@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
-from collections.abc import Sequence
+from collections.abc import Sequence, Set
 from typing import Annotated, Self
 
 from annotated_types import Interval
@@ -33,6 +33,8 @@ from .._impl import LiveStatusHostServicesRepository
 from .._models import (
     Service,
     ServiceFilter,
+    ServiceLabelValue,
+    ServiceOptionalField,
     ServiceSort,
     ServiceSortColumn,
     ServiceSortDirection,
@@ -52,6 +54,9 @@ _MAX_HOST_SVC_LIMIT = 5_000
 _DEFAULT_LIMIT = 1_000
 
 _DEFAULT_SORT = (ServiceSort(column=ServiceSortColumn.NAME, direction=ServiceSortDirection.ASC),)
+
+# The page's default columns; everything else has to be asked for.
+_DEFAULT_FIELDS: frozenset[ServiceOptionalField] = frozenset()
 
 
 @api_model
@@ -81,6 +86,11 @@ class HostServiceEntry:
         example=[],
         default_factory=ApiOmitted,
     )
+    labels: dict[str, ServiceLabelValue] | ApiOmitted = api_field(
+        description="Service labels, keyed by label name. Omitted when the service has none.",
+        example={"cmk/check_plugin": ServiceLabelValue(value="cpu_load", source="discovered")},
+        default_factory=ApiOmitted,
+    )
     perfometer: ServicePerfometer | ApiOmitted = api_field(
         description=(
             "Perf-O-Meter of the service's performance data. Omitted when the service reports no "
@@ -99,6 +109,7 @@ class HostServiceEntry:
             last_state_change=service.last_state_change,
             modes=build_service_modes_by_id(service, hostname=hostname, site_id=site_id)
             or ApiOmitted(),
+            labels=service.labels if service.labels is not None else ApiOmitted(),
             perfometer=ServicePerfometer.from_perf_data(service.perf_data, service.check_command)
             or ApiOmitted(),
         )
@@ -158,6 +169,15 @@ class ServicesRequestBody:
         description="Boolean filter expression tree. Omit to return all services.",
         default_factory=ApiOmitted,
     )
+    fields: frozenset[ServiceOptionalField] | ApiOmitted = api_field(
+        description=(
+            f"Optional field names to include. Allowed values: {ServiceOptionalField.options()}. "
+            "Each one costs a livestatus column per service, so only ask for the ones a visible "
+            "column needs. Omit to return the default fields only."
+        ),
+        example=["labels"],
+        default_factory=ApiOmitted,
+    )
 
 
 def list_services(
@@ -201,6 +221,7 @@ def list_services(
             query="" if isinstance(body.q, ApiOmitted) else body.q,
             sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
             filters=parsed_filters,
+            fields=_DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields,
         )
 
 
@@ -213,6 +234,7 @@ def _handle_list_services(
     query: str = "",
     sorters: Sequence[ServiceSort] = _DEFAULT_SORT,
     filters: ServiceFilter = ServiceFilter(""),
+    fields: Set[ServiceOptionalField] = _DEFAULT_FIELDS,
 ) -> HostServicesResponse:
     if not host_services_repo.host_exists(hostname):
         raise ProblemException(
@@ -222,7 +244,7 @@ def _handle_list_services(
         ) from None
 
     services = host_services_repo.fetch(
-        hostname, limit=limit, query=query, sorters=sorters, filters=filters
+        hostname, limit=limit, query=query, sorters=sorters, filters=filters, fields=fields
     )
     total_service_count = host_services_repo.count_total(hostname)
     if limit is None:

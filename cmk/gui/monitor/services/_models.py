@@ -14,7 +14,8 @@ logic.
 import dataclasses
 import datetime as dt
 import enum
-from typing import assert_never, Literal, NewType, override
+from collections.abc import Mapping
+from typing import assert_never, Literal, NewType, override, Self
 
 from cmk.ruleset_matcher.labels import LabelSource
 
@@ -37,6 +38,18 @@ class HostState(enum.IntEnum):
 
 
 @dataclasses.dataclass(frozen=True)
+class ServiceLabelValue:
+    value: str
+    source: LabelSource
+
+    @classmethod
+    def by_label(
+        cls, values: Mapping[str, str], sources: Mapping[str, LabelSource]
+    ) -> dict[str, Self]:
+        return {key: cls(value=value, source=sources[key]) for key, value in values.items()}
+
+
+@dataclasses.dataclass(frozen=True)
 class Service:
     name: str
     state: ServiceState
@@ -49,6 +62,7 @@ class Service:
     last_state_change: dt.datetime
     perf_data: str
     check_command: str
+    labels: dict[str, ServiceLabelValue] | None
 
     @property
     def state_label(self) -> ServiceStateLabel:
@@ -66,12 +80,6 @@ class Service:
 
 
 @dataclasses.dataclass(frozen=True)
-class ServiceLabelValue:
-    value: str
-    source: LabelSource
-
-
-@dataclasses.dataclass(frozen=True)
 class ServiceOverview(Service):
     host_name: str
     host_alias: str
@@ -79,10 +87,6 @@ class ServiceOverview(Service):
     host_acknowledged: bool
     host_in_downtime: bool
     site_id: str
-    acknowledged: bool
-    in_downtime: bool
-    notifications_enabled: bool
-    is_flapping: bool
     contact_groups: list[str]
     long_output: str
     current_attempt: int
@@ -90,7 +94,6 @@ class ServiceOverview(Service):
     # Passive services are never scheduled, so livestatus reports no next check for them.
     next_check: dt.datetime | None
     tags: dict[str, str]
-    labels: dict[str, ServiceLabelValue]
 
     @property
     def host_state_label(self) -> HostStateLabel:
@@ -103,6 +106,16 @@ class ServiceOverview(Service):
                 return "UNREACHABLE"
             case _:
                 assert_never(self.host_state)
+
+
+class ServiceOptionalField(enum.StrEnum):
+    """Columns a caller has to ask for, because fetching them costs a livestatus column per row."""
+
+    LABELS = "labels"
+
+    @classmethod
+    def options(cls) -> str:
+        return ", ".join(sorted(item.value for item in cls))
 
 
 class ServiceSortColumn(enum.StrEnum):

@@ -4893,6 +4893,7 @@ class MonitorHostsClient(RestApiClient):
         limit: int | None,
         sort: list[str] | None = None,
         filters: dict[str, Any] | None = None,
+        fields: list[str] | None = None,
         expect_ok: bool = True,
     ) -> Response:
         # ``limit`` is always sent (including an explicit ``None``), not routed through
@@ -4901,7 +4902,10 @@ class MonitorHostsClient(RestApiClient):
             "post",
             url=f"/monitor/hosts/{hostname}/services",
             query_params={"site_id": site_id},
-            body={"limit": limit, **_only_set_keys({"sort": sort, "filter": filters})},
+            body={
+                "limit": limit,
+                **_only_set_keys({"sort": sort, "filter": filters, "fields": fields}),
+            },
             expect_ok=expect_ok,
         )
 

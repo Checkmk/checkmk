@@ -6,9 +6,14 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.gui.monitor.services._impl import _build_primary_sort, LiveStatusHostServicesRepository
+from cmk.gui.monitor.services._impl import (
+    _build_primary_sort,
+    _OPTIONAL_COLUMNS,
+    LiveStatusHostServicesRepository,
+)
 from cmk.gui.monitor.services._models import (
     ServiceFilter,
+    ServiceOptionalField,
     ServiceSort,
     ServiceSortColumn,
     ServiceSortDirection,
@@ -32,7 +37,14 @@ def test_fetch_filters_by_exact_hostname_and_applies_limit() -> None:
         f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n{_DEFAULT_ORDER_BY}\nLimit: 500",
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
-        repo.fetch(_UNKNOWN_HOSTNAME, limit=500, query="", sorters=[], filters=ServiceFilter(""))
+        repo.fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=500,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
 
 
 def test_fetch_without_limit_omits_limit_header() -> None:
@@ -42,7 +54,14 @@ def test_fetch_without_limit_omits_limit_header() -> None:
         match_type="ellipsis",
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
-        repo.fetch(_UNKNOWN_HOSTNAME, limit=None, query="", sorters=[], filters=ServiceFilter(""))
+        repo.fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset(),
+        )
 
 
 def test_fetch_orders_by_the_primary_sorter() -> None:
@@ -58,6 +77,7 @@ def test_fetch_orders_by_the_primary_sorter() -> None:
             query="",
             sorters=[ServiceSort(ServiceSortColumn.STATE, ServiceSortDirection.DESC)],
             filters=ServiceFilter(""),
+            fields=frozenset(),
         )
 
 
@@ -76,6 +96,7 @@ def test_fetch_filters_by_search_query_on_description() -> None:
             query="CPU",
             sorters=[],
             filters=ServiceFilter(""),
+            fields=frozenset(),
         )
 
 
@@ -93,6 +114,24 @@ def test_fetch_applies_filters() -> None:
             query="",
             sorters=[],
             filters=ServiceFilter("Filter: state = 1"),
+            fields=frozenset(),
+        )
+
+
+def test_fetch_reads_optional_columns_only_when_asked_for() -> None:
+    with expect_single_query(
+        f"GET services\nColumns: {_SERVICES_COLUMNS} labels label_sources\n"
+        f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n{_DEFAULT_ORDER_BY}",
+        match_type="ellipsis",
+    ) as live:
+        repo = LiveStatusHostServicesRepository(connection=live)
+        repo.fetch(
+            _UNKNOWN_HOSTNAME,
+            limit=None,
+            query="",
+            sorters=[],
+            filters=ServiceFilter(""),
+            fields=frozenset({ServiceOptionalField.LABELS}),
         )
 
 
@@ -181,3 +220,8 @@ def test_count_total_query_shape() -> None:
 )
 def test_build_primary_sort(sorters: Sequence[ServiceSort], expected: str) -> None:
     assert _build_primary_sort(sorters) == expected
+
+
+def test_every_optional_field_names_the_columns_it_needs() -> None:
+    """A new ServiceOptionalField must say which livestatus columns it reads."""
+    assert set(_OPTIONAL_COLUMNS) == set(ServiceOptionalField)

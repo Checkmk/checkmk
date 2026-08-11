@@ -160,6 +160,8 @@ class TestMonitorHostServicesFilters:
                 {
                     "description": "CPU load",
                     "perf_data": "",
+                    "labels": {},
+                    "label_sources": {},
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 1,
@@ -249,6 +251,8 @@ class TestMonitorHostServicesFilters:
                 {
                     "description": "CPU load",
                     "perf_data": "",
+                    "labels": {},
+                    "label_sources": {},
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 1,
@@ -364,6 +368,8 @@ class TestMonitorHostServices:
                 {
                     "description": "CPU load",
                     "perf_data": "",
+                    "labels": {},
+                    "label_sources": {},
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
@@ -429,6 +435,81 @@ class TestMonitorHostServices:
             },
         }
 
+    def test_service_labels_are_returned_with_their_source(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}])
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": "CPU load",
+                    "host_name": _HOSTNAME,
+                    "state": 0,
+                    "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
+                    "last_check": time.time() - 30,
+                    "last_state_change": time.time(),
+                    "perf_data": "",
+                    "check_command": "check_mk-test",
+                    "labels": {"cmk/check_plugin": "cpu_load", "owner": "platform"},
+                    "label_sources": {"cmk/check_plugin": "discovered", "owner": "explicit"},
+                }
+            ],
+        )
+        _expect_list_services_queries(mock_livestatus, extra_columns="labels label_sources")
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_host_services(
+                hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, fields=["labels"]
+            )
+
+        assert resp.json["services"][0]["labels"] == {
+            "cmk/check_plugin": {"value": "cpu_load", "source": "discovered"},
+            "owner": {"value": "platform", "source": "explicit"},
+        }
+
+    def test_labels_are_omitted_unless_requested(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}])
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": "CPU load",
+                    "host_name": _HOSTNAME,
+                    "state": 0,
+                    "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
+                    "last_check": time.time() - 30,
+                    "last_state_change": time.time(),
+                    "perf_data": "",
+                    "check_command": "check_mk-test",
+                    "labels": {"cmk/check_plugin": "cpu_load"},
+                    "label_sources": {"cmk/check_plugin": "discovered"},
+                }
+            ],
+        )
+        _expect_list_services_queries(mock_livestatus)
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_host_services(
+                hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT
+            )
+
+        assert "labels" not in resp.json["services"][0]
+
     @pytest.mark.usefixtures("registered_perfometer")
     def test_service_with_performance_data_has_a_perfometer(
         self,
@@ -451,6 +532,8 @@ class TestMonitorHostServices:
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "test_metric=42;;;0;100",
+                    "labels": {},
+                    "label_sources": {},
                     "check_command": "check_mk-test",
                 }
             ],
@@ -490,6 +573,8 @@ class TestMonitorHostServices:
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "",
+                    "labels": {},
+                    "label_sources": {},
                     "check_command": "check_mk-test",
                 }
             ],
@@ -525,6 +610,8 @@ class TestMonitorHostServices:
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "unknown_metric=42;;;0;100",
+                    "labels": {},
+                    "label_sources": {},
                     "check_command": "check_mk-test",
                 }
             ],
@@ -550,6 +637,8 @@ class TestMonitorHostServices:
                 {
                     "description": "CPU load",
                     "perf_data": "",
+                    "labels": {},
+                    "label_sources": {},
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
@@ -673,6 +762,8 @@ class TestMonitorHostServices:
                 {
                     "description": "CPU load",
                     "perf_data": "",
+                    "labels": {},
+                    "label_sources": {},
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
@@ -739,6 +830,8 @@ class TestMonitorHostServicessLimitPermissions:
                 {
                     "description": "CPU load",
                     "perf_data": "",
+                    "labels": {},
+                    "label_sources": {},
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
@@ -805,6 +898,8 @@ class TestMonitorHostServicessLimitPermissions:
                 {
                     "description": "CPU load",
                     "perf_data": "",
+                    "labels": {},
+                    "label_sources": {},
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
@@ -1278,7 +1373,9 @@ _SERVICES_COLUMNS = (
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 
 
-def _expect_list_services_queries(mock_livestatus: MockLiveStatusConnection) -> None:
+def _expect_list_services_queries(
+    mock_livestatus: MockLiveStatusConnection, *, extra_columns: str = ""
+) -> None:
     mock_livestatus.expect_query(
         [
             "GET hosts",
@@ -1291,7 +1388,7 @@ def _expect_list_services_queries(mock_livestatus: MockLiveStatusConnection) -> 
     mock_livestatus.expect_query(
         [
             "GET services",
-            f"Columns: {_SERVICES_COLUMNS}",
+            f"Columns: {_SERVICES_COLUMNS}{' ' + extra_columns if extra_columns else ''}",
             f"Filter: host_name = {_HOSTNAME}",
             _DEFAULT_ORDER_BY,
             f"Limit: {_LIMIT}",

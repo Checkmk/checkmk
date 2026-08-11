@@ -11,7 +11,7 @@ when instantiated.
 """
 
 import datetime as dt
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, Sequence, Set
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -23,6 +23,7 @@ from cmk.livestatus_client import (
 from cmk.livestatus_client.expressions import And, NothingExpression, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Services
+from cmk.livestatus_client.types import Column
 
 from ._exceptions import ServiceNotFoundError
 from ._models import (
@@ -31,6 +32,7 @@ from ._models import (
     Service,
     ServiceFilter,
     ServiceLabelValue,
+    ServiceOptionalField,
     ServiceOverview,
     ServiceSort,
     ServiceSortColumn,
@@ -55,6 +57,7 @@ class LiveStatusHostServicesRepository:
         query: str,
         sorters: Sequence[ServiceSort],
         filters: ServiceFilter,
+        fields: Set[ServiceOptionalField],
     ) -> Sequence[Service]:
         extra_headers = [*filters.splitlines(), _build_primary_sort(sorters)]
 
@@ -75,6 +78,12 @@ class LiveStatusHostServicesRepository:
                 Services.last_state_change,
                 Services.perf_data,
                 Services.check_command,
+                *(
+                    column
+                    for field, columns in _OPTIONAL_COLUMNS.items()
+                    if field in fields
+                    for column in columns
+                ),
             ],
             filter_expr=_build_host_services_filter(hostname, _sanitize_query(query)),
             extra_headers=extra_headers,
@@ -101,6 +110,11 @@ class LiveStatusHostServicesRepository:
                         ),
                         perf_data=row["perf_data"],
                         check_command=row["check_command"],
+                        labels=(
+                            ServiceLabelValue.by_label(row["labels"], row["label_sources"])
+                            if "labels" in row
+                            else None
+                        ),
                     )
                     for row in q.iterate(conn)
                 ],
@@ -158,6 +172,7 @@ class LiveStatusHostServicesRepository:
             last_state_change=dt.datetime.fromtimestamp(row["last_state_change"], tz=dt.UTC),
             perf_data=row["perf_data"],
             check_command=row["check_command"],
+            labels=ServiceLabelValue.by_label(row["labels"], row["label_sources"]),
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
             notifications_enabled=bool(row["notifications_enabled"]),
@@ -176,10 +191,6 @@ class LiveStatusHostServicesRepository:
                 else None
             ),
             tags=dict(row["tags"]),
-            labels={
-                key: ServiceLabelValue(value=value, source=row["label_sources"][key])
-                for key, value in row["labels"].items()
-            },
         )
 
     def count_total(self, hostname: str) -> int:
@@ -203,6 +214,13 @@ class LiveStatusHostServicesRepository:
             ]
         )
         return sum(int(row[-1]) for row in self._connection.query(stats_query))
+
+
+# Everything beyond the columns every service row needs is read only when a caller asks
+# for it, so a hidden column costs nothing.
+_OPTIONAL_COLUMNS: Mapping[ServiceOptionalField, tuple[Column, ...]] = {
+    ServiceOptionalField.LABELS: (Services.labels, Services.label_sources),
+}
 
 
 # The domain names the columns after what the table shows, which for some of them differs from the

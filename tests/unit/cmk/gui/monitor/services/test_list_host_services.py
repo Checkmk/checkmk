@@ -88,6 +88,7 @@ def test_handle_list_services_filters_by_search_query() -> None:
         query="",
         sorters=[],
         filters=ServiceFilter(""),
+        fields=frozenset(),
     )
     known_name = items[0].name
 

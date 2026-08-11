@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Sequence, Set
 
 from polyfactory.factories import DataclassFactory
 
@@ -11,6 +11,7 @@ from cmk.gui.monitor.services._exceptions import ServiceNotFoundError
 from cmk.gui.monitor.services._models import (
     Service,
     ServiceFilter,
+    ServiceOptionalField,
     ServiceOverview,
     ServiceSort,
 )
@@ -23,10 +24,14 @@ KNOWN_SITE_ID = "local"
 
 class ServiceFactory(DataclassFactory[Service]):
     __check_model__ = False
+    # A service built here stands for one whose columns were all read, so the
+    # optional-when-unread fields always carry a value.
+    __allow_none_optionals__ = False
 
 
 class ServiceOverviewFactory(DataclassFactory[ServiceOverview]):
     __check_model__ = False
+    __allow_none_optionals__ = False
 
 
 def get_fake_host_services_repository(
@@ -64,6 +69,7 @@ def get_fake_host_services_repository(
             query: str,
             sorters: Sequence[ServiceSort],
             filters: ServiceFilter,
+            fields: Set[ServiceOptionalField] = frozenset(),
         ) -> Sequence[Service]:
             matches = [s for s in self._services if query.lower() in s.name.lower()]
             return sorted(matches, key=service_sorter(sorters))[:limit]

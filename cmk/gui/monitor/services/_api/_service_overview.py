@@ -123,6 +123,12 @@ class ServiceOverviewResponse:
 
     @classmethod
     def from_domain(cls, service: ServiceOverview, *, may_see_parameters: bool) -> Self:
+        def read[T](value: T | None, name: str) -> T:
+            """The overview reads every column, so a missing one is a bug, not an omission."""
+            if value is None:
+                raise ValueError(f"service overview is missing {name!r}")
+            return value
+
         return cls(
             name=service.name,
             host_name=service.host_name,
@@ -146,7 +152,7 @@ class ServiceOverviewResponse:
             max_check_attempts=service.max_check_attempts,
             next_check=service.next_check,
             tags=service.tags,
-            labels=service.labels,
+            labels=read(service.labels, "labels"),
         )
 
 

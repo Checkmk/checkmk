@@ -114,11 +114,15 @@ def fixture_werks_loader_empty(tmp_path: Path) -> WerksLoader:
     )
 
 
-@pytest.fixture(scope="function", name="werks_loaded")
-def fixture_werks_loader(tmp_path: Path) -> dict[int, WerkV3]:
+@pytest.fixture(scope="session", name="werks_loaded")
+def fixture_werks_loader(tmp_path_factory: pytest.TempPathFactory) -> dict[int, WerkV3]:
     """
     provide all werks available in the git repository
+
+    Loading the whole `.werks` corpus takes ~20s, so this is session scoped. The consumers only
+    read from the returned mapping.
     """
+    tmp_path = tmp_path_factory.mktemp("werks")
     base_dir = tmp_path / "werks_base_dir_precompiled"
     base_dir.mkdir()
     all_werks = cmk.werks.tool.utils.load_raw_files(bazel_repo_root() / ".werks")
@@ -133,7 +137,7 @@ def fixture_werks_loader(tmp_path: Path) -> dict[int, WerkV3]:
     )
 
 
-@pytest.fixture(scope="function", name="secwerks_loaded")
+@pytest.fixture(scope="session", name="secwerks_loaded")
 def fixture_secwerks_loaded(werks_loaded: dict[int, WerkV3]) -> dict[int, WerkV3]:
     """
     provide the Sec Werks the CVSS and CVE requirements apply to

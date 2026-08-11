@@ -13,6 +13,7 @@ test suites, since creating and surfacing them depends on the graph implementati
 from collections.abc import Iterator
 
 import pytest
+from playwright.sync_api import Page
 
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
@@ -89,6 +90,29 @@ def fixture_javascript_errors(dashboard_page: MainDashboard) -> Iterator[list[st
     yield errors
 
 
+def open_service_graphs(page: Page, host_name: str) -> ServiceGraphs:
+    """Open the service detail page holding the graphs and wait for them to render.
+
+    Public because `ServicePage.navigate` cannot be: a service page is reached through the
+    host's service list rather than by a route of its own, so a test returning to it after
+    navigating away has to walk the same list again.
+    """
+    services_of_host = ServicesOfHostPage(page, host_name=host_name)
+    services_of_host.services_table.host_services_table(host_name).get_by_role(
+        "link", name=SERVICE_WITH_GRAPHS, exact=True
+    ).click()
+    graphs = ServiceGraphs(
+        ServicePage(
+            page,
+            host_name=host_name,
+            service_name=SERVICE_WITH_GRAPHS,
+            navigate_to_page=False,
+        )
+    )
+    graphs.wait_until_rendered()
+    return graphs
+
+
 @pytest.fixture(name="service_graphs")
 def fixture_service_graphs(
     dashboard_page: MainDashboard,
@@ -99,17 +123,4 @@ def fixture_service_graphs(
 
     Depends on `javascript_errors` so the listener is attached before this navigates.
     """
-    host_name = graph_hosts_with_varying_data[0]
-    services_of_host = ServicesOfHostPage(dashboard_page.page, host_name=host_name)
-    services_of_host.services_table.host_services_table(host_name).get_by_role(
-        "link", name=SERVICE_WITH_GRAPHS, exact=True
-    ).click()
-    service_page = ServicePage(
-        dashboard_page.page,
-        host_name=host_name,
-        service_name=SERVICE_WITH_GRAPHS,
-        navigate_to_page=False,
-    )
-    graphs = ServiceGraphs(service_page)
-    graphs.wait_until_rendered()
-    yield graphs
+    yield open_service_graphs(dashboard_page.page, graph_hosts_with_varying_data[0])

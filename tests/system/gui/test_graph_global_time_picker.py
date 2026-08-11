@@ -15,9 +15,9 @@ import logging
 import re
 from typing import Final
 
-import pytest
 from playwright.sync_api import expect
 
+from tests.system.gui.testlib.playwright.pom.graphing.fixtures import open_service_graphs
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 
@@ -40,7 +40,6 @@ def _document_survived(graphs: ServiceGraphs) -> bool:
     return bool(graphs.page.evaluate("window.__cmkGlobalTimePickerMarker === true"))
 
 
-@pytest.mark.skip(reason="CMK-37024; the panel's timestamp is addressed by the wrong class.")
 def test_one_preset_selection_moves_every_graph_on_the_page(
     service_graphs: ServiceGraphs, javascript_errors: list[str]
 ) -> None:
@@ -80,7 +79,6 @@ def test_one_preset_selection_moves_every_graph_on_the_page(
     assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"
 
 
-@pytest.mark.skip(reason="CMK-37024; `ServicePage.navigate` raises, so the return trip fails.")
 def test_selected_range_is_not_restored_after_navigating_away(
     service_graphs: ServiceGraphs, javascript_errors: list[str]
 ) -> None:
@@ -102,11 +100,10 @@ def test_selected_range_is_not_restored_after_navigating_away(
 
     # Constructing the page object navigates to it.
     MainDashboard(service_page.page)
-    service_page.navigate()
-    service_graphs.wait_until_rendered()
+    reopened = open_service_graphs(service_page.page, service_page.host_name)
 
     expect(
-        service_graphs.time_picker.active_preset_chip,
+        reopened.time_picker.active_preset_chip,
         "Returning to the page restored the previous range instead of the default",
     ).to_have_text(DEFAULT_PRESET)
     assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"

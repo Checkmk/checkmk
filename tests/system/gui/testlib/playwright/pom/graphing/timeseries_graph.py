@@ -201,8 +201,13 @@ class GraphPanel:
 
     @property
     def timestamp(self) -> Locator:
-        """The drawn window, e.g. ``2026-08-06 — 2026-08-07 @ 5min``; one date within a day."""
-        return self.root.locator(".graphing-graph-timestamp")
+        """The drawn window, e.g. ``for 2026-08-06 — 2026-08-07, resolution: 5 min``.
+
+        Collapses to a single date whenever the window stays within one day. Not the
+        ``.graphing-graph-timestamp`` of `GraphTimestamp.vue`: that one belongs to the
+        figure the dashboard widgets render, not to the panel's header.
+        """
+        return self.root.locator(".graphing-graph-header__timestamp")
 
     @property
     def peak_zoom_switch(self) -> Locator:

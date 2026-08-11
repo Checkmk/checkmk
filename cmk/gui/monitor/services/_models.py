@@ -47,6 +47,8 @@ class Service:
     summary: str
     last_check: dt.datetime | None
     last_state_change: dt.datetime
+    perf_data: str
+    check_command: str
 
     @property
     def state_label(self) -> ServiceStateLabel:

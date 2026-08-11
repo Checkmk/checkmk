@@ -15,6 +15,10 @@ from cmk.gui.openapi.utils import ProblemException
 
 from .testlib import get_fake_host_services_repository, KNOWN_HOSTNAME
 
+# Building the response entries renders each service's Perf-O-Meter, which reaches into the
+# request-scoped configuration, user and theme.
+pytestmark = pytest.mark.usefixtures("request_context")
+
 _SITE_ID = "local"
 
 

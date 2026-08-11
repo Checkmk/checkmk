@@ -42,6 +42,7 @@ from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
 from ._filters import parse_as_livestatus_filter, ServiceFilterNode
 from ._modes import build_service_modes_by_id, ServiceModeInfo
+from ._perfometer import ServicePerfometer
 from ._validators import parse_service_search_query, parse_service_sort_options
 
 # View-local limits, deliberately not coupled to the global soft/hard query limit settings so they
@@ -80,6 +81,13 @@ class HostServiceEntry:
         example=[],
         default_factory=ApiOmitted,
     )
+    perfometer: ServicePerfometer | ApiOmitted = api_field(
+        description=(
+            "Perf-O-Meter of the service's performance data. Omitted when the service reports no "
+            "performance data or none of it matches a Perf-O-Meter definition."
+        ),
+        default_factory=ApiOmitted,
+    )
 
     @classmethod
     def from_domain(cls, service: Service, *, hostname: str, site_id: str) -> Self:
@@ -90,6 +98,8 @@ class HostServiceEntry:
             last_check=service.last_check,
             last_state_change=service.last_state_change,
             modes=build_service_modes_by_id(service, hostname=hostname, site_id=site_id)
+            or ApiOmitted(),
+            perfometer=ServicePerfometer.from_perf_data(service.perf_data, service.check_command)
             or ApiOmitted(),
         )
 

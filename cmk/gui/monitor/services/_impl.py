@@ -73,6 +73,8 @@ class LiveStatusHostServicesRepository:
                 Services.is_flapping,
                 Services.last_check,
                 Services.last_state_change,
+                Services.perf_data,
+                Services.check_command,
             ],
             filter_expr=_build_host_services_filter(hostname, _sanitize_query(query)),
             extra_headers=extra_headers,
@@ -97,6 +99,8 @@ class LiveStatusHostServicesRepository:
                         last_state_change=dt.datetime.fromtimestamp(
                             row["last_state_change"], tz=dt.UTC
                         ),
+                        perf_data=row["perf_data"],
+                        check_command=row["check_command"],
                     )
                     for row in q.iterate(conn)
                 ],
@@ -128,6 +132,8 @@ class LiveStatusHostServicesRepository:
                 Services.tags,
                 Services.labels,
                 Services.label_sources,
+                Services.perf_data,
+                Services.check_command,
             ],
             And(Services.host_name == hostname, Services.description == service_name),
         )
@@ -150,6 +156,8 @@ class LiveStatusHostServicesRepository:
                 else None
             ),
             last_state_change=dt.datetime.fromtimestamp(row["last_state_change"], tz=dt.UTC),
+            perf_data=row["perf_data"],
+            check_command=row["check_command"],
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
             notifications_enabled=bool(row["notifications_enabled"]),

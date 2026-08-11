@@ -239,9 +239,16 @@ _LIVESTATUS_COLUMN_OVERRIDES: Mapping[HostSortColumn, str] = {
     HostSortColumn.FOLDER: "filename",
 }
 
+# "site" is synthesized client-side by the multisite connection layer while merging rows from
+# each site (see ``detailed_connection``'s ``prepend_site``); it isn't a real column on any single
+# site's Livestatus core. Sending it in an ``OrderBy`` header makes every site reject the query, so
+# it must never reach ``_LIVESTATUS_COLUMN_OVERRIDES``/the raw header below. The correct sort order
+# is still fully applied afterwards in Python by ``host_sorter()``.
+_VIRTUAL_SORT_COLUMNS = frozenset({HostSortColumn.SITE_ID})
+
 
 def _build_primary_sort(sorters: Sequence[HostSort]) -> str:
-    if not sorters:
+    if not sorters or sorters[0].column in _VIRTUAL_SORT_COLUMNS:
         return "OrderBy: name asc"
 
     primary = sorters[0]

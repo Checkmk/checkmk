@@ -50,6 +50,10 @@ class TestHostSort:
             HostSort(column=HostSortColumn.STATE, direction=HostSortDirection.DESC),
         ]
 
+    def test_valid_site_id_sort_option(self) -> None:
+        result = parse_host_sort_options(["site_id:asc"])
+        assert result == [HostSort(column=HostSortColumn.SITE_ID, direction=HostSortDirection.ASC)]
+
     def test_invalid_options_type(self) -> None:
         with pytest.raises(ValueError, match="Expected a list of sort values"):
             parse_host_sort_options("name:asc")

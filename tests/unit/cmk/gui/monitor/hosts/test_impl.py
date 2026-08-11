@@ -48,6 +48,19 @@ def test_wato_folder_from_filename(filename: str, expected: str) -> None:
             id="folder/filename handling",
         ),
         pytest.param(
+            [HostSort(HostSortColumn.SITE_ID, HostSortDirection.ASC)],
+            "OrderBy: name asc",
+            id="site_id falls back to the default primary sort, site isn't a real Livestatus column",
+        ),
+        pytest.param(
+            [
+                HostSort(HostSortColumn.SITE_ID, HostSortDirection.ASC),
+                HostSort(HostSortColumn.NAME, HostSortDirection.DESC),
+            ],
+            "OrderBy: name asc",
+            id="site_id as the first sorter still falls back, even with a real sorter behind it",
+        ),
+        pytest.param(
             [
                 HostSort(HostSortColumn.STATE, HostSortDirection.DESC),
                 HostSort(HostSortColumn.NAME, HostSortDirection.ASC),

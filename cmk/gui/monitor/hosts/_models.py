@@ -108,6 +108,7 @@ class HostSortColumn(enum.StrEnum):
     NUM_SERVICES_UNKNOWN = "num_services_unknown"
     NUM_SERVICES_PENDING = "num_services_pending"
     FOLDER = "folder"
+    SITE_ID = "site_id"
     LAST_CHECK = "last_check"
     LAST_STATE_CHANGE = "last_state_change"
 
@@ -126,6 +127,7 @@ _NATURAL_SORT_COLUMNS = frozenset(
         HostSortColumn.ALIAS,
         HostSortColumn.ADDRESS,
         HostSortColumn.FOLDER,
+        HostSortColumn.SITE_ID,
     }
 )
 

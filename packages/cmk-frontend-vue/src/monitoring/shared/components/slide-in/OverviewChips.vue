@@ -7,12 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkTag from 'cmk-ui-library/components/CmkTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
+
+import type { LabelCellItem } from '@/monitoring/shared/components/cell/LabelCell.vue'
 
 const DEFAULT_LIMIT = 5
 
-const props = withDefaults(defineProps<{ items: string[]; limit?: number }>(), {
+const props = withDefaults(defineProps<{ items: LabelCellItem[]; limit?: number }>(), {
   limit: DEFAULT_LIMIT
 })
 
@@ -21,14 +22,21 @@ const { _t } = usei18n()
 const expanded = ref(false)
 
 const hasOverflow = computed(() => props.items.length > props.limit)
-const visibleItems = computed<TranslatedString[]>(
-  () => (expanded.value ? props.items : props.items.slice(0, props.limit)) as TranslatedString[]
+const visibleItems = computed(() =>
+  expanded.value ? props.items : props.items.slice(0, props.limit)
 )
 </script>
 
 <template>
   <div class="monitoring-overview-chips">
-    <CmkTag v-for="item in visibleItems" :key="item" size="small" variant="fill" :content="item" />
+    <CmkTag
+      v-for="item in visibleItems"
+      :key="item.text"
+      size="small"
+      variant="fill"
+      :color="item.color ?? 'default'"
+      :content="item.text"
+    />
     <CmkButton v-if="hasOverflow" size="small" variant="optional" @click="expanded = !expanded">
       {{ expanded ? _t('show less') : `+${items.length - limit}` }}
     </CmkButton>

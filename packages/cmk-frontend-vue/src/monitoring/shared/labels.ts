@@ -19,15 +19,37 @@ export function labelColor(source: string): Colors {
   return SOURCE_COLORS[source] ?? 'default'
 }
 
+/** Order entries alphabetically, so a row reads the same on every refresh. */
+function sortedByText(items: LabelCellItem[]): LabelCellItem[] {
+  return items.sort((first, second) => first.text.localeCompare(second.text))
+}
+
 /**
  * Render labels as `key: value` entries, colored by the source they were set from and ordered
  * alphabetically so a row reads the same on every refresh.
  */
 export function toLabelItems(labels: Record<string, LabelValue>): LabelCellItem[] {
-  return Object.entries(labels)
-    .map(([key, label]) => ({
+  return sortedByText(
+    Object.entries(labels).map(([key, label]) => ({
       text: `${key}: ${label.value}` as TranslatedString,
       color: labelColor(label.source)
     }))
-    .sort((first, second) => first.text.localeCompare(second.text))
+  )
+}
+
+/** Render plain names, e.g. contact groups, as entries. */
+export function toNameItems(names: string[]): LabelCellItem[] {
+  return sortedByText(names.map((name) => ({ text: name as TranslatedString })))
+}
+
+/**
+ * Render tags as `group: value` entries. Tags have no source to distinguish, so they all carry
+ * the same color.
+ */
+export function toTagItems(tags: Record<string, string>): LabelCellItem[] {
+  return sortedByText(
+    Object.entries(tags).map(([group, value]) => ({
+      text: `${group}: ${value}` as TranslatedString
+    }))
+  )
 }

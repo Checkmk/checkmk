@@ -97,13 +97,18 @@ describe('ServiceOverviewTab', () => {
     expect(screen.getByText('This check plugin reports no further details.')).toBeVisible()
   })
 
-  it('shows the service tags', () => {
-    render(ServiceOverviewTab, {
-      props: { data: makeOverview({ tags: { criticality: 'prod', networking: 'lan' } }) }
+  it('shows the service tags, ordered the way the table orders them', () => {
+    const { container } = render(ServiceOverviewTab, {
+      props: { data: makeOverview({ tags: { networking: 'lan', criticality: 'prod' } }) }
     })
 
     expect(screen.getByText('criticality: prod')).toBeInTheDocument()
     expect(screen.getByText('networking: lan')).toBeInTheDocument()
+
+    const chips = Array.from(container.querySelectorAll('.monitoring-overview-chips .cmk-tag')).map(
+      (chip) => chip.textContent?.trim()
+    )
+    expect(chips.indexOf('criticality: prod')).toBeLessThan(chips.indexOf('networking: lan'))
   })
 
   it('shows the service labels with their value', () => {

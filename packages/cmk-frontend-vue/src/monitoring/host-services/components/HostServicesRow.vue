@@ -17,7 +17,7 @@ import PerfometerCell from '@/monitoring/shared/components/cell/PerfometerCell.v
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
-import { toLabelItems } from '@/monitoring/shared/labels'
+import { toLabelItems, toTagItems } from '@/monitoring/shared/labels'
 
 const props = defineProps<{ row: HostServiceEntry; tableRow: Row<HostServiceEntry> }>()
 
@@ -42,6 +42,7 @@ const lastCheck = computed(() =>
 )
 const lastStateChange = computed(() => formatTimestamp(props.row.last_state_change))
 const labels = computed(() => toLabelItems(props.row.labels ?? {}))
+const tags = computed(() => toTagItems(props.row.tags ?? {}))
 </script>
 
 <template>
@@ -69,5 +70,6 @@ const labels = computed(() => toLabelItems(props.row.labels ?? {}))
     :value="lastStateChange"
   />
   <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
+  <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
   <PerfometerCell v-if="hasColumn('perfometer')" column-id="perfometer" :data="row.perfometer" />
 </template>

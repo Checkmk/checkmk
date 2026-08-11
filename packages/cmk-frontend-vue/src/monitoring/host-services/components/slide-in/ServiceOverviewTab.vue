@@ -17,6 +17,7 @@ import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
 import { useTimeSince } from '@/monitoring/shared/useTimeSince'
 
 const props = defineProps<{ data: ServiceOverview }>()
@@ -29,9 +30,8 @@ const checkAttempt = computed(
   () => `${props.data.current_attempt}/${props.data.max_check_attempts}`
 )
 
-const tagChips = computed(() =>
-  Object.entries(props.data.tags).map(([group, tag]) => `${group}: ${tag}`)
-)
+const tagChips = computed(() => toTagItems(props.data.tags))
+const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))
 
 const lastCheck = computed(() =>
   props.data.last_check === null ? '–' : formatTimestamp(props.data.last_check)
@@ -70,7 +70,7 @@ const nextCheck = computed(() =>
     <OverviewDetailList align="start">
       <dt>{{ _t('Contact groups:') }}</dt>
       <dd>
-        <OverviewChips :items="data.contact_groups" />
+        <OverviewChips :items="contactGroupChips" />
       </dd>
 
       <dt>{{ _t('Tags:') }}</dt>

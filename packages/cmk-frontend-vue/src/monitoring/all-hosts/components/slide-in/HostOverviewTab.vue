@@ -15,6 +15,7 @@ import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
 import { useTimeSince } from '@/monitoring/shared/useTimeSince'
 
 const props = defineProps<{ data: HostOverview }>()
@@ -29,9 +30,8 @@ const serviceSegments = computed<StateSegment[]>(() => [
   { label: _t('PENDING'), count: props.data.service_counts.pending, color: 'default' }
 ])
 
-const tagChips = computed(() =>
-  Object.entries(props.data.tags).map(([group, tag]) => `${group}: ${tag}`)
-)
+const tagChips = computed(() => toTagItems(props.data.tags))
+const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))
 
 const timeSince = useTimeSince()
 </script>
@@ -68,7 +68,7 @@ const timeSince = useTimeSince()
 
       <dt>{{ _t('Contact groups') }}</dt>
       <dd>
-        <OverviewChips :items="data.contact_groups" />
+        <OverviewChips :items="contactGroupChips" />
       </dd>
     </OverviewDetailList>
 

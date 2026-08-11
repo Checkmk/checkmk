@@ -52,9 +52,19 @@ test('renders service name and summary in their cells', () => {
 test('renders one cell per column', () => {
   const { container } = mountRow(makeService())
 
-  // select, state, modes, name, summary, last_check, last_state_change, labels, perfometer
+  // select, state, modes, name, summary, last_check, last_state_change, labels, tags, perfometer
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(tds).toHaveLength(9)
+  expect(tds).toHaveLength(10)
+})
+
+test('renders the tags of a service, sorted alphabetically', () => {
+  const { container } = mountRow(makeService({ tags: { networking: 'lan', criticality: 'prod' } }))
+
+  const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
+  expect(tags.map((tag) => tag.textContent?.trim())).toEqual([
+    'criticality: prod',
+    'networking: lan'
+  ])
 })
 
 test('renders the labels of a service, sorted alphabetically', () => {

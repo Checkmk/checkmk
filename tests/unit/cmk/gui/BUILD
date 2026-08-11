@@ -41,6 +41,58 @@ py_library(
     ],
 )
 
+# Monitoring apps test suite: monitor/{command,hosts,services}, availability,
+# bi, graphing, nagvis.
+py_cmk_test(
+    name = "monitor_tests",
+    srcs = glob([
+        "availability/**/*.py",
+        "bi/**/*.py",
+        "graphing/**/*.py",
+        "monitor/**/*.py",
+        "nagvis/**/*.py",
+    ]),
+    args = [
+        "tests/unit/cmk/gui/availability",
+        "tests/unit/cmk/gui/bi",
+        "tests/unit/cmk/gui/graphing",
+        "tests/unit/cmk/gui/monitor",
+        "tests/unit/cmk/gui/nagvis",
+    ],
+    env = {"EDITION": "community"},
+    use_project_pytest_config = True,
+    deps = [
+        ":conftest",
+        ":init_py",
+        "//cmk/bi",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui/availability",
+        "//cmk/gui/bi",
+        "//cmk/gui/graphing",
+        "//cmk/gui/graphing:openapi",
+        "//cmk/gui/monitor/command",
+        "//cmk/gui/monitor/hosts",
+        "//cmk/gui/monitor/services",
+        "//cmk/gui/nagvis",
+        "//cmk/gui/utils",
+        "//cmk/gui/utils:middle",
+        "//cmk/utils",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-graphing-engine",
+        "//packages/cmk-livestatus-client:livestatus-api",
+        "//packages/cmk-livestatus-client:py_livestatus",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//tests/unit:conftest",
+        requirement("fido2"),
+        requirement("opentelemetry-sdk"),
+        requirement("polyfactory"),
+        requirement("pydantic"),
+        requirement("pytest-mock"),
+        requirement("python-ldap"),
+        requirement("time-machine"),
+    ],
+)
+
 # Views & visuals test suite: views, visuals, painter, data_source, sidebar,
 # dashboard.
 py_cmk_test(

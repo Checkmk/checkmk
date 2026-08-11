@@ -586,8 +586,8 @@ function renderList(
     backendValidation,
     value.length
   )
-  if (!value) {
-    return h([])
+  if (value.length === 0) {
+    return h('div', [formSpec.no_element_label])
   }
   const listResults = []
   listValidations.forEach((validation: string) => {
@@ -617,8 +617,8 @@ function renderListOfStrings(
     backendValidation,
     value.length
   )
-  if (!value) {
-    return h([])
+  if (value.length === 0) {
+    return h('div', ['[]'])
   }
   const listResults = []
 

@@ -21,14 +21,18 @@ import { buildAutocompleteContext } from '@/metric-backend/attributeFilterAdapte
 import { useAttributeKeySuggestions } from '@/metric-backend/attributeKeySuggestions'
 import { type ConsolidationFunction, outputType } from '@/metric-backend/consolidation/types'
 import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
+import GroupByThenSteps from '@/metric-backend/group-by/GroupByThenSteps.vue'
 import {
+  type AggregationStep,
   type GroupByInputType,
   type GroupByModel,
-  groupByForInputType
+  groupByForInputType,
+  thenStepsAllowed
 } from '@/metric-backend/group-by/types'
 import {
+  aggregatorFromGroupBy,
   aggregatorToFloatGroupBy,
-  floatGroupByToAggregator,
+  aggregatorToThenSteps,
   fractionBelowGroupBy,
   fractionBetweenGroupBy,
   groupFractionBelowThresholdToWire,
@@ -215,7 +219,7 @@ function storeCurrentWith(overrides: {
       aggregationHistogramUpperThresholdForFractionBetween.value,
     group
   )
-  persist(stored, inputType === 'float' ? floatGroupByToAggregator(group) : undefined)
+  persist(stored, inputType === 'float' ? aggregatorFromGroupBy(group, thenSteps.value) : undefined)
 }
 
 const aggregationLookback = computed<number>({
@@ -268,6 +272,15 @@ const groupByInputType = computed<GroupByInputType>(() =>
 // user has just added but not filled in) is not persisted, so reading the group-by back
 // out of the store would drop it again the moment it appears.
 const groupBy = ref<GroupByModel>(storedGroupBy())
+const thenSteps = ref<AggregationStep[]>(aggregatorToThenSteps(item.aggregator))
+
+const thenStepsShown = computed(() => thenStepsAllowed(groupByInputType.value, groupBy.value))
+// Drop chained steps when the grouping no longer allows them, so they do not resurface later.
+watch(thenStepsShown, (shown) => {
+  if (!shown && thenSteps.value.length > 0) {
+    thenSteps.value = []
+  }
+})
 
 function storedGroupBy(): GroupByModel {
   const stored = item.consolidation_function
@@ -283,7 +296,7 @@ function storedGroupBy(): GroupByModel {
   }
 }
 
-watch(groupBy, () => storeCurrentWith({}))
+watch([groupBy, thenSteps], () => storeCurrentWith({}))
 
 // The group-by pills pick from the same attribute keys as the where clause.
 const {
@@ -355,6 +368,12 @@ const {
           />
         </td>
       </tr>
+      <GroupByThenSteps
+        v-if="thenStepsShown"
+        v-model="thenSteps"
+        :group-by-keys="groupBy.keys"
+        label-class="graphing-metric-backend-form__label-cell"
+      />
     </tbody>
   </table>
 </template>

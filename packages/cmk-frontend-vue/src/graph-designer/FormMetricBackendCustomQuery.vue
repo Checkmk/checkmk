@@ -33,14 +33,18 @@ import { buildAutocompleteContext } from '@/metric-backend/attributeFilterAdapte
 import { useAttributeKeySuggestions } from '@/metric-backend/attributeKeySuggestions'
 import { type ConsolidationFunction, outputType } from '@/metric-backend/consolidation/types'
 import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
+import GroupByThenSteps from '@/metric-backend/group-by/GroupByThenSteps.vue'
 import {
+  type AggregationStep,
   type GroupByInputType,
   type GroupByModel,
-  groupByForInputType
+  groupByForInputType,
+  thenStepsAllowed
 } from '@/metric-backend/group-by/types'
 import {
+  aggregatorFromGroupBy,
   aggregatorToFloatGroupBy,
-  floatGroupByToAggregator,
+  aggregatorToThenSteps,
   fractionBelowGroupBy,
   fractionBetweenGroupBy,
   percentileGroupBy
@@ -144,6 +148,7 @@ const aggregationHistogramUpperThresholdForFractionBetween = computed<number>({
 // user has just added but not filled in) is not persisted, so reading the group-by back
 // out of the consolidation would drop it again the moment it appears.
 const groupBy = ref<GroupByModel>(storedGroupBy())
+const thenSteps = ref<AggregationStep[]>(aggregatorToThenSteps(aggregator.value))
 
 function storedGroupBy(): GroupByModel {
   const stored = consolidation.value
@@ -184,7 +189,8 @@ function rebuildConsolidation(consolidationFunction: ConsolidationFunction | nul
     aggregationHistogramUpperThresholdForFractionBetween.value,
     group
   )
-  aggregator.value = inputType === 'float' ? floatGroupByToAggregator(group) : undefined
+  aggregator.value =
+    inputType === 'float' ? aggregatorFromGroupBy(group, thenSteps.value) : undefined
 }
 
 const consolidationFunction = computed<ConsolidationFunction | null>({
@@ -192,11 +198,19 @@ const consolidationFunction = computed<ConsolidationFunction | null>({
   set: rebuildConsolidation
 })
 
-watch(groupBy, () => rebuildConsolidation(consolidationFunction.value))
+watch([groupBy, thenSteps], () => rebuildConsolidation(consolidationFunction.value))
 
 const groupByInputType = computed<GroupByInputType>(() =>
   groupByInputTypeOf(consolidationFunction.value)
 )
+
+const thenStepsShown = computed(() => thenStepsAllowed(groupByInputType.value, groupBy.value))
+// Drop chained steps when the grouping no longer allows them, so they do not resurface later.
+watch(thenStepsShown, (shown) => {
+  if (!shown && thenSteps.value.length > 0) {
+    thenSteps.value = []
+  }
+})
 
 // The group-by pills pick from the same attribute keys as the where clause.
 const {
@@ -255,6 +269,7 @@ const {
           />
         </td>
       </tr>
+      <GroupByThenSteps v-if="thenStepsShown" v-model="thenSteps" :group-by-keys="groupBy.keys" />
       <slot name="additional-rows"></slot>
     </tbody>
   </table>

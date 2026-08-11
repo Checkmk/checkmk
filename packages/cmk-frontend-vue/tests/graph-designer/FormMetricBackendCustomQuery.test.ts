@@ -5,6 +5,7 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
+import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 
 import type { ValidationMessages } from '@/form'
 
@@ -54,4 +55,30 @@ test('a preserve histograms line offers the groupings that pair with it', async 
     expect(screen.getByRole('option', { name: 'fraction below by' })).toBeVisible()
     expect(screen.getByRole('option', { name: 'fraction between by' })).toBeVisible()
   })
+})
+
+const SUM_BY_SERVICE_THEN_AVG_BY_REGION: Aggregator = {
+  stages: [
+    {
+      aggregate_by: [{ kind: 'resource', name: 'service.name' }],
+      aggregation_fn: { type: 'scalar', name: 'sum' }
+    },
+    {
+      aggregate_by: [{ kind: 'resource', name: 'cloud.region' }],
+      aggregation_fn: { type: 'scalar', name: 'avg' }
+    }
+  ]
+}
+
+test('a stored multi-stage aggregator renders the chained then step', async () => {
+  render(FormMetricBackendCustomQuery, {
+    props: {
+      consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 60 },
+      aggregator: SUM_BY_SERVICE_THEN_AVG_BY_REGION
+    }
+  })
+
+  const thenChip = await screen.findByRole('button', { name: /Edit then step/ })
+  expect(thenChip).toHaveTextContent('avg by')
+  expect(thenChip).toHaveTextContent('cloud.region')
 })

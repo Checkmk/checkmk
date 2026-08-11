@@ -132,3 +132,19 @@ test('selecting "no grouping" clears the sibling aggregator', async () => {
 
   await waitFor(() => expect(storedItem(store).aggregator).toBeUndefined())
 })
+
+test('adding a then step persists a second aggregator stage', async () => {
+  const store = renderForm({ ...newMetricBackendDraft('A'), aggregator: SUM_BY_SERVICE })
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Add then step' }))
+
+  await waitFor(() =>
+    expect(storedItem(store).aggregator).toEqual<Aggregator>({
+      stages: [
+        SUM_BY_SERVICE.stages[0]!,
+        // The fresh then step defaults to "avg by everything": an empty aggregate_by.
+        { aggregate_by: [], aggregation_fn: { type: 'scalar', name: 'avg' } }
+      ]
+    })
+  )
+})

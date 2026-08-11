@@ -90,6 +90,9 @@ struct LegacyCustomSql {
     tns_alias: Option<String>,
     header_name: Option<String>,
     header_sep: Option<char>,
+    /// `SQLS_ITEM_SID`: the SID the legacy plugin puts into the output item.
+    /// Not supported by the new plugin, only used to warn about it.
+    item_sid: Option<String>,
 }
 
 impl LegacyCustomSql {
@@ -256,6 +259,9 @@ fn parse_custom_sqls(legacy: &str, variables: &HashMap<String, String>) -> Vec<L
                 header_sep: section_var("SQLS_SECTION_SEP")
                     .or_else(|| variables.get("SQLS_SECTION_SEP"))
                     .and_then(|v| parse_header_sep(name, v)),
+                // no global fallback: the legacy plugin unsets SQLS_ITEM_SID
+                // before each section
+                item_sid: section_var("SQLS_ITEM_SID").cloned(),
             })
         })
         .collect()
@@ -490,6 +496,28 @@ fn warn_custom_sql_alias_sids(
         .collect()
 }
 
+/// Warn about the custom SQL sections that set `SQLS_ITEM_SID`.
+fn warn_custom_sql_item_sid(custom_sqls: &[LegacyCustomSql]) -> Vec<String> {
+    custom_sqls
+        .iter()
+        .filter(|custom| custom.header_name.is_none())
+        .filter_map(|custom| {
+            let item_sid = custom.item_sid.as_ref()?;
+            // the item is unchanged when the section already runs on exactly
+            // that instance
+            if custom.tns_alias.is_none() && custom.reference_sid().as_ref() == Some(item_sid) {
+                return None;
+            }
+            Some(format!(
+                "{}: SQLS_ITEM_SID '{item_sid}' is not supported and is not migrated; the item of \
+                 the oracle_sql section is built from the name of the instance the section runs \
+                 on, so the name of the service changes and it is rediscovered",
+                custom.name
+            ))
+        })
+        .collect()
+}
+
 /// Collect raw `SQLS_SIDS=` assignments from the legacy config text, keyed by
 /// the enclosing function name (None = top level).
 fn collect_raw_sqls_sids(legacy: &str) -> HashMap<Option<String>, String> {
@@ -580,6 +608,7 @@ pub fn convert(
         &custom_sqls,
         &known_aliases(&dbuser, &dbuser_extras),
     ));
+    warnings.extend(warn_custom_sql_item_sid(&custom_sqls));
     warnings.extend(custom_sql_warnings(&custom_sqls));
     for warning in warnings {
         let warning = format!("# WARNING: {warning}\n");
@@ -1349,6 +1378,7 @@ mod tests {
                 tns_alias: None,
                 header_name: None,
                 header_sep: None,
+                item_sid: None,
             }]
         );
     }
@@ -1372,6 +1402,7 @@ mod tests {
                 tns_alias: None,
                 header_name: None,
                 header_sep: None,
+                item_sid: None,
             }]
         );
     }
@@ -1732,6 +1763,36 @@ sec2 () {
         );
     }
 
+    #[cfg(not(windows))]
+    #[test]
+    fn test_convert_warns_on_custom_sql_item_sid() {
+        let legacy = "sec1 () {\n    SQLS_SIDS=\"REMOTE_INSTANCE_PRODPDB1\"\n    \
+                      SQLS_SQL=\"a.sql\"\n    SQLS_ITEM_SID=\"PRODPDB1\"\n}\n";
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            (
+                "REMOTE_INSTANCE_PRODPDB1".into(),
+                "user:pass::remotehost:1521::PRODCDB:11.2".into(),
+            ),
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            (
+                "SQLS.sec1.SQLS_SIDS".into(),
+                "REMOTE_INSTANCE_PRODPDB1".into(),
+            ),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+            ("SQLS.sec1.SQLS_ITEM_SID".into(), "PRODPDB1".into()),
+        ]);
+        let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            result.contains("# WARNING: sec1: SQLS_ITEM_SID 'PRODPDB1' is not supported"),
+            "got: {result}"
+        );
+        assert!(
+            !result.contains("item_sid"),
+            "there is no field to migrate it to, got: {result}"
+        );
+    }
+
     #[test]
     fn test_parse_custom_sqls_header_name() {
         let vars = HashMap::from([
@@ -1758,6 +1819,70 @@ sec2 () {
         let result = parse_custom_sqls("", &vars);
         assert_eq!(result[0].name, "my_item");
         assert_eq!(result[1].name, "sec2", "default is the section name");
+    }
+
+    #[test]
+    fn test_parse_custom_sqls_item_sid() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1 sec2".into()),
+            ("SQLS_SQL".into(), "a.sql".into()),
+            ("SQLS_ITEM_SID".into(), "GLOBAL".into()),
+            ("SQLS.sec1.SQLS_ITEM_SID".into(), "PRODPDB1".into()),
+        ]);
+        let result = parse_custom_sqls("", &vars);
+        assert_eq!(result[0].item_sid.as_deref(), Some("PRODPDB1"));
+        assert!(
+            result[1].item_sid.is_none(),
+            "SQLS_ITEM_SID has no global fallback"
+        );
+    }
+
+    #[test]
+    fn test_warn_custom_sql_item_sid() {
+        let mut custom = make_custom_sql("sec1", None, "a.sql", &["REMOTE_PROD"]);
+        custom.item_sid = Some("PRODPDB1".into());
+        assert_eq!(
+            warn_custom_sql_item_sid(&[custom]),
+            vec![
+                "sec1: SQLS_ITEM_SID 'PRODPDB1' is not supported and is not migrated; the item of \
+                 the oracle_sql section is built from the name of the instance the section runs \
+                 on, so the name of the service changes and it is rediscovered"
+            ]
+        );
+    }
+
+    #[test]
+    fn test_warn_custom_sql_item_sid_same_as_only_sid() {
+        let mut custom = make_custom_sql("sec1", None, "a.sql", &["PRODPDB1"]);
+        custom.item_sid = Some("PRODPDB1".into());
+        assert!(
+            warn_custom_sql_item_sid(&[custom]).is_empty(),
+            "item is unchanged when the section runs on that instance only"
+        );
+    }
+
+    #[test]
+    fn test_warn_custom_sql_item_sid_of_aliased_section() {
+        let mut custom = make_custom_sql("sec1", None, "a.sql", &["PRODPDB1"]);
+        custom.item_sid = Some("PRODPDB1".into());
+        custom.tns_alias = Some("PROD_ALIAS".into());
+        assert_eq!(
+            warn_custom_sql_item_sid(&[custom]).len(),
+            1,
+            "an aliased section may connect to any instance"
+        );
+    }
+
+    #[test]
+    fn test_warn_custom_sql_item_sid_ignores_unaffected_sections() {
+        let plain = make_custom_sql("plain", None, "a.sql", &["PRODPDB1"]);
+        let mut custom_section = make_custom_sql("custom_section", None, "a.sql", &["PRODPDB1"]);
+        custom_section.item_sid = Some("OTHER".into());
+        custom_section.header_name = Some("my_section".into());
+        assert!(
+            warn_custom_sql_item_sid(&[plain, custom_section]).is_empty(),
+            "no SQLS_ITEM_SID, or a section the legacy plugin emits no item for"
+        );
     }
 
     #[test]
@@ -1864,6 +1989,7 @@ sec3 () {
             tns_alias: None,
             header_name: None,
             header_sep: None,
+            item_sid: None,
         }
     }
 

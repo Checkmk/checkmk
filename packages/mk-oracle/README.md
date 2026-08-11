@@ -1100,6 +1100,40 @@ The alias then forms the entry alone and the dropped restriction is reported:
 In both cases, check that the alias resolves to the database the section was meant to
 query — the connection now depends on your `tnsnames.ora` alone.
 
+##### `SQLS_ITEM_SID`
+
+The legacy plugin builds the item of the `oracle_sql` output as
+`[[[<SQLS_ITEM_SID>|<SQLS_ITEM_NAME>]]]`, which lets the displayed SID differ from the
+internal name of the monitored instance. It is mainly used for remote instances, whose
+internal name is the `REMOTE_INSTANCE_<ID>` variable:
+
+```bash
+foo_views_chk1 () {
+    SQLS_SIDS="REMOTE_INSTANCE_PRODPDB1"
+    SQLS_SQL=foo_view_check1.sql
+    SQLS_ITEM_NAME="foo_views_kim1"
+    SQLS_ITEM_SID="PRODPDB1"
+}
+```
+
+**`mk-oracle` has no equivalent field**: the item is always built from the name of the
+instance the section runs on (`sid:`, or the discovered SID). `SQLS_ITEM_SID` is
+therefore not migrated, and the migration warns about every section where the item
+would change:
+
+```
+# WARNING: foo_views_chk1: SQLS_ITEM_SID 'PRODPDB1' is not supported and is not migrated; the item of the oracle_sql section is built from the name of the instance the section runs on, so the name of the service changes and it is rediscovered
+```
+
+The item is part of the Checkmk service name, so an affected service disappears and is
+rediscovered under the new name — together with the rules, downtimes and history bound
+to the old one. Compare the old and the new item before rediscovering, and rename the
+instance (`sid:`) if you need to keep the previous service name.
+
+No warning is emitted when the value cannot change anything: the section runs on that
+one SID anyway, or it uses a custom `SQLS_SECTION_NAME`, for which the legacy plugin
+emits no item at all.
+
 ### What Is Not Migrated
 
 The following variables are recognized but only preserved as comments in the output;
@@ -1109,6 +1143,7 @@ port them manually if you still need them:
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `SQLS_DBUSER`, `SQLS_DBPASSWORD`, `SQLS_DBSYSCONNECT` | Per-custom-SQL credentials; use per-instance `authentication:` overrides instead                                         |
 | `SQLS_PARAMETERS`                                     | SQL\*Plus parameter passing is not supported                                                                             |
+| `SQLS_ITEM_SID`                                       | The item always carries the name of the instance the section runs on (see [above](#sqls_item_sid))                       |
 | `EXCLUDE_<SID>="<section> ..."`                       | Per-SID exclusion of individual sections; only `EXCLUDE_<SID>="ALL"` is converted                                        |
 | `ORACLE_HOME`, `REMOTE_ORACLE_HOME`                   | The OCI runtime is located as described in [Options](#options) (`use_host_client`)                                       |
 | `ID_BY`                                               | Selects `SID=` vs `SERVICE_NAME=` in the legacy connect string; use the `sid:` / `service_name:` instance fields instead |

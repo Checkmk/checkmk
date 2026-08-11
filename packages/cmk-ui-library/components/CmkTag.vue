@@ -46,13 +46,15 @@ export interface CmkTagProps {
   color?: Colors
   variant?: Variants
   content: TranslatedString
+  /** Native tooltip, e.g. the full text when a consumer clips the tag to its column. */
+  title?: string
 }
 
 defineProps<CmkTagProps>()
 </script>
 
 <template>
-  <span class="cmk-tag" :class="propsCva({ size, color, variant })">
+  <span class="cmk-tag" :class="propsCva({ size, color, variant })" :title="title">
     {{ content }}
   </span>
 </template>

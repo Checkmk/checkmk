@@ -49,6 +49,12 @@ export const panelConfig = {
       { title: 'Weighted', name: 'weighted' }
     ] satisfies Options<Variants>[],
     initialState: 'outline' as const
+  },
+  title: {
+    type: 'string' as const,
+    title: 'Title',
+    initialState: '',
+    help: 'Native tooltip shown on hover, e.g. the full text when the tag is clipped.'
   }
 } satisfies PanelConfigFor<typeof CmkTag>
 </script>

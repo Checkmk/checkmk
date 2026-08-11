@@ -21,6 +21,7 @@ import UclCollapsibleCell from './cell/UclCollapsibleCell.vue'
 import UclColorPickerCell from './cell/UclColorPickerCell.vue'
 import UclDragHandleCell from './cell/UclDragHandleCell.vue'
 import UclDropdownCell from './cell/UclDropdownCell.vue'
+import UclLabelCell from './cell/UclLabelCell.vue'
 import UclModesCell from './cell/UclModesCell.vue'
 import UclNumberCell from './cell/UclNumberCell.vue'
 import UclPerfometerCell from './cell/UclPerfometerCell.vue'
@@ -39,6 +40,7 @@ export const pages: Array<Folder | Page> = [
     new Page('ColorPickerCell', UclColorPickerCell),
     new Page('DragHandleCell', UclDragHandleCell),
     new Page('DropdownCell', UclDropdownCell),
+    new Page('LabelCell', UclLabelCell),
     new Page('ModesCell', UclModesCell),
     new Page('NumberCell', UclNumberCell),
     new Page('PerfometerCell', UclPerfometerCell),

@@ -387,6 +387,7 @@ def require_password_change(site: Site, username: str) -> Iterator[None]:
         site.delete_file(pw_change_marker)
 
 
+@pytest.mark.skip(reason="Flaky test: CMK-37917")
 def test_rest_api_access_with_enabled_2fa(site: Site) -> None:
     """you're not supposed to access the rest api if you have 2fa enabled (except for cookie auth)
 

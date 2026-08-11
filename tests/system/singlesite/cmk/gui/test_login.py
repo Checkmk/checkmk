@@ -387,7 +387,7 @@ def require_password_change(site: Site, username: str) -> Iterator[None]:
         site.delete_file(pw_change_marker)
 
 
-@pytest.mark.skip(reason="Flaky test: CMK-37917")
+@pytest.mark.skip_if_edition("cloud")
 def test_rest_api_access_with_enabled_2fa(site: Site) -> None:
     """you're not supposed to access the rest api if you have 2fa enabled (except for cookie auth)
 
@@ -458,6 +458,7 @@ def test_invalid_remote_site_login(site: Site) -> None:
     assert "check_mk/login.py" in response.url
 
 
+@pytest.mark.skip_if_edition("cloud")
 def test_rest_api_requires_password_change(site: Site) -> None:
     """test that rest api access is blocked when user is required to change password"""
 

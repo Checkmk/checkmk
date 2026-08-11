@@ -77,7 +77,9 @@ FROM v$database d
                         t.contents
               ) dbf ON 1 = 1
          JOIN (SELECT vc.con_id,
-                      DECODE(vc.con_id, 1, d.name, d.name || '.' || vc.name) db_name
+                      -- Non-CDB: no container name to qualify the item with.
+                      DECODE(d.cdb, 'NO', d.name,
+                             DECODE(vc.con_id, 1, d.name, d.name || '.' || vc.name)) db_name
                FROM v$containers vc
                         JOIN v$database d ON 1 = 1
                WHERE vc.con_id <> 2 -- Exclude PDB$SEED
@@ -141,7 +143,8 @@ FROM v$database d
                         t.contents
               ) dbf ON 1 = 1
          JOIN (SELECT vc.con_id,
-                      d.name || '.' || vc.name db_name
+                      -- Non-CDB: no container name to qualify the item with.
+                      DECODE(d.cdb, 'NO', d.name, d.name || '.' || vc.name) db_name
                FROM v$containers vc
                         JOIN v$database d ON 1 = 1
                WHERE vc.con_id <> 2 -- Exclude PDB$SEED

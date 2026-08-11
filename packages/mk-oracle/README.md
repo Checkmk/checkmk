@@ -2,6 +2,7 @@
 
 ## Table of Contents
 
+- [Supported Oracle Releases](#supported-oracle-releases)
 - [Oracle Instant Client Download and Installation](#oracle-instant-client-download-and-installation)
   - [Linux](#linux)
   - [Windows](#windows)
@@ -28,6 +29,16 @@
   - [What Is Migrated](#what-is-migrated)
   - [What Is Not Migrated](#what-is-not-migrated)
   - [Adapting Custom SQL Files](#adapting-custom-sql-files)
+
+## Supported Oracle Releases
+
+The minimum supported release is **Oracle 12.1.0.2**.
+
+Older releases are not supported and are not accommodated. The queries name
+`V$DATABASE.CDB` and `V$INSTANCE.CON_ID`, which arrived with 12.1, and
+`V$PDBS.RECOVERY_STATUS`, which arrived with 12.1.0.2. An older instance
+therefore fails with `ORA-00904` while its version is being established, and
+reports that error in the `oracle_instance` section instead of being monitored.
 
 ## Oracle Instant Client Download and Installation
 
@@ -577,7 +588,7 @@ Resolution rules:
 
 - **Absolute vs. relative.** Absolute paths are used as-is. Relative paths are searched first in **`MK_LIBDIR/plugins/packages/mk-oracle/orasql/`** and then in **`MK_CONFDIR/orasql/`**. When the same relative path resolves in both, the **`MK_LIBDIR/plugins/packages/mk-oracle/orasql/`** copy wins.
 - **File vs. directory.** A `path:` may point at a file (with or without the `.sql` extension) or at a directory. In the directory case the file name is derived from the **item name** for `custom_metrics`, or from the **section name** for predefined `sections`.
-- **Version variants.** Alongside the base `<stem>.sql`, you may provide Oracle-version-specific variants named `<stem>@<min_version>.sql` (e.g. `sessions@12010000.sql`). The plugin picks the file with the highest `min_version` that is still less than or equal to the connected instance's version. The version is the 8-digit numeric form `MMmmRRSSSS` (major / minor / release / patch), e.g. `12.1.0.2` → `12010002`.
+- **Version variants.** Alongside the base `<stem>.sql`, you may provide Oracle-version-specific variants named `<stem>@<min_version>.sql` (e.g. `sessions@19000000.sql`). The plugin picks the file with the highest `min_version` that is still less than or equal to the connected instance's version. The version is the 8-digit numeric form `MMmmRRSSSS` (major / minor / release / patch), e.g. `12.1.0.2` → `12010002`.
 - **Fallback chain.** Resolution order for a section is: `path:` → inline `sql:` → bundled (for predefined sections only). If `path:` is set but no file matches the instance version and no inline `sql:` is provided, the section yields no output.
 
 Example layout on Linux:
@@ -585,8 +596,8 @@ Example layout on Linux:
 ```
 $MK_CONFDIR/orasql/
 ├── product_price.sql
-├── product_price@12010000.sql       # picked for Oracle >= 12.1.0.0
-└── product_price@19000000.sql       # picked for Oracle >= 19.0.0.0
+├── product_price@19000000.sql       # picked for Oracle >= 19.0.0.0
+└── product_price@23000000.sql       # picked for Oracle >= 23.0.0.0
 
 $MK_LIBDIR/plugins/packages/mk-oracle/orasql/
 └── product_price.sql                    # overrides the MK_CONFDIR copy

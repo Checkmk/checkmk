@@ -18,7 +18,9 @@ Before you start, make sure you have the following installed:
 This `docker-compose.yml` file defines several Oracle database services. You should only run **one at a time** since they are configured to use the same host port (`1521`) by default.
 
 - `oracle-free` (Version 23): Runs the **Oracle Database Free** edition.
-- `oracle-xe` (Version 11): Runs the **Oracle Database Express Edition (XE)**.
+- `oracle-xe` (Version 11): Runs the **Oracle Database Express Edition (XE)**. Below the
+  supported minimum of 12.1.0.2, so the plug-in only fails against it; useful for
+  checking that it fails cleanly, not for monitoring.
 - `oracle-12c` (Version 12): Runs **Oracle Database 12c**.
 - `oracle-19c` (Version 19): Runs **Oracle Database 19c**.
 
@@ -37,7 +39,7 @@ You can easily start any of the supported database versions using the `run-db.sh
 ### Options
 
 - `-v, --version`: **Required**. The Oracle version to run.
-  - Available versions: `23`, `11`, `12`, `19`.
+  - Available versions: `23`, `19`, `12`, and `11` (below the supported minimum).
 - `-P, --port`: **Optional**. The host port to bind the database listener to.
   - Default: `1521`.
 

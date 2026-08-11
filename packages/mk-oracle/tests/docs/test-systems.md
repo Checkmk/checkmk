@@ -114,8 +114,8 @@ flowchart LR
   and the legacy-vs-new comparison harness.
 - **Local developer databases**:
   [`../files/docker/run-db.sh`](../files/docker/run-db.sh) starts a local
-  Oracle container (versions 23 / 19 / 12 / 11) for ad-hoc development runs —
-  not used by CI.
+  Oracle container (versions 23 / 19 / 12, and 11 which is below the supported
+  minimum of 12.1.0.2) for ad-hoc development runs — not used by CI.
 - **Perf tier** ([`../perf/`](../perf)): `docker-compose.yml` with
   `gvenzl/oracle-free:23.26.0` for the semi-automated performance comparison
   (Rust vs legacy plugin) — run locally, no CI job.

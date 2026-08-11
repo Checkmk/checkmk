@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Callable, Mapping, Sequence, Sized
+from collections.abc import Sized
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Self
@@ -36,7 +36,6 @@ class SourceContext:
     omd_root: Path
     metrics_association: str | None
     check_mk_check_interval: float
-    telemetry_custom_service: Callable[[HostName], Sequence[Mapping[str, object]]]
 
 
 class OptionalSource[TRawData: Sized](Source[TRawData], abc.ABC):

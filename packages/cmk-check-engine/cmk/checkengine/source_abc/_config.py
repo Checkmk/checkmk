@@ -44,7 +44,6 @@ class SourceConfig:
         program_commandline: Callable[[HostName, _AddressFamily, HostAddress | None, str], str],
         snmp_fetcher_config: SNMPFetcherConfig,
         tcp_fetcher_config: TCPFetcherConfig,
-        telemetry_custom_service: Callable[[HostName], Sequence[Mapping[str, object]]],
         is_cmc: bool,
         uuid_lookup_dir: Path,
     ) -> None:
@@ -57,7 +56,6 @@ class SourceConfig:
         self._management_credentials: Final = management_credentials
         self.snmp_fetcher_config: Final = snmp_fetcher_config
         self.tcp_fetcher_config: Final = tcp_fetcher_config
-        self.telemetry_custom_service: Final = telemetry_custom_service
         self.is_cmc: Final = is_cmc
         self.uuid_lookup_dir: Final = uuid_lookup_dir
 

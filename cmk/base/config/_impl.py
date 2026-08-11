@@ -38,10 +38,7 @@ from cmk.base import default_config
 from cmk.base.configlib.agent import make_only_from_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.exit_code import make_exit_code_spec
-from cmk.base.configlib.fetchers import (
-    make_tcp_fetcher_config,
-    make_telemetry_custom_service_config,
-)
+from cmk.base.configlib.fetchers import make_tcp_fetcher_config
 from cmk.base.configlib.inventory import make_inventory_config
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import BaseConfig, CustomCheck
@@ -1450,9 +1447,6 @@ class ConfigCache:
             ),
             snmp_fetcher_config=snmp_fetcher_config,
             tcp_fetcher_config=make_tcp_fetcher_config(
-                self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
-            ),
-            telemetry_custom_service=make_telemetry_custom_service_config(
                 self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
             ),
             is_cmc=self._loaded_config.monitoring_core == "cmc",

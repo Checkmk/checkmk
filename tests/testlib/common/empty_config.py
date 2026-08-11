@@ -39,7 +39,6 @@ EMPTY_CONFIG = BaseConfig(
     piggyback_max_cachefile_age=3600,
     agent_encryption=(),
     agent_exclude_sections=(),
-    telemetry_custom_service=(),
     cmc_real_time_checks=None,
     snmp_check_interval=[],
     agent_bakery_logging=None,

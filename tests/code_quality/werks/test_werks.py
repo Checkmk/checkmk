@@ -118,9 +118,6 @@ def fixture_werks_loader_empty(tmp_path: Path) -> WerksLoader:
 def fixture_all_werks_raw() -> Sequence[WerkV3]:
     """
     provide the werks as parsed from the `.werks` directory
-
-    Parsing the ~15k werk files takes ~16s, so this is session scoped. The consumers only read
-    from the returned werks.
     """
     return cmk.werks.tool.utils.load_raw_files(bazel_repo_root() / ".werks")
 
@@ -333,30 +330,24 @@ def _has_no_impact(description: str) -> bool:
 
 def _assert_git_tags_available() -> None:
     # By the time writing, we had more than 700 tags in the git repo
-    assert (
-        len(
-            subprocess.check_output(
-                ["git", "tag", "--list"],
-            )
-            .decode()
-            .split("\n")
-        )
-        > 700
-    ), (
+    assert len(_existing_git_tags()) > 700, (
         "The amount of found git tags looks suspicous low. Please check if there is an issue with your checkout"
     )
 
 
 @lru_cache
-def _git_tag_exists(tag: str) -> bool:
-    return (
-        subprocess.Popen(
-            ["git", "rev-list", tag],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.STDOUT,
-        ).wait()
-        == 0
+def _existing_git_tags() -> frozenset[str]:
+    return frozenset(
+        subprocess.check_output(
+            ["git", "tag", "--list"],
+        )
+        .decode()
+        .split()
     )
+
+
+def _git_tag_exists(tag: str) -> bool:
+    return tag in _existing_git_tags()
 
 
 def _werk_exists_in_git_tag(tag: str, werk_id: int) -> bool:

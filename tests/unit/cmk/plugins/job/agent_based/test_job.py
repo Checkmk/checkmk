@@ -505,10 +505,12 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                     state=State.CRIT,
                     summary=(
                         "Job age (currently running): "
-                        "1 year 63 days (warn/crit at 1 second/2 seconds)"
+                        "1 year 294 days (warn/crit at 1 second/2 seconds)"
                     ),
                 ),
-                Metric("job_age", 36999059.0, levels=(1.0, 2.0), boundaries=(0.0, None)),
+                # The age of the job that has been running the longest (started
+                # 2018-09-18), not of the one that started last.
+                Metric("job_age", 56999119.0, levels=(1.0, 2.0), boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Avg. memory: 1000 B"),
                 Metric("avg_mem_bytes", 1000.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Invol. context switches: 12"),

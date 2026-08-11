@@ -241,7 +241,6 @@ def _process_job_stats(
         yield from _check_job_levels(job, "real_time", notice_only=False)
 
     currently_running = " (currently running)" if "running_start_time" in job else ""
-    # use start time of oldest running job, if any.
     if currently_running:
         start_times = job["running_start_time"]
         count = len(start_times)
@@ -260,7 +259,8 @@ def _process_job_stats(
             notice="Latest job started at %s" % render.datetime(job["start_time"]),
         )
 
-    used_start_time = max(job["running_start_time"]) if currently_running else job["start_time"]
+    # Werk 7477: the age levels apply to the job that has been running the longest.
+    used_start_time = min(job["running_start_time"]) if currently_running else job["start_time"]
     if (age := now - used_start_time) >= 0:
         yield from check_levels(
             age,

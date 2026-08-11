@@ -10,10 +10,10 @@ These are intentionally only protocols as they are meant to only signify what so
 they will return. This allows us to pass stubs when testing our applications.
 """
 
-from collections.abc import Sequence
+from collections.abc import Sequence, Set
 from typing import Protocol
 
-from ._models import Host, HostFilter, HostOverview, HostSort
+from ._models import Host, HostFilter, HostOptionalField, HostOverview, HostSort
 
 
 class HostRepository(Protocol):
@@ -24,8 +24,9 @@ class HostRepository(Protocol):
         query: str,
         sorters: Sequence[HostSort],
         filters: HostFilter,
+        fields: Set[HostOptionalField],
     ) -> Sequence[Host]:
-        """Fetch hosts based on filter criteria."""
+        """Fetch hosts, reading only the columns `fields` and `sorters` need."""
         ...
 
     def get_overview(self, *, hostname: str, site_id: str) -> HostOverview:

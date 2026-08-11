@@ -11,7 +11,7 @@ when instantiated.
 """
 
 import datetime as dt
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, Sequence, Set
 from pathlib import PurePosixPath
 
 from cmk.ccc.hostaddress import HostName
@@ -24,12 +24,14 @@ from cmk.livestatus_client import (
 from cmk.livestatus_client.expressions import NothingExpression, Or, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts
+from cmk.livestatus_client.types import Column
 
 from ._exceptions import HostNotFoundError
 from ._models import (
     Host,
     HostFilter,
     HostLabelValue,
+    HostOptionalField,
     HostOverview,
     HostSort,
     HostSortColumn,
@@ -51,6 +53,7 @@ class LiveStatusHostRepository:
         query: str,
         sorters: Sequence[HostSort],
         filters: HostFilter,
+        fields: Set[HostOptionalField],
     ) -> Sequence[Host]:
         query_ = _sanitize_query(query)
         extra_headers = [
@@ -59,23 +62,19 @@ class LiveStatusHostRepository:
         ]
         if limit is not None:
             extra_headers.append(f"Limit: {limit}")
+        wanted = _columns_to_read(fields, sorters)
         q = Query(
             [
                 Hosts.name,
-                Hosts.alias,
-                Hosts.address,
                 Hosts.state,
-                Hosts.num_services,
-                Hosts.num_services_ok,
-                Hosts.num_services_warn,
-                Hosts.num_services_crit,
-                Hosts.num_services_unknown,
-                Hosts.num_services_pending,
                 Hosts.acknowledged,
                 Hosts.scheduled_downtime_depth,
-                Hosts.last_check,
-                Hosts.last_state_change,
-                Hosts.filename,
+                *(
+                    column
+                    for field, columns in _OPTIONAL_COLUMNS.items()
+                    if field in wanted
+                    for column in columns
+                ),
             ],
             _build_query_filter(query_),
             extra_headers=extra_headers,
@@ -86,25 +85,20 @@ class LiveStatusHostRepository:
                 [
                     Host(
                         name=row["name"],
-                        alias=row["alias"],
-                        address=row["address"],
+                        alias=row.get("alias"),
+                        address=row.get("address"),
                         state=HostState(row["state"]),
                         site_id=row["site"],
-                        service_counts=ServiceCounts(
-                            total=row["num_services"],
-                            ok=row["num_services_ok"],
-                            warn=row["num_services_warn"],
-                            crit=row["num_services_crit"],
-                            unknown=row["num_services_unknown"],
-                            pending=row["num_services_pending"],
-                        ),
+                        service_counts=_service_counts(row),
                         acknowledged=bool(row["acknowledged"]),
                         in_downtime=row["scheduled_downtime_depth"] > 0,
-                        last_check=dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC),
-                        last_state_change=dt.datetime.fromtimestamp(
-                            row["last_state_change"], tz=dt.UTC
+                        last_check=_timestamp(row.get("last_check")),
+                        last_state_change=_timestamp(row.get("last_state_change")),
+                        folder=(
+                            None
+                            if (filename := row.get("filename")) is None
+                            else _wato_folder_from_filename(filename)
                         ),
-                        folder=_wato_folder_from_filename(row["filename"]),
                     )
                     for row in q.iterate(conn)
                 ],
@@ -245,6 +239,64 @@ _LIVESTATUS_COLUMN_OVERRIDES: Mapping[HostSortColumn, str] = {
 # it must never reach ``_LIVESTATUS_COLUMN_OVERRIDES``/the raw header below. The correct sort order
 # is still fully applied afterwards in Python by ``host_sorter()``.
 _VIRTUAL_SORT_COLUMNS = frozenset({HostSortColumn.SITE_ID})
+
+
+# Everything beyond the columns every host row needs is read only when a caller asks for it,
+# either through `fields` or by sorting on it - the list is sorted in Python, so a sort column
+# has to be read even when the response omits it.
+_OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
+    HostOptionalField.ALIAS: (Hosts.alias,),
+    HostOptionalField.ADDRESS: (Hosts.address,),
+    HostOptionalField.NUM_SERVICES: (Hosts.num_services,),
+    HostOptionalField.NUM_SERVICES_OK: (Hosts.num_services_ok,),
+    HostOptionalField.NUM_SERVICES_WARN: (Hosts.num_services_warn,),
+    HostOptionalField.NUM_SERVICES_CRIT: (Hosts.num_services_crit,),
+    HostOptionalField.NUM_SERVICES_UNKNOWN: (Hosts.num_services_unknown,),
+    HostOptionalField.NUM_SERVICES_PENDING: (Hosts.num_services_pending,),
+    HostOptionalField.FOLDER: (Hosts.filename,),
+    HostOptionalField.LAST_CHECK: (Hosts.last_check,),
+    HostOptionalField.LAST_STATE_CHANGE: (Hosts.last_state_change,),
+}
+
+_SORT_COLUMN_FIELDS: Mapping[HostSortColumn, HostOptionalField] = {
+    HostSortColumn.ALIAS: HostOptionalField.ALIAS,
+    HostSortColumn.ADDRESS: HostOptionalField.ADDRESS,
+    HostSortColumn.NUM_SERVICES: HostOptionalField.NUM_SERVICES,
+    HostSortColumn.NUM_SERVICES_OK: HostOptionalField.NUM_SERVICES_OK,
+    HostSortColumn.NUM_SERVICES_WARN: HostOptionalField.NUM_SERVICES_WARN,
+    HostSortColumn.NUM_SERVICES_CRIT: HostOptionalField.NUM_SERVICES_CRIT,
+    HostSortColumn.NUM_SERVICES_UNKNOWN: HostOptionalField.NUM_SERVICES_UNKNOWN,
+    HostSortColumn.NUM_SERVICES_PENDING: HostOptionalField.NUM_SERVICES_PENDING,
+    HostSortColumn.FOLDER: HostOptionalField.FOLDER,
+    HostSortColumn.LAST_CHECK: HostOptionalField.LAST_CHECK,
+    HostSortColumn.LAST_STATE_CHANGE: HostOptionalField.LAST_STATE_CHANGE,
+}
+
+
+def _columns_to_read(
+    fields: Set[HostOptionalField], sorters: Sequence[HostSort]
+) -> Set[HostOptionalField]:
+    return set(fields) | {
+        field for sorter in sorters if (field := _SORT_COLUMN_FIELDS.get(sorter.column)) is not None
+    }
+
+
+def _timestamp(value: float | None) -> dt.datetime | None:
+    return None if value is None else dt.datetime.fromtimestamp(value, tz=dt.UTC)
+
+
+def _service_counts(row: Mapping[str, object]) -> ServiceCounts | None:
+    """The counts are read as a block, so one missing column means none were asked for."""
+    if "num_services" not in row:
+        return None
+    return ServiceCounts(
+        total=int(row["num_services"]),  # type: ignore[call-overload]
+        ok=int(row["num_services_ok"]),  # type: ignore[call-overload]
+        warn=int(row["num_services_warn"]),  # type: ignore[call-overload]
+        crit=int(row["num_services_crit"]),  # type: ignore[call-overload]
+        unknown=int(row["num_services_unknown"]),  # type: ignore[call-overload]
+        pending=int(row["num_services_pending"]),  # type: ignore[call-overload]
+    )
 
 
 def _build_primary_sort(sorters: Sequence[HostSort]) -> str:

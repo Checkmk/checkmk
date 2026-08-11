@@ -3,21 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Sequence, Set
 
 from polyfactory.factories import DataclassFactory
 
 from cmk.gui.monitor.hosts._exceptions import HostNotFoundError
-from cmk.gui.monitor.hosts._models import Host, HostFilter, HostOverview, HostSort
+from cmk.gui.monitor.hosts._models import (
+    Host,
+    HostFilter,
+    HostOptionalField,
+    HostOverview,
+    HostSort,
+)
 from cmk.gui.monitor.hosts._repositories import HostRepository
 
 
 class HostFactory(DataclassFactory[Host]):
     __check_model__ = False
+    # A host built here stands for one whose columns were all read, so the optional-when-unread
+    # fields always carry a value.
+    __allow_none_optionals__ = False
 
 
 class HostOverviewFactory(DataclassFactory[HostOverview]):
     __check_model__ = False
+    __allow_none_optionals__ = False
 
 
 def get_fake_host_repository(*, n_hosts: int) -> HostRepository:
@@ -36,6 +46,7 @@ def get_fake_host_repository(*, n_hosts: int) -> HostRepository:
             query: str,
             sorters: Sequence[HostSort],
             filters: HostFilter,
+            fields: Set[HostOptionalField] = frozenset(),
         ) -> Sequence[Host]:
             return self._hosts[:limit]
 

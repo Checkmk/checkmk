@@ -538,7 +538,7 @@ class TestMonitorHostsFields:
         mock_livestatus.expect_query(
             [
                 "GET hosts",
-                f"Columns: {_HOST_TABLE_COLUMNS}",
+                f"Columns: {_host_columns(_NON_DEFAULT_FIELD)}",
                 "OrderBy: name asc natural",
                 f"Limit: {_LIMIT}",
             ]
@@ -562,18 +562,13 @@ class TestMonitorHostsFields:
         mock_livestatus.expect_query(
             [
                 "GET hosts",
-                f"Columns: {_HOST_TABLE_COLUMNS}",
+                f"Columns: {_host_columns(*_OPTIONAL_FIELDS_UNDER_TEST)}",
                 "OrderBy: name asc natural",
                 f"Limit: {_LIMIT}",
             ]
         )
 
-        optional_fields = [
-            "alias",
-            "folder",
-            "last_check",
-            "last_state_change",
-        ]
+        optional_fields = list(_OPTIONAL_FIELDS_UNDER_TEST)
 
         with mock_livestatus(expect_status_query=True):
             resp = clients.MonitorHosts.list_all(limit=_LIMIT, fields=optional_fields)
@@ -581,6 +576,30 @@ class TestMonitorHostsFields:
         host = next(h for h in resp.json["hosts"] if h["name"] == "heute")
 
         assert all(field in host for field in optional_fields)
+
+    def test_sort_column_is_read_even_when_the_response_omits_it(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        """Sorting happens in Python, so a sort column has to be read even if no field wants it."""
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_host_columns(*_DEFAULT_FIELDS, _NON_DEFAULT_FIELD)}",
+                "OrderBy: alias asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, sort=[f"{_NON_DEFAULT_FIELD}:asc"])
+
+        by_alias = sorted(_HOSTS, key=lambda host: str(host["alias"]).lower())
+        assert [host["name"] for host in resp.json["hosts"]] == [host["name"] for host in by_alias]
+        assert _NON_DEFAULT_FIELD not in resp.json["hosts"][0]
 
 
 class TestMonitorHostOverviewAuth:
@@ -905,6 +924,7 @@ def _site_configs(site_ids: list[SiteId]) -> dict[SiteId, SiteConfiguration]:
 
 _LIMIT = 1000
 _NON_DEFAULT_FIELD = "alias"
+_OPTIONAL_FIELDS_UNDER_TEST = ("alias", "folder", "last_check", "last_state_change")
 _HOSTS = [
     {
         "name": "heute",
@@ -959,5 +979,43 @@ _HOSTS = [
         "filename": "/omd/sites/heute/etc/nagios/conf.d/hosts.mk",
     },
 ]
-_HOST_TABLE_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth last_check last_state_change filename"
+# Columns every host row needs, followed by the ones a request has to ask for. Both lists are in
+# the order the query names them, so the expectations below read like the real `Columns:` header.
+_MANDATORY_COLUMNS = ("name", "state", "acknowledged", "scheduled_downtime_depth")
+_OPTIONAL_COLUMNS = {
+    "alias": "alias",
+    "address": "address",
+    "num_services": "num_services",
+    "num_services_ok": "num_services_ok",
+    "num_services_warn": "num_services_warn",
+    "num_services_crit": "num_services_crit",
+    "num_services_unknown": "num_services_unknown",
+    "num_services_pending": "num_services_pending",
+    "folder": "filename",
+    "last_check": "last_check",
+    "last_state_change": "last_state_change",
+}
+_DEFAULT_FIELDS = (
+    "address",
+    "num_services",
+    "num_services_ok",
+    "num_services_warn",
+    "num_services_crit",
+    "num_services_unknown",
+    "num_services_pending",
+)
+
+
+def _host_columns(*fields: str) -> str:
+    """The `Columns:` a request asking for `fields` reads (defaults when none are named)."""
+    wanted = set(fields) if fields else set(_DEFAULT_FIELDS)
+    return " ".join(
+        [
+            *_MANDATORY_COLUMNS,
+            *(column for field, column in _OPTIONAL_COLUMNS.items() if field in wanted),
+        ]
+    )
+
+
+_HOST_TABLE_COLUMNS = _host_columns()
 _HOST_OVERVIEW_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth last_check last_state_change contact_groups tags labels label_sources custom_variables filename"

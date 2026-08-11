@@ -6,8 +6,18 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.gui.monitor.hosts._impl import _build_primary_sort, _wato_folder_from_filename
-from cmk.gui.monitor.hosts._models import HostSort, HostSortColumn, HostSortDirection
+from cmk.gui.monitor.hosts._impl import (
+    _build_primary_sort,
+    _OPTIONAL_COLUMNS,
+    _SORT_COLUMN_FIELDS,
+    _wato_folder_from_filename,
+)
+from cmk.gui.monitor.hosts._models import (
+    HostOptionalField,
+    HostSort,
+    HostSortColumn,
+    HostSortDirection,
+)
 
 
 @pytest.mark.parametrize(
@@ -73,3 +83,16 @@ def test_wato_folder_from_filename(filename: str, expected: str) -> None:
 )
 def test_build_primary_sort(sorters: Sequence[HostSort], expected: str) -> None:
     assert _build_primary_sort(sorters) == expected
+
+
+def test_every_optional_field_names_the_columns_it_needs() -> None:
+    """A new HostOptionalField must say which livestatus columns it reads, or it reads none."""
+    assert set(_OPTIONAL_COLUMNS) == set(HostOptionalField)
+
+
+def test_every_sort_column_maps_to_a_field_or_is_always_read() -> None:
+    """Sorting happens in Python, so a sort column must either be mandatory or ask for its field."""
+    # `site` is synthesized by the multisite connection rather than queried, so sorting on it needs
+    # no column of its own - same as the two the query always reads.
+    always_read = {HostSortColumn.NAME, HostSortColumn.STATE, HostSortColumn.SITE_ID}
+    assert set(_SORT_COLUMN_FIELDS) | always_read == set(HostSortColumn)

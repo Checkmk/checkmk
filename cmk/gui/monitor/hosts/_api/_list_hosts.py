@@ -141,35 +141,38 @@ class HostEntry:
 
     @classmethod
     def from_domain(cls, host: Host, fields: Set[HostOptionalField]) -> Self:
+        def included[T](field: HostOptionalField, value: T | None) -> T | ApiOmitted:
+            """Return the value only if it was asked for and therefore actually read."""
+            return value if field in fields and value is not None else ApiOmitted()
+
+        counts = host.service_counts
         return cls(
             name=host.name,
             state=host.state_label,
             site_id=host.site_id,
-            address=host.address if HostOptionalField.ADDRESS in fields else ApiOmitted(),
-            alias=host.alias if HostOptionalField.ALIAS in fields else ApiOmitted(),
-            num_services=host.service_counts.total
-            if HostOptionalField.NUM_SERVICES in fields
-            else ApiOmitted(),
-            num_services_ok=host.service_counts.ok
-            if HostOptionalField.NUM_SERVICES_OK in fields
-            else ApiOmitted(),
-            num_services_warn=host.service_counts.warn
-            if HostOptionalField.NUM_SERVICES_WARN in fields
-            else ApiOmitted(),
-            num_services_crit=host.service_counts.crit
-            if HostOptionalField.NUM_SERVICES_CRIT in fields
-            else ApiOmitted(),
-            num_services_unknown=host.service_counts.unknown
-            if HostOptionalField.NUM_SERVICES_UNKNOWN in fields
-            else ApiOmitted(),
-            num_services_pending=host.service_counts.pending
-            if HostOptionalField.NUM_SERVICES_PENDING in fields
-            else ApiOmitted(),
-            folder=host.folder if HostOptionalField.FOLDER in fields else ApiOmitted(),
-            last_check=host.last_check if HostOptionalField.LAST_CHECK in fields else ApiOmitted(),
-            last_state_change=host.last_state_change
-            if HostOptionalField.LAST_STATE_CHANGE in fields
-            else ApiOmitted(),
+            address=included(HostOptionalField.ADDRESS, host.address),
+            alias=included(HostOptionalField.ALIAS, host.alias),
+            num_services=included(
+                HostOptionalField.NUM_SERVICES, None if counts is None else counts.total
+            ),
+            num_services_ok=included(
+                HostOptionalField.NUM_SERVICES_OK, None if counts is None else counts.ok
+            ),
+            num_services_warn=included(
+                HostOptionalField.NUM_SERVICES_WARN, None if counts is None else counts.warn
+            ),
+            num_services_crit=included(
+                HostOptionalField.NUM_SERVICES_CRIT, None if counts is None else counts.crit
+            ),
+            num_services_unknown=included(
+                HostOptionalField.NUM_SERVICES_UNKNOWN, None if counts is None else counts.unknown
+            ),
+            num_services_pending=included(
+                HostOptionalField.NUM_SERVICES_PENDING, None if counts is None else counts.pending
+            ),
+            folder=included(HostOptionalField.FOLDER, host.folder),
+            last_check=included(HostOptionalField.LAST_CHECK, host.last_check),
+            last_state_change=included(HostOptionalField.LAST_STATE_CHANGE, host.last_state_change),
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
         )
@@ -325,6 +328,7 @@ def _handle_list_hosts(
         query=query,
         sorters=sorters,
         filters=filters,
+        fields=fields,
     )
     # `limit` reaches Livestatus as a per-site cap (queried in parallel across sites, then merged
     # and sorted here), so a multi-site fetch can come back with up to `limit * len(sites)` rows.

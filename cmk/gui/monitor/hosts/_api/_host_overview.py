@@ -95,19 +95,25 @@ class HostOverviewResponse:
 
     @classmethod
     def from_domain(cls, host: HostOverview, *, site_alias: str) -> Self:
+        def read[T](value: T | None, name: str) -> T:
+            """The overview reads every column, so a missing one is a bug, not an omission."""
+            if value is None:
+                raise ValueError(f"host overview is missing {name!r}")
+            return value
+
         return cls(
             name=host.name,
             state=host.state_label,
-            address=host.address,
-            alias=host.alias,
+            address=read(host.address, "address"),
+            alias=read(host.alias, "alias"),
             site_id=host.site_id,
             site_alias=site_alias,
-            service_counts=host.service_counts,
+            service_counts=read(host.service_counts, "service_counts"),
             modes=build_host_modes(host),
-            last_check=host.last_check,
-            last_state_change=host.last_state_change,
+            last_check=read(host.last_check, "last_check"),
+            last_state_change=read(host.last_state_change, "last_state_change"),
             customer=host.customer,
-            folder=host.folder,
+            folder=read(host.folder, "folder"),
             contact_groups=host.contact_groups,
             tags=host.tags,
             labels=host.labels,

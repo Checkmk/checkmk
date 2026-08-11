@@ -64,7 +64,7 @@ def test_multi_column_sorting() -> None:
     ]
 
     value = [
-        (host.address, host.service_counts.total)
+        (host.address, None if host.service_counts is None else host.service_counts.total)
         for host in sorted(hosts, key=host_sorter(sorters))
     ]
     expected = [

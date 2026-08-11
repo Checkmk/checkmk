@@ -39,17 +39,23 @@ class ServiceCounts:
 
 @dataclasses.dataclass(frozen=True)
 class Host:
+    """A host row.
+
+    Every field that a caller has to ask for is `None` when it was not read, which is what
+    tells "the host has no alias" apart from "nobody asked for the alias".
+    """
+
     name: str
     state: HostState
-    address: str
-    alias: str
+    address: str | None
+    alias: str | None
     site_id: str
-    service_counts: ServiceCounts
+    service_counts: ServiceCounts | None
     acknowledged: bool
     in_downtime: bool
-    folder: str
-    last_check: dt.datetime
-    last_state_change: dt.datetime
+    folder: str | None
+    last_check: dt.datetime | None
+    last_state_change: dt.datetime | None
 
     @property
     def state_label(self) -> HostStateLabel:

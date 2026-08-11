@@ -655,11 +655,11 @@ http_archive(
 http_archive(
     name = "python",
     build_file = "//omd/packages/Python:BUILD.Python.bazel",
-    integrity = "sha256-Y55DJDxiCjCPloIT354A8vj2IzL3rbqnp+65eDBXxpA=",
-    strip_prefix = "Python-3.13.14",
+    integrity = "sha256-O0jayPtZ9i6qZ6yDwesSvaG3oIQG3ShuJSwRpmvif4E=",
+    strip_prefix = "Python-3.14.7",
     urls = [
-        "https://www.python.org/ftp/python/3.13.14/Python-3.13.14.tar.xz",
-        UPSTREAM_MIRROR_URL + "Python-3.13.14.tar.xz",
+        "https://www.python.org/ftp/python/3.14.7/Python-3.14.7.tar.xz",
+        UPSTREAM_MIRROR_URL + "Python-3.14.7.tar.xz",
     ],
 )
 

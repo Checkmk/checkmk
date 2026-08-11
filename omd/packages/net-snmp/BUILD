@@ -141,7 +141,7 @@ directory_path(
 directory_path(
     name = "lib_python",
     directory = ":gen_dir",
-    path = "lib/python3.13",
+    path = "lib/python3.14",
     tags = ["manual"],
 )
 

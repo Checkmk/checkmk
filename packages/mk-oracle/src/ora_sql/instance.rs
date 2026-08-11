@@ -825,6 +825,70 @@ mod yaml_to_output_tests {
             .collect()
     }
 
+    /// A `sections:` list replaces the predefined set, so this yields exactly
+    /// the sections the test asked for.
+    fn builtin_sections(config: &Config) -> Vec<Section> {
+        config
+            .product()
+            .sections()
+            .iter()
+            .filter(|s| !s.is_custom_metric())
+            .map(|s| Section::new(s, 0, config.options()))
+            .collect()
+    }
+
+    /// Synchronous, so the header carries no `cached(...)` marker.
+    fn one_builtin_section_yaml(name: &str) -> String {
+        format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    connection:
+      hostname: localhost
+    sections:
+      - {name}:
+          is_async: false
+"#
+        )
+    }
+
+    /// `MiniOra` answers every section query alike, so only the selected SQL
+    /// text shows which variant dispatch produced.
+    fn selected_statements(yaml: &str, name: &str, version: &str, cdb: &str) -> Vec<String> {
+        let config = config_from(yaml);
+        let db = MiniOra {
+            default_rows: vec![vec!["r1".to_string()]],
+            ..MiniOra::at_version(name, version, cdb)
+        };
+        let (works, errors) = make_spot_work_results(
+            vec![open_spot(db, None)],
+            builtin_sections(&config),
+            &[],
+            0,
+            config.params(),
+            config.options(),
+        );
+        let error_msgs: Vec<String> = errors.iter().map(|(_, e)| e.to_string()).collect();
+        assert!(
+            error_msgs.is_empty(),
+            "unexpected spot errors: {error_msgs:?}"
+        );
+        let (_spot, instance_works) = &works[0];
+        let (instance, blocks) = &instance_works[0];
+        assert_eq!(instance.to_string(), name.to_uppercase());
+        // Without this, every "must not contain" assertion below is vacuous.
+        assert_eq!(blocks.len(), 1, "the section must yield exactly one block");
+        blocks[0]
+            .queries
+            .iter()
+            .map(|q| q.as_str().to_owned())
+            .collect()
+    }
+
     /// Run the pipeline over `spots`, returning the joined output lines.
     fn emit(
         spots: Vec<OpenedSpot>,
@@ -1056,6 +1120,23 @@ oracle:
                 "<<<oracle_sql:sep(58)>>>\n[[[ORCL2|global_metric]]]\ndetails:ok\n",
                 "<<<oracle_sql:sep(58)>>>\n[[[ORCL2|instance_metric]]]\ndetails:ok",
             )
+        );
+    }
+
+    // CMK-37361: the item expression must branch on d.cdb, otherwise a non-CDB
+    // (con_id 0) gets the item `TESTDB.TESTDB` instead of `TESTDB`.
+    #[test]
+    fn test_tablespaces_nocdb_query_is_cdb_flag_aware() {
+        let yaml = one_builtin_section_yaml("tablespaces");
+        let statements = selected_statements(&yaml, "TESTDB", "19.28.0.0.0", "NO");
+
+        assert_eq!(statements.len(), 1);
+        // One occurrence per UNION arm, so fixing only one arm still fails.
+        assert_eq!(
+            statements[0].matches("DECODE(d.cdb, 'NO', d.name").count(),
+            2,
+            "{}",
+            statements[0]
         );
     }
 }

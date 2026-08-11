@@ -450,9 +450,19 @@ py_cmk_test(
     ],
 )
 
+# Core toolkit test suite: the root-level tests plus htmllib, theme, utils,
+# valuespecs, user_message. Collection is driven by the runfiles content
+# below tests/unit/cmk/gui, so no per-directory args are needed.
 py_cmk_test(
     name = "tests",
-    srcs = glob(["test_*.py"]),
+    srcs = glob([
+        "test_*.py",
+        "htmllib/**/*.py",
+        "theme/**/*.py",
+        "user_message/**/*.py",
+        "utils/**/*.py",
+        "valuespecs/**/*.py",
+    ]),
     args = [
         "tests/unit/cmk/gui",
     ],
@@ -465,6 +475,7 @@ py_cmk_test(
         ":conftest",
         "//cmk/gui:app",
         "//cmk/gui:auth",
+        "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:customer",
@@ -500,6 +511,7 @@ py_cmk_test(
         "//packages/cmk-ccc:version",
         "//packages/cmk-crash:crash",
         "//packages/cmk-crypto",
+        "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-livestatus-client:livestatus-api",
         "//packages/cmk-mkp-tool",
@@ -507,6 +519,7 @@ py_cmk_test(
         "//packages/cmk-plugin-apis:inventory_ui",
         "//packages/cmk-trace",
         "//packages/cmk-wsgi",
+        "//tests/testlib:rest_api_client",
         "//tests/unit:conftest",
         requirement("beautifulsoup4"),
         requirement("fido2"),

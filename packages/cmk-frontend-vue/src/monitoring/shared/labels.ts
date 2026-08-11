@@ -37,7 +37,7 @@ export function toLabelItems(labels: Record<string, LabelValue>): LabelCellItem[
   )
 }
 
-/** Render plain names, e.g. contact groups, as entries. */
+/** Render plain names, e.g. contacts and contact groups, as entries. */
 export function toNameItems(names: string[]): LabelCellItem[] {
   return sortedByText(names.map((name) => ({ text: name as TranslatedString })))
 }

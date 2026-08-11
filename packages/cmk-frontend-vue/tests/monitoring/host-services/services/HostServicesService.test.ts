@@ -75,7 +75,7 @@ describe('HostServicesService', () => {
         sort: [],
         searchQuery: '',
         filter: undefined,
-        fields: ['labels', 'tags']
+        fields: ['labels', 'tags', 'contacts']
       },
       expect.any(AbortSignal)
     )
@@ -97,7 +97,7 @@ describe('HostServicesService', () => {
         sort: [{ id: 'state', desc: true }],
         searchQuery: '',
         filter: undefined,
-        fields: ['labels', 'tags']
+        fields: ['labels', 'tags', 'contacts']
       },
       expect.any(AbortSignal)
     )
@@ -119,7 +119,7 @@ describe('HostServicesService', () => {
         sort: [],
         searchQuery: 'CPU',
         filter: undefined,
-        fields: ['labels', 'tags']
+        fields: ['labels', 'tags', 'contacts']
       },
       expect.any(AbortSignal)
     )

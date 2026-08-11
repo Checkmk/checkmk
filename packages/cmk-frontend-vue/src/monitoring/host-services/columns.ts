@@ -22,7 +22,11 @@ import type {
  * When hidden, their field is omitted from the API request, so the endpoint
  * does not read it from livestatus either.
  */
-const OPTIONAL_FIELD_COLUMNS = ['labels', 'tags'] as const satisfies readonly ServiceOptionalField[]
+const OPTIONAL_FIELD_COLUMNS = [
+  'labels',
+  'tags',
+  'contacts'
+] as const satisfies readonly ServiceOptionalField[]
 
 /**
  * The service optional fields (columns) the table currently shows,
@@ -146,6 +150,13 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableSorting: false,
       minSize: 100,
       maxSize: 400
+    },
+    {
+      accessorKey: 'contacts',
+      header: _t('Contacts'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 300
     },
     {
       accessorKey: 'perfometer',

@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
-
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from typing import Final, TypedDict
 
 from cmk.agent_based.v2 import (
@@ -101,9 +99,47 @@ def _job_parse_metrics(line: list[str]) -> tuple[str, float]:
     return name, int(value)
 
 
-def _get_jobname_and_running_state(
-    string_table: StringTable,
-) -> tuple[str, str]:
+def _split_job_tables(string_table: StringTable) -> Iterator[tuple[list[str], StringTable]]:
+    """Split the section into one (header, body) pair per mk-job file.
+
+    Bodies may be empty: mk-job creates the file before it has anything to write
+    into it, so the agent can pick it up while it is still empty.
+    """
+    header: list[str] = []
+    buffer: StringTable = []
+    for line in string_table:
+        if line[0] == "==>" and line[-1] == "<==":
+            if header:
+                yield header, buffer
+            header = line
+            # A new list instead of clearing the old one: our caller holds on to
+            # every buffer we have yielded so far.
+            buffer = []
+            continue
+
+        buffer.append(line)
+
+    if header:
+        yield header, buffer
+
+
+def _is_zombie(body: StringTable) -> bool:
+    """Tell a running job apart from a leftover ".<pid>running" file.
+
+    mk-job copies the file of a running job right after writing its start time,
+    and appends everything else to the completed file only. So anything but that
+    single line means the job is not running any more - it was killed, or we are
+    looking at a partially written file.
+
+    NOTE: zombie jobs and empty files are most likely due to non-atomic file
+    operations, which are addressed in werk 15450. So, when mk-job agent plugins
+    that do not include this werk are no longer supported (haha), code to handle
+    it could be removed.
+    """
+    return len(body) != 1 or body[0][0] != "start_time"
+
+
+def _get_jobname_and_running_state(header: list[str], body: StringTable) -> tuple[str, str]:
     """determine whether the job is running. some jobs are flagged as
     running jobs, but are in fact not (i.e. they are pseudo running), for
     example killed jobs.
@@ -113,61 +149,46 @@ def _get_jobname_and_running_state(
         - 'not_running'
         - 'pseudo_running'
     """
-    jobname = " ".join(string_table[0][1:-1])
+    jobname = " ".join(header[1:-1])
 
     if not jobname.endswith("running"):
         return jobname, "not_running"
 
     jobname = jobname.rsplit(".", 1)[0]
 
-    # NOTE: pseudo_running jobs and empty files are most likely due to non-atomic
-    # file operations, which are addressed in werk 15450, so when mk-job agent
-    # plugins that do not include this werk are no longer supported (haha),
-    # code to handle it could be removed
-
-    # real running jobs ...
-    # ... have the start time defined ...
-    if len(string_table) < 2 or string_table[1][0] != "start_time":
-        return jobname, "pseudo_running"
-
-    # ... and then the subsection ends
-    if len(string_table) > 2 and string_table[2][0] != "==>":
-        return jobname, "pseudo_running"
-
-    return jobname, "running"
+    return jobname, "pseudo_running" if _is_zombie(body) else "running"
 
 
 def parse_job(string_table: StringTable) -> Section:
     parsed: Section = {}
-    job: Job = {}
-    for idx, line in enumerate(string_table):
-        if line[0] == "==>" and line[-1] == "<==":
-            jobname, running_state = _get_jobname_and_running_state(string_table[idx:])
-            running = running_state == "running"
+    for header, body in _split_job_tables(string_table):
+        jobname, running_state = _get_jobname_and_running_state(header, body)
+        running = running_state == "running"
 
-            if running_state == "pseudo_running":
-                # A leftover ".<pid>running" file of a job that is not running any
-                # more. Its contents do not describe the last completed run: the
-                # exit code written by /usr/bin/time is 0 for a job that died from
-                # a signal, for example. So we go by the completed file instead.
-                job = {}
+        if running_state == "pseudo_running":
+            # A leftover ".<pid>running" file of a job that is not running any
+            # more. Its contents do not describe the last completed run: the
+            # exit code written by /usr/bin/time is 0 for a job that died from
+            # a signal, for example. So we go by the completed file instead.
+            continue
+
+        metrics: Metrics = {}
+        job_stats: Job = {
+            "running": running,
+            "metrics": metrics,
+        }
+        job = parsed.setdefault(jobname, job_stats)
+        # the setdefault means: the first job wins. so if we see a running job first, and a
+        # stopped afterwards, the job is running.
+        # but if we se a stopped job first and then a running one, then its still reported as
+        # stopped, which is not correct.
+        # running should overwrite stopped, but stopped should not overwrite running:
+        if job_stats["running"] is True:
+            job["running"] = True
+
+        for line in body:
+            if len(line) != 2:
                 continue
-
-            metrics: Metrics = {}
-            job_stats: Job = {
-                "running": running,
-                "metrics": metrics,
-            }
-            job = parsed.setdefault(jobname, job_stats)
-            # the setdefault means: the first job wins. so if we see a running job first, and a
-            # stopped afterwards, the job is running.
-            # but if we se a stopped job first and then a running one, then its still reported as
-            # stopped, which is not correct.
-            # running should overwrite stopped, but stopped should not overwrite running:
-            if job_stats["running"] is True:
-                job["running"] = True
-
-        elif job and len(line) == 2:
             name, value = _job_parse_metrics(line)
             if running:
                 job.setdefault("running_start_time", []).append(int(value))

@@ -17,6 +17,45 @@ import time_machine
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.job.agent_based import job
 
+STRING_TABLE_1: StringTable = [
+    ["==>", "SHREK", "<=="],
+    ["start_time", "1547301201"],
+    ["exit_code", "0"],
+    ["real_time", "2:00.00"],
+    ["user_time", "1.00"],
+    ["system_time", "0.00"],
+    ["reads", "0"],
+    ["writes", "0"],
+    ["max_res_kbytes", "1234"],
+    ["avg_mem_kbytes", "1"],
+    ["invol_context_switches", "12"],
+    ["vol_context_switches", "23"],
+    ["==>", "SNOWWHITE", "<=="],
+    ["start_time", "1557301201"],
+    ["exit_code", "1"],
+    ["real_time", "6:00.00"],
+    ["user_time", "0.00"],
+    ["system_time", "0.00"],
+    ["reads", "0"],
+    ["writes", "0"],
+    ["max_res_kbytes", "2224"],
+    ["avg_mem_kbytes", "0"],
+    ["invol_context_switches", "1"],
+    ["vol_context_switches", "2"],
+    ["==>", "SNOWWHITE.27997running", "<=="],
+    ["start_time", "1557301261"],
+    ["==>", "SNOWWHITE.28912running", "<=="],
+    ["start_time", "1557301321"],
+    ["==>", "SNOWWHITE.29381running", "<=="],
+    ["start_time", "1557301381"],
+    ["==>", "SNOWWHITE.30094running", "<=="],
+    ["start_time", "1557301441"],
+    ["==>", "SNOWWHITE.30747running", "<=="],
+    ["start_time", "1537301501"],
+    ["==>", "SNOWWHITE.31440running", "<=="],
+    ["start_time", "1557301561"],
+]
+
 SECTION_1: job.Section = {
     "SHREK": {
         "running": False,
@@ -152,6 +191,45 @@ def _modify_start_time(
     return new_job
 
 
+def test_split_job_tables() -> None:
+    assert list(job._split_job_tables(STRING_TABLE_1[:14])) == [
+        (["==>", "SHREK", "<=="], STRING_TABLE_1[1:12]),
+        (["==>", "SNOWWHITE", "<=="], STRING_TABLE_1[13:14]),
+    ]
+
+
+def test_split_job_tables_yields_empty_bodies() -> None:
+    # mk-job creates the file before it has anything to write into it, so the
+    # agent can pick it up while it is still empty.
+    assert list(job._split_job_tables([["==>", "a", "<=="], ["==>", "b", "<=="]])) == [
+        (["==>", "a", "<=="], []),
+        (["==>", "b", "<=="], []),
+    ]
+
+
+def test_split_job_tables_drops_lines_before_the_first_header() -> None:
+    assert list(job._split_job_tables([["junk"], ["==>", "a", "<=="], ["start_time", "1"]])) == [
+        (["==>", "a", "<=="], [["start_time", "1"]]),
+    ]
+
+
+@pytest.mark.parametrize(
+    ["body", "expected_result"],
+    [
+        pytest.param([["start_time", "1547301201"]], False, id="a real running job"),
+        pytest.param([], True, id="empty file"),
+        pytest.param([["exit_code", "0"]], True, id="no start time"),
+        pytest.param(
+            [["start_time", "1547301201"], ["exit_code", "137"]],
+            True,
+            id="killed job, completion data written to the running file",
+        ),
+    ],
+)
+def test_is_zombie(body: StringTable, expected_result: bool) -> None:
+    assert job._is_zombie(body) is expected_result
+
+
 @pytest.mark.parametrize(
     "timestr,expected_result",
     [
@@ -168,44 +246,7 @@ def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
     "string_table,expected_parsed_data",
     [
         pytest.param(
-            [
-                ["==>", "SHREK", "<=="],
-                ["start_time", "1547301201"],
-                ["exit_code", "0"],
-                ["real_time", "2:00.00"],
-                ["user_time", "1.00"],
-                ["system_time", "0.00"],
-                ["reads", "0"],
-                ["writes", "0"],
-                ["max_res_kbytes", "1234"],
-                ["avg_mem_kbytes", "1"],
-                ["invol_context_switches", "12"],
-                ["vol_context_switches", "23"],
-                ["==>", "SNOWWHITE", "<=="],
-                ["start_time", "1557301201"],
-                ["exit_code", "1"],
-                ["real_time", "6:00.00"],
-                ["user_time", "0.00"],
-                ["system_time", "0.00"],
-                ["reads", "0"],
-                ["writes", "0"],
-                ["max_res_kbytes", "2224"],
-                ["avg_mem_kbytes", "0"],
-                ["invol_context_switches", "1"],
-                ["vol_context_switches", "2"],
-                ["==>", "SNOWWHITE.27997running", "<=="],
-                ["start_time", "1557301261"],
-                ["==>", "SNOWWHITE.28912running", "<=="],
-                ["start_time", "1557301321"],
-                ["==>", "SNOWWHITE.29381running", "<=="],
-                ["start_time", "1557301381"],
-                ["==>", "SNOWWHITE.30094running", "<=="],
-                ["start_time", "1557301441"],
-                ["==>", "SNOWWHITE.30747running", "<=="],
-                ["start_time", "1537301501"],
-                ["==>", "SNOWWHITE.31440running", "<=="],
-                ["start_time", "1557301561"],
-            ],
+            STRING_TABLE_1,
             SECTION_1,
             id="",
         ),

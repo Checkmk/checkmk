@@ -6,20 +6,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkPerfometer from 'cmk-ui-library/components/CmkPerfometer.vue'
 
+import type { Perfometer } from '../../api/types'
 import BaseCell, { type CellLink } from './BaseCell.vue'
 
-// TODO(CMK-36919): source this data from the OpenAPI-generated perfometer type
-// (components['schemas'][...]) once the services-of-a-host endpoint exposes it,
-// mirroring how ModeInfo is consumed in shared/api/types.ts.
-export interface PerfometerData {
-  value: number
-  valueRange: [number, number]
-  formatted: string
-  color: string
-}
-
 export interface PerfometerCellProps {
-  data?: PerfometerData | undefined
+  data?: Perfometer | undefined
   stale?: boolean | undefined
   linkedTo?: CellLink | undefined
   columnId?: string | undefined
@@ -35,7 +26,7 @@ const props = defineProps<PerfometerCellProps>()
         v-if="props.data"
         :class="{ 'monitoring-perfometer-cell--stale': stale }"
         :value="props.data.value"
-        :value-range="props.data.valueRange"
+        :value-range="[props.data.value_range.min, props.data.value_range.max]"
         :formatted="props.data.formatted"
         :color="props.data.color"
       />

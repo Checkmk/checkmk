@@ -14,7 +14,7 @@ import PerfometerCell from '@/monitoring/shared/components/cell/PerfometerCell.v
         <PerfometerCell
           :data="{
             value: 65,
-            valueRange: [0, 100],
+            value_range: { min: 0, max: 100 },
             formatted: '65.0%',
             color: '#13d389'
           }"

@@ -52,9 +52,32 @@ test('renders service name and summary in their cells', () => {
 test('renders one cell per column', () => {
   const { container } = mountRow(makeService())
 
-  // select, state, modes, name, summary, last_check, last_state_change
+  // select, state, modes, name, summary, last_check, last_state_change, perfometer
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(tds).toHaveLength(7)
+  expect(tds).toHaveLength(8)
+})
+
+test('renders the perfometer of a service that has one', () => {
+  mountRow(
+    makeService({
+      perfometer: {
+        value: 42,
+        value_range: { min: 0, max: 100 },
+        formatted: '42%',
+        color: '#ff0000'
+      }
+    })
+  )
+
+  const perfometer = screen.getByRole('progressbar', { name: 'Perf-O-Meter' })
+  expect(perfometer).toHaveAttribute('aria-valuenow', '42')
+  expect(perfometer).toHaveTextContent('42%')
+})
+
+test('leaves the perfometer cell empty for a service without performance data', () => {
+  mountRow(makeService())
+
+  expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
 })
 
 test('renders the two timestamps as formatted date-time strings', () => {

@@ -113,6 +113,14 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       sortDescFirst: true,
       minSize: 120,
       maxSize: 200
+    },
+    {
+      accessorKey: 'perfometer',
+      header: _t('Perf-O-Meter'),
+      enableSorting: false,
+      minSize: 168,
+      maxSize: 168,
+      meta: { justify: 'center' }
     }
   ]
 }

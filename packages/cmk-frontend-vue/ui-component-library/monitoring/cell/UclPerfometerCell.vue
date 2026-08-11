@@ -13,7 +13,7 @@ export const panelConfig = {
     type: 'number' as const,
     title: 'value',
     initialState: 65,
-    help: 'Current metric value, positioned within valueRange to derive the fill level.'
+    help: 'Current metric value, positioned within value_range to derive the fill level.'
   },
   min: {
     type: 'number' as const,
@@ -95,12 +95,11 @@ import {
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { computed, ref } from 'vue'
 
+import type { Perfometer } from '@/monitoring/shared/api/types'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import type { ColumnJustify } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
-import PerfometerCell, {
-  type PerfometerData
-} from '@/monitoring/shared/components/cell/PerfometerCell.vue'
+import PerfometerCell from '@/monitoring/shared/components/cell/PerfometerCell.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -110,9 +109,9 @@ const propState = ref(
   ) as InferPanelState<typeof panelConfig>
 )
 
-const data = computed<PerfometerData>(() => ({
+const data = computed<Perfometer>(() => ({
   value: propState.value.value,
-  valueRange: [propState.value.min, propState.value.max],
+  value_range: { min: propState.value.min, max: propState.value.max },
   formatted: propState.value.formatted,
   color: propState.value.color
 }))

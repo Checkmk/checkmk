@@ -22,7 +22,12 @@ function mountCell(props: PerfometerCellProps) {
 
 test('renders the perfometer with its label, fill percentage and color', () => {
   const { container } = mountCell({
-    data: { value: 70, valueRange: [40, 100], formatted: '70%', color: 'rgb(0, 128, 0)' }
+    data: {
+      value: 70,
+      value_range: { min: 40, max: 100 },
+      formatted: '70%',
+      color: 'rgb(0, 128, 0)'
+    }
   })
 
   const progressbar = screen.getByRole('progressbar', { name: 'Perf-O-Meter' })
@@ -44,7 +49,12 @@ test('renders an empty cell when no perfometer data is present', () => {
 test('marks the perfometer as stale', () => {
   const { container } = mountCell({
     stale: true,
-    data: { value: 10, valueRange: [0, 100], formatted: '10%', color: 'rgb(0, 128, 0)' }
+    data: {
+      value: 10,
+      value_range: { min: 0, max: 100 },
+      formatted: '10%',
+      color: 'rgb(0, 128, 0)'
+    }
   })
 
   expect(container.querySelector('.monitoring-perfometer-cell--stale')).toBeInTheDocument()
@@ -53,7 +63,12 @@ test('marks the perfometer as stale', () => {
 test('wraps the perfometer in a link when linkedTo is set', () => {
   const { container } = mountCell({
     linkedTo: { href: 'graph.py?host=web-1', target: '_top' },
-    data: { value: 10, valueRange: [0, 100], formatted: '10%', color: 'rgb(0, 128, 0)' }
+    data: {
+      value: 10,
+      value_range: { min: 0, max: 100 },
+      formatted: '10%',
+      color: 'rgb(0, 128, 0)'
+    }
   })
 
   const link = container.querySelector('a')

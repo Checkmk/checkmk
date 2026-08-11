@@ -34,6 +34,8 @@ export type HostMode = components['schemas']['ModeInfo']
 
 export type ServiceMode = components['schemas']['ServiceModeInfo']
 
+export type Perfometer = components['schemas']['ServicePerfometer']
+
 export type HostLabelValue = components['schemas']['HostLabelValue']
 
 export type ServiceLabelValue = components['schemas']['ServiceLabelValue']

@@ -439,6 +439,15 @@ Pipfile.lock: Pipfile
 # only bites on distros without a matching wheel, which made it look like a
 # sles-12sp5 specific failure.
 #
+# pillow gets installed up front, because it needs the same "build without
+# FreeType" treatment the Bazel build applies (see the rationale in
+# omd/packages/python3-modules/build-python3-modules.bzl): on sles-12sp5 it has no
+# wheel and the system FreeType 2.6.3 is too old for pillow 12. It cannot be done
+# as part of the sync, because pip applies --config-settings only to requirements
+# named on the command line, never to the ones it reads from the "-r" file pipenv
+# hands it. Requirement and hashes come from Pipfile.lock, so this stays pinned and
+# hash checked, and the sync afterwards just finds it already satisfied.
+#
 # We still need our own packages laid out so that mypy can type check them:
 # https://github.com/python/mypy/issues/13392
 # --config-settings editable_mode=compat is setuptools' supported replacement
@@ -455,7 +464,13 @@ Pipfile.lock: Pipfile
 	      echo "Cleaning up .venv before sync..."; \
 	      $(RM) -r .venv; \
 	    fi; \
-	    ( PIP_CONSTRAINT=temporary_pipenv_constraints.txt SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev \
+	    ( SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) run python -c "" \
+	      && echo "Installing pillow without FreeType support..." \
+	      && PILLOW_REQUIREMENTS=$$(mktemp) \
+	      && .venv/bin/python -c 'import json; e = json.load(open("Pipfile.lock"))["default"]["pillow"]; print("pillow" + e["version"], "--config-settings freetype=disable", *("--hash=" + h for h in e["hashes"]))' > $$PILLOW_REQUIREMENTS \
+	      && PIP_CONSTRAINT=temporary_pipenv_constraints.txt .venv/bin/python -m pip install --quiet --no-deps -r $$PILLOW_REQUIREMENTS \
+	      && $(RM) $$PILLOW_REQUIREMENTS \
+	      && PIP_CONSTRAINT=temporary_pipenv_constraints.txt SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev \
 	      && echo "Reinstalling editable packages in compat mode..." \
 	      && .venv/bin/python -m pip install --quiet --no-deps --no-build-isolation --config-settings editable_mode=compat \
 	           $$(.venv/bin/python -c 'import json; print(" ".join("-e " + e["path"] for s in ("default", "develop") for e in json.load(open("Pipfile.lock"))[s].values() if e.get("editable")))') \

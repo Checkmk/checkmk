@@ -9,6 +9,22 @@ def get_pip_options(module_name):
         "numpy": '--config-settings=setup-args="-Dallow-noblas=true"',
     }.get(module_name, "")
 
+def get_requirement_options(module_name):
+    """Options that have to be attached to the requirement itself.
+
+    pip applies --config-settings only to requirements named on the command line, never
+    to the ones it reads from a "-r" file. We install every module via "-r", so passing
+    them through get_pip_options() above would silently have no effect.
+    """
+    return {
+        # pillow 12.0.0 removed the FREETYPE_MAJOR/MINOR guards around the variable font
+        # API (https://github.com/python-pillow/Pillow/pull/9159), so building _imagingft
+        # now needs FreeType >= 2.9.1. sles-12sp5 only has 2.6.3 and nothing newer is
+        # installable there. We never render text with PIL - it is only used for image IO -
+        # so we simply disable it.
+        "pillow": " --config-settings freetype=disable",
+    }.get(module_name, "")
+
 def create_requirements_file(name, outs):
     """This macro is creating a requirements file per module.
     """
@@ -17,7 +33,7 @@ def create_requirements_file(name, outs):
         outs = outs,
         cmd = """
            echo "%s" > $@
-        """ % packages[name],
+        """ % (packages[name] + get_requirement_options(name)),
     )
 
 def build_python_module(name, srcs, outs, cmd, **kwargs):

@@ -17,8 +17,9 @@
 -- Section sessions: retrieves session usage statistics per container (CDB / PDB)
 
 --- === Section 1: retrieves session usage statistics for PDB only ===
-SELECT UPPER(vp.name)  AS instance_name,   -- PDB name (uppercased)
-       LTRIM(COUNT(1)) AS current_sessions -- Number of currently active sessions
+-- COUNT the joined column: an idle container's null-extended row must be 0.
+SELECT UPPER(vp.name)       AS instance_name,   -- PDB name (uppercased)
+       LTRIM(COUNT(vs.sid)) AS current_sessions -- Number of currently active sessions
 FROM (
          -- Step 1: Build container list
          SELECT vp.con_id,

@@ -116,6 +116,7 @@ class LiveStatusHostServicesRepository:
                             else None
                         ),
                         tags=dict(row["tags"]) if "tags" in row else None,
+                        contacts=list(row["contacts"]) if "contacts" in row else None,
                     )
                     for row in q.iterate(conn)
                 ],
@@ -192,6 +193,8 @@ class LiveStatusHostServicesRepository:
                 else None
             ),
             tags=dict(row["tags"]),
+            # The overview does not expose contacts, so its query does not read them.
+            contacts=[],
         )
 
     def count_total(self, hostname: str) -> int:
@@ -222,6 +225,7 @@ class LiveStatusHostServicesRepository:
 _OPTIONAL_COLUMNS: Mapping[ServiceOptionalField, tuple[Column, ...]] = {
     ServiceOptionalField.LABELS: (Services.labels, Services.label_sources),
     ServiceOptionalField.TAGS: (Services.tags,),
+    ServiceOptionalField.CONTACTS: (Services.contacts,),
 }
 
 

@@ -96,6 +96,11 @@ class HostServiceEntry:
         example={"criticality": "prod"},
         default_factory=ApiOmitted,
     )
+    contacts: list[str] | ApiOmitted = api_field(
+        description="Contacts responsible for this service. Omitted when it has none.",
+        example=["hh"],
+        default_factory=ApiOmitted,
+    )
     perfometer: ServicePerfometer | ApiOmitted = api_field(
         description=(
             "Perf-O-Meter of the service's performance data. Omitted when the service reports no "
@@ -116,6 +121,7 @@ class HostServiceEntry:
             or ApiOmitted(),
             labels=service.labels if service.labels is not None else ApiOmitted(),
             tags=service.tags if service.tags is not None else ApiOmitted(),
+            contacts=service.contacts if service.contacts is not None else ApiOmitted(),
             perfometer=ServicePerfometer.from_perf_data(service.perf_data, service.check_command)
             or ApiOmitted(),
         )

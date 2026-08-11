@@ -64,6 +64,7 @@ class Service:
     check_command: str
     labels: dict[str, ServiceLabelValue] | None
     tags: dict[str, str] | None
+    contacts: list[str] | None
 
     @property
     def state_label(self) -> ServiceStateLabel:
@@ -113,6 +114,7 @@ class ServiceOptionalField(enum.StrEnum):
 
     LABELS = "labels"
     TAGS = "tags"
+    CONTACTS = "contacts"
 
     @classmethod
     def options(cls) -> str:

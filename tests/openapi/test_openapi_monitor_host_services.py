@@ -592,6 +592,82 @@ class TestMonitorHostServices:
 
         assert "labels" not in resp.json["services"][0]
 
+    def test_service_contacts_are_returned_when_requested(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}])
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": "CPU load",
+                    "host_name": _HOSTNAME,
+                    "state": 0,
+                    "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
+                    "last_check": time.time() - 30,
+                    "last_state_change": time.time(),
+                    "perf_data": "",
+                    "check_command": "check_mk-test",
+                    "labels": {},
+                    "label_sources": {},
+                    "tags": {},
+                    "contacts": ["hh", "ops"],
+                }
+            ],
+        )
+        _expect_list_services_queries(mock_livestatus, extra_columns="contacts")
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_host_services(
+                hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, fields=["contacts"]
+            )
+
+        assert resp.json["services"][0]["contacts"] == ["hh", "ops"]
+
+    def test_contacts_are_omitted_unless_requested(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}])
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": "CPU load",
+                    "host_name": _HOSTNAME,
+                    "state": 0,
+                    "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
+                    "last_check": time.time() - 30,
+                    "last_state_change": time.time(),
+                    "perf_data": "",
+                    "check_command": "check_mk-test",
+                    "labels": {},
+                    "label_sources": {},
+                    "tags": {},
+                    "contacts": ["hh"],
+                }
+            ],
+        )
+        _expect_list_services_queries(mock_livestatus)
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_host_services(
+                hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT
+            )
+
+        assert "contacts" not in resp.json["services"][0]
+
     @pytest.mark.usefixtures("registered_perfometer")
     def test_service_with_performance_data_has_a_perfometer(
         self,
@@ -1070,6 +1146,7 @@ class TestMonitorServiceOverview:
                     "current_attempt": 2,
                     "max_check_attempts": 4,
                     "next_check": time.time() + 60,
+                    "contacts": ["hh"],
                     "tags": {"criticality": "prod"},
                     "labels": {"cmk/check_plugin": "cpu_load"},
                     "label_sources": {"cmk/check_plugin": "discovered"},
@@ -1172,6 +1249,7 @@ class TestMonitorServiceOverview:
                     "current_attempt": 2,
                     "max_check_attempts": 4,
                     "next_check": time.time() + 60,
+                    "contacts": ["hh"],
                     "tags": {"criticality": "prod"},
                     "labels": {"cmk/check_plugin": "cpu_load"},
                     "label_sources": {"cmk/check_plugin": "discovered"},
@@ -1228,6 +1306,7 @@ class TestMonitorServiceOverview:
                     "current_attempt": 1,
                     "max_check_attempts": 1,
                     "next_check": 0,
+                    "contacts": ["hh"],
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -1283,6 +1362,7 @@ class TestMonitorServiceOverview:
                     "current_attempt": 1,
                     "max_check_attempts": 1,
                     "next_check": time.time() + 60,
+                    "contacts": ["hh"],
                     "labels": {},
                     "label_sources": {},
                     "tags": {},

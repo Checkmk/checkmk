@@ -37,17 +37,13 @@ FROM (
                          ON vp.con_id = vs.con_id -- Map sessions to each container
 GROUP BY vp.name, vp.con_id, rl.LIMIT_VALUE, rl.MAX_UTILIZATION;
 
--- === Section 2: retrieves session usage statistics for CDB (root container) only ===
-SELECT UPPER(vp.instance_name)       AS instance_name,    -- CDB / PDB name (uppercased)
-       LTRIM(COUNT(1))               AS current_sessions, -- Number of currently active sessions
-       LTRIM(RTRIM(LIMIT_VALUE))     AS limit_sessions,   -- Configured session limit
-       LTRIM(RTRIM(MAX_UTILIZATION)) AS MAX_UTILIZATION   -- Peak session usage so far
-FROM (
-         -- Include root container (CDB) as con_id = 0
-         SELECT 0, instance_name
-         FROM v$instance i
-     ) vp
-         -- Step 2: Join with resource limits
+-- === Section 2: retrieves instance-wide session usage statistics ===
+-- Instance-wide, so no d.cdb branch is needed. The count comes from
+-- v$resource_limit, which already tracks it; the set has a single row.
+SELECT UPPER(i.instance_name)               AS instance_name,    -- CDB / instance name (uppercased)
+       LTRIM(RTRIM(rl.CURRENT_UTILIZATION)) AS current_sessions, -- Sessions in use, including the recursive ones v$session omits
+       LTRIM(RTRIM(rl.LIMIT_VALUE))         AS limit_sessions,   -- Configured session limit
+       LTRIM(RTRIM(rl.MAX_UTILIZATION))     AS max_utilization   -- Peak session usage so far
+FROM v$instance i
          JOIN v$resource_limit rl
-              ON RESOURCE_NAME = 'sessions' -- Only look at session resource limit
-GROUP BY vp.instance_name, rl.LIMIT_VALUE, rl.MAX_UTILIZATION
+              ON rl.RESOURCE_NAME = 'sessions' -- Only look at session resource limit

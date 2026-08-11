@@ -64,16 +64,23 @@ GRAPH_SURFACES: Final[tuple[GraphSurface, ...]] = (
     GraphSurface(
         key="custom_graph",
         title="Custom graph",
-        containment=GraphContainment.PAGE_DIRECT,
+        containment=GraphContainment.DESIGNER_PREVIEW,
         requires_pro=True,
-        page_object="tests.system.gui.testlib.playwright.pom.customize.custom_graphs:CustomGraph",
+        page_object=(
+            "tests.system.gui.testlib.playwright.pom.graphing.custom_graph_designer"
+            ":CustomGraphDesigner"
+        ),
+        notes="A saved custom graph shown in the designer's view mode.",
     ),
     GraphSurface(
         key="custom_graph_designer_preview",
         title="Custom graph designer preview",
         containment=GraphContainment.DESIGNER_PREVIEW,
         requires_pro=True,
-        page_object="tests.system.gui.testlib.playwright.pom.customize.custom_graphs:DesignGraph",
+        page_object=(
+            "tests.system.gui.testlib.playwright.pom.graphing.custom_graph_designer"
+            ":CustomGraphDesigner"
+        ),
         notes="Graph preview rendered inside the designer while editing metric definitions.",
     ),
     GraphSurface(

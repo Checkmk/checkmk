@@ -40,7 +40,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, UTC
 from enum import StrEnum
-from typing import Any, Literal, NamedTuple, override
+from typing import Any, Final, Literal, NamedTuple, override
 
 import requests
 
@@ -172,6 +172,7 @@ class CMKOpenApiSession(requests.Session):
         self.metric_backend = MetricBackendAPI(self)
         self.graph = GraphAPI(self)
         self.custom_graph = CustomGraphAPI(self)
+        self.autocomplete = AutocompleteAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -2258,8 +2259,102 @@ class GraphAPI(BaseAPI):
         )
 
 
+class AutocompleteAPI(BaseAPI):
+    """The autocompleters backing the GUI's suggestion dropdowns."""
+
+    def metric_titles(self, host_name: str, service_name: str) -> dict[str, str]:
+        """Map each of the service's metric names to the title the GUI offers it under.
+
+        A dropdown suggestion is labelled with the title, never the metric name, so a test
+        driving one has to know both.
+        """
+        response = self._post_internal_action(
+            "objects/autocomplete/monitored_metrics",
+            {
+                "value": "",
+                "parameters": {
+                    "strict": True,
+                    "context": {
+                        "host": {"host": host_name},
+                        "service": {"service": service_name},
+                    },
+                },
+            },
+        )
+        return {choice["id"]: choice["value"] for choice in response["choices"]}
+
+
 class CustomGraphAPI(BaseAPI):
-    """The custom-graph data endpoint, the only way to graph metric-backend (OTel) data."""
+    """Custom graphs: their lifecycle, plus the data endpoint.
+
+    The data endpoint is also the only way to graph metric-backend (OTel) data.
+    """
+
+    # Every field is mandatory in the API model, but no caller here varies them.
+    _DEFAULT_METADATA: Final[Mapping[str, Any]] = {
+        "description": "",
+        "topic": "my_workplace",
+        "sort_index": 99,
+        "hidden": False,
+        "is_show_more": False,
+        "public": {"type": "private"},
+    }
+    _DEFAULT_GRAPH_OPTIONS: Final[Mapping[str, Any]] = {
+        "unit": {"type": "first_entry_with_unit"},
+        "explicit_vertical_range": {"type": "auto"},
+        "omit_zero_metrics": False,
+    }
+
+    @staticmethod
+    def rrd_metric_data_source(
+        source_id: str,
+        host_name: str,
+        service_name: str,
+        metric_name: str,
+        color: str = "#28a2f3",
+    ) -> dict[str, Any]:
+        """One RRD metric of a monitored service, as the graph's data source."""
+        return {
+            "type": "rrd_metric",
+            "id": source_id,
+            "title": "$DEFAULT_TITLE$",
+            "line_type": "line",
+            "mirrored": False,
+            "visible": True,
+            "color": color,
+            "host_name": host_name,
+            "service_name": service_name,
+            "metric_name": metric_name,
+            "consolidation": "avg",
+        }
+
+    def create(
+        self,
+        name: str,
+        title: str,
+        data_sources: Sequence[Mapping[str, Any]] = (),
+    ) -> dict[str, Any]:
+        return self._post_internal_action(
+            "domain-types/custom_graph/collections/all",
+            {
+                "name": name,
+                "title": title,
+                "metadata": self._DEFAULT_METADATA,
+                "content": {
+                    "graph_options": self._DEFAULT_GRAPH_OPTIONS,
+                    "data_sources": data_sources,
+                },
+            },
+        )
+
+    def delete(self, name: str) -> None:
+        response = self.session.delete(
+            f"objects/custom_graph/{name}",
+            api_version=APIVersion.INTERNAL,
+            headers={"If-Match": "*"},
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
 
     def fetch_data(
         self,

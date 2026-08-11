@@ -27,6 +27,8 @@ _DESIGNER_PREVIEW_SELECTOR = "#graph_0"
 # The engine mounts one graph group per painter, holding a panel per graph it resolved.
 ENGINE_GRAPH_GROUP_SELECTOR = ".graphing-graph-group"
 ENGINE_GRAPH_PANEL_SELECTOR = ".graphing-graph-panel"
+# The designer embeds a single panel of its own instead of a painter's group.
+_ENGINE_DESIGNER_PREVIEW_SELECTOR = ".graphing-designer-body__preview"
 
 
 class GraphAccessor:
@@ -79,6 +81,9 @@ class GraphAccessor:
 
         ``within`` narrows `PAGE_DIRECT` to one part of the page, for a surface that hosts
         several groups and needs the one belonging to a given slot.
+
+        Only the surfaces driven by a painter have one. The designer embeds a single panel
+        of its own, so reach for `graph_root` there instead.
         """
         match containment:
             case GraphContainment.PAGE_DIRECT:
@@ -94,7 +99,7 @@ class GraphAccessor:
                     return widget.frame_locator("iframe").locator(ENGINE_GRAPH_GROUP_SELECTOR)
                 return widget.locator(ENGINE_GRAPH_GROUP_SELECTOR)
             case _:
-                raise ValueError(f"The engine does not render on containment: {containment!r}")
+                raise ValueError(f"No painter graph group on containment: {containment!r}")
 
     def graph_root(
         self,
@@ -111,6 +116,8 @@ class GraphAccessor:
         auto-waits for each graph to render, unlike ``.all()`` / ``.count()``), then
         address them via ``.nth(i)``.
         """
+        if containment is GraphContainment.DESIGNER_PREVIEW:
+            return self._owner.main_area.locator(_ENGINE_DESIGNER_PREVIEW_SELECTOR)
         return self.engine_graph_group(
             containment, widget=widget, iframed=iframed, within=within
         ).locator(ENGINE_GRAPH_PANEL_SELECTOR)

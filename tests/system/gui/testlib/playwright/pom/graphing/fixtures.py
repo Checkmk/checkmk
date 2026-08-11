@@ -5,13 +5,14 @@
 
 """Reusable fixtures for the graph E2E suites.
 
-Registered for discovery in ``tests/system/gui/conftest.py``. The saved-surface
-fixtures still to be built (custom graph, forecast) `skip` until completed by the graph
-test suites, since creating and surfacing them depends on the graph implementation.
+Registered for discovery in ``tests/system/gui/conftest.py``. The saved-surface fixture
+still to be built (forecast) `skip`s until completed by the graph test suites, since
+creating and surfacing it depends on the graph implementation.
 """
 
-from collections.abc import Iterator
-from typing import Final
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
+from typing import Final, NamedTuple
 
 import pytest
 from playwright.sync_api import Page
@@ -82,10 +83,107 @@ def fixture_graph_rrd_dst_boundary(test_site: Site) -> InjectedRrd:
     pytest.skip("graph_rrd_dst_boundary is scaffolding: see docstring.")
 
 
+class RrdMetric(NamedTuple):
+    """A metric under both the names it goes by."""
+
+    name: str  # what the RRD and the REST API call it, e.g. "mem_used"
+    title: str  # what the GUI labels it, e.g. "RAM used"
+
+
+class RrdMetricSource(NamedTuple):
+    """A monitored service and the metrics it stores RRD data for."""
+
+    host_name: str
+    service_name: str
+    metrics: Sequence[RrdMetric]
+
+
+@pytest.fixture(name="rrd_metric_source", scope="module")
+def fixture_rrd_metric_source(
+    test_site: Site, graph_hosts_with_varying_data: list[str]
+) -> RrdMetricSource:
+    """Metrics a monitored service actually reports, read from the site rather than hard-coded.
+
+    Both names are collected: the REST API builds a graph out of metric names, while the
+    designer's dropdown only ever offers their titles.
+
+    Two metrics are needed: a graph that stays interesting when a second one joins it.
+    """
+    host_name = graph_hosts_with_varying_data[0]
+    metric_names = test_site.live.query_value(
+        f"GET services\nColumns: metrics\n"
+        f"Filter: host_name = {host_name}\nFilter: description = {SERVICE_WITH_GRAPHS}\n"
+    )
+    titles = test_site.openapi.autocomplete.metric_titles(host_name, SERVICE_WITH_GRAPHS)
+    metrics = [RrdMetric(str(name), titles[str(name)]) for name in metric_names if name in titles]
+    if len(metrics) < 2:
+        pytest.skip(
+            f"Service {SERVICE_WITH_GRAPHS!r} on {host_name!r} offers "
+            f"{len(metrics)} named metrics; two are needed."
+        )
+    return RrdMetricSource(host_name, SERVICE_WITH_GRAPHS, metrics)
+
+
+@contextmanager
+def _as_admin_user(test_site: Site) -> Iterator[None]:
+    """Act as the user the browser logs in as, not the site's automation user.
+
+    Custom graphs are stored per user and created private, so a graph made through the
+    site's own session would belong to `AUTOMATION_USER` and be invisible to the
+    `ADMIN_USER` the tests drive - the designer would only ever find a 404.
+    """
+    session = test_site.openapi
+    automation_auth = session.headers["Authorization"]
+    session.set_authentication_header(ADMIN_USER, test_site.admin_password)
+    try:
+        yield
+    finally:
+        session.headers["Authorization"] = automation_auth
+
+
+@contextmanager
+def _custom_graph(
+    test_site: Site, name: str, title: str, data_sources: Sequence[Mapping[str, object]]
+) -> Iterator[str]:
+    with _as_admin_user(test_site):
+        test_site.openapi.custom_graph.create(name, title, data_sources)
+    try:
+        yield name
+    finally:
+        # Deleted even when the site is kept for inspection: the graphs are named per
+        # fixture, so one left behind makes the next test's creation collide with it.
+        with _as_admin_user(test_site):
+            test_site.openapi.custom_graph.delete(name)
+
+
 @pytest.fixture(name="saved_custom_graph")
-def fixture_saved_custom_graph(test_site: Site) -> str:
-    """A saved custom graph; complete via the custom-graph creation flow."""
-    pytest.skip("saved_custom_graph is scaffolding: graph engine not implemented yet.")
+def fixture_saved_custom_graph(
+    test_site: Site, rrd_metric_source: RrdMetricSource
+) -> Iterator[str]:
+    """A saved custom graph holding one RRD metric of a monitored service.
+
+    Created over the REST API rather than through the designer, so the tests that read a
+    saved graph do not fail on a broken designer.
+    """
+    data_source = test_site.openapi.custom_graph.rrd_metric_data_source(
+        "A",
+        rrd_metric_source.host_name,
+        rrd_metric_source.service_name,
+        rrd_metric_source.metrics[0].name,
+    )
+    with _custom_graph(test_site, "e2e_saved_graph", "E2E saved graph", [data_source]) as name:
+        yield name
+
+
+@pytest.fixture(name="custom_graph_for_editing")
+def fixture_custom_graph_for_editing(test_site: Site) -> Iterator[str]:
+    """An empty saved custom graph to open in the designer's edit mode.
+
+    The designer page takes the graph to edit as a mandatory URL parameter, so even the
+    "build a graph from scratch" cases need one to exist first.
+    """
+    with _custom_graph(test_site, "e2e_designer_graph", "E2E designer graph", []) as name:
+        yield name
 
 
 @pytest.fixture(name="graph_collection")

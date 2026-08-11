@@ -24,6 +24,7 @@ from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.plugin import PageGetter
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
     fixture_combined_graphs_page,
+    fixture_custom_graph_for_editing,
     fixture_forecast_graph,
     fixture_graph_collection,
     fixture_graph_hosts_high_density,
@@ -32,6 +33,7 @@ from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
     fixture_graph_rrd_with_gaps,
     fixture_javascript_errors,
     fixture_requested_urls,
+    fixture_rrd_metric_source,
     fixture_saved_custom_graph,
     fixture_service_graphs,
 )
@@ -60,6 +62,7 @@ logger = logging.getLogger(__name__)
 setup_fixtures = [notification_user]
 graphing_fixtures = [
     fixture_combined_graphs_page,
+    fixture_custom_graph_for_editing,
     fixture_forecast_graph,
     fixture_graph_collection,
     fixture_graph_hosts_high_density,
@@ -68,6 +71,7 @@ graphing_fixtures = [
     fixture_graph_rrd_with_gaps,
     fixture_javascript_errors,
     fixture_requested_urls,
+    fixture_rrd_metric_source,
     fixture_saved_custom_graph,
     fixture_service_graphs,
 ]

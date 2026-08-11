@@ -48,6 +48,7 @@ from cmk.gui.form_specs import (
     VisitorOptions,
 )
 from cmk.gui.form_specs.unstable.catalog import Catalog
+from cmk.gui.form_specs.unstable.legacy_converter import resolve_title
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -2169,7 +2170,7 @@ class ABCEditRuleMode(WatoMode):
     def _init_form_type(self) -> _BackendForm | _FrontendForm:
         try:
             title: str | None = localize_or_none(
-                self._ruleset.rulespec.form_spec.title, translate_to_current_language
+                resolve_title(self._ruleset.rulespec.form_spec), translate_to_current_language
             )
             has_show_more = False
         except FormSpecNotImplementedError:

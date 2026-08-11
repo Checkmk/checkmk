@@ -5,10 +5,11 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from typing import Any
 
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import FormSpec
 
 
@@ -30,3 +31,25 @@ class TransformDataForLegacyFormatOrRecomposeFunction(FormSpec[object]):
     wrapped_form_spec: FormSpec[Any] | Callable[[], FormSpec[Any]]
     from_disk: Callable[[object], object]
     to_disk: Callable[[object], object]
+
+
+def _self_and_wrapped(form_spec: FormSpec[Any]) -> Iterator[FormSpec[Any]]:
+    yield form_spec
+    while isinstance(form_spec, TransformDataForLegacyFormatOrRecomposeFunction):
+        wrapped = form_spec.wrapped_form_spec
+        form_spec = wrapped() if callable(wrapped) else wrapped
+        yield form_spec
+
+
+def resolve_title(form_spec: FormSpec[Any]) -> Title | None:
+    for fs in _self_and_wrapped(form_spec):
+        if (title := fs.title) is not None:
+            return title
+    return None
+
+
+def resolve_help_text(form_spec: FormSpec[Any]) -> Help | None:
+    for fs in _self_and_wrapped(form_spec):
+        if (help_text := fs.help_text) is not None:
+            return help_text
+    return None

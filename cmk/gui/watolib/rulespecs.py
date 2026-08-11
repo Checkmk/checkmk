@@ -21,6 +21,7 @@ import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
+from cmk.gui.form_specs.unstable.legacy_converter import resolve_help_text, resolve_title
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.global_config import get_global_config
@@ -506,7 +507,9 @@ class Rulespec:
         else:
             try:
                 # Instantiating the value model is expensive, only use as fallback
-                plain_title = localize_or_none(self.form_spec.title, translate_to_current_language)
+                plain_title = localize_or_none(
+                    resolve_title(self.form_spec), translate_to_current_language
+                )
             except FormSpecNotImplementedError:
                 plain_title = self.valuespec.title()
 
@@ -522,7 +525,9 @@ class Rulespec:
             return self._help()
 
         try:
-            return localize_or_none(self.form_spec.help_text, translate_to_current_language)
+            return localize_or_none(
+                resolve_help_text(self.form_spec), translate_to_current_language
+            )
         except FormSpecNotImplementedError:
             return self.valuespec.help()
 

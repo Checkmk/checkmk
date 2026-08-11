@@ -59,8 +59,6 @@ def enable_deprecated_cascading_elements(
         return reversed_mapping[value].name_in_form_spec, True
 
     return TransformDataForLegacyFormatOrRecomposeFunction(
-        title=wrapped_form_spec.title,
-        help_text=wrapped_form_spec.help_text,
         wrapped_form_spec=wrapped_form_spec,
         from_disk=from_disk,
         to_disk=to_disk,

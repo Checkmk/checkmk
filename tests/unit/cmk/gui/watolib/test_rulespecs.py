@@ -13,6 +13,9 @@ from pytest import MonkeyPatch
 
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.gui.plugins.wato.utils import TimeperiodValuespec
 from cmk.gui.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
 from cmk.gui.search.matchers import MatchItem
@@ -21,6 +24,7 @@ from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rule_match_item_generator import MatchItemGeneratorRules
 from cmk.gui.watolib.rulespecs import (
+    FormSpecDefinition,
     get_rulegroup,
     HostRulespec,
     main_module_from_rulespec_group_name,
@@ -30,6 +34,8 @@ from cmk.gui.watolib.rulespecs import (
     RulespecRegistry,
     RulespecSubGroup,
 )
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import Integer
 
 
 def test_rulespec_sub_group() -> None:
@@ -358,6 +364,43 @@ def test_rulespec_groups_have_unique_names() -> None:
     # distinguish where a rule is located in the menu hierarchy.
     main_group_titles = [e().title for e in rulespec_group_registry.get_main_groups()]
     assert len(main_group_titles) == len(set(main_group_titles)), "Main group titles are not unique"
+
+
+def test_rulespec_title_and_help_look_through_transform() -> None:
+    # TransformDataForLegacyFormatOrRecomposeFunction is a transparent wrapper without a
+    # title of its own, so title and help have to be taken from the wrapped form spec.
+    class SomeRulespecGroup(RulespecGroup):
+        @property
+        @override
+        def name(self) -> str:
+            return "rulespec_group"
+
+        @property
+        @override
+        def title(self) -> str:
+            return "Rulespec Group"
+
+        @property
+        @override
+        def help(self) -> str:
+            return ""
+
+    rulespec = HostRulespec(
+        name="some_host_rulespec",
+        group=SomeRulespecGroup,
+        valuespec=TextInput,
+        form_spec_definition=FormSpecDefinition(
+            value=lambda: TransformDataForLegacyFormatOrRecomposeFunction(
+                wrapped_form_spec=Integer(title=Title("Wrapped"), help_text=Help("Wrapped help")),
+                from_disk=lambda value: value,
+                to_disk=lambda value: value,
+            ),
+            item=None,
+        ),
+    )
+
+    assert rulespec.title == "Wrapped"
+    assert rulespec.help == "Wrapped help"
 
 
 def test_validate_datatype_timeperiod_valuespec_inner() -> None:

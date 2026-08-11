@@ -37,8 +37,6 @@ def Age(
         ]
 
     return TransformDataForLegacyFormatOrRecomposeFunction(
-        title=title,
-        help_text=help_text,
         wrapped_form_spec=TimeSpan(
             title=title,
             help_text=help_text,

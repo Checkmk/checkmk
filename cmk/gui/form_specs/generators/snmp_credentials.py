@@ -281,8 +281,6 @@ def create_snmp_credentials(
             default_value = "community"
 
     return TransformDataForLegacyFormatOrRecomposeFunction(
-        title=title,
-        help_text=help_text,
         from_disk=lambda value: convert_from_disk(value, only_v3, allow_none),
         to_disk=convert_to_disk,
         wrapped_form_spec=CascadingSingleChoice(

@@ -35,6 +35,7 @@ from cmk.gui.form_specs import (
     render_form_spec,
     VisitorOptions,
 )
+from cmk.gui.form_specs.unstable.legacy_converter import resolve_help_text, resolve_title
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -287,8 +288,8 @@ class ABCGlobalSettingsMode(WatoMode):
                 value_model = config_variable.value_model(context)
                 help_text: str | HTML
                 if isinstance(value_model, FormSpec):
-                    help_text = localize(value_model.help_text)
-                    title_text = localize(value_model.title)
+                    help_text = localize(resolve_help_text(value_model))
+                    title_text = localize(resolve_title(value_model))
                 else:
                     help_text = value_model.help() or ""
                     title_text = value_model.title() or ""
@@ -595,7 +596,7 @@ class ABCEditGlobalSettingMode(WatoMode):
 
     def _title(self) -> str:
         if isinstance(self._value_model, FormSpec):
-            return localize(self._value_model.title)
+            return localize(resolve_title(self._value_model))
         title = self._value_model.title()
         assert isinstance(title, str)
         return title
@@ -894,7 +895,7 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
     ) -> MatchItem:
         value_model = config_variable.value_model(global_settings_context)
         if isinstance(value_model, FormSpec):
-            title = localize(value_model.title) or _("Untitled setting")
+            title = localize(resolve_title(value_model)) or _("Untitled setting")
         else:
             title = value_model.title() or _("Untitled setting")
         ident = config_variable.ident()

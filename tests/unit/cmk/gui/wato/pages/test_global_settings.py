@@ -14,6 +14,9 @@ from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.gui.http import request
 from cmk.gui.i18n import _l
 from cmk.gui.pages import PageContext
@@ -92,6 +95,48 @@ def test_match_item_generator_settings(
             match_texts=["title", "ident"],
         ),
     ]
+
+
+def test_match_item_generator_settings_looks_through_transform(
+    monkeypatch: MonkeyPatch,
+    request_context: None,
+    test_edition: Edition,
+) -> None:
+    # TransformDataForLegacyFormatOrRecomposeFunction is a transparent wrapper without a
+    # title of its own, so the title has to be taken from the wrapped form spec.
+    group = ConfigVariableGroup(
+        title=_l("xyz"),
+        sort_index=10,
+    )
+
+    config_variable = ConfigVariable(
+        group=group,
+        primary_domain=ConfigDomainCore,
+        ident="ident",
+        form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(
+            wrapped_form_spec=Integer(title=Title("Wrapped title")),
+            from_disk=lambda value: value,
+            to_disk=lambda value: value,
+        ),
+    )
+
+    class SomeSettingsMode(DefaultModeEditGlobals):
+        @override
+        def iter_all_configuration_variables(
+            self, *, debug: bool
+        ) -> Iterable[tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
+            return [(group, [config_variable])]
+
+    monkeypatch.setattr(ABCConfigDomain, "get_all_default_globals", dict)
+
+    assert [
+        match_item.title
+        for match_item in MatchItemGeneratorSettings(
+            "settings",
+            "Settings",
+            lambda: SomeSettingsMode(test_edition, PageContext(config=Config(), request=request)),
+        ).generate_match_items(UserPermissions({}, {}, {}, []))
+    ] == ["Wrapped title"]
 
 
 @pytest.mark.usefixtures("load_config")

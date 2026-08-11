@@ -1026,8 +1026,8 @@ class ModeEditRuleset(WatoMode):
         return self.mode_url(varname=self._name)
 
     def title(self) -> str:
-        assert self._rulespec.title is not None
         title = self._rulespec.title
+        assert title is not None
 
         if self._hostname:
             title += _(" for host %s") % self._hostname

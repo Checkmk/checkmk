@@ -26,6 +26,7 @@ from cmk.gui.form_specs.unstable import SingleChoiceElementExtended, SingleChoic
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.global_config import get_global_config
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -483,6 +484,12 @@ class Rulespec(abc.ABC):
 
     @property
     def title(self) -> str | None:
+        return self._localized_title()
+
+    # Request-scoped so a cached title can never outlive the language it was
+    # localized for.
+    @request_memoize(maxsize=None)
+    def _localized_title(self) -> str | None:
         if self._title:
             plain_title: str | None = self._title()
         else:

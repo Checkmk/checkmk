@@ -53,9 +53,16 @@ test('renders one cell per column', () => {
   const { container } = mountRow(makeService())
 
   // select, state, modes, name, summary, last_check, last_state_change, labels, tags, contacts,
-  // perfometer
+  // contact_groups, perfometer
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(tds).toHaveLength(11)
+  expect(tds).toHaveLength(12)
+})
+
+test('renders the contact groups of a service, sorted alphabetically', () => {
+  const { container } = mountRow(makeService({ contact_groups: ['linux', 'all'] }))
+
+  const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
+  expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['all', 'linux'])
 })
 
 test('renders the contacts of a service, sorted alphabetically', () => {

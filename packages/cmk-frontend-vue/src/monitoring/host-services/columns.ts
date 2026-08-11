@@ -25,7 +25,8 @@ import type {
 const OPTIONAL_FIELD_COLUMNS = [
   'labels',
   'tags',
-  'contacts'
+  'contacts',
+  'contact_groups'
 ] as const satisfies readonly ServiceOptionalField[]
 
 /**
@@ -154,6 +155,13 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
     {
       accessorKey: 'contacts',
       header: _t('Contacts'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 300
+    },
+    {
+      accessorKey: 'contact_groups',
+      header: _t('Contact groups'),
       enableSorting: false,
       minSize: 100,
       maxSize: 300

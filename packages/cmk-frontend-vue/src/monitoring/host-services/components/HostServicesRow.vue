@@ -44,6 +44,7 @@ const lastStateChange = computed(() => formatTimestamp(props.row.last_state_chan
 const labels = computed(() => toLabelItems(props.row.labels ?? {}))
 const tags = computed(() => toTagItems(props.row.tags ?? {}))
 const contacts = computed(() => toNameItems(props.row.contacts ?? []))
+const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? []))
 </script>
 
 <template>
@@ -73,5 +74,11 @@ const contacts = computed(() => toNameItems(props.row.contacts ?? []))
   <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
   <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
   <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
+  <LabelCell
+    v-if="hasColumn('contact_groups')"
+    column-id="contact_groups"
+    :items="contactGroups"
+    size="small"
+  />
   <PerfometerCell v-if="hasColumn('perfometer')" column-id="perfometer" :data="row.perfometer" />
 </template>

@@ -102,7 +102,11 @@ test('requests the services sorted by name ascending on the first click of the S
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, sort: ['name:asc'], fields: ['labels', 'tags', 'contacts'] }
+      body: {
+        limit: 1000,
+        sort: ['name:asc'],
+        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+      }
     })
   )
 })
@@ -117,7 +121,11 @@ test('requests a descending sort first for the State column', async () => {
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, sort: ['state:desc'], fields: ['labels', 'tags', 'contacts'] }
+      body: {
+        limit: 1000,
+        sort: ['state:desc'],
+        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+      }
     })
   )
 })
@@ -135,7 +143,7 @@ test('requests the services matching a submitted search query', async () => {
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, q: 'CPU', fields: ['labels', 'tags', 'contacts'] }
+      body: { limit: 1000, q: 'CPU', fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
     })
   )
 })
@@ -169,7 +177,7 @@ test('requests services whose name contains the typed filter text', async () => 
       body: {
         limit: 1000,
         filter: { type: 'condition', field: 'name', op: 'contains', value: 'cpu' },
-        fields: ['labels', 'tags', 'contacts']
+        fields: ['labels', 'tags', 'contacts', 'contact_groups']
       }
     })
   )
@@ -191,7 +199,9 @@ test('clearing the name filter restores the full, unfiltered list', async () => 
 
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
-    expect.objectContaining({ body: { limit: 1000, fields: ['labels', 'tags', 'contacts'] } })
+    expect.objectContaining({
+      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+    })
   )
 })
 
@@ -210,7 +220,7 @@ test('requests services whose summary contains the typed filter text', async () 
       body: {
         limit: 1000,
         filter: { type: 'condition', field: 'summary', op: 'contains', value: 'timeout' },
-        fields: ['labels', 'tags', 'contacts']
+        fields: ['labels', 'tags', 'contacts', 'contact_groups']
       }
     })
   )
@@ -232,7 +242,9 @@ test('clearing the summary filter restores the full, unfiltered list', async () 
 
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
-    expect.objectContaining({ body: { limit: 1000, fields: ['labels', 'tags', 'contacts'] } })
+    expect.objectContaining({
+      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+    })
   )
 })
 
@@ -258,7 +270,7 @@ test('requests services that are not acknowledged and not in downtime', async ()
             { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
           ]
         },
-        fields: ['labels', 'tags', 'contacts']
+        fields: ['labels', 'tags', 'contacts', 'contact_groups']
       }
     })
   )
@@ -280,7 +292,9 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
 
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
-    expect.objectContaining({ body: { limit: 1000, fields: ['labels', 'tags', 'contacts'] } })
+    expect.objectContaining({
+      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+    })
   )
 })
 
@@ -314,7 +328,9 @@ test('resetting all filters restores the full, unfiltered list', async () => {
 
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
-    expect.objectContaining({ body: { limit: 1000, fields: ['labels', 'tags', 'contacts'] } })
+    expect.objectContaining({
+      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+    })
   )
 })
 

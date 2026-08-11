@@ -429,9 +429,23 @@ Pipfile.lock: Pipfile
 # This is extremely fast since the dependencies do not have to be resolved.
 # Cleanup partially created pipenv. This makes us able to automatically repair
 # broken virtual environments which may have been caused by network issues.
-# SETUPTOOLS_ENABLE_FEATURES="legacy-editable" is needed for mypy being able to
-# type check a package that's installed editable:
+#
+# The sync must no longer run with SETUPTOOLS_ENABLE_FEATURES="legacy-editable":
+# setuptools only defines the PEP 660 hooks when that feature is off, but always
+# lists them in build_meta.__all__. Any third party sdist whose build backend
+# does "from setuptools.build_meta import *" (e.g. pillow) therefore dies with
+# "AttributeError: module 'setuptools.build_meta' has no attribute
+# 'get_requires_for_build_editable'" once pip has to build it from source. That
+# only bites on distros without a matching wheel, which made it look like a
+# sles-12sp5 specific failure.
+#
+# We still need our own packages laid out so that mypy can type check them:
 # https://github.com/python/mypy/issues/13392
+# --config-settings editable_mode=compat is setuptools' supported replacement
+# for the feature flag. It writes the same plain path .pth mypy can follow, but
+# goes through the regular PEP 660 build_editable hook, so it neither relies on
+# pip's removed "setup.py develop" fallback nor leaks into anybody else's build.
+# --no-build-isolation makes them use the .venv's own (pinned) setuptools.
 .venv: Pipfile.lock .python-$(PYTHON_MAJOR_DOT_MINOR)-stamp
 	@( \
 	    echo "Creating .venv..." ; \
@@ -441,5 +455,9 @@ Pipfile.lock: Pipfile
 	      echo "Cleaning up .venv before sync..."; \
 	      $(RM) -r .venv; \
 	    fi; \
-	    ( PIP_CONSTRAINT=temporary_pipenv_constraints.txt SKIP_MAKEFILE_CALL=1 SETUPTOOLS_ENABLE_FEATURES="legacy-editable" VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+	    ( PIP_CONSTRAINT=temporary_pipenv_constraints.txt SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev \
+	      && echo "Reinstalling editable packages in compat mode..." \
+	      && .venv/bin/python -m pip install --quiet --no-deps --no-build-isolation --config-settings editable_mode=compat \
+	           $$(.venv/bin/python -c 'import json; print(" ".join("-e " + e["path"] for s in ("default", "develop") for e in json.load(open("Pipfile.lock"))[s].values() if e.get("editable")))') \
+	      && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)

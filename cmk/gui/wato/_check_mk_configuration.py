@@ -460,9 +460,13 @@ def _slow_view_logging_help() -> Help:
     )
 
 
-def _add_job_scheduler_log_level(params: dict[str, int]) -> dict[str, int]:
-    """Update version 2.3 -> 2.4"""
+def _migrate_log_levels(params: dict[str, int]) -> dict[str, int]:
+    # 2.3 -> 2.4: job scheduler logger added
     params.setdefault("cmk.web.ui-job-scheduler", 20)
+    # CMK-36979 (2.5 -> 3.0): the automations logger was renamed to match the
+    # backend logger name.
+    if "cmk.web.automations" in params:
+        params.setdefault("cmk.automations", params.pop("cmk.web.automations"))
     return params
 
 
@@ -484,7 +488,7 @@ def _form_spec_log_levels(edition: Edition, context: GlobalSettingsContext) -> D
             for level_id in _web_log_level_elements(edition, include_other_editions=True)
             if level_id not in elements
         ),
-        migrate=_add_job_scheduler_log_level,  # type: ignore[arg-type]
+        migrate=_migrate_log_levels,  # type: ignore[arg-type]
     )
 
 

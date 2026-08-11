@@ -7,7 +7,10 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.gui.wato._check_mk_configuration import _migrate_piggybacked_host_files
+from cmk.gui.wato._check_mk_configuration import (
+    _migrate_log_levels,
+    _migrate_piggybacked_host_files,
+)
 
 
 @pytest.mark.parametrize(
@@ -120,3 +123,31 @@ def test_migrate_piggybacked_host_files(
     expected_result: Mapping[str, object],
 ) -> None:
     assert _migrate_piggybacked_host_files(rule_value) == expected_result
+
+
+@pytest.mark.parametrize(
+    ("params", "expected_result"),
+    [
+        pytest.param(
+            {"cmk.web": 30, "cmk.web.automations": 10},
+            {"cmk.web": 30, "cmk.automations": 10, "cmk.web.ui-job-scheduler": 20},
+            id="CMK-36979: rename carries the configured level over",
+        ),
+        pytest.param(
+            # An already-migrated value wins; the stale key is dropped.
+            {"cmk.automations": 10, "cmk.web.automations": 20, "cmk.web.ui-job-scheduler": 20},
+            {"cmk.automations": 10, "cmk.web.ui-job-scheduler": 20},
+            id="CMK-36979: existing new key is not clobbered",
+        ),
+        pytest.param(
+            {"cmk.web": 30, "cmk.automations": 10, "cmk.web.ui-job-scheduler": 20},
+            {"cmk.web": 30, "cmk.automations": 10, "cmk.web.ui-job-scheduler": 20},
+            id="already migrated is unchanged",
+        ),
+    ],
+)
+def test_migrate_log_levels(
+    params: dict[str, int],
+    expected_result: dict[str, int],
+) -> None:
+    assert _migrate_log_levels(params) == expected_result

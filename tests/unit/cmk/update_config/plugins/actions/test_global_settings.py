@@ -8,9 +8,11 @@ import logging
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.ccc.version import Edition
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.valuespec import TextInput, Transform
+from cmk.gui.wato._check_mk_configuration import ConfigVariableLogLevels
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     ConfigVariableRegistry,
@@ -76,6 +78,37 @@ def test_update_global_config_migrates_form_spec_values(
         {"key": "old"},
         active_config,
     ) == {"key": "new"}
+
+
+@pytest.mark.usefixtures("request_context")
+def test_update_global_config_migrates_renamed_log_level(
+    mocker: MockerFixture,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # CMK-36979: the automations logger was renamed cmk.web.automations ->
+    # cmk.automations. A saved log_levels override must be rewritten during
+    # cmk-update-config so the configured level is preserved under the new key.
+
+    # Disable variable filtering by known Checkmk variables
+    mocker.patch.object(
+        global_settings, "filter_unknown_settings", lambda global_config: global_config
+    )
+
+    registry = ConfigVariableRegistry()
+    registry.register(ConfigVariableLogLevels(Edition.COMMUNITY))
+    monkeypatch.setattr(global_settings, "config_variable_registry", registry)
+
+    assert global_settings.update_global_config(
+        logging.getLogger(),
+        {"log_levels": {"cmk.web": 30, "cmk.web.automations": 10}},
+        active_config,
+    ) == {
+        "log_levels": {
+            "cmk.web": 30,
+            "cmk.automations": 10,
+            "cmk.web.ui-job-scheduler": 20,
+        }
+    }
 
 
 def test_update_global_config(

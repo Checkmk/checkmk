@@ -113,7 +113,11 @@ AuthType = Literal[
 ]
 
 DismissableWarning = Literal[
-    "notification_fallback", "immediate_slideout_change", "changes-info", "agent_slideout"
+    "notification_fallback",
+    "immediate_slideout_change",
+    "changes-info",
+    "agent_slideout",
+    "automatic_crash_report_upload",
 ]
 
 

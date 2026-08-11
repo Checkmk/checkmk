@@ -808,6 +808,7 @@ class UserDismissWarningModel:
         "immediate_slideout_change",
         "changes-info",
         "agent_slideout",
+        "automatic_crash_report_upload",
     ] = api_field(
         description="The warning to be dismissed.",
         example="notification_fallback",

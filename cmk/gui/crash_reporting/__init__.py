@@ -10,6 +10,7 @@ from cmk.crash import cleanup_crash_reports, make_crash_report_base_path
 from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.data_source import DataSourceRegistry
+from cmk.gui.hooks import register_builtin
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.views.command import CommandRegistry
@@ -77,6 +78,7 @@ def register(
     cron_job_registry: CronJobRegistry,
 ) -> None:
     crash_reporting_pages.register(page_registry)
+    register_builtin("view_banner", crash_reporting_pages.show_automatic_upload_hint_on_view)
     cron_job_registry.register(
         CronJob(
             name="consolidate_crash_reports",

@@ -31,6 +31,7 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_topic_breadcrumb,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.debug_vars import debug_vars
@@ -129,6 +130,46 @@ def _get_serialized_crash_report(row: CrashReportRow) -> Mapping[str, bytes | No
     return {k: v.encode() for k, v in row.items() if k not in ["site", "crash_id", "crash_type"]}
 
 
+def show_automatic_upload_hint_on_view(view_name: str) -> None:
+    if view_name == "crash_reports":
+        _show_automatic_upload_hint(request, active_config.automatic_crash_report_upload)
+
+
+def _show_automatic_upload_hint(request: Request, contact_email: str | None) -> None:
+    if contact_email is not None or not user.may("wato.global"):
+        return
+
+    html.vue_component(
+        "cmk-dialog",
+        data={
+            "title": _("Automatic crash report upload is disabled"),
+            "message": _(
+                "Crash reports help us to find and fix bugs faster. Instead of submitting "
+                "every crash report by hand, you can let this site upload its crash "
+                "reports automatically once a day."
+            ),
+            "main_button": {
+                "title": _("Opt in to automatic crash report upload"),
+                "action": {
+                    "type": "redirect",
+                    "url": makeuri_contextless(
+                        request,
+                        [
+                            ("mode", "edit_configvar"),
+                            ("varname", "automatic_crash_report_upload"),
+                        ],
+                        filename="wato.py",
+                    ),
+                },
+            },
+            "optional_button": {
+                "title": _("Do not show again"),
+                "dismissal": {"key": "automatic_crash_report_upload"},
+            },
+        },
+    )
+
+
 class PageCrash(Page):
     @override
     def page(self, ctx: PageContext) -> None:
@@ -198,6 +239,7 @@ class PageCrash(Page):
 
         self._warn_about_sensitive_information(report.info)
         self._warn_about_local_files(report.info)
+        _show_automatic_upload_hint(ctx.request, ctx.config.automatic_crash_report_upload)
         self._show_report_form(report.info, details)
         self._show_crash_report(report.info)
         self._show_crash_report_details(report.info, report.row)

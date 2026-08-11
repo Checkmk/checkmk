@@ -97,6 +97,7 @@ py_cmk_test(
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crash:crash",
         "//packages/cmk-ec",

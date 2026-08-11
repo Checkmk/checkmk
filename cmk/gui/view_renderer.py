@@ -290,6 +290,7 @@ class GUIViewRenderer(ABCViewRenderer):
         for message in self.view.warning_messages:
             html.show_warning(message)
 
+        call_hooks("view_banner", self.view.name)
         call_hooks("rmk_view_banner", self.view.name)
         call_hooks("experimental_view_button", self.view.name)
 

@@ -11,6 +11,7 @@ import type {
   HostRef,
   HostServicesResponse,
   ServiceFilterNode,
+  ServiceOptionalField,
   ServiceOverview,
   ServiceRef,
   ServicesRequestBody
@@ -21,6 +22,7 @@ export interface HostServicesQueryParams extends MonitoringQueryParams {
   // `ServiceFilterNode` schema, generated separately from the host one (e.g. `state`'s allowed
   // values differ between the two), hence the `unknown` bridge below rather than a direct cast.
   filter?: FilterNode | undefined
+  fields?: ServiceOptionalField[] | undefined
 }
 
 export class HostServicesApi extends MonitoringApi {
@@ -33,7 +35,8 @@ export class HostServicesApi extends MonitoringApi {
       ...this.buildRequestBody(params),
       ...(params.filter && {
         filter: params.filter as unknown as ServiceFilterNode
-      })
+      }),
+      ...(params.fields !== undefined && { fields: params.fields })
     }
     return unwrap(
       await client.POST('/monitor/hosts/{hostname}/services', {

@@ -70,7 +70,13 @@ describe('HostServicesService', () => {
 
     expect(fetchServices).toHaveBeenLastCalledWith(
       HOST,
-      { limit: DEFAULT_BATCH_SIZE, sort: [], searchQuery: '' },
+      {
+        limit: DEFAULT_BATCH_SIZE,
+        sort: [],
+        searchQuery: '',
+        filter: undefined,
+        fields: ['labels']
+      },
       expect.any(AbortSignal)
     )
   })
@@ -86,7 +92,13 @@ describe('HostServicesService', () => {
 
     expect(fetchServices).toHaveBeenLastCalledWith(
       { ...HOST },
-      { limit: DEFAULT_BATCH_SIZE, sort: [{ id: 'state', desc: true }], searchQuery: '' },
+      {
+        limit: DEFAULT_BATCH_SIZE,
+        sort: [{ id: 'state', desc: true }],
+        searchQuery: '',
+        filter: undefined,
+        fields: ['labels']
+      },
       expect.any(AbortSignal)
     )
   })
@@ -102,7 +114,13 @@ describe('HostServicesService', () => {
 
     expect(fetchServices).toHaveBeenLastCalledWith(
       { ...HOST },
-      { limit: DEFAULT_BATCH_SIZE, sort: [], searchQuery: 'CPU' },
+      {
+        limit: DEFAULT_BATCH_SIZE,
+        sort: [],
+        searchQuery: 'CPU',
+        filter: undefined,
+        fields: ['labels']
+      },
       expect.any(AbortSignal)
     )
   })

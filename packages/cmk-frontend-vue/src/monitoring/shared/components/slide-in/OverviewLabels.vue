@@ -5,12 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
-import CmkTag, { type Colors } from 'cmk-ui-library/components/CmkTag.vue'
+import CmkTag from 'cmk-ui-library/components/CmkTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
 
 import type { LabelValue } from '@/monitoring/shared/api/types'
+import { toLabelItems } from '@/monitoring/shared/labels'
 
 const DEFAULT_LIMIT = 5
 
@@ -20,20 +20,9 @@ const props = withDefaults(defineProps<{ labels: Record<string, LabelValue>; lim
 
 const { _t } = usei18n()
 
-const SOURCE_COLORS: Record<string, Colors> = {
-  discovered: 'discovered',
-  explicit: 'explicit',
-  ruleset: 'ruleset'
-}
-
 const expanded = ref(false)
 
-const items = computed(() =>
-  Object.entries(props.labels).map(([key, label]) => ({
-    text: `${key}: ${label.value}` as TranslatedString,
-    color: SOURCE_COLORS[label.source] ?? 'default'
-  }))
-)
+const items = computed(() => toLabelItems(props.labels))
 
 const hasOverflow = computed(() => items.value.length > props.limit)
 const visibleItems = computed(() =>

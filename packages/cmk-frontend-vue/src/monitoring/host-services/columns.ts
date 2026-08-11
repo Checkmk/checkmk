@@ -3,15 +3,34 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ColumnDef, ColumnPinningState } from '@tanstack/vue-table'
+import type { ColumnDef, ColumnPinningState, VisibilityState } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import type { HostServiceEntry, ServiceState } from '@/monitoring/shared/api/types'
+import type {
+  HostServiceEntry,
+  ServiceOptionalField,
+  ServiceState
+} from '@/monitoring/shared/api/types'
 import type {
   BooleanGroupFilter,
   CheckboxListFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
+
+/**
+ * Columns the user may hide that also map to API-optional fields.
+ * When hidden, their field is omitted from the API request, so the endpoint
+ * does not read it from livestatus either.
+ */
+const OPTIONAL_FIELD_COLUMNS = ['labels'] as const satisfies readonly ServiceOptionalField[]
+
+/**
+ * The service optional fields (columns) the table currently shows,
+ * to ask the API for those alone.
+ */
+export function visibleServiceFields(visibility: VisibilityState): ServiceOptionalField[] {
+  return OPTIONAL_FIELD_COLUMNS.filter((field) => visibility[field] !== false)
+}
 
 /**
  * The columns frozen to the edges of the table once it has to scroll
@@ -113,6 +132,13 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       sortDescFirst: true,
       minSize: 120,
       maxSize: 200
+    },
+    {
+      accessorKey: 'labels',
+      header: _t('Labels'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 400
     },
     {
       accessorKey: 'perfometer',

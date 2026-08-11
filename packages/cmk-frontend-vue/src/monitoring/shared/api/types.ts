@@ -13,6 +13,8 @@ export type HostEntry = components['schemas']['HostEntry']
 
 export type HostOptionalField = components['schemas']['HostOptionalField']
 
+export type ServiceOptionalField = components['schemas']['ServiceOptionalField']
+
 export type HostServicesResponse = components['schemas']['HostServicesResponse']
 
 export type HostServiceEntry = components['schemas']['HostServiceEntry']

@@ -52,9 +52,26 @@ test('renders service name and summary in their cells', () => {
 test('renders one cell per column', () => {
   const { container } = mountRow(makeService())
 
-  // select, state, modes, name, summary, last_check, last_state_change, perfometer
+  // select, state, modes, name, summary, last_check, last_state_change, labels, perfometer
   const tds = Array.from(container.querySelectorAll('td'))
-  expect(tds).toHaveLength(8)
+  expect(tds).toHaveLength(9)
+})
+
+test('renders the labels of a service, sorted alphabetically', () => {
+  const { container } = mountRow(
+    makeService({
+      labels: {
+        owner: { value: 'platform', source: 'explicit' },
+        'cmk/check_plugin': { value: 'cpu_load', source: 'discovered' }
+      }
+    })
+  )
+
+  const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
+  expect(tags.map((tag) => tag.textContent?.trim())).toEqual([
+    'cmk/check_plugin: cpu_load',
+    'owner: platform'
+  ])
 })
 
 test('renders the perfometer of a service that has one', () => {

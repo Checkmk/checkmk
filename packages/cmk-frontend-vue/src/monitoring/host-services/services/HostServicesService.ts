@@ -13,6 +13,7 @@ import {
 } from '@/monitoring/shared/services/MonitoringService'
 
 import type { HostServicesApi } from '../api/services'
+import { visibleServiceFields } from '../columns'
 
 export class HostServicesService extends MonitoringService<HostServiceEntry> {
   constructor(
@@ -31,7 +32,8 @@ export class HostServicesService extends MonitoringService<HostServiceEntry> {
         limit: this.requestedLimit.value,
         sort: this.sortState.value,
         searchQuery: this.searchQuery.value,
-        filter: this.filterState.value
+        filter: this.filterState.value,
+        fields: visibleServiceFields(this.columnVisibility.value)
       },
       signal
     )

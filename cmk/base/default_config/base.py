@@ -46,6 +46,7 @@ agent_ports: list[RuleSpec[int]] = []
 agent_encryption: list[RuleSpec[str | None]] = []
 encryption_handling: list[RuleSpec[Mapping[str, str]]] = []
 agent_exclude_sections: list[RuleSpec[dict[str, str]]] = []
+telemetry_custom_service: list[RuleSpec[Mapping[str, object]]] = []
 # UDP ports used for SNMP
 snmp_ports: list[RuleSpec[int]] = []
 tcp_connect_timeout = 5.0

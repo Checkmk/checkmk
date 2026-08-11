@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 
 from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc.hostaddress import HostName
@@ -48,6 +48,23 @@ def make_tcp_fetcher_config(
             ruleset_matcher,
             labels_of_host,
         ),
+    )
+
+
+def make_telemetry_custom_service_config(
+    loaded_config: BaseConfig,
+    ruleset_matcher: RulesetMatcher,
+    labels_of_host: Callable[[HostName], Labels],
+) -> Callable[[HostName], Sequence[Mapping[str, object]]]:
+    """Resolve the custom telemetry service ruleset for a single host.
+
+    The ruleset's eval type is ALL, so every matching rule contributes; the caller
+    gets them in rule order.
+    """
+    return SingleHostRulesetMatcher(
+        host_ruleset=loaded_config.telemetry_custom_service,
+        matcher=ruleset_matcher,
+        labels_of_host=labels_of_host,
     )
 
 

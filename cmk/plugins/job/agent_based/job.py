@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 import time
-from collections.abc import Callable, Iterator, Mapping
-from typing import Final, TypedDict
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from dataclasses import asdict, dataclass
+from enum import auto, Enum
+from typing import Final, Self, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -62,41 +65,93 @@ _METRIC_TRANSLATION: Final = {
     "System": "system_time",
 }
 
-Metrics = dict[str, float]
+# mk-job names the file of a running job "<jobname>.<pid>running". Old versions
+# omitted the pid, so it may be empty.
+_JOB_HEADER: Final = re.compile(r"(?P<jobname>.+?)(?P<running>\.(?P<pid>\d*)running)?")
 
 
-class Job(TypedDict, total=False):
-    running: bool
-    exit_code: int
+class RunState(Enum):
+    RUNNING = auto()
+    COMPLETED = auto()
+
+
+def _as[T](_type: Callable[[str], T], value: str | None) -> T | None:
+    """Apply _type to value, mapping anything unparsable to None.
+
+    Every field of an mk-job file may be missing or garbled: /usr/bin/time may
+    not be installed at all, and on AIX/Solaris mk-job merges the job's own
+    stderr into the file (see agents/mk-job.aix).
+    """
+    if value is None:
+        return None
+    try:
+        return _type(value)
+    except (TypeError, ValueError):
+        return None
+
+
+@dataclass
+class Metrics:
+    real_time: float | None
+    user_time: float | None
+    system_time: float | None
+    reads: int | None
+    writes: int | None
+    max_res_bytes: int | None
+    avg_mem_bytes: int | None
+    invol_context_switches: int | None
+    vol_context_switches: int | None
+
+    @classmethod
+    def from_dict(cls, values: Mapping[str, str]) -> Self:
+        translated = {
+            # Some locales use a comma as the decimal marker.
+            _METRIC_TRANSLATION.get(name, name): value.replace(",", ".")
+            for name, value in values.items()
+        }
+        max_res_kbytes = _as(int, translated.get("max_res_kbytes"))
+        avg_mem_kbytes = _as(int, translated.get("avg_mem_kbytes"))
+        return cls(
+            real_time=_as(_job_parse_real_time, translated.get("real_time")),
+            user_time=_as(float, translated.get("user_time")),
+            system_time=_as(float, translated.get("system_time")),
+            reads=_as(int, translated.get("reads")),
+            writes=_as(int, translated.get("writes")),
+            max_res_bytes=max_res_kbytes * 1000 if max_res_kbytes is not None else None,
+            avg_mem_bytes=avg_mem_kbytes * 1000 if avg_mem_kbytes is not None else None,
+            invol_context_switches=_as(int, translated.get("invol_context_switches")),
+            vol_context_switches=_as(int, translated.get("vol_context_switches")),
+        )
+
+
+@dataclass
+class RunningJob:
+    name: str
+    pid: int | None
+    # A running job without a usable start time is not reported at all, see parse_job.
     start_time: float
-    running_start_time: list[int]
+
+
+@dataclass
+class CompletedJob:
+    name: str
+    start_time: float | None
+    exit_code: int | None
     metrics: Metrics
 
 
-Section = dict[str, Job]
+Job = RunningJob | CompletedJob
+Section = Mapping[str, Sequence[Job]]
 
 
 def _job_parse_real_time(s: str) -> float:
     parts = s.split(":")
-    min_sec, hour_sec = 0, 0
+    min_sec, hour_sec = 0.0, 0.0
     if len(parts) == 3:
         hour_sec = int(parts[0]) * 60 * 60
     if len(parts) >= 2:
         min_sec = int(parts[-2]) * 60
     return float(parts[-1]) + min_sec + hour_sec
-
-
-def _job_parse_metrics(line: list[str]) -> tuple[str, float]:
-    name, value = line
-    name = _METRIC_TRANSLATION.get(name, name)
-    value = value.replace(",", ".")
-    if name == "real_time":
-        return name, _job_parse_real_time(value)
-    if name in ("user_time", "system_time"):
-        return name, float(value)
-    if name in ("max_res_kbytes", "avg_mem_kbytes"):
-        return name.replace("kbytes", "bytes"), int(value) * 1000
-    return name, int(value)
 
 
 def _split_job_tables(string_table: StringTable) -> Iterator[tuple[list[str], StringTable]]:
@@ -123,6 +178,17 @@ def _split_job_tables(string_table: StringTable) -> Iterator[tuple[list[str], St
         yield header, buffer
 
 
+def _parse_header(header: list[str]) -> tuple[str, RunState, int | None] | None:
+    """Return job name, run state and pid, or None if there is no job name."""
+    if (match := _JOB_HEADER.fullmatch(" ".join(header[1:-1]))) is None:
+        return None
+
+    if match["running"] is None:
+        return match["jobname"], RunState.COMPLETED, None
+
+    return match["jobname"], RunState.RUNNING, _as(int, match["pid"])
+
+
 def _is_zombie(body: StringTable) -> bool:
     """Tell a running job apart from a leftover ".<pid>running" file.
 
@@ -139,68 +205,37 @@ def _is_zombie(body: StringTable) -> bool:
     return len(body) != 1 or body[0][0] != "start_time"
 
 
-def _get_jobname_and_running_state(header: list[str], body: StringTable) -> tuple[str, str]:
-    """determine whether the job is running. some jobs are flagged as
-    running jobs, but are in fact not (i.e. they are pseudo running), for
-    example killed jobs.
-    returns a tuple containing the job name without the 'running' postfix
-    (if applicable) and one of three possible running states:
-        - 'running'
-        - 'not_running'
-        - 'pseudo_running'
-    """
-    jobname = " ".join(header[1:-1])
-
-    if not jobname.endswith("running"):
-        return jobname, "not_running"
-
-    jobname = jobname.rsplit(".", 1)[0]
-
-    return jobname, "pseudo_running" if _is_zombie(body) else "running"
-
-
 def parse_job(string_table: StringTable) -> Section:
-    parsed: Section = {}
+    section: dict[str, list[Job]] = {}
     for header, body in _split_job_tables(string_table):
-        jobname, running_state = _get_jobname_and_running_state(header, body)
-        running = running_state == "running"
+        if (parsed_header := _parse_header(header)) is None:
+            continue
+        jobname, state, pid = parsed_header
 
-        if running_state == "pseudo_running":
-            # A leftover ".<pid>running" file of a job that is not running any
-            # more. Its contents do not describe the last completed run: the
-            # exit code written by /usr/bin/time is 0 for a job that died from
-            # a signal, for example. So we go by the completed file instead.
+        fields = {line[0]: " ".join(line[1:]) for line in body}
+        start_time = _as(float, fields.pop("start_time", None))
+
+        if state is RunState.RUNNING:
+            if start_time is None or _is_zombie(body):
+                # Leftover file of a job that is not running any more, or one
+                # without a usable start time. Either way the completed file -
+                # if there is one - is what describes this job.
+                continue
+            section.setdefault(jobname, []).append(
+                RunningJob(name=jobname, pid=pid, start_time=start_time)
+            )
             continue
 
-        metrics: Metrics = {}
-        job_stats: Job = {
-            "running": running,
-            "metrics": metrics,
-        }
-        job = parsed.setdefault(jobname, job_stats)
-        # the setdefault means: the first job wins. so if we see a running job first, and a
-        # stopped afterwards, the job is running.
-        # but if we se a stopped job first and then a running one, then its still reported as
-        # stopped, which is not correct.
-        # running should overwrite stopped, but stopped should not overwrite running:
-        if job_stats["running"] is True:
-            job["running"] = True
+        section.setdefault(jobname, []).append(
+            CompletedJob(
+                name=jobname,
+                start_time=start_time,
+                exit_code=_as(int, fields.pop("exit_code", None)),
+                metrics=Metrics.from_dict(fields),
+            )
+        )
 
-        for line in body:
-            if len(line) != 2:
-                continue
-            name, value = _job_parse_metrics(line)
-            if running:
-                job.setdefault("running_start_time", []).append(int(value))
-            elif name == "exit_code":
-                job["exit_code"] = int(value)
-            elif name == "start_time":
-                job["start_time"] = value
-            else:
-                assert name in _METRIC_SPECS
-                metrics[name] = value
-
-    return parsed
+    return section
 
 
 agent_section_job = AgentSection(
@@ -210,7 +245,7 @@ agent_section_job = AgentSection(
 
 
 def discover_job(section: Section) -> DiscoveryResult:
-    for jobname, _job in section.items():
+    for jobname in section:
         yield Service(item=jobname)
 
 
@@ -227,89 +262,35 @@ _METRIC_SPECS: Mapping[str, tuple[str, Callable[[float | int], str]]] = {
 }
 
 
-def _check_job_levels(job: Job, metric: str, notice_only: bool = True) -> CheckResult:
-    label, render_func = _METRIC_SPECS[metric]
-    yield from check_levels(
-        job["metrics"][metric],
-        metric_name=metric,
-        label=label,
-        render_func=render_func,
-        notice_only=notice_only,
-        boundaries=(0, None),
-    )
-
-
-def _process_job_stats(
-    job: Job,
-    age_levels: tuple[int, int] | None,
-    exit_code_to_state_map: dict[int, State],
-    now: float,
+def _check_completed_job(
+    exit_code: int,
+    metrics: Metrics,
+    exit_code_to_state_map: Mapping[int, State],
 ) -> CheckResult:
     yield Result(
-        state=exit_code_to_state_map.get(job["exit_code"], State.CRIT),
-        summary=f"Latest exit code: {job['exit_code']}",
+        state=exit_code_to_state_map.get(exit_code, State.CRIT),
+        summary=f"Latest exit code: {exit_code}",
     )
-
-    metrics_to_output = set(job["metrics"])
-
-    if "real_time" in metrics_to_output:
-        metrics_to_output.remove("real_time")
-        yield from _check_job_levels(job, "real_time", notice_only=False)
-
-    # Order metric in a meaningful way
-    for metric in (
-        "user_time",
-        "system_time",
-        "reads",
-        "writes",
-        "max_res_bytes",
-        "avg_mem_bytes",
-        "invol_context_switches",
-        "vol_context_switches",
-    ):
-        if metric not in metrics_to_output:
+    for name, value in asdict(metrics).items():
+        if value is None:
             continue
-        yield from _check_job_levels(job, metric)
-
-    currently_running = " (currently running)" if "running_start_time" in job else ""
-    if currently_running:
-        start_times = job["running_start_time"]
-        count = len(start_times)
-        yield Result(
-            state=State.OK,
-            notice="%d job%s currently running, started at %s"
-            % (
-                count,
-                " is" if count == 1 else "s are",
-                ", ".join(render.datetime(t) for t in start_times),
-            ),
-        )
-    else:
-        yield Result(
-            state=State.OK,
-            notice="Latest job started at %s" % render.datetime(job["start_time"]),
-        )
-
-    # Werk 7477: the age levels apply to the job that has been running the longest.
-    used_start_time = min(job["running_start_time"]) if currently_running else job["start_time"]
-    if (age := now - used_start_time) >= 0:
+        label, render_func = _METRIC_SPECS[name]
         yield from check_levels(
-            age,
-            metric_name="job_age",
-            label=f"Job age{currently_running}",
-            # In pre-2.0 versions of this check plug-in, we had
-            # check_default_parameters={"age": (0, 0)}
-            # However, these levels were only applied if they were not zero. We still need to keep this
-            # check because many old autocheck files still have
-            # 'parameters': {'age': (0, 0)}
-            # which must not result in actually applying these levels.
-            levels_upper=(
-                ("fixed", age_levels) if age_levels is not None and age_levels != (0, 0) else None
-            ),
-            render_func=render.timespan,
+            value=value,
+            metric_name=name,
+            label=label,
+            render_func=render_func,
+            notice_only=name != "real_time",
             boundaries=(0, None),
         )
-    else:
+
+
+def _check_job_age(
+    age: float,
+    currently_running: bool,
+    age_levels: tuple[int, int] | None,
+) -> CheckResult:
+    if age < 0:
         yield Result(
             state=State.OK,
             summary=(
@@ -317,6 +298,24 @@ def _process_job_stats(
                 " in the future (check your system time)"
             ),
         )
+        return
+
+    yield from check_levels(
+        value=age,
+        metric_name="job_age",
+        label=f"Job age{' (currently running)' if currently_running else ''}",
+        # In pre-2.0 versions of this check plug-in, we had
+        # check_default_parameters={"age": (0, 0)}
+        # However, these levels were only applied if they were not zero. We still need to keep this
+        # check because many old autocheck files still have
+        # 'parameters': {'age': (0, 0)}
+        # which must not result in actually applying these levels.
+        levels_upper=(
+            ("fixed", age_levels) if age_levels is not None and age_levels != (0, 0) else None
+        ),
+        render_func=render.timespan,
+        boundaries=(0, None),
+    )
 
 
 def check_job(
@@ -324,23 +323,49 @@ def check_job(
     params: CheckParameters,
     section: Section,
 ) -> CheckResult:
-    job = section.get(item)
-    if job is None:
+    if (jobs := section.get(item)) is None:
         return
 
-    if job.get("exit_code") is None or not ("start_time" in job or "running_start_time" in job):
-        yield Result(
-            state=State.UNKNOWN,
-            summary="Got incomplete information for this job",
-        )
+    running_jobs = [job for job in jobs if isinstance(job, RunningJob)]
+    completed_job = next((job for job in jobs if isinstance(job, CompletedJob)), None)
+
+    # The exit code comes from the completed job, so without one we cannot say
+    # anything about the outcome. Its start time is only needed while nothing runs.
+    if (
+        completed_job is None
+        or completed_job.exit_code is None
+        or (completed_job.start_time is None and not running_jobs)
+    ):
+        yield Result(state=State.UNKNOWN, summary="Got incomplete information for this job")
         return
 
-    yield from _process_job_stats(
-        job,
-        params["age"],
+    yield from _check_completed_job(
+        completed_job.exit_code,
+        completed_job.metrics,
         {k: State(v) for k, v in params["exit_code_to_state_map"]},
-        time.time(),
     )
+
+    if running_jobs:
+        count = len(running_jobs)
+        yield Result(
+            state=State.OK,
+            notice=(
+                f"{count} job{' is' if count == 1 else 's are'} currently running, started at"
+                f" {', '.join(render.datetime(job.start_time) for job in running_jobs)}"
+            ),
+        )
+        # Werk 7477: the age levels apply to the job that has been running the longest.
+        start_time = min(job.start_time for job in running_jobs)
+    elif completed_job.start_time is not None:
+        yield Result(
+            state=State.OK,
+            notice=f"Latest job started at {render.datetime(completed_job.start_time)}",
+        )
+        start_time = completed_job.start_time
+    else:
+        return  # unreachable, the guard above has rejected this
+
+    yield from _check_job_age(time.time() - start_time, bool(running_jobs), params["age"])
 
 
 check_plugin_job = CheckPlugin(

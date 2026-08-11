@@ -1972,3 +1972,111 @@ def test_openapi_refresh_job_status(
     assert "state" in resp.json["extensions"]
     assert "result" in resp.json["extensions"]["logs"]
     assert "progress" in resp.json["extensions"]["logs"]
+
+
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_openapi_service_discovery_accessible_to_folder_contact(
+    clients: ClientRegistry,
+    mock_discovery_preview: MagicMock,
+) -> None:
+    """Regression test for SUP-29084.
+
+    A user who can see a host only through their contact group's folder permissions (not
+    through the blanket 'wato.see_all_folders' permission, which is only held by admins) must
+    still be able to run a service discovery and read back its result/status via the REST API.
+    """
+    host_name = "restricted_host"
+    clients.ContactGroup.create("folder_cg", alias="folder_cg")
+    clients.User.create(
+        username="folder_member",
+        fullname="folder_member",
+        customer=None,
+        roles=["user"],
+        contactgroups=["folder_cg"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.Folder.create(
+        title="restricted_folder",
+        parent="/",
+        folder_name="restricted_folder",
+        attributes={"contactgroups": {"groups": ["folder_cg"], "recurse_perms": True}},
+    )
+    clients.HostConfig.create(host_name=host_name, folder="/restricted_folder")
+
+    clients.ServiceDiscovery.set_credentials("folder_member", "supersecretish")
+
+    clients.ServiceDiscovery.start_service_discovery(host_name, "refresh").assert_status_code(303)
+
+    clients.ServiceDiscovery.wait_for_service_discovery_completion(host_name).assert_status_code(
+        204
+    )
+
+    run_resp = clients.ServiceDiscovery.get_service_discovery_status(host_name)
+
+    run_resp.assert_status_code(200)
+    assert run_resp.json["extensions"]["state"] == "finished"
+
+
+def test_openapi_service_discovery_inaccessible_to_non_folder_contact(
+    clients: ClientRegistry,
+) -> None:
+    """A user who is NOT a member of the host folder's contact group gets 404, indistinguishable
+    from a host that does not exist, so that host existence is not leaked."""
+    host_name = "restricted_host"
+    clients.ContactGroup.create("correct_cg", alias="correct_cg")
+    clients.ContactGroup.create("wrong_cg", alias="wrong_cg")
+    clients.User.create(
+        username="wrong_member",
+        fullname="wrong_member",
+        customer=None,
+        roles=["user"],
+        contactgroups=["wrong_cg"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.Folder.create(
+        title="restricted_folder",
+        parent="/",
+        folder_name="restricted_folder",
+        attributes={"contactgroups": {"groups": ["correct_cg"], "recurse_perms": True}},
+    )
+    clients.HostConfig.create(host_name=host_name, folder="/restricted_folder")
+
+    clients.ServiceDiscovery.set_credentials("wrong_member", "supersecretish")
+
+    clients.ServiceDiscovery.wait_for_service_discovery_completion(
+        host_name, expect_ok=False
+    ).assert_status_code(404)
+
+
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_openapi_service_discovery_accessible_to_admin_not_in_folder_contact_group(
+    clients: ClientRegistry,
+    mock_discovery_preview: MagicMock,
+) -> None:
+    """Regression test for SUP-29084.
+
+    Admins can see every host via the blanket 'wato.see_all_folders' permission, regardless of
+    contact group membership. This must keep working now that 'wato.see_all_folders' is only an
+    optional shortcut in RO_PERMISSIONS (added so that folder contacts without it are not locked
+    out, see test_openapi_service_discovery_accessible_to_folder_contact).
+    """
+    host_name = "restricted_host"
+    clients.ContactGroup.create("folder_cg", alias="folder_cg")
+    clients.Folder.create(
+        title="restricted_folder",
+        parent="/",
+        folder_name="restricted_folder",
+        attributes={"contactgroups": {"groups": ["folder_cg"], "recurse_perms": True}},
+    )
+    clients.HostConfig.create(host_name=host_name, folder="/restricted_folder")
+
+    clients.ServiceDiscovery.start_service_discovery(host_name, "refresh").assert_status_code(303)
+
+    clients.ServiceDiscovery.wait_for_service_discovery_completion(host_name).assert_status_code(
+        204
+    )
+
+    run_resp = clients.ServiceDiscovery.get_service_discovery_status(host_name)
+
+    run_resp.assert_status_code(200)
+    assert run_resp.json["extensions"]["state"] == "finished"

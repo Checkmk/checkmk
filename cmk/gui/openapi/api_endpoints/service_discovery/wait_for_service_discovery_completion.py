@@ -31,7 +31,7 @@ from ._utils import job_snapshot, RO_PERMISSIONS
 def wait_for_service_discovery_completion_v1(
     api_context: ApiContext,
     host: Annotated[
-        Annotated[Host, TypedPlainValidator(str, HostConverter().host)],
+        Annotated[Host, TypedPlainValidator(str, HostConverter(permission_type="setup_read").host)],
         PathParam(description="A host name.", example="example.com", alias="host_name"),
     ],
 ) -> ApiResponse[None]:
@@ -41,7 +41,6 @@ def wait_for_service_discovery_completion_v1(
     """
     user.need_permission("wato.edit")
     user.need_permission("wato.services")
-    user.need_permission("wato.see_all_folders")
 
     snapshot = job_snapshot(host, api_context.config.sites, debug=api_context.config.debug)
     if not snapshot.exists:

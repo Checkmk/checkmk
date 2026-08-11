@@ -39,7 +39,8 @@ UPDATE_PHASE_PERMISSIONS = permissions.AllPerm(
         permissions.Perm("wato.service_discovery_to_ignored"),
         permissions.Perm("wato.service_discovery_to_undecided"),
         permissions.Perm("wato.service_discovery_to_removed"),
-        permissions.Perm("wato.see_all_folders"),
+        # Only used as a shortcut to see hosts without being a contact of their folder.
+        permissions.Optional(permissions.Perm("wato.see_all_folders")),
     ]
 )
 
@@ -48,7 +49,7 @@ def update_service_phase_v1(
     api_context: ApiContext,
     body: UpdateDiscoveryPhaseModel,
     host: Annotated[
-        Annotated[Host, TypedPlainValidator(str, HostConverter().host)],
+        Annotated[Host, TypedPlainValidator(str, HostConverter(permission_type="setup_read").host)],
         PathParam(
             description="The host of the service which shall be updated.",
             example="example.com",
@@ -61,7 +62,6 @@ def update_service_phase_v1(
     user.need_permission("wato.service_discovery_to_ignored")
     user.need_permission("wato.service_discovery_to_undecided")
     user.need_permission("wato.service_discovery_to_removed")
-    user.need_permission("wato.see_all_folders")
 
     _update_single_service_phase(
         SERVICE_DISCOVERY_PHASES[body.target_phase],

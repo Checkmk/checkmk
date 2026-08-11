@@ -37,7 +37,7 @@ from .models.response_models import ServiceDiscoveryResultModel
 def show_service_discovery_result_v1(
     api_context: ApiContext,
     host: Annotated[
-        Annotated[Host, TypedPlainValidator(str, HostConverter().host)],
+        Annotated[Host, TypedPlainValidator(str, HostConverter(permission_type="setup_read").host)],
         PathParam(
             description="The host of the service discovery result",
             example="example.com",
@@ -48,7 +48,6 @@ def show_service_discovery_result_v1(
     """Show the current service discovery result"""
     user.need_permission("wato.edit")
     user.need_permission("wato.services")
-    user.need_permission("wato.see_all_folders")
 
     try:
         discovery_result = get_check_table(

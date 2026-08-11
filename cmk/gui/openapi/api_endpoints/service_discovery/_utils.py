@@ -66,7 +66,8 @@ RO_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.edit"),
         permissions.Perm("wato.services"),
-        permissions.Perm("wato.see_all_folders"),
+        # Only used as a shortcut to see hosts without being a contact of their folder.
+        permissions.Optional(permissions.Perm("wato.see_all_folders")),
         # The permissions below are required to manage BackgroundJobs
         permissions.Optional(permissions.Perm("background_jobs.stop_jobs")),
         permissions.Optional(permissions.Perm("background_jobs.stop_foreign_jobs")),

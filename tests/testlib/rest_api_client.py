@@ -3625,6 +3625,7 @@ class ServiceClient(RestApiClient):
 class ServiceDiscoveryClient(RestApiClient):
     service_discovery_domain: DomainType = "service_discovery"
     discovery_run_domain: DomainType = "discovery_run"
+    service_discovery_run_domain: DomainType = "service_discovery_run"
 
     def bulk_discovery(
         self,
@@ -3668,6 +3669,33 @@ class ServiceDiscoveryClient(RestApiClient):
         return self.request(
             "get",
             url=f"/objects/{self.discovery_run_domain}/{id_}",
+            expect_ok=expect_ok,
+        )
+
+    def start_service_discovery(
+        self, host_name: str, mode: str = "refresh", expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.service_discovery_run_domain}/actions/start/invoke",
+            body={"host_name": host_name, "mode": mode},
+            expect_ok=expect_ok,
+            follow_redirects=False,
+        )
+
+    def wait_for_service_discovery_completion(
+        self, host_name: str, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.service_discovery_run_domain}/{host_name}/actions/wait-for-completion/invoke",
+            expect_ok=expect_ok,
+        )
+
+    def get_service_discovery_status(self, host_name: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.service_discovery_run_domain}/{host_name}",
             expect_ok=expect_ok,
         )
 

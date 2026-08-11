@@ -34,14 +34,13 @@ from .models.response_models import (
 def show_service_discovery_run_v1(
     api_context: ApiContext,
     host: Annotated[
-        Annotated[Host, TypedPlainValidator(str, HostConverter().host)],
+        Annotated[Host, TypedPlainValidator(str, HostConverter(permission_type="setup_read").host)],
         PathParam(description="A host name.", example="example.com", alias="host_name"),
     ],
 ) -> ServiceDiscoveryRunModel:
     """Show the last service discovery background job on a host"""
     user.need_permission("wato.edit")
     user.need_permission("wato.services")
-    user.need_permission("wato.see_all_folders")
     snapshot = job_snapshot(host, api_context.config.sites, debug=api_context.config.debug)
     job_id = snapshot.job_id
     job_status = snapshot.status

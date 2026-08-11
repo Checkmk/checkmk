@@ -68,7 +68,7 @@ def is_scalar(quantity: ApiQuantity) -> bool:
             assert_never(quantity)
 
 
-def _metric_names_in_quantity(quantity: ApiQuantity) -> Iterable[MetricName]:
+def metric_names_in_quantity(quantity: ApiQuantity) -> Iterable[MetricName]:
     match quantity:
         case str():
             yield MetricName(quantity)
@@ -90,7 +90,7 @@ def _metric_names_in_quantity(quantity: ApiQuantity) -> Iterable[MetricName]:
             | metrics_v1.Fraction()
         ):
             for operand in operands_of(quantity):
-                yield from _metric_names_in_quantity(operand)
+                yield from metric_names_in_quantity(operand)
         case _:
             assert_never(quantity)
 
@@ -103,6 +103,6 @@ def drawn_metric_names_of_graph(
             name
             for quantity in (*graph.compound_lines, *graph.simple_lines)
             if not is_scalar(quantity)
-            for name in _metric_names_in_quantity(quantity)
+            for name in metric_names_in_quantity(quantity)
         }
     )

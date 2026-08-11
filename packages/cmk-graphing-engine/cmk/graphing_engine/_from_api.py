@@ -12,7 +12,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 
-from ._api_plugins import ApiQuantity, is_scalar, operands_of
+from ._api_plugins import ApiQuantity, is_scalar, metric_names_in_quantity, operands_of
 from ._display import (
     FALLBACK_ATTRIBUTES,
     metric_display_attributes,
@@ -171,9 +171,13 @@ def _parse_quantity(quantity: ApiQuantity, context: _ParseContext) -> QuantityPr
             assert_never(quantity)
 
 
-def _parse_bound(bound: int | float | ApiQuantity, context: _ParseContext) -> Bound:
+def _parse_bound(bound: int | float | ApiQuantity, context: _ParseContext) -> Bound | None:
     if isinstance(bound, int | float):
         return bound
+    # A bound naming a metric is read from one object; over several matched ones there is none, so
+    # that end is left to auto-scale. A bound of constants alone is read without one.
+    if len(context.services) > 1 and any(metric_names_in_quantity(bound)):
+        return None
     return _parse_quantity(bound, context)
 
 
@@ -183,10 +187,11 @@ def _parse_range(
 ) -> MinimalRange | None:
     if graph.minimal_range is None:
         return None
-    return MinimalRange(
-        lower=_parse_bound(graph.minimal_range.lower, context),
-        upper=_parse_bound(graph.minimal_range.upper, context),
-    )
+    lower = _parse_bound(graph.minimal_range.lower, context)
+    upper = _parse_bound(graph.minimal_range.upper, context)
+    if lower is None and upper is None:
+        return None
+    return MinimalRange(lower=lower, upper=upper)
 
 
 def _widest_bound(
@@ -196,7 +201,8 @@ def _widest_bound(
 ) -> Bound | None:
     if isinstance(of_upper, int | float) and isinstance(of_lower, int | float):
         return pick(of_upper, of_lower)
-    # Two quantity bounds cannot be compared before they are evaluated, so the upper half's wins.
+    # Two quantity bounds cannot be compared before they are evaluated, so the upper half's wins; a
+    # half whose end was dropped has none, and then the other half's end is the range.
     return of_lower if of_upper is None else of_upper
 
 

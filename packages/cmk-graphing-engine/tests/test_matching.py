@@ -14,6 +14,7 @@ from cmk.graphing_engine import (
     build_curve,
     build_matched_graphs,
     ConsolidationFunction,
+    Constant,
     evaluate_graphs,
     EvaluatedGraph,
     FetchedData,
@@ -22,6 +23,7 @@ from cmk.graphing_engine import (
     Line,
     MetricName,
     MetricProtocol,
+    MinimalRange,
     parse_graph_from_api,
     PerformanceData,
     QuantityProtocol,
@@ -761,3 +763,140 @@ def test_build_matched_graphs_matches_via_a_service_without_the_conflicting_metr
 
     # h2 carries the conflicting metric, but h1 does not, so the plugin still matches via h1.
     assert "cpu" in {d.name for d in discovered}
+
+
+def _graph_with_a_quantity_bound() -> graphs_v1.Graph:
+    return graphs_v1.Graph(
+        name="cpu",
+        title=Title("CPU"),
+        minimal_range=graphs_v1.MinimalRange(
+            0, metrics_v1.MaximumOf("cpu_user", metrics_v1.Color.GREEN)
+        ),
+        simple_lines=["cpu_user"],
+    )
+
+
+def test_build_matched_graphs_keeps_a_quantity_range_bound_for_one_service() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    fetch_data = _FakeRRDFetchData(
+        performance_response={service: _perf_data(_perf(cpu_user, maximum=100.0))}
+    )
+
+    [discovered] = _discover([_graph_with_a_quantity_bound()], fetch_data=fetch_data)
+
+    assert discovered.vertical_range is not None
+    assert discovered.vertical_range.lower == 0
+    upper = discovered.vertical_range.upper
+    assert isinstance(upper, ScalarOf)
+    assert upper.metric == _rrd(cpu_user)
+    assert upper.scalar_kind is ScalarKind.MAXIMUM
+
+
+def test_build_matched_graphs_drops_a_quantity_range_bound_for_multiple_services() -> None:
+    h1, h2 = _services()
+    cpu_user = MetricName("cpu_user")
+    fetch_data = _FakeRRDFetchData(
+        performance_response={
+            h1: _perf_data(_perf(cpu_user, maximum=100.0)),
+            h2: _perf_data(_perf(cpu_user, maximum=200.0)),
+        }
+    )
+
+    [discovered] = _discover_combined([_graph_with_a_quantity_bound()], fetch_data=fetch_data)
+
+    # The numeric end is kept; the threshold end belongs to no one matched object, so it is dropped
+    # rather than resolved against an arbitrary one.
+    assert discovered.vertical_range == MinimalRange(lower=0, upper=None)
+
+
+def test_build_matched_graphs_drops_a_wholly_quantity_range_for_multiple_services() -> None:
+    h1, h2 = _services()
+    cpu_user = MetricName("cpu_user")
+    plugin = graphs_v1.Graph(
+        name="cpu",
+        title=Title("CPU"),
+        minimal_range=graphs_v1.MinimalRange(
+            metrics_v1.MinimumOf("cpu_user", metrics_v1.Color.GREEN),
+            metrics_v1.MaximumOf("cpu_user", metrics_v1.Color.GREEN),
+        ),
+        simple_lines=["cpu_user"],
+    )
+    fetch_data = _FakeRRDFetchData(
+        performance_response={
+            h1: _perf_data(_perf(cpu_user, minimum=0.0, maximum=100.0)),
+            h2: _perf_data(_perf(cpu_user, minimum=0.0, maximum=200.0)),
+        }
+    )
+
+    [discovered] = _discover_combined([plugin], fetch_data=fetch_data)
+
+    # Neither end survives, so there is no range rather than one holding nothing.
+    assert discovered.vertical_range is None
+
+
+def test_build_matched_graphs_keeps_a_constant_range_bound_for_multiple_services() -> None:
+    h1, h2 = _services()
+    cpu_user = MetricName("cpu_user")
+    plugin = graphs_v1.Graph(
+        name="cpu",
+        title=Title("CPU"),
+        minimal_range=graphs_v1.MinimalRange(
+            0,
+            metrics_v1.Constant(
+                Title("Ceiling"),
+                metrics_v1.Unit(metrics_v1.DecimalNotation("")),
+                metrics_v1.Color.GRAY,
+                100.0,
+            ),
+        ),
+        simple_lines=["cpu_user"],
+    )
+    fetch_data = _FakeRRDFetchData(
+        performance_response={h1: _perf_data(_perf(cpu_user)), h2: _perf_data(_perf(cpu_user))}
+    )
+
+    [discovered] = _discover_combined([plugin], fetch_data=fetch_data)
+
+    # A bound of constants alone names no metric, so it needs no object and survives.
+    assert discovered.vertical_range is not None
+    assert discovered.vertical_range.lower == 0
+    upper = discovered.vertical_range.upper
+    assert isinstance(upper, Constant)
+    assert upper.value == 100.0
+
+
+def test_build_matched_graphs_lets_a_kept_end_win_over_a_dropped_one_when_bidirectional() -> None:
+    h1, h2 = _services()
+    cpu_user = MetricName("cpu_user")
+    cpu_system = MetricName("cpu_system")
+    plugin = graphs_v1.Bidirectional(
+        name="cpu",
+        title=Title("CPU"),
+        upper=graphs_v1.Graph(
+            name="upper",
+            title=Title("Upper"),
+            minimal_range=graphs_v1.MinimalRange(
+                0, metrics_v1.MaximumOf("cpu_user", metrics_v1.Color.GRAY)
+            ),
+            simple_lines=["cpu_user"],
+        ),
+        lower=graphs_v1.Graph(
+            name="lower",
+            title=Title("Lower"),
+            minimal_range=graphs_v1.MinimalRange(0, 50),
+            simple_lines=["cpu_system"],
+        ),
+    )
+    fetch_data = _FakeRRDFetchData(
+        performance_response={
+            h1: _perf_data(_perf(cpu_user, maximum=100.0), _perf(cpu_system)),
+            h2: _perf_data(_perf(cpu_user, maximum=200.0), _perf(cpu_system)),
+        }
+    )
+
+    [discovered] = _discover_combined([plugin], fetch_data=fetch_data)
+
+    # The upper half's threshold end is dropped, so the lower half's numeric end is the range - where
+    # a threshold resolved against one arbitrary object would have masked it.
+    assert discovered.vertical_range == MinimalRange(lower=0, upper=50)

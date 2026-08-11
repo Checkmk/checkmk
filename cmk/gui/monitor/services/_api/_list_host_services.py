@@ -91,6 +91,11 @@ class HostServiceEntry:
         example={"cmk/check_plugin": ServiceLabelValue(value="cpu_load", source="discovered")},
         default_factory=ApiOmitted,
     )
+    tags: dict[str, str] | ApiOmitted = api_field(
+        description="Service tags, keyed by tag group. Omitted when the service has none.",
+        example={"criticality": "prod"},
+        default_factory=ApiOmitted,
+    )
     perfometer: ServicePerfometer | ApiOmitted = api_field(
         description=(
             "Perf-O-Meter of the service's performance data. Omitted when the service reports no "
@@ -110,6 +115,7 @@ class HostServiceEntry:
             modes=build_service_modes_by_id(service, hostname=hostname, site_id=site_id)
             or ApiOmitted(),
             labels=service.labels if service.labels is not None else ApiOmitted(),
+            tags=service.tags if service.tags is not None else ApiOmitted(),
             perfometer=ServicePerfometer.from_perf_data(service.perf_data, service.check_command)
             or ApiOmitted(),
         )

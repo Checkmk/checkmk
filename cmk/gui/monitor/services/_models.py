@@ -63,6 +63,7 @@ class Service:
     perf_data: str
     check_command: str
     labels: dict[str, ServiceLabelValue] | None
+    tags: dict[str, str] | None
 
     @property
     def state_label(self) -> ServiceStateLabel:
@@ -93,7 +94,6 @@ class ServiceOverview(Service):
     max_check_attempts: int
     # Passive services are never scheduled, so livestatus reports no next check for them.
     next_check: dt.datetime | None
-    tags: dict[str, str]
 
     @property
     def host_state_label(self) -> HostStateLabel:
@@ -112,6 +112,7 @@ class ServiceOptionalField(enum.StrEnum):
     """Columns a caller has to ask for, because fetching them costs a livestatus column per row."""
 
     LABELS = "labels"
+    TAGS = "tags"
 
     @classmethod
     def options(cls) -> str:

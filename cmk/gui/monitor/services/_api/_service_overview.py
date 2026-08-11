@@ -151,7 +151,7 @@ class ServiceOverviewResponse:
             current_attempt=service.current_attempt,
             max_check_attempts=service.max_check_attempts,
             next_check=service.next_check,
-            tags=service.tags,
+            tags=read(service.tags, "tags"),
             labels=read(service.labels, "labels"),
         )
 

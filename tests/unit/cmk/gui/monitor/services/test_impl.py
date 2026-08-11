@@ -120,7 +120,7 @@ def test_fetch_applies_filters() -> None:
 
 def test_fetch_reads_optional_columns_only_when_asked_for() -> None:
     with expect_single_query(
-        f"GET services\nColumns: {_SERVICES_COLUMNS} labels label_sources\n"
+        f"GET services\nColumns: {_SERVICES_COLUMNS} labels label_sources tags\n"
         f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n{_DEFAULT_ORDER_BY}",
         match_type="ellipsis",
     ) as live:
@@ -131,7 +131,7 @@ def test_fetch_reads_optional_columns_only_when_asked_for() -> None:
             query="",
             sorters=[],
             filters=ServiceFilter(""),
-            fields=frozenset({ServiceOptionalField.LABELS}),
+            fields=frozenset({ServiceOptionalField.LABELS, ServiceOptionalField.TAGS}),
         )
 
 

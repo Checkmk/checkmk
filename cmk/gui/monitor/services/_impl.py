@@ -115,6 +115,7 @@ class LiveStatusHostServicesRepository:
                             if "labels" in row
                             else None
                         ),
+                        tags=dict(row["tags"]) if "tags" in row else None,
                     )
                     for row in q.iterate(conn)
                 ],
@@ -220,6 +221,7 @@ class LiveStatusHostServicesRepository:
 # for it, so a hidden column costs nothing.
 _OPTIONAL_COLUMNS: Mapping[ServiceOptionalField, tuple[Column, ...]] = {
     ServiceOptionalField.LABELS: (Services.labels, Services.label_sources),
+    ServiceOptionalField.TAGS: (Services.tags,),
 }
 
 

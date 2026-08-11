@@ -126,8 +126,8 @@ test('renders one cell per service state with its count', () => {
 
   const tds = Array.from(container.querySelectorAll('td'))
   // select, state, modes, name, alias, address, folder, site_id, total, ok, warn, crit, unknown,
-  // pending, last_check, last_state_change
-  expect(tds).toHaveLength(16)
+  // pending, last_check, last_state_change, labels
+  expect(tds).toHaveLength(17)
   expect(tds[8]).toHaveTextContent('15')
   expect(tds[9]).toHaveTextContent('1')
   expect(tds[10]).toHaveTextContent('2')
@@ -165,4 +165,18 @@ test('renders the zero counts as well — one badge per service state column', (
   )
 
   expect(screen.getAllByText('0')).toHaveLength(5)
+})
+
+test('renders the labels of a host, sorted alphabetically', () => {
+  const { container } = mountRow(
+    makeHost({
+      labels: {
+        owner: { value: 'platform', source: 'explicit' },
+        'cmk/site': { value: 'heute', source: 'discovered' }
+      }
+    })
+  )
+
+  const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
+  expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['cmk/site: heute', 'owner: platform'])
 })

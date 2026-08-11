@@ -12,11 +12,13 @@ import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
+import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { toLabelItems } from '@/monitoring/shared/labels'
 
 const props = withDefaults(
   defineProps<{
@@ -61,6 +63,8 @@ function hasColumn(columnId: string): boolean {
 function toggleSelected(selected: boolean): void {
   props.tableRow.toggleSelected(selected)
 }
+
+const labels = computed(() => toLabelItems(props.row.labels ?? {}))
 
 const lastCheck = computed(() =>
   props.row.last_check === undefined ? undefined : formatTimestamp(props.row.last_check)
@@ -232,6 +236,7 @@ const lastStateChange = computed(() =>
     column-id="last_state_change"
     :value="lastStateChange"
   />
+  <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
 
   <ActionsCell
     v-if="(loadActionMenu || actionButtons.length > 0) && hasColumn('actions')"

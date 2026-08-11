@@ -14,11 +14,37 @@
 --
 -- SPDX-License-Identifier: Apache-2.0
 
--- Section sessions: information about concurrent sessions
-SELECT UPPER(i.instance_name),
-       CURRENT_UTILIZATION, -- Current number of sessions
-       LTRIM(LIMIT_VALUE),  -- Upper bound of the number of sessions
-       MAX_UTILIZATION      -- Peak number of sessions since startup
-FROM v$resource_limit,
-     v$instance i
-WHERE RESOURCE_NAME = 'sessions'
+-- Section sessions: retrieves session usage statistics per container (CDB / PDB)
+
+--- === Section 1: retrieves session usage statistics for PDB only ===
+-- COUNT the joined column: an idle container's null-extended row must be 0.
+SELECT UPPER(vp.name)       AS instance_name,   -- PDB name (uppercased)
+       LTRIM(COUNT(vs.sid)) AS current_sessions -- Number of currently active sessions
+FROM (
+         -- Step 1: Build container list
+         SELECT vp.con_id,
+                i.instance_name || '.' || vp.name name -- Instance + PDB name
+         FROM v$containers vp
+                  JOIN v$instance i ON 1 = 1
+                  JOIN v$database d ON 1 = 1
+         WHERE d.cdb = 'YES' -- Only if running in multitenant mode
+           AND vp.con_id <> 2 -- Exclude seed PDB (PDB$SEED)
+     ) vp
+         -- Step 2: Join with resource limits
+         JOIN v$resource_limit rl
+              ON RESOURCE_NAME = 'sessions' -- Only look at session resource limit
+    -- Step 3: Count active sessions per container
+         LEFT OUTER JOIN v$session vs
+                         ON vp.con_id = vs.con_id -- Map sessions to each container
+GROUP BY vp.name, vp.con_id, rl.LIMIT_VALUE, rl.MAX_UTILIZATION;
+
+-- === Section 2: retrieves instance-wide session usage statistics ===
+-- Instance-wide, so no d.cdb branch is needed. The count comes from
+-- v$resource_limit, which already tracks it; the set has a single row.
+SELECT UPPER(i.instance_name)               AS instance_name,    -- CDB / instance name (uppercased)
+       LTRIM(RTRIM(rl.CURRENT_UTILIZATION)) AS current_sessions, -- Sessions in use, including the recursive ones v$session omits
+       LTRIM(RTRIM(rl.LIMIT_VALUE))         AS limit_sessions,   -- Configured session limit
+       LTRIM(RTRIM(rl.MAX_UTILIZATION))     AS max_utilization   -- Peak session usage so far
+FROM v$instance i
+         JOIN v$resource_limit rl
+              ON rl.RESOURCE_NAME = 'sessions' -- Only look at session resource limit

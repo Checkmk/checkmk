@@ -88,14 +88,14 @@ pub mod query {
     }];
     pub const JOBS_META: &[RawMetadata] = &[
         RawMetadata {
-            sql: include_str!("../../sqls/jobs.12010000.cdb.sql"),
-            min_version: 12010000,
+            sql: include_str!("../../sqls/jobs.0.cdb.sql"),
+            min_version: 0,
             tenant: Tenant::Cdb,
         },
         RawMetadata {
-            sql: include_str!("../../sqls/jobs.10020000.all.sql"),
-            min_version: 10020000,
-            tenant: Tenant::All,
+            sql: include_str!("../../sqls/jobs.0.nocdb.sql"),
+            min_version: 0,
+            tenant: Tenant::NoCdb,
         },
     ];
     pub const RESUMABLE_META: &[RawMetadata] = &[RawMetadata {
@@ -103,98 +103,56 @@ pub mod query {
         min_version: 0,
         tenant: Tenant::All,
     }];
-    pub const UNDOSTAT_META: &[RawMetadata] = &[
-        RawMetadata {
-            sql: include_str!("../../sqls/undostat.12010000.all.sql"),
-            min_version: 12010000,
-            tenant: Tenant::All,
-        },
-        RawMetadata {
-            sql: include_str!("../../sqls/undostat.10020000.all.sql"),
-            min_version: 10020000,
-            tenant: Tenant::All,
-        },
-    ];
+    pub const UNDOSTAT_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/undostat.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
     pub const RECOVERY_AREA_META: &[RawMetadata] = &[RawMetadata {
         sql: include_str!("../../sqls/recovery_area.0.all.sql"),
         min_version: 0,
         tenant: Tenant::All,
     }];
-    pub const ASM_DISKGROUP_META: &[RawMetadata] = &[
-        RawMetadata {
-            sql: include_str!("../../sqls/asm_diskgroup.12010000.all.sql"),
-            min_version: 12010000,
-            tenant: Tenant::All,
-        },
-        RawMetadata {
-            sql: include_str!("../../sqls/asm_diskgroup.10020000.all.sql"),
-            min_version: 10020000,
-            tenant: Tenant::All,
-        },
-    ];
+    pub const ASM_DISKGROUP_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/asm_diskgroup.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
     pub const ASM_INSTANCE_META: &[RawMetadata] = &[RawMetadata {
         sql: include_str!("../../sqls/asm_instance.0.all.sql"),
         min_version: 0,
         tenant: Tenant::All,
     }];
     pub const DATAGUARD_STATS_META: &[RawMetadata] = &[RawMetadata {
-        sql: include_str!("../../sqls/dataguard_stats.10020000.all.sql"),
-        min_version: 10020000,
+        sql: include_str!("../../sqls/dataguard_stats.0.all.sql"),
+        min_version: 0,
         tenant: Tenant::All,
     }];
-    pub const INSTANCE_META: &[RawMetadata] = &[
-        RawMetadata {
-            sql: include_str!("../../sqls/instance.12010002.all.sql"),
-            min_version: 1201_0002,
-            tenant: Tenant::All,
-        },
-        RawMetadata {
-            sql: include_str!("../../sqls/instance.0.all.sql"),
-            min_version: 0,
-            tenant: Tenant::All,
-        },
-    ];
-    pub const LOCKS_META: &[RawMetadata] = &[
-        RawMetadata {
-            sql: include_str!("../../sqls/locks.12010000.all.sql"),
-            min_version: 1201_0000,
-            tenant: Tenant::All,
-        },
-        RawMetadata {
-            sql: include_str!("../../sqls/locks.10020000.all.sql"),
-            min_version: 1002_0000,
-            tenant: Tenant::All,
-        },
-    ];
+    pub const INSTANCE_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/instance.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
+    pub const LOCKS_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/locks.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
     pub const LOGSWITCHES_META: &[RawMetadata] = &[RawMetadata {
         sql: include_str!("../../sqls/logswitches.0.all.sql"),
         min_version: 0,
         tenant: Tenant::All,
     }];
-    pub const LONGACTIVESESSIONS_META: &[RawMetadata] = &[
-        RawMetadata {
-            sql: include_str!("../../sqls/longactivesessions.12010000.all.sql"),
-            min_version: 1201_0000,
-            tenant: Tenant::All,
-        },
-        RawMetadata {
-            sql: include_str!("../../sqls/longactivesessions.10010000.all.sql"),
-            min_version: 1001_0000,
-            tenant: Tenant::All,
-        },
-    ];
-    pub const PERFORMANCE_META: &[RawMetadata] = &[
-        RawMetadata {
-            sql: include_str!("../../sqls/performance.12010000.all.sql"),
-            min_version: 1201_0000,
-            tenant: Tenant::All,
-        },
-        RawMetadata {
-            sql: include_str!("../../sqls/performance.10010000.all.sql"),
-            min_version: 1001_0000,
-            tenant: Tenant::All,
-        },
-    ];
+    pub const LONGACTIVESESSIONS_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/longactivesessions.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
+    pub const PERFORMANCE_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/performance.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
     pub const PROCESSES_META: &[RawMetadata] = &[RawMetadata {
         sql: include_str!("../../sqls/processes.0.all.sql"),
         min_version: 0,
@@ -205,54 +163,26 @@ pub mod query {
         min_version: 0,
         tenant: Tenant::All,
     }];
-    pub const RECOVERY_STATUS_META: &[RawMetadata] = &[
-        RawMetadata {
-            sql: include_str!("../../sqls/recovery_status.12010000.all.sql"),
-            min_version: 1201_0000,
-            tenant: Tenant::All,
-        },
-        RawMetadata {
-            sql: include_str!("../../sqls/recovery_status.10010000.all.sql"),
-            min_version: 1001_0000,
-            tenant: Tenant::All,
-        },
-    ];
-    pub const RMAN_META: &[RawMetadata] = &[
-        RawMetadata {
-            sql: include_str!("../../sqls/rman.12010000.all.sql"),
-            min_version: 1201_0000,
-            tenant: Tenant::All,
-        },
-        RawMetadata {
-            sql: include_str!("../../sqls/rman.10020000.all.sql"),
-            min_version: 1002_0000,
-            tenant: Tenant::All,
-        },
-    ];
-    pub const SESSIONS_META: &[RawMetadata] = &[
-        RawMetadata {
-            sql: include_str!("../../sqls/sessions.12010000.all.sql"),
-            min_version: 1201_0000,
-            tenant: Tenant::All,
-        },
-        RawMetadata {
-            sql: include_str!("../../sqls/sessions.0.all.sql"),
-            min_version: 0,
-            tenant: Tenant::All,
-        },
-    ];
-    pub const TABLESPACES_META: &[RawMetadata] = &[
-        RawMetadata {
-            sql: include_str!("../../sqls/tablespaces.12010000.all.sql"),
-            min_version: 1201_0000,
-            tenant: Tenant::All,
-        },
-        RawMetadata {
-            sql: include_str!("../../sqls/tablespaces.10020000.all.sql"),
-            min_version: 1002_0000,
-            tenant: Tenant::All,
-        },
-    ];
+    pub const RECOVERY_STATUS_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/recovery_status.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
+    pub const RMAN_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/rman.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
+    pub const SESSIONS_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/sessions.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
+    pub const TABLESPACES_META: &[RawMetadata] = &[RawMetadata {
+        sql: include_str!("../../sqls/tablespaces.0.all.sql"),
+        min_version: 0,
+        tenant: Tenant::All,
+    }];
 
     pub mod internal {
         pub const INSTANCE_INFO_SQL_TEXT_NEW: &str = r"
@@ -489,24 +419,6 @@ mod tests {
             None,
         )
     }
-    #[test]
-    fn test_find_jobs() {
-        let id = Id::Jobs;
-
-        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
-        let query_old = find_helper(id, 10200000, Tenant::Cdb).unwrap();
-        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
-        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
-        assert!(!query_new.is_empty());
-        assert!(!query_old.is_empty());
-        assert!(query_nothing.is_err());
-        assert_ne!(query_old, query_new);
-        assert_eq!(query_last, query_new);
-        // A non-CDB must never get the 11-field CDB query, even at version `None`.
-        assert_eq!(find_helper(id, 0, Tenant::NoCdb).unwrap(), query_old);
-        // A pre-12.1 CDB must still resolve.
-        assert_eq!(find_helper(id, 11020000, Tenant::Cdb).unwrap(), query_old);
-    }
 
     /// The only section whose non-CDB shape differs in arity.
     #[test]
@@ -519,6 +431,8 @@ mod tests {
         assert!(no_cdb.contains("dba_scheduler_jobs"), "{no_cdb}");
         assert!(!no_cdb.contains("container_name"), "{no_cdb}");
         assert!(!no_cdb.contains("v$containers"), "{no_cdb}");
+        // Also at an unknown version, where dispatch takes the first hit.
+        assert_eq!(find_helper(Id::Jobs, 0, Tenant::NoCdb).unwrap(), no_cdb);
     }
 
     /// A tenant tag must never make a whole section vanish.
@@ -548,7 +462,7 @@ mod tests {
         ];
         assert_eq!(ALL_IDS.len(), QUERY_MAP.len(), "new Id not covered here");
         for id in ALL_IDS {
-            for version in [12_01_00_00u32, 19_01_00_00, 21_03_00_00, 23_08_00_25] {
+            for version in [12_01_00_02u32, 19_01_00_00, 21_03_00_00, 23_08_00_25] {
                 for tenant in [Tenant::Cdb, Tenant::NoCdb] {
                     assert!(
                         find_helper(*id, version, tenant).is_ok(),
@@ -559,8 +473,8 @@ mod tests {
         }
     }
 
-    /// Tripwire for the shadowing rule in `build_query_metadata`. No section
-    /// declares two entries at one min_version today, so the body does not run.
+    /// The shadowing rule in `build_query_metadata`: jobs declares both of its
+    /// entries at min_version 0, which is only safe while neither is `All`.
     #[test]
     fn test_no_all_entry_shares_min_version_with_a_tenant_entry() {
         for (id, metas) in QUERY_MAP.iter() {
@@ -605,20 +519,6 @@ mod tests {
         assert_eq!(query_new, query_last);
     }
     #[test]
-    fn test_find_undostat() {
-        let id = Id::UndoStat;
-
-        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
-        let query_old = find_helper(id, 10200000, Tenant::Cdb).unwrap();
-        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
-        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
-        assert!(!query_new.is_empty());
-        assert!(!query_old.is_empty());
-        assert!(query_nothing.is_err());
-        assert_ne!(query_old, query_new);
-        assert_eq!(query_last, query_new);
-    }
-    #[test]
     fn test_find_recovery_area() {
         let id = Id::RecoveryArea;
 
@@ -627,35 +527,6 @@ mod tests {
         assert!(!query_new.is_empty());
         assert!(!query_last.is_empty());
         assert_eq!(query_new, query_last);
-    }
-
-    #[test]
-    fn test_find_asm_diskgroup() {
-        let id = Id::AsmDiskGroup;
-
-        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
-        let query_old = find_helper(id, 10200000, Tenant::Cdb).unwrap();
-        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
-        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
-        assert!(!query_new.is_empty());
-        assert!(!query_old.is_empty());
-        assert!(query_nothing.is_err());
-        assert_ne!(query_old, query_new);
-        assert_eq!(query_last, query_new);
-    }
-    #[test]
-    fn test_find_locks() {
-        let id = Id::Locks;
-
-        let query_new = find_helper(id, 12010000, Tenant::NoCdb).unwrap();
-        let query_old = find_helper(id, 10200000, Tenant::Cdb).unwrap();
-        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
-        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
-        assert!(!query_new.is_empty());
-        assert!(!query_old.is_empty());
-        assert!(query_nothing.is_err());
-        assert_ne!(query_old, query_new);
-        assert_eq!(query_last, query_new);
     }
 
     #[test]
@@ -687,64 +558,6 @@ mod tests {
     }
 
     #[test]
-    fn test_long_active_sessions() {
-        let id = Id::LongActiveSessions;
-
-        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
-        let query_old = find_helper(id, 10200000, Tenant::All).unwrap();
-        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
-        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
-        assert!(!query_new.is_empty());
-        assert!(!query_old.is_empty());
-        assert!(query_nothing.is_err());
-        assert_ne!(query_old, query_new);
-        assert_eq!(query_last, query_new);
-    }
-
-    #[test]
-    fn test_recovery_status() {
-        let id = Id::RecoveryStatus;
-
-        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
-        let query_old = find_helper(id, 10200000, Tenant::All).unwrap();
-        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
-        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
-        assert!(!query_new.is_empty());
-        assert!(!query_old.is_empty());
-        assert!(query_nothing.is_err());
-        assert_ne!(query_old, query_new);
-        assert_eq!(query_last, query_new);
-    }
-
-    #[test]
-    fn test_find_rman() {
-        let id = Id::Rman;
-
-        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
-        let query_old = find_helper(id, 10200000, Tenant::All).unwrap();
-        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
-        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
-        assert!(!query_new.is_empty());
-        assert!(!query_old.is_empty());
-        assert!(query_nothing.is_err());
-        assert_ne!(query_old, query_new);
-        assert_eq!(query_last, query_new);
-    }
-
-    #[test]
-    fn test_find_sessions() {
-        let id = Id::Sessions;
-
-        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
-        let query_old = find_helper(id, 10200000, Tenant::All).unwrap();
-        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
-        assert!(!query_new.is_empty());
-        assert!(!query_old.is_empty());
-        assert_ne!(query_old, query_new);
-        assert_eq!(query_last, query_new);
-    }
-
-    #[test]
     fn test_find_system_parameter() {
         let id = Id::SystemParameter;
 
@@ -756,21 +569,6 @@ mod tests {
         assert_eq!(query_old, query_new);
         assert_eq!(query_last, query_new);
         assert_eq!(query_obsolete, query_new);
-    }
-
-    #[test]
-    fn test_find_table_spaces() {
-        let id = Id::TableSpaces;
-
-        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
-        let query_old = find_helper(id, 10200000, Tenant::All).unwrap();
-        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
-        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
-        assert!(!query_new.is_empty());
-        assert!(!query_old.is_empty());
-        assert!(query_nothing.is_err());
-        assert_ne!(query_old, query_new);
-        assert_eq!(query_last, query_new);
     }
 
     #[test]
@@ -809,20 +607,5 @@ mod tests {
         assert!(query_full_version.contains("i.version_full"));
         assert!(!query_version.contains("i.version_full"));
         assert_eq!(query_last, query_full_version);
-    }
-
-    #[test]
-    fn test_find_performance() {
-        let id = Id::Performance;
-
-        let query_new = find_helper(id, 12010000, Tenant::Cdb).unwrap();
-        let query_old = find_helper(id, 10200000, Tenant::All).unwrap();
-        let query_nothing = find_helper(id, 10000000, Tenant::Cdb);
-        let query_last = find_helper(id, 0, Tenant::Cdb).unwrap(); // simulates 0
-        assert!(!query_new.is_empty());
-        assert!(!query_old.is_empty());
-        assert!(query_nothing.is_err());
-        assert_ne!(query_old, query_new);
-        assert_eq!(query_last, query_new);
     }
 }

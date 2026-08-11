@@ -418,16 +418,16 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.43.67 \
-    --hash=sha256:082cf9df068168cb44028a1703822374c1eb7e48fa49470d7e8a76f0c977d0bc \
-    --hash=sha256:75fe983b70d39cfdc274dc51f9bb02b8a0a104bdad4fa073c1af85a35e707c91
+boto3==1.43.68 \
+    --hash=sha256:4be071482312d05ea345ae8a2ea307637d3e2f4fdce44b8ebeb0192929aa2644 \
+    --hash=sha256:4be7531c45fbf8eb145ecd0f385c7b8f9d66ba2fd0c256522717260e67fca89d
     # via
     #   -c requirements.txt
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-plugins/requirements.in
-botocore==1.43.67 \
-    --hash=sha256:48ab8e9fac26fbc2a700d57010251003e6a5f731cf74d8540fb796bc8f3fc0ef \
-    --hash=sha256:6fe5cfa0c8676ba809efe505b618ec00f30d1af2d014bf316a7aa4ee86accb20
+botocore==1.43.68 \
+    --hash=sha256:9985c6eb9b7896f88bd89c07d543accd6985ea772af9d796087012ad40f78420 \
+    --hash=sha256:a6c7ac88724c96f2ad5a7657f87d545d8218a74a1b219ba4397e3d37481941cd
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -1018,9 +1018,9 @@ gitdb==4.0.12 \
     # via
     #   -c requirements.txt
     #   gitpython
-gitpython==3.1.58 \
-    --hash=sha256:621416df10ef3fd0e19fabf9172ddeed0fa704d353d04f194eec56a625a95b22 \
-    --hash=sha256:d331e722577f0fd7fc1f857419b3ecc07af66282b933d2a4d95f84a042fdd50f
+gitpython==3.1.59 \
+    --hash=sha256:0a1475cfdc38a5bfba1a3e9a4a9da52a39749ecec322b772915c019f94e5b7e4 \
+    --hash=sha256:67a82f537384578643624c8b2c531938a9b82be431663e575dcf638526631d4c
     # via
     #   -c requirements.txt
     #   -r packages/cmk-werks/requirements.in
@@ -2408,9 +2408,9 @@ pillow==12.3.0 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   reportlab
-platformdirs==4.11.1 \
-    --hash=sha256:2efd27d363e8dd2e661639ffb398865a5e0a46442a11d266bf375a0e0c10e386 \
-    --hash=sha256:bb1af68078f25e2f3e111e2d43b8d536df41b73c8a684b40bb018223b66fae27
+platformdirs==4.11.2 \
+    --hash=sha256:3a2ae5fca3520a01ab1be8b45613537f52ddf5b5f6f53d88233892dfbf0cd82d \
+    --hash=sha256:7f89089b6ea71bda7962953edcf784b2e2d9d285b40ad88be2bb75c6e9d82ab4
     # via
     #   -c requirements.txt
     #   black
@@ -3201,9 +3201,9 @@ python-multipart==0.0.32 \
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
     #   mcp
-python-snap7==3.1.0 \
-    --hash=sha256:9c3760bc4f81b2a063e76d751e0f0c275ecebc0b87d9979b1052f98947d7b8c8 \
-    --hash=sha256:cdc0fe5e0ddd57ed67e43d1dec41fe678c6d7c7dfac868227fbcd722ed4f99d2
+python-snap7==3.1.2 \
+    --hash=sha256:17a486966d415e54e0b8e2dad3204323e16c445fbc55af44d9cd3173c9573de2 \
+    --hash=sha256:81913da5cff791c33d9f2ac301f2226a44487792ea8ecc2a9d63a2fbd6895c62
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -3809,9 +3809,9 @@ typing-extensions==4.16.0 \
     #   pydantic-core
     #   typeguard
     #   typing-inspection
-typing-inspection==0.4.2 \
-    --hash=sha256:4ed1cacbdc298c220f1bd249ed5287caa16f34d44ef4e9c3d0cbad5b521545e7 \
-    --hash=sha256:ba561c48a67c5958007083d386c3295464928b01faa735ab8547c5692e87f464
+typing-inspection==0.4.3 \
+    --hash=sha256:5f42b23858a91e0b4ef521f5418f03a0da3c9216fd2995ef5e73463100e676cd \
+    --hash=sha256:c5f9ec1530b5c1e2c9bc34a84d9a3466ed1b2f3f2fa9f901368d9c5596210e4d
     # via
     #   -c requirements.txt
     #   fastapi

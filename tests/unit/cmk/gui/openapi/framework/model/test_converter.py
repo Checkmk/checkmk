@@ -10,14 +10,17 @@ import pytest
 from pydantic import AfterValidator
 from pytest_mock import MockerFixture
 
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.groups import GroupType
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.converter import (
     GroupConverter,
     HostAddressConverter,
     HostConverter,
+    SiteIdConverter,
     TagConverter,
     UserConverter,
 )
@@ -348,3 +351,25 @@ class TestHostConverter:
     def test_not_exists_fails_empty_host(self) -> None:
         with pytest.raises(ValueError, match="Host name cannot be empty"):
             HostConverter.not_exists("")
+
+
+class TestSiteIdConverter:
+    @pytest.mark.usefixtures("request_context")
+    def test_should_be_authorized_rejects_a_configured_site_outside_the_users_sites(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        local = next(iter(active_config.sites))
+        other = SiteId("other-site")
+        monkeypatch.setitem(active_config.sites, other, {**active_config.sites[local], "id": other})
+
+        with UserContext(UserId("made-up"), UserPermissions({}, {}, {}, [])):
+            monkeypatch.setitem(user.attributes, "authorized_sites", [local])
+
+            # should_exist accepts it, because the site really is configured. That is exactly why
+            # a monitoring endpoint cannot use it: the answer tells a restricted user that a site
+            # they may not see exists.
+            assert SiteIdConverter.should_exist(other) == other
+
+            with pytest.raises(ValueError, match="does not exist"):
+                SiteIdConverter.should_be_authorized(other)
+            assert SiteIdConverter.should_be_authorized(local) == local

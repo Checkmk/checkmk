@@ -1189,6 +1189,29 @@ class AuxTagClient(RestApiClient):
         )
 
 
+class GraphClient(RestApiClient):
+    domain: DomainType = "graph"
+    default_version = APIVersion.INTERNAL
+
+    def translate_metric_names(
+        self,
+        hostname: str,
+        service_description: str,
+        site: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/translate_metric_names/invoke",
+            body={
+                "hostname": hostname,
+                "service_description": service_description,
+                "site": site,
+            },
+            expect_ok=expect_ok,
+        )
+
+
 class GraphTimerangeClient(RestApiClient):
     domain: DomainType = "graph_timerange"
     default_version = APIVersion.UNSTABLE
@@ -4228,6 +4251,7 @@ class ClientRegistry:
     AuxTag: AuxTagClient
     TimePeriod: TimePeriodClient
     GraphTimerange: GraphTimerangeClient
+    Graph: GraphClient
     Rule: RuleClient
     Ruleset: RulesetClient
     HostTagGroup: HostTagGroupClient
@@ -4286,6 +4310,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Host=HostClient(request_handler, url_prefix),
         Folder=FolderClient(request_handler, url_prefix),
         GraphTimerange=GraphTimerangeClient(request_handler, url_prefix),
+        Graph=GraphClient(request_handler, url_prefix),
         AuxTag=AuxTagClient(request_handler, url_prefix),
         TimePeriod=TimePeriodClient(request_handler, url_prefix),
         Rule=RuleClient(request_handler, url_prefix),

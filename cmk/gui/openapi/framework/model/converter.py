@@ -364,6 +364,20 @@ class SiteIdConverter:
             return site_id
         raise ValueError(f"Site {site_id!r} is not configurable.")
 
+    @staticmethod
+    def should_be_authorized(value: str) -> SiteId:
+        """Validates that the given site ID exists and the user is authorized to see it.
+
+        Unlike should_exist, this checks the user's authorized sites, and a site outside them
+        raises the same error as a site that does not exist at all. Use it in monitoring
+        endpoints, where should_exist would let a restricted user enumerate the sites they may
+        not see (cf. werks #18993, #18994).
+        """
+        site_id = SiteId(value)
+        if site_id not in user.authorized_sites(unfiltered_sites=active_config.sites):
+            raise ValueError(f"Site {site_id!r} does not exist.")
+        return site_id
+
 
 class PasswordConverter:
     @staticmethod

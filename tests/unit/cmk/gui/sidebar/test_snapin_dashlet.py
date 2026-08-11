@@ -76,7 +76,7 @@ def _dashlet_spec(snapin: str) -> SnapinDashletConfig:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request._get_current_object())
+    return PageContext(config=config, request=request)
 
 
 def test_dashlet_metadata() -> None:

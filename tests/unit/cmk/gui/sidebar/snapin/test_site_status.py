@@ -159,7 +159,7 @@ def test_show_offers_the_bulk_switches(
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request._get_current_object())
+    return PageContext(config=config, request=request)
 
 
 def test_switch_site_needs_the_snapin_permission(

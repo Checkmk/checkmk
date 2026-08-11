@@ -107,7 +107,7 @@ def _creator(monkeypatch: pytest.MonkeyPatch, items: Iterable[object]) -> MainMe
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request._get_current_object())
+    return PageContext(config=config, request=request)
 
 
 def test_a_menu_without_topics_and_without_a_vue_app_is_dropped(

@@ -65,7 +65,7 @@ def _visual(name: str, title: str, *, topic: str = "overview") -> Visual:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request._get_current_object())
+    return PageContext(config=config, request=request)
 
 
 def test_views_metadata() -> None:

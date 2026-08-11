@@ -32,7 +32,6 @@ import GraphLegend from './legend/GraphLegend.vue'
 const { _t } = usei18n()
 
 const props = withDefaults(defineProps<GraphPanelProps>(), {
-  figureWidth: 800,
   figureHeight: 300,
   legendPosition: 'bottom'
 })

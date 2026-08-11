@@ -30,7 +30,6 @@ from cmk.gui.openapi.endpoints.background_job import JobID
 from cmk.gui.openapi.endpoints.host_config.request_schemas import EXISTING_HOST_NAME
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.constructors import domain_object, link_rel, object_property
-from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import EXT, problem, ProblemException, serve_json
@@ -81,7 +80,8 @@ RO_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.edit"),
         permissions.Perm("wato.services"),
-        permissions.Perm("wato.see_all_folders"),
+        # Only used as a shortcut to see hosts without being a contact of their folder.
+        permissions.Optional(permissions.Perm("wato.see_all_folders")),
         # The permissions below are required to manage BackgroundJobs
         permissions.Optional(permissions.Perm("background_jobs.stop_jobs")),
         permissions.Optional(permissions.Perm("background_jobs.stop_foreign_jobs")),
@@ -89,6 +89,14 @@ RO_PERMISSIONS = permissions.AllPerm(
         permissions.Optional(permissions.Perm("background_jobs.delete_foreign_jobs")),
     ]
 )
+
+HOST_NAME_SETUP_READ = {
+    "host_name": gui_fields.HostField(
+        description="A host name.",
+        should_exist=True,
+        permission_type="setup_read",
+    )
+}
 
 SERVICE_DISCOVERY_PHASES = {
     "undecided": DiscoveryState.UNDECIDED,
@@ -172,6 +180,7 @@ DISCOVERY_ACTION = {
                 description="The host of the service discovery result",
                 example="example.com",
                 required=True,
+                permission_type="setup_read",
             )
         }
     ],
@@ -182,7 +191,6 @@ def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
     """Show the current service discovery result"""
     user.need_permission("wato.edit")
     user.need_permission("wato.services")
-    user.need_permission("wato.see_all_folders")
 
     host = Host.load_host(params["host_name"])
 
@@ -251,6 +259,7 @@ class UpdateDiscoveryPhase(BaseSchema):
             "host_name": gui_fields.HostField(
                 description="The host of the service which shall be updated.",
                 example="example.com",
+                permission_type="setup_read",
             ),
         }
     ],
@@ -265,7 +274,8 @@ class UpdateDiscoveryPhase(BaseSchema):
             permissions.Perm("wato.service_discovery_to_ignored"),
             permissions.Perm("wato.service_discovery_to_undecided"),
             permissions.Perm("wato.service_discovery_to_removed"),
-            permissions.Perm("wato.see_all_folders"),
+            # Only used as a shortcut to see hosts without being a contact of their folder.
+            permissions.Optional(permissions.Perm("wato.see_all_folders")),
         ]
     ),
 )
@@ -275,7 +285,6 @@ def update_service_phase(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.service_discovery_to_ignored")
     user.need_permission("wato.service_discovery_to_undecided")
     user.need_permission("wato.service_discovery_to_removed")
-    user.need_permission("wato.see_all_folders")
 
     body = params["body"]
     host = Host.load_host(params["host_name"])
@@ -312,7 +321,7 @@ def _update_single_service_phase(
     "cmk/show",
     method="get",
     tag_group="Setup",
-    path_params=[HOST_NAME],
+    path_params=[HOST_NAME_SETUP_READ],
     response_schema=response_schemas.DomainObject,
     permissions_required=RO_PERMISSIONS,
 )
@@ -320,7 +329,6 @@ def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
     """Show the last service discovery background job on a host"""
     user.need_permission("wato.edit")
     user.need_permission("wato.services")
-    user.need_permission("wato.see_all_folders")
     host = Host.load_host(params["host_name"])
     snapshot = _job_snapshot(host)
     job_id = snapshot.job_id
@@ -354,7 +362,7 @@ def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
         "'Wait for completion' endpoint.",
         404: "There is no running service discovery",
     },
-    path_params=[HOST_NAME],
+    path_params=[HOST_NAME_SETUP_READ],
     additional_status_codes=[302],
     output_empty=True,
     permissions_required=RO_PERMISSIONS,
@@ -366,7 +374,6 @@ def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Resp
     """
     user.need_permission("wato.edit")
     user.need_permission("wato.services")
-    user.need_permission("wato.see_all_folders")
 
     host = Host.load_host(params["host_name"])
     snapshot = _job_snapshot(host)

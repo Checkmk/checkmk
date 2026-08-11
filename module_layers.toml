@@ -272,6 +272,12 @@ allows = [
   "cmk.ruleset_matcher",
 ]
 
+[plugin_families.violations.generic_agent_options]
+allows = [
+  # The Agent Controller rule validates the certificates to embed.
+  "cmk.crypto",
+]
+
 [plugin_families.violations.dcd]
 allows = ["@ccc", "cmk.dcd", "cmk.gui.config"]
 

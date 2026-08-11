@@ -15,6 +15,7 @@ from cmk.graphing_engine import (
     build_matched_graphs,
     ConsolidationFunction,
     Constant,
+    Difference,
     evaluate_graphs,
     EvaluatedGraph,
     FetchedData,
@@ -645,10 +646,10 @@ def _rrd_on(service: Service, name: MetricName) -> RRDMetric:
 
 
 class _SumQuantityBuilder:
-    # Stand-in for a real aggregating QuantityBuilderProtocol (e.g. the pro _Aggregation): wraps the per-service
-    # RRDMetrics of one drawn metric in the engine's own Sum.
-    def __call__(self, metrics: Sequence[RRDMetric]) -> QuantityProtocol:
-        return Sum(summands=list(metrics))
+    # Stand-in for a real aggregating QuantityBuilderProtocol (e.g. the pro CombinedAggregation):
+    # wraps what one drawn quantity is per service in the engine's own Sum.
+    def __call__(self, per_object: Sequence[QuantityProtocol]) -> QuantityProtocol:
+        return Sum(summands=list(per_object))
 
 
 def _discover_combined(
@@ -686,6 +687,85 @@ def test_build_matched_graphs_aggregates_a_drawn_metric_across_services() -> Non
     assert line.curve.quantity == Sum(summands=[_rrd_on(h1, cpu_user), _rrd_on(h2, cpu_user)])
     # Both services contribute; the evaluated value is their sum.
     assert [line.curve.value for line in _evaluate(discovered, fetch_data).lines] == [2.0]
+
+
+def test_build_matched_graphs_builds_a_drawn_operation_per_service() -> None:
+    h1, h2 = _services()
+    cpu_user = MetricName("cpu_user")
+    cpu_system = MetricName("cpu_system")
+    plugin = graphs_v1.Graph(
+        name="cpu",
+        title=Title("CPU"),
+        simple_lines=[
+            metrics_v1.Difference(
+                Title("Difference"),
+                metrics_v1.Color.GREEN,
+                minuend="cpu_user",
+                subtrahend="cpu_system",
+            )
+        ],
+    )
+    fetch_data = _FakeRRDFetchData(
+        performance_response={
+            h1: _perf_data(_perf(cpu_user), _perf(cpu_system)),
+            h2: _perf_data(_perf(cpu_user), _perf(cpu_system)),
+        }
+    )
+
+    [discovered] = _discover_combined([plugin], fetch_data=fetch_data)
+
+    # The builder combines one difference per service, rather than the difference taking two
+    # cross-service quantities as its operands - which no operation can have.
+    [line] = discovered.lines
+    quantity = line.curve.quantity
+    assert isinstance(quantity, Sum)
+    operands = []
+    for summand in quantity.summands:
+        assert isinstance(summand, Difference)
+        operands.append((summand.minuend, summand.subtrahend))
+    assert operands == [
+        (_rrd_on(h1, cpu_user), _rrd_on(h1, cpu_system)),
+        (_rrd_on(h2, cpu_user), _rrd_on(h2, cpu_system)),
+    ]
+    assert [line.curve.value for line in _evaluate(discovered, fetch_data).lines] == [0.0]
+
+
+def test_build_matched_graphs_resolves_a_nested_scalar_per_service() -> None:
+    h1, h2 = _services()
+    cpu_user = MetricName("cpu_user")
+    plugin = graphs_v1.Graph(
+        name="cpu",
+        title=Title("CPU"),
+        simple_lines=[
+            metrics_v1.Difference(
+                Title("Headroom"),
+                metrics_v1.Color.GREEN,
+                minuend=metrics_v1.MaximumOf("cpu_user", metrics_v1.Color.GREEN),
+                subtrahend="cpu_user",
+            )
+        ],
+    )
+    fetch_data = _FakeRRDFetchData(
+        performance_response={
+            h1: _perf_data(_perf(cpu_user)),
+            h2: _perf_data(_perf(cpu_user)),
+        }
+    )
+
+    [discovered] = _discover_combined([plugin], fetch_data=fetch_data)
+
+    # A threshold names the metric of the service its expression was built for, not of the first
+    # matched one.
+    [line] = discovered.lines
+    quantity = line.curve.quantity
+    assert isinstance(quantity, Sum)
+    thresholds = []
+    for summand in quantity.summands:
+        assert isinstance(summand, Difference)
+        assert isinstance(summand.minuend, ScalarOf)
+        assert summand.minuend.scalar_kind is ScalarKind.MAXIMUM
+        thresholds.append(summand.minuend.metric)
+    assert thresholds == [_rrd_on(h1, cpu_user), _rrd_on(h2, cpu_user)]
 
 
 def test_build_matched_graphs_drops_rules_and_predictive_for_multiple_services() -> None:

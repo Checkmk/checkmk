@@ -159,19 +159,10 @@ def build_matched_graphs(
         # work, rather than building every graph and filtering afterwards.
         if graph_name is not None and not _matches_graph_name(base, graph_name):
             return
-        # Rules and predictive lines are single-service concepts; a graph over multiple services
-        # drops them.
+        # A predictive line is a single-service concept; a graph over multiple services has none (nor
+        # rules or a quantity range bound, which the parse already left out).
         if single_service is None:
-            matched_graphs.append(
-                Graph(
-                    name=base.name,
-                    title=base.title,
-                    kind=base.kind,
-                    vertical_range=base.vertical_range,
-                    stacks=base.stacks,
-                    lines=base.lines,
-                )
-            )
+            matched_graphs.append(base)
             return
         graph, predictive_names = _add_predictive_lines(
             base, single_service, available, localizer, registered_metrics
@@ -181,7 +172,7 @@ def build_matched_graphs(
 
     def _fallback_rules(name: MetricName) -> Sequence[Rule]:
         if single_service is None:
-            return []
+            return ()
         metric = rrd_metric_of(single_service, name)
         return [
             Rule(

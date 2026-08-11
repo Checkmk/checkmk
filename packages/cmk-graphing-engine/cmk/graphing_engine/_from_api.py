@@ -37,12 +37,14 @@ from ._units import CurveAttributes
 
 
 class QuantityBuilderProtocol(Protocol):
-    def __call__(self, metrics: Sequence[RRDMetric]) -> QuantityProtocol: ...
+    """Combines what a graph draws for each matched object into the one quantity drawing them."""
+
+    def __call__(self, per_object: Sequence[QuantityProtocol]) -> QuantityProtocol: ...
 
 
-def build_single_quantity(metrics: Sequence[RRDMetric]) -> QuantityProtocol:
-    (metric,) = metrics
-    return metric
+def build_single_quantity(per_object: Sequence[QuantityProtocol]) -> QuantityProtocol:
+    (quantity,) = per_object
+    return quantity
 
 
 def drawn_quantity(
@@ -54,20 +56,48 @@ def drawn_quantity(
 
 
 @dataclass(frozen=True)
+class _ObjectContext:
+    """One of the objects a graph was matched on, to build what it draws for that object."""
+
+    service: Service
+    localizer: Callable[[str], str]
+    registered_metrics: Mapping[str, metrics_v1.Metric]
+
+    def metric(self, metric_name: str) -> RRDMetric:
+        return rrd_metric_of(self.service, metric_name)
+
+
+@dataclass(frozen=True)
 class _ParseContext:
     services: Sequence[Service]
     quantity_builder: QuantityBuilderProtocol
     localizer: Callable[[str], str]
     registered_metrics: Mapping[str, metrics_v1.Metric]
 
-    def drawn(self, metric_name: str) -> QuantityProtocol:
-        return drawn_quantity(metric_name, self.services, self.quantity_builder)
+    def _of(self, service: Service) -> _ObjectContext:
+        return _ObjectContext(service, self.localizer, self.registered_metrics)
 
-    def scalar(self, metric_name: str) -> RRDMetric:
-        return rrd_metric_of(self.services[0], metric_name)
+    def single_object(self) -> _ObjectContext | None:
+        # A rule names one object's thresholds; over several matched ones there is none to name them
+        # against, so no rule is built.
+        return self._of(self.services[0]) if len(self.services) == 1 else None
+
+    def object_for(self, bound: ApiQuantity) -> _ObjectContext | None:
+        # A bound naming a metric is read from one object; over several matched ones there is none, so
+        # that end is left to auto-scale. A bound of constants alone is read without one.
+        if any(metric_names_in_quantity(bound)):
+            return self.single_object()
+        return self._of(self.services[0])
+
+    def drawn(self, quantity: ApiQuantity) -> QuantityProtocol:
+        # Built once per matched object and combined, so an operation only ever takes that object's
+        # operands - never a quantity spanning the objects, which cannot be an operand.
+        return self.quantity_builder(
+            [_parse_quantity(quantity, self._of(service)) for service in self.services]
+        )
 
 
-def _curve_display(quantity: ApiQuantity, context: _ParseContext) -> CurveAttributes:
+def _curve_display(quantity: ApiQuantity, context: _ObjectContext) -> CurveAttributes:
     match quantity:
         case str():
             return metric_display_attributes(
@@ -109,39 +139,39 @@ def _curve_display(quantity: ApiQuantity, context: _ParseContext) -> CurveAttrib
             assert_never(quantity)
 
 
-def _parse_quantity(quantity: ApiQuantity, context: _ParseContext) -> QuantityProtocol:
+def _parse_quantity(quantity: ApiQuantity, context: _ObjectContext) -> QuantityProtocol:
     match quantity:
         case str():
-            return context.drawn(quantity)
+            return context.metric(quantity)
         case metrics_v1.Constant():
             return Constant(quantity.value, display=_curve_display(quantity, context))
         case metrics_v2_unstable.LowerWarningOf():
             return ScalarOf(
-                metric=context.scalar(quantity.metric_name),
+                metric=context.metric(quantity.metric_name),
                 scalar_kind=ScalarKind.LOWER_WARNING,
             )
         case metrics_v2_unstable.LowerCriticalOf():
             return ScalarOf(
-                metric=context.scalar(quantity.metric_name),
+                metric=context.metric(quantity.metric_name),
                 scalar_kind=ScalarKind.LOWER_CRITICAL,
             )
         case metrics_v1.WarningOf():
             return ScalarOf(
-                metric=context.scalar(quantity.metric_name), scalar_kind=ScalarKind.WARNING
+                metric=context.metric(quantity.metric_name), scalar_kind=ScalarKind.WARNING
             )
         case metrics_v1.CriticalOf():
             return ScalarOf(
-                metric=context.scalar(quantity.metric_name), scalar_kind=ScalarKind.CRITICAL
+                metric=context.metric(quantity.metric_name), scalar_kind=ScalarKind.CRITICAL
             )
         case metrics_v1.MinimumOf():
             return ScalarOf(
-                metric=context.scalar(quantity.metric_name),
+                metric=context.metric(quantity.metric_name),
                 scalar_kind=ScalarKind.MINIMUM,
                 color=parse_color(quantity.color),
             )
         case metrics_v1.MaximumOf():
             return ScalarOf(
-                metric=context.scalar(quantity.metric_name),
+                metric=context.metric(quantity.metric_name),
                 scalar_kind=ScalarKind.MAXIMUM,
                 color=parse_color(quantity.color),
             )
@@ -174,11 +204,8 @@ def _parse_quantity(quantity: ApiQuantity, context: _ParseContext) -> QuantityPr
 def _parse_bound(bound: int | float | ApiQuantity, context: _ParseContext) -> Bound | None:
     if isinstance(bound, int | float):
         return bound
-    # A bound naming a metric is read from one object; over several matched ones there is none, so
-    # that end is left to auto-scale. A bound of constants alone is read without one.
-    if len(context.services) > 1 and any(metric_names_in_quantity(bound)):
-        return None
-    return _parse_quantity(bound, context)
+    object_context = context.object_for(bound)
+    return None if object_context is None else _parse_quantity(bound, object_context)
 
 
 def _parse_range(
@@ -242,19 +269,26 @@ def _parse_lines(
     *,
     inverse: bool,
 ) -> tuple[Sequence[Stack], Sequence[Line], Sequence[Rule]]:
-    def _curve(q: ApiQuantity) -> Curve:
-        return build_curve(
-            _parse_quantity(q, context), context.localizer, context.registered_metrics
-        )
+    def _curve(quantity: QuantityProtocol) -> Curve:
+        return build_curve(quantity, context.localizer, context.registered_metrics)
 
-    stack_members = [_curve(q) for q in graph.compound_lines if not is_scalar(q)]
+    stack_members = [_curve(context.drawn(q)) for q in graph.compound_lines if not is_scalar(q)]
     stacks = [Stack(members=stack_members, inverse=inverse)] if stack_members else []
-    lines = [Line(curve=_curve(q), inverse=inverse) for q in graph.simple_lines if not is_scalar(q)]
-    rules = [
-        Rule(curve=_curve(q), inverse=inverse)
-        for q in (*graph.compound_lines, *graph.simple_lines)
-        if is_scalar(q)
+    lines = [
+        Line(curve=_curve(context.drawn(q)), inverse=inverse)
+        for q in graph.simple_lines
+        if not is_scalar(q)
     ]
+    single_object = context.single_object()
+    rules: Sequence[Rule] = (
+        ()
+        if single_object is None
+        else [
+            Rule(curve=_curve(_parse_quantity(q, single_object)), inverse=inverse)
+            for q in (*graph.compound_lines, *graph.simple_lines)
+            if is_scalar(q)
+        ]
+    )
     return stacks, lines, rules
 
 

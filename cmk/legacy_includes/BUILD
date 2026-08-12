@@ -1,5 +1,4 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
 py_library(
@@ -15,7 +14,6 @@ py_library(
     deps = [
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugins:lib",
-        requirement("pydantic"),
     ],
 )
 

@@ -644,6 +644,49 @@ class TestMonitorHostsFields:
 
         assert "labels" not in resp.json["hosts"][0]
 
+    def test_tags_are_read_and_returned_only_when_requested(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_host_columns('tags')}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, fields=["tags"])
+
+        host = next(h for h in resp.json["hosts"] if h["name"] == "heute")
+        assert host["tags"] == {"criticality": "prod"}
+
+    def test_tags_are_omitted_unless_requested(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT)
+
+        assert "tags" not in resp.json["hosts"][0]
+
 
 class TestMonitorHostOverviewAuth:
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
@@ -987,6 +1030,7 @@ _HOSTS = [
         "filename": "/wato/hosts.mk",
         "labels": {"cmk/site": "heute"},
         "label_sources": {"cmk/site": "discovered"},
+        "tags": {"criticality": "prod"},
     },
     {
         "name": "gestern",
@@ -1006,6 +1050,7 @@ _HOSTS = [
         "filename": "/wato/network/hosts.mk",
         "labels": {"cmk/site": "gestern"},
         "label_sources": {"cmk/site": "discovered"},
+        "tags": {"criticality": "prod"},
     },
     {
         "name": "morgen",
@@ -1026,6 +1071,7 @@ _HOSTS = [
         "filename": "/omd/sites/heute/etc/nagios/conf.d/hosts.mk",
         "labels": {"cmk/site": "morgen"},
         "label_sources": {"cmk/site": "discovered"},
+        "tags": {"criticality": "prod"},
     },
 ]
 # Columns every host row needs, followed by the ones a request has to ask for. Both lists are in
@@ -1043,6 +1089,7 @@ _OPTIONAL_COLUMNS = {
     "folder": "filename",
     "last_check": "last_check",
     "last_state_change": "last_state_change",
+    "tags": "tags",
 }
 _DEFAULT_FIELDS = (
     "address",

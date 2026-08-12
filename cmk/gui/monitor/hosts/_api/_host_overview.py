@@ -115,7 +115,7 @@ class HostOverviewResponse:
             customer=host.customer,
             folder=read(host.folder, "folder"),
             contact_groups=host.contact_groups,
-            tags=host.tags,
+            tags=read(host.tags, "tags"),
             labels=read(host.labels, "labels"),
             legacy_host_status_link=host_view_link("hoststatus", host),
         )

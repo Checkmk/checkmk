@@ -132,6 +132,11 @@ class HostEntry:
         example={"cmk/site": HostLabelValue(value="heute", source="discovered")},
         default_factory=ApiOmitted,
     )
+    tags: dict[str, str] | ApiOmitted = api_field(
+        description="Host tags, keyed by tag group. Omitted when the host has none.",
+        example={"criticality": "prod"},
+        default_factory=ApiOmitted,
+    )
     modes: list[ModeInfo] | ApiOmitted = api_field(
         description=(
             "Active host modes (e.g. scheduled downtime, acknowledgement) rendered as linked "
@@ -180,6 +185,7 @@ class HostEntry:
             last_check=included(HostOptionalField.LAST_CHECK, host.last_check),
             last_state_change=included(HostOptionalField.LAST_STATE_CHANGE, host.last_state_change),
             labels=included(HostOptionalField.LABELS, host.labels),
+            tags=included(HostOptionalField.TAGS, host.tags),
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
         )

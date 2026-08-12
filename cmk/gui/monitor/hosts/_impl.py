@@ -104,6 +104,7 @@ class LiveStatusHostRepository:
                             if "labels" in row
                             else None
                         ),
+                        tags=dict(row["tags"]) if "tags" in row else None,
                     )
                     for row in q.iterate(conn)
                 ],
@@ -259,6 +260,7 @@ _OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
     HostOptionalField.LAST_CHECK: (Hosts.last_check,),
     HostOptionalField.LAST_STATE_CHANGE: (Hosts.last_state_change,),
     HostOptionalField.LABELS: (Hosts.labels, Hosts.label_sources),
+    HostOptionalField.TAGS: (Hosts.tags,),
 }
 
 _SORT_COLUMN_FIELDS: Mapping[HostSortColumn, HostOptionalField] = {

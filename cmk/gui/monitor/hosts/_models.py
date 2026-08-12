@@ -70,6 +70,7 @@ class Host:
     last_check: dt.datetime | None
     last_state_change: dt.datetime | None
     labels: dict[str, HostLabelValue] | None
+    tags: dict[str, str] | None
 
     @property
     def state_label(self) -> HostStateLabel:
@@ -88,7 +89,6 @@ class Host:
 class HostOverview(Host):
     customer: str | None
     contact_groups: list[str] = dataclasses.field(default_factory=list)
-    tags: dict[str, str] = dataclasses.field(default_factory=dict)
 
 
 class HostOptionalField(enum.StrEnum):
@@ -104,6 +104,7 @@ class HostOptionalField(enum.StrEnum):
     LAST_CHECK = "last_check"
     LAST_STATE_CHANGE = "last_state_change"
     LABELS = "labels"
+    TAGS = "tags"
 
     @classmethod
     def options(cls) -> str:

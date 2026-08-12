@@ -105,7 +105,7 @@ package_wheel(
 # this is a workaround to be able to strip prefix
 copy_directory(
     name = "rrdtool_bindings_workaround",
-    src = "@rrdtool//:perl_bindings_gen_dir",
+    src = "@rrdtool_native//:perl_bindings_gen_dir",
     out = "perl_bindings_dir",
     tags = ["manual"],
 )

@@ -909,7 +909,7 @@
     "@@glib+//:extensions.bzl%glib": {
       "general": {
         "bzlTransitiveDigest": "sblapP1DsymdUVtFqn9VSE7zBbpNefRdSCMR8g20wt4=",
-        "usagesDigest": "DN+3ONK74cEC7+dHKb1wku9YYtcq/e1t4yPv7Om6Puo=",
+        "usagesDigest": "lJcSP5Mo22PpZIRLkYls98O/4XwM0Z6B9sk7s+lBhkY=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -984,7 +984,7 @@
     "@@libxml2+//:extensions.bzl%libxml2": {
       "general": {
         "bzlTransitiveDigest": "/NBkW2bl3gpGdX4KI767AEM1QKN/+fLyISZXz2ShXFQ=",
-        "usagesDigest": "QV9mhkSrr5RO+oKbz1EPO+Mj7nIijjA/EB/7iq5+qoE=",
+        "usagesDigest": "FefXyRL+6iR261dDcV5lPobga9o9yfs3GPRvKYuuAxI=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},

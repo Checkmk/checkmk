@@ -1,0 +1,13 @@
+diff --git a/src/rrd_config.h b/src/rrd_config.h
+index c7432e95..fd9aae55 100644
+--- a/src/rrd_config.h
++++ b/src/rrd_config.h
+@@ -31,7 +31,7 @@
+ 
+ /* Define to 1 if translation of program messages to the user's native
+    language is requested. */
+-#define ENABLE_NLS 1
++#define ENABLE_NLS 0
+ 
+ /* Define to 1 if you have the `asprintf' function. */
+ #define HAVE_ASPRINTF 1

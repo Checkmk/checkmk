@@ -24,7 +24,7 @@ export type ParamKind = 'quantile' | 'fraction_below' | 'fraction_between' | 'no
 export interface GroupKey {
   id: string
   attributeKind: AttributeKind
-  key: string
+  attributeKey: string
 }
 
 export interface GroupByModel {
@@ -71,5 +71,5 @@ export function functionParamKind(fn: GroupByFunction): ParamKind {
 }
 
 export function isKeyValid(key: GroupKey): boolean {
-  return key.key !== ''
+  return key.attributeKey !== ''
 }

@@ -20,8 +20,8 @@ test.each(SCALAR_FUNCTIONS)(
     const groupBy = model({
       function: fn,
       keys: [
-        { id: 'a', attributeKind: 'resource', key: 'service.name' },
-        { id: 'b', attributeKind: 'scope', key: 'scope.name' }
+        { id: 'a', attributeKind: 'resource', attributeKey: 'service.name' },
+        { id: 'b', attributeKind: 'scope', attributeKey: 'scope.name' }
       ]
     })
 
@@ -44,8 +44,8 @@ test.each(SCALAR_FUNCTIONS)(
     expect(back.function).toBe(fn)
     expect(back.params).toEqual({})
     expect(back.keys).toEqual([
-      { id: 'k0', attributeKind: 'resource', key: 'service.name' },
-      { id: 'k1', attributeKind: 'scope', key: 'scope.name' }
+      { id: 'k0', attributeKind: 'resource', attributeKey: 'service.name' },
+      { id: 'k1', attributeKind: 'scope', attributeKey: 'scope.name' }
     ])
   }
 )
@@ -56,7 +56,9 @@ test('the "none" function produces no aggregator', () => {
 
 test('a function with no valid keys produces no aggregator', () => {
   expect(
-    floatGroupByToAggregator(model({ keys: [{ id: 'a', attributeKind: 'resource', key: '' }] }))
+    floatGroupByToAggregator(
+      model({ keys: [{ id: 'a', attributeKind: 'resource', attributeKey: '' }] })
+    )
   ).toBeUndefined()
 })
 
@@ -65,8 +67,8 @@ test('invalid (empty) keys are dropped while valid ones survive', () => {
     model({
       function: 'avg',
       keys: [
-        { id: 'a', attributeKind: 'resource', key: '' },
-        { id: 'b', attributeKind: 'data_point', key: 'http.method' }
+        { id: 'a', attributeKind: 'resource', attributeKey: '' },
+        { id: 'b', attributeKind: 'data_point', attributeKey: 'http.method' }
       ]
     })
   )

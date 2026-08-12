@@ -32,7 +32,7 @@ export function functionLabel(fn: GroupByFunction): TranslatedString {
 
 /** Group key label, prefixed with its bracketed attribute kind: '[Resource] service.name'. */
 export function keyPillLabel(key: GroupKey): string {
-  return `[${attributeKindLabel(key.attributeKind)}] ${key.key}`
+  return `[${attributeKindLabel(key.attributeKind)}] ${key.attributeKey}`
 }
 
 /** Clause-head token for the collapsed chip, e.g. 'p95 by', 'fraction <0.1 by', 'avg by'. */

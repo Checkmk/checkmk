@@ -64,8 +64,8 @@ test('the collapsed chip summarises the clause with the attribute kind shown dim
   renderWidget({
     function: 'avg',
     keys: [
-      { id: '1', attributeKind: 'resource', key: 'service.name' },
-      { id: '2', attributeKind: 'data_point', key: 'http.route' }
+      { id: '1', attributeKind: 'resource', attributeKey: 'service.name' },
+      { id: '2', attributeKind: 'data_point', attributeKey: 'http.route' }
     ]
   })
   const chip = screen.getByRole('button', { name: /Edit group by/ })
@@ -184,13 +184,18 @@ test('the "everything" placeholder shows for an active function with no keys and
 
 test('"no grouping" removes the keys area but retains the keys in the model', async () => {
   const { model } = renderWidget(
-    { function: 'none', keys: [{ id: '1', attributeKind: 'resource', key: 'service.name' }] },
+    {
+      function: 'none',
+      keys: [{ id: '1', attributeKind: 'resource', attributeKey: 'service.name' }]
+    },
     'float'
   )
   await openPill()
   expect(screen.queryByTestId('group-by-keys')).toBeNull()
   expect(screen.queryByRole('button', { name: /Edit group key/ })).toBeNull()
-  expect(model.value.keys).toEqual([{ id: '1', attributeKind: 'resource', key: 'service.name' }])
+  expect(model.value.keys).toEqual([
+    { id: '1', attributeKind: 'resource', attributeKey: 'service.name' }
+  ])
 })
 
 async function selectKey(value: string): Promise<void> {
@@ -211,7 +216,10 @@ async function selectKey(value: string): Promise<void> {
 test('picking a key applies key and inferred attribute kind in one mutation (also for a second key)', async () => {
   // Two emits (key then attribute kind) would race and drop the key; a second key regressed this (CMK-36579).
   const { model } = renderWidget(
-    { function: 'avg', keys: [{ id: 'k1', attributeKind: 'resource', key: 'service.name' }] },
+    {
+      function: 'avg',
+      keys: [{ id: 'k1', attributeKind: 'resource', attributeKey: 'service.name' }]
+    },
     'float'
   )
   await openPill()
@@ -220,7 +228,7 @@ test('picking a key applies key and inferred attribute kind in one mutation (als
   await waitFor(() => expect(model.value.keys).toHaveLength(2))
   await selectKey('http.route')
 
-  await waitFor(() => expect(model.value.keys[1]!.key).toBe('http.route'))
+  await waitFor(() => expect(model.value.keys[1]!.attributeKey).toBe('http.route'))
   expect(model.value.keys[1]!.attributeKind).toBe('data_point')
 })
 
@@ -232,14 +240,17 @@ test('picking a key leaves the group-key pill in edit mode', async () => {
   await waitFor(() => expect(model.value.keys).toHaveLength(1))
   await selectKey('service.name')
 
-  await waitFor(() => expect(model.value.keys[0]!.key).toBe('service.name'))
+  await waitFor(() => expect(model.value.keys[0]!.attributeKey).toBe('service.name'))
   expect(screen.queryByRole('button', { name: /Edit group key/ })).toBeNull()
   expect(screen.getByRole('combobox', { name: 'Attribute key' })).toBeVisible()
 })
 
 test('entering edit with a single key opens that key pill for editing', async () => {
   renderWidget(
-    { function: 'avg', keys: [{ id: 'k1', attributeKind: 'resource', key: 'service.name' }] },
+    {
+      function: 'avg',
+      keys: [{ id: 'k1', attributeKind: 'resource', attributeKey: 'service.name' }]
+    },
     'float'
   )
   await openPill()
@@ -251,8 +262,8 @@ test('entering edit with several keys leaves the key pills collapsed', async () 
     {
       function: 'avg',
       keys: [
-        { id: 'k1', attributeKind: 'resource', key: 'service.name' },
-        { id: 'k2', attributeKind: 'data_point', key: 'http.route' }
+        { id: 'k1', attributeKind: 'resource', attributeKey: 'service.name' },
+        { id: 'k2', attributeKind: 'data_point', attributeKey: 'http.route' }
       ]
     },
     'float'
@@ -264,7 +275,10 @@ test('entering edit with several keys leaves the key pills collapsed', async () 
 
 test('a committed key can be removed', async () => {
   const { model } = renderWidget(
-    { function: 'avg', keys: [{ id: '1', attributeKind: 'resource', key: 'service.name' }] },
+    {
+      function: 'avg',
+      keys: [{ id: '1', attributeKind: 'resource', attributeKey: 'service.name' }]
+    },
     'float'
   )
   await openPill()

@@ -46,8 +46,8 @@ test.each<[string, GroupByModel, string]>([
       function: 'avg',
       params: {},
       keys: [
-        { id: '1', attributeKind: 'resource', key: 'service.name' },
-        { id: '2', attributeKind: 'data_point', key: 'http.route' }
+        { id: '1', attributeKind: 'resource', attributeKey: 'service.name' },
+        { id: '2', attributeKind: 'data_point', attributeKey: 'http.route' }
       ]
     },
     'avg by [Resource] service.name, [Data point] http.route'

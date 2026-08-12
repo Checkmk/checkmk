@@ -186,7 +186,7 @@ function addKey(): void {
   if (!keysEnabled.value || !tryChangeFocus()) {
     return
   }
-  const fresh: GroupKey = { id: randomId(), attributeKind: 'resource', key: '' }
+  const fresh: GroupKey = { id: randomId(), attributeKind: 'resource', attributeKey: '' }
   model.value = { ...model.value, keys: [...model.value.keys, fresh] }
   editingId.value = fresh.id
 }
@@ -207,11 +207,11 @@ function updateAttributeKind(target: GroupKey, value: AttributeKind): void {
 }
 
 // Override the kind only when the key resolves, so a user-picked kind survives free-text edits.
-function updateKey(target: GroupKey, value: string): void {
+function updateAttributeKey(target: GroupKey, value: string): void {
   const inferred = value !== '' ? (props.resolveAttributeKind?.(value) ?? null) : null
   mapKeys((k) =>
     k.id === target.id
-      ? { ...k, key: value, ...(inferred !== null ? { attributeKind: inferred } : {}) }
+      ? { ...k, attributeKey: value, ...(inferred !== null ? { attributeKind: inferred } : {}) }
       : k
   )
 }
@@ -269,7 +269,7 @@ function canLeaveEdit(): boolean {
               >
               <!-- Comma hugs the key; the segment's own right padding spaces it from the next term. -->
               <span class="metric-backend-form-group-by__segment"
-                >{{ key.key }}{{ index < model.keys.length - 1 ? ',' : '' }}</span
+                >{{ key.attributeKey }}{{ index < model.keys.length - 1 ? ',' : '' }}</span
               >
             </template>
           </template>
@@ -347,7 +347,7 @@ function canLeaveEdit(): boolean {
             @edit="startEditing(key.id)"
             @done="onKeyEditDone(key.id)"
             @update:attribute-kind="(value) => updateAttributeKind(key, value)"
-            @update:key="(value) => updateKey(key, value)"
+            @update:attribute-key="(value) => updateAttributeKey(key, value)"
           />
           <CmkIconButton
             class="metric-backend-form-group-by__add"

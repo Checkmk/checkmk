@@ -27,7 +27,7 @@ function renderPill(initial: Partial<GroupKey> = {}, editing = false) {
   const condition = ref<GroupKey>({
     id: '1',
     attributeKind: 'resource',
-    key: 'service.name',
+    attributeKey: 'service.name',
     ...initial
   })
   const removed = ref(false)
@@ -43,9 +43,9 @@ function renderPill(initial: Partial<GroupKey> = {}, editing = false) {
         onUpdateAttributeKind: (attributeKind: AttributeKind) => {
           condition.value = { ...condition.value, attributeKind }
         },
-        onUpdateKey: (key: string) => {
-          keyUpdates.push(key)
-          condition.value = { ...condition.value, key }
+        onUpdateAttributeKey: (attributeKey: string) => {
+          keyUpdates.push(attributeKey)
+          condition.value = { ...condition.value, attributeKey }
         },
         onRemove: () => {
           removed.value = true
@@ -59,7 +59,7 @@ function renderPill(initial: Partial<GroupKey> = {}, editing = false) {
         removable
         :query-suggestions="querySuggestions"
         @update:attribute-kind="onUpdateAttributeKind"
-        @update:key="onUpdateKey"
+        @update:attribute-key="onUpdateAttributeKey"
         @remove="onRemove"
       />
     `
@@ -75,8 +75,8 @@ test('the read-only chip shows the bracketed attribute kind and the key', () => 
   expect(chip).toHaveTextContent('service.name')
 })
 
-test('selecting a suggested key emits a single update:key (attribute-kind inference is the parent’s job)', async () => {
-  const { condition, keyUpdates } = renderPill({ key: '' }, true)
+test('selecting a suggested key emits a single update:attributeKey (attribute-kind inference is the parent’s job)', async () => {
+  const { condition, keyUpdates } = renderPill({ attributeKey: '' }, true)
   expect(screen.getByRole('combobox', { name: 'Attribute kind' })).toBeVisible()
 
   // Let the auto-open (nextTick) settle so the click below cannot re-toggle the dropdown.
@@ -90,7 +90,7 @@ test('selecting a suggested key emits a single update:key (attribute-kind infere
   await userEvent.type(filter, 'http.route')
   await userEvent.click(await screen.findByRole('option', { name: 'http.route' }))
 
-  expect(condition.value.key).toBe('http.route')
+  expect(condition.value.attributeKey).toBe('http.route')
   expect(keyUpdates).toEqual(['http.route'])
 })
 

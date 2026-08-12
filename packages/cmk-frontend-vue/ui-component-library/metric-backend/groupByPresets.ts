@@ -25,25 +25,25 @@ export const groupByPresets: Record<PresetName, GroupByModel> = {
   avgByService: {
     function: 'avg',
     params: {},
-    keys: [{ id: 'preset-service', attributeKind: 'resource', key: 'service.name' }]
+    keys: [{ id: 'preset-service', attributeKind: 'resource', attributeKey: 'service.name' }]
   },
   avgByServiceAndRoute: {
     function: 'avg',
     params: {},
     keys: [
-      { id: 'preset-service', attributeKind: 'resource', key: 'service.name' },
-      { id: 'preset-route', attributeKind: 'data_point', key: 'http.route' }
+      { id: 'preset-service', attributeKind: 'resource', attributeKey: 'service.name' },
+      { id: 'preset-route', attributeKind: 'data_point', attributeKey: 'http.route' }
     ]
   },
   histogramPercentile: {
     function: 'percentile',
     params: { quantile: 0.95 },
-    keys: [{ id: 'preset-service', attributeKind: 'resource', key: 'service.name' }]
+    keys: [{ id: 'preset-service', attributeKind: 'resource', attributeKey: 'service.name' }]
   },
   histogramFractionBetween: {
     function: 'fraction_between',
     params: { fractionLowerThreshold: 0.1, fractionUpperThreshold: 0.9 },
-    keys: [{ id: 'preset-service', attributeKind: 'resource', key: 'service.name' }]
+    keys: [{ id: 'preset-service', attributeKind: 'resource', attributeKey: 'service.name' }]
   }
 }
 

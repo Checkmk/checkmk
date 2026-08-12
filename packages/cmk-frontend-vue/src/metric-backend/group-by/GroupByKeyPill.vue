@@ -38,11 +38,11 @@ const emit = defineEmits<{
   (e: 'edit'): void
   (e: 'done'): void
   (e: 'update:attributeKind', value: AttributeKind): void
-  (e: 'update:key', value: string): void
+  (e: 'update:attributeKey', value: string): void
 }>()
 
 const fullLabel = computed(() => keyPillLabel(props.condition))
-const keyEmpty = computed(() => props.condition.key === '')
+const keyEmpty = computed(() => props.condition.attributeKey === '')
 
 const keyDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('keyDropdownRef')
 const pillRef = useTemplateRef<InstanceType<typeof InlineEditPill>>('pillRef')
@@ -64,7 +64,7 @@ watch(
 
 // Emit only the key; the parent infers the kind in one mutation (two emits would race and drop it).
 function onKeyUpdate(value: string | null): void {
-  emit('update:key', value ?? '')
+  emit('update:attributeKey', value ?? '')
 }
 
 const attributeKindInput = computed<string | null>({
@@ -139,7 +139,7 @@ defineExpose({
         <CmkDropdown
           ref="keyDropdownRef"
           floating
-          :model-value="condition.key || null"
+          :model-value="condition.attributeKey || null"
           :options="{ type: 'callback-filtered', querySuggestions }"
           :label="_t('Attribute key')"
           :input-hint="_t('Attribute key')"
@@ -156,7 +156,7 @@ defineExpose({
       >
       <span
         class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--key"
-        >{{ condition.key }}</span
+        >{{ condition.attributeKey }}</span
       >
     </template>
   </InlineEditPill>

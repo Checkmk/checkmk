@@ -186,11 +186,17 @@ const supportsAnchorPositioning =
 
 const flippedUp = ref(false)
 
-const nonFloatingMaxHeight = supportsAnchorPositioning ? 'none' : '200px'
+const nonFloatingMaxHeight = supportsAnchorPositioning ? 'none' : `${PREFERRED_MIN_BELOW_PX}px`
 // Grace margin kept between the list and the viewport edge.
-const viewportBottomMargin = '40px'
-// reka-ui provides this collision-aware available-height var.
-const floatingMaxHeight = `calc(var(--reka-popper-available-height, 500px) - ${viewportBottomMargin})`
+const VIEWPORT_MARGIN_PX = 40
+const viewportMargin = `${VIEWPORT_MARGIN_PX}px`
+const floatingCollisionPadding = { top: VIEWPORT_MARGIN_PX, bottom: VIEWPORT_MARGIN_PX }
+// reka-ui provides the collision-aware available height, already less the collision padding above.
+// The floor is what lets its flip still fire: a list capped to exactly the room it has never
+// collides, so without it the list stays below the button and shrinks to a sliver.
+// The var is only set once reka-ui has positioned the list, and an unset one would take the whole
+// declaration down with it, so the fallback caps the list until then.
+const floatingMaxHeight = `max(${PREFERRED_MIN_BELOW_PX}px, var(--reka-popper-available-height, 500px))`
 
 // Swallow the click-outside fired by the in-flight bubble when open() is
 // called from a sibling's click handler.
@@ -378,6 +384,7 @@ const group = computed<ButtonVariants['group']>(() => {
         <PopoverContent
           side="bottom"
           align="start"
+          :collision-padding="floatingCollisionPadding"
           class="cmk-dropdown__floating"
           :style="{ position: 'relative', zIndex: 'var(--z-index-dropdown-offset)' }"
           @open-auto-focus.prevent
@@ -402,7 +409,7 @@ const group = computed<ButtonVariants['group']>(() => {
 
 <style scoped>
 .cmk-dropdown {
-  --cmk-dropdown-viewport-margin: v-bind(viewportBottomMargin);
+  --cmk-dropdown-viewport-margin: v-bind(viewportMargin);
 
   display: inline-block;
   position: relative;

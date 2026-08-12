@@ -172,7 +172,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
           <template #empty-state>
             <slot name="empty-state">
               <MonitoringEmptyState
-                :has-search-query="service.searchQuery.value !== ''"
+                :has-search-query="service.committedSearchQuery.value !== ''"
                 :has-active-filter="service.filters.activeFilterCount > 0"
               />
             </slot>

@@ -29,7 +29,7 @@ export class HostService extends MonitoringService<HostEntry> {
       {
         limit: this.requestedLimit.value,
         sort: this.sortState.value,
-        searchQuery: this.searchQuery.value,
+        searchQuery: this.appliedSearchQuery.value,
         filter: this.filterState.value,
         fields: visibleHostFields(this.columnVisibility.value)
       },

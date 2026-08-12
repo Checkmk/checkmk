@@ -8,6 +8,7 @@ import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
+import type { FilterNode } from '@/monitoring/shared/api/types'
 import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 import {
   MonitoringService,
@@ -639,6 +640,26 @@ describe('MonitoringService', () => {
     service.stopPolling()
   })
 
+  it('clearSearch drops what the next fetch would send, without fetching itself', async () => {
+    const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+    const service = new TestService(fetchBatch)
+
+    await vi.advanceTimersByTimeAsync(0)
+
+    service.updateSearch('web')
+    await vi.advanceTimersByTimeAsync(0)
+    const callsBeforeClear = fetchBatch.mock.calls.length
+
+    service.clearSearch()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(service.searchQuery.value).toBe('')
+    expect(service.appliedSearchQuery.value).toBe('')
+    expect(fetchBatch.mock.calls.length).toBe(callsBeforeClear)
+
+    service.stopPolling()
+  })
+
   it('destruct() removes the focus-search callback so it is no longer dispatched', () => {
     let shortcutCallback: (() => void) | undefined
     const shortCutService = {
@@ -1237,6 +1258,107 @@ describe('MonitoringService', () => {
         limit: 5000
       })
 
+      service.stopPolling()
+    })
+  })
+
+  describe('appliedSearchQuery', () => {
+    it('a live keystroke does not leak into a background poll fetch', async () => {
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+      const service = new TestService(fetchBatch)
+
+      await vi.advanceTimersByTimeAsync(0)
+      service.updateSearch('web')
+      await vi.advanceTimersByTimeAsync(0)
+      expect(service.appliedSearchQuery.value).toBe('web')
+
+      // Mirrors the live v-model binding: typing without submitting.
+      service.searchQuery.value = 'web01'
+
+      service.refresh()
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(service.appliedSearchQuery.value).toBe('web')
+      expect(service.committedSearchQuery.value).toBe('web')
+
+      service.stopPolling()
+    })
+  })
+
+  describe('initialFilterState', () => {
+    it('seeds the filter and search into the first fetch, called exactly once', async () => {
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+      const filter: FilterNode = { type: 'condition', field: 'name', op: 'contains', value: 'web' }
+      const service = new TestService(fetchBatch, {
+        initialFilterState: { filter, search: 'web01' }
+      })
+
+      expect(service.filterState.value).toEqual(filter)
+      expect(service.searchQuery.value).toBe('web01')
+      expect(service.appliedSearchQuery.value).toBe('web01')
+
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchBatch).toHaveBeenCalledTimes(1)
+
+      service.stopPolling()
+    })
+
+    it('also seeds the column-filter store, not just the mirrored filterState', () => {
+      const filter: FilterNode = { type: 'condition', field: 'name', op: 'contains', value: 'web' }
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        initialFilterState: { filter }
+      })
+
+      expect(service.filters.filterNode.value).toEqual(filter)
+
+      service.stopPolling()
+    })
+
+    it('leaves filter and search at their defaults when no initial filter state is given', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)))
+
+      expect(service.filterState.value).toBeUndefined()
+      expect(service.searchQuery.value).toBe('')
+
+      service.stopPolling()
+    })
+  })
+
+  describe('filterUrlState', () => {
+    it('mirrors the current filter and applied search', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)))
+
+      expect(service.filterUrlState.value).toEqual({ filter: undefined, search: '' })
+
+      service.updateSearch('web01')
+      const filter: FilterNode = { type: 'condition', field: 'name', op: 'contains', value: 'web' }
+      service.updateFilters(filter)
+
+      expect(service.filterUrlState.value).toEqual({ filter, search: 'web01' })
+
+      service.stopPolling()
+    })
+
+    it('reflects the applied search immediately, not gated on the fetch resolving', async () => {
+      let resolveFetch: (value: PagedResponse<TestItem>) => void = () => {}
+      const fetchBatch = vi
+        .fn()
+        .mockResolvedValueOnce(makeResponse([], 0, 0))
+        .mockImplementationOnce(
+          () =>
+            new Promise<PagedResponse<TestItem>>((resolve) => {
+              resolveFetch = resolve
+            })
+        )
+      const service = new TestService(fetchBatch)
+
+      await vi.advanceTimersByTimeAsync(0)
+      service.updateSearch('web01')
+
+      expect(service.filterUrlState.value.search).toBe('web01')
+
+      resolveFetch(makeResponse([], 0, 0))
+      await vi.advanceTimersByTimeAsync(0)
       service.stopPolling()
     })
   })

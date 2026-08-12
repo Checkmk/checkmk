@@ -26,6 +26,8 @@ import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
 import { createActionRegistry } from '../shared/components/action/registry'
+import { buildFilterUrlSchema } from '../shared/filterState/schema'
+import { readFilterUrlState, useUrlFilterState } from '../shared/filterState/useUrlFilterState'
 import { buildColumnStorageKey } from '../shared/services/MonitoringService'
 import { buildTableStateSchema } from '../shared/tableState/schema'
 import { readTableStateFromUrl, useUrlTableState } from '../shared/tableState/useUrlTableState'
@@ -108,6 +110,9 @@ const schema = buildTableStateSchema({
 })
 const initialState = readTableStateFromUrl(window.location.search, schema)
 
+const filterSchema = buildFilterUrlSchema(columns)
+const initialFilterState = readFilterUrlState(window.location.search, filterSchema)
+
 const hostApi = new HostApi()
 
 const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
@@ -121,6 +126,7 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
   }),
   columns,
   initialState,
+  initialFilterState,
   quickFilters: [
     {
       label: _t('Unhandled host problems'),
@@ -145,6 +151,7 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
 })
 
 useUrlTableState(hostService, schema)
+useUrlFilterState(hostService)
 
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 

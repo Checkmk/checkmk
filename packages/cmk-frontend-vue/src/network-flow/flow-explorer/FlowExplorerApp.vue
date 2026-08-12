@@ -137,7 +137,7 @@ const hasFilters = computed(() => hasActiveFilter.value || flowService.searchQue
 
 /** Clears every filter and the search, back to the default time range. */
 function clearAllFilters(): void {
-  flowService.searchQuery.value = ''
+  flowService.clearSearch()
   applyFilters(defaultTimeContext())
 }
 

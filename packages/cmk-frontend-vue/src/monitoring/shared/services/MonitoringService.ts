@@ -25,6 +25,7 @@ import {
 
 import type { FilterNode } from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE, POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
+import type { FilterUrlState } from '@/monitoring/shared/filterState/types'
 import {
   columnIdsFromVisibility,
   visibilityFromColumnIds
@@ -95,6 +96,12 @@ export interface MonitoringServiceOptions<T> {
    * unlimited-pauses-refresh coupling `setRequestedLimit` does.
    */
   initialState?: Partial<TableState>
+  /**
+   * A validated, already-reconciled filter/search state to seed from -
+   * typically decoded from the URL. Kept separate from {@link initialState}:
+   * this narrows the result set, table state never does.
+   */
+  initialFilterState?: Partial<FilterUrlState>
 }
 
 export interface ColumnStorageScope {
@@ -160,10 +167,17 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly hasLoaded: Ref<boolean> = ref(false)
   readonly sortState: Ref<SortingState> = ref<SortingState>([])
   readonly searchQuery: Ref<string> = ref('')
-  /** The `searchQuery` updates on every key stroke, but we will also want information on the
-   *  committed (or sent) query, which only changes on submit. */
+  /**
+   * `searchQuery` updates on every key stroke; this only changes when a search is actually
+   * submitted (Enter, a quick filter, or a reset). `fetchBatch` reads this, not `searchQuery`,
+   * so a background poll firing mid-keystroke can never narrow the listing to unsubmitted text.
+   */
+  readonly appliedSearchQuery: Ref<string> = ref('')
+  /** The applied query the most recently completed fetch actually used. */
   readonly committedSearchQuery: Ref<string> = ref('')
   readonly filterState: Ref<FilterNode | undefined> = ref(undefined)
+  /** The table's row-narrowing state - filter plus applied search - for a URL sync to watch. */
+  readonly filterUrlState: ComputedRef<FilterUrlState>
 
   readonly toggleableColumns: ToggleableColumn[]
   private readonly hideableColumnIds: string[]
@@ -232,7 +246,8 @@ export abstract class MonitoringService<T> extends ServiceBase {
       mayRemoveLimit = false,
       tableStateSchema,
       columnStorageKey,
-      initialState
+      initialState,
+      initialFilterState
     } = options
 
     if (tableStateSchema === undefined) {
@@ -287,7 +302,23 @@ export abstract class MonitoringService<T> extends ServiceBase {
       limit: this.requestedLimit.value
     }))
 
+    if (initialFilterState?.search !== undefined) {
+      this.searchQuery.value = initialFilterState.search
+      this.appliedSearchQuery.value = initialFilterState.search
+    }
+
     this.filters = new FilterStore(quickFilters, this.searchQuery)
+    // Seed before the filterNode watch below exists, so this never fires a spurious
+    // updateFilters() fetch - the scheduled initial fetch already carries this filter.
+    if (initialFilterState?.filter !== undefined) {
+      this.filters.setQueryNode(initialFilterState.filter)
+      this.filterState.value = initialFilterState.filter
+    }
+    this.filterUrlState = computed(() => ({
+      filter: this.filterState.value,
+      search: this.appliedSearchQuery.value
+    }))
+
     const bridge = useColumnFilterBridge(columns, this.filters)
     this.tableColumnFilters = bridge.tableColumnFilters
     this.onColumnFiltersUpdate = bridge.onColumnFiltersUpdate
@@ -353,6 +384,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
 
   updateSearch(searchQuery: string): void {
     this.searchQuery.value = searchQuery
+    this.appliedSearchQuery.value = searchQuery
     this.offset.value = 0
     void this.fetch()
   }
@@ -451,6 +483,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   activateQuickFilter(quickFilter: QuickFilter): void {
     if (quickFilter.searchQuery !== undefined) {
       this.searchQuery.value = quickFilter.searchQuery
+      this.appliedSearchQuery.value = quickFilter.searchQuery
     }
     this.filters.activateQuickFilter(quickFilter)
     // Refresh explicitly: a quick filter may only change the search query, leaving the
@@ -462,8 +495,18 @@ export abstract class MonitoringService<T> extends ServiceBase {
     this.filters.deactivateQuickFilter(quickFilter)
   }
 
-  clearAllFilters(): void {
+  /**
+   * Clears the search box and what the next fetch will send with it. Does not
+   * fetch: the caller owns when that happens, because a view resetting its
+   * filters alongside this one only wants a single request.
+   */
+  clearSearch(): void {
     this.searchQuery.value = ''
+    this.appliedSearchQuery.value = ''
+  }
+
+  clearAllFilters(): void {
+    this.clearSearch()
     this.filters.clearAllFilters()
     this.updateFilters(undefined)
   }
@@ -512,7 +555,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
 
     this.secondsRemaining.value = this.pollIntervalSeconds
     this.fetchState.value = kind
-    const searchQueryForFetch = this.searchQuery.value
+    const searchQueryForFetch = this.appliedSearchQuery.value
     try {
       const response = await this.fetchBatch(abort.signal)
       if (this.currentAbort !== abort) {

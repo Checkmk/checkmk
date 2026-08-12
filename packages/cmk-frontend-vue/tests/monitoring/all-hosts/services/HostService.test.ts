@@ -96,6 +96,26 @@ describe('HostService', () => {
     )
   })
 
+  it('a background poll does not pick up search text typed but never submitted', async () => {
+    const fetchHosts = vi.fn().mockResolvedValue(makeHostsResponse([], 0, 0))
+    service = new HostService({ fetchHosts }, makeKeyShortcutService())
+
+    await vi.advanceTimersByTimeAsync(0)
+    service.updateSearch('web01')
+    await vi.advanceTimersByTimeAsync(0)
+
+    // Mirrors the live v-model binding: typing without pressing Enter.
+    service.searchQuery.value = 'web01x'
+
+    service.refresh()
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(fetchHosts).toHaveBeenLastCalledWith(
+      { limit: DEFAULT_BATCH_SIZE, sort: [], searchQuery: 'web01', fields: visibleHostFields({}) },
+      expect.any(AbortSignal)
+    )
+  })
+
   describe('requested fields', () => {
     const COLUMNS = [{ accessorKey: 'address', header: 'IP address' }] as const
 

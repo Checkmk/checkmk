@@ -91,7 +91,7 @@ export class FlowService extends MonitoringService<FlowEntry> {
         offset: this.offset.value,
         sort: this.sortToken,
         context: this.context.value,
-        q: this.searchQuery.value.trim() || undefined
+        q: this.appliedSearchQuery.value.trim() || undefined
       },
       signal
     )

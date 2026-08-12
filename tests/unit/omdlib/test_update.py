@@ -15,6 +15,7 @@ from omdlib.type_defs import Skeleton
 from omdlib.update import (
     _restore_version_meta_dir,
     _store_version_meta_dir,
+    ensure_skel_is_intact,
     file_type,
     get_conflict_mode_update,
     get_edition,
@@ -443,3 +444,26 @@ def test_get_conflict_mode_update(
 def test_get_edition(edition: version._EditionValue) -> None:
     unknown = "unknown", "unknown"
     assert get_edition(f"1.2.3.{edition.long}") != unknown
+
+
+def test_ensure_skel_is_intact_ok(tmp_path: Path) -> None:
+    skel = tmp_path / "skel"
+    (skel / "etc" / "sub").mkdir(parents=True)
+    random_file(skel / "etc" / "sub" / "1.file")
+    (skel / "var").mkdir()
+    ensure_skel_is_intact(skel)  # must not raise
+
+
+@pytest.mark.parametrize("present", [[], ["etc"], ["var"]])
+def test_ensure_skel_is_intact_incomplete(tmp_path: Path, present: list[str]) -> None:
+    skel = tmp_path / "skel"
+    skel.mkdir()
+    for directory in present:
+        (skel / directory).mkdir()
+    with pytest.raises(SystemExit, match="skeleton hierarchy .* is incomplete"):
+        ensure_skel_is_intact(skel)
+
+
+def test_ensure_skel_is_intact_missing_root(tmp_path: Path) -> None:
+    with pytest.raises(SystemExit, match="is incomplete"):
+        ensure_skel_is_intact(tmp_path / "does-not-exist")

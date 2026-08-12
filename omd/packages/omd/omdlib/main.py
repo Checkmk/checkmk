@@ -109,7 +109,13 @@ from omdlib.tmpfs import (
     unmount_tmpfs_as_root,
 )
 from omdlib.type_defs import Replacements, Skeleton
-from omdlib.update import get_conflict_mode_update, get_edition, ManageUpdate, PreFlight
+from omdlib.update import (
+    ensure_skel_is_intact,
+    get_conflict_mode_update,
+    get_edition,
+    ManageUpdate,
+    PreFlight,
+)
 from omdlib.update_check import check_update_possible, prepare_conflict_resolution
 from omdlib.user_processes import (
     descriptions_of_processes,
@@ -2530,6 +2536,8 @@ def main_update(
 
         from_skelroot = site.version_skel_dir
         to_skelroot = "/omd/versions/%s/skel" % to_version
+        ensure_skel_is_intact(Path(from_skelroot))
+        ensure_skel_is_intact(Path(to_skelroot))
 
         with ManageUpdate(
             site.name, site.tmp_dir, Path(site_home), Path(from_skelroot), Path(to_skelroot)

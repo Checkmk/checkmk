@@ -1,5 +1,4 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "legacy_checks",
@@ -15,7 +14,5 @@ py_library(
         "//cmk/plugins",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugins:lib",
-        requirement("pydantic"),
-        requirement("python-dateutil"),
     ],
 )

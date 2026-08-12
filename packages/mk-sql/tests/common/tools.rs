@@ -236,24 +236,37 @@ pub async fn run_get_version(client: &mut UniClient) -> Option<String> {
     }
 }
 
+/// Directory holding the log file that [`LogMe`] writes.
+///
+/// Reused by every run.
+/// `LogMe` hands the log file to the process-global logger,
+/// which keeps that file open until the test process exits. Windows refuses to
+/// delete an open file, so a temporary directory created for one run cannot be removed by
+/// that same run.
+fn log_dir() -> PathBuf {
+    std::env::temp_dir().join("mk-sql-test-logs")
+}
+
 #[allow(dead_code)]
 pub struct LogMe {
-    temp_dir: TempDir,
+    dir: PathBuf,
     name: String,
 }
 
 #[allow(dead_code)]
 impl LogMe {
     pub fn new(name: &str) -> Self {
-        let dir = create_temp_process_dir();
+        let dir = log_dir();
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("failed to create log directory");
         Self {
-            temp_dir: dir,
+            dir,
             name: name.to_string(),
         }
     }
 
     pub fn dir(&self) -> &Path {
-        self.temp_dir.path()
+        &self.dir
     }
 
     pub fn start(self, level: log::Level) -> Self {

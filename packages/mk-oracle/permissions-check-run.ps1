@@ -44,6 +44,8 @@ while (!(Test-Path "$root_dir/.werks" -ErrorAction SilentlyContinue)) {
 Write-Host "Building $package_name..." -ForegroundColor White
 Push-Location $PSScriptRoot
 $temp_dir = Join-Path $env:TEMP "mk-oracle-perms-check-$([System.IO.Path]::GetRandomFileName())"
+$runtime_path = "$temp_dir/runtimes/plugins/packages/mk-oracle/runtime"
+$current_user_sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 New-Item -ItemType Directory -Path $temp_dir -Force | Out-Null
 try {
     & cargo build --release --package $package_name --target $cargo_target
@@ -61,7 +63,6 @@ try {
     if ($LASTEXITCODE -ne 0) { Write-Error "OCI download failed" }
 
     $oci_zip = & bazel cquery $target --output=starlark --starlark:expr='target.files.to_list()[0].path'
-    $runtime_path = "$temp_dir/runtimes/plugins/packages/mk-oracle/runtime"
     New-Item -ItemType Directory -Path $runtime_path -Force | Out-Null
     Expand-Archive -Path "$root_dir/$oci_zip" -DestinationPath $runtime_path -Force
 
@@ -111,9 +112,9 @@ try {
     # restrict it to Administrators-only (elevated, so the ACL reset itself
     # isn't fighting a UAC-filtered token), then verify it's trusted again.
     Write-Host "Step 4: running elevated checks..." -ForegroundColor White
-    $admin_out_before = "$env:TEMP\perms-check-stdout-before.txt"
-    $admin_out_after = "$env:TEMP\perms-check-stdout-after.txt"
-    $admin_sql_out_before = "$env:TEMP\perms-check-sql-stdout-before.txt"
+    $admin_out_before = Join-Path $temp_dir "perms-check-stdout-before.txt"
+    $admin_out_after = Join-Path $temp_dir "perms-check-stdout-after.txt"
+    $admin_sql_out_before = Join-Path $temp_dir "perms-check-sql-stdout-before.txt"
     $admin_script = Join-Path $temp_dir "admin-check.ps1"
     @"
 `$ErrorActionPreference = 'Stop'
@@ -124,6 +125,8 @@ Set-Location '$PSScriptRoot'
 icacls '$runtime_path' /inheritance:r /remove:g '*S-1-5-32-545' /grant:r '*S-1-5-32-544:(OI)(CI)F' '*S-1-5-18:(OI)(CI)F' /T /C | Out-Null
 if (`$LASTEXITCODE -ne 0) { exit 2 }
 & '$binary' -c tests/files/test-mini-one-section.yml *> '$admin_out_after'
+# Hand the directory back to the account that created it
+icacls '$runtime_path' /grant '*${current_user_sid}:(OI)(CI)F' /T /C | Out-Null
 "@ | Set-Content -Path $admin_script -Encoding utf8
     $proc = Start-Process pwsh -ArgumentList "-NoProfile -File `"$admin_script`"" -Verb RunAs -Wait -PassThru -WindowStyle Hidden
     if ($proc.ExitCode -ne 0) {
@@ -143,7 +146,6 @@ if (`$LASTEXITCODE -ne 0) { exit 2 }
     $refusal = "No Oracle client runtime found"
 
     $output_before = Get-Content $admin_out_before -Raw
-    Remove-Item $admin_out_before -ErrorAction SilentlyContinue
     if ($output_before -match '<<<' -or $output_before -notmatch $refusal) {
         Write-Host $output_before -ForegroundColor Red
         Write-Error "FAIL: expected '$refusal' and no section output from admin run before restricting permissions"
@@ -151,7 +153,6 @@ if (`$LASTEXITCODE -ne 0) { exit 2 }
     Write-Host "OK: root can't exec non-root code" -ForegroundColor Green
 
     $sql_output_before = Get-Content $admin_sql_out_before -Raw
-    Remove-Item $admin_sql_out_before -ErrorAction SilentlyContinue
     if ($sql_output_before -match '<<<' -or $sql_output_before -notmatch $refusal) {
         Write-Host $sql_output_before -ForegroundColor Red
         Write-Error "FAIL: expected '$refusal' and no section output from admin run with custom SQL file"
@@ -159,7 +160,6 @@ if (`$LASTEXITCODE -ne 0) { exit 2 }
     Write-Host "OK: root can't read non-root custom SQL file" -ForegroundColor Green
 
     $output_after = Get-Content $admin_out_after -Raw
-    Remove-Item $admin_out_after -ErrorAction SilentlyContinue
     # Same shape as the non-elevated run (step 3): real section output, not
     # just any bytes — error text on stderr must not count as success.
     $after_lines = ($output_after -split "`n" | Where-Object { $_.Trim() -ne "" })
@@ -176,6 +176,14 @@ if (`$LASTEXITCODE -ne 0) { exit 2 }
 
 }
 finally {
-    Remove-Item $temp_dir -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path $runtime_path) {
+        & icacls $runtime_path /grant "*${current_user_sid}:(OI)(CI)F" /T /C 2>&1 | Out-Null
+    }
+    try {
+        Remove-Item $temp_dir -Recurse -Force
+    }
+    catch {
+        Write-Warning "Leftover directory $temp_dir could not be removed: $_"
+    }
     Pop-Location
 }

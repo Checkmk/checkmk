@@ -6,11 +6,14 @@
     "0001-xff_field_missing_from_rrdinfo.dif": "sha256-2GI23x9J+qt2DBVmczE3OmmxdlxHlrdNaCM+ibEm2UA=",
     "0003-cli-xport-consistency.dif": "sha256-JyZ8LG7SZa22Ew9gN5O8UOADsjwrRwi6mNVYlrfppvI=",
     "0004-fix-error-formatting.dif": "sha256-QCNUYC0Gmx0a3gllrA/g0iZUKLkmy5NwaYnxnw1xo/A=",
-    "0005-config-disable_nls.dif": "sha256-mUwerEKwQb1FSqoaENtN/TGKN2BWVHxrr6FYGQyk0dg="
+    "0005-config-disable_nls.dif": "sha256-mUwerEKwQb1FSqoaENtN/TGKN2BWVHxrr6FYGQyk0dg=",
+    "0006-xport-without-graph.dif": "sha256-7w5gj9j5aKPqb+LBcpLsNOUwLKnPLmha57m8n0emMMg=",
+    "0007-config-disable_rrd_graph.dif": "sha256-LiR/Wj7NInML4nxlsZPXDUHruxzasZhb32wLLiQVJYk="
   },
   "patch_strip": 1,
   "overlay": {
-    "BUILD.bazel": "sha256-A0WQr4aPF974kTy8uEVdmXw3Eordm3qElJnhluQ95NQ=",
-    "MODULE.bazel": "sha256-yec89CluPPGIJ0F7h0N8Yfp9XRWDwmh4Oj8zLJpE1OY="
+    "BUILD.bazel": "sha256-bIKs2WCJ+gpR4IzWf0wUTRIM33Gs1+vXIKgUqwbDBv8=",
+    "MODULE.bazel": "sha256-RzZvqsQGkBp6xzZX3nCXZnUWfy96XYDk7MwKRNrP8LE=",
+    "perl_bindings.bzl": "sha256-/ROzzSIVrGib03EWQN7wOExpLeoJz30V7ai4xHb5X88="
   }
 }

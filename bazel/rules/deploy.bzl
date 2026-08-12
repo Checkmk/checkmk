@@ -159,7 +159,7 @@ deploy_python_drift_test = rule(
 # NOTE: omd/BUILD is the source of truth for what constitutes an edition.
 # The lists below must stay in sync with it; //:deploy-python-drift-test
 # fails with a diff when they drift. One deliberate deviation: external
-# wheels (e.g. @rrdtool_native) are not deployed, as they are not built
+# wheels (e.g. @rrdtool) are not deployed, as they are not built
 # from this repo and thus cannot change during development.
 #
 # These lists could be replaced by collecting the product's wheels

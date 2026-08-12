@@ -1,5 +1,5 @@
 module(
-    name = "rrdtool_native",
+    name = "rrdtool",
     version = "1.7.2.cmk.2",
     bazel_compatibility = [">=7.2.1"],
     compatibility_level = 1,
@@ -8,6 +8,7 @@ module(
 bazel_dep(name = "aspect_rules_py", version = "1.5.2")
 bazel_dep(name = "glib", version = "2.0.cmk.1", repo_name = "glib_module")
 bazel_dep(name = "libxml2", version = "2.0.cmk.1", repo_name = "libxml2_module")
+bazel_dep(name = "package_metadata", version = "0.0.7")
 bazel_dep(name = "rules_cc", version = "0.2.11")
 bazel_dep(name = "rules_python", version = "1.6.0")
 

@@ -146,6 +146,40 @@ void voteGerrit(Map args) {
     }
 }
 
+/// The package pre-build and the test jobs are the same call with the same
+/// package identity, so keep it in one place: if the two drift apart, the test
+/// jobs stop finding the pre-built package and build their own.
+///
+/// @extra_build_params: entries specific to one job, e.g. TEST_FILTER. They take
+///     part in build matching, so a cached build from a run with different values
+///     does not get reused.
+/// @force_build: only where a cache hit is a problem, which is the package. The
+///     test jobs are already distinct through their own parameters.
+void triggerCascadeJob(Map args) {
+    smart_build(
+        // see global-defaults.yml, needs to run in minimal container
+        use_upstream_build: true,
+        force_build: args.force_build ?: false,
+        relative_job_name: args.relative_job_name,
+        build_params: [
+            CUSTOM_GIT_REF: args.git_ref,
+            EDITION: args.edition,
+            DISTRO: args.distro,
+            DISABLE_CACHE: args.disable_cache,
+            DISABLE_CMK_DISTRO_PACKAGE_SIGNING: args.disable_signing,
+            FAKE_ARTIFACTS: args.fake_artifacts,
+        ] + (args.extra_build_params ?: [:]),
+        build_params_no_check: [
+            CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+            CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+            CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
+        ],
+        no_remove_others: true, // do not delete other files in the dest dir
+        download: false,    // use copyArtifacts to avoid nested directories
+    );
+}
+
 // groovylint-disable MethodSize
 void main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
@@ -268,27 +302,15 @@ void main() {
                 name: "Pre-build needed package",
                 raiseOnError: true,
             ) {
-                smart_build(
-                    // see global-defaults.yml, needs to run in minimal container
-                    use_upstream_build: true,
-                    force_build: force_build,
+                triggerCascadeJob(
                     relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",
-                    build_params: [
-                        CUSTOM_GIT_REF: new_patchset_revision,
-                        EDITION: edition_medium_chain,
-                        DISTRO: distro_medium_chain,
-                        DISABLE_CACHE: force_build,
-                        DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
-                        FAKE_ARTIFACTS: fake_artifacts,
-                    ],
-                    build_params_no_check: [
-                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
-                    ],
-                    no_remove_others: true, // do not delete other files in the dest dir
-                    download: false,    // use copyArtifacts to avoid nested directories
+                    git_ref: new_patchset_revision,
+                    edition: edition_medium_chain,
+                    distro: distro_medium_chain,
+                    disable_cache: force_build,
+                    disable_signing: disable_signing,
+                    fake_artifacts: fake_artifacts,
+                    force_build: force_build,
                 );
             }
         }
@@ -300,34 +322,16 @@ void main() {
                 smart_stage(
                     name: "Trigger ${job_name}",
                 ) {
-                    smart_build(
-                        // see global-defaults.yml, needs to run in minimal container
-                        use_upstream_build: true,
-                        force_build: force_build,
+                    triggerCascadeJob(
                         relative_job_name: "${branch_base_folder}/cv/${job_name}",
-                        build_params: [
-                            CUSTOM_GIT_REF: new_patchset_revision,
-                            EDITION: edition_medium_chain,
-                            DISTRO: distro_medium_chain,
-                            DISABLE_CACHE: force_build,
-                            DISABLE_CMK_DISTRO_PACKAGE_SIGNING: disable_signing,
-                            FAKE_ARTIFACTS: fake_artifacts,
-                            // if there is a test filter specified on make target level, the last one in the list of pytest arguments will
-                            // overwrite all previous ones. Place all required test filters in one place and connect them with "and"
-                            // "TEST_FILTER" is prepended to the pytest call and thereby always the first source of settings and so it is
-                            // overruled if there is an additional test filter set later in the list of pytest args
-                            // Remember to quote a chain of filters to prevent word splitting
-                            // Setting "-m medium_test_chain" will cause special handling in "test-system-singlesite-single.groovy"
-                            TEST_FILTER: '-m medium_test_chain',
-                        ],
-                        build_params_no_check: [
-                            CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                            CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                            CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
-                        ],
-                        no_remove_others: true, // do not delete other files in the dest dir
-                        download: false,    // use copyArtifacts to avoid nested directories
+                        git_ref: new_patchset_revision,
+                        edition: edition_medium_chain,
+                        distro: distro_medium_chain,
+                        disable_cache: force_build,
+                        disable_signing: disable_signing,
+                        fake_artifacts: fake_artifacts,
+                        force_build: force_build,
+                        extra_build_params: [TEST_FILTER: '-m medium_test_chain'],
                     );
                 }
             }]

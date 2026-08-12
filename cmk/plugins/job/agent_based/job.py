@@ -342,10 +342,29 @@ def check_job(
     # The exit code comes from the completed job, so without one we cannot say
     # anything about the outcome. Its start time is only needed while nothing runs.
     if completed_job is not None:
-        if completed_job.exit_code is None or (
-            completed_job.start_time is None and not running_jobs
-        ):
-            yield Result(state=State.UNKNOWN, summary="Got incomplete information for this job")
+        if completed_job.exit_code is None:
+            # Werk 15450 made mk-job assemble this file under $TMPDIR and move it into place, so
+            # that it is "either present and complete, or absent altogether". That holds while the
+            # move is a rename. With $TMPDIR on another filesystem it is a copy to the final name
+            # instead - no temporary name, no rename - and a copy that fails or is interrupted
+            # leaves the file truncated for good, with the exit code, written last, missing. So
+            # this case survives the agents that werk 15450 shipped with: it takes a filesystem
+            # layout, not an old plugin, and it does not clear up by itself.
+            yield Result(
+                state=State.UNKNOWN,
+                summary="Got incomplete information for this job",
+                details="No exit code for the last completed run - its file is probably truncated.",
+            )
+            return
+        if completed_job.start_time is None and not running_jobs:
+            # mk-job versions shipped with Checkmk 2.4.0 and older determine the start time with
+            # perl and write an empty one if perl is not installed - on a minimal RHEL 8/9
+            # installation, for example.
+            yield Result(
+                state=State.UNKNOWN,
+                summary="Got incomplete information for this job",
+                details="No start time for the last completed run - probably no perl on the monitored host.",
+            )
             return
         yield from _check_completed_job(
             completed_job.exit_code,
@@ -355,7 +374,11 @@ def check_job(
     elif not running_jobs:
         # A job that has not completed yet has no exit code, but as long as it is
         # running there is something to report. Without either, there is not.
-        yield Result(state=State.UNKNOWN, summary="Got incomplete information for this job")
+        yield Result(
+            state=State.UNKNOWN,
+            summary="Got incomplete information for this job",
+            details="No file of a completed run - this job has probably not finished one yet, or its file is gone.",
+        )
         return
 
     if running_jobs:

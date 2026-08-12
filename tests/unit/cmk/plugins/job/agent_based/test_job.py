@@ -439,6 +439,32 @@ def test_metric_specs_cover_all_metrics() -> None:
     assert {field.name for field in fields(job.Metrics)} == set(job._METRIC_SPECS)
 
 
+def test_incomplete_information_results() -> None:
+    results = (
+        Result(
+            state=State.UNKNOWN,
+            summary="Got incomplete information for this job",
+            details="No file of a completed run - this job has probably not finished one yet, or its file is gone.",
+        ),
+        Result(
+            state=State.UNKNOWN,
+            summary="Got incomplete information for this job",
+            details="No exit code for the last completed run - its file is probably truncated.",
+        ),
+        Result(
+            state=State.UNKNOWN,
+            summary="Got incomplete information for this job",
+            details="No start time for the last completed run - probably no perl on the monitored host.",
+        ),
+    )
+    assert all(result.state is State.UNKNOWN for result in results)
+    # The summary is deliberately the same for all of them - werk 22105 quotes it.
+    assert {result.summary for result in results} == {"Got incomplete information for this job"}
+    # What tells them apart is the details, one line each.
+    assert len({result.details for result in results}) == len(results)
+    assert all("\n" not in result.details for result in results)
+
+
 @pytest.mark.parametrize(
     "string_table,expected_parsed_data",
     [
@@ -738,6 +764,20 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
     assert job.parse_job(string_table) == expected_parsed_data
 
 
+def _undated_result(pids: list[int | None]) -> Result:
+    """What check_job yields for the running files it cannot date."""
+    count = len(pids)
+    _pids = ", ".join(str(pid) for pid in pids if pid is not None)
+    return Result(
+        state=State.WARN,
+        summary=(
+            f"{count} running file{'' if count == 1 else 's'} without a usable start"
+            f" time{f' (PID {_pids})' if _pids else ''}"
+        ),
+        details="To fix this start time issue, please update the agent or install perl on the host",
+    )
+
+
 # The metrics of SECTION_1["SHREK"], in the order check_job emits them.
 _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
     Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
@@ -778,15 +818,6 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
                 Metric("job_age", 46999419.0, boundaries=(0.0, None)),
             ],
             id="legacy age levels (0, 0) are not applied",
-        ),
-        pytest.param(
-            # parse_job never produces this, but the item exists, so we must say
-            # something about it rather than let the service go stale.
-            "item",
-            job.check_plugin_job.check_default_parameters,
-            [["==>", "item", "<=="]],
-            [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
-            id="item present but without any job data",
         ),
         pytest.param(
             "cleanup_remote_logs",
@@ -869,8 +900,35 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
                 ["real_time", "0.96"],
                 ["exit_code", "0"],
             ],
-            [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Got incomplete information for this job",
+                    details="No start time for the last completed run - probably no perl on the monitored host.",
+                )
+            ],
             id="job without a start time",
+        ),
+        pytest.param(
+            # mk-job appends the exit code to the file of a completed run last, so a
+            # file that was cut short has everything but that.
+            "Cleanup-Cache-Files",
+            job.check_plugin_job.check_default_parameters,
+            [
+                ["==>", "Cleanup-Cache-Files", "<=="],
+                ["start_time", str(TIME - 60)],
+                ["real", "0.96"],
+                ["user", "0.96"],
+                ["sys", "0.96"],
+            ],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Got incomplete information for this job",
+                    details="No exit code for the last completed run - its file is probably truncated.",
+                )
+            ],
+            id="job without an exit code",
         ),
         pytest.param(
             # Werk 22105: the start time of the completed job is only needed while
@@ -1023,7 +1081,13 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
             [
                 ["==>", "empty-file", "<=="],
             ],
-            [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Got incomplete information for this job",
+                    details="No exit code for the last completed run - its file is probably truncated.",
+                )
+            ],
             id="completed job from an empty file",
         ),
         pytest.param(
@@ -1078,10 +1142,10 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
                 ["start_time"],
             ],
             [
-                Result(
-                    state=State.WARN,
-                    summary="1 running file without a usable start time (PID 4711)",
-                    details="To fix this start time issue, please update the agent or install perl on the host",
+                _undated_result(
+                    [
+                        4711,
+                    ]
                 ),
                 Result(
                     state=State.OK,
@@ -1135,10 +1199,10 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
                 ["start_time"],
             ],
             [
-                Result(
-                    state=State.WARN,
-                    summary="1 running file without a usable start time (PID 30166)",
-                    details="To fix this start time issue, please update the agent or install perl on the host",
+                _undated_result(
+                    [
+                        30166,
+                    ]
                 ),
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, notice="Latest job started at 2020-07-09 15:15:00"),
@@ -1153,12 +1217,12 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
             job.check_plugin_job.check_default_parameters,
             [["==>", "no-perl-only.running", "<=="], ["start_time"]],
             [
+                _undated_result([None]),
                 Result(
-                    state=State.WARN,
-                    summary="1 running file without a usable start time",
-                    details="To fix this start time issue, please update the agent or install perl on the host",
+                    state=State.UNKNOWN,
+                    summary="Got incomplete information for this job",
+                    details="No file of a completed run - this job has probably not finished one yet, or its file is gone.",
                 ),
-                Result(state=State.UNKNOWN, summary="Got incomplete information for this job"),
             ],
             id="undated running file and nothing else",
         ),
@@ -1172,12 +1236,12 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
                 ["start_time"],
             ],
             [
+                _undated_result([1, 2]),
                 Result(
-                    state=State.WARN,
-                    summary="2 running files without a usable start time (PID 1, 2)",
-                    details="To fix this start time issue, please update the agent or install perl on the host",
+                    state=State.UNKNOWN,
+                    summary="Got incomplete information for this job",
+                    details="No file of a completed run - this job has probably not finished one yet, or its file is gone.",
                 ),
-                Result(state=State.UNKNOWN, summary="Got incomplete information for this job"),
             ],
             id="several undated running files",
         ),

@@ -70,6 +70,11 @@ def main() -> int:
         sys.stderr.write(f"{e}\n")
         return 1
 
+    # Keep interactive runs informative, but stay quiet when writing to an
+    # output file (Bazel aspect), where this would spam the build log.
+    if args.output is None:
+        sys.stderr.write(f"Checking {len(files_to_check)} python files\n")
+
     return _handle_results(
         _run_checkers(files_to_check, workspace_dir, factories),
         args.format,
@@ -135,10 +140,7 @@ def _collect_files(paths: Sequence[Path], workspace_dir: Path) -> list[Path]:
         else:
             raise ValueError(f"Error: Not a file or directory: {path}")
 
-    files_to_check = sorted(set(files_to_check))
-    sys.stderr.write(f"Checking {len(files_to_check)} python files\n")
-
-    return files_to_check
+    return sorted(set(files_to_check))
 
 
 @dataclass

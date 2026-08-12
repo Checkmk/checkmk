@@ -15,7 +15,7 @@ The tests enforce that flags are removed before their deadline.
 """
 
 from pathlib import Path
-from typing import cast, Final
+from typing import Annotated, cast, Final
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.fields import FieldInfo
@@ -61,6 +61,19 @@ class ReleaseFlagConfig(BaseModel):
     """
 
     model_config = ConfigDict(frozen=True, extra="ignore")
+
+    exp_trial_mode_selection: Annotated[
+        bool,
+        release_field(
+            description=(
+                "Ask admins on their next visit whether this site is used as a trial "
+                "or with an existing license. The selection workflow is not yet complete."
+            ),
+            remove_ticket="CMK-37562",
+            remove_after="3.1.0",
+            owner="giordano.tomassorri@checkmk.com",
+        ),
+    ] = False
 
 
 def load_release_flags(config_dir: Path) -> ReleaseFlagConfig:

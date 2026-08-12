@@ -730,6 +730,49 @@ class TestMonitorHostsFields:
 
         assert "contacts" not in resp.json["hosts"][0]
 
+    def test_contact_groups_are_read_and_returned_only_when_requested(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_host_columns('contact_groups')}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, fields=["contact_groups"])
+
+        host = next(h for h in resp.json["hosts"] if h["name"] == "heute")
+        assert host["contact_groups"] == ["all"]
+
+    def test_contact_groups_are_omitted_unless_requested(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT)
+
+        assert "contact_groups" not in resp.json["hosts"][0]
+
 
 class TestMonitorHostOverviewAuth:
     def test_invalid_credentials(self, clients: ClientRegistry) -> None:
@@ -1075,6 +1118,7 @@ _HOSTS = [
         "label_sources": {"cmk/site": "discovered"},
         "tags": {"criticality": "prod"},
         "contacts": ["hh"],
+        "contact_groups": ["all"],
     },
     {
         "name": "gestern",
@@ -1096,6 +1140,7 @@ _HOSTS = [
         "label_sources": {"cmk/site": "discovered"},
         "tags": {"criticality": "prod"},
         "contacts": ["hh"],
+        "contact_groups": ["all"],
     },
     {
         "name": "morgen",
@@ -1118,6 +1163,7 @@ _HOSTS = [
         "label_sources": {"cmk/site": "discovered"},
         "tags": {"criticality": "prod"},
         "contacts": ["hh"],
+        "contact_groups": ["all"],
     },
 ]
 # Columns every host row needs, followed by the ones a request has to ask for. Both lists are in
@@ -1137,6 +1183,7 @@ _OPTIONAL_COLUMNS = {
     "last_state_change": "last_state_change",
     "tags": "tags",
     "contacts": "contacts",
+    "contact_groups": "contact_groups",
 }
 _DEFAULT_FIELDS = (
     "address",

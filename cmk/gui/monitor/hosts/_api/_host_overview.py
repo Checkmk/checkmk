@@ -114,7 +114,7 @@ class HostOverviewResponse:
             last_state_change=read(host.last_state_change, "last_state_change"),
             customer=host.customer,
             folder=read(host.folder, "folder"),
-            contact_groups=host.contact_groups,
+            contact_groups=read(host.contact_groups, "contact_groups"),
             tags=read(host.tags, "tags"),
             labels=read(host.labels, "labels"),
             legacy_host_status_link=host_view_link("hoststatus", host),

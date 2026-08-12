@@ -72,6 +72,7 @@ class Host:
     labels: dict[str, HostLabelValue] | None
     tags: dict[str, str] | None
     contacts: list[str] | None
+    contact_groups: list[str] | None
 
     @property
     def state_label(self) -> HostStateLabel:
@@ -89,7 +90,6 @@ class Host:
 @dataclasses.dataclass(frozen=True)
 class HostOverview(Host):
     customer: str | None
-    contact_groups: list[str] = dataclasses.field(default_factory=list)
 
 
 class HostOptionalField(enum.StrEnum):
@@ -107,6 +107,7 @@ class HostOptionalField(enum.StrEnum):
     LABELS = "labels"
     TAGS = "tags"
     CONTACTS = "contacts"
+    CONTACT_GROUPS = "contact_groups"
 
     @classmethod
     def options(cls) -> str:

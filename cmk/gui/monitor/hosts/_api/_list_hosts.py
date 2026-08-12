@@ -142,6 +142,11 @@ class HostEntry:
         example=["hh"],
         default_factory=ApiOmitted,
     )
+    contact_groups: list[str] | ApiOmitted = api_field(
+        description="Contact groups this host is in. Omitted when it is in none.",
+        example=["all"],
+        default_factory=ApiOmitted,
+    )
     modes: list[ModeInfo] | ApiOmitted = api_field(
         description=(
             "Active host modes (e.g. scheduled downtime, acknowledgement) rendered as linked "
@@ -192,6 +197,7 @@ class HostEntry:
             labels=included(HostOptionalField.LABELS, host.labels),
             tags=included(HostOptionalField.TAGS, host.tags),
             contacts=included(HostOptionalField.CONTACTS, host.contacts),
+            contact_groups=included(HostOptionalField.CONTACT_GROUPS, host.contact_groups),
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
         )

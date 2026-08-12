@@ -13,9 +13,10 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import { onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
-import type { HostRef, HostServiceEntry } from '@/monitoring/shared/api/types'
+import type { HostRef, HostServiceEntry, ServiceState } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import QuickFilterChip from '@/monitoring/shared/components/filter/QuickFilterChip.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
@@ -54,7 +55,28 @@ const hostServicesService = new HostServicesService(
   getKeyShortcutServiceInstance(),
   {
     pollIntervalMs: props.poll_interval_ms,
-    columns
+    columns,
+    quickFilters: [
+      {
+        label: _t('Unhandled problems'),
+        tooltip: _t(
+          'Show only services in a problem state (WARN or CRIT) that are neither acknowledged nor in a scheduled downtime'
+        ),
+        filter: {
+          type: 'and',
+          children: [
+            {
+              type: 'condition',
+              field: 'state',
+              op: 'one_of',
+              value: ['WARN', 'CRIT'] as ServiceState[]
+            },
+            { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
+            { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
+          ]
+        }
+      }
+    ]
   }
 )
 
@@ -130,6 +152,17 @@ function onActionPerformed(result: ActionFeedbackResult): void {
           @focusin="hostServicesService.beginAutoPause()"
           @focusout="hostServicesService.endAutoPause()"
         />
+        <div class="monitoring-host-services-app__quick-filters">
+          <QuickFilterChip
+            v-for="chip in hostServicesService.filters.quickFilters"
+            :key="chip.label"
+            :label="chip.label"
+            :tooltip="chip.tooltip"
+            :active="chip.isActive.value"
+            @activate="hostServicesService.activateQuickFilter(chip)"
+            @deactivate="hostServicesService.deactivateQuickFilter(chip)"
+          />
+        </div>
         <CmkButton variant="text" size="small" @click="hostServicesService.clearAllFilters()">
           {{ _t('Reset all filters') }}
         </CmkButton>
@@ -204,5 +237,11 @@ function onActionPerformed(result: ActionFeedbackResult): void {
 .monitoring-host-services-app__search {
   flex: 1;
   max-width: 360px;
+}
+
+.monitoring-host-services-app__quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dimension-4);
 }
 </style>

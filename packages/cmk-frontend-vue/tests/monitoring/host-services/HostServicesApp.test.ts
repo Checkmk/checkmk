@@ -298,6 +298,72 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
   )
 })
 
+test('activating the unhandled-problems quick filter requests the WARN/CRIT, unacked, no-downtime preset', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Unhandled problems' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        filter: {
+          type: 'and',
+          children: [
+            { type: 'condition', field: 'state', op: 'one_of', value: ['WARN', 'CRIT'] },
+            { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
+            { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
+          ]
+        },
+        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+      }
+    })
+  )
+})
+
+test('clicking the unhandled-problems chip again turns it back off', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  const chip = await screen.findByRole('button', { name: 'Unhandled problems' })
+  await userEvent.click(chip)
+  await userEvent.click(chip)
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+    })
+  )
+})
+
+test('resetting all filters also turns off the unhandled-problems chip', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Unhandled problems' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Reset all filters' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+    })
+  )
+})
+
+test('shows a tooltip on the unhandled-problems chip', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  expect(await screen.findByRole('button', { name: 'Unhandled problems' })).toHaveAttribute(
+    'title',
+    'Show only services in a problem state (WARN or CRIT) that are neither acknowledged nor in a scheduled downtime'
+  )
+})
+
 test('resetting all filters restores the full, unfiltered list', async () => {
   mockServices([makeApiEntry()])
   renderApp()

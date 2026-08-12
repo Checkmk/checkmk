@@ -110,6 +110,106 @@ def test_metrics_association_multi_rule_request_maps_to_lookup_rules(
     )
 
 
+def test_metrics_association_wire_attribute_filter_request_projects_to_three_lists(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A rule's wire ``attribute_filter`` projects its ``equals`` conditions into the three
+    per-kind lists. Regression test for CMK-37860."""
+    monkeypatch.setattr(
+        "cmk.gui.openapi.framework.model.restrict_editions.edition",
+        lambda _omd_root: Edition.ULTIMATE,
+    )
+    payload = {
+        "metrics_association": [
+            "enabled",
+            {
+                "host_name_lookup_rules": [
+                    {
+                        "resource_attributes": [],
+                        "scope_attributes": [],
+                        "data_point_attributes": [],
+                        "attribute_filter": {
+                            "type": "and",
+                            "conjuncts": [
+                                {
+                                    "type": "equals",
+                                    "key": {"kind": "resource", "name": "k8s.pod.name"},
+                                    "value": "pod-a",
+                                },
+                                {
+                                    "type": "equals",
+                                    "key": {"kind": "data_point", "name": "unit"},
+                                    "value": "bytes",
+                                },
+                            ],
+                        },
+                        "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
+                    },
+                ],
+            },
+        ]
+    }
+
+    model = TypeAdapter(  # astrein: disable=pydantic-type-adapter
+        HostAttributeRequestModel
+    ).validate_python(payload)
+
+    assert model.to_internal()["metrics_association"] == (
+        "enabled",
+        {
+            "host_name_lookup_rules": [
+                {
+                    "resource_attributes": [{"key": "k8s.pod.name", "value": "pod-a"}],
+                    "scope_attributes": [],
+                    "data_point_attributes": [{"key": "unit", "value": "bytes"}],
+                    "host_name_template": "$RESOURCE_ATTR.k8s.pod.name$",
+                },
+            ],
+        },
+    )
+
+
+def test_metrics_association_non_equals_wire_attribute_filter_request_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A wire ``attribute_filter`` richer than an AND of ``equals`` is rejected."""
+    monkeypatch.setattr(
+        "cmk.gui.openapi.framework.model.restrict_editions.edition",
+        lambda _omd_root: Edition.ULTIMATE,
+    )
+    payload = {
+        "metrics_association": [
+            "enabled",
+            {
+                "host_name_lookup_rules": [
+                    {
+                        "resource_attributes": [],
+                        "scope_attributes": [],
+                        "data_point_attributes": [],
+                        "attribute_filter": {
+                            "type": "and",
+                            "conjuncts": [
+                                {
+                                    "type": "regex",
+                                    "key": {"kind": "resource", "name": "k8s.pod.name"},
+                                    "value": "pod-.*",
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        ]
+    }
+
+    model = TypeAdapter(  # astrein: disable=pydantic-type-adapter
+        HostAttributeRequestModel
+    ).validate_python(payload)
+
+    with pytest.raises(ValueError, match="Expected an 'equals' attribute filter condition"):
+        model.to_internal()
+
+
 def test_metrics_association_empty_lookup_rules_request_is_rejected(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

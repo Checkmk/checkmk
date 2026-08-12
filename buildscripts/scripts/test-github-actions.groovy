@@ -21,6 +21,7 @@ void main() {
             name: "make test-github-actions",
             cmd: "make test-github-actions",
             container_name: "ubuntu-2404-${container_safe_branch_name}-latest",
+            disable_hot_cache: true,
         ]);
     }
 }

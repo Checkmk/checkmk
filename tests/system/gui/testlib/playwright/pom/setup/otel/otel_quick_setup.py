@@ -315,5 +315,5 @@ class AddOTelConfiguration(CmkPage):
 
     def finish_and_go_to_activate_changes(self) -> None:
         self.click_and_wait_for_navigation(
-            self.finish_button, frame_url=re.compile("mode=otel_overview")
+            self.finish_button, frame_url=re.compile("mode=changelog")
         )

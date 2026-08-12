@@ -3,7 +3,7 @@
   "type": "object",
   "title": "custom_services_wizard",
   "properties": {
-    "back_url": { "type": "string" }
+    "activate_changes_url": { "type": "string" }
   },
-  "required": ["back_url"]
+  "required": ["activate_changes_url"]
 }

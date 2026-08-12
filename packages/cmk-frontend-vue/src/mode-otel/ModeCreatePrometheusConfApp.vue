@@ -29,7 +29,7 @@ import {
 } from './otel-configuration-steps/post_save_actions.ts'
 
 const props = defineProps<{
-  overview_url: string
+  activate_changes_url: string
 }>()
 
 const { _t } = usei18n()
@@ -129,21 +129,10 @@ const saveButtonDisabled = computed(() => saveState.value === 'running')
 const overviewValidationFailed = ref(false)
 
 async function onSaveClick(): Promise<void> {
-  // Second click after a successful run navigates back to the Prometheus
-  // Overview page and opens the "Activate changes" panel so the user can
-  // apply the pending configuration changes.
+  // Second click after a successful run navigates to the full activate-changes
+  // page so the user can apply the pending configuration changes.
   if (saveState.value === 'success') {
-    // Open the main-menu "Changes" panel in the top frame. The nav item is
-    // rendered by MainMenuApp with id="nav-item-changes"; clicking it toggles
-    // the activate-changes slide-in. We trigger it before navigating so the
-    // panel is already visible when the overview page loads.
-    try {
-      const changesNavItem = top?.document.getElementById('nav-item-changes')
-      changesNavItem?.click()
-    } catch {
-      // Cross-origin or missing element — fall through to navigation.
-    }
-    window.location.href = props.overview_url
+    window.location.href = props.activate_changes_url
     return
   }
   // In overview mode the per-step Next buttons (which normally carry

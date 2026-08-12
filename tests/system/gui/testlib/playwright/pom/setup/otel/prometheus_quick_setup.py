@@ -193,9 +193,8 @@ class AddPrometheusQuickSetupConfiguration(CmkPage):
 
     def finish_and_go_to_activate_changes(self) -> None:
         self.click_and_wait_for_navigation(
-            self.finish_button, frame_url=re.compile("mode=prometheus_overview")
+            self.finish_button, frame_url=re.compile("mode=changelog")
         )
-        PrometheusQuickSetup(self.page, navigate_to_page=False)
 
 
 class EditPrometheusQuickSetupConfiguration(CmkPage):

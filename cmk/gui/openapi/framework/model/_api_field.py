@@ -11,7 +11,7 @@ The `api_field` function is a wrapper around the `dataclasses.field` function, w
 improve the dev experience when creating API related schemas."""
 
 from collections.abc import Callable, Mapping, MutableMapping
-from dataclasses import Field, MISSING
+from dataclasses import field, MISSING
 from typing import Any, overload
 
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
@@ -123,8 +123,6 @@ def api_field(
         kw_only: Include the field as a keyword-only argument in the generated __init__ method.
         additional_metadata: Additional metadata to include in the field.
     """
-    if default is not _NOT_SET and default_factory is not None:
-        raise ValueError("cannot specify both default and default_factory")
     metadata: MutableMapping[str, object] = {
         "description": description,
     }
@@ -142,15 +140,49 @@ def api_field(
         metadata["deprecated"] = True
     if additional_metadata:
         metadata.update(additional_metadata)
-    return Field(
-        default=MISSING if default is _NOT_SET else default,
-        default_factory=MISSING if default_factory is None else default_factory,  # type: ignore[arg-type]
-        init=init,
-        repr=repr,
-        hash=hash,
-        compare=compare,
-        # defaulting to true or false would be wrong here, as the default should be to use the
-        # configuration from the class, which is why must use MISSING
-        kw_only=MISSING if kw_only is None else kw_only,  # type: ignore[arg-type]
-        metadata=metadata,
-    )
+
+    # Defaulting to true or false would be wrong here, as the default should be to use the
+    # configuration from the class, which is why we must use MISSING.
+    kw_only_value = MISSING if kw_only is None else kw_only
+
+    # NOTE 1: From https://docs.python.org/3/library/dataclasses.html#dataclasses.Field:
+    # "Users should never instantiate a Field object directly." => Only use `fields()`
+
+    # NOTE 2: `default` and `default_factory` are optional and mutually exclusive, and the typing of
+    # `fields()` models this via overloads. As a consequence, we'll have to follow that pattern
+    # below to avoid ugly & fragile typing suppressions. That's the price one has to pay when trying
+    # to wrap an overloaded function within another overloaded function...
+    if default is _NOT_SET and default_factory is None:
+        return field(
+            default=MISSING,
+            default_factory=MISSING,
+            init=init,
+            repr=repr,
+            hash=hash,
+            compare=compare,
+            kw_only=kw_only_value,
+            metadata=metadata,
+        )
+    if default is _NOT_SET and default_factory is not None:
+        return field(
+            default=MISSING,
+            default_factory=default_factory,
+            init=init,
+            repr=repr,
+            hash=hash,
+            compare=compare,
+            kw_only=kw_only_value,
+            metadata=metadata,
+        )
+    if default is not _NOT_SET and default_factory is None:
+        return field(
+            default=default,
+            default_factory=MISSING,
+            init=init,
+            repr=repr,
+            hash=hash,
+            compare=compare,
+            kw_only=kw_only_value,
+            metadata=metadata,
+        )
+    raise ValueError("cannot specify both default and default_factory")

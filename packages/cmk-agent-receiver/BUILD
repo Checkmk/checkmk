@@ -115,7 +115,6 @@ py_library(
         "//packages/cmk-crypto",
         "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-relay-protocols",
-        requirement("cryptography"),
         requirement("fastapi"),
         requirement("gunicorn"),
         requirement("h11"),
@@ -141,7 +140,6 @@ py_library(
     deps = [
         ":cmk-agent-receiver",
         "//packages/cmk-crypto",
-        requirement("cryptography"),
         requirement("fastapi"),
         requirement("httpx"),
         requirement("python-dateutil"),

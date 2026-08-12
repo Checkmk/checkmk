@@ -45,7 +45,6 @@ py_cmk_test(
     ],
     deps = [
         "//packages/cmk-agent-receiver:testlib",
-        requirement("httpx"),
         requirement("pytest-random-order"),
     ],
 )

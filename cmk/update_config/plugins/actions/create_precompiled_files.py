@@ -18,8 +18,11 @@ class CreatePrecompiledFiles(UpdateAction):
     """
 
     def __call__(self, _logger: Logger, _update_action_state: UpdateActionState) -> None:
+        #  Note: We do not use folder.save here, as this always invalidates all caches again and again and reloads
+        #  the folder tree afterwards, and this after each host/folder compile. Also Invalidate caches only one time
+        folder_tree().invalidate_caches()
         for folder in folder_tree().root_folder().subfolders_recursively():
-            folder.save()
+            folder.persist_instance()
             folder.save_hosts()
 
 

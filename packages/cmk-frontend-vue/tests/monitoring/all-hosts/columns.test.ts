@@ -15,9 +15,9 @@ import {
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import {
   MonitoringService,
-  type PagedResponse,
-  columnId
+  type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
+import { columnId } from '@/monitoring/shared/tableState/schema'
 
 import { makeKeyShortcutService, makeResponse } from '../shared/services/testHelpers'
 

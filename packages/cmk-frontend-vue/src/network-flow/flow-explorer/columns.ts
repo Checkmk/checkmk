@@ -6,7 +6,7 @@
 import type { ColumnDef, ColumnPinningState } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import { columnId } from '@/monitoring/shared/services/MonitoringService'
+import { columnId } from '@/monitoring/shared/tableState/schema'
 
 import type { FlowEntry, FlowSortColumn } from './api/flows'
 

@@ -61,10 +61,8 @@ import { computed, provide, ref, watch } from 'vue'
 
 import ColumnPicker from '@/monitoring/shared/components/ColumnPicker.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type {
-  MonitoringService,
-  ToggleableColumn
-} from '@/monitoring/shared/services/MonitoringService'
+import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
+import type { ToggleableColumn } from '@/monitoring/shared/tableState/schema'
 
 defineProps<{ screenshotMode: boolean }>()
 

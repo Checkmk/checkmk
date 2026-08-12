@@ -10,10 +10,8 @@ import { ref } from 'vue'
 
 import MonitoringLimitSelector from '@/monitoring/shared/components/MonitoringLimitSelector.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type {
-  MonitoringService,
-  RequestedLimit
-} from '@/monitoring/shared/services/MonitoringService'
+import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
+import type { RequestedLimit } from '@/monitoring/shared/types'
 
 function makeServiceStub(offeredLimits: RequestedLimit[]) {
   const requestedLimit = ref<RequestedLimit>(offeredLimits[0] ?? 1000)

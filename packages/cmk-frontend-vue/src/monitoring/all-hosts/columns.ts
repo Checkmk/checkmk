@@ -14,7 +14,7 @@ import type {
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
-import { columnId } from '@/monitoring/shared/services/MonitoringService'
+import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export interface HostColumnOptions {
   /** Whether to render the row-action column, which needs permitted actions. */

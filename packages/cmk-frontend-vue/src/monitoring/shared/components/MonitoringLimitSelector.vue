@@ -9,7 +9,8 @@ import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, inject } from 'vue'
 
-import type { RequestedLimit } from '../services/MonitoringService'
+import type { RequestedLimit } from '@/monitoring/shared/types'
+
 import { MONITORING_SERVICE } from './MonitoringTableContext'
 
 const { _t } = usei18n()

@@ -11,10 +11,8 @@ import { defineComponent, h, provide, ref } from 'vue'
 
 import ColumnPicker from '@/monitoring/shared/components/ColumnPicker.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
-import type {
-  MonitoringService,
-  ToggleableColumn
-} from '@/monitoring/shared/services/MonitoringService'
+import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
+import type { ToggleableColumn } from '@/monitoring/shared/tableState/schema'
 
 function t(value: string): TranslatedString {
   return value as TranslatedString

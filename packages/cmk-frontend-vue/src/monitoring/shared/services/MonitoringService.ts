@@ -10,7 +10,6 @@ import type {
   VisibilityState
 } from '@tanstack/vue-table'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { ServiceBase } from 'cmk-ui-library/lib/service/base'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
@@ -26,6 +25,14 @@ import {
 
 import type { FilterNode } from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE, POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
+import {
+  type ToggleableColumn,
+  buildOfferedLimits,
+  buildToggleableColumns,
+  computeDefaultVisibility
+} from '@/monitoring/shared/tableState/schema'
+import type { TableStateSchema } from '@/monitoring/shared/tableState/types'
+import type { RequestedLimit } from '@/monitoring/shared/types'
 
 import { FilterStore, type QuickFilter, type QuickFilterConfig } from './FilterStore'
 import { useColumnFilterBridge } from './useColumnFilterBridge'
@@ -63,6 +70,16 @@ export interface MonitoringServiceOptions<T> {
   limitTiers?: number[]
   mayRemoveLimit?: boolean
   /**
+   * The table's URL vocabulary, built by `buildTableStateSchema` from the same
+   * `columns`/`limitTiers`/`mayRemoveLimit` also wired to `useUrlTableState`. When
+   * given, it is the single source for the ids behind `toggleableColumns`,
+   * `defaultColumnVisibility` and `offeredLimits` - `columns`/`limitTiers`/
+   * `mayRemoveLimit` are then only consulted for labels and the column-filter
+   * bridge. Omit for a listing with no URL persistence, which keeps deriving all
+   * three straight from `columns`/`limitTiers`/`mayRemoveLimit`.
+   */
+  tableStateSchema?: TableStateSchema
+  /**
    * Browser-storage key the user's column selection is kept under, built with
    * {@link buildColumnStorageKey}. Omit to keep the selection in memory only.
    */
@@ -85,62 +102,6 @@ export interface ColumnStorageScope {
  */
 export function buildColumnStorageKey({ view, site, userId, edition }: ColumnStorageScope): string {
   return `monitoring-${view}-columns-${site}-${userId}-${edition}`
-}
-
-export type RequestedLimit = number | null
-
-export interface ToggleableColumn {
-  id: string
-  label: TranslatedString
-}
-
-export function columnId<T>(column: ColumnDef<T>): string | undefined {
-  if (column.id !== undefined) {
-    return column.id
-  }
-  if ('accessorKey' in column && column.accessorKey !== undefined) {
-    return String(column.accessorKey)
-  }
-  return undefined
-}
-
-function columnLabel<T>(column: ColumnDef<T>, id: string): string {
-  if (typeof column.header === 'string' && column.header !== '') {
-    return column.header
-  }
-  return column.meta?.headerTitle?.toString() ?? id
-}
-
-function isToggleable<T>(column: ColumnDef<T>): boolean {
-  return !column.meta?.selectColumn && column.enableHiding !== false
-}
-
-function buildToggleableColumns<T>(columns: ColumnDef<T>[]): ToggleableColumn[] {
-  const result: ToggleableColumn[] = []
-  for (const column of columns) {
-    if (!isToggleable(column)) {
-      continue
-    }
-    const id = columnId(column)
-    if (id === undefined) {
-      continue
-    }
-    result.push({ id, label: untranslated(columnLabel(column, id)) })
-  }
-  return result
-}
-
-function computeDefaultVisibility<T>(columns: ColumnDef<T>[]): VisibilityState {
-  const visibility: VisibilityState = {}
-  for (const column of columns) {
-    if (column.meta?.hidden) {
-      const id = columnId(column)
-      if (id !== undefined) {
-        visibility[id] = false
-      }
-    }
-  }
-  return visibility
 }
 
 /**
@@ -255,11 +216,26 @@ export abstract class MonitoringService<T> extends ServiceBase {
       columns = [],
       limitTiers = [],
       mayRemoveLimit = false,
+      tableStateSchema,
       columnStorageKey
     } = options
 
-    this.toggleableColumns = buildToggleableColumns(columns)
-    this.defaultColumnVisibility = computeDefaultVisibility(columns)
+    if (tableStateSchema === undefined) {
+      this.toggleableColumns = buildToggleableColumns(columns)
+      this.defaultColumnVisibility = computeDefaultVisibility(columns)
+    } else {
+      // `columns` still describes every column, so this only borrows its labels - not
+      // its notion of what's hideable or hidden by default, which the schema now owns.
+      // `untranslated(id)` is unreachable as long as `columns` is the same array
+      // `tableStateSchema` was built from; it exists so a schema/columns mismatch
+      // degrades to a raw id instead of crashing.
+      const labelById = new Map(buildToggleableColumns(columns).map(({ id, label }) => [id, label]))
+      this.toggleableColumns = tableStateSchema.hideable.map((id) => ({
+        id,
+        label: labelById.get(id) ?? untranslated(id)
+      }))
+      this.defaultColumnVisibility = tableStateSchema.defaultVisibility
+    }
     const defaultVisibility = { ...this.defaultColumnVisibility }
     // usePersistentRef writes every later change back, so the selection outlives
     // the tab it was made in.
@@ -270,10 +246,8 @@ export abstract class MonitoringService<T> extends ServiceBase {
             sanitizeVisibility(stored, this.toggleableColumns, defaultVisibility)
           )
 
-    const numericTiers: RequestedLimit[] = limitTiers.length
-      ? [...limitTiers]
-      : [DEFAULT_BATCH_SIZE]
-    this.offeredLimits = mayRemoveLimit ? [...numericTiers, null] : numericTiers
+    this.offeredLimits =
+      tableStateSchema?.offeredLimits ?? buildOfferedLimits(limitTiers, mayRemoveLimit)
     this.requestedLimit = ref(this.offeredLimits[0] ?? DEFAULT_BATCH_SIZE)
 
     this.filters = new FilterStore(quickFilters, this.searchQuery)

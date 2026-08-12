@@ -6,7 +6,7 @@
 import type { SortingState } from '@tanstack/vue-table'
 
 import { DEFAULT_BATCH_SIZE } from '@/monitoring/shared/constants'
-import type { RequestedLimit } from '@/monitoring/shared/services/MonitoringService'
+import type { RequestedLimit } from '@/monitoring/shared/types'
 
 /** Query parameters every paged monitoring listing accepts. */
 export interface MonitoringQueryParams {

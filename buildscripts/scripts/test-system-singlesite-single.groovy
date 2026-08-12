@@ -69,37 +69,67 @@ void main() {
             );
         }
 
-        helper.execute_test([
-            // k8s specific configs
-            name: "${make_target}",
-            container_name: "this-distro-container",
-            callback: single_tests.&run_make_target_k8s,
+        /// Set only when the medium chain triggered this run as a shard. Everything
+        /// sharding needs hangs off this one value, because the script is shared with
+        /// heavy/ and the other editions, which must keep running exactly as before.
+        ///
+        /// Deliberately not in check_job_parameters above: those jobs have no such
+        /// parameter and requiring it would fail them. Absent reads as null, the
+        /// elvis turns that into "", which means "not sharded".
+        ///
+        /// tests/conftest.py reads it as the default of --shard-durations-build.
+        def shard_build_based_on = params.SHARD_BUILD_BASED_ON ?: "";
 
-            // test environment specific configs
-            disable_hot_cache: true,
-            prepare_fake_git_overlay: true,
-            creds_usernames: [
-                [credentialsId: "cmk-credentials", location: "/etc/.cmk-credentials"],
-            ],
+        withEnv([
+            "SHARD_BUILD_BASED_ON=${shard_build_based_on}",
+            /// What cmk_dev's extract_credentials() needs on top of the two
+            /// credentials below, there is no hardcoded fallback.
+            "JENKINS_URL=${env.JENKINS_URL}",
+        ]) {
+            helper.execute_test([
+                // k8s specific configs
+                name: "${make_target}",
+                container_name: "this-distro-container",
+                callback: single_tests.&run_make_target_k8s,
 
-            // test specific configs
-            result_path: "${checkout_dir}/test-results/${distro}",
-            archive_pattern: "${test_results_dir}/**",
-            edition: edition,
-            docker_tag: setup_values.docker_tag,
-            version: setup_values.cmk_version,
-            distro: distro,
-            branch_name: setup_values.safe_branch_name,
-            make_target: "${make_target}",
-            test_filter: test_filter,
-            faked_artifacts: fake_artifacts,
-            force_build: force_build,
-            disable_cache: disable_cache,
-            // ultimate can hit 120min during the nightly runs (without wait time)
-            // runs of heavy chain are around 45-90min depending on the edition
-            // using FoS of 3
-            timeout: 360,
-        ]);
+                // test environment specific configs
+                disable_hot_cache: true,
+                prepare_fake_git_overlay: true,
+                creds_usernames: [
+                    [credentialsId: "cmk-credentials", location: "/etc/.cmk-credentials"],
+                ],
+                /// Only a sharded run talks to the Jenkins API, to read the runtimes
+                /// of the build named in SHARD_BUILD_BASED_ON. An empty list makes
+                /// withCredentialEnv() skip withCredentials() altogether, so every
+                /// other job on this script keeps the environment it had before and
+                /// never sees these credentials.
+                creds_env: shard_build_based_on ? [
+                    usernamePassword(
+                        credentialsId: "jenkins-api-token",
+                        usernameVariable: "JENKINS_USERNAME",
+                        passwordVariable: "JENKINS_PASSWORD",
+                    ),
+                ] : [],
+
+                // test specific configs
+                result_path: "${checkout_dir}/test-results/${distro}",
+                archive_pattern: "${test_results_dir}/**",
+                edition: edition,
+                docker_tag: setup_values.docker_tag,
+                version: setup_values.cmk_version,
+                distro: distro,
+                branch_name: setup_values.safe_branch_name,
+                make_target: "${make_target}",
+                test_filter: test_filter,
+                faked_artifacts: fake_artifacts,
+                force_build: force_build,
+                disable_cache: disable_cache,
+                // ultimate can hit 120min during the nightly runs (without wait time)
+                // runs of heavy chain are around 45-90min depending on the edition
+                // using FoS of 3
+                timeout: 360,
+            ]);
+        }
     }
 
     stage("Process test reports") {

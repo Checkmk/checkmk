@@ -180,6 +180,108 @@ void triggerCascadeJob(Map args) {
     );
 }
 
+/// Build the TEST_FILTER of one cascade entry.
+///
+/// run_tests.sh evals TEST_FILTER as shell tokens, so it carries plain pytest
+/// options as well as markers.
+///
+/// At most one marker belongs here: the make targets append their own "-m" after
+/// TEST_FILTER and pytest lets the last one win. "-m medium_test_chain" also
+/// switches test-system-singlesite-single.groovy to its marker-only target, so an
+/// entry that wants the whole suite sharded must not carry it.
+String composeTestFilter(Map args) {
+    def parts = [];
+    if (args.marker) {
+        parts.add("-m ${args.marker}");
+    }
+    if (args.shard_count && args.shard_count > 1) {
+        parts.add("--shard-index ${args.shard_index} --shard-count ${args.shard_count}");
+    }
+    parts.addAll(args.options ?: []);
+    /// toString(), a GString reaching a build parameter is asking for trouble.
+    return parts.join(" ").toString();
+}
+
+/// Name the finished build the shards take their runtimes from.
+///
+/// Returns "<job>#<number>". Every shard reads that build itself. Pinning the
+/// number is what makes them agree: a finished test report never changes, so it
+/// does not matter when a shard starts, and a reference job finishing midway
+/// through the cascade changes nothing.
+///
+/// Raises when the report cannot be read or holds no test cases. The shards have
+/// no fallback, so the job that fails should be this one, before eight pods have
+/// built a site.
+String resolveShardDurations(Map args) {
+    def reference = "";
+    /// Same credentials ci-artifacts is invoked with, see global-defaults.yml.
+    withCredentials([usernamePassword(
+        credentialsId: "jenkins-api-token",
+        usernameVariable: "JENKINS_USERNAME",
+        passwordVariable: "JENKINS_PASSWORD",
+    )]) {
+        reference = sh(
+            returnStdout: true,
+            script: ("${checkout_dir}/tests/scripts/resolve_shard_durations.py " +
+                     "--job ${args.job}"),
+        ).trim();
+    }
+    /// No second guard on the value: the script exits non-zero on any problem and
+    /// prints nothing but the reference on stdout, its logging goes to stderr.
+    println("Shards balance against ${reference}");
+    return reference;
+}
+
+/// The entries of the medium cascade: stage label -> what to trigger for it.
+///
+/// Labels have to stay unique, the same job runs once per shard.
+Map cascadeJobSpecs(Map args) {
+    def specs = [:];
+    /// The unsharded entry both suites use: the marked tests, nothing else.
+    def marker_filter = composeTestFilter(marker: "medium_test_chain");
+    def markerSpec = { job_name -> [
+        job_name: job_name,
+        build_params: [TEST_FILTER: marker_filter],
+        start_delay: 0,
+    ] };
+
+    def multisite_job = "test-system-multisite-${args.edition}".toString();
+    specs["${multisite_job} [marker]".toString()] = markerSpec(multisite_job);
+
+    def singlesite_job = "test-system-singlesite-${args.edition}".toString();
+
+    /// Sharding off: exactly what this cascade did before, one job on the marker.
+    /// The switch is the SHARD_COUNT job parameter, so turning sharding on or off
+    /// is a checkmk_ci change and needs no change here and no rebase of open chains.
+    if (args.singlesite_shards < 2) {
+        specs["${singlesite_job} [marker]".toString()] = markerSpec(singlesite_job);
+        return specs;
+    }
+
+    /// The whole single site suite, split over N jobs. No marker here: the point
+    /// is to run more than the marked tests, see composeTestFilter().
+    (0..<args.singlesite_shards).each { shard ->
+        def label = "${singlesite_job} [shard ${shard + 1}/${args.singlesite_shards}]";
+        specs[label.toString()] = [
+            job_name: singlesite_job,
+            build_params: [
+                TEST_FILTER: composeTestFilter(
+                    shard_index: shard,
+                    shard_count: args.singlesite_shards,
+                    options: [args.medium_chain_option],
+                ),
+                /// A build parameter and not part of TEST_FILTER, so the job
+                /// documents where its runtimes come from. It is matched, which
+                /// is what stops a cached shard build from an earlier run with
+                /// different runtimes being reused into this split.
+                SHARD_BUILD_BASED_ON: args.shard_durations_build,
+            ],
+            start_delay: shard == 0 ? 0 : args.package_visibility_delay,
+        ];
+    }
+    return specs;
+}
+
 // groovylint-disable MethodSize
 void main() {
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
@@ -200,10 +302,30 @@ void main() {
     def all_change_info = [:];
     def edition_medium_chain = "ultimate";
     def distro_medium_chain = "ubuntu-24.04";
-    def job_names = [
-        "test-system-multisite-${edition_medium_chain}",
-        "test-system-singlesite-${edition_medium_chain}",
-    ];
+    /// Run the whole single site suite instead of only the tests carrying the
+    /// medium_test_chain marker, split over this many pods. Each shard builds its
+    /// own site, so the cost is N site setups against roughly 1/N of the runtime.
+    /// The split is computed in pytest, see tests/testlib/pytest_helpers/sharding.py.
+    ///
+    /// A job parameter so the number can be tuned from checkmk_ci without a change
+    /// here. The fallback keeps this working before that parameter is deployed.
+    ///
+    /// One value for the whole cascade for now, since only the single site suite
+    /// is sharded. Once multisite shards too it needs a value per suite, they do
+    /// not want the same number.
+    def singlesite_shards = (params.SHARD_COUNT ?: 8) as Integer;
+    /// Build the shards take their runtimes from. Heavy has no singlesite job on
+    /// the gate's edition, so this is the closest full report. Only used for
+    /// balancing, never for selecting, so the mismatch does not matter.
+    /// Full job path, so this works from the Testing folder and on any branch.
+    def durations_job = "${branch_base_folder}/heavy/test-system-singlesite-ultimatemt";
+    /// Tests that cannot work pre-submit carry "skip_if_medium_chain".
+    def medium_chain_option = "--medium-chain";
+    /// The pre-build below waits for the package, but every shard still does its
+    /// own ci-artifacts lookup. Let the first go and hold the rest back briefly,
+    /// so that lookup finds the pre-built package instead of racing for it.
+    def package_visibility_delay = 60;
+    def job_specs = [:];
     def new_patchset_revision = effective_git_ref;
     def medium_chain_hashtag = "medium-chain-running";
     def gerrit_project = "check_mk";
@@ -223,7 +345,8 @@ void main() {
         |do_rebase:......... │${do_rebase}│
         |fake_artifacts:.... │${fake_artifacts} (always active)│
         |force_build:....... │${force_build}│
-        |job_names:......... │${job_names}│
+        |singlesite_shards:. │${singlesite_shards}│
+        |durations_job:..... │${durations_job}│
         |safe_branch_name:.. │${safe_branch_name}│
         |===================================================
         """.stripMargin());
@@ -298,6 +421,27 @@ void main() {
                 println("New Patchset revision after Gerrit rebase: ${new_patchset_revision}");
             }
 
+            /// Before the package pre-build and fatal on purpose: an unusable
+            /// reference should stop the cascade here, see resolveShardDurations().
+            /// Skipped entirely while sharding is off, so the switch also takes the
+            /// Jenkins API call out of the gate's path.
+            smart_stage(
+                name: "Resolve shard durations",
+                raiseOnError: true,
+            ) {
+                job_specs = cascadeJobSpecs(
+                    edition: edition_medium_chain,
+                    singlesite_shards: singlesite_shards,
+                    medium_chain_option: medium_chain_option,
+                    package_visibility_delay: package_visibility_delay,
+                    shard_durations_build: (singlesite_shards < 2) ? "" : resolveShardDurations(job: durations_job),
+                );
+                println("Cascade entries:");
+                job_specs.each { label, spec ->
+                    println("  ${label}: ${spec.build_params}");
+                }
+            }
+
             smart_stage(
                 name: "Pre-build needed package",
                 raiseOnError: true,
@@ -315,23 +459,27 @@ void main() {
             }
         }
 
-        def stages = job_names.collectEntries { job_name ->
-            [("${job_name}") : {
+        def stages = job_specs.collectEntries { stage_label, spec ->
+            [(stage_label) : {
                 sleep(1 * timeOffsetForOrder++);
+                if (spec.start_delay) {
+                    println("Holding ${stage_label} for ${spec.start_delay}s so the pre-built " +
+                            "package is visible to ci-artifacts before this shard asks for it");
+                    sleep(spec.start_delay);
+                }
 
                 smart_stage(
-                    name: "Trigger ${job_name}",
+                    name: "Trigger ${stage_label}",
                 ) {
                     triggerCascadeJob(
-                        relative_job_name: "${branch_base_folder}/cv/${job_name}",
+                        relative_job_name: "${branch_base_folder}/cv/${spec.job_name}",
                         git_ref: new_patchset_revision,
                         edition: edition_medium_chain,
                         distro: distro_medium_chain,
                         disable_cache: force_build,
                         disable_signing: disable_signing,
                         fake_artifacts: fake_artifacts,
-                        force_build: force_build,
-                        extra_build_params: [TEST_FILTER: '-m medium_test_chain'],
+                        extra_build_params: spec.build_params,
                     );
                 }
             }]

@@ -4,13 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { GraphItemsStore } from '../../composables/useGraphItems'
 import { useValidationMessages } from '../../composables/useValidationMessages'
 import type { DesignerItem } from '../../drafts'
-import type { RowField, RowIssue } from '../../validation'
+import { type RowField, type RowIssue, isValid } from '../../validation'
 import ConstantLineForm from './ConstantLineForm.vue'
 import FormulaForm from './FormulaForm.vue'
 import MetricBackendForm from './MetricBackendForm.vue'
@@ -24,7 +26,34 @@ const { row, store, thresholds, issues } = defineProps<{
   issues: readonly RowIssue[]
 }>()
 
+const { _t } = usei18n()
 const { issueMessage } = useValidationMessages()
+
+type PreviewAlert = 'added' | 'updated'
+
+const alert = ref<PreviewAlert | null>(null)
+
+const formStore: GraphItemsStore = {
+  ...store,
+  replace: (updated: DesignerItem) => {
+    const wasValid = isValid(row)
+    store.replace(updated)
+    alert.value = !isValid(updated) ? null : wasValid ? 'updated' : 'added'
+  }
+}
+
+function previewAlertText(preview: PreviewAlert): TranslatedString {
+  switch (preview) {
+    case 'added':
+      return _t('Preview added to graph')
+    case 'updated':
+      return _t('Preview updated')
+  }
+}
+
+const alertText = computed<TranslatedString | null>(() =>
+  alert.value === null ? null : previewAlertText(alert.value)
+)
 
 const messagesByField = computed(() => {
   const byField = new Map<RowField, TranslatedString[]>()
@@ -48,10 +77,21 @@ function messagesFor(field: RowField): TranslatedString[] {
       :ast-errors="messagesFor('ast')"
     />
     <div v-else class="graphing-row-editor__panel">
+      <CmkAlertBox
+        v-if="alertText !== null"
+        class="graphing-row-editor__alert"
+        variant="success"
+        size="small"
+        auto-dismiss
+        @update:open="alert = null"
+      >
+        {{ alertText }}
+      </CmkAlertBox>
+
       <RrdForm
         v-if="row.type === 'rrd_metric' || row.type === 'rrd_query'"
         :item="row"
-        :store="store"
+        :store="formStore"
         :host-name-errors="messagesFor('host_name')"
         :service-name-errors="messagesFor('service_name')"
         :metric-name-errors="messagesFor('metric_name')"
@@ -59,13 +99,13 @@ function messagesFor(field: RowField): TranslatedString[] {
       <ConstantLineForm
         v-else-if="row.type === 'constant'"
         :item="row"
-        :store="store"
+        :store="formStore"
         :value-errors="messagesFor('value')"
       />
       <ServiceReferenceLineForm
         v-else-if="row.type === 'scalar'"
         :item="row"
-        :store="store"
+        :store="formStore"
         :thresholds="thresholds"
         :host-name-errors="messagesFor('host_name')"
         :service-name-errors="messagesFor('service_name')"
@@ -74,7 +114,7 @@ function messagesFor(field: RowField): TranslatedString[] {
       <MetricBackendForm
         v-else-if="row.type === 'metric_backend'"
         :item="row"
-        :store="store"
+        :store="formStore"
         :metric-name-errors="messagesFor('metric_name')"
         :consolidation-errors="messagesFor('consolidation_function')"
       />
@@ -87,11 +127,23 @@ function messagesFor(field: RowField): TranslatedString[] {
   --graphing-row-editor-panel-border: var(--color-mid-grey-10);
 }
 
+.graphing-row-editor__alert {
+  position: absolute;
+  top: var(--dimension-4);
+  right: var(--dimension-4);
+  z-index: 1;
+  white-space: nowrap;
+  margin: 0;
+  padding: var(--dimension-2) var(--dimension-4);
+  align-items: center;
+}
+
 body[data-theme='modern-dark'] .graphing-row-editor {
   --graphing-row-editor-panel-border: var(--color-mid-grey-90);
 }
 
 .graphing-row-editor__panel {
+  position: relative;
   overflow: hidden;
   border: 1px solid var(--graphing-row-editor-panel-border);
   border-radius: var(--border-radius);

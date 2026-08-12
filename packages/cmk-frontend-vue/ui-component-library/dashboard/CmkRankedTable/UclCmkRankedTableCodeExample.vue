@@ -15,9 +15,10 @@ const columns: RankedTableColumn[] = [
 ]
 
 const rows: RankedTableRow[] = [
-  { host: '10.0.71.219', volume: 194_420_000_000 },
+  // A cell is either a bare value, or an object with display overrides.
+  { host: { value: '10.0.71.219', href: 'view.py?view_name=host' }, volume: 194_420_000_000 },
   { host: '10.0.234.247', volume: 158_270_000_000 },
-  { host: '10.0.171.51', volume: 58_270_000_000 }
+  { host: '10.0.171.51', volume: { value: 58_270_000_000, formatted: '58.3 GB' } }
 ]
 </script>
 

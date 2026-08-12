@@ -466,7 +466,7 @@ oracle:
             &endpoint,
             "FREE",
             Some(InstanceAlias::from("ora_remote".to_string())),
-            &tns_admin,
+            tns_admin.path(),
         );
         let env = Env::default();
         let r = generate_data(&config, &env).await;

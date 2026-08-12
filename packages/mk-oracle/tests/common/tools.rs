@@ -20,6 +20,7 @@
 use mk_oracle::config::authentication::{AuthType, Role, SqlDbEndpoint};
 use mk_oracle::config::ora_sql::Config;
 use mk_oracle::types::{Credentials, InstanceAlias};
+use tempfile::TempDir;
 
 /// Mandatory reference endpoint for all DB-dependent tests.
 pub const ORA_ENDPOINT_ENV_VAR: &str = "CI_ORA2_DB_TEST";
@@ -221,14 +222,15 @@ pub fn make_mini_config_custom_instance(
     )
 }
 
-/// Writes a tnsnames.ora resolving `alias` to `endpoint` into a
-/// process-private directory and returns that directory, suitable as
-/// tns_admin. Keeps alias-based tests independent of which reference DB
-/// the endpoint env vars point at.
-pub fn make_endpoint_tns_admin_dir(endpoint: &SqlDbEndpoint, alias: &str) -> std::path::PathBuf {
-    let dir =
-        std::env::temp_dir().join(format!("mk-oracle-test-tns-{}-{alias}", std::process::id()));
-    std::fs::create_dir_all(&dir).expect("failed to create TNS_ADMIN dir");
+/// Writes a tnsnames.ora resolving `alias` to `endpoint` into a temporary
+/// directory and returns that directory, suitable as tns_admin. Keeps
+/// alias-based tests independent of which reference DB the endpoint env vars
+/// point at.
+pub fn make_endpoint_tns_admin_dir(endpoint: &SqlDbEndpoint, alias: &str) -> TempDir {
+    let dir = tempfile::Builder::new()
+        .prefix(&format!("mk-oracle-test-tns-{alias}-"))
+        .tempdir()
+        .expect("failed to create TNS_ADMIN dir");
     let content = format!(
         r"{alias} =
   (DESCRIPTION =
@@ -248,7 +250,7 @@ pub fn make_endpoint_tns_admin_dir(endpoint: &SqlDbEndpoint, alias: &str) -> std
             .as_deref()
             .expect("endpoint must provide a SID"),
     );
-    std::fs::write(dir.join("tnsnames.ora"), content).expect("failed to write tnsnames.ora");
+    std::fs::write(dir.path().join("tnsnames.ora"), content).expect("failed to write tnsnames.ora");
     dir
 }
 

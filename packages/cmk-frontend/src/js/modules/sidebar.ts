@@ -754,51 +754,6 @@ function move_needle(from_perc: number, to_perc: number) {
   )
 }
 
-/************************************************
- * Popup Message Handling
- *************************************************/
-
-export function update_message_trigger(msg_text: string, msg_count: number) {
-  const l = document.getElementById('messages_label')
-  if (l) {
-    if (msg_count === 0) {
-      l.style.display = 'none'
-      return
-    }
-
-    l.innerText = msg_count.toString()
-    l.style.display = 'inline'
-  }
-
-  const user_messages = document.getElementById('messages_link_to')
-  if (user_messages) {
-    const text_content = msg_count + ' ' + msg_text
-    // We need the <a> tag where the current text is stored
-    const popup_link = document.querySelector('#user_topic_usermessages ul li a')!
-    // We only need the initial text part, excluding the already added text_content.
-    // Otherwise it would added on each loop
-    const popup_text = popup_link.textContent!.substring(0, 17)
-    // Construct new text for the GUI hint
-    popup_link.innerHTML = `${popup_text} <span class="new_msg">${text_content}</span>`
-  }
-}
-
-export function update_werks_trigger(werks_count: number, text: string, tooltip: string) {
-  const l = document.getElementById('werks_label')!
-  if (werks_count === 0) {
-    l.style.display = 'none'
-    return
-  }
-
-  l.innerText = werks_count.toString()
-  l.style.display = 'inline'
-
-  const werks_link = document.getElementById('werks_link_to')
-  if (werks_link) {
-    werks_link.textContent = text
-    werks_link.setAttribute('title', tooltip.toString())
-  }
-}
 export function update_vue_snapin_contents(id: string, content: string) {
   const event = new CustomEvent('sidebar-new-snapin-content', {
     detail: {

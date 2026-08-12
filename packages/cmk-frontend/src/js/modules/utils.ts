@@ -147,32 +147,6 @@ export function get_button(event: MouseEvent) {
   /* All others */ else return event.which < 2 ? 'LEFT' : event.which == 2 ? 'MIDDLE' : 'RIGHT'
 }
 
-export function page_height() {
-  if (
-    window.innerHeight !== null &&
-    typeof window.innerHeight !== 'undefined' &&
-    window.innerHeight !== 0
-  )
-    return window.innerHeight
-  else if (document.documentElement && document.documentElement.clientHeight)
-    return document.documentElement.clientHeight
-  else if (document.body !== null) return document.body.clientHeight
-  return null
-}
-
-export function page_width() {
-  if (
-    window.innerWidth !== null &&
-    typeof window.innerWidth !== 'undefined' &&
-    window.innerWidth !== 0
-  )
-    return window.innerWidth
-  else if (document.documentElement && document.documentElement.clientWidth)
-    return document.documentElement.clientWidth
-  else if (document.body !== null) return document.body.clientWidth
-  return null
-}
-
 // Whether or not an element is partially in the the visible viewport
 export function is_in_viewport(element: HTMLElement) {
   const rect = element.getBoundingClientRect(),
@@ -347,10 +321,6 @@ export function makeuri_contextless(vars: any, filename: string) {
   }
 
   return filename + '?' + params.join('&')
-}
-
-export function get_theme() {
-  return document.body.dataset.theme
 }
 
 // Changes a parameter in the current pages URL without reloading the page

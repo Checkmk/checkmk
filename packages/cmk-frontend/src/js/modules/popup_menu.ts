@@ -12,7 +12,6 @@ import type { Nullable } from './utils'
 import {
   add_class,
   add_event_handler,
-  change_class,
   del_event_handler,
   get_computed_style,
   has_class,
@@ -620,63 +619,4 @@ function main_menu_last_topic_grow(topics: HTMLCollectionOf<HTMLElement>) {
 
 function maximum_popup_width() {
   return window.innerWidth - document.getElementById('check_mk_navigation')!.offsetWidth
-}
-
-export function main_menu_show_all_items(current_topic_id: string) {
-  const current_topic = document.getElementById(current_topic_id)
-  const main_menu: HTMLElement = current_topic!.closest('.main_menu')!
-
-  // Check whether we're already coming from an extended topic. In that case we set a class
-  // "previously_extended" to be able to reopen that topic again.
-  // We assume here that only one level of previously extended topics is possible
-  // (i.e. "Show all" > multilevel topic segment)
-  // Multiple multilevel topic segments cannot be handled by this show/collapse code.
-  const previously_extended_topic = main_menu.getElementsByClassName(
-    'topic extended'
-  )[0] as HTMLElement
-  if (previously_extended_topic) {
-    change_class(previously_extended_topic, 'extended', 'previously_extended')
-  }
-
-  // Preserve the popup menu's height so there's no vertical jump
-  // This only concerns our small menus "help" and "user"
-  const popup_menu: HTMLElement = main_menu.closest('.popup_menu_handler')!
-  popup_menu.style.minHeight = `${popup_menu.clientHeight}px`
-
-  remove_class(current_topic, 'extendable')
-  add_class(current_topic, 'extended')
-  add_class(main_menu, 'extended_topic')
-  resize_main_menu_popup(popup_menu)
-}
-
-export function main_menu_hide_entries(menu_id: string) {
-  const menu = document.getElementById(menu_id)
-  const more_is_active = menu?.classList.contains('more')
-  const topics = menu?.getElementsByClassName('topic') as HTMLCollectionOf<HTMLElement>
-  Array.from(topics!).forEach((topic) => {
-    if (topic.classList.contains('extended')) return
-    const max_entry_number = Number(topic.getAttribute('data-max-entries'))
-    if (!max_entry_number) {
-      return
-    }
-    const entries = topic.getElementsByTagName('li')
-    const show_all_items_entry = entries[entries.length - 1]
-    if (entries.length > max_entry_number + 1) {
-      // + 1 is needed for the show_all_items entry
-      let counter = 0
-      Array.from(entries).forEach((entry) => {
-        if (
-          (!more_is_active && entry.classList.contains('show_more_mode')) ||
-          entry == show_all_items_entry
-        )
-          return
-        if (counter >= max_entry_number) add_class(entry, 'extended')
-        else remove_class(entry, 'extended')
-        counter++
-      })
-      if (counter > max_entry_number) add_class(topic, 'extendable')
-      else remove_class(topic, 'extendable')
-    }
-  })
-  resize_main_menu_popup(menu!.parentElement!)
 }

@@ -137,6 +137,11 @@ class HostEntry:
         example={"criticality": "prod"},
         default_factory=ApiOmitted,
     )
+    contacts: list[str] | ApiOmitted = api_field(
+        description="Contacts responsible for this host. Omitted when it has none.",
+        example=["hh"],
+        default_factory=ApiOmitted,
+    )
     modes: list[ModeInfo] | ApiOmitted = api_field(
         description=(
             "Active host modes (e.g. scheduled downtime, acknowledgement) rendered as linked "
@@ -186,6 +191,7 @@ class HostEntry:
             last_state_change=included(HostOptionalField.LAST_STATE_CHANGE, host.last_state_change),
             labels=included(HostOptionalField.LABELS, host.labels),
             tags=included(HostOptionalField.TAGS, host.tags),
+            contacts=included(HostOptionalField.CONTACTS, host.contacts),
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
         )

@@ -105,6 +105,7 @@ class LiveStatusHostRepository:
                             else None
                         ),
                         tags=dict(row["tags"]) if "tags" in row else None,
+                        contacts=list(row["contacts"]) if "contacts" in row else None,
                     )
                     for row in q.iterate(conn)
                 ],
@@ -163,6 +164,8 @@ class LiveStatusHostRepository:
             folder=_wato_folder_from_filename(row["filename"]),
             contact_groups=list(row["contact_groups"]),
             tags=dict(row["tags"]),
+            # The overview does not expose contacts, so its query does not read them.
+            contacts=[],
             labels=HostLabelValue.by_label(row["labels"], row["label_sources"]),
         )
 
@@ -261,6 +264,7 @@ _OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
     HostOptionalField.LAST_STATE_CHANGE: (Hosts.last_state_change,),
     HostOptionalField.LABELS: (Hosts.labels, Hosts.label_sources),
     HostOptionalField.TAGS: (Hosts.tags,),
+    HostOptionalField.CONTACTS: (Hosts.contacts,),
 }
 
 _SORT_COLUMN_FIELDS: Mapping[HostSortColumn, HostOptionalField] = {

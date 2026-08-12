@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Forecast graph and graph collection surfaces.
+"""Graph collection surface.
 
-The collection cases assert what the engine renders, never what the legacy renderer no longer
+The cases assert what the engine renders, never what the legacy renderer no longer
 does: a slot holds either a plot the engine drew or an error box, so a plot in every slot already
 says the old renderer drew nothing.
 
-The forecast case stays a skipped skeleton (CMK-35973) until the engine renders on that surface.
+The forecast surface lives in ``nonfree/pro/test_forecast_graph_engine.py``, since
+forecast graphs are Pro+.
 """
 
 import pytest
@@ -18,19 +19,6 @@ from playwright.sync_api import expect
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import GRAPH_COLLECTION_SIZE
 from tests.system.gui.testlib.playwright.pom.graphing.graph_collection import GraphCollection
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
-from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_forecast_graph_shows_historical_and_forecast_series(
-    dashboard_page: MainDashboard, forecast_graph: str
-) -> None:
-    """The forecast graph shows historical and forecast series.
-
-    Do: inspect the rendered forecast component.
-    Assert: legend entries for both the historical and forecast series; no broken-graph.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
 
 
 @pytest.mark.skip_if_edition("community")

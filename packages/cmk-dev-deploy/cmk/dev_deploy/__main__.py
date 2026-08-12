@@ -791,9 +791,6 @@ def _guard_terminal_settings() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     """Run the cmk-dev-deploy CLI."""
-    if os.getuid() == 0:
-        output.error("cmk-dev-deploy must not be run as root.")
-        return 1
     # Everything created for the site (clone parent directories, wheel
     # installs, ...) must stay readable by the *site* user; a restrictive
     # personal umask (e.g. 027) would lock the site out of its own version
@@ -802,12 +799,21 @@ def main(argv: list[str] | None = None) -> int:
     _guard_terminal_settings()
     args = parse_args(argv)
     output.set_verbosity(args.verbose)
+    # Arguments are parsed first so --help works for anyone (the CI test
+    # runners execute the launcher smoke test as root); everything beyond
+    # parsing is refused for root.
+    if os.getuid() == 0:
+        output.error("cmk-dev-deploy must not be run as root.")
+        return 1
 
     try:
         repo_root = find_repo_root()
     except RepoNotFoundError as e:
         output.error(str(e))
         return 1
+    # All entry points work relative to the repo root (the launcher already
+    # chdirs there; ``python -m cmk.dev_deploy`` from a subdirectory does not).
+    os.chdir(repo_root)
 
     # --print-setup / --remove-setup only need the site name; they exit
     # before any manifest, sudo, or site preparation work.

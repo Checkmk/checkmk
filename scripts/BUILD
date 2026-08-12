@@ -2,7 +2,10 @@ load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
-exports_files(["requirements.in"])
+exports_files([
+    "cmk-dev-deploy.py",
+    "requirements.in",
+])
 
 sh_binary(
     name = "in_bazel",

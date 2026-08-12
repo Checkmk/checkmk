@@ -1,6 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
-load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@rules_python//python:packaging.bzl", "py_wheel")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
@@ -65,38 +63,13 @@ py_library(
     visibility = ["//visibility:public"],
 )
 
-py_binary(
-    name = "cmk-dev-deploy-bin",
-    srcs = ["cmk/dev_deploy/__main__.py"],
-    main = "cmk/dev_deploy/__main__.py",
-    visibility = ["//visibility:public"],
-    deps = [":cmk-dev-deploy"],
-)
-
 py_cmk_test(
     name = "unit",
     size = "small",
     srcs = glob(["tests/**/*.py"]),
+    data = ["//scripts:cmk-dev-deploy.py"],
     deps = [
         ":cmk-dev-deploy",
-    ],
-)
-
-py_wheel(
-    name = "wheel_entrypoint_only",
-    distribution = "cmk-dev-deploy-entrypoint",
-    entry_points = {
-        "console_scripts": ["cmk-dev-deploy = cmk.dev_deploy.__main__:main"],
-    },
-    version = "1.0.0",
-    visibility = ["//visibility:public"],
-    deps = [],
-)
-
-build_test(
-    name = "build_test",
-    targets = [
-        ":wheel_entrypoint_only",
     ],
 )
 
@@ -104,7 +77,6 @@ py_requirements_test(
     name = "requirements-test",
     libs = [
         ":cmk-dev-deploy",
-        ":cmk-dev-deploy-bin",
     ],
     requirements_in = "requirements.in",
 )

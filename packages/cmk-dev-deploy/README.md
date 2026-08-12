@@ -9,32 +9,38 @@ Deploy local changes to a running OMD site in under 5 seconds.
 - A local OMD site -- install one with `cmk-dev-install` / `cmk-dev-install-site` (from the `cmk-dev-site` pipx package)
 - `sudo` access (for the one-time installation of the per-site sudoers rule)
 - Bazel (the project's build system)
+- Python >= 3.14 (the tool itself is stdlib-only; if the system Python is
+  older, the launcher automatically falls back to the repo venv -- create it
+  with `make .venv`)
 
 ## Quick Start
 
-The tool is invoked via Bazel:
+The tool is launched directly from the checkout -- deliberately not via
+`bazel run`, so starting a deploy never queues behind other Bazel commands:
 
 ```bash
 # Auto-detect site and deploy changed files
-bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin
+./scripts/cmk-dev-deploy.py
 
-# Pass flags after --
-bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin -- --site v260
-bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin -- --watch
-bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin -- --frontend --watch
+# Pass flags directly
+./scripts/cmk-dev-deploy.py --site v260
+./scripts/cmk-dev-deploy.py --watch
+./scripts/cmk-dev-deploy.py --frontend --watch
 ```
 
-You'll likely want a shell alias:
+You'll likely want a shell function so `cdd` works from any directory
+inside a checkout -- like `bazel run` did, it picks the checkout you are
+standing in:
 
 ```bash
-alias cdd='bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin --'
+cdd() { "$(git rev-parse --show-toplevel)/scripts/cmk-dev-deploy.py" "$@"; }
 ```
 
-Deploys always build the site's edition: the tool pins `--cmk_edition=<site edition>` on every bazel command it runs, no matter how cdd is invoked. The `bazel run` in the alias is its own bazel command though, and it uses the flag's default value (`community`). When the site has any other edition, each cdd invocation therefore switches the bazel server between two configurations, and every switch discards the analysis cache (a few seconds of re-analysis). This costs time, not correctness. To avoid it, give the alias the edition of the site you deploy to:
-
-```bash
-alias cdd='bazel run //packages/cmk-dev-deploy:cmk-dev-deploy-bin --cmk_edition=pro --'
-```
+(An alias with a hard-coded absolute path works too, but then always
+deploys that one checkout.) The launcher itself deploys the checkout it
+lives in, independent of your current working directory. Deploys always
+build the site's edition: the tool pins `--cmk_edition=<site edition>` on
+every bazel command it runs.
 
 Then:
 

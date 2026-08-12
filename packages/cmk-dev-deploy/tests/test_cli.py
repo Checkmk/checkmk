@@ -32,6 +32,13 @@ class TestRootGuard:
         captured = capsys.readouterr()
         assert "root" not in (captured.err + captured.out).lower()
 
+    def test_help_works_as_root(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """--help must work for root: CI runs the launcher smoke test as root."""
+        with patch("os.getuid", return_value=0), pytest.raises(SystemExit) as exc_info:
+            main(["--help"])
+        assert exc_info.value.code == 0
+        assert "usage: cmk-dev-deploy" in capsys.readouterr().out
+
 
 # ---------------------------------------------------------------------------
 # Default values

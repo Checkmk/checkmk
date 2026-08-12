@@ -2291,6 +2291,7 @@ class TestMainCombinedMode:
 
         with (
             patch("os.getuid", return_value=1000),
+            patch("os.chdir"),
             patch("cmk.dev_deploy.__main__.output", self._mock_output()),
             patch("cmk.dev_deploy.__main__.find_repo_root", return_value=Path("/repo")),
             patch("cmk.dev_deploy.__main__.resolve_site"),
@@ -2326,6 +2327,7 @@ class TestMainCombinedMode:
 
         with (
             patch("os.getuid", return_value=1000),
+            patch("os.chdir"),
             patch("cmk.dev_deploy.__main__.output", self._mock_output()),
             patch("cmk.dev_deploy.__main__.find_repo_root", return_value=Path("/repo")),
             patch("cmk.dev_deploy.__main__.resolve_site"),

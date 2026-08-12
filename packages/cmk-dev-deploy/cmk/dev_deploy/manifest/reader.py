@@ -12,7 +12,6 @@ Does NOT import ``cmk.dev_deploy.output`` to avoid circular dependencies.
 import functools
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Any
 
@@ -36,10 +35,7 @@ MANIFEST_VERSION = "3"
 
 
 def _manifest_dir() -> Path:
-    """Return the manifest directory, using BUILD_WORKSPACE_DIRECTORY when under bazel run."""
-    workspace = os.environ.get("BUILD_WORKSPACE_DIRECTORY")
-    if workspace:
-        return Path(workspace) / "packages" / "cmk-dev-deploy" / "cmk" / "dev_deploy" / "manifest"
+    """Return the manifest directory inside the checkout's source tree."""
     return Path(__file__).parent
 
 

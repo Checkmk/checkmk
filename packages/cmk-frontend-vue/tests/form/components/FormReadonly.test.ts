@@ -383,6 +383,8 @@ const metricBackendCustomQuerySpec: FormSpec.MetricBackendCustomQuery = {
   metric_name: null,
   aggregation_lookback: 0,
   consolidation_function: 'gauge_last',
+  aggregation_histogram_group_by: [],
+  aggregator: null,
   aggregation_histogram_percentile: 0,
   aggregation_histogram_threshold_for_fraction_below: 0,
   aggregation_histogram_lower_threshold_for_fraction_between: 0,
@@ -392,7 +394,9 @@ const metricBackendCustomQuerySpec: FormSpec.MetricBackendCustomQuery = {
 
 function renderMetricBackendCustomQuery(
   attributeFilter?: unknown,
-  consolidationFunction: string = 'sum_rate'
+  consolidationFunction: string = 'sum_rate',
+  groupBy: unknown[] = [],
+  aggregator: unknown = null
 ): void {
   render(FormReadonly, {
     props: {
@@ -403,6 +407,8 @@ function renderMetricBackendCustomQuery(
         attribute_filter: attributeFilter,
         aggregation_lookback: 222,
         consolidation_function: consolidationFunction,
+        aggregation_histogram_group_by: groupBy,
+        aggregator: aggregator,
         aggregation_histogram_percentile: 95,
         aggregation_histogram_threshold_for_fraction_below: 5,
         aggregation_histogram_lower_threshold_for_fraction_between: 10,

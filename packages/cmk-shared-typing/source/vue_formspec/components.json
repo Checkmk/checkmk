@@ -983,6 +983,20 @@
       },
       "required": ["authority_url", "display_name"]
     },
+    "metric_backend_group_by_key": {
+      "id": "metric_backend_group_by_key",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["resource", "scope", "data_point"]
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": ["kind", "key"]
+    },
     "metric_backend_custom_query": {
       "id": "metric_backend_custom_query",
       "type": "object",
@@ -1016,6 +1030,23 @@
             "consolidation_function": {
               "$ref": "../consolidation.json"
             },
+            "aggregation_histogram_group_by": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/metric_backend_group_by_key"
+              },
+              "default": []
+            },
+            "aggregator": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "../aggregation.json"
+                }
+              ]
+            },
             "aggregation_histogram_percentile": {
               "type": "number"
             },
@@ -1037,6 +1068,8 @@
             "metric_name",
             "aggregation_lookback",
             "consolidation_function",
+            "aggregation_histogram_group_by",
+            "aggregator",
             "aggregation_histogram_percentile",
             "aggregation_histogram_threshold_for_fraction_below",
             "aggregation_histogram_lower_threshold_for_fraction_between",

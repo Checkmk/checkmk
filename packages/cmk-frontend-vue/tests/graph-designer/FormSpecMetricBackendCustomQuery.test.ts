@@ -19,6 +19,8 @@ const SPEC: MetricBackendCustomQuery = {
   metric_name: 'cmk.example',
   aggregation_lookback: 120,
   consolidation_function: 'gauge_last',
+  aggregation_histogram_group_by: [],
+  aggregator: null,
   aggregation_histogram_percentile: 90,
   aggregation_histogram_threshold_for_fraction_below: 0,
   aggregation_histogram_lower_threshold_for_fraction_between: 0,

@@ -82,7 +82,6 @@ py_cmk_test(
     deps = [
         ":library",
         requirement("lsprotocol"),
-        requirement("pygls"),
     ],
 )
 

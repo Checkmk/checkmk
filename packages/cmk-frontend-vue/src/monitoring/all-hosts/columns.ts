@@ -39,7 +39,8 @@ const OPTIONAL_FIELD_COLUMNS = [
   'num_services_pending',
   'last_check',
   'last_state_change',
-  'labels'
+  'labels',
+  'tags'
 ] as const satisfies readonly HostOptionalField[]
 
 /**
@@ -319,6 +320,14 @@ export function buildHostColumns({
     {
       accessorKey: 'labels',
       header: _t('Labels'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 400,
+      meta: { hidden: true }
+    },
+    {
+      accessorKey: 'tags',
+      header: _t('Tags'),
       enableSorting: false,
       minSize: 100,
       maxSize: 400,

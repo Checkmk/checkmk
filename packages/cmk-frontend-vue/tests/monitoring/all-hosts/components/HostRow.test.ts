@@ -126,8 +126,8 @@ test('renders one cell per service state with its count', () => {
 
   const tds = Array.from(container.querySelectorAll('td'))
   // select, state, modes, name, alias, address, folder, site_id, total, ok, warn, crit, unknown,
-  // pending, last_check, last_state_change, labels
-  expect(tds).toHaveLength(17)
+  // pending, last_check, last_state_change, labels, tags
+  expect(tds).toHaveLength(18)
   expect(tds[8]).toHaveTextContent('15')
   expect(tds[9]).toHaveTextContent('1')
   expect(tds[10]).toHaveTextContent('2')
@@ -179,4 +179,14 @@ test('renders the labels of a host, sorted alphabetically', () => {
 
   const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['cmk/site: heute', 'owner: platform'])
+})
+
+test('renders the tags of a host, sorted alphabetically', () => {
+  const { container } = mountRow(makeHost({ tags: { networking: 'lan', criticality: 'prod' } }))
+
+  const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
+  expect(tags.map((tag) => tag.textContent?.trim())).toEqual([
+    'criticality: prod',
+    'networking: lan'
+  ])
 })

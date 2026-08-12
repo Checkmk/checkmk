@@ -79,7 +79,8 @@ test('the optional columns are offered in the picker, labelled by their header',
     { id: 'num_services_pending', label: 'Pd' },
     { id: 'last_check', label: 'Last check' },
     { id: 'last_state_change', label: 'Last state change' },
-    { id: 'labels', label: 'Labels' }
+    { id: 'labels', label: 'Labels' },
+    { id: 'tags', label: 'Tags' }
   ])
 })
 
@@ -92,7 +93,8 @@ test('most offered columns are shown on first use, but alias, folder, the timest
     site_id: false,
     last_check: false,
     last_state_change: false,
-    labels: false
+    labels: false,
+    tags: false
   })
   expect(service.columnVisibility.value).toEqual(service.defaultColumnVisibility)
 })
@@ -116,6 +118,7 @@ test('the fixed columns keep their position around the optional ones', () => {
     'last_check',
     'last_state_change',
     'labels',
+    'tags',
     'actions'
   ])
 })

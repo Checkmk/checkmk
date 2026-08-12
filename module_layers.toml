@@ -906,6 +906,7 @@ allows = [
   "cmk.web.utils",
   "@ccc",
   "@crypto",
+  "@flags",
   "@livestatus_client",
   "@mkp_tool",
   "@plugin_apis",

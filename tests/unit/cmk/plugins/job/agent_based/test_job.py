@@ -273,6 +273,41 @@ def test_job_parse_real_time(timestr: str, expected_result: float) -> None:
             id="",
         ),
         pytest.param(
+            # Same as SECTION_3, but with the leftover file being the newer one.
+            # Its data must not replace the data of the completed job.
+            [
+                ["==>", "killed_job", "<=="],
+                ["start_time", "1560925321"],
+                ["exit_code", "0"],
+                ["real", "0:02.63"],
+                ["==>", "killed_job.30166running", "<=="],
+                ["start_time", "1560929999"],
+                ["Command", "terminated", "by", "signal", "9"],
+                ["exit_code", "0"],
+                ["real", "1:32:44"],
+            ],
+            {
+                "killed_job": {
+                    "running": False,
+                    "start_time": 1560925321,
+                    "exit_code": 0,
+                    "metrics": {"real_time": 2.63},
+                }
+            },
+            id="leftover running file newer than the completed job",
+        ),
+        pytest.param(
+            [
+                ["==>", "killed_job.30166running", "<=="],
+                ["start_time", "1560929999"],
+                ["Command", "terminated", "by", "signal", "9"],
+                ["exit_code", "0"],
+                ["real", "1:32:44"],
+            ],
+            {},
+            id="leftover running file without a completed job",
+        ),
+        pytest.param(
             [
                 [
                     "==>",

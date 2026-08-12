@@ -139,22 +139,25 @@ def _get_jobname_and_running_state(
 
 def parse_job(string_table: StringTable) -> Section:
     parsed: Section = {}
-    pseudo_running_jobs: Section = {}  # contains jobs that are flagged as running but are not, e.g. killed jobs
     job: Job = {}
     for idx, line in enumerate(string_table):
         if line[0] == "==>" and line[-1] == "<==":
             jobname, running_state = _get_jobname_and_running_state(string_table[idx:])
             running = running_state == "running"
 
+            if running_state == "pseudo_running":
+                # A leftover ".<pid>running" file of a job that is not running any
+                # more. Its contents do not describe the last completed run: the
+                # exit code written by /usr/bin/time is 0 for a job that died from
+                # a signal, for example. So we go by the completed file instead.
+                job = {}
+                continue
+
             metrics: Metrics = {}
             job_stats: Job = {
                 "running": running,
                 "metrics": metrics,
             }
-            if running_state == "pseudo_running":
-                job = pseudo_running_jobs.setdefault(jobname, job_stats)
-                continue
-
             job = parsed.setdefault(jobname, job_stats)
             # the setdefault means: the first job wins. so if we see a running job first, and a
             # stopped afterwards, the job is running.
@@ -175,14 +178,6 @@ def parse_job(string_table: StringTable) -> Section:
             else:
                 assert name in _METRIC_SPECS
                 metrics[name] = value
-
-    for jobname, job_stats in pseudo_running_jobs.items():
-        # NOTE: pseudo_running jobs and empty files are most likely due to non-atomic
-        # file operations, which are addressed in werk 15450, so when mk-job agent
-        # plugins that do not include this werk are no longer supported (haha),
-        # code to handle it could be removed
-        if job_stats.get("start_time", -1) > parsed.get(jobname, {}).get("start_time", 0):
-            parsed[jobname] = job_stats
 
     return parsed
 

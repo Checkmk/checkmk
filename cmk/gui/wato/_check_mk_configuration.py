@@ -1500,6 +1500,17 @@ def _fs_keyed_by_first_tuple_element(
     )
 
 
+def _drop_unavailable_localizations(value: object) -> Mapping[str, object]:
+    # user_localizations is based on the currently installed languages.
+    # if a language gets removed, an unknown dictionary key will remain
+    # and saving is no longer possible. so let's cleanup unknown languages.
+    assert isinstance(value, dict)
+    available = {language for language, _alias in get_languages()}
+    return {
+        language: translation for language, translation in value.items() if language in available
+    }
+
+
 ConfigVariableUserLocalizations = ConfigVariable(
     group=ConfigVariableGroupUserInterface,
     primary_domain=ConfigDomainGUI,
@@ -1522,6 +1533,7 @@ ConfigVariableUserLocalizations = ConfigVariable(
                             )
                             for language, alias in get_languages()
                         },
+                        migrate=_drop_unavailable_localizations,
                     ),
                 ],
             ),

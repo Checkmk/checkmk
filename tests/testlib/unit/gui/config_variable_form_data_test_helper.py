@@ -2451,6 +2451,11 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "user_localizations": [
         CasePass("configured", {"Business critical": {"en": "Important"}}),
+        CaseMigrates(
+            "translation-of-an-unavailable-language",
+            {"Business critical": {"en": "Important", "tlh": "potlh"}},
+            {"Business critical": {"en": "Important"}},
+        ),
         CaseFail("not-a-dict", "Business critical"),
     ],
     "user_security_notification_duration": [

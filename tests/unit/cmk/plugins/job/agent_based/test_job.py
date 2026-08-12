@@ -242,8 +242,10 @@ SECTION_3: job.Section = {
                 vol_context_switches=2025,
             ),
         ),
-        # The leftover "process1minrtu.30166running" file of the killed job is
-        # not reported: it does not describe a job that is still running.
+        # The "process1minrtu.30166running" file was written by an agent predating
+        # werk 15450, which is out of support - so it is taken at face value, stale
+        # start time and all.
+        job.RunningJob(name="process1minrtu", pid=30166, start_time=1560921361.0),
     ],
 }
 
@@ -353,23 +355,6 @@ def test_parse_header(
 
 
 @pytest.mark.parametrize(
-    ["body", "expected_result"],
-    [
-        pytest.param([["start_time", "1547301201"]], False, id="a real running job"),
-        pytest.param([], True, id="empty file"),
-        pytest.param([["exit_code", "0"]], True, id="no start time"),
-        pytest.param(
-            [["start_time", "1547301201"], ["exit_code", "137"]],
-            True,
-            id="killed job, completion data written to the running file",
-        ),
-    ],
-)
-def test_is_zombie(body: StringTable, expected_result: bool) -> None:
-    assert job._is_zombie(body) is expected_result
-
-
-@pytest.mark.parametrize(
     "timestr,expected_result",
     [
         ("0:00.00", 0.0),
@@ -473,8 +458,8 @@ def test_metric_specs_cover_all_metrics() -> None:
             id="",
         ),
         pytest.param(
-            # Same as SECTION_3, but with the leftover file being the newer one.
-            # Its data must not replace the data of the completed job.
+            # The data of a ".<pid>running" file never replaces the data of the
+            # completed job, whichever of the two started later.
             [
                 ["==>", "killed_job", "<=="],
                 ["start_time", "1560925321"],
@@ -494,9 +479,10 @@ def test_metric_specs_cover_all_metrics() -> None:
                         exit_code=0,
                         metrics=job.Metrics(2.63, None, None, None, None, None, None, None, None),
                     ),
+                    job.RunningJob(name="killed_job", pid=30166, start_time=1560929999.0),
                 ]
             },
-            id="leftover running file newer than the completed job",
+            id="running file newer than the completed job",
         ),
         pytest.param(
             [
@@ -506,8 +492,19 @@ def test_metric_specs_cover_all_metrics() -> None:
                 ["exit_code", "0"],
                 ["real", "1:32:44"],
             ],
-            {},
-            id="leftover running file without a completed job",
+            {"killed_job": [job.RunningJob(name="killed_job", pid=30166, start_time=1560929999.0)]},
+            id="running file without a completed job",
+        ),
+        pytest.param(
+            # mk-job versions that determine the timestamp via perl write a bare
+            # "start_time " into the running file too if perl is not installed. We
+            # know the job is running, but not since when.
+            [
+                ["==>", "no-perl.4711running", "<=="],
+                ["start_time"],
+            ],
+            {"no-perl": [job.UndatedRunningFile(name="no-perl", pid=4711)]},
+            id="running file without a usable start time",
         ),
         pytest.param(
             # Only a ".<pid>running" suffix marks a running file, so a job whose own
@@ -537,8 +534,9 @@ def test_metric_specs_cover_all_metrics() -> None:
                     "<==",
                 ]
             ],
-            {},
-            id="empty file",
+            # An empty file has no start time either.
+            {"empty_file": [job.UndatedRunningFile(name="empty_file", pid=123)]},
+            id="empty running file",
         ),
         pytest.param(
             # An empty completed file, on the other hand, still describes a job -
@@ -696,8 +694,8 @@ def test_metric_specs_cover_all_metrics() -> None:
         ),
         pytest.param(
             # mk-job versions that determine the timestamp via perl write a bare
-            # "start_time " if perl is not installed. The parser only evaluates
-            # lines consisting of two fields, so the timestamp is dropped.
+            # "start_time " if perl is not installed, so there is no timestamp to
+            # parse.
             [
                 ["==>", "Cleanup-Cache-Files", "<=="],
                 ["start_time"],
@@ -1035,6 +1033,95 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
             [["==>", "never-completed.1234running", "<=="], ["start_time", str(TIME - 60)]],
             [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
             id="running job without a completed one",
+        ),
+        pytest.param(
+            "Cleanup-Cache-Files",
+            job.check_plugin_job.check_default_parameters,
+            [
+                ["==>", "Cleanup-Cache-Files", "<=="],
+                ["start_time", str(TIME - 120)],
+                ["exit_code", "0"],
+                ["real_time", "0.96"],
+                ["user_time", "0.96"],
+                ["system_time", "0.96"],
+                ["==>", "Cleanup-Cache-Files.1234running", "<=="],
+                ["start_time", str(TIME - 60)],
+            ],
+            [
+                Result(state=State.OK, summary="Latest exit code: 0"),
+                Result(state=State.OK, summary="Real time: 960 milliseconds"),
+                Metric("real_time", 0.96, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="User time: 960 milliseconds"),
+                Metric("user_time", 0.96, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="System time: 960 milliseconds"),
+                Metric("system_time", 0.96, boundaries=(0.0, None)),
+                Result(
+                    state=State.OK,
+                    notice="1 job is currently running, started at 2020-07-09 15:16:00",
+                ),
+                Result(state=State.OK, summary="Job age (currently running): 1 minute 0 seconds"),
+                Metric("job_age", 60.0, boundaries=(0.0, None)),
+            ],
+            id="completed job with only some metrics, one running job",
+        ),
+        pytest.param(
+            # The last completed run is still reported; only the file we cannot date
+            # is flagged.
+            "no-perl",
+            job.check_plugin_job.check_default_parameters,
+            [
+                ["==>", "no-perl", "<=="],
+                ["start_time", str(TIME - 120)],
+                ["exit_code", "0"],
+                ["==>", "no-perl.30166running", "<=="],
+                ["start_time"],
+            ],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="1 running file without a usable start time (PID 30166)",
+                    details="To fix this start time issue, please update the agent or install perl on the host",
+                ),
+                Result(state=State.OK, summary="Latest exit code: 0"),
+                Result(state=State.OK, notice="Latest job started at 2020-07-09 15:15:00"),
+                Result(state=State.OK, summary="Job age: 2 minutes 0 seconds"),
+                Metric("job_age", 120.0, boundaries=(0.0, None)),
+            ],
+            id="undated running file next to a completed job",
+        ),
+        pytest.param(
+            # Pre-1.6 mk-job left the pid out of the file name.
+            "no-perl-only",
+            job.check_plugin_job.check_default_parameters,
+            [["==>", "no-perl-only.running", "<=="], ["start_time"]],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="1 running file without a usable start time",
+                    details="To fix this start time issue, please update the agent or install perl on the host",
+                ),
+                Result(state=State.UNKNOWN, summary="Got incomplete information for this job"),
+            ],
+            id="undated running file and nothing else",
+        ),
+        pytest.param(
+            "several-undated",
+            job.check_plugin_job.check_default_parameters,
+            [
+                ["==>", "several-undated.1running", "<=="],
+                ["start_time"],
+                ["==>", "several-undated.2running", "<=="],
+                ["start_time"],
+            ],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="2 running files without a usable start time (PID 1, 2)",
+                    details="To fix this start time issue, please update the agent or install perl on the host",
+                ),
+                Result(state=State.UNKNOWN, summary="Got incomplete information for this job"),
+            ],
+            id="several undated running files",
         ),
         pytest.param(
             # An age of exactly zero is an age, not a start time in the future.

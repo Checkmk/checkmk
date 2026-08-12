@@ -128,7 +128,8 @@ class Metrics:
 class RunningJob:
     name: str
     pid: int | None
-    # A running job without a usable start time is not reported at all, see parse_job.
+    # A running file without a usable start time becomes an UndatedRunningFile
+    # instead, see parse_job.
     start_time: float
 
 
@@ -140,7 +141,21 @@ class CompletedJob:
     metrics: Metrics
 
 
-Job = RunningJob | CompletedJob
+@dataclass
+class UndatedRunningFile:
+    """A ".<pid>running" file whose start time we cannot read.
+
+    mk-job versions shipped with Checkmk 2.4.0 and older determine the start time
+    with perl and write an empty one if perl is not installed. The job may well be
+    running; there is just no telling since when, so there is nothing to report
+    about it but the fact that the file is there.
+    """
+
+    name: str
+    pid: int | None
+
+
+Job = RunningJob | CompletedJob | UndatedRunningFile
 Section = Mapping[str, Sequence[Job]]
 
 
@@ -189,22 +204,6 @@ def _parse_header(header: list[str]) -> tuple[str, RunState, int | None] | None:
     return match["jobname"], RunState.RUNNING, _as(int, match["pid"])
 
 
-def _is_zombie(body: StringTable) -> bool:
-    """Tell a running job apart from a leftover ".<pid>running" file.
-
-    mk-job copies the file of a running job right after writing its start time,
-    and appends everything else to the completed file only. So anything but that
-    single line means the job is not running any more - it was killed, or we are
-    looking at a partially written file.
-
-    NOTE: zombie jobs and empty files are most likely due to non-atomic file
-    operations, which are addressed in werk 15450. So, when mk-job agent plugins
-    that do not include this werk are no longer supported (haha), code to handle
-    it could be removed.
-    """
-    return len(body) != 1 or body[0][0] != "start_time"
-
-
 def parse_job(string_table: StringTable) -> Section:
     section: dict[str, list[Job]] = {}
     for header, body in _split_job_tables(string_table):
@@ -216,13 +215,10 @@ def parse_job(string_table: StringTable) -> Section:
         start_time = _as(float, fields.pop("start_time", None))
 
         if state is RunState.RUNNING:
-            if start_time is None or _is_zombie(body):
-                # Leftover file of a job that is not running any more, or one
-                # without a usable start time. Either way the completed file -
-                # if there is one - is what describes this job.
-                continue
             section.setdefault(jobname, []).append(
                 RunningJob(name=jobname, pid=pid, start_time=start_time)
+                if start_time is not None
+                else UndatedRunningFile(name=jobname, pid=pid)
             )
             continue
 
@@ -328,6 +324,20 @@ def check_job(
 
     running_jobs = [job for job in jobs if isinstance(job, RunningJob)]
     completed_job = next((job for job in jobs if isinstance(job, CompletedJob)), None)
+
+    # Report the files we cannot date, but keep going: whatever we do know about this
+    # job comes from the other files.
+    if undated := [job for job in jobs if isinstance(job, UndatedRunningFile)]:
+        count = len(undated)
+        pids = ", ".join(str(file.pid) for file in undated if file.pid is not None)
+        yield Result(
+            state=State.WARN,
+            summary=(
+                f"{count} running file{'' if count == 1 else 's'} without a usable start"
+                f" time{f' (PID {pids})' if pids else ''}"
+            ),
+            details="To fix this start time issue, please update the agent or install perl on the host",
+        )
 
     # The exit code comes from the completed job, so without one we cannot say
     # anything about the outcome. Its start time is only needed while nothing runs.

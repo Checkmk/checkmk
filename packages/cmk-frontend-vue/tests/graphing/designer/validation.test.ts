@@ -10,11 +10,12 @@ import {
   newRrdQueryDraft,
   newScalarDraft
 } from '@/graphing/designer/drafts'
-import { isValid, validateRow } from '@/graphing/designer/validation'
+import { isValid, validateDesign, validateRow } from '@/graphing/designer/validation'
 
 import {
   constantItem,
   formulaItem,
+  items,
   metricBackendItem,
   rrdMetricItem,
   rrdQueryItem,
@@ -149,5 +150,79 @@ describe('isValid', () => {
     } as const
     expect(isValid(metricBackendItem('A', { consolidation_function: consolidation }))).toBe(false)
     expect(isValid(newRrdMetricDraft('B', '#123456'))).toBe(false)
+  })
+})
+
+describe('validateDesign', () => {
+  test('a graph with no sources is valid', () => {
+    expect(validateDesign([])).toEqual([])
+  })
+
+  test('a fully configured graph has nothing blocking it', () => {
+    expect(validateDesign(items)).toEqual([])
+  })
+
+  test('a formula pointing at a source that is still being filled in', () => {
+    const design = [newRrdMetricDraft('A', '#123456'), formulaItem('D')]
+
+    expect(validateDesign(design)).toContainEqual({
+      id: 'D',
+      field: 'ast',
+      code: 'ref-incomplete',
+      ref: 'A'
+    })
+  })
+
+  test('a bare reference to a dynamic query needs consolidating', () => {
+    const design = [rrdQueryItem('C'), formulaItem('D', { ast: { op: 'ref', id: 'C' } })]
+
+    expect(validateDesign(design)).toEqual([
+      { id: 'D', field: 'ast', code: 'needs-consolidation', ref: 'C' }
+    ])
+  })
+
+  test('a reference to no source at all stays unknown', () => {
+    const design = [rrdMetricItem('A'), formulaItem('D', { ast: { op: 'ref', id: 'Z' } })]
+
+    expect(validateDesign(design)).toEqual([
+      { id: 'D', field: 'ast', code: 'unknown-ref', ref: 'Z' }
+    ])
+  })
+
+  test('a formula cannot reference itself', () => {
+    const design = [formulaItem('D', { ast: { op: 'ref', id: 'D' } })]
+
+    expect(validateDesign(design)).toEqual([{ id: 'D', field: 'ast', code: 'self-ref', ref: 'D' }])
+  })
+
+  test('formulas cannot form a cycle', () => {
+    const design = [
+      formulaItem('D', { ast: { op: 'ref', id: 'F' } }),
+      formulaItem('F', { ast: { op: 'ref', id: 'D' } })
+    ]
+
+    expect(validateDesign(design)).toContainEqual({
+      id: 'D',
+      field: 'ast',
+      code: 'cyclic-ref',
+      ref: 'F'
+    })
+  })
+
+  test('an RRD formula cannot reach into the metrics backend', () => {
+    const design = [metricBackendItem('E'), formulaItem('D', { ast: { op: 'ref', id: 'E' } })]
+
+    expect(validateDesign(design)).toEqual([
+      { id: 'D', field: 'ast', code: 'domain-mismatch', ref: 'E' }
+    ])
+  })
+
+  test('each source contributes its own blockers', () => {
+    const design = [newRrdQueryDraft('A'), newConstantDraft('B', '#123456')]
+
+    expect(validateDesign(design)).toEqual([
+      { id: 'A', field: 'metric_name', code: 'required' },
+      { id: 'B', field: 'value', code: 'required' }
+    ])
   })
 })

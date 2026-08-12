@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { CustomGraphDesigner } from 'cmk-shared-typing/typescript/custom_graph_designer'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { afterEach, beforeEach, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   resetGlobalRefresh,
@@ -400,29 +400,98 @@ test('edit mode fetches hidden rows as visible and shows their stats', async () 
   ).toEqual([true, true])
 })
 
-test('an incomplete row blocks saving with an inline error', async () => {
-  await renderApp()
+const SAVE_ISSUES_SUMMARY = /Fix the issues with IDs? /
+
+async function enterEdit(): Promise<void> {
   await fireEvent.click(await screen.findByRole('button', { name: 'Edit custom graph' }))
   await userEvent.click(screen.getByRole('tab', { name: 'Metrics selection' }))
+}
 
-  await fireEvent.click(await screen.findByRole('combobox', { name: 'Add source' }))
-  await fireEvent.click(await screen.findByRole('option', { name: 'Constant line' }))
+async function addRrdSource(): Promise<void> {
+  await fireEvent.click(screen.getByRole('combobox', { name: 'Add source' }))
+  await fireEvent.click(await screen.findByRole('option', { name: 'Checkmk RRD' }))
+}
 
+async function save(): Promise<void> {
   await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
-  expect(await screen.findByText(/incomplete.*B/)).toBeInTheDocument()
-  expect(putSpy).not.toHaveBeenCalled()
-})
+}
 
-test('blanking a row title blocks saving with an inline error', async () => {
-  await renderApp()
-  await fireEvent.click(await screen.findByRole('button', { name: 'Edit custom graph' }))
-  await userEvent.click(screen.getByRole('tab', { name: 'Metrics selection' }))
+describe('a blocked save', () => {
+  test('says nothing until a save has been attempted', async () => {
+    await renderApp()
+    await enterEdit()
+    await addRrdSource()
 
-  await userEvent.clear(await screen.findByRole('textbox', { name: 'Title' }))
+    expect(screen.queryByText(SAVE_ISSUES_SUMMARY)).not.toBeInTheDocument()
+  })
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
-  expect(await screen.findByText(/incomplete.*A/)).toBeInTheDocument()
-  expect(putSpy).not.toHaveBeenCalled()
+  test('names the unfinished source instead of sending it', async () => {
+    await renderApp()
+    await enterEdit()
+    await addRrdSource()
+
+    await save()
+
+    expect(putSpy).not.toHaveBeenCalled()
+    expect(
+      await screen.findByText('Fix the issues with ID B, then try saving again.')
+    ).toBeInTheDocument()
+  })
+
+  test('a blanked title blocks a source that is otherwise filled in', async () => {
+    await renderApp()
+    await enterEdit()
+
+    await userEvent.clear(await screen.findByRole('textbox', { name: 'Title' }))
+
+    await save()
+
+    expect(putSpy).not.toHaveBeenCalled()
+    expect(
+      await screen.findByText('Fix the issues with ID A, then try saving again.')
+    ).toBeInTheDocument()
+  })
+
+  test('marks the source in the table', async () => {
+    await renderApp()
+    await enterEdit()
+    await addRrdSource()
+
+    await save()
+
+    expect(await screen.findByLabelText('Source B prevents saving')).toBeInTheDocument()
+  })
+
+  test('a repeat attempt puts focus on the summary, the first attempt leaves it alone', async () => {
+    await renderApp()
+    await enterEdit()
+    await addRrdSource()
+
+    await save()
+
+    const summary = (await screen.findByText(SAVE_ISSUES_SUMMARY)).closest('[tabindex="-1"]')
+    expect(document.activeElement).not.toBe(summary)
+
+    await save()
+
+    await waitFor(() => expect(document.activeElement).toBe(summary))
+  })
+
+  test('a source added afterwards joins the summary at once, without a second save', async () => {
+    await renderApp()
+    await enterEdit()
+    await addRrdSource()
+    await save()
+    expect(
+      await screen.findByText('Fix the issues with ID B, then try saving again.')
+    ).toBeInTheDocument()
+
+    await addRrdSource()
+
+    expect(
+      await screen.findByText('Fix the issues with IDs B, C, then try saving again.')
+    ).toBeInTheDocument()
+  })
 })
 
 test('a preferred refresh time is preselected and used by the auto-started refresh', async () => {

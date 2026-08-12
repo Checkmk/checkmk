@@ -12,6 +12,8 @@ import type { CustomGraphObject } from '@/graphing/designer/api'
 import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { fromApiDataSource } from '@/graphing/designer/drafts'
+import type { ItemId } from '@/graphing/designer/types'
+import type { RowIssue } from '@/graphing/designer/validation'
 
 import { metricBackendItem } from '../fixtures'
 
@@ -143,13 +145,18 @@ function bodyProps(graph: CustomGraphObject = graphObject()) {
     metricBackendAvailable: false,
     createServicesAvailable: true,
     metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
-    titleMacros: []
+    titleMacros: [],
+    issuesByRow: new Map<ItemId, RowIssue[]>()
   }
 }
 
 function renderBody(
   mode: 'view' | 'edit',
-  overrides: { displaySettings?: boolean; graph?: CustomGraphObject } = {}
+  overrides: {
+    displaySettings?: boolean
+    graph?: CustomGraphObject
+    issuesByRow?: ReadonlyMap<ItemId, RowIssue[]>
+  } = {}
 ) {
   const { graph, ...rest } = overrides
   return render(DesignerBody, { props: { ...bodyProps(graph), mode, ...rest } })
@@ -211,6 +218,28 @@ test('edit mode renders the config tabs beneath the preview, not the legend', as
   expect(await screen.findByRole('tab', { name: 'Graph appearance' })).toBeInTheDocument()
   expect(screen.getByRole('tab', { name: 'Metrics selection' })).toBeInTheDocument()
   expect(container.querySelector('.graphing-graph-legend')).toBeNull()
+})
+
+test('a blocked source marks the metrics tab, from whichever tab is open', async () => {
+  renderBody('edit', {
+    issuesByRow: new Map([['A', [{ id: 'A', field: 'title', code: 'required' }]]])
+  })
+  await fireEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+
+  const metrics = screen.getByRole('tab', { name: 'Metrics selection' })
+
+  expect(metrics.querySelector('.cmk-icon')).not.toBeNull()
+  expect(
+    screen.getByRole('tab', { name: 'Graph appearance' }).querySelector('.cmk-icon')
+  ).toBeNull()
+})
+
+test('the metrics tab carries no marker while nothing blocks the save', async () => {
+  renderBody('edit')
+
+  const metrics = await screen.findByRole('tab', { name: 'Metrics selection' })
+
+  expect(metrics.querySelector('.cmk-icon')).toBeNull()
 })
 
 describe('settings slide-out', () => {

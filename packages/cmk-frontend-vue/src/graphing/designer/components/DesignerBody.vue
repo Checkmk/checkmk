@@ -8,6 +8,7 @@ import type {
   CustomGraphDesignerMode,
   TitleMacroGroup
 } from 'cmk-shared-typing/typescript/custom_graph_designer'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -28,7 +29,7 @@ import { useCustomGraphData } from '../composables/useCustomGraphData'
 import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
 import type { GraphItemsStore } from '../composables/useGraphItems'
 import type { FormulaDraft, ItemId } from '../types'
-import { isValid } from '../validation'
+import { type RowIssue, isValid } from '../validation'
 import AppearanceTable from './AppearanceTable.vue'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
 import DesignerSettings from './DesignerSettings.vue'
@@ -46,7 +47,8 @@ const {
   metricBackendAvailable,
   createServicesAvailable,
   metricBackendDefaultTitle,
-  titleMacros
+  titleMacros,
+  issuesByRow
 } = defineProps<{
   store: GraphItemsStore
   graphOptions: CustomGraphOptions
@@ -57,6 +59,7 @@ const {
   createServicesAvailable: boolean
   metricBackendDefaultTitle: string
   titleMacros: TitleMacroGroup[]
+  issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
 }>()
 
 const emit = defineEmits<{
@@ -150,6 +153,8 @@ watch(
     data.refetch()
   }
 )
+
+const hasBlockingIssues = computed(() => issuesByRow.size > 0)
 
 type Tab = 'appearance' | 'metrics'
 const activeTab = ref<Tab>('metrics')
@@ -257,7 +262,13 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
         <template #tabs>
           <CmkTab v-for="tab in TABS" :id="tab.id" :key="tab.id">
             <span class="graphing-designer-body__tab-label">
-              <span v-if="activeTab === tab.id" class="graphing-designer-body__tab-check">
+              <span
+                v-if="tab.id === 'metrics' && hasBlockingIssues"
+                class="graphing-designer-body__tab-icon"
+              >
+                <CmkIcon name="inline-error" size="large" aria-hidden="true" />
+              </span>
+              <span v-else-if="activeTab === tab.id" class="graphing-designer-body__tab-icon">
                 <CmkMultitoneIcon name="checkmark" primary-color="font" size="small" />
               </span>
               {{ tab.label }}
@@ -280,6 +291,7 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
               :create-services-available="createServicesAvailable"
               :metric-backend-default-title="metricBackendDefaultTitle"
               :title-macros="titleMacros"
+              :issues-by-row="issuesByRow"
               @add-calculation="slideoutOpen = true"
             />
           </CmkTabContent>
@@ -368,7 +380,7 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
   gap: var(--dimension-3);
 }
 
-.graphing-designer-body__tab-check {
+.graphing-designer-body__tab-icon {
   display: flex;
   line-height: 0;
 }

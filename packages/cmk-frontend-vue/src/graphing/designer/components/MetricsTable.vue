@@ -39,10 +39,13 @@ import {
   scalarColor
 } from '../drafts'
 import { type ItemId, type MetricBackendItem, isSingleLine, parseLineType } from '../types'
-import { isValid } from '../validation'
+import { type RowIssue, isValid } from '../validation'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
 import MetricBackendRuleSlideIn from './MetricBackendRuleSlideIn.vue'
 import RowEditor from './forms/RowEditor.vue'
+
+/** Shared so an unaffected row keeps the same identity across renders. */
+const NO_ISSUES: readonly RowIssue[] = Object.freeze([])
 
 const {
   store,
@@ -50,7 +53,8 @@ const {
   metricBackendAvailable,
   createServicesAvailable,
   metricBackendDefaultTitle,
-  titleMacros
+  titleMacros,
+  issuesByRow
 } = defineProps<{
   store: GraphItemsStore
   thresholds: { warning: string; critical: string }
@@ -59,6 +63,7 @@ const {
   /** What the engine expands `$DEFAULT_TITLE$` to for a metric-backend row. */
   metricBackendDefaultTitle: string
   titleMacros: TitleMacroGroup[]
+  issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
 }>()
 
 const emit = defineEmits<{
@@ -204,6 +209,14 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
 function onTitleChange(row: DesignerItem, title: string | undefined): void {
   store.patch(row.id, { title: title ?? '' })
 }
+
+function issuesOf(row: DesignerItem): readonly RowIssue[] {
+  return issuesByRow.get(row.id) ?? NO_ISSUES
+}
+
+function isBlocking(row: DesignerItem): boolean {
+  return issuesOf(row).length > 0
+}
 </script>
 
 <template>
@@ -257,7 +270,17 @@ function onTitleChange(row: DesignerItem, title: string | undefined): void {
             :aria-label="_t('Select row')"
             @update:model-value="tableRow.toggleSelected($event)"
           />
-          <BaseCell column-id="id" vertical-align="middle">{{ row.id }}</BaseCell>
+          <BaseCell column-id="id" vertical-align="middle">
+            <span class="graphing-metrics-table__id">
+              {{ row.id }}
+              <CmkIcon
+                v-if="isBlocking(row)"
+                name="inline-error"
+                size="small"
+                :aria-label="_t('Source %{id} prevents saving', { id: row.id })"
+              />
+            </span>
+          </BaseCell>
           <BaseCell column-id="source" vertical-align="middle" no-wrap>{{
             sourceTypeLabel(row.type)
           }}</BaseCell>
@@ -374,6 +397,12 @@ function onTitleChange(row: DesignerItem, title: string | undefined): void {
 .graphing-metrics-table__scroll {
   flex: 0 1 auto;
   min-height: 0;
+}
+
+.graphing-metrics-table__id {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dimension-3);
 }
 
 .graphing-metrics-table__toolbar {

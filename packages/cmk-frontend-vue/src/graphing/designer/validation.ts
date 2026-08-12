@@ -3,11 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { type ValidationIssue, validateFormula } from './calculation/formula'
 import type { DesignerItem } from './drafts'
-import type { GraphItem, ItemId } from './types'
+import { type GraphItem, type ItemId, domainOf, isFormula } from './types'
 
 /** An API field a source must carry before it can be saved. */
 type RequiredField = 'host_name' | 'service_name' | 'metric_name' | 'value'
+
+type FormulaIssueCode = ValidationIssue['code'] | 'ref-incomplete'
 
 type FieldIssue =
   | { field: 'title' | RequiredField; code: 'required' }
@@ -17,7 +20,9 @@ type FieldIssue =
       code: 'lookback-too-small' | 'percentile-out-of-range' | 'thresholds-unordered'
     }
 
-export type RowIssue = { id: ItemId } & FieldIssue
+type FormulaIssue = { field: 'ast'; code: FormulaIssueCode; ref: ItemId }
+
+export type RowIssue = { id: ItemId } & (FieldIssue | FormulaIssue)
 
 export type RowField = RowIssue['field']
 
@@ -107,4 +112,29 @@ export function validateRow(item: DesignerItem): RowIssue[] {
 /** Narrows a source the rules accept to the shape the API takes. */
 export function isValid(item: DesignerItem): item is GraphItem {
   return validateRow(item).length === 0
+}
+
+/** Every source's own blockers, plus the formula rules that span sources. */
+export function validateDesign(items: readonly DesignerItem[]): RowIssue[] {
+  const issues = items.flatMap(validateRow)
+  const valid = items.filter(isValid)
+  const known = new Set(items.map((item) => item.id))
+
+  for (const item of items) {
+    if (!isFormula(item)) {
+      continue
+    }
+    for (const issue of validateFormula(item.ast, valid, domainOf(item.type), item.id)) {
+      // `validateFormula` only sees the sources the rules accept, so a reference to one that
+      // exists but is still being filled in reaches it as unknown.
+      const incompleteRef = issue.code === 'unknown-ref' && known.has(issue.id)
+      issues.push({
+        id: item.id,
+        field: 'ast',
+        code: incompleteRef ? 'ref-incomplete' : issue.code,
+        ref: issue.id
+      })
+    }
+  }
+  return issues
 }

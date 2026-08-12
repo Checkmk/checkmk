@@ -10,6 +10,8 @@ import { type MockInstance, vi } from 'vitest'
 import MetricsTable from '@/graphing/designer/components/MetricsTable.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { type DesignerItem, newMetricBackendDraft } from '@/graphing/designer/drafts'
+import type { ItemId } from '@/graphing/designer/types'
+import type { RowIssue } from '@/graphing/designer/validation'
 
 import { constantItem, formulaItem, metricBackendItem, rrdMetricItem } from '../fixtures'
 
@@ -60,7 +62,8 @@ function renderTable(
       metricBackendAvailable,
       createServicesAvailable,
       metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
-      titleMacros: TITLE_MACROS
+      titleMacros: TITLE_MACROS,
+      issuesByRow: new Map<ItemId, RowIssue[]>()
     }
   })
   return { store, ...utils }

@@ -13,7 +13,7 @@ import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/Cm
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 
 import {
   GlobalRefreshControl,
@@ -35,10 +35,10 @@ import { useGraphItems } from './composables/useGraphItems'
 import { fromApiDataSource, toApiDataSources } from './drafts'
 import type { ItemId } from './types'
 import { pushUrlState, replaceUrlState } from './urlState'
-import { isValid } from './validation'
+import { type RowIssue, isValid, validateDesign } from './validation'
 
 const props = defineProps<CustomGraphDesigner>()
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
 
 // Single owner of the shared time-range default; header and body only read/update it.
 const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
@@ -96,10 +96,44 @@ watch(selectedGraph, (selected) => {
 
 const saveError = ref<string | null>(null)
 const isSaving = ref(false)
+/** Until a save has been tried, an unfinished source is work in progress, not an error. */
+const hasAttemptedSave = ref(false)
+const issuesAlert = ref<HTMLElement | null>(null)
+
+const blockingIssues = computed(() => validateDesign(store.items.value))
+
+const issuesByRow = computed(() => {
+  const byRow = new Map<ItemId, RowIssue[]>()
+  if (!hasAttemptedSave.value) {
+    return byRow
+  }
+  for (const issue of blockingIssues.value) {
+    byRow.set(issue.id, [...(byRow.get(issue.id) ?? []), issue])
+  }
+  return byRow
+})
+
+const showsSaveIssues = computed(() => hasAttemptedSave.value && blockingIssues.value.length > 0)
+const showsAlerts = computed(() => showsSaveIssues.value || saveError.value !== null)
+
+const blockedIds = computed(() => {
+  const blocked = new Set(blockingIssues.value.map((issue) => issue.id))
+  return store.items.value.filter((item) => blocked.has(item.id)).map((item) => item.id)
+})
+
+const blockedSummary = computed(() =>
+  _tn(
+    'Fix the issues with ID %{ids}, then try saving again.',
+    'Fix the issues with IDs %{ids}, then try saving again.',
+    blockedIds.value.length,
+    { ids: blockedIds.value.join(', ') }
+  )
+)
 
 function resetEditor(graph: CustomGraphObject): void {
   store.replaceAll(graph.extensions.content.data_sources.map(fromApiDataSource))
   graphOptions.value = graph.extensions.content.graph_options
+  hasAttemptedSave.value = false
   saveError.value = null
 }
 
@@ -199,12 +233,13 @@ function onCancelEdit(): void {
   replaceUrlState(urlState())
 }
 
-/** Rows the wire format cannot express: invalid sources and formulas with broken refs. */
-function invalidRowIds(): ItemId[] {
-  const keptIds = new Set(
-    toApiDataSources(store.items.value.filter(isValid)).map((source) => source.id)
-  )
-  return store.items.value.map((item) => item.id).filter((id) => !keptIds.has(id))
+// The alert box carries role="alert", so its first appearance is announced on its own; a repeat
+// attempt leaves the DOM unchanged, with nothing to announce, and moves focus there instead.
+function revealBlockingIssues(announceByFocus: boolean): void {
+  issuesAlert.value?.scrollIntoView({ block: 'nearest' })
+  if (announceByFocus) {
+    issuesAlert.value?.focus({ preventScroll: true })
+  }
 }
 
 async function save(): Promise<void> {
@@ -213,15 +248,13 @@ async function save(): Promise<void> {
   if (isSaving.value || edited === null || editedOptions === null) {
     return
   }
-  const invalid = invalidRowIds()
-  if (invalid.length > 0) {
-    saveError.value = _t(
-      'These rows are incomplete or reference incomplete rows and cannot be saved: %{ids}',
-      { ids: invalid.join(', ') }
-    )
+  const wasBlocked = showsSaveIssues.value
+  saveError.value = null
+  hasAttemptedSave.value = true
+  if (blockingIssues.value.length > 0) {
+    void nextTick(() => revealBlockingIssues(wasBlocked))
     return
   }
-  saveError.value = null
   isSaving.value = true
   try {
     const result = await updateCustomGraph(
@@ -237,6 +270,7 @@ async function save(): Promise<void> {
       },
       ownerParam.value
     )
+    hasAttemptedSave.value = false
     loaded.value = result
     mode.value = 'view'
     replaceUrlState(urlState())
@@ -300,12 +334,22 @@ async function save(): Promise<void> {
         :create-services-available="create_services_available"
         :metric-backend-default-title="metric_backend_default_title"
         :title-macros="title_macros"
+        :issues-by-row="issuesByRow"
         @update-graph-options="graphOptions = $event"
       >
         <template #alerts>
-          <CmkAlertBox v-if="mode === 'edit' && saveError !== null" variant="error">
-            {{ saveError }}
-          </CmkAlertBox>
+          <div v-if="mode === 'edit' && showsAlerts" ref="issuesAlert" tabindex="-1">
+            <CmkAlertBox
+              v-if="showsSaveIssues"
+              class="graphing-custom-graph-designer-app__issues-alert"
+              variant="error"
+            >
+              {{ blockedSummary }}
+            </CmkAlertBox>
+            <CmkAlertBox v-if="saveError !== null" variant="error">
+              {{ saveError }}
+            </CmkAlertBox>
+          </div>
         </template>
       </DesignerBody>
     </div>
@@ -366,5 +410,9 @@ async function save(): Promise<void> {
 
 .graphing-custom-graph-designer-app__content > * {
   margin: var(--dimension-6);
+}
+
+.graphing-custom-graph-designer-app__issues-alert {
+  align-items: center;
 }
 </style>

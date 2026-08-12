@@ -30,17 +30,6 @@ def get_extra_setup(module_name):
     """
     return {
         "matplotlib": """
-	    # meson runs harfbuzz's gen-hb-version.py through its
-            # "#!/usr/bin/env python3" shebang. LD_LIBRARY_PATH (see build_cmd) puts
-            # our bundled Python's lib dir first, so a system python3 that links
-            # libpython dynamically -- sles-16.0 does, with a colliding 3.13 soname --
-            # loads the wrong libpython and aborts before running the script. Resolve
-            # python3 to the interpreter LD_LIBRARY_PATH already matches.
-            export PATH="$$(dirname "$$PYTHON_EXECUTABLE"):$$PATH"
-            # Build in a private, guaranteed-writable/empty TMPDIR instead of the shared
-            # host /tmp: pip/meson-python stage the harfbuzz/libraqm/etc.
-            export TMPDIR="$$HOME/tmp_matplotlib"
-            mkdir -p "$$TMPDIR"
             export MESON_PACKAGE_CACHE_DIR="$$HOME/mpl_packagecache"
             mkdir -p "$$MESON_PACKAGE_CACHE_DIR"
             cp "$(execpath @matplotlib_harfbuzz_src//file)" "$$MESON_PACKAGE_CACHE_DIR/harfbuzz-14.1.0.tar.xz"
@@ -126,6 +115,10 @@ build_cmd = """
     # never writes bytecode back into @python's output.
     export PYTHON_EXECUTABLE=$$PWD/$$EXT_DEPS_PATH/{python_dir}/python/bin/python3
 
+    # Keep "#!/usr/bin/env python3" in vendored build scripts on our interpreter:
+    # LD_LIBRARY_PATH above would hand a system python3 our libpython.
+    export PATH="$$(dirname "$$PYTHON_EXECUTABLE"):$$PATH"
+
     # Workaround for git execution issue: pip may call git for VCS deps, but LD_LIBRARY_PATH
     # is set to our OpenSSL which conflicts with system git. The wrapper unsets it.
     mkdir -p $$TMPDIR/workdir/$$MODULE_NAME
@@ -206,20 +199,7 @@ build_cmd = """
       --use-feature=build-constraint \\
       --build-constraint="{constraints}" \\
       --prefix="$$HOME/$$MODULE_NAME" \\
-      {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout" || true
-    # The `|| true` above keeps `set -e` from aborting on pip's exit code before
-    # we get a chance to inspect PIPESTATUS and dump diagnostics below.
-    PIP_INSTALL_STATUS=$${{PIPESTATUS[0]}}
-    if [ "$$PIP_INSTALL_STATUS" -ne 0 ]; then
-        # pip/meson swallow the actual subprocess output on failure and only point
-        # to a meson-log.txt buried in the (ephemeral) sandbox tmpdir -- e.g. the
-        # harfbuzz subproject build inside matplotlib's meson-python backend just
-        # reports "failed with status 1" with no further detail in the CI console.
-        # Dump any such log here so the real traceback survives into the CI log.
-        echo "pip install for $$MODULE_NAME failed (exit $$PIP_INSTALL_STATUS); dumping any meson-log.txt found under TMPDIR:"
-        find "$$TMPDIR" -name meson-log.txt -print -exec cat {{}} \\; 2>/dev/null
-        exit "$$PIP_INSTALL_STATUS"
-    fi
+      {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
 
     tar cf $@ -C $$MODULE_NAME .
 """

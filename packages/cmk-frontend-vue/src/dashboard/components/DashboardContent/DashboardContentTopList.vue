@@ -5,12 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
-import CmkPerfometer from 'cmk-ui-library/components/CmkPerfometer.vue'
 import { type AjaxResponseError, cmkAjax } from 'cmk-ui-library/lib/ajax'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { type Ref, computed, onBeforeMount, ref, watch } from 'vue'
+import { computed, onBeforeMount, ref, watch } from 'vue'
 
+import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
+import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type {
@@ -64,18 +64,6 @@ watch(dataParameters, () => {
   void fetchData()
 })
 
-const headers: Ref<(string | TranslatedString)[]> = computed(() => {
-  const _headers: (string | TranslatedString)[] = [_t('Host')]
-  if (props.content.columns.show_service_description === true) {
-    _headers.push(_t('Service'))
-  }
-  if (data.value !== undefined) {
-    _headers.push(data.value.full_metric_name)
-  }
-  return _headers
-})
-
-const errorHeaders: string[] = [_t('Host'), _t('Service'), _t('Check command')]
 const errorMessage: string = _t(
   `Due to a limitation in how Checkmk handles metrics internally, the results contain conflicting metrics and this top list may be incorrect or incomplete.\n
     This is caused by the service check commands with an example host and service in the following table.\n
@@ -111,12 +99,64 @@ const checkCommandViewUrl = (error: TopListError) => {
   return `view.py?${urlParams}`
 }
 
-const valueRange: Ref<[number, number] | undefined> = computed(() => {
-  if (data.value) {
-    return [data.value.value_range.min_value, data.value.value_range.max_value]
+// Links to the monitoring views are suppressed on public dashboards, where the
+// recipient has no session to follow them with.
+function link(url: string): { href?: string } {
+  return isPublicDashboard ? {} : { href: url }
+}
+
+const columns = computed<RankedTableColumn[]>(() => {
+  const showBar = props.content.columns.show_bar_visualization !== false
+  const result: RankedTableColumn[] = [
+    { key: 'host', title: _t('Host'), render: 'text', bar: false }
+  ]
+  if (props.content.columns.show_service_description === true) {
+    result.push({ key: 'service', title: _t('Service'), render: 'text', bar: false })
   }
-  return undefined
+  result.push({
+    key: 'value',
+    title: data.value?.full_metric_name ?? '',
+    render: 'count',
+    bar: showBar,
+    // The backend derives the range from the widget's "display range" setting.
+    ...(showBar && data.value !== undefined
+      ? {
+          barRange: [data.value.value_range.min_value, data.value.value_range.max_value] as [
+            number,
+            number
+          ]
+        }
+      : {})
+  })
+  return result
 })
+
+// The backend delivers the entries pre-ranked, pre-formatted and colored by metric.
+const rows = computed<RankedTableRow[]>(() =>
+  (data.value?.entries ?? []).map((entry) => ({
+    host: { value: entry.host_name, ...link(hostViewUrl(entry)) },
+    service: { value: entry.service_description, ...link(serviceViewUrl(entry)) },
+    value: {
+      value: entry.metric.value,
+      formatted: entry.metric.formatted,
+      color: entry.metric.color
+    }
+  }))
+)
+
+const errorColumns: RankedTableColumn[] = [
+  { key: 'host', title: _t('Host'), render: 'text', bar: false },
+  { key: 'service', title: _t('Service'), render: 'text', bar: false },
+  { key: 'checkCommand', title: _t('Check command'), render: 'text', bar: false }
+]
+
+const errorRows = computed<RankedTableRow[]>(() =>
+  (data.value?.errors ?? []).map((error) => ({
+    host: { value: error.host_name, ...link(hostViewUrl(error)) },
+    service: { value: error.service_description, ...link(serviceViewUrl(error)) },
+    checkCommand: { value: error.check_command, ...link(checkCommandViewUrl(error)) }
+  }))
+)
 </script>
 
 <template>
@@ -132,122 +172,21 @@ const valueRange: Ref<[number, number] | undefined> = computed(() => {
       {{ _t('Loading Top list content') }}...
     </div>
     <div v-else>
-      <table v-if="data!.entries.length" class="db-content-top-list__table">
-        <tbody>
-          <tr>
-            <th v-for="(header, index) in headers" :key="index">{{ header }}</th>
-          </tr>
-          <tr v-for="(entry, index) in data!.entries" :key="index">
-            <td>
-              <a v-if="!isPublicDashboard" :href="hostViewUrl(entry)">{{ entry.host_name }}</a>
-              <span v-else>{{ entry.host_name }}</span>
-            </td>
-            <td v-if="content.columns.show_service_description === true">
-              <a v-if="!isPublicDashboard" :href="serviceViewUrl(entry)">{{
-                entry.service_description
-              }}</a>
-              <span v-else>{{ entry.service_description }}</span>
-            </td>
-            <td v-if="content.columns.show_bar_visualization === false">
-              {{ entry.metric.formatted }}
-            </td>
-            <td v-else class="db-content-top-list__perfometer">
-              <CmkPerfometer
-                :value="entry.metric.value"
-                :value-range="valueRange!"
-                :formatted="entry.metric.formatted"
-                :color="entry.metric.color"
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <CmkRankedTable v-if="rows.length" :columns="columns" :rows="rows" />
       <div v-else class="db-content-top-list__no-entries">
         {{ _t('No entries') }}
       </div>
-      <CmkAlertBox v-if="data!.errors!.length" variant="error">
-        <div class="db-content-top-list__error-msg">{{ errorMessage }}</div>
-      </CmkAlertBox>
-      <table v-if="data!.errors!.length" class="db-content-top-list__table">
-        <tbody>
-          <tr>
-            <th v-for="(header, index) in errorHeaders" :key="index">{{ header }}</th>
-          </tr>
-          <tr v-for="(error, index) in data!.errors" :key="index">
-            <td>
-              <a v-if="!isPublicDashboard" :href="hostViewUrl(error)">{{ error.host_name }}</a>
-              <span v-else>{{ error.host_name }}</span>
-            </td>
-            <td>
-              <a v-if="!isPublicDashboard" :href="serviceViewUrl(error)">{{
-                error.service_description
-              }}</a>
-              <span v-else>{{ error.service_description }}</span>
-            </td>
-            <td>
-              <a v-if="!isPublicDashboard" :href="checkCommandViewUrl(error)">{{
-                error.check_command
-              }}</a>
-              <span v-else>{{ error.check_command }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <template v-if="errorRows.length">
+        <CmkAlertBox variant="error">
+          <div class="db-content-top-list__error-msg">{{ errorMessage }}</div>
+        </CmkAlertBox>
+        <CmkRankedTable :columns="errorColumns" :rows="errorRows" />
+      </template>
     </div>
   </DashboardContentContainer>
 </template>
 
 <style scoped>
-.db-content-top-list__table {
-  width: 100%;
-  border-collapse: collapse;
-  border-spacing: 0;
-  empty-cells: show;
-
-  tr {
-    overflow: hidden;
-    box-sizing: border-box;
-    transition: all 0.15s ease-in;
-
-    &:nth-child(even) {
-      background-color: var(--even-tr-bg-color);
-    }
-
-    &:nth-child(odd) {
-      background-color: var(--odd-tr-bg-color);
-    }
-
-    th {
-      height: var(--dimension-8);
-      padding: 0 var(--dimension-4);
-      letter-spacing: 1px;
-      text-align: left;
-      vertical-align: middle;
-      color: var(--font-color-dimmed);
-      background-color: var(--odd-tr-bg-color);
-    }
-
-    td {
-      height: 26px;
-      padding: var(--dimension-2) var(--dimension-4);
-      text-overflow: ellipsis;
-      vertical-align: middle;
-
-      a {
-        text-decoration: none;
-
-        &:hover {
-          text-decoration: underline;
-        }
-      }
-    }
-  }
-}
-
-.db-content-top-list__perfometer {
-  width: 150px;
-}
-
 .db-content-top-list__no-entries {
   padding: var(--spacing);
 }

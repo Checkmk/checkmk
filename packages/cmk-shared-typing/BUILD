@@ -39,6 +39,7 @@ SOURCES_COMMON = [
     "welcome.json",
     "agent_slideout.json",
     "product_usage_analytics.json",
+    "trial_mode_selection.json",
     "two_factor_auth.json",
     "monitoring/all_hosts.json",
     "monitoring/page_link_button.json",

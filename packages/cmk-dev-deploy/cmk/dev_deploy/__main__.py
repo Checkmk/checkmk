@@ -20,6 +20,7 @@ import contextlib
 
 from cmk.dev_deploy.cli import parse_args
 from cmk.dev_deploy.core import output
+from cmk.dev_deploy.core.bazel import request_shared_server
 from cmk.dev_deploy.deployers.bazel_builder import build_and_install
 from cmk.dev_deploy.deployers.config_deployer import deploy_config
 from cmk.dev_deploy.deployers.wheel_deployer import deploy_wheels, has_wheel_changes
@@ -805,6 +806,8 @@ def main(argv: list[str] | None = None) -> int:
     if os.getuid() == 0:
         output.error("cmk-dev-deploy must not be run as root.")
         return 1
+    if args.shared_bazel_server:
+        request_shared_server()
 
     try:
         repo_root = find_repo_root()

@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 
 from cmk.dev_deploy.core import output
+from cmk.dev_deploy.core.bazel import bazel_command
 from cmk.dev_deploy.core.subprocess_utils import run_checked
 from cmk.dev_deploy.core.timeouts import BAZEL_BUILD
 from cmk.dev_deploy.errors import WheelDeployError
@@ -83,15 +84,17 @@ def deploy_wheels(repo_root: Path, site: SiteInfo) -> WheelDeployResult:
     _check_site_layout(site)
 
     result = run_checked(
-        [
-            "bazel",
-            "run",
-            "--noshow_progress",
-            DEPLOY_PYTHON_TARGET,
-            f"--cmk_edition={site.edition.value}",
-            "--",
-            str(site.root),
-        ],
+        bazel_command(
+            [
+                "run",
+                "--noshow_progress",
+                DEPLOY_PYTHON_TARGET,
+                f"--cmk_edition={site.edition.value}",
+                "--",
+                str(site.root),
+            ],
+            repo_root,
+        ),
         cwd=repo_root,
         timeout=BAZEL_BUILD,
         env=_uv_cache_env(),

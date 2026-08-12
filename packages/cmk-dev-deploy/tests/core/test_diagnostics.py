@@ -108,6 +108,8 @@ class TestCollectBazelState:
             state = _collect_bazel_state(tmp_path)
         assert state["output_base"] == str(tmp_path)
         assert state["output_base_exists"] is True
+        assert "deploy_output_base" in state
+        assert "shared_server" in state
 
     def test_handles_timeout(self, tmp_path: Path) -> None:
         """Bazel info timeout does not crash the collector."""

@@ -160,6 +160,45 @@ A leftover OverlayFS mount from an older cmk-dev-deploy version is detected
 and refused with manual recovery instructions (`umount` plus removal of
 `/var/tmp/cmk-dev-deploy/<site>`).
 
+## A Dedicated Bazel Server
+
+Bazel executes one command at a time per output base. On the checkout's
+default server, every deploy would queue behind whatever `bazel test` or
+`bazel build` you have running -- and block it in return. The tool
+therefore runs all of its Bazel commands (`build`, `run //:deploy-python`,
+`query`, `cquery`, `info`) against a dedicated output base:
+
+```
+~/.cache/cmk-dev-deploy/bazel/<hash of the checkout path>
+```
+
+Deploys and your own Bazel commands run in parallel. What the second
+server costs, and why it is cheap:
+
+- **Disk:** a second output base (several GB once warm). The repo-wide
+  shared disk cache (`--disk_cache` in `.bazelrc`) makes actions built by
+  either server cache hits for the other, so the duplication costs disk,
+  not build time.
+- **RAM:** a second server JVM, bounded to 3 GB.
+- **First deploy:** pays one-time cold analysis and cache-served rebuilds;
+  afterwards the server stays warm. Because the deploy server only ever
+  sees the site edition's configuration, its analysis cache is never
+  discarded by configuration flips.
+
+The deploy server never touches the checkout's `bazel-bin`/`bazel-out`
+convenience symlinks: building commands run with `--symlink_prefix=/`
+(create no symlinks), and artifacts are located via `bazel info` and
+`bazel cquery` instead.
+
+Opt out with `--shared-bazel-server` (or `CDD_SHARED_BAZEL_SERVER=1`) to
+use the checkout's default server, e.g. when disk space is tight.
+`CDD_BAZEL_OUTPUT_BASE` overrides the output base location. To reclaim
+the disk space:
+
+```bash
+bazel --output_base=<path> clean --expunge    # or simply: rm -rf <path>
+```
+
 ## Modes of Operation
 
 ### One-Shot Deploy (default)
@@ -248,23 +287,24 @@ echo 'v260' > .site
 
 ### Deploy Flags
 
-| Flag                 | Short | Default     | Description                                                                                                                                                                                                       |
-| -------------------- | ----- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--site NAME`        | `-s`  | auto-detect | Target OMD site name                                                                                                                                                                                              |
-| `--info`             |       |             | Show site info and exit without deploying                                                                                                                                                                         |
-| `--full`             |       |             | Force full deploy: delete and recreate the clone, deploy everything                                                                                                                                               |
-| `--dry-run`          | `-n`  |             | Show deploy plan without executing                                                                                                                                                                                |
-| `--watch`            | `-w`  |             | Watch for changes and auto-deploy                                                                                                                                                                                 |
-| `--frontend`         |       |             | Start iBazel frontend supervisor after deploying                                                                                                                                                                  |
-| `--commit REF`       |       |             | Use a specific commit/branch/tag for change detection instead of the working tree (implies `--full`). Manifest and builds still use the current working tree — check out the ref first to deploy its exact state. |
-| `--verbose`          | `-v`  | 0           | Increase verbosity (`-v` for detailed output)                                                                                                                                                                     |
-| `--jobs N`           | `-j`  | 4           | Max parallel deployment workers                                                                                                                                                                                   |
-| `--no-restart`       |       |             | Deploy files only, skip service restarts                                                                                                                                                                          |
-| `--rebuild-manifest` |       |             | Force manifest regeneration before deploying                                                                                                                                                                      |
-| `--purge`            |       |             | Revert site to original state and remove deploy data, then exit (no deploy)                                                                                                                                       |
-| `--print-setup`      |       |             | Print the admin commands that set up the clone backend, then exit                                                                                                                                                 |
-| `--remove-setup`     |       |             | Remove the clone backend's sudoers rule, then exit                                                                                                                                                                |
-| `--json-errors`      |       |             | On error, output a JSON diagnostic bundle to stdout (for automation)                                                                                                                                              |
+| Flag                    | Short | Default     | Description                                                                                                                                                                                                       |
+| ----------------------- | ----- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--site NAME`           | `-s`  | auto-detect | Target OMD site name                                                                                                                                                                                              |
+| `--info`                |       |             | Show site info and exit without deploying                                                                                                                                                                         |
+| `--full`                |       |             | Force full deploy: delete and recreate the clone, deploy everything                                                                                                                                               |
+| `--dry-run`             | `-n`  |             | Show deploy plan without executing                                                                                                                                                                                |
+| `--watch`               | `-w`  |             | Watch for changes and auto-deploy                                                                                                                                                                                 |
+| `--frontend`            |       |             | Start iBazel frontend supervisor after deploying                                                                                                                                                                  |
+| `--commit REF`          |       |             | Use a specific commit/branch/tag for change detection instead of the working tree (implies `--full`). Manifest and builds still use the current working tree — check out the ref first to deploy its exact state. |
+| `--verbose`             | `-v`  | 0           | Increase verbosity (`-v` for detailed output)                                                                                                                                                                     |
+| `--jobs N`              | `-j`  | 4           | Max parallel deployment workers                                                                                                                                                                                   |
+| `--no-restart`          |       |             | Deploy files only, skip service restarts                                                                                                                                                                          |
+| `--rebuild-manifest`    |       |             | Force manifest regeneration before deploying                                                                                                                                                                      |
+| `--shared-bazel-server` |       |             | Run bazel commands on the checkout's default server instead of the tool's dedicated one (deploys then queue behind other bazel commands)                                                                          |
+| `--purge`               |       |             | Revert site to original state and remove deploy data, then exit (no deploy)                                                                                                                                       |
+| `--print-setup`         |       |             | Print the admin commands that set up the clone backend, then exit                                                                                                                                                 |
+| `--remove-setup`        |       |             | Remove the clone backend's sudoers rule, then exit                                                                                                                                                                |
+| `--json-errors`         |       |             | On error, output a JSON diagnostic bundle to stdout (for automation)                                                                                                                                              |
 
 ### Flag Combinations
 

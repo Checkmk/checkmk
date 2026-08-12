@@ -30,6 +30,7 @@ from types import MappingProxyType
 from typing import Any
 
 from cmk.dev_deploy.core import output
+from cmk.dev_deploy.core.bazel import bazel_command
 from cmk.dev_deploy.core.output import Spinner
 from cmk.dev_deploy.manifest.reader import MANIFEST_VERSION
 from cmk.dev_deploy.manifest.staleness import save_manifest_hashes
@@ -454,13 +455,14 @@ def _run_bazel_query(
     *,
     timeout: int = _QUERY_TIMEOUT,
 ) -> subprocess.CompletedProcess[str] | None:
-    """Run a bazel command and return the result, or ``None`` on timeout/failure.
+    """Run a bazel command (given without the leading ``bazel``) on the deploy server.
 
-    Accepts exit code 3 (partial results with ``--keep_going``).
+    Returns the result, or ``None`` on timeout/failure.  Accepts exit
+    code 3 (partial results with ``--keep_going``).
     """
     try:
         result = subprocess.run(
-            args,
+            bazel_command(args, repo_root),
             capture_output=True,
             text=True,
             check=False,
@@ -544,13 +546,15 @@ def _cquery_packaging_targets(
         # Build union expression: target1 + target2 + ...
         union_expr = " + ".join(targets)
         result = subprocess.run(
-            [
-                "bazel",
-                "cquery",
-                union_expr,
-                "--output=starlark",
-                f"--starlark:file={formatter_path}",
-            ],
+            bazel_command(
+                [
+                    "cquery",
+                    union_expr,
+                    "--output=starlark",
+                    f"--starlark:file={formatter_path}",
+                ],
+                repo_root,
+            ),
             capture_output=True,
             text=True,
             check=False,
@@ -591,7 +595,7 @@ def _query_deps_packages_targets(repo_root: Path) -> list[str]:
     # pkg_tar nodes themselves and silently drops their contents.
     query = 'kind("pkg_files rule", deps(//omd:deps_packages, 3))'
     result = _run_bazel_query(
-        ["bazel", "query", query, "--output=label", "--keep_going"],
+        ["query", query, "--output=label", "--keep_going"],
         repo_root,
     )
     if result is None:
@@ -616,7 +620,7 @@ def _query_wheel_prefixes(repo_root: Path) -> list[str]:
     """
     query = "labels(whls, //:deploy-python_gen)"
     result = _run_bazel_query(
-        ["bazel", "query", query, "--output=label", "--keep_going"],
+        ["query", query, "--output=label", "--keep_going"],
         repo_root,
     )
     if result is None:
@@ -818,7 +822,7 @@ def _query_install_spec_extensions(
     union_expr = " + ".join(sorted(set(targets)))
     srcs_query = f"labels(srcs, deps({union_expr}))"
     result = _run_bazel_query(
-        ["bazel", "query", srcs_query, "--output=label", "--keep_going"],
+        ["query", srcs_query, "--output=label", "--keep_going"],
         repo_root,
     )
     if result is None:
@@ -1075,7 +1079,6 @@ def _compute_deploy_deps(
         union_expr = " + ".join(unique_targets)
         result = _run_bazel_query(
             [
-                "bazel",
                 "query",
                 f"deps({union_expr}, 1)",
                 "--output=graph",

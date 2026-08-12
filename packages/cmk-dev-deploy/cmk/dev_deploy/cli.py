@@ -85,6 +85,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Force manifest regeneration before deploying",
     )
     parser.add_argument(
+        "--shared-bazel-server",
+        action="store_true",
+        help="Run bazel commands on the checkout's default server instead of the "
+        "tool's dedicated one (deploys then queue behind other bazel commands, "
+        "but no disk is spent on a second output base)",
+    )
+    parser.add_argument(
         "--frontend",
         action="store_true",
         help="Start iBazel frontend supervisor after deploying (foreground, Ctrl-C to stop)",

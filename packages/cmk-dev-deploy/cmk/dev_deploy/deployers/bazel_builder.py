@@ -18,6 +18,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.dev_deploy.core import output
+from cmk.dev_deploy.core.bazel import bazel_command
 from cmk.dev_deploy.core.subprocess_utils import run_checked
 from cmk.dev_deploy.core.timeouts import (
     BAZEL_BUILD,
@@ -62,7 +63,7 @@ def specs_for_packages(
 def _get_bazel_info(key: str, repo_root: Path, edition: str) -> str:
     """Retrieve a value from ``bazel info`` (in the site's configuration)."""
     return run_checked(
-        ["bazel", "info", f"--cmk_edition={edition}", key],
+        bazel_command(["info", f"--cmk_edition={edition}", key], repo_root),
         cwd=repo_root,
         timeout=BAZEL_INFO,
         error_cls=BazelBuildError,
@@ -98,10 +99,11 @@ def _build_targets(
     and alternating flag values between invocations would discard
     Bazel's analysis cache (seconds of re-analysis each time).
     """
-    cmd: list[str] = ["bazel", "build", f"--cmk_edition={edition}"]
+    args: list[str] = ["build", f"--cmk_edition={edition}"]
     if version is not None:
-        cmd.append(f"--cmk_version={version}")
-    cmd.extend(targets)
+        args.append(f"--cmk_version={version}")
+    args.extend(targets)
+    cmd = bazel_command(args, repo_root)
 
     if verbose:
         # Pause the spinner so Bazel progress output streams cleanly.
@@ -155,7 +157,7 @@ def _find_artifact_cquery(
     names, so cquery is needed to find the actual output path.
     """
     result = run_checked(
-        ["bazel", "cquery", f"--cmk_edition={edition}", "--output=files", label],
+        bazel_command(["cquery", f"--cmk_edition={edition}", "--output=files", label], repo_root),
         cwd=repo_root,
         timeout=BAZEL_CQUERY,
         error_cls=BazelBuildError,

@@ -25,6 +25,7 @@ from datetime import datetime, UTC
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from cmk.dev_deploy.core.bazel import bazel_command, deploy_output_base, use_shared_server
 from cmk.dev_deploy.core.timeouts import BAZEL_INFO_QUICK
 from cmk.dev_deploy.errors import DeployError
 
@@ -197,11 +198,13 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
         return state
 
     cwd = str(repo_root)
+    state["shared_server"] = use_shared_server()
+    state["deploy_output_base"] = str(deploy_output_base(repo_root))
 
-    # Get output_base
+    # Get output_base (as the deploy server itself reports it)
     try:
         result = subprocess.run(
-            ["bazel", "info", "output_base"],
+            bazel_command(["info", "output_base"], repo_root),
             capture_output=True,
             text=True,
             check=False,
@@ -218,7 +221,7 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
     # Get execution root
     try:
         result = subprocess.run(
-            ["bazel", "info", "execution_root"],
+            bazel_command(["info", "execution_root"], repo_root),
             capture_output=True,
             text=True,
             check=False,
@@ -236,7 +239,7 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
     # Bazel server PID + memory
     try:
         result = subprocess.run(
-            ["bazel", "info", "server_pid"],
+            bazel_command(["info", "server_pid"], repo_root),
             capture_output=True,
             text=True,
             check=False,

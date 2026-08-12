@@ -8,17 +8,25 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
+from cmk.dev_deploy.core.bazel import OUTPUT_BASE_ENV, SHARED_SERVER_ENV
 from cmk.dev_deploy.deployers.bazel_builder import _build_targets, _install_binary
 
 
 class TestBuildCommand:
     """Every configuration-creating bazel command pins the site's edition."""
 
-    def test_build_pins_edition(self, tmp_path: Path) -> None:
+    def test_build_pins_edition_on_deploy_server(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv(OUTPUT_BASE_ENV, "/ob")
+        monkeypatch.delenv(SHARED_SERVER_ENV, raising=False)
         with patch("cmk.dev_deploy.deployers.bazel_builder.run_checked") as run:
             _build_targets(["//pkg:target"], tmp_path, None, "pro")
         cmd = run.call_args.args[0]
-        assert cmd[:3] == ["bazel", "build", "--cmk_edition=pro"]
+        assert cmd[:2] == ["bazel", "--output_base=/ob"]
+        assert "--cmk_edition=pro" in cmd
         assert cmd[-1] == "//pkg:target"
 
     def test_build_with_version_flag(self, tmp_path: Path) -> None:

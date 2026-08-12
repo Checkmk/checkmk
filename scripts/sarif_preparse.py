@@ -8,15 +8,15 @@ import json
 import sys
 from pathlib import Path
 
-from sarif import __version__ as SARIF_TOOLS_PACKAGE_VERSION  # type: ignore[import-untyped]
-from sarif.operations import copy_op  # type: ignore[import-untyped]
-from sarif.sarif_file import SarifFile, SarifFileSet  # type: ignore[import-untyped]
+from sarif import __version__ as SARIF_TOOLS_PACKAGE_VERSION
+from sarif.operations import copy_op
+from sarif.sarif_file import SarifFile, SarifFileSet
 
 SARIF_MIN_SIZE = 0
 
 
 def load_all(root_dir: Path) -> SarifFileSet:
-    results = SarifFileSet()
+    results = SarifFileSet()  # type: ignore[no-untyped-call]
     # Some buggy linters do not follow the SARIF spec and are missing the
     # `results` key. Let's just count the occurrences.
     skipped_without_results = 0
@@ -26,7 +26,7 @@ def load_all(root_dir: Path) -> SarifFileSet:
                 continue
 
             with file_path.open("rt") as fd:
-                sarif_fd = SarifFile(file_path, json.load(fd))
+                sarif_fd = SarifFile(file_path, json.load(fd))  # type: ignore[no-untyped-call]
                 try:
                     sarif_fd.runs[0].get_results()
                 except KeyError:

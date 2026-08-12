@@ -32,7 +32,6 @@ import { useRowLabels } from '../composables/useRowLabels'
 import { useTitleMacroHelp } from '../composables/useTitleMacroHelp'
 import {
   type DesignerItem,
-  isComplete,
   newConstantDraft,
   newMetricBackendDraft,
   newRrdMetricDraft,
@@ -40,6 +39,7 @@ import {
   scalarColor
 } from '../drafts'
 import { type ItemId, type MetricBackendItem, isSingleLine, parseLineType } from '../types'
+import { isValid } from '../validation'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
 import MetricBackendRuleSlideIn from './MetricBackendRuleSlideIn.vue'
 import RowEditor from './forms/RowEditor.vue'
@@ -157,7 +157,7 @@ function rowActionsFor(row: DesignerItem): CellAction[] {
     metricBackendAvailable &&
     createServicesAvailable &&
     row.type === 'metric_backend' &&
-    isComplete(row)
+    isValid(row)
   ) {
     return [
       ...rowActions,
@@ -181,7 +181,7 @@ function onRowAction(row: DesignerItem, action: CellAction): void {
     }
   } else if (action.id === 'delete') {
     rowDelete.request([row.id])
-  } else if (action.id === 'add-rule' && row.type === 'metric_backend' && isComplete(row)) {
+  } else if (action.id === 'add-rule' && row.type === 'metric_backend' && isValid(row)) {
     metricBackendRuleItem.value = row
   }
 }

@@ -15,13 +15,13 @@ import {
   type FetchCustomGraphDataRequest,
   fetchCustomGraphData
 } from '../api'
-import { type DesignerItem, toApiDataSources } from '../drafts'
-import type { ApiDataSource, ItemId } from '../types'
+import { toApiDataSources } from '../drafts'
+import type { ApiDataSource, GraphItem, ItemId } from '../types'
 
 export type ApiGraphOptions = FetchCustomGraphDataRequest['content']['graph_options']
 
 export interface UseCustomGraphDataOptions {
-  getItems: () => readonly DesignerItem[]
+  getItems: () => readonly GraphItem[]
   getGraphOptions: () => ApiGraphOptions
   getRequestedTimeRange: () => RequestedTimeRange
   getConsolidationFn: () => ConsolidationFn

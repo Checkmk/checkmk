@@ -35,6 +35,7 @@ import { useGraphItems } from './composables/useGraphItems'
 import { fromApiDataSource, toApiDataSources } from './drafts'
 import type { ItemId } from './types'
 import { pushUrlState, replaceUrlState } from './urlState'
+import { isValid } from './validation'
 
 const props = defineProps<CustomGraphDesigner>()
 const { _t } = usei18n()
@@ -198,9 +199,11 @@ function onCancelEdit(): void {
   replaceUrlState(urlState())
 }
 
-/** Rows the wire format cannot express: incomplete drafts and formulas with broken refs. */
+/** Rows the wire format cannot express: invalid sources and formulas with broken refs. */
 function invalidRowIds(): ItemId[] {
-  const keptIds = new Set(toApiDataSources(store.items.value).map((source) => source.id))
+  const keptIds = new Set(
+    toApiDataSources(store.items.value.filter(isValid)).map((source) => source.id)
+  )
   return store.items.value.map((item) => item.id).filter((id) => !keptIds.has(id))
 }
 
@@ -229,7 +232,7 @@ async function save(): Promise<void> {
         metadata: edited.graph.extensions.metadata,
         content: {
           graph_options: editedOptions,
-          data_sources: toApiDataSources(store.items.value)
+          data_sources: toApiDataSources(store.items.value.filter(isValid))
         }
       },
       ownerParam.value

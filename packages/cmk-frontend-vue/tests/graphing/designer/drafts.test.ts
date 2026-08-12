@@ -4,10 +4,6 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import {
-  type DesignerItem,
-  isComplete,
-  newConstantDraft,
-  newMetricBackendDraft,
   newRrdMetricDraft,
   newRrdQueryDraft,
   newScalarDraft,
@@ -16,104 +12,28 @@ import {
   scalarColor,
   toApiDataSources
 } from '@/graphing/designer/drafts'
-import { DEFAULT_TITLE_MACRO } from '@/graphing/designer/types'
+import { DEFAULT_TITLE_MACRO, type GraphItem } from '@/graphing/designer/types'
 
-import {
-  constantItem,
-  formulaItem,
-  metricBackendItem,
-  rrdMetricItem,
-  rrdQueryItem,
-  scalarItem
-} from './fixtures'
+import { constantItem, formulaItem, rrdMetricItem } from './fixtures'
 
 const THRESHOLDS = { warning: '#ffd000', critical: '#ff3232' }
 
-describe('isComplete', () => {
-  test('a fresh RRD metric draft is incomplete until host, service and metric are set', () => {
-    const draft = newRrdMetricDraft('A', '#123456')
-    expect(isComplete(draft)).toBe(false)
-    expect(isComplete({ ...draft, host_name: 'h' })).toBe(false)
-    expect(isComplete({ ...draft, host_name: 'h', service_name: 's' })).toBe(false)
-    expect(isComplete({ ...draft, host_name: 'h', service_name: 's', metric_name: 'm' })).toBe(true)
-  })
-
-  test('a fresh constant draft is incomplete until it has a value', () => {
-    const draft = newConstantDraft('A', '#123456')
-    expect(isComplete(draft)).toBe(false)
-    expect(isComplete({ ...draft, value: 0 })).toBe(true)
-  })
-
-  test('a fresh RRD query draft is incomplete until a metric is set (filters stay optional)', () => {
-    const draft = newRrdQueryDraft('A')
-    expect(isComplete(draft)).toBe(false)
-    expect(isComplete({ ...draft, metric_name: 'util' })).toBe(true)
-  })
-
-  test('a scalar needs host, service and metric', () => {
-    expect(isComplete(newScalarDraft('A', '#123456'))).toBe(false)
-    expect(isComplete(scalarItem('A'))).toBe(true)
-  })
-
-  test('a fresh metric backend draft is incomplete until a metric is set', () => {
-    const draft = newMetricBackendDraft('A')
-    expect(isComplete(draft)).toBe(false)
-    expect(isComplete({ ...draft, metric_name: 'span.latency' })).toBe(true)
-  })
-
-  test('a blank metric name counts as incomplete', () => {
-    expect(isComplete({ ...newMetricBackendDraft('A'), metric_name: '  ' })).toBe(false)
-    expect(isComplete({ ...newRrdQueryDraft('B'), metric_name: '' })).toBe(false)
-    expect(isComplete({ ...rrdMetricItem('C'), metric_name: '  ' })).toBe(false)
-    expect(isComplete({ ...scalarItem('D'), metric_name: '' })).toBe(false)
-  })
-
-  test('a blank title counts as incomplete, whatever the row type', () => {
-    for (const item of [rrdMetricItem('A'), metricBackendItem('B'), constantItem('C')]) {
-      expect(isComplete({ ...item, title: '   ' })).toBe(false)
-    }
-  })
-
-  test('a blank title also disqualifies a formula, whose fields are otherwise always set', () => {
-    expect(isComplete({ ...formulaItem('A'), title: '' })).toBe(false)
-  })
-
-  test('wire items are always complete', () => {
-    for (const item of [
-      rrdMetricItem('A'),
-      rrdQueryItem('B'),
-      metricBackendItem('C'),
-      constantItem('D'),
-      formulaItem('E'),
-      scalarItem('F')
-    ]) {
-      expect(isComplete(item)).toBe(true)
-    }
-  })
-})
-
 describe('toApiDataSources', () => {
-  test('keeps complete rows in table order and drops incomplete ones', () => {
-    const items: DesignerItem[] = [
-      rrdMetricItem('A'),
-      newRrdMetricDraft('B', '#123456'),
-      constantItem('C')
-    ]
-    expect(toApiDataSources(items).map((source) => source.id)).toEqual(['A', 'C'])
+  test('keeps the given rows in table order', () => {
+    const items: GraphItem[] = [rrdMetricItem('A'), constantItem('B')]
+    expect(toApiDataSources(items).map((source) => source.id)).toEqual(['A', 'B'])
   })
 
-  test('drops a row whose title was blanked, and formulas reaching it', () => {
-    const items: DesignerItem[] = [
-      { ...rrdMetricItem('A'), title: '' },
+  test('drops a formula reaching a row the caller left out', () => {
+    const items: GraphItem[] = [
       formulaItem('B', { ast: { op: 'ref', id: 'A' } }),
       constantItem('C')
     ]
     expect(toApiDataSources(items).map((source) => source.id)).toEqual(['C'])
   })
 
-  test('drops formulas whose refs reach an incomplete row, transitively', () => {
-    const items: DesignerItem[] = [
-      newConstantDraft('A', '#123456'),
+  test('drops formulas whose refs reach a left-out row, transitively', () => {
+    const items: GraphItem[] = [
       formulaItem('B', { ast: { op: 'ref', id: 'A' } }),
       formulaItem('C', { ast: { op: 'ref', id: 'B' } }),
       formulaItem('D', { ast: { op: 'num', value: 1 } })

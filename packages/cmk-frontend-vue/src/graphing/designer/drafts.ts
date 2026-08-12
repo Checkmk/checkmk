@@ -40,40 +40,17 @@ export type DesignerItem =
   | DraftScalarItem
   | FormulaItem
 
-function isFilled(value: string | null): boolean {
-  return value !== null && value.trim() !== ''
-}
-
-/** Narrows a designer row to the API-complete shape. */
-export function isComplete(item: DesignerItem): item is GraphItem {
-  if (!isFilled(item.title)) {
-    return false
-  }
-  switch (item.type) {
-    case 'rrd_metric':
-    case 'scalar':
-      return isFilled(item.host_name) && isFilled(item.service_name) && isFilled(item.metric_name)
-    case 'constant':
-      return item.value !== null && String(item.value) !== ''
-    case 'rrd_query':
-    case 'metric_backend':
-      return isFilled(item.metric_name)
-    case 'rrd_formula':
-      return true
-  }
-}
-
 /** Converts a wire-format data source to a designer item; throws on an invalid formula ast. */
 export function fromApiDataSource(source: ApiDataSourceInput): GraphItem {
   return source.type === 'rrd_formula' ? { ...source, ast: fromApiAst(source.ast) } : source
 }
 
 /**
- * The rows in wire form, in table order. Incomplete rows are dropped, as are formulas whose
- * refs (transitively) reach a dropped row — the backend rejects dangling refs.
+ * The given rows in wire form, in table order, minus the formulas whose refs (transitively)
+ * reach a row the caller left out — the backend rejects dangling refs.
  */
-export function toApiDataSources(items: readonly DesignerItem[]): ApiDataSource[] {
-  const kept = new Map(items.filter(isComplete).map((item) => [item.id, item]))
+export function toApiDataSources(items: readonly GraphItem[]): ApiDataSource[] {
+  const kept = new Map(items.map((item) => [item.id, item]))
   let pruned = true
   while (pruned) {
     pruned = false
@@ -85,13 +62,11 @@ export function toApiDataSources(items: readonly DesignerItem[]): ApiDataSource[
     }
   }
   return items.flatMap((item) => {
-    const completeItem = kept.get(item.id)
-    if (completeItem === undefined) {
+    const keptItem = kept.get(item.id)
+    if (keptItem === undefined) {
       return []
     }
-    return [
-      isFormula(completeItem) ? { ...completeItem, ast: toApiAst(completeItem.ast) } : completeItem
-    ]
+    return [isFormula(keptItem) ? { ...keptItem, ast: toApiAst(keptItem.ast) } : keptItem]
   })
 }
 

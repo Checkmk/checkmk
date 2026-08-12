@@ -13,6 +13,8 @@ import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { fromApiDataSource } from '@/graphing/designer/drafts'
 
+import { metricBackendItem } from '../fixtures'
+
 vi.mock('cmk-ui-library/components/CmkSlideIn/CmkSlideIn.vue', () => ({
   default: defineComponent({
     name: 'CmkSlideIn',
@@ -185,6 +187,22 @@ test('view mode renders the legend beneath the preview, not the config tabs', as
   await waitFor(() => expect(screen.getByTestId('time-series-graph')).toHaveTextContent('CPU'))
   expect(container.querySelector('.graphing-graph-legend')).not.toBeNull()
   expect(screen.queryByRole('tab')).toBeNull()
+})
+
+test('a source the rules reject is left out of the preview request', async () => {
+  const postSpy = vi.spyOn(client, 'POST')
+  postSpy.mockResolvedValue(fetchDataResponse())
+  const outOfRange = metricBackendItem('B', {
+    consolidation_function: { type: 'histogram_quantile', lookback_seconds: 300, percentile: 500 }
+  })
+  renderBody('edit', { graph: graphObject([rrdSource('A'), outOfRange]) })
+
+  await waitFor(() => expect(postSpy).toHaveBeenCalled())
+
+  const sent = postSpy.mock.calls[0]![1] as {
+    body: { content: { data_sources: { id: string }[] } }
+  }
+  expect(sent.body.content.data_sources.map((source) => source.id)).toEqual(['A'])
 })
 
 test('edit mode renders the config tabs beneath the preview, not the legend', async () => {

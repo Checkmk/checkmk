@@ -27,8 +27,8 @@ import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
 import { useCustomGraphData } from '../composables/useCustomGraphData'
 import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
 import type { GraphItemsStore } from '../composables/useGraphItems'
-import { isComplete } from '../drafts'
 import type { FormulaDraft, ItemId } from '../types'
+import { isValid } from '../validation'
 import AppearanceTable from './AppearanceTable.vue'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
 import DesignerSettings from './DesignerSettings.vue'
@@ -67,7 +67,7 @@ const displaySettings = defineModel<boolean>('displaySettings', { default: false
 
 const { _t } = usei18n()
 
-const completeItems = computed(() => store.items.value.filter(isComplete))
+const validItems = computed(() => store.items.value.filter(isValid))
 
 const consolidationFn = ref<ConsolidationFn>('max')
 // The app seeds the global time range from the configured default before we mount.
@@ -88,7 +88,7 @@ const { observe } = useResizeObserver((entries) => {
 observe(graphContainer)
 
 const data = useCustomGraphData({
-  getItems: () => store.items.value,
+  getItems: () => validItems.value,
   getGraphOptions: () => graphOptions,
   getRequestedTimeRange: () => requestedTimeRange.value,
   getConsolidationFn: () => consolidationFn.value,
@@ -290,7 +290,7 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
     <template v-if="mode === 'edit'">
       <MetricsCalculationSlideout
         :open="slideoutOpen"
-        :items="completeItems"
+        :items="validItems"
         :next-id="store.nextId.value"
         :next-color="store.nextColor.value"
         @add="onCalculationAdd"

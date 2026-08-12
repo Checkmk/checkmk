@@ -11,8 +11,7 @@ import {
   type ApiGraphOptions,
   useCustomGraphData
 } from '@/graphing/designer/composables/useCustomGraphData'
-import type { DesignerItem } from '@/graphing/designer/drafts'
-import { newRrdMetricDraft } from '@/graphing/designer/drafts'
+import type { GraphItem } from '@/graphing/designer/types'
 import type { RequestedTimeRange } from '@/graphing/types'
 
 import { constantItem, rrdMetricItem } from '../fixtures'
@@ -74,13 +73,13 @@ function fetchResponse(
 }
 
 interface Harness {
-  items: ReturnType<typeof ref<DesignerItem[]>>
+  items: ReturnType<typeof ref<GraphItem[]>>
   data: ReturnType<typeof useCustomGraphData>
   overviewEnabled: ReturnType<typeof ref<boolean>>
 }
 
-function mount(initialItems: DesignerItem[], withOverview = false, fetchHidden = false): Harness {
-  const items = ref<DesignerItem[]>(initialItems)
+function mount(initialItems: GraphItem[], withOverview = false, fetchHidden = false): Harness {
+  const items = ref<GraphItem[]>(initialItems)
   const overviewEnabled = ref<boolean>(withOverview)
   const data = useCustomGraphData({
     getItems: () => items.value ?? [],
@@ -176,15 +175,15 @@ test('posts the real visibility when not fetching hidden lines', async () => {
   expect(postSpy.mock.calls[1]![1].body.content.data_sources[0].visible).toBe(false)
 })
 
-test('excludes incomplete rows and skips the request entirely without complete rows', async () => {
-  const { data, items } = mount([rrdMetricItem('A'), newRrdMetricDraft('B', '#123456')])
+test('skips the request entirely once there is nothing left to draw', async () => {
+  const { data, items } = mount([rrdMetricItem('A')])
   await flush()
   expect(postSpy).toHaveBeenCalledTimes(1)
   expect(
     postSpy.mock.calls[0]![1].body.content.data_sources.map((source: { id: string }) => source.id)
   ).toEqual(['A'])
 
-  items.value = [newRrdMetricDraft('B', '#123456')]
+  items.value = []
   await flush()
   expect(postSpy).toHaveBeenCalledTimes(1)
   expect(data.metrics.value).toEqual([])

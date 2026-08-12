@@ -8,8 +8,8 @@ import { computed, ref } from 'vue'
 
 import { MetricsCalculationSlideout, type RefVisibility } from '@/graphing/designer/calculation'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
-import { isComplete } from '@/graphing/designer/drafts'
 import type { FormulaDraft, GraphItem, ItemId } from '@/graphing/designer/types'
+import { isValid } from '@/graphing/designer/validation'
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400', '#ec48b6', '#ffd703']
 
@@ -31,7 +31,7 @@ const seed: GraphItem[] = [
 
 const store = useGraphItems(PALETTE)
 store.replaceAll(seed)
-const completeItems = computed(() => store.items.value.filter(isComplete))
+const completeItems = computed(() => store.items.value.filter(isValid))
 const open = ref(true)
 
 function applyRefVisibility(refVisibility: RefVisibility): void {

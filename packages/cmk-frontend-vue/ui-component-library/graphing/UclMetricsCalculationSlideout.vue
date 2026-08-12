@@ -16,13 +16,13 @@ import { computed, ref } from 'vue'
 import { MetricsCalculationSlideout, type RefVisibility } from '@/graphing/designer/calculation'
 import DeleteWithDependentsPopup from '@/graphing/designer/components/DeleteWithDependentsPopup.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
-import { isComplete } from '@/graphing/designer/drafts'
 import {
   DEFAULT_TITLE_MACRO,
   type FormulaDraft,
   type GraphItem,
   type ItemId
 } from '@/graphing/designer/types'
+import { isValid } from '@/graphing/designer/validation'
 
 import codeExample from './UclMetricsCalculationSlideoutCodeExample.vue?raw'
 
@@ -116,7 +116,7 @@ const seed: GraphItem[] = [
 
 const store = useGraphItems(PALETTE)
 store.replaceAll(seed)
-const completeItems = computed(() => store.items.value.filter(isComplete))
+const completeItems = computed(() => store.items.value.filter(isValid))
 const open = ref(false)
 
 function applyRefVisibility(refVisibility: RefVisibility): void {

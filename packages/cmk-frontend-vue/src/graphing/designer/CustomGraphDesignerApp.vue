@@ -21,10 +21,18 @@ import {
   useGlobalRefresh
 } from '../GlobalRefreshControl'
 import { rollingRange, useGlobalTimeRange } from '../GlobalTimePicker'
-import { type CustomGraphObject, getCustomGraph } from './api'
+import {
+  type CustomGraphObject,
+  type CustomGraphOptions,
+  getCustomGraph,
+  updateCustomGraph
+} from './api'
 import DesignerBody from './components/DesignerBody.vue'
 import DesignerHeader from './components/DesignerHeader.vue'
 import type { SelectableGraph } from './components/GraphSelector.vue'
+import { useGraphItems } from './composables/useGraphItems'
+import { fromApiDataSource, toApiDataSources } from './drafts'
+import type { ItemId } from './types'
 import { pushUrlState, replaceUrlState } from './urlState'
 
 const props = defineProps<CustomGraphDesigner>()
@@ -47,7 +55,9 @@ const etag = ref<string | null>(null)
 const mode = ref<CustomGraphDesignerMode>('view')
 const isLoading = ref(false)
 const loadError = ref<string | null>(null)
-const loadCounter = ref(0)
+
+const store = useGraphItems(props.palette)
+const graphOptions = ref<CustomGraphOptions | null>(null)
 
 const { loadFilterDefinitions } = useProvideFilterDefinitions()
 const filtersReady = ref(false)
@@ -83,7 +93,14 @@ watch(selectedGraph, (selected) => {
   }
 })
 
-const bodyRef = ref<InstanceType<typeof DesignerBody> | null>(null)
+const saveError = ref<string | null>(null)
+const isSaving = ref(false)
+
+function resetEditor(graph: CustomGraphObject): void {
+  store.replaceAll(graph.extensions.content.data_sources.map(fromApiDataSource))
+  graphOptions.value = graph.extensions.content.graph_options
+  saveError.value = null
+}
 
 function urlState(): { name: string; owner: string; mode: CustomGraphDesignerMode } {
   return { name: current.value.name, owner: current.value.owner, mode: mode.value }
@@ -108,6 +125,7 @@ async function load(requestedMode: CustomGraphDesignerMode): Promise<void> {
     }
     graph.value = result.graph
     etag.value = result.etag
+    resetEditor(result.graph)
     mode.value = requestedMode === 'edit' && result.graph.extensions.is_editable ? 'edit' : 'view'
     replaceUrlState(urlState())
   } catch (e) {
@@ -162,7 +180,6 @@ onBeforeUnmount(() => {
 function onGraphChange(selected: SelectableGraph): void {
   current.value = { name: selected.name, owner: selected.owner }
   mode.value = 'view'
-  loadCounter.value += 1
   pushUrlState(urlState())
   void load('view')
 }
@@ -175,17 +192,65 @@ function onEnterEdit(): void {
 }
 
 function onCancelEdit(): void {
-  // Remounting the body re-seeds its items from the last loaded graph.
-  loadCounter.value += 1
+  if (graph.value !== null) {
+    resetEditor(graph.value)
+  }
   mode.value = 'view'
   replaceUrlState(urlState())
 }
 
-function onSaved(savedGraph: CustomGraphObject, savedEtag: string | null): void {
-  graph.value = savedGraph
-  etag.value = savedEtag
-  mode.value = 'view'
-  replaceUrlState(urlState())
+/** Rows the wire format cannot express: incomplete drafts and formulas with broken refs. */
+function invalidRowIds(): ItemId[] {
+  const keptIds = new Set(toApiDataSources(store.items.value).map((source) => source.id))
+  return store.items.value.map((item) => item.id).filter((id) => !keptIds.has(id))
+}
+
+async function save(): Promise<void> {
+  const edited = graph.value
+  const editedOptions = graphOptions.value
+  if (isSaving.value || edited === null || editedOptions === null) {
+    return
+  }
+  const invalid = invalidRowIds()
+  if (invalid.length > 0) {
+    saveError.value = _t(
+      'These rows are incomplete or reference incomplete rows and cannot be saved: %{ids}',
+      { ids: invalid.join(', ') }
+    )
+    return
+  }
+
+  if (etag.value === null) {
+    saveError.value = _t(
+      'The graph was loaded without a version identifier — reload the page before saving.'
+    )
+    return
+  }
+  saveError.value = null
+  isSaving.value = true
+  try {
+    const result = await updateCustomGraph(
+      current.value.name,
+      etag.value,
+      {
+        title: edited.title ?? current.value.name,
+        metadata: edited.extensions.metadata,
+        content: {
+          graph_options: editedOptions,
+          data_sources: toApiDataSources(store.items.value)
+        }
+      },
+      ownerParam.value
+    )
+    graph.value = result.graph
+    etag.value = result.etag
+    mode.value = 'view'
+    replaceUrlState(urlState())
+  } catch (e) {
+    saveError.value = e instanceof Error ? e.message : String(e)
+  } finally {
+    isSaving.value = false
+  }
 }
 </script>
 
@@ -207,7 +272,7 @@ function onSaved(savedGraph: CustomGraphObject, savedEtag: string | null): void 
         :is-editable="isEditable"
         :time-picker="time_picker"
         @enter-edit="onEnterEdit"
-        @save="bodyRef?.save()"
+        @save="void save()"
         @cancel-edit="onCancelEdit"
         @graph-change="onGraphChange"
         @enter-settings="() => (displaySettings = true)"
@@ -223,28 +288,31 @@ function onSaved(savedGraph: CustomGraphObject, savedEtag: string | null): void 
         {{ loadError ?? filtersError }}
       </CmkAlertBox>
       <CmkIcon
-        v-else-if="isLoading || graph === null || !filtersReady"
+        v-else-if="isLoading || graph === null || graphOptions === null || !filtersReady"
         name="load-graph"
         size="xxlarge"
       />
       <DesignerBody
         v-else
-        :key="`${current.owner}/${current.name}/${loadCounter}`"
-        ref="bodyRef"
+        :key="`${current.owner}/${current.name}`"
         v-model:display-settings="displaySettings"
-        :graph="graph"
-        :graph-name="current.name"
-        :etag="etag"
-        :owner-param="ownerParam"
+        :store="store"
+        :graph-options="graphOptions"
+        :title="graph.title ?? current.name"
         :mode="mode"
-        :palette="palette"
         :thresholds="{ warning: warning_color, critical: critical_color }"
         :metric-backend-available="metric_backend_available"
         :create-services-available="create_services_available"
         :metric-backend-default-title="metric_backend_default_title"
         :title-macros="title_macros"
-        @saved="onSaved"
-      />
+        @update-graph-options="graphOptions = $event"
+      >
+        <template #alerts>
+          <CmkAlertBox v-if="mode === 'edit' && saveError !== null" variant="error">
+            {{ saveError }}
+          </CmkAlertBox>
+        </template>
+      </DesignerBody>
     </div>
   </div>
 </template>

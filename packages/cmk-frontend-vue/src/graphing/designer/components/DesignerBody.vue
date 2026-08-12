@@ -8,13 +8,12 @@ import type {
   CustomGraphDesignerMode,
   TitleMacroGroup
 } from 'cmk-shared-typing/typescript/custom_graph_designer'
-import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../../GlobalRefreshControl/useGlobalRefresh'
 import GraphNotice from '../../components/GraphNotice.vue'
@@ -23,12 +22,12 @@ import type { ConsolidationFn } from '../../components/consolidation'
 import GraphLegend from '../../components/legend/GraphLegend.vue'
 import { type GraphNoticeDescriptor, useGraphNotice } from '../../composables/useGraphNotice'
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
-import { type CustomGraphObject, updateCustomGraph } from '../api'
+import type { CustomGraphOptions } from '../api'
 import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
 import { useCustomGraphData } from '../composables/useCustomGraphData'
 import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
-import { useGraphItems } from '../composables/useGraphItems'
-import { fromApiDataSource, isComplete, toApiDataSources } from '../drafts'
+import type { GraphItemsStore } from '../composables/useGraphItems'
+import { isComplete } from '../drafts'
 import type { FormulaDraft, ItemId } from '../types'
 import AppearanceTable from './AppearanceTable.vue'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
@@ -39,25 +38,20 @@ import MetricsTable from './MetricsTable.vue'
 const DEFAULT_FIGURE_WIDTH = 1000
 
 const {
-  graph,
-  graphName,
-  etag,
-  ownerParam,
+  store,
+  graphOptions,
+  title,
   mode,
-  palette,
   thresholds,
   metricBackendAvailable,
   createServicesAvailable,
   metricBackendDefaultTitle,
   titleMacros
 } = defineProps<{
-  graph: CustomGraphObject
-  graphName: string
-  etag: string | null
-  /** Query parameter for foreign graphs; undefined for the user's own graph. */
-  ownerParam: string | undefined
+  store: GraphItemsStore
+  graphOptions: CustomGraphOptions
+  title: string
   mode: CustomGraphDesignerMode
-  palette: readonly string[]
   thresholds: { warning: string; critical: string }
   metricBackendAvailable: boolean
   createServicesAvailable: boolean
@@ -66,14 +60,13 @@ const {
 }>()
 
 const emit = defineEmits<{
-  saved: [graph: CustomGraphObject, etag: string | null]
+  'update-graph-options': [graphOptions: CustomGraphOptions]
 }>()
 
 const displaySettings = defineModel<boolean>('displaySettings', { default: false })
 
 const { _t } = usei18n()
 
-const store = useGraphItems(palette, graph.extensions.content.data_sources.map(fromApiDataSource))
 const completeItems = computed(() => store.items.value.filter(isComplete))
 
 const consolidationFn = ref<ConsolidationFn>('max')
@@ -93,8 +86,6 @@ const { observe } = useResizeObserver((entries) => {
   }
 })
 observe(graphContainer)
-
-const graphOptions = reactive(graph.extensions.content.graph_options)
 
 const data = useCustomGraphData({
   getItems: () => store.items.value,
@@ -173,60 +164,6 @@ function onTabChange(value: string | number): void {
   }
 }
 
-const saveError = ref<string | null>(null)
-const isSaving = ref(false)
-
-/** Rows the wire format cannot express: incomplete drafts and formulas with broken refs. */
-function invalidRowIds(): ItemId[] {
-  const keptIds = new Set(toApiDataSources(store.items.value).map((source) => source.id))
-  return store.items.value.map((item) => item.id).filter((id) => !keptIds.has(id))
-}
-
-async function save(): Promise<void> {
-  if (isSaving.value) {
-    return
-  }
-  const invalid = invalidRowIds()
-  if (invalid.length > 0) {
-    saveError.value = _t(
-      'These rows are incomplete or reference incomplete rows and cannot be saved: %{ids}',
-      { ids: invalid.join(', ') }
-    )
-    return
-  }
-
-  if (etag === null) {
-    saveError.value = _t(
-      'The graph was loaded without a version identifier — reload the page before saving.'
-    )
-    return
-  }
-  saveError.value = null
-  isSaving.value = true
-  try {
-    const result = await updateCustomGraph(
-      graphName,
-      etag,
-      {
-        title: graph.title ?? graphName,
-        metadata: graph.extensions.metadata,
-        content: {
-          graph_options: graphOptions,
-          data_sources: toApiDataSources(store.items.value)
-        }
-      },
-      ownerParam
-    )
-    emit('saved', result.graph, result.etag)
-  } catch (e) {
-    saveError.value = e instanceof Error ? e.message : String(e)
-  } finally {
-    isSaving.value = false
-  }
-}
-
-defineExpose({ save })
-
 const slideoutOpen = ref(false)
 
 function applyRefVisibility(refVisibility: RefVisibility): void {
@@ -247,8 +184,8 @@ function onCalculationUpdate(id: ItemId, draft: FormulaDraft, refVisibility: Ref
 
 const calculationDelete = useDeleteWithDependents(store)
 
-const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
-  Object.assign(graphOptions, newGraphOptions)
+function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
+  emit('update-graph-options', newGraphOptions)
   displaySettings.value = false
 }
 </script>
@@ -272,7 +209,7 @@ const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
         :horizontal-lines="data.horizontalLines.value"
         :requested-time-range="requestedTimeRange"
         :time-picker-requests="timePickerRequests"
-        :title="graph.title ?? graphName"
+        :title="title"
         show-title
         show-timestamp
         :figure-width="figureWidth"
@@ -297,9 +234,7 @@ const onSettingsUpdate = (newGraphOptions: typeof graphOptions): void => {
       />
     </div>
 
-    <CmkAlertBox v-if="mode === 'edit' && saveError !== null" variant="error">
-      {{ saveError }}
-    </CmkAlertBox>
+    <slot name="alerts" />
 
     <div class="graphing-designer-body__scroll-region">
       <GraphLegend

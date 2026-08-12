@@ -80,6 +80,8 @@ export interface GraphItemsStore {
   patch: (id: ItemId, patch: SharedRowPatch) => void
   /** Swap an existing item for `item` (matched by id), e.g. after a type switch. */
   replace: (item: DesignerItem) => void
+  /** Swap every item for `replacements`, discarding the ids in use. */
+  replaceAll: (replacements: readonly DesignerItem[]) => void
   /** Copy each given row, inserting the copy right below it. Returns the new ids. */
   clone: (ids: readonly ItemId[]) => ItemId[]
   /** Move the row at `from` to position `to`. */
@@ -163,6 +165,10 @@ export function useGraphItems(
     items.value = items.value.map((existing) => (existing.id === item.id ? item : existing))
   }
 
+  function replaceAll(replacements: readonly DesignerItem[]): void {
+    items.value = [...replacements]
+  }
+
   function clone(ids: readonly ItemId[]): ItemId[] {
     requireKnown(ids)
     const idSet = new Set(ids)
@@ -225,6 +231,7 @@ export function useGraphItems(
     addItem,
     patch,
     replace,
+    replaceAll,
     clone,
     move,
     remove,

@@ -10,6 +10,8 @@ import { defineComponent, h } from 'vue'
 
 import type { CustomGraphObject } from '@/graphing/designer/api'
 import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
+import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
+import { fromApiDataSource } from '@/graphing/designer/drafts'
 
 vi.mock('cmk-ui-library/components/CmkSlideIn/CmkSlideIn.vue', () => ({
   default: defineComponent({
@@ -127,26 +129,26 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+function bodyProps(graph: CustomGraphObject = graphObject()) {
+  return {
+    store: useGraphItems(PALETTE, graph.extensions.content.data_sources.map(fromApiDataSource)),
+    graphOptions: graph.extensions.content.graph_options,
+    title: 'My graph',
+    mode: 'edit' as 'view' | 'edit',
+    thresholds: { warning: '#ffd000', critical: '#ff3232' },
+    metricBackendAvailable: false,
+    createServicesAvailable: true,
+    metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
+    titleMacros: []
+  }
+}
+
 function renderBody(
   mode: 'view' | 'edit',
   overrides: { displaySettings?: boolean; graph?: CustomGraphObject } = {}
 ) {
-  return render(DesignerBody, {
-    props: {
-      graph: graphObject(),
-      graphName: 'my_graph',
-      etag: '"etag-1"',
-      ownerParam: undefined,
-      mode,
-      palette: PALETTE,
-      thresholds: { warning: '#ffd000', critical: '#ff3232' },
-      metricBackendAvailable: false,
-      createServicesAvailable: true,
-      metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
-      titleMacros: [],
-      ...overrides
-    }
-  })
+  const { graph, ...rest } = overrides
+  return render(DesignerBody, { props: { ...bodyProps(graph), mode, ...rest } })
 }
 
 test('hiding a metric in the detached view-mode legend removes it from the preview', async () => {
@@ -207,33 +209,27 @@ describe('settings slide-out', () => {
     expect(screen.getByRole('checkbox', { name: 'Show zero values' })).toBeChecked()
   })
 
-  test('accepting a change closes the panel and persists it on the shared graph options', async () => {
-    const { emitted, rerender } = renderBody('edit', { displaySettings: true })
+  test('accepting a change closes the panel and hands the edited options up', async () => {
+    const { emitted } = renderBody('edit', { displaySettings: true })
 
     await fireEvent.click(await screen.findByRole('checkbox', { name: 'Show zero values' }))
     await fireEvent.click(screen.getByRole('button', { name: 'Accept' }))
 
     // DesignerBody's onSettingsUpdate closes the panel via the displaySettings v-model.
     expect(emitted()['update:displaySettings']).toEqual([[false]])
-
-    // Re-opening it shows the edited value was written back to the shared graph options
-    // (via Object.assign), not just kept in the settings panel's own local draft.
-    // (The test has to drive the model through the same false -> true transition a real
-    // parent would, since rerender() only reacts to an actual prop change.)
-    await rerender({ displaySettings: false })
-    await rerender({ displaySettings: true })
-    expect(await screen.findByRole('checkbox', { name: 'Show zero values' })).not.toBeChecked()
+    expect(emitted()['update-graph-options']).toEqual([
+      [expect.objectContaining({ omit_zero_metrics: true })]
+    ])
   })
 
-  test('cancelling discards the change instead of persisting it', async () => {
-    const { rerender } = renderBody('edit', { displaySettings: true })
+  test('cancelling discards the change instead of handing it up', async () => {
+    const { emitted } = renderBody('edit', { displaySettings: true })
 
     await fireEvent.click(await screen.findByRole('checkbox', { name: 'Show zero values' }))
     await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
-    await rerender({ displaySettings: false })
-    await rerender({ displaySettings: true })
-    expect(await screen.findByRole('checkbox', { name: 'Show zero values' })).toBeChecked()
+    expect(emitted()['update:displaySettings']).toEqual([[false]])
+    expect(emitted()['update-graph-options']).toBeUndefined()
   })
 })
 

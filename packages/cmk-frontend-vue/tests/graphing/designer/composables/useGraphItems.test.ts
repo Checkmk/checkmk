@@ -54,6 +54,16 @@ test('continues after the highest seed id', () => {
   expect(store.addFormula(numberDraft(1))).toBe('B')
 })
 
+test('replacing every item drops the edited ones and re-allocates ids from the new ones', () => {
+  const store = useGraphItems(PALETTE, [rrdMetricItem('A'), rrdMetricItem('B')])
+  store.remove('B')
+
+  store.replaceAll([rrdMetricItem('A'), rrdMetricItem('B'), rrdMetricItem('C')])
+
+  expect(store.items.value.map((item) => item.id)).toEqual(['A', 'B', 'C'])
+  expect(store.nextId.value).toBe('D')
+})
+
 test('nextId follows the highest id in use, not backfilling removed ones', () => {
   const store = useGraphItems(
     PALETTE,

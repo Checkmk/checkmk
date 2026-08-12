@@ -42,11 +42,7 @@ import {
 import { type ItemId, type MetricBackendItem, isSingleLine, parseLineType } from '../types'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
 import MetricBackendRuleSlideIn from './MetricBackendRuleSlideIn.vue'
-import ConstantLineForm from './forms/ConstantLineForm.vue'
-import FormulaForm from './forms/FormulaForm.vue'
-import MetricBackendForm from './forms/MetricBackendForm.vue'
-import RrdForm from './forms/RrdForm.vue'
-import ServiceReferenceLineForm from './forms/ServiceReferenceLineForm.vue'
+import RowEditor from './forms/RowEditor.vue'
 
 const {
   store,
@@ -316,26 +312,7 @@ function onTitleChange(row: DesignerItem, title: string | undefined): void {
               :colspan="columns.length - titleColumnIndex"
               class="graphing-metrics-table__expansion"
             >
-              <FormulaForm v-if="row.type === 'rrd_formula'" :item="row" :store="store" />
-              <div v-else class="graphing-metrics-table__editor-panel">
-                <RrdForm
-                  v-if="row.type === 'rrd_metric' || row.type === 'rrd_query'"
-                  :item="row"
-                  :store="store"
-                />
-                <ConstantLineForm v-else-if="row.type === 'constant'" :item="row" :store="store" />
-                <ServiceReferenceLineForm
-                  v-else-if="row.type === 'scalar'"
-                  :item="row"
-                  :store="store"
-                  :thresholds="thresholds"
-                />
-                <MetricBackendForm
-                  v-else-if="row.type === 'metric_backend'"
-                  :item="row"
-                  :store="store"
-                />
-              </div>
+              <RowEditor :row="row" :store="store" :thresholds="thresholds" />
             </td>
           </tr>
         </template>
@@ -392,12 +369,6 @@ function onTitleChange(row: DesignerItem, title: string | undefined): void {
   flex-direction: column;
   flex: 0 1 auto;
   min-height: 0;
-
-  --graphing-metrics-table-panel-border: var(--color-mid-grey-10);
-}
-
-body[data-theme='modern-dark'] .graphing-metrics-table {
-  --graphing-metrics-table-panel-border: var(--color-mid-grey-90);
 }
 
 .graphing-metrics-table__scroll {
@@ -423,12 +394,6 @@ body[data-theme='modern-dark'] .graphing-metrics-table {
 .graphing-metrics-table__expansion {
   padding: var(--dimension-5);
   padding-left: 0;
-}
-
-.graphing-metrics-table__editor-panel {
-  overflow: hidden;
-  border: 1px solid var(--graphing-metrics-table-panel-border);
-  border-radius: var(--border-radius);
 }
 
 /* Fill the source cell without the global 10em floor forcing the column wider. */

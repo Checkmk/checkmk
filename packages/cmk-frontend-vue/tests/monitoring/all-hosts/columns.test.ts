@@ -81,7 +81,8 @@ test('the optional columns are offered in the picker, labelled by their header',
     { id: 'last_state_change', label: 'Last state change' },
     { id: 'labels', label: 'Labels' },
     { id: 'tags', label: 'Tags' },
-    { id: 'contacts', label: 'Contacts' }
+    { id: 'contacts', label: 'Contacts' },
+    { id: 'contact_groups', label: 'Contact groups' }
   ])
 })
 
@@ -96,7 +97,8 @@ test('most offered columns are shown on first use, but alias, folder, the timest
     last_state_change: false,
     labels: false,
     tags: false,
-    contacts: false
+    contacts: false,
+    contact_groups: false
   })
   expect(service.columnVisibility.value).toEqual(service.defaultColumnVisibility)
 })
@@ -122,6 +124,7 @@ test('the fixed columns keep their position around the optional ones', () => {
     'labels',
     'tags',
     'contacts',
+    'contact_groups',
     'actions'
   ])
 })

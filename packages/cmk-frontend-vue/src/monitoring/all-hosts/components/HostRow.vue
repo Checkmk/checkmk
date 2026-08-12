@@ -67,6 +67,7 @@ function toggleSelected(selected: boolean): void {
 const labels = computed(() => toLabelItems(props.row.labels ?? {}))
 const tags = computed(() => toTagItems(props.row.tags ?? {}))
 const contacts = computed(() => toNameItems(props.row.contacts ?? []))
+const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? []))
 
 const lastCheck = computed(() =>
   props.row.last_check === undefined ? undefined : formatTimestamp(props.row.last_check)
@@ -241,6 +242,12 @@ const lastStateChange = computed(() =>
   <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
   <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
   <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
+  <LabelCell
+    v-if="hasColumn('contact_groups')"
+    column-id="contact_groups"
+    :items="contactGroups"
+    size="small"
+  />
 
   <ActionsCell
     v-if="(loadActionMenu || actionButtons.length > 0) && hasColumn('actions')"

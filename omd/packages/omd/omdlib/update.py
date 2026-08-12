@@ -10,7 +10,7 @@ import enum
 import os
 import shutil
 import sys
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from types import TracebackType
 from typing import Literal, Self
@@ -86,11 +86,32 @@ def file_type(path: Path) -> ManagedTypes:
 ####
 
 
-def walk_in_DFS_order(path: Path) -> Iterator[Path]:
-    for root, _directories, files in os.walk(path):
+def walk_in_DFS_order(
+    path: Path, onerror: Callable[[OSError], None] | None = None
+) -> Iterator[Path]:
+    for root, _directories, files in os.walk(path, onerror=onerror):
         yield Path(root)
         for file in files:
             yield Path(root).joinpath(file)
+
+
+def ensure_skel_is_intact(skel: Path) -> None:
+    # Basic sanity check, because running the update with an empty skel directory is very
+    # destructive.
+    if missing := [d for d in ("etc", "var") if not os.path.isdir(skel / d)]:
+        sys.exit(
+            f"ERROR: The skeleton hierarchy '{skel}' is incomplete (missing: {', '.join(missing)})."
+            "It looks damaged, updating with it could corrupt the site. The update was aborted.\n"
+        )
+
+    def _exit(error: OSError) -> None:
+        sys.exit(
+            f"ERROR: Cannot read the skeleton hierarchy '{skel}': {error}\n"
+            "Updating with it could corrupt the site. The update was aborted.\n"
+        )
+
+    for _path in walk_in_DFS_order(skel, onerror=_exit):
+        pass
 
 
 def walk_managed(skel: Path) -> Iterator[str]:

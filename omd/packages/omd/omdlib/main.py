@@ -104,7 +104,7 @@ from omdlib.tmpfs import (
     unmount_tmpfs_as_root,
 )
 from omdlib.type_defs import Config, Replacements, Skeleton
-from omdlib.update import get_conflict_mode_update, ManageUpdate
+from omdlib.update import ensure_skel_is_intact, get_conflict_mode_update, ManageUpdate
 from omdlib.user_processes import kill_site_user_processes, terminate_site_user_processes
 from omdlib.users_and_groups import (
     find_processes_of_user,
@@ -2607,6 +2607,8 @@ def main_update(  # pylint: disable=too-many-branches
 
     from_skelroot = site.version_skel_dir
     to_skelroot = "/omd/versions/%s/skel" % to_version
+    ensure_skel_is_intact(Path(from_skelroot))
+    ensure_skel_is_intact(Path(to_skelroot))
 
     skeleton_mode = "install" if conflict_mode == "ignore" else conflict_mode
 

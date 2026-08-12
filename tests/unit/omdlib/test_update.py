@@ -8,9 +8,12 @@ import dataclasses
 import os
 from pathlib import Path
 
+import pytest
+
 from omdlib.update import (
     _restore_version_meta_dir,
     _store_version_meta_dir,
+    ensure_skel_is_intact,
     file_type,
     ManagedTypes,
     ManageUpdate,
@@ -396,3 +399,26 @@ def test_restore_version_meta_dir(tmp_path: Path) -> None:
     assert save != [read_all(p) for p in walk_in_DFS_order(version_metadir)]
     _restore_version_meta_dir(site_dir, backup_dir)
     assert save == [read_all(p) for p in walk_in_DFS_order(version_metadir)]
+
+
+def test_ensure_skel_is_intact_ok(tmp_path: Path) -> None:
+    skel = tmp_path / "skel"
+    (skel / "etc" / "sub").mkdir(parents=True)
+    random_file(skel / "etc" / "sub" / "1.file")
+    (skel / "var").mkdir()
+    ensure_skel_is_intact(skel)  # must not raise
+
+
+@pytest.mark.parametrize("present", [[], ["etc"], ["var"]])
+def test_ensure_skel_is_intact_incomplete(tmp_path: Path, present: list[str]) -> None:
+    skel = tmp_path / "skel"
+    skel.mkdir()
+    for directory in present:
+        (skel / directory).mkdir()
+    with pytest.raises(SystemExit, match="skeleton hierarchy .* is incomplete"):
+        ensure_skel_is_intact(skel)
+
+
+def test_ensure_skel_is_intact_missing_root(tmp_path: Path) -> None:
+    with pytest.raises(SystemExit, match="is incomplete"):
+        ensure_skel_is_intact(tmp_path / "does-not-exist")

@@ -20,3 +20,13 @@ test('entering a value completes a constant', async () => {
 
   expect(store.items.value[0]).toMatchObject({ type: 'constant', value: 42 })
 })
+
+test('clearing the value leaves the constant unset rather than blank', async () => {
+  const draft = { ...newConstantDraft('A', '#28a2f3'), value: 42 }
+  const store = useGraphItems(PALETTE, [draft])
+  render(ConstantLineForm, { props: { item: draft, store } })
+
+  await fireEvent.update(screen.getByRole('spinbutton', { name: 'Constant at' }), '')
+
+  expect(store.items.value[0]).toMatchObject({ type: 'constant', value: null })
+})

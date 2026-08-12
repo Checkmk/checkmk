@@ -21,8 +21,9 @@ const { _t } = usei18n()
 
 const valueInputId = useId()
 
-function onValueChange(value: number | undefined): void {
-  store.replace({ ...item, value: value ?? null })
+function onValueChange(value: unknown): void {
+  const parsed = parseFloat(String(value))
+  store.replace({ ...item, value: Number.isFinite(parsed) ? parsed : null })
 }
 </script>
 

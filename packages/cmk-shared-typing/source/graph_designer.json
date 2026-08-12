@@ -105,10 +105,7 @@
       "title": "consolidation_gauge",
       "properties": {
         "type": { "type": "string", "enum": ["gauge"] },
-        "function": {
-          "type": "string",
-          "enum": ["gauge_last", "gauge_max", "gauge_avg", "gauge_min"]
-        },
+        "function": { "$ref": "consolidation.json#/$defs/gauge_function" },
         "lookback_seconds": { "type": "number" }
       },
       "required": ["type", "function", "lookback_seconds"]
@@ -118,7 +115,7 @@
       "title": "consolidation_sum",
       "properties": {
         "type": { "type": "string", "enum": ["sum"] },
-        "function": { "type": "string", "enum": ["sum_rate", "sum_last_raw", "sum_delta"] },
+        "function": { "$ref": "consolidation.json#/$defs/sum_function" },
         "lookback_seconds": { "type": "number" }
       },
       "required": ["type", "function", "lookback_seconds"]
@@ -138,19 +135,9 @@
       "properties": {
         "type": { "type": "string", "enum": ["histogram"] },
         "function": {
-          "type": "string",
-          "enum": [
-            "histogram_quantile",
-            "histogram_count_delta",
-            "histogram_count_rate",
-            "histogram_sum_rate",
-            "histogram_sum_delta",
-            "histogram_sum_raw",
-            "histogram_fraction_below",
-            "histogram_fraction_between",
-            "histogram_preserve_quantile",
-            "histogram_preserve_fraction_below",
-            "histogram_preserve_fraction_between"
+          "anyOf": [
+            { "$ref": "consolidation.json#/$defs/histogram_function" },
+            { "$ref": "consolidation.json#/$defs/histogram_preserve_function" }
           ]
         },
         "lookback_seconds": { "type": "number" },

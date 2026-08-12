@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "consolidation_function_name",
+  "anyOf": [
+    { "$ref": "#/$defs/gauge_function" },
+    { "$ref": "#/$defs/sum_function" },
+    { "$ref": "#/$defs/histogram_function" },
+    { "$ref": "#/$defs/histogram_preserve_function" }
+  ],
+  "$defs": {
+    "gauge_function": {
+      "type": "string",
+      "enum": ["gauge_last", "gauge_max", "gauge_avg", "gauge_min"]
+    },
+    "sum_function": {
+      "type": "string",
+      "enum": ["sum_rate", "sum_last_raw", "sum_delta"]
+    },
+    "histogram_function": {
+      "type": "string",
+      "enum": [
+        "histogram_quantile",
+        "histogram_count_delta",
+        "histogram_count_rate",
+        "histogram_sum_rate",
+        "histogram_sum_delta",
+        "histogram_sum_raw",
+        "histogram_fraction_below",
+        "histogram_fraction_between"
+      ]
+    },
+    "histogram_preserve_function": {
+      "type": "string",
+      "enum": [
+        "histogram_preserve_quantile",
+        "histogram_preserve_fraction_below",
+        "histogram_preserve_fraction_between"
+      ]
+    }
+  }
+}

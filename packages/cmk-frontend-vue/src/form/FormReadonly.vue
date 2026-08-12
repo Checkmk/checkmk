@@ -58,18 +58,30 @@ import {
   groupNestedValidations
 } from '@/form/private/validation'
 
-import { pillLabel } from '@/metric-backend/attribute-filter/pill-label'
+import { attributeKindPrefix, pillLabel } from '@/metric-backend/attribute-filter/pill-label'
 import { fromAttributeFilter } from '@/metric-backend/attributeFilterAdapter'
 import {
   compactFunction,
   lookbackLabel,
   typeLabel
 } from '@/metric-backend/consolidation/consolidation-label'
-import { consolidationFunctionFromName } from '@/metric-backend/consolidation/types'
+import {
+  catalogFunctionName,
+  consolidationFunctionFromName
+} from '@/metric-backend/consolidation/types'
 import type {
   ConsolidationFunction,
   ConsolidationParams
 } from '@/metric-backend/consolidation/types'
+import { clauseSummary, thenStepSummary } from '@/metric-backend/group-by/group-by-label'
+import type { GroupByModel } from '@/metric-backend/group-by/types'
+import {
+  aggregatorToFloatGroupBy,
+  aggregatorToThenSteps,
+  fractionBelowGroupBy,
+  fractionBetweenGroupBy,
+  percentileGroupBy
+} from '@/metric-backend/group-by/wire'
 
 import {
   type Operator,
@@ -224,13 +236,36 @@ function consolidationParams(
   }
 }
 
+function preserveGroupByModel(value: MetricBackendCustomQuery): GroupByModel | null {
+  switch (value.consolidation_function) {
+    case 'histogram_preserve_quantile':
+      return percentileGroupBy({
+        percentile: value.aggregation_histogram_percentile,
+        group_by: value.aggregation_histogram_group_by
+      })
+    case 'histogram_preserve_fraction_below':
+      return fractionBelowGroupBy({
+        threshold: value.aggregation_histogram_threshold_for_fraction_below,
+        group_by: value.aggregation_histogram_group_by
+      })
+    case 'histogram_preserve_fraction_between':
+      return fractionBetweenGroupBy({
+        lower_threshold: value.aggregation_histogram_lower_threshold_for_fraction_between,
+        upper_threshold: value.aggregation_histogram_upper_threshold_for_fraction_between,
+        group_by: value.aggregation_histogram_group_by
+      })
+    default:
+      return null
+  }
+}
+
 function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode {
   const rows: VNode[] = []
+  const row = (label: string, text: string): VNode =>
+    h('tr', [h('td', { class: 'dict_title' }, [label]), h('td', [text])])
 
   if (value.metric_name) {
-    rows.push(
-      h('tr', [h('td', { class: 'dict_title' }, ['Metric:']), h('td', [value.metric_name])])
-    )
+    rows.push(row('Metric:', value.metric_name))
   }
 
   // OR-of-AND sentence like the editable pills; the custom-query editor only builds one AND group.
@@ -243,46 +278,49 @@ function renderMetricBackendCustomQuery(value: MetricBackendCustomQuery): VNode 
     )
     .join(` ${untranslated('OR')} `)
   if (attributeSentence) {
-    rows.push(
-      h('tr', [h('td', { class: 'dict_title' }, ['Attributes:']), h('td', [attributeSentence])])
-    )
+    rows.push(row('Attributes:', attributeSentence))
   }
 
-  const consolidationFunction = consolidationFunctionFromName(value.consolidation_function)
+  const consolidationFunction = consolidationFunctionFromName(
+    catalogFunctionName(value.consolidation_function)
+  )
   if (consolidationFunction) {
     rows.push(
-      h('tr', [
-        h('td', { class: 'dict_title' }, ['Consolidation:']),
-        h('td', [
-          `[${typeLabel(consolidationFunction.type)}] ${compactFunction({
-            ...consolidationFunction,
-            params: consolidationParams(value, consolidationFunction),
-            lookbackSeconds: value.aggregation_lookback
-          })} · ${lookbackLabel(value.aggregation_lookback)}`
-        ])
-      ])
+      row(
+        'Consolidation:',
+        `[${typeLabel(consolidationFunction.type)}] ${compactFunction({
+          ...consolidationFunction,
+          params: consolidationParams(value, consolidationFunction),
+          lookbackSeconds: value.aggregation_lookback
+        })} · ${lookbackLabel(value.aggregation_lookback)}`
+      )
     )
   } else {
+    rows.push(row('Aggregation lookback:', lookbackLabel(value.aggregation_lookback)))
+    rows.push(row('Percentile (histograms):', `${value.aggregation_histogram_percentile} %`))
+  }
+
+  // One row covers both grouping flavours: a preserve function owns the leading clause and
+  // every aggregator stage is a then step; otherwise the aggregator's first stage is the clause.
+  const preserveGroupBy = preserveGroupByModel(value)
+  const groupBy = preserveGroupBy ?? aggregatorToFloatGroupBy(value.aggregator ?? undefined)
+  const thenSteps = aggregatorToThenSteps(value.aggregator ?? undefined, groupBy)
+  if (preserveGroupBy || value.aggregator) {
     rows.push(
-      h('tr', [
-        h('td', { class: 'dict_title' }, ['Aggregation lookback:']),
-        h('td', [lookbackLabel(value.aggregation_lookback)])
-      ])
+      row('Group by:', [clauseSummary(groupBy), ...thenSteps.map(thenStepSummary)].join(', '))
     )
+  } else if (value.aggregation_histogram_group_by.length > 0) {
     rows.push(
-      h('tr', [
-        h('td', { class: 'dict_title' }, ['Percentile (histograms):']),
-        h('td', [`${value.aggregation_histogram_percentile} %`])
-      ])
+      row(
+        'Group by:',
+        value.aggregation_histogram_group_by
+          .map((key) => `${attributeKindPrefix(key.kind)}${key.key}`)
+          .join(', ')
+      )
     )
   }
 
-  rows.push(
-    h('tr', [
-      h('td', { class: 'dict_title' }, ['Service name template:']),
-      h('td', [value.service_name_template])
-    ])
-  )
+  rows.push(row('Service name template:', value.service_name_template))
 
   return h(
     'table',

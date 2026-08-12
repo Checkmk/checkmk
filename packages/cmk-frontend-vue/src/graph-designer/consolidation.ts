@@ -6,6 +6,7 @@
 import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/graph_designer'
 import { staticAssertNever } from 'cmk-ui-library/lib/typeUtils'
 
+import { catalogFunctionName } from '@/metric-backend/consolidation/types'
 import type { ConsolidationFunction } from '@/metric-backend/consolidation/types'
 import type { GroupByModel } from '@/metric-backend/group-by/types'
 import {
@@ -31,17 +32,8 @@ export function consolidationFunctionFromWire(
     case 'sum':
       return { type: 'sum', function: wire.function }
     case 'histogram':
-      // The histogram_preserve_* functions name a consolidation and a grouping at once.
       // The picker holds the "preserve histograms" half, the group-by clause the other.
-      return {
-        type: 'histogram',
-        function:
-          wire.function === 'histogram_preserve_quantile' ||
-          wire.function === 'histogram_preserve_fraction_below' ||
-          wire.function === 'histogram_preserve_fraction_between'
-            ? 'histogram_preserve'
-            : wire.function
-      }
+      return { type: 'histogram', function: catalogFunctionName(wire.function) }
     default:
       staticAssertNever(wire)
       throw new Error(`unhandled consolidation type: ${JSON.stringify(wire)}`)

@@ -82,35 +82,6 @@ export const CONSOLIDATION_CATALOG: {
   ]
 }
 
-/** Allowlist restricting the offered functions per type; a missing entry offers all. */
-export type AllowedFunctions = {
-  [T in MetricType]?: FunctionsByType[T][]
-}
-
-/** For consumers needing a scalar; only histograms have a function that is not one. */
-export const FLOAT_OUTPUT_FUNCTIONS: AllowedFunctions = {
-  histogram: CONSOLIDATION_CATALOG.histogram
-    .filter((spec) => spec.output === 'float')
-    .map((spec) => spec.fn)
-}
-
-/**
- * Functions offered for a type, in catalog order. An allowlist filters them;
- * a filter that matches nothing falls back to the full catalog.
- */
-export function functionSpecsForType<T extends MetricType>(
-  type: T,
-  allowed?: AllowedFunctions
-): FunctionSpec<FunctionsByType[T]>[] {
-  const specs = CONSOLIDATION_CATALOG[type]
-  const allowList = allowed?.[type]
-  if (allowList === undefined) {
-    return specs
-  }
-  const filtered = specs.filter((spec) => allowList.includes(spec.fn))
-  return filtered.length > 0 ? filtered : specs
-}
-
 export function functionSpec(
   type: MetricType,
   fn: ConsolidationFunctionName
@@ -119,18 +90,15 @@ export function functionSpec(
   return specs.find((spec) => spec.fn === fn)
 }
 
-/** The default function for a type is the first it offers (catalog order, allowlist applied). */
-export function defaultFunction(
-  type: MetricType,
-  allowed?: AllowedFunctions
-): ConsolidationFunction {
+/** The default function for a type is the first it offers (catalog order). */
+export function defaultFunction(type: MetricType): ConsolidationFunction {
   switch (type) {
     case 'gauge':
-      return { type, function: functionSpecsForType(type, allowed)[0]!.fn }
+      return { type, function: CONSOLIDATION_CATALOG[type][0]!.fn }
     case 'sum':
-      return { type, function: functionSpecsForType(type, allowed)[0]!.fn }
+      return { type, function: CONSOLIDATION_CATALOG[type][0]!.fn }
     case 'histogram':
-      return { type, function: functionSpecsForType(type, allowed)[0]!.fn }
+      return { type, function: CONSOLIDATION_CATALOG[type][0]!.fn }
   }
 }
 
@@ -145,6 +113,27 @@ export function outputType(
 export function consolidationFunctionOf(model: ConsolidationModel): ConsolidationFunction {
   const { params: _params, lookbackSeconds: _lookbackSeconds, ...fn } = model
   return fn
+}
+
+const PRESERVE_FUNCTION_SPELLINGS = [
+  'histogram_preserve_quantile',
+  'histogram_preserve_fraction_below',
+  'histogram_preserve_fraction_between'
+] as const
+
+type PreserveFunctionSpelling = (typeof PRESERVE_FUNCTION_SPELLINGS)[number]
+
+/**
+ * A histogram_preserve_* spelling names a consolidation and a grouping at once; the
+ * catalog holds only the "preserve histograms" half. Collapse a persisted or wire
+ * spelling to that entry; every other name passes through.
+ */
+export function catalogFunctionName<N extends string>(
+  name: N
+): Exclude<N, PreserveFunctionSpelling> | 'histogram_preserve' {
+  return (PRESERVE_FUNCTION_SPELLINGS as readonly string[]).includes(name)
+    ? 'histogram_preserve'
+    : (name as Exclude<N, PreserveFunctionSpelling>)
 }
 
 /** Resolve a persisted function name to its type/function pair; null for unknown names. */

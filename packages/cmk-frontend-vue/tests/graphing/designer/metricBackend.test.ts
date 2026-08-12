@@ -112,6 +112,56 @@ test('the fraction between thresholds are carried over', () => {
   expect(query.aggregation_histogram_upper_threshold_for_fraction_between).toBe(3)
 })
 
+test('an ungrouped line carries no grouping', () => {
+  const query = metricBackendRuleQuery(metricBackendItem('A'), DEFAULT_TITLE)
+
+  expect(query.aggregation_histogram_group_by).toEqual([])
+  expect(query.aggregator).toBeNull()
+})
+
+test('a preserve function carries its group keys and percentile', () => {
+  const query = metricBackendRuleQuery(
+    metricBackendItem('A', {
+      consolidation_function: {
+        type: 'histogram_preserve_quantile',
+        lookback_seconds: 300,
+        percentile: 99,
+        group_by: [{ kind: 'resource', key: 'k8s.pod.name' }]
+      }
+    }),
+    DEFAULT_TITLE
+  )
+
+  expect(query.consolidation_function).toBe('histogram_preserve_quantile')
+  expect(query.aggregation_histogram_group_by).toEqual([{ kind: 'resource', key: 'k8s.pod.name' }])
+  expect(query.aggregation_histogram_percentile).toBe(99)
+})
+
+test('the aggregator is carried over', () => {
+  const query = metricBackendRuleQuery(
+    metricBackendItem('A', {
+      aggregator: {
+        stages: [
+          {
+            aggregate_by: [{ kind: 'resource', name: 'service.name' }],
+            aggregation_fn: { type: 'scalar', name: 'avg' }
+          }
+        ]
+      }
+    }),
+    DEFAULT_TITLE
+  )
+
+  expect(query.aggregator).toEqual({
+    stages: [
+      {
+        aggregate_by: [{ kind: 'resource', name: 'service.name' }],
+        aggregation_fn: { type: 'scalar', name: 'avg' }
+      }
+    ]
+  })
+})
+
 test('functions without thresholds fall back to the rule defaults', () => {
   const query = metricBackendRuleQuery(
     metricBackendItem('A', {

@@ -213,25 +213,28 @@ const dataQuery = ref<Query>({
 const queryFormKey = ref(0)
 
 function consolidationPercentile(cf: WireConsolidationFunction): number {
-  return cf.function === 'histogram_quantile'
+  return cf.function === 'histogram_quantile' || cf.function === 'histogram_preserve_quantile'
     ? cf.percentile
     : dataQueryAggregationHistogramPercentile
 }
 
 function consolidationThresholdForFractionBelow(cf: WireConsolidationFunction): number {
-  return cf.function === 'histogram_fraction_below'
+  return cf.function === 'histogram_fraction_below' ||
+    cf.function === 'histogram_preserve_fraction_below'
     ? (cf.threshold ?? dataQueryAggregationHistogramThresholdForFractionBelow)
     : dataQueryAggregationHistogramThresholdForFractionBelow
 }
 
 function consolidationLowerThresholdForFractionBetween(cf: WireConsolidationFunction): number {
-  return cf.function === 'histogram_fraction_between'
+  return cf.function === 'histogram_fraction_between' ||
+    cf.function === 'histogram_preserve_fraction_between'
     ? (cf.lower_threshold ?? dataQueryAggregationHistogramLowerThresholdForFractionBetween)
     : dataQueryAggregationHistogramLowerThresholdForFractionBetween
 }
 
 function consolidationUpperThresholdForFractionBetween(cf: WireConsolidationFunction): number {
-  return cf.function === 'histogram_fraction_between'
+  return cf.function === 'histogram_fraction_between' ||
+    cf.function === 'histogram_preserve_fraction_between'
     ? (cf.upper_threshold ?? dataQueryAggregationHistogramUpperThresholdForFractionBetween)
     : dataQueryAggregationHistogramUpperThresholdForFractionBetween
 }
@@ -1008,6 +1011,8 @@ const slideInAPI = {
           attribute_filter: graphLineQuery.value.attribute_filter,
           aggregation_lookback: cf.lookback_seconds,
           consolidation_function: cf.function,
+          aggregation_histogram_group_by: cf.type === 'histogram' ? (cf.group_by ?? []) : [],
+          aggregator: graphLineQuery.value.aggregator ?? null,
           aggregation_histogram_percentile: consolidationPercentile(cf),
           aggregation_histogram_threshold_for_fraction_below:
             consolidationThresholdForFractionBelow(cf),

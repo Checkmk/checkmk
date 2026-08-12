@@ -31,11 +31,7 @@ import FormMetricBackendConsolidation from '@/metric-backend/FormMetricBackendCo
 import FormMetricNameAutocompleter from '@/metric-backend/FormMetricNameAutocompleter.vue'
 import { buildAutocompleteContext } from '@/metric-backend/attributeFilterAdapter'
 import { useAttributeKeySuggestions } from '@/metric-backend/attributeKeySuggestions'
-import {
-  type AllowedFunctions,
-  type ConsolidationFunction,
-  outputType
-} from '@/metric-backend/consolidation/types'
+import { type ConsolidationFunction, outputType } from '@/metric-backend/consolidation/types'
 import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
 import GroupByThenSteps from '@/metric-backend/group-by/GroupByThenSteps.vue'
 import {
@@ -65,7 +61,6 @@ export interface Query {
 
 const props = defineProps<{
   backendValidation?: ValidationMessages
-  allowedFunctions?: AllowedFunctions | undefined
 }>()
 
 // Only the metric name is validated here; the rest moved to FormMetricBackendConsolidation.
@@ -272,7 +267,6 @@ const {
             v-model:consolidation-function="consolidationFunction"
             :label="_t('Consolidation')"
             :metric-types="metricTypes"
-            :allowed-functions="props.allowedFunctions"
           />
         </td>
       </tr>

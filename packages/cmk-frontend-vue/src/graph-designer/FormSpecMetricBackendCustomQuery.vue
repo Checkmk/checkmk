@@ -4,25 +4,21 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
+import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import { type ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/graph_designer'
 import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { staticAssertNever } from 'cmk-ui-library/lib/typeUtils'
 import useId from 'cmk-ui-library/lib/useId'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { type ValidationMessages } from '@/form'
 import FormHelp from '@/form/private/FormHelp.vue'
 
-import {
-  type ConsolidationFunction,
-  FLOAT_OUTPUT_FUNCTIONS,
-  consolidationFunctionFromName
-} from '@/metric-backend/consolidation/types'
-
 import FormMetricBackendCustomQuery from './FormMetricBackendCustomQuery.vue'
-import { buildConsolidationFunction, consolidationFunctionFromWire } from './consolidation'
 import { metricBackendMacroHelp } from './constants'
 
 const { _t } = usei18n()
@@ -42,49 +38,121 @@ const serviceNameTemplateErrors = computed<string[]>(() =>
 
 const componentId = useId()
 
-const pickedFunction = ref<ConsolidationFunction | null>(
-  consolidationFunctionFromName(data.value.consolidation_function)
-)
+function storedConsolidation(stored: MetricBackendCustomQuery): WireConsolidationFunction {
+  const fn = stored.consolidation_function
+  switch (fn) {
+    case 'gauge_last':
+    case 'gauge_max':
+    case 'gauge_avg':
+    case 'gauge_min':
+      return { type: 'gauge', function: fn, lookback_seconds: stored.aggregation_lookback }
+    case 'sum_rate':
+    case 'sum_last_raw':
+    case 'sum_delta':
+      return { type: 'sum', function: fn, lookback_seconds: stored.aggregation_lookback }
+    case 'histogram_quantile':
+    case 'histogram_count_delta':
+    case 'histogram_count_rate':
+    case 'histogram_sum_rate':
+    case 'histogram_sum_delta':
+    case 'histogram_sum_raw':
+    case 'histogram_fraction_below':
+    case 'histogram_fraction_between':
+    case 'histogram_preserve_quantile':
+    case 'histogram_preserve_fraction_below':
+    case 'histogram_preserve_fraction_between':
+      return {
+        type: 'histogram',
+        function: fn,
+        lookback_seconds: stored.aggregation_lookback,
+        percentile: stored.aggregation_histogram_percentile,
+        threshold: stored.aggregation_histogram_threshold_for_fraction_below,
+        lower_threshold: stored.aggregation_histogram_lower_threshold_for_fraction_between,
+        upper_threshold: stored.aggregation_histogram_upper_threshold_for_fraction_between,
+        group_by: stored.aggregation_histogram_group_by
+      }
+    default:
+      staticAssertNever(fn)
+      throw new Error(`unhandled consolidation function: ${JSON.stringify(fn)}`)
+  }
+}
+
+// A bound defineModel reflects a write only after the parent's prop flows back (next
+// flush), so same-tick writes (e.g. consolidation + aggregator on one picker change)
+// would each spread a stale data.value. This mirror gives them a synchronous view.
+const local = ref<MetricBackendCustomQuery>({ ...data.value })
+
+watch(data, (incoming) => {
+  if (incoming !== local.value) {
+    local.value = { ...incoming }
+  }
+})
+
+function commit(next: MetricBackendCustomQuery): void {
+  local.value = next
+  data.value = next
+}
+
+function update(patch: Partial<MetricBackendCustomQuery>): void {
+  commit({ ...local.value, ...patch })
+}
+
+const metricName = computed<string | null>({
+  get: () => local.value.metric_name,
+  set: (value) => update({ metric_name: value })
+})
+
+const attributeFilter = computed<AttributeFilter | undefined>({
+  get: () => local.value.attribute_filter,
+  set: (value) => {
+    const { attribute_filter: _dropped, ...rest } = local.value
+    commit(value === undefined ? rest : { ...rest, attribute_filter: value })
+  }
+})
+
+const serviceNameTemplate = computed<string>({
+  get: () => local.value.service_name_template,
+  set: (value) => update({ service_name_template: value })
+})
 
 const consolidation = computed<WireConsolidationFunction>({
-  get: () =>
-    buildConsolidationFunction(
-      pickedFunction.value,
-      data.value.aggregation_lookback,
-      data.value.aggregation_histogram_percentile,
-      data.value.aggregation_histogram_threshold_for_fraction_below,
-      data.value.aggregation_histogram_lower_threshold_for_fraction_between,
-      data.value.aggregation_histogram_upper_threshold_for_fraction_between
-    ),
+  get: () => storedConsolidation(local.value),
   set: (value) => {
-    const picked = consolidationFunctionFromWire(value)
-    if (picked.function === 'histogram_preserve') {
-      throw new Error('preserve histograms cannot be stored in the custom-query rule')
-    }
-    pickedFunction.value = picked
-    data.value = {
-      ...data.value,
-      consolidation_function: picked.function,
+    const current = local.value
+    update({
+      consolidation_function: value.function,
       aggregation_lookback: value.lookback_seconds,
       aggregation_histogram_percentile:
-        value.function === 'histogram_quantile'
+        value.function === 'histogram_quantile' || value.function === 'histogram_preserve_quantile'
           ? value.percentile
-          : data.value.aggregation_histogram_percentile,
+          : current.aggregation_histogram_percentile,
       aggregation_histogram_threshold_for_fraction_below:
-        value.function === 'histogram_fraction_below'
-          ? (value.threshold ?? data.value.aggregation_histogram_threshold_for_fraction_below)
-          : data.value.aggregation_histogram_threshold_for_fraction_below,
+        value.function === 'histogram_fraction_below' ||
+        value.function === 'histogram_preserve_fraction_below'
+          ? (value.threshold ?? current.aggregation_histogram_threshold_for_fraction_below)
+          : current.aggregation_histogram_threshold_for_fraction_below,
       aggregation_histogram_lower_threshold_for_fraction_between:
-        value.function === 'histogram_fraction_between'
+        value.function === 'histogram_fraction_between' ||
+        value.function === 'histogram_preserve_fraction_between'
           ? (value.lower_threshold ??
-            data.value.aggregation_histogram_lower_threshold_for_fraction_between)
-          : data.value.aggregation_histogram_lower_threshold_for_fraction_between,
+            current.aggregation_histogram_lower_threshold_for_fraction_between)
+          : current.aggregation_histogram_lower_threshold_for_fraction_between,
       aggregation_histogram_upper_threshold_for_fraction_between:
-        value.function === 'histogram_fraction_between'
+        value.function === 'histogram_fraction_between' ||
+        value.function === 'histogram_preserve_fraction_between'
           ? (value.upper_threshold ??
-            data.value.aggregation_histogram_upper_threshold_for_fraction_between)
-          : data.value.aggregation_histogram_upper_threshold_for_fraction_between
-    }
+            current.aggregation_histogram_upper_threshold_for_fraction_between)
+          : current.aggregation_histogram_upper_threshold_for_fraction_between,
+      aggregation_histogram_group_by: value.type === 'histogram' ? (value.group_by ?? []) : []
+    })
+  }
+})
+
+// Scalar grouping rides the aggregator sibling; stored as-is, null when ungrouped.
+const aggregator = computed<Aggregator | undefined>({
+  get: () => local.value.aggregator ?? undefined,
+  set: (value) => {
+    update({ aggregator: value ?? null })
   }
 })
 </script>
@@ -92,11 +160,11 @@ const consolidation = computed<WireConsolidationFunction>({
 <template>
   <FormMetricBackendCustomQuery
     :id="componentId"
-    v-model:metric-name="data.metric_name"
-    v-model:attribute-filter="data.attribute_filter"
+    v-model:metric-name="metricName"
+    v-model:attribute-filter="attributeFilter"
     v-model:consolidation="consolidation"
+    v-model:aggregator="aggregator"
     :backend-validation="props.backendValidation"
-    :allowed-functions="FLOAT_OUTPUT_FUNCTIONS"
   >
     <template #additional-rows>
       <tr>
@@ -104,7 +172,7 @@ const consolidation = computed<WireConsolidationFunction>({
         <td>
           <div class="gd-form-spec-metric-backend-custom-query__service-name-template">
             <CmkInput
-              v-model="data.service_name_template"
+              v-model="serviceNameTemplate"
               type="text"
               field-size="large"
               :placeholder="_t('Service name template')"

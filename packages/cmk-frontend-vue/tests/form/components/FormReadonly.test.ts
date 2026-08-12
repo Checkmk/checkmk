@@ -478,3 +478,83 @@ test('FormReadonly falls back to the plain fields for a name outside the catalog
   screen.getByText('Percentile (histograms):')
   screen.getByText('95 %')
 })
+
+test('FormReadonly renders a preserve spelling as the preserve-histograms pill', () => {
+  renderMetricBackendCustomQuery(undefined, 'histogram_preserve_quantile')
+
+  screen.getByText('Consolidation:')
+  screen.getByText(/\[Histogram\] preserve histograms ·/)
+})
+
+test.each([
+  ['histogram_preserve_quantile', 'p95 by [Resource] k8s.pod.name'],
+  ['histogram_preserve_fraction_below', 'fraction <5 by [Resource] k8s.pod.name'],
+  ['histogram_preserve_fraction_between', 'fraction 10–90 by [Resource] k8s.pod.name']
+])('FormReadonly renders the preserve grouping as the editor chip', (fn, clause) => {
+  renderMetricBackendCustomQuery(undefined, fn, [{ kind: 'resource', key: 'k8s.pod.name' }])
+
+  screen.getByText('Group by:')
+  screen.getByText(clause)
+})
+
+test('FormReadonly renders an ungrouped preserve view with its parameter', () => {
+  renderMetricBackendCustomQuery(undefined, 'histogram_preserve_quantile')
+
+  screen.getByText('Group by:')
+  screen.getByText('p95 by nothing, combine all series into one')
+})
+
+test('FormReadonly renders the aggregator stages', () => {
+  renderMetricBackendCustomQuery(undefined, 'gauge_last', [], {
+    stages: [
+      {
+        aggregate_by: [{ kind: 'resource', name: 'k8s.pod.name' }],
+        aggregation_fn: { type: 'scalar', name: 'avg' }
+      }
+    ]
+  })
+
+  screen.getByText('Group by:')
+  screen.getByText('avg by [Resource] k8s.pod.name')
+})
+
+test('FormReadonly renders a chained aggregator as the editor clause plus then steps', () => {
+  renderMetricBackendCustomQuery(undefined, 'gauge_last', [], {
+    stages: [
+      {
+        aggregate_by: [{ kind: 'resource', name: 'k8s.pod.name' }],
+        aggregation_fn: { type: 'scalar', name: 'avg' }
+      },
+      {
+        aggregate_by: [{ kind: 'resource', name: 'k8s.namespace.name' }],
+        aggregation_fn: { type: 'scalar', name: 'max' }
+      }
+    ]
+  })
+
+  screen.getByText('Group by:')
+  screen.getByText('avg by [Resource] k8s.pod.name, then max by [Resource] k8s.namespace.name')
+})
+
+test('FormReadonly renders a keyless aggregator stage as combining all series', () => {
+  renderMetricBackendCustomQuery(undefined, 'gauge_last', [], {
+    stages: [{ aggregate_by: [], aggregation_fn: { type: 'scalar', name: 'avg' } }]
+  })
+
+  screen.getByText('Group by:')
+  screen.getByText('avg by nothing, combine all series into one')
+})
+
+test('FormReadonly renders a preserve grouping and its then step in one row', () => {
+  renderMetricBackendCustomQuery(
+    undefined,
+    'histogram_preserve_quantile',
+    [{ kind: 'resource', key: 'k8s.pod.name' }],
+    { stages: [{ aggregate_by: [], aggregation_fn: { type: 'scalar', name: 'avg' } }] }
+  )
+
+  expect(screen.getAllByText('Group by:')).toHaveLength(1)
+  screen.getByText(
+    'p95 by [Resource] k8s.pod.name, then avg by nothing, combine all series into one'
+  )
+})

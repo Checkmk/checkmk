@@ -8,17 +8,9 @@ import { render, screen, waitFor } from '@testing-library/vue'
 import { defineComponent, nextTick, ref } from 'vue'
 
 import FormConsolidation from '@/metric-backend/consolidation/FormConsolidation.vue'
-import type {
-  AllowedFunctions,
-  ConsolidationModel,
-  MetricType
-} from '@/metric-backend/consolidation/types'
+import type { ConsolidationModel, MetricType } from '@/metric-backend/consolidation/types'
 
-function renderWidget(
-  initial: Partial<ConsolidationModel> = {},
-  availableTypes?: MetricType[],
-  allowedFunctions?: AllowedFunctions
-) {
+function renderWidget(initial: Partial<ConsolidationModel> = {}, availableTypes?: MetricType[]) {
   const model = ref<ConsolidationModel>({
     type: 'sum',
     function: 'sum_rate',
@@ -30,16 +22,12 @@ function renderWidget(
   const wrapper = defineComponent({
     components: { FormConsolidation },
     setup() {
-      return { model, availableTypes: resolvedTypes, allowedFunctions }
+      return { model, availableTypes: resolvedTypes }
     },
     template: `
       <div>
         <button type="button">outside</button>
-        <FormConsolidation
-          v-model="model"
-          :available-types="availableTypes"
-          :allowed-functions="allowedFunctions"
-        />
+        <FormConsolidation v-model="model" :available-types="availableTypes" />
       </div>
     `
   })
@@ -413,56 +401,4 @@ test('a still-available metric type keeps the current function', async () => {
 
   expect(model.value.type).toBe('sum')
   expect(model.value.function).toBe('sum_delta')
-})
-
-const BACKEND_SUPPORTED: AllowedFunctions = {
-  gauge: ['gauge_last'],
-  sum: ['sum_rate'],
-  histogram: ['histogram_quantile']
-}
-
-test('an allowlist restricts the dropdown to the permitted functions', async () => {
-  // Two permitted functions still warrant a dropdown, but only those two show.
-  renderWidget({ type: 'histogram', function: 'histogram_quantile' }, ['histogram'], {
-    histogram: ['histogram_quantile', 'histogram_count_delta']
-  })
-  await openFunctionDropdown()
-
-  expect(await screen.findByRole('option', { name: 'Quantile' })).toBeVisible()
-  expect(screen.getByRole('option', { name: 'Count delta' })).toBeVisible()
-  expect(screen.queryByRole('option', { name: 'Preserve histograms' })).toBeNull()
-})
-
-test('a single permitted function renders read-only instead of a dropdown', async () => {
-  renderWidget({ type: 'sum', function: 'sum_rate' }, ['sum'], BACKEND_SUPPORTED)
-  await userEvent.click(chip())
-
-  expect(screen.queryByRole('combobox', { name: 'Consolidation function' })).toBeNull()
-  expect(screen.getByText('Rate')).toBeVisible()
-})
-
-test('an allowlist drives the per-type default on a metric type change', async () => {
-  // Catalog default is preserve_histogram, but the allowlist permits only quantile.
-  const { model, availableTypes } = renderWidget(
-    { type: 'sum', function: 'sum_rate' },
-    ['sum'],
-    BACKEND_SUPPORTED
-  )
-
-  availableTypes.value = ['histogram']
-  await nextTick()
-
-  expect(model.value.type).toBe('histogram')
-  expect(model.value.function).toBe('histogram_quantile')
-})
-
-test('an ambiguous type offers only the permitted function per group', async () => {
-  renderWidget({ type: 'sum', function: 'sum_rate' }, ['sum', 'histogram'], BACKEND_SUPPORTED)
-  await openFunctionDropdown()
-
-  expect(await screen.findByText('Treat as Sum')).toBeVisible()
-  expect(screen.getByText('Treat as Histogram')).toBeVisible()
-  expect(screen.getByRole('option', { name: 'Rate' })).toBeVisible()
-  expect(screen.getByRole('option', { name: 'Quantile' })).toBeVisible()
-  expect(screen.queryByRole('option', { name: 'Preserve histograms' })).toBeNull()
 })

@@ -448,7 +448,6 @@ py_library(
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
-        requirement("python-dateutil"),
     ],
 )
 

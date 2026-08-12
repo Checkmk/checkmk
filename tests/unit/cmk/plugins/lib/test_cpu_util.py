@@ -165,6 +165,44 @@ def test_cpu_util_time(
     )
 
 
+def test_cpu_util_time_resets_on_time_source_anomaly() -> None:
+    """A stored timestamp that is not strictly in the past (e.g. after a time
+    source change, or a clock jumping backwards) must not produce a bogus or
+    negative duration - it must reset tracking instead."""
+    value_store: dict[str, object] = {"cpu.util.core.high": {"my_core": 1_000.0}}
+
+    # `this_time` is *before* the stored timestamp -> anomaly, must not crash
+    # and must not yield a (negative) duration.
+    assert not list(
+        cpu_util.cpu_util_time(
+            this_time=500.0,
+            core="my_core",
+            perc=100,
+            threshold=40,
+            levels=(5, 10),
+            value_store=value_store,
+        )
+    )
+    assert value_store["cpu.util.core.high"] == {"my_core": 500.0}
+
+    # tracking resumes normally from the reset point
+    assert list(
+        cpu_util.cpu_util_time(
+            this_time=510.0,
+            core="my_core",
+            perc=100,
+            threshold=40,
+            levels=(5, 10),
+            value_store=value_store,
+        )
+    ) == [
+        Result(
+            state=State.CRIT,
+            summary="my_core is under high load for: 10 seconds (warn/crit at 5 seconds/10 seconds)",
+        ),
+    ]
+
+
 def test__util_counter() -> None:
     cpu = cpu_util.CPUInfo("cpu-name", 100, 40, 60, 80, 50, 80, 30, 60, 20, 40)
 

@@ -45,6 +45,7 @@ import ProfilingFlamegraphApp from './profiling/ProfilingFlamegraphApp.vue'
 import ProfilingProfilesListApp from './profiling/ProfilingProfilesListApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
+import TrialModeSelectionApp from './trial-mode-selection/TrialModeSelectionApp.vue'
 import TwoFactorAuthApp from './two-factor-auth/TwoFactorAuthApp.vue'
 import WebAuthnRegisterButtonApp from './two-factor-auth/WebAuthnRegisterButtonApp.vue'
 import UnifiedSearchApp from './unified-search/UnifiedSearchApp.vue'
@@ -91,6 +92,7 @@ defineCmkComponent('cmk-static-icon', IconApp, { pure: true })
 defineCmkComponent('cmk-two-factor-authentication', TwoFactorAuthApp)
 defineCmkComponent('cmk-webauthn-register-button', WebAuthnRegisterButtonApp)
 defineCmkComponent('cmk-product-usage-analytics', ProductUsageAnalyticsApp)
+defineCmkComponent('cmk-trial-mode-selection', TrialModeSelectionApp)
 defineCmkComponent('cmk-date-time-picker', DateTimePickerApp)
 defineCmkComponent('cmk-global-time-picker', GlobalTimePickerApp)
 defineCmkComponent('cmk-graph-group', GraphGroup)

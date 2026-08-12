@@ -246,6 +246,14 @@ body.login {
     color: $font-color-dimmed;
   }
 
+  &.trial_mode_selection {
+    /* stylelint-disable-next-line selector-id-pattern */
+    #login_window {
+      width: 640px;
+      text-align: left;
+    }
+  }
+
   &.two_factor {
     /* stylelint-disable-next-line selector-id-pattern */
     #login_window {

@@ -1663,6 +1663,7 @@ CASES: Mapping[str, list[Case]] = {
     "graph_timeranges": [
         CasePass("configured", [{"title": "The last 4 fortnights", "duration": 4838400}]),
         CaseFail("missing-duration", [{"title": "The last 4 fortnights"}]),
+        CaseFail("empty", []),
         CaseFail("not-a-list", "4h"),
     ],
     "hard_query_limit": MIN_ONE_INTEGER_CASES,

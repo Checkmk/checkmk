@@ -39,7 +39,6 @@ py_library(
     ],
     deps = [
         requirement("pydantic"),
-        requirement("toml"),
     ],
 )
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import time
 from collections.abc import Mapping
 
 import pytest
@@ -73,3 +74,63 @@ def test_check_cpu_utilization_os_levels(
     # Measure: t=110s -> 10 seconds elapsed; delta cpu controls util.
     section_t1 = SectionCpuUtilizationOs(time_base=110.0, num_cpus=4, time_cpu=second_time_cpu)
     assert list(check_cpu_utilization_os(params, section_t1)) == expected_results
+
+
+def test_check_cpu_utilization_os_high_load_duration_uses_wall_clock_time(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    value_store: dict[str, object] = {"util": (0.0, 0.0)}
+    monkeypatch.setattr(cpu_utilization_os_plugin, "get_value_store", lambda: value_store)
+    times = iter([1_000_000.0, 1_000_010.0])
+    monkeypatch.setattr(time, "time", lambda: next(times))
+
+    params = {"core_util_time_total": (0.0, 5.0, 10.0)}
+
+    # First call only registers that the core is over the threshold.
+    list(
+        check_cpu_utilization_os(
+            params, SectionCpuUtilizationOs(time_base=1e9, num_cpus=4, time_cpu=1.0)
+        )
+    )
+
+    # time_base jumps by billions (simulating nanosecond ticks) while only
+    # 10 seconds of real time actually pass (per the mocked time.time() calls).
+    results = list(
+        check_cpu_utilization_os(
+            params, SectionCpuUtilizationOs(time_base=5e18, num_cpus=4, time_cpu=2.0)
+        )
+    )
+    assert (
+        Result(
+            state=State.CRIT,
+            summary="total is under high load for: 10 seconds (warn/crit at 5 seconds/10 seconds)",
+        )
+        in results
+    )
+
+
+def test_check_cpu_utilization_os_migrates_stale_high_load_state(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A "core is under high load since" timestamp written before this plugin
+    # switched this_time to wall-clock time can be *smaller* than the new
+    # time.time() too (e.g. cgroup v2's old this_time was uptime), so
+    # this_time - stale_timestamp is a large *positive* number.
+    # Such stale state must be discarded.
+    value_store: dict[str, object] = {
+        "util": (500_000.0, 100.0),
+        "cpu.util.core.high": {"total": 500_000.0},
+    }
+    monkeypatch.setattr(cpu_utilization_os_plugin, "get_value_store", lambda: value_store)
+    monkeypatch.setattr(time, "time", lambda: 1_800_000_000.0)
+
+    params = {"core_util_time_total": (0.0, 5.0, 10.0)}
+    results = list(
+        check_cpu_utilization_os(
+            params, SectionCpuUtilizationOs(time_base=500_010.0, num_cpus=4, time_cpu=110.0)
+        )
+    )
+
+    assert not any(
+        isinstance(r, Result) and r.summary.startswith("total is under high load") for r in results
+    )

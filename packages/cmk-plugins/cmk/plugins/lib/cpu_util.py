@@ -398,13 +398,15 @@ def _cpu_util_time(
         value_store["cpu.util.core.high"] = {k: v for k, v in core_states.items() if k != core}
         return
 
-    timestamp = core_states.setdefault(core, this_time)
-    value_store["cpu.util.core.high"] = core_states
-    if timestamp == this_time:
+    timestamp = core_states.get(core, this_time)
+    duration = this_time - timestamp
+    if duration <= 0:
+        core_states[core] = this_time
+        value_store["cpu.util.core.high"] = core_states
         return
 
     yield from check_levels_v1(
-        this_time - timestamp,
+        duration,
         levels_upper=levels,
         render_func=render.timespan,
         label="%s is under high load for" % core,

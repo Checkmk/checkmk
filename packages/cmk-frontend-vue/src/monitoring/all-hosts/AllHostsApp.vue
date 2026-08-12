@@ -27,6 +27,8 @@ import { type ActionFeedback as ActionFeedbackResult } from '../shared/component
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildColumnStorageKey } from '../shared/services/MonitoringService'
+import { buildTableStateSchema } from '../shared/tableState/schema'
+import { readTableStateFromUrl, useUrlTableState } from '../shared/tableState/useUrlTableState'
 import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
 import { useRescheduleHostsAction } from './actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
@@ -99,12 +101,18 @@ async function loadActionMenu(host: HostRef): Promise<CellAction[]> {
 const columns = buildHostColumns({ includeActions: hasRowActions, sites: props.sites })
 const columnPinning = buildHostColumnPinning({ includeActions: hasRowActions })
 
+const schema = buildTableStateSchema({
+  columns,
+  limitTiers: HOST_LIMIT_TIERS,
+  mayRemoveLimit: props.may_ignore_hard_limit ?? false
+})
+const initialState = readTableStateFromUrl(window.location.search, schema)
+
 const hostApi = new HostApi()
 
 const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
   pollIntervalMs: props.poll_interval_ms,
-  limitTiers: HOST_LIMIT_TIERS,
-  mayRemoveLimit: props.may_ignore_hard_limit ?? false,
+  tableStateSchema: schema,
   columnStorageKey: buildColumnStorageKey({
     view: 'all-hosts',
     site: props.site,
@@ -112,6 +120,7 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
     edition: props.edition
   }),
   columns,
+  initialState,
   quickFilters: [
     {
       label: _t('Unhandled host problems'),
@@ -134,6 +143,8 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
     }
   ]
 })
+
+useUrlTableState(hostService, schema)
 
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 

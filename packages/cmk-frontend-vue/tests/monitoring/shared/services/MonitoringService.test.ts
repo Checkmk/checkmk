@@ -15,6 +15,7 @@ import {
   type PagedResponse,
   buildColumnStorageKey
 } from '@/monitoring/shared/services/MonitoringService'
+import type { TableStateSchema } from '@/monitoring/shared/tableState/types'
 
 import { makeKeyShortcutService, makeResponse } from './testHelpers'
 
@@ -1057,6 +1058,184 @@ describe('MonitoringService', () => {
       await vi.advanceTimersByTimeAsync(0)
 
       expect(service.offset.value).toBe(42)
+
+      service.stopPolling()
+    })
+  })
+
+  describe('initialState', () => {
+    it('feeds columns, sort and limit into the first fetch, called exactly once', async () => {
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+      const service = new TestService(fetchBatch, {
+        columns: [
+          { accessorKey: 'address', header: 'IP address' },
+          { accessorKey: 'alias', header: 'Alias', meta: { hidden: true } }
+        ],
+        limitTiers: [100, 1000],
+        initialState: { cols: ['alias'], sort: [{ id: 'name', desc: true }], limit: 1000 }
+      })
+
+      expect(service.columnVisibility.value).toEqual({ address: false, alias: true })
+      expect(service.sortState.value).toEqual([{ id: 'name', desc: true }])
+      expect(service.requestedLimit.value).toBe(1000)
+
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(fetchBatch).toHaveBeenCalledTimes(1)
+
+      service.stopPolling()
+    })
+
+    it('pauses the refresh when the initial limit is unlimited', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        limitTiers: [1000],
+        mayRemoveLimit: true,
+        initialState: { limit: null }
+      })
+
+      expect(service.requestedLimit.value).toBeNull()
+      expect(service.manualPaused.value).toBe(true)
+
+      service.stopPolling()
+    })
+
+    it('leaves columns, sort and limit at their defaults when no initial state is given', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        columns: [{ accessorKey: 'alias', header: 'Alias', meta: { hidden: true } }],
+        limitTiers: [1000]
+      })
+
+      expect(service.columnVisibility.value).toEqual({ alias: false })
+      expect(service.sortState.value).toEqual([])
+      expect(service.requestedLimit.value).toBe(1000)
+
+      service.stopPolling()
+    })
+
+    describe('column seeding and local storage', () => {
+      const STORAGE_KEY = 'test-service-initial-state-columns'
+      const COLUMNS: ColumnDef<TestItem>[] = [
+        { accessorKey: 'name', header: 'Host', enableHiding: false },
+        { accessorKey: 'address', header: 'IP address' },
+        { accessorKey: 'alias', header: 'Alias', meta: { hidden: true } }
+      ]
+
+      afterEach(() => {
+        localStorage.clear()
+      })
+
+      it('an initial column list wins over what is already stored', () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ alias: true }))
+
+        const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+          columns: COLUMNS,
+          columnStorageKey: STORAGE_KEY,
+          initialState: { cols: ['address'] }
+        })
+
+        expect(service.columnVisibility.value).toEqual({ address: true, alias: false })
+
+        service.stopPolling()
+      })
+
+      it('does not write the seeded selection to storage', async () => {
+        const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+          columns: COLUMNS,
+          columnStorageKey: STORAGE_KEY,
+          initialState: { cols: ['address'] }
+        })
+        await nextTick()
+
+        expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+
+        service.stopPolling()
+      })
+
+      it("still persists the user's own next change", async () => {
+        const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+          columns: COLUMNS,
+          columnStorageKey: STORAGE_KEY,
+          initialState: { cols: ['address'] }
+        })
+
+        service.updateColumnVisibility({ alias: true })
+        await nextTick()
+
+        expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')).toEqual({ alias: true })
+
+        service.stopPolling()
+      })
+    })
+  })
+
+  describe('tableStateSchema', () => {
+    it('sources hideable ids, default visibility and offered limits from the schema, not from columns/limitTiers/mayRemoveLimit', () => {
+      const columns: ColumnDef<TestItem>[] = [
+        { accessorKey: 'id', header: 'Id', enableHiding: false },
+        { accessorKey: 'value', header: 'Value' }
+      ]
+      const tableStateSchema: TableStateSchema = {
+        hideable: ['value'],
+        sortable: new Set(['value']),
+        defaultVisibility: { value: false },
+        offeredLimits: [42, 99]
+      }
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        columns,
+        limitTiers: [1000, 5000],
+        mayRemoveLimit: true,
+        tableStateSchema
+      })
+
+      // computeDefaultVisibility(columns) alone would give {} - the schema's { value: false } wins.
+      expect(service.columnVisibility.value).toEqual({ value: false })
+      expect(service.toggleableColumns).toEqual([{ id: 'value', label: 'Value' }])
+      // buildOfferedLimits(limitTiers, mayRemoveLimit) alone would give [1000, 5000, null].
+      expect(service.offeredLimits).toEqual([42, 99])
+      expect(service.requestedLimit.value).toBe(42)
+
+      service.stopPolling()
+    })
+
+    it('falls back to the raw id as a label when the schema names a column absent from columns', () => {
+      const tableStateSchema: TableStateSchema = {
+        hideable: ['phantom'],
+        sortable: new Set(),
+        defaultVisibility: {},
+        offeredLimits: [1000]
+      }
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        columns: [],
+        tableStateSchema
+      })
+
+      expect(service.toggleableColumns).toEqual([{ id: 'phantom', label: 'phantom' }])
+
+      service.stopPolling()
+    })
+  })
+
+  describe('tableState', () => {
+    it('mirrors the current columns, sort and limit', () => {
+      const service = new TestService(vi.fn().mockResolvedValue(makeResponse([], 0, 0)), {
+        columns: [
+          { accessorKey: 'address', header: 'IP address' },
+          { accessorKey: 'alias', header: 'Alias', meta: { hidden: true } }
+        ],
+        limitTiers: [1000, 5000]
+      })
+
+      expect(service.tableState.value).toEqual({ cols: ['address'], sort: [], limit: 1000 })
+
+      service.updateColumnVisibility({ alias: true })
+      service.updateSort([{ id: 'name', desc: false }])
+      service.setRequestedLimit(5000)
+
+      expect(service.tableState.value).toEqual({
+        cols: ['address', 'alias'],
+        sort: [{ id: 'name', desc: false }],
+        limit: 5000
+      })
 
       service.stopPolling()
     })

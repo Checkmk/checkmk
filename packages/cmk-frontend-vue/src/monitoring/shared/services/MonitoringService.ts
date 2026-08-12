@@ -26,12 +26,16 @@ import {
 import type { FilterNode } from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE, POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 import {
+  columnIdsFromVisibility,
+  visibilityFromColumnIds
+} from '@/monitoring/shared/tableState/reconcile'
+import {
   type ToggleableColumn,
   buildOfferedLimits,
   buildToggleableColumns,
   computeDefaultVisibility
 } from '@/monitoring/shared/tableState/schema'
-import type { TableStateSchema } from '@/monitoring/shared/tableState/types'
+import type { TableState, TableStateSchema } from '@/monitoring/shared/tableState/types'
 import type { RequestedLimit } from '@/monitoring/shared/types'
 
 import { FilterStore, type QuickFilter, type QuickFilterConfig } from './FilterStore'
@@ -84,6 +88,13 @@ export interface MonitoringServiceOptions<T> {
    * {@link buildColumnStorageKey}. Omit to keep the selection in memory only.
    */
   columnStorageKey?: string
+  /**
+   * A validated, already-reconciled table state to seed columns, sort and
+   * limit from - typically decoded from the URL. Seeding columns this way
+   * never writes to local storage; seeding the limit applies the same
+   * unlimited-pauses-refresh coupling `setRequestedLimit` does.
+   */
+  initialState?: Partial<TableState>
 }
 
 export interface ColumnStorageScope {
@@ -155,8 +166,11 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly filterState: Ref<FilterNode | undefined> = ref(undefined)
 
   readonly toggleableColumns: ToggleableColumn[]
+  private readonly hideableColumnIds: string[]
   readonly columnVisibility: Ref<VisibilityState>
   readonly defaultColumnVisibility: VisibilityState
+  /** The table's non-filter display state, for a URL sync to watch. */
+  readonly tableState: ComputedRef<TableState>
 
   /** Owns all filter state: quick-filters and active conditions. */
   readonly filters: FilterStore
@@ -217,11 +231,13 @@ export abstract class MonitoringService<T> extends ServiceBase {
       limitTiers = [],
       mayRemoveLimit = false,
       tableStateSchema,
-      columnStorageKey
+      columnStorageKey,
+      initialState
     } = options
 
     if (tableStateSchema === undefined) {
       this.toggleableColumns = buildToggleableColumns(columns)
+      this.hideableColumnIds = this.toggleableColumns.map(({ id }) => id)
       this.defaultColumnVisibility = computeDefaultVisibility(columns)
     } else {
       // `columns` still describes every column, so this only borrows its labels - not
@@ -230,25 +246,46 @@ export abstract class MonitoringService<T> extends ServiceBase {
       // `tableStateSchema` was built from; it exists so a schema/columns mismatch
       // degrades to a raw id instead of crashing.
       const labelById = new Map(buildToggleableColumns(columns).map(({ id, label }) => [id, label]))
-      this.toggleableColumns = tableStateSchema.hideable.map((id) => ({
+      this.hideableColumnIds = tableStateSchema.hideable
+      this.toggleableColumns = this.hideableColumnIds.map((id) => ({
         id,
         label: labelById.get(id) ?? untranslated(id)
       }))
       this.defaultColumnVisibility = tableStateSchema.defaultVisibility
     }
     const defaultVisibility = { ...this.defaultColumnVisibility }
+    const urlVisibility =
+      initialState?.cols === undefined
+        ? undefined
+        : visibilityFromColumnIds(initialState.cols, this.hideableColumnIds)
     // usePersistentRef writes every later change back, so the selection outlives
-    // the tab it was made in.
+    // the tab it was made in. Seeding through `parse` lets a URL's columns win
+    // without persisting them - the user's own next change still writes through.
     this.columnVisibility =
       columnStorageKey === undefined
-        ? ref(defaultVisibility)
+        ? ref(urlVisibility ?? defaultVisibility)
         : usePersistentRef(columnStorageKey, defaultVisibility, (stored) =>
-            sanitizeVisibility(stored, this.toggleableColumns, defaultVisibility)
+            urlVisibility === undefined
+              ? sanitizeVisibility(stored, this.toggleableColumns, defaultVisibility)
+              : urlVisibility
           )
 
     this.offeredLimits =
       tableStateSchema?.offeredLimits ?? buildOfferedLimits(limitTiers, mayRemoveLimit)
     this.requestedLimit = ref(this.offeredLimits[0] ?? DEFAULT_BATCH_SIZE)
+    if (initialState?.limit !== undefined) {
+      this.applyLimit(initialState.limit)
+    }
+
+    if (initialState?.sort !== undefined) {
+      this.sortState.value = initialState.sort
+    }
+
+    this.tableState = computed(() => ({
+      cols: columnIdsFromVisibility(this.columnVisibility.value, this.hideableColumnIds),
+      sort: this.sortState.value,
+      limit: this.requestedLimit.value
+    }))
 
     this.filters = new FilterStore(quickFilters, this.searchQuery)
     const bridge = useColumnFilterBridge(columns, this.filters)
@@ -368,20 +405,27 @@ export abstract class MonitoringService<T> extends ServiceBase {
     }
   }
 
-  // Selecting "no limit" pauses the auto-refresh so an unbounded result set isn't re-fetched on
-  // every tick; switching back to a bounded limit resumes it.
-  setRequestedLimit(value: RequestedLimit): void {
-    if (value === this.requestedLimit.value) {
-      return
-    }
+  /**
+   * Set {@link requestedLimit}, applying the "unlimited pauses auto-refresh,
+   * a bounded value resumes it" coupling. Does not reset {@link offset} or
+   * trigger a fetch - callers representing a user action do that themselves.
+   */
+  private applyLimit(value: RequestedLimit): void {
     const wasUnlimited = this.requestedLimit.value === null
     this.requestedLimit.value = value
-    this.offset.value = 0
     if (value === null) {
       this.manualPaused.value = true
     } else if (wasUnlimited) {
       this.manualPaused.value = false
     }
+  }
+
+  setRequestedLimit(value: RequestedLimit): void {
+    if (value === this.requestedLimit.value) {
+      return
+    }
+    this.applyLimit(value)
+    this.offset.value = 0
     void this.fetch()
   }
 

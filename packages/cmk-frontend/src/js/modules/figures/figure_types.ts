@@ -115,11 +115,6 @@ export type Levels = {
   style: string
 }
 
-interface _Metric {
-  bounds: Bounds
-  unit: any
-}
-
 export interface Bounds {
   warn?: number
   crit?: number

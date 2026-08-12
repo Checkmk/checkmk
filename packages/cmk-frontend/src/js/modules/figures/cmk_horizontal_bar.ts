@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { Dimension } from 'crossfilter2'
-import type { AxisDomain, BaseType, ScaleLinear, Selection } from 'd3'
-import { axisLeft, axisRight, axisTop, max, range, scaleLinear } from 'd3'
+import type { ScaleLinear, Selection } from 'd3'
+import { axisLeft, axisTop, max, range, scaleLinear } from 'd3'
 
 import { FigureTooltip } from '@/modules/figures/cmk_figure_tooltip'
 import { FigureBase } from '@/modules/figures/cmk_figures'

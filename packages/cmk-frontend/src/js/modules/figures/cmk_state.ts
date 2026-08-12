@@ -120,25 +120,6 @@ export class StateFigure extends TextFigure<StateFigureData> {
   }
 }
 
-interface StateHostFigureDataData {
-  url: string
-  host_state: any
-  host_has_been_checked: any
-  host_description: string
-  host_name: string
-}
-
-type StateHostFigureDataPlotDefinition = StateFigureDataPlotDefinition
-
-//This type is not used for now, because this causes other errors related to figure data.
-//But it should be used in the future to specify the Data type of StateHostFigure
-interface _StateHostFigureData extends TextFigureData<
-  StateHostFigureDataData,
-  StateHostFigureDataPlotDefinition
-> {
-  data: StateHostFigureDataData[]
-}
-
 export class StateHostFigure extends StateFigure {
   override ident() {
     return 'state_host'

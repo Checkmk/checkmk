@@ -152,45 +152,6 @@ export class BIVisualization extends NodeVisualization {
   }
 }
 
-class TopologySettings {
-  growth_root_nodes: string[]
-  growth_forbidden_nodes: string[]
-  growth_continue_nodes: string[]
-  display_mode: string
-  max_nodes: number
-  mesh_depth: number
-  overlays_config: { [name: string]: any }
-
-  constructor(
-    growth_root_nodes: string[] = [],
-    growth_forbidden_nodes: string[] = [],
-    growth_continue_nodes: string[] = [],
-    display_mode = 'parent_child',
-    max_nodes = 2000,
-    mesh_depth = 2,
-    overlays_config: { [name: string]: any } = {}
-  ) {
-    this.growth_root_nodes = growth_root_nodes
-    this.growth_forbidden_nodes = growth_forbidden_nodes
-    this.growth_continue_nodes = growth_continue_nodes
-    this.display_mode = display_mode
-    this.max_nodes = max_nodes
-    this.mesh_depth = mesh_depth
-    this.overlays_config = overlays_config
-  }
-}
-
-function _parse_topology_settings(data: TopologySettings): TopologySettings {
-  return new TopologySettings(
-    data.growth_root_nodes,
-    data.growth_forbidden_nodes,
-    data.growth_continue_nodes,
-    data.display_mode,
-    data.max_nodes,
-    data.mesh_depth
-  )
-}
-
 function updateUrlParams(
   url: string,
   newParams: Record<string, string | number | boolean>

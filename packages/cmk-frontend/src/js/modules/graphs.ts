@@ -1194,15 +1194,6 @@ function paint_line(p0: [number, number], p1: [number, number], color: string) {
   ctx.restore()
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function paint_rect(p: [number, number], width: number, height: number, color: string) {
-  if (!ctx) throw new Error("ctx shouldn't be null!")
-  ctx.save()
-  ctx.fillStyle = color
-  ctx.fillRect(p[0], p[1], width, height)
-  ctx.restore()
-}
-
 function paint_dot(p: [number, number], color: string) {
   if (!ctx) throw new Error("ctx shouldn't be null!")
   ctx.save()
@@ -1237,22 +1228,6 @@ function render_color_rgba(rgb: [number, number, number], a: number) {
   const g = rgb[1] * 255
   const b = rgb[2] * 255
   return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + a + ')'
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function lighten_color(rgb: [number, number, number], v: number) {
-  const lighten = function (x: number, v: number) {
-    return x + (1.0 - x) * v
-  }
-  return [lighten(rgb[0], v), lighten(rgb[1], v), lighten(rgb[2], v)]
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function darken_color(rgb: [number, number, number], v: number) {
-  const darken = function (x: number, v: number) {
-    return x * (1.0 - v)
-  }
-  return [darken(rgb[0], v), darken(rgb[1], v), darken(rgb[2], v)]
 }
 
 function invert_color(rgb: [number, number, number]): [number, number, number] {

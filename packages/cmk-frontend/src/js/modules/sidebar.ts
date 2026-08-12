@@ -3,10 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import Swal from 'sweetalert2'
-
 import { call_ajax } from './ajax'
-import type { CMKAjaxReponse } from './types'
 import {
   add_class,
   change_class,
@@ -147,16 +144,6 @@ function snapinDrop(event: MouseEvent, targetpos: HTMLElement): boolean | void {
   refresh_single_snapin(thisId)
 }
 
-function snapinTerminateDrag(): true | void {
-  if (g_snapin_dragging == false) return true
-  removeSnapinDragIndicator()
-  // Reset properties
-  remove_class(g_snapin_dragging, 'dragging')
-  g_snapin_dragging.style.top = ''
-  g_snapin_dragging.style.left = ''
-  g_snapin_dragging = false
-}
-
 export function snapin_stop_drag(event: Event) {
   if (!g_snapin_dragging) return
 
@@ -293,10 +280,6 @@ let refresh_snapins: string[][] = []
 let restart_snapins: string[] = []
 // Snapins that only have to be reloaded on demand
 let static_snapins: string[] = []
-// Contains a timestamp which holds the time of the last nagios restart handling
-let sidebar_restart_time: number | null = null
-// Configures the number of seconds to reload all snapins which request it
-let sidebar_update_interval: number | null = null
 
 export function add_snapin(name: string) {
   call_ajax('sidebar_ajax_add_snapin.py?name=' + name, {
@@ -442,28 +425,6 @@ export function switch_site(url: string) {
     handler_data: null
   })
 }
-
-function bulk_update_contents(ids: string[], codes: string) {
-  /* eslint-disable-next-line no-eval -- Highlight existing violations CMK-17846 */
-  codes = eval(codes)
-  for (let i = 0; i < ids.length; i++) {
-    if (restart_snapins.indexOf(ids[i].replace('snapin_', '')) !== -1) {
-      // Snapins which rely on the restart time of nagios receive
-      // an empty code here when nagios has not been restarted
-      // since sidebar rendering or last update, skip it
-      if (codes[i] !== '') {
-        update_contents(ids[i], codes[i])
-        sidebar_restart_time = Math.floor(new Date().getTime() / 1000)
-      }
-    } else {
-      update_contents(ids[i], codes[i])
-    }
-  }
-}
-
-let g_seconds_to_update: null | number = null
-let g_sidebar_scheduler_timer: null | number = null
-let g_sidebar_full_reload = false
 
 export function refresh_single_snapin(name: string) {
   const event = new CustomEvent('sidebar-update-snapin-content', {
@@ -797,48 +758,6 @@ function move_needle(from_perc: number, to_perc: number) {
  * Popup Message Handling
  *************************************************/
 
-// integer representing interval in seconds or <null> when disabled.
-let g_sidebar_notify_interval: null | number
-let g_may_ack = false
-
-interface AjaxSidebarGetMessages {
-  popup_messages: { id: string; text: string }[]
-  hint_messages: {
-    type: string
-    title: string
-    text: string
-    count: number
-  }
-}
-
-function handle_update_messages(_data: any, response_text: string) {
-  const response: CMKAjaxReponse<AjaxSidebarGetMessages> = JSON.parse(response_text)
-  if (response.result_code !== 0) {
-    return
-  }
-  const result = response.result
-  const messages_text = result.hint_messages.text
-  const messages_title = result.hint_messages.title
-  const messages_count = result.hint_messages.count
-
-  update_message_trigger(messages_text, messages_count)
-  result.popup_messages.forEach((msg) => {
-    Swal.fire({
-      icon: 'info',
-      title: messages_title,
-      text: msg.text
-    })
-    mark_message_read(msg.id)
-  })
-}
-
-function update_messages() {
-  // retrieve new messages
-  call_ajax('ajax_sidebar_get_messages.py', {
-    response_handler: handle_update_messages
-  })
-}
-
 export function update_message_trigger(msg_text: string, msg_count: number) {
   const l = document.getElementById('messages_label')
   if (l) {
@@ -862,32 +781,6 @@ export function update_message_trigger(msg_text: string, msg_count: number) {
     // Construct new text for the GUI hint
     popup_link.innerHTML = `${popup_text} <span class="new_msg">${text_content}</span>`
   }
-}
-
-function mark_message_read(msg_id: string) {
-  call_ajax('sidebar_message_read.py?id=' + msg_id)
-}
-
-interface AjaxSidebarGetUnackIncompWerks {
-  count: number
-  text: string
-  tooltip: string
-}
-
-function handle_update_unack_incomp_werks(_data: any, response_text: string) {
-  const response: CMKAjaxReponse<AjaxSidebarGetUnackIncompWerks> = JSON.parse(response_text)
-  if (response.result_code !== 0) {
-    return
-  }
-  const result = response.result
-  update_werks_trigger(result.count, result.text, result.tooltip)
-}
-
-function update_unack_incomp_werks() {
-  // retrieve number of unacknowledged incompatible werks
-  call_ajax('ajax_sidebar_get_unack_incomp_werks.py', {
-    response_handler: handle_update_unack_incomp_werks
-  })
 }
 
 export function update_werks_trigger(werks_count: number, text: string, tooltip: string) {

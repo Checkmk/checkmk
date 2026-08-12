@@ -242,11 +242,6 @@ function _clear_root_nodes(world: NodevisWorld) {
   })
 }
 
-function _set_root_node(nodevis_node: NodevisNode, world: NodevisWorld): void {
-  _clear_root_nodes(world)
-  nodevis_node.data.growth_settings.growth_root = true
-}
-
 function _toggle_growth_continue(nodevis_node: NodevisNode): boolean {
   const growth_settings = nodevis_node.data.growth_settings
   growth_settings.growth_continue = !growth_settings.growth_continue

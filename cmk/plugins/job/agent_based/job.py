@@ -340,7 +340,7 @@ def check_job(
         )
 
     # The exit code comes from the completed job, so without one we cannot say
-    # anything about the outcome. Its start time is only needed while nothing runs.
+    # anything about the outcome.
     if completed_job is not None:
         if completed_job.exit_code is None:
             # Werk 15450 made mk-job assemble this file under $TMPDIR and move it into place, so
@@ -354,16 +354,6 @@ def check_job(
                 state=State.UNKNOWN,
                 summary="Got incomplete information for this job",
                 details="No exit code for the last completed run - its file is probably truncated.",
-            )
-            return
-        if completed_job.start_time is None and not running_jobs:
-            # mk-job versions shipped with Checkmk 2.4.0 and older determine the start time with
-            # perl and write an empty one if perl is not installed - on a minimal RHEL 8/9
-            # installation, for example.
-            yield Result(
-                state=State.UNKNOWN,
-                summary="Got incomplete information for this job",
-                details="No start time for the last completed run - probably no perl on the monitored host.",
             )
             return
         yield from _check_completed_job(
@@ -399,7 +389,14 @@ def check_job(
         )
         start_time = completed_job.start_time
     else:
-        return  # unreachable, the guards above have rejected this
+        # We reported the outcome of the completed job above; without a start time for
+        # it, and with nothing running, there is no job age to go with it.
+        yield Result(
+            state=State.UNKNOWN,
+            summary="Got incomplete information for this job",
+            details="No start time for the last completed run - probably no perl on the monitored host.",
+        )
+        return
 
     yield from _check_job_age(time.time() - start_time, bool(running_jobs), params["age"])
 

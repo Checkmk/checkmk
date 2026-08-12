@@ -901,13 +901,32 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
                 ["exit_code", "0"],
             ],
             [
+                Result(state=State.OK, summary="Latest exit code: 0"),
+                Result(state=State.OK, summary="Real time: 960 milliseconds"),
+                Metric("real_time", 0.96, boundaries=(0.0, None)),
                 Result(
                     state=State.UNKNOWN,
                     summary="Got incomplete information for this job",
                     details="No start time for the last completed run - probably no perl on the monitored host.",
-                )
+                ),
             ],
             id="job without a start time",
+        ),
+        pytest.param(
+            # The outcome does not depend on the start time, so a job that failed is
+            # CRIT and not UNKNOWN even if we cannot say when it ran.
+            "Cleanup-Cache-Files",
+            job.check_plugin_job.check_default_parameters,
+            [["==>", "Cleanup-Cache-Files", "<=="], ["exit_code", "1"]],
+            [
+                Result(state=State.CRIT, summary="Latest exit code: 1"),
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Got incomplete information for this job",
+                    details="No start time for the last completed run - probably no perl on the monitored host.",
+                ),
+            ],
+            id="failed job without a start time",
         ),
         pytest.param(
             # mk-job appends the exit code to the file of a completed run last, so a

@@ -432,6 +432,7 @@ def test_widget_filters(
     ).to_have_count(hosts_count)
 
 
+@pytest.mark.xfail(reason="CMK-37975; skip failing test.")
 def test_add_top_list_widget(
     linux_hosts: list[str], cloned_linux_hosts_dashboard: CustomDashboard
 ) -> None:

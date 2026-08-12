@@ -3671,9 +3671,6 @@
             "https://files.pythonhosted.org/packages/3f/45/53d662227dc4787b2c854445ee7eb4751cb5d74cfb5c686a6ecbe1f94c17/botocore_stubs-1.43.67.tar.gz": "853e74014a1f557055c4ffae5fb38d7c65c7c0520e1aab366cac41d5428f419d",
             "https://files.pythonhosted.org/packages/4e/5e/bdbf19967898a032292da65a47d6e25b2eee55865db4e687f861d80b5602/botocore_stubs-1.43.67-py3-none-any.whl": "c51262bac3341c1cda71f05fa01141fffd3990d7a92c7960e3b755c1bc830373"
           },
-          "bson": {
-            "https://files.pythonhosted.org/packages/4d/53/7c534a38850f2252275d7f949aed2219095e90df1e2d180a9c8ed139e499/bson-0.5.10.tar.gz": "d6511b2ab051139a9123c184de1a04227262173ad593429d21e443d6462d6590"
-          },
           "cached-property": {
             "https://files.pythonhosted.org/packages/11/0e/7d8225aab3bc1a0f5811f8e1b557aa034ac04bdf641925b30d3caf586b28/cached_property-2.0.1-py3-none-any.whl": "f617d70ab1100b7bcf6e42228f9ddcb78c676ffa167278d9f730d1c2fba69ccb",
             "https://files.pythonhosted.org/packages/76/4b/3d870836119dbe9a5e3c9a61af8cc1a8b69d75aea564572e385882d5aefb/cached_property-2.0.1.tar.gz": "484d617105e3ee0e4f1f58725e72a8ef9e93deee462222dbd51cd91230897641"
@@ -9205,7 +9202,6 @@
           "boto3_stubs": "/simple/boto3-stubs/",
           "botocore": "/simple/botocore/",
           "botocore_stubs": "/simple/botocore-stubs/",
-          "bson": "/simple/bson/",
           "cached_property": "/simple/cached-property/",
           "cattrs": "/simple/cattrs/",
           "certifi": "/simple/certifi/",

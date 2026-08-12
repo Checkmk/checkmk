@@ -552,11 +552,6 @@ botocore==1.43.68 \
     #   -r packages/cmk-plugins/requirements.in
     #   boto3
     #   s3transfer
-bson==0.5.10 \
-    --hash=sha256:d6511b2ab051139a9123c184de1a04227262173ad593429d21e443d6462d6590
-    # via
-    #   -c requirements.txt
-    #   -r tests/dev-requirements.in
 cached-property==2.0.1 \
     --hash=sha256:484d617105e3ee0e4f1f58725e72a8ef9e93deee462222dbd51cd91230897641 \
     --hash=sha256:f617d70ab1100b7bcf6e42228f9ddcb78c676ffa167278d9f730d1c2fba69ccb
@@ -4597,7 +4592,6 @@ python-dateutil==2.9.0.post0 \
     #   -r packages/cmk-licensing/requirements.in
     #   -r packages/cmk-plugins/requirements.in
     #   botocore
-    #   bson
     #   icalendar
     #   influxdb-client
     #   kubernetes
@@ -5409,7 +5403,6 @@ six==1.17.0 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
     # via
     #   -c requirements.txt
-    #   bson
     #   dockerpty
     #   kubernetes
     #   opsgenie-sdk

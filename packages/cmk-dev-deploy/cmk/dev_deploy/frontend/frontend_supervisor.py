@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cmk.dev_deploy.core import output
+from cmk.dev_deploy.core.bazel import ensure_bazel_wrapper
 from cmk.dev_deploy.errors import FrontendError
 from cmk.dev_deploy.frontend.ibazel_manager import ensure_ibazel
 
@@ -385,9 +386,17 @@ class FrontendSupervisor:
     # -- Subprocess management -----------------------------------------------
 
     def _spawn_ibazel(self) -> None:
-        """Spawn iBazel via ``ibazel run`` in a new process group."""
+        """Spawn iBazel via ``ibazel run`` in a new process group.
+
+        ``-bazel_path`` points iBazel's bazel invocations at the deploy
+        server, so frontend rebuilds never contend with the developer's
+        own bazel commands (omitted in shared-server mode).
+        """
         ibazel_bin = ensure_ibazel()
-        cmd = [str(ibazel_bin), "run", IBAZEL_TARGET]
+        cmd = [str(ibazel_bin)]
+        if (bazel_wrapper := ensure_bazel_wrapper(self._repo_root)) is not None:
+            cmd.append(f"-bazel_path={bazel_wrapper}")
+        cmd.extend(["run", IBAZEL_TARGET])
         self._proc = subprocess.Popen(
             cmd,
             cwd=str(self._repo_root),

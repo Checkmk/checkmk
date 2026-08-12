@@ -166,7 +166,8 @@ Bazel executes one command at a time per output base. On the checkout's
 default server, every deploy would queue behind whatever `bazel test` or
 `bazel build` you have running -- and block it in return. The tool
 therefore runs all of its Bazel commands (`build`, `run //:deploy-python`,
-`query`, `cquery`, `info`) against a dedicated output base:
+`query`, `cquery`, `info`, and the iBazel frontend supervisor's rebuilds)
+against a dedicated output base:
 
 ```
 ~/.cache/cmk-dev-deploy/bazel/<hash of the checkout path>

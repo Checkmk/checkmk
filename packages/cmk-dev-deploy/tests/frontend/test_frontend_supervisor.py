@@ -2611,3 +2611,46 @@ class TestSiteConfigIntegration:
 
         source = inspect.getsource(_run_frontend_watch)
         assert "remove_override" in source
+
+
+# ---------------------------------------------------------------------------
+# TestSpawnIBazelBazelPath
+# ---------------------------------------------------------------------------
+
+
+class TestSpawnIBazelBazelPath:
+    """iBazel is pointed at the deploy server via -bazel_path."""
+
+    def _spawn(self, tmp_path: Path, wrapper: Path | None) -> list[str]:
+        from cmk.dev_deploy.frontend.frontend_supervisor import FrontendSupervisor
+
+        supervisor = FrontendSupervisor(FrontendConfig(), repo_root=tmp_path)
+        with (
+            patch(
+                "cmk.dev_deploy.frontend.frontend_supervisor.ensure_ibazel",
+                return_value=Path("/bin/ibazel"),
+            ),
+            patch(
+                "cmk.dev_deploy.frontend.frontend_supervisor.ensure_bazel_wrapper",
+                return_value=wrapper,
+            ),
+            patch("cmk.dev_deploy.frontend.frontend_supervisor.subprocess.Popen") as popen,
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._StdoutPrefixer"),
+            patch("cmk.dev_deploy.frontend.frontend_supervisor._StderrCapture"),
+            patch.object(FrontendSupervisor, "_write_pid_file"),
+        ):
+            supervisor._spawn_ibazel()  # noqa: SLF001
+        cmd: list[str] = popen.call_args.args[0]
+        return cmd
+
+    def test_bazel_path_flag_in_isolated_mode(self, tmp_path: Path) -> None:
+        from cmk.dev_deploy.frontend.frontend_supervisor import IBAZEL_TARGET
+
+        cmd = self._spawn(tmp_path, Path("/cache/bazel-wrapper"))
+        assert cmd == ["/bin/ibazel", "-bazel_path=/cache/bazel-wrapper", "run", IBAZEL_TARGET]
+
+    def test_plain_ibazel_in_shared_mode(self, tmp_path: Path) -> None:
+        from cmk.dev_deploy.frontend.frontend_supervisor import IBAZEL_TARGET
+
+        cmd = self._spawn(tmp_path, None)
+        assert cmd == ["/bin/ibazel", "run", IBAZEL_TARGET]

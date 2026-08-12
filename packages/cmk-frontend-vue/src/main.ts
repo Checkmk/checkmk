@@ -36,6 +36,7 @@ import ProductUsageAnalyticsApp from './product-usage-analytics/ProductUsageAnal
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
 import SidebarApp from './sidebar/SidebarApp.vue'
+import TrialModeSelectionApp from './trial-mode-selection/TrialModeSelectionApp.vue'
 import TwoFactorAuthApp from './two-factor-auth/TwoFactorAuthApp.vue'
 import WebAuthnRegisterButtonApp from './two-factor-auth/WebAuthnRegisterButtonApp.vue'
 import UnifiedSearchApp from './unified-search/UnifiedSearchApp.vue'
@@ -73,6 +74,7 @@ defineCmkComponent('cmk-static-icon', IconApp, { pure: true })
 defineCmkComponent('cmk-two-factor-authentication', TwoFactorAuthApp)
 defineCmkComponent('cmk-webauthn-register-button', WebAuthnRegisterButtonApp)
 defineCmkComponent('cmk-product-usage-analytics', ProductUsageAnalyticsApp)
+defineCmkComponent('cmk-trial-mode-selection', TrialModeSelectionApp)
 defineCmkComponent('cmk-monitoring-all-hosts', AllHostsApp)
 defineCmkComponent('cmk-monitoring-page-link-button', MonitoringPageLinkButton)
 

@@ -95,13 +95,9 @@ export interface GraphItemsStore {
 
 /**
  * @param palette Default metric colors to use.
- * @param seed Pre-existing items (e.g. when editing an existing graph).
  */
-export function useGraphItems(
-  palette: readonly string[],
-  seed: readonly DesignerItem[] = []
-): GraphItemsStore {
-  const items = ref<DesignerItem[]>([...seed])
+export function useGraphItems(palette: readonly string[]): GraphItemsStore {
+  const items = ref<DesignerItem[]>([])
 
   function requireFormula(id: ItemId): FormulaItem {
     const item = items.value.find((candidate) => candidate.id === id)

@@ -20,7 +20,8 @@ const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
 /** Renders the wrapper off the live store row so a type switch re-renders the right sub-form. */
 function renderForm(seed: DraftRRDMetricItem | DraftRRDQueryItem) {
-  const store = useGraphItems(PALETTE, [seed])
+  const store = useGraphItems(PALETTE)
+  store.replaceAll([seed])
   const harness = defineComponent({
     setup() {
       useProvideFilterDefinitions({ definitions: {}, groups: {} })

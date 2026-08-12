@@ -130,8 +130,10 @@ afterEach(() => {
 })
 
 function bodyProps(graph: CustomGraphObject = graphObject()) {
+  const store = useGraphItems(PALETTE)
+  store.replaceAll(graph.extensions.content.data_sources.map(fromApiDataSource))
   return {
-    store: useGraphItems(PALETTE, graph.extensions.content.data_sources.map(fromApiDataSource)),
+    store,
     graphOptions: graph.extensions.content.graph_options,
     title: 'My graph',
     mode: 'edit' as 'view' | 'edit',

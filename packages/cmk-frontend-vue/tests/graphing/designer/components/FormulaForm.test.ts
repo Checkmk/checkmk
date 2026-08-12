@@ -16,7 +16,8 @@ const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
 /** Seeds the store and renders the formula row 'F' off it. */
 function renderFormulaForm(seed: DesignerItem[]) {
-  const store = useGraphItems(PALETTE, seed)
+  const store = useGraphItems(PALETTE)
+  store.replaceAll(seed)
   const item = store.items.value.find((candidate) => candidate.id === 'F')
   if (item?.type !== 'rrd_formula') {
     throw new Error(`expected an rrd_formula row, got ${item?.type}`)

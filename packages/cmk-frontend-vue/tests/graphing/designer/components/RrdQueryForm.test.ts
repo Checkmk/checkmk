@@ -64,7 +64,8 @@ const DEFINITIONS = {
 } as unknown as FilterDefinitions
 
 function renderQueryForm(seed: DraftRRDQueryItem) {
-  const store = useGraphItems(PALETTE, [seed])
+  const store = useGraphItems(PALETTE)
+  store.replaceAll([seed])
   const harness = defineComponent({
     setup() {
       useProvideFilterDefinitions({ definitions: DEFINITIONS, groups: {} })

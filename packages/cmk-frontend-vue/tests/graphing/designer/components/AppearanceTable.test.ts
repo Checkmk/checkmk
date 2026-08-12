@@ -38,7 +38,8 @@ function renderTable(
   metricsBySource: Map<ItemId, Metric[]>,
   groupTitlesBySource: Map<ItemId, string> = new Map()
 ) {
-  const store = useGraphItems(PALETTE, seed)
+  const store = useGraphItems(PALETTE)
+  store.replaceAll(seed)
   return {
     store,
     ...render(AppearanceTable, { props: { store, metricsBySource, groupTitlesBySource } })

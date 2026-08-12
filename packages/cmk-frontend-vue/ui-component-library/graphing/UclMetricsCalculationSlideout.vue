@@ -114,7 +114,8 @@ const seed: GraphItem[] = [
   }
 ]
 
-const store = useGraphItems(PALETTE, seed)
+const store = useGraphItems(PALETTE)
+store.replaceAll(seed)
 const completeItems = computed(() => store.items.value.filter(isComplete))
 const open = ref(false)
 

@@ -37,7 +37,8 @@ function renderForm(seed: DraftMetricBackendItem) {
     raiseForStatus: async () => {},
     json: async () => ({ choices: [] })
   })
-  const store = useGraphItems(PALETTE, [seed])
+  const store = useGraphItems(PALETTE)
+  store.replaceAll([seed])
   const harness = defineComponent({
     setup() {
       return () => {

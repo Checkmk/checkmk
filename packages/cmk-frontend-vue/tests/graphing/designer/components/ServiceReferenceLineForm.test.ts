@@ -15,7 +15,8 @@ const THRESHOLDS = { warning: '#ffd000', critical: '#ff3232' }
 
 test('changing the threshold type recolors warning/critical scalars', async () => {
   const scalar = scalarItem('A', { color: THRESHOLDS.warning })
-  const store = useGraphItems(PALETTE, [scalar])
+  const store = useGraphItems(PALETTE)
+  store.replaceAll([scalar])
   render(ServiceReferenceLineForm, { props: { item: scalar, store, thresholds: THRESHOLDS } })
 
   await fireEvent.click(screen.getByRole('combobox', { name: 'Threshold type' }))

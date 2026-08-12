@@ -6,15 +6,20 @@
 import { fireEvent, render, screen } from '@testing-library/vue'
 
 import ConstantLineForm from '@/graphing/designer/components/forms/ConstantLineForm.vue'
-import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
-import { newConstantDraft } from '@/graphing/designer/drafts'
+import { type GraphItemsStore, useGraphItems } from '@/graphing/designer/composables/useGraphItems'
+import { type DraftConstantItem, newConstantDraft } from '@/graphing/designer/drafts'
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
-test('entering a value completes a constant', async () => {
-  const draft = newConstantDraft('A', '#28a2f3')
-  const store = useGraphItems(PALETTE, [draft])
+function renderForm(draft: DraftConstantItem): GraphItemsStore {
+  const store = useGraphItems(PALETTE)
+  store.replaceAll([draft])
   render(ConstantLineForm, { props: { item: draft, store } })
+  return store
+}
+
+test('entering a value completes a constant', async () => {
+  const store = renderForm(newConstantDraft('A', '#28a2f3'))
 
   await fireEvent.update(screen.getByRole('spinbutton', { name: 'Constant at' }), '42')
 
@@ -22,9 +27,7 @@ test('entering a value completes a constant', async () => {
 })
 
 test('clearing the value leaves the constant unset rather than blank', async () => {
-  const draft = { ...newConstantDraft('A', '#28a2f3'), value: 42 }
-  const store = useGraphItems(PALETTE, [draft])
-  render(ConstantLineForm, { props: { item: draft, store } })
+  const store = renderForm({ ...newConstantDraft('A', '#28a2f3'), value: 42 })
 
   await fireEvent.update(screen.getByRole('spinbutton', { name: 'Constant at' }), '')
 

@@ -51,7 +51,8 @@ function renderTable(
   metricBackendAvailable = true,
   createServicesAvailable = true
 ) {
-  const store = useGraphItems(PALETTE, seed)
+  const store = useGraphItems(PALETTE)
+  store.replaceAll(seed)
   const utils = render(MetricsTable, {
     props: {
       store,

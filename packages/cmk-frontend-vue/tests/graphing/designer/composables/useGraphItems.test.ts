@@ -35,6 +35,15 @@ function colorOf(item: DesignerItem): string | undefined {
   return isSingleLine(item) ? item.color : undefined
 }
 
+function storeWith(
+  items: readonly DesignerItem[],
+  palette: readonly string[] = PALETTE
+): GraphItemsStore {
+  const store = useGraphItems(palette)
+  store.replaceAll(items)
+  return store
+}
+
 test('allocates spreadsheet-style ids, wrapping past Z, and returns them', () => {
   const store = useGraphItems(PALETTE)
   const returned: string[] = []
@@ -50,12 +59,12 @@ test('allocates spreadsheet-style ids, wrapping past Z, and returns them', () =>
 })
 
 test('continues after the highest seed id', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A', { color: PALETTE[0]! })])
+  const store = storeWith([rrdMetricItem('A', { color: PALETTE[0]! })])
   expect(store.addFormula(numberDraft(1))).toBe('B')
 })
 
 test('replacing every item drops the edited ones and re-allocates ids from the new ones', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A'), rrdMetricItem('B')])
+  const store = storeWith([rrdMetricItem('A'), rrdMetricItem('B')])
   store.remove('B')
 
   store.replaceAll([rrdMetricItem('A'), rrdMetricItem('B'), rrdMetricItem('C')])
@@ -65,10 +74,7 @@ test('replacing every item drops the edited ones and re-allocates ids from the n
 })
 
 test('nextId follows the highest id in use, not backfilling removed ones', () => {
-  const store = useGraphItems(
-    PALETTE,
-    ['A', 'B', 'C', 'D'].map((id) => rrdMetricItem(id))
-  )
+  const store = storeWith(['A', 'B', 'C', 'D'].map((id) => rrdMetricItem(id)))
   store.remove('C')
   expect(store.nextId.value).toBe('E') // the gap at C is left alone
   store.remove('D')
@@ -94,19 +100,19 @@ test('picks the least-used colour when the palette is exhausted unevenly', () =>
     rrdMetricItem('D', { color: PALETTE[2]! }),
     rrdMetricItem('E', { color: PALETTE[3]! })
   ]
-  const store = useGraphItems(PALETTE, seed)
+  const store = storeWith(seed)
   addWithNextColor(store, 0)
   expect(colorOf(store.items.value[5]!)).toBe(PALETTE[0])
 })
 
 test('the counter skips a colour already used by a single-line item', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A', { color: PALETTE[0]! })])
+  const store = storeWith([rrdMetricItem('A', { color: PALETTE[0]! })])
   addWithNextColor(store, 0)
   expect(colorOf(store.items.value[1]!)).toBe(PALETTE[1])
 })
 
 test('ignores N-line items (no colour) when countering', () => {
-  const store = useGraphItems(PALETTE, [rrdQueryItem('A')])
+  const store = storeWith([rrdQueryItem('A')])
   addWithNextColor(store, 0)
   expect(store.items.value[0]).not.toHaveProperty('color')
   expect(colorOf(store.items.value[1]!)).toBe(PALETTE[0])
@@ -132,7 +138,7 @@ test('persists the draft title and color and sets display defaults', () => {
 })
 
 test('nextId and nextColor preview what the next add assigns', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A', { color: PALETTE[0]! })])
+  const store = storeWith([rrdMetricItem('A', { color: PALETTE[0]! })])
   expect(store.nextId.value).toBe('B')
   expect(store.nextColor.value).toBe(PALETTE[1])
   expect(addWithNextColor(store, 1)).toBe('B')
@@ -145,9 +151,9 @@ test('suggests black for an empty palette', () => {
   expect(store.nextColor.value).toBe('#000000')
 })
 
-test('does not mutate the seed array', () => {
+test('does not mutate the array it was given', () => {
   const seed = [rrdMetricItem('A')]
-  const store = useGraphItems(['#111111'], seed)
+  const store = storeWith(seed, ['#111111'])
   store.addFormula(numberDraft(1))
   expect(seed).toHaveLength(1)
   expect(store.items.value).toHaveLength(2)
@@ -176,7 +182,7 @@ test('update replaces AST, title and color but keeps id and line style', () => {
 })
 
 test('update throws for unknown or non-formula targets', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A')])
+  const store = storeWith([rrdMetricItem('A')])
   const draft = numberDraft(1)
   expect(() => store.updateFormula('Z', draft)).toThrow()
   expect(() => store.updateFormula('A', draft)).toThrow()
@@ -191,7 +197,7 @@ test('remove deletes the item and throws for unknown ids', () => {
 })
 
 test('setVisibility toggles exactly the given items', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A'), rrdMetricItem('B')])
+  const store = storeWith([rrdMetricItem('A'), rrdMetricItem('B')])
   store.setVisibility(['A'], false)
   expect(store.items.value.map((item) => item.visible)).toEqual([false, true])
   store.setVisibility(['A', 'B'], true)
@@ -199,7 +205,7 @@ test('setVisibility toggles exactly the given items', () => {
 })
 
 test('dependentsOf follows references transitively', () => {
-  const store = useGraphItems(PALETTE, [
+  const store = storeWith([
     rrdMetricItem('A'),
     formulaItem('D', { ast: { op: 'ref', id: 'A' } }),
     formulaItem('F', { ast: { op: 'ref', id: 'D' } }),
@@ -213,14 +219,14 @@ test('dependentsOf follows references transitively', () => {
 })
 
 test('items cannot be mutated past the store', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A')])
+  const store = storeWith([rrdMetricItem('A')])
   // @ts-expect-error the readonly type forbids push; assert the runtime freeze too
   expect(() => store.items.value.push(rrdMetricItem('B'))).toThrow(TypeError)
   expect(store.items.value).toHaveLength(1)
 })
 
 test('addItem assigns the next id and appends the created item', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A')])
+  const store = storeWith([rrdMetricItem('A')])
   const id = store.addItem((assigned) => newRrdMetricDraft(assigned, store.nextColor.value))
   expect(id).toBe('B')
   expect(store.items.value.map((item) => item.id)).toEqual(['A', 'B'])
@@ -228,7 +234,7 @@ test('addItem assigns the next id and appends the created item', () => {
 })
 
 test('patch updates shared row fields and throws for unknown ids', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A')])
+  const store = storeWith([rrdMetricItem('A')])
   store.patch('A', { title: 't', line_type: 'area', mirrored: true, visible: false })
   const [item] = store.items.value
   expect(item).toMatchObject({ title: 't', line_type: 'area', mirrored: true, visible: false })
@@ -236,7 +242,7 @@ test('patch updates shared row fields and throws for unknown ids', () => {
 })
 
 test('patch applies the color to single-line items only', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A'), rrdQueryItem('B')])
+  const store = storeWith([rrdMetricItem('A'), rrdQueryItem('B')])
   store.patch('A', { color: '#654321' })
   store.patch('B', { color: '#654321' })
   expect(colorOf(store.items.value[0]!)).toBe('#654321')
@@ -244,14 +250,14 @@ test('patch applies the color to single-line items only', () => {
 })
 
 test('replace swaps the item with the matching id in place', () => {
-  const store = useGraphItems(PALETTE, [constantItem('A'), rrdMetricItem('B')])
+  const store = storeWith([constantItem('A'), rrdMetricItem('B')])
   store.replace(newScalarDraft('A', '#123456'))
   expect(store.items.value.map((item) => item.type)).toEqual(['scalar', 'rrd_metric'])
   expect(() => store.replace(constantItem('Z'))).toThrow()
 })
 
 test('clone copies each row right below its source and returns the new ids', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A'), rrdMetricItem('B'), constantItem('C')])
+  const store = storeWith([rrdMetricItem('A'), rrdMetricItem('B'), constantItem('C')])
   const created = store.clone(['A', 'C'])
   expect(created).toEqual(['D', 'E'])
   expect(store.items.value.map((item) => item.id)).toEqual(['A', 'D', 'B', 'C', 'E'])
@@ -260,7 +266,7 @@ test('clone copies each row right below its source and returns the new ids', () 
 })
 
 test('move reorders rows and throws for an unknown index', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A'), rrdMetricItem('B'), constantItem('C')])
+  const store = storeWith([rrdMetricItem('A'), rrdMetricItem('B'), constantItem('C')])
   store.move(0, 2)
   expect(store.items.value.map((item) => item.id)).toEqual(['B', 'C', 'A'])
   store.move(2, 0)
@@ -269,7 +275,7 @@ test('move reorders rows and throws for an unknown index', () => {
 })
 
 test('removeMany deletes exactly the given rows', () => {
-  const store = useGraphItems(PALETTE, [rrdMetricItem('A'), rrdMetricItem('B'), constantItem('C')])
+  const store = storeWith([rrdMetricItem('A'), rrdMetricItem('B'), constantItem('C')])
   store.removeMany(['A', 'C'])
   expect(store.items.value.map((item) => item.id)).toEqual(['B'])
   expect(() => store.removeMany(['Z'])).toThrow()

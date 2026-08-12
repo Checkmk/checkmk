@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { CustomGraphDesigner } from 'cmk-shared-typing/typescript/custom_graph_designer'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
@@ -121,6 +121,22 @@ function okResponse(data: unknown, etag = '"etag-1"'): unknown {
     data,
     error: undefined,
     response: new Response(null, { status: 200, headers: { ETag: etag } })
+  }
+}
+
+function conflictResponse(): unknown {
+  return {
+    data: undefined,
+    error: { title: 'Precondition failed', detail: 'The graph was modified concurrently' },
+    response: new Response('', { status: 412, statusText: 'Precondition Failed' })
+  }
+}
+
+function rejectedResponse(): unknown {
+  return {
+    data: undefined,
+    error: { title: 'Bad request', detail: 'ids must be unique' },
+    response: new Response('', { status: 400, statusText: 'Bad Request' })
   }
 }
 
@@ -335,20 +351,6 @@ test('a graph served without an ETag fails the load, so no edit can start', asyn
   expect(screen.queryByRole('button', { name: 'Edit custom graph' })).not.toBeInTheDocument()
 })
 
-test('a failing save shows the error and stays in edit mode', async () => {
-  putSpy.mockResolvedValue({
-    data: undefined,
-    error: { title: 'Precondition failed', detail: 'The graph was modified concurrently' },
-    response: new Response('', { status: 412, statusText: 'Precondition Failed' })
-  })
-  await renderApp()
-  await fireEvent.click(await screen.findByRole('button', { name: 'Edit custom graph' }))
-  await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
-
-  expect(await screen.findByText(/Precondition/i)).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
-})
-
 test('cancelling discards edits by re-seeding from the loaded graph', async () => {
   await renderApp()
   await fireEvent.click(await screen.findByRole('button', { name: 'Edit custom graph' }))
@@ -503,6 +505,77 @@ describe('a blocked save', () => {
     expect(
       await screen.findByText('Fix the issues with IDs B, C, then try saving again.')
     ).toBeInTheDocument()
+  })
+})
+
+describe('a failed save', () => {
+  test('an unreachable server offers a retry that sends again', async () => {
+    putSpy.mockRejectedValue(new TypeError('Failed to fetch'))
+    await renderApp()
+    await enterEdit()
+
+    await save()
+    await waitFor(() => expect(putSpy).toHaveBeenCalledTimes(1))
+
+    await fireEvent.click(await screen.findByRole('button', { name: 'Retry' }))
+
+    await waitFor(() => expect(putSpy).toHaveBeenCalledTimes(2))
+  })
+
+  test('a conflict offers only the reload and stays in edit mode', async () => {
+    putSpy.mockResolvedValue(conflictResponse())
+    await renderApp()
+    await enterEdit()
+
+    await save()
+
+    expect(
+      await screen.findByRole('heading', { name: 'This graph changed since you opened it.' })
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
+  })
+
+  test('a failure with nothing to add states its message instead of heading an empty box', async () => {
+    putSpy.mockRejectedValue(new TypeError('Failed to fetch'))
+    await renderApp()
+    await enterEdit()
+
+    await save()
+
+    const message = await screen.findByText(
+      'Could not reach the server. Your changes are still here.'
+    )
+    const alert = message.closest('[role="alert"]') as HTMLElement
+    expect(within(alert).queryByRole('heading')).not.toBeInTheDocument()
+  })
+
+  test('a failure the server explained heads the box with the message, above the detail', async () => {
+    putSpy.mockResolvedValue(rejectedResponse())
+    await renderApp()
+    await enterEdit()
+
+    await save()
+
+    expect(
+      await screen.findByRole('heading', { name: 'The server rejected the graph definition.' })
+    ).toBeInTheDocument()
+    expect(screen.getByText(/ids must be unique/)).toBeInTheDocument()
+  })
+
+  test('a later blocked save clears the alert of the attempt before it', async () => {
+    putSpy.mockRejectedValue(new TypeError('Failed to fetch'))
+    await renderApp()
+    await enterEdit()
+    await save()
+    expect(await screen.findByRole('button', { name: 'Retry' })).toBeInTheDocument()
+
+    await addRrdSource()
+    await save()
+
+    expect(await screen.findByText(SAVE_ISSUES_SUMMARY)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
   })
 })
 

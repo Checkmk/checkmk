@@ -13,6 +13,7 @@ import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/Cm
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 
 import {
@@ -31,6 +32,7 @@ import {
 import DesignerBody from './components/DesignerBody.vue'
 import DesignerHeader from './components/DesignerHeader.vue'
 import type { SelectableGraph } from './components/GraphSelector.vue'
+import { type SaveAction, type SaveFailure, useSaveFailures } from './composables/saveFailure'
 import { useGraphItems } from './composables/useGraphItems'
 import { fromApiDataSource, toApiDataSources } from './drafts'
 import type { ItemId } from './types'
@@ -39,6 +41,7 @@ import { type RowIssue, isValid, validateDesign } from './validation'
 
 const props = defineProps<CustomGraphDesigner>()
 const { _t, _tn } = usei18n()
+const { describeSaveFailure } = useSaveFailures()
 
 // Single owner of the shared time-range default; header and body only read/update it.
 const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
@@ -94,7 +97,7 @@ watch(selectedGraph, (selected) => {
   }
 })
 
-const saveError = ref<string | null>(null)
+const saveFailure = ref<SaveFailure | null>(null)
 const isSaving = ref(false)
 /** Until a save has been tried, an unfinished source is work in progress, not an error. */
 const hasAttemptedSave = ref(false)
@@ -114,7 +117,7 @@ const issuesByRow = computed(() => {
 })
 
 const showsSaveIssues = computed(() => hasAttemptedSave.value && blockingIssues.value.length > 0)
-const showsAlerts = computed(() => showsSaveIssues.value || saveError.value !== null)
+const showsAlerts = computed(() => showsSaveIssues.value || saveFailure.value !== null)
 
 const blockedIds = computed(() => {
   const blocked = new Set(blockingIssues.value.map((issue) => issue.id))
@@ -134,7 +137,7 @@ function resetEditor(graph: CustomGraphObject): void {
   store.replaceAll(graph.extensions.content.data_sources.map(fromApiDataSource))
   graphOptions.value = graph.extensions.content.graph_options
   hasAttemptedSave.value = false
-  saveError.value = null
+  saveFailure.value = null
 }
 
 function urlState(): { name: string; owner: string; mode: CustomGraphDesignerMode } {
@@ -249,7 +252,7 @@ async function save(): Promise<void> {
     return
   }
   const wasBlocked = showsSaveIssues.value
-  saveError.value = null
+  saveFailure.value = null
   hasAttemptedSave.value = true
   if (blockingIssues.value.length > 0) {
     void nextTick(() => revealBlockingIssues(wasBlocked))
@@ -275,11 +278,27 @@ async function save(): Promise<void> {
     mode.value = 'view'
     replaceUrlState(urlState())
   } catch (e) {
-    saveError.value = e instanceof Error ? e.message : String(e)
+    saveFailure.value = describeSaveFailure(e)
   } finally {
     isSaving.value = false
   }
 }
+
+function saveActionButton(action: SaveAction): { title: TranslatedString; onclick: () => void } {
+  switch (action) {
+    case 'retry':
+      return { title: _t('Retry'), onclick: () => void save() }
+    case 'reload':
+      return { title: _t('Reload'), onclick: () => window.location.reload() }
+  }
+}
+
+// exactOptionalPropertyTypes rejects an explicit undefined, so a failure with no action to
+// offer has to omit the key rather than pass one.
+const saveFailureButtons = computed(() => {
+  const [main] = saveFailure.value?.actions ?? []
+  return main === undefined ? {} : { mainButton: saveActionButton(main) }
+})
 </script>
 
 <template>
@@ -346,8 +365,13 @@ async function save(): Promise<void> {
             >
               {{ blockedSummary }}
             </CmkAlertBox>
-            <CmkAlertBox v-if="saveError !== null" variant="error">
-              {{ saveError }}
+            <CmkAlertBox
+              v-if="saveFailure !== null"
+              variant="error"
+              :heading="saveFailure.detail !== null ? saveFailure.message : undefined"
+              v-bind="saveFailureButtons"
+            >
+              {{ saveFailure.detail ?? saveFailure.message }}
             </CmkAlertBox>
           </div>
         </template>

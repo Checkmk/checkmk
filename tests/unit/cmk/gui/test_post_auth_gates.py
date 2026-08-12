@@ -5,6 +5,7 @@
 
 import pytest
 
+import cmk.ccc.version as cmk_version
 from cmk.gui.config import Config
 from cmk.gui.post_auth_gates import (
     post_auth_gate_redirect_url,
@@ -12,6 +13,7 @@ from cmk.gui.post_auth_gates import (
     PostAuthGate,
     PostAuthGateRegistry,
 )
+from cmk.utils import paths
 
 
 @pytest.fixture(name="registry")
@@ -63,5 +65,12 @@ def test_first_active_gate_wins(registry: PostAuthGateRegistry) -> None:
     assert post_auth_gate_redirect_url(Config(), "index") == "first.py"
 
 
-def test_default_registry_is_empty() -> None:
-    assert not post_auth_gate_registry.keys()
+def test_default_registry() -> None:
+    # The trial mode selection gate is registered by the editions that ship it.
+    expected = (
+        {"trial_mode_selection"}
+        if cmk_version.edition(paths.omd_root)
+        in (cmk_version.Edition.PRO, cmk_version.Edition.ULTIMATE, cmk_version.Edition.ULTIMATEMT)
+        else set()
+    )
+    assert set(post_auth_gate_registry.keys()) == expected

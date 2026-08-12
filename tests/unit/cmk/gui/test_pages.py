@@ -251,6 +251,16 @@ def test_registered_pages() -> None:
             "user_oauth_tokens",
         ]
 
+    if cmk_version.edition(paths.omd_root) in (
+        cmk_version.Edition.PRO,
+        cmk_version.Edition.ULTIMATE,
+        cmk_version.Edition.ULTIMATEMT,
+    ):
+        expected_pages += [
+            "trial_mode_selection",
+            "ajax_save_trial_mode_selection",
+        ]
+
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:
         expected_pages += [
             "noauth:cognito_sso",

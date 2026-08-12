@@ -31,8 +31,9 @@ def _convert_old_instance(inst: object) -> Mapping[str, object]:
     (protocol, cafile), address, port, name = inst
 
     result: dict[str, object] = {"protocol": protocol, "address": address}
-    if port is not None:
-        result["port"] = port
+    # port is None if the old rule used "Don't use custom port", which the new required
+    # "port" field can't represent.
+    result["port"] = port if port is not None else (443 if protocol == "https" else 80)
     if name:
         result["instance"] = name
     if cafile is not None:

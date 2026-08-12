@@ -74,6 +74,34 @@ from cmk.plugins.apache.rulesets.apache_status import migrate
             id="old_static_https_no_cert",
         ),
         pytest.param(
+            (
+                "static",
+                [(("http", None), "10.0.0.2", None, "")],
+            ),
+            {
+                "deployment": ("sync", None),
+                "instances": (
+                    "static",
+                    [{"protocol": "http", "address": "10.0.0.2", "port": 80}],
+                ),
+            },
+            id="old_static_http_no_custom_port",
+        ),
+        pytest.param(
+            (
+                "static",
+                [(("https", None), "10.0.0.2", None, "")],
+            ),
+            {
+                "deployment": ("sync", None),
+                "instances": (
+                    "static",
+                    [{"protocol": "https", "address": "10.0.0.2", "port": 443}],
+                ),
+            },
+            id="old_static_https_no_custom_port",
+        ),
+        pytest.param(
             None,
             {"deployment": ("do_not_deploy", None)},
             id="old_do_not_deploy",

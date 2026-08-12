@@ -40,7 +40,8 @@ const OPTIONAL_FIELD_COLUMNS = [
   'last_check',
   'last_state_change',
   'labels',
-  'tags'
+  'tags',
+  'contacts'
 ] as const satisfies readonly HostOptionalField[]
 
 /**
@@ -331,6 +332,14 @@ export function buildHostColumns({
       enableSorting: false,
       minSize: 100,
       maxSize: 400,
+      meta: { hidden: true }
+    },
+    {
+      accessorKey: 'contacts',
+      header: _t('Contacts'),
+      enableSorting: false,
+      minSize: 100,
+      maxSize: 300,
       meta: { hidden: true }
     },
     ...(includeActions

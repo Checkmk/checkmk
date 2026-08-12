@@ -18,7 +18,7 @@ import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
-import { toLabelItems, toTagItems } from '@/monitoring/shared/labels'
+import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
 
 const props = withDefaults(
   defineProps<{
@@ -66,6 +66,7 @@ function toggleSelected(selected: boolean): void {
 
 const labels = computed(() => toLabelItems(props.row.labels ?? {}))
 const tags = computed(() => toTagItems(props.row.tags ?? {}))
+const contacts = computed(() => toNameItems(props.row.contacts ?? []))
 
 const lastCheck = computed(() =>
   props.row.last_check === undefined ? undefined : formatTimestamp(props.row.last_check)
@@ -239,6 +240,7 @@ const lastStateChange = computed(() =>
   />
   <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
   <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
+  <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
 
   <ActionsCell
     v-if="(loadActionMenu || actionButtons.length > 0) && hasColumn('actions')"

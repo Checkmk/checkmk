@@ -22,10 +22,8 @@ bazel_dep(name = "cabextract", version = "1.11")
 bazel_dep(name = "cmk", version = "0.0.0")
 bazel_dep(name = "crypt-ssleay", version = "0.72.cmk.2", repo_name = "Crypt-SSLeay")
 bazel_dep(name = "gazelle", version = "0.51.3")
-bazel_dep(name = "glib", version = "2.0.cmk.1", repo_name = "glib_module")
 bazel_dep(name = "googletest", version = "1.17.0", repo_name = "gtest")
 bazel_dep(name = "libgsf", version = "1.14.44.cmk.4")
-bazel_dep(name = "libxml2", version = "2.0.cmk.1", repo_name = "libxml2_module")
 bazel_dep(name = "llvm_toolchain", version = "21.1.8.cmk.1")
 bazel_dep(name = "mod_fcgid", version = "2.3.9.cmk.1")
 bazel_dep(name = "mod_wsgi", version = "5.0.2.cmk.1")
@@ -60,7 +58,7 @@ bazel_dep(name = "rules_python", version = "2.0.1")
 bazel_dep(name = "rules_rust", version = "0.70.0")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 bazel_dep(name = "rules_uv", version = "0.89.2")
-bazel_dep(name = "rrdtool", version = "1.7.2.cmk.2")
+bazel_dep(name = "rrdtool", version = "1.7.2.cmk.3")
 bazel_dep(name = "shunit2", version = "2.1.9pre.cmk.1")
 bazel_dep(name = "tar.bzl", version = "0.6.0")
 bazel_dep(name = "toolchains_musl", version = "0.1.20")
@@ -296,14 +294,6 @@ apt.install(
     manifest = "//omd/non-free/relay:distro_packages.yaml",
 )
 use_repo(apt, "relay_base_image")
-
-# @glib and @libxml2 overlay the distro-provided system libraries
-# (new_local_repository over /usr).
-glib_ext = use_extension("@glib_module//:extensions.bzl", "glib")
-use_repo(glib_ext, "glib")
-
-libxml2_ext = use_extension("@libxml2_module//:extensions.bzl", "libxml2")
-use_repo(libxml2_ext, "libxml2")
 
 # Java runtimes we hand to tools explicitly:
 #   remotejdk25_linux - Wiremock-based component/unit tests. Previously provided

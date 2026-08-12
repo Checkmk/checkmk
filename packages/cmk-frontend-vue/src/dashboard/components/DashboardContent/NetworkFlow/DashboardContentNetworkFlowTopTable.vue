@@ -8,10 +8,14 @@ import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import { computed, inject } from 'vue'
 
+import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
+import type {
+  ChartColor,
+  RankedTableColumn,
+  RankedTableRow
+} from '@/dashboard/components/CmkRankedTable'
 import type { NetworkFlowTopTableContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
-import CmkRankedTable from '@/network-flow/CmkRankedTable'
-import type { ChartColor, RankedTableColumn, RankedTableRow } from '@/network-flow/CmkRankedTable'
 import { autonomousSystemSlideInKey, hostSlideInKey } from '@/network-flow/slide-ins/injectionKeys'
 
 import DashboardContentContainer from '../DashboardContentContainer.vue'

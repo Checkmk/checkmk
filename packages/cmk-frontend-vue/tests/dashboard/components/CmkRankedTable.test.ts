@@ -5,8 +5,8 @@
  */
 import { fireEvent, render } from '@testing-library/vue'
 
-import CmkRankedTable from '@/network-flow/CmkRankedTable/CmkRankedTable.vue'
-import type { RankedTableColumn, RankedTableRow } from '@/network-flow/CmkRankedTable/types'
+import CmkRankedTable from '@/dashboard/components/CmkRankedTable/CmkRankedTable.vue'
+import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable/types'
 
 const COLUMNS: RankedTableColumn[] = [
   { key: 'host', title: 'Host', render: 'text', bar: false },
@@ -29,7 +29,7 @@ function renderTable(rows: RankedTableRow[] = ROWS) {
 test('renders a header per column and a row per data entry', () => {
   const { container } = renderTable()
 
-  expect(container.querySelectorAll('.network-flow-cmk-ranked-table__th')).toHaveLength(3)
+  expect(container.querySelectorAll('.db-cmk-ranked-table__th')).toHaveLength(3)
   expect(container.querySelector('thead')).toHaveTextContent('Host')
   expect(container.querySelectorAll('tbody tr')).toHaveLength(3)
 })
@@ -46,9 +46,7 @@ test('keeps the row order provided by the caller', () => {
 test('scales inline bars to the column max and fills them with the accent color', () => {
   const { container } = renderTable()
 
-  const fills = [
-    ...container.querySelectorAll<HTMLElement>('.network-flow-cmk-ranked-table__bar-fill')
-  ]
+  const fills = [...container.querySelectorAll<HTMLElement>('.db-cmk-ranked-table__bar-fill')]
   expect(fills.map((el) => el.style.width)).toEqual(['100%', '40%', '20%'])
   // The named color resolves to its theme palette CSS variable.
   expect(fills[0]!.style.backgroundColor).toBe('var(--color-corporate-green-50)')
@@ -63,7 +61,7 @@ test('emits cellClick with column and row when a clickable cell is activated', a
     props: { columns: clickableColumns, rows: ROWS, barColor: 'green' as const }
   })
 
-  const button = container.querySelector<HTMLButtonElement>('.network-flow-cmk-ranked-table__link')
+  const button = container.querySelector<HTMLButtonElement>('.db-cmk-ranked-table__link')
   expect(button).not.toBeNull()
   await fireEvent.click(button!)
 
@@ -76,7 +74,7 @@ test('emits cellClick with column and row when a clickable cell is activated', a
 test('renders plain text (no button) for non-clickable columns', () => {
   const { container } = renderTable()
 
-  expect(container.querySelector('.network-flow-cmk-ranked-table__link')).toBeNull()
+  expect(container.querySelector('.db-cmk-ranked-table__link')).toBeNull()
 })
 
 test('formats byte columns as human-readable SI values', () => {
@@ -85,9 +83,9 @@ test('formats byte columns as human-readable SI values', () => {
     { host: 'B', ingress: 5e9, volume: 552.63e6 }
   ])
 
-  const barValues = [
-    ...container.querySelectorAll('.network-flow-cmk-ranked-table__bar-value')
-  ].map((el) => el.textContent)
+  const barValues = [...container.querySelectorAll('.db-cmk-ranked-table__bar-value')].map(
+    (el) => el.textContent
+  )
   // Scaled to GB / MB (the SI formatter trims trailing zeros: 90.4, not 90.40).
   expect(barValues).toEqual(['90.4 GB', '552.63 MB'])
 })

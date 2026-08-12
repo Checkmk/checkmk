@@ -3,13 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import CmkRankedTable from './CmkRankedTable.vue'
+import { Page } from '@ucl/_ucl/types/page'
 
-export default CmkRankedTable
-export type { ChartColor } from '../colors'
-export type {
-  CmkRankedTableProps,
-  RankedTableCellRender,
-  RankedTableColumn,
-  RankedTableRow
-} from './types'
+import UclCmkRankedTable from './CmkRankedTable/UclCmkRankedTable.vue'
+
+export const pages: Array<Page> = [new Page('CmkRankedTable', UclCmkRankedTable)]

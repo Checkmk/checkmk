@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
-import { type ChartColor } from '@/network-flow/CmkRankedTable'
+import { type ChartColor } from '@/dashboard/components/CmkRankedTable'
 
 import codeExample from './UclCmkRankedTableCodeExample.vue?raw'
 
@@ -43,7 +43,7 @@ import {
 import CmkRankedTable, {
   type RankedTableColumn,
   type RankedTableRow
-} from '@/network-flow/CmkRankedTable'
+} from '@/dashboard/components/CmkRankedTable'
 
 defineProps<{ screenshotMode: boolean }>()
 

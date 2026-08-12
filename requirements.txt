@@ -4256,7 +4256,6 @@ pymongo==4.17.0 \
     --hash=sha256:faf03e4c2aafd6de626dbd30ba246d369ae33f47f10629d1bbe40f72115027a6 \
     --hash=sha256:ff5aa3f1c7e3f08eb0e7a016c91ba468b1850ccfd63d9b1f12f56350f4974cef
     # via
-    #   -r agents/plugins/dev-requirements.in
     #   -r packages/cmk-ec/requirements.in
     #   -r tests/dev-requirements.in
 pymssql==2.3.13 \

@@ -44,7 +44,6 @@ py_library(
     # dev dependency and write some actual tests :-|
     deps = [
         requirement("docker"),
-        requirement("pymongo"),
         requirement("requests"),
         requirement("urllib3"),
     ],

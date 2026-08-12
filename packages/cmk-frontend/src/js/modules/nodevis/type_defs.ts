@@ -326,14 +326,6 @@ export interface NodeVisHierarchyNode<Datum> extends HierarchyNode<Datum> {
   children_backup?: this[]
 }
 
-// TODO: add class
-export interface LayoutSettings {
-  origin_info: string
-  origin_type: 'explicit' | 'default_template'
-  default_id: string
-  config: SerializedNodevisLayout
-}
-
 export class NodeConfig {
   hierarchy: NodeVisHierarchyNode<NodeData>
   link_info: NodevisLink[]

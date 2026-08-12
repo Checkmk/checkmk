@@ -17,7 +17,6 @@ import {
   get_computed_style,
   has_class,
   is_visible,
-  querySelectorAllByClassName,
   reload_whole_page,
   remove_class
 } from './utils'
@@ -536,20 +535,6 @@ export function graph_export(page: string) {
  * Main menu
  ****************************************/
 
-export function initialize_main_menus() {
-  ;['resize', 'load'].forEach((event) => {
-    window.addEventListener(event, () => {
-      resize_all_main_menu_popups()
-    })
-  })
-}
-
-function resize_all_main_menu_popups() {
-  for (const popup of querySelectorAllByClassName('popup_menu_handler')) {
-    resize_main_menu_popup(popup)
-  }
-}
-
 export function resize_main_menu_popup(menu_popup: Nullable<HTMLElement>) {
   /* Resize a main menu to the size of its content. Three cases are considered here:
    *   1) The overview of all topics is opened.
@@ -664,53 +649,6 @@ export function main_menu_show_all_items(current_topic_id: string) {
   resize_main_menu_popup(popup_menu)
 }
 
-export function main_menu_collapse_topic(current_topic_id: string) {
-  const current_topic = document.getElementById(current_topic_id)
-  const main_menu: HTMLElement = current_topic!.closest('.main_menu')!
-
-  remove_class(current_topic, 'extended')
-  current_topic?.getElementsByTagName('ul')[0].removeAttribute('style')
-
-  // See comment in main_menu_show_all_items
-  const previously_extended_topic = main_menu.getElementsByClassName(
-    'topic previously_extended'
-  )[0] as HTMLElement
-  if (previously_extended_topic) {
-    change_class(previously_extended_topic, 'previously_extended', 'extended')
-    return
-  }
-
-  const popup_menu: HTMLElement = main_menu.closest('.popup_menu_handler')!
-  popup_menu.style.minHeight = ''
-
-  remove_class(main_menu, 'extended_topic')
-  main_menu_hide_entries(main_menu.id)
-  resize_main_menu_popup(popup_menu)
-}
-
-export function main_menu_reset_default_expansion(main_menu_name: string) {
-  const main_menu: HTMLElement | null = document.getElementById('main_menu_' + main_menu_name)
-  if (main_menu === null) {
-    return
-  }
-
-  const extended_topics = main_menu.querySelectorAll(
-    '.topic.extended, .topic.previously_extended'
-  ) as NodeListOf<HTMLElement>
-  if (extended_topics.length === 0) {
-    return
-  }
-
-  for (const topic of extended_topics) {
-    remove_class(topic, 'extended')
-    topic.getElementsByTagName('ul')[0].removeAttribute('style')
-  }
-
-  remove_class(main_menu, 'extended_topic')
-  main_menu_hide_entries(main_menu.id)
-  resize_main_menu_popup(main_menu.closest('.popup_menu_handler')!)
-}
-
 export function main_menu_hide_entries(menu_id: string) {
   const menu = document.getElementById(menu_id)
   const more_is_active = menu?.classList.contains('more')
@@ -741,8 +679,4 @@ export function main_menu_hide_entries(menu_id: string) {
     }
   })
   resize_main_menu_popup(menu!.parentElement!)
-}
-
-export function focus_search_field(input_id: string) {
-  document.getElementById(input_id)?.focus()
 }

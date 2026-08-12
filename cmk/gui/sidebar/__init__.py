@@ -764,15 +764,7 @@ class SidebarRenderer:
         html.open_div(class_="content", id_="snapin_%s" % name, style=style)
         refresh_url = ""
         try:
-            # TODO: Refactor this confusing special case. Add deddicated method or something
-            # to let the snapins make the sidebar know that there is a URL to fetch.
-            url = snapin_instance.show(config)
-            if url is not None:
-                # Fetch the contents from an external URL. Don't render it on our own.
-                refresh_url = url
-                html.javascript(
-                    f'cmk.ajax.get_url("{refresh_url}", cmk.utils.update_contents, "snapin_{name}")'
-                )
+            snapin_instance.show(config)
         except Exception as e:
             logger.exception("error rendering snapin %(snapin_name)s", {"snapin_name": name})
             write_snapin_exception(e)

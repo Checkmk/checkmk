@@ -28,7 +28,6 @@ import * as foldable_container from './modules/foldable_container'
 import * as forms from './modules/forms'
 import * as graph_integration from './modules/graph_integration'
 import * as graphs from './modules/graphs'
-import * as graphs_cee from './modules/graphs_cee'
 import * as help from './modules/help'
 import * as host_diagnose from './modules/host_diagnose'
 import * as hover from './modules/hover'
@@ -99,7 +98,6 @@ export const cmk_export = {
     forms: forms,
     graph_integration: graph_integration,
     graphs: graphs,
-    graphs_cee: graphs_cee,
     help: help,
     host_diagnose: host_diagnose,
     hover: hover,

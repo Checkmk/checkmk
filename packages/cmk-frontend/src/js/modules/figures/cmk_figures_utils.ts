@@ -368,10 +368,6 @@ export function split_unit(formatted_value?: string) {
   return { value: formatted_value, unit: '' }
 }
 
-export function getEmptyBasicFigureData(): FigureData {
-  return { data: [], plot_definitions: [] }
-}
-
 /**
  * Component to realize the css property text-overflow: ellipsis for svg text elements
  * @param node - text/tspan element

@@ -3,7 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import $ from 'jquery'
 import Swal, { type SweetAlertOptions } from 'sweetalert2'
 
 import { add_class, copy_to_clipboard, has_class, remove_class } from './utils'
@@ -307,12 +306,6 @@ export function toggle_folder(_event: Event | undefined, oDiv: HTMLElement, on: 
       move_dialog.style.display = 'none'
     }
   }
-}
-
-export function toggle_rule_condition_type(select_id: string) {
-  const value = (document.getElementById(select_id) as HTMLInputElement).value
-  $('.condition').hide()
-  $('.condition.' + value).show()
 }
 
 export function toggle_test_notification_visibility(

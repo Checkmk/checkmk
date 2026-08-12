@@ -208,12 +208,6 @@ export function toggle_dropdown(oDropdown: HTMLInputElement, divid: string) {
   else oDiv.style.display = 'none'
 }
 
-export function toggle_tag_dropdown(oDropdown: HTMLInputElement, divid: string) {
-  const oDiv = document.getElementById(divid)!
-  if (oDropdown.value == 'ignore') oDiv.style.display = 'none'
-  else oDiv.style.display = ''
-}
-
 /* This function is called after the table with of input elements
    has been rendered. It attaches the onFocus-function to the last
    of the input elements. That function will append another

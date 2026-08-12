@@ -504,12 +504,6 @@ function highlight_link(link_obj: HTMLElement, container_id: string) {
   }
 }
 
-export function wato_folders_clicked(link_obj: HTMLElement, folderpath: string) {
-  g_last_folder = folderpath
-  highlight_link(link_obj, 'snapin_container_wato_folders')
-  window.location.href = g_last_view + '&wato_folder=' + encodeURIComponent(g_last_folder)
-}
-
 export function wato_views_clicked(link_obj: HTMLLinkElement) {
   g_last_view = link_obj.href
 
@@ -912,24 +906,6 @@ export function update_werks_trigger(werks_count: number, text: string, tooltip:
     werks_link.setAttribute('title', tooltip.toString())
   }
 }
-/************************************************
- * user menu callbacks
- *************************************************/
-
-// for quick access options in user menu
-
-export function toggle_user_attribute(mode: string) {
-  call_ajax(mode, {
-    method: 'POST',
-    response_handler: function (_handler_data: any, ajax_response: string) {
-      const data = JSON.parse(ajax_response)
-      if (data.result_code == 0) {
-        reload_whole_page()
-      }
-    }
-  })
-}
-
 export function update_vue_snapin_contents(id: string, content: string) {
   const event = new CustomEvent('sidebar-new-snapin-content', {
     detail: {

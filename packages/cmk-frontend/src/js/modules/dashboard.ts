@@ -10,19 +10,14 @@ import {
   add_event_handler,
   browser,
   get_button,
-  get_theme,
   has_class,
   is_window_active,
   makeuri,
   makeuri_contextless,
-  page_height,
-  page_width,
   prevent_default_events,
-  reload_whole_page,
   remove_class,
   update_contents,
-  update_header_timer,
-  update_url_parameter
+  update_header_timer
 } from './utils'
 
 interface Dashlet {
@@ -74,38 +69,6 @@ interface Thresholds {
 
 const reload_on_resize: Record<number, any> = {}
 export let dashboard_properties = {} as DashboardPropertiesGlobal
-
-// Set the dashboard as a start URL for the user
-export function set_start_url(dashboard_name: string) {
-  call_ajax('ajax_set_dashboard_start_url.py?name=' + encodeURIComponent(dashboard_name), {
-    response_handler: (_handler_data: any, response_body: string) => {
-      let response
-      try {
-        response = JSON.parse(response_body)
-      } catch (e) {
-        console.error('Failed to parse dashboard start URL response: ' + response_body)
-        return
-      }
-      if (response.result_code === 0) {
-        reload_whole_page()
-      } else {
-        confirm_dialog(
-          {
-            text: response.result,
-            confirmButtonText: 'OK',
-            showCancelButton: false
-          },
-          null
-        )
-      }
-    },
-    method: 'POST'
-  })
-}
-
-export function set_reload_on_resize(dashlet_id: number, url: string) {
-  reload_on_resize[dashlet_id] = url
-}
 
 //the python side returns a json which includes javascript code.
 // this javascript code is encoded as string, so we need to eval
@@ -440,46 +403,10 @@ function calculate_dashlets() {
   return size_info
 }
 
-let g_dashboard_resizer: null | boolean = null
 let g_dashboard_top: number | null = null
 let g_dashboard_left: number | null = null
 let g_dashboard_width: number | null = null
 let g_dashboard_height: number | null = null
-
-export function calculate_dashboard() {
-  if (g_dashboard_resizer !== null) return // another resize is processed
-  g_dashboard_resizer = true
-
-  const oDash = document.getElementById('dashboard')
-  if (!oDash) throw new Error("oDash shouldn't be null!")
-  const dashboard_rect = oDash.getBoundingClientRect()
-  const oContainer = oDash.parentElement
-  const container_padding_right = parseInt(
-    window.getComputedStyle(oContainer!, null).paddingRight,
-    10
-  )
-
-  g_dashboard_top = dashboard_rect.top
-  g_dashboard_left = dashboard_rect.left
-  // The visual width is driven by the parent layout (``#content_area``), which
-  // already subtracts the sidebar / main-navigation strip. Apply ``width: 100 %``
-  // first, force a layout reflow, then read back the actual rendered
-  // ``clientWidth`` so the dashlet positioning math (size_dashlets /
-  // align_to_grid) is calibrated against the same width the user sees —
-  // including the current sidebar fold/unfold state.
-  oDash.style.width = '100%'
-  // Force layout flush so clientWidth reflects the new ``width: 100 %`` style.
-  void oDash.offsetWidth
-  g_dashboard_width =
-    oDash.clientWidth || (page_width() || 0) - g_dashboard_left - container_padding_right
-  // For some reason a cache removing reload on Firefox breaks this height caluclation by 1px.
-  // Thus the '- 1' hack here, so the dashboard does not overflow and no scrollbar is needed.
-  g_dashboard_height = (page_height() || 0) - g_dashboard_top - 1
-  oDash.style.height = g_dashboard_height + 'px'
-
-  size_dashlets()
-  g_dashboard_resizer = null
-}
 
 export function execute_dashboard_scheduler(initial: number) {
   // Stop reload of the dashlets in case the browser window / tab is not visible
@@ -535,52 +462,6 @@ function dashboard_update_contents(id: string, response_text: string) {
 //
 
 let g_editing = false
-
-export function toggle_dashboard_edit(edit_text?: string, display_text?: string) {
-  g_editing = !g_editing
-
-  // Toggle the page menu elements
-  const toggle_suggestion = document.getElementById('menu_suggestion_toggle_edit')
-  const toggle_shortcut = document.getElementById('menu_shortcut_toggle_edit')
-  const toggle_entry = document.getElementById('menu_entry_toggle_edit')
-
-  if (edit_text && display_text) {
-    const title = g_editing ? edit_text : display_text
-    if (toggle_suggestion) toggle_suggestion.lastChild!.textContent = title
-    toggle_shortcut!.title = title
-    toggle_entry!.firstChild!.lastChild!.textContent = title
-  }
-
-  if (g_editing) {
-    const icon_disable = 'themes/' + get_theme() + '/images/emblem_disable.svg'
-    if (toggle_suggestion)
-      (toggle_suggestion.querySelector('img.emblem') as HTMLImageElement).src = icon_disable
-    ;(toggle_shortcut!.querySelector('img.emblem') as HTMLImageElement).src = icon_disable
-    ;(toggle_entry!.querySelector('img.emblem') as HTMLImageElement).src = icon_disable
-  } else {
-    const icon_trans = 'themes/facelift/images/emblem_trans.svg'
-    if (toggle_suggestion)
-      (toggle_suggestion.querySelector('img.emblem') as HTMLImageElement).src = icon_trans
-    ;(toggle_shortcut!.querySelector('img.emblem') as HTMLImageElement).src = icon_trans
-    ;(toggle_entry!.querySelector('img.emblem') as HTMLImageElement).src = icon_trans
-  }
-
-  const dashlet_divs = document.getElementsByClassName('dashlet') as HTMLCollectionOf<HTMLElement>
-  for (let i = 0; i < dashlet_divs.length; i++) dashlet_toggle_edit(dashlet_divs[i])
-
-  // Remove/Add edit=1 parameter from URL to make page reload handling correct
-  update_url_parameter('edit', g_editing ? '1' : '0')
-
-  toggle_grid()
-}
-
-function toggle_grid() {
-  if (!g_editing) {
-    remove_class(document.getElementById('dashboard'), 'grid')
-  } else {
-    add_class(document.getElementById('dashboard'), 'grid')
-  }
-}
 
 // The resize controls are transparent areas at the border of the
 // snapin which give the user the option to dragresize the dashlets
@@ -1264,10 +1145,6 @@ function dashlet_resized(nr: number, dashlet_obj: HTMLElement) {
   }
 }
 
-export function has_canvas_support() {
-  return document.createElement('canvas').getContext
-}
-
 /*
  * Register the global event handlers, used for dragging of dashlets,
  * dialog control and resizing of dashlets
@@ -1297,32 +1174,6 @@ export function register_event_handlers() {
     },
     document
   )
-}
-
-export function chart_pie(
-  pie_id: string,
-  x_scale: number,
-  radius: number,
-  color: string | CanvasGradient | CanvasPattern,
-  right_side: boolean,
-  pie_diameter: number
-) {
-  let context = (document.getElementById(pie_id + '_stats') as HTMLCanvasElement).getContext('2d')
-  if (!context) return
-  const pie_x = pie_diameter / 2
-  const pie_y = pie_diameter / 2
-  const pie_d = pie_diameter
-  context.fillStyle = color
-  context.save()
-  context.translate(pie_x, pie_y)
-  context.scale(x_scale, 1)
-  context.beginPath()
-  if (right_side) context.arc(0, 0, (pie_d / 2) * radius, 1.5 * Math.PI, 0.5 * Math.PI, false)
-  else context.arc(0, 0, (pie_d / 2) * radius, 0.5 * Math.PI, 1.5 * Math.PI, false)
-  context.closePath()
-  context.fill()
-  context.restore()
-  context = null
 }
 
 function toggle_slim_controls(controls_obj: HTMLElement, width: number, height: number) {

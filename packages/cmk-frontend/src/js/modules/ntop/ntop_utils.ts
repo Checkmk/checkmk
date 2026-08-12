@@ -13,8 +13,6 @@ import { TableFigure } from '@/modules/figures/cmk_table'
 
 import type { NtopColumn } from './ntop_flows'
 
-// TODO: Use library functions from number_format.js
-const NTOPNG_MIN_VISUAL_VALUE = 0.005
 export const ifid_dep = 'ifid_dependent'
 
 export class interface_table extends TableFigure {
@@ -84,24 +82,6 @@ export class interface_table extends TableFigure {
       // @ts-ignore
       .forEach((o) => o.set_ids(this._ifid, this._vlanid))
   }
-}
-
-export function bytes_to_volume(bytes: number) {
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
-  if (bytes == 0) return '0 Bytes'
-  if (bytes > 0 && bytes < NTOPNG_MIN_VISUAL_VALUE) return '< ' + NTOPNG_MIN_VISUAL_VALUE + ' Bytes'
-  const res = scale_value(bytes, sizes, 1024)
-  return parseFloat(String(res[0])) + ' ' + res[1]
-}
-
-function scale_value(val: number, sizes: string[], scale: number) {
-  if (val == 0) return [0, sizes[0]]
-  let i = Math.floor(Math.log(val) / Math.log(scale))
-  if (i < 0 || isNaN(i)) {
-    i = 0
-  } else if (i >= sizes.length) i = sizes.length - 1
-
-  return [Math.round((val / Math.pow(scale, i)) * 10) / 10, sizes[i]]
 }
 
 export function seconds_to_time(seconds: number) {

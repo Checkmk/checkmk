@@ -24,38 +24,6 @@ export function close_active_dropdown() {
   popup_menu_close_popup()
 }
 
-export function set_checkbox_entry(id_stem: string, checked: boolean) {
-  const oEntryChecked = document.getElementById('menu_entry_' + id_stem + '_checked')
-  const oEntryUnhecked = document.getElementById('menu_entry_' + id_stem + '_unchecked')
-
-  if (checked) {
-    change_class(oEntryChecked, 'invisible', 'visible')
-    change_class(oEntryUnhecked, 'visible', 'invisible')
-  } else {
-    change_class(oEntryChecked, 'visible', 'invisible')
-    change_class(oEntryUnhecked, 'invisible', 'visible')
-  }
-}
-
-// Make a dropdown usable
-export function enable_dropdown(id: string) {
-  toggle_dropdown_enabled(id, true)
-}
-
-// Set a dropdown to be not usable (inactive)
-export function disable_dropdown(id: string) {
-  toggle_dropdown_enabled(id, false)
-}
-
-function toggle_dropdown_enabled(id: string, enabled: boolean) {
-  const dropdown = document.getElementById('page_menu_dropdown_' + id)
-  if (enabled) {
-    remove_class(dropdown, 'disabled')
-  } else {
-    add_class(dropdown, 'disabled')
-  }
-}
-
 export function update_down_duration_button(new_selection_id: string | null = null) {
   const active_elements = document.getElementsByClassName(
     'button duration active'
@@ -233,12 +201,6 @@ export function register_on_close_handler(popup_id: string, handler: () => void)
   on_close[popup_id] = handler
 }
 
-let on_toggle_suggestions: null | (() => void) = null
-
-export function register_on_toggle_suggestions_handler(handler: () => void) {
-  on_toggle_suggestions = handler
-}
-
 export function toggle_suggestions() {
   const oPageMenuBar = document.getElementById('page_menu_bar')
   let open: 'on' | 'off'
@@ -250,11 +212,6 @@ export function toggle_suggestions() {
     open = 'off'
   }
   persist_tree_state('suggestions', 'all', open)
-
-  // Call registered hook
-  if (on_toggle_suggestions !== null) {
-    on_toggle_suggestions()
-  }
 }
 
 export function form_submit(form_name: string, button_name: string) {
@@ -295,10 +252,6 @@ export function confirmed_form_submit(
 export function toggle_popup_filter_list(trigger: HTMLAnchorElement, filter_list_id: string) {
   toggle_class(trigger, 'active', 'inactive')
   toggle_class(document.getElementById(filter_list_id), 'active', 'inactive')
-}
-
-export function toggle_filter_group_display(filter_group: HTMLAnchorElement) {
-  toggle_class(filter_group, 'active', 'inactive')
 }
 
 export function on_filter_popup_open() {

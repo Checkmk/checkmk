@@ -371,25 +371,6 @@ export abstract class TextFigure<T extends TextFigureData = TextFigureData> exte
   }
 }
 
-// Base class for dc.js based figures (using crossfilter)
-export abstract class DCFigureBase<
-  DCFigureData extends FigureData
-> extends FigureBase<DCFigureData> {
-  _graph_group: any
-  _dc_chart: any
-
-  constructor(div_selector: string, crossfilter: any, graph_group: any) {
-    super(div_selector)
-    this._crossfilter = crossfilter // Shared dataset
-    this._graph_group = graph_group // Shared group among graphs
-    this._dc_chart = null
-  }
-
-  get_dc_chart() {
-    return this._dc_chart
-  }
-}
-
 export class FigureRegistry<T extends FigureData> {
   private _figures: Record<string, new (div_selector: string, fixed_size?: any) => FigureBase<T>>
 

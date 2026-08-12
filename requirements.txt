@@ -5640,7 +5640,6 @@ time-machine==3.4.0 \
     #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r packages/cmk-crypto/dev-requirements.in
     #   -r packages/cmk-ec/dev-requirements.in
-    #   -r packages/cmk-events/dev-requirements.in
     #   -r packages/cmk-plugins/dev-requirements.in
     #   -r tests/dev-requirements.in
 tinycss2==1.5.1 \

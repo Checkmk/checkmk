@@ -50,7 +50,6 @@ py_cmk_test(
     srcs = glob(["tests/**/*.py"]),
     deps = [
         ":cmk-events",
-        requirement("time-machine"),
     ],
 )
 

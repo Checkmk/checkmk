@@ -8,8 +8,8 @@ import type { AttributeKind } from '../attribute-kind'
 export type { AttributeKind }
 
 export const STRING_OPERATORS = [
-  'eq',
-  'neq',
+  'equals',
+  'not_equals',
   'contains',
   'not_contains',
   'starts_with',

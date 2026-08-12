@@ -161,7 +161,8 @@ function hasInvalidAttributes(): boolean {
   return filterModel.value
     .flatMap((group) => group.conditions)
     .some(
-      (condition) => condition.key && condition.operator === 'eq' && condition.value.trim() === ''
+      (condition) =>
+        condition.key && condition.operator === 'equals' && condition.value.trim() === ''
     )
 }
 

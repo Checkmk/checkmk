@@ -15,17 +15,19 @@ function makeCondition(
 }
 
 test('attribute-kind prefix is rendered', () => {
-  expect(pillLabel(makeCondition(null, 'eq', 'GET'))).toBe('http.method is GET')
-  expect(pillLabel(makeCondition('resource', 'eq', 'GET'))).toBe('[Resource] http.method is GET')
-  expect(pillLabel(makeCondition('scope', 'eq', 'GET'))).toBe('[Scope] http.method is GET')
-  expect(pillLabel(makeCondition('data_point', 'eq', 'GET'))).toBe(
+  expect(pillLabel(makeCondition(null, 'equals', 'GET'))).toBe('http.method is GET')
+  expect(pillLabel(makeCondition('resource', 'equals', 'GET'))).toBe(
+    '[Resource] http.method is GET'
+  )
+  expect(pillLabel(makeCondition('scope', 'equals', 'GET'))).toBe('[Scope] http.method is GET')
+  expect(pillLabel(makeCondition('data_point', 'equals', 'GET'))).toBe(
     '[Data point] http.method is GET'
   )
 })
 
 test('all string operators render with their human phrase', () => {
-  expect(pillLabel(makeCondition(null, 'eq', 'x'))).toBe('http.method is x')
-  expect(pillLabel(makeCondition(null, 'neq', 'x'))).toBe('http.method is not x')
+  expect(pillLabel(makeCondition(null, 'equals', 'x'))).toBe('http.method is x')
+  expect(pillLabel(makeCondition(null, 'not_equals', 'x'))).toBe('http.method is not x')
   expect(pillLabel(makeCondition(null, 'contains', 'x'))).toBe('http.method contains x')
   expect(pillLabel(makeCondition(null, 'not_contains', 'x'))).toBe('http.method does not contain x')
   expect(pillLabel(makeCondition(null, 'starts_with', 'x'))).toBe('http.method starts with x')

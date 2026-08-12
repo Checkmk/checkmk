@@ -13,8 +13,8 @@ import type { AttributeCondition, AttributeKind, Operator } from './types'
 function operatorPhrases(): Record<Operator, TranslatedString> {
   const { _t } = usei18n()
   return {
-    eq: _t('is'),
-    neq: _t('is not'),
+    equals: _t('is'),
+    not_equals: _t('is not'),
     contains: _t('contains'),
     not_contains: _t('does not contain'),
     starts_with: _t('starts with'),

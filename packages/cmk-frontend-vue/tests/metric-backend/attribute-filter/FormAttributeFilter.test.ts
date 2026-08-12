@@ -25,7 +25,7 @@ const KEY_SUGGESTIONS = [
 ]
 
 function condition(id: string, overrides: Partial<Condition> = {}): Condition {
-  return { id, attributeKind: null, key: '', operator: 'eq', value: '', ...overrides }
+  return { id, attributeKind: null, key: '', operator: 'equals', value: '', ...overrides }
 }
 
 function conditionGroup(id: string, ...conditions: Condition[]): ConditionGroup {
@@ -203,16 +203,16 @@ test('manual operator change persists on the targeted row', async () => {
   await pickOperator(pillsInOrder()[1]!, 'is not')
 
   const conditions = conditionsOf(model.value!)
-  expect(conditions[1]!.operator).toBe('neq')
-  expect(conditions[0]!.operator).toBe('eq')
+  expect(conditions[1]!.operator).toBe('not_equals')
+  expect(conditions[0]!.operator).toBe('equals')
 })
 
 test('restricting operators to a single choice forces every pill onto it, not just the last', async () => {
   const { model, operators } = renderForm([
     conditionGroup(
       'g',
-      condition('pill-a', { key: 'service.name', operator: 'eq', value: 'foo' }),
-      condition('pill-b', { key: 'otel.library.name', operator: 'neq', value: 'bar' }),
+      condition('pill-a', { key: 'service.name', operator: 'equals', value: 'foo' }),
+      condition('pill-b', { key: 'otel.library.name', operator: 'not_equals', value: 'bar' }),
       condition('pill-c', { key: 'http.method', operator: 'starts_with', value: 'baz' })
     )
   ])
@@ -234,7 +234,7 @@ test('forcing onto a single existence operator clears the value of every pill', 
   const { model, operators } = renderForm([
     conditionGroup(
       'g',
-      condition('pill-a', { key: 'service.name', operator: 'eq', value: 'foo' }),
+      condition('pill-a', { key: 'service.name', operator: 'equals', value: 'foo' }),
       condition('pill-b', { key: 'http.method', operator: 'contains', value: 'bar' })
     )
   ])
@@ -344,7 +344,12 @@ test('empty-state add button creates a single row with documented defaults', asy
 
   const conditions = conditionsOf(model.value!)
   expect(conditions).toHaveLength(1)
-  expect(conditions[0]).toMatchObject({ attributeKind: null, key: '', operator: 'eq', value: '' })
+  expect(conditions[0]).toMatchObject({
+    attributeKind: null,
+    key: '',
+    operator: 'equals',
+    value: ''
+  })
   expect(conditions[0]!.id).toEqual(expect.any(String))
   expect(conditions[0]!.id.length).toBeGreaterThan(0)
 })
@@ -361,14 +366,14 @@ test('per-pill add button inserts a fresh AND-joined row after it, leaving the o
   expect(model.value![0]!.conditions.map((c) => c.id)).toEqual(['pill-a', expect.any(String)])
   expect(model.value![1]!.conditions.map((c) => c.id)).toEqual(['pill-b'])
   const fresh = model.value![0]!.conditions[1]!
-  expect(fresh).toMatchObject({ attributeKind: null, key: '', operator: 'eq', value: '' })
+  expect(fresh).toMatchObject({ attributeKind: null, key: '', operator: 'equals', value: '' })
   expect(fresh.id).toEqual(expect.any(String))
   expect(fresh.id).not.toBe('pill-a')
   expect(fresh.id).not.toBe('pill-b')
 })
 
 test('value is preserved when switching between two comparison operators', async () => {
-  const { model } = renderForm(singlePill({ operator: 'eq', value: 'foo' }))
+  const { model } = renderForm(singlePill({ operator: 'equals', value: 'foo' }))
 
   await pickOperator(pillsInOrder()[0]!, 'starts with')
 
@@ -377,7 +382,7 @@ test('value is preserved when switching between two comparison operators', async
 })
 
 test('value is cleared when switching to an existence operator and stays empty on return', async () => {
-  const { model } = renderForm(singlePill({ operator: 'eq', value: 'foo' }))
+  const { model } = renderForm(singlePill({ operator: 'equals', value: 'foo' }))
 
   await pickOperator(pillsInOrder()[0]!, 'exists')
 
@@ -386,7 +391,7 @@ test('value is cleared when switching to an existence operator and stays empty o
 
   await pickOperator(pillsInOrder()[0]!, 'is')
 
-  expect(conditionsOf(model.value!)[0]).toMatchObject({ operator: 'eq', value: '' })
+  expect(conditionsOf(model.value!)[0]).toMatchObject({ operator: 'equals', value: '' })
 })
 
 test('switching from an existence operator to a value-taking operator auto-opens the value dropdown', async () => {
@@ -401,7 +406,7 @@ test('switching from an existence operator to a value-taking operator auto-opens
 })
 
 test('same-family swap with a populated value does not auto-open the value dropdown', async () => {
-  renderForm(singlePill({ operator: 'eq', value: 'foo' }))
+  renderForm(singlePill({ operator: 'equals', value: 'foo' }))
 
   await pickOperator(pillsInOrder()[0]!, 'starts with')
 
@@ -412,7 +417,7 @@ test('same-family swap with a populated value does not auto-open the value dropd
 })
 
 test('same-family swap with an empty value auto-opens the value dropdown', async () => {
-  renderForm(singlePill({ operator: 'eq', value: '' }))
+  renderForm(singlePill({ operator: 'equals', value: '' }))
 
   await pickOperator(pillsInOrder()[0]!, 'starts with')
 

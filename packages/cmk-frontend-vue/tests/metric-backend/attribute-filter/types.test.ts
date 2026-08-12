@@ -12,7 +12,7 @@ function condition(overrides: Partial<AttributeCondition> = {}): AttributeCondit
   return {
     attributeKind: 'resource',
     key: 'service.name',
-    operator: 'eq',
+    operator: 'equals',
     value: 'foo',
     ...overrides
   }
@@ -32,7 +32,7 @@ describe('isConditionValid', () => {
   })
 
   test('returns false when a value-taking operator has an empty value', () => {
-    expect(isConditionValid(condition({ operator: 'eq', value: '' }))).toBe(false)
+    expect(isConditionValid(condition({ operator: 'equals', value: '' }))).toBe(false)
     expect(isConditionValid(condition({ operator: 'contains', value: '' }))).toBe(false)
   })
 

@@ -19,7 +19,7 @@ function echoQueryValueSuggestions(_: Condition, query: string): Promise<Respons
   return Promise.resolve(new Response(query ? [{ name: query, title: query }] : []))
 }
 
-function renderPill(initialOperator: Operator = 'eq', value = 'GET', operators?: Operator[]) {
+function renderPill(initialOperator: Operator = 'equals', value = 'GET', operators?: Operator[]) {
   const condition = ref<Condition>({
     id: 'pill',
     attributeKind: null,
@@ -66,7 +66,7 @@ function renderClearablePill() {
     id: 'pill',
     attributeKind: 'resource',
     key: 'http.method',
-    operator: 'eq',
+    operator: 'equals',
     value: 'GET'
   })
   const wrapper = defineComponent({
@@ -101,29 +101,29 @@ async function pickOperator(phrase: string): Promise<void> {
 }
 
 test('selecting a comparison operator emits the new operator and keeps the value segment', async () => {
-  const { condition } = renderPill('eq')
+  const { condition } = renderPill('equals')
   await pickOperator('is not')
 
-  expect(condition.value.operator).toBe('neq')
+  expect(condition.value.operator).toBe('not_equals')
   await waitFor(() => expect(screen.getByLabelText('Attribute value')).toHaveTextContent('GET'))
 })
 
 test('a single allowed operator renders as static text in edit mode, not a dropdown', () => {
-  renderPill('eq', 'GET', ['eq'])
+  renderPill('equals', 'GET', ['equals'])
 
   expect(screen.queryByRole('combobox', { name: 'Attribute operator' })).toBeNull()
   expect(screen.getByText('is')).toBeVisible()
 })
 
 test('selecting an existence operator hides the value segment, switching back restores it', async () => {
-  const { condition } = renderPill('eq')
+  const { condition } = renderPill('equals')
 
   await pickOperator('exists')
   expect(condition.value.operator).toBe('exists')
   expect(screen.queryByLabelText('Attribute value')).toBeNull()
 
   await pickOperator('is')
-  expect(condition.value.operator).toBe('eq')
+  expect(condition.value.operator).toBe('equals')
   await waitFor(() => expect(screen.getByLabelText('Attribute value')).toHaveTextContent('GET'))
 })
 

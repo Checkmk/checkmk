@@ -44,7 +44,7 @@ function modelFromLists(source: ThreeLists): AttributeFilterModel {
       id: newId(),
       attributeKind: kind,
       key: attr.key,
-      operator: 'eq' as const,
+      operator: 'equals' as const,
       value: attr.value
     }))
   )
@@ -58,9 +58,15 @@ describe('fromModel', () => {
 
   test('drops conditions with no attributeKind or empty key (pills still being created)', () => {
     const model = group(
-      { id: 'a', attributeKind: null, key: '', operator: 'eq', value: '' },
-      { id: 'b', attributeKind: 'resource', key: '', operator: 'eq', value: 'x' },
-      { id: 'c', attributeKind: 'scope', key: 'otel.library.name', operator: 'eq', value: 'http' }
+      { id: 'a', attributeKind: null, key: '', operator: 'equals', value: '' },
+      { id: 'b', attributeKind: 'resource', key: '', operator: 'equals', value: 'x' },
+      {
+        id: 'c',
+        attributeKind: 'scope',
+        key: 'otel.library.name',
+        operator: 'equals',
+        value: 'http'
+      }
     )
 
     expect(fromModel(model)).toEqual({
@@ -74,8 +80,20 @@ describe('fromModel', () => {
 describe('buildAutocompleteContext', () => {
   test('encodes the model as a recursive filter, dropping the excluded pill, plus the options', () => {
     const model = group(
-      { id: 'self', attributeKind: 'data_point', key: 'http.method', operator: 'eq', value: 'GET' },
-      { id: 'other', attributeKind: 'data_point', key: 'http.route', operator: 'eq', value: '/api' }
+      {
+        id: 'self',
+        attributeKind: 'data_point',
+        key: 'http.method',
+        operator: 'equals',
+        value: 'GET'
+      },
+      {
+        id: 'other',
+        attributeKind: 'data_point',
+        key: 'http.route',
+        operator: 'equals',
+        value: '/api'
+      }
     )
 
     expect(
@@ -116,13 +134,15 @@ describe('toAttributeFilter', () => {
       {
         id: 'g1',
         conditions: [
-          { id: 'a', attributeKind: 'resource', key: 'k1', operator: 'eq', value: 'v1' },
-          { id: 'b', attributeKind: 'scope', key: 'k2', operator: 'eq', value: 'v2' }
+          { id: 'a', attributeKind: 'resource', key: 'k1', operator: 'equals', value: 'v1' },
+          { id: 'b', attributeKind: 'scope', key: 'k2', operator: 'equals', value: 'v2' }
         ]
       },
       {
         id: 'g2',
-        conditions: [{ id: 'c', attributeKind: 'resource', key: 'k3', operator: 'eq', value: 'v3' }]
+        conditions: [
+          { id: 'c', attributeKind: 'resource', key: 'k3', operator: 'equals', value: 'v3' }
+        ]
       }
     ]
 
@@ -163,7 +183,7 @@ describe('toAttributeFilter', () => {
       { type: 'not', condition: { type: 'exists', key: { kind: 'scope', name: 'a' } } }
     ],
     [
-      'neq',
+      'not_equals',
       'v',
       { type: 'not', condition: { type: 'equals', key: { kind: 'scope', name: 'a' }, value: 'v' } }
     ],
@@ -207,8 +227,8 @@ describe('toAttributeFilter', () => {
 
   test('drops incomplete conditions before encoding', () => {
     const model = group(
-      { id: 'a', attributeKind: null, key: '', operator: 'eq', value: '' },
-      { id: 'b', attributeKind: 'resource', key: 'service.name', operator: 'eq', value: 'x' }
+      { id: 'a', attributeKind: null, key: '', operator: 'equals', value: '' },
+      { id: 'b', attributeKind: 'resource', key: 'service.name', operator: 'equals', value: 'x' }
     )
 
     expect(toAttributeFilter(model)).toEqual({
@@ -245,10 +265,10 @@ describe('fromAttributeFilter', () => {
       )
     ).toEqual([
       [
-        ['resource', 'k1', 'eq'],
+        ['resource', 'k1', 'equals'],
         ['scope', 'k2', 'exists']
       ],
-      [['resource', 'k3', 'eq']]
+      [['resource', 'k3', 'equals']]
     ])
   })
 
@@ -259,7 +279,7 @@ describe('fromAttributeFilter', () => {
     ],
     [
       { type: 'equals', key: { kind: 'resource', name: 'service.name' }, value: 'v' },
-      ['resource', 'service.name', 'neq', 'v']
+      ['resource', 'service.name', 'not_equals', 'v']
     ],
     [
       { type: 'contains', key: { kind: 'resource', name: 'service.name' }, value: 'v' },

@@ -39,8 +39,8 @@ const ALL_OPERATORS: Operator[] = [...STRING_OPERATORS, ...EXISTENCE_OPERATORS]
 // Plain-string mirror of operatorPhrases() in pill-label.ts: panelConfig labels
 // cannot use the i18n helper because it runs at module load, before i18n is set up.
 const OPERATOR_LABELS: Record<Operator, string> = {
-  eq: 'is',
-  neq: 'is not',
+  equals: 'is',
+  not_equals: 'is not',
   contains: 'contains',
   not_contains: 'does not contain',
   starts_with: 'starts with',

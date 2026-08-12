@@ -36,7 +36,7 @@ type AttributeKey = SharedAttributeFilterEquals['key']
 
 // `satisfies` forces an entry per PositiveLeaf type; a new leaf type breaks the build until mapped.
 const WIRE_TYPE_TO_OPERATOR = {
-  equals: 'eq',
+  equals: 'equals',
   contains: 'contains',
   starts_with: 'starts_with',
   ends_with: 'ends_with',
@@ -46,7 +46,7 @@ const WIRE_TYPE_TO_OPERATOR = {
 
 // Every operator paired with its negation; the wire encodes a negation as not(<positive>).
 const NEGATION_PAIRS: readonly (readonly [Operator, Operator])[] = [
-  ['eq', 'neq'],
+  ['equals', 'not_equals'],
   ['contains', 'not_contains'],
   ['starts_with', 'not_starts_with'],
   ['ends_with', 'not_ends_with'],
@@ -79,7 +79,7 @@ function assertLeaf(filter: AttributeFilter): SharedLeaf {
 
 function positiveLeaf(operator: Operator, key: AttributeKey, value: string): PositiveLeaf {
   switch (operator) {
-    case 'eq':
+    case 'equals':
       return { type: 'equals', key, value }
     case 'contains':
       return { type: 'contains', key, value }

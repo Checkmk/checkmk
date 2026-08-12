@@ -72,7 +72,7 @@ function freshCondition(): Condition {
     id: randomId(),
     attributeKind: null,
     key: '',
-    operator: props.operators?.[0] ?? 'eq',
+    operator: props.operators?.[0] ?? 'equals',
     value: ''
   }
 }

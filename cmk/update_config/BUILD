@@ -1,5 +1,4 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 
 # Only for static analysis.
@@ -99,6 +98,5 @@ py_library(
         "//packages/cmk-werks:site",
         "//packages/cmk-werks:tool",
         "//packages/cmk-wsgi",
-        requirement("python-dateutil"),
     ],
 )

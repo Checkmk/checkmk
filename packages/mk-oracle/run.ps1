@@ -416,9 +416,7 @@ try {
 
         if (Test-Administrator) {
             Write-Host "Escalated permission checks!" -Foreground White
-            # TODO: Renable this test as soon the clean up works
-            # see discussions in https://tribe29.slack.com/archives/C085MHGLPJ6/p1786455088900979
-            # & "$PSScriptRoot/permissions-check-run.ps1" --root
+            & "$PSScriptRoot/permissions-check-run.ps1" --root
         }
         else {
             Write-Host "Not elevated: permissions will not be checked" -ForegroundColor Red

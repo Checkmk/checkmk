@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Row dataclass and ``Table`` binding for ``cmk_change_tested``."""
 
 from __future__ import annotations
@@ -12,7 +10,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Final
+from typing import Final
 
 from tests.qa_metrics.db import Table
 
@@ -36,7 +34,7 @@ class ChangeTestedRow:
     has_test: bool | None
     files_changed: int
 
-    def to_db_dict(self) -> dict[str, Any]:
+    def to_db_dict(self) -> dict[str, object]:
         return asdict(self)
 
 

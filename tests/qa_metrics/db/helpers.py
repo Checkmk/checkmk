@@ -3,13 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Generic UPSERT helper shared by the qa_metrics pipelines."""
 
 import logging
 from collections.abc import Mapping
-from typing import Any
 
 from psycopg import sql
 from psycopg.errors import Error as PsycopgError
@@ -23,8 +20,8 @@ def upsert_record(
     db: MetabasePostgres,
     table: str,
     conflict_columns: list[str],
-    insert_values: Mapping[str, Any],
-    update_values: Mapping[str, Any] | None = None,
+    insert_values: Mapping[str, object],
+    update_values: Mapping[str, object] | None = None,
 ) -> None:
     """``INSERT ... ON CONFLICT (conflict_columns) DO UPDATE``.
 

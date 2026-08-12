@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """Light binding from a row dataclass to a postgres table.
 
 A ``Table[RowT]`` wraps a metric's table identity (name, primary key, row type,
@@ -20,7 +18,7 @@ import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Protocol
 
 from .connection import MetabasePostgres
 from .helpers import upsert_record
@@ -44,7 +42,7 @@ def apply_schema_file(db: MetabasePostgres, sql_path: Path) -> None:
 class DbRow(Protocol):
     """Anything with a ``to_db_dict()`` method that yields column → value."""
 
-    def to_db_dict(self) -> Mapping[str, Any]: ...
+    def to_db_dict(self) -> Mapping[str, object]: ...
 
 
 @dataclass(frozen=True)

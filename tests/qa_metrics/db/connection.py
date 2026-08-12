@@ -3,16 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 """psycopg connection wrapper for the QA Metabase postgres."""
 
 import logging
 import os
 from pathlib import Path
-from typing import Any, Literal, Self
+from typing import Literal, Self
 
 import psycopg
+from psycopg.conninfo import make_conninfo
+from psycopg.rows import TupleRow
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class MetabasePostgres:
         self.sslcert = sslcert
         self.sslkey = sslkey
 
-        self.connection = psycopg.connect(autocommit=True, **self._connect_kwargs())
+        self.connection = psycopg.connect(self._conninfo(), autocommit=True)
         logger.info("Connected to database %s@%s:%s", self.dbname, self.host, self.port)
 
     @classmethod
@@ -79,26 +79,26 @@ class MetabasePostgres:
             sslmode=_ssl_mode_from_env(),
         )
 
-    def _connect_kwargs(self) -> dict[str, Any]:
-        base: dict[str, Any] = {
-            "host": self.host,
-            "port": self.port,
-            "dbname": self.dbname,
-            "user": self.user,
-        }
+    def _conninfo(self) -> str:
+        base = make_conninfo(
+            host=self.host,
+            port=self.port,
+            dbname=self.dbname,
+            user=self.user,
+        )
         if self._password:
-            return {**base, "password": self._password}
+            return make_conninfo(base, password=self._password)
         if self.sslcert and self.sslkey and self.sslrootcert:
-            return {
-                **base,
-                "sslmode": self.sslmode,
-                "sslrootcert": str(self.sslrootcert),
-                "sslcert": str(self.sslcert),
-                "sslkey": str(self.sslkey),
-            }
+            return make_conninfo(
+                base,
+                sslmode=self.sslmode,
+                sslrootcert=str(self.sslrootcert),
+                sslcert=str(self.sslcert),
+                sslkey=str(self.sslkey),
+            )
         raise ValueError("Database password or SSL certificates must be provided")
 
-    def cursor(self) -> psycopg.Cursor[Any]:
+    def cursor(self) -> psycopg.Cursor[TupleRow]:
         """Return a new cursor; use as ``with db.cursor() as cur: ...``.
 
         ``psycopg.Cursor`` is itself a context manager — entering returns the

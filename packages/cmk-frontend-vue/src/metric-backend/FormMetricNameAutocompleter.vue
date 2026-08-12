@@ -38,6 +38,7 @@ defineProps<{
   placeholder: TranslatedString
   label?: string
   hasError?: boolean
+  describedBy?: string | undefined
   disabled?: boolean
 }>()
 
@@ -170,6 +171,7 @@ function clearMetricName(): void {
     :width="'wide'"
     :no-results-hint="_t('No results found')"
     :form-validation="hasError || false"
+    :described-by="describedBy"
     :disabled="disabled || false"
   >
     <template v-if="metricName !== null && !disabled" #buttons-end>

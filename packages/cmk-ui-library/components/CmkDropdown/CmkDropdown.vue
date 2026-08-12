@@ -45,6 +45,7 @@ const {
   options,
   label,
   formValidation = false,
+  describedBy,
   floating = false
 } = defineProps<{
   options: Suggestions
@@ -57,6 +58,7 @@ const {
   label: TranslatedString
   width?: ButtonVariants['width']
   formValidation?: boolean
+  describedBy?: string | undefined
   floating?: boolean
 }>()
 
@@ -325,6 +327,8 @@ const group = computed<ButtonVariants['group']>(() => {
       ref="comboboxButtonRef"
       :aria-label="label"
       :aria-expanded="suggestionsShown"
+      :aria-invalid="formValidation || undefined"
+      :aria-describedby="describedBy"
       :disabled="disabled"
       :multiple-choices-available="canOpenDropdown"
       :value-is-selected="!(selectedOption instanceof NoSelection)"

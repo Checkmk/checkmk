@@ -1103,3 +1103,43 @@ test('open() suppresses trailing click-outside across microtask checkpoint', asy
   document.body.dispatchEvent(new MouseEvent('click', { bubbles: true }))
   await waitFor(() => expect(screen.queryByText('Option 1')).toBeNull())
 })
+
+test('dropdown marked invalid points at the element stating why', async () => {
+  const testComponent = defineComponent({
+    components: { CmkDropdown },
+    template: `
+      <span id="reason">Select an option.</span>
+      <CmkDropdown
+        :options="{ type: 'fixed', suggestions: [] }"
+        :model-value="null"
+        input-hint="Select an option"
+        label="some aria label"
+        described-by="reason"
+        form-validation
+      />
+    `
+  })
+
+  render(testComponent)
+
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
+
+  expect(dropdown).toHaveAttribute('aria-invalid', 'true')
+  expect(dropdown).toHaveAccessibleDescription('Select an option.')
+})
+
+test('dropdown without a validation error is neither marked nor described', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: { type: 'fixed', suggestions: [] },
+      modelValue: null,
+      inputHint: 'Select an option',
+      label: 'some aria label'
+    }
+  })
+
+  const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
+
+  expect(dropdown).not.toHaveAttribute('aria-invalid')
+  expect(dropdown).toHaveAccessibleDescription('')
+})

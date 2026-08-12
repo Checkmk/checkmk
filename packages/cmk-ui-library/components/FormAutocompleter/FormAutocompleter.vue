@@ -31,6 +31,7 @@ const props = defineProps<{
   label?: string
   width?: ButtonVariants['width']
   hasError?: boolean
+  describedBy?: string | undefined
   disabled?: boolean
   floating?: boolean
 }>()
@@ -74,6 +75,7 @@ const slots = useSlots()
     :width="width || 'wide'"
     :no-results-hint="_t('No results found')"
     :form-validation="hasError || false"
+    :described-by="describedBy"
     :disabled="disabled || false"
     :floating="floating || false"
   >

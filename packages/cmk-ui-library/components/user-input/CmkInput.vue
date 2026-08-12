@@ -11,6 +11,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type VariantProps, cva } from 'class-variance-authority'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
+import useId from 'cmk-ui-library/lib/useId'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { computed, ref, watch } from 'vue'
 
@@ -57,6 +58,9 @@ const data = defineModel<InputDataType<T>>()
 const validation = ref<string[]>([])
 const width = computed(() => inputSizes[fieldSize].width)
 
+const validationId = useId()
+const showsValidation = computed(() => !hideValidationMessage && validation.value.length > 0)
+
 const inputRef = ref<HTMLInputElement | null>(null)
 
 defineExpose({
@@ -88,7 +92,7 @@ immediateWatch(
 
 <template>
   <div class="cmk-input__wrapper" :style="wrapperStyle">
-    <CmkInlineValidation v-if="!hideValidationMessage" :validation="validation" />
+    <CmkInlineValidation v-if="showsValidation" :id="validationId" :validation="validation" />
     <div class="cmk-input__input-unit-container">
       <input
         ref="inputRef"
@@ -100,6 +104,8 @@ immediateWatch(
         ]"
         :type="type"
         step="any"
+        :aria-invalid="validation.length > 0 || undefined"
+        :aria-describedby="showsValidation ? validationId : undefined"
       />
       <div v-if="unit" class="cmk-input__unit"><CmkSpace size="small" />{{ unit }}</div>
     </div>

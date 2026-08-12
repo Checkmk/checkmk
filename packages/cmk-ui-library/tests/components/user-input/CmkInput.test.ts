@@ -122,3 +122,45 @@ test('CmkInput changes do not reset external validations without local validator
 
   await screen.findByText('some validation')
 })
+
+test('CmkInput points at its validation message', async () => {
+  render(CmkInput, {
+    props: {
+      modelValue: 'foo',
+      externalErrors: ['some validation']
+    }
+  })
+
+  const input = screen.getByRole('textbox')
+
+  expect(input).toHaveAttribute('aria-invalid', 'true')
+  expect(input).toHaveAccessibleDescription(/some validation/)
+})
+
+test('CmkInput stays marked invalid while its message is placed elsewhere', async () => {
+  render(CmkInput, {
+    props: {
+      modelValue: 'foo',
+      externalErrors: ['some validation'],
+      hideValidationMessage: true
+    }
+  })
+
+  const input = screen.getByRole('textbox')
+
+  expect(input).toHaveAttribute('aria-invalid', 'true')
+  expect(input).toHaveAccessibleDescription('')
+})
+
+test('CmkInput without validation is neither marked nor described', async () => {
+  render(CmkInput, {
+    props: {
+      modelValue: 'foo'
+    }
+  })
+
+  const input = screen.getByRole('textbox')
+
+  expect(input).not.toHaveAttribute('aria-invalid')
+  expect(input).toHaveAccessibleDescription('')
+})

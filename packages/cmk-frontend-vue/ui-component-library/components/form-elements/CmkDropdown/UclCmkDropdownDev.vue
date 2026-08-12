@@ -8,6 +8,7 @@ import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkDropdownButton from 'cmk-ui-library/components/CmkDropdown/CmkDropdownButton.vue'
 import { ErrorResponse, Response } from 'cmk-ui-library/components/CmkSuggestions'
 import { type Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import { ref } from 'vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -23,6 +24,7 @@ const defaultEmpty6 = ref<string | null>(null)
 const defaultEmpty7 = ref<string | null>(null)
 const defaultEmpty8 = ref<string | null>(null)
 const defaultEmpty9 = ref<string | null>(null)
+const invalidSelection = ref<string | null>(null)
 const sectionedFreeText = ref<string | null>(null)
 const errorCase = ref<string | null>('invalid_backend_value')
 const callCount = ref<number>(0)
@@ -129,6 +131,26 @@ const slowOptions: Suggestions = {
     input-hint="some input hint"
     no-results-hint="no results hint"
     label="some label"
+    required
+  />
+  <h2>Invalid dropdown stating its reason</h2>
+  <label for="invalid-dropdown">some label</label>
+  <CmkInlineValidation id="invalid-dropdown-reason" :validation="['Select an option.']" />
+  <CmkDropdown
+    v-model="invalidSelection"
+    :options="{
+      type: 'fixed',
+      suggestions: [
+        { name: '1', title: 'one' },
+        { name: '2', title: 'two' }
+      ]
+    }"
+    component-id="invalid-dropdown"
+    described-by="invalid-dropdown-reason"
+    input-hint="some input hint"
+    no-results-hint="no results hint"
+    label="some label"
+    form-validation
     required
   />
   <h2>two elements, selected</h2>

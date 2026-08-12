@@ -99,7 +99,7 @@ export const panelConfig = {
   }
 } satisfies PanelConfigFor<
   typeof CmkDropdown,
-  'label' | 'options' | 'componentId' | 'noElementsText'
+  'label' | 'options' | 'componentId' | 'noElementsText' | 'describedBy'
 > & { optionsType: ListPropDef; sectioned: BoolPropDef }
 </script>
 
@@ -124,7 +124,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<
   typeof CmkDropdown,
-  'label' | 'options' | 'componentId' | 'noElementsText'
+  'label' | 'options' | 'componentId' | 'noElementsText' | 'describedBy'
 >().createRef(panelConfig)
 
 const selectedOption = computed<string | null>({

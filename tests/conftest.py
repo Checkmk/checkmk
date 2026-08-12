@@ -263,6 +263,17 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Select only the first N tests from the collection list.",
     )
     parser.addoption(
+        "--medium-chain",
+        action="store_true",
+        default=False,
+        help=(
+            "Mark this run as part of the gated medium chain, which skips tests "
+            "carrying skip_if_medium_chain. A plain option and not a '-m' filter "
+            "on purpose: the make targets in run_tests.sh set their own '-m' after "
+            "TEST_FILTER, and pytest lets the last '-m' win."
+        ),
+    )
+    parser.addoption(
         "--session-timeout",
         action="store",
         metavar="TIMEOUT",
@@ -386,6 +397,11 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     config.addinivalue_line(
         "markers",
+        "skip_if_medium_chain: skip test when --medium-chain is set. For tests "
+        "that cannot work pre-submit, not for tests that merely fail",
+    )
+    config.addinivalue_line(
+        "markers",
         "requires_non_root_user: Tests that require a non-root user to be executed.",
     )
 
@@ -432,6 +448,9 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
         "--package-contains-faked-artifacts"
     ):
         pytest.skip(f"{item.nodeid}: Package contains faked artifacts!")
+
+    if item.get_closest_marker("skip_if_medium_chain") and item.config.getoption("--medium-chain"):
+        pytest.skip(f"{item.nodeid}: Not reachable in the gated medium chain!")
 
 
 def _iter_site_objects(pytest_item: pytest.Item) -> Iterator[Site]:

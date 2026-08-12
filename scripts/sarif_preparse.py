@@ -17,6 +17,9 @@ SARIF_MIN_SIZE = 0
 
 def load_all(root_dir: Path) -> SarifFileSet:
     results = SarifFileSet()
+    # Some buggy linters do not follow the SARIF spec and are missing the
+    # `results` key. Let's just count the occurrences.
+    skipped_without_results = 0
     for file_path in root_dir.rglob("*AspectRulesLint*.report"):
         try:
             if file_path.stat().st_size <= SARIF_MIN_SIZE:
@@ -26,12 +29,14 @@ def load_all(root_dir: Path) -> SarifFileSet:
                 sarif_fd = SarifFile(file_path, json.load(fd))
                 try:
                     sarif_fd.runs[0].get_results()
-                except KeyError as exc:
-                    sys.stderr.write(f"No results found:\n\t{file_path!s}: {exc!s}\n")
+                except KeyError:
+                    skipped_without_results += 1
                     continue
                 results.add_file(sarif_fd)
         except (json.JSONDecodeError, OSError) as exc:
             sys.stderr.write(f"{file_path!s}: {exc!s}\n")
+    if skipped_without_results:
+        sys.stderr.write(f"Skipped {skipped_without_results} reports without results\n")
     return results
 
 

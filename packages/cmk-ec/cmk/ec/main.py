@@ -265,7 +265,7 @@ def unmap_ipv4_address(ip_address: str) -> str:
     """
     with contextlib.suppress(ValueError):  # in case address[0] is a hostname
         host = ipaddress.ip_address(ip_address)
-        if host.version == 6 and host.ipv4_mapped:
+        if isinstance(host, ipaddress.IPv6Address) and host.ipv4_mapped:
             return str(host.ipv4_mapped)
     return ip_address
 

@@ -258,14 +258,18 @@ class FilterNumberRange(Filter):  # type is int
         # this special styling is not supported by the current components
         html.write_text_permissive(_("From:") + "&nbsp;")
         html.text_input(
-            self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), style="width: 80px;"
+            varname=self.htmlvars[0],
+            default_value=value.get(self.htmlvars[0], ""),
+            style="width: 80px;",
         )
         if self.unit:
             html.write_text_permissive(" %s " % self.unit)
 
         html.write_text_permissive(" &nbsp; " + _("To:") + "&nbsp;")
         html.text_input(
-            self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), style="width: 80px;"
+            varname=self.htmlvars[1],
+            default_value=value.get(self.htmlvars[1], ""),
+            style="width: 80px;",
         )
         if self.unit:
             html.write_text_permissive(" %s " % self.unit)
@@ -338,7 +342,7 @@ class FilterTime(Filter):
             html.open_tr()
             html.td("%s:" % whatname)
             html.open_td()
-            html.text_input(varprefix, default_value=value.get(varprefix, ""))
+            html.text_input(varname=varprefix, default_value=value.get(varprefix, ""))
             html.close_td()
             html.open_td()
             html.dropdown(

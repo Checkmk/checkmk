@@ -206,7 +206,7 @@ def _page_login(config: Config) -> None:
             saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
 
         html.text_input(
-            "_username", label=_("Username:"), autocomplete="username", id_="input_user"
+            varname="_username", label=_("Username:"), autocomplete="username", id_="input_user"
         )
         html.password_input(
             "_password",

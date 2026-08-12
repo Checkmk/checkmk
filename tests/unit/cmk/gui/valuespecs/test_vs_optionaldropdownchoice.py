@@ -11,10 +11,10 @@ from .utils import expect_validate_failure, expect_validate_success, request_var
 class TestOptionalDropdownChoice:
     def test_validate(self) -> None:
         valuespec = vs.OptionalDropdownChoice[str](
-            vs.TextInput(), [("id_a", "title_a"), ("id_b", "title_b")]
+            explicit=vs.TextInput(), choices=[("id_a", "title_a"), ("id_b", "title_b")]
         )
         valuespec_max_len = vs.OptionalDropdownChoice[str](
-            vs.TextInput(maxlen=2), [("id_a", "title_a"), ("id_b", "title_b")]
+            explicit=vs.TextInput(maxlen=2), choices=[("id_a", "title_a"), ("id_b", "title_b")]
         )
         expect_validate_success(
             valuespec,
@@ -35,7 +35,7 @@ class TestOptionalDropdownChoice:
 
     def test_from_html_vars(self, request_context: None) -> None:
         valuespec = vs.OptionalDropdownChoice[str](
-            vs.TextInput(), [("id_a", "title_a"), ("id_b", "title_b")]
+            explicit=vs.TextInput(), choices=[("id_a", "title_a"), ("id_b", "title_b")]
         )
         with request_var(od="0"):
             assert valuespec.from_html_vars("od") == "id_a"
@@ -45,4 +45,7 @@ class TestOptionalDropdownChoice:
             assert valuespec.from_html_vars("od") == "id_a"
 
     def test_canonical_value(self) -> None:
-        assert vs.OptionalDropdownChoice[str](vs.TextInput(), []).canonical_value() == ""
+        assert (
+            vs.OptionalDropdownChoice[str](explicit=vs.TextInput(), choices=[]).canonical_value()
+            == ""
+        )

@@ -1543,12 +1543,12 @@ def _mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> N
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     service_name_config = config_cache.make_passive_service_name_config(final_service_name_config)
     _notify_host_files = create_config(
-        sys.stdout,
-        hosts_config,
-        loading_result.host_tags,
-        config_cache,
-        core_objects_config,
-        NagiosCoreConfig(
+        outfile=sys.stdout,
+        hosts_config=hosts_config,
+        host_tags=loading_result.host_tags,
+        config_cache=config_cache,
+        core_objects_config=core_objects_config,
+        nagios_core_config=NagiosCoreConfig(
             delay_precompile=loaded_config.delay_precompile,
             host_template=loaded_config.host_template,
             cluster_template=loaded_config.cluster_template,
@@ -1569,9 +1569,9 @@ def _mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> N
             contactgroup_members=loaded_config.contactgroup_members,
             simulation_mode=loaded_config.simulation_mode,
         ),
-        final_service_name_config,
-        service_name_config,
-        config.EnforcedServicesTable(
+        final_service_name_config=final_service_name_config,
+        passive_service_name_config=service_name_config,
+        enforced_services_table=config.EnforcedServicesTable(
             BundledHostRulesetMatcher(
                 loaded_config.static_checks,
                 ruleset_matcher,
@@ -1581,7 +1581,7 @@ def _mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> N
             plugins.check_plugins,
             label_manager.labels_of_service,
         ),
-        plugins.check_plugins,
+        plugins=plugins.check_plugins,
         hostnames=hostnames,
         licensing_handler=app.licensing_handler_factory(),
         passwords=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
@@ -2833,7 +2833,7 @@ def _mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str])
 
 
 # also used in precompiled host checks!
-def run_checking(  # noqa: PLR0917
+def run_checking(
     app: CheckmkBaseApp,
     loaded_config: BaseConfig,
     ruleset_matcher: RulesetMatcher,

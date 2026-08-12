@@ -116,12 +116,12 @@ ConfigVariableInventoryCleanup = ConfigVariable(
             (
                 "for_hosts",
                 ListOf(
-                    Dictionary(
+                    valuespec=Dictionary(
                         elements=[
                             (
                                 "regex_or_explicit",
                                 ListOf(
-                                    TextOrRegExp(),
+                                    valuespec=TextOrRegExp(),
                                     title=_("Match host names"),
                                     magic="!@#",
                                     allow_empty=False,

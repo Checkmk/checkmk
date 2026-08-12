@@ -614,7 +614,7 @@ class HostRulespec(Rulespec):
     """Base class for all rulespecs managing host rule sets with values"""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # noqa: PLR0917
+    def __init__(
         self,
         name: str,
         group: type[Any],
@@ -756,7 +756,7 @@ class BinaryHostRulespec(HostRulespec):
 
 class BinaryServiceRulespec(ServiceRulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # noqa: PLR0917
+    def __init__(
         self,
         name: str,
         group: type[RulespecBaseGroup],
@@ -1069,7 +1069,7 @@ class ManualCheckParameterRulespec(HostRulespec):
     These have to be named static_checks:<name-of-checkgroup>"""
 
     # Required because of Rulespec.NO_FACTORY_DEFAULT
-    def __init__(  # noqa: PLR0917
+    def __init__(
         self,
         group: type[RulespecBaseGroup],
         check_group_name: str,

@@ -608,7 +608,7 @@ def sorted_host_attributes_by_topic(
 
 
 # Kept for comatibility with pre 1.6 plugins
-def declare_host_attribute(  # noqa: PLR0917
+def declare_host_attribute(
     a: type[ABCHostAttribute],
     show_in_table: bool = True,
     show_in_folder: bool = True,

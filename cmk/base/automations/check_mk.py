@@ -661,7 +661,7 @@ def _automation_discovery_preview(
     )
 
 
-def _get_discovery_preview(  # noqa: PLR0917
+def _get_discovery_preview(
     host_name: HostName,
     default_address_family: Callable[
         [HostName], Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -688,20 +688,20 @@ def _get_discovery_preview(  # noqa: PLR0917
     # TODO: Do we still need the redirects?
     with redirect_stdout(buf), redirect_stderr(buf):
         check_preview = _execute_discovery(
-            loaded_config,
-            config_cache.ruleset_matcher,
-            config_cache.label_manager,
-            host_name,
-            default_address_family,
-            get_ip_stack_config,
-            on_error,
-            ip_address_of,
-            ip_address,
-            fetcher,
-            file_cache_options,
-            active_service_name_config,
-            passive_service_name_config,
-            config_cache,
+            loaded_config=loaded_config,
+            ruleset_matcher=config_cache.ruleset_matcher,
+            label_manager=config_cache.label_manager,
+            host_name=host_name,
+            default_address_family=default_address_family,
+            get_ip_stack_config=get_ip_stack_config,
+            on_error=on_error,
+            ip_address_of=ip_address_of,
+            ip_address=ip_address,
+            fetcher=fetcher,
+            file_cache_options=file_cache_options,
+            active_service_name_config=active_service_name_config,
+            passive_service_name_config=passive_service_name_config,
+            config_cache=config_cache,
             plugins=plugins,
             secrets_config=secrets_config,
             for_relay=for_relay,
@@ -826,7 +826,8 @@ def _make_compute_check_parameters_of_autocheck(
     return compute_check_parameters_of_autocheck
 
 
-def _execute_discovery(  # noqa: PLR0917
+def _execute_discovery(
+    *,
     loaded_config: BaseConfig,
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
@@ -3366,7 +3367,7 @@ class AutomationDiagHost:
         )
         return completed_process.returncode, completed_process.stdout
 
-    def _execute_agent(  # noqa: PLR0917
+    def _execute_agent(
         self,
         app: CheckmkBaseApp,
         hosts_config: Hosts,
@@ -3568,7 +3569,7 @@ class AutomationDiagHost:
             return 1, "Cannot find binary <tt>traceroute</tt>."
         return completed_process.returncode, completed_process.stdout
 
-    def _execute_snmp(  # noqa: PLR0917
+    def _execute_snmp(
         self,
         config_cache: config.ConfigCache,
         test: str,

@@ -54,7 +54,7 @@ def _get_single_host(hosts: Mapping[str, object]) -> Host | None:
 
 
 # TODO: Wow, this function REALLY has to be cleaned up
-def configure_attributes(  # noqa: PLR0917
+def configure_attributes(
     host_attributes: Mapping[str, ABCHostAttribute],
     new: bool,
     hosts: Mapping[str, Host | Folder | None],

@@ -465,13 +465,13 @@ class ModeEditRole(WatoMode):
             html.write_text_permissive("{} ({})".format(self._role_id, _("built-in role")))
             html.hidden_field("id", self._role_id)
         else:
-            html.text_input("id", self._role_id)
+            html.text_input(varname="id", default_value=self._role_id)
             html.set_focus("id")
 
         # Alias
         forms.section(_("Alias"))
         html.help(_("An alias or description of the role"))
-        html.text_input("alias", self._role.alias, size=50)
+        html.text_input(varname="alias", default_value=self._role.alias, size=50)
 
         forms.section(_("Enforce two-factor authentication"))
         html.help(

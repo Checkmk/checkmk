@@ -33,7 +33,7 @@ def _migrate(value: tuple | dict) -> dict:
 def _parameter_valuespec_epower() -> Migrate[dict[str, Any]]:
     return Migrate(
         Dictionary(
-            [
+            elements=[
                 (
                     "levels_lower",
                     SimpleLevels(

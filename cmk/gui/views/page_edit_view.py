@@ -239,7 +239,7 @@ def view_inventory_join_macros(
             (
                 "macros",
                 ListOf(
-                    Tuple(
+                    valuespec=Tuple(
                         elements=[
                             DropdownChoice(
                                 title=_("Use value from"),
@@ -408,7 +408,7 @@ def _get_join_inv_vs_column_choice(
                                 (
                                     "columns_to_match",
                                     ListOf(
-                                        Tuple(
+                                        valuespec=Tuple(
                                             elements=[
                                                 DropdownChoice(
                                                     title=_("The column"),

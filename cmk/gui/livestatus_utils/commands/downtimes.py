@@ -207,7 +207,7 @@ def schedule_services_downtimes_with_query(
         )
 
 
-def schedule_service_downtime(  # noqa: PLR0917
+def schedule_service_downtime(
     connection: MultiSiteConnection,
     site_id: SiteId | None,
     host_name: HostName,
@@ -746,7 +746,7 @@ def _schedule_service_downtime_for_hosts_services(
         )
 
 
-def _schedule_downtime(  # noqa: PLR0917
+def _schedule_downtime(
     sites: MultiSiteConnection,
     command: LivestatusCommand,
     site_id: SiteId | None,

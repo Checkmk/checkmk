@@ -36,7 +36,7 @@ from .sorter import register_sorters, SorterRegistry
 from .visual_type import VisualTypeViews
 
 
-def register(  # noqa: PLR0917
+def register(
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
     page_registry: PageRegistry,

@@ -377,7 +377,7 @@ OpenAPISchemaType = Literal["string", "array", "object", "boolean", "integer", "
 EndpointTarget = Literal["swagger-ui", "doc"]
 
 
-def translate_to_openapi_keys(  # noqa: PLR0917
+def translate_to_openapi_keys(
     name: str,
     location: LocationType,
     description: str | None = None,

@@ -1397,7 +1397,7 @@ class MetricBackendDCDConnectionAttributeFilter:
 
 
 class DcdAPI(BaseAPI):
-    def create_piggyback_connection(  # noqa: PLR0917
+    def create_piggyback_connection(
         self,
         dcd_id: str,
         title: str,
@@ -1537,7 +1537,7 @@ class DcdAPI(BaseAPI):
 
 
 class LDAPConnectionAPI(BaseAPI):
-    def create(  # noqa: PLR0917
+    def create(
         self,
         ldap_id: str,
         user_base_dn: str,

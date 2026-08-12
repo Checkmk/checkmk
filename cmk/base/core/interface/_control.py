@@ -44,7 +44,7 @@ tracer = trace.get_tracer()
 type _LockingMode = Literal["abort", "wait"] | None
 
 
-def do_reload(  # noqa: PLR0917
+def do_reload(
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     hosts_config: Hosts,
@@ -98,7 +98,7 @@ def do_reload(  # noqa: PLR0917
     )
 
 
-def do_restart(  # noqa: PLR0917
+def do_restart(
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
     host_config: Hosts,
@@ -161,7 +161,7 @@ def do_restart(  # noqa: PLR0917
         raise MKBailOut("An error occurred: %s" % e)
 
 
-def do_create_config(  # noqa: PLR0917
+def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -281,7 +281,7 @@ def _backup_objects_file(core_client: CoreClient) -> Iterator[None]:
 # We generally understand the existence of the "latest" link that
 # we create below to indicate that the configuration is ready to be used.
 # Everything that should be in it must be created before creating that link.
-def _create_active_config(  # noqa: PLR0917
+def _create_active_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,

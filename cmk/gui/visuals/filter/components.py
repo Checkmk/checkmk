@@ -157,7 +157,7 @@ class TextInput(BaseComponent):
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         if self.label:
             html.write_text_permissive(self.label)
-        html.text_input(self.id, default_value=current_values.get(self.id, ""))
+        html.text_input(varname=self.id, default_value=current_values.get(self.id, ""))
         if self.suffix:
             html.write_text_permissive(self.suffix)
 
@@ -193,7 +193,7 @@ class MultiselectWithFreeText(BaseComponent):
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
         if self.label:
             html.write_text_permissive(self.label)
-        html.text_input(self.id, default_value=current_values.get(self.id, ""))
+        html.text_input(varname=self.id, default_value=current_values.get(self.id, ""))
 
 
 @dataclass(kw_only=True, slots=True)

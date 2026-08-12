@@ -195,7 +195,9 @@ def command_reschedule_confirm_dialog_additions(
 def command_reschedule_render(what: str) -> None:
     html.open_div(class_="group")
     html.write_text_permissive(_("Spread over") + " ")
-    html.text_input("_resched_spread", default_value="5", size=3, cssclass="number", required=True)
+    html.text_input(
+        varname="_resched_spread", default_value="5", size=3, cssclass="number", required=True
+    )
     html.write_text_permissive(" " + _("minutes"))
     html.help(
         _(
@@ -673,7 +675,9 @@ def command_fake_check_result_render(what: str) -> None:
     html.write_text_permissive(_("Plug-in output") + " &nbsp; ")
     html.close_td()
     html.open_td()
-    html.text_input("_fake_output", "", size=60, placeholder=_("What is the purpose?"))
+    html.text_input(
+        varname="_fake_output", default_value="", size=60, placeholder=_("What is the purpose?")
+    )
     html.close_td()
     html.close_tr()
 
@@ -683,8 +687,8 @@ def command_fake_check_result_render(what: str) -> None:
     html.close_td()
     html.open_td()
     html.text_input(
-        "_fake_perfdata",
-        "",
+        varname="_fake_perfdata",
+        default_value="",
         size=60,
         placeholder=_("Enter metrics to show in notifications etc. ..."),
     )
@@ -814,7 +818,7 @@ PermissionActionCustomNotification = Permission(
 def command_custom_notification_render(what: str) -> None:
     html.open_div(class_="group")
     html.text_input(
-        "_cusnot_comment",
+        varname="_cusnot_comment",
         id_="cusnot_comment",
         size=60,
         submit="_customnotification",
@@ -967,7 +971,7 @@ def command_acknowledge_render(what: str) -> None:
     submit_id = "_acknowledge"
     html.open_div(class_="group")
     html.text_input(
-        "_ack_comment",
+        varname="_ack_comment",
         id_="ack_comment",
         size=60,
         submit=submit_id,
@@ -1334,7 +1338,7 @@ PermissionActionAddComment = Permission(
 def command_add_comment_render(what: str) -> None:
     html.open_div(class_="group")
     html.text_input(
-        "_comment",
+        varname="_comment",
         id_="comment",
         size=60,
         submit="_add_comment",
@@ -1543,7 +1547,7 @@ class CommandScheduleDowntimesForm:
     def _render_comment(self) -> None:
         html.open_div(class_="group")
         html.text_input(
-            "_down_comment",
+            varname="_down_comment",
             id_="down_comment",
             size=60,
             label=_("Comment"),

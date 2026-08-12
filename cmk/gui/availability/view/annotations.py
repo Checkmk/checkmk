@@ -325,7 +325,7 @@ def _vs_annotation() -> Dictionary:
         else [("hide_from_report", Checkbox(title=_("Hide annotation in report")))]
     )
     return Dictionary(
-        elements + extra_elements,
+        elements=elements + extra_elements,
         title=_("Edit annotation"),
         optional_keys=[],
         validate=_validate_reclassify_of_states,

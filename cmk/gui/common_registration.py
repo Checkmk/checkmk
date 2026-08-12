@@ -118,7 +118,8 @@ from cmk.licensing.registry import register_community_licensing_handler
 from cmk.shared_typing.main_menu import NavItemTopicEntry
 
 
-def register(  # noqa: PLR0917
+def register(
+    *,
     edition: Edition,
     main_menu_registry: MainMenuRegistry,
     job_registry: BackgroundJobRegistry,
@@ -290,23 +291,23 @@ def register(  # noqa: PLR0917
     )
 
     bi_registration.register(
-        data_source_registry,
-        painter_registry,
-        painter_option_registry,
-        permission_section_registry,
-        permission_registry,
-        page_registry,
-        filter_registry,
-        rename_host_hook_registry,
-        main_module_topic_registry,
-        main_module_registry,
-        mode_registry,
-        icon_and_action_registry,
-        snapin_registry,
-        endpoint_registry,
-        command_registry,
-        command_group_registry,
-        cron_job_registry,
+        data_source_registry=data_source_registry,
+        painter_registry=painter_registry,
+        painter_option_registry=painter_option_registry,
+        permission_section_registry=permission_section_registry,
+        permission_registry=permission_registry,
+        page_registry=page_registry,
+        filter_registry=filter_registry,
+        rename_host_hook_registry=rename_host_hook_registry,
+        main_module_topic_registry=main_module_topic_registry,
+        main_module_registry=main_module_registry,
+        mode_registry=mode_registry,
+        icon_and_action_registry=icon_and_action_registry,
+        snapin_registry=snapin_registry,
+        endpoint_registry=endpoint_registry,
+        command_registry=command_registry,
+        command_group_registry=command_group_registry,
+        cron_job_registry=cron_job_registry,
     )
     nodevis.register(page_registry, filter_registry, icon_and_action_registry, cron_job_registry)
     notifications.register(page_registry, permission_section_registry)

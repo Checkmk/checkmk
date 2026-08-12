@@ -1080,7 +1080,7 @@ def test_user_with_invalid_id(clients: ClientRegistry, username: str) -> None:
 
 def test_openapi_edit_non_existing_user_regression(clients: ClientRegistry) -> None:
     clients.User.edit(
-        "i_do_not_exists",
+        username="i_do_not_exists",
         fullname="I hopefully won't crash the site!",
         expect_ok=False,
     ).assert_status_code(404)

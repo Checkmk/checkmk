@@ -143,7 +143,7 @@ class _FilterNumberRange(Filter):
 
         html.open_td()
         html.text_input(
-            self._html_var_from,
+            varname=self._html_var_from,
             default_value=value.get(self._html_var_from, ""),
             style="width: 80px;",
         )
@@ -166,7 +166,7 @@ class _FilterNumberRange(Filter):
 
         html.open_td()
         html.text_input(
-            self._html_var_until,
+            varname=self._html_var_until,
             default_value=value.get(self._html_var_until, ""),
             style="width: 80px;",
         )
@@ -412,11 +412,15 @@ class FilterInvTextWithSortKey(Filter):
         # this special styling is not supported by the current components
         html.write_text_permissive(_("From:") + "&nbsp;")
         html.text_input(
-            self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), style="width: 80px;"
+            varname=self.htmlvars[0],
+            default_value=value.get(self.htmlvars[0], ""),
+            style="width: 80px;",
         )
         html.write_text_permissive(" &nbsp; " + _("To:") + "&nbsp;")
         html.text_input(
-            self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), style="width: 80px;"
+            varname=self.htmlvars[1],
+            default_value=value.get(self.htmlvars[1], ""),
+            style="width: 80px;",
         )
 
     @override
@@ -604,10 +608,14 @@ class FilterInvtableTextWithSortKey(Filter):
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
         html.write_text_permissive(_("From:"))
-        html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7)
+        html.text_input(
+            varname=self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7
+        )
         html.write_text_permissive(" &nbsp; ")
         html.write_text_permissive(_("To:"))
-        html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7)
+        html.text_input(
+            varname=self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7
+        )
 
     @override
     def components(self) -> Iterable[FilterComponent]:
@@ -770,10 +778,14 @@ class FilterInvtableVersion(Filter):
         # keep this in sync with components(), remove once all filter menus are switched to vue
         # this special styling is not supported by the current components
         html.write_text_permissive(_("Min.&nbsp;Version:"))
-        html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7)
+        html.text_input(
+            varname=self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7
+        )
         html.write_text_permissive(" &nbsp; ")
         html.write_text_permissive(_("Max.&nbsp;Version:"))
-        html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7)
+        html.text_input(
+            varname=self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7
+        )
 
     @override
     def components(self) -> Iterable[FilterComponent]:
@@ -954,14 +966,14 @@ class FilterInvHasSoftwarePackage(Filter):
         html.open_span(class_="min_max_row")
         html.write_text_permissive(_("Min.&nbsp;Version: "))
         html.text_input(
-            self._varprefix + "version_from",
+            varname=self._varprefix + "version_from",
             default_value=value.get(self._varprefix + "version_from", ""),
             size=9,
         )
         html.write_text_permissive(" &nbsp; ")
         html.write_text_permissive(_("Max.&nbsp;Vers.: "))
         html.text_input(
-            self._varprefix + "version_to",
+            varname=self._varprefix + "version_to",
             default_value=value.get(self._varprefix + "version_from", ""),
             size=9,
         )

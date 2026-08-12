@@ -221,7 +221,7 @@ from .helpers import action_choices, eventd_configuration, service_levels
 from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
-def register(  # noqa: PLR0917
+def register(
     edition: Edition,
     permission_registry: PermissionRegistry,
     sample_config_generator_registry: SampleConfigGeneratorRegistry,

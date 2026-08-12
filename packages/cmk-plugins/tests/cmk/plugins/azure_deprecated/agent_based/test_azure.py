@@ -1013,7 +1013,7 @@ def test_check_resource_sustained_threshold_map_func(get_value_store: Mock) -> N
         ),
     ],
 )
-def test_threshold_hit_for_time(  # noqa: PLR0917
+def test_threshold_hit_for_time(
     current_value1: float,
     current_value2: float,
     threshold: float,

@@ -281,7 +281,7 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
                 )
             )
             if self._new:
-                html.text_input("name", self._attr["name"], size=61)
+                html.text_input(varname="name", default_value=self._attr["name"], size=61)
                 html.set_focus("name")
             else:
                 html.write_text_permissive(self._name)
@@ -289,7 +289,7 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
 
             forms.section(_("Title") + "<sup>*</sup>", is_required=True)
             html.help(_("The title is used to label this attribute."))
-            html.text_input("title", self._attr["title"], size=61)
+            html.text_input(varname="title", default_value=self._attr["title"], size=61)
 
             forms.section(_("Topic"))
             html.help(_("The attribute is added to this section in the edit dialog."))

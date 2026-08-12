@@ -190,7 +190,7 @@ class NagiosCore(MonitoringCore):
             ),
         )
 
-    def _create_core_config(  # noqa: PLR0917
+    def _create_core_config(
         self,
         config_path: Path,
         hosts_config: Hosts,
@@ -223,16 +223,16 @@ class NagiosCore(MonitoringCore):
 
         config_buffer = StringIO()
         notify_host_files = create_config(
-            config_buffer,
-            hosts_config,
-            host_tags,
-            self._config_cache,
-            self._core_objects_config,
-            self.nagios_core_config,
-            final_service_name_config,
-            passive_service_name_config,
-            enforced_services_table,
-            plugins,
+            outfile=config_buffer,
+            hosts_config=hosts_config,
+            host_tags=host_tags,
+            config_cache=self._config_cache,
+            core_objects_config=self._core_objects_config,
+            nagios_core_config=self.nagios_core_config,
+            final_service_name_config=final_service_name_config,
+            passive_service_name_config=passive_service_name_config,
+            enforced_services_table=enforced_services_table,
+            plugins=plugins,
             hostnames=sorted(
                 {
                     hn
@@ -334,7 +334,8 @@ def _validate_licensing(
         raise MKGeneralException(block_effect.message_raw)
 
 
-def create_config(  # noqa: PLR0917
+def create_config(
+    *,
     outfile: IO[str],
     hosts_config: Hosts,
     host_tags: HostTags,
@@ -372,23 +373,23 @@ def create_config(  # noqa: PLR0917
     all_notify_host_configs: dict[HostName, NotificationHostConfig] = {}
     for hostname in hostnames:
         all_notify_host_configs[hostname] = _create_nagios_config_host(
-            cfg,
-            hosts_config,
-            host_tags,
-            config_cache,
-            core_objects_config,
-            nagios_core_config,
-            final_service_name_config,
-            passive_service_name_config,
-            enforced_services_table,
-            plugins,
-            hostname,
-            get_ip_stack_config(hostname),
-            default_address_family(hostname),
-            passwords,
-            licensing_counter,
-            ip_address_of,
-            service_depends_on,
+            cfg=cfg,
+            hosts_config=hosts_config,
+            host_tags=host_tags,
+            config_cache=config_cache,
+            core_objects_config=core_objects_config,
+            nagios_core_config=nagios_core_config,
+            final_service_name_config=final_service_name_config,
+            passive_service_name_config=passive_service_name_config,
+            enforced_services_table=enforced_services_table,
+            plugins=plugins,
+            hostname=hostname,
+            ip_stack_config=get_ip_stack_config(hostname),
+            host_ip_family=default_address_family(hostname),
+            stored_passwords=passwords,
+            license_counter=licensing_counter,
+            ip_address_of=ip_address_of,
+            service_depends_on=service_depends_on,
             for_relay=get_relay_id(hostname) is not None,
             descendants=descendants_per_host.get(hostname, ()),
         )
@@ -429,7 +430,8 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
     )
 
 
-def _create_nagios_config_host(  # noqa: PLR0917
+def _create_nagios_config_host(
+    *,
     cfg: NagiosConfig,
     hosts_config: Hosts,
     host_tags: HostTags,
@@ -451,7 +453,6 @@ def _create_nagios_config_host(  # noqa: PLR0917
     license_counter: Counter,
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-    *,
     for_relay: bool,
     descendants: Sequence[HostName],
 ) -> NotificationHostConfig:
@@ -479,23 +480,23 @@ def _create_nagios_config_host(  # noqa: PLR0917
         descendants=descendants,
         host_labels=get_labels_from_attributes(list(host_attrs.items())),
         service_labels=create_nagios_servicedefs(
-            cfg,
-            hosts_config,
-            config_cache,
-            core_objects_config,
-            nagios_core_config,
-            final_service_name_config,
-            passive_service_name_config,
-            enforced_services_table,
-            plugins,
-            hostname,
-            ip_stack_config,
-            host_ip_family,
-            host_attrs,
-            stored_passwords,
-            license_counter,
-            ip_address_of,
-            service_depends_on,
+            cfg=cfg,
+            hosts_config=hosts_config,
+            config_cache=config_cache,
+            core_objects_config=core_objects_config,
+            nagios_core_config=nagios_core_config,
+            final_service_name_config=final_service_name_config,
+            passive_service_name_config=passive_service_name_config,
+            enforced_services_table=enforced_services_table,
+            plugins=plugins,
+            hostname=hostname,
+            ip_stack_config=ip_stack_config,
+            host_ip_family=host_ip_family,
+            host_attrs=host_attrs,
+            stored_passwords=stored_passwords,
+            license_counter=license_counter,
+            ip_address_of=ip_address_of,
+            service_depends_on=service_depends_on,
             for_relay=for_relay,
         ),
         tags=get_tags_with_groups_from_attributes(list(host_attrs.items())),
@@ -652,7 +653,7 @@ def transform_active_service_command(
 _ServiceLabels = dict[ServiceName, Labels]
 
 
-def _process_services_data(  # noqa: PLR0917
+def _process_services_data(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -741,7 +742,8 @@ def _process_services_data(  # noqa: PLR0917
 _PingServiceNames = Literal["PING", "PING IPv4", "PING IPv6"]
 
 
-def create_nagios_servicedefs(  # noqa: PLR0917
+def create_nagios_servicedefs(
+    *,
     cfg: NagiosConfig,
     hosts_config: Hosts,
     config_cache: ConfigCache,
@@ -763,7 +765,6 @@ def create_nagios_servicedefs(  # noqa: PLR0917
     license_counter: Counter,
     ip_address_of: ip_lookup.IPLookup,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
-    *,
     for_relay: bool,
 ) -> dict[ServiceName, Labels]:
     check_mk_labels = _get_service_labels(config_cache.label_manager, hostname, "Check_MK")
@@ -994,7 +995,7 @@ def create_nagios_servicedefs(  # noqa: PLR0917
     return service_labels
 
 
-def _create_custom_check(  # noqa: PLR0917
+def _create_custom_check(
     entry: CustomCheck,
     cfg: NagiosConfig,
     config_cache: ConfigCache,
@@ -1148,7 +1149,7 @@ def _get_dependencies(
     )
 
 
-def _add_ping_service(  # noqa: PLR0917
+def _add_ping_service(
     cfg: NagiosConfig,
     hosts_config: Hosts,
     config_cache: ConfigCache,

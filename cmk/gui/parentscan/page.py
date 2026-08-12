@@ -315,7 +315,12 @@ class ModeParentScan(WatoMode):
         html.write_text_permissive(_("Timeout for responses") + ":")
         html.close_td()
         html.open_td()
-        html.text_input("timeout", str(self._settings.timeout), size=2, cssclass="number")
+        html.text_input(
+            varname="timeout",
+            default_value=str(self._settings.timeout),
+            size=2,
+            cssclass="number",
+        )
         html.write_text_permissive(_("sec"))
         html.close_td()
         html.close_tr()
@@ -325,7 +330,12 @@ class ModeParentScan(WatoMode):
         html.write_text_permissive(_("Number of probes per hop") + ":")
         html.close_td()
         html.open_td()
-        html.text_input("probes", str(self._settings.probes), size=2, cssclass="number")
+        html.text_input(
+            varname="probes",
+            default_value=str(self._settings.probes),
+            size=2,
+            cssclass="number",
+        )
         html.close_td()
         html.close_tr()
 
@@ -334,7 +344,12 @@ class ModeParentScan(WatoMode):
         html.write_text_permissive(_("Maximum distance (TTL) to gateway") + ":")
         html.close_td()
         html.open_td()
-        html.text_input("max_ttl", str(self._settings.max_ttl), size=2, cssclass="number")
+        html.text_input(
+            varname="max_ttl",
+            default_value=str(self._settings.max_ttl),
+            size=2,
+            cssclass="number",
+        )
         html.close_td()
         html.close_tr()
 
@@ -343,7 +358,12 @@ class ModeParentScan(WatoMode):
         html.write_text_permissive(_("Number of ping probes") + ":")
         html.close_td()
         html.open_td()
-        html.text_input("ping_probes", str(self._settings.ping_probes), size=2, cssclass="number")
+        html.text_input(
+            varname="ping_probes",
+            default_value=str(self._settings.ping_probes),
+            size=2,
+            cssclass="number",
+        )
         html.close_td()
         html.close_tr()
         html.close_table()
@@ -401,7 +421,7 @@ class ModeParentScan(WatoMode):
         )
         html.close_ul()
         html.write_text_permissive(_("Alias for created gateway hosts") + ": ")
-        html.text_input("alias", default_value=self._settings.alias)
+        html.text_input(varname="alias", default_value=self._settings.alias)
 
         forms.end()
 

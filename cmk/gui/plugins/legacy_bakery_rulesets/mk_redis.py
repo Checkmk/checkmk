@@ -53,7 +53,7 @@ def _valuespec_agent_config_mk_redis() -> CascadingDropdown:
                 "static",
                 _("Specific list of instances"),
                 ListOf(
-                    Migrate(
+                    valuespec=Migrate(
                         valuespec=Dictionary(
                             elements=[
                                 (

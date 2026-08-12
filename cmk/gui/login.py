@@ -344,7 +344,9 @@ class LoginPage(Page):
                 class_="login_label",
             )
             html.open_td(class_="login_input")
-            html.text_input(self._username_varname, id_="input_user", autocomplete="username")
+            html.text_input(
+                varname=self._username_varname, id_="input_user", autocomplete="username"
+            )
             html.close_td()
             html.close_tr()
             html.open_tr()

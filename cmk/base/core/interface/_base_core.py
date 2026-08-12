@@ -40,7 +40,7 @@ class MonitoringCore(abc.ABC):
     def name(cls) -> Literal["nagios", "cmc"]:
         raise NotImplementedError
 
-    def create_config(  # noqa: PLR0917
+    def create_config(
         self,
         config_creation_context: ConfigCreationContext,
         config_cache: ConfigCache,
@@ -88,7 +88,7 @@ class MonitoringCore(abc.ABC):
         )
 
     @abc.abstractmethod
-    def _create_config(  # noqa: PLR0917
+    def _create_config(
         self,
         config_creation_context: ConfigCreationContext,
         config_cache: ConfigCache,

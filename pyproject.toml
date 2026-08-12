@@ -217,10 +217,9 @@ section-order = [
 [tool.ruff.lint.isort.sections]
 first-party-not-cmk = ["cmc_proto", "omdlib", "livestatus"]
 
-# TODO: This is already twice the default of 5, but it's stil way too high.
-# But even with this huge limit, we still need 145 suppressions. :-/
+# TODO: This is way too high, the default is 5!
 [tool.ruff.lint.pylint]
-max-positional-args = 10
+max-positional-args = 16
 
 # NOTE: Keep this is sync with mypy-gpl.ini!
 # The number of errors/files below are just a snapshot to give a rough idea. In

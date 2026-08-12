@@ -508,7 +508,7 @@ def test_create_discover_by_metrics_function(
         ),
     ],
 )
-def test_threshold_hit_for_time(  # noqa: PLR0917
+def test_threshold_hit_for_time(
     current_value1: float,
     current_value2: float,
     threshold: float,

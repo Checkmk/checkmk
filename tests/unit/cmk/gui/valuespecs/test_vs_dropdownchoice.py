@@ -26,7 +26,7 @@ def get_dropdown_choice(
     default_value: vs.ValueSpecDefault[str] = vs.DEF_VALUE,
 ) -> vs.DropdownChoice[str]:
     return vs.DropdownChoice[str](
-        choices,
+        choices=choices,
         help_separator=help_separator,
         invalid_choice=invalid_choice,
         invalid_choice_title=invalid_choice_title,

@@ -634,7 +634,7 @@ class ModeRenameHost(WatoMode):
             forms.section(_("Current name"))
             html.write_text_permissive(self._host.name())
             forms.section(_("New name"))
-            html.text_input("newname", "")
+            html.text_input(varname="newname", default_value="")
             forms.end()
             html.set_focus("newname")
             html.hidden_fields()

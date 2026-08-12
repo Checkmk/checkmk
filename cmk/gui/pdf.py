@@ -694,7 +694,7 @@ class Document:
 
         return wrapped_lines if wrapped_lines else [""]
 
-    def add_table(  # noqa: PLR0917
+    def add_table(
         self,
         header_texts: Sequence[str],
         raw_rows: RawTableRows,
@@ -1059,7 +1059,7 @@ class TableRenderer:
         super().__init__()
         self.pdf = pdf
 
-    def add_table(  # noqa: PLR0917
+    def add_table(
         self,
         header_texts: Sequence[str],
         raw_rows: RawTableRows,
@@ -1287,7 +1287,7 @@ class TableRenderer:
                 row_oddeven="heading",
             )
 
-    def _paint_row(  # noqa: PLR0917
+    def _paint_row(
         self,
         row: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
@@ -1392,7 +1392,7 @@ class TableRenderer:
                 left, self.pdf._linepos, left, self.pdf._linepos - row_height - 2 * y_padding
             )
 
-    def _paint_stepwise(  # noqa: PLR0917
+    def _paint_stepwise(
         self,
         row: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],

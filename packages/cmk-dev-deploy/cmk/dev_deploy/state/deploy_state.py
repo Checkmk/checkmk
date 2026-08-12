@@ -293,7 +293,7 @@ def prune_stale_dirty(ds: DeployerState, current_dirty: set[str]) -> DeployerSta
     )
 
 
-def build_and_save_state(  # noqa: PLR0917
+def build_and_save_state(
     repo_root: Path,
     site_root: Path,
     branch: str,

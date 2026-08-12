@@ -369,7 +369,7 @@ class MKSignalException(MKException):
 class EventServer(ECServerThread):
     """Processing and classification of incoming events."""
 
-    def __init__(  # noqa: PLR0917
+    def __init__(
         self,
         logger: Logger,
         settings: Settings,
@@ -2025,7 +2025,7 @@ class StatusTableStatus(StatusTable):
 class StatusServer(ECServerThread):
     """Responding to status and command requests via the UNIX/TCP sockets."""
 
-    def __init__(  # noqa: PLR0917
+    def __init__(
         self,
         logger: Logger,
         settings: Settings,
@@ -2523,7 +2523,7 @@ class StatusServer(ECServerThread):
 #   '----------------------------------------------------------------------'
 
 
-def run_eventd(  # noqa: PLR0917
+def run_eventd(
     terminate_main_event: threading.Event,
     settings: Settings,
     config: Config,

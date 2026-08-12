@@ -1487,7 +1487,7 @@ class ModeDistributedMonitoring(WatoMode):
         with html.form_context("login", method="POST"):
             forms.header(_("Login credentials"))
             forms.section(_("Administrator name"))
-            html.text_input("_name")
+            html.text_input(varname="_name")
             html.set_focus("_name")
             forms.section(_("Administrator password"))
             html.password_input("_passwd")

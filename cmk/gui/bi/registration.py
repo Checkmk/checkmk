@@ -55,7 +55,8 @@ from .view import (
 )
 
 
-def register(  # noqa: PLR0917
+def register(
+    *,
     data_source_registry: DataSourceRegistry,
     painter_registry: PainterRegistry,
     painter_option_registry: PainterOptionRegistry,

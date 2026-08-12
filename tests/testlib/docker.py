@@ -292,7 +292,7 @@ class CheckmkApp:
     The module supports both raw and SaaS editions of Checkmk.
     """
 
-    def __init__(  # noqa: PLR0917
+    def __init__(
         self,
         client: docker.client.DockerClient,
         package_info: CMKPackageInfo | None = None,

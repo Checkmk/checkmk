@@ -50,7 +50,7 @@ def _valuespec_agent_config_mk_mysql() -> Alternative:
                     (
                         "sockets",
                         ListOf(
-                            Dictionary(
+                            valuespec=Dictionary(
                                 elements=[
                                     (
                                         "socket",

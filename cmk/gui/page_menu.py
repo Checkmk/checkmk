@@ -1005,7 +1005,7 @@ def search_form(title: str | None = None, mode: str | None = None, default_value
     with html.form_context("search", add_transid=False):
         if title:
             html.write_text_permissive(title + " ")
-        html.text_input("search", size=32, default_value=default_value)
+        html.text_input(varname="search", size=32, default_value=default_value)
         html.hidden_fields()
         if mode:
             html.hidden_field("mode", mode, add_var=True)
@@ -1021,7 +1021,7 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
     was_submitted = bool(get_search_expression())
     with html.form_context(form_name, add_transid=False):
         html.text_input(
-            "search",
+            varname="search",
             size=32,
             default_value=default_value,
             placeholder=_("Find on this page ..."),

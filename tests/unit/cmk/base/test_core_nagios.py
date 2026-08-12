@@ -669,11 +669,11 @@ def test_create_nagios_servicedefs_active_check(
     cfg = NagiosConfig(outfile, [hostname], timeperiods={})
     license_counter = Counter("services")
     create_nagios_servicedefs(
-        cfg,
-        hosts_config,
-        config_cache,
-        _make_core_objects_config(config_cache),
-        EMPTY_NAGIOS_CORE_CONFIG,
+        cfg=cfg,
+        hosts_config=hosts_config,
+        config_cache=config_cache,
+        core_objects_config=_make_core_objects_config(config_cache),
+        nagios_core_config=EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=final_service_name_config,
         passive_service_name_config=config_cache.make_passive_service_name_config(
             final_service_name_config
@@ -723,11 +723,11 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
     cfg = NagiosConfig(outfile, [hostname], timeperiods={})
     license_counter = Counter("services")
     create_nagios_servicedefs(
-        cfg,
-        hosts_config,
-        config_cache,
-        _make_core_objects_config(config_cache),
-        EMPTY_NAGIOS_CORE_CONFIG,
+        cfg=cfg,
+        hosts_config=hosts_config,
+        config_cache=config_cache,
+        core_objects_config=_make_core_objects_config(config_cache),
+        nagios_core_config=EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=lambda *a: "",
         passive_service_name_config=lambda *a: "",
         enforced_services_table=lambda hn: {},
@@ -867,11 +867,11 @@ def test_create_nagios_servicedefs_with_warnings(
     cfg = NagiosConfig(outfile, [hostname], timeperiods={})
     license_counter = Counter("services")
     create_nagios_servicedefs(
-        cfg,
-        hosts_config,
-        config_cache,
-        _make_core_objects_config(config_cache),
-        EMPTY_NAGIOS_CORE_CONFIG,
+        cfg=cfg,
+        hosts_config=hosts_config,
+        config_cache=config_cache,
+        core_objects_config=_make_core_objects_config(config_cache),
+        nagios_core_config=EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=final_service_name_config,
         passive_service_name_config=config_cache.make_passive_service_name_config(
             final_service_name_config
@@ -954,11 +954,11 @@ def test_create_nagios_servicedefs_omit_service(
     cfg = NagiosConfig(outfile, [hostname], timeperiods={})
     license_counter = Counter("services")
     create_nagios_servicedefs(
-        cfg,
-        hosts_config,
-        config_cache,
-        _make_core_objects_config(config_cache),
-        EMPTY_NAGIOS_CORE_CONFIG,
+        cfg=cfg,
+        hosts_config=hosts_config,
+        config_cache=config_cache,
+        core_objects_config=_make_core_objects_config(config_cache),
+        nagios_core_config=EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=lambda *a: "",
         passive_service_name_config=lambda *a: "",
         enforced_services_table=lambda hn: {},
@@ -1041,11 +1041,11 @@ def test_create_nagios_servicedefs_invalid_args(
     license_counter = Counter("services")
 
     create_nagios_servicedefs(
-        cfg,
-        hosts_config,
-        config_cache,
-        _make_core_objects_config(config_cache),
-        EMPTY_NAGIOS_CORE_CONFIG,
+        cfg=cfg,
+        hosts_config=hosts_config,
+        config_cache=config_cache,
+        core_objects_config=_make_core_objects_config(config_cache),
+        nagios_core_config=EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=lambda *a: "",
         passive_service_name_config=lambda *a: "",
         enforced_services_table=lambda hn: {},
@@ -1147,11 +1147,11 @@ def test_create_nagios_config_commands(
     cfg = NagiosConfig(outfile, [hostname], timeperiods={})
     license_counter = Counter("services")
     create_nagios_servicedefs(
-        cfg,
-        hosts_config,
-        config_cache,
-        _make_core_objects_config(config_cache),
-        EMPTY_NAGIOS_CORE_CONFIG,
+        cfg=cfg,
+        hosts_config=hosts_config,
+        config_cache=config_cache,
+        core_objects_config=_make_core_objects_config(config_cache),
+        nagios_core_config=EMPTY_NAGIOS_CORE_CONFIG,
         final_service_name_config=final_service_name_config,
         passive_service_name_config=config_cache.make_passive_service_name_config(
             final_service_name_config

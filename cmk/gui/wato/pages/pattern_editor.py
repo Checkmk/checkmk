@@ -216,7 +216,7 @@ class ModePatternEditor(WatoMode):
             self._vs_host().render_input("host", self._hostname)
             forms.section(_("Log file"))
             html.help(_("Here, you need to insert the original file or path name."))
-            html.text_input("file", size=80)
+            html.text_input(varname="file", size=80)
             forms.section(_("Text to match"))
             html.help(
                 _(
@@ -225,7 +225,7 @@ class ModePatternEditor(WatoMode):
                     'will be highlighted after clicking the "Try out" button.'
                 )
             )
-            html.text_input("match", cssclass="match", size=100)
+            html.text_input(varname="match", cssclass="match", size=100)
             forms.end()
             html.button("_try", _("Try out"))
             request.del_var("folder")  # Never hand over the folder here

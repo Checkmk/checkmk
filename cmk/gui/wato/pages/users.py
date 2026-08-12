@@ -1668,7 +1668,7 @@ class ModeEditUser(WatoMode):
             html.write_text_permissive(value)
             html.hidden_field(name, value)
         else:
-            html.text_input(name, value, size=73)
+            html.text_input(varname=name, default_value=value, size=73)
 
     def _pw_suffix(self) -> str:
         if self._is_new_user:

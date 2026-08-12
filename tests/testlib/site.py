@@ -2390,7 +2390,7 @@ class SiteFactory:
                 logger.info("Removing site '%(site_id)s'...", {"site_id": site_copy.id})
                 site_copy.rm()
 
-    def interactive_update(  # noqa: PLR0917
+    def interactive_update(
         self,
         test_site: Site,
         target_package: CMKPackageInfo,

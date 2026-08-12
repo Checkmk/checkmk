@@ -1387,7 +1387,7 @@ def _convert_to_legacy_dropdown_choice(
             to_convert.custom_validate, localizer
         )
 
-    return legacy_valuespecs.DropdownChoice(choices, **converted_kwargs)
+    return legacy_valuespecs.DropdownChoice(choices=choices, **converted_kwargs)
 
 
 def _convert_to_legacy_cascading_dropdown(

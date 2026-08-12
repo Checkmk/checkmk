@@ -241,10 +241,11 @@ class Endpoint:
 
     """
 
-    def __init__(  # noqa: PLR0917
+    def __init__(
         self,
         path: str,
         link_relation: LinkRelation,
+        *,
         method: HTTPMethod = "get",
         content_type: str = "application/json",
         output_empty: bool = False,

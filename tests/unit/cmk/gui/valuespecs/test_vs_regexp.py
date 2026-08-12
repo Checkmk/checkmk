@@ -11,15 +11,15 @@ from .utils import expect_validate_failure, expect_validate_success
 
 class TestRegexp:
     def test_validate(self) -> None:
-        expect_validate_success(vs.RegExp("infix"), "^$")
-        expect_validate_failure(vs.RegExp("infix"), "(", match="Invalid regular expression:")
+        expect_validate_success(vs.RegExp(mode="infix"), "^$")
+        expect_validate_failure(vs.RegExp(mode="infix"), "(", match="Invalid regular expression:")
         expect_validate_failure(
-            vs.RegExp("infix", mingroups=1), "^$", match="You need at least <b>1</b> groups."
+            vs.RegExp(mode="infix", mingroups=1), "^$", match="You need at least <b>1</b> groups."
         )
-        expect_validate_success(vs.RegExp("infix", mingroups=1), "^(.+)$")
+        expect_validate_success(vs.RegExp(mode="infix", mingroups=1), "^(.+)$")
         expect_validate_failure(
-            vs.RegExp("infix", maxgroups=2),
+            vs.RegExp(mode="infix", maxgroups=2),
             "^(.)(.)(.)$",
             match="It must have at most <b>2</b> groups.",
         )
-        expect_validate_success(vs.RegExp("infix", maxgroups=2), "^(.+)$")
+        expect_validate_success(vs.RegExp(mode="infix", maxgroups=2), "^(.+)$")

@@ -861,8 +861,9 @@ class HTMLGenerator(HTMLWriter):
         )
 
     # TODO: Try and thin out this method's list of parameters - remove unused ones
-    def text_input(  # noqa: PLR0917
+    def text_input(
         self,
+        *,
         varname: str,
         default_value: str = "",
         cssclass: str = "text",
@@ -991,7 +992,7 @@ class HTMLGenerator(HTMLWriter):
             class_=class_,
         )
 
-    def password_input(  # noqa: PLR0917
+    def password_input(
         self,
         varname: str,
         default_value: str = "",
@@ -1006,8 +1007,8 @@ class HTMLGenerator(HTMLWriter):
         placeholder: str | None = None,
     ) -> None:
         self.text_input(
-            varname,
-            default_value,
+            varname=varname,
+            default_value=default_value,
             cssclass=cssclass,
             size=size,
             label=label,
@@ -1456,7 +1457,7 @@ class HTMLGenerator(HTMLWriter):
         )
 
     @staticmethod
-    def render_icon_button(  # noqa: PLR0917
+    def render_icon_button(
         url: None | str,
         title: str,
         icon: DynamicIcon | StaticIcon,
@@ -1521,7 +1522,7 @@ class HTMLGenerator(HTMLWriter):
             ),
         )
 
-    def icon_button(  # noqa: PLR0917
+    def icon_button(
         self,
         url: str | None,
         title: str,
@@ -1586,7 +1587,7 @@ class HTMLGenerator(HTMLWriter):
         self.close_div()
         self.close_a()
 
-    def popup_trigger(  # noqa: PLR0917
+    def popup_trigger(
         self,
         content: HTML,
         ident: str,
@@ -1617,7 +1618,7 @@ class HTMLGenerator(HTMLWriter):
         )
 
     @staticmethod
-    def render_popup_trigger(  # noqa: PLR0917
+    def render_popup_trigger(
         content: HTML,
         ident: str,
         method: PopupMethod,

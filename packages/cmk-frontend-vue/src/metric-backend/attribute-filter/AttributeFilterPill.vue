@@ -12,7 +12,8 @@ import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import DropdownClearButton from '../DropdownClearButton.vue'
 import InlineEditPill from '../InlineEditPill.vue'
-import { ATTRIBUTE_KIND_LABELS, attributeKindPrefix, operatorPhrase, pillLabel } from './pill-label'
+import { ATTRIBUTE_KIND_ORDER, attributeKindLabel } from '../attribute-kind'
+import { attributeKindPrefix, operatorPhrase, pillLabel } from './pill-label'
 import {
   EXISTENCE_OPERATORS,
   STRING_OPERATORS,
@@ -53,7 +54,7 @@ const emit = defineEmits<{
   (e: 'edit'): void
   (e: 'done'): void
   (e: 'update:key', value: string): void
-  (e: 'update:attributeKind', value: AttributeKind): void
+  (e: 'update:attributeKind', value: AttributeKind | null): void
   (e: 'update:operator', value: Operator): void
   (e: 'update:value', value: string): void
 }>()
@@ -159,7 +160,7 @@ const attributeKindInput = computed<string | null>({
   get: () => props.condition.attributeKind,
   set: (value) => {
     const valid =
-      value !== null && Object.hasOwn(ATTRIBUTE_KIND_LABELS, value)
+      value !== null && (ATTRIBUTE_KIND_ORDER as string[]).includes(value)
         ? (value as AttributeKind)
         : null
     emit('update:attributeKind', valid)
@@ -215,11 +216,10 @@ watch(
 
 const attributeKindOptions = computed(() => ({
   type: 'fixed' as const,
-  suggestions: [
-    { name: 'resource', title: _t('Resource') },
-    { name: 'scope', title: _t('Scope') },
-    { name: 'data_point', title: _t('Data point') }
-  ]
+  suggestions: ATTRIBUTE_KIND_ORDER.map((attributeKind) => ({
+    name: attributeKind,
+    title: attributeKindLabel(attributeKind)
+  }))
 }))
 
 function operatorSuggestion(name: Operator) {

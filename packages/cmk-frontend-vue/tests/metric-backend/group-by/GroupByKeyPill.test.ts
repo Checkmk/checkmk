@@ -9,22 +9,27 @@ import { Response } from 'cmk-ui-library/components/CmkSuggestions/suggestions'
 import { defineComponent, ref } from 'vue'
 
 import GroupByKeyPill from '@/metric-backend/group-by/GroupByKeyPill.vue'
-import type { GroupKey, GroupLevel } from '@/metric-backend/group-by/types'
+import type { AttributeKind, GroupKey } from '@/metric-backend/group-by/types'
 
-const KEY_LEVELS: Record<string, GroupLevel> = {
+const KEY_ATTRIBUTE_KINDS: Record<string, AttributeKind> = {
   'service.name': 'resource',
   'http.route': 'data_point'
 }
 
 function querySuggestions(query: string): Promise<Response> {
-  const matches = Object.keys(KEY_LEVELS)
+  const matches = Object.keys(KEY_ATTRIBUTE_KINDS)
     .filter((k) => k.includes(query))
     .map((k) => ({ name: k, title: k }))
   return Promise.resolve(new Response(matches))
 }
 
 function renderPill(initial: Partial<GroupKey> = {}, editing = false) {
-  const condition = ref<GroupKey>({ id: '1', level: 'resource', key: 'service.name', ...initial })
+  const condition = ref<GroupKey>({
+    id: '1',
+    attributeKind: 'resource',
+    key: 'service.name',
+    ...initial
+  })
   const removed = ref(false)
   const keyUpdates: string[] = []
   const wrapper = defineComponent({
@@ -35,8 +40,8 @@ function renderPill(initial: Partial<GroupKey> = {}, editing = false) {
         editing,
         removed,
         querySuggestions,
-        onUpdateLevel: (level: GroupLevel) => {
-          condition.value = { ...condition.value, level }
+        onUpdateAttributeKind: (attributeKind: AttributeKind) => {
+          condition.value = { ...condition.value, attributeKind }
         },
         onUpdateKey: (key: string) => {
           keyUpdates.push(key)
@@ -53,7 +58,7 @@ function renderPill(initial: Partial<GroupKey> = {}, editing = false) {
         :editing="editing"
         removable
         :query-suggestions="querySuggestions"
-        @update:level="onUpdateLevel"
+        @update:attribute-kind="onUpdateAttributeKind"
         @update:key="onUpdateKey"
         @remove="onRemove"
       />
@@ -63,16 +68,16 @@ function renderPill(initial: Partial<GroupKey> = {}, editing = false) {
   return { condition, removed, keyUpdates }
 }
 
-test('the read-only chip shows the bracketed level and the key', () => {
+test('the read-only chip shows the bracketed attribute kind and the key', () => {
   renderPill()
   const chip = screen.getByRole('button', { name: /Edit group key/ })
   expect(chip).toHaveTextContent('[Resource]')
   expect(chip).toHaveTextContent('service.name')
 })
 
-test('selecting a suggested key emits a single update:key (level inference is the parent’s job)', async () => {
+test('selecting a suggested key emits a single update:key (attribute-kind inference is the parent’s job)', async () => {
   const { condition, keyUpdates } = renderPill({ key: '' }, true)
-  expect(screen.getByRole('combobox', { name: 'Attribute level' })).toBeVisible()
+  expect(screen.getByRole('combobox', { name: 'Attribute kind' })).toBeVisible()
 
   // Let the auto-open (nextTick) settle so the click below cannot re-toggle the dropdown.
   await new Promise((resolve) => setTimeout(resolve, 0))

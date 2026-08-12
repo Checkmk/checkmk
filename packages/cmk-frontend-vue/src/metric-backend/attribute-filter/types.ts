@@ -3,8 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { AttributeKind } from '../attribute-kind'
 
-export type AttributeKind = 'resource' | 'scope' | 'data_point' | null
+export type { AttributeKind }
 
 export const STRING_OPERATORS = [
   'eq',
@@ -41,7 +42,7 @@ export function isOperator(value: string): value is Operator {
 }
 
 export interface AttributeCondition {
-  attributeKind: AttributeKind
+  attributeKind: AttributeKind | null
   key: string | null
   operator: Operator
   value: string

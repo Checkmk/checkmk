@@ -3,8 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { AttributeKind } from '../attribute-kind'
 import type { ConsolidationOutputType } from '../consolidation/types'
 import type { HistogramParams } from '../histogram-params'
+
+export type { AttributeKind }
 
 export type GroupByInputType = ConsolidationOutputType
 
@@ -12,18 +15,15 @@ export type GroupByInputType = ConsolidationOutputType
 export const FLOAT_FUNCTIONS = ['none', 'avg', 'min', 'max', 'sum', 'count'] as const
 export const HISTOGRAM_FUNCTIONS = ['percentile', 'fraction_below', 'fraction_between'] as const
 
-export const GROUP_LEVELS = ['resource', 'scope', 'data_point'] as const
-
 export type FloatFunction = (typeof FLOAT_FUNCTIONS)[number]
 export type HistogramFunction = (typeof HISTOGRAM_FUNCTIONS)[number]
 export type GroupByFunction = FloatFunction | HistogramFunction
-export type GroupLevel = (typeof GROUP_LEVELS)[number]
 
 export type ParamKind = 'quantile' | 'fraction_below' | 'fraction_between' | 'none'
 
 export interface GroupKey {
   id: string
-  level: GroupLevel
+  attributeKind: AttributeKind
   key: string
 }
 

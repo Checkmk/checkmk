@@ -69,7 +69,7 @@ const validationMessages = ref<string[]>([])
 
 const {
   querySuggestions,
-  resolveKind: resolveAttributeKind,
+  resolveAttributeKind,
   cachedSuggestions,
   suggestionRevision,
   clearCache: clearSuggestionCache

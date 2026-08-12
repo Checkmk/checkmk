@@ -12,12 +12,12 @@ import {
   flattenSuggestions
 } from 'cmk-ui-library/components/CmkSuggestions'
 import { fetchSuggestions } from 'cmk-ui-library/components/FormAutocompleter/autocompleter'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { type Ref, ref } from 'vue'
 
-import { ATTRIBUTE_KIND_ORDER, KEY_IDENTS } from './attributeFilterAdapter'
-import type { AttributeKindKey, AutoCompleteContext } from './attributeFilterAdapter'
+import { ATTRIBUTE_KIND_ORDER, type AttributeKind, attributeKindLabel } from './attribute-kind'
+import { KEY_IDENTS } from './attributeFilterAdapter'
+import type { AutoCompleteContext } from './attributeFilterAdapter'
 
 /**
  * Attribute-key autocomplete across the three attribute kinds, sectioned by kind.
@@ -30,7 +30,7 @@ export function useAttributeKeySuggestions(
   buildContext: (excludeId?: string) => AutoCompleteContext
 ): {
   querySuggestions: (query: string, excludeId?: string) => Promise<Response>
-  resolveKind: (key: string) => AttributeKindKey | null
+  resolveAttributeKind: (key: string) => AttributeKind | null
   cachedSuggestions: (
     autocompleter: Autocompleter,
     query: string
@@ -38,8 +38,6 @@ export function useAttributeKeySuggestions(
   suggestionRevision: Ref<number>
   clearCache: () => void
 } {
-  const { _t } = usei18n()
-
   const suggestionCache = new Map<string, Response | ErrorResponse>()
   const inflightSuggestions = new Set<string>()
   const suggestionRevision = ref(0)
@@ -68,17 +66,11 @@ export function useAttributeKeySuggestions(
     suggestionCache.clear()
   }
 
-  const sectionTitles: Record<AttributeKindKey, TranslatedString> = {
-    resource: _t('Resource'),
-    scope: _t('Scope'),
-    data_point: _t('Data point')
-  }
-
   // A key may be offered under more than one attribute kind, so record the set of
-  // kinds each suggested key belongs to (see `resolveKind`).
-  const keyKindCache = new Map<string, Set<AttributeKindKey>>()
+  // kinds each suggested key belongs to (see `resolveAttributeKind`).
+  const keyKindCache = new Map<string, Set<AttributeKind>>()
 
-  function cacheKeyKind(name: string, attributeKind: AttributeKindKey): void {
+  function cacheKeyKind(name: string, attributeKind: AttributeKind): void {
     const kinds = keyKindCache.get(name)
     if (kinds) {
       kinds.add(attributeKind)
@@ -111,7 +103,7 @@ export function useAttributeKeySuggestions(
         }
       }
       if (suggestions.length > 0) {
-        sections.push({ title: sectionTitles[attributeKind], suggestions })
+        sections.push({ title: attributeKindLabel(attributeKind), suggestions })
       }
     })
     const userEntry: Section[] = query
@@ -120,12 +112,18 @@ export function useAttributeKeySuggestions(
     return new Response([...userEntry, ...sections])
   }
 
-  function resolveKind(key: string): AttributeKindKey | null {
+  function resolveAttributeKind(key: string): AttributeKind | null {
     // A key offered under more than one attribute kind is ambiguous: leave it
     // unresolved so the attribute-kind dropdown opens for the user to choose.
     const kinds = keyKindCache.get(key)
     return kinds?.size === 1 ? [...kinds][0]! : null
   }
 
-  return { querySuggestions, resolveKind, cachedSuggestions, suggestionRevision, clearCache }
+  return {
+    querySuggestions,
+    resolveAttributeKind,
+    cachedSuggestions,
+    suggestionRevision,
+    clearCache
+  }
 }

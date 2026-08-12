@@ -7,7 +7,7 @@ import { pillLabel } from '@/metric-backend/attribute-filter/pill-label'
 import type { AttributeCondition, AttributeKind } from '@/metric-backend/attribute-filter/types'
 
 function makeCondition(
-  attributeKind: AttributeKind,
+  attributeKind: AttributeKind | null,
   operator: AttributeCondition['operator'],
   value = ''
 ): AttributeCondition {

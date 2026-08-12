@@ -61,7 +61,7 @@ export const panelConfig = {
   }
 } satisfies PanelConfigFor<
   typeof FormGroupBy,
-  'modelValue' | 'querySuggestions' | 'resolveLevel' | 'ariaLabel'
+  'modelValue' | 'querySuggestions' | 'resolveAttributeKind' | 'ariaLabel'
 > & {
   preset: ListPropDef<PresetName>
   inputType: ListPropDef<GroupByInputType>
@@ -82,19 +82,19 @@ import type { Section } from 'cmk-ui-library/components/CmkSuggestions/types'
 import { ref, watch } from 'vue'
 
 import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
-import type { GroupByModel, GroupLevel } from '@/metric-backend/group-by/types'
+import type { AttributeKind, GroupByModel } from '@/metric-backend/group-by/types'
 
 import { groupByPresets, presetInputType } from './groupByPresets'
 
 defineProps<{ screenshotMode: boolean }>()
 
 interface TypedSection extends Section {
-  level: GroupLevel
+  attributeKind: AttributeKind
 }
 
 const dummyKeySections: TypedSection[] = [
   {
-    level: 'resource',
+    attributeKind: 'resource',
     title: 'Resource',
     suggestions: [
       { name: 'service.name', title: 'service.name' },
@@ -104,7 +104,7 @@ const dummyKeySections: TypedSection[] = [
     ]
   },
   {
-    level: 'scope',
+    attributeKind: 'scope',
     title: 'Scope',
     suggestions: [
       { name: 'otel.library.name', title: 'otel.library.name' },
@@ -112,7 +112,7 @@ const dummyKeySections: TypedSection[] = [
     ]
   },
   {
-    level: 'data_point',
+    attributeKind: 'data_point',
     title: 'Data point',
     suggestions: [
       { name: 'http.method', title: 'http.method' },
@@ -145,14 +145,14 @@ async function querySuggestions(query: string): Promise<Response> {
   ])
 }
 
-function resolveLevel(key: string): GroupLevel | null {
+function resolveAttributeKind(key: string): AttributeKind | null {
   const section = dummyKeySections.find((s) => s.suggestions.some((sug) => sug.name === key))
-  return section?.level ?? null
+  return section?.attributeKind ?? null
 }
 
 const propState = new PanelStateCreator<
   typeof FormGroupBy,
-  'modelValue' | 'querySuggestions' | 'resolveLevel' | 'ariaLabel'
+  'modelValue' | 'querySuggestions' | 'resolveAttributeKind' | 'ariaLabel'
 >().createRef(panelConfig)
 
 function clonePreset(name: PresetName): GroupByModel {
@@ -179,7 +179,7 @@ watch(
         v-model="model"
         :input-type="propState.inputType"
         :query-suggestions="querySuggestions"
-        :resolve-level="resolveLevel"
+        :resolve-attribute-kind="resolveAttributeKind"
       />
 
       <template #properties>

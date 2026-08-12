@@ -111,7 +111,7 @@ import { filterPresets } from './attributeFilterPresets'
 defineProps<{ screenshotMode: boolean }>()
 
 interface TypedSection extends Section {
-  attributeKind: Exclude<AttributeKind, null>
+  attributeKind: AttributeKind
 }
 
 const dummyKeySections: TypedSection[] = [
@@ -172,7 +172,7 @@ async function querySuggestions(_condition: AttributeCondition, query: string): 
   ])
 }
 
-function resolveAttributeKind(key: string): AttributeKind {
+function resolveAttributeKind(key: string): AttributeKind | null {
   const section = dummyKeySections.find((s) => s.suggestions.some((sug) => sug.name === key))
   return section?.attributeKind ?? null
 }

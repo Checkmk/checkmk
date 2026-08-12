@@ -32,7 +32,7 @@ const props = withDefaults(
     querySuggestions: (condition: Condition, query: string) => ReturnType<QuerySuggestionsFn>
     queryValueSuggestions: (condition: Condition, query: string) => ReturnType<QuerySuggestionsFn>
     suggestionRevision?: number
-    resolveAttributeKind?: ((key: string) => AttributeKind) | undefined
+    resolveAttributeKind?: ((key: string) => AttributeKind | null) | undefined
     operators?: Operator[] | undefined
     allowOr?: boolean
     ariaLabel?: string | undefined
@@ -108,7 +108,7 @@ function updateKey(target: Condition, value: string): void {
   )
 }
 
-function updateAttributeKind(target: Condition, value: AttributeKind): void {
+function updateAttributeKind(target: Condition, value: AttributeKind | null): void {
   mapConditions((c) => (c.id === target.id ? { ...c, attributeKind: value } : c))
 }
 

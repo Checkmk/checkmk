@@ -6,8 +6,9 @@
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
+import { attributeKindLabel } from '../attribute-kind'
 import { DEFAULT_QUANTILE } from '../histogram-params'
-import type { GroupByFunction, GroupByModel, GroupKey, GroupLevel } from './types'
+import type { GroupByFunction, GroupByModel, GroupKey } from './types'
 
 // Built at call time, not module load, because i18n is not yet set up then.
 function functionLabels(): Record<GroupByFunction, TranslatedString> {
@@ -29,19 +30,9 @@ export function functionLabel(fn: GroupByFunction): TranslatedString {
   return functionLabels()[fn] ?? untranslated(fn)
 }
 
-export function levelLabel(level: GroupLevel): TranslatedString {
-  const { _t } = usei18n()
-  const labels: Record<GroupLevel, TranslatedString> = {
-    resource: _t('Resource'),
-    scope: _t('Scope'),
-    data_point: _t('Data point')
-  }
-  return labels[level]
-}
-
-/** Group key label, prefixed with its bracketed level: '[Resource] service.name'. */
+/** Group key label, prefixed with its bracketed attribute kind: '[Resource] service.name'. */
 export function keyPillLabel(key: GroupKey): string {
-  return `[${levelLabel(key.level)}] ${key.key}`
+  return `[${attributeKindLabel(key.attributeKind)}] ${key.key}`
 }
 
 /** Clause-head token for the collapsed chip, e.g. 'p95 by', 'fraction <0.1 by', 'avg by'. */

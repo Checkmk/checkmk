@@ -6,23 +6,9 @@
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
+import { attributeKindLabel } from '../attribute-kind'
 import { operatorTakesValue } from './types'
 import type { AttributeCondition, AttributeKind, Operator } from './types'
-
-export const ATTRIBUTE_KIND_LABELS: Record<Exclude<AttributeKind, null>, string> = {
-  resource: 'Resource',
-  scope: 'Scope',
-  data_point: 'Data point'
-}
-
-function attributeKindPrefixes(): Record<Exclude<AttributeKind, null>, TranslatedString> {
-  const { _t } = usei18n()
-  return {
-    resource: _t('[Resource]'),
-    scope: _t('[Scope]'),
-    data_point: _t('[Data point]')
-  }
-}
 
 function operatorPhrases(): Record<Operator, TranslatedString> {
   const { _t } = usei18n()
@@ -42,8 +28,8 @@ function operatorPhrases(): Record<Operator, TranslatedString> {
   }
 }
 
-export function attributeKindPrefix(attributeKind: AttributeKind): string {
-  return attributeKind === null ? '' : `${attributeKindPrefixes()[attributeKind]} `
+export function attributeKindPrefix(attributeKind: AttributeKind | null): string {
+  return attributeKind === null ? '' : `[${attributeKindLabel(attributeKind)}] `
 }
 
 export function operatorPhrase(operator: Operator): TranslatedString {

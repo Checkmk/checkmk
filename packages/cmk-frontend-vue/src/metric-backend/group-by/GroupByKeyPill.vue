@@ -11,9 +11,10 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import InlineEditPill from '../InlineEditPill.vue'
-import { keyPillLabel, levelLabel } from './group-by-label'
-import { GROUP_LEVELS, isKeyValid } from './types'
-import type { GroupKey, GroupLevel } from './types'
+import { ATTRIBUTE_KIND_ORDER, attributeKindLabel } from '../attribute-kind'
+import { keyPillLabel } from './group-by-label'
+import { isKeyValid } from './types'
+import type { AttributeKind, GroupKey } from './types'
 
 const { _t } = usei18n()
 
@@ -36,7 +37,7 @@ const emit = defineEmits<{
   (e: 'remove'): void
   (e: 'edit'): void
   (e: 'done'): void
-  (e: 'update:level', value: GroupLevel): void
+  (e: 'update:attributeKind', value: AttributeKind): void
   (e: 'update:key', value: string): void
 }>()
 
@@ -61,23 +62,26 @@ watch(
   { immediate: true }
 )
 
-// Emit only the key; the parent infers the level in one mutation (two emits would race and drop it).
+// Emit only the key; the parent infers the kind in one mutation (two emits would race and drop it).
 function onKeyUpdate(value: string | null): void {
   emit('update:key', value ?? '')
 }
 
-const levelInput = computed<string | null>({
-  get: () => props.condition.level,
+const attributeKindInput = computed<string | null>({
+  get: () => props.condition.attributeKind,
   set: (value) => {
     if (value !== null) {
-      emit('update:level', value as GroupLevel)
+      emit('update:attributeKind', value as AttributeKind)
     }
   }
 })
 
-const levelOptions = computed(() => ({
+const attributeKindOptions = computed(() => ({
   type: 'fixed' as const,
-  suggestions: GROUP_LEVELS.map((level) => ({ name: level, title: levelLabel(level) }))
+  suggestions: ATTRIBUTE_KIND_ORDER.map((attributeKind) => ({
+    name: attributeKind,
+    title: attributeKindLabel(attributeKind)
+  }))
 }))
 
 // Veto committing while the key is empty: reveal the error and keep editing.
@@ -118,14 +122,14 @@ defineExpose({
     <template #edit>
       <span
         data-gb-item
-        class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--level"
+        class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--attribute-kind"
       >
         <CmkDropdown
-          v-model="levelInput"
+          v-model="attributeKindInput"
           floating
-          :options="levelOptions"
-          :label="_t('Attribute level')"
-          :input-hint="_t('Attribute level')"
+          :options="attributeKindOptions"
+          :label="_t('Attribute kind')"
+          :input-hint="_t('Attribute kind')"
         />
       </span>
       <span
@@ -147,8 +151,8 @@ defineExpose({
     </template>
     <template #read-only>
       <span
-        class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--level metric-backend-group-by-key-pill__segment--dimmed"
-        >[{{ levelLabel(condition.level) }}]</span
+        class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--attribute-kind metric-backend-group-by-key-pill__segment--dimmed"
+        >[{{ attributeKindLabel(condition.attributeKind) }}]</span
       >
       <span
         class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--key"

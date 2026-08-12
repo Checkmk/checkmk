@@ -18,9 +18,10 @@ import { randomId } from 'cmk-ui-library/lib/randomId'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import InlineEditPill from '../InlineEditPill.vue'
+import { attributeKindLabel } from '../attribute-kind'
 import { DEFAULT_QUANTILE, useHistogramParams } from '../histogram-params'
 import GroupByKeyPill from './GroupByKeyPill.vue'
-import { clauseSummary, compactFunctionLabel, functionLabel, levelLabel } from './group-by-label'
+import { clauseSummary, compactFunctionLabel, functionLabel } from './group-by-label'
 import {
   defaultFunction,
   functionParamKind,
@@ -30,11 +31,11 @@ import {
   isKeyValid
 } from './types'
 import type {
+  AttributeKind,
   GroupByFunction,
   GroupByInputType,
   GroupByModel,
   GroupKey,
-  GroupLevel,
   ParamKind
 } from './types'
 
@@ -44,7 +45,7 @@ const props = defineProps<{
   // The consolidation output type for the same graph line.
   inputType: GroupByInputType
   querySuggestions: QuerySuggestionsFn
-  resolveLevel?: ((key: string) => GroupLevel | null) | undefined
+  resolveAttributeKind?: ((key: string) => AttributeKind | null) | undefined
   ariaLabel?: string | undefined
 }>()
 
@@ -185,7 +186,7 @@ function addKey(): void {
   if (!keysEnabled.value || !tryChangeFocus()) {
     return
   }
-  const fresh: GroupKey = { id: randomId(), level: 'resource', key: '' }
+  const fresh: GroupKey = { id: randomId(), attributeKind: 'resource', key: '' }
   model.value = { ...model.value, keys: [...model.value.keys, fresh] }
   editingId.value = fresh.id
 }
@@ -201,15 +202,17 @@ function mapKeys(fn: (key: GroupKey) => GroupKey): void {
   model.value = { ...model.value, keys: model.value.keys.map(fn) }
 }
 
-function updateLevel(target: GroupKey, value: GroupLevel): void {
-  mapKeys((k) => (k.id === target.id ? { ...k, level: value } : k))
+function updateAttributeKind(target: GroupKey, value: AttributeKind): void {
+  mapKeys((k) => (k.id === target.id ? { ...k, attributeKind: value } : k))
 }
 
-// Override the level only when the key resolves, so a user-picked level survives free-text edits.
+// Override the kind only when the key resolves, so a user-picked kind survives free-text edits.
 function updateKey(target: GroupKey, value: string): void {
-  const inferred = value !== '' ? (props.resolveLevel?.(value) ?? null) : null
+  const inferred = value !== '' ? (props.resolveAttributeKind?.(value) ?? null) : null
   mapKeys((k) =>
-    k.id === target.id ? { ...k, key: value, ...(inferred !== null ? { level: inferred } : {}) } : k
+    k.id === target.id
+      ? { ...k, key: value, ...(inferred !== null ? { attributeKind: inferred } : {}) }
+      : k
   )
 }
 
@@ -262,7 +265,7 @@ function canLeaveEdit(): boolean {
             <template v-for="(key, index) in model.keys" :key="key.id">
               <span
                 class="metric-backend-form-group-by__segment metric-backend-form-group-by__segment--dimmed"
-                >[{{ levelLabel(key.level) }}]</span
+                >[{{ attributeKindLabel(key.attributeKind) }}]</span
               >
               <!-- Comma hugs the key; the segment's own right padding spaces it from the next term. -->
               <span class="metric-backend-form-group-by__segment"
@@ -343,7 +346,7 @@ function canLeaveEdit(): boolean {
             @remove="removeKey(key)"
             @edit="startEditing(key.id)"
             @done="onKeyEditDone(key.id)"
-            @update:level="(value) => updateLevel(key, value)"
+            @update:attribute-kind="(value) => updateAttributeKind(key, value)"
             @update:key="(value) => updateKey(key, value)"
           />
           <CmkIconButton

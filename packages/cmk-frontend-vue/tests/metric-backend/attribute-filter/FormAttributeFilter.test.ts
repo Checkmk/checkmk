@@ -69,7 +69,7 @@ function echoQueryValueSuggestions(_: unknown, query: string): Promise<Response>
 
 function renderForm(
   initial: AttributeFilterModel,
-  resolve?: (key: string) => AttributeKind,
+  resolve?: (key: string) => AttributeKind | null,
   initialOperators?: Operator[],
   allowOr: boolean = true
 ): {

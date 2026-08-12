@@ -23,7 +23,11 @@ export function percentileGroupBy(stored?: {
   return {
     function: 'percentile',
     params: { quantile: stored === undefined ? DEFAULT_QUANTILE : stored.percentile / 100 },
-    keys: (stored?.group_by ?? []).map(({ kind, key }) => ({ id: randomId(), level: kind, key }))
+    keys: (stored?.group_by ?? []).map(({ kind, key }) => ({
+      id: randomId(),
+      attributeKind: kind,
+      key
+    }))
   }
 }
 
@@ -42,7 +46,11 @@ export function fractionBelowGroupBy(stored?: {
   return {
     function: 'fraction_below',
     params: stored === undefined ? {} : { fractionBelowThreshold: stored.threshold },
-    keys: (stored?.group_by ?? []).map(({ kind, key }) => ({ id: randomId(), level: kind, key }))
+    keys: (stored?.group_by ?? []).map(({ kind, key }) => ({
+      id: randomId(),
+      attributeKind: kind,
+      key
+    }))
   }
 }
 
@@ -68,7 +76,11 @@ export function fractionBetweenGroupBy(stored?: {
             fractionLowerThreshold: stored.lower_threshold,
             fractionUpperThreshold: stored.upper_threshold
           },
-    keys: (stored?.group_by ?? []).map(({ kind, key }) => ({ id: randomId(), level: kind, key }))
+    keys: (stored?.group_by ?? []).map(({ kind, key }) => ({
+      id: randomId(),
+      attributeKind: kind,
+      key
+    }))
   }
 }
 
@@ -81,7 +93,7 @@ export function groupFractionUpperThresholdToWire(groupBy: GroupByModel): number
 }
 
 export function groupKeysToWire(keys: readonly GroupKey[]): ConsolidationGroupByKey[] {
-  return keys.filter(isKeyValid).map(({ level, key }) => ({ kind: level, key }))
+  return keys.filter(isKeyValid).map(({ attributeKind, key }) => ({ kind: attributeKind, key }))
 }
 
 const SCALAR_FUNCTIONS = ['avg', 'min', 'max', 'sum', 'count'] as const
@@ -98,7 +110,7 @@ export function floatGroupByToAggregator(groupBy: GroupByModel): Aggregator | un
   }
   const aggregateBy = groupBy.keys
     .filter(isKeyValid)
-    .map(({ level, key }) => ({ kind: level, name: key }))
+    .map(({ attributeKind, key }) => ({ kind: attributeKind, name: key }))
   // A scalar function without any valid key has nothing to group by, so it is no aggregator.
   if (aggregateBy.length === 0) {
     return undefined
@@ -127,6 +139,10 @@ export function aggregatorToFloatGroupBy(
   return {
     function: stage.aggregation_fn.name,
     params: {},
-    keys: stage.aggregate_by.map(({ kind, name }) => ({ id: newId(), level: kind, key: name }))
+    keys: stage.aggregate_by.map(({ kind, name }) => ({
+      id: newId(),
+      attributeKind: kind,
+      key: name
+    }))
   }
 }

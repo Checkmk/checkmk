@@ -24,11 +24,6 @@ import {
 // Flat key/value attribute list, as the autocomplete REST context and readonly rendering use it.
 type GraphLineQueryAttributes = Array<{ key: string; value: string }>
 
-// Pill kinds match the shared model's kinds verbatim, so a condition's kind crosses unchanged.
-export type AttributeKindKey = Exclude<AttributeKind, null>
-
-export const ATTRIBUTE_KIND_ORDER: AttributeKindKey[] = ['resource', 'scope', 'data_point']
-
 type PositiveLeaf =
   | SharedAttributeFilterEquals
   | SharedAttributeFilterContains
@@ -151,13 +146,13 @@ export function fromAttributeFilter(
     .filter((group) => group.conditions.length > 0)
 }
 
-export const KEY_IDENTS: Record<AttributeKindKey, string> = {
+export const KEY_IDENTS: Record<AttributeKind, string> = {
   resource: 'monitored_resource_attributes_keys_backend',
   scope: 'monitored_scope_attributes_keys_backend',
   data_point: 'monitored_data_point_attributes_keys_backend'
 }
 
-export const VALUE_IDENTS: Record<AttributeKindKey, string> = {
+export const VALUE_IDENTS: Record<AttributeKind, string> = {
   resource: 'monitored_resource_attributes_values_backend',
   scope: 'monitored_scope_attributes_values_backend',
   data_point: 'monitored_data_point_attributes_values_backend'

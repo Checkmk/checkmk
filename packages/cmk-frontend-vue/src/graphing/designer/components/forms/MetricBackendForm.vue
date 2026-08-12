@@ -277,10 +277,11 @@ function storedGroupBy(): GroupByModel {
 
 watch(groupBy, () => storeCurrentWith({}))
 
-// The group-by pills pick from the same attribute keys as the where clause, and a group
-// level is an attribute kind, so the resolved kind is the pill's level.
-const { querySuggestions: groupByQuerySuggestions, resolveKind: groupByResolveLevel } =
-  useAttributeKeySuggestions(() => buildAutocompleteContext([], { metricName: metricName.value }))
+// The group-by pills pick from the same attribute keys as the where clause.
+const {
+  querySuggestions: groupByQuerySuggestions,
+  resolveAttributeKind: groupByResolveAttributeKind
+} = useAttributeKeySuggestions(() => buildAutocompleteContext([], { metricName: metricName.value }))
 </script>
 
 <template>
@@ -328,7 +329,7 @@ const { querySuggestions: groupByQuerySuggestions, resolveKind: groupByResolveLe
             v-model="groupBy"
             :input-type="groupByInputType"
             :query-suggestions="groupByQuerySuggestions"
-            :resolve-level="groupByResolveLevel"
+            :resolve-attribute-kind="groupByResolveAttributeKind"
           />
         </td>
       </tr>

@@ -9,22 +9,22 @@ import { Response } from 'cmk-ui-library/components/CmkSuggestions/suggestions'
 import { defineComponent, ref } from 'vue'
 
 import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
-import type { GroupByInputType, GroupByModel, GroupLevel } from '@/metric-backend/group-by/types'
+import type { AttributeKind, GroupByInputType, GroupByModel } from '@/metric-backend/group-by/types'
 
-const KEY_LEVELS: Record<string, GroupLevel> = {
+const KEY_ATTRIBUTE_KINDS: Record<string, AttributeKind> = {
   'service.name': 'resource',
   'http.route': 'data_point'
 }
 
 function querySuggestions(query: string): Promise<Response> {
-  const matches = Object.keys(KEY_LEVELS)
+  const matches = Object.keys(KEY_ATTRIBUTE_KINDS)
     .filter((k) => k.includes(query))
     .map((k) => ({ name: k, title: k }))
   return Promise.resolve(new Response(matches))
 }
 
-function resolveLevel(key: string): GroupLevel | null {
-  return KEY_LEVELS[key] ?? null
+function resolveAttributeKind(key: string): AttributeKind | null {
+  return KEY_ATTRIBUTE_KINDS[key] ?? null
 }
 
 function renderWidget(initial: Partial<GroupByModel> = {}, inputType: GroupByInputType = 'float') {
@@ -33,7 +33,7 @@ function renderWidget(initial: Partial<GroupByModel> = {}, inputType: GroupByInp
   const wrapper = defineComponent({
     components: { FormGroupBy },
     setup() {
-      return { model, type, querySuggestions, resolveLevel }
+      return { model, type, querySuggestions, resolveAttributeKind }
     },
     template: `
       <div>
@@ -42,7 +42,7 @@ function renderWidget(initial: Partial<GroupByModel> = {}, inputType: GroupByInp
           v-model="model"
           :input-type="type"
           :query-suggestions="querySuggestions"
-          :resolve-level="resolveLevel"
+          :resolve-attribute-kind="resolveAttributeKind"
         />
       </div>
     `
@@ -60,18 +60,18 @@ async function openFunctionDropdown(): Promise<void> {
   await userEvent.click(screen.getByRole('combobox', { name: 'Grouping function' }))
 }
 
-test('the collapsed chip summarises the clause with the level shown dimmed', () => {
+test('the collapsed chip summarises the clause with the attribute kind shown dimmed', () => {
   renderWidget({
     function: 'avg',
     keys: [
-      { id: '1', level: 'resource', key: 'service.name' },
-      { id: '2', level: 'data_point', key: 'http.route' }
+      { id: '1', attributeKind: 'resource', key: 'service.name' },
+      { id: '2', attributeKind: 'data_point', key: 'http.route' }
     ]
   })
   const chip = screen.getByRole('button', { name: /Edit group by/ })
   expect(chip).toHaveTextContent('avg by')
-  const level = within(chip).getByText('[Resource]')
-  expect(level).toHaveClass('metric-backend-form-group-by__segment--dimmed')
+  const attributeKind = within(chip).getByText('[Resource]')
+  expect(attributeKind).toHaveClass('metric-backend-form-group-by__segment--dimmed')
   expect(within(chip).getByText('service.name,')).toBeVisible()
   expect(within(chip).getByText('http.route')).toBeVisible()
 })
@@ -184,13 +184,13 @@ test('the "everything" placeholder shows for an active function with no keys and
 
 test('"no grouping" removes the keys area but retains the keys in the model', async () => {
   const { model } = renderWidget(
-    { function: 'none', keys: [{ id: '1', level: 'resource', key: 'service.name' }] },
+    { function: 'none', keys: [{ id: '1', attributeKind: 'resource', key: 'service.name' }] },
     'float'
   )
   await openPill()
   expect(screen.queryByTestId('group-by-keys')).toBeNull()
   expect(screen.queryByRole('button', { name: /Edit group key/ })).toBeNull()
-  expect(model.value.keys).toEqual([{ id: '1', level: 'resource', key: 'service.name' }])
+  expect(model.value.keys).toEqual([{ id: '1', attributeKind: 'resource', key: 'service.name' }])
 })
 
 async function selectKey(value: string): Promise<void> {
@@ -208,10 +208,10 @@ async function selectKey(value: string): Promise<void> {
   await userEvent.click(await screen.findByRole('option', { name: value }))
 }
 
-test('picking a key applies key and inferred level in one mutation (also for a second key)', async () => {
-  // Two emits (key then level) would race and drop the key; a second key regressed this (CMK-36579).
+test('picking a key applies key and inferred attribute kind in one mutation (also for a second key)', async () => {
+  // Two emits (key then attribute kind) would race and drop the key; a second key regressed this (CMK-36579).
   const { model } = renderWidget(
-    { function: 'avg', keys: [{ id: 'k1', level: 'resource', key: 'service.name' }] },
+    { function: 'avg', keys: [{ id: 'k1', attributeKind: 'resource', key: 'service.name' }] },
     'float'
   )
   await openPill()
@@ -221,7 +221,7 @@ test('picking a key applies key and inferred level in one mutation (also for a s
   await selectKey('http.route')
 
   await waitFor(() => expect(model.value.keys[1]!.key).toBe('http.route'))
-  expect(model.value.keys[1]!.level).toBe('data_point')
+  expect(model.value.keys[1]!.attributeKind).toBe('data_point')
 })
 
 test('picking a key leaves the group-key pill in edit mode', async () => {
@@ -239,7 +239,7 @@ test('picking a key leaves the group-key pill in edit mode', async () => {
 
 test('entering edit with a single key opens that key pill for editing', async () => {
   renderWidget(
-    { function: 'avg', keys: [{ id: 'k1', level: 'resource', key: 'service.name' }] },
+    { function: 'avg', keys: [{ id: 'k1', attributeKind: 'resource', key: 'service.name' }] },
     'float'
   )
   await openPill()
@@ -251,8 +251,8 @@ test('entering edit with several keys leaves the key pills collapsed', async () 
     {
       function: 'avg',
       keys: [
-        { id: 'k1', level: 'resource', key: 'service.name' },
-        { id: 'k2', level: 'data_point', key: 'http.route' }
+        { id: 'k1', attributeKind: 'resource', key: 'service.name' },
+        { id: 'k2', attributeKind: 'data_point', key: 'http.route' }
       ]
     },
     'float'
@@ -264,7 +264,7 @@ test('entering edit with several keys leaves the key pills collapsed', async () 
 
 test('a committed key can be removed', async () => {
   const { model } = renderWidget(
-    { function: 'avg', keys: [{ id: '1', level: 'resource', key: 'service.name' }] },
+    { function: 'avg', keys: [{ id: '1', attributeKind: 'resource', key: 'service.name' }] },
     'float'
   )
   await openPill()

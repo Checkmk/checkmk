@@ -51,7 +51,7 @@ const props = defineProps<{
   collector_activation_allowed: boolean
   metric_backend_allowed: boolean
   may_create_password: boolean
-  overview_url: string
+  activate_changes_url: string
   cloud_grpc_receiver_endpoint?: string | null
   cloud_http_receiver_endpoint?: string | null
 }>()
@@ -302,21 +302,10 @@ const saveButtonDisabled = computed(() => saveState.value === 'running')
 const overviewValidationFailed = ref(false)
 
 async function onSaveClick(): Promise<void> {
-  // Second click after a successful run navigates back to the OTel Overview
-  // page and opens the "Activate changes" panel so the user can apply the
-  // pending configuration changes.
+  // Second click after a successful run navigates to the full activate-changes
+  // page so the user can apply the pending configuration changes.
   if (saveState.value === 'success') {
-    // Open the main-menu "Changes" panel in the top frame. The nav item is
-    // rendered by MainMenuApp with id="nav-item-changes"; clicking it toggles
-    // the activate-changes slide-in. We trigger it before navigating so the
-    // panel is already visible when the overview page loads.
-    try {
-      const changesNavItem = top?.document.getElementById('nav-item-changes')
-      changesNavItem?.click()
-    } catch {
-      // Cross-origin or missing element — fall through to navigation.
-    }
-    window.location.href = props.overview_url
+    window.location.href = props.activate_changes_url
     return
   }
   // In overview mode the per-step Next buttons (which normally carry

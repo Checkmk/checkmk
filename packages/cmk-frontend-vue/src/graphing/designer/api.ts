@@ -50,15 +50,27 @@ export async function listCustomGraphMetadata() {
   return unwrap(await client.GET('/domain-types/custom_graph_metadata/collections/all'))
 }
 
+/** A custom graph together with the version to save it against. */
+export interface LoadedCustomGraph {
+  graph: CustomGraphObject
+  etag: string
+}
+
+// Both endpoints declare an ETag, so a response without one leaves nothing to save against.
+function requireEtag(response: Response): string {
+  const etag = response.headers.get('ETag')
+  if (etag === null) {
+    throw new Error('The server answered without a version identifier for this graph.')
+  }
+  return etag
+}
+
 /** Fetch a single custom graph by name, optionally a foreign/published one via `owner`. */
-export async function getCustomGraph(
-  name: string,
-  owner?: string
-): Promise<{ graph: CustomGraphObject; etag: string | null }> {
+export async function getCustomGraph(name: string, owner?: string): Promise<LoadedCustomGraph> {
   const result = await client.GET('/objects/custom_graph/{name}', {
     params: graphParams(name, owner)
   })
-  return { graph: unwrap(result), etag: result.response.headers.get('ETag') }
+  return { graph: unwrap(result), etag: requireEtag(result.response) }
 }
 
 /** Replace a custom graph. `etag` is sent as `If-Match` for optimistic locking. */
@@ -67,7 +79,7 @@ export async function updateCustomGraph(
   etag: string,
   body: UpdateCustomGraphRequest,
   owner?: string
-): Promise<{ graph: CustomGraphObject; etag: string | null }> {
+): Promise<LoadedCustomGraph> {
   const result = await client.PUT('/objects/custom_graph/{name}', {
     params: {
       ...graphParams(name, owner),
@@ -75,7 +87,7 @@ export async function updateCustomGraph(
     },
     body
   })
-  return { graph: unwrap(result), etag: result.response.headers.get('ETag') }
+  return { graph: unwrap(result), etag: requireEtag(result.response) }
 }
 
 /** Evaluate an unsaved custom-graph definition over a time range (preview). */

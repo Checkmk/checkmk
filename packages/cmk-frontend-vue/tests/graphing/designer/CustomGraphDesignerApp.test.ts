@@ -294,7 +294,7 @@ test('a second save click while a save is in flight is ignored', async () => {
   expect(await screen.findByRole('button', { name: 'Edit custom graph' })).toBeInTheDocument()
 })
 
-test('saving is refused when the graph was loaded without an ETag', async () => {
+test('a graph served without an ETag fails the load, so no edit can start', async () => {
   getSpy.mockImplementation((path: string) =>
     Promise.resolve(
       isFilterPath(path)
@@ -305,11 +305,10 @@ test('saving is refused when the graph was loaded without an ETag', async () => 
     )
   )
   await renderApp()
-  await fireEvent.click(await screen.findByRole('button', { name: 'Edit custom graph' }))
-  await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
-  expect(await screen.findByText(/reload the page/i)).toBeInTheDocument()
-  expect(putSpy).not.toHaveBeenCalled()
+  expect(await screen.findByText(/without a version identifier/i)).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Edit custom graph' })).not.toBeInTheDocument()
 })
 
 test('a failing save shows the error and stays in edit mode', async () => {

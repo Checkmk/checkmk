@@ -24,6 +24,7 @@ import { rollingRange, useGlobalTimeRange } from '../GlobalTimePicker'
 import {
   type CustomGraphObject,
   type CustomGraphOptions,
+  type LoadedCustomGraph,
   getCustomGraph,
   updateCustomGraph
 } from './api'
@@ -50,8 +51,7 @@ const current = ref<{ name: string; owner: string }>({
   name: props.graph_name,
   owner: props.graph_owner
 })
-const graph = shallowRef<CustomGraphObject | null>(null)
-const etag = ref<string | null>(null)
+const loaded = shallowRef<LoadedCustomGraph | null>(null)
 const mode = ref<CustomGraphDesignerMode>('view')
 const isLoading = ref(false)
 const loadError = ref<string | null>(null)
@@ -68,15 +68,15 @@ const ownerParam = computed(() =>
   current.value.owner === props.logged_in_user ? undefined : current.value.owner
 )
 
-const isEditable = computed(() => graph.value?.extensions.is_editable === true)
+const isEditable = computed(() => loaded.value?.graph.extensions.is_editable === true)
 
 const selectedGraph = computed<SelectableGraph | null>(() =>
-  graph.value === null
+  loaded.value === null
     ? null
     : {
         name: current.value.name,
         owner: current.value.owner,
-        title: graph.value.title ?? current.value.name
+        title: loaded.value.graph.title ?? current.value.name
       }
 )
 
@@ -123,8 +123,7 @@ async function load(requestedMode: CustomGraphDesignerMode): Promise<void> {
     if (token !== loadToken) {
       return
     }
-    graph.value = result.graph
-    etag.value = result.etag
+    loaded.value = result
     resetEditor(result.graph)
     mode.value = requestedMode === 'edit' && result.graph.extensions.is_editable ? 'edit' : 'view'
     replaceUrlState(urlState())
@@ -132,7 +131,7 @@ async function load(requestedMode: CustomGraphDesignerMode): Promise<void> {
     if (token !== loadToken) {
       return
     }
-    graph.value = null
+    loaded.value = null
     loadError.value = e instanceof Error ? e.message : String(e)
   } finally {
     if (token === loadToken) {
@@ -192,8 +191,8 @@ function onEnterEdit(): void {
 }
 
 function onCancelEdit(): void {
-  if (graph.value !== null) {
-    resetEditor(graph.value)
+  if (loaded.value !== null) {
+    resetEditor(loaded.value.graph)
   }
   mode.value = 'view'
   replaceUrlState(urlState())
@@ -206,7 +205,7 @@ function invalidRowIds(): ItemId[] {
 }
 
 async function save(): Promise<void> {
-  const edited = graph.value
+  const edited = loaded.value
   const editedOptions = graphOptions.value
   if (isSaving.value || edited === null || editedOptions === null) {
     return
@@ -219,22 +218,15 @@ async function save(): Promise<void> {
     )
     return
   }
-
-  if (etag.value === null) {
-    saveError.value = _t(
-      'The graph was loaded without a version identifier — reload the page before saving.'
-    )
-    return
-  }
   saveError.value = null
   isSaving.value = true
   try {
     const result = await updateCustomGraph(
       current.value.name,
-      etag.value,
+      edited.etag,
       {
-        title: edited.title ?? current.value.name,
-        metadata: edited.extensions.metadata,
+        title: edited.graph.title ?? current.value.name,
+        metadata: edited.graph.extensions.metadata,
         content: {
           graph_options: editedOptions,
           data_sources: toApiDataSources(store.items.value)
@@ -242,8 +234,7 @@ async function save(): Promise<void> {
       },
       ownerParam.value
     )
-    graph.value = result.graph
-    etag.value = result.etag
+    loaded.value = result
     mode.value = 'view'
     replaceUrlState(urlState())
   } catch (e) {
@@ -288,7 +279,7 @@ async function save(): Promise<void> {
         {{ loadError ?? filtersError }}
       </CmkAlertBox>
       <CmkIcon
-        v-else-if="isLoading || graph === null || graphOptions === null || !filtersReady"
+        v-else-if="isLoading || loaded === null || graphOptions === null || !filtersReady"
         name="load-graph"
         size="xxlarge"
       />
@@ -298,7 +289,7 @@ async function save(): Promise<void> {
         v-model:display-settings="displaySettings"
         :store="store"
         :graph-options="graphOptions"
-        :title="graph.title ?? current.name"
+        :title="loaded.graph.title ?? current.name"
         :mode="mode"
         :thresholds="{ warning: warning_color, critical: critical_color }"
         :metric-backend-available="metric_backend_available"

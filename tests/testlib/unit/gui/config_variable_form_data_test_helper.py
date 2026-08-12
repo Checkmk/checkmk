@@ -563,9 +563,23 @@ def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -
         revealed[parameter_path] = _legacy_revealed_default(vs._valuespec)
         _walk_legacy_valuespec(vs._valuespec, parameter_path, revealed)
     elif isinstance(vs, valuespec.Alternative):
+        # An Alternative renders the alternative its own default value matches
+        # with that value, and every other one with the alternative's own
+        # default (see render_input in cmk.gui.valuespec), so the pins have to
+        # follow suit to state what the user sees.
+        alternative_default = _legacy_revealed_default(vs)
+        matching_vs = (
+            None
+            if isinstance(alternative_default, NoSaveableDefault)
+            else vs._matching_alternative(alternative_default)
+        )
         for index, element_vs in enumerate(vs._elements):
             element_path = _join_key(path, f"[choice {index}]")
-            revealed[element_path] = _legacy_revealed_default(element_vs)
+            revealed[element_path] = (
+                alternative_default
+                if element_vs is matching_vs
+                else _legacy_revealed_default(element_vs)
+            )
             _walk_legacy_valuespec(element_vs, element_path, revealed)
     elif isinstance(vs, valuespec.Tuple):
         for index, element_vs in enumerate(vs._elements):
@@ -612,7 +626,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "certificates[add]": None,
         "certificates[add].[choice 0]": None,
         "certificates[add].[choice 1]": b"",
-        "certificates[add].[choice 2]": "",
+        "certificates[add].[choice 2]": None,
         "remote_url": "",
     },
     "auth_by_http_header": {
@@ -937,7 +951,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     },
     "snmp_credentials": {
         "[add]": {"credentials": "public", "description": ""},
-        "[add].credentials.[choice 0]": "",
+        "[add].credentials.[choice 0]": "public",
         "[add].credentials.[choice 1]": ("noAuthNoPriv", ""),
         "[add].credentials.[choice 2]": ("authNoPriv", "md5", "", ""),
         "[add].credentials.[choice 3]": ("authPriv", "md5", "", "", "DES", ""),
@@ -952,11 +966,11 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "trusted_cas[add]": None,
         "trusted_cas[add].[choice 0]": None,
         "trusted_cas[add].[choice 1]": b"",
-        "trusted_cas[add].[choice 2]": "",
+        "trusted_cas[add].[choice 2]": None,
     },
     "user_downtime_timeranges": {
         "[add]": {"end": 86400, "title": ""},
-        "[add].end.[choice 0]": 0,
+        "[add].end.[choice 0]": 86400,
         "[add].end.[choice 1]": "next_day",
     },
     "user_icons_and_actions": {

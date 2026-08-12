@@ -19,6 +19,7 @@ use rustls::{
 use rustls_pemfile::Item;
 use std::net::TcpStream;
 use std::sync::Arc;
+use x509_parser::oid_registry::OID_X509_EXT_AUTHORITY_KEY_IDENTIFIER;
 use x509_parser::prelude::FromDer;
 
 pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
@@ -324,6 +325,15 @@ pub fn common_names<'a>(x509_name: &'a x509_parser::x509::X509Name) -> AnyhowRes
         .collect::<AnyhowResult<Vec<_>>>()
 }
 
+pub fn has_authority_key_identifier(
+    certificate: &x509_parser::certificate::X509Certificate,
+) -> bool {
+    matches!(
+        certificate.get_extension_unique(&OID_X509_EXT_AUTHORITY_KEY_IDENTIFIER),
+        Ok(Some(_))
+    )
+}
+
 pub fn render_asn1_time(asn1_tine: &x509_parser::time::ASN1Time) -> String {
     match asn1_tine.to_rfc2822() {
         Ok(s) => s,
@@ -398,6 +408,17 @@ mod test_cn_no_uuid {
         let cn_checker =
             CNCheckerUUID::try_from(&rustls_certificate(constants::TEST_CERT_OK).unwrap()).unwrap();
         assert_eq!(cn_checker.cn(), "heute");
+    }
+
+    #[test]
+    fn test_missing_authority_key_identifier() {
+        // TEST_CERT_CN_UUID has the shape of an agent certificate from an older Checkmk
+        // version: subject alternative name and basic constraints, but no authority key
+        // identifier.
+        let cert = rustls_certificate(constants::TEST_CERT_CN_UUID).unwrap();
+        let (_rem, cert) =
+            x509_parser::certificate::X509Certificate::from_der(cert.as_ref()).unwrap();
+        assert!(!has_authority_key_identifier(&cert));
     }
 
     #[test]

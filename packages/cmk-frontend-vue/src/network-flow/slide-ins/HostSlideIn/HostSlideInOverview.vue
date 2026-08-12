@@ -127,7 +127,7 @@ const peerRows = computed<RankedTableRow[]>(() =>
         v-else
         :columns="applicationColumns"
         :rows="applicationRows"
-        bar-color="green"
+        :bar-color="CHART_COLOR_CSS.green"
       />
     </section>
 
@@ -136,7 +136,12 @@ const peerRows = computed<RankedTableRow[]>(() =>
       <CmkParagraph v-if="peerRows.length === 0">
         {{ _t('No peer traffic in the last 30 minutes.') }}
       </CmkParagraph>
-      <CmkRankedTable v-else :columns="peerColumns" :rows="peerRows" bar-color="blue" />
+      <CmkRankedTable
+        v-else
+        :columns="peerColumns"
+        :rows="peerRows"
+        :bar-color="CHART_COLOR_CSS.blue"
+      />
     </section>
   </div>
 </template>

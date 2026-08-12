@@ -81,7 +81,12 @@ const localHostRows = computed<RankedTableRow[]>(() =>
       <CmkParagraph v-if="localHostRows.length === 0">
         {{ _t('No traffic in the last 30 minutes.') }}
       </CmkParagraph>
-      <CmkRankedTable v-else :columns="localHostColumns" :rows="localHostRows" bar-color="blue" />
+      <CmkRankedTable
+        v-else
+        :columns="localHostColumns"
+        :rows="localHostRows"
+        :bar-color="CHART_COLOR_CSS.blue"
+      />
     </section>
 
     <section class="network-flow-autonomous-system-slide-in-overview__table">
@@ -93,7 +98,7 @@ const localHostRows = computed<RankedTableRow[]>(() =>
         v-else
         :columns="applicationColumns"
         :rows="applicationRows"
-        bar-color="green"
+        :bar-color="CHART_COLOR_CSS.green"
       />
     </section>
   </div>

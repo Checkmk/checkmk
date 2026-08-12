@@ -22,5 +22,5 @@ const rows: RankedTableRow[] = [
 </script>
 
 <template>
-  <CmkRankedTable :columns="columns" :rows="rows" bar-color="green" />
+  <CmkRankedTable :columns="columns" :rows="rows" bar-color="var(--color-corporate-green-50)" />
 </template>

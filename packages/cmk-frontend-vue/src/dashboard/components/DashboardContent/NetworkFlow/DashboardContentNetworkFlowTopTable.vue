@@ -9,13 +9,10 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import { computed, inject } from 'vue'
 
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
-import type {
-  ChartColor,
-  RankedTableColumn,
-  RankedTableRow
-} from '@/dashboard/components/CmkRankedTable'
+import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
 import type { NetworkFlowTopTableContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
+import { chartColorCss } from '@/network-flow/colors'
 import { autonomousSystemSlideInKey, hostSlideInKey } from '@/network-flow/slide-ins/injectionKeys'
 
 import DashboardContentContainer from '../DashboardContentContainer.vue'
@@ -43,7 +40,7 @@ const { data, error } = useNetworkFlowWidgetData(
 
 // The widget's accent values name colors of the chart palette, so the
 // configuration passes straight through (the assignment is type-checked).
-const barColor = computed<ChartColor>(() => props.content.accent)
+const barColor = computed<string>(() => chartColorCss(props.content.accent))
 
 // Make the "host"/"asn" columns clickable to open their slide-ins.
 function isClickable(columnKey: string): boolean {

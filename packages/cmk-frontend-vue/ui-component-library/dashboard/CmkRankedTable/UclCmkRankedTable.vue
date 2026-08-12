@@ -4,9 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
-
-import { type ChartColor } from '@/dashboard/components/CmkRankedTable'
+import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkRankedTableCodeExample.vue?raw'
 
@@ -15,16 +13,16 @@ export const panelConfig = {
     type: 'list' as const,
     title: 'Bar color',
     options: [
-      { title: 'Blue', name: 'blue' },
-      { title: 'Green', name: 'green' },
-      { title: 'Grey', name: 'grey' },
-      { title: 'Magenta', name: 'magenta' },
-      { title: 'Orange', name: 'orange' },
-      { title: 'Purple', name: 'purple' },
-      { title: 'Red', name: 'red' },
-      { title: 'Yellow', name: 'yellow' }
-    ] satisfies Options<ChartColor>[],
-    initialState: 'green' as const
+      { title: 'Blue', name: 'var(--color-light-blue-50)' },
+      { title: 'Green', name: 'var(--color-corporate-green-50)' },
+      { title: 'Grey', name: 'var(--color-mid-grey-50)' },
+      { title: 'Magenta', name: 'var(--color-pink-50)' },
+      { title: 'Orange', name: 'var(--color-orange-50)' },
+      { title: 'Purple', name: 'var(--color-purple-50)' },
+      { title: 'Red', name: 'var(--color-light-red-50)' },
+      { title: 'Yellow', name: 'var(--color-yellow-50)' }
+    ],
+    initialState: 'var(--color-corporate-green-50)' as const
   }
 } satisfies PanelConfigFor<typeof CmkRankedTable, 'rows' | 'columns'>
 </script>

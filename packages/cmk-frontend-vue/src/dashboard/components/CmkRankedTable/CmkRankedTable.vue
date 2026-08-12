@@ -4,42 +4,56 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkButton from 'cmk-ui-library/components/CmkButton'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
-import { chartColorCss } from '@/network-flow/colors'
+import type {
+  CmkRankedTableProps,
+  RankedTableCell,
+  RankedTableColumn,
+  RankedTableRow
+} from './types'
 
-import type { CmkRankedTableProps, RankedTableColumn, RankedTableRow } from './types'
-
-const props = defineProps<CmkRankedTableProps>()
+const {
+  columns,
+  rows,
+  barColor = 'var(--color-light-blue-50)'
+} = defineProps<CmkRankedTableProps>()
 
 const emit = defineEmits<{
   /** A cell in a column marked `clickable` was activated. */
   cellClick: [column: RankedTableColumn, row: RankedTableRow]
 }>()
 
-const barColorCss = computed<string>(() => chartColorCss(props.barColor))
-
 // Canonical SI byte formatter (base 1000), matching the backend: 90_400_000_000 → "90.40 GB".
 const byteFormatter = new SIFormatter('B', { type: 'strict', digits: 2 })
 
-// Largest value per bar column, used to scale the inline bars.
+// Largest value per bar column, used to scale bars of columns without a fixed `barRange`.
 const columnMax = computed<Record<string, number>>(() => {
   const max: Record<string, number> = {}
-  for (const column of props.columns) {
-    if (column.bar) {
-      max[column.key] = Math.max(0, ...props.rows.map((row) => Number(row[column.key] ?? 0)))
+  for (const column of columns) {
+    if (column.bar && column.barRange === undefined) {
+      max[column.key] = Math.max(0, ...rows.map((row) => Number(cell(column, row).value ?? 0)))
     }
   }
   return max
 })
+
+function cell(column: RankedTableColumn, row: RankedTableRow): RankedTableCell {
+  const value = row[column.key]
+  return typeof value === 'object' ? value : { value: value ?? '' }
+}
 
 function isNumeric(column: RankedTableColumn): boolean {
   return column.render === 'bytes' || column.render === 'count'
 }
 
 function cellText(column: RankedTableColumn, row: RankedTableRow): string {
-  const value = row[column.key]
+  const { value, formatted } = cell(column, row)
+  if (formatted !== undefined) {
+    return formatted
+  }
   if (column.render === 'bytes') {
     return byteFormatter.render(Number(value ?? 0))
   }
@@ -47,8 +61,21 @@ function cellText(column: RankedTableColumn, row: RankedTableRow): string {
 }
 
 function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
+  const value = Number(cell(column, row).value ?? 0)
+  if (column.barRange !== undefined) {
+    const [minimum, maximum] = column.barRange
+    if (maximum <= minimum) {
+      // A collapsed range carries no proportion: everything that reaches it is full.
+      return value >= maximum ? 100 : 0
+    }
+    return Math.min(100, Math.max(0, ((value - minimum) / (maximum - minimum)) * 100))
+  }
   const max = columnMax.value[column.key] ?? 0
-  return max > 0 ? (Number(row[column.key] ?? 0) / max) * 100 : 0
+  return max > 0 ? (value / max) * 100 : 0
+}
+
+function barColorOf(column: RankedTableColumn, row: RankedTableRow): string {
+  return cell(column, row).color ?? barColor
 }
 </script>
 
@@ -86,20 +113,28 @@ function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
                 class="db-cmk-ranked-table__bar-fill"
                 :style="{
                   width: `${barPercent(column, row)}%`,
-                  backgroundColor: barColorCss
+                  backgroundColor: barColorOf(column, row)
                 }"
               />
             </span>
             <span class="db-cmk-ranked-table__bar-value">{{ cellText(column, row) }}</span>
           </div>
-          <button
+          <CmkButton
+            v-else-if="cell(column, row).href !== undefined"
+            variant="text"
+            size="small"
+            :href="cell(column, row).href"
+          >
+            {{ cellText(column, row) }}
+          </CmkButton>
+          <CmkButton
             v-else-if="column.clickable"
-            type="button"
-            class="db-cmk-ranked-table__link"
+            variant="text"
+            size="small"
             @click="emit('cellClick', column, row)"
           >
             {{ cellText(column, row) }}
-          </button>
+          </CmkButton>
           <template v-else>{{ cellText(column, row) }}</template>
         </td>
       </tr>
@@ -127,7 +162,6 @@ function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
   font-weight: var(--font-weight-bold);
   color: var(--color-mid-grey-50);
   text-align: left;
-  text-transform: uppercase;
   letter-spacing: 0.04em;
   white-space: nowrap;
   border-bottom: 1px solid var(--ux-theme-4);
@@ -166,6 +200,10 @@ function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
 
 .db-cmk-ranked-table__bar-track {
   flex: 1;
+
+  /* Keeps the bar visible when the text columns claim most of the width -- without
+     it the track is the only flexible box in the row and collapses to nothing. */
+  min-width: 4em;
   height: clamp(4px, 1.2cqh, 7px);
   overflow: hidden;
   background-color: var(--ux-theme-4);
@@ -182,20 +220,5 @@ function barPercent(column: RankedTableColumn, row: RankedTableRow): number {
   min-width: 5.5em;
   font-variant-numeric: tabular-nums;
   text-align: right;
-}
-
-/* Clickable cell: a bare button styled like CmkLink. */
-.db-cmk-ranked-table__link {
-  padding: 0;
-  font: inherit;
-  color: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-  background: none;
-  border: none;
-}
-
-.db-cmk-ranked-table__link:hover {
-  color: var(--cmk-link-hover-color, #15d1a0);
 }
 </style>

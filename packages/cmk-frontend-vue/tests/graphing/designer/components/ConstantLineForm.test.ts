@@ -14,7 +14,7 @@ const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 function renderForm(draft: DraftConstantItem): GraphItemsStore {
   const store = useGraphItems(PALETTE)
   store.replaceAll([draft])
-  render(ConstantLineForm, { props: { item: draft, store } })
+  render(ConstantLineForm, { props: { item: draft, store, valueErrors: [] } })
   return store
 }
 

@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkLabeledSwitch from 'cmk-ui-library/components/CmkLabeledSwitch.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { GraphItemsStore } from '../../composables/useGraphItems'
 import {
@@ -18,9 +19,12 @@ import {
 import RrdMetricForm from './RrdMetricForm.vue'
 import RrdQueryForm from './RrdQueryForm.vue'
 
-const { item, store } = defineProps<{
+const { item, store, hostNameErrors, serviceNameErrors, metricNameErrors } = defineProps<{
   item: DraftRRDMetricItem | DraftRRDQueryItem
   store: GraphItemsStore
+  hostNameErrors: TranslatedString[]
+  serviceNameErrors: TranslatedString[]
+  metricNameErrors: TranslatedString[]
 }>()
 
 const { _t } = usei18n()
@@ -45,8 +49,20 @@ function onModeChange(isQuery: boolean): void {
 
     <CmkLabel>{{ _t('Show') }}</CmkLabel>
 
-    <RrdMetricForm v-if="item.type === 'rrd_metric'" :item="item" :store="store" />
-    <RrdQueryForm v-else-if="item.type === 'rrd_query'" :item="item" :store="store" />
+    <RrdMetricForm
+      v-if="item.type === 'rrd_metric'"
+      :item="item"
+      :store="store"
+      :host-name-errors="hostNameErrors"
+      :service-name-errors="serviceNameErrors"
+      :metric-name-errors="metricNameErrors"
+    />
+    <RrdQueryForm
+      v-else-if="item.type === 'rrd_query'"
+      :item="item"
+      :store="store"
+      :metric-name-errors="metricNameErrors"
+    />
   </div>
 </template>
 

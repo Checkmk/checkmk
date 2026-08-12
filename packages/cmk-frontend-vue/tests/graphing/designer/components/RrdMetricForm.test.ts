@@ -48,7 +48,15 @@ function renderForm(seed: DraftRRDMetricItem) {
     setup() {
       return () => {
         const item = store.items.value.find((candidate) => candidate.id === seed.id)
-        return item?.type === 'rrd_metric' ? h(RrdMetricForm, { item, store }) : null
+        return item?.type === 'rrd_metric'
+          ? h(RrdMetricForm, {
+              item,
+              store,
+              hostNameErrors: [],
+              serviceNameErrors: [],
+              metricNameErrors: []
+            })
+          : null
       }
     }
   })

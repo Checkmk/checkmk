@@ -16,6 +16,7 @@ import {
   useFilters
 } from 'cmk-ui-library/components/filter'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import type { ConsolidationFn } from '@/graphing/components/consolidation'
@@ -28,9 +29,10 @@ import ServiceMetricSelect from './fields/ServiceMetricSelect.vue'
 
 type Category = 'host' | 'service'
 
-const { item, store } = defineProps<{
+const { item, store, metricNameErrors } = defineProps<{
   item: DraftRRDQueryItem
   store: GraphItemsStore
+  metricNameErrors: TranslatedString[]
 }>()
 
 const { _t } = usei18n()
@@ -157,6 +159,7 @@ function onConsolidationChange(value: ConsolidationFn): void {
       :placeholder="_t('Select service metric')"
       required
       show-independent-of-context
+      :errors="metricNameErrors"
       @update:model-value="onMetricChange"
     />
     <ConsolidationSelect

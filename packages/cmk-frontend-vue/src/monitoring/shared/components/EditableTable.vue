@@ -40,6 +40,7 @@ const props = defineProps<{
    * the slot must supply its own `<tr>` element(s).
    */
   expandedRows?: Record<string, boolean>
+  getRowVariant?: (row: T, index: number) => 'error' | null
 }>()
 
 const emit = defineEmits<{
@@ -171,7 +172,8 @@ defineExpose({
           class="monitoring-editable-table__row"
           :class="{
             'monitoring-editable-table__row--alt': index % 2 === 1,
-            'monitoring-editable-table__row--no-hover': isDraggingRow
+            'monitoring-editable-table__row--no-hover': isDraggingRow,
+            'monitoring-editable-table__row--error': getRowVariant?.(row, index) === 'error'
           }"
         >
           <slot name="row" :row="row" :table-row="tableRowAt(index)" :index="index" />
@@ -192,6 +194,12 @@ defineExpose({
 <style scoped>
 .monitoring-editable-table {
   width: 100%;
+
+  --monitoring-editable-table-row-error-bg: var(--color-dark-red-20);
+}
+
+body[data-theme='modern-dark'] .monitoring-editable-table {
+  --monitoring-editable-table-row-error-bg: var(--color-dark-red-100);
 }
 
 .monitoring-editable-table__table {
@@ -211,21 +219,39 @@ defineExpose({
   background: var(--ux-theme-3);
 }
 
-.monitoring-editable-table__row:not(.monitoring-editable-table__row--no-hover):hover,
-/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-.monitoring-editable-table__row:not(.monitoring-editable-table__row--no-hover):hover :deep(td) {
+/* stylelint-disable selector-pseudo-class-no-unknown */
+.monitoring-editable-table__row:not(
+    .monitoring-editable-table__row--no-hover,
+    .monitoring-editable-table__row--error
+  ):hover,
+.monitoring-editable-table__row:not(
+    .monitoring-editable-table__row--no-hover,
+    .monitoring-editable-table__row--error
+  ):hover
+  :deep(td) {
   background-color: var(--color-light-blue-0);
 }
 
-/* stylelint-disable selector-pseudo-class-no-unknown */
 body[data-theme='modern-dark']
-  .monitoring-editable-table__row:not(.monitoring-editable-table__row--no-hover):hover,
+  .monitoring-editable-table__row:not(
+    .monitoring-editable-table__row--no-hover,
+    .monitoring-editable-table__row--error
+  ):hover,
 body[data-theme='modern-dark']
-  .monitoring-editable-table__row:not(.monitoring-editable-table__row--no-hover):hover
+  .monitoring-editable-table__row:not(
+    .monitoring-editable-table__row--no-hover,
+    .monitoring-editable-table__row--error
+  ):hover
   :deep(td) {
   background-color: var(--color-dark-blue-90);
 }
 /* stylelint-enable selector-pseudo-class-no-unknown */
+
+.monitoring-editable-table__row--error,
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown */
+.monitoring-editable-table__row--error :deep(td) {
+  background-color: var(--monitoring-editable-table-row-error-bg);
+}
 
 .monitoring-editable-table__row-group--dragging {
   box-shadow: 0 2px 10px 0 rgb(0 0 0 / 40%);

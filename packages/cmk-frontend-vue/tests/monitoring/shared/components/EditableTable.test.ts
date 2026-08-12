@@ -33,6 +33,7 @@ function mountEditableTable(options: {
   onReorder?: (fromIndex: number, toIndex: number) => void
   withFooter?: boolean
   withEmptyState?: boolean
+  getRowVariant?: (row: Row, index: number) => 'error' | null
 }) {
   const rows = options.rows ?? makeRows(3)
 
@@ -47,7 +48,8 @@ function mountEditableTable(options: {
             expandedRows: options.expandedRows ?? {},
             getRowKey: (row: Row) => row.id,
             ...(options.rowHeight ? { rowHeight: options.rowHeight } : {}),
-            ...(options.onReorder ? { onReorder: options.onReorder } : {})
+            ...(options.onReorder ? { onReorder: options.onReorder } : {}),
+            ...(options.getRowVariant ? { getRowVariant: options.getRowVariant } : {})
           },
           {
             row: ({ row, index }: { row: Row; index: number }) => [
@@ -98,6 +100,20 @@ test('renders every row', () => {
 
   expect(screen.getByTestId('row-row-0')).toBeInTheDocument()
   expect(screen.getByTestId('row-row-59')).toBeInTheDocument()
+})
+
+test('marks the rows a variant calls erroring, and only those', () => {
+  mountEditableTable({
+    rows: makeRows(2),
+    getRowVariant: (row: Row) => (row.id === 'row-1' ? 'error' : null)
+  })
+
+  expect(screen.getByTestId('row-row-1').closest('tr')).toHaveClass(
+    'monitoring-editable-table__row--error'
+  )
+  expect(screen.getByTestId('row-row-0').closest('tr')).not.toHaveClass(
+    'monitoring-editable-table__row--error'
+  )
 })
 
 test('renders no sort buttons even when column definitions allow sorting', () => {

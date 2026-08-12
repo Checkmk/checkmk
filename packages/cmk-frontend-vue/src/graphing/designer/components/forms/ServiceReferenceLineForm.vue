@@ -19,11 +19,15 @@ import ServiceMetricSelect from './fields/ServiceMetricSelect.vue'
 import ServiceNameSelect from './fields/ServiceNameSelect.vue'
 import { hostServiceContext } from './fields/utils'
 
-const { item, store, thresholds } = defineProps<{
-  item: DraftScalarItem
-  store: GraphItemsStore
-  thresholds: { warning: string; critical: string }
-}>()
+const { item, store, thresholds, hostNameErrors, serviceNameErrors, metricNameErrors } =
+  defineProps<{
+    item: DraftScalarItem
+    store: GraphItemsStore
+    thresholds: { warning: string; critical: string }
+    hostNameErrors: TranslatedString[]
+    serviceNameErrors: TranslatedString[]
+    metricNameErrors: TranslatedString[]
+  }>()
 
 const { _t } = usei18n()
 
@@ -80,17 +84,24 @@ function onMetricChange(metricName: string | null): void {
 
 <template>
   <div class="graphing-service-reference-line-form">
-    <HostNameSelect :model-value="item.host_name" required @update:model-value="onHostChange" />
+    <HostNameSelect
+      :model-value="item.host_name"
+      required
+      :errors="hostNameErrors"
+      @update:model-value="onHostChange"
+    />
     <ServiceNameSelect
       :model-value="item.service_name"
       :host-name="item.host_name"
       required
+      :errors="serviceNameErrors"
       @update:model-value="onServiceChange"
     />
     <ServiceMetricSelect
       :model-value="item.metric_name"
       :context="metricContext"
       required
+      :errors="metricNameErrors"
       @update:model-value="onMetricChange"
     />
 

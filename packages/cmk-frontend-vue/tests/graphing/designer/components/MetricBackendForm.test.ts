@@ -43,7 +43,14 @@ function renderForm(seed: DraftMetricBackendItem) {
     setup() {
       return () => {
         const item = store.items.value.find((candidate) => candidate.id === seed.id)
-        return item?.type === 'metric_backend' ? h(MetricBackendForm, { item, store }) : null
+        return item?.type === 'metric_backend'
+          ? h(MetricBackendForm, {
+              item,
+              store,
+              metricNameErrors: [],
+              consolidationErrors: []
+            })
+          : null
       }
     }
   })

@@ -12,6 +12,7 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 
 import EditableTable from '@/monitoring/shared/components/EditableTable.vue'
@@ -30,6 +31,7 @@ import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
 import type { GraphItemsStore } from '../composables/useGraphItems'
 import { useRowLabels } from '../composables/useRowLabels'
 import { useTitleMacroHelp } from '../composables/useTitleMacroHelp'
+import { useValidationMessages } from '../composables/useValidationMessages'
 import {
   type DesignerItem,
   newConstantDraft,
@@ -73,6 +75,7 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 const { sourceTypeLabel, lineStyleSuggestions, lineStyleLabel } = useRowLabels()
 const { renderTitleMacroHelp } = useTitleMacroHelp()
+const { issueMessage } = useValidationMessages()
 
 const titleMacroHelp = renderTitleMacroHelp(titleMacros)
 
@@ -217,6 +220,16 @@ function issuesOf(row: DesignerItem): readonly RowIssue[] {
 function isBlocking(row: DesignerItem): boolean {
   return issuesOf(row).length > 0
 }
+
+function rowVariant(row: DesignerItem): 'error' | null {
+  return isBlocking(row) ? 'error' : null
+}
+
+function titleMessages(row: DesignerItem): TranslatedString[] {
+  return issuesOf(row)
+    .filter((issue) => issue.field === 'title')
+    .map(issueMessage)
+}
 </script>
 
 <template>
@@ -252,6 +265,7 @@ function isBlocking(row: DesignerItem): boolean {
         :rows="[...store.items.value]"
         :columns="columns"
         :get-row-key="(row: DesignerItem) => row.id"
+        :get-row-variant="rowVariant"
         :expanded-rows="expandedRows"
         @reorder="(from: number, to: number) => store.move(from, to)"
       >
@@ -270,17 +284,7 @@ function isBlocking(row: DesignerItem): boolean {
             :aria-label="_t('Select row')"
             @update:model-value="tableRow.toggleSelected($event)"
           />
-          <BaseCell column-id="id" vertical-align="middle">
-            <span class="graphing-metrics-table__id">
-              {{ row.id }}
-              <CmkIcon
-                v-if="isBlocking(row)"
-                name="inline-error"
-                size="small"
-                :aria-label="_t('Source %{id} prevents saving', { id: row.id })"
-              />
-            </span>
-          </BaseCell>
+          <BaseCell column-id="id" vertical-align="middle">{{ row.id }}</BaseCell>
           <BaseCell column-id="source" vertical-align="middle" no-wrap>{{
             sourceTypeLabel(row.type)
           }}</BaseCell>
@@ -298,12 +302,21 @@ function isBlocking(row: DesignerItem): boolean {
             :expanded="expandedRows[row.id] === true"
             @update:expanded="expandedRows = { ...expandedRows, [row.id]: $event }"
           >
-            <CmkInput
-              :model-value="row.title"
-              :aria-label="_t('Title')"
-              field-size="large"
-              @update:model-value="onTitleChange(row, $event)"
-            />
+            <div class="graphing-metrics-table__title">
+              <CmkIcon
+                v-if="isBlocking(row)"
+                name="inline-error"
+                size="large"
+                :aria-label="_t('Source %{id} prevents saving', { id: row.id })"
+              />
+              <CmkInput
+                :model-value="row.title"
+                :aria-label="_t('Title')"
+                field-size="large"
+                :external-errors="titleMessages(row)"
+                @update:model-value="onTitleChange(row, $event)"
+              />
+            </div>
           </CollapsibleCell>
           <DropdownCell
             column-id="line_style"
@@ -335,7 +348,12 @@ function isBlocking(row: DesignerItem): boolean {
               :colspan="columns.length - titleColumnIndex"
               class="graphing-metrics-table__expansion"
             >
-              <RowEditor :row="row" :store="store" :thresholds="thresholds" />
+              <RowEditor
+                :row="row"
+                :store="store"
+                :thresholds="thresholds"
+                :issues="issuesOf(row)"
+              />
             </td>
           </tr>
         </template>
@@ -399,8 +417,8 @@ function isBlocking(row: DesignerItem): boolean {
   min-height: 0;
 }
 
-.graphing-metrics-table__id {
-  display: inline-flex;
+.graphing-metrics-table__title {
+  display: flex;
   align-items: center;
   gap: var(--dimension-3);
 }

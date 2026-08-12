@@ -22,7 +22,7 @@ function renderFormulaForm(seed: DesignerItem[]) {
   if (item?.type !== 'rrd_formula') {
     throw new Error(`expected an rrd_formula row, got ${item?.type}`)
   }
-  render(FormulaForm, { props: { item, store } })
+  render(FormulaForm, { props: { item, store, astErrors: [] } })
   return store
 }
 

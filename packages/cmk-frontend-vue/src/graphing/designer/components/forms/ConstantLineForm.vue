@@ -7,14 +7,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
 
 import type { GraphItemsStore } from '../../composables/useGraphItems'
 import type { DraftConstantItem } from '../../drafts'
 
-const { item, store } = defineProps<{
+const { item, store, valueErrors } = defineProps<{
   item: DraftConstantItem
   store: GraphItemsStore
+  valueErrors: TranslatedString[]
 }>()
 
 const { _t } = usei18n()
@@ -36,6 +38,7 @@ function onValueChange(value: unknown): void {
         :model-value="item.value ?? undefined"
         type="number"
         :placeholder="_t('Value')"
+        :external-errors="valueErrors"
         @update:model-value="onValueChange"
       />
     </div>

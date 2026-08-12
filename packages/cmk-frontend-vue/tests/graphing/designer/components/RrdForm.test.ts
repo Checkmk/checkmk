@@ -28,7 +28,13 @@ function renderForm(seed: DraftRRDMetricItem | DraftRRDQueryItem) {
       return () => {
         const item = store.items.value.find((candidate) => candidate.id === seed.id)
         return item && (item.type === 'rrd_metric' || item.type === 'rrd_query')
-          ? h(RrdForm, { item, store })
+          ? h(RrdForm, {
+              item,
+              store,
+              hostNameErrors: [],
+              serviceNameErrors: [],
+              metricNameErrors: []
+            })
           : null
       }
     }

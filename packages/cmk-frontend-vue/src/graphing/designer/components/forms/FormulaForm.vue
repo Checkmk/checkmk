@@ -6,7 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkCollapsible from 'cmk-ui-library/components/CmkCollapsible'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref } from 'vue'
 
 import ItemIdChip from '../../calculation/components/ItemIdChip.vue'
@@ -17,13 +20,16 @@ import type { DesignerItem } from '../../drafts'
 import { type FormulaItem, isSingleLine } from '../../types'
 import { isValid } from '../../validation'
 
-const { item, store } = defineProps<{
+const { item, store, astErrors } = defineProps<{
   item: FormulaItem
   store: GraphItemsStore
+  astErrors: TranslatedString[]
 }>()
 
 const { _t } = usei18n()
 const { describeItem } = useItemDescription()
+
+const validationId = useId()
 
 const open = ref(false)
 
@@ -46,6 +52,8 @@ function chipColor(referenced: DesignerItem): string | undefined {
       type="button"
       class="graphing-formula-form__trigger"
       :aria-expanded="open"
+      :aria-invalid="astErrors.length > 0 || undefined"
+      :aria-describedby="astErrors.length > 0 ? validationId : undefined"
       @click="open = !open"
     >
       <CmkMultitoneIcon
@@ -56,6 +64,8 @@ function chipColor(referenced: DesignerItem): string | undefined {
       />
       <span class="graphing-formula-form__value">{{ describeItem(item) }}</span>
     </button>
+
+    <CmkInlineValidation v-if="astErrors.length > 0" :id="validationId" :validation="astErrors" />
 
     <CmkCollapsible :open="open">
       <div class="graphing-formula-form__listing">

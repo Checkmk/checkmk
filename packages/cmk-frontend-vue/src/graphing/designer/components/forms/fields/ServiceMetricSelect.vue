@@ -5,21 +5,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormAutocompleter.vue'
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
-import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import useId from 'cmk-ui-library/lib/useId'
 import { computed } from 'vue'
+
+import DesignerField from '../DesignerField.vue'
 
 const {
   modelValue,
   context,
   placeholder,
   required = false,
-  showIndependentOfContext = false
+  showIndependentOfContext = false,
+  errors
 } = defineProps<{
   modelValue: string | null
   context: ConfiguredFilters
@@ -27,6 +27,7 @@ const {
   required?: boolean
   /** Resolve metric suggestions from the filter context even without an exact host+service. */
   showIndependentOfContext?: boolean
+  errors: TranslatedString[]
 }>()
 
 const emit = defineEmits<{
@@ -34,8 +35,6 @@ const emit = defineEmits<{
 }>()
 
 const { _t } = usei18n()
-
-const metricId = useId()
 
 const metricAutocompleter = computed<Autocompleter>(() => ({
   fetch_method: 'rest_autocomplete',
@@ -47,27 +46,23 @@ const metricAutocompleter = computed<Autocompleter>(() => ({
 </script>
 
 <template>
-  <div class="graphing-service-metric-select">
-    <CmkLabel variant="subtitle" :for="metricId">
-      {{ _t('Service metric') }}<CmkLabelRequired :show="required" space="before" />
-    </CmkLabel>
+  <DesignerField
+    v-slot="{ controlId, describedBy, invalid }"
+    :label="_t('Service metric')"
+    :required="required"
+    :errors="errors"
+  >
     <FormAutocompleter
-      :id="metricId"
+      :id="controlId"
       :model-value="modelValue"
       :autocompleter="metricAutocompleter"
       :size="0"
       :placeholder="placeholder ?? _t('Select metric')"
       width="wide"
       floating
+      :has-error="invalid"
+      :described-by="describedBy"
       @update:model-value="emit('update:modelValue', $event)"
     />
-  </div>
+  </DesignerField>
 </template>
-
-<style scoped>
-.graphing-service-metric-select {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
-}
-</style>

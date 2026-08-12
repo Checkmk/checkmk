@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import type { ConsolidationFn } from '@/graphing/components/consolidation'
@@ -17,9 +18,12 @@ import ServiceMetricSelect from './fields/ServiceMetricSelect.vue'
 import ServiceNameSelect from './fields/ServiceNameSelect.vue'
 import { hostServiceContext } from './fields/utils'
 
-const { item, store } = defineProps<{
+const { item, store, hostNameErrors, serviceNameErrors, metricNameErrors } = defineProps<{
   item: DraftRRDMetricItem
   store: GraphItemsStore
+  hostNameErrors: TranslatedString[]
+  serviceNameErrors: TranslatedString[]
+  metricNameErrors: TranslatedString[]
 }>()
 
 const metricContext = computed(() => hostServiceContext(item.host_name, item.service_name))
@@ -59,17 +63,24 @@ function onConsolidationChange(value: ConsolidationFn): void {
 
 <template>
   <div class="graphing-rrd-metric-form">
-    <HostNameSelect :model-value="item.host_name" required @update:model-value="onHostChange" />
+    <HostNameSelect
+      :model-value="item.host_name"
+      required
+      :errors="hostNameErrors"
+      @update:model-value="onHostChange"
+    />
     <ServiceNameSelect
       :model-value="item.service_name"
       :host-name="item.host_name"
       required
+      :errors="serviceNameErrors"
       @update:model-value="onServiceChange"
     />
     <ServiceMetricSelect
       :model-value="item.metric_name"
       :context="metricContext"
       required
+      :errors="metricNameErrors"
       @update:model-value="onMetricChange"
     />
     <ConsolidationSelect

@@ -22,12 +22,12 @@ import {
   type FunctionName,
   type OperatorSymbol,
   type ParseErrorDetail,
-  type ValidationIssue,
   isOperatorSymbol,
   parseFormula,
   validateFormula
 } from '../formula'
 import type { CommitResult } from '../types'
+import { useFormulaMessages } from './useFormulaMessages'
 
 const DEBOUNCE_MS = 300
 
@@ -50,23 +50,9 @@ export function useFormulaEditor(
   editedItemId: MaybeRefOrGetter<ItemId | null> = null
 ): FormulaEditor {
   const { _t } = usei18n()
+  const { issueMessage } = useFormulaMessages()
   const text = ref('')
   const errors = ref<string[]>([])
-
-  function issueMessage(issue: ValidationIssue): TranslatedString {
-    switch (issue.code) {
-      case 'unknown-ref':
-        return _t('Unknown metric or formula "%{id}".', { id: issue.id })
-      case 'self-ref':
-        return _t('The formula cannot reference itself ("%{id}").', { id: issue.id })
-      case 'cyclic-ref':
-        return _t('"%{id}" refers back to this formula (circular reference).', { id: issue.id })
-      case 'domain-mismatch':
-        return _t('Cannot mix RRD and metrics backend data: "%{id}".', { id: issue.id })
-      case 'needs-consolidation':
-        return _t('Consolidate "%{id}" using avg, min, max or sum.', { id: issue.id })
-    }
-  }
 
   function parseMessage(detail: ParseErrorDetail): TranslatedString {
     switch (detail.code) {

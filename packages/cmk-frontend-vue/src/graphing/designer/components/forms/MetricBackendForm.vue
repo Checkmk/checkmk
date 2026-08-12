@@ -7,8 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref, watch } from 'vue'
 
 import FormMetricBackendAttributes from '@/metric-backend/FormMetricBackendAttributes.vue'
@@ -46,12 +49,16 @@ import {
 } from '../../metricBackend'
 import type { MetricBackendItem } from '../../types'
 
-const { item, store } = defineProps<{
+const { item, store, metricNameErrors, consolidationErrors } = defineProps<{
   item: DraftMetricBackendItem
   store: GraphItemsStore
+  metricNameErrors: TranslatedString[]
+  consolidationErrors: TranslatedString[]
 }>()
 
 const { _t } = usei18n()
+
+const metricNameValidationId = useId()
 
 type Consolidation = MetricBackendItem['consolidation_function']
 
@@ -293,11 +300,18 @@ const {
           ><CmkLabelRequired />
         </td>
         <td>
+          <CmkInlineValidation
+            v-if="metricNameErrors.length > 0"
+            :id="metricNameValidationId"
+            :validation="metricNameErrors"
+          />
           <FormMetricNameAutocompleter
             v-model:metric-name="metricName"
             v-model:metric-types="metricTypes"
             :placeholder="_t('Metric name')"
             :label="_t('Metric name')"
+            :has-error="metricNameErrors.length > 0"
+            :described-by="metricNameErrors.length > 0 ? metricNameValidationId : undefined"
           />
         </td>
       </tr>
@@ -320,6 +334,12 @@ const {
         v-model:consolidation-function="consolidationFunction"
         :metric-types="metricTypes"
       />
+      <tr v-if="consolidationErrors.length > 0">
+        <td></td>
+        <td>
+          <CmkInlineValidation :validation="consolidationErrors" />
+        </td>
+      </tr>
       <tr>
         <td class="graphing-metric-backend-form__label-cell">
           {{ _t('Group by') }}

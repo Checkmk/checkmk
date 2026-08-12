@@ -5,15 +5,20 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormAutocompleter.vue'
-import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import useId from 'cmk-ui-library/lib/useId'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-const { modelValue, required = false } = defineProps<{
+import DesignerField from '../DesignerField.vue'
+
+const {
+  modelValue,
+  required = false,
+  errors
+} = defineProps<{
   modelValue: string | null
   required?: boolean
+  errors: TranslatedString[]
 }>()
 
 const emit = defineEmits<{
@@ -22,8 +27,6 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 
-const hostNameId = useId()
-
 const hostAutocompleter: Autocompleter = {
   fetch_method: 'rest_autocomplete',
   data: { ident: 'monitored_hostname', params: { strict: true } }
@@ -31,27 +34,23 @@ const hostAutocompleter: Autocompleter = {
 </script>
 
 <template>
-  <div class="graphing-host-name-select">
-    <CmkLabel variant="subtitle" :for="hostNameId">
-      {{ _t('Host name') }}<CmkLabelRequired :show="required" space="before" />
-    </CmkLabel>
+  <DesignerField
+    v-slot="{ controlId, describedBy, invalid }"
+    :label="_t('Host name')"
+    :required="required"
+    :errors="errors"
+  >
     <FormAutocompleter
-      :id="hostNameId"
+      :id="controlId"
       :model-value="modelValue"
       :autocompleter="hostAutocompleter"
       :size="0"
       :placeholder="_t('Select host')"
       width="wide"
       floating
+      :has-error="invalid"
+      :described-by="describedBy"
       @update:model-value="emit('update:modelValue', $event)"
     />
-  </div>
+  </DesignerField>
 </template>
-
-<style scoped>
-.graphing-host-name-select {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
-}
-</style>

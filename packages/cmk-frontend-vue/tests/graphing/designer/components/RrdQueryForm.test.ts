@@ -71,7 +71,9 @@ function renderQueryForm(seed: DraftRRDQueryItem) {
       useProvideFilterDefinitions({ definitions: DEFINITIONS, groups: {} })
       return () => {
         const item = store.items.value.find((candidate) => candidate.id === seed.id)
-        return item?.type === 'rrd_query' ? h(RrdQueryForm, { item, store }) : null
+        return item?.type === 'rrd_query'
+          ? h(RrdQueryForm, { item, store, metricNameErrors: [] })
+          : null
       }
     }
   })

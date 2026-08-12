@@ -417,6 +417,12 @@ async function save(): Promise<void> {
 }
 
 describe('a blocked save', () => {
+  function markedInvalid(): HTMLElement[] {
+    return screen
+      .getAllByRole('combobox')
+      .filter((control) => control.getAttribute('aria-invalid') === 'true')
+  }
+
   test('says nothing until a save has been attempted', async () => {
     await renderApp()
     await enterEdit()
@@ -450,9 +456,10 @@ describe('a blocked save', () => {
     expect(
       await screen.findByText('Fix the issues with ID A, then try saving again.')
     ).toBeInTheDocument()
+    expect(await screen.findByText('This field is required.')).toBeInTheDocument()
   })
 
-  test('marks the source in the table', async () => {
+  test('marks the source in the table and states why on each of its fields', async () => {
     await renderApp()
     await enterEdit()
     await addRrdSource()
@@ -460,6 +467,11 @@ describe('a blocked save', () => {
     await save()
 
     expect(await screen.findByLabelText('Source B prevents saving')).toBeInTheDocument()
+    const blocked = markedInvalid()
+    expect(blocked).toHaveLength(3)
+    blocked.forEach((control) =>
+      expect(control).toHaveAccessibleDescription(/This field is required\./)
+    )
   })
 
   test('a repeat attempt puts focus on the summary, the first attempt leaves it alone', async () => {

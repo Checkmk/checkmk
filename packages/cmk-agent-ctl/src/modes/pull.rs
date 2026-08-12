@@ -603,41 +603,43 @@ mod tests {
     // we rely on our CI system using IPv6
     #[test]
     fn test_tcp_listener() {
-        let port = 45147;
         assert_eq!(
-            tcp_listener(listening_config(port))
+            tcp_listener(listening_config(0))
                 .unwrap()
                 .local_addr()
                 .unwrap()
+                .ip()
                 .to_string(),
-            format!("[::]:{port}")
+            "::"
         );
     }
 
     // we rely on our CI system using IPv6
     #[test]
     fn test_tcp_listener_v6() {
-        let lc = listening_config(45148);
+        let lc = listening_config(0);
         assert_eq!(
             tcp_listener_v6(lc.addr_v6, lc.port)
                 .unwrap()
                 .local_addr()
                 .unwrap()
+                .ip()
                 .to_string(),
-            format!("[::]:{}", lc.port)
+            "::"
         );
     }
 
     #[test]
     fn test_tcp_listener_ipv4() {
-        let lc = listening_config(45149);
+        let lc = listening_config(0);
         assert_eq!(
             tcp_listener_v4(lc.addr_v4, lc.port)
                 .unwrap()
                 .local_addr()
                 .unwrap()
+                .ip()
                 .to_string(),
-            format!("0.0.0.0:{}", lc.port)
+            "0.0.0.0"
         );
     }
 

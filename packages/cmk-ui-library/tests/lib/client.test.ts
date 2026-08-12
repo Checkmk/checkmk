@@ -16,6 +16,7 @@ const BASE_URL = 'http://foo.bar'
 const VALID_ENDPOINT = '/valid-endpoint'
 const BROKEN_ENDPOINT = '/broken-endpoint'
 const BROKEN_ENDPOINT_WITH_CRASHREPORT = '/broken-endpoint-with-crashreport'
+const BROKEN_ENDPOINT_WITHOUT_JSON = '/broken-endpoint-without-json'
 
 const restHandlers = [
   http.get(`${BASE_URL}${VALID_ENDPOINT}`, () => {
@@ -33,6 +34,9 @@ const restHandlers = [
       },
       { status: 500 }
     )
+  }),
+  http.get(`${BASE_URL}${BROKEN_ENDPOINT_WITHOUT_JSON}`, () => {
+    return HttpResponse.text('<html><body>Gateway Time-out</body></html>', { status: 504 })
   })
 ]
 
@@ -74,6 +78,7 @@ test('unwrap throws CmkApiError with status and context', async () => {
     expect(apiError.context).toContain(`${BASE_URL}${BROKEN_ENDPOINT}`)
     expect(apiError.context).toContain("STATUS 418: I'm a Teapot")
     expect(apiError.message).toBe('Error in fetch response')
+    expect(apiError.statusCode).toBe(418)
   }
 })
 
@@ -89,5 +94,22 @@ test('unwrap includes crash report details in error', async () => {
     expect(apiError.context).toContain('STATUS 500: Internal Server Error')
     expect(apiError.context).toContain('Crash report: random_href')
     expect(apiError.message).toBe('some_title: some_detail')
+    expect(apiError.statusCode).toBe(500)
+  }
+})
+
+test('unwrap throws CmkApiError without leaking a non-JSON error body', async () => {
+  /* @ts-expect-error Testing mock endpoint */
+  const result = await client.GET(BROKEN_ENDPOINT_WITHOUT_JSON)
+
+  try {
+    unwrap(result)
+    throw new Error('Expected unwrap to throw')
+  } catch (e) {
+    const apiError = e as CmkApiError
+    expect(apiError.name).toBe('CmkApiError')
+    expect(apiError.context).toContain('STATUS 504: Gateway Timeout')
+    expect(apiError.message).toBe('Error in fetch response')
+    expect(apiError.statusCode).toBe(504)
   }
 })

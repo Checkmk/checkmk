@@ -87,7 +87,7 @@ describe('useNetworkFlowWidgetData', () => {
   it('reports a backend-reported condition as a warning, using its message', async () => {
     const fetchResponse = vi
       .fn()
-      .mockRejectedValue(new CmkApiError('Flow monitoring is disabled', null, ''))
+      .mockRejectedValue(new CmkApiError('Flow monitoring is disabled', null, '', 400))
 
     const state = renderHarness(fetchResponse)
 
@@ -160,7 +160,7 @@ describe('useNetworkFlowWidgetData', () => {
     let resolveSecond: (response: Response) => void = () => {}
     const fetchResponse = vi
       .fn()
-      .mockRejectedValueOnce(new CmkApiError('Database unreachable', null, ''))
+      .mockRejectedValueOnce(new CmkApiError('Database unreachable', null, '', 500))
       .mockReturnValueOnce(
         new Promise<Response>((resolve) => {
           resolveSecond = resolve

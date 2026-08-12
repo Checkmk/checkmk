@@ -58,11 +58,13 @@ export class CmkSimpleError extends CmkError {
 
 export class CmkApiError extends CmkError {
   context: string
+  readonly statusCode: number
 
-  constructor(message: string, cause: Error | null, context: string) {
+  constructor(message: string, cause: Error | null, context: string, statusCode: number) {
     super(message, cause)
     this.name = 'CmkApiError'
     this.context = context
+    this.statusCode = statusCode
   }
 
   override getContext(): string {

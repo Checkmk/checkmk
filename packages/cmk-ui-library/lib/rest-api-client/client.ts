@@ -44,16 +44,14 @@ export function unwrap<T>(result: { data?: T; error?: unknown; response: Respons
       if (detail && title) {
         message = `${title}: ${detail}`
       }
-    } else {
-      throw parsedJson
     }
 
-    throw new CmkApiError(message, null, context.join('\n\n'))
+    throw new CmkApiError(message, null, context.join('\n\n'), result.response.status)
   }
 
   // Reference: https://github.com/openapi-ts/openapi-typescript/discussions/1869
   if (result.data === undefined && ![204, 205].includes(result.response.status)) {
-    throw new CmkApiError('No data in fetch response', null, '')
+    throw new CmkApiError('No data in fetch response', null, '', result.response.status)
   }
 
   return result.data!

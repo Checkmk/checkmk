@@ -20,12 +20,13 @@ test('an unreachable server keeps the changes and offers a retry', () => {
   })
 })
 
-test('a conflict offers a reload and says what that costs', () => {
+test('a conflict offers the reload before the overwrite and says what each costs', () => {
   const failure = describeSaveFailure(apiError(412))
 
-  expect(failure.actions).toEqual(['reload'])
+  expect(failure.actions).toEqual(['reload', 'overwrite'])
   expect(failure.message).toBe('This graph changed since you opened it.')
-  expect(failure.detail).toContain('discards your unsaved changes')
+  expect(failure.detail).toContain('Reload to use the newer graph and discard your unsaved changes')
+  expect(failure.detail).toContain('overwrite to keep your changes and replace the newer one')
 })
 
 test('a conflict never offers a retry, which would re-send the same stale version', () => {

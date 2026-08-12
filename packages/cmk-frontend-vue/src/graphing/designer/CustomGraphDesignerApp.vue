@@ -39,6 +39,8 @@ import type { ItemId } from './types'
 import { pushUrlState, replaceUrlState } from './urlState'
 import { type RowIssue, isValid, validateDesign } from './validation'
 
+const ANY_VERSION = '*'
+
 const props = defineProps<CustomGraphDesigner>()
 const { _t, _tn } = usei18n()
 const { describeSaveFailure } = useSaveFailures()
@@ -246,6 +248,14 @@ function revealBlockingIssues(announceByFocus: boolean): void {
 }
 
 async function save(): Promise<void> {
+  await saveAgainst('loaded')
+}
+
+async function overwrite(): Promise<void> {
+  await saveAgainst('any')
+}
+
+async function saveAgainst(version: 'loaded' | 'any'): Promise<void> {
   const edited = loaded.value
   const editedOptions = graphOptions.value
   if (isSaving.value || edited === null || editedOptions === null) {
@@ -258,11 +268,12 @@ async function save(): Promise<void> {
     void nextTick(() => revealBlockingIssues(wasBlocked))
     return
   }
+  const ifMatch = version === 'any' ? ANY_VERSION : edited.etag
   isSaving.value = true
   try {
     const result = await updateCustomGraph(
       current.value.name,
-      edited.etag,
+      ifMatch,
       {
         title: edited.graph.title ?? current.value.name,
         metadata: edited.graph.extensions.metadata,
@@ -290,14 +301,22 @@ function saveActionButton(action: SaveAction): { title: TranslatedString; onclic
       return { title: _t('Retry'), onclick: () => void save() }
     case 'reload':
       return { title: _t('Reload'), onclick: () => window.location.reload() }
+    case 'overwrite':
+      return { title: _t('Overwrite'), onclick: () => void overwrite() }
   }
 }
 
-// exactOptionalPropertyTypes rejects an explicit undefined, so a failure with no action to
-// offer has to omit the key rather than pass one.
+// exactOptionalPropertyTypes rejects an explicit undefined, so a failure with fewer actions than
+// the alert has buttons has to omit the keys rather than pass one.
 const saveFailureButtons = computed(() => {
-  const [main] = saveFailure.value?.actions ?? []
-  return main === undefined ? {} : { mainButton: saveActionButton(main) }
+  const [main, optional] = saveFailure.value?.actions ?? []
+  if (main === undefined) {
+    return {}
+  }
+  if (optional === undefined) {
+    return { mainButton: saveActionButton(main) }
+  }
+  return { mainButton: saveActionButton(main), optionalButton: saveActionButton(optional) }
 })
 </script>
 

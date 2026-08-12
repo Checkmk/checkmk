@@ -509,6 +509,13 @@ describe('a blocked save', () => {
 })
 
 describe('a failed save', () => {
+  function sentVersions(put: { mock: { calls: unknown[][] } }): unknown[] {
+    return put.mock.calls.map((call) => {
+      const options = call[1] as { params: { header: Record<string, string> } }
+      return options.params.header['If-Match']
+    })
+  }
+
   test('an unreachable server offers a retry that sends again', async () => {
     putSpy.mockRejectedValue(new TypeError('Failed to fetch'))
     await renderApp()
@@ -522,18 +529,20 @@ describe('a failed save', () => {
     await waitFor(() => expect(putSpy).toHaveBeenCalledTimes(2))
   })
 
-  test('a conflict offers only the reload and stays in edit mode', async () => {
+  test('a conflict offers the reload before the overwrite and stays in edit mode', async () => {
     putSpy.mockResolvedValue(conflictResponse())
     await renderApp()
     await enterEdit()
 
     await save()
 
+    const message = await screen.findByText(/changed since you opened it/i)
+    const alert = message.closest('[role="alert"]') as HTMLElement
     expect(
-      await screen.findByRole('heading', { name: 'This graph changed since you opened it.' })
-    ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
+      within(alert)
+        .getAllByRole('button')
+        .map((button) => button.textContent?.trim())
+    ).toEqual(['Reload', 'Overwrite'])
     expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
   })
 
@@ -576,6 +585,22 @@ describe('a failed save', () => {
 
     expect(await screen.findByText(SAVE_ISSUES_SUMMARY)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
+  })
+
+  test('overwriting sends the same save again, with a star tag instead of the stale one', async () => {
+    putSpy.mockResolvedValue(conflictResponse())
+    await renderApp()
+    await enterEdit()
+    await save()
+    const overwrite = await screen.findByRole('button', { name: 'Overwrite' })
+    putSpy.mockResolvedValue(okResponse(graphObject(), '"etag-2"'))
+
+    await fireEvent.click(overwrite)
+
+    await waitFor(() => expect(sentVersions(putSpy)).toEqual(['"etag-1"', '*']))
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Overwrite' })).not.toBeInTheDocument()
+    )
   })
 })
 

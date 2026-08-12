@@ -7,7 +7,7 @@ import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-export type SaveAction = 'retry' | 'reload'
+export type SaveAction = 'retry' | 'reload' | 'overwrite'
 
 export interface SaveFailure {
   message: TranslatedString
@@ -54,8 +54,10 @@ export function useSaveFailures(): SaveFailures {
       case 412:
         return failure(
           _t('This graph changed since you opened it.'),
-          ['reload'],
-          _t('Reloading discards your unsaved changes.')
+          ['reload', 'overwrite'],
+          _t(
+            'Reload to use the newer graph and discard your unsaved changes, or overwrite to keep your changes and replace the newer one.'
+          )
         )
       default:
         return failure(

@@ -214,16 +214,16 @@ defineExpose({
 .monitoring-editable-table__row:not(.monitoring-editable-table__row--no-hover):hover,
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .monitoring-editable-table__row:not(.monitoring-editable-table__row--no-hover):hover :deep(td) {
-  background-color: var(--color-dark-blue-90);
+  background-color: var(--color-light-blue-0);
 }
 
 /* stylelint-disable selector-pseudo-class-no-unknown */
-body[data-theme='facelift']
+body[data-theme='modern-dark']
   .monitoring-editable-table__row:not(.monitoring-editable-table__row--no-hover):hover,
-body[data-theme='facelift']
+body[data-theme='modern-dark']
   .monitoring-editable-table__row:not(.monitoring-editable-table__row--no-hover):hover
   :deep(td) {
-  background-color: var(--color-light-blue-0);
+  background-color: var(--color-dark-blue-90);
 }
 /* stylelint-enable selector-pseudo-class-no-unknown */
 
@@ -233,12 +233,12 @@ body[data-theme='facelift']
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .monitoring-editable-table__row-group--dragging :deep(td) {
-  background-color: var(--color-dark-blue-90);
+  background-color: var(--color-light-blue-0);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-body[data-theme='facelift'] .monitoring-editable-table__row-group--dragging :deep(td) {
-  background-color: var(--color-light-blue-0);
+body[data-theme='modern-dark'] .monitoring-editable-table__row-group--dragging :deep(td) {
+  background-color: var(--color-dark-blue-90);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */

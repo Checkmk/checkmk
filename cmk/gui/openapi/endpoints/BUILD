@@ -92,7 +92,6 @@ py_library(
         requirement("marshmallow-oneofschema"),
         requirement("python-dateutil"),
         requirement("urllib3"),
-        requirement("werkzeug"),
     ],
 )
 

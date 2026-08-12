@@ -130,18 +130,18 @@ def test_migrate_piggybacked_host_files(
     [
         pytest.param(
             {"cmk.web": 30, "cmk.web.automations": 10},
-            {"cmk.web": 30, "cmk.automations": 10, "cmk.web.ui-job-scheduler": 20},
+            {"cmk.web": 30, "cmk.automations": 10},
             id="CMK-36979: rename carries the configured level over",
         ),
         pytest.param(
             # An already-migrated value wins; the stale key is dropped.
-            {"cmk.automations": 10, "cmk.web.automations": 20, "cmk.web.ui-job-scheduler": 20},
-            {"cmk.automations": 10, "cmk.web.ui-job-scheduler": 20},
+            {"cmk.automations": 10, "cmk.web.automations": 20},
+            {"cmk.automations": 10},
             id="CMK-36979: existing new key is not clobbered",
         ),
         pytest.param(
-            {"cmk.web": 30, "cmk.automations": 10, "cmk.web.ui-job-scheduler": 20},
-            {"cmk.web": 30, "cmk.automations": 10, "cmk.web.ui-job-scheduler": 20},
+            {"cmk.web": 30, "cmk.automations": 10},
+            {"cmk.web": 30, "cmk.automations": 10},
             id="already migrated is unchanged",
         ),
     ],

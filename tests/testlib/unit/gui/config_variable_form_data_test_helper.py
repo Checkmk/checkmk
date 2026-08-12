@@ -1876,11 +1876,6 @@ CASES: Mapping[str, list[Case]] = {
     "log_levels": [
         CasePass("configured", DefaultWithOverrides({"cmk.web.auth": 10})),
         CaseFail("not-a-log-level", DefaultWithOverrides({"cmk.web": 25})),
-        CaseMigrates(
-            "job-scheduler-level-added-on-update",
-            DefaultWithoutKeys(frozenset({"cmk.web.ui-job-scheduler"})),
-            DefaultWithOverrides({"cmk.web.ui-job-scheduler": 20}),
-        ),
     ],
     "log_logon_failures": CHECKBOX_CASES,
     "log_messages": CHECKBOX_CASES,

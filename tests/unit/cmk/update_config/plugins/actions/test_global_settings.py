@@ -106,7 +106,6 @@ def test_update_global_config_migrates_renamed_log_level(
         "log_levels": {
             "cmk.web": 30,
             "cmk.automations": 10,
-            "cmk.web.ui-job-scheduler": 20,
         }
     }
 

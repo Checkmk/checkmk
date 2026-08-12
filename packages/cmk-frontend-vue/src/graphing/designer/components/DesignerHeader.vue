@@ -16,12 +16,13 @@ import { computed } from 'vue'
 import { GlobalTimePicker, rollingRange, useGlobalTimeRange } from '../../GlobalTimePicker'
 import GraphSelector, { type SelectableGraph } from './GraphSelector.vue'
 
-const { selected, loggedInUser, mode, isEditable, timePicker } = defineProps<{
+const { selected, loggedInUser, mode, isEditable, timePicker, saving } = defineProps<{
   selected: SelectableGraph | null
   loggedInUser: string
   mode: CustomGraphDesignerMode
   isEditable: boolean
   timePicker: GlobalTimePickerProps
+  saving: boolean
 }>()
 
 const emit = defineEmits<{
@@ -72,10 +73,10 @@ const range = computed<DateTimeRange>({
           {{ _t('Settings') }}
         </CmkButton>
         <div class="graphing-designer-header__separator" />
-        <CmkButton variant="primary" @click="emit('save')">
+        <CmkButton variant="primary" :running="saving" @click="emit('save')">
           {{ _t('Save') }}
         </CmkButton>
-        <CmkButton variant="secondary" @click="emit('cancel-edit')">
+        <CmkButton variant="secondary" :disabled="saving" @click="emit('cancel-edit')">
           <CmkIcon name="cancel" variant="inline" size="small" />
           {{ _t('Cancel') }}
         </CmkButton>

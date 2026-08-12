@@ -218,6 +218,30 @@ test('a mode=edit deep link on a non-editable graph falls back to view', async (
   expect(screen.queryByRole('button', { name: 'Edit custom graph' })).not.toBeInTheDocument()
 })
 
+test('the save button reports the request as running, while the editor stays usable', async () => {
+  let settlePut: (value: unknown) => void = () => {}
+  putSpy.mockImplementation(() => new Promise((resolve) => (settlePut = resolve)))
+  await renderApp()
+  await fireEvent.click(await screen.findByRole('button', { name: 'Edit custom graph' }))
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+  const saveButton = screen.getByRole('button', { name: 'Save' })
+  await waitFor(() => expect(saveButton).toHaveAttribute('aria-busy', 'true'))
+  expect(saveButton).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
+
+  await userEvent.click(screen.getByRole('tab', { name: 'Graph appearance' }))
+  expect(screen.getByRole('tab', { name: 'Graph appearance' })).toHaveAttribute(
+    'data-state',
+    'active'
+  )
+
+  settlePut(okResponse(graphObject(), '"etag-2"'))
+
+  expect(await screen.findByRole('button', { name: 'Edit custom graph' })).toBeInTheDocument()
+})
+
 test('saving PUTs the definition with If-Match and returns to view mode', async () => {
   await renderApp()
   await fireEvent.click(await screen.findByRole('button', { name: 'Edit custom graph' }))

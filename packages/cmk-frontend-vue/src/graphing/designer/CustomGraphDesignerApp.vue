@@ -262,6 +262,7 @@ async function save(): Promise<void> {
         :mode="mode"
         :is-editable="isEditable"
         :time-picker="time_picker"
+        :saving="isSaving"
         @enter-edit="onEnterEdit"
         @save="void save()"
         @cancel-edit="onCancelEdit"

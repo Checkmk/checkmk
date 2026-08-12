@@ -179,6 +179,7 @@ py_library(
         "page_menu.py",
         "page_state.py",
         "pages.py",
+        "post_auth_gates.py",
         "search_menu.py",
         "table.py",
         "top_heading.py",

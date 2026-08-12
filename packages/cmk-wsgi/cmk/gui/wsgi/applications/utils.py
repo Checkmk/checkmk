@@ -24,6 +24,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInRemoteSite, LoggedInSuperUser, user
 from cmk.gui.pages import get_page_handler, PageContext
 from cmk.gui.permissions import permission_registry
+from cmk.gui.post_auth_gates import post_auth_gate_redirect_url
 from cmk.gui.session import session
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.language_cookie import set_language_cookie
@@ -112,6 +113,20 @@ def ensure_authentication(handler: pages.PageHandler) -> Callable[[PageContext],
                         )
                 case _:
                     pass
+
+            # Feature gates (e.g. the trial mode selection) may take over the
+            # GUI of interactive users once the session is fully established.
+            if (
+                session.session_info.session_state == "logged_in"
+                and not session.user.automation_user
+                and (
+                    gate_url := post_auth_gate_redirect_url(
+                        ctx.config, requested_file_name(request)
+                    )
+                )
+                is not None
+            ):
+                raise HTTPRedirect(gate_url)
 
             # When displaying the crash report message, the user authentication context
             # has already been left. We need to preserve this information to be able to

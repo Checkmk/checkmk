@@ -134,7 +134,7 @@ def quick_setup_duplication_warning(ident: GlobalIdent, type_name: str) -> None:
                     style="display: flex; align-items: center;",
                 )
                 + _(
-                    "However, the duplicated %s will no longer be associated with the Quick setup and this source."
+                    "However, the duplicated %s will no longer be associated with the Quick Setup and this source."
                 )
                 % type_name
             ),

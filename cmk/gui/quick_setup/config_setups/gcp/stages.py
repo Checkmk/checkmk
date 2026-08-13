@@ -80,7 +80,7 @@ def configure_authentication() -> QuickSetupStage:
                     ),
                     Text(
                         text=_(
-                            'Create a Service Account in "IAM & Admin" and assign the roles "Monitoring Viewer" and "Cloud Asset Viewer" to this account.'
+                            'Create a service account in "IAM & Admin" and assign the roles "Monitoring Viewer" and "Cloud Asset Viewer" to this account.'
                         ),
                     ),
                     Text(
@@ -224,7 +224,7 @@ gce_recap_message = _GCERecapMessage()
 
 
 def _save_and_activate_recap(title: str, parsed_data: ParsedFormData) -> Sequence[Widget]:
-    message = _("Save your progress and go to the Activate Changes page to enable it.")
+    message = _("Save your progress and go to the 'Activate changes' page to enable it.")
     if "gce" in parsed_data.get(FormSpecId("configure_advanced"), {}).get("piggyback", {}).get(
         "piggyback_services", []
     ):
@@ -338,7 +338,7 @@ quick_setup_gcp = QuickSetup(
     actions=[
         QuickSetupBackgroundAction(
             id=ActionId("activate_changes"),
-            label=_("Save & go to Activate changes"),
+            label=_("Save & go to 'Activate changes'"),
             icon=QuickSetupActionButtonIcon(name="save-to-services"),
             action=action,
             permissions=["wato.passwords", "wato.rulesets", "wato.hosts"],

@@ -26,7 +26,7 @@ def _parameter_form() -> Dictionary:
     return Dictionary(
         title=Title("Ruckus Spot"),
         help_text=Help(
-            "This rule selects the agent Ruckus Spot agent instead of the normal Checkmk agent"
+            "This rule selects the Ruckus Spot agent instead of the normal Checkmk agent "
             "which collects the data through the Ruckus Spot web interface"
         ),
         elements={
@@ -35,7 +35,7 @@ def _parameter_form() -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Title("Server Address"),
                     help_text=Help(
-                        "Here you can set a manual address if the server differs from the host"
+                        "Here, you can set a manual address, if the server differs from the host."
                     ),
                     elements=[
                         CascadingSingleChoiceElement(

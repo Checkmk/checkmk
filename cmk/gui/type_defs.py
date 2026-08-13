@@ -226,7 +226,8 @@ class SessionInfo:
     # We don't care about the specific object, because it's internal to the fido2 library
     webauthn_action_state: WebAuthnActionState | None = None
 
-    # None is only required for bootstrapping the object; valid sessions always have an auth_type
+    # The credential that authenticated the current request, not how the session was established:
+    # a session created by an interactive login carries None until it is resumed from its cookie.
     auth_type: AuthType | None = None
 
     session_state: SessionState = field(default="credentials_needed")

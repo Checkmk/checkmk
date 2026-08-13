@@ -48,6 +48,13 @@ from cmk.utils.log.security_event import log_security_event
 
 tracer = trace.get_tracer()
 
+# Only credentials a browser re-presents on every request may back a persisted, cookie-backed
+# session. A token must not be exchangeable for one: the cookie carries none of the token's
+# scope restrictions and outlives its revocation.
+_COOKIE_ELIGIBLE_AUTH_TYPES: frozenset[AuthType] = frozenset(
+    {"basic_auth", "http_header", "web_server"}
+)
+
 
 class CheckmkFileBasedSession(dict, SessionMixin):
     new = True
@@ -88,7 +95,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             return False
 
         if not self.is_gui_session:
-            # No persistant sessions for RestAPI
+            # No persistant sessions for the REST API or token-authenticated requests
             return False
 
         return not self.user.automation_user
@@ -107,6 +114,10 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         self.is_secure = secure_flag
         self.authorization = authorization
         self.user = LoggedInUser(user_name, user_permissions)
+        # Note that interactive logins don't come through this path, so we don't need to worry
+        # about their auth_types here. They go create_empty_session() -> login(), which leaves
+        # is_gui_session at its default.
+        self.is_gui_session = auth_type in _COOKIE_ELIGIBLE_AUTH_TYPES
 
         self.session_info = SessionInfo(
             session_id=userdb.session.create_session_id(),
@@ -189,6 +200,8 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         sess = cls()
         sess.user = LoggedInUser(user_name, user_permissions)
         sess.session_info = info
+        # From here on the cookie is the credential, regardless of what established the session.
+        # After this, we cannot rely on auth_type to figure out how the session was initially made.
         sess.session_info.auth_type = "cookie"
         sess.new = False
         sess["_flashes"] = info.flashes

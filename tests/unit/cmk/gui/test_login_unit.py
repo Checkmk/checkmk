@@ -253,18 +253,12 @@ def test_token_auth_is_not_exchangeable_for_a_session_cookie(
     flask_app: flask.Flask,
 ) -> None:
     """A token this site authenticates must not mint a session cookie: otherwise a
-    scoped token could be exchanged for an unrestricted one.
-
-    2.5.0 backport note: master enforces this path-independently (71b364c301b, not
-    backported). On 2.5.0 the guarantee holds for REST-API requests, which set
-    is_gui_session=False (see cmk.gui.wsgi.applications.rest_api) -- and that is the
-    path the MCP server presents OAuth tokens on. We reproduce that condition here."""
+    scoped token could be exchanged for an unrestricted one."""
     username, password = with_user
     with flask_app.test_request_context(
         "/", method="GET", headers={"Authorization": make_header(username, password)}
     ):
         flask_app.preprocess_request()
-        session.is_gui_session = False
         response = flask_app.process_response(http.Response())
 
     assert not [

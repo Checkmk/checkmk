@@ -15,6 +15,7 @@ import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.job.agent_based import job
+from cmk.plugins.job.lib import CheckParameters
 
 STRING_TABLE_1: StringTable = [
     ["==>", "SHREK", "<=="],
@@ -806,18 +807,16 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
     [
         pytest.param(
             "SHREK",
-            # which is what check_plugin_job.check_default_parameters holds
-            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
+            job.check_plugin_job.check_default_parameters,
             STRING_TABLE_1,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 *_SHREK_METRIC_RESULTS,
                 Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
-                # (0, 0) comes from pre-2.0 autochecks and must not be applied as levels
                 Result(state=State.OK, summary="Job age: 1 year 178 days"),
                 Metric("job_age", 46999419.0, boundaries=(0.0, None)),
             ],
-            id="legacy age levels (0, 0) are not applied",
+            id="no age levels configured",
         ),
         pytest.param(
             "cleanup_remote_logs",
@@ -851,7 +850,10 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
         ),
         pytest.param(
             "backup.sh",
-            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
+            {
+                "age": ("fixed", (1.0, 2.0)),
+                "exit_code_to_state_map": [{"exit_code": 0, "state": 0}],
+            },
             STRING_TABLE_2,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
@@ -887,14 +889,17 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
         ),
         pytest.param(
             "missing",
-            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
+            {
+                "age": ("fixed", (1.0, 2.0)),
+                "exit_code_to_state_map": [{"exit_code": 0, "state": 0}],
+            },
             STRING_TABLE_2,
             [],
             id="item not in section",
         ),
         pytest.param(
             "Cleanup-Cache-Files",
-            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
+            job.check_plugin_job.check_default_parameters,
             [
                 ["==>", "Cleanup-Cache-Files", "<=="],
                 ["real_time", "0.96"],
@@ -976,7 +981,10 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
         ),
         pytest.param(
             "SHREK",
-            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
+            {
+                "age": ("fixed", (1.0, 2.0)),
+                "exit_code_to_state_map": [{"exit_code": 0, "state": 0}],
+            },
             STRING_TABLE_1,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
@@ -992,7 +1000,7 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
         ),
         pytest.param(
             "SHREK",
-            {"age": (0, 0), "exit_code_to_state_map": [(0, 1)]},
+            {"age": None, "exit_code_to_state_map": [{"exit_code": 0, "state": 1}]},
             STRING_TABLE_1,
             [
                 Result(
@@ -1008,7 +1016,10 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
         ),
         pytest.param(
             "SHREK",
-            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
+            {
+                "age": ("fixed", (1.0, 2.0)),
+                "exit_code_to_state_map": [{"exit_code": 0, "state": 0}],
+            },
             STRING_TABLE_1_RUNNING,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
@@ -1128,7 +1139,10 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
         pytest.param(
             # The age levels apply to a job that has never completed, too.
             "never-completed",
-            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
+            {
+                "age": ("fixed", (1.0, 2.0)),
+                "exit_code_to_state_map": [{"exit_code": 0, "state": 0}],
+            },
             [
                 ["==>", "never-completed.1234running", "<=="],
                 ["start_time", str(TIME - 60)],
@@ -1301,7 +1315,7 @@ _SHREK_METRIC_RESULTS: Sequence[Result | Metric] = [
 )
 def test_check_job(
     item: str,
-    params: job.CheckParameters,
+    params: CheckParameters,
     string_table: StringTable,
     expected_results: Sequence[Result | Metric],
 ) -> None:

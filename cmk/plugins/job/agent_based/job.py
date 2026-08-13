@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import auto, Enum
-from typing import Final, Self, TypedDict
+from typing import Final, Self
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -22,6 +22,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.job.lib import CheckParameters, ExitCodeState
+from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 # <<<job>>>
 # ==> asd ASD <==
@@ -46,11 +48,6 @@ from cmk.agent_based.v2 import (
 # writes 0
 # max_res_kbytes 1984
 # avg_mem_kbytes 0
-
-
-class CheckParameters(TypedDict):
-    age: tuple[int, int] | None
-    exit_code_to_state_map: list[tuple[int, int]]
 
 
 _METRIC_TRANSLATION: Final = {
@@ -284,7 +281,7 @@ def _check_completed_job(
 def _check_job_age(
     age: float,
     currently_running: bool,
-    age_levels: tuple[int, int] | None,
+    age_levels: SimpleLevelsConfigModel[float],
 ) -> CheckResult:
     if age < 0:
         yield Result(
@@ -300,15 +297,7 @@ def _check_job_age(
         value=age,
         metric_name="job_age",
         label=f"Job age{' (currently running)' if currently_running else ''}",
-        # In pre-2.0 versions of this check plug-in, we had
-        # check_default_parameters={"age": (0, 0)}
-        # However, these levels were only applied if they were not zero. We still need to keep this
-        # check because many old autocheck files still have
-        # 'parameters': {'age': (0, 0)}
-        # which must not result in actually applying these levels.
-        levels_upper=(
-            ("fixed", age_levels) if age_levels is not None and age_levels != (0, 0) else None
-        ),
+        levels_upper=age_levels,
         render_func=render.timespan,
         boundaries=(0, None),
     )
@@ -359,7 +348,10 @@ def check_job(
         yield from _check_completed_job(
             completed_job.exit_code,
             completed_job.metrics,
-            {k: State(v) for k, v in params["exit_code_to_state_map"]},
+            {
+                entry["exit_code"]: State(entry["state"])
+                for entry in params["exit_code_to_state_map"]
+            },
         )
     elif not running_jobs:
         # A job that has not completed yet has no exit code, but as long as it is
@@ -405,7 +397,10 @@ check_plugin_job = CheckPlugin(
     name="job",
     service_name="Job %s",
     discovery_function=discover_job,
-    check_default_parameters={"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
+    check_default_parameters=CheckParameters(
+        age=("no_levels", None),
+        exit_code_to_state_map=[ExitCodeState(exit_code=0, state=0)],
+    ),
     check_ruleset_name="job",
     check_function=check_job,
 )

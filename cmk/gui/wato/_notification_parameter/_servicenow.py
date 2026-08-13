@@ -153,7 +153,7 @@ def form_spec() -> Dictionary:
             "timeout": DictElement(
                 parameter_form=String(
                     title=Title("Set optional timeout for connections to ServiceNow"),
-                    help_text=Help("Here you can configure timeout settings in seconds."),
+                    help_text=Help("Here, you can configure timeout settings in seconds."),
                     prefill=DefaultValue("10"),
                 )
             ),
@@ -330,7 +330,7 @@ def _incident_fs() -> Dictionary:
             ),
             "ack_custom_fields": DictElement(
                 parameter_form=_custom_fields_fs(
-                    title=Title("Custom fields on acknowledgement"),
+                    title=Title("Custom fields on acknowledgment"),
                     help_text=Help(
                         "Optional name/value pairs that are merged into the "
                         "PUT request sent to ServiceNow when an "
@@ -369,7 +369,7 @@ def _incident_fs() -> Dictionary:
                 parameter_form=Dictionary(
                     title=Title("Settings for incident state in case of downtime"),
                     help_text=Help(
-                        "Here you can define the state of the incident in case of a "
+                        "Here, you can define the state of the incident in case of a "
                         "downtime of the affected host or service."
                     ),
                     elements={
@@ -517,7 +517,7 @@ def _case_fs() -> Dictionary:
                 parameter_form=SingleChoice(
                     title=Title("Priority"),
                     help_text=Help(
-                        "Here you can define with which priority the case should be created."
+                        "Here, you can define with which priority the case should be created."
                     ),
                     elements=[
                         SingleChoiceElement(name="low", title=Title("Low")),
@@ -616,7 +616,7 @@ def _recovery_state_fs(issue_type: str) -> Dictionary:
     return Dictionary(
         title=Title("Settings for %s state in case of recovery") % issue_type,
         help_text=Help(
-            "Here you can define the state of the %s in case of a recovery "
+            "Here, you can define the state of the %s in case of a recovery "
             "of the affected host or service problem."
         )
         % issue_type,

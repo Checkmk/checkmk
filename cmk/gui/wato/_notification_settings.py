@@ -53,7 +53,7 @@ ConfigVariableNotificationFallbackEmail = ConfigVariable(
             "This can happen when you forward notifications from the Event Console. "
             "<br><br>Notification fallback can also be configured in single user profiles."
         ),
-        empty_text=_("(No fallback email address configured!)"),
+        empty_text=_("(no fallback email address configured!)"),
         make_clickable=False,
     ),
 )
@@ -113,7 +113,7 @@ ConfigVariableNotificationBulkInterval = ConfigVariable(
     valuespec=lambda context: Age(
         title=_("Interval for checking for ripe bulk notifications"),
         help=_(
-            "If you are using rule based notifications with <i>Bulk notifications</i>, "
+            "If you use rule based notifications with <i>Bulk notifications</i>, "
             "then Checkmk will check for ripe bulk notifications to be sent "
             "at this interval at the latest."
         ),
@@ -168,7 +168,7 @@ ConfigVariableFailedNotificationHorizon = ConfigVariable(
         help=_(
             "The tactical overview snap-in is reporting about notifications that could not be sent "
             'by Checkmk. Users with the permission "See failed notifications (all)" get the number '
-            "of failed notification within the configured horizon."
+            "of failed notifications within the configured horizon."
         ),
         default_value=60 * 60 * 24 * 7,
         display=["days"],

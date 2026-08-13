@@ -413,7 +413,7 @@ def _host_subject() -> DictElement[Any]:
         parameter_form=String(
             title=Title("Subject line for host notifications"),
             help_text=Help(
-                "Here you are allowed to use "
+                "Here, you are allowed to use "
                 "all macros that are defined in "
                 "the notification context."
             ),
@@ -433,7 +433,7 @@ def _service_subject() -> DictElement[Any]:
         parameter_form=String(
             title=Title("Subject line for service notifications"),
             help_text=Help(
-                "Here you are allowed to use "
+                "Here, you are allowed to use "
                 "all macros that are defined in "
                 "the notification context."
             ),

@@ -23,7 +23,7 @@ EXPECTED_CHECKS = [
     "Deprecated legacy GUI extensions",
     "Deprecated rule sets",
     "Unknown check parameter rule sets",
-    "Alert handler: Don't handle all check executions",
+    "Alert handler: don't handle all check executions",
     "Apache number of processes",
     "Apache process usage",
     "Check helper usage",

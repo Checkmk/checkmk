@@ -639,7 +639,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                 ("service", _("Service name")),
                 ("sl", _("Service level")),
                 ("check_type", _("Check type")),
-                ("state", _("Host/Service state")),
+                ("state", _("Host/service state")),
             ]
             + (
                 [
@@ -1566,7 +1566,7 @@ class ModeAnalyzeNotifications(ModeNotifications):
 
         with table_element(
             table_id="backlog",
-            title=_("Analysis: Recent notifications"),
+            title=_("Analysis: recent notifications"),
         ) as table:
             for nr, context in enumerate(backlog):
                 table.row()
@@ -2040,7 +2040,7 @@ class ModeTestNotifications(ModeNotifications):
 
         with table_element(
             table_id="notification_test",
-            title=_("Analysis: Test notifications"),
+            title=_("Analysis: test notifications"),
         ) as table:
             table.row()
             table.cell("&nbsp;", css=["buttons"])
@@ -3114,7 +3114,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                         ),
                         title=_("Restrict by custom macros"),
                         help=_(
-                            "Here you can <i>restrict</i> the list of contacts that has been "
+                            "Here, you can <i>restrict</i> the list of contacts that has been "
                             "built up by the previous options to those who have certain values "
                             "in certain custom macros. If you add more than one macro here then "
                             "<i>all</i> macros must match. The matches are regular expressions "
@@ -3129,12 +3129,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                         valuespec=ContactGroupSelection(),
                         title=_("Restrict by contact groups"),
                         help=_(
-                            "Here you can <i>restrict</i> the list of contacts that has been "
+                            "Here, you can <i>restrict</i> the list of contacts that has been "
                             "built up by the previous options to those that are members of "
                             "selected contact groups. If you select more than one contact group here then "
                             "the user must be member of <i>all</i> these groups."
                         ),
-                        add_label=_("Add Group"),
+                        add_label=_("Add group"),
                         movable=False,
                     ),
                 ),

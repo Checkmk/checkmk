@@ -201,7 +201,7 @@ def form_spec() -> Dictionary:
                 parameter_form=String(
                     title=Title("Summary for host notifications"),
                     help_text=Help(
-                        "Here you are allowed to use all macros that are defined in the "
+                        "Here, you are allowed to use all macros that are defined in the "
                         "notification context."
                     ),
                     prefill=DefaultValue("Check_MK: $HOSTNAME$ - $HOSTSHORTSTATE$"),
@@ -212,7 +212,7 @@ def form_spec() -> Dictionary:
                 parameter_form=String(
                     title=Title("Summary for service notifications"),
                     help_text=Help(
-                        "Here you are allowed to use all macros that are defined in the "
+                        "Here, you are allowed to use all macros that are defined in the "
                         "notification context."
                     ),
                     prefill=DefaultValue(
@@ -258,7 +258,7 @@ def form_spec() -> Dictionary:
             "timeout": DictElement(
                 parameter_form=String(
                     title=Title("Set optional timeout for connections to Jira"),
-                    help_text=Help("Here you can configure timeout settings."),
+                    help_text=Help("Here, you can configure timeout settings."),
                     prefill=DefaultValue("10"),
                 ),
             ),

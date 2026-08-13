@@ -367,7 +367,7 @@ def triggering_events() -> QuickSetupStage:
                             parameter_form=FixedValue(
                                 value=None,
                                 label=Label(
-                                    "All host events, service events and event console alerts will "
+                                    "All host events, service events and Event Console alerts will "
                                     "trigger a notification"
                                 ),
                             ),
@@ -1268,7 +1268,7 @@ def notification_method() -> QuickSetupStage:
                             "state": DictElement(
                                 required=False,
                                 parameter_form=FixedValue(
-                                    title=Title("Host/Service state"),
+                                    title=Title("Host/service state"),
                                     value=None,
                                 ),
                             ),

@@ -950,7 +950,9 @@ class ABCHostAttributeText(ABCHostAttribute, abc.ABC):
     def render_input(self, varprefix: str, value: str | None) -> None:
         if value is None:
             value = ""
-        html.text_input(varprefix + "attr_" + self.name(), value, size=self._size)
+        html.text_input(
+            varname=varprefix + "attr_" + self.name(), default_value=value, size=self._size
+        )
 
     @override
     def from_html_vars(self, varprefix: str) -> str | None:

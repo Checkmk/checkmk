@@ -74,7 +74,7 @@ SECTIONS: Sequence[SectionOptions] = (
     ),
     SectionOptions(
         section="dataguard_stats",
-        title=Title("Dataguard statistics"),
+        title=Title("Data Guard statistics"),
         mode="synchronous",
     ),
     SectionOptions(
@@ -129,7 +129,7 @@ SECTIONS: Sequence[SectionOptions] = (
     ),
     SectionOptions(
         section="iostats",
-        title=Title("Performance: IO stats"),
+        title=Title("Performance: I/O stats"),
         help_text=Help(
             "WARNING: This section will increase the load of your Checkmk server and "
             "may increase load of your Database. "
@@ -236,7 +236,7 @@ def _auth_options(is_default_options: bool = True) -> Dictionary:
                         ),
                         CascadingSingleChoiceElement(
                             name="wallet",
-                            title=Title("Oracle Wallet"),
+                            title=Title("Oracle wallet"),
                             parameter_form=FixedValue(
                                 value=None,
                                 help_text=Help(
@@ -269,7 +269,7 @@ def _auth_options(is_default_options: bool = True) -> Dictionary:
             "asm_auth": DictElement(
                 required=False,
                 parameter_form=Dictionary(
-                    title=Title("ASM Authentication"),
+                    title=Title("ASM authentication"),
                     help_text=Help(
                         "Separate credentials for accessing ASM. If omitted, the main "
                         "authentication above is reused."
@@ -277,7 +277,7 @@ def _auth_options(is_default_options: bool = True) -> Dictionary:
                     elements={
                         "username": DictElement(
                             parameter_form=String(
-                                title=Title("ASM Username"),
+                                title=Title("ASM username"),
                                 custom_validate=(validators.LengthInRange(min_value=1),),
                             ),
                             required=True,
@@ -291,7 +291,7 @@ def _auth_options(is_default_options: bool = True) -> Dictionary:
                         ),
                         "role": DictElement(
                             parameter_form=SingleChoice(
-                                title=Title("ASM Role"),
+                                title=Title("ASM role"),
                                 help_text=Help(
                                     "Specifies the database privilege role used when connecting to Oracle."
                                 ),
@@ -345,7 +345,7 @@ def _sid_entry() -> Dictionary:
 
 def _descriptor_entry() -> Dictionary:
     return Dictionary(
-        title=Title("Oracle Service Name"),
+        title=Title("Oracle service name"),
         elements={
             "service_name": DictElement(
                 required=True,
@@ -455,7 +455,7 @@ def _connection_options() -> Dictionary:
         ),
         "oracle_local_registry": DictElement(
             parameter_form=String(
-                title=Title("Oracle Local Registry path"),
+                title=Title("Oracle local registry path"),
                 custom_validate=(
                     validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
                 ),
@@ -753,7 +753,7 @@ def _main() -> Dictionary:
                 parameter_form=Integer(
                     title=Title("Cache age"),
                     help_text=Help(
-                        "How old (in seconds) the cache file for builtin sections is allowed to be."
+                        "How old (in seconds) the cache file for built-in sections is allowed to be."
                     ),
                     prefill=DefaultValue(600),
                 ),
@@ -761,7 +761,7 @@ def _main() -> Dictionary:
             ),
             "custom_metrics_cache_age": DictElement(
                 parameter_form=Integer(
-                    title=Title("Custom Metrics cache age"),
+                    title=Title("Custom metrics cache age"),
                     help_text=Help(
                         "How old (in seconds) the cache file for custom metrics is allowed to be."
                     ),
@@ -860,7 +860,7 @@ def _agent_config_mk_oracle() -> Dictionary:
 
 rule_spec_oracle_bakelet = AgentConfig(
     name="mk_oracle_unified",
-    title=Title("Unified Oracle Plugin (Beta)"),
+    title=Title("Unified Oracle plug-in (beta)"),
     topic=Topic.DATABASES,
     parameter_form=_agent_config_mk_oracle,
     help_text=Help(

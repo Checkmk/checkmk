@@ -66,7 +66,7 @@ def _formspec_discovery_oracle_performance() -> Dictionary:
                 required=False,
                 parameter_form=FixedValue(
                     value=True,
-                    title=Title("Create additional service for IO stats bytes"),
+                    title=Title("Create additional service for I/O stats bytes"),
                     label=Label(
                         "Creates a new service that displays information about disk I/O of database files. "
                         "This service displays the number of bytes read and written to database files."
@@ -77,7 +77,7 @@ def _formspec_discovery_oracle_performance() -> Dictionary:
                 required=False,
                 parameter_form=FixedValue(
                     value=True,
-                    title=Title("Create additional service for IO stats requests"),
+                    title=Title("Create additional service for I/O stats requests"),
                     label=Label(
                         "Creates a new service that displays information about disk I/O of database files. "
                         "This service displays the number of single block read and write requests that are being made to database files."
@@ -171,7 +171,7 @@ def _parameter_valuespec_oracle_performance():
         waitclasses_choices.append((waitclass.metric_fg, "%s wait class (FG)" % waitclass.name))
 
     return Dictionary(
-        help_text=Help("Here you can set levels for the Oracle performance metrics."),
+        help_text=Help("Here, you can set levels for the Oracle performance metrics."),
         elements={
             "dbtime": DictElement(
                 required=False,
@@ -216,7 +216,7 @@ def _parameter_valuespec_oracle_performance():
                         title=Title("Field"),
                         elements=iostat_bytes_choices,
                     ),
-                    title=Title("Levels for IO stats bytes"),
+                    title=Title("Levels for I/O stats bytes"),
                 ),
             ),
             "iostat_ios": DictElement(
@@ -226,7 +226,7 @@ def _parameter_valuespec_oracle_performance():
                         title=Title("Field"),
                         elements=iostat_ios_choices,
                     ),
-                    title=Title("Levels for IO stats requests"),
+                    title=Title("Levels for I/O stats requests"),
                 ),
             ),
             "waitclasses": DictElement(

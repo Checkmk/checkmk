@@ -81,97 +81,97 @@ metric_oracle_ios_f_control_file_s_wb = metrics.Metric(
 )
 metric_oracle_ios_f_data_file_backup_l_rb = metrics.Metric(
     name="oracle_ios_f_data_file_backup_l_rb",
-    title=Title("Oracle data file backup large read bytes"),
+    title=Title("Oracle datafile backup large read bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.CYAN,
 )
 metric_oracle_ios_f_data_file_backup_l_wb = metrics.Metric(
     name="oracle_ios_f_data_file_backup_l_wb",
-    title=Title("Oracle data file backup large write bytes"),
+    title=Title("Oracle datafile backup large write bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_GREEN,
 )
 metric_oracle_ios_f_data_file_backup_s_rb = metrics.Metric(
     name="oracle_ios_f_data_file_backup_s_rb",
-    title=Title("Oracle data file backup small read bytes"),
+    title=Title("Oracle datafile backup small read bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.YELLOW,
 )
 metric_oracle_ios_f_data_file_backup_s_wb = metrics.Metric(
     name="oracle_ios_f_data_file_backup_s_wb",
-    title=Title("Oracle data file backup small write bytes"),
+    title=Title("Oracle datafile backup small write bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_YELLOW,
 )
 metric_oracle_ios_f_data_file_copy_l_rb = metrics.Metric(
     name="oracle_ios_f_data_file_copy_l_rb",
-    title=Title("Oracle data file copy large read bytes"),
+    title=Title("Oracle datafile copy large read bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_ORANGE,
 )
 metric_oracle_ios_f_data_file_copy_l_wb = metrics.Metric(
     name="oracle_ios_f_data_file_copy_l_wb",
-    title=Title("Oracle data file copy large write bytes"),
+    title=Title("Oracle datafile copy large write bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_GREEN,
 )
 metric_oracle_ios_f_data_file_copy_s_rb = metrics.Metric(
     name="oracle_ios_f_data_file_copy_s_rb",
-    title=Title("Oracle data file copy small read bytes"),
+    title=Title("Oracle datafile copy small read bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_BLUE,
 )
 metric_oracle_ios_f_data_file_copy_s_wb = metrics.Metric(
     name="oracle_ios_f_data_file_copy_s_wb",
-    title=Title("Oracle data file copy small write bytes"),
+    title=Title("Oracle datafile copy small write bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.GREEN,
 )
 metric_oracle_ios_f_data_file_incremental_backup_l_rb = metrics.Metric(
     name="oracle_ios_f_data_file_incremental_backup_l_rb",
-    title=Title("Oracle data file incremental backup large read bytes"),
+    title=Title("Oracle datafile incremental backup large read bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.BLUE,
 )
 metric_oracle_ios_f_data_file_incremental_backup_l_wb = metrics.Metric(
     name="oracle_ios_f_data_file_incremental_backup_l_wb",
-    title=Title("Oracle data file incremental backup large write bytes"),
+    title=Title("Oracle datafile incremental backup large write bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.BLUE,
 )
 metric_oracle_ios_f_data_file_incremental_backup_s_rb = metrics.Metric(
     name="oracle_ios_f_data_file_incremental_backup_s_rb",
-    title=Title("Oracle data file incremental backup small read bytes"),
+    title=Title("Oracle datafile incremental backup small read bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_YELLOW,
 )
 metric_oracle_ios_f_data_file_incremental_backup_s_wb = metrics.Metric(
     name="oracle_ios_f_data_file_incremental_backup_s_wb",
-    title=Title("Oracle data file incremental backup small write bytes"),
+    title=Title("Oracle datafile incremental backup small write bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_BLUE,
 )
 metric_oracle_ios_f_data_file_l_rb = metrics.Metric(
     name="oracle_ios_f_data_file_l_rb",
-    title=Title("Oracle data file large read bytes"),
+    title=Title("Oracle datafile large read bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_PINK,
 )
 metric_oracle_ios_f_data_file_l_wb = metrics.Metric(
     name="oracle_ios_f_data_file_l_wb",
-    title=Title("Oracle data file large write bytes"),
+    title=Title("Oracle datafile large write bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.YELLOW,
 )
 metric_oracle_ios_f_data_file_s_rb = metrics.Metric(
     name="oracle_ios_f_data_file_s_rb",
-    title=Title("Oracle data file small read bytes"),
+    title=Title("Oracle datafile small read bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_BLUE,
 )
 metric_oracle_ios_f_data_file_s_wb = metrics.Metric(
     name="oracle_ios_f_data_file_s_wb",
-    title=Title("Oracle data file small write bytes"),
+    title=Title("Oracle datafile small write bytes"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.LIGHT_YELLOW,
 )

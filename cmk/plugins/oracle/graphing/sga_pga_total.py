@@ -57,7 +57,7 @@ metric_oracle_sga_redo_buffer = metrics.Metric(
 )
 metric_oracle_sga_shared_io_pool = metrics.Metric(
     name="oracle_sga_shared_io_pool",
-    title=Title("Oracle shared IO pool size"),
+    title=Title("Oracle shared I/O pool size"),
     unit=UNIT_BYTES,
     color=metrics.Color.DARK_GREEN,
 )
@@ -96,7 +96,7 @@ graph_oracle_sga_pga_total = graphs.Graph(
     ],
     simple_lines=[
         metrics.Sum(
-            Title("Oracle total Memory"),
+            Title("Oracle total memory"),
             metrics.Color.GRAY,
             [
                 "oracle_sga_size",

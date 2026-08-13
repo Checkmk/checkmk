@@ -3,12 +3,17 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { GroupByInputType, GroupByModel } from '@/metric-backend/group-by/types'
+import type {
+  AggregationStep,
+  GroupByInputType,
+  GroupByModel
+} from '@/metric-backend/group-by/types'
 
 export type PresetName =
   | 'noGrouping'
   | 'avgByService'
   | 'avgByServiceAndRoute'
+  | 'avgThenSumByRoute'
   | 'histogramPercentile'
   | 'histogramFractionBetween'
 
@@ -16,6 +21,7 @@ export const presetOptions: Array<{ title: string; name: PresetName }> = [
   { title: 'No grouping', name: 'noGrouping' },
   { title: 'Avg by service.name', name: 'avgByService' },
   { title: 'Avg by service.name + http.route', name: 'avgByServiceAndRoute' },
+  { title: 'Avg by service.name + http.route, then sum by http.route', name: 'avgThenSumByRoute' },
   { title: 'Percentile by service.name', name: 'histogramPercentile' },
   { title: 'Fraction between by service.name', name: 'histogramFractionBetween' }
 ]
@@ -28,6 +34,14 @@ export const groupByPresets: Record<PresetName, GroupByModel> = {
     keys: [{ id: 'preset-service', attributeKind: 'resource', attributeKey: 'service.name' }]
   },
   avgByServiceAndRoute: {
+    function: 'avg',
+    params: {},
+    keys: [
+      { id: 'preset-service', attributeKind: 'resource', attributeKey: 'service.name' },
+      { id: 'preset-route', attributeKind: 'data_point', attributeKey: 'http.route' }
+    ]
+  },
+  avgThenSumByRoute: {
     function: 'avg',
     params: {},
     keys: [
@@ -51,6 +65,22 @@ export const presetInputType: Record<PresetName, GroupByInputType> = {
   noGrouping: 'float',
   avgByService: 'float',
   avgByServiceAndRoute: 'float',
+  avgThenSumByRoute: 'float',
   histogramPercentile: 'histogram',
   histogramFractionBetween: 'histogram'
+}
+
+export const presetThenSteps: Record<PresetName, AggregationStep[]> = {
+  noGrouping: [],
+  avgByService: [],
+  avgByServiceAndRoute: [],
+  avgThenSumByRoute: [
+    {
+      id: 'preset-then-sum',
+      function: 'sum',
+      keys: [{ id: 'preset-then-route', attributeKind: 'data_point', attributeKey: 'http.route' }]
+    }
+  ],
+  histogramPercentile: [],
+  histogramFractionBetween: []
 }

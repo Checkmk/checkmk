@@ -79,12 +79,18 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import { Response } from 'cmk-ui-library/components/CmkSuggestions/suggestions'
 import type { Section } from 'cmk-ui-library/components/CmkSuggestions/types'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import FormGroupBy from '@/metric-backend/group-by/FormGroupBy.vue'
-import type { AttributeKind, GroupByModel } from '@/metric-backend/group-by/types'
+import GroupByThenSteps from '@/metric-backend/group-by/GroupByThenSteps.vue'
+import {
+  type AggregationStep,
+  type AttributeKind,
+  type GroupByModel,
+  thenStepsAllowed
+} from '@/metric-backend/group-by/types'
 
-import { groupByPresets, presetInputType } from './groupByPresets'
+import { groupByPresets, presetInputType, presetThenSteps } from './groupByPresets'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -159,12 +165,20 @@ function clonePreset(name: PresetName): GroupByModel {
   return structuredClone(groupByPresets[name])
 }
 
+function cloneThenSteps(name: PresetName): AggregationStep[] {
+  return structuredClone(presetThenSteps[name])
+}
+
 const model = ref<GroupByModel>(clonePreset(propState.value.preset))
+const thenSteps = ref<AggregationStep[]>(cloneThenSteps(propState.value.preset))
+
+const thenStepsShown = computed(() => thenStepsAllowed(propState.value.inputType, model.value))
 
 watch(
   () => propState.value.preset,
   (name) => {
     model.value = clonePreset(name)
+    thenSteps.value = cloneThenSteps(name)
     propState.value.inputType = presetInputType[name]
   }
 )
@@ -175,12 +189,27 @@ watch(
     <UclDetailPageHeader>FormGroupBy</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <FormGroupBy
-        v-model="model"
-        :input-type="propState.inputType"
-        :query-suggestions="querySuggestions"
-        :resolve-attribute-kind="resolveAttributeKind"
-      />
+      <table class="ucl-form-group-by__table">
+        <tbody>
+          <tr>
+            <td class="ucl-form-group-by__label">Group by</td>
+            <td>
+              <FormGroupBy
+                v-model="model"
+                :input-type="propState.inputType"
+                :query-suggestions="querySuggestions"
+                :resolve-attribute-kind="resolveAttributeKind"
+              />
+            </td>
+          </tr>
+          <GroupByThenSteps
+            v-if="thenStepsShown"
+            v-model="thenSteps"
+            :group-by-keys="model.keys"
+            label-class="ucl-form-group-by__label"
+          />
+        </tbody>
+      </table>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />
@@ -190,3 +219,17 @@ watch(
     <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>
+
+<style scoped>
+.ucl-form-group-by__table {
+  border-collapse: separate;
+  border-spacing: 5px;
+}
+
+/* Align the row label with the top of a multi-line pill area. */
+.ucl-form-group-by__label {
+  vertical-align: top;
+  padding-top: var(--dimension-3);
+  white-space: nowrap;
+}
+</style>

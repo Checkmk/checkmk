@@ -17,11 +17,16 @@ import type { AttributeKind, GroupKey } from './types'
 
 const { _t } = usei18n()
 
-const props = defineProps<{
-  querySuggestions: QuerySuggestionsFn
-  resolveAttributeKind?: ((key: string) => AttributeKind | null) | undefined
-  testid?: string | undefined
-}>()
+const props = withDefaults(
+  defineProps<{
+    querySuggestions: QuerySuggestionsFn
+    resolveAttributeKind?: ((key: string) => AttributeKind | null) | undefined
+    canAdd?: boolean
+    hideAttributeKind?: boolean
+    testid?: string | undefined
+  }>(),
+  { canAdd: true, hideAttributeKind: false }
+)
 
 const keys = defineModel<GroupKey[]>({ required: true })
 
@@ -115,6 +120,7 @@ defineExpose({ tryChangeFocus, focusKey })
       :ref="(element) => registerPill(key.id, element)"
       :condition="key"
       :query-suggestions="querySuggestions"
+      :hide-attribute-kind="hideAttributeKind"
       removable
       :editing="key.id === editingId"
       @remove="removeKey(key)"
@@ -124,6 +130,7 @@ defineExpose({ tryChangeFocus, focusKey })
       @update:attribute-key="(value) => updateAttributeKey(key, value)"
     />
     <CmkIconButton
+      v-if="canAdd"
       class="metric-backend-group-by-keys-area__add"
       name="add"
       size="large"

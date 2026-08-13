@@ -24,11 +24,13 @@ const props = withDefaults(
     querySuggestions: QuerySuggestionsFn
     removable?: boolean
     editing?: boolean
+    hideAttributeKind?: boolean
     ariaLabel?: string | undefined
   }>(),
   {
     removable: false,
     editing: false,
+    hideAttributeKind: false,
     ariaLabel: undefined
   }
 )
@@ -136,7 +138,7 @@ defineExpose({
   >
     <template #edit>
       <span
-        v-if="condition.attributeKey"
+        v-if="condition.attributeKey && !hideAttributeKind"
         data-gb-item
         class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--attribute-kind"
       >

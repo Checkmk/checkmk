@@ -23,7 +23,7 @@ function querySuggestions(query: string): Promise<Response> {
   return Promise.resolve(new Response(matches))
 }
 
-function renderPill(initial: Partial<GroupKey> = {}, editing = false) {
+function renderPill(initial: Partial<GroupKey> = {}, editing = false, hideAttributeKind = false) {
   const condition = ref<GroupKey>({
     id: '1',
     attributeKind: 'resource',
@@ -38,6 +38,7 @@ function renderPill(initial: Partial<GroupKey> = {}, editing = false) {
       return {
         condition,
         editing,
+        hideAttributeKind,
         removed,
         querySuggestions,
         onUpdateAttributeKind: (attributeKind: AttributeKind) => {
@@ -56,6 +57,7 @@ function renderPill(initial: Partial<GroupKey> = {}, editing = false) {
       <GroupByKeyPill
         :condition="condition"
         :editing="editing"
+        :hide-attribute-kind="hideAttributeKind"
         removable
         :query-suggestions="querySuggestions"
         @update:attribute-kind="onUpdateAttributeKind"
@@ -115,6 +117,12 @@ test('picking a key whose kind is unresolved reveals and auto-opens the attribut
   const kindCombobox = await screen.findByRole('combobox', { name: 'Attribute kind' })
   expect(kindCombobox).toBeVisible()
   expect(kindCombobox).toHaveAttribute('aria-expanded', 'true')
+})
+
+test('hide-attribute-kind drops the kind dropdown even when a key is set', () => {
+  renderPill({ attributeKey: 'service.name' }, true, true)
+  expect(screen.queryByRole('combobox', { name: 'Attribute kind' })).toBeNull()
+  expect(screen.getByRole('combobox', { name: 'Attribute key' })).toBeVisible()
 })
 
 test('the remove button emits remove', async () => {

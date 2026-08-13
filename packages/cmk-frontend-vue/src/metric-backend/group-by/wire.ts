@@ -8,7 +8,26 @@ import type { ConsolidationGroupByKey } from 'cmk-shared-typing/typescript/graph
 import { randomId } from 'cmk-ui-library/lib/randomId'
 
 import { DEFAULT_QUANTILE } from '../histogram-params'
-import { type GroupByFunction, type GroupByModel, type GroupKey, isKeyValid } from './types'
+import {
+  type AggregationStep,
+  type GroupByModel,
+  type GroupKey,
+  type ScalarFunction,
+  isKeyValid,
+  isScalarFunction
+} from './types'
+
+type AggregationStage = Aggregator['stages'][number]
+
+// Empty keys are kept as an "aggregate everything" stage (aggregate_by: []), not dropped.
+function scalarStage(fn: ScalarFunction, keys: readonly GroupKey[]): AggregationStage {
+  return {
+    aggregate_by: keys
+      .filter(isKeyValid)
+      .map(({ attributeKind, attributeKey }) => ({ kind: attributeKind, name: attributeKey })),
+    aggregation_fn: { type: 'scalar', name: fn }
+  }
+}
 
 /**
  * The "percentile by" clause a stored histogram_preserve_quantile describes, or a fresh
@@ -98,30 +117,9 @@ export function groupKeysToWire(keys: readonly GroupKey[]): ConsolidationGroupBy
     .map(({ attributeKind, attributeKey }) => ({ kind: attributeKind, key: attributeKey }))
 }
 
-const SCALAR_FUNCTIONS = ['avg', 'min', 'max', 'sum', 'count'] as const
-type ScalarFunction = (typeof SCALAR_FUNCTIONS)[number]
-
-function isScalarFunction(fn: GroupByFunction): fn is ScalarFunction {
-  return (SCALAR_FUNCTIONS as readonly string[]).includes(fn)
-}
-
-/**
- * The aggregator a float grouping serializes to, or undefined for a non-scalar function.
- *
- * A scalar function always aggregates; empty keys mean "aggregate over everything".
- */
+/** The aggregator a float grouping serializes to, or undefined for a non-scalar ("no grouping"). */
 export function floatGroupByToAggregator(groupBy: GroupByModel): Aggregator | undefined {
-  if (!isScalarFunction(groupBy.function)) {
-    return undefined
-  }
-  const aggregateBy = groupBy.keys
-    .filter(isKeyValid)
-    .map(({ attributeKind, attributeKey }) => ({ kind: attributeKind, name: attributeKey }))
-  return {
-    stages: [
-      { aggregate_by: aggregateBy, aggregation_fn: { type: 'scalar', name: groupBy.function } }
-    ]
-  }
+  return aggregatorFromGroupBy(groupBy, [])
 }
 
 /**
@@ -147,4 +145,46 @@ export function aggregatorToFloatGroupBy(
       attributeKey: name
     }))
   }
+}
+
+/** Aggregator for a group-by and its then steps; absent when the grouping is "no grouping". */
+export function aggregatorFromGroupBy(
+  groupBy: GroupByModel,
+  thenSteps: readonly AggregationStep[]
+): Aggregator | undefined {
+  if (!isScalarFunction(groupBy.function)) {
+    return undefined
+  }
+  return {
+    stages: [
+      scalarStage(groupBy.function, groupBy.keys),
+      ...thenSteps.map((step) => scalarStage(step.function, step.keys))
+    ]
+  }
+}
+
+/**
+ * The then steps a stored aggregator describes: its stages after the first, up to the first
+ * non-scalar stage. `newId` mints widget-local ids; injectable for deterministic tests.
+ */
+export function aggregatorToThenSteps(
+  aggregator: Aggregator | undefined,
+  newId: () => string = randomId
+): AggregationStep[] {
+  const steps: AggregationStep[] = []
+  for (const stage of (aggregator?.stages ?? []).slice(1)) {
+    if (stage.aggregation_fn.type !== 'scalar') {
+      break
+    }
+    steps.push({
+      id: newId(),
+      function: stage.aggregation_fn.name,
+      keys: stage.aggregate_by.map(({ kind, name }) => ({
+        id: newId(),
+        attributeKind: kind,
+        attributeKey: name
+      }))
+    })
+  }
+  return steps
 }

@@ -8,7 +8,13 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import { attributeKindLabel } from '../attribute-kind'
 import { DEFAULT_QUANTILE } from '../histogram-params'
-import type { GroupByFunction, GroupByModel, GroupKey } from './types'
+import {
+  type AggregationStep,
+  type GroupByFunction,
+  type GroupByModel,
+  type GroupKey,
+  isKeyValid
+} from './types'
 
 // Built at call time, not module load, because i18n is not yet set up then.
 function functionLabels(): Record<GroupByFunction, TranslatedString> {
@@ -68,4 +74,12 @@ export function clauseSummary(model: GroupByModel): string {
     return `${fn} ${_t('everything')}`
   }
   return `${fn} ${model.keys.map(keyPillLabel).join(', ')}`
+}
+
+/** Summary of a chained then step: 'then <function> everything' or 'then <function> [Kind] key, ...'. */
+export function thenStepSummary(step: AggregationStep): string {
+  const { _t } = usei18n()
+  const keys = step.keys.filter(isKeyValid)
+  const tail = keys.length === 0 ? _t('everything') : keys.map(keyPillLabel).join(', ')
+  return `${_t('then')} ${functionLabel(step.function)} ${tail}`
 }

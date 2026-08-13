@@ -9,9 +9,19 @@ import {
   defaultFunction,
   functionParamKind,
   functionsForInputType,
-  isKeyValid
+  isKeyValid,
+  thenStepsAllowed
 } from '@/metric-backend/group-by/types'
-import type { GroupByFunction, GroupByInputType, GroupKey } from '@/metric-backend/group-by/types'
+import type {
+  GroupByFunction,
+  GroupByInputType,
+  GroupByModel,
+  GroupKey
+} from '@/metric-backend/group-by/types'
+
+function model(overrides: Partial<GroupByModel> = {}): GroupByModel {
+  return { function: 'avg', params: {}, keys: [], ...overrides }
+}
 
 test.each<[GroupByInputType, readonly GroupByFunction[]]>([
   ['float', FLOAT_FUNCTIONS],
@@ -35,4 +45,18 @@ test.each<[string, GroupKey, boolean]>([
   ['neither', { id: '1', attributeKind: null, attributeKey: '' }, false]
 ])('a key is valid only with both a key and a kind (%s)', (_name, key, expected) => {
   expect(isKeyValid(key)).toBe(expected)
+})
+
+test.each<[string, GroupByInputType, GroupByModel, boolean]>([
+  [
+    'a scalar float grouping',
+    'float',
+    model({ function: 'avg', keys: [{ id: '1', attributeKind: 'resource', attributeKey: 'x' }] }),
+    true
+  ],
+  ['the same grouping over everything', 'float', model({ function: 'avg', keys: [] }), true],
+  ['"no grouping"', 'float', model({ function: 'none' }), false],
+  ['a histogram function', 'histogram', model({ function: 'percentile' }), false]
+])('then steps are allowed for %s: %s', (_scenario, inputType, groupBy, expected) => {
+  expect(thenStepsAllowed(inputType, groupBy)).toBe(expected)
 })

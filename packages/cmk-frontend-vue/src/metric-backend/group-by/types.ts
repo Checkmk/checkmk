@@ -15,9 +15,13 @@ export type GroupByInputType = ConsolidationOutputType
 export const FLOAT_FUNCTIONS = ['none', 'avg', 'min', 'max', 'sum', 'count'] as const
 export const HISTOGRAM_FUNCTIONS = ['percentile', 'fraction_below', 'fraction_between'] as const
 
+// The float functions minus "no grouping": the aggregations a then step may use.
+export const SCALAR_FUNCTIONS = ['avg', 'min', 'max', 'sum', 'count'] as const
+
 export type FloatFunction = (typeof FLOAT_FUNCTIONS)[number]
 export type HistogramFunction = (typeof HISTOGRAM_FUNCTIONS)[number]
 export type GroupByFunction = FloatFunction | HistogramFunction
+export type ScalarFunction = (typeof SCALAR_FUNCTIONS)[number]
 
 export type ParamKind = 'quantile' | 'fraction_below' | 'fraction_between' | 'none'
 
@@ -31,6 +35,22 @@ export interface GroupByModel {
   function: GroupByFunction
   params: HistogramParams
   keys: GroupKey[]
+}
+
+/** A chained group-by "then" step: a further aggregation of the preceding step's output. */
+export interface AggregationStep {
+  id: string
+  function: ScalarFunction
+  keys: GroupKey[]
+}
+
+export function isScalarFunction(fn: GroupByFunction): fn is ScalarFunction {
+  return (SCALAR_FUNCTIONS as readonly string[]).includes(fn)
+}
+
+/** Whether the grouping admits "then" steps: a scalar float grouping, with or without keys. */
+export function thenStepsAllowed(inputType: GroupByInputType, groupBy: GroupByModel): boolean {
+  return inputType === 'float' && isScalarFunction(groupBy.function)
 }
 
 /** The grouping functions offered for an input type, in catalog (dropdown) order. */

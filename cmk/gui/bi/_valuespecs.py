@@ -76,7 +76,7 @@ def get_bi_state_dropdown() -> DropdownChoice[int]:
     return DropdownChoice[int](
         title=_("Restrict severity to at worst"),
         help=_(
-            "Here a maximum severity of the node state can be set. This severity is not "
+            "Here, a maximum severity of the node state can be set. This severity is not "
             "exceeded, even if some of the children have more severe states."
         ),
         default_value=2,
@@ -403,12 +403,13 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                                 "When selecting <i>The found hosts' children</i>, the conditions "
                                 "(tags and host name) are used to match a host, but you will get one "
                                 "node created for each child of the matched host. The "
-                                "place holder <tt>$HOSTNAME$</tt> contains the name of the found child "
-                                "and the place holder <tt>$HOSTALIAS$</tt> contains it's alias.<br><br>"
+                                "placeholder <tt>$HOSTNAME$</tt> contains the name of the found "
+                                "child, and the placeholder <tt>$HOSTALIAS$</tt> contains its "
+                                "alias.<br><br>"
                                 "When selecting <i>The found hosts' parents</i>, the conditions "
                                 "(tags and host name) are used to match a host, but you will get one "
                                 "node created for each of the parent hosts of the matched host. "
-                                "The place holder <tt>$HOSTNAME$</tt> contains the name of the child "
+                                "The placeholder <tt>$HOSTNAME$</tt> contains the name of the child "
                                 "host and <tt>$2$</tt> the name of the parent host."
                             ),
                         ),
@@ -570,7 +571,7 @@ bi_config_action_registry = BIConfigActionRegistry()
 class BIConfigCallARuleAction(BICallARuleAction, ABCBIConfigAction):
     @classmethod
     def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
-        return (cls.kind(), _("Call a Rule"), cls.valuespec())
+        return (cls.kind(), _("Call a rule"), cls.valuespec())
 
     @classmethod
     def valuespec(cls) -> ValueSpec:
@@ -777,7 +778,7 @@ def get_aggregation_function_choices() -> Transform:
 
     return Transform(
         valuespec=CascadingDropdown(
-            title=_("Aggregation Function"),
+            title=_("Aggregation function"),
             help=_(
                 "The aggregation function decides how the status of a node "
                 "is constructed from the states of the child nodes."
@@ -838,7 +839,7 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
                 elements=[
                     Integer(
                         help=_(
-                            "Normally this value is <tt>1</tt>, which means that the best state "
+                            "Normally, this value is <tt>1</tt>, which means that the best state "
                             "of all child nodes is used as the overall state. If you set it for example "
                             "to <tt>2</tt>, then the node with the best state will not be regarded. "
                             "If the states of the child nodes were CRIT, WARN and OK, then the overall "
@@ -885,11 +886,11 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
                     Integer(
                         help=_(
                             "Normally this value is <tt>1</tt>, which means that the worst state "
-                            "of all child nodes is being used as the total state. If you set it for example "
+                            "of all child nodes is being used as the total state. If you set it, for example, "
                             "to <tt>3</tt>, then instead the node with the 3rd worst state is being regarded. "
-                            "Example: In the case of five nodes with the states CRIT CRIT WARN OK OK then "
+                            "Example: In the case of five nodes with the states CRIT, CRIT, WARN, OK, OK, the "
                             "resulting state would be WARN. Or you could say that the worst two nodes are "
-                            "first dropped and then the worst of the remaining nodes defines the state. "
+                            "dropped and then the worst of the remaining nodes defines the state. "
                         ),
                         title=_("Take n'th worst state for n = "),
                         default_value=1,

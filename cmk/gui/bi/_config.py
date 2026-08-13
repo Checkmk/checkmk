@@ -204,7 +204,7 @@ class MainModuleBI(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Configuration of Checkmk's Business Intelligence component")
+        return _("Configuration of the Business Intelligence component of Checkmk")
 
     @property
     def sort_index(self) -> int:
@@ -359,8 +359,8 @@ class ModeBIEditPack(ABCBIMode):
 
     def title(self) -> str:
         if self._bi_pack:
-            return _("Edit BI Pack %s") % self.bi_pack.title
-        return _("Add BI Pack")
+            return _("Edit BI pack %s") % self.bi_pack.title
+        return _("Add BI pack")
 
     def action(self, config: Config) -> ActionResult:
         check_csrf_token()
@@ -439,7 +439,7 @@ class ModeBIEditPack(ABCBIMode):
                 size=24,
             )
         return Dictionary(
-            title=_("BI Pack Properties"),
+            title=_("BI pack properties"),
             optional_keys=False,
             render="form",
             show_more_keys=["comment"],
@@ -605,7 +605,7 @@ class ModeBIPacks(ABCBIMode):
         return redirect(self.mode_url())
 
     def page(self, config: Config) -> None:
-        with table_element("bi_packs", title=_("BI Configuration Packs")) as table:
+        with table_element("bi_packs", title=_("BI configuration packs")) as table:
             for nr, pack in enumerate(sorted(self._bi_packs.packs.values(), key=lambda x: x.id)):
                 if not may_use_rules_in_pack(pack):
                     continue
@@ -1085,7 +1085,7 @@ class ModeBIRules(ABCBIMode):
                         bi_rule.aggregation_function.kind()
                     ]
 
-                    table.cell(_("Aggregation Function"), str(aggr_func_gui(aggr_func_data)))
+                    table.cell(_("Aggregation function"), str(aggr_func_gui(aggr_func_data)))
                     table.cell(_("Nodes"), str(bi_rule.num_nodes()), css=["number"])
                     table.cell(_("Used by"))
                     have_this = set()
@@ -1186,8 +1186,8 @@ class ModeBIEditRule(ABCBIMode):
 
     def title(self) -> str:
         if self._new:
-            return _("Add BI Rule")
-        return _("Edit Rule") + " " + escaping.escape_attribute(self._rule_id)
+            return _("Add BI rule")
+        return _("Edit rule") + " " + escaping.escape_attribute(self._rule_id)
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -1398,17 +1398,17 @@ class ModeBIEditRule(ABCBIMode):
                         title=_("Parameters"),
                         help=_(
                             "Parameters are used in order to make rules more flexible. They must "
-                            "be named like variables in programming languages. For example you can "
+                            "be named like variables in programming languages. For example, you can "
                             "make your rule have the two parameters <tt>HOST</tt> and <tt>INST</tt>. "
-                            "When calling the rule - from an aggergation or a higher level rule - "
+                            "When calling the rule - from an aggregation or a higher-level rule - "
                             "you can then specify two arbitrary values for these parameters. In the "
-                            "title of the rule as well as the host and service names, you can insert the "
+                            "title of the rule, as well as in the host and service names, you can insert the "
                             "actual value of the parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> "
                             "(enclosed in dollar signs)."
                             "<p>"
-                            "<b>Note</b>: a parameter with a colon (:) inside its value is a valid "
+                            "<b>Note</b>: A parameter with a colon (:) inside its value is a valid "
                             "parameter, e.g. <tt>LABEL_KEY:LABEL_VALUE</tt>. This is quite handy "
-                            "when you want to pass a parameter to a label filter since labels "
+                            "when you want to pass a parameter to a label filter, since labels "
                             "require a colon to be present to be considered valid."
                             "</p>"
                         ),
@@ -1535,8 +1535,8 @@ class ModeBIEditRule(ABCBIMode):
                             "disabled",
                         ],
                     ),
-                    (_("Child Node Generation"), ["nodes"]),
-                    (_("Aggregation Function"), ["aggregation_function"]),
+                    (_("Child node generation"), ["nodes"]),
+                    (_("Aggregation function"), ["aggregation_function"]),
                 ],
             ),
             to_valuespec=convert_to_vs,
@@ -1768,8 +1768,8 @@ class BIModeEditAggregation(ABCBIMode):
         if self._clone:
             return _("Clone aggregation %s") % request.get_str_input_mandatory("clone")
         if self._new:
-            return _("Add Aggregation")
-        return _("Edit Aggregation")
+            return _("Add aggregation")
+        return _("Edit aggregation")
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(
@@ -1885,7 +1885,7 @@ class BIModeEditAggregation(ABCBIMode):
             )
 
         return BIAggregationForm(
-            title=_("Aggregation Properties"),
+            title=_("Aggregation properties"),
             optional_keys=False,
             render="form",
             show_more_keys=["comment"],
@@ -2020,7 +2020,7 @@ class BIModeEditAggregation(ABCBIMode):
     @classmethod
     def _get_vs_aggregation_visualization(cls) -> Dictionary:
         return Dictionary(
-            title=_("BI Visualization"),
+            title=_("BI visualization"),
             elements=[
                 (
                     "layout_id",
@@ -2032,9 +2032,9 @@ class BIModeEditAggregation(ABCBIMode):
                                 _("Default (%s)")
                                 % active_config.default_bi_layout["node_style"][8:].title(),
                             ),
-                            ("builtin_force", _("Built-in: Force")),
-                            ("builtin_hierarchy", _("Built-in: Hierarchy")),
-                            ("builtin_radial", _("Built-in: Radial")),
+                            ("builtin_force", _("Built-in: force")),
+                            ("builtin_hierarchy", _("Built-in: hierarchy")),
+                            ("builtin_radial", _("Built-in: radial")),
                             # TODO: continue this list with user configurable layouts
                         ],
                         default_value="builtin_default",

@@ -57,11 +57,12 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
             "base_url": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("Base URL (OMD Site)"),
+                    title=Title("Base URL (OMD site)"),
                     help_text=Help(
-                        "The base URL to the monitoring instance. For example <tt>http://mycheckmk01/mysite</tt>. "
-                        "You can use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this URL to "
-                        "make them be replaced by the hosts values."
+                        "The base URL to the monitoring site. For example "
+                        "<tt>http://mycheckmk01/mysite</tt>. You can use macros like "
+                        "<tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this URL. Those "
+                        "will be replaced by the host's values then."
                     ),
                     field_size=FieldSize.LARGE,
                     custom_validate=(validators.LengthInRange(min_value=1),),
@@ -73,8 +74,9 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                     title=Title("Aggregation name"),
                     help_text=Help(
                         "The name of the aggregation to fetch. It will be added to the service name. You can "
-                        "use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to "
-                        "make them be replaced by the hosts values. The aggregation name is the title in the "
+                        "use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within "
+                        "this parameter. Those will be replaced by the hosts' values then. The "
+                        "aggregation name is the title in the "
                         "top-level-rule of your BI pack."
                     ),
                     custom_validate=(validators.LengthInRange(min_value=1),),
@@ -104,7 +106,7 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                                     "user": DictElement(
                                         required=True,
                                         parameter_form=String(
-                                            title=Title("Automation user name"),
+                                            title=Title("Automation username"),
                                             help_text=Help(
                                                 "The name of the automation account to use for fetching the BI aggregation via HTTP."
                                                 " Note: You may also set credentials of a standard user account, though it is disadvised."
@@ -143,7 +145,7 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                                 prefill=DefaultValue("header"),
                                 elements=[
                                     SingleChoiceElement(
-                                        name="header", title=Title("Authorization Header")
+                                        name="header", title=Title("Authorization header")
                                     ),
                                     SingleChoiceElement(name="basic", title=Title("HTTP Basic")),
                                     SingleChoiceElement(name="digest", title=Title("HTTP Digest")),
@@ -186,7 +188,7 @@ def _form_spec_active_checks_bi_aggr() -> Dictionary:
                                 elements=(
                                     SingleChoiceElement(
                                         name="normal",
-                                        title=Title("Use normal state, ignore acknowledgement"),
+                                        title=Title("Use normal state, ignore acknowledgment"),
                                     ),
                                     SingleChoiceElement(name="ok", title=Title("Force to be OK")),
                                     SingleChoiceElement(

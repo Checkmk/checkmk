@@ -1402,3 +1402,109 @@ fn test_read_legacy_config_merges_sorted_cfg_files() {
     // newline. Sorting keeps the output stable regardless of the read_dir order.
     assert_eq!(merged, "MAIN=1\n\nA=1\n\nB=2\n\nC=3\n");
 }
+
+/// Hidden files must be skipped: the legacy plugin sources `mk_oracle.d/*.cfg` with a
+/// shell glob, which never matches names starting with a dot (editor swap files,
+/// backups of package managers, ...).
+#[cfg(not(windows))]
+#[test]
+fn test_read_legacy_config_skips_hidden_cfg_files() {
+    let tmp = tempfile::tempdir().expect("create temp dir");
+    let input = tmp.path().join("mk_oracle.cfg");
+    std::fs::write(&input, "MAIN=1\n").unwrap();
+
+    let dir = tmp.path().join("mk_oracle.d");
+    std::fs::create_dir(&dir).unwrap();
+    std::fs::write(dir.join("a.cfg"), "A=1\n").unwrap();
+    std::fs::write(dir.join(".a.cfg.swp"), "SWAP=1\n").unwrap();
+    std::fs::write(dir.join(".hidden.cfg"), "HIDDEN=1\n").unwrap();
+
+    let merged = mk_oracle::config::migration::read_legacy_config(&input, Some(&dir)).unwrap();
+    assert_eq!(merged, "MAIN=1\n\nA=1\n");
+}
+
+/// A config file that cannot be executed must be reported with its path, not be
+/// turned into an empty variable set that fails later with a misleading
+/// "DBUSER not defined".
+#[cfg(not(windows))]
+#[test]
+fn test_migrate_reports_config_that_cannot_be_executed() {
+    let tmp = tempfile::tempdir().expect("create temp dir");
+    let main_cfg = tmp.path().join("mk_oracle.cfg");
+    std::fs::write(&main_cfg, "DBUSER='checkmk:secret::localhost:1521:'\n").unwrap();
+
+    let dir = tmp.path().join("mk_oracle.d");
+    std::fs::create_dir(&dir).unwrap();
+    let broken = dir.join("50_broken.cfg");
+    std::fs::write(&broken, "echo 'broken fragment' >&2\nexit 3\n").unwrap();
+
+    let err = mk_oracle::config::migration::migrate(&main_cfg, Some(&dir)).expect_err("must fail");
+    let message = format!("{err:#}");
+    assert!(
+        message.contains(&broken.display().to_string()),
+        "the offending config file must be named: {message}"
+    );
+    assert!(
+        message.contains("broken fragment"),
+        "the shell output must be passed on: {message}"
+    );
+    assert!(
+        !message.contains("DBUSER not defined"),
+        "the real cause must not be masked by a downstream error: {message}"
+    );
+}
+
+/// A custom SQL section defined only in an `mk_oracle.d/*.cfg` fragment must end
+/// up in the migrated config, like it does for the legacy plugin which sources
+/// the main config and the fragments as one effective configuration.
+#[cfg(not(windows))]
+#[test]
+fn test_migrate_custom_sql_from_config_dir() {
+    let tmp = tempfile::tempdir().expect("create temp dir");
+    let sql_dir = tmp.path().display();
+
+    let main_cfg = tmp.path().join("mk_oracle.cfg");
+    std::fs::write(
+        &main_cfg,
+        "DBUSER='checkmk:secret::localhost:1521:'\nSYNC_SECTIONS=\"instance\"\n",
+    )
+    .unwrap();
+
+    let config_dir = tmp.path().join("mk_oracle.d");
+    std::fs::create_dir(&config_dir).unwrap();
+    std::fs::write(
+        config_dir.join("50_foo.cfg"),
+        format!(
+            r#"SQLS_SECTIONS=foo_views_chk1
+SQLS_DIR={sql_dir}
+SQLS_MAX_CACHE_AGE=3600
+
+foo_views_chk1 () {{
+    SQLS_SIDS="PRODPDB1"
+    SQLS_SQL=foo_view_check1.sql
+    SQLS_ITEM_NAME="foo_views_kim1"
+}}
+"#
+        ),
+    )
+    .unwrap();
+    std::fs::write(
+        tmp.path().join("foo_view_check1.sql"),
+        "select 'foo' from dual\n",
+    )
+    .unwrap();
+
+    let yml = mk_oracle::config::migration::migrate(&main_cfg, Some(&config_dir))
+        .expect("migration must succeed");
+
+    assert!(
+        yml.contains("    custom_metrics_cache_age: 3600\n"),
+        "SQLS_MAX_CACHE_AGE from mk_oracle.d not migrated:\n{yml}"
+    );
+    assert!(
+        yml.contains(&format!(
+            "      - sid: PRODPDB1\n        custom_metrics:\n          - foo_views_kim1:\n              path: {sql_dir}/foo_view_check1.sql\n"
+        )),
+        "custom SQL section from mk_oracle.d not migrated:\n{yml}"
+    );
+}

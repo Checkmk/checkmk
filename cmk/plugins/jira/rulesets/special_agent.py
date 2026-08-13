@@ -215,7 +215,7 @@ def _parameter_form() -> Dictionary:
                                 parameter_form=CascadingSingleChoice(
                                     title=Title("Type of result"),
                                     help_text=Help(
-                                        "Here you can define, what search result "
+                                        "Here, you can define which search result "
                                         "should be used. You can show the number of search "
                                         "results (count) or the summed up or average values "
                                         "of a given numeric field."
@@ -251,7 +251,7 @@ def _parameter_form() -> Dictionary:
                                                                 "Limit number of processed search results"
                                                             ),
                                                             help_text=Help(
-                                                                "Here you can define, how many search results "
+                                                                "Here, you can define how many search results "
                                                                 "should be processed. The max. internal limit "
                                                                 "of Jira is 1000 results. If you want to "
                                                                 "ignore any limit, set -1 here. Default is 50."

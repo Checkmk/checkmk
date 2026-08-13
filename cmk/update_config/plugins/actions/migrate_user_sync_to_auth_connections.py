@@ -5,27 +5,21 @@
 """Migrate the removed ``user_sync`` site field to ``authentication_connections``
 and ``user_attribute_sync_connections``.
 
-The split between authentication and attribute sync did not exist before the
-upgrade, so both new fields mirror the legacy ``user_sync`` value:
+``user_sync`` only governed the background sync; login worked against every
+connection available on the site. The attribute sync field takes over the
+sync half, the authentication field stays permissive so that logins — and the
+users a login creates on the site, which only survive config pushes while
+listed here — keep working:
 
-* ``"all"`` becomes the dynamic "use all connections" form on both fields.
-* ``("list", [...])`` becomes the equivalent explicit lists.
-* ``None`` (the legacy "Disable automatic user synchronization" choice) and
-  ``"master"`` on a remote become the explicit ``"disabled"`` value on both
-  fields.
+    legacy ``user_sync``   authentication         attribute sync
+    ``"all"``              ``("all", [types])``   ``"all"``
+    ``"master"``           ``("all", [types])``   central ``"all"``, remote ``"disabled"``
+    non-empty ``list``     same list              same list
+    ``None`` / empty list  ``("all", [types])``   ``"disabled"``
+    key missing            ``("all", [types])``   central ``"all"``, remote ``"disabled"``
 
-Before the upgrade SAML connections could only be configured for (and
-authenticate on) the central site. Remote sites therefore never enable the
-"All SAML connections" type: they get ``("all", ["ldap"])`` where the central
-site gets ``("all", ["ldap", "saml"])``.
-
-A site spec without the ``user_sync`` key (hand-edited; the legacy valuespec
-always wrote the key) gets both values written explicitly, since an absent
-key now falls back to the defaults ("all" — which would silently enroll SAML
-connections on remotes and start the attribute sync there). Authentication
-is treated like the "use all" case, preserving that LDAP login always worked;
-the attribute sync follows the legacy ``userdb_automatic_sync`` default
-(``"master"``): ``"all"`` on the central site, ``"disabled"`` on remotes.
+``[types]`` is ``["ldap", "saml"]`` on the central site and ``["ldap"]`` on
+remotes, where SAML never authenticated before the upgrade.
 
 Only fields not yet set are filled in, so manually migrated sites keep their
 configuration.
@@ -116,13 +110,10 @@ def _derive_new_values(
     is_central_site: bool,
     saml_supported: bool,
 ) -> tuple[AuthenticationConnectionsValue | None, AttrSyncConnectionsValue | None]:
-    """Map a ``user_sync`` value to the new fields.
+    """Map a ``user_sync`` value to the new fields per the module docstring.
 
-    Both new fields mirror the legacy value (the authentication / attribute
-    sync split did not exist before the upgrade). ``None`` for a field means
-    "leave the key absent on disk" — callers must skip the assignment. See
-    the module docstring for why remotes never enable the SAML type and how
-    a missing ``user_sync`` key is handled.
+    ``None`` for a field means "leave the key absent on disk" — callers must
+    skip the assignment.
     """
     all_value: AuthenticationConnectionsValue = (
         ("all", ["ldap", "saml"]) if is_central_site and saml_supported else ("all", ["ldap"])
@@ -130,24 +121,24 @@ def _derive_new_values(
     if user_sync == "all":
         return all_value, "all"
     if user_sync == "master":
-        # Legacy "sync only on the central site": the central behaved like
-        # "all", a remote like "disabled".
-        return (all_value, "all") if is_central_site else ("disabled", "disabled")
+        # Legacy "sync only on the central site".
+        return all_value, "all" if is_central_site else "disabled"
     if isinstance(user_sync, tuple) and user_sync[0] == "list":
         if not (conn_ids := list(user_sync[1])):
-            # An empty explicit list is semantically "disabled", and the site editor
-            # now rejects an empty list.
-            return "disabled", "disabled"
+            # An empty explicit list is semantically "no sync", and the site
+            # editor now rejects an empty list.
+            return all_value, "disabled"
         auth_entries: list[AuthenticationConnectionEntry] = [
             ("ldap", conn_id) for conn_id in conn_ids
         ]
         return auth_entries, conn_ids
     if user_sync is None:
         # Legacy "Disable automatic user synchronization".
-        return "disabled", "disabled"
-    # Missing key (or unrecognized value): write both sides explicitly. The
-    # attribute sync follows the legacy `userdb_automatic_sync` default
-    # ("master"): only the central site syncs.
+        return all_value, "disabled"
+    # Missing key (or unrecognized value): write both sides explicitly since
+    # an absent key now falls back to the "all" defaults. The attribute sync
+    # follows the legacy `userdb_automatic_sync` default ("master"): only the
+    # central site syncs.
     return all_value, "all" if is_central_site else "disabled"
 
 

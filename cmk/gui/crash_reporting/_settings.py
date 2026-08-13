@@ -16,7 +16,7 @@ ConfigVariableCrashReportURL = ConfigVariable(
     ident="crash_report_url",
     valuespec=lambda context: HTTPUrl(
         title=_("Crash report HTTP URL"),
-        help=_("By default crash reports will be sent to our crash reporting server."),
+        help=_("By default, crash reports will be sent to our crash reporting server."),
         show_as_link=False,
     ),
 )
@@ -28,7 +28,7 @@ ConfigVariableCrashReportTarget = ConfigVariable(
     valuespec=lambda context: TextInput(
         title=_("Crash report fallback mail address"),
         help=_(
-            "By default crash reports will be sent to our crash reporting server. In case "
+            "By default, crash reports will be sent to our crash reporting server. In case "
             "this fails for some reason, the crash reports can be sent by mail to the "
             "address configured here."
         ),

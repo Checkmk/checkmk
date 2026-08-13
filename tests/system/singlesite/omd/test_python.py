@@ -140,25 +140,19 @@ def test_03_pip_interpreter_version(site: Site, pip_cmd: PipCommand) -> None:
 
 
 def test_04_pip_user_can_install_non_wheel_packages(site: Site) -> None:
-    # ibm_db is compiled from source, so choosing this also ensures that the Python headers can be
-    # found by pip. Note that ibm_db publishes prebuilt manylinux wheels which pip prefers over the
-    # sdist, so --no-binary is what actually makes this a source build.
-    package_name = "ibm_db"
-    # Do not downgrade: releases before 3.3.0 miss an `#include <wctype.h>` and do not compile with
-    # current gcc, and releases before 3.2.5 still use Python APIs that were removed in 3.12.
-    package_spec = f"{package_name}==3.3.0"
-    # ibm_db downloads its native CLI driver while building, by default the latest one. Pin it, as
-    # newer drivers are built against GLIBC_2.32 and cannot be loaded on our older distros, whereas
-    # v11.5.9 needs at most GLIBC_2.14.
-    clidriver_version = "v11.5.9"
+    # regex has a mandatory C extension without any external library dependencies, so building it
+    # from source verifies that pip finds the Python headers and the compiler toolchain works.
+    # It must not be a package shipped with the site (like psutil), otherwise pip considers the
+    # requirement already satisfied. Note that regex publishes prebuilt manylinux wheels which pip
+    # prefers over the sdist, so --no-binary is what actually makes this a source build.
+    package_name = "regex"
+    package_spec = f"{package_name}==2026.5.9"
 
     # We're testing this only for one supported pip command as building from source just takes too long
     pip_cmd = PipCommand(["pip3"], False)
 
     assert_install_package(
-        ["env", f"CLIDRIVER_VERSION={clidriver_version}"]
-        + pip_cmd.command
-        + ["install", "--no-binary", package_name, package_spec],
+        pip_cmd.command + ["install", "--no-binary", package_name, package_spec],
         package_name,
         site,
     )

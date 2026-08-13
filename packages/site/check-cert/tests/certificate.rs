@@ -15,6 +15,10 @@ fn as_der(crt: &[u8]) -> Vec<u8> {
 
 #[test]
 fn test_signature_algorithm_sha256_with_rsa_encryption() {
+    // The certificate must be valid at run time. This test asserts an exit code
+    // of 0, and `certificate::check` always compares the validity period against
+    // the current time. See assets/README.md for the commands that regenerate
+    // the file.
     static DER: &[u8] = include_bytes!("../assets/cert.der");
 
     let coll = certificate::check(
@@ -26,7 +30,8 @@ fn test_signature_algorithm_sha256_with_rsa_encryption() {
     assert_eq!(check::exit_code(&coll), 0);
     assert_that!(coll
         .to_string()
-        .contains("OK\nCertificate signature algorithm: sha256WithRSAEncryption"));
+        .contains("Certificate signature algorithm: sha256WithRSAEncryption"))
+    .is_true();
 }
 
 #[test]
@@ -43,7 +48,8 @@ fn test_signature_algorithm_ee_pss_sha256() {
     assert_eq!(check::exit_code(&coll), 0);
     assert_that!(coll
         .to_string()
-        .contains("Certificate signature algorithm: rsassa-pss"));
+        .contains("Certificate signature algorithm: rsassa-pss"))
+    .is_true();
 }
 
 #[test]
@@ -64,7 +70,8 @@ fn test_signature_algorithm_ee_pss_sha256_wrong_alg() {
         (
             "Certificate signature algorithm: rsassa-pss (1.2.840.113549.1.1.10) but expected 1.2.3.4.5.6 (!)"
         )
-    );
+    )
+    .is_true();
 }
 
 #[test]
@@ -81,7 +88,8 @@ fn test_signature_algorithm_ee_pss_sha1() {
     assert_eq!(check::exit_code(&coll), 0);
     assert_that!(coll
         .to_string()
-        .contains("Certificate signature algorithm: rsassa-pss"));
+        .contains("Certificate signature algorithm: rsassa-pss"))
+    .is_true();
 }
 
 #[test]
@@ -101,5 +109,6 @@ fn test_signature_algorithm_ee_pss_sha1_wrong_alg() {
         coll.to_string().contains(
             "Certificate signature algorithm: rsassa-pss (1.2.840.113549.1.1.10) but expected 1.2.840.113549.1.1.11 (!)"
         )
-    );
+    )
+    .is_true();
 }

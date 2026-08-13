@@ -7,7 +7,9 @@ use check_cert::checker::verification::{self, Config};
 
 #[test]
 fn test_verification_with_canned_certs() {
-    // Taken from `rust-openssl`
+    // Both certificates must be valid at run time. This test asserts an exit
+    // code of 0, and the verification rejects an expired certificate. See
+    // assets/README.md for the commands that regenerate the pair.
     let ca = include_bytes!("../assets/root-ca.der");
     let cert = include_bytes!("../assets/cert.der");
 

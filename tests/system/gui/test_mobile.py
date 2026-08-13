@@ -45,7 +45,7 @@ def browser_context_args(
 def test_login(dashboard_page_mobile: DashboardMobile) -> None:
     """Login into the Chechmk mobile page and assert the presence of the header."""
     expect(
-        dashboard_page_mobile.locator(_header_selector + " >> text=Checkmk Mobile")
+        dashboard_page_mobile.locator(_header_selector + " >> text=Checkmk mobile")
     ).to_be_visible()
 
 

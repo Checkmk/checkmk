@@ -29,7 +29,7 @@ class ElementTopList(CmkPage):
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.main_area.check_page_title(self.page_title)
-        expect(self._section("Context / Search Filters")).to_be_visible()
+        expect(self._section("Context / search filters")).to_be_visible()
         expect(self._section("Properties")).to_be_visible()
 
     @override

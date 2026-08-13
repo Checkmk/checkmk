@@ -1380,7 +1380,7 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
 
     @classmethod
     def title(cls) -> str:
-        return _("AWS S3 Bucket")
+        return _("AWS S3 bucket")
 
     @staticmethod
     def _instantiate_target(params: RemoteTargetParams[S3Params]) -> S3Target:
@@ -1921,7 +1921,7 @@ class PageEditBackupTarget:
                         title=Title("Title"),
                         custom_validate=[
                             validators.LengthInRange(
-                                min_value=1, error_msg=Message("Text field can not be empty")
+                                min_value=1, error_msg=Message("Text field cannot be empty")
                             )
                         ],
                     ),

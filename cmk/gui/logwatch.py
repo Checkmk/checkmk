@@ -996,18 +996,19 @@ def _valuespec_logwatch_rules() -> Dictionary:
                     ),
                     title=_("Reclassify state matching regex pattern"),
                     help=_(
-                        "<p>You can define one or several patterns (regular expressions) in each logfile pattern rule. "
-                        "These patterns are applied to the selected logfiles to reclassify the "
+                        "<p>You can define one or several patterns (regular expressions) in each "
+                        "log file pattern rule. These patterns are applied to the selected log "
+                        "files to reclassify the "
                         "matching log messages. The first pattern which matches a line will "
                         "be used for reclassifying a message. You can use the "
-                        '<a href="wato.py?mode=pattern_editor">Logfile pattern analyzer</a> '
+                        '<a href="wato.py?mode=pattern_editor">Log file pattern analyzer</a> '
                         "to test the rules you defined here.</p>"
                         "<p>Note that to match a special regex character in your patterns, you need to use a "
                         "backslash to escape its special meaning. This is especially relevant for Windows file paths. "
                         'For example, to match the Windows path "C:\\Users\\amdin\\Desktop", enter '
-                        '"C:\\\\Users\\\\admin\\\\Desktop".</p>'
-                        '<p>Select "Ignore" as state to get the matching logs deleted. Other states will keep the '
-                        "log entries but reclassify the state of them.</p>"
+                        '"C:\\\\Users\\\\admin\\\\Desktop".</p><p>Select '
+                        '"Ignore" as state to get the matching logs deleted. Other states will '
+                        "keep the log entries but reclassify their states.</p>"
                     ),
                     add_label=_("Add pattern"),
                 ),
@@ -1025,13 +1026,13 @@ def _valuespec_logwatch_rules() -> Dictionary:
                         (
                             "c_to",
                             DropdownChoice(
-                                title=_("Change CRITICAL State to"),
+                                title=_("Change CRITICAL state to"),
                                 choices=[
                                     ("C", _("CRITICAL")),
                                     ("W", _("WARNING")),
                                     ("O", _("OK")),
                                     ("I", _("IGNORE")),
-                                    (".", _("Context Info")),
+                                    (".", _("Context info")),
                                 ],
                                 default_value="C",
                             ),
@@ -1045,7 +1046,7 @@ def _valuespec_logwatch_rules() -> Dictionary:
                                     ("W", _("WARNING")),
                                     ("O", _("OK")),
                                     ("I", _("IGNORE")),
-                                    (".", _("Context Info")),
+                                    (".", _("Context info")),
                                 ],
                                 default_value="W",
                             ),
@@ -1053,13 +1054,13 @@ def _valuespec_logwatch_rules() -> Dictionary:
                         (
                             "o_to",
                             DropdownChoice(
-                                title=_("Change OK State to"),
+                                title=_("Change OK state to"),
                                 choices=[
                                     ("C", _("CRITICAL")),
                                     ("W", _("WARNING")),
                                     ("O", _("OK")),
                                     ("I", _("IGNORE")),
-                                    (".", _("Context Info")),
+                                    (".", _("Context info")),
                                 ],
                                 default_value="O",
                             ),
@@ -1067,13 +1068,13 @@ def _valuespec_logwatch_rules() -> Dictionary:
                         (
                             "._to",
                             DropdownChoice(
-                                title=_("Change Context Info to"),
+                                title=_("Change context info to"),
                                 choices=[
                                     ("C", _("CRITICAL")),
                                     ("W", _("WARNING")),
                                     ("O", _("OK")),
                                     ("I", _("IGNORE")),
-                                    (".", _("Context Info")),
+                                    (".", _("Context info")),
                                 ],
                                 default_value=".",
                             ),
@@ -1121,7 +1122,7 @@ def _valuespec_logwatch_groups() -> Dictionary:
                                 orientation="vertical",
                                 elements=[
                                     TextInput(title=_("Include pattern")),
-                                    TextInput(title=_("Exclude Pattern")),
+                                    TextInput(title=_("Exclude pattern")),
                                 ],
                             ),
                         ],

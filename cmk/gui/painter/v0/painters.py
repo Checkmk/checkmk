@@ -2686,7 +2686,7 @@ class PainterHost(Painter):
                     ],
                     title=_("Coloring"),
                     help=_(
-                        "Here you can configure the background color for specific states. "
+                        "Here, you can configure the background color for specific states. "
                         "The coloring for host in downtime overrules all other coloring."
                     ),
                 ),
@@ -3162,7 +3162,7 @@ class PainterHostServices(Painter):
                     default_value=[0, 1, 2, 3, "p"],
                     title=_("Only show services in this states"),
                     help=_(
-                        "Here you can configure which services are displayed depending on "
+                        "Here, you can configure which services are displayed depending on "
                         "their state. This is a filter at display level not query level."
                     ),
                 ),
@@ -4512,7 +4512,7 @@ class PainterDowntimeDuration(Painter):
         return _("Downtime duration (if flexible)")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Flex. Duration")
+        return _("Flex. duration")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -4698,7 +4698,7 @@ class PainterLogWhat(Painter):
         return _("Log: host or service")
 
     def short_title(self, cell: Cell) -> str:
-        return _("Host/Service")
+        return _("Host/service")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -5119,7 +5119,7 @@ class PainterAlertStatsOk(Painter):
         return "alert_stats_ok"
 
     def title(self, cell: Cell) -> str:
-        return _("Alert statistics: Number of recoveries")
+        return _("Alert statistics: number of recoveries")
 
     def short_title(self, cell: Cell) -> str:
         return _("OK")
@@ -5141,7 +5141,7 @@ class PainterAlertStatsWarn(Painter):
         return "alert_stats_warn"
 
     def title(self, cell: Cell) -> str:
-        return _("Alert statistics: Number of warnings")
+        return _("Alert statistics: number of warnings")
 
     def short_title(self, cell: Cell) -> str:
         return _("WARN")
@@ -5163,7 +5163,7 @@ class PainterAlertStatsCrit(Painter):
         return "alert_stats_crit"
 
     def title(self, cell: Cell) -> str:
-        return _("Alert statistics: Number of critical alerts")
+        return _("Alert statistics: number of critical alerts")
 
     def short_title(self, cell: Cell) -> str:
         return _("CRIT")
@@ -5185,7 +5185,7 @@ class PainterAlertStatsUnknown(Painter):
         return "alert_stats_unknown"
 
     def title(self, cell: Cell) -> str:
-        return _("Alert statistics: Number of unknown alerts")
+        return _("Alert statistics: number of unknown alerts")
 
     def short_title(self, cell: Cell) -> str:
         return _("UNKN")
@@ -5207,7 +5207,7 @@ class PainterAlertStatsProblem(Painter):
         return "alert_stats_problem"
 
     def title(self, cell: Cell) -> str:
-        return _("Alert statistics: Number of problem alerts")
+        return _("Alert statistics: number of problem alerts")
 
     def short_title(self, cell: Cell) -> str:
         return _("Problems")

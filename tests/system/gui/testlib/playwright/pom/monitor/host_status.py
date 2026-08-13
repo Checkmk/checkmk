@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class HostStatus(CmkPage):
     """Represents page Monitor > Overview > All hosts > Services of <host name> >
-    Status of host <host name>.
+    State of host <host name>.
     """
 
     dropdown_buttons: list[str] = [
@@ -45,12 +45,12 @@ class HostStatus(CmkPage):
         navigate_to_page: bool = True,
     ) -> None:
         self.host_details = host
-        self.page_title = f"Status of host {host.name}"
+        self.page_title = f"State of host {host.name}"
         super().__init__(page, navigate_to_page)
 
     @override
     def navigate(self) -> None:
-        """Navigate to 'Status of host <host name>' page.
+        """Navigate to 'State of host <host name>' page.
         This method assumes that the host is already created.
         """
         logger.info("Navigate to Monitor >> Overview >> All hosts")
@@ -67,7 +67,7 @@ class HostStatus(CmkPage):
         self.page.wait_for_url(url=re.compile(services_of_host_url_pattern), wait_until="load")
 
         logger.info("Navigate to '%s'", self.page_title)
-        self.main_area.click_item_in_dropdown_list(dropdown_button="Host", item="Status of host")
+        self.main_area.click_item_in_dropdown_list(dropdown_button="Host", item="State of host")
         status_of_host_url_pattern = (
             quote_plus(f"host={self.host_details.name}") + ".*" + quote_plus("view_name=hoststatus")
         )

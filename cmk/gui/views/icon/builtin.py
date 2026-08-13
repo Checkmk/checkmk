@@ -1230,7 +1230,7 @@ def _render_crashed_check_icon(
         return (
             StaticIcon(IconNames.crash),
             _(
-                "This check crashed. Please click here for more information. You also can submit "
+                "This check crashed. Please click here for more information. You can also submit "
                 "a crash report to the development team if you like."
             ),
             crashurl,

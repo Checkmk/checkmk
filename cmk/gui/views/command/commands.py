@@ -421,7 +421,7 @@ def command_toggle_active_checks_action(
 
 CommandToggleActiveChecks = Command(
     ident="toggle_active_checks",
-    title=_l("Enable/Disable active checks"),
+    title=_l("Enable/disable active checks"),
     confirm_title=lambda: (
         _l("Enable active checks") if request.var("_enable_checks") else _l("Disable active checks")
     ),
@@ -494,7 +494,7 @@ def command_toggle_passive_checks_action(
 
 CommandTogglePassiveChecks = Command(
     ident="toggle_passive_checks",
-    title=_l("Enable/Disable passive checks"),
+    title=_l("Enable/disable passive checks"),
     confirm_title=lambda: (
         _l("Enable passive checks")
         if request.var("_enable_passive_checks")
@@ -1539,7 +1539,7 @@ class CommandScheduleDowntimesForm:
         html.td(_("Duration"))
         html.open_td(class_="down_duration")
         html.write_html(self._get_duration_options())
-        html.a(_("(Edit presets)"), href=self._get_presets_url(), class_="down_presets")
+        html.a(_("(edit presets)"), href=self._get_presets_url(), class_="down_presets")
         html.close_td()
         html.close_tr()
 
@@ -1852,14 +1852,14 @@ class CommandScheduleDowntimesForm:
             )
 
         return additions + HTMLWriter.render_p(
-            _("<u>Info</u>: Downtime also applies to all services of the %s.")
+            _("<u>Info</u>: downtime also applies to all services of the %s.")
             % ungettext(
                 "host",
                 "hosts",
                 len(action_rows),
             )
             if cmdtag == "HOST"
-            else _("<u>Info</u>: Downtime does not apply to host.")
+            else _("<u>Info</u>: downtime does not apply to host.")
         )
 
     def _flexible_option(self) -> int:

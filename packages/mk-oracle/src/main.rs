@@ -41,7 +41,9 @@ async fn main() {
                 }
             },
             Err(e) => {
-                eprintln!("Migration failed: {e}");
+                // `{e:#}` prints the context chain, so the offending config file
+                // and the underlying cause are both visible.
+                eprintln!("Migration failed: {e:#}");
                 1
             }
         };

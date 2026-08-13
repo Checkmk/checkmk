@@ -544,6 +544,34 @@ fn test_migrate_config_yaml_structure() {
     // assert!(config.unwrap().ora_sql().is_some());
 }
 
+/// A fragment the shell cannot source (here: a syntax error) does not fail the
+/// config execution, it only makes the shell complain on stderr. That complaint
+/// names the file and must reach the user instead of being swallowed, which would
+/// leave a config silently migrated from an incomplete set of variables.
+#[cfg(not(windows))]
+#[test]
+fn test_migrate_config_warns_about_unsourceable_fragment() {
+    let tmp = tempfile::tempdir().unwrap();
+    let main_cfg = tmp.path().join("mk_oracle.cfg");
+    fs::write(&main_cfg, "DBUSER='checkmk:secret::localhost:1521:'\n").unwrap();
+
+    let config_dir = tmp.path().join("mk_oracle.d");
+    fs::create_dir(&config_dir).unwrap();
+    let broken = config_dir.join("50_broken.cfg");
+    fs::write(&broken, "SYNC_SECTIONS=(\n").unwrap();
+
+    let output = run_bin()
+        .args(["-M", main_cfg.to_str().unwrap()])
+        .args(["--migrate-subdir", config_dir.to_str().unwrap()])
+        .ok()
+        .unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        stderr.contains(&broken.display().to_string()),
+        "the unsourceable fragment must be named on stderr, got: {stderr}"
+    );
+}
+
 #[test]
 fn test_migrate_config_to_file() {
     let cfg = legacy_cfg_path();
@@ -568,10 +596,10 @@ fn test_migrate_config_to_file() {
 
 #[test]
 fn test_execute_config_reference() {
-    use std::path::Path;
+    use std::path::PathBuf;
 
     let cfg = legacy_cfg_path();
-    let vars = mk_oracle::config::migration::convert_config(Path::new(&cfg)).unwrap();
+    let vars = mk_oracle::config::migration::convert_configs(&[PathBuf::from(&cfg)]).unwrap();
     let lines: Vec<String> = vars.iter().map(|(n, v)| format!("{n} {v}")).collect();
 
     let value_of = |var: &str| -> Option<&str> {
@@ -621,10 +649,10 @@ fn test_execute_config_reference() {
 #[cfg(not(windows))]
 #[test]
 fn test_execute_config_custom_sqls() {
-    use std::path::Path;
+    use std::path::PathBuf;
 
     let cfg = legacy_cfg_path();
-    let vars = mk_oracle::config::migration::convert_config(Path::new(&cfg)).unwrap();
+    let vars = mk_oracle::config::migration::convert_configs(&[PathBuf::from(&cfg)]).unwrap();
 
     // variables set inside the section function are extracted per section
     assert_eq!(

@@ -15,37 +15,91 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::config::defines::values;
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use std::collections::{HashMap, HashSet};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-/// Read the legacy config from `input`, appending the content of every `*.cfg` file found in
-/// `mk_oracle_d` (when given). Files are merged in sorted order so the result is deterministic.
-pub fn read_legacy_config(input: &Path, mk_oracle_d: Option<&Path>) -> Result<String> {
-    let mut legacy = std::fs::read_to_string(input)?;
+/// True for entries the legacy plugin sources: `*.cfg` files that are not hidden.
+/// The legacy plugin globs `mk_oracle.d/*.cfg`, and a shell glob never matches
+/// names starting with a dot, so hidden files are skipped here as well.
+fn is_legacy_config_fragment(path: &Path) -> bool {
+    path.extension().is_some_and(|ext| ext == "cfg")
+        && path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| !name.starts_with('.'))
+}
+
+/// The legacy config files in the order the legacy plugin sources them: `input`
+/// first, then every `*.cfg` file of `mk_oracle_d` (when given) sorted by name,
+/// so the result is deterministic regardless of the `read_dir` order.
+fn config_files(input: &Path, mk_oracle_d: Option<&Path>) -> Result<Vec<PathBuf>> {
+    let mut files = vec![input.to_path_buf()];
     if let Some(dir) = mk_oracle_d {
         let mut cfg_files = Vec::new();
-        for entry in std::fs::read_dir(dir)? {
-            let path = entry?.path();
-            if path.extension().is_some_and(|ext| ext == "cfg") {
+        let entries = std::fs::read_dir(dir)
+            .with_context(|| format!("Cannot read the config directory {}", dir.display()))?;
+        for entry in entries {
+            let path = entry
+                .with_context(|| format!("Cannot list the config directory {}", dir.display()))?
+                .path();
+            if is_legacy_config_fragment(&path) {
                 cfg_files.push(path);
             }
         }
         cfg_files.sort();
-        for path in cfg_files {
+        files.extend(cfg_files);
+    }
+    Ok(files)
+}
+
+/// The config files as a comma separated list, to name them in error messages.
+fn format_paths(files: &[PathBuf]) -> String {
+    files
+        .iter()
+        .map(|p| p.display().to_string())
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// Concatenate the content of `files`, separated by a newline so that a file not
+/// ending with one cannot glue its last line to the next file's first line.
+fn merge_config_files(files: &[PathBuf]) -> Result<String> {
+    let mut legacy = String::new();
+    for (index, path) in files.iter().enumerate() {
+        if index > 0 {
             legacy.push('\n');
-            legacy.push_str(&std::fs::read_to_string(&path)?);
         }
+        legacy.push_str(
+            &std::fs::read_to_string(path)
+                .with_context(|| format!("Cannot read the legacy config {}", path.display()))?,
+        );
     }
     Ok(legacy)
+}
+
+/// Read the legacy config from `input`, appending the content of every `*.cfg` file found in
+/// `mk_oracle_d` (when given). Files are merged in sorted order so the result is deterministic.
+pub fn read_legacy_config(input: &Path, mk_oracle_d: Option<&Path>) -> Result<String> {
+    merge_config_files(&config_files(input, mk_oracle_d)?)
 }
 
 /// Full migration pipeline: read legacy config, execute it, convert to new format.
 ///
 /// Returns the formatted output string. Caller decides whether to write to file or stdout.
 pub fn migrate(input: &Path, mk_oracle_d: Option<&Path>) -> Result<String> {
-    let legacy = read_legacy_config(input, mk_oracle_d)?;
-    let variables = convert_config(input).unwrap_or_default();
+    // Determine the file list once and reuse it: the textual merge and the variable
+    // extraction must see the same set of files.
+    let files = config_files(input, mk_oracle_d)?;
+    let legacy = merge_config_files(&files)?;
+    // Failing here must be reported as is: falling back to no variables at all would
+    // hide the culprit behind a misleading "DBUSER not defined" from convert().
+    let variables = convert_configs(&files).with_context(|| {
+        format!(
+            "Cannot execute the legacy config ({})",
+            format_paths(&files)
+        )
+    })?;
     let timestamp = format_timestamp();
     convert(
         &legacy,
@@ -1105,51 +1159,65 @@ const CUSTOM_SQL_SECTION_VARIABLES: &[&str] = &[
     "SQLS_TNSALIAS",
 ];
 
-/// Execute a legacy config file in its native shell and return extracted variables.
+/// Execute the legacy config files in their native shell and return extracted variables.
 ///
-/// Sources the config in the platform's shell (bash on Linux, ksh on AIX,
-/// powershell on Windows) and captures known variable values.
+/// Sources them in the given order in the platform's shell (bash on Linux, ksh
+/// on AIX, powershell on Windows) — one shell for all of them, as the legacy
+/// plugin does for `mk_oracle.cfg` plus `mk_oracle.d` — and captures known
+/// variable values.
 ///
 /// Returns pairs of (name, value) for variables with non-empty values.
-pub fn convert_config(config_path: &Path) -> Result<HashMap<String, String>> {
-    let output = run_config_shell(config_path)?;
+pub fn convert_configs(config_paths: &[PathBuf]) -> Result<HashMap<String, String>> {
+    let output = run_config_shell(config_paths)?;
     parse_variable_output(&output)
 }
 
 #[cfg(target_os = "windows")]
-fn run_config_shell(config_path: &Path) -> Result<String> {
+fn run_config_shell(config_paths: &[PathBuf]) -> Result<String> {
     run_shell(
         "powershell",
         &["-NoProfile", "-NonInteractive", "-Command"],
-        &build_powershell_script(config_path),
+        &build_powershell_script(config_paths),
     )
 }
 
 #[cfg(target_os = "aix")]
-fn run_config_shell(config_path: &Path) -> Result<String> {
-    run_shell("ksh", &["-c"], &build_posix_script(config_path))
+fn run_config_shell(config_paths: &[PathBuf]) -> Result<String> {
+    run_shell("ksh", &["-c"], &build_posix_script(config_paths))
 }
 
 #[cfg(not(any(target_os = "windows", target_os = "aix")))]
-fn run_config_shell(config_path: &Path) -> Result<String> {
-    run_shell("bash", &["-c"], &build_posix_script(config_path))
+fn run_config_shell(config_paths: &[PathBuf]) -> Result<String> {
+    run_shell("bash", &["-c"], &build_posix_script(config_paths))
 }
 
 fn run_shell(shell: &str, args: &[&str], script: &str) -> Result<String> {
     let output = std::process::Command::new(shell)
         .args(args)
         .arg(script)
-        .output()?;
+        .output()
+        .with_context(|| format!("Cannot run {shell}"))?;
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stderr = stderr.trim_end();
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("Config execution failed (exit {}): {stderr}", output.status);
+        anyhow::bail!("Config execution failed ({}): {stderr}", output.status);
+    }
+    // A config file that cannot be sourced (missing, syntax error, ...) does not fail
+    // the script — the shell only complains about it on stderr, naming the file. Pass
+    // that on instead of silently migrating from a partial set of variables.
+    if !stderr.is_empty() {
+        eprintln!("WARNING: {shell} reported while reading the legacy config:\n{stderr}");
     }
     Ok(String::from_utf8(output.stdout)?)
 }
 
 #[cfg(unix)]
-fn build_posix_script(config_path: &Path) -> String {
-    let quoted_path = posix_quote(&config_path.display().to_string());
+fn build_posix_script(config_paths: &[PathBuf]) -> String {
+    let source_configs = config_paths
+        .iter()
+        .map(|p| format!(". {}", posix_quote(&p.display().to_string())))
+        .collect::<Vec<_>>()
+        .join("\n");
     let vars = KNOWN_VARIABLES.join(" ");
     let prefixes = KNOWN_PREFIXES
         .iter()
@@ -1158,7 +1226,7 @@ fn build_posix_script(config_path: &Path) -> String {
         .join("|");
     let section_vars = CUSTOM_SQL_SECTION_VARIABLES.join(" ");
     format!(
-        r#". {quoted_path}
+        r#"{source_configs}
 for __n in {vars}; do
   eval "__v=\$$__n"
   [ -n "$__v" ] && printf '%s %s\n' "$__n" "$__v"
@@ -1180,8 +1248,14 @@ true"#
 }
 
 #[cfg(windows)]
-fn build_powershell_script(config_path: &Path) -> String {
-    let quoted_path = powershell_quote(&config_path.display().to_string());
+fn build_powershell_script(config_paths: &[PathBuf]) -> String {
+    // Windows has no mk_oracle.d equivalent (`--migrate-subdir` is compiled out
+    // there), so this is always the main config alone.
+    let source_configs = config_paths
+        .iter()
+        .map(|p| format!(". {}", powershell_quote(&p.display().to_string())))
+        .collect::<Vec<_>>()
+        .join("\n");
     let var_list = KNOWN_VARIABLES
         .iter()
         .map(|v| format!("'{v}'"))
@@ -1193,7 +1267,7 @@ fn build_powershell_script(config_path: &Path) -> String {
         .collect::<Vec<_>>()
         .join(" -or ");
     format!(
-        r#". {quoted_path}
+        r#"{source_configs}
 foreach ($__n in @({var_list})) {{
   $__v = (Get-Variable -Name $__n -ValueOnly -ErrorAction SilentlyContinue)
   if ($__v -is [array]) {{
@@ -2722,13 +2796,28 @@ sec3 () {
     #[cfg(unix)]
     #[test]
     fn test_build_posix_script() {
-        let script = build_posix_script(Path::new("/tmp/test.cfg"));
+        let script = build_posix_script(&[PathBuf::from("/tmp/test.cfg")]);
         assert!(script.starts_with(". '/tmp/test.cfg'"));
         assert!(script.contains("DBUSER"));
         assert!(script.contains("CACHE_MAXAGE"));
         assert!(script.contains("REMOTE_INSTANCE_"));
         assert!(script.contains("EXCLUDE_"));
         assert!(script.contains("SQLS.$__sec.$__n"));
+    }
+
+    /// Several configs are sourced in the given order, like the legacy plugin
+    /// sources mk_oracle.cfg and then the fragments of mk_oracle.d.
+    #[cfg(unix)]
+    #[test]
+    fn test_build_posix_script_sources_all_configs() {
+        let script = build_posix_script(&[
+            PathBuf::from("/tmp/test.cfg"),
+            PathBuf::from("/tmp/mk_oracle.d/01_a.cfg"),
+            PathBuf::from("/tmp/mk_oracle.d/02_b.cfg"),
+        ]);
+        assert!(script.starts_with(
+            ". '/tmp/test.cfg'\n. '/tmp/mk_oracle.d/01_a.cfg'\n. '/tmp/mk_oracle.d/02_b.cfg'\n"
+        ));
     }
 
     #[cfg(unix)]
@@ -2741,7 +2830,7 @@ sec3 () {
             "DBUSER='checkmk:secret'\nCACHE_MAXAGE=600\nREMOTE_INSTANCE_XE='user:pass::host'\n",
         )
         .unwrap();
-        let result = convert_config(&config_path);
+        let result = convert_configs(std::slice::from_ref(&config_path));
         let _ = std::fs::remove_file(&config_path);
         let vars = result.unwrap();
         assert_eq!(vars["DBUSER"], "checkmk:secret");

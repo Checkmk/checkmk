@@ -907,10 +907,35 @@ FILE_PATTERNS_SIGNABLE = [
     re.compile(r".*\.msi$"),
 ]
 
+# signable files expected inside check_mk_agent.msi (paths as installed by msiexec);
+# additions are verified automatically, but must be acknowledged here. CMK-37147
+MSI_EMBEDDED_SIGNED_FILES = (
+    "Program Files/checkmk/service/check_mk_agent.exe",
+    "Program Files/checkmk/service/cmk-agent-ctl.exe",
+)
+
 
 def _should_be_signed(path: str) -> bool:
     return any(pattern.match(path) for pattern in FILE_PATTERNS_SIGNABLE) and not any(
         pattern.match(path) for pattern in FILES_UNSIGNED
+    )
+
+
+def _msi_signable_file_names(msi_path: Path) -> list[str]:
+    """Target names of all signable File table entries of an MSI, one per row.
+
+    The FileName column is `8.3|long` - keep the long variant. Duplicate target
+    names stay visible: the MSI may install several File table rows under the
+    same name (e.g. one binary per architecture, selected by condition), which
+    a filesystem extraction silently collapses into a single file.
+    """
+    table = subprocess.check_output(["msiinfo", "export", str(msi_path), "File"], text=True)
+    return sorted(
+        file_name
+        for line in table.splitlines()
+        if len(columns := line.split("\t")) >= 3
+        for file_name in (columns[2].split("|")[-1],)
+        if any(pattern.match(file_name) for pattern in FILE_PATTERNS_SIGNABLE)
     )
 
 
@@ -926,6 +951,8 @@ def _signing_ca_bundle() -> str:
     store anyway):
       - Comodo AAA Certificate Services              -> YubiKey/Sectigo code signing
       - USERTrust RSA Certification Authority        -> Sectigo timestamp chain
+      - Microsoft Identity Verification Root CA 2020 -> Azure Trusted Signing
+                                                        (code signing + timestamp)
     The same bundle serves -TSA-CAfile too, since it covers the timestamp chains.
     """
     roots = sorted(_TRUSTED_ROOTS_DIR.glob("*.pem"))
@@ -1063,13 +1090,33 @@ def test_windows_artifacts_are_signed(
                     LOGGER.warning("can be installed locally")
                     LOGGER.warning("  ubuntu: sudo apt install msitools")
                     raise
-                for file in ("check_mk_agent.exe", "cmk-agent-ctl.exe"):
+                extracted_signable = sorted(
+                    path
+                    for path in Path(msi_content).rglob("*")
+                    if path.is_file() and _should_be_signed(str(path))
+                )
+                for extracted_file in extracted_signable:
                     signing_failures.append(
                         _verify_signature(
-                            Path(msi_content + "/Program Files/checkmk/service/" + file),
-                            f"check_mk_agent.msi/Program Files/checkmk/service/{file}",
+                            extracted_file,
+                            f"check_mk_agent.msi/{extracted_file.relative_to(msi_content)}",
                         )
                     )
+                extracted_names = sorted(
+                    str(path.relative_to(msi_content)) for path in extracted_signable
+                )
+                assert extracted_names == sorted(MSI_EMBEDDED_SIGNED_FILES), (
+                    "Signable files inside check_mk_agent.msi changed - if intended, "
+                    f"update MSI_EMBEDDED_SIGNED_FILES. Found: {extracted_names}"
+                )
+                # A File table row per target name: several rows installing under the
+                # same name (e.g. one binary per architecture) collapse into one file
+                # on extraction, leaving all but one of them unverified above.
+                msi_table_names = _msi_signable_file_names(Path(msi_file.name))
+                assert msi_table_names == sorted(path.name for path in extracted_signable), (
+                    "File table of check_mk_agent.msi does not match the extracted "
+                    f"files - signable entries were collapsed or lost: {msi_table_names}"
+                )
 
         # check the embedded relay MSI - shipped only for cloud/ultimate/ultimatemt and
         # signed by default in the distro build (relay-msi.groovy: should_sign). CMK-34188

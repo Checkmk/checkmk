@@ -39,8 +39,8 @@ rule_spec_check_parameters = CheckParameters(
                 parameter_form=SimpleLevels[int](
                     title=Title("Number of zombie jobs"),
                     help_text=Help(
-                        "Splunk labels a job a zombie when the job is no longer running,"
-                        "but it did not declare explicitly that it has finished its work."
+                        "Splunk labels a job as a zombie when the job is no longer running, "
+                        "but has not declared explicitly that it finished its work."
                     ),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Integer(),

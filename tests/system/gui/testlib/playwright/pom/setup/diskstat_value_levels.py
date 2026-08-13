@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class DiskstatValueLevels:
-    """Class for Levels configuration of Value section in Ruleset of 'Disk IO levels' page."""
+    """Class for Levels configuration of Value section in Ruleset of 'Disk I/O levels' page."""
 
     def __init__(self, page: CmkPage, checkbox_label: str):
         """

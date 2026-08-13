@@ -16,6 +16,16 @@ from tests.system.gui.testlib.playwright.pom.page import CmkPage
 logger = logging.getLogger(__name__)
 
 
+def end_anchored_name_pattern(name: str) -> Pattern[str]:
+    """Match an accessible name ending in `name`.
+
+    Playwright serialises the pattern into its own `/…/` selector syntax without
+    escaping forward slashes, so a ruleset such as "Disk I/O levels" would build an
+    unparseable selector. Escaping them keeps the Python match identical.
+    """
+    return re.compile(re.escape(name).replace("/", r"\/") + "$")
+
+
 class Ruleset(CmkPage):
     """Represent any page with service ruleset.
 
@@ -54,7 +64,7 @@ class Ruleset(CmkPage):
         else:
             results = popup.get_by_role(role="listitem")
 
-        rule_pattern = re.compile(f"{re.escape(self.rule_name)}$")
+        rule_pattern = end_anchored_name_pattern(self.rule_name)
         selection = results.get_by_role(role="link", name=rule_pattern, exact=self._exact)
 
         selection.click()

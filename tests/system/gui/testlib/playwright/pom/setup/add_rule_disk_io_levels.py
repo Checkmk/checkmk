@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class AddRuleDiskIOLevels(CmkPage):
-    """Represent the 'Add rule: Disk IO levels' page.
+    """Represent the 'Add rule: Disk I/O levels' page.
 
-    To navigate: `Setup > Services > Service monitoring rules > Disk IO levels
-    > Add rule: Disk IO levels`.
+    To navigate: `Setup > Services > Service monitoring rules > Disk I/O levels
+    > Add rule: Disk I/O levels`.
 
     Dependent class for value levels configuration:
         `tests/system/gui/testlib/playwright/pom/setup/diskstat_value_levels.py`.
@@ -68,10 +68,10 @@ class AddRuleDiskIOLevels(CmkPage):
         text: Literal[
             "Read throughput",
             "Write throughput",
-            "Disk Utilization",
+            "Disk utilization",
             "Disk Latency",
-            "Disk Read Latency",
-            "Disk Write Latency",
+            "Disk read latency",
+            "Disk write latency",
             "Read wait",
             "Write wait",
             "Averaging",

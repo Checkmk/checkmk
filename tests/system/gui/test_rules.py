@@ -339,11 +339,11 @@ def test_predictive_levels_with_default_values(
     dashboard_page: MainDashboard, test_site: Site
 ) -> None:
     """Test configuring predictive levels with default values with adding a new rule
-    for 'Disk IO levels' page.
+    for 'Disk I/O levels' page.
     """
 
     rule_description = "Predictive levels rule with default values"
-    logger.info("Add a new rule for 'Disk IO levels' page")
+    logger.info("Add a new rule for 'Disk I/O levels' page")
     is_rule_added = False
     try:
         disk_io_levels_page = AddRuleDiskIOLevels(dashboard_page.page)

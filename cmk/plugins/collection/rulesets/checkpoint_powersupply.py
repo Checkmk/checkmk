@@ -38,7 +38,7 @@ def _formspec_checkpoint_powersupply() -> Dictionary:
             "no_redundancy": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State when reported device status is No Redundancy"),
+                    title=Title("State when reported device status is 'No redundancy'"),
                     prefill=DefaultValue(1),
                 ),
             ),

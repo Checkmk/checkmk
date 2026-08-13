@@ -37,7 +37,7 @@ def podman_container_health() -> Dictionary:
             ),
             "no_healthcheck": DictElement(
                 parameter_form=ServiceState(
-                    title=Title("No Health Check"),
+                    title=Title("No health check"),
                     prefill=DefaultValue(ServiceState.WARN),
                 )
             ),

@@ -19,7 +19,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, Topic
 def podman_container_restarts() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "Here you can configure absolute levels for total restart count and last hour restarts."
+            "Here, you can configure absolute levels for total restart count and last hour restarts."
         ),
         elements={
             "restarts_total": DictElement(

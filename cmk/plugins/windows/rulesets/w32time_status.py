@@ -131,7 +131,7 @@ def _make_form() -> Dictionary:
 
 rule_spec_w32time_status = CheckParameters(
     name="w32time_status",
-    title=Title("Windows time service status"),
+    title=Title("Windows Time service status"),
     topic=Topic.WINDOWS,
     parameter_form=_make_form,
     condition=HostCondition(),

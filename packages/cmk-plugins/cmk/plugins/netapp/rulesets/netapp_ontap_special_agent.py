@@ -73,7 +73,7 @@ def _formspec_netapp_ontap() -> Dictionary:
     return Dictionary(
         title=Title("NetApp via Ontap REST API"),
         help_text=Help(
-            "This rule set selects the NetApp special agent instead of the normal Checkmk Agent "
+            "This rule set selects the NetApp special agent instead of the normal Checkmk agent "
             "and allows monitoring via the NetApp Ontap REST API."
         ),
         migrate=_migrate_netapp_config,
@@ -112,16 +112,16 @@ def _formspec_netapp_ontap() -> Dictionary:
                         MultipleChoiceElement(name="volumes", title=Title("Volumes")),
                         MultipleChoiceElement(
                             name="volumes_counters",
-                            title=Title("Volume Performance Counters (requires Volumes)"),
+                            title=Title("Volume performance counters (requires volumes)"),
                         ),
                         MultipleChoiceElement(name="disk", title=Title("Disks")),
                         MultipleChoiceElement(name="luns", title=Title("LUNs")),
                         MultipleChoiceElement(name="aggr", title=Title("Aggregations")),
                         MultipleChoiceElement(name="qtree_quota", title=Title("Qtree Quotas")),
-                        MultipleChoiceElement(name="s3_buckets", title=Title("S3 Buckets")),
+                        MultipleChoiceElement(name="s3_buckets", title=Title("S3 buckets")),
                         MultipleChoiceElement(name="snapvault", title=Title("SnapVaults")),
-                        MultipleChoiceElement(name="interfaces", title=Title("Network Interfaces")),
-                        MultipleChoiceElement(name="ports", title=Title("Network Ports")),
+                        MultipleChoiceElement(name="interfaces", title=Title("Network interfaces")),
+                        MultipleChoiceElement(name="ports", title=Title("Network ports")),
                         MultipleChoiceElement(name="fc_interfaces", title=Title("Interface FCP")),
                         MultipleChoiceElement(
                             name="node", title=Title("Nodes")
@@ -130,10 +130,10 @@ def _formspec_netapp_ontap() -> Dictionary:
                         MultipleChoiceElement(name="vs_traffic", title=Title("Traffic SVM")),
                         MultipleChoiceElement(name="ntp_time_sync", title=Title("NTP Time Sync")),
                         MultipleChoiceElement(name="fan", title=Title("Fans")),
-                        MultipleChoiceElement(name="temp", title=Title("Temperature Sensors")),
-                        MultipleChoiceElement(name="psu", title=Title("Power Supplies")),
+                        MultipleChoiceElement(name="temp", title=Title("Temperature sensors")),
+                        MultipleChoiceElement(name="psu", title=Title("Power supplies")),
                         MultipleChoiceElement(
-                            name="environment", title=Title("Environment Sensors")
+                            name="environment", title=Title("Environment sensors")
                         ),
                         MultipleChoiceElement(name="alerts", title=Title("Alerts")),
                     ],
@@ -142,7 +142,7 @@ def _formspec_netapp_ontap() -> Dictionary:
                     title=Title("Fetch information about..."),
                     help_text=Help(
                         "Select the NetApp resources you would like to fetch from the API. "
-                        "Note that some sections depend on others: 'Volume Performance Counters' "
+                        "Note that some sections depend on others: 'Volume performance counters' "
                         "requires 'Volumes' data. Performance counter sections may "
                         "consume more resources and take longer to collect on large systems."
                     ),

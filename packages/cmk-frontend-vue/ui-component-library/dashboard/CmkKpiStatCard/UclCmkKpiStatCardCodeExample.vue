@@ -16,5 +16,8 @@ const series = [62, 68, 75, 71, 66, 73, 82, 78, 74, 80]
     :delta-ratio="0.062"
     :series="series"
     color="var(--color-corporate-green-50)"
+    :state="{ severity: 'warn' }"
+    :range-limits="{ minimum: '0 B', maximum: '1.00 TB' }"
+    href="view.py?view_name=service"
   />
 </template>

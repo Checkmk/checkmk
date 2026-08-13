@@ -34,6 +34,7 @@ import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.ccc.regex import SITE_ID_PATTERN
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import forms
@@ -372,10 +373,15 @@ class ModeEditSite(WatoMode):
 
     def _basic_elements(self, config: Config) -> list[tuple[str, ValueSpec]]:
         if self._new:
-            vs_site_id: TextInput | FixedValue = ID(
+            vs_site_id: TextInput | FixedValue = TextInput(
                 title=_("Site ID"),
                 size=60,
                 allow_empty=False,
+                regex=SITE_ID_PATTERN,
+                regex_error=_(
+                    "The site id must begin with a letter or underscore, may contain only "
+                    "letters, digits and underscores and must be 1 to 16 characters long."
+                ),
                 help=_(
                     "The site ID must be identical (case sensitive) with the instance's exact name."
                 ),

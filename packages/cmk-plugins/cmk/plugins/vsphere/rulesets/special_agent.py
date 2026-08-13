@@ -42,7 +42,7 @@ def parameter_form() -> Dictionary:
             "user": DictElement(
                 required=True,
                 parameter_form=String(
-                    title=Title("vSphere User name"),
+                    title=Title("vSphere username"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                 ),
             ),
@@ -72,7 +72,7 @@ def parameter_form() -> Dictionary:
                         CascadingSingleChoiceElement(
                             name=QueryType.STANDALONE,
                             title=Title(
-                                "Queried host is a ESXi host (Standalone / not vCenter integrated)"
+                                "Queried host is a ESXi host (standalone / not vCenter integrated)"
                             ),
                             parameter_form=_info_form_for_host(QueryType.STANDALONE),
                         ),
@@ -125,8 +125,9 @@ def parameter_form() -> Dictionary:
                     title=Title("Connect timeout"),
                     help_text=Help(
                         "The network timeout in seconds when communicating with vSphere or "
-                        "to the Checkmk Agent. The default is 60 seconds. Please note that this "
-                        "is not a total timeout but is applied to each individual network transation."
+                        "to the Checkmk agent. The default is 60 seconds. Please note that this "
+                        "is not a total timeout but is applied to each individual network "
+                        "transaction."
                     ),
                     prefill=DefaultValue(60),
                     custom_validate=(validators.NumberInRange(min_value=1),),
@@ -190,7 +191,7 @@ def parameter_form() -> Dictionary:
                     label=Label("Display snapshot summary on ESX hosts"),
                     prefill=DefaultValue(False),
                     help_text=Help(
-                        "By default the snapshot summary service is displayed on the vCenter. "
+                        "By default, the snapshot summary service is displayed on the vCenter. "
                         "Users who run an ESX host on its own or do not include their vCenter in the "
                         "monitoring can choose to display the snapshot summary on the ESX host itself."
                     ),
@@ -240,9 +241,9 @@ def _info_form_for_host(query_type: QueryType) -> MultipleChoice:
     return MultipleChoice(
         title=Title("Retrieve information about..."),
         elements=[
-            MultipleChoiceElement(name="hostsystem", title=Title("Host Systems")),
-            MultipleChoiceElement(name="virtualmachine", title=Title("Virtual Machines")),
-            MultipleChoiceElement(name="datastore", title=Title("Datastores")),
+            MultipleChoiceElement(name="hostsystem", title=Title("Host systems")),
+            MultipleChoiceElement(name="virtualmachine", title=Title("Virtual machines")),
+            MultipleChoiceElement(name="datastore", title=Title("Data stores")),
             MultipleChoiceElement(name="counters", title=Title("Performance counters")),
             MultipleChoiceElement(name="licenses", title=Title("License Usage")),
         ],

@@ -17,7 +17,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 
 rule_spec_esx_vsphere_counters_gpu_utilization = CheckParameters(
     name="esx_vsphere_counters_gpu_utilization",
-    title=Title("ESX GPU Utilization"),
+    title=Title("ESX GPU utilization"),
     topic=Topic.OPERATING_SYSTEM,
     parameter_form=lambda: Dictionary(
         elements={

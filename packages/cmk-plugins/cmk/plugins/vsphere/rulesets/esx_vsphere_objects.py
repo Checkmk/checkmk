@@ -41,7 +41,7 @@ def _parameter_form_esx_vsphere_objects():
     return Dictionary(
         help_text=Help(
             "Usually the check goes to WARN if a VM or host is powered off and OK otherwise. "
-            "You can change this behaviour on a per-state-basis here."
+            "You can change this behavior on a per-state-basis here."
         ),
         elements={
             "states": DictElement(
@@ -104,7 +104,7 @@ rule_spec_esx_vsphere_objects = CheckParameters(
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_esx_vsphere_objects,
     condition=HostAndItemCondition(
-        item_title=Title("Name of the VM/HostSystem"),
+        item_title=Title("Name of the VM/host system"),
         item_form=String(
             help_text=Help(
                 "Please do not forget to specify either <tt>VM</tt> or <tt>HostSystem</tt>. "

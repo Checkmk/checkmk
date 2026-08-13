@@ -52,7 +52,7 @@ def _parameter_rulespec_safenet_hsm_operstats():
             ),
             "operation_errors": DictElement(
                 parameter_form=SimpleLevels(
-                    title=Title("Operation Errors"),
+                    title=Title("Operation errors"),
                     help_text=Help(
                         "Sets levels on total operation errors since last counter reset."
                     ),

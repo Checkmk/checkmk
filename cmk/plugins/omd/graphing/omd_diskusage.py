@@ -101,7 +101,7 @@ metric_omd_metric_backend_size = metrics.Metric(
 
 graph_omd_fileusage = graphs.Graph(
     name="omd_fileusage",
-    title=Title("OMD filesystem usage"),
+    title=Title("OMD file system usage"),
     compound_lines=[
         "omd_log_size",
         "omd_rrd_size",

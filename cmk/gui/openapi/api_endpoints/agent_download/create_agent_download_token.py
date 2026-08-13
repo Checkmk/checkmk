@@ -65,7 +65,7 @@ def create_agent_download_token_v1(
             raise ProblemException(
                 status=400,
                 title="Unknown site",
-                detail=_('No site with id "%s" is configured.') % body.site_id,
+                detail=_('No site with ID "%s" is configured.') % body.site_id,
             )
         if not site_is_local(site_config):
             forwarded = forward_token_create(

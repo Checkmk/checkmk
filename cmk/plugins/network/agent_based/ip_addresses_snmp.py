@@ -170,9 +170,9 @@ def parse_ip_addresses(string_table: Sequence[StringByteTable]) -> Section:
     ):
         name = interface_by_index.get(if_index, if_index)
         adapter = result.setdefault(name, IPNetworkAdapter(name=name, inet4=[], inet6=[]))
-        if interface_ip.version == 4:
+        if isinstance(interface_ip, AugmentedIPv4Interface):
             adapter.inet4.append(interface_ip)
-        elif interface_ip.version == 6:
+        elif isinstance(interface_ip, AugmentedIPv6Interface):
             adapter.inet6.append(interface_ip)
 
     return list(result.values())

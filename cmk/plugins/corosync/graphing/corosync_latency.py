@@ -20,7 +20,7 @@ UNIT_MILLISECOND = Unit(TimeNotation())
 
 metric_corosync_latency_max = Metric(
     name="latency_max",
-    title=Title("Maximum Latency"),
+    title=Title("Maximum latency"),
     unit=UNIT_MILLISECOND,
     color=Color.RED,
 )

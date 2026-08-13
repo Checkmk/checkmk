@@ -17,6 +17,7 @@ const propsCva = cva('', {
       default: 'cmk-badge--default',
       success: 'cmk-badge--success',
       warning: 'cmk-badge--warning',
+      unknown: 'cmk-badge--unknown',
       danger: 'cmk-badge--danger'
     },
     type: {
@@ -116,6 +117,14 @@ defineProps<CmkBadgeProps>()
   color: var(--black);
 }
 
+/* The monitoring UNKNOWN state, which is its own color rather than a shade of
+   the other three. */
+.cmk-badge--unknown {
+  background: var(--color-unknown);
+  border-color: var(--color-unknown);
+  color: var(--white);
+}
+
 .cmk-badge--outline {
   background: transparent;
 
@@ -133,6 +142,10 @@ defineProps<CmkBadgeProps>()
 
   &.cmk-badge--success {
     color: var(--success);
+  }
+
+  &.cmk-badge--unknown {
+    color: var(--color-unknown);
   }
 }
 

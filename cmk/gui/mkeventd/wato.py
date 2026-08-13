@@ -208,6 +208,8 @@ from cmk.livestatus_client import (
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.internal.form_specs import (
     DictionaryExtended,
+    MultipleChoiceElementExtended,
+    MultipleChoiceExtended,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
@@ -4126,27 +4128,32 @@ ConfigVariableEventConsole = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident="site_mkeventd",
-    valuespec=lambda context: Optional(
-        valuespec=ListChoice(
-            choices=[
-                ("SNMPTRAP", _("Receive SNMP traps (UDP/162)")),
-                ("SYSLOG", _("Receive Syslog messages (UDP/514)")),
-                ("SYSLOG_TCP", _("Receive Syslog messages (TCP/514)")),
+    form_spec=lambda context: OptionalChoice(
+        parameter_form=MultipleChoiceExtended(
+            elements=[
+                MultipleChoiceElementExtended(
+                    name="SNMPTRAP", title=Title("Receive SNMP traps (UDP/162)")
+                ),
+                MultipleChoiceElementExtended(
+                    name="SYSLOG", title=Title("Receive Syslog messages (UDP/514)")
+                ),
+                MultipleChoiceElementExtended(
+                    name="SYSLOG_TCP", title=Title("Receive Syslog messages (TCP/514)")
+                ),
             ],
-            title=_("Listen for incoming messages via"),
-            empty_text=_("Locally enabled"),
+            title=Title("Listen for incoming messages via"),
+            prefill=DefaultValue([]),
         ),
-        title=_("Event Console"),
-        help=_(
+        title=Title("Event Console"),
+        help_text=Help(
             "This option enables the Event Console - The event processing and "
             "classification daemon of Checkmk. You can also configure whether "
             "or not the Event Console shal listen for incoming SNMP traps or "
             "syslog messages. Please note that only a single Checkmk site per "
             "Checkmk server can listen for such messages."
         ),
-        label=_("Event Console enabled"),
-        none_label=_("Event Console disabled"),
-        indent=False,
+        label=Label("Event Console enabled"),
+        none_label=Label("Event Console disabled"),
     ),
 )
 

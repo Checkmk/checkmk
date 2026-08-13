@@ -145,8 +145,7 @@ class EditPiggybackHubGlobally(EditGlobalSetting):
 
     @property
     def _current_setting_checkbox(self) -> Locator:
-        current_setting_label = "label[for='cb_ve']"
-        return self.main_area.locator(current_setting_label)
+        return self.main_area.locator().get_by_role("checkbox")
 
     def enable_hub(self) -> None:
         if not self._current_setting_checkbox.is_checked():
@@ -324,8 +323,7 @@ class EditPiggybackHubSiteSpecific(EditSiteSpecificGlobalSetting):
 
     @property
     def _current_setting_checkbox(self) -> Locator:
-        current_setting_label = "label[for='cb_ve']"
-        return self.main_area.locator(current_setting_label)
+        return self.main_area.locator().get_by_role("checkbox")
 
     def enable_hub(self) -> None:
         if not self._current_setting_checkbox.is_checked():

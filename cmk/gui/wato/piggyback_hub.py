@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import Checkbox
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     ConfigVariableRegistry,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue
 
 CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT = "site_piggyback_hub"
 
@@ -19,11 +19,13 @@ def register(config_variable_registry: ConfigVariableRegistry) -> None:
     config_variable_registry.register(ConfigVariableSitePiggybackHub)
 
 
-def piggyback_hub_config_value_spec() -> Checkbox:
-    return Checkbox(
-        title=_("Enable piggyback-hub"),
-        help=_("Enable the piggyback-hub to send/receive piggyback data to/from other sites."),
-        default_value=False,
+def piggyback_hub_config_form_spec() -> BooleanChoice:
+    return BooleanChoice(
+        title=Title("Enable piggyback-hub"),
+        help_text=Help(
+            "Enable the piggyback-hub to send/receive piggyback data to/from other sites."
+        ),
+        prefill=DefaultValue(False),
     )
 
 
@@ -31,5 +33,5 @@ ConfigVariableSitePiggybackHub = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident=CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT,
-    valuespec=lambda context: piggyback_hub_config_value_spec(),
+    form_spec=lambda context: piggyback_hub_config_form_spec(),
 )

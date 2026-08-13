@@ -3,77 +3,95 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    FixedValue,
-    Integer,
-    IPNetwork,
-    ListOfStrings,
-    Migrate,
-    Optional,
-)
+import ipaddress
+
+from cmk.gui.form_specs.unstable import OptionalChoice
 from cmk.gui.watolib.config_domain_name import ConfigVariable
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
+from cmk.rulesets.internal.form_specs import ListOfStrings, ListOfStringsLayout
+from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    Integer,
+    String,
+    validators,
+)
+from cmk.rulesets.v1.form_specs.validators import ValidationError
+
+
+def _validate_ip_network(value: str) -> None:
+    # Port of the IPNetwork() valuespec.
+    errors = []
+    for ip_class in (ipaddress.IPv4Network, ipaddress.IPv6Network):
+        try:
+            ip_class(value)
+            return
+        except ValueError as exc:
+            errors.append(str(exc))
+    raise ValidationError(
+        Message("Invalid host or network address. IPv4: %(e4)s, IPv6: %(e6)s")
+        % {"e4": errors[0], "e6": errors[1]}
+    )
 
 
 def _livestatus_via_tcp() -> Dictionary:
     return Dictionary(
-        elements=[
-            (
-                "port",
-                Integer(
-                    title=_("TCP port"),
-                    minvalue=1,
-                    maxvalue=65535,
-                    default_value=6557,
+        elements={
+            "port": DictElement(
+                required=True,
+                parameter_form=Integer(
+                    title=Title("TCP port"),
+                    custom_validate=[validators.NumberInRange(min_value=1, max_value=65535)],
+                    prefill=DefaultValue(6557),
                 ),
             ),
-            (
-                "only_from",
-                ListOfStrings(
-                    title=_("Restrict access to IP addresses"),
-                    help=_(
+            "only_from": DictElement(
+                required=True,
+                parameter_form=ListOfStrings(
+                    title=Title("Restrict access to IP addresses"),
+                    help_text=Help(
                         "The access to Livestatus via TCP will only be allowed from the "
                         "configured source IP addresses. You can either configure specific "
                         "IP addresses or networks in the syntax <tt>10.3.3.0/24</tt>."
                     ),
-                    valuespec=IPNetwork(),
-                    orientation="horizontal",
-                    allow_empty=False,
-                    default_value=["0.0.0.0", "::/0"],
+                    string_spec=String(custom_validate=[_validate_ip_network]),
+                    layout=ListOfStringsLayout.horizontal,
+                    custom_validate=[validators.LengthInRange(min_value=1)],
+                    prefill=DefaultValue(["0.0.0.0", "::/0"]),
                 ),
             ),
-            (
-                "instances",
-                Integer(
-                    title=_("Maximum number of parallel server instances"),
-                    help=_(
+            "instances": DictElement(
+                required=True,
+                parameter_form=Integer(
+                    title=Title("Maximum number of parallel server instances"),
+                    help_text=Help(
                         "Limits the number of Livestatus server processes that can be active "
                         "simultaneously."
                     ),
-                    default_value=500,
+                    prefill=DefaultValue(500),
                 ),
             ),
-            (
-                "per_source",
-                Integer(
-                    title=_("Maximum parallel connections per source IP address"),
-                    help=_(
+            "per_source": DictElement(
+                required=True,
+                parameter_form=Integer(
+                    title=Title("Maximum parallel connections per source IP address"),
+                    help_text=Help(
                         "Limits the number of simultaneous Livestatus connections allowed "
                         "from a single source IP address."
                     ),
-                    default_value=250,
+                    prefill=DefaultValue(250),
                 ),
             ),
-            (
-                "tls",
-                FixedValue(
+            "tls": DictElement(
+                parameter_form=FixedValue(
                     value=True,
-                    title=_("Encrypt communication"),
-                    totext=_("Encrypt TCP Livestatus connections"),
-                    help=_(
+                    title=Title("Encrypt communication"),
+                    label=Label("Encrypt TCP Livestatus connections"),
+                    help_text=Help(
                         "Since Checkmk 1.6 it is possible to encrypt the TCP Livestatus "
                         "connections using SSL. This is enabled by default for sites that "
                         "enable Livestatus via TCP with 1.6 or newer. Sites that already "
@@ -83,12 +101,13 @@ def _livestatus_via_tcp() -> Dictionary:
                     ),
                 ),
             ),
-        ],
-        optional_keys=["tls"],
+        },
+        migrate=_migrate_tcp_only_from,
     )
 
 
-def _migrate_tcp_only_from(livestatus_tcp: dict[str, object]) -> dict[str, object]:
+def _migrate_tcp_only_from(livestatus_tcp: object) -> dict[str, object]:
+    assert isinstance(livestatus_tcp, dict)
     if "only_from" in livestatus_tcp:
         return livestatus_tcp
     livestatus_tcp["only_from"] = ["0.0.0.0"]
@@ -99,18 +118,15 @@ ConfigVariableSiteLivestatusTCP = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident="site_livestatus_tcp",
-    valuespec=lambda context: Optional(
-        valuespec=Migrate(
-            _livestatus_via_tcp(),
-            migrate=_migrate_tcp_only_from,
-        ),
-        title=_("Access to Livestatus via TCP"),
-        help=_(
+    form_spec=lambda context: OptionalChoice(
+        parameter_form=_livestatus_via_tcp(),
+        title=Title("Access to Livestatus via TCP"),
+        help_text=Help(
             "Check_MK Livestatus usually listens only on a local Unix socket - "
             "for reasons of performance and security. This option is used "
             "to make it reachable via TCP on a port configurable with LIVESTATUS_TCP_PORT."
         ),
-        label=_("Enable Livestatus access via network (TCP)"),
-        none_label=_("Livestatus is available locally"),
+        label=Label("Enable Livestatus access via network (TCP)"),
+        none_label=Label("Livestatus is available locally"),
     ),
 )

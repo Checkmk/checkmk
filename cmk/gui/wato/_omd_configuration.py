@@ -14,19 +14,10 @@ import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.version import Edition
 from cmk.diskspace.config import DEFAULT_CONFIG as diskspace_DEFAULT_CONFIG
-from cmk.gui.i18n import _
+from cmk.gui.form_specs.generators.age import Age as FSAge
+from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.log import logger
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.valuespec import (
-    Age,
-    Checkbox,
-    Dictionary,
-    DropdownChoice,
-    DropdownChoiceEntry,
-    Filesize,
-    Integer,
-    Tuple,
-)
 from cmk.gui.wato._livestatus import ConfigVariableSiteLivestatusTCP
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -45,9 +36,33 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPathType,
 )
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
+from cmk.rulesets.internal.form_specs import (
+    DictionaryExtended,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
+from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
+    DataSize,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    IECMagnitude,
+    Integer,
+    validators,
+)
 from cmk.utils.config_warnings import ConfigurationWarnings
 
 T = TypeVar("T")
+
+FILESIZE_MAGNITUDES = [
+    IECMagnitude.BYTE,
+    IECMagnitude.KIBI,
+    IECMagnitude.MEBI,
+    IECMagnitude.GIBI,
+    IECMagnitude.TEBI,
+]
 
 
 def register(
@@ -92,23 +107,27 @@ ConfigVariableSiteAutostart = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident="site_autostart",
-    valuespec=lambda context: Checkbox(
-        title=_("Start during system boot"),
-        help=_("Whether or not this site should be started during startup of the Checkmk server."),
+    form_spec=lambda context: BooleanChoice(
+        title=Title("Start during system boot"),
+        help_text=Help(
+            "Whether or not this site should be started during startup of the Checkmk server."
+        ),
     ),
 )
 
 
-def _valuespec_site_core(context: GlobalSettingsContext) -> DropdownChoice[str]:
-    return DropdownChoice(
-        title=_("Monitoring core"),
-        help=_(
+def _form_spec_site_core(context: GlobalSettingsContext) -> SingleChoiceExtended[str]:
+    choices = _monitoring_core_choices(context.edition_of_local_site)
+    return SingleChoiceExtended[str](
+        title=Title("Monitoring core"),
+        help_text=Help(
             "Choose the monitoring core to run for monitoring. You can also "
             "decide to run no monitoring core in this site. This can be useful "
             "for instances running only a GUI for connecting to other monitoring "
             "sites."
         ),
-        choices=_monitoring_core_choices(context.edition_of_local_site),
+        elements=[SingleChoiceElementExtended(name=name, title=title) for name, title in choices],
+        prefill=DefaultValue(choices[0][0]),
     )
 
 
@@ -116,18 +135,18 @@ ConfigVariableSiteCore = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainOMD,
     ident="site_core",
-    valuespec=_valuespec_site_core,
+    form_spec=_form_spec_site_core,
 )
 
 
-def _monitoring_core_choices(edition: Edition) -> list[DropdownChoiceEntry[str]]:
+def _monitoring_core_choices(edition: Edition) -> list[tuple[str, Title]]:
     cores = []
     if edition is not Edition.COMMUNITY:
-        cores.append(("cmc", _("Checkmk Micro Core")))
+        cores.append(("cmc", Title("Checkmk Micro Core")))
 
     cores += [
-        ("nagios", _("Nagios 3")),
-        ("none", _("No monitoring core")),
+        ("nagios", Title("Nagios 3")),
+        ("none", Title("No monitoring core")),
     ]
 
     return cores
@@ -176,9 +195,10 @@ ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainDiskspace,
     ident="diskspace_cleanup",
-    valuespec=lambda context: Dictionary(
-        title=_("Automatic disk space cleanup"),
-        help=_(
+    form_spec=lambda context: DictionaryExtended(
+        default_checked=["cleanup_abandoned_host_files"],
+        title=Title("Automatic disk space cleanup"),
+        help_text=Help(
             "You can configure your monitoring site to free disk space based on the ages "
             "of files or free space of the volume the site is placed on.<br>"
             "The monitoring site is executing the program <tt>diskspace</tt> 5 minutes past "
@@ -186,14 +206,13 @@ ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
             "<tt>var/log/diskspace.log</tt>. You can always execute this program manually "
             "(add the <tt>-v</tt> option to see details about the actions taken)."
         ),
-        elements=[
-            (
-                "max_file_age",
-                Age(
-                    minvalue=1,  # 1 sec
-                    default_value=31536000,  # 1 year
-                    title=_("Delete files older than"),
-                    help=_(
+        elements={
+            "max_file_age": DictElement(
+                parameter_form=FSAge(
+                    custom_validate=[validators.NumberInRange(min_value=1)],  # 1 sec
+                    prefill=DefaultValue(31536000.0),  # 1 year
+                    title=Title("Delete files older than"),
+                    help_text=Help(
                         "The historic events (state changes, downtimes etc.) of your hosts and services "
                         "are stored in the monitoring "
                         "history as plain text log files. One history log file contains the monitoring "
@@ -207,27 +226,28 @@ ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
                     ),
                 ),
             ),
-            (
-                "min_free_bytes",
-                Tuple(
+            "min_free_bytes": DictElement(
+                parameter_form=FSTuple(
                     elements=[
-                        Filesize(
-                            title=_("Clean up when disk space is below"),
-                            minvalue=1,  # min 1 byte
-                            default_value=0,
+                        DataSize(
+                            title=Title("Clean up when disk space is below"),
+                            displayed_magnitudes=FILESIZE_MAGNITUDES,
+                            custom_validate=[validators.NumberInRange(min_value=1)],  # min 1 byte
                         ),
-                        Age(
-                            title=_("Never remove files newer than"),
-                            minvalue=1,  # minimum 1 sec
-                            default_value=2592000,  # 1 month
-                            help=_(
+                        FSAge(
+                            title=Title("Never remove files newer than"),
+                            custom_validate=[
+                                validators.NumberInRange(min_value=1)
+                            ],  # minimum 1 sec
+                            prefill=DefaultValue(2592000.0),  # 1 month
+                            help_text=Help(
                                 "With this option you can prevent cleanup of files which have been updated "
                                 "within this time range."
                             ),
                         ),
                     ],
-                    title=_("Delete additional files when disk space is below"),
-                    help=_(
+                    title=Title("Delete additional files when disk space is below"),
+                    help_text=Help(
                         "When the disk space cleanup by file age was not able to gain enough "
                         "free disk space, then the cleanup mechanism starts cleaning up additional "
                         "files. The files are deleted by age, the oldest first, until the files are "
@@ -235,13 +255,12 @@ ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
                     ),
                 ),
             ),
-            (
-                "cleanup_abandoned_host_files",
-                Age(
-                    title=_("Clean up abandoned host files older than"),
-                    minvalue=3600,  # 1 hour
-                    default_value=2592000,  # 1 month
-                    help=_(
+            "cleanup_abandoned_host_files": DictElement(
+                parameter_form=FSAge(
+                    title=Title("Clean up abandoned host files older than"),
+                    custom_validate=[validators.NumberInRange(min_value=3600)],  # 1 hour
+                    prefill=DefaultValue(2592000.0),  # 1 month
+                    help_text=Help(
                         "During monitoring there are several dedicated files created for each host. "
                         "There are, for example, the discovered services, performance data and "
                         "different temporary files created. During deletion of a host, these files "
@@ -254,9 +273,8 @@ ConfigVariableSiteDiskspaceCleanup = ConfigVariable(
                     ),
                 ),
             ),
-        ],
-        default_keys=["cleanup_abandoned_host_files"],
-        empty_text=_("Disk space cleanup is disabled"),
+        },
+        no_elements_text=Message("Disk space cleanup is disabled"),
     ),
 )
 
@@ -364,25 +382,25 @@ ConfigVariableSiteApacheProcessTuning = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainApache,
     ident="apache_process_tuning",
-    valuespec=lambda context: Dictionary(
-        title=_("Apache process tuning"),
-        optional_keys=[],
-        elements=[
-            (
-                "number_of_processes",
-                Integer(
-                    title=_("Number of apache processes"),
-                    help=_(
+    form_spec=lambda context: Dictionary(
+        title=Title("Apache process tuning"),
+        elements={
+            "number_of_processes": DictElement(
+                required=True,
+                parameter_form=Integer(
+                    title=Title("Number of apache processes"),
+                    help_text=Help(
                         "Use this value to tune the maximum number of apache client requests that will be processed simultaneously "
                         "(maximum number of apache server processes allowed to start). In case you have a lot of incoming "
                         "requests in parallel it may be a good idea to increase this value. But do this carefully, more is "
                         "not always better. The apache processes normally need a decent amount of memory and you should "
                         "only configure as many apache processes as your system can handle in high load situations."
                     ),
-                    minvalue=5,
+                    custom_validate=[validators.NumberInRange(min_value=5)],
+                    prefill=DefaultValue(5),
                 ),
             ),
-        ],
+        },
     ),
 )
 
@@ -491,62 +509,64 @@ ConfigVariableSiteRRDCachedTuning = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainRRDCached,
     ident="rrdcached_tuning",
-    valuespec=lambda context: Dictionary(
-        title=_("RRDCached tuning"),
-        elements=[
-            (
-                "TIMEOUT",
-                Age(
-                    title=_("Disk flush interval of updated metrics"),
-                    help=_(
+    form_spec=lambda context: Dictionary(
+        title=Title("RRDCached tuning"),
+        elements={
+            "TIMEOUT": DictElement(
+                required=True,
+                parameter_form=FSAge(
+                    title=Title("Disk flush interval of updated metrics"),
+                    help_text=Help(
                         "Updated metrics are written to disk in the configured interval. "
                         "The write operation is only performed for metrics that are being "
                         "updated. Old metrics are not affected by this option."
                     ),
-                    minvalue=0,
+                    custom_validate=[validators.NumberInRange(min_value=0)],
+                    prefill=DefaultValue(0.0),
                 ),
             ),
-            (
-                "RANDOM_DELAY",
-                Age(
-                    title=_("Random delay"),
-                    help=_(
+            "RANDOM_DELAY": DictElement(
+                required=True,
+                parameter_form=FSAge(
+                    title=Title("Random delay"),
+                    help_text=Help(
                         "The rrdcached will delay writing of each metric for a random "
                         "number of seconds in the range [0..delay]. This will avoid too many "
                         "writes being queued simultaneously. This number should not be "
                         'higher than the value specified in "Disk flush interval of '
                         'updated metrics".'
                     ),
-                    minvalue=0,
+                    custom_validate=[validators.NumberInRange(min_value=0)],
+                    prefill=DefaultValue(0.0),
                 ),
             ),
-            (
-                "FLUSH_TIMEOUT",
-                Age(
-                    title=_("Disk flush interval of old data"),
-                    help=_(
+            "FLUSH_TIMEOUT": DictElement(
+                required=True,
+                parameter_form=FSAge(
+                    title=Title("Disk flush interval of old data"),
+                    help_text=Help(
                         "The entire cache is searched in the interval configured here for old "
                         "values which shall be written to disk. This only concerns RRD files to "
                         "which updates have stopped, so setting this to a high value is "
                         "acceptable in most cases."
                     ),
-                    minvalue=0,
+                    custom_validate=[validators.NumberInRange(min_value=0)],
+                    prefill=DefaultValue(0.0),
                 ),
             ),
-            (
-                "WRITE_THREADS",
-                Integer(
-                    title=_("Number of threads used for writing RRD files"),
-                    help=_(
+            "WRITE_THREADS": DictElement(
+                required=True,
+                parameter_form=Integer(
+                    title=Title("Number of threads used for writing RRD files"),
+                    help_text=Help(
                         "Increasing this number will allow rrdcached to have more simultaneous "
                         "I/O requests into the kernel. This may allow the kernel to re-order "
                         "disk writes, resulting in better disk throughput."
                     ),
-                    minvalue=1,
-                    maxvalue=100,
+                    custom_validate=[validators.NumberInRange(min_value=1, max_value=100)],
+                    prefill=DefaultValue(1),
                 ),
             ),
-        ],
-        optional_keys=[],
+        },
     ),
 )

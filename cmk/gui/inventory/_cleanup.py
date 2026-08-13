@@ -14,20 +14,14 @@ from typing import Literal
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import Config
-from cmk.gui.i18n import _
+from cmk.gui.form_specs.generators.age import Age as FSAge
+from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
+from cmk.gui.form_specs.generators.regex_utils import create_regex
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.gui.log import logger
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.valuespec import (
-    Age,
-    Alternative,
-    CascadingDropdown,
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    Integer,
-    ListOf,
-    TextOrRegExp,
-)
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
 )
@@ -41,67 +35,128 @@ from cmk.inventory.config import (
 )
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.paths import TreePath, TreePathGz
+from cmk.rulesets.internal.form_specs import (
+    ListExtended,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
+from cmk.rulesets.v1 import Label, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    Integer,
+    MatchingScope,
+    String,
+    TimeMagnitude,
+    validators,
+)
 
 
-def _vs_file_age(title: str, default_value: int) -> Age:
-    return Age(title=title, display=["days"], minvalue=1, default_value=default_value)
-
-
-def _vs_file_age_history_entries() -> Age:
-    return _vs_file_age(_("Remove history entries older than"), 400 * 86400)
-
-
-def _vs_number_of_history_entries() -> Integer:
-    return Integer(
-        title=_("Remove history entries right after"),
-        label=_("entry number"),
-        default_value=100,
-        minvalue=1,
-        size=4,
+def _fs_text_or_regex() -> TransformDataForLegacyFormatOrRecomposeFunction:
+    # Port of the TextOrRegExp() valuespec.
+    return enable_deprecated_alternative(
+        wrapped_form_spec=CascadingSingleChoice(
+            elements=[
+                CascadingSingleChoiceElement(
+                    name="alternative_explicit",
+                    title=Title("Explicit match"),
+                    parameter_form=String(title=Title("Explicit match")),
+                ),
+                CascadingSingleChoiceElement(
+                    name="alternative_regex",
+                    title=Title("Regular expression match"),
+                    parameter_form=TransformDataForLegacyFormatOrRecomposeFunction(
+                        wrapped_form_spec=create_regex(
+                            MatchingScope.PREFIX,
+                            title=Title("Regular expression match"),
+                        ),
+                        to_disk=lambda value: f"~{value}",
+                        from_disk=lambda value: str(value)[1:],
+                    ),
+                ),
+            ],
+            prefill=DefaultValue("alternative_explicit"),
+        ),
+        match_function=lambda value: 1 if value and value[0] == "~" else 0,
     )
 
 
-def _vs_choices() -> CascadingDropdown:
-    return CascadingDropdown(
-        title=_("Cleanup parameters"),
-        choices=[
-            (
-                "file_age",
-                _("Remove history entries older than"),
-                _vs_file_age_history_entries(),
+def _fs_file_age(title: Title, prefill: int) -> TransformDataForLegacyFormatOrRecomposeFunction:
+    return FSAge(
+        title=title,
+        displayed_magnitudes=[TimeMagnitude.DAY],
+        custom_validate=[validators.NumberInRange(min_value=1)],
+        prefill=DefaultValue(float(prefill)),
+    )
+
+
+def _fs_file_age_history_entries() -> TransformDataForLegacyFormatOrRecomposeFunction:
+    return _fs_file_age(Title("Remove history entries older than"), 400 * 86400)
+
+
+def _fs_number_of_history_entries() -> Integer:
+    return Integer(
+        title=Title("Remove history entries right after"),
+        label=Label("entry number"),
+        prefill=DefaultValue(100),
+        custom_validate=[validators.NumberInRange(min_value=1)],
+    )
+
+
+def _fs_choices() -> CascadingSingleChoice:
+    return CascadingSingleChoice(
+        title=Title("Cleanup parameters"),
+        elements=[
+            CascadingSingleChoiceElement(
+                name="file_age",
+                title=Title("Remove history entries older than"),
+                parameter_form=_fs_file_age_history_entries(),
             ),
-            (
-                "number_of_history_entries",
-                _("Remove history entries right after"),
-                _vs_number_of_history_entries(),
+            CascadingSingleChoiceElement(
+                name="number_of_history_entries",
+                title=Title("Remove history entries right after"),
+                parameter_form=_fs_number_of_history_entries(),
             ),
-            (
-                "combined",
-                _("Remove history entries which meet the following conditions"),
-                Dictionary(
-                    title=_("Use the following defaults"),
-                    elements=[
-                        (
-                            "strategy",
-                            DropdownChoice(
-                                title=_("Cleanup strategy"),
-                                choices=[
-                                    ("and", _("Both conditions must match (defensive)")),
-                                    ("or", _("One condition needs to match (offensive)")),
+            CascadingSingleChoiceElement(
+                name="combined",
+                title=Title("Remove history entries which meet the following conditions"),
+                parameter_form=Dictionary(
+                    title=Title("Use the following defaults"),
+                    elements={
+                        "strategy": DictElement(
+                            required=True,
+                            parameter_form=SingleChoiceExtended[str](
+                                title=Title("Cleanup strategy"),
+                                elements=[
+                                    SingleChoiceElementExtended(
+                                        name="and",
+                                        title=Title("Both conditions must match (defensive)"),
+                                    ),
+                                    SingleChoiceElementExtended(
+                                        name="or",
+                                        title=Title("One condition needs to match (offensive)"),
+                                    ),
                                 ],
+                                prefill=DefaultValue("and"),
                             ),
                         ),
-                        (
-                            "file_age",
-                            _vs_file_age_history_entries(),
+                        "file_age": DictElement(
+                            required=True,
+                            parameter_form=_fs_file_age_history_entries(),
                         ),
-                        ("number_of_history_entries", _vs_number_of_history_entries()),
-                    ],
-                    optional_keys=[],
+                        "number_of_history_entries": DictElement(
+                            required=True,
+                            parameter_form=_fs_number_of_history_entries(),
+                        ),
+                    },
                 ),
             ),
         ],
-        sorted=False,
+        prefill=DefaultValue("file_age"),
     )
 
 
@@ -109,64 +164,83 @@ ConfigVariableInventoryCleanup = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainGUI,
     ident="inventory_cleanup",
-    valuespec=lambda context: Dictionary(
-        title=_("HW/SW inventory cleanup"),
-        elements=[
-            (
-                "for_hosts",
-                ListOf(
-                    valuespec=Dictionary(
-                        elements=[
-                            (
-                                "regex_or_explicit",
-                                ListOf(
-                                    valuespec=TextOrRegExp(),
-                                    title=_("Match host names"),
-                                    magic="!@#",
-                                    allow_empty=False,
+    form_spec=lambda context: Dictionary(
+        title=Title("HW/SW inventory cleanup"),
+        elements={
+            "for_hosts": DictElement(
+                required=True,
+                parameter_form=ListExtended(
+                    element_template=Dictionary(
+                        elements={
+                            "regex_or_explicit": DictElement(
+                                required=True,
+                                parameter_form=ListExtended(
+                                    element_template=_fs_text_or_regex(),
+                                    title=Title("Match host names"),
+                                    custom_validate=[validators.LengthInRange(min_value=1)],
+                                    prefill=DefaultValue([]),
                                 ),
                             ),
-                            ("parameters", _vs_choices()),
-                        ],
-                        optional_keys=[],
+                            "parameters": DictElement(
+                                required=True,
+                                parameter_form=_fs_choices(),
+                            ),
+                        },
                     ),
-                    title=_("For specific hosts"),
+                    title=Title("For specific hosts"),
+                    prefill=DefaultValue([]),
                 ),
             ),
-            (
-                "default",
-                Alternative(
-                    title=_("Default cleanup parameters"),
-                    elements=[
-                        Dictionary(
-                            title=_("Use the following defaults"),
-                            elements=[
-                                (
-                                    "strategy",
-                                    FixedValue(
-                                        "and",
-                                        _("Both conditions must match (defensive)"),
-                                        title=_("Cleanup strategy"),
-                                    ),
+            "default": DictElement(
+                required=True,
+                parameter_form=enable_deprecated_alternative(
+                    wrapped_form_spec=CascadingSingleChoice(
+                        title=Title("Default cleanup parameters"),
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                name="alternative_defaults",
+                                title=Title("Use the following defaults"),
+                                parameter_form=Dictionary(
+                                    title=Title("Use the following defaults"),
+                                    elements={
+                                        "strategy": DictElement(
+                                            required=True,
+                                            parameter_form=FixedValue(
+                                                value="and",
+                                                label=Label(
+                                                    "Both conditions must match (defensive)"
+                                                ),
+                                                title=Title("Cleanup strategy"),
+                                            ),
+                                        ),
+                                        "file_age": DictElement(
+                                            required=True,
+                                            parameter_form=_fs_file_age_history_entries(),
+                                        ),
+                                        "number_of_history_entries": DictElement(
+                                            required=True,
+                                            parameter_form=_fs_number_of_history_entries(),
+                                        ),
+                                    },
                                 ),
-                                (
-                                    "file_age",
-                                    _vs_file_age_history_entries(),
-                                ),
-                                ("number_of_history_entries", _vs_number_of_history_entries()),
-                            ],
-                            optional_keys=[],
-                        ),
-                        FixedValue(None, totext="", title=_("No defaults")),
-                    ],
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="alternative_no_defaults",
+                                title=Title("No defaults"),
+                                parameter_form=FixedValue(value=None),
+                            ),
+                        ],
+                        prefill=DefaultValue("alternative_defaults"),
+                    )
                 ),
             ),
-            (
-                "abandoned_file_age",
-                _vs_file_age(_("Remove abandoned host files older than"), 30 * 86400),
+            "abandoned_file_age": DictElement(
+                required=True,
+                parameter_form=_fs_file_age(
+                    Title("Remove abandoned host files older than"), 30 * 86400
+                ),
             ),
-        ],
-        optional_keys=[],
+        },
     ),
 )
 

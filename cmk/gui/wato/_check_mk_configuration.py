@@ -20,6 +20,7 @@ from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.form_specs._utils import create_validation_error_for_mk_user_error
 from cmk.gui.form_specs.generators.age import Age as FSAge
 from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
+from cmk.gui.form_specs.generators.host_address import HostAddressValidator
 from cmk.gui.form_specs.generators.log_level import LogLevelChoice
 from cmk.gui.form_specs.unstable import (
     id_validators,
@@ -2054,6 +2055,7 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
         )
     ),
     ident="trusted_certificate_authorities",
+    # TODO: not ported yet, ListOfCAs has no FormSpec counterpart.
     valuespec=lambda context: Dictionary(
         title=_("Trusted certificate authorities for SSL"),
         help=_(
@@ -2103,10 +2105,12 @@ ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
     primary_domain=ConfigDomainSiteCertificate,
     ident="site_subject_alternative_names",
     need_restart=True,
-    valuespec=lambda context: ListOf(
-        valuespec=HostAddress(),
-        title=_("Site certificate subject alternative names"),
-        help=_(
+    form_spec=lambda context: ListExtended(
+        element_template=fs.String(
+            custom_validate=[HostAddressValidator()],
+        ),
+        title=Title("Site certificate subject alternative names"),
+        help_text=Help(
             "Set the host names or IP addresses of the site. "
             "The entries will be added as additional subject alternative names (SANs) to the site "
             "certificate, alongside the default SANs. "
@@ -2118,6 +2122,7 @@ ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
             "In distributed setups, configure SANs separately for each site in the distributed "
             "monitoring configuration."
         ),
+        prefill=fs.DefaultValue([]),
     ),
 )
 
@@ -2126,15 +2131,15 @@ ConfigVariableAgentControllerCertificates = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainGUI,
     ident="agent_controller_certificates",
-    valuespec=lambda context: Dictionary(
-        title=_("Agent certificates"),
-        help=_("Settings for certificates issued to registered agents."),
-        elements=[
-            (
-                "lifetime_in_months",
-                DropdownChoice(
-                    title=_("Lifetime of certificates"),
-                    help=_(
+    form_spec=lambda context: fs.Dictionary(
+        title=Title("Agent certificates"),
+        help_text=Help("Settings for certificates issued to registered agents."),
+        elements={
+            "lifetime_in_months": fs.DictElement(
+                required=True,
+                parameter_form=SingleChoiceExtended[int](
+                    title=Title("Lifetime of certificates"),
+                    help_text=Help(
                         "This setting limits the validity of agent certificates."
                         " Active agents (i.e., the Agent Controller is running as a daemon)"
                         " will automatically call the Checkmk site for renewal when"
@@ -2142,19 +2147,19 @@ ConfigVariableAgentControllerCertificates = ConfigVariable(
                         " setting, you can assure that registrations of inactive agents"
                         " expire after a given time."
                     ),
-                    choices=[
-                        (3, _("3 months")),
-                        (6, _("6 months")),
-                        (12, _("1 year")),
-                        (24, _("2 years")),
-                        (60, _("5 years")),
-                        (120, _("10 years")),
-                        (600, _("50 years")),
+                    elements=[
+                        SingleChoiceElementExtended(name=3, title=Title("3 months")),
+                        SingleChoiceElementExtended(name=6, title=Title("6 months")),
+                        SingleChoiceElementExtended(name=12, title=Title("1 year")),
+                        SingleChoiceElementExtended(name=24, title=Title("2 years")),
+                        SingleChoiceElementExtended(name=60, title=Title("5 years")),
+                        SingleChoiceElementExtended(name=120, title=Title("10 years")),
+                        SingleChoiceElementExtended(name=600, title=Title("50 years")),
                     ],
+                    prefill=fs.DefaultValue(3),
                 ),
             ),
-        ],
-        optional_keys=False,
+        },
     ),
 )
 
@@ -2162,9 +2167,9 @@ RestAPIETagLocking = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainGUI,
     ident="rest_api_etag_locking",
-    valuespec=lambda context: Checkbox(
-        title=_("REST API: Use HTTP ETags for optimistic locking"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("REST API: Use HTTP ETags for optimistic locking"),
+        help_text=Help(
             "When multiple HTTP clients want to update an object at the same time, "
             "it can happen that the slower client will overwrite changes by the faster one. "
             "This is commonly referred to as the 'lost update problem'. To prevent this "

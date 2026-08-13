@@ -56,7 +56,11 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.livestatus_client import SiteConfigurations
-from cmk.rulesets.internal.form_specs import MultipleChoiceExtended, SingleChoiceExtended
+from cmk.rulesets.internal.form_specs import (
+    ListOfStrings,
+    MultipleChoiceExtended,
+    SingleChoiceExtended,
+)
 from cmk.rulesets.v1 import form_specs
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -515,6 +519,10 @@ def _walk_form_spec(spec: FormSpec[Any], path: str, revealed: dict[str, object])
         revealed[f"{path}[add]"] = _form_spec_revealed_default(
             _list_unique_selection_template(spec)
         )
+    elif isinstance(spec, ListOfStrings):
+        template_path = f"{path}[add]"
+        revealed[template_path] = _form_spec_revealed_default(spec.string_spec)
+        _walk_form_spec(spec.string_spec, template_path, revealed)
     elif isinstance(spec, form_specs.CascadingSingleChoice):
         for choice_element in spec.elements:
             element_path = _join_key(path, choice_element.name)
@@ -682,7 +690,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     "diskspace_cleanup": {
         "cleanup_abandoned_host_files": 2592000,
         "max_file_age": 31536000,
-        "min_free_bytes": (0, 2592000),
+        "min_free_bytes": (NoSaveableDefault(), 2592000),
     },
     "graph_timeranges": {
         "[add]": {"duration": NoSaveableDefault(), "title": NoSaveableDefault()},
@@ -711,12 +719,12 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[enable]": 720,
     },
     "inventory_cleanup": {
-        "default.[choice 0]": {
+        "default.alternative_defaults": {
             "file_age": 34560000,
             "number_of_history_entries": 100,
             "strategy": "and",
         },
-        "default.[choice 1]": None,
+        "default.alternative_no_defaults": None,
         "for_hosts[add]": {"parameters": ("file_age", 34560000), "regex_or_explicit": []},
         "for_hosts[add].parameters.combined": {
             "file_age": 34560000,
@@ -725,9 +733,9 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         },
         "for_hosts[add].parameters.file_age": 34560000,
         "for_hosts[add].parameters.number_of_history_entries": 100,
-        "for_hosts[add].regex_or_explicit[add]": "",
-        "for_hosts[add].regex_or_explicit[add].[choice 0]": "",
-        "for_hosts[add].regex_or_explicit[add].[choice 1]": "~",
+        "for_hosts[add].regex_or_explicit[add]": NoSaveableDefault(),
+        "for_hosts[add].regex_or_explicit[add].alternative_explicit": NoSaveableDefault(),
+        "for_hosts[add].regex_or_explicit[add].alternative_regex": NoSaveableDefault(),
     },
     "ldap_quarantine_period": {
         "[enable]": 2592000,
@@ -925,7 +933,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
             "per_source": 250,
             "port": 6557,
         },
-        "[enable].only_from[add]": "",
+        "[enable].only_from[add]": NoSaveableDefault(),
         "[enable].tls": True,
     },
     "site_mkeventd": {
@@ -936,7 +944,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "limit.relative": {"limit": 80, "spike_limit": 20},
     },
     "site_subject_alternative_names": {
-        "[add]": "",
+        "[add]": NoSaveableDefault(),
     },
     "site_trace_receive": {
         "[enable]": {"address": "[::1]", "port": 4317},
@@ -2335,8 +2343,9 @@ CASES: Mapping[str, list[Case]] = {
     "site_mcp_trace_forward": CHECKBOX_CASES,
     "site_mkeventd": [
         CasePass("disabled", None),
-        CasePass("configured", ["SYSLOG", "SNMPTRAP"]),
-        CaseFail("unknown-listener", ["BOGUS"]),
+        CasePass("configured", ["SNMPTRAP", "SYSLOG"]),
+        CaseMigrates("unsorted-is-sorted", ["SYSLOG", "SNMPTRAP"], ["SNMPTRAP", "SYSLOG"]),
+        CaseMigrates("unknown-listener-dropped", ["BOGUS"], []),
     ],
     "site_opentelemetry_collector": CHECKBOX_CASES,
     "site_opentelemetry_collector_delta_to_cumulative_processor": [

@@ -9,6 +9,7 @@ import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
+import ActionIcon from '@/monitoring/shared/components/cell/ActionIcon.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 
 const props = defineProps<{
@@ -53,10 +54,11 @@ function select(action: CellAction): void {
         variant="optional"
         :disabled="disabled || action.disabled"
         :title="action.label"
-        :icon="{ name: action.icon, size: 'small' }"
         :running="runningActionId === action.id"
+        class="monitoring-action-bar__action"
         @click="select(action)"
       >
+        <ActionIcon :icon="action.icon" />
         {{ action.label }}
       </CmkButton>
     </div>
@@ -81,6 +83,11 @@ function select(action: CellAction): void {
 .monitoring-action-bar__selection {
   flex: 0 0 auto;
   font-weight: var(--font-weight-bold);
+}
+
+.monitoring-action-bar__action {
+  /* CmkButton only spaces icon from label for its `icon` prop, and the icon comes via the slot. */
+  gap: var(--dimension-4);
 }
 
 .monitoring-action-bar__actions {

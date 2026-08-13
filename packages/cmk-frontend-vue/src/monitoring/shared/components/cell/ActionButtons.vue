@@ -6,10 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
-import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
-import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
+import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkSkeleton from 'cmk-ui-library/components/CmkSkeleton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -22,10 +20,12 @@ import {
 } from 'reka-ui'
 import { computed, ref } from 'vue'
 
+import ActionIcon, { type ActionIcon as ActionIconSpec } from './ActionIcon.vue'
+
 export interface CellAction {
   id: string
   label: TranslatedString
-  icon: SimpleIcons
+  icon: ActionIconSpec
   disabled?: boolean | undefined
   // When set, the action is a link and is rendered as a native anchor; otherwise it is a button
   // that emits `select` for the parent to handle.
@@ -99,20 +99,29 @@ function select(action: CellAction): void {
         :title="action.label"
         :aria-label="action.label"
       >
-        <CmkIcon :name="action.icon" size="small" />
+        <ActionIcon :icon="action.icon" />
       </a>
-      <CmkButton
-        v-else
-        size="iconOnly"
-        variant="optional"
+      <CmkIconButton
+        v-else-if="typeof action.icon !== 'string'"
+        class="monitoring-action-buttons__icon-button"
+        :name="action.icon.name"
+        :primary-color="action.icon.color"
+        size="small"
         :title="action.label"
         :aria-label="action.label"
         :disabled="action.disabled"
-        class="monitoring-action-buttons__button"
         @click="select(action)"
-      >
-        <CmkIcon :name="action.icon" size="small" />
-      </CmkButton>
+      />
+      <CmkIconButton
+        v-else
+        class="monitoring-action-buttons__icon-button"
+        :name="action.icon"
+        size="small"
+        :title="action.label"
+        :aria-label="action.label"
+        :disabled="action.disabled"
+        @click="select(action)"
+      />
     </template>
 
     <DropdownMenuRoot v-if="hasMenu" @update:open="onOpenChange">
@@ -136,7 +145,7 @@ function select(action: CellAction): void {
               class="monitoring-action-buttons__menu-item"
             >
               <a :href="action.url" :target="action.target ?? '_top'">
-                <CmkIcon :name="action.icon" size="small" />
+                <ActionIcon :icon="action.icon" />
                 <span class="monitoring-action-buttons__menu-label">{{ action.label }}</span>
               </a>
             </DropdownMenuItem>
@@ -146,7 +155,7 @@ function select(action: CellAction): void {
               :disabled="action.disabled === true"
               @select="select(action)"
             >
-              <CmkIcon :name="action.icon" size="small" />
+              <ActionIcon :icon="action.icon" />
               <span class="monitoring-action-buttons__menu-label">{{ action.label }}</span>
             </DropdownMenuItem>
           </template>
@@ -187,7 +196,7 @@ function select(action: CellAction): void {
                 class="monitoring-action-buttons__menu-item"
               >
                 <a :href="action.url" :target="action.target ?? '_top'">
-                  <CmkIcon :name="action.icon" size="small" />
+                  <ActionIcon :icon="action.icon" />
                   <span class="monitoring-action-buttons__menu-label">{{ action.label }}</span>
                 </a>
               </DropdownMenuItem>
@@ -197,7 +206,7 @@ function select(action: CellAction): void {
                 :disabled="action.disabled === true"
                 @select="select(action)"
               >
-                <CmkIcon :name="action.icon" size="small" />
+                <ActionIcon :icon="action.icon" />
                 <span class="monitoring-action-buttons__menu-label">{{ action.label }}</span>
               </DropdownMenuItem>
             </template>
@@ -214,10 +223,6 @@ function select(action: CellAction): void {
   flex-direction: row;
   align-items: center;
   gap: var(--dimension-2);
-}
-
-.monitoring-action-buttons__button {
-  flex: 0 0 auto;
 }
 
 .monitoring-action-buttons__icon-button {

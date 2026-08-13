@@ -213,6 +213,7 @@ void main() {
                 smart_stage(
                     name: "Copy artifacts",
                     condition: run_condition && build_instance && item.RESULT_CHECK_FILE_PATTERN,
+                    retry: 3,
                     raiseOnError: false,
                 ) {
                     // copyArtifacts seems not to work with k8s

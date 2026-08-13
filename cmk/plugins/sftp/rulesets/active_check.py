@@ -61,7 +61,7 @@ def _migrate_get_params(params: object) -> Mapping[str, object]:
 def _make_form_spec_check_sftp() -> Dictionary:
     return Dictionary(
         migrate=_migrate_from_tuple,
-        title=Title("Check SFTP Service"),
+        title=Title("Check SFTP service"),
         help_text=Help(
             "Check functionality of a SFTP server. You can use the default values for putting or getting "
             "a file. This file will then be created for the test and deleted afterwards. It will of course not "
@@ -206,7 +206,7 @@ def _make_form_spec_check_sftp() -> Dictionary:
 
 rule_spec_active_check_sftp = ActiveCheck(
     name="sftp",
-    title=Title("Check SFTP Service"),
+    title=Title("Check SFTP service"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form_spec_check_sftp,
 )

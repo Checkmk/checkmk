@@ -102,7 +102,7 @@ def _make_parameter_form() -> Dictionary:
             ),
             "expect": DictElement(
                 parameter_form=String(
-                    title=Title("Expected String"),
+                    title=Title("Expected string"),
                     help_text=Help(
                         "String to expect in first line of server response. "
                         "The default is <tt>220</tt>."

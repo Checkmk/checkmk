@@ -79,7 +79,7 @@ def _valuespec_active_checks_mail_loop() -> Dictionary:
                     title=Title("Subject"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                     help_text=Help(
-                        "Here you can specify the subject text "
+                        "Here, you can specify the subject text "
                         "instead of default text 'Check_MK-Mail-Loop'."
                     ),
                 ),

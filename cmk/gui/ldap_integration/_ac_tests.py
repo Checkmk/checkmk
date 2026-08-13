@@ -59,14 +59,14 @@ class ACTestLDAPSecured(ACTest):
             if connection.use_ssl():
                 yield ACSingleResult(
                     state=ACResultState.OK,
-                    text=_("%s: Uses SSL") % connection_id,
+                    text=_("%s: uses SSL") % connection_id,
                     site_id=site_id,
                 )
 
             else:
                 yield ACSingleResult(
                     state=ACResultState.WARN,
-                    text=_("%s: Not using SSL. Consider enabling it in the connection settings.")
+                    text=_("%s: not using SSL. Consider enabling it in the connection settings.")
                     % connection_id,
                     site_id=site_id,
                 )

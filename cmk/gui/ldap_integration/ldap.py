@@ -316,16 +316,18 @@ class LDAPConnectionValuespec(Dictionary):
                         "(name conflicts), for example user accounts, from different LDAP connections.<br>"
                         "It is used in the following situations:<br><br>"
                         "During LDAP synchronization, the LDAP sync might discover that a user to be "
-                        "synchronized from from the current LDAP is already being synchronized from "
-                        "another LDAP connection. Without the suffix configured this results in a name "
+                        "synchronized from the current LDAP is already being synchronized from "
+                        "another LDAP connection. Without the suffix configured, this results in a "
+                        "name "
                         "conflict and the later user not being synchronized. If the connection has a "
                         "suffix configured, this suffix is added to the later username in case of the name "
                         "conflict to resolve it. The user will then be named <tt>[username]@[suffix]</tt> "
                         "instead of just <tt>[username]</tt>.<br><br>"
-                        "In the case a user which users name is existing in multiple LDAP directories, "
-                        "but associated to different persons, your user can insert <tt>[username]@[suffix]</tt>"
-                        " during login instead of just the plain <tt>[username]</tt> to tell which LDAP "
-                        "directory he is assigned to. Users without name conflict just need to provide their "
+                        "In case a user's username exists in multiple LDAP directories, "
+                        "but associated to different persons, the user can insert "
+                        "<tt>[username]@[suffix]</tt> during login instead of just the plain "
+                        "<tt>[username]</tt> to specify which LDAP directory they are assigned to. "
+                        "Users without name conflict just need to provide their "
                         "regular username as usual."
                     ),
                     regex=re.compile(r"^[A-Z0-9.-]+(?:\.[A-Z]{2,24})?$", re.I),
@@ -386,8 +388,9 @@ class LDAPConnectionValuespec(Dictionary):
                                 TextInput(
                                     title=_("DNS domain name to discover LDAP servers of"),
                                     help=_(
-                                        "Configure the DNS domain name of your Active directory domain here, Checkmk "
-                                        "will then query this domain for it's closest domain controller to communicate "
+                                        "Configure the DNS domain name of your Active Directory "
+                                        "domain here, Checkmk will then query this domain for its "
+                                        "closest domain controller to communicate "
                                         "with."
                                     ),
                                     allow_empty=False,
@@ -447,7 +450,7 @@ class LDAPConnectionValuespec(Dictionary):
                 TextInput(
                     title=_("Search filter"),
                     help=_(
-                        "Using this option you can define an optional LDAP filter which is used during "
+                        "Using this option, you can define an optional LDAP filter which is used during "
                         "LDAP searches. It can be used to only handle a subset of the users below the given "
                         "base DN.<br><br>Some common examples:<br><br> "
                         "All user objects in LDAP:<br> "
@@ -468,7 +471,7 @@ class LDAPConnectionValuespec(Dictionary):
                 LDAPDistinguishedName(
                     title=_("Filter group (see help)"),
                     help=_(
-                        "Using this option you can define the DN of a group object which is used to filter the users. "
+                        "Using this option, you can define the DN of a group object which is used to filter the users. "
                         "Only members of this group will then be synchronized. This is a filter which can be "
                         'used to extend capabilities of the regular "Search Filter". Using the search filter '
                         "you can only define filters which directly apply to the user objects. To filter by "
@@ -476,9 +479,10 @@ class LDAPConnectionValuespec(Dictionary):
                         "directories. But some directories do not have such attributes because the memberships "
                         "are stored in the group objects as e.g. <tt>member</tt> attributes. You should use the "
                         "regular search filter whenever possible and only use this filter when it is really "
-                        "necessary. Finally you can say, you should not use this option when using Active Directory. "
-                        "This option is necessary in OpenLDAP directories when you like to filter by group membership.<br><br>"
-                        "If using, give a plain distinguished name of a group here, e. g. "
+                        "necessary. So, this option should not be used when using Active "
+                        "Directory. This option is necessary in OpenLDAP directories when you want "
+                        "to filter by group membership.<br><br>If used, enter a plain "
+                        "distinguished name of a group here, e. g. "
                         "<tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt>"
                     ),
                     size=80,
@@ -502,7 +506,7 @@ class LDAPConnectionValuespec(Dictionary):
                     title=_("Lower case User-IDs"),
                     help=_("Convert imported User-IDs to lower case during synchronization."),
                     value=True,
-                    totext=_("Enforce lower case User-IDs."),
+                    totext=_("Enforce lower case user IDs."),
                 ),
             ),
             (
@@ -577,7 +581,7 @@ class LDAPConnectionValuespec(Dictionary):
                 TextInput(
                     title=_("Search filter"),
                     help=_(
-                        "Using this option you can define an optional LDAP filter which is used "
+                        "Using this option, you can define an optional LDAP filter which is used "
                         "during group related LDAP searches. It can be used to only handle a "
                         "subset of the groups below the given base DN.<br><br>"
                         "e.g. <tt>(objectclass=group)</tt>"
@@ -970,9 +974,9 @@ class ModeEditLDAPConnection(WatoMode):
         return [
             (_("Connection"), self._test_connect),
             (_("User Base-DN"), self._test_user_base_dn),
-            (_("Count Users"), self._test_user_count),
+            (_("Count users"), self._test_user_count),
             (_("Group Base-DN"), self._test_group_base_dn),
-            (_("Count Groups"), self._test_group_count),
+            (_("Count groups"), self._test_group_count),
             (_("Sync-plug-in: Roles"), self._test_groups_to_roles),
         ]
 

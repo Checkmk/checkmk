@@ -2386,7 +2386,7 @@ class LDAPAttributePluginAlias(LDAPAttributePlugin):
             title=_("Alias"),
             help_text=_(
                 "Populates the alias attribute of the Setup user by synchronizing an attribute "
-                "from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used."
+                "from the LDAP user account. By default, the LDAP attribute <tt>cn</tt> is used."
             ),
         )
 
@@ -2456,7 +2456,7 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
         super().__init__(
             builtin=True,
             ident="auth_expire",
-            title=_("Authentication Expiration"),
+            title=_("Authentication expiration"),
             help_text=_(
                 "This plug-in fetches all information which is needed to check whether or not an already authenticated user should be de-authenticated, e.g. because the password has changed in LDAP or the account has been locked."
             ),
@@ -2551,7 +2551,7 @@ class LDAPAttributePluginAuthExpire(LDAPAttributePlugin):
                         help=_(
                             "When the value of this attribute changes for a user account, all "
                             "current authenticated sessions of the user are invalidated and the "
-                            "user must login again. By default this field uses the fields which "
+                            "user must login again. By default, this field uses the fields which "
                             "hold the time of the last password change of the user."
                         ),
                         default_value=lambda: ldap_attr_of_connection(connection, "pw_changed"),
@@ -2581,7 +2581,7 @@ class LDAPAttributePluginPager(LDAPAttributePlugin):
             help_text=_(
                 "This plug-in synchronizes a field of the users LDAP account to the pager attribute "
                 "of the Setup user accounts, which is then forwarded to the monitoring core and can be used "
-                "for notifications. By default the LDAP attribute <tt>mobile</tt> is used."
+                "for notifications. By default, the LDAP attribute <tt>mobile</tt> is used."
             ),
         )
 

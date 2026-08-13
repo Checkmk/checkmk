@@ -36,6 +36,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=lambda: TextInput(title=_("Resource Group")),
         parameter_valuespec=_parameter_valuespec_hacmp_resources,
-        title=lambda: _("AIX HACMP Resource Groups"),
+        title=lambda: _("AIX HACMP resource groups"),
     )
 )

@@ -411,7 +411,7 @@ def vs_idle_timeout_duration() -> Age:
         display=["minutes", "hours", "days"],
         minvalue=60,
         help=_(
-            "Normally a user login session is valid until the password is changed, the "
+            "Normally, a user login session is valid until the password is changed, the "
             "browser is closed or the user is locked. By enabling this option, you "
             "can apply a time limit to login sessions which is applied when the user "
             "stops interacting with the GUI for a given amount of time. When a user "

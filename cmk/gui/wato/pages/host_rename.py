@@ -357,7 +357,7 @@ class ModeBulkRenameHost(WatoMode):
                 (
                     "recurse",
                     Checkbox(
-                        title=_("Folder Selection"),
+                        title=_("Folder selection"),
                         label=_("Include all subfolders"),
                         default_value=True,
                     ),
@@ -376,7 +376,7 @@ class ModeBulkRenameHost(WatoMode):
                     "renamings",
                     ListOf(
                         valuespec=self._vs_host_renaming(),
-                        title=_("Renaming Operations"),
+                        title=_("Renaming operations"),
                         add_label=_("Add renaming"),
                         allow_empty=False,
                     ),
@@ -399,8 +399,8 @@ class ModeBulkRenameHost(WatoMode):
                         ]
                     ),
                 ),
-                ("add_suffix", _("Add Suffix"), TextInput(allow_empty=False, size=38)),
-                ("add_prefix", _("Add Prefix"), TextInput(allow_empty=False, size=38)),
+                ("add_suffix", _("Add suffix"), TextInput(allow_empty=False, size=38)),
+                ("add_prefix", _("Add prefix"), TextInput(allow_empty=False, size=38)),
                 ("drop_domain", _("Drop Domain Suffix")),
                 ("reverse_dns", _("Convert IP addresses of hosts into host their DNS names")),
                 (
@@ -748,7 +748,7 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         if what.startswith("dnsfail-"):
             text = (
                 _(
-                    "<b>Warning: </b> the IP address lookup of <b>%s</b> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. Please update your DNS or configure an IP address for the affected host."
+                    "<b>Warning: </b> The IP address lookup of <b>%s</b> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. Please update your DNS or configure an IP address for the affected host."
                 )
                 % what.split("-", 1)[1]
             )

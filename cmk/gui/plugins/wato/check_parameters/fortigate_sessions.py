@@ -39,6 +39,6 @@ rulespec_registry.register(
         check_group_name="fortigate_sessions",
         group=RulespecGroupCheckParametersNetworking,
         parameter_valuespec=fortigate_sessions_element,
-        title=lambda: _("Fortigate Active Sessions"),
+        title=lambda: _("FortiGate active sessions"),
     )
 )

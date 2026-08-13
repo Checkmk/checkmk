@@ -20,7 +20,7 @@ def _parameter_valuespec_bluecat_dns() -> Dictionary:
             (
                 "oper_states",
                 Dictionary(
-                    title=_("Operations States"),
+                    title=_("Operations states"),
                     elements=[
                         (
                             "warning",
@@ -53,6 +53,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bluecat_dns,
-        title=lambda: _("Bluecat DNS Settings"),
+        title=lambda: _("BlueCat DNS settings"),
     )
 )

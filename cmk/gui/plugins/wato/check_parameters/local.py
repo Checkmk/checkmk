@@ -46,7 +46,7 @@ def _parameter_valuespec_local():
                     ],
                     title="%s - %s %s"
                     % (
-                        _("Clusters: Preferred check result of local checks"),
+                        _("Clusters: preferred check result of local checks"),
                         _deprecation_message(),
                         _("Old setting"),
                     ),

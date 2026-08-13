@@ -54,6 +54,6 @@ rulespec_registry.register(
         item_spec=_item_spec_ucs_c_rack_server_led,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ucs_c_rack_server_led,
-        title=lambda: _("Cisco UCS C-Series Rack Server LED state"),
+        title=lambda: _("Cisco UCS C-Series rack server LED state"),
     )
 )

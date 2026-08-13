@@ -76,7 +76,7 @@ def _parameter_valuespec_checkmk_agent():
                     valuespec=CascadingDropdown(
                         title=_("Check version of Checkmk agent"),
                         help=_(
-                            "Here you can make sure that all of your Checkmk agents are running"
+                            "Here, you can make sure that all of your Checkmk agents are running"
                             " one specific version. Agents running"
                             " a different version return a non-OK state."
                         ),
@@ -269,7 +269,7 @@ def _parameter_valuespec_checkmk_agent():
             (
                 "exclude_pattern_plugins",
                 RegExp(
-                    title=_("Agent plug-ins: Regular expression to exclude plug-ins"),
+                    title=_("Agent plug-ins: regular expression to exclude plug-ins"),
                     mode=RegExp.infix,
                     help=_(
                         "Plug-ins matching this pattern will be excluded from the comparison with "

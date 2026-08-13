@@ -410,14 +410,14 @@ def _valuespec_inventory_if_rules() -> Dictionary:
         title=_("Network interface and switch port discovery"),
         help=_(
             "Configure the discovery of services monitoring network interfaces and switch "
-            "ports. Note that this rule is a somewhat special case compared to most other "
-            "rules in checkmk. Usually, the conditions for applying a rule are configured "
+            "ports. Note that this rule is a somehow special case compared to most other "
+            "rules in Checkmk. Usually, the conditions for applying a rule are configured "
             "exclusively below in the section 'Conditions'. However, here, you can define "
             "additional conditions using the options offered by 'Conditions for this rule to "
             "apply'. These conditions are evaluated on a per-interface basis and allow for "
             "configuring the discovery of the corresponding services very finely. For example, "
-            "you can make checkmk discover only interfaces whose alias matches the regex 'eth' "
-            "or exclude certain port types or states from being discoverd. Note that saving a "
+            "you can make Checkmk discover only interfaces whose alias matches the regex 'eth' "
+            "or exclude certain port types or states from being discovered. Note that saving a "
             "rule which has only conditions specified is not allowed and will result in an "
             "error. The reason is that such a rule would have no effect."
         ),
@@ -508,7 +508,7 @@ def _valuespec_if_groups() -> Alternative:
     return Alternative(
         title=_("Network interface groups"),
         help=_(
-            "Normally the Interface checks create a single service for interface. "
+            "Normally, the interface checks create a single service for interface. "
             "By defining if-group patterns multiple interfaces can be combined together. "
             "A single service is created for this interface group showing the total traffic amount "
             "of its members. You can configure if interfaces which are identified as group interfaces "
@@ -564,9 +564,9 @@ rulespec_registry.register(
 
 def _help_if_disable_if64_hosts():
     return _(
-        "A couple of switches with broken firmware report that they support 64 bit "
-        "counters but do not output any actual data in those counters. Listing those "
-        "hosts in this rule forces them to use the interface check with 32 bit counters "
+        "A couple of switches with broken firmware report that they support 64-bit "
+        "counters, but do not output any actual data in those counters. Listing those "
+        "hosts in this rule forces them to use the interface check with 32-bit counters "
         "instead."
     )
 
@@ -944,7 +944,7 @@ def _parameter_valuespec_if() -> Dictionary:
                 "unit",
                 DropdownChoice(
                     title=_("Measurement unit"),
-                    help=_("Here you can specifiy the measurement unit of the network interface"),
+                    help=_("Here, you can specify the measurement unit of the network interface."),
                     default_value="byte",
                     choices=[
                         ("bit", _("Bits")),
@@ -978,7 +978,7 @@ def _parameter_valuespec_if() -> Dictionary:
                         title=_("Direction"),
                         orientation="horizontal",
                         choices=[
-                            ("both", _("In / Out"), vs_interface_traffic()),
+                            ("both", _("In / out"), vs_interface_traffic()),
                             ("in", _("In"), vs_interface_traffic()),
                             ("out", _("Out"), vs_interface_traffic()),
                         ],
@@ -1152,7 +1152,7 @@ def _parameter_valuespec_if() -> Dictionary:
                     help=_(
                         "Choose the behavior when the current port is not the "
                         "home port of the respective interface. The default is "
-                        '"Check and Display". This feature is currently only '
+                        '"Check and display". This feature is currently only '
                         "supported by the check netapp_api_if."
                     ),
                     choices=[

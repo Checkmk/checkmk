@@ -58,6 +58,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of VServer")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netscaler_vserver,
-        title=lambda: _("Netscaler VServer States"),
+        title=lambda: _("NetScaler VServer states"),
     )
 )

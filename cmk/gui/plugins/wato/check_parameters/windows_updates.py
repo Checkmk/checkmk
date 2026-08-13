@@ -44,7 +44,7 @@ def _parameter_valuespec_windows_updates() -> Dictionary:
                 "reboot_required_show_state",
                 DropdownChoice[int | None](
                     choices=[
-                        (None, _("Do not display reboot required state")),
+                        (None, _("Do not display 'reboot required' state")),
                         (0, _("OK")),
                         (1, _("WARN")),
                         (2, _("CRIT")),
@@ -53,7 +53,7 @@ def _parameter_valuespec_windows_updates() -> Dictionary:
                     sorted=False,
                     title=_("Service state if reboot required"),
                     help=_(
-                        "If a reboot is required, the selected status will be displayed. Default is warning."
+                        "If a reboot is required, the selected status will be displayed. Default is WARNING."
                     ),
                     default_value=1,
                 ),

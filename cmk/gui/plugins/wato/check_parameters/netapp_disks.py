@@ -64,6 +64,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netapp_disks,
-        title=lambda: _("Filer Disk Levels (NetApp, IBM SVC)"),
+        title=lambda: _("Filer disk levels (NetApp, IBM SVC)"),
     )
 )

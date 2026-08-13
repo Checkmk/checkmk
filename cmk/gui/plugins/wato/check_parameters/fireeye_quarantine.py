@@ -37,6 +37,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_quarantine,
-        title=lambda: _("Fireeye Quarantine Usage"),
+        title=lambda: _("FireEye quarantine usage"),
     )
 )

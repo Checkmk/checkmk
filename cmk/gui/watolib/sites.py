@@ -229,7 +229,7 @@ class SiteManagement:
                 "transport. Starting with Checkmk 1.6 it is possible to use encrypted Livestatus "
                 "communication. Sites created with 1.6 will automatically use encrypted communication "
                 "by default. Sites created with previous versions need to be configured manually to "
-                'enable the encryption. Have a look at <a href="werk.py?werk=7017">werk #7017</a> '
+                'enable the encryption. Have a look at <a href="werk.py?werk=7017">Werk #7017</a> '
                 "for further information."
             ),
         )
@@ -257,7 +257,7 @@ class SiteManagement:
             ],
             default_value="all" if site_id is None or site_is_local(site_configuration) else None,
             help=_(
-                "By default the users are synchronized automatically in the interval configured "
+                "By default, the users are synchronized automatically in the interval configured "
                 "in the connection. For example the LDAP connector synchronizes the users every "
                 "five minutes by default. The interval can be changed for each connection "
                 'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '

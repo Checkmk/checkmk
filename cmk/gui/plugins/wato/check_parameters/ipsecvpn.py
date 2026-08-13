@@ -37,6 +37,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ipsecvpn,
-        title=lambda: _("Fortigate IPSec VPN Tunnels"),
+        title=lambda: _("FortiGate IPSec VPN tunnels"),
     )
 )

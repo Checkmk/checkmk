@@ -111,7 +111,7 @@ file_size_age_elements: list[tuple[str, ValueSpec]] = [
 
 def _item_spec_filestats():
     return TextInput(
-        title=_("File Group Name"),
+        title=_("File group name"),
         help=_(
             "This name must match the name of the section defined "
             "in the mk_filestats configuration."
@@ -192,7 +192,7 @@ def _parameter_valuespec_filestats():
             ),
         ],
         help=_(
-            "Here you can impose various levels on the results reported by the"
+            "Here, you can impose various levels on the results reported by the"
             " mk_filestats plug-in. Note that some levels only apply to a matching"
             " output format (e.g. max/min count levels are not applied if only the"
             " smallest, largest, oldest and newest file is reported). In order to"

@@ -52,7 +52,7 @@ ConfigVariableGroupSupport = ConfigVariableGroup(
 
 
 ConfigVariableGroupDeveloperTools = ConfigVariableGroup(
-    title=_l("Developer Tools"),
+    title=_l("Developer tools"),
     sort_index=90,
     warning=_l(
         "These are internal settings used by Checkmk developers. "

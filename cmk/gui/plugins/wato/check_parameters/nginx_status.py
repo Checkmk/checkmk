@@ -27,7 +27,7 @@ def _parameter_valuespec_nginx_status():
             (
                 "active_connections",
                 Tuple(
-                    title=_("Active Connections"),
+                    title=_("Active connections"),
                     help=_(
                         "You can configure upper thresholds for the currently active "
                         "connections handled by the web server."

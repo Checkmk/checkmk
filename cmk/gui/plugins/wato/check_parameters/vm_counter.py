@@ -19,7 +19,7 @@ def _item_spec_vm_counter() -> DropdownChoice[str]:
     return DropdownChoice[str](
         title=_("kernel counter"),
         choices=[
-            ("Context Switches", _("Context Switches")),
+            ("Context Switches", _("Context switches")),
             ("Process Creations", _("Process Creations")),
             ("Major Page Faults", _("Major Page Faults")),
         ],

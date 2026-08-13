@@ -47,6 +47,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of the pool"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_svc_mdiskgrp,
-        title=lambda: _("IBM SVC Pool Capacity"),
+        title=lambda: _("IBM SVC pool capacity"),
     )
 )

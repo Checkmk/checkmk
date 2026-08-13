@@ -29,7 +29,7 @@ def _parameter_valuespec_citrix_sessions() -> Dictionary:
             (
                 "active",
                 Tuple(
-                    title=_("Number of Active Sessions"),
+                    title=_("Number of active sessions"),
                     elements=[
                         Integer(title=_("warning at"), unit="Sessions"),
                         Integer(title=_("critical at"), unit="Session"),
@@ -39,7 +39,7 @@ def _parameter_valuespec_citrix_sessions() -> Dictionary:
             (
                 "inactive",
                 Tuple(
-                    title=_("Number of Inactive Sessions"),
+                    title=_("Number of inactive sessions"),
                     elements=[
                         Integer(title=_("warning at"), unit="Sessions"),
                         Integer(title=_("critical at"), unit="Session"),
@@ -56,6 +56,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_citrix_sessions,
-        title=lambda: _("Citrix Terminal Server Sessions"),
+        title=lambda: _("Citrix terminal server sessions"),
     )
 )

@@ -21,7 +21,7 @@ def _parameter_valuespec_bluecat_command_server():
             (
                 "oper_states",
                 Dictionary(
-                    title=_("Operations States"),
+                    title=_("Operations states"),
                     elements=[
                         (
                             "warning",
@@ -54,6 +54,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bluecat_command_server,
-        title=lambda: _("Bluecat Command Server Settings"),
+        title=lambda: _("BlueCat Command Server settings"),
     )
 )

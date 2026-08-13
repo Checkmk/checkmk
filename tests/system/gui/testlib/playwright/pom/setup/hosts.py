@@ -409,7 +409,7 @@ class ImportHostsViaCSVFilePreview(CmkPage):
     def validate_page(self) -> None:
         logger.info("Validate that current page is the 'Bulk host import' page")
         self.main_area.check_page_title(self.page_title)
-        expect(self.main_area.get_text(text="File Parsing Settings")).to_be_visible()
+        expect(self.main_area.get_text(text="File parsing settings")).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
@@ -469,9 +469,9 @@ class ImportHostsViaCSVFileUpload(CmkPage):
 
     page_title = "Bulk import of hosts"
 
-    textarea_name = "Content of CSV File"
+    textarea_name = "Content of CSV file"
 
-    upload_button_name = "Upload CSV File"
+    upload_button_name = "Upload CSV file"
 
     @override
     def navigate(self) -> None:

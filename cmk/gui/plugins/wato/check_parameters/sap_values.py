@@ -39,7 +39,7 @@ def _valuespec_sap_value_groups():
                                             mode=RegExp.prefix,
                                         ),
                                         RegExp(
-                                            title=_("Exclude Pattern"),
+                                            title=_("Exclude pattern"),
                                             mode=RegExp.prefix,
                                         ),
                                     ],

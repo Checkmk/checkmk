@@ -62,7 +62,7 @@ def _parameter_form_spec_bgp_peer():
 
 rule_spec_bgp_peer = CheckParameters(
     name="bgp_peer",
-    title=Title("BGP Peer State Mapping"),
+    title=Title("BGP peer state mapping"),
     topic=Topic.NETWORKING,
     parameter_form=_parameter_form_spec_bgp_peer,
     condition=HostAndItemCondition(

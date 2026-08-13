@@ -51,7 +51,7 @@ def _phase_elements():
         (
             "appower",
             Tuple(
-                title=_("Apparent Power"),
+                title=_("Apparent power"),
                 elements=[
                     Integer(title=_("warning at"), unit="VA", default_value=1100),
                     Integer(title=_("critical at"), unit="VA", default_value=1300),
@@ -104,7 +104,7 @@ def _phase_elements():
 
 
 def _item_spec_el_inphase():
-    return TextInput(title=_("Input Name"), help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
+    return TextInput(title=_("Input name"), help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
 
 
 def _parameter_valuespec_el_inphase():
@@ -132,7 +132,7 @@ def _parameter_valuespec_el_inphase():
                     valuespec=Tuple(elements=[TextInput(size=10), MonitoringState()]),
                     title=_("Map device state"),
                     help=_(
-                        "Here you can enter either device state number (e.g. from SNMP devices) "
+                        "Here, you can enter either device state number (e.g. from SNMP devices) "
                         "or exact device state name and the related monitoring state."
                     ),
                 ),
@@ -186,7 +186,7 @@ def _parameter_valuespec_ups_outphase() -> Dictionary:
                     valuespec=Tuple(elements=[TextInput(size=10), MonitoringState()]),
                     title=_("Map device state"),
                     help=_(
-                        "Here you can enter either device state number (e.g. from SNMP devices) "
+                        "Here, you can enter either device state number (e.g. from SNMP devices) "
                         "or exact device state name and the related monitoring state."
                     ),
                 ),

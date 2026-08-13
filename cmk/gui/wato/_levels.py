@@ -271,7 +271,7 @@ def Levels(
             totext=_("Do not impose levels, always be OK"),
         ),
         Tuple(
-            title=_("Fixed Levels"),
+            title=_("Fixed levels"),
             elements=[
                 Float(
                     unit=unit,

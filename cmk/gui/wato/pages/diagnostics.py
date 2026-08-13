@@ -310,16 +310,16 @@ class ModeDiagnostics(WatoMode):
             title=_("Collect diagnostic dump"),
             render="form",
             help=_(
-                "Files collected by the Support Diagnostics tool are automatically categorized to"
+                "Files collected by the support diagnostics tool are automatically categorized to"
                 " help you identify sensitive data. We recommend reviewing all files prior to"
-                " sharing, particularly those in the Unclassified category.<ul>"
+                " sharing, particularly those in the 'Unclassified' category.<ul>"
                 "<li>H (High): Critical security data (e.g., passwords, API keys, secrets).</li>"
-                "<li>M (Medium): PII and infrastructure details (e.g., IP addresses, hostnames,"
+                "<li>M (Medium): PII and infrastructure details (e.g., IP addresses, host names,"
                 " usernames, emails).</li>"
                 "<li>L (Low): Operational data; no sensitive information is expected.</li>"
-                "<li>U (Unclassified): Files from custom components. These might be 3rd-party"
+                "<li>U (Unclassified): Files from custom components. These might be 3rd party"
                 " extensions or modifications made by you.</li></ul>"
-                "<b>Note</b>: These Classifications may differ from your organization's specific"
+                "<b>Note</b>: These classifications may differ from your organization's specific"
                 " data security classifications.<br><br>"
                 "The following files are created by built-in components:<ul><li>%s</li></ul>"
             )
@@ -399,7 +399,7 @@ class ModeDiagnostics(WatoMode):
                         totext=_("Collect information about OS and Checkmk version"),
                         help=_(
                             "Collect information about OS, Checkmk version and edition, "
-                            "Time, Core, Python version and paths, Architecture"
+                            "time, core, Python version and paths, architecture"
                         ),
                     ),
                 ),
@@ -482,7 +482,7 @@ class ModeDiagnostics(WatoMode):
                 FixedValue(
                     value=True,
                     totext="",
-                    title=_("Checkmk Overview"),
+                    title=_("Checkmk overview"),
                     help=_(
                         "Checkmk agent, number, version and edition of sites, cluster host; "
                         "number of hosts, services, CMK Helper, Live Helper, "
@@ -497,7 +497,7 @@ class ModeDiagnostics(WatoMode):
                 FixedValue(
                     value=True,
                     totext="",
-                    title=_("Crash Reports"),
+                    title=_("Crash reports"),
                     help=_(
                         "The latest crash reports<br>"
                         "<b>Note</b>: Some crash reports may contain sensitive data like "
@@ -508,7 +508,7 @@ class ModeDiagnostics(WatoMode):
             (
                 OPT_CHECKMK_LOG_FILES,
                 self._get_component_specific_checkmk_files_choices(
-                    _("Checkmk Log files"),
+                    _("Checkmk log files"),
                     [
                         (f, get_checkmk_file_info(f))
                         for f in self._checkmk_files_map[FILE_MAP_LOG["file_type"]]
@@ -518,7 +518,7 @@ class ModeDiagnostics(WatoMode):
             (
                 OPT_CHECKMK_CONFIG_FILES,
                 self._get_component_specific_checkmk_files_choices(
-                    _("Checkmk Configuration files"),
+                    _("Checkmk configuration files"),
                     [
                         (f, get_checkmk_file_info(f))
                         for f in self._checkmk_files_map[FILE_MAP_CONFIG["file_type"]]
@@ -563,7 +563,7 @@ class ModeDiagnostics(WatoMode):
             (
                 OPT_COMP_HOSTS_AND_FOLDERS,
                 Dictionary(
-                    title=_("Hosts and Folders"),
+                    title=_("Hosts and folders"),
                     help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s")
                     % _CHECKMK_FILES_NOTE,
                     elements=self._get_component_specific_checkmk_files_elements(
@@ -650,7 +650,7 @@ class ModeDiagnostics(WatoMode):
                     title=_("BI runtime data"),
                     help=_(
                         "Cached data from Business Intelligence. "
-                        "Contains states, downtimes, acknowledgements and service periods "
+                        "Contains states, downtimes, acknowledgments and service periods "
                         "for all hosts/services included in a BI aggregation."
                     ),
                 ),

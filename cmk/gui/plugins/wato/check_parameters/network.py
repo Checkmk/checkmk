@@ -35,10 +35,10 @@ def _parameter_valuespec_byte_count():
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="byte_count",
-        item_spec=lambda: TextInput(title=_("Byte Count")),
+        item_spec=lambda: TextInput(title=_("Byte count")),
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_byte_count,
-        title=lambda: _("Byte Count"),
+        title=lambda: _("Byte count"),
     )
 )
 

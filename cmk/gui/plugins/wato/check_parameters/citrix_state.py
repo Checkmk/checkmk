@@ -18,7 +18,7 @@ def _parameter_valuespec_citrix_state() -> Dictionary:
             (
                 "registrationstate",
                 Dictionary(
-                    title=_("Interpretation of Registration States"),
+                    title=_("Interpretation of registration states"),
                     elements=[
                         ("Unregistered", MonitoringState(title=_("Unregistered"), default_value=2)),
                         ("Initializing", MonitoringState(title=_("Initializing"), default_value=1)),
@@ -33,7 +33,7 @@ def _parameter_valuespec_citrix_state() -> Dictionary:
                 Dictionary(
                     title=_("Interpretation of VM tools states"),
                     elements=[
-                        ("NotPresent", MonitoringState(title=_("Not Present"), default_value=2)),
+                        ("NotPresent", MonitoringState(title=_("Not present"), default_value=2)),
                         ("Unknown", MonitoringState(title=_("Unknown"), default_value=3)),
                         ("NotStarted", MonitoringState(title=_("Not started"), default_value=1)),
                         ("Running", MonitoringState(title=_("Running"), default_value=0)),

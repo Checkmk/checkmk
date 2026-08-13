@@ -24,7 +24,7 @@ def _parameter_valuespec_graylog_sidecars():
             (
                 "last_seen",
                 Tuple(
-                    title=_("Time since the sidecar was last seen by graylog"),
+                    title=_("Time since the sidecar was last seen by Graylog"),
                     elements=[Age(title=_("Warning at")), Age(title=_("Critical at"))],
                 ),
             ),

@@ -21,6 +21,6 @@ rulespec_registry.register(
         parameter_valuespec=lambda: Dictionary(
             elements=ceph_epoch_element(_("Status epoch levels and average")),
         ),
-        title=lambda: _("Ceph Status"),
+        title=lambda: _("Ceph status"),
     )
 )

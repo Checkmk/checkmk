@@ -27,7 +27,7 @@ def _parameter_valuespec_mcafee_web_gateway():
                 Tuple(
                     title=_("Upper levels for infections"),
                     help=_(
-                        "Here you can specify upper levels for the number of "
+                        "Here, you can specify upper levels for the number of "
                         "infections detected by anti-malware engine."
                     ),
                     elements=[

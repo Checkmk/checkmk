@@ -21,7 +21,7 @@ def _parameter_valuespec_win_license():
                 "status",
                 ListOfStrings(
                     title=_("Allowed license states"),
-                    help=_("Here you can specify the allowed license states for Windows."),
+                    help=_("Here, you can specify the allowed license states for Windows."),
                     default_value=["Licensed", "Initial grace period"],
                 ),
             ),

@@ -471,7 +471,7 @@ class Age(ValueSpec[int]):
         for uid, title, val, tkovr_fac in [
             ("days", _("days"), days, 24),
             ("hours", _("hours"), hours, 60),
-            ("minutes", _("mins"), minutes, 60),
+            ("minutes", _("min"), minutes, 60),
             ("seconds", _("secs"), seconds, 60),
         ]:
             if uid in self._display:
@@ -581,7 +581,7 @@ class TimeSpan(ValueSpec[float]):
         for uid, title, val, tkovr_fac in [
             ("days", _("days"), int(days), 24),
             ("hours", _("hours"), int(hours), 60),
-            ("minutes", _("mins"), int(minutes), 60),
+            ("minutes", _("min"), int(minutes), 60),
             ("seconds", _("s"), int(seconds_whole), 1),
             ("milliseconds", _("ms"), seconds_frac * 1000, 0.001),
         ]:
@@ -4974,7 +4974,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
                 varprefix, _("The time must not be greater than %02d:%02d.") % max_value
             )
         if value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
-            raise MKUserError(varprefix, _("Hours/Minutes out of range"))
+            raise MKUserError(varprefix, _("Hours/minutes out of range"))
 
     def value_to_json(self, value: TimeofdayValue) -> JSONValue:
         return None if value is None else [value[0], value[1]]
@@ -8415,7 +8415,7 @@ class _CAorCAChain(UploadOrPasteTextFile):
         validate: ValueSpecValidateFunc[Any] | None = None,
     ):
         super().__init__(
-            file_title=_("CRT/PEM File") if file_title is None else file_title,
+            file_title=_("CRT/PEM file") if file_title is None else file_title,
             allow_empty=allow_empty,
             elements=[_CAInput()],
             mime_types=[

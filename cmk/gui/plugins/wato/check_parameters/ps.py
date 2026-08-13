@@ -71,8 +71,8 @@ def process_level_elements():
                 title=_("CPU rescale maximum load"),
                 help=_(
                     # xgettext: no-python-format
-                    "CPU utilization is delivered by the Operating "
-                    "System as a per CPU core basis. Thus each core contributes "
+                    "CPU utilization is delivered by the operating "
+                    "system as a per CPU core basis. Thus each core contributes "
                     "with a 100% at full utilization, producing a maximum load "
                     "of N*100% (N=number of cores). For simplicity this maximum "
                     "can be rescaled down, making 100% the maximum and thinking "
@@ -86,7 +86,7 @@ def process_level_elements():
                     "Starting from version 1.6.0 this value must be configured. "
                     "Read Werk #6646 for further information."
                 ),
-                invalid_choice_error=_("CPU rescale maximum load is Unspecified.")
+                invalid_choice_error=_("CPU rescale maximum load is unspecified.")
                 + " "
                 + _(
                     "Starting from version 1.6.0 this value must be configured. "
@@ -163,7 +163,7 @@ def process_level_elements():
             Tuple(
                 title=_("Levels on CPU utilization of a single process"),
                 help=_(
-                    "Here you can define levels on the CPU utilization of single "
+                    "Here, you can define levels on the CPU utilization of single "
                     "processes. For performance reasons CPU averaging will not be "
                     "applied to to the levels of single processes."
                 ),
@@ -231,7 +231,7 @@ def process_level_elements():
             Tuple(
                 title=_("Virtual memory utilization of a single process"),
                 help=_(
-                    "Here you can define levels on the virtual memory utilization of single "
+                    "Here, you can define levels on the virtual memory utilization of single "
                     "processes. For performance reasons virtual memory averaging will not be "
                     "applied to to the levels of single processes."
                 ),
@@ -271,7 +271,7 @@ def process_level_elements():
             Tuple(
                 title=_("Resident memory utilization of a single process"),
                 help=_(
-                    "Here you can define levels on the resident memory utilization of single "
+                    "Here, you can define levels on the resident memory utilization of single "
                     "processes. For performance reasons resident memory averaging will not be "
                     "applied to to the levels of single processes."
                 ),
@@ -311,7 +311,7 @@ def process_level_elements():
             Tuple(
                 title=_("Resident memory usage (in percentage of total RAM) of a single process"),
                 help=_(
-                    "Here you can define levels on the resident memory utilization (in percentage "
+                    "Here, you can define levels on the resident memory utilization (in percentage "
                     "of total RAM) of single processes. For performance reasons resident memory "
                     "averaging will not be applied to to the levels of single processes."
                 ),
@@ -481,12 +481,12 @@ def process_match_options():
                     "This regex must match the <i>beginning</i> of the complete "
                     "command line of the process including arguments.<br>"
                     "When using groups, matches will be instantiated "
-                    "during process discovery. e.g. (py.*) will match python, python_dev "
+                    "during process discovery. For instance, (py.*) will match python, python_dev "
                     "and python_test and discover 3 services. At check time, because "
-                    "python is a substring of python_test and python_dev it will aggregate"
-                    "all process that start with python. If that is not the intended behavior "
+                    "python is a substring of python_test and python_dev, it will aggregate "
+                    "all processes that start with python. If that is not the intended behavior "
                     "please use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$<br>"
-                    "In manual check groups are aggregated"
+                    "In manual check, groups are aggregated."
                 ),
                 to_valuespec=lambda x: x[1:],  # remove ~
                 from_valuespec=lambda x: "~" + x,  # prefix ~
@@ -712,7 +712,7 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
                     world=Labels.World.CONFIG,
                     title=_("Host label"),
                     help=_(
-                        "Here you can set host labels that automatically get created when discovering the services."
+                        "Here, you can set host labels that automatically get created when discovering the services."
                     ),
                 ),
             ),
@@ -722,10 +722,11 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
                     valuespec=Dictionary(
                         title=_("Default parameters for detected services"),
                         help=_(
-                            "Here you can select default parameters that are being set "
+                            "Here, you can select default parameters that are being set "
                             "for detected services. Note: the preferred way for setting parameters is to use "
-                            'the rule set <a href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> '
-                            "State and Count of Processes</a> instead. "
+                            "the rule set <a "
+                            'href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> '
+                            "State and count of processes</a> instead. "
                             "A change there will immediately be active, while a change in this rule "
                             "requires a re-discovery of the services."
                         ),
@@ -952,10 +953,11 @@ def _valuespec_discovery_hr_processes_rules():
                 Dictionary(
                     title=_("Default parameters for detected services"),
                     help=_(
-                        "Here you can select default parameters that are being set "
+                        "Here, you can select default parameters that are being set "
                         "for detected services. Note: the preferred way for setting parameters is to use "
-                        'the rule set <a href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> '
-                        "State and Count of Processes</a> instead. "
+                        "the rule set <a "
+                        'href="wato.py?varname=checkgroup_parameters:ps&mode=edit_ruleset"> State '
+                        "and count of processes</a> instead. "
                         "A change there will immediately be active, while a change in this rule "
                         "requires a re-discovery of the services."
                     ),

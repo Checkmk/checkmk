@@ -22,8 +22,8 @@ def register(
             name="use",
             title=_l("Use Setup"),
             description=_l(
-                "This permission allows users to use Setup - Checkmk's "
-                "web administration tool. Without this permission all "
+                "This permission allows users to use Setup - the "
+                "web administration tool of Checkmk. Without this permission all "
                 "references to Setup (buttons, links, snap-ins) will "
                 "be invisible."
             ),

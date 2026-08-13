@@ -991,7 +991,7 @@ class ModeFolder(WatoMode):
 
         num_hosts = subfolder.num_hosts_recursively()
         if num_hosts == 1:
-            html.write_text_permissive(_("1 Host"))
+            html.write_text_permissive(_("1 host"))
         elif num_hosts > 0:
             html.write_text_permissive("%d %s" % (num_hosts, _("Hosts")))
         else:

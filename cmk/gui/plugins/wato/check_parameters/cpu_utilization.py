@@ -149,7 +149,7 @@ def cpu_util_elements() -> list[tuple[str, ValueSpec]]:
                 help=_(
                     "The CPU utilization sums up the percentages of CPU time that is used "
                     "for user processes, kernel routines (system), disk wait (sometimes also "
-                    "called IO wait) or nothing (idle). The levels are always applied "
+                    "called I/O wait) or nothing (idle). The levels are always applied "
                     "on the average utilization since the last check - which is usually one minute."
                 ),
             ),
@@ -162,7 +162,7 @@ def cpu_util_elements() -> list[tuple[str, ValueSpec]]:
                     Percentage(title=_("Warning at"), default_value=90.0),
                     Percentage(title=_("Critical at"), default_value=95.0),
                 ],
-                help=_("Here you can set levels on the CPU utilization on single cores"),
+                help=_("Here, you can set levels on the CPU utilization on single cores."),
             ),
         ),
         (
@@ -192,7 +192,7 @@ def _cpu_util_unix_elements() -> list[tuple[str, ValueSpec]]:
         (
             "iowait",
             Tuple(
-                title=_("Levels on IO wait (Unix only)"),
+                title=_("Levels on I/O wait (Unix only)"),
                 elements=[
                     Percentage(title=_("Warning at a disk wait of"), default_value=5.0),
                     Percentage(title=_("Critical at a disk wait of"), default_value=10.0),
@@ -213,7 +213,7 @@ def _cpu_util_unix_elements() -> list[tuple[str, ValueSpec]]:
                     Percentage(title=_("Warning at a steal time of"), default_value=30.0),
                     Percentage(title=_("Critical at a steal time of"), default_value=50.0),
                 ],
-                help=_("Here you can set levels on the steal CPU utilization."),
+                help=_("Here, you can set levels on the steal CPU utilization."),
             ),
         ),
     ]

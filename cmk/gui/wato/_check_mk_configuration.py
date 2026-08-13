@@ -982,7 +982,7 @@ ConfigVariableVirtualHostTrees = ConfigVariable(
         add_label=_("Create new virtual host tree configuration"),
         title=_("Virtual host trees"),
         help=_(
-            "Here you can define tree configurations for the snap-in <i>Virtual Host-Trees</i>. "
+            "Here, you can define tree configurations for the snap-in <i>Virtual Host-Trees</i>. "
             "These trees organize your hosts based on their values in certain host tag groups. "
             "Each host tag group you select will create one level in the tree."
         ),
@@ -1164,7 +1164,7 @@ ConfigVariableAuthByHTTPHeader = ConfigVariable(
             ),
             title=_("Authenticate users by incoming HTTP requests"),
             label=_(
-                "Activate HTTP header authentication (Warning: Only activate "
+                "Activate HTTP header authentication (Warning: only activate "
                 "in trusted environments, see help for details)"
             ),
             help=_(
@@ -1673,7 +1673,7 @@ ConfigVariableBuiltinIconVisibility = ConfigVariable(
             help=_(
                 "You can use this option to change the default visibility "
                 "options of the built-in icons. You can change whether or not "
-                "the icons are shown in the popup menu or on top level and "
+                "the icons are shown in the pop-up menu or on top level and "
                 "change the sorting of the icons."
             ),
         ),
@@ -1809,10 +1809,10 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
     valuespec=lambda context: Dictionary(
         title=_("Trusted certificate authorities for SSL"),
         help=_(
-            "Whenever a server component of Checkmk opens a SSL connection it uses the "
+            "Whenever a server component of Checkmk opens an SSL connection, it uses the "
             "certificate authorities configured here for verifying the SSL certificate of "
             "the destination server. This is used for example when performing Setup "
-            "replication to slave sites or when special agents are communicating via HTTPS. "
+            "replication to remote sites or when special agents are communicating via HTTPS. "
             "The CA certificates configured here will be written to the CA bundle %s."
         )
         % site_neutral_path(ConfigDomainCACertificates.trusted_cas_file),
@@ -1916,7 +1916,7 @@ RestAPIETagLocking = ConfigVariable(
             "When multiple HTTP clients want to update an object at the same time, "
             "it can happen that the slower client will overwrite changes by the faster one. "
             "This is commonly referred to as the 'lost update problem'. To prevent this "
-            "situation from happening, Checkmk's REST API does 'optimistic locking' using "
+            "situation from happening, the REST API of Checkmk does 'optimistic locking' using "
             "HTTP ETag headers. In this case the Object's ETag has to be sent to the server "
             "with a HTTP If-Match header. This behavior can be deactivated, but this will "
             "allow the 'lost update problem' to occur."
@@ -1992,10 +1992,10 @@ ConfigVariableWATOHideFilenames = ConfigVariable(
         title=_("Hide internal folder names in Setup"),
         label=_("hide folder names"),
         help=_(
-            "When enabled, then the internal names of Setup folder in the filesystem "
-            "are not shown. They will automatically be derived from the name of the folder "
+            "When enabled, then the internal names of Setup folders in the file system "
+            "are not shown. They will automatically be derived from the names of the folders "
             "when a new folder is being created. Disable this option if you want to see and "
-            "set the filenames manually."
+            "set the file names manually."
         ),
     ),
 )
@@ -2006,8 +2006,8 @@ ConfigVariableWATOHideHosttags = ConfigVariable(
     ident="wato_hide_hosttags",
     valuespec=lambda context: Checkbox(
         title=_("Hide host tags in Setup folder view"),
-        label=_("hide hosttags"),
-        help=_("When enabled, hosttags are no longer shown within the Setup folder view"),
+        label=_("hide host tags"),
+        help=_("When enabled, host tags are no longer shown within the Setup folder view"),
     ),
 )
 
@@ -2200,9 +2200,9 @@ ConfigVariablePasswordPolicy = ConfigVariable(
     valuespec=lambda context: Dictionary(
         title=_("Password policy for local accounts"),
         help=_(
-            "You can define some rules to which each user password ahers. By default "
+            "You can define some rules that every user password must meet. By default, "
             "all passwords are accepted, even ones which are made of only a single character, "
-            "which is obviously a bad idea. Using this option you can enforce your users "
+            "which is obviously a bad idea. Using this option, you can enforce your users "
             "to choose more secure passwords."
         ),
         elements=[
@@ -2279,7 +2279,7 @@ ConfigVariableSessionManagement = ConfigVariable(
                                 display=["minutes", "hours", "days"],
                                 minvalue=60,
                                 help=_(
-                                    "Warn the user at a specificied time before "
+                                    "Warn users at a specified time before "
                                     "the maximum session duration is reached "
                                     "to aid users in preserving data.",
                                 ),
@@ -2325,9 +2325,9 @@ ConfigVariableSingleUserSession = ConfigVariable(
         title=_("Limit login to single session at a time"),
         label=_("Users can only login from one client at a time"),
         help=_(
-            "Normally a user can login to the GUI from unlimited number of clients at "
-            "the same time. If you want to enforce your users to be able to login only once "
-            " (from one client which means device and browser), you can enable this option. "
+            "Normally a user can log in to the GUI from an unlimited number of clients at "
+            "the same time. If you want to enforce your users to be able to log in only once "
+            "(from one client, which means device and browser), you can enable this option. "
             "When the user logs out or is inactive for the configured amount of time, the "
             "session is invalidated automatically and the user has to log in again from the "
             "current or another device."
@@ -2488,7 +2488,7 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         ),
         (
             "barracuda_mailqueues",
-            Checkbox(title=_("Barracuda: Mail queue"), label=_("Use the new service name")),
+            Checkbox(title=_("Barracuda: mail queue"), label=_("Use the new service name")),
         ),
         (
             "brocade_sys_mem",
@@ -2564,19 +2564,19 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         ("db2_mem", Checkbox(title=_("DB2 memory usage"), label=_("Use the new service name"))),
         (
             "df",
-            Checkbox(title=_("Used space in filesystems"), label=_("Use the new service name")),
+            Checkbox(title=_("Used space in file systems"), label=_("Use the new service name")),
         ),
         (
             "df_netapp",
             Checkbox(
-                title=_("NetApp Filers: Used Space in Filesystems"),
+                title=_("NetApp filers: used space in file systems"),
                 label=_("Use the new service name"),
             ),
         ),
         (
             "df_netapp32",
             Checkbox(
-                title=_("NetApp Filers: Used space in Filesystem Using 32-Bit Counters"),
+                title=_("NetApp filers: used space in file system using 32-bit counters"),
                 label=_("Use the new service name"),
             ),
         ),
@@ -2589,7 +2589,7 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         ),
         (
             "enterasys_temp",
-            Checkbox(title=_("Enterasys Switch: Temperature"), label=_("Use the new service name")),
+            Checkbox(title=_("Enterasys switch: temperature"), label=_("Use the new service name")),
         ),
         (
             "esx_vsphere_datastores",
@@ -2612,7 +2612,7 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         (
             "etherbox_temp",
             Checkbox(
-                title=_("Etherbox / MessPC: Sensor Temperature"),
+                title=_("Etherbox / MessPC: sensor temperature"),
                 label=_("Use the new service name"),
             ),
         ),
@@ -2632,12 +2632,12 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         ),
         (
             "fortigate_node_memory",
-            Checkbox(title=_("Fortigate node memory"), label=_("Use the new service name")),
+            Checkbox(title=_("FortiGate node memory"), label=_("Use the new service name")),
         ),
         (
             "hr_fs",
             Checkbox(
-                title=_("Used space in filesystems via SNMP"),
+                title=_("Used space in file systems via SNMP"),
                 label=_("Use the new service name"),
             ),
         ),
@@ -2652,7 +2652,7 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
             "http",
             Checkbox(
                 title=_(
-                    "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections (Deprecated/ineffective)"
+                    "Check HTTP: use HTTPS instead of HTTP for SSL/TLS connections (deprecated/ineffective)"
                 ),
                 label=_("Use the new service name"),
             ),
@@ -2671,39 +2671,39 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         (
             "ibm_svc_mdiskgrp",
             Checkbox(
-                title=_("IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps"),
+                title=_("IBM SVC / Storwize V3700 / V7000: status and usage of MDisksGrps"),
                 label=_("Use the new service name"),
             ),
         ),
         (
             "ibm_svc_system",
-            Checkbox(title=_("IBM SVC / V7000: System Info"), label=_("Use the new service name")),
+            Checkbox(title=_("IBM SVC / V7000: system info"), label=_("Use the new service name")),
         ),
         (
             "ibm_svc_systemstats_cache",
             Checkbox(
-                title=_("IBM SVC / V7000: Cache Usage in Total"),
+                title=_("IBM SVC / V7000: cache usage in total"),
                 label=_("Use the new service name"),
             ),
         ),
         (
             "ibm_svc_systemstats_disk_latency",
             Checkbox(
-                title=_("IBM SVC / V7000: Latency for Drives/MDisks/VDisks in Total"),
+                title=_("IBM SVC / V7000: latency for drives/MDisks/VDisks in total"),
                 label=_("Use the new service name"),
             ),
         ),
         (
             "ibm_svc_systemstats_diskio",
             Checkbox(
-                title=_("IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total"),
+                title=_("IBM SVC / V7000: disk throughput for drives/MDisks/VDisks in total"),
                 label=_("Use the new service name"),
             ),
         ),
         (
             "ibm_svc_systemstats_iops",
             Checkbox(
-                title=_("IBM SVC / V7000: IO operations/sec for Drives/MDisks/VDisks in Total"),
+                title=_("IBM SVC / V7000: I/O operations/sec for drives/MDisks/VDisks in total"),
                 label=_("Use the new service name"),
             ),
         ),
@@ -2714,7 +2714,7 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         (
             "innovaphone_temp",
             Checkbox(
-                title=_("Innovaphone Gateway: Current Temperature"),
+                title=_("Innovaphone gateway: current temperature"),
                 label=_("Use the new service name"),
             ),
         ),
@@ -2768,14 +2768,14 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         (
             "megaraid_bbu",
             Checkbox(
-                title=_("LSI MegaRAID: Battery Backup Unit"),
+                title=_("LSI MegaRAID: battery backup unit"),
                 label=_("Use the new service name"),
             ),
         ),
         (
             "mem_used",
             Checkbox(
-                title=_("Main memory usage (UNIX / Other Devices)"),
+                title=_("Main memory usage (Unix / other devices)"),
                 label=_("Use the new service name"),
             ),
         ),
@@ -2788,69 +2788,69 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         ),
         (
             "mknotifyd",
-            Checkbox(title=_("Notification Spooler"), label=_("Use the new service name")),
+            Checkbox(title=_("Notification spooler"), label=_("Use the new service name")),
         ),
         (
             "mknotifyd_connection",
             Checkbox(
-                title=_("Notification Spooler Connection"), label=_("Use the new service name")
+                title=_("Notification spooler connection"), label=_("Use the new service name")
             ),
         ),
         (
             "mssql_backup",
-            Checkbox(title=_("MSSQL Backup"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL backup"), label=_("Use the new service name")),
         ),
         (
             "mssql_blocked_sessions",
-            Checkbox(title=_("MSSQL Blocked Sessions"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL blocked sessions"), label=_("Use the new service name")),
         ),
         (
             "mssql_counters_cache_hits",
-            Checkbox(title=_("MSSQL Cache Hits"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL cache hits"), label=_("Use the new service name")),
         ),
         (
             "mssql_counters_file_sizes",
-            Checkbox(title=_("MSSQL File Sizes"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL file sizes"), label=_("Use the new service name")),
         ),
         (
             "mssql_counters_locks",
-            Checkbox(title=_("MSSQL Locks"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL locks"), label=_("Use the new service name")),
         ),
         (
             "mssql_counters_locks_per_batch",
-            Checkbox(title=_("MSSQL Locks per Batch"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL locks per batch"), label=_("Use the new service name")),
         ),
         (
             "mssql_counters_pageactivity",
-            Checkbox(title=_("MSSQL Page Activity"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL page activity"), label=_("Use the new service name")),
         ),
         (
             "mssql_counters_sqlstats",
-            Checkbox(title=_("MSSQL SQL Stats"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL SQL stats"), label=_("Use the new service name")),
         ),
         (
             "mssql_counters_transactions",
-            Checkbox(title=_("MSSQL Transactions"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL transactions"), label=_("Use the new service name")),
         ),
         (
             "mssql_databases",
-            Checkbox(title=_("MSSQL Database"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL database"), label=_("Use the new service name")),
         ),
         (
             "mssql_datafiles",
-            Checkbox(title=_("MSSQL Datafile"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL datafile"), label=_("Use the new service name")),
         ),
         (
             "mssql_tablespaces",
-            Checkbox(title=_("MSSQL Tablespace"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL tablespace"), label=_("Use the new service name")),
         ),
         (
             "mssql_transactionlogs",
-            Checkbox(title=_("MSSQL Transactionlog"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL transaction log"), label=_("Use the new service name")),
         ),
         (
             "mssql_versions",
-            Checkbox(title=_("MSSQL Version"), label=_("Use the new service name")),
+            Checkbox(title=_("MSSQL version"), label=_("Use the new service name")),
         ),
         (
             "netapp_ontap_volumes",
@@ -2874,11 +2874,11 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         ),
         (
             "netscaler_mem",
-            Checkbox(title=_("Netscaler memory Usage"), label=_("Use the new service name")),
+            Checkbox(title=_("NetScaler memory usage"), label=_("Use the new service name")),
         ),
         (
             "nullmailer_mailq",
-            Checkbox(title=_("Nullmailer: Mail Queue"), label=_("Use the new service name")),
+            Checkbox(title=_("Nullmailer: mail queue"), label=_("Use the new service name")),
         ),
         (
             "prism_alerts",
@@ -2905,7 +2905,7 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         ),
         (
             "postfix_mailq",
-            Checkbox(title=_("Postfix: Mail Queue"), label=_("Use the new service name")),
+            Checkbox(title=_("Postfix: mail queue"), label=_("Use the new service name")),
         ),
         (
             "ps",
@@ -2913,7 +2913,7 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         ),
         (
             "qmail_stats",
-            Checkbox(title=_("Qmail: Mail Queue"), label=_("Use the new service name")),
+            Checkbox(title=_("Qmail: mail queue"), label=_("Use the new service name")),
         ),
         (
             "raritan_emx",
@@ -2967,7 +2967,7 @@ def use_new_descriptions_for_valuespec(context: GlobalSettingsContext) -> ValueS
         (
             "zfsget",
             Checkbox(
-                title=_("Used space in ZFS pools and filesystems"),
+                title=_("Used space in ZFS pools and file systems"),
                 label=_("Use the new service name"),
             ),
         ),
@@ -3082,7 +3082,7 @@ ConfigVariablePiggybackMaxCachefileAge = ConfigVariable(
     valuespec=lambda context: Age(
         title=_("Maximum age for piggyback files"),
         help=_(
-            "The maximum age for piggy back data from another host to be valid for monitoring. "
+            "The maximum age for piggyback data from another host to be valid for monitoring. "
             "Older files are deleted before processing them. Please make sure that this age is "
             "at least as large as you normal check interval for piggy hosts."
         ),
@@ -3144,13 +3144,13 @@ ConfigVariableChooseSNMPBackend = ConfigVariable(
     ident="snmp_backend_default",
     valuespec=lambda context: Transform(
         valuespec=DropdownChoice(
-            title=_("Choose SNMP back-end"),
+            title=_("Choose SNMP backend"),
             choices=[
-                (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
-                (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
+                (SNMPBackendEnum.CLASSIC, _("Use classic SNMP backend")),
+                (SNMPBackendEnum.INLINE, _("Use inline SNMP backend")),
             ],
             help=_(
-                "By default Checkmk uses command line calls of Net-SNMP tools like snmpget or snmpwalk to gather SNMP information. For each request a new command line program is being executed. It is now possible to use the inline SNMP implementation which calls the respective libraries directly via its Python bindings. This should increase the performance of SNMP checks in a significant way. Both SNMP modes are features which improve the performance for large installations and are only available via our subscription."
+                "By default, Checkmk uses command line calls of Net-SNMP tools like snmpget or snmpwalk to gather SNMP information. For each request a new command line program is being executed. It is now possible to use the inline SNMP implementation which calls the respective libraries directly via its Python bindings. This should increase the performance of SNMP checks in a significant way. Both SNMP modes are features which improve the performance for large installations and are only available via our subscription."
             ),
         ),
         to_valuespec=_transform_snmp_backend_hosts_to_valuespec,
@@ -3494,8 +3494,7 @@ def _valuespec_extra_service_conf_process_perf_data() -> DropdownChoice:
     return DropdownChoice(
         title=_("Enable/disable processing of metrics for services"),
         help=_(
-            "This setting allows you to disable the processing of perfdata for a "
-            "service completely."
+            "This setting allows you to completely disable the processing of metrics for a service."
         ),
         choices=[
             ("1", _("Enable processing of metrics")),
@@ -3583,9 +3582,9 @@ def _valuespec_extra_host_conf_check_interval() -> Transform:
         from_valuespec=lambda v: float(v) / 60.0,
         title=_("Normal check interval for host checks"),
         help=_(
-            "The default interval is set to 6 seconds for smart ping and one minute for all other. Here you can specify a larger "
+            "The default interval is set to 6 seconds for Smart Ping and one minute for all other. Here you can specify a larger "
             "interval. The host is contacted in this interval on a regular base. The host "
-            "check is also being executed when a problematic service state is detected to check "
+            "check is also executed when a problematic service state is detected to check "
             "whether or not the service problem is resulting from a host problem."
         ),
     )
@@ -3606,10 +3605,10 @@ def _valuespec_extra_host_conf_retry_interval() -> Transform:
         title=_("Retry check interval for host checks"),
         help=_(
             "This setting is relevant if you have set the maximum number of check "
-            "attempts to a number greater than one. In case a host check is not UP "
-            "and the maximum number of check attempts is not yet reached, it will be "
+            "attempts to a number greater than one. In case of a host check not being UP "
+            "and the maximum number of check attempts not yet being reached, it will be "
             "rescheduled with this interval. The retry interval is usually set to a smaller "
-            "value than the normal interval. The default is 6 seconds for smart ping and 60 seconds for all other."
+            "value than the normal interval. The default is 6 seconds for Smart Ping and 60 seconds for all other."
         ),
     )
 
@@ -3642,14 +3641,14 @@ ExtraHostConfCheckPeriod = HostRulespec(
 def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownChoice]:
     choices: list[CascadingDropdownChoice] = [
         ("ping", _("Ping (active check with ICMP echo request)")),
-        ("smart", _("Smart PING (only with Checkmk Micro Core)")),
+        ("smart", _("Smart Ping (only with Checkmk Micro Core)")),
         (
             "tcp",
             _("TCP Connect"),
             NetworkPort(label=_("to port:"), minvalue=1, maxvalue=65535, default_value=80),
         ),
         ("ok", _("Always assume host to be up")),
-        ("agent", _("Use the status of the Check_MK Service")),
+        ("agent", _("Use the state of the Check_MK service")),
         (
             "service",
             _("Use the status of the service..."),
@@ -3692,7 +3691,7 @@ def PluginCommandLine(read_only: bool = False) -> ValueSpec:
         title=_("Command line"),
         help=_(
             "Please enter the complete shell command including path name and arguments to execute. "
-            "If the plug-in you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
+            "If the plug-in you want to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
             "or <tt>~/lib/nagios/plugins</tt> within your site directory, you can strip the path name and "
             "just configure the plug-in file name as command <tt>check_foobar</tt>."
         )
@@ -3725,7 +3724,7 @@ def _valuespec_host_check_commands() -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Host check command"),
         help=_(
-            "Usually Checkmk uses a series of PING (ICMP echo request) in order to determine "
+            "Usually Checkmk uses a series of ping (ICMP echo request) in order to determine "
             "whether a host is up. In some cases this is not possible, however. With this rule "
             "you can specify an alternative way of determining the host's state."
         )
@@ -3808,14 +3807,15 @@ def _valuespec_extra_host_conf_notification_options() -> Transform:
         ),
         title=_("Notified events for hosts"),
         help=_(
-            "This ruleset allows you to restrict notifications of host problems to certain "
+            "This rule set allows you to restrict notifications of host problems to certain "
             "states, e.g. only notify on DOWN, but not on UNREACHABLE. Please select the types "
             "of events that should initiate notifications. Please note that several other "
-            "filters must also be passed in order for notifications to finally being sent out.<br><br>"
-            "Please note: There is a difference between the Micro Core and Nagios when you have "
-            "a host that has no matching rule in this ruleset. In this case the Micro Core will "
+            "filters must also be passed in order for notifications to finally be "
+            "sent.<br><br>Please note: There is a difference between the Checkmk Micro Core and "
+            "Nagios when you have a host that has no matching rule in this rule set. In this case "
+            "the Checkmk Micro Core will "
             "not send out UNREACHABLE notifications while the Nagios core would send out "
-            "UNREACHABLE notifications. To align this behaviour, create a rule matching "
+            "UNREACHABLE notifications. To align this behavior, create a rule matching "
             "all your hosts and configure it to either send UNREACHABLE notifications or not."
         ),
         to_valuespec=lambda x: x != "n" and x.split(",") or [],
@@ -3845,10 +3845,10 @@ def _valuespec_extra_service_conf_notification_options() -> Transform:
         ),
         title=_("Notified events for services"),
         help=_(
-            "This ruleset allows you to restrict notifications of service problems to certain "
+            "This rule set allows you to restrict notifications of service problems to certain "
             "states, e.g. only notify on CRIT, but not on WARN. Please select the types "
             "of events that should initiate notifications. Please note that several other "
-            "filters must also be passed in order for notifications to finally being sent out."
+            "filters must also be passed in order for notifications to finally be sent out."
         ),
         to_valuespec=lambda x: x != "n" and x.split(",") or [],
         from_valuespec=lambda x: ",".join(x) or "n",
@@ -4123,9 +4123,9 @@ def _valuespec_ignored_checks() -> Transform:
     return CheckPluginSelection(
         title=_("Disabled checks"),
         help_=_(
-            "This ruleset is similar to 'Disabled services', but selects checks to be disabled "
+            "This rule set is similar to 'Disabled services', but selects checks to be disabled "
             "by their <b>type</b>. This allows you to disable certain technical implementations "
-            "such as filesystem checks via SNMP on hosts that also have the Checkmk agent "
+            "such as file system checks via SNMP on hosts that also have the Checkmk agent "
             "installed."
         ),
     )
@@ -4457,7 +4457,7 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                     ],
                     default_value=True,
                     help=_(
-                        "Here you can have the changes activated whenever services "
+                        "Here, you can have the changes activated whenever services "
                         "have been added or removed."
                     ),
                 ),
@@ -4688,7 +4688,7 @@ def _valuespec_custom_service_attributes() -> ListOf:
             orientation="horizontal",
         ),
         title=_("Custom service attributes"),
-        help=_('Use this ruleset to assign <a href="%s">%s</a> to services.')
+        help=_('Use this rule set to assign <a href="%s">%s</a> to services.')
         % (
             "wato.py?mode=edit_configvar&varname=custom_service_attributes",
             _("Custom service attributes"),
@@ -4709,11 +4709,11 @@ CustomServiceAttributes = ServiceRulespec(
 
 def _help_clustered_services() -> str:
     return _(
-        "When you define HA clusters in Setup then you also have to specify which services "
+        "When you define HA clusters in Setup, then you also have to specify which services "
         "of a node should be assigned to the cluster and which services to the physical "
-        "node. This is done by this ruleset. Please note that the rule will be applied to "
-        "the <i>nodes</i>, not to the cluster.<br><br>Please make sure that you re-"
-        "inventorize the cluster and the physical nodes after changing this ruleset."
+        "node. This is done by this rule set. Please note that the rule will be applied to "
+        "the <i>nodes</i>, not to the cluster.<br><br>Please make sure that you "
+        "reinventorize the cluster and the physical nodes after changing this rule set."
     )
 
 
@@ -4759,7 +4759,7 @@ def _valuespec_clustered_services_config() -> CascadingDropdown:
                         "If it is available, it is probably the best choice, as it implements logic "
                         "specifically designed for the check plug-in in question. Implementing it is "
                         "optional however, so this might not be available (a warning will be displayed). "
-                        "Consult the plug-ins manpage for details about its cluster behaviour."
+                        "Consult the plug-ins manual page for details about its cluster behavior."
                     ),
                     _(
                         "Failover: The check function of the plug-in will be applied to each individual "
@@ -4860,12 +4860,12 @@ def _valuespec_clustered_services_mapping() -> TextInput:
         title=_("Clustered services for overlapping clusters"),
         label=_("Assign services to the following cluster:"),
         help=_(
-            "It's possible to have clusters that share nodes. You could say that "
-            'such clusters "overlap". In such a case using the ruleset '
-            "<i>Clustered services</i> is not sufficient since it would not be clear "
-            "to which of the several possible clusters a service found on such a shared "
-            "node should be assigned to. With this ruleset you can assign services and "
-            "explicitly specify which cluster to assign them to."
+            "Clusters can share nodes, meaning "
+            'they "overlap." In these scenarios, the standard rule set '
+            "<i>Clustered services</i> is insufficient because it cannot "
+            "determine which of the overlapping clusters a service on a shared "
+            "node belongs to. Use this rule set to "
+            "explicitly specify the cluster assignment for such services."
         ),
     )
 
@@ -4892,7 +4892,7 @@ def _valuespec_service_label_rules() -> Labels:
         world=Labels.World.CONFIG,
         label_source=Labels.Source.RULESET,
         title=_("Service labels"),
-        help=_("Use this ruleset to assign labels to service of your choice."),
+        help=_("Use this rule set to assign labels to the service of your choice."),
     )
 
 
@@ -4912,7 +4912,7 @@ def _valuespec_service_tag_rules() -> ListOf:
             orientation="horizontal",
         ),
         title=_("Service tags"),
-        help=_('Use this ruleset to assign <a href="%s">%s</a> to services.')
+        help=_('Use this rule set to assign <a href="%s">%s</a> to services.')
         % ("wato.py?mode=tags", _("Tags")),
         allow_empty=False,
         validate=_service_tag_rules_validate_unique_entries,
@@ -4957,7 +4957,7 @@ def _valuespec_host_label_rules() -> Labels:
         world=Labels.World.CONFIG,
         label_source=Labels.Source.RULESET,
         title=_("Host labels"),
-        help=_("Use this ruleset to assign labels to hosts of your choice."),
+        help=_("Use this rule set to assign labels to hosts of your choice."),
     )
 
 
@@ -4989,7 +4989,7 @@ def _valuespec_extra_service_conf_service_period() -> TimeperiodSelection:
 def _valuespec_extra_host_conf_notes_url() -> TextInput:
     return TextInput(
         label=_("URL:"),
-        title=_("Notes (URL) for Hosts"),
+        title=_("Notes (URL) for hosts"),
         help=_(
             "With this setting you can set links to documentations for Hosts. "
             "You can use some macros within the URL which are dynamically "
@@ -5022,7 +5022,7 @@ ExtraServiceConfServicePeriod = ServiceRulespec(
 
 def _valuespec_extra_service_conf_display_name() -> TextInput:
     return TextInput(
-        title=_("Alternative display name for Services"),
+        title=_("Alternative display name for services"),
         help=_(
             "This rule set allows you to specify an alternative name "
             "to be displayed for certain services. This name is available as "
@@ -5049,7 +5049,7 @@ ExtraServiceConfDisplayName = ServiceRulespec(
 def _valuespec_extra_service_conf_notes_url() -> TextInput:
     return TextInput(
         label=_("URL:"),
-        title=_("Notes (URL) for Services"),
+        title=_("Notes (URL) for services"),
         help=_(
             "With this setting you can set links to documentations for each service. "
             "You can use some macros within the URL which are dynamically "
@@ -5282,7 +5282,7 @@ ExtraHostConfEscapePluginOutput = HostRulespec(
 
 def _valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT() -> DropdownChoice:
     return DropdownChoice(
-        title=_("Escape HTML in service output (Dangerous to deactivate - read help)"),
+        title=_("Escape HTML in service output (dangerous to deactivate - read help)"),
         help=_(
             "By default, for security reasons, the GUI does not interpret any HTML "
             "code received from external sources, like service output or log messages. "
@@ -5321,15 +5321,15 @@ class RulespecGroupAgentGeneralSettings(RulespecSubGroup):
 
     @property
     def title(self) -> str:
-        return _("General Settings")
+        return _("General settings")
 
 
 def _help_dyndns_hosts() -> str:
     return _(
-        "This ruleset selects host for dynamic DNS lookup during monitoring. Normally the "
+        "This rule set selects hosts for dynamic DNS lookup during monitoring. Normally the "
         "IP addresses of hosts are statically configured or looked up when you activate "
         "the changes. In some rare cases DNS lookups must be done each time a host is "
-        "connected to, e.g. when the IP address of the host is dynamic and can change."
+        "connected, e.g., when the IP address of the host is dynamic and can change."
     )
 
 
@@ -5350,9 +5350,9 @@ def _valuespec_primary_address_family() -> DropdownChoice:
         title=_("Primary IP address family of dual-stack hosts"),
         help=_(
             "When you configure dual-stack host (IPv4 + IPv6) monitoring in Checkmk, "
-            "normally IPv4 is used as primary address family to communicate with this "
+            "normally IPv4 is used as the primary address family to communicate with this "
             "host. The other family, IPv6, is just being pinged. You can use this rule "
-            "to invert this behaviour to use IPv6 as primary address family."
+            "to invert this behavior to use IPv6 as the primary address family."
         ),
     )
 
@@ -5368,7 +5368,7 @@ def _valuespec_snmp_communities() -> Alternative:
     return SNMPCredentials(
         title=_("SNMP credentials of monitored hosts"),
         help=_(
-            'By default Checkmk uses the community "public" to contact '
+            'By default, Checkmk uses the community "public" to contact '
             "hosts via SNMPv1/v2. This rule can be used to customize the "
             "credentials to be used when contacting hosts via SNMP."
         ),
@@ -5424,13 +5424,13 @@ SnmpCharacterEncodings = HostRulespec(
 
 def _help_enable_snmpv2c() -> str:
     return _(
-        "Use this rule to enable the use of SNMP verison 2c instead of the default SNMP version 1."
+        "Use this rule to enable the use of SNMP version 2c instead of the default SNMP version 1."
         " Checkmk defaults to SNMPv1 in order to support as many devices as possible."
         " In practice, most SNMP devices also support SNMPv2c, which has two advantages:"
-        ' It supports 64 bit counters and the "bulkwalk" query, which is faster and saves CPU and network resources.'
+        ' It supports 64-bit counters and the "bulk walk" query, which is faster and saves CPU and network resources.'
         " Use this rule to configure SNMPv2c for as many devices as possible."
-        ' However, please be aware some buggy devices do not properly support "bulkwalk" queries.'
-        ' For those you may want to try disabling them using the ruleset "%s".'
+        ' However, please be aware that some buggy devices might not properly support "bulk walk" '
+        'queries. For those, you may want to try disabling them using the rule set "%s".'
     ) % _("Disable bulk walks")
 
 
@@ -5451,7 +5451,7 @@ ManagementBulkwalkHosts = BinaryHostRulespec(
 
 def _valuespec_snmp_bulk_size() -> Integer:
     return Integer(
-        title=_("Bulk walk: Number of OIDs per bulk"),
+        title=_("Bulk walk: number of OIDs per bulk"),
         label=_("Number of OIDs to request per bulk: "),
         minvalue=1,
         maxvalue=100,
@@ -5459,7 +5459,7 @@ def _valuespec_snmp_bulk_size() -> Integer:
         help=_(
             "This variable allows you to configure the number of OIDs Checkmk should request "
             "at once. This rule only applies to SNMP hosts that are configured to be bulk "
-            "walk hosts.You may want to use this rule to tune SNMP performance. Be aware: A "
+            "walk hosts. You may want to use this rule to tune SNMP performance. Be aware: A "
             "higher value is not always better. It may decrease the transactions between "
             "Checkmk and the target system, but may increase the OID overhead in case you "
             "only need a small amount of OIDs."
@@ -5492,8 +5492,8 @@ SnmpWithoutSysDescr = BinaryHostRulespec(
 
 def _help_snmpv2c_without_bulkwalk() -> str:
     return _(
-        'Some SNMPv2c/v3 capable devices do not properly support "bulkwalk" queries.'
-        ' For those you can disable "bulkwalk" queries with this ruleset.'
+        'Some SNMPv2c/v3 capable devices do not properly support "bulk walk" queries. '
+        'For those you can disable "bulk walk" queries with this rule set.'
         " Please be aware that you should only do this if no other approach is feasible"
         " (e.g. limiting the bulk size), as bulk walks are much more performant."
     )
@@ -5575,7 +5575,7 @@ NonInlineSnmpHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_non_inline_snmp_hosts,
     name="non_inline_snmp_hosts",
-    title=lambda: _("Hosts not using Inline-SNMP"),
+    title=lambda: _("Hosts not using inline SNMP"),
     is_deprecated=True,
 )
 
@@ -5588,7 +5588,7 @@ def _help_snmp_backend() -> str:
         "for all SNMP hosts and it is a good idea to keep this default "
         "setting. However, there are SNMP devices which have problems "
         "with some SNMP implementations. You can use this rule to select "
-        "the SNMP back-end for these hosts."
+        "the SNMP backend for these hosts."
     )
 
 
@@ -5609,8 +5609,8 @@ def _valuespec_snmp_backend() -> Transform:
         valuespec=DropdownChoice(
             title=_("Choose SNMP backend"),
             choices=[
-                (SNMPBackendEnum.INLINE, _("Use Inline SNMP backend")),
-                (SNMPBackendEnum.CLASSIC, _("Use Classic backend")),
+                (SNMPBackendEnum.INLINE, _("Use inline SNMP backend")),
+                (SNMPBackendEnum.CLASSIC, _("Use classic backend")),
             ],
         ),
         to_valuespec=_transform_snmp_backend_hosts_to_valuespec,
@@ -5623,15 +5623,15 @@ SnmpBackendHosts = HostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_snmp_backend,
     name="snmp_backend_hosts",
-    title=lambda: _("Hosts using a specific SNMP Backend"),
+    title=lambda: _("Hosts using a specific SNMP backend"),
 )
 
 
 def _help_usewalk_hosts() -> str:
     return _(
-        "This ruleset helps in test and development. You can create stored SNMP walks on "
+        "This rule set helps in test and development. You can create stored SNMP walks on "
         "the command line with cmk --snmpwalk HOSTNAME. A host that is configured with "
-        "this ruleset will then use the information from that file instead of using real "
+        "this rule set will then use the information from that file instead of using real "
         "SNMP."
     )
 
@@ -5728,7 +5728,7 @@ def _valuespec_encryption_handling() -> Dictionary:
             (
                 "accept",
                 DropdownChoice(
-                    title=_("Server side handling of unencrypted data"),
+                    title=_("Server-side handling of unencrypted data"),
                     help=_(
                         "The agent can send data either using TLS encryption, a symmetric encryption, or unencrypted."
                         " This rule determines how the monitoring site handles each type of data, in case it is sent by the agent."
@@ -5853,10 +5853,10 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
     return Dictionary(
         title=_("Status of the Checkmk services"),
         help=_(
-            "This ruleset specifies the total status of the 'Check_MK' services <i>Check_MK</i>, "
-            "<i>Check_MK Discovery</i> and <i>Check_MK HW/SW Inventory</i> in case of various "
+            "This rule set specifies the total status of the 'Check_MK' services <i>Check_MK</i>, "
+            "<i>Check_MK Discovery</i> and <i>Check_MK HW/SW inventory</i> in case of various "
             "error situations. One use case is the monitoring of hosts that are not always up. "
-            "You can have Checkmk an OK status here if the host is not reachable. Note: the "
+            "You can have Checkmk in an OK status here if the host is not reachable. Note: the "
             "<i>Timeout</i> setting only works when using the Checkmk Micro Core."
         ),
         elements=[
@@ -5918,7 +5918,7 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                         ),
                         (
                             "special",
-                            _individual_spec(_("Special Agent")),
+                            _individual_spec(_("Special agent")),
                         ),
                         (
                             "snmp",
@@ -5959,7 +5959,7 @@ CheckMkExitStatus = HostRulespec(
 def _valuespec_check_mk_agent_target_versions() -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Check for correct version of Checkmk agent"),
-        help=_('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.')
+        help=_('This rule set is deprecated. Please use the rule set <i>"%s"</i> instead.')
         % _("Checkmk agent installation auditing"),
         choices=[
             ("ignore", _("Ignore the version")),
@@ -6027,7 +6027,7 @@ def _valuespec_agent_config_only_from() -> ListOfStrings:
             "that the agent will be inaccessible if a Linux host doesn't meet these prerequisites, "
             "i.e. an activation of a service that can't realize the IP restriction will be "
             'prevented on agent package installation, see "Checkmk agent network service (Linux)" '
-            "ruleset. Even if you don't use the bakery, the configured IP address "
+            "rule set. Even if you don't use the Bakery, the configured IP address "
             "restrictions of a host will be verified against the allowed "
             "IP addresses reported by the agent. This is done during "
             "monitoring by the 'Check_MK' service."
@@ -6048,18 +6048,18 @@ def _valuespec_piggyback_translation() -> Dictionary:
         help_txt=_(
             "Some agents or agent plug-ins send data not only for the queried host but also "
             'for other hosts "piggyback" with their own data. This is the case '
-            "for the vSphere special agent and the SAP R/3 plugin, for example. The host names "
-            "that these agents send must match your host names in your monitoring configuration. "
-            "If that is not the case, then with this rule you can define a host name translation. "
-            'Note: This rule must be configured for the "pig" - i.e. the host that the '
+            "for the vSphere special agent and the SAP R/3 plug-in, for example. The host names "
+            "that these agents send must match the host names in your monitoring configuration. "
+            "If that is not the case, you can define a host name translation with this rule. "
+            'Note: This rule must be configured for the "pig" - i.e., the host the '
             "agent is running on. It is not applied to the translated piggybacked hosts."
             "<br><br>"
             "The 'Multiple regular expressions' and 'Explicit name mapping' options match against "
             "the raw host names as sent by the agent. Keep in mind that Checkmk only allows "
-            "letters, digits, dashes, underscores and dots in host names, so any other characters "
-            "are automatically converted to underscores when the piggybacked host is created in "
+            "letters, digits, dashes, underscores, and dots in host names, so any other characters "
+            "are automatically converted into underscores when the piggybacked host is created in "
             "monitoring. This means that if, for example, an agent sends the host name "
-            "'My Virtual Machine', Checkmk will store it as 'My_Virtual_Machine'. Your translation "
+            "'My virtual machine', Checkmk stores it as 'My_virtual_machine'. Your translation "
             "rules should therefore be written to match the original name as sent by the agent, not"
             " the converted underscore variant."
         ),
@@ -6078,18 +6078,18 @@ def _valuespec_service_description_translation() -> Dictionary:
     return ServiceDescriptionTranslation(
         title=_("Translation of service names"),
         help_txt=_(
-            "Within this ruleset service names can be translated similar to the ruleset "
+            "Within this rule set service names can be translated similar to the rule set "
             "<tt>Host name translation for piggybacked hosts</tt>. Services such as "
             "<tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
-            "<tt>Check_MK inventory</tt>, and <tt>Check_MK HW/SW Inventory</tt> are excluded. "
+            "<tt>Check_MK inventory</tt>, and <tt>Check_MK HW/SW inventory</tt> are excluded. "
             "<b>Attention:</b><ul>"
             "<li>Downtimes and other configured rules which match these "
             "services have to be adapted.</li>"
-            "<li>Performance data and graphs will begin from scratch for translated services.</li>"
+            "<li>Metrics and graphs will begin from scratch for translated services.</li>"
             "<li>Especially configured check parameters keep their functionality further on.</li>"
-            "<li>This new ruleset translates also the item part of a service name. "
-            "This means that after such a translation the item may be gone but is used in the "
-            "conditions of the parameters further on if any parameters are configured. "
+            "<li>This new rule set translates also the item part of a service name. "
+            "This means that after such a translation, the item may be gone, but is used in the "
+            "conditions of the parameters further on, if any parameters are configured. "
             "This might be confusing.</li></ul>"
             "This rule should only be configured in the early stages."
         ),
@@ -6134,7 +6134,7 @@ def _valuespec_snmp_fetch_interval() -> Tuple:
                 help=_(
                     "You can only configure section names here, but not choose individual "
                     "check plug-ins. The reason for this is that the check plug-ins "
-                    "themselves are not aware whether or not they are processing SNMP based "
+                    "themselves are not aware of whether or not they are processing SNMP based "
                     "data."
                 ),
                 choices=get_snmp_section_names,
@@ -6243,7 +6243,7 @@ def _valuespec_snmpv3_contexts() -> Migrate:
         valuespec=Tuple(
             title=_("SNMPv3 contexts to use in requests"),
             help=_(
-                "By default Checkmk does not use a specific context during SNMPv3 queries, "
+                "By default, Checkmk does not use a specific context during SNMPv3 queries, "
                 "but some devices are offering their information in different SNMPv3 contexts. "
                 "This rule can be used to configure, based on hosts and SNMP sections, which SNMPv3 "
                 "contexts Checkmk should ask for when getting information via SNMPv3."
@@ -6309,10 +6309,10 @@ def _valuespec_piggybacked_host_files() -> Migrate:
     )
 
     global_max_cache_age_title = (
-        _('Use maximum age from <a href="%s">global settings</a>') % global_max_cache_age_uri
+        _('Use maximum age from <a href="%s">Global settings</a>') % global_max_cache_age_uri
     )
     max_cache_age_title = (
-        _('Use maximum age from <a href="%s">global settings</a> or above')
+        _('Use maximum age from <a href="%s">Global settings</a> or above')
         % global_max_cache_age_uri
     )
 
@@ -6358,7 +6358,7 @@ def _valuespec_piggybacked_host_files() -> Migrate:
                                         ),
                                         allow_empty=False,
                                         help=_(
-                                            "Here you can specify explicit piggybacked host names or "
+                                            "Here, you can specify explicit piggybacked host names or "
                                             "regex patterns to match specific piggybacked host names."
                                         ),
                                     ),

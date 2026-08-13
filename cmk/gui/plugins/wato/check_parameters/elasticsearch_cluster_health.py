@@ -177,7 +177,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_elasticsearch_cluster_shards,
-        title=lambda: _("Elasticsearch Cluster Shards"),
+        title=lambda: _("Elasticsearch cluster shards"),
     )
 )
 
@@ -216,6 +216,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_elasticsearch_cluster_tasks,
-        title=lambda: _("Elasticsearch Cluster Tasks"),
+        title=lambda: _("Elasticsearch cluster tasks"),
     )
 )

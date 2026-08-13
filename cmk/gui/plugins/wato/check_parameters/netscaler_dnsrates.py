@@ -16,7 +16,7 @@ from cmk.gui.valuespec import Dictionary, Float, Tuple
 
 def _parameter_valuespec_netscaler_dnsrates():
     return Dictionary(
-        help=_("Counter rates of DNS parameters for Citrix Netscaler Load Balancer Appliances"),
+        help=_("Counter rates of DNS parameters for Citrix NetScaler load balancer appliances"),
         elements=[
             (
                 "query",
@@ -48,6 +48,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netscaler_dnsrates,
-        title=lambda: _("Citrix Netscaler DNS counter rates"),
+        title=lambda: _("Citrix NetScaler DNS counter rates"),
     )
 )

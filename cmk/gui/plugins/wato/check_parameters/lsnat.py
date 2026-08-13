@@ -35,6 +35,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_lsnat,
-        title=lambda: _("Enterasys LSNAT Bindings"),
+        title=lambda: _("Enterasys LSNAT bindings"),
     )
 )

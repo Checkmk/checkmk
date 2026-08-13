@@ -41,6 +41,6 @@ rulespec_registry.register(
         ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_credentials_expiration,
-        title=lambda: _("Credentials Expiration"),
+        title=lambda: _("Credentials expiration"),
     )
 )

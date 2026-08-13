@@ -236,11 +236,11 @@ class ACTestLivestatusUsage(ACTest):
             "<p>Livestatus is used by several components, for example the GUI, to gather "
             "information about the monitored objects from the monitoring core. It is "
             "very important for the overall performance of the monitoring system that "
-            "livestatus is reliable and performant.</p>"
-            "<p>There should always be enough free livestatus slots to serve new "
+            "Livestatus is reliable and performant.</p><p>There "
+            "should always be enough free Livestatus slots to serve new "
             "incoming queries.</p>"
-            "<p>You should never reach a livestatus usage of 100% for a longer time. "
-            "Consider increasing the number of parallel livestatus connections or track down "
+            "<p>You should never reach a Livestatus usage of 100% for a longer time. "
+            "Consider increasing the number of parallel Livestatus connections or track down "
             "the clients to check whether or not you can reduce the usage somehow.</p>"
         )
 
@@ -300,7 +300,7 @@ class ACTestTmpfs(ACTest):
 
     def help(self) -> str:
         return _(
-            "<p>By default each Checkmk site has its own temporary file system "
+            "<p>By default, each Checkmk site has its own temporary file system "
             "(a ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not "
             "possible, Checkmk starts without this temporary file system.</p>"
             "<p>Even if this is possible, it is not recommended to use Checkmk this "
@@ -353,13 +353,13 @@ class ACTestLivestatusSecured(ACTest):
 
     def help(self) -> str:
         return _(
-            "<p>In distributed setups Livestatus is used to transport the status information "
-            "gathered in one site to the central site. Since Checkmk 1.6 it is natively "
+            "<p>In distributed setups, Livestatus is used to transport the status information "
+            "gathered in one site to the central site. Since Checkmk 1.6, it is natively "
             "possible and highly recommended to encrypt this Livestatus traffic.</p> "
             "<p>This can be enabled using the global setting "
-            '<a href="wato.py?mode=edit_configvar&varname=site_livestatus_tcp">Access to Livestatus via TCP</a>. Before enabling this you should ensure that all your Livestatus clients '
+            '<a href="wato.py?mode=edit_configvar&varname=site_livestatus_tcp">Access to Livestatus via TCP</a>. Before enabling this, you should ensure that all your Livestatus clients '
             "are able to handle the SSL encrypted Livestatus communication. Have a look at "
-            '<a href="werk.py?werk=7017">werk #7017</a> for further information.</p>'
+            '<a href="werk.py?werk=7017">Werk #7017</a> for further information.</p>'
         )
 
     def is_relevant(self) -> bool:
@@ -828,7 +828,7 @@ class ACTestCheckMKHelperUsage(ACTest):
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough helper processes to handle "
             "the configured checks.</p>"
-            "<p>In case the helper pool is 100% used, checks will not be executed in "
+            "<p>In case the helper pool is used to 100%, checks will not be executed in "
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
@@ -840,7 +840,7 @@ class ACTestCheckMKHelperUsage(ACTest):
             "check helpers, because they consume a lot of memory. Your system needs "
             "to be able to handle the memory demand for all of them at once. An additional "
             "problem is that the Checkmk helpers are initialized in parallel during startup "
-            "of the Micro Core, which may cause load peaks when having "
+            "of the Checkmk Micro Core, which may cause load peaks when having "
             "a lot of Checkmk helper processes configured.</p>"
         )
 
@@ -888,7 +888,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough fetcher processes to handle "
             "the configured checks just in time.</p>"
-            "<p>In case the fetcher helper pool is 100% used, checks will not be executed in "
+            "<p>In case the fetcher helper pool is used to 100%, checks will not be executed in "
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
@@ -898,8 +898,8 @@ class ACTestCheckMKFetcherUsage(ACTest):
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
             "fetcher helpers, because they consume resources. An additional "
-            "problem is that the Checkmk fetchers are initialized in parallel during startup "
-            "of the Micro Core, which may cause load peaks when having "
+            "problem is that the Checkmk are initialized in parallel during startup "
+            "of the Checkmk Micro Core, which may cause load peaks when having "
             "a lot of Checkmk helper processes configured.</p>"
         )
 
@@ -964,7 +964,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough helper processes to handle "
             "the configured checks.</p>"
-            "<p>In case the checker helper pool is 100% used, checks will not be executed in "
+            "<p>In case the checker helper pool is used to 100%, checks will not be executed in "
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
@@ -976,7 +976,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "checker helpers, because they consume a lot of memory. Your system has "
             "to be able to handle the memory demand for all of them at once. An additional "
             "problem is that the Checkmk helpers are initialized in parallel during startup "
-            "of the Micro Core, which may cause load peaks when having "
+            "of the Checkmk Micro Core, which may cause load peaks when having "
             "a lot of Checkmk helper processes configured.</p>"
         )
 
@@ -1040,7 +1040,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
             "<p>The Checkmk Micro Core uses generic check helper processes to execute "
             "the active check based services (e.g. check_http, check_...). There should "
             "always be enough helper processes to handle the configured checks.</p>"
-            "<p>In case the helper pool is 100% used, checks will not be executed in "
+            "<p>In case the helper pool is used to 100%, checks will not be executed in "
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
@@ -1223,7 +1223,7 @@ class ACTestDeprecatedRuleSets(ACTest):
         return _(
             "These rule sets are configured in your site, but marked as deprecated. They still"
             " work, but need to be migrated to their successor or be removed before the update"
-            " to the next major release. There should be a werk for each of these rules providing"
+            " to the next major release. There should be a Werk for each of these rules providing"
             " you with further information on what to do specifically."
         )
 
@@ -1460,7 +1460,7 @@ class ACTestDeprecatedCheckManpages(ACTest):
 
     def help(self) -> str:
         return _(
-            "Check man pages in <tt>'%s'</tt> are marked as "
+            "Check manual pages in <tt>'%s'</tt> are marked as "
             "'deprecated' and will be ignored in future Checkmk versions "
             "(official deprecation timeline not decided yet)."
         ) % str(local_legacy_check_manpages_dir)
@@ -1481,7 +1481,7 @@ class ACTestDeprecatedCheckManpages(ACTest):
                     version=__version__,
                     deprecated_version="2.3.0",
                     removed_version="2.4.0",
-                    title_entity=_("Check man page"),
+                    title_entity=_("Check manual page"),
                     title_api=_("legacy"),
                     site_id=site_id,
                     path=plugin_filepath,
@@ -1490,7 +1490,7 @@ class ACTestDeprecatedCheckManpages(ACTest):
 
         yield ACSingleResult(
             state=ACResultState.OK,
-            text=_("No check man pages using the deprecated API"),
+            text=_("No check manual pages using the deprecated API"),
             site_id=site_id,
         )
 
@@ -1774,7 +1774,7 @@ class ACTestCheckMKCheckerNumber(ACTest):
     def help(self) -> str:
         return _(
             "The Checkmk Micro Core uses Checkmk checker processes to process the results "
-            "from the Checkmk fetchers. Since the checker processes are not IO bound, they are "
+            "from the Checkmk fetchers. Since the checker processes are not I/O bound, they are "
             "most effective when each checker gets a dedicated CPU. Configuring more checkers than "
             "the number of available CPUs has a negative effect, because it increases "
             "the amount of context switches."
@@ -1799,7 +1799,7 @@ class ACTestCheckMKCheckerNumber(ACTest):
                 state=ACResultState.WARN,
                 text=_(
                     "Configuring more checkers than the number of available CPUs (%d) have "
-                    "a detrimental effect, since they are not IO bound."
+                    "a detrimental effect, since they are not I/O bound."
                 )
                 % num_cpu,
                 site_id=site_id,

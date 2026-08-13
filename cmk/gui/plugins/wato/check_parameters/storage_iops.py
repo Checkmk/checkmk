@@ -18,7 +18,7 @@ def _parameter_valuespec_storage_iops() -> Dictionary:
             (
                 "read",
                 Tuple(
-                    title=_("Read IO operations per second"),
+                    title=_("Read I/O operations per second"),
                     elements=[
                         Float(title=_("Warning at"), unit="1/s"),
                         Float(title=_("Critical at"), unit="1/s"),
@@ -28,7 +28,7 @@ def _parameter_valuespec_storage_iops() -> Dictionary:
             (
                 "write",
                 Tuple(
-                    title=_("Write IO operations per second"),
+                    title=_("Write I/O operations per second"),
                     elements=[
                         Float(title=_("Warning at"), unit="1/s"),
                         Float(title=_("Critical at"), unit="1/s"),
@@ -38,7 +38,7 @@ def _parameter_valuespec_storage_iops() -> Dictionary:
             (
                 "total",
                 Tuple(
-                    title=_("Total IO operations per second"),
+                    title=_("Total I/O operations per second"),
                     elements=[
                         Float(title=_("Warning at"), unit="1/s"),
                         Float(title=_("Critical at"), unit="1/s"),

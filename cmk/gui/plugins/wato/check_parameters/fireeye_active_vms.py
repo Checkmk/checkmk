@@ -37,6 +37,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_active_vms,
-        title=lambda: _("Fireeye Active VMs"),
+        title=lambda: _("FireEye active VMs"),
     )
 )

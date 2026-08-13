@@ -53,7 +53,7 @@ def _valuespec_inventory_solaris_services_rules():
                 Alternative(
                     title=_("Service name"),
                     elements=[
-                        FixedValue(value="full_descr", title=_("Full Description"), totext=""),
+                        FixedValue(value="full_descr", title=_("Full description"), totext=""),
                         FixedValue(
                             value="descr_without_prefix",
                             title=_("Description without type prefix"),
@@ -89,8 +89,8 @@ def _parameter_valuespec_solaris_services():
                 ListOfStrings(
                     title=_("Alternative names for the service"),
                     help=_(
-                        "Here you can specify alternative names that the service might have. "
-                        "This helps when the exact spelling of the services can changed from "
+                        "Here, you can specify alternative names that the service might have. "
+                        "This helps, when the exact spelling of the services can change from "
                         "one version to another."
                     ),
                 ),

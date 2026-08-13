@@ -93,6 +93,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_svc_host,
-        title=lambda: _("IBM SVC Hosts"),
+        title=lambda: _("IBM SVC hosts"),
     )
 )

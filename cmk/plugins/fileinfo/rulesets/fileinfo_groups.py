@@ -61,10 +61,10 @@ DISPLAYED_MAGNITUDES_DATA = [
 
 def _get_fileinfo_groups_help():
     return Help(
-        "Checks <tt>fileinfo</tt> and <tt>sap_hana_fileinfo</tt> monitor "
+        "The checks <tt>fileinfo</tt> and <tt>sap_hana_fileinfo</tt> monitor "
         "the age and size of a single file. Each file information that is sent "
         "by the agent will create one service. By defining grouping "
-        "patterns you can switch to checks <tt>fileinfo.groups</tt> or "
+        "patterns you can switch to the checks <tt>fileinfo.groups</tt> or "
         "<tt>sap_hana_fileinfo.groups</tt>. These checks monitor a list of files at once. "
         "You can set levels not only for the total size and the age of the oldest/youngest "
         "file but also on the count. You can define one or several "
@@ -72,7 +72,7 @@ def _get_fileinfo_groups_help():
         "<tt>/var/log/apache/*.log</tt>. Please see Python's fnmatch for more "
         "information regarding globbing patterns and special characters. "
         "If the pattern begins with a tilde then this pattern is interpreted as "
-        "a regular expression instead of as a filename globbing pattern and "
+        "a regular expression instead of as a file name globbing pattern and "
         "<tt>*</tt> and <tt>?</tt> are treated differently. "
         "For files contained in a group "
         "the discovery will automatically create a group service instead "
@@ -81,10 +81,10 @@ def _get_fileinfo_groups_help():
         "Furthermore, the current time/date in a configurable format "
         "may be included in the include pattern. The syntax is as follows: "
         "$DATE:format-spec$ or $YESTERDAY:format-spec$, where format-spec "
-        "is a list of time format directives of the unix date command. "
-        "Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A pattern "
+        "is a list of time format directives of the Unix date command. "
+        "Example: $DATE:%Y%m%d$ is today's date, e.g. 20140127. A pattern "
         "of /var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files "
-        "with todays date  as name in the directory /var/tmp/backups. "
+        "with today's date as name in the directory /var/tmp/backups. "
         "The YESTERDAY syntax simply subtracts one day from the reference time."
     )
 
@@ -171,7 +171,7 @@ def _valuespec_fileinfo_groups() -> Dictionary:
                                         "exclude_pattern": DictElement(
                                             required=True,
                                             parameter_form=String(
-                                                title=Title("Exclude Pattern"),
+                                                title=Title("Exclude pattern"),
                                                 field_size=FieldSize.LARGE,
                                             ),
                                         ),
@@ -199,7 +199,7 @@ rule_spec_fileinfo_groups = DiscoveryParameters(
 
 def _item_spec_fileinfo_groups():
     return String(
-        title=Title("File Group Name"),
+        title=Title("File group name"),
         help_text=Help(
             "This name must match the name of the group defined "
             'in the <a href="wato.py?mode=edit_ruleset&varname=fileinfo_groups">%s</a> rule set.'
@@ -235,7 +235,7 @@ def get_fileinfo_groups_parameter_form(is_enforced: bool = False) -> Dictionary:
                             "group_pattern_exclude": DictElement(
                                 required=True,
                                 parameter_form=String(
-                                    title=Title("Exclude Pattern"),
+                                    title=Title("Exclude pattern"),
                                     field_size=FieldSize.MEDIUM,
                                 ),
                             ),
@@ -524,7 +524,7 @@ rule_spec_fileinfo_groups_checking = CheckParameters(
     parameter_form=get_fileinfo_groups_parameter_form,
     condition=HostAndItemCondition(
         item_form=_item_spec_fileinfo_groups(),
-        item_title=Title("File Group Name"),
+        item_title=Title("File group name"),
     ),
     create_enforced_service=False,
 )
@@ -537,6 +537,6 @@ rule_spec_fileinfo_groups_enforced = EnforcedService(
     parameter_form=lambda: get_fileinfo_groups_parameter_form(is_enforced=True),
     condition=HostAndItemCondition(
         item_form=_item_spec_fileinfo_groups(),
-        item_title=Title("File Group Name"),
+        item_title=Title("File group name"),
     ),
 )

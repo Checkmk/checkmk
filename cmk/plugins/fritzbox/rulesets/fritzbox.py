@@ -36,7 +36,7 @@ def _formspec_fritzbox():
 
 rule_spec_fritzbox = rule_specs.SpecialAgent(
     name="fritzbox",
-    title=Title("Fritz!Box Devices"),
+    title=Title("Fritz!Box devices"),
     topic=rule_specs.Topic.NETWORKING,
     parameter_form=_formspec_fritzbox,
 )

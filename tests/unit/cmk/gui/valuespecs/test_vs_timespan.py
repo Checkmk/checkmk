@@ -5,14 +5,19 @@
 
 from cmk.gui.valuespec import TimeSpan
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    request_var,
+)
 
 
 class TestValueSpecTimeSpan:
     def test_validate(self) -> None:
         expect_validate_failure(TimeSpan(), 100)
         expect_validate_success(TimeSpan(), 100.0)
-        expect_validate_failure(TimeSpan(), "smth")  # type: ignore[misc]
+        expect_validate_failure_untypeable(TimeSpan(), "smth")
         expect_validate_failure(TimeSpan(minvalue=300.0), 100.0)
         expect_validate_failure(TimeSpan(maxvalue=300.0), 400.0)
         expect_validate_success(TimeSpan(minvalue=100.0, maxvalue=300.0), 200.0)

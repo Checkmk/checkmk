@@ -7,7 +7,12 @@
 import cmk.gui.valuespec as vs
 from cmk.web.utils.html import HTML
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    request_var,
+)
 
 
 class TestListOfStrings:
@@ -26,7 +31,7 @@ class TestListOfStrings:
         expect_validate_failure(
             vs.ListOfStrings(max_entries=1), ["1", "2"], match="You can specify at most 1 entries"
         )
-        expect_validate_failure(  # type: ignore[misc]
+        expect_validate_failure_untypeable(
             vs.ListOfStrings(), 123, match="Expected data type is list, but your type is int."
         )
 

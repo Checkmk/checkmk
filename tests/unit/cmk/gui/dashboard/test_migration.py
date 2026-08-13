@@ -100,13 +100,14 @@ def fixture_mock_embedded_view_conversion() -> Iterator[MagicMock]:
 
 class TestMigrateDashboardConfigDefaults:
     def test_sets_defaults_for_missing_fields(self) -> None:
-        dashboard = _make_dashboard()
-        del dashboard["single_infos"]  # type: ignore[misc]
-        del dashboard["context"]  # type: ignore[misc]
-        del dashboard["mandatory_context_filters"]  # type: ignore[misc]
-        del dashboard["widgets"]  # type: ignore[misc]
+        # typing is a total lie below... :-/
+        dashboard: dict[str, object] = _make_dashboard()  # type: ignore[assignment]
+        del dashboard["single_infos"]
+        del dashboard["context"]
+        del dashboard["mandatory_context_filters"]
+        del dashboard["widgets"]
 
-        result = migrate_dashboard_config(dashboard)
+        result = migrate_dashboard_config(dashboard)  # type: ignore[arg-type]
 
         assert result["single_infos"] == []
         assert result["context"] == {}
@@ -325,11 +326,15 @@ class TestMigrateWidgetsViewWidget:
     def test_view_widget_missing_embedded_view_fields_get_defaults(
         self, mock_dashlet_registry: MagicMock
     ) -> None:
-        view_widget = _make_view_widget()
+        # typing is a total lie below... :-/
+        view_widget: dict[str, object] = _make_view_widget()  # type: ignore[assignment]
 
         # Explicitly delete the fields
-        for key in ("group_painters", "browser_reload", "num_columns", "column_headers", "sorters"):
-            view_widget.pop(key, None)  # type: ignore[misc]
+        view_widget.pop("group_painters", None)
+        view_widget.pop("browser_reload", None)
+        view_widget.pop("num_columns", None)
+        view_widget.pop("column_headers", None)
+        view_widget.pop("sorters", None)
 
         dashboard = _make_dashboard(widgets={"w1": view_widget})
 

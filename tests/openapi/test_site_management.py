@@ -284,6 +284,9 @@ def test_create_site_connection_missing_config(
     key: str,
 ) -> None:
     config = _default_config()
+    # NOTE: The whole test is very questionable from a typing perspecitve: Even if we make the type
+    # of `key` stricter via a `Literal`, things are incorrect: The key/value pairs we remove are
+    # required, so the whole typing is a lie here.
     config.pop(key)  # type: ignore[misc]
     clients.SiteManagement.create(
         site_config=config,

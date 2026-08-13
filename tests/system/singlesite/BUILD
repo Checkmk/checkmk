@@ -51,6 +51,7 @@ py_library(
         "//tests/testlib/common:utils",
     ] + select({
         "//:gpl+nonfree_repo": [
+            "//non-free/packages/cmk-core-helpers:inline-snmp",
             "//non-free/packages/cmk-liveproxyd",
             "//non-free/packages/cmk-otel-collector:testlib",
             "//non-free/packages/cmk-telemetry:plugins-custom-query",

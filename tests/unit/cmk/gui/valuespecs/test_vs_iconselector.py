@@ -10,7 +10,12 @@ import cmk.gui.valuespec as vs
 from cmk.gui.type_defs import DynamicIconName
 from cmk.gui.utils.output_funnel import output_funnel
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import (
+    expect_validate_failure,
+    expect_validate_failure_untypeable,
+    expect_validate_success,
+    request_var,
+)
 
 # A few types below are plain lies...
 ICON: vs.IconSelectorModel = {"icon": DynamicIconName("crash"), "emblem": None}
@@ -37,7 +42,9 @@ class TestValueSpecFloat:
     def test_validate(self, _mock_icons: MagicMock, _mock_emblems: MagicMock) -> None:  # type: ignore[misc]
         # ## value may be a string, or a dictionary.
         # ## first test string...
-        expect_validate_failure(vs.IconSelector(), "asd", match="The selected icon does not exist.")  # type: ignore[misc]
+        expect_validate_failure_untypeable(
+            vs.IconSelector(), "asd", match="The selected icon does not exist."
+        )
 
         # TODO: validate_value allows None, ...
         vs.IconSelector().validate_value(None, "")

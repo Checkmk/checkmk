@@ -526,6 +526,9 @@ def test_create_and_update_rule_with_conditions_data_200(
 def invalid_conditions() -> Iterator:
     for k in notification_rule_request_example()["conditions"]:
         config = notification_rule_request_example()
+        # NOTE: mypy currently doesn't have the equivalent of TypeScript's keyof, so k's type is
+        # simply str. Consequently, we need a suppression below. With PEP 827 ("Type Manipulation")
+        # we should be able to remove that.
         config["conditions"].update({k: {"state": "enabled"}})  # type: ignore[misc]
         yield config
 

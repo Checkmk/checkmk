@@ -3,16 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 import ast
 import sys
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Any
 
 import cmk.utils.paths
-from cmk.ccc.version import Edition, edition
 from cmk.checkengine.snmp_backends.classic import (  # astrein: disable=cmk-module-layer-violation
     ClassicSNMPBackend,
 )
@@ -28,16 +24,9 @@ from cmk.checkengine.snmplib import (
     SNMPHostConfig,
 )
 
-if edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY:
-    from cmk.checkengine.snmp_backends.inline import (  # type: ignore[import, unused-ignore] # astrein: disable=cmk-module-layer-violation
-        InlineSNMPBackend,
-    )
-else:
-    InlineSNMPBackend = None  # type: ignore[assignment, misc, unused-ignore]
-
 cmk.ccc.debug.enable()
 
-params: tuple[OID, str, Mapping[str, Any], str] = ast.literal_eval(sys.stdin.read())
+params: tuple[OID, str, Mapping[str, object], str] = ast.literal_eval(sys.stdin.read())
 oid = params[0]
 backend_type = SNMPBackendEnum.deserialize(params[1])
 config = SNMPHostConfig.deserialize(params[2])
@@ -46,6 +35,10 @@ cmk.utils.paths.snmpwalks_dir = Path(params[3])
 backend: Callable[[SNMPHostConfig], SNMPBackend]
 match backend_type:
     case SNMPBackendEnum.INLINE:
+        from cmk.checkengine.snmp_backends.inline import (  # type: ignore[import-not-found,unused-ignore]  # astrein: disable=cmk-module-layer-violation
+            InlineSNMPBackend,
+        )
+
         backend = InlineSNMPBackend
     case SNMPBackendEnum.CLASSIC:
         backend = ClassicSNMPBackend

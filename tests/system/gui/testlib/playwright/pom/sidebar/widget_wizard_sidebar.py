@@ -75,7 +75,7 @@ class WidgetType(StrEnum):
     ALERTS_AND_NOTIFICATIONS = "Alerts & notifications"
 
     @overload
-    def get_wizard(  # type: ignore[misc] # https://github.com/python/mypy/issues/15456
+    def get_wizard(  # type: ignore[misc] # https://github.com/python/mypy/issues/15456  # TODO: SUP
         self: Literal[WidgetType.METRICS_AND_GRAPHS], wizard_mode: WidgetWizardMode, page: Page
     ) -> MetricsAndGraphsWidgetWizard: ...
 

@@ -114,7 +114,8 @@ def test_check_jolokia_jvm_runtime_uptime_different_values() -> None:
         assert "Up since" in result[0][1]
 
         # Verify metric value matches input
-        metrics = result[0][2]  # type: ignore[misc]
+        assert len(result[0]) == 3
+        metrics = result[0][2]
         assert metrics[0][1] == pytest.approx(uptime_ms / 1000.0)
 
 
@@ -155,7 +156,8 @@ def test_jolokia_jvm_runtime_complete_workflow() -> None:
     assert "uptime: 9:35:02" in result[1]
 
     # Verify metrics exactly match dataset expectations
-    metrics = result[2]  # type: ignore[misc]
+    assert len(result) == 3
+    metrics = result[2]
     assert len(metrics) == 1
     assert metrics[0][0] == "uptime"  # metric name
     assert metrics[0][1] == 34502.762  # metric value

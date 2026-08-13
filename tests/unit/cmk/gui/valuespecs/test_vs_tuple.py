@@ -7,7 +7,7 @@ import pytest
 
 import cmk.gui.valuespec as vs
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import expect_validate_failure_untypeable, expect_validate_success, request_var
 
 
 def get_tuple_vs() -> vs.Tuple[tuple[str, int, str, int]]:
@@ -37,10 +37,10 @@ class TestValueSpecTuple:
 
     def test_validate(self) -> None:
         expect_validate_success(get_tuple_vs(), ("", 0, "", 1))
-        expect_validate_failure(get_tuple_vs(), ("", 0))  # type: ignore[misc]
-        expect_validate_failure(get_tuple_vs(), ())  # type: ignore[misc]
-        expect_validate_failure(get_tuple_vs(), (0, "", 0, ""))  # type: ignore[misc]
-        expect_validate_failure(get_tuple_vs(), ["", 0, "", 1])  # type: ignore[misc]
+        expect_validate_failure_untypeable(get_tuple_vs(), ("", 0))
+        expect_validate_failure_untypeable(get_tuple_vs(), ())
+        expect_validate_failure_untypeable(get_tuple_vs(), (0, "", 0, ""))
+        expect_validate_failure_untypeable(get_tuple_vs(), ["", 0, "", 1])
 
     def test_from_html_vars(self, request_context: None) -> None:
         with request_var(v_0="a", v_1="2", v_2="c", v_3="4"):

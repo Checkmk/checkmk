@@ -117,7 +117,10 @@ class TestModeDumpAgent:
             make_app(),
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),
         )
-        check_mk.mode_dump_agent.handler_function(app, {}, hostname)  # type: ignore[misc]
+
+        fn = check_mk.mode_dump_agent.handler_function
+        assert fn is not None
+        fn(app, {}, hostname)
         assert capsys.readouterr().out == raw_data.decode()
 
 
@@ -230,7 +233,9 @@ class TestModeDumpAgentUseWalk:
             make_app(),
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),
         )
-        check_mk.mode_dump_agent.handler_function(app, options, hostname)  # type: ignore[misc]
+        fn = check_mk.mode_dump_agent.handler_function
+        assert fn is not None
+        fn(app, options, hostname)
 
         # Open the SNMP fetcher manually to drive make_backend
         assert len(captured_sources) == 1

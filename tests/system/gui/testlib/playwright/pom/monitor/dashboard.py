@@ -165,7 +165,9 @@ class BaseDashboard(CmkPage):
         Returns:
             The locator of the rows of the table inside the widget.
         """
-        return self.get_widget_table(widget_title, iframed).locator("tr:not(:has(th))")
+        return self.get_widget_table(widget_title, iframed).first.locator(
+            "> tbody > tr:not(:has(th))"
+        )
 
     def get_widget_table_column_cells(
         self, widget_title: str, *, column_index: int, iframed: bool = False

@@ -35,7 +35,7 @@ def _pre_24_to_formspec_migration(values: object) -> dict[str, object]:
 
 def _formspec_aws():
     return Dictionary(
-        title=Title("Amazon Web Services (AWS) Status"),
+        title=Title("Amazon Web Services (AWS) status"),
         migrate=_pre_24_to_formspec_migration,
         elements={
             "regions_to_monitor": DictElement(
@@ -59,7 +59,7 @@ def _formspec_aws():
 
 rule_spec_aws_status = SpecialAgent(
     name="aws_status",
-    title=Title("Amazon Web Services (AWS) Status"),
+    title=Title("Amazon Web Services (AWS) status"),
     topic=Topic.CLOUD,
     parameter_form=_formspec_aws,
 )

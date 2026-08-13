@@ -69,7 +69,7 @@ def _parameter_form() -> Dictionary:
 
 rule_spec_special_agent_innovaphone = SpecialAgent(
     name="innovaphone",
-    title=Title("Innovaphone Gateways"),
+    title=Title("Innovaphone gateways"),
     topic=Topic.SERVER_HARDWARE,
     parameter_form=_parameter_form,
 )

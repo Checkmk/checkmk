@@ -79,6 +79,6 @@ rule_spec_proxmox_ve_vm_backup_status = CheckParameters(
     name="proxmox_ve_vm_backup_status",
     topic=Topic.CLOUD,
     parameter_form=_parameter_valuespec_proxmox_ve_vm_backup_requirements,
-    title=Title("Proxmox VE VM Backup"),
+    title=Title("Proxmox VE VM backup"),
     condition=HostCondition(),
 )

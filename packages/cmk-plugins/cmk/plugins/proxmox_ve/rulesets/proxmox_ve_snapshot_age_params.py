@@ -63,6 +63,6 @@ rule_spec_proxmox_ve_vm_snapshot_age = CheckParameters(
     name="proxmox_ve_vm_snapshot_age",
     topic=Topic.CLOUD,
     parameter_form=_parameter_valuespec_proxmox_ve_snapshot_age_requirements,
-    title=Title("Proxmox VE VM Snapshot Age"),
+    title=Title("Proxmox VE VM snapshot age"),
     condition=HostCondition(),
 )

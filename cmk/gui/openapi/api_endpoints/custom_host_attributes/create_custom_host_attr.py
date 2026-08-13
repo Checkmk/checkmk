@@ -65,7 +65,7 @@ def create_custom_host_attr_v1(
         pprint_value=api_context.config.wato_pprint_config,
     )
     return ApiResponse(
-        status_code=201,
+        status_code=200,
         body=serialize_attr(new_attr),
         etag=attr_etag(new_attr),
     )

@@ -9,7 +9,7 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 
 def test_create_and_get(clients: ClientRegistry) -> None:
-    clients.CustomHostAttr.create(name="coordinates", title="Coordinates").assert_status_code(201)
+    clients.CustomHostAttr.create(name="coordinates", title="Coordinates").assert_status_code(200)
 
     resp = clients.CustomHostAttr.get("coordinates")
     assert resp.json["id"] == "coordinates"
@@ -25,7 +25,7 @@ def test_create_with_all_fields(clients: ClientRegistry) -> None:
         show_in_table=True,
         add_custom_macro=True,
     )
-    resp.assert_status_code(201)
+    resp.assert_status_code(200)
     ext = resp.json["extensions"]
     assert ext["topic"] == "My Topic"
     assert ext["help"] == "Where the host lives."
@@ -35,7 +35,7 @@ def test_create_with_all_fields(clients: ClientRegistry) -> None:
 
 def test_create_defaults(clients: ClientRegistry) -> None:
     resp = clients.CustomHostAttr.create(name="minimal", title="Minimal")
-    resp.assert_status_code(201)
+    resp.assert_status_code(200)
     ext = resp.json["extensions"]
     assert ext["topic"] == "Custom attributes"
     assert ext["help"] == ""

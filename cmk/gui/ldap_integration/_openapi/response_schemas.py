@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -574,7 +573,7 @@ class LDAPGroupsToRoles(LDAPCheckbox):
     user = fields.List(fields.Nested(LDAPRoleElement))
 
     @post_dump(pass_original=True)
-    def _include_other_user_roles(
+    def _include_other_user_roles(  # type: ignore[misc]
         self,
         result_data: dict[str, Any],
         original_data: dict[str, Any],
@@ -598,7 +597,7 @@ class LDAPGroupsToRoles(LDAPCheckbox):
 class LDAPSyncPlugins(BaseSchema):
     # TODO: DEPRECATED(18295) remove "mega_menu_icons"
     @pre_dump
-    def _fill_mega_menu_icons(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+    def _fill_mega_menu_icons(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
         data["mega_menu_icons"] = data.get("main_menu_icons")
         return data
 
@@ -695,7 +694,7 @@ class LDAPSyncPlugins(BaseSchema):
     )
 
     @post_dump(pass_original=True)
-    def _include_custom_user_attributes(
+    def _include_custom_user_attributes(  # type: ignore[misc]
         self,
         result_data: dict[str, Any],
         original_data: dict[str, Any],

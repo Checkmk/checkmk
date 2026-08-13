@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -275,7 +274,7 @@ def test_discover_tplink_poe(section: Section, expected: DiscoveryResult) -> Non
         ),
     ],
 )
-def test_check_tplink_poe(
+def test_check_tplink_poe(  # type: ignore[misc]
     item: str, params: Mapping[str, Any], section: Section, expected: CheckResult
 ) -> None:
     assert list(check_tplink_poe(item, params, section)) == expected

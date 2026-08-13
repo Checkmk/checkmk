@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 # ruff: noqa: ARG005
@@ -171,7 +170,7 @@ def test_get_section_kwargs(
         ),
     ],
 )
-def test_get_section_cluster_kwargs(
+def test_get_section_cluster_kwargs(  # type: ignore[misc]
     required_sections: Sequence[str], expected_result: dict[str, Any]
 ) -> None:
     node1_sections = HostSections[AgentRawDataSection](

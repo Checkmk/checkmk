@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import re
@@ -84,7 +83,7 @@ def parse_flattened_piggyback_time_settings(  # type: ignore[explicit-any]
 
 
 @lru_cache(maxsize=128)
-def _compile(pattern: str) -> re.Pattern:
+def _compile(pattern: str) -> re.Pattern:  # type: ignore[misc]
     """Compile a regular expression pattern and cache the result.
 
     Caching by the re module is limited to 512 entries.

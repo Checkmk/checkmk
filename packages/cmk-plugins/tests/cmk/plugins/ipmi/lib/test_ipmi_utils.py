@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
 from typing import Any
@@ -340,7 +339,7 @@ from cmk.plugins.ipmi.lib import ipmi
         ),
     ],
 )
-def test_check_ipmi_detailed(
+def test_check_ipmi_detailed(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     sensor: ipmi.Sensor,

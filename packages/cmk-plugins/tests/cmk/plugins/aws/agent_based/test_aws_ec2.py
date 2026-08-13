@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -232,7 +231,7 @@ def test_aws_ec2_cpu_util_discovery(
         ),
     ],
 )
-def test_check_aws_ec2_cpu_util(
+def test_check_aws_ec2_cpu_util(  # type: ignore[misc]
     section: Mapping[str, float],
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],

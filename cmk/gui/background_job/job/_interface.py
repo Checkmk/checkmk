@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -101,7 +100,7 @@ class JobTarget[Args](BaseModel, frozen=True):
         return func
 
     @field_serializer("callable")
-    def serialize_callable(self, value: Callable) -> tuple[str, str]:
+    def serialize_callable(self, value: Callable) -> tuple[str, str]:  # type: ignore[misc]
         return self.callable.__module__, self.callable.__name__
 
 

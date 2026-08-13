@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterable, Mapping, Sequence
@@ -42,7 +41,7 @@ from ._connector import ConnectorType, user_connector_registry, UserConnector
 
 
 @request_memoize(maxsize=None)
-def get_connection(connection_id: str | None) -> UserConnector | None:
+def get_connection(connection_id: str | None) -> UserConnector | None:  # type: ignore[misc]
     """Returns the connection object of the requested connection id
 
     This function maintains a cache that for a single connection_id only one object per request is

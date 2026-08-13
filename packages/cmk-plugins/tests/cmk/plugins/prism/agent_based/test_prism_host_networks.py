@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 import json
 from collections.abc import Mapping, Sequence
@@ -200,7 +199,7 @@ def test_discovery_prism_host_networks(
         ),
     ],
 )
-def test_check_prism_host_networks(
+def test_check_prism_host_networks(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result],

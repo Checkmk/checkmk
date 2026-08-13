@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 import json
 import os
@@ -203,7 +202,7 @@ def latest_commit_subject(repo_path: Path) -> str:
 
 
 @pytest.mark.vcr
-def test_reserve_ids_and_create_werk(
+def test_reserve_ids_and_create_werk(  # type: ignore[misc]
     tmp_path: Path, vcr_cassette_dir: str, vcr_config: dict[str, Any]
 ) -> None:
     home = tmp_path / "home"
@@ -234,7 +233,7 @@ def test_reserve_ids_and_create_werk(
 
 
 @pytest.mark.vcr
-def test_commit_config(tmp_path: Path, vcr_cassette_dir: str, vcr_config: dict[str, Any]) -> None:
+def test_commit_config(tmp_path: Path, vcr_cassette_dir: str, vcr_config: dict[str, Any]) -> None:  # type: ignore[misc]
     home = tmp_path / "home"
     home.mkdir()
     cmk_repo_path = tmp_path / "repo_cmk"

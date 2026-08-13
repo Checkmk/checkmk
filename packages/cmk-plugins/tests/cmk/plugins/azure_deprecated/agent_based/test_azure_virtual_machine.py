@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
 
@@ -169,7 +168,7 @@ MULTIPLE_VMS_SECTION = {
         pytest.param({}, [], id="no VM resources"),
     ],
 )
-def test_discover_azure_virtual_machine(
+def test_discover_azure_virtual_machine(  # type: ignore[misc]
     section: Section,
     expected_discovery: DiscoveryResult,
 ) -> None:
@@ -297,7 +296,7 @@ def test_discover_azure_virtual_machine(
         ),
     ],
 )
-def test_check_azure_virtual_machines(
+def test_check_azure_virtual_machines(  # type: ignore[misc]
     item: str,
     params: Mapping[str, int],
     section: Section,
@@ -321,7 +320,7 @@ def test_check_azure_virtual_machines_no_item() -> None:
         pytest.param({}, [], id="no VM resources"),
     ],
 )
-def test_discover_azure_virtual_machines_summary(
+def test_discover_azure_virtual_machines_summary(  # type: ignore[misc]
     section: Section,
     expected_discovery: DiscoveryResult,
 ) -> None:
@@ -379,7 +378,7 @@ def test_discover_azure_virtual_machines_summary(
         ),
     ],
 )
-def test_check_azure_virtual_machines_summary(
+def test_check_azure_virtual_machines_summary(  # type: ignore[misc]
     section: Section,
     params: Mapping[str, VMSummaryParams],
     expected_result: CheckResult,
@@ -397,7 +396,7 @@ def test_check_azure_virtual_machines_summary(
         pytest.param({}, [], id="no resources"),
     ],
 )
-def test_discover_azure_vm_cpu_utilization(
+def test_discover_azure_vm_cpu_utilization(  # type: ignore[misc]
     section: Section, expected_discovery: DiscoveryResult
 ) -> None:
     assert list(discover_azure_vm_cpu_utilization(section)) == expected_discovery
@@ -418,7 +417,7 @@ def test_discover_azure_vm_cpu_utilization(
         ),
     ],
 )
-def test_check_azure_vm_cpu_utilization(
+def test_check_azure_vm_cpu_utilization(  # type: ignore[misc]
     params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
 ) -> None:
     assert (
@@ -441,7 +440,7 @@ def test_check_azure_vm_cpu_utilization(
         ),
     ],
 )
-def test_check_azure_vm_burst_cpu_credits(
+def test_check_azure_vm_burst_cpu_credits(  # type: ignore[misc]
     params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
 ) -> None:
     assert list(check_azure_vm_burst_cpu_credits(params, section)) == expected_result
@@ -463,7 +462,7 @@ def test_check_azure_vm_burst_cpu_credits(
         ),
     ],
 )
-def test_check_azure_vm_memory(
+def test_check_azure_vm_memory(  # type: ignore[misc]
     params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
 ) -> None:
     assert list(check_azure_vm_memory(params, section)) == expected_result
@@ -491,7 +490,7 @@ def test_check_azure_vm_memory(
         ),
     ],
 )
-def test_check_azure_vm_disk(
+def test_check_azure_vm_disk(  # type: ignore[misc]
     params: Mapping[str, tuple[float, float]], section: Section, expected_result: CheckResult
 ) -> None:
     assert list(check_azure_vm_disk(params, section)) == expected_result
@@ -505,7 +504,7 @@ def test_check_azure_vm_disk(
         pytest.param({}, [], id="no resources"),
     ],
 )
-def test_discover_azure_vm_network_io(
+def test_discover_azure_vm_network_io(  # type: ignore[misc]
     section: Section, expected_discovery: DiscoveryResult
 ) -> None:
     assert list(discover_azure_vm_network_io(section)) == expected_discovery
@@ -561,7 +560,7 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
-def test_check_azure_vm_network_io(
+def test_check_azure_vm_network_io(  # type: ignore[misc]
     params: Mapping[str, tuple[float, float]],
     section: Section,
     expected_result: CheckResult,

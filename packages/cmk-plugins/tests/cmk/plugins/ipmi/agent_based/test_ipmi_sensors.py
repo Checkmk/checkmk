@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
 from typing import Any
@@ -604,7 +603,7 @@ def test_discover_ipmi_sensors(
         ),
     ],
 )
-def test_check_ipmi_sensors(
+def test_check_ipmi_sensors(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     section: ipmi_utils.Section,

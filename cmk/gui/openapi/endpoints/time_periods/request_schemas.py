@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -137,7 +136,7 @@ class TimeRange(BaseSchema):
     )
 
     @marshmallow.validates_schema
-    def validate_start_before_end(self, data, **_kwargs):
+    def validate_start_before_end(self, data, **_kwargs):  # type: ignore[misc]
         self._validate_times(data)
         self._validate_time_order(data)
 

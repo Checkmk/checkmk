@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import cast, Literal, NotRequired, override, TypedDict
@@ -98,7 +96,7 @@ def load_contact_group_information() -> GroupSpecs:
 
 
 @request_memoize()
-def load_group_information() -> AllGroupSpecs:
+def load_group_information() -> AllGroupSpecs:  # type: ignore[misc]
     aliases = GroupAliasConfigFile().load_for_reading()
     configs = GroupsConfigFile().load_for_reading()
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from collections.abc import Mapping
 
 from marshmallow import validates_schema, ValidationError
@@ -39,7 +37,7 @@ class BrokerConnectionConfig(BaseSchema):
     )
 
     @validates_schema
-    def validate_connection(
+    def validate_connection(  # type: ignore[misc]
         self, data: Mapping[str, Mapping[str, object]], **kwargs: object
     ) -> None:
         """The two connected sites should not be the same."""

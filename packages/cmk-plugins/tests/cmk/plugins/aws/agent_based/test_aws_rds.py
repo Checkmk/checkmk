@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -3212,7 +3211,7 @@ def test_aws_rds_discovery(
         ),
     ],
 )
-def test_check_aws_rds(
+def test_check_aws_rds(  # type: ignore[misc]
     section: AWSSectionMetrics,
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
@@ -3417,7 +3416,7 @@ def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
         ),
     ],
 )
-def test_check_aws_rds_cpu_credits(
+def test_check_aws_rds_cpu_credits(  # type: ignore[misc]
     section: Mapping[str, Mapping[str, float]],
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
@@ -3541,7 +3540,7 @@ def test_check_aws_rds_bin_log_usage_allocated_storage_is_zero() -> None:
         ),
     ],
 )
-def test_check_aws_rds_bin_log_usage(
+def test_check_aws_rds_bin_log_usage(  # type: ignore[misc]
     section: Mapping[str, Mapping[str, float]],
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
@@ -3684,7 +3683,7 @@ def test_check_aws_rds_transaction_logs_usage_allocated_storage_is_zero() -> Non
         ),
     ],
 )
-def test_check_aws_rds_transaction_logs_usage(
+def test_check_aws_rds_transaction_logs_usage(  # type: ignore[misc]
     section: Mapping[str, Mapping[str, float]],
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
@@ -3810,7 +3809,7 @@ def test_check_aws_rds_replication_slot_usage_allocated_storage_is_zero() -> Non
         ),
     ],
 )
-def test_check_aws_rds_replication_slot_usage(
+def test_check_aws_rds_replication_slot_usage(  # type: ignore[misc]
     section: Mapping[str, Mapping[str, float]],
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
@@ -3892,7 +3891,7 @@ def test_check_aws_rds_connections_item_not_found() -> None:
         ),
     ],
 )
-def test_check_aws_rds_connections(
+def test_check_aws_rds_connections(  # type: ignore[misc]
     section: Mapping[str, Mapping[str, float]],
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
@@ -3991,7 +3990,7 @@ def test_check_aws_rds_replica_lag_item_not_found() -> None:
         ),
     ],
 )
-def test_check_aws_rds_replica_lag(
+def test_check_aws_rds_replica_lag(  # type: ignore[misc]
     section: Mapping[str, Mapping[str, float]],
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],

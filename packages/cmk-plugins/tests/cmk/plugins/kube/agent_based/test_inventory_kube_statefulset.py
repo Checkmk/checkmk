@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Sequence
@@ -148,7 +147,7 @@ STATEFUL_SET = StatefulSetInfo(
         ),
     ],
 )
-def test_inventorize_kube_statefulset(
+def test_inventorize_kube_statefulset(  # type: ignore[misc]
     section_info: StatefulSetInfo,
     section_strategy: UpdateStrategy,
     expected_inventory_result: Sequence[Any],

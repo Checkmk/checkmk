@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -140,7 +139,7 @@ def test_discover_netapp_ontap_snapshots(
         ),
     ],
 )
-def test_check_netapp_ontap_snapshots_no_metrics(
+def test_check_netapp_ontap_snapshots_no_metrics(  # type: ignore[misc]
     volume_model: VolumeModel, params: Mapping[str, Any], expected_result: CheckResult
 ) -> None:
     section = {volume_model.item_name(): volume_model}

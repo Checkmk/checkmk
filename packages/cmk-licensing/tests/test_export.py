@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -34,7 +33,7 @@ from cmk.licensing.export import (
         ("manual", {}),
     ],
 )
-def test_subscription_details_broken(
+def test_subscription_details_broken(  # type: ignore[misc]
     protocol_version: Literal[
         "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"
     ],
@@ -182,7 +181,7 @@ def test_subscription_details_source(
         ),
     ],
 )
-def test_subscription_details_limit(
+def test_subscription_details_limit(  # type: ignore[misc]
     protocol_version: Literal[
         "1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0", "3.1", "3.2"
     ],
@@ -253,7 +252,7 @@ def test_subscription_details_limit(
         ),
     ],
 )
-def test_subscription_details_for_report(
+def test_subscription_details_for_report(  # type: ignore[misc]
     subscription_details: SubscriptionDetails, expected_raw_subscription_details: Mapping[str, Any]
 ) -> None:
     assert subscription_details.for_report() == expected_raw_subscription_details
@@ -309,7 +308,7 @@ def test_subscription_details_for_report(
         ),
     ],
 )
-def test_subscription_details_for_config(
+def test_subscription_details_for_config(  # type: ignore[misc]
     subscription_details: SubscriptionDetails, expected_raw_subscription_details: Mapping[str, Any]
 ) -> None:
     assert subscription_details.for_config() == expected_raw_subscription_details
@@ -400,7 +399,7 @@ def test_subscription_details_for_config(
         ),
     ],
 )
-def test_LicenseUsageExtensions_parse_from_sample(
+def test_LicenseUsageExtensions_parse_from_sample(  # type: ignore[misc]
     raw_sample: dict, expected_ntop_enabled: bool
 ) -> None:
     extensions = _parse_extensions(raw_sample)

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -314,7 +313,7 @@ class EndpointModel[**P, T]:
     @classmethod
     @lru_cache(maxsize=64)  # keep in sync with get_cached_type_adapter
     @tracer.instrument("build_endpoint_model")
-    def build(cls, handler: Callable[P, T]) -> Self:
+    def build(cls, handler: Callable[P, T]) -> Self:  # type: ignore[misc]
         """Build the endpoint model from the handler function."""
         signature = inspect.signature(handler, eval_str=True)
         annotated_parameters = SignatureParametersProcessor.extract_annotated_parameters(signature)

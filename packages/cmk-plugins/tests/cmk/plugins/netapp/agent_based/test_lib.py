@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import time
@@ -75,7 +74,7 @@ NOW_SIMULATED_SECONDS = 3600
         ),
     ],
 )
-def test_check_netapp_luns(
+def test_check_netapp_luns(  # type: ignore[misc]
     item: str,
     online: bool,
     read_only: bool,
@@ -220,7 +219,7 @@ _QTREE_SECTION = {
         ),
     ],
 )
-def test_discover_netapp_qtree_quota(
+def test_discover_netapp_qtree_quota(  # type: ignore[misc]
     params: Mapping[str, Any], expected_result: DiscoveryResult
 ) -> None:
     result = list(discover_netapp_qtree_quota(params, _QTREE_SECTION))
@@ -530,7 +529,7 @@ INTERFACE = interfaces.InterfaceWithCounters(
         ),
     ],
 )
-def test_check_home_port_status(
+def test_check_home_port_status(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     interfaces: interfaces.Section[interfaces.InterfaceWithCounters],
@@ -595,7 +594,7 @@ def test_check_home_port_status(
         ),
     ],
 )
-def test_check_home_port_status_with_failover_ports(
+def test_check_home_port_status_with_failover_ports(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     interfaces: interfaces.Section[interfaces.InterfaceWithCounters],
@@ -653,7 +652,7 @@ def test_check_home_port_status_with_failover_ports(
         ),
     ],
 )
-def test_unknown_failover_policy(
+def test_unknown_failover_policy(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     interfaces: interfaces.Section[interfaces.InterfaceWithCounters],

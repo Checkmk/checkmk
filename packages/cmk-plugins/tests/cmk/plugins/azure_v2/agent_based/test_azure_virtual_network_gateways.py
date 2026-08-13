@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import time
@@ -660,7 +659,7 @@ def test_check_virtual_network_gateway_bgp(
         ),
     ],
 )
-def test_discover_virtual_network_gateway_peering(section, expected_discovery):
+def test_discover_virtual_network_gateway_peering(section, expected_discovery):  # type: ignore[misc]
     assert list(discover_virtual_network_gateway_peering(section)) == expected_discovery
 
 
@@ -691,7 +690,7 @@ def test_discover_virtual_network_gateway_peering(section, expected_discovery):
         ),
     ],
 )
-def test_check_virtual_network_gateway_peering(section, item, expected_result):
+def test_check_virtual_network_gateway_peering(section, item, expected_result):  # type: ignore[misc]
     assert list(check_virtual_network_gateway_peering(item, section)) == expected_result
 
 

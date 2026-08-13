@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -418,7 +417,7 @@ class OverridableInstances[T: Overridable]:
         self.add_instance((new_page.owner(), new_page.name()), new_page)
 
     @request_memoize(maxsize=4096)
-    def find_page(self, name: str, user_permissions: UserPermissions) -> T | None:
+    def find_page(self, name: str, user_permissions: UserPermissions) -> T | None:  # type: ignore[misc]
         """Find a page by name, implements shadowing and publishing und overriding by admins"""
         mine = None
         forced = None

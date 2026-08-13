@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="redundant-expr"
 
@@ -80,7 +79,7 @@ class RegexpRewrites(BaseSchema, CheckmkTuple):
     )
 
     @validates_schema
-    def validate_replacement(self, data: Mapping[str, str], **kwargs: object) -> None:
+    def validate_replacement(self, data: Mapping[str, str], **kwargs: object) -> None:  # type: ignore[misc]
         search = re.compile(data["search"])
         replace_groups = list(set(re.findall(r"\\((?:[1-9]|\d\d)+)", data["replace_with"])))
         replace_groups.sort()
@@ -567,7 +566,7 @@ class NetworkScan(BaseSchema):
     translate_names = Nested(TranslateNames)
 
     @validates_schema
-    def validate_tag_criticality(self, data: dict[str, Any], **kwargs: Any) -> None:
+    def validate_tag_criticality(self, data: dict[str, Any], **kwargs: Any) -> None:  # type: ignore[misc]
         tag_criticality = load_tag_group(TagGroupID("criticality"))
         if tag_criticality is None:
             if "tag_criticality" in data:
@@ -739,11 +738,11 @@ class SNMPCommunity(BaseSchema):
     )
 
     @post_load
-    def to_checkmk_str(self, data: dict[str, str], **kwargs: object) -> str:
+    def to_checkmk_str(self, data: dict[str, str], **kwargs: object) -> str:  # type: ignore[misc]
         return data["community"]
 
     @pre_dump
-    def from_tuple(self, data: object, **kwargs: object) -> dict[str, str] | None:
+    def from_tuple(self, data: object, **kwargs: object) -> dict[str, str] | None:  # type: ignore[misc]
         """
 
         v1 'community'

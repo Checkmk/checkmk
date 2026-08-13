@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping
@@ -132,7 +131,7 @@ def section_fixture() -> Section:
         ),
     ],
 )
-def test_check_azure_storageaccounts(
+def test_check_azure_storageaccounts(  # type: ignore[misc]
     item: str,
     params: Mapping[str, object],
     results_expected: list[object],
@@ -203,7 +202,7 @@ def test_check_azure_storageaccounts_defaults():
         ),
     ],
 )
-def test_check_azure_storageaccounts_flow(
+def test_check_azure_storageaccounts_flow(  # type: ignore[misc]
     item: str,
     params: Mapping[str, object],
     results_expected: list[object],
@@ -289,7 +288,7 @@ def test_check_azure_storageaccounts_flow_defaults():
         ),
     ],
 )
-def test_check_plugin_azure_storageaccounts_performance(
+def test_check_plugin_azure_storageaccounts_performance(  # type: ignore[misc]
     item: str,
     params: Mapping[str, object],
     results_expected: list[object],

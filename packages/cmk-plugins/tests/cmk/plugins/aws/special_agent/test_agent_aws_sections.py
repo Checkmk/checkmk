@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
@@ -137,7 +136,7 @@ class TestAWSHostLabelSections:
             ),
         ],
     )
-    def test_label_section_header(
+    def test_label_section_header(  # type: ignore[misc]
         self,
         generic_section: AWSSectionsGeneric,
         capsys: pytest.CaptureFixture[str],

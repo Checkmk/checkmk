@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 from typing import Any
@@ -87,7 +86,7 @@ def test_tolerance_check_no_last_sync(notice_only: bool, expected_result: Result
 
 
 @mock.patch("time.time", mock.Mock(return_value=42.0))
-def test_host_time_ahead():
+def test_host_time_ahead():  # type: ignore[misc]
     value_store: dict[str, Any] = {"time_server": 43.0}
     assert list(
         tolerance_check(

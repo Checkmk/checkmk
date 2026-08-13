@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -125,7 +124,7 @@ AZURE_FIREWALL_NO_METRICS = Resource(
         ),
     ],
 )
-def test_check_azure_firewall(
+def test_check_azure_firewall(  # type: ignore[misc]
     resource: Resource,
     params: Mapping[str, Any],
     expected_results: Sequence[Result | Metric],
@@ -171,7 +170,7 @@ def test_check_azure_firewall_health_no_metrics() -> None:
         ),
     ],
 )
-def test_check_azure_firewall_snat(
+def test_check_azure_firewall_snat(  # type: ignore[misc]
     resource: Resource,
     params: Mapping[str, Any],
     expected_results: Sequence[Result | Metric],
@@ -210,7 +209,7 @@ def test_check_azure_firewall_snat(
         ),
     ],
 )
-def test_check_azure_firewall_throughput(
+def test_check_azure_firewall_throughput(  # type: ignore[misc]
     resource: Resource,
     params: Mapping[str, Any],
     expected_results: Sequence[Result | Metric],
@@ -249,7 +248,7 @@ def test_check_azure_firewall_throughput(
         ),
     ],
 )
-def test_check_azure_firewall_latency(
+def test_check_azure_firewall_latency(  # type: ignore[misc]
     resource: Resource,
     params: Mapping[str, Any],
     expected_results: Sequence[Result | Metric],

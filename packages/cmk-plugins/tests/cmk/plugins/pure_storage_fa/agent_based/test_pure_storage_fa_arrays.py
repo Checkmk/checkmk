@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
 from typing import Any
@@ -119,7 +118,7 @@ def test_discover_overall_capacity(section: Array, expected_services: DiscoveryR
         )
     ],
 )
-def test_check_overall_capacity(
+def test_check_overall_capacity(  # type: ignore[misc]
     section: Array, item: str, params: Mapping[str, Any], expected_result: CheckResult
 ) -> None:
     assert list(check_overall_capacity(item, params, section)) == expected_result

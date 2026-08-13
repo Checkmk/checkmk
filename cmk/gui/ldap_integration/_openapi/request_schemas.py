@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -709,7 +708,7 @@ class LDAPRoleElementRequest(BaseSchema):
     )
 
     @post_load
-    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
         if (
             data["search_in"] != "this_connection"
             and data["search_in"] not in get_ldap_connections()
@@ -761,7 +760,7 @@ class LDAPEnableGroupsToRoles(ValueTypedDictSchema):
     )
 
     @pre_load
-    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
         return {k: v for k, v in data.items() if k in self.fields}
 
 
@@ -775,7 +774,7 @@ class LDAPGroupsToRolesSelector(LDAPCheckboxSelector):
 class LDAPSyncPluginsRequest(BaseSchema):
     # TODO: DEPRECATED(18295) remove "mega_menu_icons"
     @pre_load
-    def _handle_menu_icons_fields(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+    def _handle_menu_icons_fields(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
         params = {key: value for key, value in data.items() if value is not None}
         if params:
             data["main_menu_icons"] = mutually_exclusive_fields(
@@ -899,7 +898,7 @@ class LDAPSyncPluginsRequest(BaseSchema):
     )
 
     @post_load(pass_original=True)
-    def _validate_extra_attributes(
+    def _validate_extra_attributes(  # type: ignore[misc]
         self,
         result_data: dict[str, Any],
         original_data: MutableMapping[str, Any],
@@ -1050,7 +1049,7 @@ class LDAPConnectionConfigRequest(BaseSchema):
     )
 
     @post_load
-    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
         group_base_dn = data["groups"]["group_base_dn"]
         for key, grouplist in data["sync_plugins"].get("groups_to_roles", {}).items():
             if key in {"state", "handle_nested"}:

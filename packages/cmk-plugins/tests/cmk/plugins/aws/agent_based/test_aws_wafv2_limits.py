@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -323,7 +322,7 @@ def test_discover_aws_wafv2_limits(
         ),
     ],
 )
-def test_check_aws_wafv2_limits(
+def test_check_aws_wafv2_limits(  # type: ignore[misc]
     item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
 ) -> None:
     """Test check function for aws_wafv2_limits check."""

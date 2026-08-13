@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
@@ -79,7 +78,7 @@ class BaseSchema(Schema):
 
     @post_load(pass_many=True)
     @post_dump(pass_many=True)
-    def remove_ordered_dict(self, data: object, **kwargs: object) -> object:
+    def remove_ordered_dict(self, data: object, **kwargs: object) -> object:  # type: ignore[misc]
         def _remove_ordered_dict(obj: object) -> object:
             if self.cast_to_dict and isinstance(obj, collections.OrderedDict):
                 return dict(obj)
@@ -93,7 +92,7 @@ class BaseSchema(Schema):
         return _remove_ordered_dict(data)
 
     @pre_dump(pass_many=True)
-    def validate_dump_fields(self, data: object, **kwargs: object) -> object:
+    def validate_dump_fields(self, data: object, **kwargs: object) -> object:  # type: ignore[misc]
         if not self.validate_on_dump:
             return data
 

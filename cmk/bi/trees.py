@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
@@ -312,7 +311,7 @@ class BISiteHostPairSchema(Schema):
     host_name = ReqString(description="Host name.")
 
     @pre_dump
-    def pre_dumper(self, obj: tuple, many: bool = False) -> dict:
+    def pre_dumper(self, obj: tuple, many: bool = False) -> dict:  # type: ignore[misc]
         # Convert aggregations and rules to list
         return {"site_id": obj[0], "host_name": obj[1]}
 

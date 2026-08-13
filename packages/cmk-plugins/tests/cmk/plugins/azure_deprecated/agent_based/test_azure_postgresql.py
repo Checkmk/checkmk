@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -87,7 +86,7 @@ from cmk.plugins.azure_deprecated.agent_based.lib import (
         ),
     ],
 )
-def test_check_replication(
+def test_check_replication(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],
@@ -198,7 +197,7 @@ def test_azure_postgresql_connections_active_connections_lower() -> None:
         ),
     ],
 )
-def test_check_connections(
+def test_check_connections(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],

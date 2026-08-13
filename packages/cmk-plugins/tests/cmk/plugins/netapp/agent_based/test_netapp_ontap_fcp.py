@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import time
@@ -176,7 +175,7 @@ def test_io_ops_results(value_store_patch: None) -> None:
         ),
     ],
 )
-def test_speed_result(
+def test_speed_result(  # type: ignore[misc]
     params: Mapping[str, Any], speed: int | None, expected_result: CheckResult
 ) -> None:
     result = list(_speed_result(params=params, speed=speed))

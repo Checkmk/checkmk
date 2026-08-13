@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
 from typing import Any
@@ -166,7 +165,7 @@ def test_discover_azure_usagedetails_resource_type_parsing(
         ),
     ],
 )
-def test_check_azure_usagedetails(
+def test_check_azure_usagedetails(  # type: ignore[misc]
     item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: CheckResult
 ) -> None:
     parsed = parse_azure_usagedetails(string_table)

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 """Decorators to expose API endpoints.
@@ -660,7 +659,7 @@ class Endpoint:
             raise RuntimeError("Decorating failure. function not set.")
 
         @functools.wraps(self.func)
-        def _validating_wrapper(param: Mapping[str, Any]) -> cmk_http.Response:
+        def _validating_wrapper(param: Mapping[str, Any]) -> cmk_http.Response:  # type: ignore[misc]
             # TODO: Better error messages, pointing to the location where variables are missing
 
             self._used_permissions = set()
@@ -698,7 +697,7 @@ class Endpoint:
             # a cache-load, which - without locking - could become inconsistent. This is obviously
             # a deeper problem of those components which needs to be fixed as well.
             @functools.wraps(func)
-            def _wrapper(param: Mapping[str, Any]) -> cmk_http.Response:
+            def _wrapper(param: Mapping[str, Any]) -> cmk_http.Response:  # type: ignore[misc]
                 if not self.skip_locking and self.method != "get":
                     with store.lock_checkmk_configuration(configuration_lockfile):
                         response = func(param)

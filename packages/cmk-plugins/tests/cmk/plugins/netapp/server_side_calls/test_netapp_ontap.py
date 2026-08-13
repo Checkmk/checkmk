@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -100,7 +99,7 @@ HOST_CONFIG = HostConfig(
         ),
     ],
 )
-def test_argument_parsing(
+def test_argument_parsing(  # type: ignore[misc]
     params: Mapping[str, Any],
     expected_args: Sequence[SpecialAgentCommand],
 ) -> None:

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -204,7 +203,7 @@ class ABCConfigDomain(abc.ABC):
 
 
 @request_memoize()
-def _get_all_default_globals() -> GlobalSettings:
+def _get_all_default_globals() -> GlobalSettings:  # type: ignore[misc]
     settings: dict[str, Any] = {}
     for domain in ABCConfigDomain.enabled_domains():
         settings.update(domain.default_globals())

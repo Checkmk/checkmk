@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -141,7 +140,7 @@ def load_users_uncached(lock: bool = False) -> Users:
 
 
 @request_memoize()
-def load_users(lock: bool = False) -> Users:
+def load_users(lock: bool = False) -> Users:  # type: ignore[misc]
     return _load_users(lock)
 
 

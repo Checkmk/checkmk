@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -116,7 +115,7 @@ def test_inventory_ucs_bladecenter_psu(
         ),
     ],
 )
-def test_check_ucs_bladecenter_psu(
+def test_check_ucs_bladecenter_psu(  # type: ignore[misc]
     item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
 ) -> None:
     """Test check function for ucs_bladecenter_psu check."""

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta, UTC
@@ -680,7 +679,7 @@ def test_check_resource_metric_notice_only() -> None:
 
 @mock.patch("cmk.plugins.azure_v2.agent_based.lib.get_value_store", return_value={})
 @time_machine.travel(EPOCH)
-def test_check_resource_metric_average(get_value_store: Mock) -> None:
+def test_check_resource_metric_average(get_value_store: Mock) -> None:  # type: ignore[misc]
     metric_data = MetricData(
         "total_connections_failed",
         "connections_failed",
@@ -714,7 +713,7 @@ def test_check_resource_metric_average(get_value_store: Mock) -> None:
     return_value={"connections_failed_sustained_threshold": EPOCH - 1000},
 )
 @time_machine.travel(EPOCH)
-def test_check_resource_sustained_threshold(get_value_store: Mock) -> None:
+def test_check_resource_sustained_threshold(get_value_store: Mock) -> None:  # type: ignore[misc]
     metric_data = MetricData(
         "total_connections_failed",
         "connections_failed",
@@ -757,7 +756,7 @@ def test_check_resource_sustained_threshold(get_value_store: Mock) -> None:
     return_value={"connections_failed_sustained_threshold": EPOCH - 1000},
 )
 @time_machine.travel(EPOCH)
-def test_check_resource_sustained_threshold_map_func(get_value_store: Mock) -> None:
+def test_check_resource_sustained_threshold_map_func(get_value_store: Mock) -> None:  # type: ignore[misc]
     metric_data = MetricData(
         "total_connections_failed",
         "connections_failed",
@@ -933,7 +932,7 @@ def test_inventory_common_azure() -> None:
         ),
     ],
 )
-def test_check_memory(
+def test_check_memory(  # type: ignore[misc]
     section: Resource,
     item: str,
     params: Mapping[str, Any],
@@ -956,7 +955,7 @@ def test_check_memory(
         ),
     ],
 )
-def test_check_cpu(
+def test_check_cpu(  # type: ignore[misc]
     section: Resource,
     item: str,
     params: Mapping[str, Any],
@@ -981,7 +980,7 @@ def test_check_cpu(
         ),
     ],
 )
-def test_check_connections(
+def test_check_connections(  # type: ignore[misc]
     section: Resource,
     item: str,
     params: Mapping[str, Any],

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -567,7 +566,7 @@ class RequestsSessionMock:
 
 
 @patch("cmk.notification_plugins.utils.site", new=SiteMock())
-def test_render_cmk_graphs(capsys: pytest.CaptureFixture) -> None:
+def test_render_cmk_graphs(capsys: pytest.CaptureFixture) -> None:  # type: ignore[misc]
     context = {
         "HOSTNAME": "heute",
         "PARAMETER_GRAPHS_PER_NOTIFICATION": "1",

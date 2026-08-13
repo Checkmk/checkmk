@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
 from typing import Any
@@ -124,7 +123,7 @@ def test_item_not_in_section_yields_no_result(section: Section) -> None:
         ),
     ],
 )
-def test_gcp_cost_check_levels(
+def test_gcp_cost_check_levels(  # type: ignore[misc]
     result: list[Result | Metric], params: Mapping[str, Any], section: Section
 ) -> None:
     results = list(check(item="test1", params=params, section=section))

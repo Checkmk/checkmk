@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any, override
@@ -203,7 +202,7 @@ class MockMgmtApiClient(MgmtApiClient):
         ),
     ],
 )
-def test_process_vm(
+def test_process_vm(  # type: ignore[misc]
     mgmt_client: MgmtApiClient,
     vmach_info: Mapping[str, Any],
     args: Args,
@@ -417,7 +416,7 @@ def test_get_vm_labels_section(
     ],
 )
 @patch("cmk.plugins.azure_deprecated.special_agent.agent_azure", return_value=None)
-def test_process_resource(
+def test_process_resource(  # type: ignore[misc]
     mock_gather_metrics: MagicMock,
     mgmt_client: MgmtApiClient,
     resource_info: Mapping[str, Any],

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 
 from __future__ import annotations
@@ -110,7 +109,7 @@ class LabelGroupConditionSchema(Schema):
     )
 
     @pre_dump
-    def _pre_dump(
+    def _pre_dump(  # type: ignore[misc]
         self, data: LabelGroupCondition | tuple[AndOrNotLiteral, LabelGroup], **_: object
     ) -> LabelGroupCondition:
         if isinstance(data, dict):
@@ -121,7 +120,7 @@ class LabelGroupConditionSchema(Schema):
         }
 
     @post_load
-    def _post_load(
+    def _post_load(  # type: ignore[misc]
         self, data: LabelGroupCondition, **_: object
     ) -> tuple[AndOrNotLiteral, LabelGroup]:
         op: AndOrNotLiteral = data["operator"]
@@ -475,14 +474,14 @@ class BIHostSearchSchema(Schema):
     )
 
     @pre_load
-    def pre_load(self, data: BIHostSearchSerialized, **_: object) -> BIHostSearchSerialized:
+    def pre_load(self, data: BIHostSearchSerialized, **_: object) -> BIHostSearchSerialized:  # type: ignore[misc]
         if isinstance((raw_refer_to := data["refer_to"]), str):
             # Fixes legacy schema config: {"refer_to": "host"}
             data["refer_to"] = {"type": cast(ReferToType, raw_refer_to)}
         return data
 
     @post_dump
-    def post_dump(self, data: ReferToType | ReferTo, **_: object) -> ReferTo:
+    def post_dump(self, data: ReferToType | ReferTo, **_: object) -> ReferTo:  # type: ignore[misc]
         # Fixes legacy schema config: {"refer_to": "host"}
         return {"type": data} if isinstance(data, str) else data
 

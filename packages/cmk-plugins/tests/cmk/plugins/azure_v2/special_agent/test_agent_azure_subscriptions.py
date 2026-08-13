@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 import argparse
 from collections.abc import Mapping, Sequence
@@ -161,7 +160,7 @@ RESOURCE_SUBSCRIPTION_2 = AzureSubscription(
         ),
     ],
 )
-def test_azureresourcegroup_piggytarget(
+def test_azureresourcegroup_piggytarget(  # type: ignore[misc]
     resource_group_info: Mapping[str, Any],
     subscription: AzureSubscription,
     use_unique_names: bool,
@@ -286,7 +285,7 @@ def test_ensure_different_hashes_subscription_resourcegroups() -> None:
         ),
     ],
 )
-def test_azureresource_piggytarget(
+def test_azureresource_piggytarget(  # type: ignore[misc]
     resource_info: dict[str, Any],
     subscription: AzureSubscription,
     use_unique_names: bool,

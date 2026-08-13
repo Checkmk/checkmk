@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -49,7 +48,7 @@ from .inventory import get_inventory_value
         ),
     ],
 )
-def test_check_qps(
+def test_check_qps(  # type: ignore[misc]
     section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
@@ -124,7 +123,7 @@ def test_check_qps_stale(section: Resource) -> None:
         ),
     ],
 )
-def test_check_probe_state(
+def test_check_probe_state(  # type: ignore[misc]
     section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],

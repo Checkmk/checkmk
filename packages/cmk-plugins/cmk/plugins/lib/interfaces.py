@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="redundant-expr"
 
 import enum
@@ -1864,7 +1863,7 @@ def _rename_metrics_to_legacy[**TCheckInterfaceParams](
 
 
 @_rename_metrics_to_legacy
-def check_single_interface(
+def check_single_interface(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     interface: InterfaceWithRatesAndAverages,

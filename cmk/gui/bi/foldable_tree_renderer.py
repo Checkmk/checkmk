@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
@@ -356,7 +355,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
     @contextmanager
     @override
-    def _show_node(
+    def _show_node(  # type: ignore[misc]
         self,
         tree: BIAggrTreeState | BILeafTreeState,
         show_host: bool,
@@ -515,7 +514,7 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
 
     @contextmanager
     @override
-    def _show_node(
+    def _show_node(  # type: ignore[misc]
         self,
         tree: BIAggrTreeState | BILeafTreeState,
         show_host: bool,

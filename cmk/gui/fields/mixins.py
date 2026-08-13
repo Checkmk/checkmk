@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -59,7 +58,7 @@ class CheckmkTuple:
     converter: _ConverterTuple = ()
 
     @post_load
-    def to_checkmk_tuple(self, data: Mapping[str, object], **kwargs: object) -> tuple:
+    def to_checkmk_tuple(self, data: Mapping[str, object], **kwargs: object) -> tuple:  # type: ignore[misc]
         def _convert_to_tuple(
             _fields: _TupleFields, _converter: _ConverterTuple, _result: list
         ) -> tuple:
@@ -84,7 +83,7 @@ class CheckmkTuple:
         return _convert_to_tuple(self.tuple_fields, self.converter, [])
 
     @pre_dump
-    def from_checkmk_tuple(self, data: tuple, **kwargs: object) -> Mapping[str, object]:
+    def from_checkmk_tuple(self, data: tuple, **kwargs: object) -> Mapping[str, object]:  # type: ignore[misc]
         # We use result as the aggregation variable. In this case a dict we pass around everywhere.
         def _convert_tuple(
             _fields: _TupleFields,

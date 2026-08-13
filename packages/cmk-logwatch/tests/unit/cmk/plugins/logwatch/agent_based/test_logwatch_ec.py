@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -238,7 +237,7 @@ def _logwatch_state(config: _LogwatchConfigDummy) -> Iterator[None]:
         ),
     ],
 )
-def test_logwatch_ec_inventory_single(
+def test_logwatch_ec_inventory_single(  # type: ignore[misc]
     info: StringTable,
     fwd_rule: Sequence[ParameterLogwatchEc],
     expected_result: DiscoveryResult,
@@ -297,7 +296,7 @@ def test_logwatch_ec_inventory_single(
         ),
     ],
 )
-def test_logwatch_ec_inventory_groups(
+def test_logwatch_ec_inventory_groups(  # type: ignore[misc]
     info: StringTable,
     fwd_rule: Sequence[ParameterLogwatchEc],
     expected_result: DiscoveryResult,
@@ -361,7 +360,7 @@ class _FakeForwarder(MessageForwarder):
         ),
     ],
 )
-def test_check_logwatch_ec_common_single_node(
+def test_check_logwatch_ec_common_single_node(  # type: ignore[misc]
     item: str | None,
     params: ParameterLogwatchEc,
     parsed: logwatch_.ClusterSection,
@@ -573,7 +572,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
     ],
 )
 @pytest.mark.skip("Flaky test - will be re-enabled with CMK-17338")
-def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
+def test_check_logwatch_ec_common_multiple_nodes_ungrouped(  # type: ignore[misc]
     params: ParameterLogwatchEc,
     cluster_section: logwatch_.ClusterSection,
     expected_result: CheckResult,

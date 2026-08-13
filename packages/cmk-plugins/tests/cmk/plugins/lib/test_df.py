@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 # TODO: test the interface, not the private members
 # ruff: noqa: SLF001
@@ -509,7 +508,7 @@ def test_mountpoints_in_group(
         ),
     ],
 )
-def test_get_filesystem_levels(
+def test_get_filesystem_levels(  # type: ignore[misc]
     filesystem_size_gb: float,
     filesystem_params: Mapping[str, Any],
     parsed_params: df.FilesystemLevels,
@@ -651,7 +650,7 @@ def test_get_filesystem_levels(
         ),
     ],
 )
-def test_get_filesystem_levels_magic_factor(
+def test_get_filesystem_levels_magic_factor(  # type: ignore[misc]
     filesystem_size_gb: float,
     filesystem_params: Mapping[str, Any],
     parsed_params: df.FilesystemLevels,

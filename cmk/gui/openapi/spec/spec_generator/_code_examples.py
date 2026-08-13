@@ -9,7 +9,6 @@ be referenced in the result of _build_code_templates.
 
 """
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import functools
@@ -349,7 +348,9 @@ def _transform_params(
         A dict with the key being the parameters name and the value being the parameter.
     """
     return {
-        param["name"]: param for param in param_list if "in" in param and param["in"] != "header"
+        param["name"]: param  # type: ignore[misc]
+        for param in param_list
+        if "in" in param and param["in"] != "header"
     }
 
 
@@ -686,7 +687,7 @@ def to_param_dict(params: list[OpenAPIParameter]) -> dict[str, OpenAPIParameter]
 
 
 @jinja2.pass_context
-def fill_out_parameters(ctx: dict[str, Any], val: str) -> str:  # type: ignore[explicit-any]
+def fill_out_parameters(ctx: dict[str, Any], val: str) -> str:  # type: ignore[explicit-any, misc]
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 
     This assumes the parameters to be defined as such:

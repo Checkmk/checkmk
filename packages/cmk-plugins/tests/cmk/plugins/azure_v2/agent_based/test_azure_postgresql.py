@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
 from typing import Any
@@ -113,7 +112,7 @@ from .inventory import get_inventory_value
         ),
     ],
 )
-def test_check_replication(
+def test_check_replication(  # type: ignore[misc]
     section: Resource,
     params: Mapping[str, Any],
     expected_result: CheckResult,
@@ -217,7 +216,7 @@ def test_azure_postgresql_connections_active_connections_lower() -> None:
         ),
     ],
 )
-def test_check_connections(
+def test_check_connections(  # type: ignore[misc]
     section: Resource,
     params: Mapping[str, Any],
     expected_result: CheckResult,
@@ -282,7 +281,7 @@ def test_check_connections(
         ),
     ],
 )
-def test_check_memory(
+def test_check_memory(  # type: ignore[misc]
     section: Resource, params: Mapping[str, Any], expected_result: CheckResult
 ) -> None:
     assert list(check_azure_postgresql_memory("Memory", params, section)) == expected_result
@@ -381,7 +380,7 @@ def test_azure_postgresql_inventory() -> None:
         ),
     ],
 )
-def test_check_storage(
+def test_check_storage(  # type: ignore[misc]
     section: Resource,
     params: Mapping[str, Any],
     expected_result: CheckResult,
@@ -433,7 +432,7 @@ def test_check_storage(
         ),
     ],
 )
-def test_check_network(
+def test_check_network(  # type: ignore[misc]
     section: Resource, params: Mapping[str, Any], expected_result: CheckResult
 ) -> None:
     assert (
@@ -496,7 +495,7 @@ def test_check_network(
         ),
     ],
 )
-def test_check_cpu(
+def test_check_cpu(  # type: ignore[misc]
     section: Resource, params: Mapping[str, Any], expected_result: CheckResult
 ) -> None:
     assert (

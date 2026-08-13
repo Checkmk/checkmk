@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -54,7 +53,7 @@ SECTION = {
         ),
     ],
 )
-def test_discovery_prism_vm_tools(
+def test_discovery_prism_vm_tools(  # type: ignore[misc]
     section: Mapping[str, Any],
     expected_discovery_result: Sequence[Service],
 ) -> None:
@@ -86,7 +85,7 @@ def test_discovery_prism_vm_tools(
         ),
     ],
 )
-def test_check_prism_vm_tools(
+def test_check_prism_vm_tools(  # type: ignore[misc]
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],

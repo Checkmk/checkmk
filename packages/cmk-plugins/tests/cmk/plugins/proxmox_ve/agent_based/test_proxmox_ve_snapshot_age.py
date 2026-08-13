@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -116,7 +115,7 @@ def test_check_proxmox_ve_snapshot_age_no_snapshot(
         ),
     ],
 )
-def test_check_proxmox_ve_snapshot_age_with_snapshot(
+def test_check_proxmox_ve_snapshot_age_with_snapshot(  # type: ignore[misc]
     params: Mapping[str, Any],
     section_data: SectionSnapshots,
     expected_result: CheckResult,

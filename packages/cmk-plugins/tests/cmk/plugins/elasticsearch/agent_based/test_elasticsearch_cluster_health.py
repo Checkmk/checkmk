@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import pytest
@@ -59,7 +58,7 @@ _FULL_STRING_TABLE: list[list[str]] = [
         ),
     ],
 )
-def test_check_function(parameters, info, expected_result):
+def test_check_function(parameters, info, expected_result):  # type: ignore[misc]
     parsed = parse_elasticsearch_cluster_health(info)
     assert list(check_elasticsearch_cluster_health(parameters, parsed)) == expected_result
 
@@ -104,7 +103,7 @@ def test_check_function(parameters, info, expected_result):
         ),
     ],
 )
-def test_shards_check_function(parameters, info, expected_result):
+def test_shards_check_function(parameters, info, expected_result):  # type: ignore[misc]
     parsed = parse_elasticsearch_cluster_health(info)
     assert list(check_elasticsearch_cluster_health_shards(parameters, parsed)) == expected_result
 
@@ -135,6 +134,6 @@ def test_shards_check_function(parameters, info, expected_result):
         ),
     ],
 )
-def test_tasks_check_function(parameters, info, expected_result):
+def test_tasks_check_function(parameters, info, expected_result):  # type: ignore[misc]
     parsed = parse_elasticsearch_cluster_health(info)
     assert list(check_elasticsearch_cluster_health_tasks(parameters, parsed)) == expected_result

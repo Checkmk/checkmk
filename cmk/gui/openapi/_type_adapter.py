@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from functools import lru_cache
 from typing import override
 
@@ -35,7 +33,7 @@ class _HashableArgs[T]:
 
 
 @lru_cache(maxsize=128)  # arbitrarily chosen, should be ~2x of what EndpointModel.build uses
-def _get_type_adapter[T](args: _HashableArgs[T]) -> TypeAdapter[T]:
+def _get_type_adapter[T](args: _HashableArgs[T]) -> TypeAdapter[T]:  # type: ignore[misc]
     """Get a TypeAdapter for the given type."""
     # astrein: disable=pydantic-type-adapter
     return TypeAdapter(args.type, config=args.config)

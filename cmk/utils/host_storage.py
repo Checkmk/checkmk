@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -290,7 +289,7 @@ class RawHostsStorage(ABCHostsStorage[HostsData]):
 
 
 @cache
-def _make_experimental_hosts_storage(storage_format: StorageFormat) -> ABCHostsStorage | None:
+def _make_experimental_hosts_storage(storage_format: StorageFormat) -> ABCHostsStorage | None:  # type: ignore[misc]
     if storage_format == StorageFormat.RAW:
         return RawHostsStorage()
     if storage_format == StorageFormat.PICKLE:
@@ -303,7 +302,7 @@ def get_standard_hosts_storage() -> ABCHostsStorage[str]:
 
 
 @lru_cache
-def get_host_storage_loaders(storage_format: StorageFormat) -> list[ABCHostsStorageLoader]:
+def get_host_storage_loaders(storage_format: StorageFormat) -> list[ABCHostsStorageLoader]:  # type: ignore[misc]
     host_storage_loaders: list[ABCHostsStorageLoader] = [
         StandardStorageLoader(get_standard_hosts_storage())
     ]

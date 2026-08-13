@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
 from typing import Any
@@ -46,7 +45,7 @@ from cmk.plugins.rabbitmq.lib import Section
         ),
     ],
 )
-def test_discover_sockets(
+def test_discover_sockets(  # type: ignore[misc]
     section_nodes: Mapping[str, Any], section_cluster: Mapping[str, Any], expected: DiscoveryResult
 ) -> None:
     assert list(discover_rabbitmq_nodes_sockets(section_nodes, section_cluster)) == expected
@@ -155,7 +154,7 @@ def test_discover_sockets(
         ),
     ],
 )
-def test_check_rabbitmq_nodes_sockets(
+def test_check_rabbitmq_nodes_sockets(  # type: ignore[misc]
     item: str,
     params: Params,
     section_nodes: Section,

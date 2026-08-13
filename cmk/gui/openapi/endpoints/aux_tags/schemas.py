@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -99,7 +98,7 @@ class AuxTagAttrsUpdate(BaseSchema):
     )
 
     @post_load
-    def verify_at_least_one(self, *args, **kwargs):
+    def verify_at_least_one(self, *args, **kwargs):  # type: ignore[misc]
         at_least_one_of = {"topic", "title", "help"}
         if not at_least_one_of & set(args[0]):
             raise ValidationError(

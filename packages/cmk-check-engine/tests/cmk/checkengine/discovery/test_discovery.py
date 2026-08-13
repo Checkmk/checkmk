@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 # ruff: noqa: SLF001
@@ -744,7 +743,7 @@ def test__get_service_filter_func(
         ),
     ],
 )
-def test__get_service_filters_lists(
+def test__get_service_filters_lists(  # type: ignore[misc]
     parameters,
     new_whitelist,
     new_blacklist,

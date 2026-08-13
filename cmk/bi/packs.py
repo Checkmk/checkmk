@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterable, Iterator
@@ -430,7 +429,7 @@ class BIAggregationPackSchema(Schema):
     )
 
     @pre_dump
-    def pre_dumper(self, obj: BIAggregationPack, many: bool = False) -> dict:
+    def pre_dumper(self, obj: BIAggregationPack, many: bool = False) -> dict:  # type: ignore[misc]
         # Convert aggregations and rules to list
         return {
             "id": obj.id,
@@ -447,7 +446,7 @@ class BIAggregationPacksSchema(Schema):
     packs = ReqList(ReqNested(BIAggregationPackSchema), description="List of BI packs.")
 
     @pre_dump
-    def pre_dumper(self, obj: BIAggregationPacks, many: bool = False) -> dict:
+    def pre_dumper(self, obj: BIAggregationPacks, many: bool = False) -> dict:  # type: ignore[misc]
         # Convert packs to list
         return {"packs": obj.packs.values()}
 

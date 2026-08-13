@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Sequence
@@ -81,7 +80,7 @@ from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_re
         ),
     ],
 )
-def test_inventorize_kube_daemonset(
+def test_inventorize_kube_daemonset(  # type: ignore[misc]
     section_info: DaemonSetInfo,
     section_strategy: UpdateStrategy,
     expected_inventory_result: Sequence[Any],

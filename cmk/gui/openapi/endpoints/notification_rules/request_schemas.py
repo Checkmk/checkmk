@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 
 import re
@@ -124,7 +123,7 @@ class TagGroupBase(BaseSchema):
     )
 
     @post_load
-    def _post_load(self, data: dict[str, Any], **_kwargs: Any) -> dict[str, Any]:
+    def _post_load(self, data: dict[str, Any], **_kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
         tg = load_tag_group(ident=data["tag_group_id"])
         if tg is not None:
             existing_tag_ids = tg.get_tag_ids()
@@ -2465,11 +2464,11 @@ class CustomPlugin(BaseSchema):
     )
 
     @pre_load
-    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:  # type: ignore[misc]
         return {k: v for k, v in data.items() if k in self.fields}
 
     @post_load(pass_original=True)
-    def _post_load(
+    def _post_load(  # type: ignore[misc]
         self,
         data: dict[str, Any],
         original_data: dict[str, Any],
@@ -2798,7 +2797,7 @@ class ContactSelection(BaseSchema):
     )
 
     @pre_load
-    def _require_explicit_email_addresses_when_allowed(
+    def _require_explicit_email_addresses_when_allowed(  # type: ignore[misc]
         self, data: dict[str, Any], **_kwargs: Any
     ) -> dict[str, Any]:
         # manually load the default
@@ -2810,7 +2809,7 @@ class ContactSelection(BaseSchema):
         return data
 
     @post_load
-    def _validate_explicit_email_addresses_not_in_cse(
+    def _validate_explicit_email_addresses_not_in_cse(  # type: ignore[misc]
         self, data: dict[str, Any], **_kwargs: Any
     ) -> dict[str, Any]:
         """Forbid explicit_email_addresses in CSE edition"""

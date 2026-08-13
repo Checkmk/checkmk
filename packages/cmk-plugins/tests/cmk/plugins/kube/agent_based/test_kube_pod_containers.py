@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -223,7 +222,7 @@ def test_check_result_terminated_non_zero_exit_code_status(
 @pytest.mark.parametrize(
     "failed_state", [int(State.OK), int(State.WARN), int(State.CRIT), int(State.UNKNOWN)]
 )
-def test_check_result_terminated_non_zero_exit_code_status_specified_params(
+def test_check_result_terminated_non_zero_exit_code_status_specified_params(  # type: ignore[misc]
     failed_state, check_result
 ):
     result, _, _, _ = check_result

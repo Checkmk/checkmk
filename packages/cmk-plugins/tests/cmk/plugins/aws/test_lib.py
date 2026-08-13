@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -620,7 +619,7 @@ def test_parse_aws_limits_generic() -> None:
         ),
     ],
 )
-def test_check_aws_limits_legacy(test_input: list[list], output: CheckResult) -> None:
+def test_check_aws_limits_legacy(test_input: list[list], output: CheckResult) -> None:  # type: ignore[misc]
     assert (
         list(
             check_aws_limits_legacy(
@@ -701,7 +700,7 @@ def test_check_aws_limits_legacy(test_input: list[list], output: CheckResult) ->
         ),
     ],
 )
-def test_check_aws_limits(test_input: list[list], output: CheckResult) -> None:
+def test_check_aws_limits(test_input: list[list], output: CheckResult) -> None:  # type: ignore[misc]
     default_limit: AWSLimits = {
         "absolute": ("aws_default_limit", None),
         "percentage": {"warn": 80.0, "crit": 90.0},
@@ -1042,7 +1041,7 @@ def test_check_aws_limits(test_input: list[list], output: CheckResult) -> None:
         ),
     ],
 )
-def test_extract_aws_metrics_by_labels(
+def test_extract_aws_metrics_by_labels(  # type: ignore[misc]
     expected_metric_names, section, extra_kwargs, expected_result
 ):
     assert (

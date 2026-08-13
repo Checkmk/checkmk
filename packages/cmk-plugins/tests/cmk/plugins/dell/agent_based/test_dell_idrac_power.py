@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Sequence
 from typing import Any
@@ -94,7 +93,7 @@ def test_discover_dell_idrac_power(
         ),
     ],
 )
-def test_check_dell_idrac_power(
+def test_check_dell_idrac_power(  # type: ignore[misc]
     item: str,
     string_table: Sequence[StringTable],
     expected_results: Sequence[Any],
@@ -154,7 +153,7 @@ def test_discover_dell_idrac_power_unit(
         ),
     ],
 )
-def test_check_dell_idrac_power_unit(
+def test_check_dell_idrac_power_unit(  # type: ignore[misc]
     item: str,
     string_table: Sequence[StringTable],
     expected_results: Sequence[Any],

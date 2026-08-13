@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -133,7 +132,7 @@ def _get_tag_group_choices(
 
 
 @request_memoize()
-def _get_cached_tag_group_choices() -> Sequence[
+def _get_cached_tag_group_choices() -> Sequence[  # type: ignore[misc]
     tuple[TagID | TagGroupID, Tuple | CascadingDropdown]
 ]:
     # In case one has configured a lot of tag groups / id recomputing this for

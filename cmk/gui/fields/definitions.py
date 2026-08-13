@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -698,7 +697,7 @@ class CustomHostAttributesAndTagGroups(ValueTypedDictSchema):
     _raise_error_if_attribute_is_readonly = False
 
     @marshmallow.post_load(pass_original=True)
-    def _validate_extra_attributes(
+    def _validate_extra_attributes(  # type: ignore[misc]
         self,
         result_data: dict[str, Any],
         original_data: MutableMapping[str, Any],
@@ -729,7 +728,7 @@ class CustomHostAttributesAndTagGroups(ValueTypedDictSchema):
         return result_data
 
     @marshmallow.post_dump(pass_original=True)
-    def _add_tags_and_custom_attributes_back(
+    def _add_tags_and_custom_attributes_back(  # type: ignore[misc]
         self, dump_data: dict[str, Any], original_data: dict[str, Any], **_kwargs: Any
     ) -> dict[str, Any]:
         # Custom attributes and tags are thrown away during validation as they have no field in the schema.

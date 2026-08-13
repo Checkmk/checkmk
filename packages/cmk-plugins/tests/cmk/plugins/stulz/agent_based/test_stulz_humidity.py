@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc,import-untyped"
+# mypy: disable-error-code="import-untyped"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -76,7 +76,7 @@ def test_discover_stulz_humidity(
         ),
     ],
 )
-def test_check_stulz_humidity(
+def test_check_stulz_humidity(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     string_table: StringTable,

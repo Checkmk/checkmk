@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -100,7 +99,7 @@ from cmk.plugins.rabbitmq.lib import Section
         ),
     ],
 )
-def test_check_rabbitmq_nodes_proc(
+def test_check_rabbitmq_nodes_proc(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     section: Section,

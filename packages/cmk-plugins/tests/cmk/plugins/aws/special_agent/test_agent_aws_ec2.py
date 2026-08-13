@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -402,7 +401,7 @@ def test_agent_aws_ec2_without_limits(get_ec2_sections: EC2Sections) -> None:
         {"Instances": ["Tags"]},  # Fix for FEED-6986
     ],
 )
-def test_agent_aws_ec2_no_crash_when_keys_missing(
+def test_agent_aws_ec2_no_crash_when_keys_missing(  # type: ignore[misc]
     get_ec2_sections, names, tags, found_ec2, found_ec2_with_labels, skip_entities
 ):
     ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(

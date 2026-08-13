@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import json
@@ -328,7 +327,7 @@ def test_check_kube_replicas() -> None:
         ),
     ],
 )
-def test_check_kube_replicas_outdated_replicas(
+def test_check_kube_replicas_outdated_replicas(  # type: ignore[misc]
     params: Mapping[str, VSResultAge],
     replicas: Replicas,
     strategy: UpdateStrategy,
@@ -419,7 +418,7 @@ def test_check_kube_replicas_outdated_replicas(
         ),
     ],
 )
-def test_check_kube_replicas_misscheduled_pods(
+def test_check_kube_replicas_misscheduled_pods(  # type: ignore[misc]
     params: Mapping[str, VSResultAge],
     replicas: DaemonSetReplicas,
     value_store: MutableMapping[str, Any],
@@ -508,7 +507,7 @@ def test_check_kube_replicas_misscheduled_pods(
         ),
     ],
 )
-def test_check_kube_replicas_not_ready_replicas(
+def test_check_kube_replicas_not_ready_replicas(  # type: ignore[misc]
     params: Mapping[str, VSResultAge],
     replicas: Replicas,
     value_store: MutableMapping[str, Any],
@@ -607,7 +606,7 @@ def test_check_kube_replicas_not_ready_replicas(
         ),
     ],
 )
-def test_check_kube_replicas_not_ready_and_outdated(
+def test_check_kube_replicas_not_ready_and_outdated(  # type: ignore[misc]
     params: Mapping[str, VSResultAge],
     replicas: Replicas,
     strategy: UpdateStrategy,
@@ -749,7 +748,7 @@ def test_check_kube_replicas_not_ready_and_outdated(
         ),
     ],
 )
-def test_check_kube_replicas_value_store_reset(
+def test_check_kube_replicas_value_store_reset(  # type: ignore[misc]
     params: Mapping[str, VSResultAge],
     replicas: Replicas,
     value_store: MutableMapping[str, Any],

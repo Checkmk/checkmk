@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta, UTC
@@ -270,7 +269,7 @@ def test__get_metrics() -> None:
         ),
     ],
 )
-def test__parse_resource(resource_data: Sequence[str], expected_result: Resource | None) -> None:
+def test__parse_resource(resource_data: Sequence[str], expected_result: Resource | None) -> None:  # type: ignore[misc]
     assert _parse_resource(resource_data) == expected_result
 
 
@@ -373,7 +372,7 @@ def test_parse_resources() -> None:
         ),
     ],
 )
-def test_create_discover_by_metrics_function(
+def test_create_discover_by_metrics_function(  # type: ignore[misc]
     resource_types: Sequence[str] | None, section: Section, expected_discovery: DiscoveryResult
 ) -> None:
     discovery_func = create_discover_by_metrics_function(
@@ -427,7 +426,7 @@ def test_create_discover_by_metrics_function(
         ),
     ],
 )
-def test_create_discover_by_metrics_function_single(
+def test_create_discover_by_metrics_function_single(  # type: ignore[misc]
     resource_types: Sequence[str] | None, section: Section, expected_discovery: DiscoveryResult
 ) -> None:
     discovery_func = create_discover_by_metrics_function_single(
@@ -453,7 +452,7 @@ def test_create_discover_by_metrics_function_single(
         ),
     ],
 )
-def test_iter_resource_attributes(
+def test_iter_resource_attributes(  # type: ignore[misc]
     resource: Resource, include_keys: tuple[str], expected_result: list[tuple[str, str | None]]
 ) -> None:
     assert list(iter_resource_attributes(resource, include_keys=include_keys)) == expected_result
@@ -468,7 +467,7 @@ def test_iter_resource_attributes(
         ),
     ],
 )
-def test_iter_resource_attributes_default_keys(
+def test_iter_resource_attributes_default_keys(  # type: ignore[misc]
     resource: Resource, expected_result: list[tuple[str, str | None]]
 ) -> None:
     assert list(iter_resource_attributes(resource)) == expected_result
@@ -491,7 +490,7 @@ def test_iter_resource_attributes_default_keys(
         ),
     ],
 )
-def test_check_memory(
+def test_check_memory(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],
@@ -524,7 +523,7 @@ def test_check_memory(
         ),
     ],
 )
-def test_check_memory_errors(section: Section, item: str, params: Mapping[str, Any]) -> None:
+def test_check_memory_errors(section: Section, item: str, params: Mapping[str, Any]) -> None:  # type: ignore[misc]
     with pytest.raises(IgnoreResultsError, match="Data not present at the moment"):
         list(check_memory()(item, params, section))
 
@@ -543,7 +542,7 @@ def test_check_memory_errors(section: Section, item: str, params: Mapping[str, A
         ),
     ],
 )
-def test_check_cpu(
+def test_check_cpu(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],
@@ -568,7 +567,7 @@ def test_check_cpu(
         ),
     ],
 )
-def test_check_connections(
+def test_check_connections(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],
@@ -595,7 +594,7 @@ def test_check_connections(
         ),
     ],
 )
-def test_check_network(
+def test_check_network(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],
@@ -626,7 +625,7 @@ def test_check_network(
         ),
     ],
 )
-def test_check_storage(
+def test_check_storage(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],
@@ -649,7 +648,7 @@ def test_check_storage(
         pytest.param(MULTIPLE_RESOURCE_SECTION, [], id="multiple resources"),
     ],
 )
-def test_create_check_azure_metrics_function_single(
+def test_create_check_azure_metrics_function_single(  # type: ignore[misc]
     section: Section, expected_result: CheckResult
 ) -> None:
     check_func = create_check_metrics_function_single(
@@ -697,7 +696,7 @@ def test_create_check_azure_metrics_function_single_error() -> None:
         pytest.param(MULTIPLE_RESOURCE_SECTION, [], id="multiple resources"),
     ],
 )
-def test_create_check_azure_metrics_function_single_specified_check_levels(
+def test_create_check_azure_metrics_function_single_specified_check_levels(  # type: ignore[misc]
     section: Section, expected_result: CheckResult
 ) -> None:
     check_func = create_check_metrics_function_single(
@@ -782,7 +781,7 @@ def test_check_resource_metric_notice_only() -> None:
 
 @mock.patch("cmk.plugins.azure_deprecated.agent_based.lib.get_value_store", return_value={})
 @time_machine.travel(EPOCH)
-def test_check_resource_metric_average(get_value_store: Mock) -> None:
+def test_check_resource_metric_average(get_value_store: Mock) -> None:  # type: ignore[misc]
     metric_data = MetricData(
         "total_connections_failed",
         "connections_failed",
@@ -815,7 +814,7 @@ def test_check_resource_metric_average(get_value_store: Mock) -> None:
     return_value={"connections_failed_sustained_threshold": EPOCH - 1000},
 )
 @time_machine.travel(EPOCH)
-def test_check_resource_sustained_threshold(get_value_store: Mock) -> None:
+def test_check_resource_sustained_threshold(get_value_store: Mock) -> None:  # type: ignore[misc]
     metric_data = MetricData(
         "total_connections_failed",
         "connections_failed",
@@ -857,7 +856,7 @@ def test_check_resource_sustained_threshold(get_value_store: Mock) -> None:
     return_value={"connections_failed_sustained_threshold": EPOCH - 1000},
 )
 @time_machine.travel(EPOCH)
-def test_check_resource_sustained_threshold_map_func(get_value_store: Mock) -> None:
+def test_check_resource_sustained_threshold_map_func(get_value_store: Mock) -> None:  # type: ignore[misc]
     metric_data = MetricData(
         "total_connections_failed",
         "connections_failed",

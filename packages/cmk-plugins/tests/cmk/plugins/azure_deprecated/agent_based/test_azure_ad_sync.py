@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 import datetime
 from typing import Any
@@ -78,7 +77,7 @@ def test_discover_sync(string_table: StringTable, expected: list[Service]) -> No
     ],
 )
 @time_machine.travel(datetime.datetime.fromisoformat("1970-02-01 03:00:01"))
-def test_check_azure_sync(
+def test_check_azure_sync(  # type: ignore[misc]
     params: dict[str, Any], expected_state: State, expected_summary: str
 ) -> None:
     parsed = azure_ad.parse_azure_ad(STRING_TABLE)

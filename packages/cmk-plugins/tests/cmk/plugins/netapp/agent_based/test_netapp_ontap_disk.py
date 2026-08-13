@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -116,7 +115,7 @@ _DISK_MODELS = [
         ),
     ],
 )
-def test_check_netapp_ontap_disk_summary(
+def test_check_netapp_ontap_disk_summary(  # type: ignore[misc]
     params: Mapping[str, Any], expected_results: CheckResult
 ) -> None:
     result = list(check_netapp_ontap_disk_summary(params=params, section=_DISK_MODELS))

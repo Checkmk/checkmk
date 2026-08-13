@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -60,7 +59,7 @@ class NodeModelFactory(ModelFactory):
         ),
     ],
 )
-def test_check_netapp_ontap_cpu_utilization(
+def test_check_netapp_ontap_cpu_utilization(  # type: ignore[misc]
     monkeypatch: pytest.MonkeyPatch,
     node_model: NodeModel,
     params: Mapping[str, Any],
@@ -95,7 +94,7 @@ def test_check_netapp_ontap_cpu_utilization(
         ),
     ],
 )
-def test_check_netapp_ontap_cpu_utilization_average(
+def test_check_netapp_ontap_cpu_utilization_average(  # type: ignore[misc]
     monkeypatch: pytest.MonkeyPatch,
     node_model: NodeModel,
     params: Mapping[str, Any],

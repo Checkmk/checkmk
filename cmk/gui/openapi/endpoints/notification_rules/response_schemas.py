@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -97,7 +96,7 @@ class EventConsoleAlertsResponse(CheckboxOutput):
     values = fields.Nested(EventConsoleAlertAttrsResponse)
 
     @post_dump
-    def _post_dump(self, data, many, **kwargs):
+    def _post_dump(self, data, many, **kwargs):  # type: ignore[misc]
         if data.get("values") == {}:
             del data["values"]
         return data

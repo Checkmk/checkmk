@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 """Background tools required to register a check plug-in"""
@@ -34,7 +33,7 @@ def _filter_inventory(
     """
 
     @functools.wraps(generator)
-    def filtered_generator(*args: object, **kwargs: object) -> InventoryResult:
+    def filtered_generator(*args: object, **kwargs: object) -> InventoryResult:  # type: ignore[misc]
         for element in generator(*args, **kwargs):
             if not isinstance(element, Attributes | TableRow):
                 raise TypeError("unexpected type in inventory function: %r" % type(element))

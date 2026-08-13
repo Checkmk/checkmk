@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Iterable, Mapping
 from typing import Any
@@ -30,5 +29,5 @@ from cmk.plugins.rabbitmq.lib import discover_key
         ),
     ],
 )
-def test_discover_proc(section: Mapping[str, Any], expected: Iterable[Service]) -> None:
+def test_discover_proc(section: Mapping[str, Any], expected: Iterable[Service]) -> None:  # type: ignore[misc]
     assert list(discover_key("proc")(section)) == expected

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -93,7 +92,7 @@ SECTION: Mapping[str, Mapping] = {
         ),
     ],
 )
-def test_discovery_diskstat_generic(params, section, exp_res) -> None:
+def test_discovery_diskstat_generic(params, section, exp_res) -> None:  # type: ignore[misc]
     assert list(diskstat.discovery_diskstat_generic(params, section)) == exp_res
 
 

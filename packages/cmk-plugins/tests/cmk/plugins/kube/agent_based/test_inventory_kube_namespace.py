@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Sequence
 from typing import Any
@@ -46,7 +45,7 @@ from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_re
         ),
     ],
 )
-def test_inventorize_kube_namespace(
+def test_inventorize_kube_namespace(  # type: ignore[misc]
     section_info: NamespaceInfo,
     expected_inventory_result: Sequence[Any],
 ) -> None:

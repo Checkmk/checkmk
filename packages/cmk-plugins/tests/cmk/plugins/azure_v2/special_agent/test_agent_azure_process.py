@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
@@ -1030,7 +1029,7 @@ async def test_get_resource_health_sections(
     ],
 )
 @pytest.mark.asyncio
-async def test_process_app_registrations_ok(
+async def test_process_app_registrations_ok(  # type: ignore[misc]
     api_client_mock_return: Sequence[Mapping],
     expected_section: MockAzureSection,
     mock_api_client: AsyncMock,
@@ -1357,7 +1356,7 @@ RESOURCES_API_RESPONSE = [
     ],
 )
 @pytest.mark.asyncio
-async def test_collect_resources(
+async def test_collect_resources(  # type: ignore[misc]
     api_client_mock_return: Sequence[Mapping],
     args: Args,
     expected_resources: Sequence[AzureResourceInfo],
@@ -1488,7 +1487,7 @@ RESOURCE_DATA_DIFFERENT_TYPE = {
         ),
     ],
 )
-def test_azure_resource(
+def test_azure_resource(  # type: ignore[misc]
     resource_data: Mapping,
     expected_resource: AzureResourceInfo,
     unique_hostname: bool,
@@ -1528,7 +1527,7 @@ def test_azure_resource(
         ),
     ],
 )
-def test_azure_resource_long_hostname(
+def test_azure_resource_long_hostname(  # type: ignore[misc]
     resource_data: Mapping,
     expected_piggytarget: str,
     mock_azure_subscription: AzureSubscription,

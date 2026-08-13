@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -355,7 +354,7 @@ def test_get_failover_home_port(
         ),
     ],
 )
-def test_merge_interface_port(
+def test_merge_interface_port(  # type: ignore[misc]
     node_name: str,
     port_name: str,
     expected_result: dict,

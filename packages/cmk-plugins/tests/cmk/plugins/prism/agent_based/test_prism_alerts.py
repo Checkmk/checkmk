@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 import json
 import time
@@ -167,7 +166,7 @@ def test_newline_in_message(
         ),
     ],
 )
-def test_discovery_prism_alerts(
+def test_discovery_prism_alerts(  # type: ignore[misc]
     section: Sequence[Mapping[Any, Any]],
     expected_discovery_result: Sequence[Service],
 ) -> None:
@@ -202,7 +201,7 @@ def test_discovery_prism_alerts(
         ),
     ],
 )
-def test_check_prism_alerts(
+def test_check_prism_alerts(  # type: ignore[misc]
     params: Mapping[str, str],
     section: Sequence[Mapping[Any, Any]],
     expected_check_result: Sequence[Result],

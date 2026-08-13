@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -304,7 +303,7 @@ def test_parse_load_balancer(string_table: StringTable, expected_section: Sectio
         ),
     ],
 )
-def test_check_byte_count(
+def test_check_byte_count(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],
@@ -391,7 +390,7 @@ def test_check_byte_count_stale(section: Section, item: str) -> None:
         ),
     ],
 )
-def test_check_snat(
+def test_check_snat(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],
@@ -438,7 +437,7 @@ def test_check_snat_stale(section: Section, item: str) -> None:
         ),
     ],
 )
-def test_check_health(
+def test_check_health(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],

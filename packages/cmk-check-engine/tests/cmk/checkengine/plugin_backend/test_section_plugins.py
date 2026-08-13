@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 # ruff: noqa: ARG001
@@ -80,7 +79,7 @@ def test_validate_parse_function_type(parse_function: object) -> None:
         lambda foo, string_table: None,
     ],
 )
-def test_validate_parse_function_value(parse_function: Callable[..., None]) -> None:
+def test_validate_parse_function_value(parse_function: Callable[..., None]) -> None:  # type: ignore[misc]
     with pytest.raises(ValueError):
         section_plugins.validate_parse_function(
             parse_function,

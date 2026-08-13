@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -62,7 +61,7 @@ _PORT_MODELS = [
         ),
     ],
 )
-def test_discover_netapp_ontap_ports(
+def test_discover_netapp_ontap_ports(  # type: ignore[misc]
     params: Mapping[str, Any], expected_result: DiscoveryResult
 ) -> None:
     section = {port_model.item_name(): port_model for port_model in _PORT_MODELS}

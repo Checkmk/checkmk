@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -33,7 +32,7 @@ SECTION = {"enable": {"duration": 0, "enabled": False}}
         pytest.param({}, [], id="No services is discovered if no data exists."),
     ],
 )
-def test_discovery_prism_remote_support(
+def test_discovery_prism_remote_support(  # type: ignore[misc]
     section: Mapping[str, Any],
     expected_discovery_result: Sequence[Service],
 ) -> None:
@@ -61,7 +60,7 @@ def test_discovery_prism_remote_support(
         ),
     ],
 )
-def test_check_prism_remote_support(
+def test_check_prism_remote_support(  # type: ignore[misc]
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],

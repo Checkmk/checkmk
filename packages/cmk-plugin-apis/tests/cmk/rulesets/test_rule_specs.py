@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
 from typing import Any
@@ -150,7 +149,7 @@ from cmk.rulesets.v1.rule_specs import (
         ),
     ],
 )
-def test_ruleset_name_validation(
+def test_ruleset_name_validation(  # type: ignore[misc]
     name: str,
     input_rulespec: (
         type[ActiveCheck]

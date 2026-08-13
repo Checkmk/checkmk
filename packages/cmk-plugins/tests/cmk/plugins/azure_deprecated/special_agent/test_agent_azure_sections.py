@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -36,7 +35,7 @@ class TestSection:
             (["piggy-back"], "<<<<piggy-back>>>>"),
         ],
     )
-    def test_piggytarget_header(
+    def test_piggytarget_header(  # type: ignore[misc]
         self,
         name,
         piggytarget,
@@ -58,7 +57,7 @@ class TestSection:
             ("test-section", "<<<test_section:sep(1):myopts>>>"),
         ],
     )
-    def test_section_header(
+    def test_section_header(  # type: ignore[misc]
         self,
         section_name,
         expected_section_header,

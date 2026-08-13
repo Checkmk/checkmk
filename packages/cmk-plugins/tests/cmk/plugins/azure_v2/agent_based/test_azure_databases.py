@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -106,7 +105,7 @@ RESULT_STORAGE_WARN = Result(
         ),
     ],
 )
-def test_check_azure_databases_storage(
+def test_check_azure_databases_storage(  # type: ignore[misc]
     section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
@@ -159,7 +158,7 @@ def test_check_azure_databases_storage(
         ),
     ],
 )
-def test_check_azure_databases_deadlock(
+def test_check_azure_databases_deadlock(  # type: ignore[misc]
     section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
@@ -212,7 +211,7 @@ def test_check_azure_databases_deadlock(
         ),
     ],
 )
-def test_check_azure_databases_cpu(
+def test_check_azure_databases_cpu(  # type: ignore[misc]
     section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
@@ -265,7 +264,7 @@ def test_check_azure_databases_cpu(
         ),
     ],
 )
-def test_check_azure_databases_dtu(
+def test_check_azure_databases_dtu(  # type: ignore[misc]
     section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],
@@ -371,7 +370,7 @@ def test_check_azure_databases_dtu(
         ),
     ],
 )
-def test_check_azure_databases_connections(
+def test_check_azure_databases_connections(  # type: ignore[misc]
     section: Resource,
     params: Mapping[str, Any],
     expected_result: Sequence[Result | Metric],

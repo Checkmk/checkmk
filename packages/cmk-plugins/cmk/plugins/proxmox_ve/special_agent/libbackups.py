@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 import argparse
 import itertools
@@ -468,7 +467,7 @@ def fetch_backup_data(
 
 
 @contextmanager
-def JsonCachedData(
+def JsonCachedData(  # type: ignore[misc]
     storage: Storage,
     storage_key: str,
     cutoff_condition: Callable[[str, Any], bool],

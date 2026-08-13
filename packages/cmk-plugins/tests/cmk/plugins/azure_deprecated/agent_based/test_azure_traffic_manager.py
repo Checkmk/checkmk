@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -49,7 +48,7 @@ from cmk.plugins.azure_deprecated.agent_based.lib import AzureMetric, Resource, 
         ),
     ],
 )
-def test_check_qps(
+def test_check_qps(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],
@@ -96,7 +95,7 @@ def test_check_qps(
         ),
     ],
 )
-def test_check_qps_stale(section: Section, item: str) -> None:
+def test_check_qps_stale(section: Section, item: str) -> None:  # type: ignore[misc]
     with pytest.raises(IgnoreResultsError, match="Data not present at the moment"):
         list(check_qps(item, {}, section))
 
@@ -154,7 +153,7 @@ def test_check_qps_stale(section: Section, item: str) -> None:
         ),
     ],
 )
-def test_check_probe_state(
+def test_check_probe_state(  # type: ignore[misc]
     section: Section,
     item: str,
     params: Mapping[str, Any],
@@ -185,6 +184,6 @@ def test_check_probe_state(
         ),
     ],
 )
-def test_check_probe_state_stale(section: Section, item: str) -> None:
+def test_check_probe_state_stale(section: Section, item: str) -> None:  # type: ignore[misc]
     with pytest.raises(IgnoreResultsError, match="Data not present at the moment"):
         list(check_probe_state(item, {}, section))

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Sequence
@@ -31,6 +30,6 @@ def test_oid_end_compat_with_backend() -> None:
         (".1.2", ["42.1", "42.2"]),  # 42 should be in base
     ],
 )
-def test_snmptree_valid(base: str, oids: Sequence) -> None:
+def test_snmptree_valid(base: str, oids: Sequence) -> None:  # type: ignore[misc]
     with pytest.raises((ValueError, TypeError)):
         SNMPTree(base=base, oids=oids).validate()

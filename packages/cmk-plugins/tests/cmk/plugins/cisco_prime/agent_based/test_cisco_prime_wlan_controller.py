@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 import json
 from collections.abc import Mapping
@@ -172,7 +171,7 @@ WLAN_CONTROLLERS_SECTION = {
         )
     ],
 )
-def test_get_controllers(
+def test_get_controllers(  # type: ignore[misc]
     controller_data: dict[str, Any], expected_result: list[dict[str, Any]]
 ) -> None:
     controllers = get_controllers(controller_data)
@@ -194,7 +193,7 @@ def test_get_last_backup(last_backup: str | None, expected_result: datetime | No
     "controller_data, expected_result",
     [(WLAN_CONTROLLERS, WLAN_CONTROLLERS_SECTION)],
 )
-def test_parse_cisco_prime_wlan_controller(
+def test_parse_cisco_prime_wlan_controller(  # type: ignore[misc]
     controller_data: dict[str, Any], expected_result: dict[str, WlanController]
 ) -> None:
     string_table = [[json.dumps(controller_data)]]

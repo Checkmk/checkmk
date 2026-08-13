@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
@@ -704,7 +703,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
                 self._versioned_endpoints[version][key] = endpoint
 
     @tracer.instrument("CheckmkRESTAPI._lookup_destination")
-    def _lookup_destination(
+    def _lookup_destination(  # type: ignore[misc]
         self, environ: WSGIEnvironment
     ) -> tuple[AbstractWSGIApp, PathArgs, APIVersion]:
         """Match the URL which is requested with the corresponding endpoint.

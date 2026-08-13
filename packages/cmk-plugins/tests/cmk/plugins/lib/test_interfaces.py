@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -1037,7 +1036,7 @@ ITEM_PARAMS_RESULTS = (
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface(
+def test_check_single_interface(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1081,7 +1080,7 @@ def test_check_single_interface_same_index_descr_alias() -> None:
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface_admin_status(
+def test_check_single_interface_admin_status(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1109,7 +1108,7 @@ def test_check_single_interface_admin_status(
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface_states(
+def test_check_single_interface_states(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1138,7 +1137,7 @@ def test_check_single_interface_states(
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface_map_states_independently(
+def test_check_single_interface_map_states_independently(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1172,7 +1171,7 @@ def test_check_single_interface_map_states_independently(
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface_map_states_combined_matching(
+def test_check_single_interface_map_states_combined_matching(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1212,7 +1211,7 @@ def test_check_single_interface_map_states_combined_matching(
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface_map_states_combined_not_matching(
+def test_check_single_interface_map_states_combined_not_matching(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1247,7 +1246,7 @@ def test_check_single_interface_map_states_combined_not_matching(
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface_map_states_combined_not_matching_with_target_states(
+def test_check_single_interface_map_states_combined_not_matching_with_target_states(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1284,7 +1283,7 @@ def test_check_single_interface_map_states_combined_not_matching_with_target_sta
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface_ignore_state(
+def test_check_single_interface_ignore_state(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1349,7 +1348,7 @@ def test_check_single_interface_ignore_state(
         ),
     ],
 )
-def test_check_single_interface_bandwidth_averaging(
+def test_check_single_interface_bandwidth_averaging(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1425,7 +1424,7 @@ def test_check_single_interface_bm_averaging() -> None:
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface_group(
+def test_check_single_interface_group(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1451,7 +1450,7 @@ def test_check_single_interface_group(
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface_group_admin_status(
+def test_check_single_interface_group_admin_status(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1483,7 +1482,7 @@ def test_check_single_interface_group_admin_status(
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface_w_node(
+def test_check_single_interface_w_node(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1504,7 +1503,7 @@ def test_check_single_interface_w_node(
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_single_interface_group_w_nodes(
+def test_check_single_interface_group_w_nodes(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1962,7 +1961,7 @@ def test_check_single_interface_perc_min_traffic_per_direction_speed() -> None:
 
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_multiple_interfaces(
+def test_check_multiple_interfaces(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -1990,7 +1989,7 @@ def test_check_multiple_interfaces(
 
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_multiple_interfaces_duplicate_descr(
+def test_check_multiple_interfaces_duplicate_descr(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -2020,7 +2019,7 @@ def test_check_multiple_interfaces_duplicate_descr(
 
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_multiple_interfaces_duplicate_alias(
+def test_check_multiple_interfaces_duplicate_alias(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -2236,7 +2235,7 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
 
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_multiple_interfaces_w_node(
+def test_check_multiple_interfaces_w_node(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,
@@ -2262,7 +2261,7 @@ def test_check_multiple_interfaces_w_node(
 
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
-def test_check_multiple_interfaces_same_item_twice_cluster(
+def test_check_multiple_interfaces_same_item_twice_cluster(  # type: ignore[misc]
     item: str,
     params: Mapping[str, Any],
     result: CheckResults,

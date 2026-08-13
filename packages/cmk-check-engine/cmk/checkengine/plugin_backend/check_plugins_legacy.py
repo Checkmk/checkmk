@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
@@ -105,7 +104,7 @@ def _create_check_function(
 
     # 2) unwrap parameters and ensure it is a generator of valid instances
     @functools.wraps(sig_function)
-    def check_result_generator(*args: Any, **kwargs: Any) -> FinalCheckResult:
+    def check_result_generator(*args: Any, **kwargs: Any) -> FinalCheckResult:  # type: ignore[misc]
         assert not args, "pass arguments as keywords to check function"
         assert "params" in kwargs, f"'params' is missing in kwargs: {kwargs!r}"
         parameters = kwargs["params"]
@@ -142,7 +141,7 @@ def _create_signature_check_function(
 
     else:
 
-        def check_migration_wrapper(params, section):
+        def check_migration_wrapper(params, section):  # type: ignore[misc]
             return original_function(None, params, section)
 
     return check_migration_wrapper

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from argparse import Namespace
@@ -434,7 +433,7 @@ def test_host_labels_annotation_selection() -> None:
         ),
     ],
 )
-def test_parse_namespace_patterns(namespaces: tuple, expected_args: list[str]) -> None:
+def test_parse_namespace_patterns(namespaces: tuple, expected_args: list[str]) -> None:  # type: ignore[misc]
     params = {
         "cluster_name": "cluster",
         "token": Secret(1),

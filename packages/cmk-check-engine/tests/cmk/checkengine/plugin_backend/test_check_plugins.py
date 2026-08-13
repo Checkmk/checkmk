@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -164,7 +163,7 @@ def test_create_sections(
         (dummy_function_jj, False, False, [CheckPluginName("jim"), CheckPluginName("jill")], None),
     ],
 )
-def test_validate_function_args(
+def test_validate_function_args(  # type: ignore[misc]
     function: Callable,
     has_item: bool,
     has_params: bool,

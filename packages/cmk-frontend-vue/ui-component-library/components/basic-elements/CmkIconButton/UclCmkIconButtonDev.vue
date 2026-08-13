@@ -48,6 +48,27 @@ const sizes: IconSizeNames[] = ['xsmall', 'small', 'medium', 'large', 'xlarge', 
       <CmkIconButton name="edit" title="Edit" size="medium" />
       <CmkIconButton name="plus" title="Add" size="medium" />
     </dd>
+
+    <dt>Multitone icons</dt>
+    <dd class="ucl-cmk-icon-button-dev__row">
+      <CmkIconButton name="more-actions" primary-color="font" title="More actions" size="large" />
+      <CmkIconButton name="reload" primary-color="info" title="Reload" size="large" />
+      <CmkIconButton name="success" primary-color="success" title="Success" size="large" />
+      <CmkIconButton name="error" primary-color="danger" title="Error" size="large" />
+      <CmkIconButton
+        name="aggr"
+        primary-color="info"
+        secondary-color="warning"
+        title="Aggregation (two-color)"
+        size="large"
+      />
+      <CmkIconButton
+        name="share"
+        :primary-color="{ custom: 'var(--color-purple-60)' }"
+        title="Custom color"
+        size="large"
+      />
+    </dd>
   </dl>
 </template>
 

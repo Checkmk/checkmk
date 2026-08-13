@@ -5,9 +5,26 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
-import { allIconOptions } from '@ucl/_ucl/lib/icon'
+import { allIconOptions, allMultitoneIconOptions } from '@ucl/_ucl/lib/icon'
 
 import codeExample from './UclCmkIconButtonCodeExample.vue?raw'
+
+const NO_MULTITONE_COLOR = 'none'
+
+const multitoneColorOptions = [
+  { title: 'None (raster icon)', name: NO_MULTITONE_COLOR },
+  { name: 'success', title: 'Success (Green)' },
+  { name: 'danger', title: 'Danger (Red)' },
+  { name: 'warning', title: 'Warning (Yellow)' },
+  { name: 'info', title: 'Info (Blue)' },
+  { name: 'hosts', title: 'Hosts (Cyan)' },
+  { name: 'services', title: 'Services (Orange)' },
+  { name: 'specialAgents', title: 'Special Agents (Purple)' },
+  { name: 'users', title: 'Users (Pink)' },
+  { name: 'customization', title: 'Customization (Brown)' },
+  { name: 'others', title: 'Others (Grey)' },
+  { name: 'font', title: 'Font colour' }
+]
 
 export const a11yData = [
   {
@@ -29,8 +46,9 @@ export const panelConfig = {
   name: {
     type: 'list' as const,
     title: 'Icon Name',
+    help: 'The multitone icons are listed first; they only render as such while a primary color is set.',
     initialState: 'main-help',
-    options: allIconOptions
+    options: [...allMultitoneIconOptions, ...allIconOptions]
   },
   variant: {
     type: 'list' as const,
@@ -63,7 +81,21 @@ export const panelConfig = {
     initialState: 'Lorem ipsum dolor sit amet'
   },
   rotate: { type: 'number' as const, title: 'Rotation (Degrees)', initialState: 0 },
-  colored: { type: 'boolean' as const, title: 'Colored', initialState: true }
+  colored: { type: 'boolean' as const, title: 'Colored', initialState: true },
+  primaryColor: {
+    type: 'list' as const,
+    title: 'Primary Color',
+    help: 'Setting a primary color renders a multitone icon instead of the themed raster icon.',
+    options: multitoneColorOptions,
+    initialState: NO_MULTITONE_COLOR
+  },
+  secondaryColor: {
+    type: 'list' as const,
+    title: 'Secondary Color',
+    help: 'Only two-color multitone icons such as "aggr" and "experiment" use it.',
+    options: multitoneColorOptions,
+    initialState: NO_MULTITONE_COLOR
+  }
 } satisfies PanelConfigFor<typeof CmkIconButton>
 </script>
 
@@ -79,14 +111,26 @@ import {
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import type { CmkIconVariants, IconSizeNames, SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
+import type {
+  CmkMultitoneIconColor,
+  CmkMultitoneIconNames
+} from 'cmk-ui-library/components/CmkIcon/types'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
+import { computed } from 'vue'
 
 import UclCmkIconButtonDev from './UclCmkIconButtonDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<typeof CmkIconButton>().createRef(panelConfig)
+
+function toMultitoneColor(color: string): NonNullable<CmkMultitoneIconColor> | undefined {
+  return color === NO_MULTITONE_COLOR ? undefined : (color as NonNullable<CmkMultitoneIconColor>)
+}
+
+const primaryColor = computed(() => toMultitoneColor(propState.value.primaryColor))
+const secondaryColor = computed(() => toMultitoneColor(propState.value.secondaryColor))
 </script>
 
 <template>
@@ -95,6 +139,16 @@ const propState = new PanelStateCreator<typeof CmkIconButton>().createRef(panelC
 
     <UclDetailPageComponent>
       <CmkIconButton
+        v-if="primaryColor !== undefined"
+        :name="propState.name as CmkMultitoneIconNames"
+        :size="propState.size as IconSizeNames"
+        :title="propState.title"
+        :rotate="propState.rotate"
+        :primary-color="primaryColor"
+        :secondary-color="secondaryColor"
+      />
+      <CmkIconButton
+        v-else
         :name="propState.name as SimpleIcons"
         :variant="propState.variant as CmkIconVariants['variant']"
         :size="propState.size as IconSizeNames"

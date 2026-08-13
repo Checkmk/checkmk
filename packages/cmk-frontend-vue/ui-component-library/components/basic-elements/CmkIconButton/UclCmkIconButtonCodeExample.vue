@@ -13,4 +13,11 @@ const handleClick = () => {
 
 <template>
   <CmkIconButton name="main-help" size="medium" title="Get Help" @click="handleClick" />
+  <CmkIconButton
+    name="more-actions"
+    primary-color="font"
+    size="medium"
+    title="More actions"
+    @click="handleClick"
+  />
 </template>

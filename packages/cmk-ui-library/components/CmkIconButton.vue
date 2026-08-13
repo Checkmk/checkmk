@@ -5,13 +5,52 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon, { type CmkIconProps } from 'cmk-ui-library/components/CmkIcon'
-import { useTemplateRef } from 'vue'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import type {
+  CmkMultitoneIconColor,
+  CmkMultitoneIconNames,
+  CustomIconColor,
+  IconSizeNames
+} from 'cmk-ui-library/components/CmkIcon/types'
+import { computed, useTemplateRef } from 'vue'
 
-defineProps<CmkIconProps>()
+/** A themed bitmap icon. `primaryColor` is what picks the multitone branch, so it must stay unset. */
+interface RasterIconButtonProps extends CmkIconProps {
+  primaryColor?: undefined
+  secondaryColor?: undefined
+}
+
+/**
+ * An inline multitone SVG. Requiring the color here is what keeps the names that exist only as
+ * multitone assets - 'more-actions', 'success', … - out of the raster branch, where they would
+ * resolve to no image at all.
+ */
+interface MultitoneIconButtonProps {
+  name: CmkMultitoneIconNames
+  // NonNullable, so that `primaryColor === undefined` tells the two branches apart: the cva-derived
+  // color type admits `undefined` on its own and would blur the discriminant.
+  primaryColor: NonNullable<CmkMultitoneIconColor> | CustomIconColor
+  secondaryColor?: CmkMultitoneIconColor | CustomIconColor | undefined
+  size?: IconSizeNames | undefined
+  rotate?: number | undefined
+  title?: string | undefined
+  variant?: undefined
+  colored?: undefined
+}
+
+const props = defineProps<RasterIconButtonProps | MultitoneIconButtonProps>()
 
 defineEmits(['click'])
 
 const button = useTemplateRef<HTMLButtonElement>('button')
+
+const multitone = computed<MultitoneIconButtonProps | null>(() =>
+  props.primaryColor === undefined ? null : props
+)
+
+const raster = computed<RasterIconButtonProps | null>(() =>
+  props.primaryColor === undefined ? props : null
+)
 
 defineExpose({
   focus: () => {
@@ -32,13 +71,23 @@ defineExpose({
       }
     "
   >
+    <CmkMultitoneIcon
+      v-if="multitone"
+      :name="multitone.name"
+      :primary-color="multitone.primaryColor"
+      :secondary-color="multitone.secondaryColor"
+      :size="multitone.size"
+      :rotate="multitone.rotate"
+      :title="multitone.title"
+    />
     <CmkIcon
-      :name="name"
-      :variant="variant"
-      :size="size"
-      :colored="colored"
-      :rotate="rotate"
-      :title="title"
+      v-else-if="raster"
+      :name="raster.name"
+      :variant="raster.variant"
+      :size="raster.size"
+      :colored="raster.colored"
+      :rotate="raster.rotate"
+      :title="raster.title"
     />
   </button>
 </template>
@@ -58,5 +107,11 @@ defineExpose({
 
 .cmk-icon-button:focus-visible {
   outline: revert;
+}
+
+/* Mirrors CmkButton, so a disabled icon button does not read as an enabled one. */
+.cmk-icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 </style>

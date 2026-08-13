@@ -636,7 +636,7 @@ class ModeEditSite(WatoMode):
                         title=_("Replicate extensions"),
                         label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
                         help=_(
-                            "If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
+                            "If you enable the replication of MKPs then during each <i>Activate changes</i> MKPs "
                             "that are installed on your central site and all other files below the <tt>~/local/</tt> "
                             "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
                             "below <tt>~/local/</tt> on the remote site will be removed</b>."
@@ -1743,7 +1743,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     def page(self, config: Config) -> None:
         html.help(
             _(
-                "Here you can configure global settings, that should just be applied "
+                "Here, you can configure global settings, that should just be applied "
                 "on that site. <b>Note</b>: this only makes sense if the site "
                 "is part of a distributed setup."
             )

@@ -107,7 +107,7 @@ node_software_applications_azure_application_gateways_rules = Node(
 node_software_applications_azure_application_gateways_rules_backends = Node(
     name="software_applications_azure_application_gateways_rules_backends",
     path=["software", "applications", "azure", "application_gateways", "rules", "backends"],
-    title=Title("Back-ends"),
+    title=Title("Backends"),
     table=Table(
         columns={
             "application_gateway": TextField(Title("Application gateway")),
@@ -197,7 +197,7 @@ node_software_applications_azure_metadata = Node(
         "subscription_name": TextField(Title("Subscription name")),
         "region": TextField(Title("Region")),
         "tenant_id": TextField(Title("Tenant ID")),
-        "tenant_name": TextField(Title("Tenant Name")),
+        "tenant_name": TextField(Title("Tenant name")),
     },
 )
 
@@ -216,7 +216,7 @@ node_software_applications_azure_load_balancers_inbound_nat_rules = Node(
             "load_balancer": TextField(Title("Load balancer")),
             "inbound_nat_rule": TextField(Title("Inbound NAT rule")),
             "frontend_port": TextField(Title("Front-end port")),
-            "backend_port": TextField(Title("Back-end port")),
+            "backend_port": TextField(Title("Backend port")),
         },
     ),
 )
@@ -236,7 +236,7 @@ node_software_applications_azure_load_balancers_inbound_nat_rules_backend_ip_con
         columns={
             "load_balancer": TextField(Title("Load balancer")),
             "inbound_nat_rule": TextField(Title("Inbound NAT rule")),
-            "backend_ip_config": TextField(Title("Back-end IP config")),
+            "backend_ip_config": TextField(Title("Backend IP config")),
             "ip_address": TextField(Title("IP address")),
             "ip_allocation_method": TextField(Title("Allocation method")),
         },
@@ -298,12 +298,12 @@ node_software_applications_azure_load_balancers_outbound_rules = Node(
 node_software_applications_azure_load_balancers_outbound_rules_backend_pools = Node(
     name="software_applications_azure_load_balancers_outbound_rules_backend_pools",
     path=["software", "applications", "azure", "load_balancers", "outbound_rules", "backend_pools"],
-    title=Title("Back-end pools"),
+    title=Title("Backend pools"),
     table=Table(
         columns={
             "load_balancer": TextField(Title("Load balancer")),
             "outbound_rule": TextField(Title("Outbound rule")),
-            "backend_pool": TextField(Title("Back-end pool")),
+            "backend_pool": TextField(Title("Backend pool")),
         },
     ),
 )
@@ -324,7 +324,7 @@ node_software_applications_azure_load_balancers_outbound_rules_backend_pools_add
         columns={
             "load_balancer": TextField(Title("Load balancer")),
             "outbound_rule": TextField(Title("Outbound rule")),
-            "backend_pool": TextField(Title("Back-end pool")),
+            "backend_pool": TextField(Title("Backend pool")),
             "address_name": TextField(Title("Address name")),
             "ip_address": TextField(Title("IP address")),
             "ip_allocation_method": TextField(Title("Allocation method")),
@@ -383,7 +383,7 @@ node_software_applications_check_mk_sites = Node(
             ),
             "livestatus_usage": NumberField(Title("Livestatus usage"), render=UNIT_PERCENTAGE),
             "check_helper_usage": NumberField(Title("Actual helper usage"), render=UNIT_PERCENTAGE),
-            "autostart": BoolField(Title("Autostart")),
+            "autostart": BoolField(Title("Auto-start")),
             "apache": TextField(Title("Apache status"), style=_style_service_status),
             "cmc": TextField(Title("CMC status"), style=_style_service_status),
             "crontab": TextField(Title("Crontab status"), style=_style_service_status),
@@ -510,9 +510,9 @@ node_software_applications_cisco_meraki_networks = Node(
 node_software_applications_cisco_meraki_organisations = Node(
     name="software_applications_cisco_meraki_organisations",
     path=["software", "applications", "cisco_meraki", "organisations"],
-    title=Title("Organisations"),
+    title=Title("Organizations"),
     table=Table(
-        view=View(name="invmerakiorganisations", title=Title("Organisations")),
+        view=View(name="invmerakiorganisations", title=Title("Organizations")),
         columns={
             "org_id": TextField(Title("Organization ID")),
             "org_name": TextField(Title("Organization name")),
@@ -956,9 +956,9 @@ node_software_applications_oracle = Node(
 node_software_applications_oracle_dataguard_stats = Node(
     name="software_applications_oracle_dataguard_stats",
     path=["software", "applications", "oracle", "dataguard_stats"],
-    title=Title("Oracle dataguard statistics"),
+    title=Title("Oracle Data Guard statistics"),
     table=Table(
-        view=View(name="invoradataguardstats", title=Title("Oracle dataguard statistics")),
+        view=View(name="invoradataguardstats", title=Title("Oracle Data Guard statistics")),
         columns={
             "sid": TextField(Title("SID")),
             "db_unique": TextField(Title("Name")),
@@ -996,7 +996,7 @@ node_software_applications_oracle_pga = Node(
         columns={
             "sid": TextField(Title("SID")),
             "aggregate_pga_auto_target": NumberField(
-                Title("Aggregate PGA auto target"), render=UNIT_BYTES
+                Title("Aggregate PGA auto-target"), render=UNIT_BYTES
             ),
             "aggregate_pga_target_parameter": NumberField(
                 Title("Aggregate PGA target parameter"), render=UNIT_BYTES
@@ -1008,7 +1008,7 @@ node_software_applications_oracle_pga = Node(
             "global_memory_bound": NumberField(Title("Global memory bound"), render=UNIT_BYTES),
             "maximum_pga_allocated": NumberField(Title("Maximum PGA allocated"), render=UNIT_BYTES),
             "maximum_pga_used_for_auto_workareas": NumberField(
-                Title("Maximum PGA used for auto workareas"), render=UNIT_BYTES
+                Title("Maximum PGA used for auto-workareas"), render=UNIT_BYTES
             ),
             "maximum_pga_used_for_manual_workareas": NumberField(
                 Title("Maximum PGA used for manual workareas"), render=UNIT_BYTES
@@ -1016,7 +1016,7 @@ node_software_applications_oracle_pga = Node(
             "total_pga_allocated": NumberField(Title("Total PGA allocated"), render=UNIT_BYTES),
             "total_pga_inuse": NumberField(Title("Total PGA inuse"), render=UNIT_BYTES),
             "total_pga_used_for_auto_workareas": NumberField(
-                Title("Total PGA used for auto workareas"), render=UNIT_BYTES
+                Title("Total PGA used for auto-workareas"), render=UNIT_BYTES
             ),
             "total_pga_used_for_manual_workareas": NumberField(
                 Title("Total PGA used for manual workareas"), render=UNIT_BYTES
@@ -1097,7 +1097,7 @@ node_software_applications_oracle_tablespaces = Node(
             "name": TextField(Title("Name")),
             "version": TextField(Title("Version")),
             "type": TextField(Title("Type")),
-            "autoextensible": TextField(Title("Autoextensible")),
+            "autoextensible": TextField(Title("Auto-extensible")),
             "current_size": NumberField(Title("Current size"), render=UNIT_BYTES),
             "max_size": NumberField(Title("Max. size"), render=UNIT_BYTES),
             "used_size": NumberField(Title("Used size"), render=UNIT_BYTES),

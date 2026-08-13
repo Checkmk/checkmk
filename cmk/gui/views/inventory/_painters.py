@@ -75,7 +75,7 @@ def _validate_inventory_tree_uniqueness(row: Row) -> None:
         > 1
     ):
         html.show_error(
-            _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s")
+            _("Cannot display inventory tree of host '%s': found this host on multiple sites: %s")
             % (raw_hostname, ", ".join(sites_with_same_named_hosts))
         )
         raise MultipleInventoryTreesError()

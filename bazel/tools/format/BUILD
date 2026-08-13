@@ -24,12 +24,33 @@ prettier_bin.prettier_binary(
     ],
 )
 
+# npm-groovy-lint runs CodeNarc on the JVM and accepts only Java 17 (its
+# java-caller pins minimumJavaVersion == maximumJavaVersion == 17). Without a
+# match on PATH it downloads a Temurin 17 JRE from github.com into ~/.java-caller
+# while the formatter runs. That download bypasses Bazel's downloader, so neither
+# the mirror rewrites in bazel_downloader.cfg nor the repository cache apply, and
+# one dropped connection fails the whole format check.
+#
+# Passing --javaexecutable removes the fallback rather than making it cheaper:
+# java-caller returns from manageJavaInstall() before any version probe or
+# install as soon as the executable is not the literal "java".
 groovy_bin.npm_groovy_lint_binary(
     name = "groovy-format",
-    data = ["//bazel/tools/format:.groovyformatrc.json"],
+    data = [
+        "//bazel/tools/format:.groovyformatrc.json",
+        "@remotejdk17_linux//:bin/java",
+        "@remotejdk17_linux//:jdk",
+    ],
     env = {"BAZEL_BINDIR": "."},
     fixed_args = [
         "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools/format:.groovyformatrc.json)",
+        "--javaexecutable=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath @remotejdk17_linux//:bin/java)",
+    ],
+    # A JDK cannot be copied into the output tree by rules_js — it lives in an
+    # external repository and must keep its internal layout intact.
+    no_copy_to_bin = [
+        "@remotejdk17_linux//:bin/java",
+        "@remotejdk17_linux//:jdk",
     ],
 )
 

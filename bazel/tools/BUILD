@@ -59,12 +59,23 @@ js_library(
     ],
 )
 
+# The hermetic JDK 17 keeps npm-groovy-lint from downloading its own JRE at
+# runtime. See //bazel/tools/format:groovy-format for the full rationale.
 groovy_bin.npm_groovy_lint_binary(
     name = "groovy-lint",
-    data = ["//bazel/tools:.groovylintrc.json"],
+    data = [
+        "//bazel/tools:.groovylintrc.json",
+        "@remotejdk17_linux//:bin/java",
+        "@remotejdk17_linux//:jdk",
+    ],
     env = {"BAZEL_BINDIR": "."},
     fixed_args = [
         "--config=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath //bazel/tools:.groovylintrc.json)",
+        "--javaexecutable=\"$$JS_BINARY__RUNFILES\"/$(rlocationpath @remotejdk17_linux//:bin/java)",
+    ],
+    no_copy_to_bin = [
+        "@remotejdk17_linux//:bin/java",
+        "@remotejdk17_linux//:jdk",
     ],
 )
 

@@ -303,10 +303,18 @@ use_repo(glib_ext, "glib")
 libxml2_ext = use_extension("@libxml2_module//:extensions.bzl", "libxml2")
 use_repo(libxml2_ext, "libxml2")
 
-# Java runtime used by Wiremock-based component/unit tests. Previously provided
-# implicitly via WORKSPACE; expose it explicitly under Bzlmod.
+# Java runtimes we hand to tools explicitly:
+#   remotejdk25_linux - Wiremock-based component/unit tests. Previously provided
+#                       implicitly via WORKSPACE; expose it explicitly under Bzlmod.
+#   remotejdk17_linux - CodeNarc, run by the npm-groovy-lint formatter. It insists
+#                       on exactly Java 17 and downloads a JRE from github.com at
+#                       runtime when it cannot find one, which flakes in CI.
 java_toolchains = use_extension("@rules_java//java:extensions.bzl", "toolchains")
-use_repo(java_toolchains, "remotejdk25_linux")
+use_repo(
+    java_toolchains,
+    "remotejdk17_linux",
+    "remotejdk25_linux",
+)
 
 http_file(
     name = "taplo.gz",

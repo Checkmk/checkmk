@@ -184,16 +184,14 @@ agent_section_aix_memory = AgentSection(
 
 
 def parse_solaris_mem(string_table: StringTable) -> SectionMemUsed | None:
-    """
-    >>> import pprint
-    >>> test = 'Memory: 512M phys mem, 353M free mem, 2000M total swap, 2000M free swap'
-    >>> section = parse_solaris_mem([test.split()])
-    >>> pprint.pprint(section)
-    {'MemFree': 370147328,
-     'MemTotal': 536870912,
-     'SwapFree': 2097152000,
-     'SwapTotal': 2097152000}
-
+    """Parses output of `top | grep '^Memory:'` on Solaris.
+    Challenges:
+    - values can have different names among different versions (`phys mem`/`real`,
+      `total swap`/`swap total`, etc.)
+    - sometimes we get total and free swap, sometimes (earlier versions) we get used and free swap instead
+    - funnily zero-values are omitted at all
+    >>> parse_solaris_mem(["Memory: 512M phys mem, 353M free mem, 2000M total swap, 2000M free swap".split()])
+    {'MemTotal': 536870912, 'MemFree': 370147328, 'SwapTotal': 2097152000, 'SwapFree': 2097152000}
     """
     # The 1.2.4 agent seems to create an empty section under some circumstances
     if not string_table:
@@ -201,24 +199,19 @@ def parse_solaris_mem(string_table: StringTable) -> SectionMemUsed | None:
 
     units = {"G": 1024**3, "M": 1024**2, "K": 1024}
 
-    values = []
-    mem_tokens = " ".join(string_table[0][1:]).split(",")
-    is_total_swap = False
-    for token in mem_tokens:
-        if "total swap" in token:
-            is_total_swap = True
-        raw_value = token.split()[0]
-        values.append(int(raw_value[:-1]) * units[raw_value[-1]])
-
-    # convert swap-in-use to swap-total, as expected by check_memory()
-    if not is_total_swap:
-        values[2] = values[2] + values[3]
+    vals = {
+        parts[-1]: int(parts[0][:-1]) * units[parts[0][-1]]
+        for token in " ".join(string_table[0][1:]).split(",")
+        if (parts := token.split(maxsplit=1))
+    }
 
     return {
-        "MemTotal": values[0],
-        "MemFree": values[1],
-        "SwapTotal": values[2],
-        "SwapFree": values[3],
+        "MemTotal": vals.get("phys mem") or vals.get("real") or 0,
+        "MemFree": vals.get("free mem") or vals.get("free") or 0,
+        # the "swap in use" variant reports no total; reconstruct it as in-use + free
+        "SwapTotal": vals.get("total swap")
+        or (vals.get("swap in use", 0) + vals.get("swap free", 0)),
+        "SwapFree": vals.get("free swap") or vals.get("swap free") or 0,
     }
 
 

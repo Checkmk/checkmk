@@ -131,7 +131,7 @@ ProblemsDashboard = DashboardConfig(
             "recent-events": EmbeddedViewDashletConfig(
                 {
                     "type": "embedded_view",
-                    "title": _("Events of recent 4 hours"),
+                    "title": _("Events of past 4 hours"),
                     "title_url": "view.py?view_name=events_dash",
                     "position": (-1, -1),
                     "size": (GROW, GROW),

@@ -345,7 +345,7 @@ class ProblemDashboard(BaseDashboard):
         logger.info("Validate that current page is '%s' page", self.page_title)
         self.check_dashboard_selector_placeholder()
         expect(self.dashlet("Host statistics")).to_be_visible()
-        expect(self.dashlet("Events of recent 4 hours")).to_be_visible()
+        expect(self.dashlet("Events of past 4 hours")).to_be_visible()
 
 
 # TODO: create Default dashboard POM for admin and non-admin users, see CMK-19521.

@@ -448,7 +448,7 @@ class SidebarRenderer:
         # In both cases this method would only render the sidebar
         # content afterwards.
 
-        html.html_head(title or _("Checkmk Sidebar"), main_javascript="side")
+        html.html_head(title or _("Checkmk sidebar"), main_javascript="side")
 
         self._show_body_start(
             screenshot_mode=screenshot_mode, sidebar_notify_interval=sidebar_notify_interval

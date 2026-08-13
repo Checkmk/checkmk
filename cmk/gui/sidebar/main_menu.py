@@ -359,13 +359,13 @@ class PageAjaxSidebarGetUnackIncompWerks(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         if not may_acknowledge():
-            raise MKAuthException(_("You are not allowed to acknowlegde werks"))
+            raise MKAuthException(_("You are not allowed to acknowlegde Werks"))
 
         num_unack_werks = num_unacknowledged_incompatible_werks()
         tooltip_text = (
             ungettext(
-                "%d unacknowledged incompatible werk",
-                "%d unacknowledged incompatible werks",
+                "%d unacknowledged incompatible Werk",
+                "%d unacknowledged incompatible Werks",
                 num_unack_werks,
             )
             % num_unack_werks

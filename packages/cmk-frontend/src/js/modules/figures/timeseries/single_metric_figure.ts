@@ -10,7 +10,11 @@ import type { ElementSize, SingleMetricContent } from '@/modules/figures/figure_
 
 import { TimeseriesFigure } from './cmk_timeseries'
 
-// A single metric figure with optional graph rendering in the background
+// A single metric figure with optional graph rendering in the background.
+//
+// Its only remaining users are the "alert timeline" and "notification timeline"
+// widgets in their "simple number" mode; CMK-38044 moves those onto
+// CmkKpiStatCard, after which this figure can go.
 export class SingleMetricFigure extends TimeseriesFigure<SingleMetricContent> {
   override ident() {
     return 'single_metric'

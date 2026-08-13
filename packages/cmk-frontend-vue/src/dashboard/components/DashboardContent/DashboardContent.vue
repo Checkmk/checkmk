@@ -13,6 +13,7 @@ import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import DashboardContentLinkedView from './DashboardContentLinkedView.vue'
 import DashboardContentNtop from './DashboardContentNtop.vue'
 import DashboardContentSidebarElement from './DashboardContentSidebarElement.vue'
+import DashboardContentSingleMetric from './DashboardContentSingleMetric.vue'
 import DashboardContentStaticText from './DashboardContentStaticText.vue'
 import DashboardContentTimeSeriesGraph from './DashboardContentTimeSeriesGraph.vue'
 import DashboardContentTopList from './DashboardContentTopList.vue'
@@ -43,6 +44,8 @@ function contentTypeToComponent(contentType: string): Component {
       return DashboardContentStaticText
     case contentType === 'top_list':
       return DashboardContentTopList
+    case contentType === 'single_metric':
+      return DashboardContentSingleMetric
     case contentType === 'network_flow_top_table':
       return DashboardContentNetworkFlowTopTable
     case contentType === 'network_flow_donut':

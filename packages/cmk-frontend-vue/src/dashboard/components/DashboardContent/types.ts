@@ -38,7 +38,6 @@ export const CONTENT_FIGURE_TYPES: string[] = [
   'service_state',
   'service_state_summary',
   'service_stats',
-  'single_metric',
   'site_overview'
 ]
 

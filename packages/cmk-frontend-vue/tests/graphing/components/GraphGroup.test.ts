@@ -19,9 +19,9 @@ import GraphGroup from '@/graphing/components/GraphGroup.vue'
 // "zoom" changes it.
 vi.mock('@/graphing/components/GraphPanel.vue', () => ({
   default: {
-    props: ['metrics', 'dataTimeRange', 'requestedTimeRange', 'title', 'figureWidth'],
+    props: ['metrics', 'dataTimeRange', 'requestedTimeRange', 'title'],
     emits: ['update:requestedTimeRange', 'update:consolidationFn'],
-    template: `<div data-testid="graph-panel" :data-figure-width="figureWidth">
+    template: `<div data-testid="graph-panel">
       <span>{{ title }}</span>
       <button @click="$emit('update:requestedTimeRange', { start: 1500, end: 2500 }, 'translated_timerange')">
         pan
@@ -100,45 +100,7 @@ const requestedRanges = (): { start: number; end: number; step: number }[] =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postSpy.mock.calls.map((call: any) => call[1].body.requested_time_range)
 
-// A full-width group (no figure_width) derives its width from #main_page_content. jsdom reports
-// zero-sized rects, so we mock rect sizes here to enable the fetch guard (so GraphPanel elements
-// render at all) and to assert proper calculation of the graphs' effective width.
-const MAIN_PAGE_CONTENT_ID = 'main_page_content'
-let containerRight = 1_000
-let groupLeft = 0
-
-const domRect = (left: number, right: number): DOMRect => ({
-  x: left,
-  y: 0,
-  left,
-  right,
-  top: 0,
-  bottom: 0,
-  width: right - left,
-  height: 0,
-  toJSON: () => ({})
-})
-
 beforeEach(() => {
-  containerRight = 1_000
-  groupLeft = 0
-
-  const mainPageContent = document.createElement('div')
-  mainPageContent.id = MAIN_PAGE_CONTENT_ID
-  document.body.appendChild(mainPageContent)
-
-  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (
-    this: Element
-  ): DOMRect {
-    if (this.id === MAIN_PAGE_CONTENT_ID) {
-      return domRect(0, containerRight)
-    }
-    if (this.classList.contains('graphing-graph-group')) {
-      return domRect(groupLeft, containerRight)
-    }
-    return domRect(0, 0)
-  })
-
   useGlobalTimeRange().setActiveTimeRange(null)
   postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue({
@@ -149,7 +111,6 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  document.getElementById(MAIN_PAGE_CONTENT_ID)?.remove()
   vi.restoreAllMocks()
   vi.useRealTimers()
 })
@@ -222,8 +183,6 @@ test('an error arriving after the skeletons are up replaces them', async () => {
     })
   )
   renderGroup()
-  // A full-width group fetches only after onMounted measures the page
-  await nextTick()
 
   vi.advanceTimersByTime(1_000)
   await nextTick()
@@ -445,47 +404,4 @@ test('announces one message for the group rather than one per panel', async () =
 
   // A pill over each panel, but a single live region for the whole group.
   expect(screen.getAllByRole('alert')).toHaveLength(1)
-})
-
-test('derives the effective width from #main_page_content as container.right - group.left - 20', async () => {
-  containerRight = 1_000
-  groupLeft = 100
-  const { container: containerA } = renderGroup()
-  const panelA = await within(containerA as HTMLElement).findByTestId('graph-panel')
-  // 1000 (container right) - 100 (group left) - 20 (inset) = 880.
-  expect(panelA.getAttribute('data-figure-width')).toBe('880')
-
-  // same for a different set of container width and left inset
-  containerRight = 1_600
-  groupLeft = 40
-  const { container: containerB } = renderGroup()
-  const panelB = await within(containerB as HTMLElement).findByTestId('graph-panel')
-  // 1600 - 40 - 20 = 1540.
-  expect(panelB.getAttribute('data-figure-width')).toBe('1540')
-})
-
-test('clamps the derived width to zero rather than going negative when the container is narrower than the inset', async () => {
-  containerRight = 100
-  groupLeft = 110
-  renderGroup()
-
-  await nextTick()
-  expect(postSpy).not.toHaveBeenCalled()
-  expect(screen.queryByTestId('graph-panel')).not.toBeInTheDocument()
-})
-
-test('uses the supplied figure_width and never measures the page', async () => {
-  const getElementById = vi.spyOn(document, 'getElementById')
-  render(GraphGroup, {
-    props: {
-      initial_time_range_start: 1_000,
-      initial_time_range_end: 2_000,
-      graphs: [makeGraphDefinition('CPU utilization')],
-      figure_width: 640
-    }
-  })
-
-  const panel = await screen.findByTestId('graph-panel')
-  expect(panel.getAttribute('data-figure-width')).toBe('640')
-  expect(getElementById).not.toHaveBeenCalledWith(MAIN_PAGE_CONTENT_ID)
 })

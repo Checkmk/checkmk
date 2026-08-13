@@ -14,8 +14,7 @@ import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_s
 import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
-import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useBrushCoordination } from '../composables/useBrushCoordination'
 import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
@@ -38,9 +37,9 @@ const props = withDefaults(
     // How a combined graph folds the same metric across its matched services;
     // null for graph types without a combination (e.g. template graphs).
     combination_mode?: GraphCombinationMode | null
-    // Outer figure width in CSS pixels (plot area + axis margins); the RRD step resolution is
-    // derived from the resulting plot width. absent means "fill the available page width"
-    // - see effectiveWidth below.
+    // Outer figure dimensions in CSS pixels (plot area + axis margins); the RRD step
+    // resolution is derived from the resulting plot width. Defaulted so they are always
+    // concrete numbers when forwarded to the panel.
     figure_width?: number
     figure_height?: number
     show_consolidation?: boolean
@@ -51,44 +50,13 @@ const props = withDefaults(
   }>(),
   {
     combination_mode: null,
+    figure_width: 800,
     figure_height: 300,
     show_consolidation: true,
     show_legend: true,
     layout: 'column'
   }
 )
-
-const groupEl = ref<HTMLElement | null>(null)
-const availableWidth = ref(0)
-
-// In case figure_width === null the graphs fill out the available width.
-// We need to compute the available width based on the div#main_page_content size to feed an
-// effectiveWidth into the GraphPanel children.
-if (props.figure_width === undefined) {
-  const containerEl = ref<HTMLElement | null>(null)
-
-  const recomputeAvailableWidth = (): void => {
-    const group = groupEl.value
-    const container = containerEl.value
-    if (!group || !container) {
-      return
-    }
-    availableWidth.value = Math.max(
-      0,
-      container.getBoundingClientRect().right - group.getBoundingClientRect().left - 20
-    )
-  }
-
-  const { observe } = useResizeObserver(recomputeAvailableWidth)
-  observe(containerEl)
-
-  onMounted(() => {
-    containerEl.value = document.getElementById('main_page_content')
-    recomputeAvailableWidth()
-  })
-}
-
-const effectiveWidth = computed(() => props.figure_width ?? availableWidth.value)
 
 // Seeded from the backend-provided initial range, then follows the page's global time picker;
 // brush interactions, time zooms and pans on individual panels write to it directly, and that
@@ -119,7 +87,7 @@ watch(requestedTimeRange, (range) => {
 const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphData(
   () => props.graphs,
   () => requestedTimeRange.value,
-  () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
+  () => props.figure_width - CANVAS_MARGIN_HORIZONTAL,
   () => consolidationFn.value,
   () => props.combination_mode
 )
@@ -127,7 +95,7 @@ const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphDa
 const { graphs: overviewGraphs, reload: reloadOverview } = useGraphData(
   () => props.graphs,
   () => brushCoordination.brushDomain.value,
-  () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
+  () => props.figure_width - CANVAS_MARGIN_HORIZONTAL,
   () => consolidationFn.value,
   () => props.combination_mode
 )
@@ -165,7 +133,6 @@ const definitionCount = computed(() => props.graphs.length)
 
 <template>
   <div
-    ref="groupEl"
     class="graphing-graph-group"
     :class="`graphing-graph-group--${layout}`"
     :aria-busy="isInitialLoad"
@@ -177,7 +144,7 @@ const definitionCount = computed(() => props.graphs.length)
         v-for="n in definitionCount"
         :key="n"
         class="graphing-graph-group__panel"
-        :figure-width="effectiveWidth"
+        :figure-width="figure_width"
       />
     </template>
     <template v-else>
@@ -201,7 +168,7 @@ const definitionCount = computed(() => props.graphs.length)
           :interaction="props.graphs[i]!.interaction"
           :overview="overviews[i]"
           :horizontal-lines="graph.horizontalLines"
-          :figure-width="effectiveWidth"
+          :figure-width="figure_width"
           :figure-height="figure_height"
           :add-to="graph?.addTo"
           @update:requested-time-range="onPanelTimeRange"

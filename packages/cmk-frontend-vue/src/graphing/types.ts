@@ -66,7 +66,7 @@ export interface GraphPanelProps {
   horizontalLines?: HorizontalLine[]
   // Outer figure dimensions (plot area + axis/label margins). The renderer derives
   // the plot (canvas) size by subtracting its margins.
-  figureWidth: number
+  figureWidth?: number
   figureHeight?: number
   showConsolidation?: boolean
   showLegend?: boolean

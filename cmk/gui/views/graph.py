@@ -354,7 +354,6 @@ def _render_engine_graph_group(
         show_graph_time=display_config.show_time_range_previews,
         show_legend=display_config.show_legend,
         debug=debug,
-        full_width=True,
     )
 
 

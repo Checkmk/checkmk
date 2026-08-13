@@ -197,7 +197,6 @@ def render_engine_graph_group(
     show_legend: bool = True,
     interaction: Interaction = _DEFAULT_INTERACTION,
     multi_column: bool = False,
-    full_width: bool = False,
 ) -> HTML:
     """Render the graph-engine (Vue) 'cmk-graph-group' for a host/service's template graphs.
 
@@ -232,6 +231,7 @@ def render_engine_graph_group(
     data: dict[str, object] = {
         "initial_time_range_start": time_range[0],
         "initial_time_range_end": time_range[1],
+        "figure_width": int(size.width * HTML_SIZE_PER_EX),
         "figure_height": int(size.height * HTML_SIZE_PER_EX),
         "graphs": vue_graphs,
         "show_consolidation": show_consolidation,
@@ -239,8 +239,4 @@ def render_engine_graph_group(
         # Only the hover preview flows its many graphs into columns; everywhere else stacks.
         "layout": "wrap" if multi_column else "column",
     }
-    # Full-width groups omit figure_width entirely so the component measures the available width
-    # itself; only a fixed-size embed (e.g. the hover popup) sends a concrete pixel width.
-    if not full_width:
-        data["figure_width"] = int(size.width * HTML_SIZE_PER_EX)
     return HTMLWriter.render_vue_component("cmk-graph-group", data)

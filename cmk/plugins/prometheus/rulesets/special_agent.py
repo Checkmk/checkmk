@@ -93,7 +93,7 @@ def _parameter_form() -> Dictionary:
                         "defined services with the custom PromQL query option below "
                         "if one of the scrape target types are not listed here."
                     ),
-                    add_element_label=Label("Add new Scrape Target"),
+                    add_element_label=Label("Add new scrape target"),
                     element_template=CascadingSingleChoice(
                         prefill=DefaultValue("node_exporter"),
                         elements=[
@@ -112,7 +112,7 @@ def _parameter_form() -> Dictionary:
                                                     'host name, host address or "localhost" in its endpoint address. '
                                                     "The created services of the mapped Node Exporter will "
                                                     "be assigned to the Checkmk host. A piggyback host for each "
-                                                    "Node Exporter host will be created if none of the options are "
+                                                    "Node Exporter host will be created if none of the options is "
                                                     "valid. "
                                                     "This option allows you to explicitly map one of your Node "
                                                     "Exporter hosts to the underlying Checkmk host. This can be "
@@ -256,7 +256,7 @@ def _parameter_form() -> Dictionary:
                                                     CascadingSingleChoiceElement(
                                                         name="both",
                                                         title=Title(
-                                                            "Both - Display the information for both pod and container levels"
+                                                            "Both - display the information for both pod and container levels"
                                                         ),
                                                         parameter_form=Dictionary(
                                                             elements={

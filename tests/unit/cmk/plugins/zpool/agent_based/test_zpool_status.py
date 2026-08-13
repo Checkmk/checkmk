@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Sequence
 
@@ -16,7 +15,7 @@ from cmk.plugins.zpool.agent_based.zpool_status import Section
 
 
 @pytest.mark.parametrize("string_table, expected_result", [([], None)])
-def test_zpool_status_parse(string_table: StringTable, expected_result: Section | None) -> None:
+def test_zpool_status_parse(string_table: StringTable, expected_result: Section | None) -> None:  # type: ignore[misc]
     section = zpool_status.parse_zpool_status(string_table)
     assert section == expected_result
 
@@ -29,7 +28,7 @@ def test_zpool_status_parse(string_table: StringTable, expected_result: Section 
         (Section(message="All pools are healthy"), [Service()]),
     ],
 )
-def test_zpool_status_discover(section: Section, expected_result: Sequence[Service]) -> None:
+def test_zpool_status_discover(section: Section, expected_result: Sequence[Service]) -> None:  # type: ignore[misc]
     services = list(zpool_status.discover_zpool_status(section))
     assert services == expected_result
 

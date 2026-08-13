@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterable
@@ -22,7 +21,7 @@ from cmk.plugins.hitachi_hnas.lib import parse_physical_volumes, parse_virtual_v
         )
     ],
 )
-def test_parse_physical_volumes(volume_data: Iterable[object], expected: tuple[dict, dict]) -> None:
+def test_parse_physical_volumes(volume_data: Iterable[object], expected: tuple[dict, dict]) -> None:  # type: ignore[misc]
     assert parse_physical_volumes(volume_data) == expected
 
 
@@ -39,7 +38,7 @@ def test_parse_physical_volumes(volume_data: Iterable[object], expected: tuple[d
         )
     ],
 )
-def test_parse_virtual_volumes(
+def test_parse_virtual_volumes(  # type: ignore[misc]
     volume_data: tuple[dict[str, str], Iterable[object], Iterable[object]], expected: dict
 ) -> None:
     assert parse_virtual_volumes(*volume_data) == expected

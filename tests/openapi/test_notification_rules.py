@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Generator, Iterator
@@ -527,7 +526,7 @@ def test_create_and_update_rule_with_conditions_data_200(
 def invalid_conditions() -> Iterator:
     for k in notification_rule_request_example()["conditions"]:
         config = notification_rule_request_example()
-        config["conditions"].update({k: {"state": "enabled"}})
+        config["conditions"].update({k: {"state": "enabled"}})  # type: ignore[misc]
         yield config
 
 
@@ -1911,7 +1910,7 @@ invalid_list_configs = [
 
 
 @pytest.mark.parametrize("plugin_params, expected_error", invalid_list_configs)
-def test_create_notification_custom_plugin_invalid_list_config(
+def test_create_notification_custom_plugin_invalid_list_config(  # type: ignore[misc]
     clients: ClientRegistry,
     plugin_params: APIPluginList,
     expected_error: dict[str, Any],
@@ -2130,7 +2129,7 @@ invalid_dict_configs = [
 
 @pytest.mark.parametrize("plugin_params, expected_error", invalid_dict_configs)
 @pytest.mark.usefixtures("register_custom_plugin")
-def test_create_notification_custom_plugin_invalid_dict_config(
+def test_create_notification_custom_plugin_invalid_dict_config(  # type: ignore[misc]
     clients: ClientRegistry,
     plugin_params: APIPluginDict,
     expected_error: dict[str, Any],
@@ -2469,7 +2468,7 @@ def test_explicit_email_addresses_allowed_in_non_cloud_editions(
         ),
     ],
 )
-def test_defaults_are_loaded(plugin: dict[str, Any], clients: ClientRegistry) -> None:
+def test_defaults_are_loaded(plugin: dict[str, Any], clients: ClientRegistry) -> None:  # type: ignore[misc]
     """Test minimal notification rule creation."""
     clients.RuleNotification.create(
         rule_config=cast(

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Generator
@@ -166,7 +165,7 @@ def _changed_sites(sites: list[SiteId]) -> list[SiteId]:
     ],
 )
 @pytest.mark.usefixtures("request_context")
-def test_only_affected_sites_require_activation_when_adding_users(
+def test_only_affected_sites_require_activation_when_adding_users(  # type: ignore[misc]
     sites: list[SiteId],
     added_users: list[tuple[UserId, UserSpec]],
     expected_changed_sites: list[SiteId],

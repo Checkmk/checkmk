@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 # Example output from agent:
@@ -412,7 +411,7 @@ def test_parse_skip_nic_lines() -> None:
         ),
     ],
 )
-def test_check_hyperv_vm_nic_additional_cases(item, section, params, expected_results):
+def test_check_hyperv_vm_nic_additional_cases(item, section, params, expected_results):  # type: ignore[misc]
     results = list(check_hyperv_vm_nic(item, params, section))
     assert len(results) == len(expected_results)
     for result, (expected_summary, expected_state) in zip(results, expected_results):

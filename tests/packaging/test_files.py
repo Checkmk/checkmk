@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -672,7 +671,7 @@ Bom = dict
 
 
 @cache
-def load_bom(package_path: str) -> Bom:
+def load_bom(package_path: str) -> Bom:  # type: ignore[misc]
     return json.loads(
         _get_file_from_package(
             package_path,

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping
@@ -18,7 +17,7 @@ from cmk.gui.watolib.userroles import RoleID
 
 
 @contextmanager
-def should_raise_a_mkusererror():
+def should_raise_a_mkusererror():  # type: ignore[misc]
     try:
         yield
     except MKUserError:

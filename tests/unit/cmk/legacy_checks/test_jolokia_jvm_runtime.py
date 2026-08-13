@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
@@ -116,7 +114,7 @@ def test_check_jolokia_jvm_runtime_uptime_different_values() -> None:
         assert "Up since" in result[0][1]
 
         # Verify metric value matches input
-        metrics = result[0][2]
+        metrics = result[0][2]  # type: ignore[misc]
         assert metrics[0][1] == pytest.approx(uptime_ms / 1000.0)
 
 
@@ -157,7 +155,7 @@ def test_jolokia_jvm_runtime_complete_workflow() -> None:
     assert "uptime: 9:35:02" in result[1]
 
     # Verify metrics exactly match dataset expectations
-    metrics = result[2]
+    metrics = result[2]  # type: ignore[misc]
     assert len(metrics) == 1
     assert metrics[0][0] == "uptime"  # metric name
     assert metrics[0][1] == 34502.762  # metric value

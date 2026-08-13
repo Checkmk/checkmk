@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import pytest
@@ -49,7 +48,7 @@ TABLE_SKYHIGH_2: StringTable = [["", "20"]]
         (WALK_SKYHIGH_2, mcafee_webgateway.snmp_section_skyhigh_security_webgateway),
     ],
 )
-def test_detect(
+def test_detect(  # type: ignore[misc]
     walk: dict[str, str],
     detected_section: SimpleSNMPSection,
 ) -> None:
@@ -65,7 +64,7 @@ def test_detect(
         (TABLE_SKYHIGH_2, mcafee_webgateway.snmp_section_skyhigh_security_webgateway),
     ],
 )
-def test_parse(
+def test_parse(  # type: ignore[misc]
     table: StringTable,
     detected_section: SimpleSNMPSection,
 ) -> None:
@@ -85,7 +84,7 @@ def test_parse(
         (TABLE_SKYHIGH_2, mcafee_webgateway.snmp_section_skyhigh_security_webgateway),
     ],
 )
-def test_discovery(
+def test_discovery(  # type: ignore[misc]
     table: StringTable,
     detected_section: SimpleSNMPSection,
 ) -> None:
@@ -163,7 +162,7 @@ def test_discovery(
         ),
     ],
 )
-def test_check_results(
+def test_check_results(  # type: ignore[misc]
     table: StringTable,
     detected_section: SimpleSNMPSection,
     params: mcafee_webgateway.Params,

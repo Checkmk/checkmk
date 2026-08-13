@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 import time
 from collections.abc import Mapping, Sequence
 
@@ -596,7 +594,7 @@ def test_check_fileinfo_groups_data(
         ),
     ],
 )
-def test__fileinfo_check_function(
+def test__fileinfo_check_function(  # type: ignore[misc]
     check_definition: list[MetricInfo], params: Mapping[str, object], expected_result: CheckResult
 ) -> None:
     result = list(_fileinfo_check_function(check_definition, params))
@@ -625,7 +623,7 @@ def test__fileinfo_check_function(
         ),
     ],
 )
-def test__fileinfo_check_conjunctions(
+def test__fileinfo_check_conjunctions(  # type: ignore[misc]
     check_definition: list[MetricInfo], params: Mapping[str, object], expected_result: CheckResult
 ) -> None:
     result = list(_fileinfo_check_conjunctions(check_definition, params))

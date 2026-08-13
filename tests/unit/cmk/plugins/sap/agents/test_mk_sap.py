@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -147,7 +146,7 @@ def test_state_file_missing(monkeypatch, tmp_path):
         "{('PRD', 'logfile'): (2026, 6, 10, 9, 30, 0), ('PRD', 'other'): 'bogus'}",
     ],
 )
-def test_state_file_corrupt(monkeypatch, tmp_path, content):
+def test_state_file_corrupt(monkeypatch, tmp_path, content):  # type: ignore[misc]
     state_file = tmp_path / "sap.state"
     state_file.write_text(content)
     monkeypatch.setattr(mk_sap, "STATE_FILE", str(state_file))

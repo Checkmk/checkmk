@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import argparse
@@ -102,7 +101,7 @@ def _clean_agent_controller(ctl_path: Path) -> Iterator[None]:
 
 
 @contextlib.contextmanager
-def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen]:
+def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen]:  # type: ignore[misc]
     """Manually take over systemds job if we are in a container (where we have no systemd)."""
     with _clean_agent_controller(ctl_path), _provide_agent_unix_socket():
         yield from _run_controller_daemon(ctl_path)

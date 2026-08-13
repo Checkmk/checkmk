@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -326,7 +325,7 @@ def test_parser() -> None:
         ],
     ],
 )
-def test_docker_container_diskstat(
+def test_docker_container_diskstat(  # type: ignore[misc]
     section: AgentSection,
     string_table_0: StringTable,
     string_table_10: StringTable,

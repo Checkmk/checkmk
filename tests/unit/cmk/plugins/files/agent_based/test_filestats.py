@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import pytest
@@ -177,7 +176,7 @@ def test_discovery_single() -> None:
         ),
     ],
 )
-def test_check_regression(item, params, expected):
+def test_check_regression(item, params, expected):  # type: ignore[misc]
     section = parse_filestats(STRING_TABLE)
     results = list(check_filestats(item, params, section))
     assert results == expected
@@ -233,7 +232,7 @@ def test_check_regression(item, params, expected):
         ),
     ],
 )
-def test_check_single_regression(item, params, expected):
+def test_check_single_regression(item, params, expected):  # type: ignore[misc]
     section = parse_filestats(STRING_TABLE)
     results = list(check_filestats_single(item, params, section))
     assert results == expected

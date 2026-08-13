@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -298,7 +297,7 @@ def argument_function_with_exception(*args: object, **kwargs: object) -> Never:
         ),
     ],
 )
-def test_get_active_service_data(
+def test_get_active_service_data(  # type: ignore[misc]
     monkeypatch: pytest.MonkeyPatch,
     active_check_rule: tuple[str, Sequence[Mapping[str, object]]],
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
@@ -478,7 +477,7 @@ def test_get_active_service_data_password_without_hack() -> None:
         ),
     ],
 )
-def test_test_get_active_service_data_crash_with_debug(
+def test_test_get_active_service_data_crash_with_debug(  # type: ignore[misc]
     active_check_rule: tuple[str, Sequence[Mapping[str, object]]],
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     monkeypatch: pytest.MonkeyPatch,
@@ -604,7 +603,7 @@ def test_test_get_active_service_data_crash_with_debug(
         ),
     ],
 )
-def test_get_active_service_data_warnings(
+def test_get_active_service_data_warnings(  # type: ignore[misc]
     monkeypatch: pytest.MonkeyPatch,
     active_check_rule: tuple[str, Sequence[Mapping[str, object]]],
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],

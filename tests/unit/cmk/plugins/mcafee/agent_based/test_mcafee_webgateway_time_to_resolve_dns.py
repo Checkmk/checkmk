@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import typing
@@ -68,7 +67,7 @@ TABLE_TTR_SKYHIGH: StringTable = [["16", "35", "2000", "2"]]
         (WALK_SKYHIGH, snmp_section_skyhigh_security_webgateway_misc),
     ],
 )
-def test_detect(walk: dict[str, str], detected_section: SimpleSNMPSection) -> None:
+def test_detect(walk: dict[str, str], detected_section: SimpleSNMPSection) -> None:  # type: ignore[misc]
     assert evaluate_snmp_detection(detect_spec=detected_section.detect, oid_value_getter=walk.get)
 
 
@@ -79,7 +78,7 @@ def test_detect(walk: dict[str, str], detected_section: SimpleSNMPSection) -> No
         (TABLE_TTR_SKYHIGH, snmp_section_skyhigh_security_webgateway_misc),
     ],
 )
-def test_parse(table: StringTable, detected_section: SimpleSNMPSection) -> None:
+def test_parse(table: StringTable, detected_section: SimpleSNMPSection) -> None:  # type: ignore[misc]
     # Act
     section = detected_section.parse_function([table])
 
@@ -94,7 +93,7 @@ def test_parse(table: StringTable, detected_section: SimpleSNMPSection) -> None:
         (TABLE_TTR_SKYHIGH, snmp_section_skyhigh_security_webgateway_misc),
     ],
 )
-def test_discovery(table: StringTable, detected_section: SimpleSNMPSection) -> None:
+def test_discovery(table: StringTable, detected_section: SimpleSNMPSection) -> None:  # type: ignore[misc]
     # Assemble
     section = detected_section.parse_function([table])
     assert section is not None
@@ -159,7 +158,7 @@ def test_discovery(table: StringTable, detected_section: SimpleSNMPSection) -> N
         ),
     ],
 )
-def test_check_results(
+def test_check_results(  # type: ignore[misc]
     detected_section: SimpleSNMPSection,
     params_misc: dict[str, object],
     expected_results: list[Result],
@@ -188,7 +187,7 @@ def test_check_results(
         (TABLE_TTR_SKYHIGH, snmp_section_skyhigh_security_webgateway_misc),
     ],
 )
-def test_check_metrics(table: StringTable, detected_section: SimpleSNMPSection) -> None:
+def test_check_metrics(table: StringTable, detected_section: SimpleSNMPSection) -> None:  # type: ignore[misc]
     # Assemble
     section = detected_section.parse_function([table])
     assert section is not None

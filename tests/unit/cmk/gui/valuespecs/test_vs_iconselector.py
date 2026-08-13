@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 import re
 from unittest.mock import MagicMock, patch
 
@@ -36,10 +34,10 @@ class TestValueSpecFloat:
         "cmk.gui.valuespec.definitions.IconSelector.available_emblems",
         return_value=["add"],
     )
-    def test_validate(self, _mock_icons: MagicMock, _mock_emblems: MagicMock) -> None:
+    def test_validate(self, _mock_icons: MagicMock, _mock_emblems: MagicMock) -> None:  # type: ignore[misc]
         # ## value may be a string, or a dictionary.
         # ## first test string...
-        expect_validate_failure(vs.IconSelector(), "asd", match="The selected icon does not exist.")
+        expect_validate_failure(vs.IconSelector(), "asd", match="The selected icon does not exist.")  # type: ignore[misc]
 
         # TODO: validate_value allows None, ...
         vs.IconSelector().validate_value(None, "")
@@ -115,7 +113,7 @@ class TestValueSpecFloat:
         "cmk.gui.theme._theme_type.Theme.detect_icon_path",
         return_value="some_random_icon_path.svg",
     )
-    def test_render_input_complain_phase_keeps_stored_icon(
+    def test_render_input_complain_phase_keeps_stored_icon(  # type: ignore[misc]
         self, _mock_icon_path: MagicMock, request_context: None
     ) -> None:
         """In the complain phase the surrounding valuespecs render their default value
@@ -132,7 +130,7 @@ class TestValueSpecFloat:
         "cmk.gui.theme._theme_type.Theme.detect_icon_path",
         return_value="some_random_icon_path.svg",
     )
-    def test_render_input_back_url_excludes_form_vars(
+    def test_render_input_back_url_excludes_form_vars(  # type: ignore[misc]
         self, _mock_icon_path: MagicMock, request_context: None
     ) -> None:
         """The back URL of the popup must not carry the form vars of the surrounding

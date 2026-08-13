@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -114,7 +113,7 @@ class WebTestAppForCMK(FlaskClient):
         """
 
         @contextmanager
-        def _update_environ_base(extra_env: dict) -> Generator[None]:
+        def _update_environ_base(extra_env: dict) -> Generator[None]:  # type: ignore[misc]
             backup = dict(self.environ_base)
             self.environ_base.update(extra_env)
             try:

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime
@@ -253,7 +252,7 @@ def test_network_fs_mounts_check(
 
 
 @pytest.mark.usefixtures("value_store_patch")
-def test_network_fs_mount_scales_growth_and_trend_to_bytes_per_day(monkeypatch) -> None:
+def test_network_fs_mount_scales_growth_and_trend_to_bytes_per_day(monkeypatch) -> None:  # type: ignore[misc]
     """This check emits growth/trend (recorded in MB/day) directly rather than via a translation,
     so it must rescale them to bytes/day by MEGA, like fs_size. See SUP-29835."""
     captured_factors: dict[str, float] = {}

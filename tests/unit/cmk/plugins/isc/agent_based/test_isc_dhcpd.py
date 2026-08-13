@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -93,7 +92,7 @@ def test_discovery_cisco_ucs_mem(section: DhcpdSection) -> None:
         ),
     ],
 )
-def test_check_cisco_ucs_mem(
+def test_check_cisco_ucs_mem(  # type: ignore[misc]
     item: str,
     params: Mapping[str, tuple],
     expected_output: Sequence[object],

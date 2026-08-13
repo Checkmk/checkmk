@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from functools import lru_cache
@@ -61,12 +60,12 @@ STRING_TABLE_OSDS = [
 
 
 @lru_cache
-def section1() -> ceph_status.Section:
+def section1() -> ceph_status.Section:  # type: ignore[misc]
     return ceph_status.parse_ceph_status(STRING_TABLE_1)
 
 
 @lru_cache
-def section_osds() -> ceph_status.Section:
+def section_osds() -> ceph_status.Section:  # type: ignore[misc]
     return ceph_status.parse_ceph_status(STRING_TABLE_OSDS)
 
 

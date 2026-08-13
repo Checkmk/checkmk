@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import pytest
@@ -153,5 +152,5 @@ from cmk.plugins.docker.lib import NodeInfoSection as Section
         ({"Labels": None}, []),
     ],
 )
-def test_inv_docker_node_info(parsed: Section, expected: InventoryResult) -> None:
+def test_inv_docker_node_info(parsed: Section, expected: InventoryResult) -> None:  # type: ignore[misc]
     assert list(inventorize_docker_node_info(parsed)) == list(expected)

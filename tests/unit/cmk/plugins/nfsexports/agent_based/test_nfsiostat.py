@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import pytest
@@ -130,7 +129,7 @@ def _section2():
         pytest.param("section2", "'abcdef123-x01:/bud_win_redvol/root/Oracle/tnsnames',"),
     ],
 )
-def test_item(section, item, request):
+def test_item(section, item, request):  # type: ignore[misc]
     services = list(nfsiostat.discover_nfsiostat(request.getfixturevalue(section)))
     assert len(services) == 1
     assert services[0][0] == item

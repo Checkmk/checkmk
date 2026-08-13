@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -93,7 +92,7 @@ class TestLinux:
         assert mk_postgres.helper_factory().get_default_postgres_user() == "postgres"
 
     @patch("subprocess.Popen")
-    def test_postgres_binary_path_fallback(self, mock_Popen):
+    def test_postgres_binary_path_fallback(self, mock_Popen):  # type: ignore[misc]
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [("usr/mydb-12.3/bin", None)],
@@ -149,7 +148,7 @@ class TestLinux:
         assert instances[0]["pg_passfile"] == "/PATH/TO/.pgpass"
 
     @patch("subprocess.Popen")
-    def test_factory_without_instance(
+    def test_factory_without_instance(  # type: ignore[misc]
         self,
         mock_Popen,
     ):
@@ -184,7 +183,7 @@ class TestLinux:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
-    def test_factory_with_instance(
+    def test_factory_with_instance(  # type: ignore[misc]
         self,
         mock_Popen,
         mock_isfile,
@@ -224,7 +223,7 @@ class TestLinux:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
-    def test_run_sql_as_db_user_su_options_precede_user(
+    def test_run_sql_as_db_user_su_options_precede_user(  # type: ignore[misc]
         self,
         mock_Popen: Mock,
         mock_isfile: Mock,
@@ -250,7 +249,7 @@ class TestLinux:
         assert argv[:3] == ["su", "--login", "-c"]
 
     @patch("subprocess.Popen")
-    def test_get_instances(
+    def test_get_instances(  # type: ignore[misc]
         self,
         mock_Popen,
         monkeypatch,
@@ -308,7 +307,7 @@ class TestLinux:
         ],
     )
     @patch("subprocess.Popen")
-    def test_get_instances_case_sensitivity(
+    def test_get_instances_case_sensitivity(  # type: ignore[misc]
         self, mock_Popen, instance_name, ps_instances, exp_instance
     ):
         instance = {
@@ -441,7 +440,7 @@ class TestWindows:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
-    def test_factory_without_instance(self, mock_Popen: Mock, mock_isfile: Mock) -> None:
+    def test_factory_without_instance(self, mock_Popen: Mock, mock_isfile: Mock) -> None:  # type: ignore[misc]
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [
@@ -475,7 +474,7 @@ class TestWindows:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
-    def test_factory_do_not_overwrite_PG_PASSFILE(
+    def test_factory_do_not_overwrite_PG_PASSFILE(  # type: ignore[misc]
         self,
         mock_Popen,
         mock_isfile,
@@ -506,7 +505,7 @@ class TestWindows:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
-    def test_factory_with_instance(
+    def test_factory_with_instance(  # type: ignore[misc]
         self,
         mock_Popen,
         mock_isfile,

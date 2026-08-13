@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping, Sequence
@@ -112,7 +111,7 @@ LEVELS_CRIT = {
         )
     ],
 )
-def test_sap_hana_data_volume_parse(
+def test_sap_hana_data_volume_parse(  # type: ignore[misc]
     string_table_row: StringTable, expected_parsed_data: sap_hana.ParsedSection
 ) -> None:
     assert sap_hana_data_volume.parse_sap_hana_data_volume(string_table_row) == expected_parsed_data
@@ -242,6 +241,6 @@ def test_sap_hana_data_volume_check(
         ("H62 10 - DATA 20", {}),
     ],
 )
-def test_sap_hana_data_volume_check_stale(item: str, section: sap_hana.ParsedSection) -> None:
+def test_sap_hana_data_volume_check_stale(item: str, section: sap_hana.ParsedSection) -> None:  # type: ignore[misc]
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_data_volume.check_sap_hana_data_volume(item, {}, section))

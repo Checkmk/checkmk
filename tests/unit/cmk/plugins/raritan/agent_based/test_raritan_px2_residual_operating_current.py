@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from collections.abc import Sequence
 
 import pytest
@@ -123,7 +121,7 @@ def test_discover_raritan_px2_residual_operating_current() -> None:
         ),
     ],
 )
-def test_check_raritan_px2_residual_operating_current(
+def test_check_raritan_px2_residual_operating_current(  # type: ignore[misc]
     string_table: Sequence[StringByteTable],
     item: str,
     params: Params,

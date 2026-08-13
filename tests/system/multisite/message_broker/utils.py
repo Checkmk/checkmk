@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
@@ -58,7 +57,7 @@ def _wait_for_pong_ready(stdout: IO[str]) -> None:
 
 
 @contextmanager
-def broker_pong(site: Site) -> Iterator[subprocess.Popen]:
+def broker_pong(site: Site) -> Iterator[subprocess.Popen]:  # type: ignore[misc]
     """Make sure the site echoes messages"""
     pong = site.execute(["cmk-broker-test"], stdout=subprocess.PIPE, text=True)
     assert pong.stdout is not None

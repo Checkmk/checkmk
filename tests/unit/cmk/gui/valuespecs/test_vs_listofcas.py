@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable
@@ -120,7 +119,7 @@ vmjkI6TZraE3
         ),
     ],
 )
-def test_analyze_cert(pem: Callable[[], str], expected: dict) -> None:
+def test_analyze_cert(pem: Callable[[], str], expected: dict) -> None:  # type: ignore[misc]
     cert = Certificate.load_pem(CertificatePEM(pem()))
     assert vs._CAorCAChain._analyse_cert(cert) == expected
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 import re
 import typing as t
 
@@ -387,7 +385,7 @@ TEST_DATA = [
 
 
 @pytest.mark.parametrize("test_data", TEST_DATA, ids=[tt.input[0] for tt in TEST_DATA])
-def test_parse_multipath(test_data: TupleTestData) -> None:
+def test_parse_multipath(test_data: TupleTestData) -> None:  # type: ignore[misc]
     assert (
         multipath.parse_multipath([re.split(" +", line.strip()) for line in test_data.input])
         == test_data.output

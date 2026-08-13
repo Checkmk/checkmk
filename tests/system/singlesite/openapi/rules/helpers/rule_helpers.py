@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 """Helper functions for tests against rules with predictive and fixed levels.."""
 
@@ -132,7 +131,7 @@ def verify_rule_conversion(
 
 
 @contextmanager
-def managed_rule_with_levels(
+def managed_rule_with_levels(  # type: ignore[misc]
     site: Site,
     rule_value: dict[str, Any],
     comment: str,

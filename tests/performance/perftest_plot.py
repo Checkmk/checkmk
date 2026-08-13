@@ -46,7 +46,6 @@ Example:
 """
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -229,7 +228,7 @@ class PerformanceDb:
         self.connection = psycopg.connect(self.dsn, autocommit=True)
 
     @contextmanager
-    def _cursor(self) -> Iterator[psycopg.cursor.Cursor]:
+    def _cursor(self) -> Iterator[psycopg.cursor.Cursor]:  # type: ignore[misc]
         """Return an active cursor in a new autocommit connection."""
         with self.connection.cursor() as cursor:
             yield cursor

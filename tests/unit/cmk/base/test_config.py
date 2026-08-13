@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import dataclasses
@@ -449,7 +448,7 @@ def test_is_no_ip_host(
         (HostName("testhost"), {TagGroupID("address_family"): TagID("no-ip")}, False, []),
     ],
 )
-def test_is_ipv6_primary_host(
+def test_is_ipv6_primary_host(  # type: ignore[misc]
     monkeypatch: MonkeyPatch,
     hostname: HostName,
     tags: dict[TagGroupID, TagID],
@@ -915,7 +914,7 @@ def test_make_tcp_fetcher_config_symmetric_agent_encryption(
         ),
     ],
 )
-def test_special_agents(monkeypatch: MonkeyPatch, hostname: HostName, result: list[tuple]) -> None:
+def test_special_agents(monkeypatch: MonkeyPatch, hostname: HostName, result: list[tuple]) -> None:  # type: ignore[misc]
     ts = Scenario()
     ts.add_host(hostname)
     ts.set_option(
@@ -1312,7 +1311,7 @@ def test_notification_plugin_parameters(
         ),
     ],
 )
-def test_host_config_active_checks(
+def test_host_config_active_checks(  # type: ignore[misc]
     monkeypatch: MonkeyPatch, hostname: HostName, result: list[tuple]
 ) -> None:
     ts = Scenario()
@@ -2493,7 +2492,7 @@ def test_config_cache_service_discovery_name(
         (False, [{"id": "04", "condition": {}, "value": {"status_data_inventory": False}}]),
     ],
 )
-def test_config_cache_status_data_inventory(
+def test_config_cache_status_data_inventory(  # type: ignore[misc]
     monkeypatch: MonkeyPatch, result: bool, ruleset: list[tuple] | None
 ) -> None:
     abc_host = HostName("abc")

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -382,7 +381,7 @@ def test_parse_mssql_counters_errors() -> None:
         ({}, big_parsed_data, big_services),
     ],
 )
-def test_discovery_mssql_counters_cache_hits(
+def test_discovery_mssql_counters_cache_hits(  # type: ignore[misc]
     params: Mapping, section: Section, expected_services: Sequence[Service]
 ) -> None:
     results = list(discovery_mssql_counters_cache_hits(params, section))

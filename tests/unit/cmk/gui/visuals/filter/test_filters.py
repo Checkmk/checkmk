@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -618,7 +617,7 @@ def test_filters_filter(test: FilterTest, set_config: SetConfig, request_context
 
 
 @pytest.mark.parametrize("test", filter_table_tests)
-def test_filters_filter_table(
+def test_filters_filter_table(  # type: ignore[misc]
     test: FilterTableTest, monkeypatch: pytest.MonkeyPatch, request_context: None
 ) -> None:
     # Skip deployment_has_agent in community edition - needs bakery
@@ -638,7 +637,7 @@ def test_filters_filter_table(
 
 
 @pytest.mark.parametrize("test", filter_inv_table_tests)
-def test_filters_filter_inv_table(test: FilterTableTest) -> None:
+def test_filters_filter_inv_table(test: FilterTableTest) -> None:  # type: ignore[misc]
     pass
 
 

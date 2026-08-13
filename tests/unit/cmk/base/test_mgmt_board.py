@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import socket
@@ -104,7 +103,7 @@ def test_mgmt_disabled(monkeypatch: MonkeyPatch) -> None:
         ),
     ],
 )
-def test_mgmt_config_ruleset(
+def test_mgmt_config_ruleset(  # type: ignore[misc]
     monkeypatch, protocol, cred_attribute, credentials, ruleset_credentials
 ):
     ts = Scenario()
@@ -150,7 +149,7 @@ def test_mgmt_config_ruleset(
         ),
     ],
 )
-def test_mgmt_config_ruleset_order(
+def test_mgmt_config_ruleset_order(  # type: ignore[misc]
     monkeypatch, protocol, cred_attribute, folder_credentials, ruleset_credentials
 ):
     ts = Scenario()
@@ -202,7 +201,7 @@ def test_mgmt_config_ruleset_order(
         ),
     ],
 )
-def test_mgmt_config_ruleset_overidden_by_explicit_setting(
+def test_mgmt_config_ruleset_overidden_by_explicit_setting(  # type: ignore[misc]
     monkeypatch, protocol, cred_attribute, host_credentials, ruleset_credentials
 ):
     ts = Scenario()
@@ -422,7 +421,7 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(
         ),
     ],
 )
-def test_mgmt_board_ip_addresses(
+def test_mgmt_board_ip_addresses(  # type: ignore[misc]
     monkeypatch,
     protocol,
     cred_attribute,

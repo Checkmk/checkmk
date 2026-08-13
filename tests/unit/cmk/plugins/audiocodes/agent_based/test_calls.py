@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -170,7 +169,7 @@ def test_audiocodes_discovery_function(
         ),
     ],
 )
-def test_check_function(
+def test_check_function(  # type: ignore[misc]
     string_table: Sequence[StringTable],
     params: Mapping[str, NoLevelsT | FixedLevelsT],
     expected: CheckResult,

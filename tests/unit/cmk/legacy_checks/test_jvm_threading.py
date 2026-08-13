@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
@@ -69,7 +67,7 @@ def test_discover_jolokia_jvm_threading() -> None:
 
 @patch("cmk.legacy_checks.jolokia_jvm_threading.get_value_store")
 @patch("cmk.legacy_checks.jolokia_jvm_threading.get_rate")
-def test_check_jolokia_jvm_threading_basic(
+def test_check_jolokia_jvm_threading_basic(  # type: ignore[misc]
     mock_get_rate: MagicMock, mock_get_value_store: MagicMock
 ) -> None:
     """Test main check with basic parameters"""
@@ -104,7 +102,7 @@ def test_check_jolokia_jvm_threading_basic(
 
 @patch("cmk.legacy_checks.jolokia_jvm_threading.get_value_store")
 @patch("cmk.legacy_checks.jolokia_jvm_threading.get_rate")
-def test_check_jolokia_jvm_threading_no_daemon_levels(
+def test_check_jolokia_jvm_threading_no_daemon_levels(  # type: ignore[misc]
     mock_get_rate: MagicMock, mock_get_value_store: MagicMock
 ) -> None:
     """Test main check without daemon thread levels"""

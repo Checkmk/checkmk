@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from contextlib import AbstractContextManager as ContextManager
@@ -92,7 +91,7 @@ from cmk.ruleset_matcher.labels import LabelGroups
         ),
     ],
 )
-def test_label_value_parsing(
+def test_label_value_parsing(  # type: ignore[misc]
     object_type: Literal["host", "service"],
     value: FilterHTTPVariables,
     parsed_value: LabelGroups,

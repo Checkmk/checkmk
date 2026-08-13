@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Sequence
@@ -142,7 +141,7 @@ def test_inventory_infoblox_temp(string_table: Sequence[StringTable]) -> None:
         ),
     ],
 )
-def test_check_infoblox_temp(
+def test_check_infoblox_temp(  # type: ignore[misc]
     string_table: Sequence[StringTable],
     item: str,
     params: TempParamType,

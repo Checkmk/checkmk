@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from typing import cast, Literal
 from unittest.mock import ANY, patch
 
@@ -27,7 +25,7 @@ PasswordOnDisk = tuple[
 
 
 @patch("cmk.gui.watolib.password_visitor.passwordstore_choices", return_value=[])
-def test_password_encrypts_password(
+def test_password_encrypts_password(  # type: ignore[misc]
     patch_pwstore: None,
     request_context: None,
 ) -> None:
@@ -52,7 +50,7 @@ def test_password_encrypts_password(
         RawFrontendData(("explicit_password", "", "some_password", False)),
     ],
 )
-def test_password_masks_password(
+def test_password_masks_password(  # type: ignore[misc]
     patch_pwstore: None, request_context: None, value: IncomingData
 ) -> None:
     visitor = get_visitor(Password(), VisitorOptions(migrate_values=True, mask_values=True))
@@ -68,7 +66,7 @@ def test_password_masks_password(
         RawFrontendData({"el": ("explicit_password", "", "some_password", False)}),
     ],
 )
-def test_nested_password_gets_masked(
+def test_nested_password_gets_masked(  # type: ignore[misc]
     patch_pwstore: None, request_context: None, value: IncomingData
 ) -> None:
     spec = Dictionary(elements={"el": DictElement(parameter_form=Password())})
@@ -135,7 +133,7 @@ def test_nested_password_gets_masked(
         ),
     ],
 )
-def test_password_migrates_password_on_disk(
+def test_password_migrates_password_on_disk(  # type: ignore[misc]
     patch_pwstore: None,
     request_context: None,
     old: IncomingData,

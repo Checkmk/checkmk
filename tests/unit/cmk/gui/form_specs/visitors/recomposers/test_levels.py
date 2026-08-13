@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import copy
@@ -242,7 +241,7 @@ def levels_spec() -> Levels:
         ),
     ],
 )
-def test_levels_recompose(
+def test_levels_recompose(  # type: ignore[misc]
     spec: Levels,
     value: IncomingData,
     expected_frontend_data: tuple[str, object],
@@ -303,7 +302,7 @@ def test_levels_recompose(
         ),
     ],
 )
-def test_levels_recompose_invalid_data(
+def test_levels_recompose_invalid_data(  # type: ignore[misc]
     spec: Levels,
     invalid_value: IncomingData,
     expected_validation_message: str,

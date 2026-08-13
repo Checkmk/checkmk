@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from unittest.mock import patch
 
 import pytest
@@ -123,7 +121,7 @@ def test_discover_openbsd_sensors() -> None:
     ],
 )
 @patch("cmk.plugins.openbsd.agent_based.openbsd_sensors.get_value_store", return_value={})
-def test_check_openbsd_sensors(_mock_value_store: object, item: str, expected_temp: float) -> None:
+def test_check_openbsd_sensors(_mock_value_store: object, item: str, expected_temp: float) -> None:  # type: ignore[misc]
     """Test check function for openbsd_sensors check."""
     parsed = parse_openbsd_sensors(STRING_TABLE)
     results = list(check_openbsd_sensors(item, {}, parsed))
@@ -135,7 +133,7 @@ def test_check_openbsd_sensors(_mock_value_store: object, item: str, expected_te
 
 
 @patch("cmk.plugins.openbsd.agent_based.openbsd_sensors.get_value_store", return_value={})
-def test_check_openbsd_sensors_not_found(_mock_value_store: object) -> None:
+def test_check_openbsd_sensors_not_found(_mock_value_store: object) -> None:  # type: ignore[misc]
     """Test check function returns nothing for non-existent item."""
     parsed = parse_openbsd_sensors(STRING_TABLE)
     results = list(check_openbsd_sensors("nonexistent", {}, parsed))

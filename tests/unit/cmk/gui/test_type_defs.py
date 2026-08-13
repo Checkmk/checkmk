@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from typing import Literal
@@ -245,7 +244,7 @@ from cmk.gui.type_defs import (
         ),
     ],
 )
-def test_column_spec_from_raw(
+def test_column_spec_from_raw(  # type: ignore[misc]
     raw_column_spec: _RawColumnSpec | _RawLegacyColumnSpec | tuple,
     expected_column_spec: ColumnSpec,
     expected_column_type: Literal["column", "join_column"],

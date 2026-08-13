@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 import json
 from typing import Any, Literal
@@ -387,7 +386,7 @@ def test_openapi_host_tag_group_empty_tags(clients: ClientRegistry) -> None:
         pytest.param({"mode": "abort"}, id="abort-mode"),
     ],
 )
-def test_openapi_delete_dependant_host_tag(
+def test_openapi_delete_dependant_host_tag(  # type: ignore[misc]
     clients: ClientRegistry,
     delete_options: dict[str, Any],
 ) -> None:

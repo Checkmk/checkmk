@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
@@ -141,7 +140,7 @@ from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
         ),
     ],
 )
-def test_df_check_filesystem_single_coroutine(
+def test_df_check_filesystem_single_coroutine(  # type: ignore[misc]
     mocker: MockerFixture,
     data: tuple[float | None, float | None, float | None, float | None, float | None],
     expected_result: Sequence[tuple[int, str, Sequence[tuple]]],

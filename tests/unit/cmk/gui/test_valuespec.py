@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -81,7 +80,7 @@ def test_age_value_to_json_conversion(value: int, result: str) -> None:
         ),
     ],
 )
-def test_dropdownchoice_value_to_json_conversion(
+def test_dropdownchoice_value_to_json_conversion(  # type: ignore[misc]
     choices: vs.DropdownChoices, value: object, result: vs.ValueSpecText
 ) -> None:
     assert vs.DropdownChoice[object](choices=choices).value_to_html(value) == result
@@ -104,7 +103,7 @@ def test_dropdownchoice_value_to_json_conversion(
         "invalid_choice_invalid_deprecated_choice",
     ],
 )
-def test_dropdownchoice_validate_datatype(
+def test_dropdownchoice_validate_datatype(  # type: ignore[misc]
     choices: vs.DropdownChoices,
     deprecated_choices: Sequence[str | None],
     value: int | None,
@@ -301,7 +300,7 @@ def test_password_from_html_vars_not_set() -> None:
         ([], None, None),
     ],
 )
-def test_default_value_in_cascading_dropdown(
+def test_default_value_in_cascading_dropdown(  # type: ignore[misc]
     choices,
     default_value,
     expected_default,
@@ -332,7 +331,7 @@ def test_default_value_in_cascading_dropdown(
         ([("value", "Title", None)], None, "value"),
     ],
 )
-def test_canonical_value_in_cascading_dropdown(
+def test_canonical_value_in_cascading_dropdown(  # type: ignore[misc]
     choices,
     default_value,
     expected_canonical,
@@ -362,7 +361,7 @@ def test_canonical_value_in_cascading_dropdown(
         ),
     ],
 )
-def test_mask_to_json(valuespec, value, expected):
+def test_mask_to_json(valuespec, value, expected):  # type: ignore[misc]
     masked = valuespec.mask(value)
     assert valuespec.value_to_json(masked) == expected
 

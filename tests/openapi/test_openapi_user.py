@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
@@ -859,7 +858,7 @@ def test_response_schema_compatible_with_request_schema(
     "cmk.gui.userdb.user_attributes.theme_choices",
     return_value=[("modern-dark", "Dark"), ("facelift", "Light")],
 )
-def test_user_interface_settings(_mock: None, clients: ClientRegistry) -> None:
+def test_user_interface_settings(_mock: None, clients: ClientRegistry) -> None:  # type: ignore[misc]
     username = "cmkuser"
 
     resp = clients.User.create(
@@ -941,7 +940,7 @@ def test_openapi_new_user_with_non_existing_role(clients: ClientRegistry) -> Non
 
 
 @contextmanager
-def custom_user_attributes_ctx(attrs: list[CustomUserAttrSpec]) -> Iterator:
+def custom_user_attributes_ctx(attrs: list[CustomUserAttrSpec]) -> Iterator:  # type: ignore[misc]
     try:
         save_custom_attrs_to_mk_file({"user": attrs, "host": []})
         update_user_custom_attrs(get_user_attributes(attrs), datetime.datetime.today())
@@ -954,7 +953,7 @@ def custom_user_attributes_ctx(attrs: list[CustomUserAttrSpec]) -> Iterator:
     "cmk.gui.userdb.user_attributes.theme_choices",
     return_value=[("modern-dark", "Dark")],
 )
-def test_openapi_custom_attributes_of_user(
+def test_openapi_custom_attributes_of_user(  # type: ignore[misc]
     _mock: None,
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
@@ -1000,7 +999,7 @@ def test_openapi_custom_attributes_of_user(
     "cmk.gui.userdb.user_attributes.theme_choices",
     return_value=[("modern-dark", "Dark")],
 )
-def test_edit_custom_attributes_of_user(_mock: None, clients: ClientRegistry) -> None:
+def test_edit_custom_attributes_of_user(_mock: None, clients: ClientRegistry) -> None:  # type: ignore[misc]
     username = "rob_halford"
 
     attr = CustomUserAttrSpec(

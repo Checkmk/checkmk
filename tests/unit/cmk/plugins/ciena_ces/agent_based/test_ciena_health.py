@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections import Counter
@@ -239,7 +238,7 @@ STRING_TABLE_SECTION_CHECK_RESULT_5142 = [
     "_, section, check_result",
     STRING_TABLE_SECTION_CHECK_RESULT_5142 + STRING_TABLE_SECTION_CHECK_RESULT_5171,
 )
-def test_check_ciena_health_output(
+def test_check_ciena_health_output(  # type: ignore[misc]
     _: object,
     section: Section,
     check_result: list[Result],
@@ -251,7 +250,7 @@ def test_check_ciena_health_output(
     "string_table, section, _",
     STRING_TABLE_SECTION_CHECK_RESULT_5142,
 )
-def test_parse_ciena_health_5142(
+def test_parse_ciena_health_5142(  # type: ignore[misc]
     string_table: list[StringTable],
     section: Section,
     _: object,
@@ -263,7 +262,7 @@ def test_parse_ciena_health_5142(
     "string_table, section, _",
     STRING_TABLE_SECTION_CHECK_RESULT_5171,
 )
-def test_parse_ciena_health_5171(
+def test_parse_ciena_health_5171(  # type: ignore[misc]
     string_table: list[StringTable],
     section: Section,
     _: object,

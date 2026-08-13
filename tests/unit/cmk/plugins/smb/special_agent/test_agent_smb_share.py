@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -626,7 +625,7 @@ def test_parse_arguments() -> None:
         ),
     ],
 )
-def test_iter_shared_files(
+def test_iter_shared_files(  # type: ignore[misc]
     filesystem: dict,
     disallowed_paths: list[str],
     pattern: list[str],
@@ -799,7 +798,7 @@ def test_smb_share_agent_error(capsys: pytest.CaptureFixture) -> None:
 @mock.patch(
     "cmk.plugins.smb.special_agent.agent_smb_share.SMBConnection.connect", return_value=False
 )
-def test_smb_share_agent_unsuccessful_connect(
+def test_smb_share_agent_unsuccessful_connect(  # type: ignore[misc]
     mock_connect: mock.Mock, capsys: pytest.CaptureFixture
 ) -> None:
     args = parse_arguments(
@@ -815,7 +814,7 @@ def test_smb_share_agent_unsuccessful_connect(
 @mock.patch("cmk.plugins.smb.special_agent.agent_smb_share.connect")
 @mock.patch("cmk.plugins.smb.special_agent.agent_smb_share.get_all_shared_files")
 @mock.patch("cmk.plugins.smb.special_agent.agent_smb_share.write_section")
-def test_smb_share_agent_operation_failure(
+def test_smb_share_agent_operation_failure(  # type: ignore[misc]
     mock_connect: mock.Mock,
     mock_get_files: mock.Mock,
     mock_write_section: mock.Mock,
@@ -834,7 +833,7 @@ def test_smb_share_agent_operation_failure(
     "cmk.plugins.smb.special_agent.agent_smb_share.SMBConnection.connect", return_value=True
 )
 @mock.patch("cmk.plugins.smb.special_agent.agent_smb_share.SMBConnection.close")
-def test_connect_error(mock_close: mock.Mock, mock_connect: mock.Mock) -> None:
+def test_connect_error(mock_close: mock.Mock, mock_connect: mock.Mock) -> None:  # type: ignore[misc]
     with (
         pytest.raises(Exception, match="Exception during usage of smb connection"),
         connect("username", Secret("password"), "hostname", "127.0.0.1"),

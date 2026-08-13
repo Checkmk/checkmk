@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime
@@ -215,7 +214,7 @@ AGENT_OUTPUT_SESSIONS_EMPTY_ELAPSED = [
         ),
     ],
 )
-def test_oracle_sql_parse(info, expected):
+def test_oracle_sql_parse(info, expected):  # type: ignore[misc]
     assert parse_oracle_sql(info) == expected
 
 
@@ -251,7 +250,7 @@ def test_oracle_sql_parse(info, expected):
         ),
     ],
 )
-def test_parse_metrics(line, expected):
+def test_parse_metrics(line, expected):  # type: ignore[misc]
     assert list(parse_metrics(line)) == expected
 
 
@@ -264,7 +263,7 @@ def test_parse_metrics(line, expected):
         (AGENT_OUTPUT_SESSIONS_WITH_PERFDATA, [Service(item="YOBLE1 SQL NBA SESSIONS")]),
     ],
 )
-def test_oracle_sql_discovery(info, expected):
+def test_oracle_sql_discovery(info, expected):  # type: ignore[misc]
     assert list(discovery_oracle_sql(parse_oracle_sql(info))) == expected
 
 
@@ -324,7 +323,7 @@ def test_oracle_sql_discovery(info, expected):
         ),
     ],
 )
-def test_oracle_sql_check(info, item, expected):
+def test_oracle_sql_check(info, item, expected):  # type: ignore[misc]
     result = list(check_oracle_sql(item, {}, parse_oracle_sql(info)))
     assert result == expected
 

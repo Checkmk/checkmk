@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -75,7 +74,7 @@ def test_https_cfg_versions(cfg: object) -> None:
         [("https", "127.0.0.1", None)],
     ],
 )
-def test_agent(
+def test_agent(  # type: ignore[misc]
     cfg: object, response: str, monkeypatch: MonkeyPatch, capsys: CaptureFixture
 ) -> None:
     monkeypatch.setattr(apache_status, "get_config", lambda: {"servers": cfg, "ssl_ports": [443]})

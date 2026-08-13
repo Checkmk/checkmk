@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Generator
@@ -233,7 +232,7 @@ def test_update_configuration_entity_non_admin(
         ),
     ],
 )
-def test_save_configuration_validation(
+def test_save_configuration_validation(  # type: ignore[misc]
     clients: ClientRegistry, data: dict, expected_error_fields: dict
 ) -> None:
     # WHEN

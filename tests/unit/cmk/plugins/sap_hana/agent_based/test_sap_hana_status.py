@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Result, Service, State, StringTable
@@ -85,7 +83,7 @@ SECTION_ERROR = {
         ),
     ],
 )
-def test_sap_hana_status_parse(
+def test_sap_hana_status_parse(  # type: ignore[misc]
     string_table_row: StringTable, expected_parsed_data: ParsedSection
 ) -> None:
     assert sap_hana_status.parse_sap_hana_status(string_table_row) == expected_parsed_data
@@ -125,13 +123,13 @@ def test_sap_hana_status_discovery() -> None:
         ),
     ],
 )
-def test_sap_hana_status_check(check_type: str, results: Result, section: ParsedSection) -> None:
+def test_sap_hana_status_check(check_type: str, results: Result, section: ParsedSection) -> None:  # type: ignore[misc]
     yielded_results = list(sap_hana_status.check_sap_hana_status(f"{check_type} {ITEM}", section))
     assert yielded_results == [results]
 
 
 @pytest.mark.parametrize("section, item", [({"Status H62 10": {}}, "Status H62 10")])
-def test_sap_hana_status_check_stale(section: ParsedSection, item: str) -> None:
+def test_sap_hana_status_check_stale(section: ParsedSection, item: str) -> None:  # type: ignore[misc]
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_status.check_sap_hana_status(item, section))
 

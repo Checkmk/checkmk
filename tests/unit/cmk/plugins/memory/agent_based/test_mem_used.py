@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -273,7 +272,7 @@ MEMINFO_PAGE_MAPPED = {
         ({}, {"MemTotal": 42 * KILO, "MemFree": 28 * KILO, "SwapFree": 23}, KeyError),
     ],
 )
-def test_check_memory_fails(
+def test_check_memory_fails(  # type: ignore[misc]
     params: Mapping, meminfo: memory.SectionMemUsed, fail_with_exception: type[KeyError]
 ) -> None:
     with pytest.raises(fail_with_exception):
@@ -743,7 +742,7 @@ def test_check_memory_fails(
         ),
     ],
 )
-def test_check_memory(
+def test_check_memory(  # type: ignore[misc]
     params: Mapping, meminfo: memory.SectionMemUsed, expected: CheckResult, empty_value_store: None
 ) -> None:
     copy_info = meminfo.copy()
@@ -810,7 +809,7 @@ def test_inventorize_memory(
         (1000, 1024000, 1000, 0.9765625, "1000 KiB"),
     ],
 )
-def test_mem_bytes(
+def test_mem_bytes(  # type: ignore[misc]
     value_as_kb,
     expected_bytes,
     expected_kb,

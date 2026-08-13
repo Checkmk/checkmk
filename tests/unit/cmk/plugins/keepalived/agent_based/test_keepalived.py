@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import pytest
@@ -23,7 +22,7 @@ from cmk.plugins.keepalived.agent_based.keepalived import hex2ip
         ("FFFF0000000000000000000000000001", "ffff::1"),
     ],
 )
-def test_hex2ip_valid_ip_parsing(hex_input, expected):
+def test_hex2ip_valid_ip_parsing(hex_input, expected):  # type: ignore[misc]
     assert hex2ip(hex_input) == expected
 
 
@@ -43,6 +42,6 @@ def test_hex2ip_uppercase_ipv6():
         "",  # Empty string
     ],
 )
-def test_hex2ip_error_cases(hex_input):
+def test_hex2ip_error_cases(hex_input):  # type: ignore[misc]
     with pytest.raises(ValueError):
         hex2ip(hex_input)

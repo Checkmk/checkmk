@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import pytest
@@ -157,7 +156,7 @@ from cmk.gui.availability import layout_availability_table
         )
     ],
 )
-def test_availability_percentage_only_option(
+def test_availability_percentage_only_option(  # type: ignore[misc]
     monkeypatch, what, group_title, availability_table, avoptions, result
 ):
     monkeypatch.setattr("cmk.gui.availability.layout.get_object_cells", lambda what, av, lab: 0)
@@ -322,7 +321,7 @@ def test_availability_percentage_only_option(
         )
     ],
 )
-def test_availability_time_only_option(
+def test_availability_time_only_option(  # type: ignore[misc]
     monkeypatch, what, group_title, availability_table, avoptions, result
 ):
     monkeypatch.setattr("cmk.gui.availability.layout.get_object_cells", lambda what, av, lab: 0)

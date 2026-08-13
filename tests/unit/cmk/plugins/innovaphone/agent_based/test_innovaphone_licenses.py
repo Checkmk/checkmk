@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Mapping
 from typing import Any
@@ -145,7 +144,7 @@ def test_discover_innovaphone_licenses() -> None:
         ),
     ],
 )
-def test_check_innovaphone_licenses(
+def test_check_innovaphone_licenses(  # type: ignore[misc]
     params: Mapping[str, Any], section: LicenseUsage, expected: list[Result | Metric]
 ) -> None:
     assert list(check_innovaphone_licenses(params, section)) == expected

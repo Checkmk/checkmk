@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping, Sequence
@@ -183,7 +182,7 @@ def test_check_printer_input(
         "0",
     ],
 )
-def test_check_printer_input_capacity_not_reported_if_unit_is_unkown_if_capacity_max_unkown(
+def test_check_printer_input_capacity_not_reported_if_unit_is_unkown_if_capacity_max_unkown(  # type: ignore[misc]
     capacity_unit, capacity_max
 ):
     string_table = [[["1.42", "", "", "0", capacity_unit, capacity_max, "11"]]]
@@ -199,7 +198,7 @@ def test_check_printer_input_capacity_not_reported_if_unit_is_unkown_if_capacity
 
 
 @pytest.mark.parametrize("capacity_unit", ["-1", "0", "1", "2"])
-def test_check_printer_input_capacity_not_reported_if_unit_is_unkown(
+def test_check_printer_input_capacity_not_reported_if_unit_is_unkown(  # type: ignore[misc]
     capacity_unit,
 ):
     string_table = [[["1.42", "", "", "0", capacity_unit, "42", "11"]]]

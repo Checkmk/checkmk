@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import dataclasses
@@ -246,5 +245,5 @@ def disabled_section(interface: InterfaceWithCounters) -> InterfaceWithCounters:
         ),
     ],
 )
-def test_parse_aix_if_pure(string_table: list[list[str]], section: Section) -> None:
+def test_parse_aix_if_pure(string_table: list[list[str]], section: Section) -> None:  # type: ignore[misc]
     assert parse_aix_if_pure(string_table, timestamp=TIMESTAMP) == section

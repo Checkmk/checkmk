@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterable, Mapping, Sequence
@@ -781,7 +780,7 @@ def _make_tree_or_items(
         )[0],
     ],
 )
-def test__inventorize_real_host_no_items(
+def test__inventorize_real_host_no_items(  # type: ignore[misc]
     raw_intervals: list,
     previous_node: ImmutableTree,
 ) -> None:

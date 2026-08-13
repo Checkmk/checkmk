@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 from unittest.mock import MagicMock
@@ -264,7 +263,7 @@ def test_create_site_connection_missing_config(
     key: str,
 ) -> None:
     config = _default_config()
-    config.pop(key)
+    config.pop(key)  # type: ignore[misc]
     clients.SiteManagement.create(
         site_config=config,
         expect_ok=False,
@@ -773,7 +772,7 @@ config_cnx_test_data_200: list[ConfigurationConnection] = [
 
 
 @pytest.mark.parametrize("data", config_cnx_test_data_200)
-def test_update_configuration_connection_200(
+def test_update_configuration_connection_200(  # type: ignore[misc]
     clients: ClientRegistry,
     data: ConfigurationConnection,
 ) -> None:
@@ -825,7 +824,7 @@ config_cnx_test_data_400: list[ConfigurationConnection] = [
 
 
 @pytest.mark.parametrize("data", config_cnx_test_data_400)
-def test_update_configuration_connection_400(
+def test_update_configuration_connection_400(  # type: ignore[misc]
     clients: ClientRegistry,
     data: ConfigurationConnection,
 ) -> None:

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import inspect
@@ -106,7 +105,7 @@ def _handler_error_no_annotation(_who_knows) -> None:  # type: ignore[no-untyped
         (_handler_error_no_annotation, "Missing parameter annotation"),
     ],
 )
-def test_invalid_parameters(func: Callable, match: str) -> None:
+def test_invalid_parameters(func: Callable, match: str) -> None:  # type: ignore[misc]
     signature = inspect.signature(func)
     annotated_params = SignatureParametersProcessor.extract_annotated_parameters(signature)
     with pytest.raises(ValueError, match=match):

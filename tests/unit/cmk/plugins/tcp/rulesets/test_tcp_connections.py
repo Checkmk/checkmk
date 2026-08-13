@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import pytest
@@ -21,7 +20,7 @@ from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
         pytest.param((100, 500), id="old format"),
     ],
 )
-def test_rule_spec_tcp_connections(
+def test_rule_spec_tcp_connections(  # type: ignore[misc]
     max_states: tuple[int, int] | SimpleLevelsConfigModel,
 ) -> None:
     rule = {

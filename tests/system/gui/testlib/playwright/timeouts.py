@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Definitions of timeouts during e2e testing."""
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator
@@ -22,7 +21,7 @@ TIMEOUT_AI_RESPONSE = 10_000
 
 
 @contextmanager
-def handle_playwright_timeouterror(msg: str) -> Iterator:
+def handle_playwright_timeouterror(msg: str) -> Iterator:  # type: ignore[misc]
     """Handle and update `playwright.sync_api::TimeoutError` with a context specific message.
 
     Enables easy debugging when a test fails due to timeout issues.

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from collections.abc import Mapping
 from typing import Final
 
@@ -116,7 +114,7 @@ def test_parse_multipath_section_keys(section: Section) -> None:
         ),
     ],
 )
-def test_parse_multipath_groups(
+def test_parse_multipath_groups(  # type: ignore[misc]
     item: str,
     expected: Group,
     section: Section,
@@ -160,7 +158,7 @@ def test_check_percent_levels(section: Section) -> None:
         (5, State.CRIT),  # Actual level is lower then expected so the state is CRIT
     ],
 )
-def test_check_count_levels(levels: int, state: State, section: Section) -> None:
+def test_check_count_levels(levels: int, state: State, section: Section) -> None:  # type: ignore[misc]
     assert list(
         check_multipath(
             "3600601604d40310047cf93ce66f7e111",
@@ -187,7 +185,7 @@ def test_check_count_levels(levels: int, state: State, section: Section) -> None
         ("broken_paths", State.WARN, "0 of 2 (expected: 2)"),
     ],
 )
-def test_check_count_levels_no_configuration_uses_total_paths(
+def test_check_count_levels_no_configuration_uses_total_paths(  # type: ignore[misc]
     item: str, state: State, summary: str, section: Section
 ) -> None:
     results = list(
@@ -288,7 +286,7 @@ def test_ok_summary_diff_with_default_levels_vs_none(section: Section) -> None:
     "params",
     [{"levels": 3}, {"levels": (110.0, 40.0)}, {}],
 )
-def test_check_broken_paths_always_called(
+def test_check_broken_paths_always_called(  # type: ignore[misc]
     params: Mapping[str, int | tuple[float, float]], section: Section
 ) -> None:
     assert list(

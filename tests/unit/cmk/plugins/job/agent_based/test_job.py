@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime
@@ -493,7 +492,7 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
         ),
     ],
 )
-def test_process_job_stats(
+def test_process_job_stats(  # type: ignore[misc]
     job_data,
     age_levels,
     exit_code_to_state_map,

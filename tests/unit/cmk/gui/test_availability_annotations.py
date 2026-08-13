@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import datetime
@@ -260,7 +259,7 @@ def test_relevant_annotation_times(
         ([(1543446000 + 82800, 1543446000 + 172800)], cmk.utils.render.date_and_time),
     ],
 )
-def test_get_annotation_date_render_function(
+def test_get_annotation_date_render_function(  # type: ignore[misc]
     annotation_times: Sequence[tuple[int, int]], result: Callable
 ) -> None:
     annotations: list[tuple[SiteHostSvc, AVAnnotationEntry]] = [

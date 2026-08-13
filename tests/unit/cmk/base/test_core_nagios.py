@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import importlib
@@ -630,7 +629,7 @@ class FakeLabelConfig(ABCLabelConfig):
         ),
     ],
 )
-def test_create_nagios_servicedefs_active_check(
+def test_create_nagios_servicedefs_active_check(  # type: ignore[misc]
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: dict[str, object],
@@ -834,7 +833,7 @@ def test_create_nagios_servicedefs_service_period(monkeypatch: MonkeyPatch) -> N
         ),
     ],
 )
-def test_create_nagios_servicedefs_with_warnings(
+def test_create_nagios_servicedefs_with_warnings(  # type: ignore[misc]
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: dict[str, object],
@@ -926,7 +925,7 @@ def test_create_nagios_servicedefs_with_warnings(
         ),
     ],
 )
-def test_create_nagios_servicedefs_omit_service(
+def test_create_nagios_servicedefs_omit_service(  # type: ignore[misc]
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: dict[str, object],
@@ -1011,7 +1010,7 @@ def test_create_nagios_servicedefs_omit_service(
         ),
     ],
 )
-def test_create_nagios_servicedefs_invalid_args(
+def test_create_nagios_servicedefs_invalid_args(  # type: ignore[misc]
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: dict[str, object],

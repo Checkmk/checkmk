@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import pytest
@@ -97,7 +96,7 @@ def test_cpu_threads_regression(info: StringTable, check_result: CheckResult) ->
         ),
     ],
 )
-def test_relative_but_no_absolute_levels(
+def test_relative_but_no_absolute_levels(  # type: ignore[misc]
     params,
     levels,
 ):

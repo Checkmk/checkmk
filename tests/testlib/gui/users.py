@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 import contextlib
 import random
 import shutil
@@ -61,7 +59,7 @@ def _mk_user_obj(
 
 
 @contextlib.contextmanager
-def create_and_destroy_user(
+def create_and_destroy_user(  # type: ignore[misc]
     *,
     automation: bool = False,
     role: str = "user",

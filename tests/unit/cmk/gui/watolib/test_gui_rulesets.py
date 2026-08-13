@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -261,7 +260,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
     ],
 )
 @pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation")
-def test_matches_search_with_rules(
+def test_matches_search_with_rules(  # type: ignore[misc]
     with_admin_login: UserId,
     search_options: rulesets.SearchOptions,
     rule_config: RuleSpec,

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 import pytest
 
 from cmk.agent_based.v2 import (
@@ -53,7 +51,7 @@ from cmk.plugins.sap_hana.lib import ParsedSection
         ),
     ],
 )
-def test_parse_sap_hana_events(
+def test_parse_sap_hana_events(  # type: ignore[misc]
     info: StringTable,
     expected_result: ParsedSection,
 ) -> None:

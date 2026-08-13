@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import pytest
@@ -41,7 +40,7 @@ TABLE_INFO: StringTable = [["7.6.1.2.0", "64221"]]
         ),
     ],
 )
-def test_detect(walk: dict[str, str], detected_section: SimpleSNMPSection) -> None:
+def test_detect(walk: dict[str, str], detected_section: SimpleSNMPSection) -> None:  # type: ignore[misc]
     assert evaluate_snmp_detection(detect_spec=detected_section.detect, oid_value_getter=walk.get)
 
 
@@ -52,7 +51,7 @@ def test_detect(walk: dict[str, str], detected_section: SimpleSNMPSection) -> No
         mcafee_webgateway_info.snmp_section_skyhigh_security_webgateway_info,
     ],
 )
-def test_parse(detected_section: SimpleSNMPSection) -> None:
+def test_parse(detected_section: SimpleSNMPSection) -> None:  # type: ignore[misc]
     section = detected_section.parse_function([TABLE_INFO])
 
     assert section is not None
@@ -65,7 +64,7 @@ def test_parse(detected_section: SimpleSNMPSection) -> None:
         mcafee_webgateway_info.snmp_section_skyhigh_security_webgateway_info,
     ],
 )
-def test_discovery(detected_section: SimpleSNMPSection) -> None:
+def test_discovery(detected_section: SimpleSNMPSection) -> None:  # type: ignore[misc]
     section = detected_section.parse_function([TABLE_INFO])
     assert section is not None
 
@@ -89,7 +88,7 @@ def test_discovery(detected_section: SimpleSNMPSection) -> None:
         ),
     ],
 )
-def test_check_results(
+def test_check_results(  # type: ignore[misc]
     detected_section: SimpleSNMPSection,
     expected_results: list[Result],
 ) -> None:

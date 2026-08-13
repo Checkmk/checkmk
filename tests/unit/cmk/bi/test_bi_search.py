@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import pytest
@@ -46,7 +45,7 @@ def test_empty_search(bi_searcher: BISearcher) -> None:
         ),
     ],
 )
-def test_fixed_argument_search(
+def test_fixed_argument_search(  # type: ignore[misc]
     config, num_expected_keys, expected_total_length, bi_searcher_with_sample_config
 ):
     schema_config = BIFixedArgumentsSearch.schema()().dump({"arguments": config})
@@ -71,7 +70,7 @@ def test_fixed_argument_search(
         pytest.param("wrongfolder", set(), id="Match no host"),
     ],
 )
-def test_host_folder_search(
+def test_host_folder_search(  # type: ignore[misc]
     search_class, bi_searcher_with_sample_config, folder_name, expected_hostnames
 ):
     schema_config = search_class.schema()().dump({"conditions": {"host_folder": folder_name}})
@@ -175,7 +174,7 @@ def test_host_search(
         ("Interface", "heute_clone", 4),
     ],
 )
-def test_service_search(
+def test_service_search(  # type: ignore[misc]
     service_regex, host_regex, expected_matches, bi_searcher_with_sample_config
 ):
     schema_config = BIServiceSearch.schema()().dump(

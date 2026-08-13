@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -23,7 +22,7 @@ class Schema(BaseSchema):
         super().__init__(*args, **kwargs)
 
     @post_load
-    def _validate(self, data, many=False, partial=None):
+    def _validate(self, data, many=False, partial=None):  # type: ignore[misc]
         for key in self.required:
             if key not in data:
                 raise ValidationError({key: f"Required for load: {key} ({data})/{self.required}"})
@@ -108,7 +107,7 @@ def test_loading_data_invalid_in_all_schemas_fails():
 
     class SchemaB(BaseSchema):
         @post_load
-        def _post_load(self, data, many=False, partial=None):
+        def _post_load(self, data, many=False, partial=None):  # type: ignore[misc]
             raise ValidationError("B")
 
     class MixedMultiNestedSchema(BaseSchema):

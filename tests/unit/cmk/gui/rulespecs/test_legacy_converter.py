@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -1069,7 +1068,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
     ],
 )
-def test_convert_to_legacy_valuespec(
+def test_convert_to_legacy_valuespec(  # type: ignore[misc]
     new_valuespec: FormSpec, expected: legacy_valuespecs.ValueSpec, request_context: None
 ) -> None:
     _compare_specs(
@@ -1158,7 +1157,7 @@ def _get_cascading_single_choice_with_prefill_selection(
         ),
     ],
 )
-def test_cascading_singe_choice_prefill_selection_conversion(
+def test_cascading_singe_choice_prefill_selection_conversion(  # type: ignore[misc]
     prefilled_spec: api_v1.form_specs.CascadingSingleChoice, expected_default_value: tuple
 ) -> None:
     converted_prefilled_spec = convert_to_legacy_valuespec(prefilled_spec, lambda x: x)
@@ -1907,7 +1906,7 @@ def _narrow_type[T](x: object, narrow_to: type[T]) -> T:
         ),
     ],
 )
-def test_migrate(
+def test_migrate(  # type: ignore[misc]
     parameter_form: FormSpec,
     old_value: object,
     expected_transformed_value: object,
@@ -2474,7 +2473,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
         ),
     ],
 )
-def test_level_conversion(
+def test_level_conversion(  # type: ignore[misc]
     api_levels: api_v1.form_specs.Levels,
     legacy_levels: legacy_valuespecs.Dictionary,
 ) -> None:
@@ -2637,7 +2636,7 @@ def test_levels_custom_validate() -> None:
         ),
     ],
 )
-def test_dictionary_groups_datamodel_transformation(
+def test_dictionary_groups_datamodel_transformation(  # type: ignore[misc]
     input_elements: Mapping[str, api_v1.form_specs.DictElement],
     consumer_model: Mapping[str, object],
     form_model: Mapping[str, object],
@@ -3220,7 +3219,7 @@ def test_dictionary_groups_migrate(
         ),
     ],
 )
-def test_dictionary_groups_legacy_validation(
+def test_dictionary_groups_legacy_validation(  # type: ignore[misc]
     form_spec: api_v1.form_specs.FormSpec, rule: Mapping[str, object]
 ) -> None:
     converted = convert_to_legacy_valuespec(form_spec, lambda x: x)

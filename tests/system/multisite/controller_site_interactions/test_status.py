@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 import contextlib
 import logging
@@ -29,7 +28,7 @@ pytestmark = pytest.mark.skip_if_faked_artifacts
 
 
 @contextlib.contextmanager
-def _get_status_output_json(
+def _get_status_output_json(  # type: ignore[misc]
     *,
     site: Site,
     ctl_path: Path,

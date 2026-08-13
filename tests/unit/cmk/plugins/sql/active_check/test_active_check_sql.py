@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import pytest
@@ -20,7 +19,7 @@ from cmk.plugins.sql.active_check import check_sql
         ([[5, "count"]], (3, 5), (float("-inf"), 8), (1, "count: 5.0")),
     ],
 )
-def test_process_result(
+def test_process_result(  # type: ignore[misc]
     result: list,
     warn: tuple[int, int],
     crit: tuple[float, int],

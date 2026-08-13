@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -119,7 +118,7 @@ class TestModeDumpAgent:
             make_app(),
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),
         )
-        check_mk.mode_dump_agent.handler_function(app, {}, hostname)
+        check_mk.mode_dump_agent.handler_function(app, {}, hostname)  # type: ignore[misc]
         assert capsys.readouterr().out == raw_data.decode()
 
 
@@ -202,7 +201,7 @@ class TestModeDumpAgentUseWalk:
             pytest.param({"usewalk": False}, ClassicSNMPBackend, id="walk=False"),
         ],
     )
-    def test_usewalk_creates_expected_backend(
+    def test_usewalk_creates_expected_backend(  # type: ignore[misc]
         self,
         hostname: HostName,
         options: dict,
@@ -233,7 +232,7 @@ class TestModeDumpAgentUseWalk:
             make_app(),
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),
         )
-        check_mk.mode_dump_agent.handler_function(app, options, hostname)
+        check_mk.mode_dump_agent.handler_function(app, options, hostname)  # type: ignore[misc]
 
         # Open the SNMP fetcher manually to drive make_backend
         assert len(captured_sources) == 1

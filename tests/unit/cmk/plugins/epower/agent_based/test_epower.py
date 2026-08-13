@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from typing import cast
@@ -76,7 +75,7 @@ TABLE_UPS_1: StringTable = [["1", "0"], ["2", "3500"], ["3", "4800"]]
         ),
     ],
 )
-def test_power_discover(
+def test_power_discover(  # type: ignore[misc]
     table: StringTable,
     section: SimpleSNMPSection,
     result: DiscoveryResult,
@@ -193,7 +192,7 @@ def test_power_discover(
         ),
     ],
 )
-def test_epower_check(
+def test_epower_check(  # type: ignore[misc]
     table: StringTable,
     section: SimpleSNMPSection,
     item: str,

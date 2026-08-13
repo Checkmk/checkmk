@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import dataclasses
@@ -253,7 +252,7 @@ def _all_endpoint_handler(
         ),
     ],
 )
-def test_parameters(func: Callable, expected: Parameters) -> None:
+def test_parameters(func: Callable, expected: Parameters) -> None:  # type: ignore[misc]
     signature = inspect.signature(func)
     annotated_params = SignatureParametersProcessor.extract_annotated_parameters(signature)
     ParameterValidator.validate_parsed_parameters(annotated_params)
@@ -313,7 +312,7 @@ def _api_context() -> ApiContext:
         ),
     ],
 )
-def test_input_model_validate_parameters(func: Callable, request_data: RawRequestData) -> None:
+def test_input_model_validate_parameters(func: Callable, request_data: RawRequestData) -> None:  # type: ignore[misc]
     model = EndpointModel.build(func)
     model._validate_request_parameters(
         request_data=request_data,
@@ -386,7 +385,7 @@ def test_input_model_undecodable_body() -> None:
         ),
     ],
 )
-def test_input_model_extra_fields(func: Callable, request_data: RawRequestData) -> None:
+def test_input_model_extra_fields(func: Callable, request_data: RawRequestData) -> None:  # type: ignore[misc]
     model = EndpointModel.build(func)
     # type=unexpected_keyword_argument happens only because we use dataclasses (with extra=forbid)
     with pytest.raises(ValidationError, match="type=unexpected_keyword_argument"):

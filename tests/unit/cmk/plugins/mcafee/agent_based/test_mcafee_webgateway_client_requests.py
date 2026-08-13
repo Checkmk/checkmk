@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import pytest
@@ -37,7 +36,7 @@ TABLE_CR: StringTable = [["96919", "1063172", "92114"]]
         (WALK_SKYHIGH, plugin.snmp_section_skyhigh_security_webgateway_client_requests),
     ],
 )
-def test_detect(
+def test_detect(  # type: ignore[misc]
     walk: dict[str, str],
     detected_section: SimpleSNMPSection,
 ) -> None:
@@ -51,7 +50,7 @@ def test_detect(
         plugin.snmp_section_skyhigh_security_webgateway_client_requests,
     ],
 )
-def test_parse(detected_section: SimpleSNMPSection) -> None:
+def test_parse(detected_section: SimpleSNMPSection) -> None:  # type: ignore[misc]
     # Act
     section = detected_section.parse_function([TABLE_CR])
 
@@ -66,7 +65,7 @@ def test_parse(detected_section: SimpleSNMPSection) -> None:
         plugin.snmp_section_skyhigh_security_webgateway_client_requests,
     ],
 )
-def test_discovery(detected_section: SimpleSNMPSection) -> None:
+def test_discovery(detected_section: SimpleSNMPSection) -> None:  # type: ignore[misc]
     # Assemble
     section = detected_section.parse_function([TABLE_CR])
     assert section is not None
@@ -114,7 +113,7 @@ def test_discovery(detected_section: SimpleSNMPSection) -> None:
         ),
     ],
 )
-def test_check_https(
+def test_check_https(  # type: ignore[misc]
     detected_section: SimpleSNMPSection,
     params: MiscParams,
     expected_results: list[object],
@@ -164,7 +163,7 @@ def test_check_https(
         ),
     ],
 )
-def test_check_httpv2(
+def test_check_httpv2(  # type: ignore[misc]
     detected_section: SimpleSNMPSection,
     params: MiscParams,
     expected_results: list[object],
@@ -214,7 +213,7 @@ def test_check_httpv2(
         ),
     ],
 )
-def test_check_http(
+def test_check_http(  # type: ignore[misc]
     detected_section: SimpleSNMPSection,
     params: MiscParams,
     expected_results: list[object],
@@ -239,7 +238,7 @@ def test_check_http(
         plugin.snmp_section_skyhigh_security_webgateway_client_requests,
     ],
 )
-def test_check_results_newly_discovered(detected_section: SimpleSNMPSection) -> None:
+def test_check_results_newly_discovered(detected_section: SimpleSNMPSection) -> None:  # type: ignore[misc]
     # Assemble
     section = detected_section.parse_function([TABLE_CR])
     assert section is not None

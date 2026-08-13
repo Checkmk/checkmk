@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import collections
@@ -21,7 +20,7 @@ def cached_function_fixture():
     # NOTE: With no parameters, FakeRedis() will return a fresh instance every
     # time! For details, see https://github.com/cunla/fakeredis-py/pull/303
     @ttl_memoize(10, lambda: FakeRedis(host="localhost"))
-    def time_based_function(param: int) -> float:
+    def time_based_function(param: int) -> float:  # type: ignore[misc]
         return time.time() * param
 
     return time_based_function

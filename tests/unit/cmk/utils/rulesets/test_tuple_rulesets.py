@@ -6,7 +6,6 @@
 Tests for legacy tuple rulesets.
 """
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -397,7 +396,7 @@ def test_get_host_merged_dict(ts: Scenario) -> None:
         ),
     ],
 )
-def test_get_service_bool_value(
+def test_get_service_bool_value(  # type: ignore[misc]
     ts: Scenario, parameters: tuple[Sequence[RuleSpec], bool, bool]
 ) -> None:
     ruleset, outcome_host1, outcome_host2 = parameters

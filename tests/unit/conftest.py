@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="type-arg"
 
 import logging
@@ -74,7 +73,7 @@ def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
 
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_exception_interact(
+def pytest_exception_interact(  # type: ignore[misc]
     node: pytest.Item | pytest.Collector,
     call: pytest.CallInfo,
     report: pytest.CollectReport | pytest.TestReport,

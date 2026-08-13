@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -312,7 +311,7 @@ class TestConfigParsing:
         ),
     ],
 )
-def test_grouping_multiple_groups(
+def test_grouping_multiple_groups(  # type: ignore[misc]
     section_name,
     files_iter,
     grouping_conditions,
@@ -338,7 +337,7 @@ def test_grouping_multiple_groups(
 
 
 @pytest.mark.parametrize("val", [None, "null"])
-def test_explicit_null_in_filestat(val):
+def test_explicit_null_in_filestat(val):  # type: ignore[misc]
     filestat = mk_filestats.FileStat(
         file_path="hurz",
         stat_status="file vanished",
@@ -411,7 +410,7 @@ def test_explicit_null_in_filestat(val):
         ),
     ],
 )
-def test_output_aggregator_extremes_only(files, expected_header, expected_dicts):
+def test_output_aggregator_extremes_only(files, expected_header, expected_dicts):  # type: ignore[misc]
     result = list(mk_filestats.output_aggregator_extremes_only("MYGROUP", files))
 
     assert result[0] == expected_header
@@ -497,7 +496,7 @@ _TEST_DIR_PATH = os.path.abspath(
         ),
     ],
 )
-def test_pattern_iterator(pattern_list, filters, expected_result):
+def test_pattern_iterator(pattern_list, filters, expected_result):  # type: ignore[misc]
     assert sorted(
         file_stat.file_path
         for file_stat in mk_filestats.PatternIterator(

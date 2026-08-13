@@ -11,7 +11,6 @@
 # those registrations.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -335,7 +334,7 @@ def test_rule_from_config_unhandled_format(tree: FolderTree):
         ),
     ],
 )
-def test_rule_from_config_dict(
+def test_rule_from_config_dict(  # type: ignore[misc]
     tree: FolderTree,
     ruleset_name: str,
     rule_spec: RuleSpec,

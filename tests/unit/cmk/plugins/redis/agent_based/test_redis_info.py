@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime
@@ -144,7 +143,7 @@ def test_check_redis_info(
         ),
     ],
 )
-def test_discover_redis_info_persistence(section, expected):
+def test_discover_redis_info_persistence(section, expected):  # type: ignore[misc]
     assert list(discover_redis_info_persistence(section)) == expected
 
 

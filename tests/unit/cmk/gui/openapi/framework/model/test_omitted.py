@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -95,6 +94,6 @@ class _DatetimeModel:
         ),
     ],
 )
-def test_json_dump_without_omitted(model: _TestModel | _NestedModel, expected: dict) -> None:
+def test_json_dump_without_omitted(model: _TestModel | _NestedModel, expected: dict) -> None:  # type: ignore[misc]
     dumped = json.loads(json_dump_without_omitted(model.__class__, model))
     assert dumped == expected

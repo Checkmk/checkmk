@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -55,7 +54,7 @@ def _get_skype_edge_parsed():
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_skype_edge_udp_zero_counters(skype_edge_parsed):
+def test_skype_edge_udp_zero_counters(skype_edge_parsed):  # type: ignore[misc]
     """Test Skype A/V Edge UDP monitoring with zero authentication failures, allocate requests, and packets dropped."""
     params = {
         "authentication_failures": {"upper": (20, 40)},
@@ -69,7 +68,7 @@ def test_skype_edge_udp_zero_counters(skype_edge_parsed):
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_skype_edge_udp_specific_item_monitoring(skype_edge_parsed):
+def test_skype_edge_udp_specific_item_monitoring(skype_edge_parsed):  # type: ignore[misc]
     """Test Skype A/V Edge UDP monitoring for specific network interface item."""
     params = {
         "authentication_failures": {"upper": (20, 40)},
@@ -83,7 +82,7 @@ def test_skype_edge_udp_specific_item_monitoring(skype_edge_parsed):
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_skype_edge_udp_public_ipv4_interface(skype_edge_parsed):
+def test_skype_edge_udp_public_ipv4_interface(skype_edge_parsed):  # type: ignore[misc]
     """Test Skype A/V Edge UDP monitoring for Public IPv4 Network Interface."""
     params = {
         "authentication_failures": {"upper": (20, 40)},
@@ -97,7 +96,7 @@ def test_skype_edge_udp_public_ipv4_interface(skype_edge_parsed):
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_skype_edge_udp_ipv6_zero_interface(skype_edge_parsed):
+def test_skype_edge_udp_ipv6_zero_interface(skype_edge_parsed):  # type: ignore[misc]
     """Test Skype A/V Edge UDP monitoring for Public IPv6 Network Interface with all zero counters."""
     params = {
         "authentication_failures": {"upper": (20, 40)},
@@ -111,7 +110,7 @@ def test_skype_edge_udp_ipv6_zero_interface(skype_edge_parsed):
 
 
 @pytest.mark.usefixtures("empty_value_store")
-def test_skype_edge_udp_custom_thresholds(skype_edge_parsed):
+def test_skype_edge_udp_custom_thresholds(skype_edge_parsed):  # type: ignore[misc]
     """Test Skype A/V Edge UDP monitoring with custom threshold parameters."""
     params = {
         "authentication_failures": {"upper": (5, 10)},

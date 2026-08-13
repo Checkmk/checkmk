@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -244,7 +243,7 @@ class AutomationActiveCheckTestable(check_mk.AutomationActiveCheck):
         ),
     ],
 )
-def test_automation_active_check(
+def test_automation_active_check(  # type: ignore[misc]
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: Mapping[str, str],
@@ -324,7 +323,7 @@ def test_automation_active_check(
         ),
     ],
 )
-def test_automation_active_check_invalid_args(
+def test_automation_active_check_invalid_args(  # type: ignore[misc]
     active_checks: tuple[str, Sequence[Mapping[str, str]]],
     loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
     host_attrs: Mapping[str, str],

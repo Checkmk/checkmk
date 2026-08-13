@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 import pytest
 
 from cmk.agent_based.v2 import (
@@ -93,7 +91,7 @@ SECTION = {
         ),
     ],
 )
-def test_sap_hana_license_parse(
+def test_sap_hana_license_parse(  # type: ignore[misc]
     string_table_row: StringTable, expected_parsed_data: ParsedSection
 ) -> None:
     assert sap_hana_license.parse_sap_hana_license(string_table_row) == expected_parsed_data
@@ -176,6 +174,6 @@ def test_sap_hana_license_check(cur_item: str, result: CheckResult) -> None:
         ("Y04 10", {"Y04 10": {}}),
     ],
 )
-def test_sap_hana_license_check_stale(item: str, section: ParsedSection) -> None:
+def test_sap_hana_license_check_stale(item: str, section: ParsedSection) -> None:  # type: ignore[misc]
     with pytest.raises(IgnoreResultsError):
         list(sap_hana_license.check_sap_hana_license(item, {}, section))

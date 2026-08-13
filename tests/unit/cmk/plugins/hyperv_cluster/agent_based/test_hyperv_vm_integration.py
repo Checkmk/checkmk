@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-def"
 
 import pytest
@@ -67,7 +66,7 @@ def test_check_hyperv_vm_integration_data() -> None:
         ),
     ],
 )
-def test_discovery_hyperv_vm_integration(section, expected):
+def test_discovery_hyperv_vm_integration(section, expected):  # type: ignore[misc]
     discovered = list(discovery_hyperv_vm_integration(section))
     assert discovered == expected
 

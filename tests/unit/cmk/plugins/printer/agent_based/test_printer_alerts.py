@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from collections.abc import Sequence
 from unittest import mock
 
@@ -72,7 +70,7 @@ def test_discover_always() -> None:
         "Critical Error": State.CRIT,
     },
 )
-def test_check_printer_alerts(info: Sequence[StringTable], expected_result: CheckResult) -> None:
+def test_check_printer_alerts(info: Sequence[StringTable], expected_result: CheckResult) -> None:  # type: ignore[misc]
     data = parse_printer_alerts(info)
     result = check_printer_alerts(data)
     assert list(result) == expected_result

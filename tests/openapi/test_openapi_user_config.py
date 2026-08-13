@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from pathlib import Path
 from unittest.mock import patch
 
@@ -17,7 +15,7 @@ from cmk.gui.openapi.api_endpoints.user_config._utils import _auth_options_to_in
 
 @patch("time.time", return_value=1234567890)
 @patch("cmk.gui.userdb.htpasswd.hash_password", return_value="hashed_password")
-def test_automation_secret(mock_hash: None, mock_time: None) -> None:
+def test_automation_secret(mock_hash: None, mock_time: None) -> None:  # type: ignore[misc]
     result = _auth_options_to_internal_format(
         {"auth_type": "automation", "secret": "TNBJCkwane3$cfn0XLf6p6a"},
         PasswordPolicy(12, None, False, Path("")),

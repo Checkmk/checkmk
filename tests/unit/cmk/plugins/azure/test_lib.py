@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="misc"
 
 from collections.abc import Sequence
 
@@ -236,7 +235,7 @@ def test__get_metrics() -> None:
         ),
     ],
 )
-def test__parse_resource(resource_data: Sequence[str], expected_result: Resource | None) -> None:
+def test__parse_resource(resource_data: Sequence[str], expected_result: Resource | None) -> None:  # type: ignore[misc]
     assert _parse_resource(resource_data) == expected_result
 
 
@@ -259,7 +258,7 @@ def test_parse_resources() -> None:
         ),
     ],
 )
-def test_iter_resource_attributes(
+def test_iter_resource_attributes(  # type: ignore[misc]
     resource: Resource, include_keys: tuple[str], expected_result: list[tuple[str, str | None]]
 ) -> None:
     assert list(iter_resource_attributes(resource, include_keys=include_keys)) == expected_result
@@ -274,7 +273,7 @@ def test_iter_resource_attributes(
         ),
     ],
 )
-def test_iter_resource_attributes_default_keys(
+def test_iter_resource_attributes_default_keys(  # type: ignore[misc]
     resource: Resource, expected_result: list[tuple[str, str | None]]
 ) -> None:
     assert list(iter_resource_attributes(resource)) == expected_result

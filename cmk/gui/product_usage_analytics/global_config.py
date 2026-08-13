@@ -105,7 +105,7 @@ def make_product_usage_analytics_config_variable(
                         help=_(
                             "Consent to product usage analytics data collection. "
                             "By default, this is disabled, the user will be asked for consent via pop-up. "
-                            "Run  <tt>cmk-product-usage --dry-run</tt> in the command line to see a preview of the data."
+                            "Run <tt>cmk-product-usage --dry-run</tt> in the command line to see a preview of the data."
                         ),
                         choices=[
                             (

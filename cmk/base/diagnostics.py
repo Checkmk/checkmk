@@ -737,7 +737,7 @@ class ParametersDiagnosticsElement(ABCDiagnosticsElementTextDump):
 
     @property
     def description(self) -> str:
-        return _("The parameters that were provided to create the Diagnostics dump.")
+        return _("The parameters that were provided to create the diagnostics dump.")
 
     def _collect_infos(self) -> str:
         return str(self.parameters)
@@ -755,7 +755,7 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     @override
     @property
     def title(self) -> str:
-        return _("File Size")
+        return _("File size")
 
     @override
     @property
@@ -1026,7 +1026,7 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def title(self) -> str:
-        return _("HW Information")
+        return _("HW information")
 
     @override
     @property
@@ -1090,7 +1090,7 @@ class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def title(self) -> str:
-        return _("Environment Variables")
+        return _("Environment variables")
 
     @override
     @property
@@ -1257,7 +1257,7 @@ class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def title(self) -> str:
-        return _("Checkmk appliance information")
+        return _("Checkmk Appliance information")
 
     @override
     @property
@@ -1430,7 +1430,7 @@ class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
     @property
     def title(self) -> str:
-        return _("Checkmk Configuration Files")
+        return _("Checkmk configuration files")
 
     @override
     @property
@@ -1455,7 +1455,7 @@ class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
     @property
     def title(self) -> str:
-        return _("Checkmk Log Files")
+        return _("Checkmk log files")
 
     @override
     @property
@@ -1586,7 +1586,7 @@ class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
     @property
     def title(self) -> str:
-        return _("Checkmk Core Files")
+        return _("Checkmk core files")
 
     @override
     @property
@@ -1611,7 +1611,7 @@ class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement)
     @override
     @property
     def title(self) -> str:
-        return _("Checkmk Licensing Files")
+        return _("Checkmk licensing files")
 
     @override
     @property
@@ -1705,7 +1705,7 @@ class BIDataDiagnosticsElement(ABCDiagnosticsElement):
     def description(self) -> str:
         return _(
             "Cached data from Business Intelligence. "
-            "Contains states, downtimes, acknowledgements and service periods "
+            "Contains states, downtimes, acknowledgments and service periods "
             "for all hosts/services included in a BI aggregation."
         )
 

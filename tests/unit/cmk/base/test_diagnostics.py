@@ -188,7 +188,7 @@ def test_diagnostics_element_perfdata() -> None:
 def test_diagnostics_element_hw_info() -> None:
     diagnostics_element = diagnostics.HWDiagnosticsElement()
     assert diagnostics_element.ident == "hwinfo"
-    assert diagnostics_element.title == "HW Information"
+    assert diagnostics_element.title == "HW information"
     assert diagnostics_element.description == ("Hardware information of the Checkmk server")
 
 
@@ -278,7 +278,7 @@ def test_diagnostics_element_vendor_info_content(
 def test_diagnostics_element_environment() -> None:
     diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
     assert diagnostics_element.ident == "environment"
-    assert diagnostics_element.title == "Environment Variables"
+    assert diagnostics_element.title == "Environment variables"
     assert diagnostics_element.description == ("Variables set in the site user's environment")
 
 
@@ -310,7 +310,7 @@ def test_diagnostics_element_environment_content(
 def test_diagnostics_element_filesize() -> None:
     diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
     assert diagnostics_element.ident == "file_size"
-    assert diagnostics_element.title == "File Size"
+    assert diagnostics_element.title == "File size"
     assert diagnostics_element.description == ("List of all files in the site including their size")
 
 
@@ -709,13 +709,13 @@ def test_diagnostics_element_checkmk_overview_content(tmp_path: Path) -> None:
         (
             diagnostics.CheckmkConfigFilesDiagnosticsElement,
             "checkmk_config_files",
-            "Checkmk Configuration Files",
+            "Checkmk configuration files",
             "Configuration files ('*.mk' or '*.conf') from etc/checkmk:",
         ),
         (
             diagnostics.CheckmkLogFilesDiagnosticsElement,
             "checkmk_log_files",
-            "Checkmk Log Files",
+            "Checkmk log files",
             "Log files ('*.log' or '*.state') from var/log:",
         ),
     ],
@@ -987,7 +987,7 @@ def test_diagnostics_element_se_linux_content(monkeypatch, tmp_path):
 def test_diagnostics_element_cma():
     diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
     assert diagnostics_element.ident == "appliance"
-    assert diagnostics_element.title == "Checkmk appliance information"
+    assert diagnostics_element.title == "Checkmk Appliance information"
     assert diagnostics_element.description == (
         "Information about the appliance hardware and firmware version."
     )

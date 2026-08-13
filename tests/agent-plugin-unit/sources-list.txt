@@ -22,6 +22,7 @@ cmk/plugins/sap/agents/mk_sap.py
 tests/agent-plugin-unit/datasets/mk_logwatch/test_append.log
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch.txt
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch_crlf.txt
+tests/agent-plugin-unit/test_mk_docker.py
 tests/agent-plugin-unit/test_mk_logwatch.py
 tests/agent-plugin-unit/test_mk_podman.py
 tests/agent-plugin-unit/test_mk_tinkerforge.py

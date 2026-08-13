@@ -58,6 +58,16 @@ else:
         return func
 
 
+# Only needed by the type comments below, which are never evaluated at runtime.
+# ruff doesn't look into type comments, so Callable seems to be unused to it.
+if sys.version_info >= (3, 10):  # noqa: UP036
+    from collections.abc import Callable  # noqa: F401
+    from typing import ParamSpec, TypeVar
+
+    _P = ParamSpec("_P")
+    _T = TypeVar("_T")
+
+
 DEBUG = "--debug" in sys.argv[1:]
 
 VERSION = "0.1"
@@ -119,12 +129,7 @@ def get_config(cfg_file):
     files_read = config.read(cfg_file)
     LOGGER.info("read configration file(s): %(files_read)r", {"files_read": files_read})
     section_name = "DOCKER" if config.sections() else "DEFAULT"
-    conf_dict = dict(config.items(section_name))  # type: dict[str, str | tuple]
-    skip_sections = conf_dict.get("skip_sections", "")
-    if isinstance(skip_sections, str):
-        skip_list = skip_sections.split(",")
-        conf_dict["skip_sections"] = tuple(n.strip() for n in skip_list)
-    return conf_dict
+    return dict(config.items(section_name))
 
 
 class Section(list):
@@ -135,7 +140,7 @@ class Section(list):
     version_info = {
         "PluginVersion": VERSION,
         "DockerPyVersion": docker.__version__,
-    }
+    }  # type: dict[str, str | None]
 
     # Should we need to parallelize one day, change this to be
     # more like the Section class in agent_azure, for instance
@@ -258,7 +263,7 @@ class MKDockerClient(docker.DockerClient):
         elif config["container_id"] == "combined":
             nodename = os.uname()[1]
             self.all_containers = {
-                f"{nodename}_{c.attrs['Name'].lstrip('/')}": c for c in all_containers
+                "%s_%s" % (nodename, c.attrs["Name"].lstrip("/")): c for c in all_containers
             }
         else:
             self.all_containers = {c.attrs["Id"][:12]: c for c in all_containers}
@@ -349,10 +354,12 @@ class MKDockerClient(docker.DockerClient):
 
 
 def time_it(func):
+    # type: (Callable[_P, _T]) -> Callable[_P, _T]
     """Decorator to time the function"""
 
     @functools.wraps(func)
-    def wrapped(*args, **kwargs):  # type: ignore[misc]
+    def wrapped(*args, **kwargs):
+        # type: (*_P.args, **_P.kwargs) -> _T
         before = time.time()
         try:
             return func(*args, **kwargs)
@@ -366,7 +373,8 @@ def time_it(func):
 
 
 @time_it
-def set_version_info(client):  # type: ignore[misc]
+def set_version_info(client):
+    # type: (MKDockerClient) -> None
     data = client.version()
     LOGGER.debug(data)
     Section.version_info["ApiVersion"] = data.get("ApiVersion")
@@ -387,14 +395,15 @@ def set_version_info(client):  # type: ignore[misc]
 
 def is_disabled_section(config, section_name):
     """Skip the section, if configured to do so"""
-    if section_name in config["skip_sections"]:
+    if section_name in tuple(n.strip() for n in config["skip_sections"].split(",")):
         LOGGER.info("skipped section: %(section_name)s", {"section_name": section_name})
         return True
     return False
 
 
 @time_it
-def section_node_info(client, config):  # type: ignore[misc]
+def section_node_info(client, config):
+    # type: (MKDockerClient, dict[str, str]) -> None
     LOGGER.debug(client.node_info)
     section = Section("docker_node_info")
     section.append(json.dumps(client.node_info))
@@ -402,7 +411,8 @@ def section_node_info(client, config):  # type: ignore[misc]
 
 
 @time_it
-def section_node_disk_usage(client, config):  # type: ignore[misc]
+def section_node_disk_usage(client, config):
+    # type: (MKDockerClient, dict[str, str]) -> None
     """docker system df"""
     persist_until = int(time.time()) + int(config["persist_period_node_disk_usage"])
     section = Section("docker_node_disk_usage", persist_until=persist_until)
@@ -479,7 +489,8 @@ def _robust_inspect(client, docker_object):
 
 
 @time_it
-def section_node_images(client, config):  # type: ignore[misc]
+def section_node_images(client, config):
+    # type: (MKDockerClient, dict[str, str]) -> None
     """in subsections list [[[images]]] and [[[containers]]]"""
     section = Section("docker_node_images")
 
@@ -501,7 +512,8 @@ def section_node_images(client, config):  # type: ignore[misc]
 
 
 @time_it
-def section_node_network(client, config):  # type: ignore[misc]
+def section_node_network(client, config):
+    # type: (MKDockerClient, dict[str, str]) -> None
     networks = client.networks.list(filters={"driver": "bridge"})
     section = Section("docker_node_network")
     section += [json.dumps(n.attrs) for n in networks]

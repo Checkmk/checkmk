@@ -115,11 +115,12 @@ const { data, error } = useNetworkFlowWidgetData(
 </template>
 
 <style scoped>
+/* No padding: the card insets its own content and is full-bleed otherwise, so
+   its spark line reaches the widget's edges. */
 .db-content-network-flow-kpi-stat-card__wrapper {
   display: flex;
   flex: 1;
   min-height: 0;
-  padding: calc(var(--spacing) * 2);
 }
 
 .db-content-network-flow-kpi-stat-card__error {

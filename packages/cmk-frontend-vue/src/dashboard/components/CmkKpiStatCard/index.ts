@@ -6,4 +6,10 @@
 import CmkKpiStatCard from './CmkKpiStatCard.vue'
 
 export default CmkKpiStatCard
-export type { CmkKpiStatCardProps, DeltaSemantics } from './types'
+export type {
+  CmkKpiStatCardProps,
+  DeltaSemantics,
+  KpiRangeLimits,
+  KpiState,
+  KpiStateSeverity
+} from './types'

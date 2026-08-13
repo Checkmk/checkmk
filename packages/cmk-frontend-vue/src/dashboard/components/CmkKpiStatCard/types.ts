@@ -10,6 +10,21 @@
  */
 export type DeltaSemantics = 'neutral' | 'good' | 'bad'
 
+/** Monitoring state of whatever the value was measured on. */
+export type KpiStateSeverity = 'ok' | 'warn' | 'crit' | 'unknown' | 'pending'
+
+export interface KpiState {
+  severity: KpiStateSeverity
+  /** Additionally tints the whole card in the state's color. */
+  tintBackground?: boolean
+}
+
+/** Ends of the displayed value range, pre-formatted with the metric's unit. */
+export interface KpiRangeLimits {
+  minimum: string
+  maximum: string
+}
+
 export interface CmkKpiStatCardProps {
   /** Pre-formatted headline value, e.g. "801.84" or "4.3". */
   value: string
@@ -26,4 +41,13 @@ export interface CmkKpiStatCardProps {
   series: number[]
   /** CSS color of the value and the sparkline. */
   color: string
+  /** Monitoring state shown beside the value; omit to show none. */
+  state?: KpiState | undefined
+  /**
+   * Labels for the ends of the displayed value range, drawn over the sparkline.
+   * Omit to leave the range implicit.
+   */
+  rangeLimits?: KpiRangeLimits | undefined
+  /** Turns the value into a link; omit to render it as plain text. */
+  href?: string | undefined
 }

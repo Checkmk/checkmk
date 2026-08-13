@@ -31,7 +31,7 @@ perfometer_util1 = perfometers.Perfometer(
 
 graph_util_average_2 = graphs.Graph(
     name="util_average_2",
-    title=Title("CPU utilization (Last minutes)"),
+    title=Title("CPU utilization (last minutes)"),
     minimal_range=graphs.MinimalRange(
         0,
         100,

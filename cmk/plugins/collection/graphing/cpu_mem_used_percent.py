@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_cpu_mem_used_percent = metrics.Metric(
     name="cpu_mem_used_percent",
-    title=Title("CPU Memory used"),
+    title=Title("CPU memory used"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.BLUE,
 )

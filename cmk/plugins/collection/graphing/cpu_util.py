@@ -201,7 +201,7 @@ perfometer_user_system_streams = perfometers.Perfometer(
 
 graph_util_average_1 = graphs.Graph(
     name="util_average_1",
-    title=Title("CPU utilization (Average)"),
+    title=Title("CPU utilization (average)"),
     minimal_range=graphs.MinimalRange(
         0,
         100,
@@ -246,7 +246,7 @@ graph_cpu_utilization_numcpus = graphs.Graph(
 )
 graph_cpu_utilization_simple = graphs.Graph(
     name="cpu_utilization_simple",
-    title=Title("CPU utilization (User, system)"),
+    title=Title("CPU utilization (user, system)"),
     minimal_range=graphs.MinimalRange(
         0,
         100,
@@ -297,7 +297,7 @@ graph_cpu_utilization_4 = graphs.Graph(
 )
 graph_cpu_utilization_5 = graphs.Graph(
     name="cpu_utilization_5",
-    title=Title("CPU utilization (User, system, IO wait)"),
+    title=Title("CPU utilization (user, system, I/O wait)"),
     minimal_range=graphs.MinimalRange(
         0,
         100,
@@ -407,7 +407,7 @@ graph_cpu_utilization_6_steal_util = graphs.Graph(
 )
 graph_cpu_utilization_6_guest = graphs.Graph(
     name="cpu_utilization_6_guest",
-    title=Title("CPU utilization (User, system, IO wait, guest)"),
+    title=Title("CPU utilization (user, system, I/O wait, guest)"),
     minimal_range=graphs.MinimalRange(
         0,
         100,
@@ -511,7 +511,7 @@ graph_cpu_utilization_7_util = graphs.Graph(
 )
 graph_cpu_utilization_8 = graphs.Graph(
     name="cpu_utilization_8",
-    title=Title("CPU utilization (User, system, interrupt)"),
+    title=Title("CPU utilization (user, system, interrupt)"),
     minimal_range=graphs.MinimalRange(
         0,
         100,
@@ -542,7 +542,7 @@ graph_util_fallback = graphs.Graph(
 )
 graph_cpu_utilization = graphs.Graph(
     name="cpu_utilization",
-    title=Title("CPU utilization (Caching engine)"),
+    title=Title("CPU utilization (caching engine)"),
     simple_lines=[
         "util",
         "engine_cpu_util",

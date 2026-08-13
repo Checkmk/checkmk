@@ -321,9 +321,6 @@ def _build_site_configs(this_site: str, omd_path: Path = Path("/omd")) -> _SiteC
             except PermissionError:
                 sites_with_unreadable_configs.append(sitename)
                 continue
-            if not config:
-                sites_with_unreadable_configs.append(sitename)
-                continue
             site_configs[sitename] = config
     return _SiteConfigs(site_configs, sites_with_unreadable_configs)
 

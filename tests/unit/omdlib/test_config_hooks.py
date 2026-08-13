@@ -30,13 +30,13 @@ def test_next_free_port_many_sites(tmp_path: Path, capsys: pytest.CaptureFixture
     _make_site(sites, "site1", "CONFIG_APACHE_TCP_PORT='5000'\n")  # blocks 5000
     _make_site(sites, "site2", "CONFIG_APACHE_TCP_PORT='5001'\n")  # blocks 5001
     _make_site(sites, "site3", "# CONFIG_APACHE_TCP_PORT='5002'\n")  # comment, which does not block
-    (sites / "ghost").mkdir(parents=True)  # no site.conf — warns but does not block
+    (sites / "ghost").mkdir(parents=True)  # no site.conf — silently ignored, does not block
     (sites / "stray_file").write_text("ignored")  # non-directory entry — skipped silently
 
     site_configs = _build_site_configs("site3", tmp_path)
     _report_error("APACHE_TCP_PORT", site_configs.sites_with_unreadable_configs)
     assert _next_free_port("APACHE_TCP_PORT", "site3", 5000, site_configs.configs) == 5002
-    assert "ghost" in capsys.readouterr().err
+    assert capsys.readouterr().err == ""
 
 
 def test_next_free_port_different_key(tmp_path: Path) -> None:
@@ -78,11 +78,12 @@ def test_default_port_cross_key_conflict(tmp_path: Path, port_hook: PortHook) ->
 
 
 @pytest.mark.parametrize("port_hook", _PORT_HOOKS, ids=[h.name for h in _PORT_HOOKS])
-def test_default_port_warns_on_unreadable_site(
+def test_default_port_ignores_missing_site_config(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], port_hook: PortHook
 ) -> None:
+    # A site without site.conf (e.g. created with --no-init) allocates no ports.
     (tmp_path / "sites" / "ghost").mkdir(parents=True)  # no site.conf
     site_configs = _build_site_configs("mysite", tmp_path)
     _default_port("mysite", port_hook, site_configs)
 
-    assert "ghost" in capsys.readouterr().err
+    assert capsys.readouterr().err == ""

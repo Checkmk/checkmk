@@ -205,7 +205,7 @@ def load_config(site_name: str, hook_dir: str | None, omd_path: Path = Path("/om
     puts the variables into the process environment."""
     site_home = SitePaths.from_site_name(site_name, omd_path).home
     config = read_site_config(site_home)
-    site_configs = _build_site_configs(site_name, omd_path)
+    site_configs = _build_site_configs(omd_path)
     if hook_dir and os.path.exists(hook_dir):
         for hook_name in _sort_hooks(os.listdir(hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
@@ -290,7 +290,7 @@ def _config_set(
 
     hook = _get_hook(hook_name)
     if isinstance(hook, PortHook):
-        site_configs = _build_site_configs(site_name, omd_path)
+        site_configs = _build_site_configs(omd_path)
         _report_error(hook_name, site_configs.sites_with_unreadable_configs)
         value = config[hook_name]
         new_value = str(_next_free_port(hook_name, site_name, int(value), site_configs.configs))
@@ -308,20 +308,15 @@ def _config_set(
     os.environ["CONFIG_" + hook_name] = config[hook_name]
 
 
-def _build_site_configs(this_site: str, omd_path: Path = Path("/omd")) -> _SiteConfigs:
+def _build_site_configs(omd_path: Path = Path("/omd")) -> _SiteConfigs:
     site_configs: dict[str, Config] = {}
     sites_with_unreadable_configs = []
     for sitename in all_sites(omd_path):
         site_home = SitePaths.from_site_name(sitename, omd_path).home
-        if sitename == this_site:
+        try:
             site_configs[sitename] = read_site_config(site_home)
-        else:
-            try:
-                config = read_site_config(site_home)
-            except PermissionError:
-                sites_with_unreadable_configs.append(sitename)
-                continue
-            site_configs[sitename] = config
+        except PermissionError:
+            sites_with_unreadable_configs.append(sitename)
     return _SiteConfigs(site_configs, sites_with_unreadable_configs)
 
 

@@ -33,7 +33,7 @@ def test_next_free_port_many_sites(tmp_path: Path, capsys: pytest.CaptureFixture
     (sites / "ghost").mkdir(parents=True)  # no site.conf — silently ignored, does not block
     (sites / "stray_file").write_text("ignored")  # non-directory entry — skipped silently
 
-    site_configs = _build_site_configs("site3", tmp_path)
+    site_configs = _build_site_configs(tmp_path)
     _report_error("APACHE_TCP_PORT", site_configs.sites_with_unreadable_configs)
     assert _next_free_port("APACHE_TCP_PORT", "site3", 5000, site_configs.configs) == 5002
     assert capsys.readouterr().err == ""
@@ -45,7 +45,7 @@ def test_next_free_port_different_key(tmp_path: Path) -> None:
     _make_site(sites, "site1", "CONFIG_LIVESTATUS_TCP_PORT='5000'\n")
     _make_site(sites, "site2", "CONFIG_LIVESTATUS_TCP_PORT='5001'\n")
 
-    site_configs = _build_site_configs("site1", tmp_path)
+    site_configs = _build_site_configs(tmp_path)
     assert _next_free_port("APACHE_TCP_PORT", "site1", 5000, site_configs.configs) == 5002
 
 
@@ -54,7 +54,7 @@ def test_next_free_port_no_conflict(tmp_path: Path) -> None:
     sites = tmp_path / "sites"
     _make_site(sites, "mysite", "CONFIG_APACHE_TCP_PORT='5000'\n")
 
-    site_configs = _build_site_configs("mysite", tmp_path)
+    site_configs = _build_site_configs(tmp_path)
     assert _next_free_port("APACHE_TCP_PORT", "mysite", 5000, site_configs.configs) == 5000
 
 
@@ -63,7 +63,7 @@ def test_next_free_port_missing_config_current_site(tmp_path: Path) -> None:
     sites = tmp_path / "sites"
     (sites / "newsite").mkdir(parents=True)
 
-    site_configs = _build_site_configs("newsite", tmp_path)
+    site_configs = _build_site_configs(tmp_path)
     assert _next_free_port("APACHE_TCP_PORT", "newsite", 5000, site_configs.configs) == 5000
 
 
@@ -73,7 +73,7 @@ def test_default_port_cross_key_conflict(tmp_path: Path, port_hook: PortHook) ->
     _make_site(sites, "other", f"CONFIG_OTHER_KEY='{port_hook.default_port}'\n")
     _make_site(sites, "mysite", "")
 
-    site_configs = _build_site_configs("mysite", tmp_path)
+    site_configs = _build_site_configs(tmp_path)
     assert _default_port("mysite", port_hook, site_configs) == str(port_hook.default_port + 1)
 
 
@@ -83,7 +83,7 @@ def test_default_port_ignores_missing_site_config(
 ) -> None:
     # A site without site.conf (e.g. created with --no-init) allocates no ports.
     (tmp_path / "sites" / "ghost").mkdir(parents=True)  # no site.conf
-    site_configs = _build_site_configs("mysite", tmp_path)
+    site_configs = _build_site_configs(tmp_path)
     _default_port("mysite", port_hook, site_configs)
 
     assert capsys.readouterr().err == ""

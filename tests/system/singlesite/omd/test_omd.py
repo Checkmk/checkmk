@@ -5,6 +5,8 @@
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import run
@@ -175,6 +177,37 @@ def test_run_omd_backup_and_omd_restore(site: Site) -> None:
             run(["rm", "-rf", str(backup_path)], sudo=True)
         if restored_site is not None and restored_site.exists():
             restored_site.rm()
+
+
+@pytest.mark.skip_if_edition("saas")  # the Event Console is disabled in the SaaS edition
+def test_omd_backup_excludes_ec_history_sidecars(site: Site) -> None:
+    """Test that 'omd backup' does not archive the Event Console history sidecars."""
+    history_dir = "var/mkeventd/history"
+
+    def _wal_on_disk() -> bool:
+        site.live.query("GET eventconsolehistory\nLimit: 1\n")
+        return site.file_exists(f"{history_dir}/history.sqlite-wal")
+
+    # The Event Console opens its history before daemonizing, so the sidecars of that
+    # first connection are unlinked when the pre-fork process exits. Only a reload
+    # reopens the database from the daemon itself, and sqlite needs an access to
+    # materialize the files. Without a sidecar the assertions below prove nothing.
+    site.omd("reload", "mkeventd", check=True)
+    wait_until(_wal_on_disk, timeout=30, interval=1)
+
+    # Inside the site, because the site user writes the archive. 'tmp/*' is excluded
+    # from the backup, so the archive cannot end up inside itself.
+    backup_path = "tmp/backup_ec_history.tar.gz"
+    archive = site.path(backup_path).as_posix()
+    try:
+        site.omd("backup", archive, check=True)
+        members = site.run(["tar", "-tf", archive]).stdout.splitlines()
+    finally:
+        site.delete_file(backup_path)
+
+    assert f"{site.id}/{history_dir}/history.sqlite" in members
+    assert f"{site.id}/{history_dir}/history.sqlite-wal" not in members
+    assert f"{site.id}/{history_dir}/history.sqlite-shm" not in members
 
 
 def test_run_omd_backup_and_omd_restore_empty() -> None:

@@ -188,6 +188,14 @@ def get_exclude_patterns(options: BackupExclusions) -> list[str]:
     excludes.append("*.mk.new*")
     excludes.append("var/log/.liveproxyd.state.new*")
 
+    # The Event Console history database is archived via the sqlite backup API
+    # (see _tar_add), which yields a complete database on its own. Its sidecar
+    # files are copied unsynchronised and would be replayed onto a snapshot taken
+    # at a different instant, silently losing or duplicating rows. The glob also
+    # covers the rollback journal.
+    excludes.append("var/mkeventd/history/history.sqlite-*")
+    excludes.append("var/mkeventd/history/history.sqlite.*")
+
     # exclude the "cache" / working directory for the Agent Bakery
     excludes.append("var/check_mk/agents/.files_cache/*")
 

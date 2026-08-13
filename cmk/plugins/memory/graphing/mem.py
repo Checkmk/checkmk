@@ -64,7 +64,7 @@ metric_swap_cached = Metric(
 )
 metric_mem_lnx_slab = Metric(
     name="mem_lnx_slab",
-    title=Title("Slab (Various smaller caches)"),
+    title=Title("Slab (various smaller caches)"),
     unit=UNIT_BYTES,
     color=Color.LIGHT_PURPLE,
 )
@@ -146,7 +146,7 @@ graph_mem_absolute = Graph(
 )
 graph_mem_absolute_2 = Graph(
     name="mem_absolute_2",
-    title=Title("RAM (Cached, buffers)"),
+    title=Title("RAM (cached, buffers)"),
     simple_lines=(
         # see mem_linux.py
         Sum(
@@ -177,7 +177,7 @@ graph_mem_absolute_2 = Graph(
 )
 graph_mem_absolute_3 = Graph(
     name="mem_absolute_3",
-    title=Title("RAM (Total, cached, buffers)"),
+    title=Title("RAM (total, cached, buffers)"),
     simple_lines=(
         # see mem_linux.py
         "mem_total",

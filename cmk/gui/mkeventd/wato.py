@@ -215,6 +215,7 @@ from cmk.rulesets.internal.form_specs import (
 from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     DefaultValue,
     DictElement,
     InvalidElementMode,
@@ -4965,10 +4966,10 @@ ConfigVariableEventConsolePrettyPrintRules = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="mkeventd_pprint_rules",
-    valuespec=lambda context: Checkbox(
-        title=_("Pretty-Print rules in config file of Event Console"),
-        label=_("enable pretty-printing of rules"),
-        help=_(
+    form_spec=lambda context: BooleanChoice(
+        title=Title("Pretty-Print rules in config file of Event Console"),
+        label=Label("enable pretty-printing of rules"),
+        help_text=Help(
             "When the Setup module of the Event Console saves rules to the file "
             "<tt>mkeventd.d/wato/rules.mk</tt>, it usually prints the Python "
             "representation of the rules-list into one single line by using the "

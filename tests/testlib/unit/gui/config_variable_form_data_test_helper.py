@@ -607,8 +607,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[enable]": {"comment": NoSaveableDefault(), "duration": 60},
     },
     "agent_bakery_logging": {
-        "[choice 0]": None,
-        "[choice 1]": 30,
+        "[enable]": 30,
     },
     "agent_deployment_central": {
         "automation_user": None,
@@ -998,7 +997,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[add].tree_spec[add]": NoSaveableDefault(),
     },
     "wato_icon_categories": {
-        "[add]": ("", ""),
+        "[add]": (NoSaveableDefault(), NoSaveableDefault()),
     },
 }
 

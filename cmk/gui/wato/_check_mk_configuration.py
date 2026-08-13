@@ -8,11 +8,9 @@
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
-import logging
 from collections.abc import Generator, Iterable, Mapping, Sequence
 from typing import Any, Literal, override
 
-import cmk.utils.log
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition
@@ -22,7 +20,13 @@ from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.form_specs._utils import create_validation_error_for_mk_user_error
 from cmk.gui.form_specs.generators.age import Age as FSAge
 from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
-from cmk.gui.form_specs.unstable import id_validators, LegacyValueSpec, OptionalChoice
+from cmk.gui.form_specs.generators.log_level import LogLevelChoice
+from cmk.gui.form_specs.unstable import (
+    id_validators,
+    LegacyValueSpec,
+    not_empty,
+    OptionalChoice,
+)
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
@@ -50,7 +54,6 @@ from cmk.gui.valuespec import (
     Float,
     HostAddress,
     IconSelector,
-    ID,
     Integer,
     IPNetwork,
     Labels,
@@ -482,23 +485,6 @@ def ConfigVariableLogLevels(edition: Edition) -> ConfigVariable:
     )
 
 
-def _log_level_choice(title: Title, help_text: Help) -> SingleChoiceExtended[int]:
-    """Port of the LogLevelChoice() valuespec."""
-    return SingleChoiceExtended[int](
-        title=title,
-        help_text=help_text,
-        elements=[
-            SingleChoiceElementExtended(name=logging.CRITICAL, title=Title("Critical")),
-            SingleChoiceElementExtended(name=logging.ERROR, title=Title("Error")),
-            SingleChoiceElementExtended(name=logging.WARNING, title=Title("Warning")),
-            SingleChoiceElementExtended(name=logging.INFO, title=Title("Informational")),
-            SingleChoiceElementExtended(name=cmk.utils.log.VERBOSE, title=Title("Verbose")),
-            SingleChoiceElementExtended(name=logging.DEBUG, title=Title("Debug")),
-        ],
-        prefill=fs.DefaultValue(logging.WARNING),
-    )
-
-
 def _web_log_level_elements(
     edition: Edition, *, include_other_editions: bool = False
 ) -> dict[str, fs.DictElement[int]]:
@@ -592,7 +578,7 @@ def _web_log_level_elements(
     return {
         level_id: fs.DictElement(
             required=True,
-            parameter_form=_log_level_choice(title, help_text),
+            parameter_form=LogLevelChoice(title=title, help_text=help_text),
         )
         for level_id, title, help_text in loggers
     }
@@ -2204,14 +2190,14 @@ ConfigVariableWATOMaxSnapshots = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_max_snapshots",
-    valuespec=lambda context: Integer(
-        title=_("Number of configuration snapshots to keep"),
-        help=_(
+    form_spec=lambda context: fs.Integer(
+        title=Title("Number of configuration snapshots to keep"),
+        help_text=Help(
             "Whenever you successfully activate changes a snapshot of the configuration "
             "will be created. You can also create snapshots manually. Setup will delete old "
             "snapshots when the maximum number of snapshots is reached."
         ),
-        minvalue=1,
+        custom_validate=[fs.validators.NumberInRange(min_value=1)],
     ),
 )
 
@@ -2219,17 +2205,20 @@ ConfigVariableWATOActivateChangesCommentMode = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_activate_changes_comment_mode",
-    valuespec=lambda context: DropdownChoice(
-        title=_("Comment for activation of changes"),
-        help=_(
+    form_spec=lambda context: SingleChoiceExtended[str](
+        title=Title("Comment for activation of changes"),
+        help_text=Help(
             "Whether or not Checkmk should ask the user for a comment before activating a "
             "configuration change."
         ),
-        choices=[
-            ("enforce", _("Require a comment")),
-            ("optional", _("Ask for an optional comment")),
-            ("disabled", _("Do not ask for a comment")),
+        elements=[
+            SingleChoiceElementExtended(name="enforce", title=Title("Require a comment")),
+            SingleChoiceElementExtended(
+                name="optional", title=Title("Ask for an optional comment")
+            ),
+            SingleChoiceElementExtended(name="disabled", title=Title("Do not ask for a comment")),
         ],
+        prefill=fs.DefaultValue("enforce"),
     ),
 )
 
@@ -2237,13 +2226,14 @@ ConfigVariableWATOActivationMethod = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_activation_method",
-    valuespec=lambda context: DropdownChoice(
-        title=_("Restart mode for Nagios"),
-        help=_("Restart or reload Nagios when changes are activated"),
-        choices=[
-            ("restart", _("Restart")),
-            ("reload", _("Reload")),
+    form_spec=lambda context: SingleChoiceExtended[str](
+        title=Title("Restart mode for Nagios"),
+        help_text=Help("Restart or reload Nagios when changes are activated"),
+        elements=[
+            SingleChoiceElementExtended(name="restart", title=Title("Restart")),
+            SingleChoiceElementExtended(name="reload", title=Title("Reload")),
         ],
+        prefill=fs.DefaultValue("restart"),
     ),
 )
 
@@ -2251,10 +2241,10 @@ ConfigVariableWATOHideFilenames = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_hide_filenames",
-    valuespec=lambda context: Checkbox(
-        title=_("Hide internal folder names in Setup"),
-        label=_("hide folder names"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Hide internal folder names in Setup"),
+        label=Label("hide folder names"),
+        help_text=Help(
             "When enabled, then the internal names of Setup folders in the file system "
             "are not shown. They will automatically be derived from the names of the folders "
             "when a new folder is being created. Disable this option if you want to see and "
@@ -2267,10 +2257,10 @@ ConfigVariableWATOHideHosttags = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_hide_hosttags",
-    valuespec=lambda context: Checkbox(
-        title=_("Hide host tags in Setup folder view"),
-        label=_("hide host tags"),
-        help=_("When enabled, host tags are no longer shown within the Setup folder view"),
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Hide host tags in Setup folder view"),
+        label=Label("hide host tags"),
+        help_text=Help("When enabled, host tags are no longer shown within the Setup folder view"),
     ),
 )
 
@@ -2278,10 +2268,10 @@ ConfigVariableWATOHideVarnames = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_hide_varnames",
-    valuespec=lambda context: Checkbox(
-        title=_("Hide names of configuration variables"),
-        label=_("hide variable names"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Hide names of configuration variables"),
+        label=Label("hide variable names"),
+        help_text=Help(
             "When enabled, internal configuration variable names of Checkmk are hidden "
             "from the user (for example in the rule editor)"
         ),
@@ -2292,10 +2282,10 @@ ConfigVariableWATOUseGit = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_use_git",
-    valuespec=lambda context: Checkbox(
-        title=_("Use GIT version control for Setup"),
-        label=_("enable GIT version control"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Use GIT version control for Setup"),
+        label=Label("enable GIT version control"),
+        help_text=Help(
             "When enabled, all changes of configuration files are tracked with the "
             "version control system GIT. You need to make sure that git is installed "
             "on your monitoring server. The version history currently cannot be viewed "
@@ -2310,10 +2300,10 @@ ConfigVariableWATOPrettyPrintConfig = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_pprint_config",
-    valuespec=lambda context: Checkbox(
-        title=_("Pretty-Print configuration files"),
-        label=_("pretty-print configuration files"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Pretty-Print configuration files"),
+        label=Label("pretty-print configuration files"),
+        help_text=Help(
             "When enabled, most of the configuration files are pretty printed and easier to read. "
             "On the downside, however, pretty printing bigger configurations can be quite slow - "
             "so the overall Setup GUI performance will decrease."
@@ -2325,10 +2315,10 @@ ConfigVariableWATOHideFoldersWithoutReadPermissions = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_hide_folders_without_read_permissions",
-    valuespec=lambda context: Checkbox(
-        title=_("Hide folders without read permissions"),
-        label=_("hide folders without read permissions"),
-        help=_(
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Hide folders without read permissions"),
+        label=Label("hide folders without read permissions"),
+        help_text=Help(
             "When enabled, a subfolder is not shown, when the user does not have sufficient "
             "permissions to this folder and all of its subfolders. However, the subfolder is "
             "shown if the user has permissions to any of its subfolder."
@@ -2340,24 +2330,27 @@ ConfigVariableWATOIconCategories = ConfigVariable(
     group=ConfigVariableGroupWATO,
     primary_domain=ConfigDomainGUI,
     ident="wato_icon_categories",
-    valuespec=lambda context: ListOf(
-        valuespec=Tuple(
+    form_spec=lambda context: ListExtended(
+        element_template=FSTuple(
             elements=[
-                ID(
-                    title=_("ID"),
+                fs.String(
+                    title=Title("ID"),
+                    custom_validate=id_validators(),
                 ),
-                TextInput(
-                    title=_("Title"),
+                fs.String(
+                    title=Title("Title"),
+                    custom_validate=[not_empty()],
                 ),
             ],
-            orientation="horizontal",
+            layout="horizontal",
         ),
-        title=_("Icon categories"),
-        help=_(
+        title=Title("Icon categories"),
+        help_text=Help(
             "You can customize the list of icon categories to be able to assign "
             'your <a href="wato.py?mode=icons">custom icons</a> to these categories. '
             "They will then be shown under this category in the icon selector."
         ),
+        prefill=fs.DefaultValue([]),
     ),
 )
 

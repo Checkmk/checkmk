@@ -4,11 +4,17 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkKpiStatCard from '@/network-flow/CmkKpiStatCard'
+import CmkKpiStatCard from '@/dashboard/components/CmkKpiStatCard'
 
 const series = [62, 68, 75, 71, 66, 73, 82, 78, 74, 80]
 </script>
 
 <template>
-  <CmkKpiStatCard value="801.84" unit="GB" :delta-ratio="0.062" :series="series" color="green" />
+  <CmkKpiStatCard
+    value="801.84"
+    unit="GB"
+    :delta-ratio="0.062"
+    :series="series"
+    color="var(--color-corporate-green-50)"
+  />
 </template>

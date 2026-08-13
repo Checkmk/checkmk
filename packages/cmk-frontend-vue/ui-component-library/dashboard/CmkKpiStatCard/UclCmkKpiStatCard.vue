@@ -12,7 +12,7 @@ import {
   UclDetailPageLayout
 } from '@ucl/_ucl/components/detail-page'
 
-import CmkKpiStatCard from '@/network-flow/CmkKpiStatCard'
+import CmkKpiStatCard from '@/dashboard/components/CmkKpiStatCard'
 
 import codeExample from './UclCmkKpiStatCardCodeExample.vue?raw'
 
@@ -39,7 +39,7 @@ const SERIES = [
             unit="GB"
             :delta-ratio="0.062"
             :series="SERIES"
-            color="green"
+            color="var(--color-corporate-green-50)"
           />
         </div>
         <!-- "Up is bad" metric (e.g. alerts): an increase renders red. -->
@@ -49,12 +49,17 @@ const SERIES = [
             :delta-ratio="0.12"
             delta-semantics="bad"
             :series="SERIES"
-            color="red"
+            color="var(--color-light-red-50)"
           />
         </div>
         <!-- Without a delta indicator. -->
         <div style="width: 280px; height: 130px">
-          <CmkKpiStatCard value="3.20" unit="Gbps" :series="SERIES" color="blue" />
+          <CmkKpiStatCard
+            value="3.20"
+            unit="Gbps"
+            :series="SERIES"
+            color="var(--color-light-blue-50)"
+          />
         </div>
       </div>
     </UclDetailPageComponent>

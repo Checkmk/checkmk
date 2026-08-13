@@ -5,34 +5,38 @@
  */
 import { render } from '@testing-library/vue'
 
-import CmkKpiStatCard from '@/network-flow/CmkKpiStatCard/CmkKpiStatCard.vue'
-import type { CmkKpiStatCardProps } from '@/network-flow/CmkKpiStatCard/types'
+import CmkKpiStatCard from '@/dashboard/components/CmkKpiStatCard/CmkKpiStatCard.vue'
+import type { CmkKpiStatCardProps } from '@/dashboard/components/CmkKpiStatCard/types'
 
 const SERIES = [10, 20, 15, 30]
 
 function renderCard(props: Partial<CmkKpiStatCardProps> = {}) {
   return render(CmkKpiStatCard, {
-    props: { value: '801.84', unit: 'GB', series: SERIES, color: 'green', ...props }
+    props: {
+      value: '801.84',
+      unit: 'GB',
+      series: SERIES,
+      color: 'var(--color-corporate-green-50)',
+      ...props
+    }
   })
 }
 
 function deltaOf(container: Element): HTMLElement | null {
-  return container.querySelector('.network-flow-cmk-kpi-stat-card__delta')
+  return container.querySelector('.db-cmk-kpi-stat-card__delta')
 }
 
 test('renders the headline value with its unit', () => {
   const { container } = renderCard()
 
-  expect(container.querySelector('.network-flow-cmk-kpi-stat-card__value')).toHaveTextContent(
-    '801.84'
-  )
-  expect(container.querySelector('.network-flow-cmk-kpi-stat-card__unit')).toHaveTextContent('GB')
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('801.84')
+  expect(container.querySelector('.db-cmk-kpi-stat-card__unit')).toHaveTextContent('GB')
 })
 
 test('omits the unit element for plain counts', () => {
   const { container } = renderCard({ unit: undefined })
 
-  expect(container.querySelector('.network-flow-cmk-kpi-stat-card__unit')).toBeNull()
+  expect(container.querySelector('.db-cmk-kpi-stat-card__unit')).toBeNull()
 })
 
 test('hides the delta indicator when no ratio is given', () => {
@@ -46,13 +50,13 @@ test('shows the delta as an absolute percentage with its direction', () => {
 
   const delta = deltaOf(container)
   expect(delta).toHaveTextContent('6.2%')
-  expect(delta).toHaveClass('network-flow-cmk-kpi-stat-card__delta--down')
+  expect(delta).toHaveClass('db-cmk-kpi-stat-card__delta--down')
 })
 
 test('an upward delta carries no direction modifier', () => {
   const { container } = renderCard({ deltaRatio: 0.12 })
 
-  expect(deltaOf(container)).not.toHaveClass('network-flow-cmk-kpi-stat-card__delta--down')
+  expect(deltaOf(container)).not.toHaveClass('db-cmk-kpi-stat-card__delta--down')
 })
 
 test('a neutral metric renders the delta in the plain foreground color', () => {
@@ -79,12 +83,12 @@ test('a decrease on an "up is bad" metric renders green', () => {
   )
 })
 
-test('the value and sparkline resolve the named accent color', () => {
-  const { container } = renderCard({ color: 'red' })
+test('the value and sparkline take the given accent color', () => {
+  const { container } = renderCard({ color: 'var(--color-light-red-50)' })
 
-  const card = container.querySelector<HTMLElement>('.network-flow-cmk-kpi-stat-card')
+  const card = container.querySelector<HTMLElement>('.db-cmk-kpi-stat-card')
   expect(card?.style.getPropertyValue('--accent-color')).toBe('var(--color-light-red-50)')
-  expect(container.querySelector<SVGElement>('.network-flow-kpi-spark-line')?.style.color).toBe(
+  expect(container.querySelector<SVGElement>('.db-kpi-spark-line')?.style.color).toBe(
     'var(--color-light-red-50)'
   )
 })
@@ -92,7 +96,7 @@ test('the value and sparkline resolve the named accent color', () => {
 test('draws a line and an area path for the series', () => {
   const { container } = renderCard()
 
-  const paths = [...container.querySelectorAll('.network-flow-kpi-spark-line path')]
+  const paths = [...container.querySelectorAll('.db-kpi-spark-line path')]
   expect(paths).toHaveLength(2)
   for (const path of paths) {
     expect(path.getAttribute('d')).toMatch(/^M/)
@@ -102,7 +106,7 @@ test('draws a line and an area path for the series', () => {
 test('draws no path with fewer than two data points', () => {
   const { container } = renderCard({ series: [42] })
 
-  const paths = [...container.querySelectorAll('.network-flow-kpi-spark-line path')]
+  const paths = [...container.querySelectorAll('.db-kpi-spark-line path')]
   for (const path of paths) {
     expect(path.getAttribute('d')).toBeFalsy()
   }

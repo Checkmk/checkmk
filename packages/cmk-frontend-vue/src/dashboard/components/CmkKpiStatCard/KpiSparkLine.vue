@@ -22,7 +22,7 @@ const VIEW_WIDTH = 100
 const VIEW_HEIGHT = 40
 
 // Unique per instance so multiple cards on one dashboard don't share a <defs> id.
-const gradientId = `network-flow-kpi-spark-line-gradient-${useId()}`
+const gradientId = `db-kpi-spark-line-gradient-${useId()}`
 
 const paths: Ref<{ line: string; area: string }> = computed(() => {
   const data = props.series
@@ -59,7 +59,7 @@ const paths: Ref<{ line: string; area: string }> = computed(() => {
 
 <template>
   <svg
-    class="network-flow-kpi-spark-line"
+    class="db-kpi-spark-line"
     :viewBox="`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`"
     preserveAspectRatio="none"
     :style="{ color }"
@@ -85,7 +85,7 @@ const paths: Ref<{ line: string; area: string }> = computed(() => {
 </template>
 
 <style scoped>
-.network-flow-kpi-spark-line {
+.db-kpi-spark-line {
   display: block;
   width: 100%;
   height: 100%;

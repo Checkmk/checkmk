@@ -6,5 +6,4 @@
 import CmkKpiStatCard from './CmkKpiStatCard.vue'
 
 export default CmkKpiStatCard
-export type { ChartColor } from '../colors'
 export type { CmkKpiStatCardProps, DeltaSemantics } from './types'

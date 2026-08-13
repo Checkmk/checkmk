@@ -5,6 +5,10 @@
  */
 import { Page } from '@ucl/_ucl/types/page'
 
+import UclCmkKpiStatCard from './CmkKpiStatCard/UclCmkKpiStatCard.vue'
 import UclCmkRankedTable from './CmkRankedTable/UclCmkRankedTable.vue'
 
-export const pages: Array<Page> = [new Page('CmkRankedTable', UclCmkRankedTable)]
+export const pages: Array<Page> = [
+  new Page('CmkKpiStatCard', UclCmkKpiStatCard),
+  new Page('CmkRankedTable', UclCmkRankedTable)
+]

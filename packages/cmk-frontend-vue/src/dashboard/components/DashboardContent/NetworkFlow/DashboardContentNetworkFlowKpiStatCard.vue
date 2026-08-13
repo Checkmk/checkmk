@@ -9,9 +9,10 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
+import CmkKpiStatCard, { type DeltaSemantics } from '@/dashboard/components/CmkKpiStatCard'
 import type { NetworkFlowKpiStatCardContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
-import CmkKpiStatCard, { type DeltaSemantics } from '@/network-flow/CmkKpiStatCard'
+import { chartColorCss } from '@/network-flow/colors'
 
 import DashboardContentContainer from '../DashboardContentContainer.vue'
 import type { ContentProps } from '../types.ts'
@@ -107,7 +108,7 @@ const { data, error } = useNetworkFlowWidgetData(
         :delta-ratio="data.deltaRatio"
         :delta-semantics="presentation.deltaSemantics"
         :series="data.series"
-        :color="content.accent"
+        :color="chartColorCss(content.accent)"
       />
     </div>
   </DashboardContentContainer>

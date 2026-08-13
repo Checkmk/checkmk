@@ -3,8 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ChartColor } from '../colors'
-
 /**
  * What an increase of the metric means, driving the delta indicator's color.
  * Neutral metrics (e.g. traffic volume) render the delta in a plain foreground
@@ -26,6 +24,6 @@ export interface CmkKpiStatCardProps {
   deltaSemantics?: DeltaSemantics | undefined
   /** Sparkline data points over the displayed window, oldest first. */
   series: number[]
-  /** Named palette color of the value and the sparkline. */
-  color: ChartColor
+  /** CSS color of the value and the sparkline. */
+  color: string
 }

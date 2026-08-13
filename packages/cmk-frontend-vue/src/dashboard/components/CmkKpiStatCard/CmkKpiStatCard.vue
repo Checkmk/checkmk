@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { CHART_COLOR_CSS } from '../colors'
 import KpiSparkLine from './KpiSparkLine.vue'
 import type { CmkKpiStatCardProps, DeltaSemantics } from './types'
 
@@ -15,8 +14,6 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   deltaRatio: undefined,
   deltaSemantics: 'neutral'
 })
-
-const accentColor = computed(() => CHART_COLOR_CSS[props.color])
 
 const isUp = computed(() => (props.deltaRatio ?? 0) >= 0)
 const deltaPercent = computed(() => `${Math.abs((props.deltaRatio ?? 0) * 100).toFixed(1)}%`)
@@ -43,35 +40,31 @@ const deltaColor = computed(() => resolveDeltaColor(props.deltaSemantics, isUp.v
 </script>
 
 <template>
-  <div class="network-flow-cmk-kpi-stat-card" :style="{ '--accent-color': accentColor }">
-    <div class="network-flow-cmk-kpi-stat-card__value-row">
-      <span class="network-flow-cmk-kpi-stat-card__value">{{ value }}</span>
-      <span v-if="unit" class="network-flow-cmk-kpi-stat-card__unit">{{ unit }}</span>
+  <div class="db-cmk-kpi-stat-card" :style="{ '--accent-color': color }">
+    <div class="db-cmk-kpi-stat-card__value-row">
+      <span class="db-cmk-kpi-stat-card__value">{{ value }}</span>
+      <span v-if="unit" class="db-cmk-kpi-stat-card__unit">{{ unit }}</span>
       <span
         v-if="deltaRatio !== undefined"
-        class="network-flow-cmk-kpi-stat-card__delta"
-        :class="{ 'network-flow-cmk-kpi-stat-card__delta--down': !isUp }"
+        class="db-cmk-kpi-stat-card__delta"
+        :class="{ 'db-cmk-kpi-stat-card__delta--down': !isUp }"
         :style="{ '--delta-color': deltaColor }"
       >
-        <svg
-          class="network-flow-cmk-kpi-stat-card__delta-arrow"
-          viewBox="0 0 8 6"
-          aria-hidden="true"
-        >
+        <svg class="db-cmk-kpi-stat-card__delta-arrow" viewBox="0 0 8 6" aria-hidden="true">
           <path d="m0 6 4-6 4 6z" fill="currentColor" />
         </svg>
         {{ deltaPercent }}
       </span>
     </div>
 
-    <div class="network-flow-cmk-kpi-stat-card__spark-line">
-      <KpiSparkLine :series="series" :color="accentColor" />
+    <div class="db-cmk-kpi-stat-card__spark-line">
+      <KpiSparkLine :series="series" :color="color" />
     </div>
   </div>
 </template>
 
 <style scoped>
-.network-flow-cmk-kpi-stat-card {
+.db-cmk-kpi-stat-card {
   position: relative;
   box-sizing: border-box;
   width: 100%;
@@ -83,7 +76,7 @@ const deltaColor = computed(() => resolveDeltaColor(props.deltaSemantics, isUp.v
   container-type: size;
 }
 
-.network-flow-cmk-kpi-stat-card__value-row {
+.db-cmk-kpi-stat-card__value-row {
   position: relative;
   z-index: 1;
   display: flex;
@@ -91,20 +84,20 @@ const deltaColor = computed(() => resolveDeltaColor(props.deltaSemantics, isUp.v
   align-items: baseline;
 }
 
-.network-flow-cmk-kpi-stat-card__value {
+.db-cmk-kpi-stat-card__value {
   font-size: clamp(18px, 40cqh, 52px);
   font-weight: var(--font-weight-bold);
   line-height: 1;
   color: var(--accent-color);
 }
 
-.network-flow-cmk-kpi-stat-card__unit {
+.db-cmk-kpi-stat-card__unit {
   font-size: clamp(10px, 16cqh, 22px);
   font-weight: var(--font-weight-bold);
   color: var(--color-mid-grey-50);
 }
 
-.network-flow-cmk-kpi-stat-card__delta {
+.db-cmk-kpi-stat-card__delta {
   display: inline-flex;
   gap: clamp(2px, 1cqw, 5px);
   align-items: center;
@@ -117,16 +110,16 @@ const deltaColor = computed(() => resolveDeltaColor(props.deltaSemantics, isUp.v
   border-radius: 99999px;
 }
 
-.network-flow-cmk-kpi-stat-card__delta-arrow {
+.db-cmk-kpi-stat-card__delta-arrow {
   width: clamp(6px, 1cqw, 9px);
   height: clamp(5px, 0.8cqw, 7px);
 }
 
-.network-flow-cmk-kpi-stat-card__delta--down .network-flow-cmk-kpi-stat-card__delta-arrow {
+.db-cmk-kpi-stat-card__delta--down .db-cmk-kpi-stat-card__delta-arrow {
   transform: rotate(180deg);
 }
 
-.network-flow-cmk-kpi-stat-card__spark-line {
+.db-cmk-kpi-stat-card__spark-line {
   position: absolute;
   right: 0;
   bottom: 0;

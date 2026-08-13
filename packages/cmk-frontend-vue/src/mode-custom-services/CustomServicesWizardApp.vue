@@ -44,8 +44,9 @@ async function validateStep1(): Promise<boolean> {
   return step1Valid.value
 }
 
-// Persist the custom service, then go to the full activate-changes page so the
-// user can apply the pending change.
+// Persist the custom service, then return to the Custom Services list. The new
+// rule shows up as a pending change in the top-bar Changes menu, where the user
+// activates it.
 async function createService(): Promise<void> {
   saveError.value = null
   saving.value = true
@@ -55,7 +56,7 @@ async function createService(): Promise<void> {
       saveError.value = result.error ?? _t('Failed to create the custom service.')
       return
     }
-    window.location.href = props.activate_changes_url
+    window.location.href = props.back_url
   } catch {
     saveError.value = _t('Failed to create the custom service.')
   } finally {
@@ -98,7 +99,7 @@ async function createService(): Promise<void> {
         <template #actions>
           <CmkWizardButton
             type="finish"
-            :override-label="_t('Create & activate changes')"
+            :override-label="_t('Create custom service')"
             :disabled="!step2Valid || saving"
             @click="createService"
           />

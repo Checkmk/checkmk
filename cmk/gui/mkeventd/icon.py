@@ -76,11 +76,11 @@ def _render_mkeventd_icon(
         ("host", row["host_name"]),
     ]
 
-    title = _("Events of Host %s") % (row["host_name"])
+    title = _("Events of host %s") % (row["host_name"])
 
     if len(args) >= 2:
         app = args[1].strip("'").replace("\\\\", "\\").replace("\\!", "!")
-        title = _('Events of Application "%s" on Host %s') % (app, host)
+        title = _('Events of application "%s" on host %s') % (app, host)
         url_vars.append(("event_application", app))
 
     return (

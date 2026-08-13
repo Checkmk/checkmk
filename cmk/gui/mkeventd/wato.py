@@ -459,7 +459,7 @@ class RuleState(CascadingDropdown):
                         (
                             "2",
                             RegExp(
-                                title=_("CRIT Pattern"),
+                                title=_("CRIT pattern"),
                                 help=_(
                                     "When the given regular expression (infix search) matches "
                                     "the events state is set to CRITICAL."
@@ -668,7 +668,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                                 ("rule", _("Always use service level from rule")),
                             ],
                             help=_(
-                                "Here you can specify which service level will be used when "
+                                "Here, you can specify which service level will be used when "
                                 "the incoming message already carries a service level."
                             ),
                             default_value="message",
@@ -713,7 +713,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                                 ("rule", _("Contact groups in rule have precedence")),
                             ],
                             help=_(
-                                "Here you can specify which contact groups shall have "
+                                "Here, you can specify which contact groups shall have "
                                 "precedence when both, the host of an event can be found in the "
                                 "monitoring and the event rule has defined contact groups for the event."
                             ),
@@ -784,7 +784,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
         (
             "autodelete",
             Checkbox(
-                title=_("Automatic Deletion"),
+                title=_("Automatic deletion"),
                 label=_("Delete event immediately after the actions"),
                 help=_(
                     "Incoming messages might trigger actions (when configured above), "
@@ -1304,7 +1304,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                     "Negate match: Execute this rule if the upper conditions are <b>not</b> fulfilled."
                 ),
                 help=_(
-                    "By activating this checkbox the complete combined rule conditions will be inverted. That means that this rule will be executed, if at least one of the conditions does <b>not</b> match. This can e.g. be used for skipping a rule pack if the message text does not contain <tt>ORA-</tt>. Please note: When an inverted rule matches there can never be match groups."
+                    "By activating this checkbox, the complete combined rule conditions will be inverted. That means that this rule will be executed, if at least one of the conditions does <b>not</b> match. This can e.g. be used for skipping a rule pack if the message text does not contain <tt>ORA-</tt>. Please note: When an inverted rule matches there can never be match groups."
                 ),
             ),
         ),
@@ -1477,7 +1477,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                     "event_limit",
                 ],
             ),
-            (_("Counting & Timing"), ["count", "expect", "delay", "livetime"]),
+            (_("Counting & timing"), ["count", "expect", "delay", "livetime"]),
             (
                 _("Rewriting"),
                 ["set_text", "set_host", "set_application", "set_comment", "set_contact"],
@@ -1640,7 +1640,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
     def _vs_mkeventd_event(self) -> Dictionary:
         """Valuespec for simulating an event"""
         return Dictionary(
-            title=_("Event Simulator"),
+            title=_("Event simulator"),
             help=_("You can simulate an event here and check out which rules are matching."),
             render="form",
             form_narrow=True,
@@ -3285,13 +3285,13 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
 
 ConfigVariableGroupEventConsoleGeneric = ConfigVariableGroup(
-    title=_l("Event Console: Generic"),
+    title=_l("Event Console: generic"),
     sort_index=18,
 )
 
 
 ConfigVariableGroupEventConsoleLogging = ConfigVariableGroup(
-    title=_l("Event Console: Logging & diagnose"),
+    title=_l("Event Console: logging & diagnose"),
     sort_index=19,
 )
 
@@ -4088,7 +4088,7 @@ ConfigVariableEventConsoleReplication = ConfigVariable(
                         help=_(
                             "This allows you to disable the replication without losing "
                             "your settings. If you check this box, then no replication "
-                            "will be done and the Event Console will act as its own master."
+                            "will be done and the Event Console will act as its own central site."
                         ),
                     ),
                 ),
@@ -4180,7 +4180,7 @@ ConfigVariableEventConsoleStatisticsInterval = ConfigVariable(
             "The event daemon keeps statistics about the rate of messages, events "
             "rule hits, and other stuff. These values are updated in the interval "
             "configured here and are available in the sidebar snap-in <i>Event Console "
-            "performance</i>"
+            "performance</i>."
         ),
     ),
 )
@@ -4193,7 +4193,7 @@ ConfigVariableEventConsoleLogMessages = ConfigVariable(
         title=_("Syslog-like message logging"),
         label=_("Log all messages into Syslog-like log files"),
         help=_(
-            "When this option is enabled, then <b>every</b> incoming message is being logged into the directory <tt>messages</tt> in the Event Consoles state directory. The logfile rotation is analog to that of the history logfiles. Please note that if you have lots of incoming messages then these files can get very large."
+            "When this option is enabled, then <b>every</b> incoming message is being logged into the directory <tt>messages</tt> in the Event Consoles state directory. The log file rotation is analog to that of the history log files. Please note that if you have lots of incoming messages then these files can get very large."
         ),
     ),
 )
@@ -4301,7 +4301,7 @@ ConfigVariableEventConsoleActions = ConfigVariable(
                                 ),
                                 (
                                     "script",
-                                    _("Execute Shell Script"),
+                                    _("Execute shell script"),
                                     Dictionary(
                                         optional_keys=False,
                                         elements=[
@@ -4525,9 +4525,9 @@ ConfigVariableEventConsoleSocketQueueLength = ConfigVariable(
     valuespec=lambda context: Integer(
         title=_("Max. number of pending connections to the status socket"),
         help=_(
-            "When the Multisite GUI or the active check check_mkevents connects "
+            "When the graphical user interface (GUI) or the active check check_mkevents connects "
             "to the socket of the event daemon in order to retrieve information "
-            "about current and historic events then its connection request might "
+            "about current and historic events, then its connection request might "
             "be queued before being processed. This setting defines the number of unaccepted "
             "connections to be queued before refusing new connections."
         ),
@@ -4564,7 +4564,7 @@ ConfigVariableEventConsoleTranslateSNMPTraps = ConfigVariable(
         title=_("Translate SNMP traps"),
         help=_(
             "When this option is enabled all available SNMP MIB files will be used "
-            "to translate the incoming SNMP traps. Information which can not be "
+            "to translate the incoming SNMP traps. Information which cannot be "
             "translated, e.g. because a MIB is missing, are written untouched to "
             "the event message."
         ),
@@ -4660,8 +4660,8 @@ ConfigVariableEventConsoleLogLevel = ConfigVariable(
     valuespec=lambda context: Dictionary(
         title=_("Log level"),
         help=_(
-            "You can configure the Event Console to log more details about it's actions. "
-            "These information are logged into the file <tt>%s</tt>"
+            "You can configure the Event Console to log more details about its actions. "
+            "This information is logged into the file <tt>%s</tt>."
         )
         % site_neutral_path(cmk.utils.paths.log_dir / "mkeventd.log"),
         elements=_ec_log_level_elements(),
@@ -4747,8 +4747,8 @@ ConfigVariableEventConsoleConnectTimeout = ConfigVariable(
     valuespec=lambda context: Integer(
         title=_("Connect timeout to status socket of Event Console"),
         help=_(
-            "When the Multisite GUI connects the socket of the event daemon "
-            "in order to retrieve information about current and historic events "
+            "When the graphical user interface (GUI) connects the socket of the event daemon "
+            "in order to retrieve information about current and historic events, "
             "then this timeout will be applied."
         ),
         minvalue=1,
@@ -4766,11 +4766,11 @@ ConfigVariableEventConsolePrettyPrintRules = ConfigVariable(
         label=_("enable pretty-printing of rules"),
         help=_(
             "When the Setup module of the Event Console saves rules to the file "
-            "<tt>mkeventd.d/wato/rules.mk</tt> it usually prints the Python "
+            "<tt>mkeventd.d/wato/rules.mk</tt>, it usually prints the Python "
             "representation of the rules-list into one single line by using the "
             "native Python code generator. Enabling this option switches to <tt>pprint</tt>, "
             "which nicely indents everything. While this is a bit slower for large "
-            "rulesets it makes debugging and manual editing simpler."
+            "rule sets, it makes debugging and manual editing simpler."
         ),
     ),
 )
@@ -4783,7 +4783,7 @@ ConfigVariableEventConsoleNotifyContactgroup = ConfigVariable(
     valuespec=lambda context: ContactGroupSelection(
         title=TITLE_MKEVENTD_NOTIFY_CONTACTGROUP,
         no_selection=_("(don't send notifications to Event Console)"),
-        label=_("send notifications of contactgroup:"),
+        label=_("send notifications to contact group:"),
         help=_(
             "If you select a contact group here, all notifications of "
             "hosts and services in that contact group will be sent to the "
@@ -4828,9 +4828,9 @@ ConfigVariableEventConsoleNotifyFacility = ConfigVariable(
     valuespec=lambda context: DropdownChoice(
         title=_("Syslog facility for Event Console notifications"),
         help=_(
-            "When sending notifications from the monitoring system to the Event Console "
+            "When sending notifications from the monitoring system to the Event Console, "
             "the following syslog facility will be set for these messages. Choosing "
-            "a unique facility makes creation of rules easier."
+            "a unique facility makes the creation of rules easier."
         ),
         choices=syslog_facilities,
     ),
@@ -5063,7 +5063,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                             title=_("Access via TCP"),
                             help=_(
                                 "In a distributed setup where the Event Console is not running in the same "
-                                "site as the host is monitored you need to access the remote Event Console "
+                                "site as the host is monitored on, you need to access the remote Event Console "
                                 "via TCP. Please make sure that this is activated in the global settings of "
                                 "the Event Console. The default port number is 6558."
                             ),
@@ -5118,11 +5118,11 @@ def _sl_help() -> str:
             "A service level is a number that describes the business impact of a host or "
             "service. This level can be used in rules for notifications, as a filter in "
             "views or as a criteria in rules for the Event Console. A higher service level "
-            "is assumed to be more business critical. This ruleset allows to assign service "
+            "is assumed to be more business critical. This rule set allows to assign service "
             "levels to hosts and/or services. Note: if you assign a service level to "
-            "a host with the ruleset <i>Service level of hosts</i>, then this level is "
+            "a host with the rule set <i>Service level of hosts</i>, then this level is "
             "inherited to all services that do <b>not</b> have explicitly assigned a service "
-            "with the ruleset <i>Service level of services</i>. Assigning no service level "
+            "with the rule set <i>Service level of services</i>. Assigning no service level "
             "is equal to defining a level of 0.<br><br>The list of available service "
             "levels is configured via a <a href='%s'>global option.</a>"
         )

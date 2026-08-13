@@ -52,7 +52,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title="Events of Host heute",
+                title="Events of host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Match host with host name, IP address, Alias",
@@ -72,7 +72,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title="Events of Host heute",
+                title="Events of host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Specify host explicitly",
@@ -93,7 +93,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title='Events of Application "^my_apps*" on Host heute',
+                title='Events of application "^my_apps*" on host heute',
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Specify host explicitly and application by regular expression",
@@ -117,7 +117,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title="Events of Host heute",
+                title="Events of host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Match host with host name, IP address, Alias and ignore Acknowledged events",
@@ -140,7 +140,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title='Events of Application "^my_apps*" on Host my_alias',
+                title='Events of application "^my_apps*" on host my_alias',
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Match host with Alias, application by regular expression ignore ack events",
@@ -164,7 +164,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title='Events of Application "^my_apps*" on Host 127.0.0.1',
+                title='Events of application "^my_apps*" on host 127.0.0.1',
                 url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Match host with IP address, application by regular expression ignore ack events",
@@ -183,7 +183,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title="Events of Host heute",
+                title="Events of host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="-L parameter handling",
@@ -202,7 +202,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title="Events of Host heute",
+                title="Events of host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Handling of multiple parameters without arguments",
@@ -221,7 +221,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title="Events of Host heute",
+                title="Events of host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Handling of parameter with argument",
@@ -240,7 +240,7 @@ class IconRenderResult(NamedTuple):
             ),
             IconRenderResult(
                 name="mkeventd",
-                title="Events of Host heute",
+                title="Events of host heute",
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="Handling of multiple parameters with and without argument",

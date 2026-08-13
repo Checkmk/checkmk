@@ -35,7 +35,7 @@ action_whats = {
     "SCRIPT": _l("Script executed"),
     "CANCELLED": _l("The event was cancelled because the corresponding OK message was received"),
     "ARCHIVED": _l(
-        "Event was archived because no rule matched and archiving is activated in global settings."
+        "Event was archived because no rule matched and archiving is activated in the 'Global settings'."
     ),
     "AUTODELETE": _l("Event was deleted automatically"),
     "CHANGESTATE": _l("State of event changed by user"),

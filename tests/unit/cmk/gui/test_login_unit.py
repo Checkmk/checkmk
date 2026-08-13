@@ -34,7 +34,12 @@ from cmk.gui.type_defs import (
     WebAuthnCredential,
 )
 from cmk.gui.userdb import is_two_factor_login_enabled
-from cmk.gui.userdb.session import auth_cookie_name, auth_cookie_value, generate_auth_hash
+from cmk.gui.userdb.session import (
+    auth_cookie_name,
+    auth_cookie_value,
+    generate_auth_hash,
+    load_session_infos,
+)
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr, save_two_factor_credentials
 from cmk.gui.utils.misc import saveint
 from cmk.gui.utils.roles import UserPermissions
@@ -205,6 +210,43 @@ def test_login_with_oauth_token(with_user: tuple[UserId, str], flask_app: flask.
         last_login = load_custom_attr(user_id=username, key="last_login", parser=literal_eval)
         assert last_login is not None
         assert last_login["auth_type"] == "oauth"
+
+
+def _legacy_bearer_header(username: UserId, password: str) -> str:
+    return f"Bearer {username} {password}"
+
+
+def _oauth_bearer_header(username: UserId, password: str) -> str:
+    client_id = oauth.client_store().register(["https://client.example/callback"], None).client_id
+    return "Bearer " + oauth.token_store().issue_token(
+        username,
+        expires_at=datetime.now(UTC) + timedelta(minutes=5),
+        resource=None,
+        scope=DEFAULT_SCOPE,
+        client_id=client_id,
+    )
+
+
+@pytest.mark.parametrize("make_header", [_legacy_bearer_header, _oauth_bearer_header])
+def test_token_auth_is_not_exchangeable_for_a_session_cookie(
+    make_header: Callable[[UserId, str], str],
+    with_user: tuple[UserId, str],
+    flask_app: flask.Flask,
+) -> None:
+    """A cookie outlives the token and is not restricted by whatever the token was granted."""
+    username, password = with_user
+    with flask_app.test_request_context(
+        "/", method="GET", headers={"Authorization": make_header(username, password)}
+    ):
+        flask_app.preprocess_request()
+        response = flask_app.process_response(http.Response())
+
+    assert not [
+        cookie
+        for cookie in response.headers.getlist("Set-Cookie")
+        if cookie.startswith(auth_cookie_name())
+    ]
+    assert not load_session_infos(username)
 
 
 def test_login_with_invalid_oauth_bearer_token(flask_app: flask.Flask) -> None:

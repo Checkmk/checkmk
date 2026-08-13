@@ -128,12 +128,7 @@ def test_automation_user_rest_api(with_automation_user: tuple[str, str], site: S
 
 
 @pytest.mark.skip_if_edition("cloud")
-def test_human_user_gui(site: Site) -> None:
-    """test authenticated request of a "normal"/"human" user to the gui
-
-    - the HTTP param login must not work
-    - a session must be established
-    """
+def test_human_user_gui_param_login_is_rejected(site: Site) -> None:
     username = ADMIN_USER
     password = site.admin_password
 
@@ -149,6 +144,12 @@ def test_human_user_gui(site: Site) -> None:
     assert "cmk-dashboard" not in response.text
     assert not session.is_logged_in()
 
+
+@pytest.mark.skip_if_edition("cloud")
+def test_human_user_gui_basic_auth_establishes_session(site: Site) -> None:
+    username = ADMIN_USER
+    password = site.admin_password
+
     session = CMKWebSession(site)
     response = session.get(
         "dashboard.py",
@@ -156,6 +157,13 @@ def test_human_user_gui(site: Site) -> None:
     )
     assert "cmk-dashboard" in response.text
     assert session.is_logged_in()
+
+
+@pytest.mark.skip_if_edition("cloud")
+def test_human_user_gui_bearer_token_establishes_no_session(site: Site) -> None:
+    """the token authenticates the request, but must not be exchangeable for a session (werk 20085)"""
+    username = ADMIN_USER
+    password = site.admin_password
 
     session = CMKWebSession(site)
     response = session.get(
@@ -165,7 +173,7 @@ def test_human_user_gui(site: Site) -> None:
         },
     )
     assert "cmk-dashboard" in response.text
-    assert session.is_logged_in()
+    assert not session.is_logged_in()
 
 
 @pytest.mark.skip_if_edition("cloud")

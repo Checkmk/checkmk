@@ -17,7 +17,7 @@ metric_queue_length = metrics.Metric(
 
 metric_queue_oldest_message_age = metrics.Metric(
     name="cisco_sma_queue_oldest_message_age",
-    title=Title("Oldest Message Age"),
+    title=Title("Oldest message age"),
     unit=UNIT_SECOND,
     color=metrics.Color.DARK_ORANGE,
 )

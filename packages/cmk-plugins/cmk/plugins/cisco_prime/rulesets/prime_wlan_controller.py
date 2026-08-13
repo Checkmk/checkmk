@@ -44,7 +44,7 @@ rule_spec_cisco_prime_wlan_controller_clients = CheckParameters(
     topic=Topic.OPERATING_SYSTEM,
     condition=HostAndItemCondition(item_title=Title("Clients")),
     parameter_form=_parameter_form_wlan_controllers_clients,
-    title=Title("Cisco Prime WLAN Controller Clients"),
+    title=Title("Cisco Prime WLAN controller clients"),
 )
 
 
@@ -69,7 +69,7 @@ rule_spec_cisco_prime_wlan_controller_access_points = CheckParameters(
     topic=Topic.OPERATING_SYSTEM,
     condition=HostAndItemCondition(item_title=Title("Access points")),
     parameter_form=_parameter_form_wlan_controllers_access_points,
-    title=Title("Cisco Prime WLAN Controller Access Points"),
+    title=Title("Cisco Prime WLAN controller access points"),
 )
 
 
@@ -100,5 +100,5 @@ rule_spec_cisco_prime_wlan_controller_last_backup = CheckParameters(
     topic=Topic.OPERATING_SYSTEM,
     condition=HostAndItemCondition(item_title=Title("Last backup")),
     parameter_form=_parameter_form_wlan_controllers_last_backup,
-    title=Title("Cisco Prime WLAN Controller Last Backup"),
+    title=Title("Cisco Prime WLAN controller last backup"),
 )

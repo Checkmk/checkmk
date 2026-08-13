@@ -52,7 +52,7 @@ def _connection_elements() -> Mapping[str, DictElement]:
             required=True,
             parameter_form=Integer(
                 title=Title("TCP Port"),
-                help_text=Help("Port number for connection to the Rest API. Usually 443 (TLS)"),
+                help_text=Help("Port number for connection to the REST API. Usually 443 (TLS)"),
                 prefill=DefaultValue(443),
                 custom_validate=(validators.NetworkPort(),),
             ),
@@ -62,7 +62,7 @@ def _connection_elements() -> Mapping[str, DictElement]:
             parameter_form=SingleChoice(
                 title=Title("Protocol"),
                 prefill=DefaultValue("https"),
-                help_text=Help("Protocol for the connection to the Rest API."),
+                help_text=Help("Protocol for the connection to the REST API."),
                 elements=[
                     SingleChoiceElement(
                         name="https",
@@ -115,7 +115,7 @@ def migrate_redfish_common(data: object) -> Mapping[str, object]:
 
 def _valuespec_special_agents_redfish_power() -> Dictionary:
     return Dictionary(
-        title=Title("Redfish Compatible Power Equipment (PDU)"),
+        title=Title("Redfish compatible power equipment (PDU)"),
         elements={
             **_auth_elements(),
             **_connection_elements(),
@@ -126,11 +126,11 @@ def _valuespec_special_agents_redfish_power() -> Dictionary:
 
 rule_spec_redfish_power_datasource_programs = SpecialAgent(
     name="redfish_power",
-    title=Title("Redfish Compatible Power Equipment (PDU)"),
+    title=Title("Redfish compatible power equipment (PDU)"),
     topic=Topic.SERVER_HARDWARE,
     parameter_form=_valuespec_special_agents_redfish_power,
     help_text=Help(
-        "This rule configures the Redfish integration to query PDUs via the Redfish REST API"
+        "This rule configures the Redfish integration to query PDUs via the Redfish REST API."
     ),
 )
 
@@ -141,7 +141,7 @@ def _fetching_settings() -> DictElement:
         parameter_form=Dictionary(
             title=Title("Fetching setting for individual sections"),
             help_text=Help(
-                "If sections can not be fetched or take a long time, you can configure them to be fetched"
+                "If sections cannot be fetched or take a long time, you can configure them to be fetched"
                 " not as often or not at all."
             ),
             elements={
@@ -252,7 +252,7 @@ def migrate_redfish(data: object) -> Mapping[str, object]:
 
 def _valuespec_special_agents_redfish() -> Dictionary:
     return Dictionary(
-        title=Title("Redfish Compatible Management Controller"),
+        title=Title("Redfish compatible management controller"),
         elements={
             **_auth_elements(),
             "fetching": _fetching_settings(),
@@ -265,10 +265,10 @@ def _valuespec_special_agents_redfish() -> Dictionary:
 
 rule_spec_redfish_datasource_programs = SpecialAgent(
     name="redfish",
-    title=Title("Redfish Compatible Management Controller"),
+    title=Title("Redfish compatible management controller"),
     topic=Topic.SERVER_HARDWARE,
     parameter_form=_valuespec_special_agents_redfish,
     help_text=Help(
-        "This rule configures the Redfish integration to query management controller via the Redfish REST API"
+        "This rule configures the Redfish integration to query a management controller via the Redfish REST API."
     ),
 )

@@ -93,7 +93,7 @@ perfometer_averageconsumedwatts_0 = perfometers.Perfometer(
 
 graph_power_consumption = graphs.Graph(
     name="redfish_power_consumption",
-    title=Title("Redfish Power Consumption"),
+    title=Title("Redfish power consumption"),
     simple_lines=[
         "averageconsumedwatts_0",
         "minconsumedwatts_0",

@@ -134,7 +134,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
     new = True
     session_info = dict_property[SessionInfo]()
     exc = dict_property[MKException | None](default=None)
-    is_gui_session = dict_property[bool](default=True)
+    persistent = dict_property[bool]()
     is_secure = dict_property[bool](default=False)
 
     def update_cookie(self) -> None:
@@ -159,17 +159,6 @@ class CheckmkFileBasedSession(dict, SessionMixin):
     def user_id(self) -> None:
         raise AttributeError("Don't set user_id please.")
 
-    @property
-    def persist_session(self) -> bool:
-        if isinstance(self.user, LoggedInNobody | LoggedInSuperUser | LoggedInRemoteSite):
-            return False
-
-        if not self.is_gui_session:
-            # No persistant sessions for RestAPI
-            return False
-
-        return not self.user.automation_user
-
     def initialize(
         self,
         user_name: UserId,
@@ -182,6 +171,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         userdb.session.ensure_user_can_init_session(user_name, now)
         self.is_secure = secure_flag
         self.user = LoggedInUser(user_name, user_permissions, defaults=_user_defaults())
+        self.persistent = not self.user.automation_user
 
         self.session_info = SessionInfo(
             session_id=userdb.session.create_session_id(),
@@ -202,6 +192,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         This will lead to the session cookie being deleted.
         """
         sess = cls()
+        sess.persistent = False
         sess.user = LoggedInNobody()
         sess.session_info = SessionInfo(
             session_id=userdb.session.create_session_id(),
@@ -237,6 +228,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         These should not really be sessions but currently everything is a session..."""
 
         sess = cls()
+        sess.persistent = False
         match pseudo_user_id:
             case SiteInternalPseudoUser():
                 sess.user = LoggedInSuperUser()
@@ -258,6 +250,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
         sess = cls()
         sess.user = LoggedInUser(user_name, user_permissions, defaults=_user_defaults())
+        sess.persistent = not sess.user.automation_user
         sess.session_info = info
         sess.session_info.auth_type = "cookie"
         sess.new = False
@@ -266,10 +259,15 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
     @tracer.instrument("CheckmkFileBas.login")
     def login(
-        self, username: UserId, user_permissions: UserPermissions, secure_flag: bool
+        self,
+        username: UserId,
+        user_permissions: UserPermissions,
+        secure_flag: bool,
     ) -> SessionState:
         userdb.session.on_succeeded_login(username, datetime.now())
         self.user = LoggedInUser(username, user_permissions, defaults=_user_defaults())
+        # This is the interactive login; persist except for automation users.
+        self.persistent = not self.user.automation_user
         self.is_secure = secure_flag
         return self.check_and_update_session_state()
 
@@ -327,10 +325,13 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         return self.session_info.session_state
 
     def persist(self) -> None:
-        """Save the session as "session_info" custom user attribute"""
+        """Save the session as "session_info" custom user attribute.
+
+        This must not be called from within SuperUserContext() or UserContext().
+        """
         self.session_info.flashes = self.get("_flashes", [])
 
-        if not self.persist_session:
+        if not self.persistent:
             return
 
         if self.user is None:
@@ -578,7 +579,7 @@ class FileBasedSession(SessionInterface):
             # This is the case when the session has not been modified.
             return
 
-        if not session.persist_session:
+        if not session.persistent:
             return
 
         if session.user.id is None:

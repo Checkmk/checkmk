@@ -15,7 +15,7 @@ metric_audiocodes_tel2ip_established_calls = metrics.Metric(
 )
 metric_audiocodes_ip2tel_established_calls = metrics.Metric(
     name="audiocodes_ip2tel_established_calls",
-    title=Title("IP2Tel Number of established (connected and voice activated) SIP/H323 calls"),
+    title=Title("IP2Tel number of established (connected and voice activated) SIP/H323 calls"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.PURPLE,
 )

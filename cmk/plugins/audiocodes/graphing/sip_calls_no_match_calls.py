@@ -15,7 +15,7 @@ metric_audiocodes_tel2ip_no_match_calls = metrics.Metric(
 )
 metric_audiocodes_ip2tel_no_match_calls = metrics.Metric(
     name="audiocodes_ip2tel_no_match_calls",
-    title=Title("IP2Tel Number of No capability match between peers on SIP/H323 calls"),
+    title=Title("IP2Tel number of No capability match between peers on SIP/H323 calls"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.PURPLE,
 )

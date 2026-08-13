@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -170,11 +171,12 @@ def main() -> None:
                 _measure(run_dir, scenario, "load", args.runs, extra)
         finally:
             print("Stopping charbench...")
-            charbench_proc.terminate()
             try:
-                charbench_proc.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                charbench_proc.kill()
+                os.killpg(charbench_proc.pid, signal.SIGTERM)
+                time.sleep(2)
+                os.killpg(charbench_proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass  # group already gone
 
     if not args.keep_alive:
         _setup(run_dir, "down")
@@ -286,6 +288,7 @@ def _start_charbench(uc: int, log_file: Path) -> subprocess.Popen[bytes]:
             ],
             stdout=log,
             stderr=subprocess.STDOUT,
+            start_new_session=True,  # own process group, so teardown can kill the tree
         )
     print(f"  charbench PID {proc.pid}")
     return proc

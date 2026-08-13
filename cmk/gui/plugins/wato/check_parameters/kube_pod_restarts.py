@@ -18,7 +18,7 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 def _parameter_valuespec():
     return Dictionary(
         help=_(
-            "Here you can configure absolute levels for total "
+            "Here, you can configure absolute levels for total "
             "restart count and restarts in the last hour."
         ),
         title=_("Upper levels for restarts"),

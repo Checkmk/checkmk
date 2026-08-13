@@ -54,7 +54,7 @@ def _parameter_form_kube_collector_info() -> Dictionary:
                 required=False,
                 parameter_form=ServiceState(
                     title=Title(
-                        "Monitoring state if the cluster collector reports no machine metrics"
+                        "Monitoring state if the Cluster Collector reports no machine metrics"
                     ),
                     prefill=DefaultValue(ServiceState.CRIT),
                 ),

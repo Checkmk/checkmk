@@ -328,6 +328,7 @@ def _valuespec_special_agents_kube() -> Dictionary:
                     custom_validate=(validators.LengthInRange(min_value=1),),
                     title=Title("Collect information about..."),
                     help_text=Help(
+                        # weblate-flags: read-only, domain-specific
                         "Select the Kubernetes objects you would like to monitor. Pods "
                         "controlled by CronJobs are treated separately as they are usually "
                         "quite short lived. Those pods will be monitored in the same "
@@ -336,7 +337,7 @@ def _valuespec_special_agents_kube() -> Dictionary:
                         "host. Your Dynamic host management rule should "
                         "be configured accordingly to avoid that the piggyback hosts for "
                         "terminated CronJob pods are kept for too long. This 'Pods of CronJobs' "
-                        "option has no effect if Pods are not monitored"
+                        "option has no effect if Pods are not monitored."
                     ),
                 ),
             ),

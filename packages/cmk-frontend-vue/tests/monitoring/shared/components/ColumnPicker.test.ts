@@ -3,11 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { VisibilityState } from '@tanstack/vue-table'
+import type { ColumnFiltersState, VisibilityState } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { defineComponent, h, provide, ref } from 'vue'
+import { computed, defineComponent, h, provide, ref } from 'vue'
 
 import ColumnPicker from '@/monitoring/shared/components/ColumnPicker.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
@@ -25,20 +25,37 @@ const TOGGLEABLE: ToggleableColumn[] = [
 
 const DEFAULT_VISIBILITY: VisibilityState = { alias: false }
 
-function mountPicker(visibility: VisibilityState = { ...DEFAULT_VISIBILITY }) {
+function mountPicker(
+  visibility: VisibilityState = { ...DEFAULT_VISIBILITY },
+  columnFilters: ColumnFiltersState = []
+) {
   const columnVisibility = ref<VisibilityState>({ ...visibility })
   const updateColumnVisibility = vi.fn((next: VisibilityState) => {
     columnVisibility.value = next
   })
   const resetColumnVisibility = vi.fn(() => {
-    columnVisibility.value = { ...DEFAULT_VISIBILITY }
+    columnVisibility.value = withFilteredColumnsShown({ ...DEFAULT_VISIBILITY })
   })
+  function withFilteredColumnsShown(visibility: VisibilityState): VisibilityState {
+    const filtered = new Set(columnFilters.map((filter) => filter.id))
+    const guarded = { ...visibility }
+    for (const { id } of TOGGLEABLE) {
+      if (filtered.has(id) && columnVisibility.value[id] !== false) {
+        guarded[id] = true
+      }
+    }
+    return guarded
+  }
   const mockService = {
     toggleableColumns: TOGGLEABLE,
     columnVisibility,
     defaultColumnVisibility: { ...DEFAULT_VISIBILITY },
-    updateColumnVisibility,
+    updateColumnVisibility: vi.fn((next: VisibilityState) =>
+      updateColumnVisibility(withFilteredColumnsShown(next))
+    ),
     resetColumnVisibility,
+    withFilteredColumnsShown,
+    tableColumnFilters: computed(() => columnFilters),
     beginAutoPause: vi.fn(),
     endAutoPause: vi.fn()
   }
@@ -169,4 +186,83 @@ test('"Back to default" stages the default set and commits it on Apply', async (
 
   await user.click(screen.getByRole('button', { name: 'Apply' }))
   expect(resetColumnVisibility).toHaveBeenCalledTimes(1)
+})
+
+test('a column filtering the listing cannot be hidden', async () => {
+  const { updateColumnVisibility } = mountPicker({ alias: false }, [
+    { id: 'address', value: { type: 'contains', field: 'address', value: '10.' } }
+  ])
+
+  const user = await openPicker()
+  const address = screen.getByRole('button', { name: 'IP address' })
+
+  expect(address).toHaveAttribute('aria-disabled', 'true')
+
+  await user.click(address)
+  await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+  expect(address).toHaveAttribute('aria-pressed', 'true')
+  expect(updateColumnVisibility).not.toHaveBeenCalled()
+})
+
+test('a filtered column keeps its hint reachable, not on a disabled button', async () => {
+  mountPicker({ alias: false }, [
+    { id: 'address', value: { type: 'contains', field: 'address', value: '10.' } }
+  ])
+
+  await openPicker()
+  const address = screen.getByRole('button', { name: 'IP address' })
+
+  // A native `disabled` button gets no hover in Chromium, so the title would never show.
+  expect(address).toBeEnabled()
+  expect(address).toHaveAttribute('title', 'Clear the filter on IP address before hiding it')
+})
+
+test('"Back to default" cannot hide a filtered column either', async () => {
+  const { columnVisibility } = mountPicker({ alias: true, address: true }, [
+    { id: 'alias', value: { type: 'contains', field: 'alias', value: 'web' } }
+  ])
+
+  const user = await openPicker()
+  await user.click(screen.getByRole('button', { name: 'Back to default' }))
+
+  // `alias` is hidden by default, so the unguarded reset used to drop it while its filter stayed on.
+  expect(screen.getByRole('button', { name: 'Alias', pressed: true })).toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+  expect(columnVisibility.value['alias']).not.toBe(false)
+})
+
+test('a column without a filter stays hideable while another one is filtered', async () => {
+  const { updateColumnVisibility } = mountPicker({ alias: true }, [
+    { id: 'address', value: { type: 'contains', field: 'address', value: '10.' } }
+  ])
+
+  const user = await openPicker()
+  const alias = screen.getByRole('button', { name: 'Alias' })
+
+  expect(alias).toBeEnabled()
+
+  await user.click(alias)
+  await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+  // `address` comes back explicitly shown: it is filtered, so the service pins it.
+  expect(updateColumnVisibility).toHaveBeenCalledWith({ alias: false, address: true })
+})
+
+test('a hidden column can still be shown while its filter is active', async () => {
+  const { updateColumnVisibility } = mountPicker({ alias: false }, [
+    { id: 'alias', value: { type: 'contains', field: 'alias', value: 'web' } }
+  ])
+
+  const user = await openPicker()
+  const alias = screen.getByRole('button', { name: 'Alias' })
+
+  expect(alias).toBeEnabled()
+
+  await user.click(alias)
+  await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+  expect(updateColumnVisibility).toHaveBeenCalledWith({ alias: true })
 })

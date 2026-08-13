@@ -389,14 +389,31 @@ export abstract class MonitoringService<T> extends ServiceBase {
     void this.fetch()
   }
 
+  /**
+   * Hiding a shown column whose funnel filters the listing would leave that filter narrowing the
+   * rows with nothing on screen pointing at it, so such a column is kept shown. A column that is
+   * already hidden stays hidden, or a filter set elsewhere could never be got rid of.
+   */
+  withFilteredColumnsShown(visibility: VisibilityState): VisibilityState {
+    const filtered = new Set(this.tableColumnFilters.value.map((filter) => filter.id))
+    const guarded = { ...visibility }
+    for (const { id } of this.toggleableColumns) {
+      if (filtered.has(id) && this.columnVisibility.value[id] !== false) {
+        guarded[id] = true
+      }
+    }
+    return guarded
+  }
+
   updateColumnVisibility(visibility: VisibilityState): void {
+    const guarded = this.withFilteredColumnsShown(visibility)
     // A view may narrow its request to the columns on show, in which case a
     // column that was hidden has no data behind it yet and revealing one has to
     // fetch. Hiding needs nothing: that data is already here, merely unused.
     const revealed = this.toggleableColumns.some(
-      ({ id }) => this.columnVisibility.value[id] === false && visibility[id] !== false
+      ({ id }) => this.columnVisibility.value[id] === false && guarded[id] !== false
     )
-    this.columnVisibility.value = visibility
+    this.columnVisibility.value = guarded
     if (revealed) {
       void this.fetch()
     }

@@ -21,9 +21,12 @@ const { _t } = usei18n()
 
 const monitoringService = inject(MONITORING_SERVICE, null)
 
-const staged = computed<VisibilityState>(
-  () => draft.value ?? monitoringService?.defaultColumnVisibility ?? {}
-)
+// Guarded, so that "Back to default" previews what the service will really commit rather than a
+// hidden state it is about to refuse.
+const staged = computed<VisibilityState>(() => {
+  const candidate = draft.value ?? monitoringService?.defaultColumnVisibility ?? {}
+  return monitoringService?.withFilteredColumnsShown(candidate) ?? candidate
+})
 
 const searchText = ref('')
 
@@ -31,17 +34,27 @@ interface VisibilityRow {
   id: string
   label: string
   visible: boolean
+  /** A shown column whose funnel filters the listing: hiding it would drop the filter out of sight. */
+  locked: boolean
 }
+
+const filteredColumnIds = computed(
+  () => new Set(monitoringService?.tableColumnFilters.value.map((filter) => filter.id) ?? [])
+)
 
 const rows = computed<VisibilityRow[]>(() => {
   if (!monitoringService) {
     return []
   }
-  return monitoringService.toggleableColumns.map((column) => ({
-    id: column.id,
-    label: column.label,
-    visible: staged.value[column.id] !== false
-  }))
+  return monitoringService.toggleableColumns.map((column) => {
+    const visible = staged.value[column.id] !== false
+    return {
+      id: column.id,
+      label: column.label,
+      visible,
+      locked: visible && filteredColumnIds.value.has(column.id)
+    }
+  })
 })
 
 const visibleRows = computed<VisibilityRow[]>(() => {
@@ -52,8 +65,12 @@ const visibleRows = computed<VisibilityRow[]>(() => {
   return rows.value.filter((row) => row.label.toLowerCase().includes(needle))
 })
 
-function setVisible(id: string, visible: boolean): void {
-  draft.value = { ...staged.value, [id]: visible }
+function toggleVisible(row: VisibilityRow): void {
+  // The row is aria-disabled rather than disabled, so the click still arrives here.
+  if (row.locked) {
+    return
+  }
+  draft.value = { ...staged.value, [row.id]: !row.visible }
 }
 </script>
 
@@ -68,7 +85,14 @@ function setVisible(id: string, visible: boolean): void {
         type="button"
         class="monitoring-filter-column-visibility__row"
         :aria-pressed="row.visible"
-        @click="setVisible(row.id, !row.visible)"
+        :class="{ 'monitoring-filter-column-visibility__row--locked': row.locked }"
+        :aria-disabled="row.locked"
+        :title="
+          row.locked
+            ? _t('Clear the filter on %{column} before hiding it', { column: row.label })
+            : undefined
+        "
+        @click="toggleVisible(row)"
       >
         <CmkMultitoneIcon
           :name="row.visible ? 'eye' : 'eye-crossed-out'"
@@ -115,6 +139,13 @@ function setVisible(id: string, visible: boolean): void {
   &:focus-within,
   &:focus-visible {
     background-color: var(--ux-theme-3);
+  }
+
+  /* aria-disabled, not disabled: Chromium fires no hover on a disabled button, so its `title`
+     hint - the whole point of the state - would never reach the user. */
+  &.monitoring-filter-column-visibility__row--locked {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 

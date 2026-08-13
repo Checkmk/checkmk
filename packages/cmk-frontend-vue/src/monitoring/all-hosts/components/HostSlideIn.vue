@@ -8,7 +8,7 @@ import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, markRaw, ref, watch } from 'vue'
+import { computed, markRaw } from 'vue'
 
 import { HostApi } from '@/monitoring/all-hosts/api/hosts'
 import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
@@ -16,13 +16,13 @@ import ActionFeedback, {
   type ActionFeedback as ActionFeedbackResult
 } from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
-import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
+import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
 
 import HostOverviewSkeleton from './slide-in/HostOverviewSkeleton.vue'
 import HostOverviewTab from './slide-in/HostOverviewTab.vue'
-import HostSlideInActions from './slide-in/HostSlideInActions.vue'
 import HostSlideInHeader from './slide-in/HostSlideInHeader.vue'
 
 const props = withDefaults(
@@ -32,9 +32,11 @@ const props = withDefaults(
     actions: MonitoringActionRegistry
     /** Row action buttons carrying the `{host}` placeholder, resolved here per host. */
     rowActions?: CellAction[]
+    /** The actions the backend reports this user may run on a host. */
+    permittedActions?: CellAction[]
     loadActionMenu: (host: HostRef) => Promise<CellAction[]>
   }>(),
-  { rowActions: () => [] }
+  { rowActions: () => [], permittedActions: () => [] }
 )
 
 const emit = defineEmits<{
@@ -46,15 +48,31 @@ const { _t } = usei18n()
 
 const hostApi = new HostApi()
 
-const activeActionId = ref<string | null>(null)
-const runningActionId = ref<string | null>(null)
-const feedback = ref<ActionFeedbackResult | null>(null)
-const feedbackOpen = ref(false)
-
 const open = computed(() => props.host !== null)
 
 const targets = computed<HostRef[]>(() =>
   props.host ? [{ site_id: props.host.site_id, name: props.host.name }] : []
+)
+
+// Only the actions the user may run and that this page actually implements reach the buttons.
+const slideInActions = computed(() =>
+  props.permittedActions.filter((action) => action.id in props.actions)
+)
+
+const {
+  activeActionId,
+  runningActionId,
+  feedback,
+  feedbackOpen,
+  openAction,
+  closeAction,
+  applyFeedback,
+  perform
+} = useSlideInActions<HostRef>(
+  () => props.actions,
+  targets,
+  () => props.host,
+  (result) => emit('performed', result)
 )
 
 const inlineActions = computed<CellAction[]>(() => {
@@ -102,57 +120,8 @@ const tabs = computed<SlideInTab[]>(() => {
   ]
 })
 
-watch(
-  () => props.host,
-  () => {
-    activeActionId.value = null
-    runningActionId.value = null
-    feedback.value = null
-  }
-)
-
-async function openAction(actionId: string): Promise<void> {
-  if (!(actionId in props.actions)) {
-    return
-  }
-  if (actionId === RESCHEDULE_ACTION_ID) {
-    await performImmediately(actionId)
-    return
-  }
-  feedback.value = null
-  activeActionId.value = actionId
-}
-
-async function performImmediately(actionId: string): Promise<void> {
-  const action = props.actions[actionId]
-  if (!action || targets.value.length === 0) {
-    return
-  }
-  runningActionId.value = actionId
-  try {
-    onFeedback(await action.perform(targets.value, action.defaultValues()))
-  } finally {
-    runningActionId.value = null
-  }
-}
-
-function closeAction(): void {
-  activeActionId.value = null
-}
-
-function onFeedback(result: ActionFeedbackResult): void {
-  feedback.value = result
-  feedbackOpen.value = true
-  activeActionId.value = null
-  emit('performed', result)
-}
-
 async function onCommand(payload: { id: string; host: HostRef }): Promise<void> {
-  const action = props.actions[payload.id]
-  if (!action) {
-    return
-  }
-  onFeedback(await action.perform([payload.host], action.defaultValues()))
+  await perform(payload.id, [payload.host])
 }
 </script>
 
@@ -173,8 +142,12 @@ async function onCommand(payload: { id: string; host: HostRef }): Promise<void> 
         @command="onCommand"
       />
     </template>
-    <template #actions>
-      <HostSlideInActions :running-action-id="runningActionId" @select="openAction" />
+    <template v-if="slideInActions.length" #actions>
+      <SlideInActions
+        :actions="slideInActions"
+        :running-action-id="runningActionId"
+        @select="openAction"
+      />
       <ActionFeedback
         v-if="feedback"
         v-model:open="feedbackOpen"
@@ -195,7 +168,7 @@ async function onCommand(payload: { id: string; host: HostRef }): Promise<void> 
         indent
         :show-count="false"
         @cancel="closeAction"
-        @feedback="onFeedback"
+        @feedback="applyFeedback"
       />
     </template>
   </CmkSlideInTabbed>

@@ -272,6 +272,7 @@ function onActionPerformed(result: ActionFeedbackResult): void {
       :host="slideInHost"
       :actions="actionRegistry"
       :row-actions="rowActionButtons"
+      :permitted-actions="hostActions"
       :load-action-menu="loadActionMenu"
       @close="closeSlideIn"
       @performed="onActionPerformed"

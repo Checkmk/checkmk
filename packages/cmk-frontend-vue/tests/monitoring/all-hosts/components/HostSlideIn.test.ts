@@ -17,6 +17,7 @@ import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/ack
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
+import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 
 const RUNNING_CLASS = 'cmk-button--running'
 const RESCHEDULE_LABEL = 'Reschedule check'
@@ -72,9 +73,18 @@ function makeRegistry(perform: MonitoringAction['perform']): MonitoringActionReg
   }
 }
 
-function renderSlideIn(actions: MonitoringActionRegistry, host: HostEntry | null = makeHost()) {
+const PERMITTED_ACTIONS: CellAction[] = [
+  { id: ACK_ACTION_ID, label: untranslated(ACK_LABEL), icon: 'ack' },
+  { id: RESCHEDULE_ACTION_ID, label: untranslated(RESCHEDULE_LABEL), icon: 'reload' }
+]
+
+function renderSlideIn(
+  actions: MonitoringActionRegistry,
+  host: HostEntry | null = makeHost(),
+  permittedActions: CellAction[] = PERMITTED_ACTIONS
+) {
   return render(HostSlideIn, {
-    props: { host, actions, loadActionMenu: async () => [] }
+    props: { host, actions, permittedActions, loadActionMenu: async () => [] }
   })
 }
 
@@ -152,5 +162,31 @@ describe('HostSlideIn', () => {
     expect(perform).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: /Back to host detail view/ })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: RESCHEDULE_LABEL })).not.toBeInTheDocument()
+  })
+
+  it('shows no action buttons to a user who may run none of them', async () => {
+    renderSlideIn(makeRegistry(vi.fn()), makeHost(), [])
+
+    await screen.findByText('Host details')
+
+    expect(screen.queryByRole('button', { name: RESCHEDULE_LABEL })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: ACK_LABEL })).not.toBeInTheDocument()
+  })
+
+  it('leaves out a permitted action this page cannot perform', async () => {
+    renderSlideIn(makeRegistry(vi.fn()), makeHost(), [
+      ...PERMITTED_ACTIONS,
+      {
+        id: 'send_custom_notification',
+        label: untranslated('Send custom notification'),
+        icon: 'notifications'
+      }
+    ])
+
+    await screen.findByRole('button', { name: ACK_LABEL })
+
+    expect(
+      screen.queryByRole('button', { name: 'Send custom notification' })
+    ).not.toBeInTheDocument()
   })
 })

@@ -6,13 +6,42 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import type { ExplainThisIssueData } from 'cmk-shared-typing/typescript/ai_button'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ServiceSlideIn from '@/monitoring/host-services/components/ServiceSlideIn.vue'
 import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
+import type { ActionFeedback } from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import { ACK_ACTION_ID } from '@/monitoring/shared/components/action/actions/acknowledge'
+import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
+import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
+import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 
 const HOST: HostRef = { site_id: 'local', name: 'web-server-01' }
+
+const PERMITTED_ACTIONS: CellAction[] = [
+  { id: ACK_ACTION_ID, label: 'Acknowledge problem' as TranslatedString, icon: 'ack' },
+  { id: RESCHEDULE_ACTION_ID, label: 'Reschedule check' as TranslatedString, icon: 'reload' }
+]
+
+const SUCCESS: ActionFeedback = { variant: 'success', message: 'Done' as TranslatedString }
+
+function makeActionRegistry(
+  perform: (targets: string[]) => Promise<ActionFeedback> = async () => SUCCESS
+): MonitoringActionRegistry<string> {
+  const action = (id: string, title: string) => ({
+    id,
+    title: title as TranslatedString,
+    submitLabel: title as TranslatedString,
+    defaultValues: () => ({}),
+    perform: (targets: string[]) => perform(targets)
+  })
+  return {
+    [ACK_ACTION_ID]: action(ACK_ACTION_ID, 'Acknowledge problem'),
+    [RESCHEDULE_ACTION_ID]: action(RESCHEDULE_ACTION_ID, 'Reschedule check')
+  }
+}
 
 function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntry {
   return {
@@ -179,6 +208,96 @@ describe('ServiceSlideIn', () => {
       'href',
       'wato.py?mode=object_parameters&host=web-server-01&service=CPU+load'
     )
+  })
+
+  it('offers the actions the user may run on the service', async () => {
+    render(ServiceSlideIn, {
+      props: {
+        service: makeService(),
+        host: HOST,
+        actions: makeActionRegistry(),
+        permittedActions: PERMITTED_ACTIONS
+      }
+    })
+
+    expect(await screen.findByRole('button', { name: 'Acknowledge problem' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reschedule check' })).toBeInTheDocument()
+  })
+
+  it('shows no action buttons to a user who may run none of them', async () => {
+    render(ServiceSlideIn, {
+      props: { service: makeService(), host: HOST, actions: makeActionRegistry() }
+    })
+    await screen.findByText('Service details')
+
+    expect(screen.queryByRole('button', { name: 'Acknowledge problem' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reschedule check' })).not.toBeInTheDocument()
+  })
+
+  it('leaves out a permitted action this page cannot perform', async () => {
+    render(ServiceSlideIn, {
+      props: {
+        service: makeService(),
+        host: HOST,
+        actions: makeActionRegistry(),
+        permittedActions: [
+          ...PERMITTED_ACTIONS,
+          {
+            id: 'send_custom_notification',
+            label: 'Send custom notification' as TranslatedString,
+            icon: 'notifications'
+          }
+        ]
+      }
+    })
+
+    await screen.findByRole('button', { name: 'Acknowledge problem' })
+
+    expect(
+      screen.queryByRole('button', { name: 'Send custom notification' })
+    ).not.toBeInTheDocument()
+  })
+
+  it('performs a reschedule on the shown service right away', async () => {
+    const performed: string[][] = []
+    render(ServiceSlideIn, {
+      props: {
+        service: makeService(),
+        host: HOST,
+        actions: makeActionRegistry(async (targets) => {
+          performed.push(targets)
+          return SUCCESS
+        }),
+        permittedActions: PERMITTED_ACTIONS
+      }
+    })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Reschedule check' }))
+
+    expect(performed).toEqual([['CPU load']])
+    expect(await screen.findByText('Done')).toBeInTheDocument()
+  })
+
+  it('opens the form of an action that needs input instead of performing it', async () => {
+    const performed: string[][] = []
+    render(ServiceSlideIn, {
+      props: {
+        service: makeService(),
+        host: HOST,
+        actions: makeActionRegistry(async (targets) => {
+          performed.push(targets)
+          return SUCCESS
+        }),
+        permittedActions: PERMITTED_ACTIONS
+      }
+    })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Acknowledge problem' }))
+
+    expect(performed).toEqual([])
+    expect(
+      await screen.findByRole('button', { name: 'Back to service detail view' })
+    ).toBeInTheDocument()
   })
 
   it('hides the parameters button from users who may not see rulesets', async () => {

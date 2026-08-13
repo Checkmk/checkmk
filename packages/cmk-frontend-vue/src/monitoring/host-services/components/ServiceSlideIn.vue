@@ -4,13 +4,22 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw, ref, watch } from 'vue'
 
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
 import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
+import ActionFeedback, {
+  type ActionFeedback as ActionFeedbackResult
+} from '@/monitoring/shared/components/action/ActionFeedback.vue'
+import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
+import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
+import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
+import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
 
 import ServiceAiExplainButton from './slide-in/ServiceAiExplainButton.vue'
 import ServiceOverviewSkeleton from './slide-in/ServiceOverviewSkeleton.vue'
@@ -24,12 +33,16 @@ const props = withDefaults(
     host: HostRef
     /** Offer the cloud edition's "Explain with AI" action. */
     aiExplain?: boolean
+    /** The actions this user may run, as reported by the backend; targets are service names. */
+    actions?: MonitoringActionRegistry<string>
+    permittedActions?: CellAction[]
   }>(),
-  { aiExplain: false }
+  { aiExplain: false, actions: () => ({}), permittedActions: () => [] }
 )
 
 const emit = defineEmits<{
   (event: 'close'): void
+  (event: 'performed', result: ActionFeedbackResult): void
 }>()
 
 const { _t } = usei18n()
@@ -41,6 +54,28 @@ const open = computed(() => props.service !== null)
 // The header outlives the tab body, so the loaded overview is kept here rather than only being
 // handed to the tab component.
 const overview = ref<ServiceOverview | null>(null)
+
+// Only the actions the user may run and that this page actually implements reach the buttons.
+const slideInActions = computed(() =>
+  props.permittedActions.filter((action) => action.id in props.actions)
+)
+
+const targets = computed<string[]>(() => (props.service ? [props.service.name] : []))
+
+const {
+  activeActionId,
+  runningActionId,
+  feedback,
+  feedbackOpen,
+  openAction,
+  closeAction,
+  applyFeedback
+} = useSlideInActions<string>(
+  () => props.actions,
+  targets,
+  () => props.service,
+  (result) => emit('performed', result)
+)
 
 watch(
   () => props.service,
@@ -110,6 +145,7 @@ const tabs = computed<SlideInTab[]>(() => {
     :key="service?.name ?? ''"
     :open="open"
     :tabs="tabs"
+    :override-active="activeActionId !== null"
     :header="{ title: _t('Service details'), closeButton: true }"
     @close="emit('close')"
   >
@@ -122,5 +158,45 @@ const tabs = computed<SlideInTab[]>(() => {
       />
       <ServiceAiExplainButton v-if="aiExplain && overview" :overview="overview" />
     </template>
+    <template v-if="slideInActions.length" #actions>
+      <SlideInActions
+        :actions="slideInActions"
+        :running-action-id="runningActionId"
+        @select="openAction"
+      />
+      <ActionFeedback
+        v-if="feedback"
+        v-model:open="feedbackOpen"
+        class="monitoring-service-slide-in__feedback"
+        :feedback="feedback"
+      />
+    </template>
+    <template #override>
+      <CmkButton variant="optional" class="monitoring-service-slide-in__back" @click="closeAction">
+        <CmkIcon name="back" size="small" />
+        {{ _t('Back to service detail view') }}
+      </CmkButton>
+      <MonitoringActionPane
+        v-if="activeActionId"
+        :action-id="activeActionId"
+        :actions="actions"
+        :targets="targets"
+        indent
+        :show-count="false"
+        @cancel="closeAction"
+        @feedback="applyFeedback"
+      />
+    </template>
   </CmkSlideInTabbed>
 </template>
+
+<style scoped>
+.monitoring-service-slide-in__feedback {
+  margin-top: var(--spacing);
+}
+
+.monitoring-service-slide-in__back {
+  gap: var(--dimension-3);
+  margin-bottom: var(--spacing);
+}
+</style>

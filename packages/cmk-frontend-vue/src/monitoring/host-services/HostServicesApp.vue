@@ -198,7 +198,10 @@ function onActionPerformed(result: ActionFeedbackResult): void {
       :service="slideInService"
       :host="host"
       :ai-explain="props.ai_explain ?? false"
+      :actions="actionRegistry"
+      :permitted-actions="serviceActions"
       @close="closeSlideIn"
+      @performed="onActionPerformed"
     />
   </div>
 </template>

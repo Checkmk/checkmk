@@ -9,7 +9,7 @@ UNIT_ELECTRICAL_POWER = metrics.Unit(metrics.DecimalNotation("W"), metrics.AutoP
 
 metric_power_usage = metrics.Metric(
     name="power_usage",
-    title=Title("Power Usage"),
+    title=Title("Power usage"),
     unit=UNIT_ELECTRICAL_POWER,
     color=metrics.Color.PINK,
 )

@@ -40,7 +40,7 @@ metric_mem_lnx_writeback_tmp = metrics.Metric(
 
 graph_filesystem_writeback = graphs.Graph(
     name="filesystem_writeback",
-    title=Title("Filesystem writeback"),
+    title=Title("File system writeback"),
     compound_lines=[
         "mem_lnx_dirty",
         "mem_lnx_writeback",

@@ -22,7 +22,7 @@ metric_msgs_avg = metrics.Metric(
 )
 metric_messages_rate = metrics.Metric(
     name="messages_rate",
-    title=Title("Message Rate"),
+    title=Title("Message rate"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_BLUE,
 )

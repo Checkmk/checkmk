@@ -54,7 +54,7 @@ def test_add_graphing_plugins() -> None:
 
     assert get_graph_plugin_from_id(graphs_from_api, "db_connections") == graphs_api.Graph(
         name="db_connections",
-        title=graphing_api.Title("DB Connections"),
+        title=graphing_api.Title("DB connections"),
         simple_lines=[
             "active_connections",
             "idle_connections",

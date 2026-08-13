@@ -9,7 +9,7 @@ UNIT_PARTS_PER_MILLION = metrics.Unit(metrics.DecimalNotation("ppm"))
 
 metric_parts_per_million = metrics.Metric(
     name="parts_per_million",
-    title=Title("Parts per Million"),
+    title=Title("Parts per million"),
     unit=UNIT_PARTS_PER_MILLION,
     color=metrics.Color.DARK_BLUE,
 )

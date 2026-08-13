@@ -24,7 +24,7 @@ def _make_form() -> Dictionary:
             "levels": DictElement(
                 required=True,
                 parameter_form=SimpleLevels(
-                    title=Title("Voltage Levels"),
+                    title=Title("Voltage levels"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Float(unit_symbol="V"),
                     migrate=migrate_to_float_simple_levels,

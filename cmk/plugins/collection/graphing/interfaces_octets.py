@@ -135,7 +135,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
         ],
         simple_lines=[
             metrics.Product(
-                Title("Warning of Output bandwidth"),
+                Title("Warning of output bandwidth"),
                 UNIT_BITS_PER_SECOND,
                 metrics.Color.YELLOW,
                 [
@@ -149,7 +149,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
                 ],
             ),
             metrics.Product(
-                Title("Critical of Output bandwidth"),
+                Title("Critical of output bandwidth"),
                 UNIT_BITS_PER_SECOND,
                 metrics.Color.RED,
                 [
@@ -185,7 +185,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
         ],
         simple_lines=[
             metrics.Product(
-                Title("Warning of Input bandwidth"),
+                Title("Warning of input bandwidth"),
                 UNIT_BITS_PER_SECOND,
                 metrics.Color.YELLOW,
                 [
@@ -199,7 +199,7 @@ graph_bandwidth_translated = graphs.Bidirectional(
                 ],
             ),
             metrics.Product(
-                Title("Critical of Input bandwidth"),
+                Title("Critical of input bandwidth"),
                 UNIT_BITS_PER_SECOND,
                 metrics.Color.RED,
                 [

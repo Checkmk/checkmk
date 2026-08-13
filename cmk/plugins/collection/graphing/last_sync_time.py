@@ -22,7 +22,7 @@ metric_last_sync_time = metrics.Metric(
 
 graph_last_sync_time = graphs.Graph(
     name="last_sync_time",
-    title=Title("Time since last synchronisation"),
+    title=Title("Time since last synchronization"),
     simple_lines=[
         "last_sync_time",
         "last_sync_receive_time",

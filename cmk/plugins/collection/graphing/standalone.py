@@ -423,7 +423,7 @@ metric_connections_rate = metrics.Metric(
 )
 metric_packet_velocity_asic = metrics.Metric(
     name="packet_velocity_asic",
-    title=Title("Packet velocity asic"),
+    title=Title("Packet velocity ASIC"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.GREEN,
 )
@@ -753,31 +753,31 @@ metric_sip_authentication_errors = metrics.Metric(
 )
 metric_mediation_load_call_failure_index = metrics.Metric(
     name="mediation_load_call_failure_index",
-    title=Title("MediationServer - Load call failure index"),
+    title=Title("Mediation server - Load call failure index"),
     unit=UNIT_COUNTER,
     color=metrics.Color.DARK_BLUE,
 )
 metric_mediation_failed_calls_because_of_proxy = metrics.Metric(
     name="mediation_failed_calls_because_of_proxy",
-    title=Title("MediationServer - Failed calls caused by unexpected interaction from proxy"),
+    title=Title("Mediation server - failed calls caused by unexpected interaction from proxy"),
     unit=UNIT_COUNTER,
     color=metrics.Color.DARK_BLUE,
 )
 metric_mediation_failed_calls_because_of_gateway = metrics.Metric(
     name="mediation_failed_calls_because_of_gateway",
-    title=Title("MediationServer - Failed calls caused by unexpected interaction from gateway"),
+    title=Title("Mediation server - Failed calls caused by unexpected interaction of gateway"),
     unit=UNIT_COUNTER,
     color=metrics.Color.DARK_BLUE,
 )
 metric_mediation_media_connectivity_failure = metrics.Metric(
     name="mediation_media_connectivity_failure",
-    title=Title("Mediation Server - Media connectivity check failure"),
+    title=Title("Mediation server - Media connectivity check failure"),
     unit=UNIT_COUNTER,
     color=metrics.Color.DARK_BLUE,
 )
 metric_avauth_failed_requests = metrics.Metric(
     name="avauth_failed_requests",
-    title=Title("A/V Auth - Bad requests received"),
+    title=Title("A/V Auth - bad requests received"),
     unit=UNIT_COUNTER,
     color=metrics.Color.DARK_BLUE,
 )
@@ -1113,7 +1113,7 @@ metric_used_snat_ports = metrics.Metric(
 )
 metric_power_usage_percentage = metrics.Metric(
     name="power_usage_percentage",
-    title=Title("Power Usage"),
+    title=Title("Power usage"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.DARK_PINK,
 )
@@ -1263,7 +1263,7 @@ metric_egress_packet_drop = metrics.Metric(
 )
 metric_data_files = metrics.Metric(
     name="data_files",
-    title=Title("Data files size"),
+    title=Title("Datafiles size"),
     unit=UNIT_BYTES,
     color=metrics.Color.CYAN,
 )
@@ -2087,43 +2087,43 @@ metric_fcp_other_ops = metrics.Metric(
 )
 metric_iscsi_other_data = metrics.Metric(
     name="iscsi_other_data",
-    title=Title("ISCSI other data"),
+    title=Title("iSCSI other data"),
     unit=UNIT_BYTES,
     color=metrics.Color.YELLOW,
 )
 metric_iscsi_other_latency = metrics.Metric(
     name="iscsi_other_latency",
-    title=Title("ISCSI other latency"),
+    title=Title("iSCSI other latency"),
     unit=UNIT_TIME,
     color=metrics.Color.YELLOW,
 )
 metric_iscsi_read_ios = metrics.Metric(
     name="iscsi_read_ios",
-    title=Title("ISCSI read ios"),
+    title=Title("iSCSI read IOs"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.CYAN,
 )
 metric_iscsi_write_ios = metrics.Metric(
     name="iscsi_write_ios",
-    title=Title("ISCSI write ios"),
+    title=Title("iSCSI write IOs"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_BLUE,
 )
 metric_iscsi_read_throughput = metrics.Metric(
     name="iscsi_read_throughput",
-    title=Title("ISCSI read throughput"),
+    title=Title("iSCSI read throughput"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.CYAN,
 )
 metric_iscsi_write_throughput = metrics.Metric(
     name="iscsi_write_throughput",
-    title=Title("ISCSI write throughput"),
+    title=Title("iSCSI write throughput"),
     unit=UNIT_BYTES_PER_SECOND,
     color=metrics.Color.DARK_BLUE,
 )
 metric_iscsi_other_ops = metrics.Metric(
     name="iscsi_other_ops",
-    title=Title("ISCSI other ops"),
+    title=Title("iSCSI other ops"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.YELLOW,
 )

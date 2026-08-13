@@ -81,7 +81,7 @@ def _parameter_form() -> Dictionary:
             ),
             "latency": DictElement(
                 parameter_form=Levels(
-                    title=Title("IO latency"),
+                    title=Title("I/O latency"),
                     form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.MILLISECOND]),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.08, 0.16)),
@@ -150,7 +150,7 @@ def _parameter_form() -> Dictionary:
 
 rule_spec_disk_io = CheckParameters(
     name="disk_io",
-    title=Title("Disk IO levels (old style checks)"),
+    title=Title("Disk I/O levels (old style checks)"),
     topic=Topic.STORAGE,
     parameter_form=_parameter_form,
     condition=HostAndItemCondition(
@@ -159,7 +159,7 @@ rule_spec_disk_io = CheckParameters(
             help_text=Help(
                 "For a summarized throughput of all disks, specify <tt>SUMMARY</tt>. For a "
                 "sum of read or write throughput, write <tt>read</tt> or <tt>write</tt> resp. "
-                "A per-disk IO is specified by the drive letter, a colon and a slash on Windows "
+                "A per-disk I/O is specified by the drive letter, a colon and a slash on Windows "
                 "(e.g. <tt>C:/</tt>) or by the device name on Linux/Unix (e.g. <tt>/dev/sda</tt>)."
             ),
         ),

@@ -61,7 +61,7 @@ metric_influxdb_queue_usage_rate = metrics.Metric(
 )
 metric_influxdb_overflows_rate = metrics.Metric(
     name="influxdb_overflows_rate",
-    title=Title("Rate of performance data loss for InfluxDB"),
+    title=Title("Rate of metrics loss for InfluxDB"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.YELLOW,
 )
@@ -85,7 +85,7 @@ metric_rrdcached_queue_usage_rate = metrics.Metric(
 )
 metric_rrdcached_overflows_rate = metrics.Metric(
     name="rrdcached_overflows_rate",
-    title=Title("Rate of performance data loss for RRD"),
+    title=Title("Rate of metrics loss for RRD"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.YELLOW,
 )
@@ -109,7 +109,7 @@ metric_carbon_queue_usage_rate = metrics.Metric(
 )
 metric_carbon_overflows_rate = metrics.Metric(
     name="carbon_overflows_rate",
-    title=Title("Rate of performance data loss for Carbon"),
+    title=Title("Rate of metrics loss for Carbon"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.YELLOW,
 )

@@ -416,7 +416,7 @@ _ALLOWED_DUPLICATE_METRIC_TITLES = {
         "mobileiron_non_compliant",
         "mobileiron_non_compliant_summary",
     },
-    "Power Usage": {"power_usage", "power_usage_percentage"},
+    "Power usage": {"power_usage", "power_usage_percentage"},
     "Pressure": {"pressure_pa", "pressure"},
     "Queue length": {"queue", "queue_length"},
     "Read latency": {"db_read_latency_s", "read_latency"},

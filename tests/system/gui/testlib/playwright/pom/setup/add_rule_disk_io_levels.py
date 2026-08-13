@@ -26,7 +26,7 @@ class AddRuleDiskIOLevels(CmkPage):
         `tests/system/gui/testlib/playwright/pom/setup/diskstat_value_levels.py`.
     """
 
-    rule_name = "Disk IO levels"
+    rule_name = "Disk I/O levels"
     section_name = "Service monitoring rules"
     url_specific = "%3Adiskstat"
     url_pattern = "varname=checkgroup_parameters%s&mode=new_rule"

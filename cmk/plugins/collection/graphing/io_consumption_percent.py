@@ -9,7 +9,7 @@ UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))
 
 metric_io_consumption_percent = metrics.Metric(
     name="io_consumption_percent",
-    title=Title("Storage IO consumption"),
+    title=Title("Storage I/O consumption"),
     unit=UNIT_PERCENTAGE,
     color=metrics.Color.BLUE,
 )

@@ -40,7 +40,7 @@ perfometer_inbound_and_outbound_messages = perfometers.Perfometer(
 
 graph_inbound_and_outbound_messages = graphs.Graph(
     name="inbound_and_outbound_messages",
-    title=Title("Inbound and Outbound Messages"),
+    title=Title("Inbound and outbound messages"),
     compound_lines=[
         "messages_outbound",
         "messages_inbound",

@@ -12,7 +12,7 @@ UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(
 
 metric_cmk_services_ok = metrics.Metric(
     name="cmk_services_ok",
-    title=Title("Ok services"),
+    title=Title("OK services"),
     unit=UNIT_NUMBER,
     color=metrics.Color.DARK_CYAN,
 )
@@ -24,19 +24,19 @@ metric_cmk_services_in_downtime = metrics.Metric(
 )
 metric_cmk_services_on_down_hosts = metrics.Metric(
     name="cmk_services_on_down_hosts",
-    title=Title("Services of down hosts"),
+    title=Title("Services of DOWN hosts"),
     unit=UNIT_NUMBER,
     color=metrics.Color.BLUE,  # CSS counterpart: $hexagon-host-down-color
 )
 metric_cmk_services_warning = metrics.Metric(
     name="cmk_services_warning",
-    title=Title("Warning services"),
+    title=Title("WARNING services"),
     unit=UNIT_NUMBER,
     color=metrics.Color.YELLOW,  # CSS counterpart: $color-state-1-background
 )
 metric_cmk_services_unknown = metrics.Metric(
     name="cmk_services_unknown",
-    title=Title("Unknown services"),
+    title=Title("UNKNOWN services"),
     unit=UNIT_NUMBER,
     color=metrics.Color.ORANGE,  # CSS counterpart: $hexagon-unknown-color
 )

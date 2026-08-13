@@ -140,7 +140,7 @@ graph_fs_used_2 = graphs.Graph(
     ],
     simple_lines=[
         metrics.Sum(
-            Title("Filesystem size"),
+            Title("File system size"),
             metrics.Color.DARK_GREEN,
             [
                 "fs_used",
@@ -168,7 +168,7 @@ graph_savings = graphs.Graph(
     ],
     simple_lines=[
         metrics.Sum(
-            Title("Filesystem size"),
+            Title("File system size"),
             metrics.Color.DARK_GREEN,
             [
                 "fs_used",

@@ -11,6 +11,7 @@ from pytest import MonkeyPatch
 from livestatus import SiteConfiguration
 
 from cmk.ccc.site import SiteId
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.watolib.broker_connections import BrokerConnectionInfo, SiteConnectionInfo
 from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.rest_api_client import (
@@ -280,3 +281,11 @@ def test_openapi_delete_non_existent_broker_connection(
         expect_ok=False,
     )
     res.assert_status_code(404)
+
+
+def test_openapi_list_broker_connections_permission_denied_is_forbidden(
+    clients: ClientRegistry, monkeypatch: MonkeyPatch
+) -> None:
+    monkeypatch.setattr(LoggedInUser, "may", lambda self, permission_name: False)
+    res = clients.BrokerConnection.get_all(expect_ok=False)
+    res.assert_status_code(403)

@@ -34,6 +34,7 @@ from cmk.ccc.version import Edition
 from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
 from cmk.gui.http import HTTPMethod, request
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.permission_tracking import (
@@ -70,6 +71,7 @@ from cmk.gui.openapi.utils import (
     FIELDS,
     problem,
     ProblemException,
+    RestAPIForbiddenException,
     RestAPIPermissionException,
     RestAPIWatoDisabledException,
 )
@@ -569,6 +571,22 @@ class Endpoint:
                 )
             except ProblemException as problem_exception:
                 response = problem_exception.to_problem()
+            except MKUnauthenticatedException:
+                # MKUnauthenticatedException is a subclass of MKAuthException, so this clause
+                # must come first: an actual authentication failure must stay 401, not get
+                # caught by the broader except below and remapped to 403.
+                raise
+            except MKAuthException as exc:
+                # At this point the request is already authenticated, so a failed permission
+                # check means the user lacks a permission -> forbidden (403), not unauthorized
+                # (401). Without this remap, `MKAuthException.status` (401) would end up in the
+                # response. Mirrors the equivalent remap in the new endpoint framework's
+                # handle_endpoint_request(). Raised (not turned into `response` directly) so it
+                # bypasses this endpoint's declared status codes, like RestAPIWatoDisabledException.
+                raise RestAPIForbiddenException(
+                    title=http.client.responses[403],
+                    detail=str(exc),
+                ) from exc
 
         # We don't expect a permission to be triggered when an endpoint ran into an error.
         if response.status_code < 400:

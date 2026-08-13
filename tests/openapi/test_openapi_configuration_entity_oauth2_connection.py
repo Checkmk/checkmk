@@ -94,8 +94,8 @@ def test_list_oauth2_connections_without_permissions(clients: ClientRegistry) ->
     )
 
     # THEN
-    assert resp.status_code == 401
-    assert resp.json["title"] == "Unauthorized"
+    assert resp.status_code == 403
+    assert resp.json["title"] == "Forbidden"
 
 
 @pytest.mark.usefixtures("mock_update_passwords_merged_file")
@@ -278,8 +278,8 @@ def test_create_non_existing_oauth2_connection_without_permissions(
     )
 
     # THEN
-    assert resp.status_code == 401
-    assert resp.json["title"] == "Unauthorized"
+    assert resp.status_code == 403
+    assert resp.json["title"] == "Forbidden"
 
 
 @pytest.mark.usefixtures("mock_update_passwords_merged_file")

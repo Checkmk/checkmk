@@ -27,7 +27,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
     incorrect_form_error_message = "Cannot save the form because it contains errors."
     one_collector_per_site_error_detail = (
         "A site is allowed to be used in exactly one "
-        "OpenTelemetry collector configuration: - '%s' is used in '%s'"
+        "OpenTelemetry Collector configuration: - '%s' is used in '%s'"
     )
 
     def __init__(
@@ -53,7 +53,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         logger.info(f"Validate that current page is '{self.page_title}' page")
         self.main_area.check_page_title(self.page_title)
         expect(self.unique_id_textfield).to_be_visible()
-        expect(self.receiver_protocol_endpoint_checkbox("GRPC-based OTLP receiver")).to_be_visible()
+        expect(self.receiver_protocol_endpoint_checkbox("gRPC-based OTLP receiver")).to_be_visible()
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
@@ -212,7 +212,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         self.site_restriction_checkbox(site_id).check()
         if grpc_receiver_properties:
             self._fill_collector_receiver_properties(
-                "GRPC-based OTLP receiver",
+                "gRPC-based OTLP receiver",
                 grpc_receiver_properties,
                 grpc_password_data,
             )
@@ -242,7 +242,7 @@ class EditOpenTelemetryCollectorReceiver(AddOpenTelemetryCollectorReceiver):
     def validate_page(self) -> None:
         logger.info("Validate that the OpenTelemetry Collector receiver edit form is shown")
         expect(self.save_configuration_button).to_be_visible()
-        expect(self.receiver_protocol_endpoint_checkbox("GRPC-based OTLP receiver")).to_be_visible()
+        expect(self.receiver_protocol_endpoint_checkbox("gRPC-based OTLP receiver")).to_be_visible()
 
     @property
     def quick_setup_warning(self) -> Locator:

@@ -150,7 +150,7 @@ def _expected_rulespec_group_choices() -> list[tuple[str, str]]:
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
         expected += [
             ("agents/agent_plugins", "&nbsp;&nbsp;\u2319 Agent plug-ins"),
-            ("agents/automatic_updates", "&nbsp;&nbsp;\u2319 Automatic Updates"),
+            ("agents/automatic_updates", "&nbsp;&nbsp;\u2319 Automatic updates"),
             ("agents/linux_agent", "&nbsp;&nbsp;\u2319 Linux/UNIX agent options"),
             ("agents/windows_agent", "&nbsp;&nbsp;\u2319 Windows agent options"),
             ("agents/windows_modules", "&nbsp;&nbsp;\u2319 Windows Modules"),

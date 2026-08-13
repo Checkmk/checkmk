@@ -32,7 +32,6 @@ import GraphLegend from './legend/GraphLegend.vue'
 const { _t } = usei18n()
 
 const props = withDefaults(defineProps<GraphPanelProps>(), {
-  figureWidth: 800,
   figureHeight: 300,
   legendPosition: 'bottom'
 })
@@ -89,7 +88,10 @@ const {
 )
 
 function updateTimeRange(val: RequestedTimeRange, kind: TimeRangeCommitKind) {
-  emit('update:requestedTimeRange', val, kind)
+  // The served window is a storage step wider; adopting its span would grow it on every pan.
+  const asked = props.requestedTimeRange
+  const end = kind === 'translated_timerange' ? val.start + (asked.end - asked.start) : val.end
+  emit('update:requestedTimeRange', { start: val.start, end }, kind)
 }
 
 function updateConsolidationFunction(val: ConsolidationFn) {

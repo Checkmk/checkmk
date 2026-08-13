@@ -134,6 +134,14 @@ export function useGraphData(
   let loadToken = 0
 
   async function load() {
+    const canvasWidth = getCanvasWidth()
+    // Width not measured yet (0, or negative once the axis margin is subtracted from an unmeasured
+    // figure). Skip rather than fetch at a bogus step; the resize watch below fires the first real
+    // load once a usable width arrives.
+    if (!Number.isFinite(canvasWidth) || canvasWidth <= 0) {
+      return
+    }
+
     const token = ++loadToken
     const definitions = getGraphs()
     const range = getRequestedTimeRange()
@@ -142,7 +150,7 @@ export function useGraphData(
     // Cleared on success below, not here, so a retry keeps the failure stated until a result lands.
 
     try {
-      const step = computeStep(range.start, range.end, getCanvasWidth())
+      const step = computeStep(range.start, range.end, canvasWidth)
       lastRequestedStep = step
       const requestedTimeRange = { start: range.start, end: range.end, step }
       const consolidationFunction = getConsolidationFn()
@@ -202,7 +210,12 @@ export function useGraphData(
   // drawn pixels.
   const debouncedLoad = useDebounceFn(() => void load(), 300)
   watch(getCanvasWidth, (width) => {
+    if (!Number.isFinite(width) || width <= 0) {
+      return
+    }
+    // First usable width after an unmeasured start: run the initial load that load() skipped.
     if (lastRequestedStep === null) {
+      void load()
       return
     }
     const range = getRequestedTimeRange()

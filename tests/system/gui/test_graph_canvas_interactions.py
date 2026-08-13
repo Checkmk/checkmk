@@ -130,13 +130,15 @@ def test_axis_strip_drag_pans_every_graph(
 def test_context_view_drag_shifts_the_window(
     service_graphs: ServiceGraphs, javascript_errors: list[str]
 ) -> None:
-    """Dragging the context view shifts the window without resizing it."""
+    """Dragging the context view shifts the window without resizing it.
+
+    Measured over the second drag: the page opens on a window ending at the newest sample,
+    which the data source serves as-is, while every window behind it is served a step wider.
+    Only drags that start away from the present are comparable.
+    """
     panel = service_graphs.panel(0)
     expect(panel.context_view, "The service detail page has no context view").to_be_visible()
     window_before = panel.graph.time_axis_label_texts()
-    bar_before = panel.context_view_bar.bounding_box()
-    strip_before = panel.context_view.bounding_box()
-    assert bar_before is not None and strip_before is not None
 
     panel.drag_context_view(-0.15)
 
@@ -148,6 +150,12 @@ def test_context_view_drag_shifts_the_window(
         panel.graph.time_axis_labels,
         "Dragging the context view did not move the graph's window",
     ).not_to_have_text(window_before)
+    bar_before = panel.context_view_bar.bounding_box()
+    strip_before = panel.context_view.bounding_box()
+    assert bar_before is not None and strip_before is not None
+
+    panel.drag_context_view(-0.10)
+
     bar_after = panel.context_view_bar.bounding_box()
     strip_after = panel.context_view.bounding_box()
     assert bar_after is not None and strip_after is not None

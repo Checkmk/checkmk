@@ -21,6 +21,7 @@ import cmk.gui.sites
 import cmk.gui.watolib.audit_log as _audit_log
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.ccc.regex import SITE_ID_PATTERN
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
@@ -38,7 +39,7 @@ from cmk.gui.form_specs import (
     render_form_spec,
 )
 from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
-from cmk.gui.form_specs.unstable import id_validators
+from cmk.gui.form_specs.unstable import id_validators, not_empty
 from cmk.gui.form_specs.unstable.legacy_converter import (
     Tuple,
 )
@@ -554,7 +555,14 @@ class ModeEditSite(WatoMode):
                 ),
                 field_size=FieldSize.LARGE,
                 custom_validate=[
-                    *id_validators(Message("Site ID cannot be empty")),
+                    not_empty(Message("Site ID cannot be empty")),
+                    validators.MatchRegex(
+                        regex=SITE_ID_PATTERN,
+                        error_msg=Message(
+                            "The site id must begin with a letter or underscore, may contain only "
+                            "letters, digits and underscores and must be 1 to 16 characters long."
+                        ),
+                    ),
                     create_validation_error_for_mk_user_error(self._validate_site_id),
                 ],
             )

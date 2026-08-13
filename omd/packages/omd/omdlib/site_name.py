@@ -12,6 +12,8 @@ from pathlib import Path
 from omdlib.users_and_groups import group_exists, user_exists
 from omdlib.utils import site_exists
 
+from cmk.ccc.regex import SITE_ID_PATTERN
+
 
 def site_name_from_uid() -> str:
     return pwd.getpwuid(os.getuid()).pw_name
@@ -21,7 +23,7 @@ def site_name_from_uid() -> str:
 def sitename_must_be_valid(site_name: str, site_dir: Path, reuse: bool = False) -> None:
     # Make sanity checks before starting any action
 
-    if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", site_name):
+    if not re.match(SITE_ID_PATTERN, site_name):
         sys.exit(
             "Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16"
         )

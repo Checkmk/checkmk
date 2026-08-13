@@ -244,6 +244,27 @@ def test_create_site_connection_records_pending_change_for_new_site(
     )
 
 
+@pytest.mark.parametrize(
+    "site_id",
+    [
+        pytest.param("site-1", id="dash"),
+        pytest.param("1site", id="leading_digit"),
+        pytest.param("a" * 17, id="too_long"),
+        pytest.param("remote\n", id="trailing_newline"),
+    ],
+)
+def test_create_site_connection_with_invalid_site_id(
+    clients: ClientRegistry,
+    site_id: str,
+) -> None:
+    config = _default_config()
+    config["basic_settings"]["site_id"] = site_id
+    clients.SiteManagement.create(
+        site_config=config,
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
 def test_create_site_connection_that_already_exists(
     clients: ClientRegistry,
 ) -> None:

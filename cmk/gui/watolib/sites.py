@@ -24,6 +24,7 @@ import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.sidebar_reload
 from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.regex import SITE_ID_PATTERN
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.store import load_from_mk_file
 from cmk.ccc.user import UserId
@@ -243,6 +244,18 @@ def _user_attribute_sync_to_disk(value: object) -> object:
         return "all"
     assert choice == "list"
     return list(payload)
+
+
+def validate_new_site_id(site_id: str) -> None:
+    """Reject an ID that no OMD site can ever have."""
+    if not re.match(SITE_ID_PATTERN, site_id):
+        raise MKUserError(
+            "id",
+            _(
+                "The site id must begin with a letter or underscore, may contain only "
+                "letters, digits and underscores and must be 1 to 16 characters long."
+            ),
+        )
 
 
 class SiteManagement:
@@ -753,10 +766,8 @@ class SiteManagement:
         site_configuration: SiteConfiguration,
         all_sites: SiteConfigurations,
     ) -> None:
-        if not re.match("^[-a-z0-9A-Z_]+$", site_id):
-            raise MKUserError(
-                "id", _("The site id must consist only of letters, digit and the underscore.")
-            )
+        if site_id not in all_sites:
+            validate_new_site_id(site_id)
 
         if not site_configuration.get("alias"):
             raise MKUserError(

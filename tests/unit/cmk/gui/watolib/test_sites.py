@@ -26,6 +26,7 @@ from typing import Any, cast
 import pytest
 
 from cmk.ccc.site import omd_site, SiteId
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
@@ -431,3 +432,51 @@ def test_editable_connections_form_spec_rejects_empty_list(request_context: None
     ]
 
     assert visitor.validate(RawDiskData([("ldap", "ldap_a")])) == []
+
+
+@pytest.mark.parametrize(
+    "site_id",
+    [
+        pytest.param("remote-1", id="dash"),
+        pytest.param("1remote", id="leading_digit"),
+        pytest.param("a" * 17, id="too_long"),
+        pytest.param("sitä", id="non_ascii"),
+        pytest.param("remote\n", id="trailing_newline"),
+        pytest.param("", id="empty"),
+    ],
+)
+def test_validate_configuration_rejects_invalid_new_site_id(site_id: str) -> None:
+    with pytest.raises(MKUserError, match="site id"):
+        SiteManagement.validate_configuration(
+            SiteId(site_id),
+            _remote_site_config(),
+            SiteConfigurations({SiteId("central"): _local_site_config()}),
+        )
+
+
+@pytest.mark.parametrize(
+    "site_id",
+    [
+        pytest.param("remote", id="letters"),
+        pytest.param("remote_1", id="digits_and_underscore"),
+        pytest.param("_r", id="leading_underscore"),
+        pytest.param("a" * 16, id="maximum_length"),
+    ],
+)
+def test_validate_configuration_accepts_valid_new_site_id(site_id: str) -> None:
+    SiteManagement.validate_configuration(
+        SiteId(site_id),
+        _remote_site_config(),
+        SiteConfigurations({SiteId("central"): _local_site_config()}),
+    )
+
+
+def test_validate_configuration_accepts_invalid_site_id_of_existing_connection() -> None:
+    site_id = SiteId("remote-1")
+    SiteManagement.validate_configuration(
+        site_id,
+        _remote_site_config(),
+        SiteConfigurations(
+            {SiteId("central"): _local_site_config(), site_id: _remote_site_config()}
+        ),
+    )

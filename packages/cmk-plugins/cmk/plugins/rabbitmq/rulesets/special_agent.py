@@ -31,8 +31,8 @@ def _form_spec_special_agents_rabbitmq():
         help_text=Help(
             "Request data from a RabbitMQ instance."
             " This special agent queries the HTTP API provided by"
-            " RabbitMQs 'Management Plugin'. You need to enable this"
-            " plugin in your RabbitMQ instance."
+            " RabbitMQ's 'Management Plug-in'. You need to enable this "
+            "plug-in in your RabbitMQ instance."
         ),
         elements={
             "instance": DictElement(
@@ -85,7 +85,7 @@ def _form_spec_special_agents_rabbitmq():
                 parameter_form=Integer(
                     title=Title("Port"),
                     prefill=DefaultValue(15672),
-                    help_text=Help("The port that is used for the api call."),
+                    help_text=Help("The port that is used for the API call."),
                     custom_validate=(validators.NetworkPort(),),
                 ),
             ),

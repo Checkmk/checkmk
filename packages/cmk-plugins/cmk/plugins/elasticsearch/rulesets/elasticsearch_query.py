@@ -44,7 +44,7 @@ def _parameter_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("Item suffix"),
                     help_text=Help(
-                        "Here you can define what service name (item) is "
+                        "Here, you can define which service name (item) is "
                         "used for the created service. The resulting item "
                         "is always prefixed with 'Elasticsearch Query'."
                     ),
@@ -77,7 +77,7 @@ def _parameter_form() -> Dictionary:
             "protocol": DictElement(
                 parameter_form=SingleChoice(
                     title=Title("Protocol"),
-                    help_text=Help("Here you can define which protocol to use, default is https."),
+                    help_text=Help("Here, you can define which protocol to use, default is HTTPS."),
                     elements=[
                         SingleChoiceElement(
                             name="http",
@@ -131,11 +131,11 @@ def _parameter_form() -> Dictionary:
                 parameter_form=List(
                     title=Title("Indices to query"),
                     help_text=Help(
-                        "Here you can define what index should be queried "
+                        "Here, you can define what index should be queried "
                         "for the defined search. You can query one or "
                         "multiple indices. Without this option all indices "
                         "are queried. If you want to speed up your search, "
-                        "use definded indices."
+                        "use defined indices."
                     ),
                     element_template=String(),
                 ),

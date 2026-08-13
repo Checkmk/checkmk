@@ -627,7 +627,7 @@ def get_av_computation_options() -> AVOptionValueSpecs:
                                 ("warn", _("WARN")),
                                 ("crit", _("CRIT")),
                                 ("unknown", _("UNKNOWN")),
-                                ("host_down", _("Host Down")),
+                                ("host_down", _("Host down")),
                             ],
                             default_value="host_down",
                         ),
@@ -1960,7 +1960,7 @@ def omit_urls(
     urls.append(("timeline", _("Timeline"), timeline_url))
     if what != "bi":
         urls.append(
-            ("history", _("Event History"), history_url_of((site, host, service), time_range))
+            ("history", _("Event history"), history_url_of((site, host, service), time_range))
         )
     return urls
 

@@ -214,7 +214,7 @@ def show_availability_page(
     av_mode = request.get_ascii_input_mandatory("av_mode", "availability")
 
     if av_mode == "timeline":
-        title = _("Availability Timeline")
+        title = _("Availability timeline")
     else:
         title = _("Availability")
 
@@ -1290,8 +1290,8 @@ def _vs_annotation():
                 label=_("Reclassify service state of this period"),
             ),
         ),
-        ("from", AbsoluteDate(title=_("Start-Time"), include_time=True)),
-        ("until", AbsoluteDate(title=_("End-Time"), include_time=True)),
+        ("from", AbsoluteDate(title=_("Start time"), include_time=True)),
+        ("until", AbsoluteDate(title=_("End time"), include_time=True)),
         (
             "downtime",
             Optional(

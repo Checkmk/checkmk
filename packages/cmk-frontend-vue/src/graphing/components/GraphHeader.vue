@@ -114,8 +114,8 @@ const resolutionLabel = computed(() =>
       <CmkLabeledSwitch
         v-if="showControls"
         v-model="peakZoomActive"
-        :off-label="_t('Time zoom')"
-        :on-label="_t('Peak zoom')"
+        :off-label="_t('X-zoom')"
+        :on-label="_t('Y-zoom')"
         :off-help="_t('Drag to zoom into a time range.')"
         :on-help="_t('Drag to zoom into a value range.')"
       />

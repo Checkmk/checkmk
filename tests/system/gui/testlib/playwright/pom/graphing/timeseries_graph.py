@@ -216,7 +216,7 @@ class GraphPanel:
 
     @property
     def peak_zoom_switch(self) -> Locator:
-        """The Time zoom / Peak zoom switch that selects which axis a drag zooms."""
+        """The X-zoom / Y-zoom switch that selects which axis a drag zooms."""
         return self.header.get_by_role("switch")
 
     @property

@@ -80,11 +80,11 @@ test('omits the range note while no time range is known', () => {
   expect(screen.queryByText(/resolution:/)).not.toBeInTheDocument()
 })
 
-test('offers a zoom selector with a time and a peak mode', () => {
+test('offers a zoom selector with an X and a Y mode', () => {
   render(GraphHeader, {})
 
-  expect(screen.getByText('Time zoom')).toBeInTheDocument()
-  expect(screen.getByText('Peak zoom')).toBeInTheDocument()
+  expect(screen.getByText('X-zoom')).toBeInTheDocument()
+  expect(screen.getByText('Y-zoom')).toBeInTheDocument()
 })
 
 test('the zoom selector reflects peak zoom as the checked state', () => {

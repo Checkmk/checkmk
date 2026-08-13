@@ -12,7 +12,7 @@ from cmk.graphing.v1.metrics import Color, DecimalNotation, Metric, StrictPrecis
 
 metric_jenkins_metrics_counter_http_activerequests = Metric(
     name="jenkins_metrics_counter_http_activerequests",
-    title=Title("HTTP: Active Requests"),
+    title=Title("HTTP: active requests"),
     unit=Unit(DecimalNotation(""), StrictPrecision(0)),
     color=Color.GREEN,
 )

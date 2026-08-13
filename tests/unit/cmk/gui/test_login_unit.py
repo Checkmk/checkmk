@@ -25,7 +25,7 @@ from cmk.gui import auth, http, login, oauth
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
-from cmk.gui.scopes import DEFAULT_SCOPE
+from cmk.gui.scopes import DEFAULT_SCOPE, ScopeId
 from cmk.gui.session import session
 from cmk.gui.type_defs import (
     SessionStateMachine,
@@ -210,6 +210,48 @@ def test_login_with_oauth_token(with_user: tuple[UserId, str], flask_app: flask.
         last_login = load_custom_attr(user_id=username, key="last_login", parser=literal_eval)
         assert last_login is not None
         assert last_login["auth_type"] == "oauth"
+
+
+def test_read_scoped_oauth_token_narrows_what_the_user_may_do(
+    with_user: tuple[UserId, str], flask_app: flask.Flask
+) -> None:
+    """The whole point of the scope: the user's roles are the ceiling, not the floor.
+
+    with_user has the "user" role, which grants general.act -- but the token
+    was only granted read, so the intersection denies it.
+    """
+    username, _ = with_user
+    client_id = oauth.client_store().register(["https://client.example/callback"], None).client_id
+    token = oauth.token_store().issue_token(
+        username,
+        expires_at=datetime.now(UTC) + timedelta(minutes=5),
+        resource=None,
+        scope=DEFAULT_SCOPE,
+        client_id=client_id,
+    )
+    with flask_app.test_request_context(
+        "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+    ):
+        assert session.user.may("general.use")
+        assert not session.user.may("general.act")
+
+
+def test_write_scoped_oauth_token_leaves_the_users_permissions_alone(
+    with_user: tuple[UserId, str], flask_app: flask.Flask
+) -> None:
+    username, _ = with_user
+    client_id = oauth.client_store().register(["https://client.example/callback"], None).client_id
+    token = oauth.token_store().issue_token(
+        username,
+        expires_at=datetime.now(UTC) + timedelta(minutes=5),
+        resource=None,
+        scope=frozenset({ScopeId.WRITE}),
+        client_id=client_id,
+    )
+    with flask_app.test_request_context(
+        "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+    ):
+        assert session.user.may("general.act")
 
 
 def _legacy_bearer_header(username: UserId, password: str) -> str:

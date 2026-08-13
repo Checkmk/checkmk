@@ -18,6 +18,7 @@ from cmk.ccc.user import UserId
 from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
 from cmk.gui import http, userdb
+from cmk.gui.authorization import Authorization
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.ldap_integration import ldap_connector as ldap
@@ -365,6 +366,7 @@ def test_logout_on_idle_timeout(single_auth_request: SingleRequest, set_config: 
         auth_type="web_server",
         user_permissions=UserPermissions({}, {}, {}, []),
         secure_flag=False,
+        authorization=Authorization.UNRESTRICTED,
     )
     now = datetime.now()
     session.session_info = session_info
@@ -379,6 +381,7 @@ def test_logout_on_maximum_session_reached(single_auth_request: SingleRequest) -
         auth_type="web_server",
         user_permissions=UserPermissions({}, {}, {}, []),
         secure_flag=False,
+        authorization=Authorization.UNRESTRICTED,
     )
     now = datetime.now()
     session.session_info = session_info
@@ -449,6 +452,7 @@ def test_ensure_user_can_init_with_previous_invalidated_session(user_id: UserId)
         auth_type="web_server",
         user_permissions=UserPermissions({}, {}, {}, []),
         secure_flag=False,
+        authorization=Authorization.UNRESTRICTED,
     )
     session.logout()
     userdb.session.save_session_infos(

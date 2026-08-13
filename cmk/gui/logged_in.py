@@ -25,6 +25,7 @@ from cmk.ccc import store
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import hooks
+from cmk.gui.authorization import request_authorization
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
@@ -467,11 +468,26 @@ class LoggedInUser:
         )
 
     def may(self, permission_name: str) -> bool:
-        they_may = (
-            permission_name in self.explicitly_given_permissions
-        ) or self._user_permissions.may_with_roles(self.role_ids, permission_name)
+        """Whether this user may do this, in this request.
+
+        Two independent conditions, and both must hold:
+          - the user's roles grant the permission (_may_by_roles), and
+          - the credential the request authenticated with permits it.
+
+        Subclasses override _may_by_roles, never this method: the second
+        conjunct must not be bypassable by subclassing, and it must survive
+        SuperUserContext swapping the user object out mid-request.
+        """
+        they_may = self._may_by_roles(permission_name) and request_authorization().permits(
+            permission_name
+        )
         hooks.call("permission-checked", permission_name)
         return they_may
+
+    def _may_by_roles(self, permission_name: str) -> bool:
+        return (
+            permission_name in self.explicitly_given_permissions
+        ) or self._user_permissions.may_with_roles(self.role_ids, permission_name)
 
     def need_permission(self, permission: str | BasePerm) -> None:
         if isinstance(permission, BasePerm):
@@ -544,8 +560,7 @@ class LoggedInSuperUser(LoggedInUser):
         raise TypeError("The profiles of LoggedInSuperUser cannot be saved")
 
     @override
-    def may(self, permission_name: str) -> bool:
-        hooks.call("permission-checked", permission_name)
+    def _may_by_roles(self, permission_name: str) -> bool:
         return True
 
 
@@ -565,8 +580,7 @@ class LoggedInRemoteSite(LoggedInUser):
         raise TypeError("The profiles of LoggedInRemoteSite cannot be saved")
 
     @override
-    def may(self, permission_name: str) -> bool:
-        hooks.call("permission-checked", permission_name)
+    def _may_by_roles(self, permission_name: str) -> bool:
         return False
 
 
@@ -585,8 +599,7 @@ class LoggedInNobody(LoggedInUser):
         raise TypeError("The profiles of LoggedInNobody cannot be saved")
 
     @override
-    def may(self, permission_name: str) -> bool:
-        hooks.call("permission-checked", permission_name)
+    def _may_by_roles(self, permission_name: str) -> bool:
         return False
 
 

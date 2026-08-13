@@ -25,6 +25,7 @@ from cmk.gui.auth import (
     check_auth,
     parse_and_check_cookie,
 )
+from cmk.gui.authorization import Authorization
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
@@ -138,11 +139,16 @@ class dict_property[T]:
 
 
 class CheckmkFileBasedSession(dict, SessionMixin):
+    # Note: except for SessionInfo, the attributes below are not persisted
     new = True
     session_info = dict_property[SessionInfo]()
     exc = dict_property[MKException | None](default=None)
     persistent = dict_property[bool]()
     is_secure = dict_property[bool](default=False)
+    # What the credential this request authenticated with permits. Lives here rather than on
+    # `user`, because SuperUserContext and UserContext replace that object mid-request. Read
+    # back via cmk.gui.authorization.request_authorization().
+    authorization = dict_property[Authorization](default=Authorization.UNRESTRICTED)
 
     def update_cookie(self) -> None:
         # Cookies only get set when the session is new, so we make ourselves new again.
@@ -172,11 +178,13 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         auth_type: AuthType,
         user_permissions: UserPermissions,
         secure_flag: bool,
+        authorization: Authorization,
     ) -> None:
         now = datetime.now()
         # check single-session-mode and timeouts, might raise
         userdb.session.ensure_user_can_init_session(user_name, now)
         self.is_secure = secure_flag
+        self.authorization = authorization
         self.user = LoggedInUser(user_name, user_permissions, defaults=_user_defaults())
         # Note that interactive logins don't come through this path, so we don't need to worry
         # about their auth_types here. They go create_empty_session() -> login(), which handles
@@ -221,6 +229,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         auth_type: AuthType,
         secure_flag: bool,
         user_permissions: UserPermissions,
+        authorization: Authorization,
     ) -> CheckmkFileBasedSession:
         sess = cls()
         sess.initialize(
@@ -228,17 +237,21 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             auth_type,
             user_permissions,
             secure_flag,
+            authorization,
         )
         return sess
 
     @classmethod
-    def create_pseudo_user_session(cls, pseudo_user_id: PseudoUserId) -> CheckmkFileBasedSession:
+    def create_pseudo_user_session(
+        cls, pseudo_user_id: PseudoUserId, authorization: Authorization
+    ) -> CheckmkFileBasedSession:
         """This method is reserved for pseudo users
 
         These should not really be sessions but currently everything is a session..."""
 
         sess = cls()
         sess.persistent = False
+        sess.authorization = authorization
         match pseudo_user_id:
             case SiteInternalPseudoUser():
                 sess.user = LoggedInSuperUser()
@@ -507,12 +520,14 @@ class FileBasedSession(SessionInterface):
         try to authenticate a request based on headers, password login is
         handled in login.py"""
 
-        identity, auth_type = check_auth(config)
+        credential, auth_type = check_auth(config)
 
-        if isinstance(identity, PseudoUserId):
-            return self.session_class.create_pseudo_user_session(identity)
+        if isinstance(credential.identity, PseudoUserId):
+            return self.session_class.create_pseudo_user_session(
+                credential.identity, credential.authorization
+            )
 
-        user_name = identity
+        user_name = credential.identity
 
         userdb.session.on_succeeded_login(user_name, datetime.now())
 
@@ -531,7 +546,7 @@ class FileBasedSession(SessionInterface):
         self.update_last_login(user_name, auth_type, request)
 
         return self.session_class.create_session(
-            user_name, auth_type, request.is_secure, user_permissions
+            user_name, auth_type, request.is_secure, user_permissions, credential.authorization
         )
 
     def update_last_login(

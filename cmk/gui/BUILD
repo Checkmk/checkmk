@@ -471,6 +471,7 @@ py_library(
 py_library(
     name = "auth_core",
     srcs = [
+        "authorization.py",
         "logged_in.py",
         "pseudo_users.py",
     ],
@@ -484,6 +485,7 @@ py_library(
     ],
     deps = [
         ":core_toolkit",
+        ":scopes",
         "//cmk/gui/utils:middle",
         "//cmk/utils",
         "//packages/cmk-ccc:site",
@@ -492,6 +494,7 @@ py_library(
         "//packages/cmk-livestatus-client",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",
+        requirement("flask"),
     ],
 )
 

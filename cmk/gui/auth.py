@@ -15,6 +15,7 @@ import hmac
 import re
 import uuid
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
@@ -24,11 +25,13 @@ from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
 from cmk.crypto.secrets import Secret
 from cmk.gui import oauth, userdb
+from cmk.gui.authorization import Authorization
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.oauth.store.token_store import TokenRecord
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import AuthType, CustomUserAttrSpec, UserSpec
@@ -45,46 +48,73 @@ auth_logger = logger.getChild("auth")
 
 
 AuthFunction = Callable[[Config], UserId | PseudoUserId | None]
+CredentialFunction = Callable[[Config], "Credential | None"]
 
 
-def check_auth(config: Config) -> tuple[UserId | PseudoUserId, AuthType]:
+@dataclass(frozen=True, slots=True)
+class Credential:
+    """Who the request authenticated as, and what the credential it presented permits.
+
+    A scoped OAuth token is the only credential that permits less than its user's roles do.
+    """
+
+    identity: UserId | PseudoUserId
+    authorization: Authorization
+
+
+def _unscoped(auth_function: AuthFunction) -> CredentialFunction:
+    """Adapt an auth method that applies no scopes."""
+    # This is wrapped around the _check functions rather than applied within them,
+    # so those that return some PseudoUserId subclass can continue to do so explicitly.
+
+    def _unscoped_auth(config: Config) -> Credential | None:
+        identity = auth_function(config)
+        return Credential(identity, Authorization.UNRESTRICTED) if identity is not None else None
+
+    return _unscoped_auth
+
+
+def check_auth(config: Config) -> tuple[Credential, AuthType]:
     """Try to authenticate a user from the current request.
 
     This will attempt to authenticate the user via all possible authentication types.
-    If any of them succeeds, the user's ID and the succeeding authentication type are returned.
+    If any of them succeeds, the credential it presented and the succeeding authentication type
+    are returned.
     Some attempted authentication types may raise exceptions and abort this function preemptively.
     """
     if not config.user_login and not is_site_login():
         raise MKAuthException("Site can't be logged into.")
 
-    auth_methods: list[tuple[AuthFunction, AuthType]] = [
+    auth_methods: list[tuple[CredentialFunction, AuthType]] = [
         # NOTE: This list is sorted from the more general to the most specific auth methods.
         #       The most specific to succeed will be used in the end.
-        (_check_auth_by_custom_http_header, "http_header"),
-        (_check_auth_by_remote_user, "web_server"),
-        (_check_auth_by_basic_header, "basic_auth"),
-        (_check_auth_by_bearer_header, "bearer"),
-        (_check_internal_token, "internal_token"),
+        (_unscoped(_check_auth_by_custom_http_header), "http_header"),
+        (_unscoped(_check_auth_by_remote_user), "web_server"),
+        (_unscoped(_check_auth_by_basic_header), "basic_auth"),
+        (_unscoped(_check_auth_by_bearer_header), "bearer"),
+        (_unscoped(_check_internal_token), "internal_token"),
         (_check_auth_by_oauth_token, "oauth"),
-        (_check_remote_site, "remote_site"),
+        (_unscoped(_check_remote_site), "remote_site"),
     ]
 
-    selected: tuple[UserId | PseudoUserId, AuthType] | None = None
-    user_id = None
+    selected: tuple[Credential, AuthType] | None = None
+    result = None
     for auth_method, auth_type in auth_methods:
         # NOTE: It's important for these methods to always raise an exception whenever something
         # strange is happening. This will abort the whole process, regardless of which auth method
         # succeeded or not.
         try:
-            if user_id := auth_method(config):
+            if result := auth_method(config):
                 # The last auth_method is the most specific one, use that.
-                selected = (user_id, auth_type)
+                selected = (result, auth_type)
         except Exception as e:
             log_security_event(
                 AuthenticationFailureEvent(
                     user_error=str(e),
                     auth_method=auth_type,
-                    username=user_id if isinstance(user_id, UserId) else None,
+                    username=(
+                        result.identity if result and isinstance(result.identity, UserId) else None
+                    ),
                     remote_ip=request.remote_ip,
                 )
             )
@@ -93,10 +123,11 @@ def check_auth(config: Config) -> tuple[UserId | PseudoUserId, AuthType]:
     if not selected:
         raise MKAuthException("Couldn't log in.")
 
-    if not isinstance(selected[0], PseudoUserId):
-        _check_multi_tenancy_login(selected[0])
+    credential, selected_auth_type = selected
+    if not isinstance(credential.identity, PseudoUserId):
+        _check_multi_tenancy_login(credential.identity)
 
-    return selected
+    return credential, selected_auth_type
 
 
 def is_site_login() -> bool:
@@ -311,11 +342,11 @@ def _parse_basic_auth_token(token: str) -> tuple[str, str]:
     return user_id, password
 
 
-def _check_oauth_access_token(token: str) -> UserId | None:
+def _check_oauth_access_token(token: str) -> TokenRecord | None:
     """Authenticate via an OAuth-issued access token.
 
     Returns:
-        the token's user_id if the token exists, hasn't expired, and the user
+        the token's record if the token exists, hasn't expired, and the user
         still exists and isn't locked
         None otherwise
     """
@@ -327,7 +358,7 @@ def _check_oauth_access_token(token: str) -> UserId | None:
     if not userdb.user_exists(user_id) or userdb.user_locked(user_id, load_user(user_id)):
         return None
 
-    return user_id
+    return record
 
 
 def _get_bearer_token() -> str | None:
@@ -342,11 +373,12 @@ def _is_oauth_shaped(token: str) -> bool:
     return " " not in token and oauth.looks_like_token(token)
 
 
-def _check_auth_by_oauth_token(config: Config) -> UserId | None:
+def _check_auth_by_oauth_token(config: Config) -> Credential | None:
     """Authenticate via an OAuth-issued access token in the Bearer header.
 
     Returns:
-        a UserId if authenticated successfully
+        a Credential capped at what the token's scope permits, if authenticated
+            successfully
         None if no Bearer header is present, or it isn't shaped like an
             OAuth access token
 
@@ -357,8 +389,8 @@ def _check_auth_by_oauth_token(config: Config) -> UserId | None:
     if (token := _get_bearer_token()) is None or not _is_oauth_shaped(token):
         return None
 
-    if (user_id := _check_oauth_access_token(token)) is not None:
-        return user_id
+    if (record := _check_oauth_access_token(token)) is not None:
+        return Credential(record.user_id, Authorization.from_scopes(record.scope))
 
     raise MKAuthException("Invalid OAuth access token")
 

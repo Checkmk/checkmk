@@ -187,14 +187,7 @@ _HOOKS: Sequence[Hook | PortHook] = [
 
 
 def load_hook_dependencies(config: Config, config_hooks: ConfigHooks) -> dict[str, bool]:
-    return {hook_name: _get_hook(hook_name).depends(config) for hook_name in config_hooks}
-
-
-def _default_port(site_name: str, port_hook: PortHook, site_configs: _SiteConfigs) -> str:
-    _report_error(port_hook.name, site_configs.sites_with_unreadable_configs)
-    return str(
-        _next_free_port(port_hook.name, site_name, port_hook.default_port, site_configs.configs)
-    )
+    return {hook_name: get_hook(hook_name).depends(config) for hook_name in config_hooks}
 
 
 def load_config(site_name: str, hook_dir: str | None, omd_path: Path = Path("/omd/")) -> Config:
@@ -209,9 +202,13 @@ def load_config(site_name: str, hook_dir: str | None, omd_path: Path = Path("/om
     if hook_dir and os.path.exists(hook_dir):
         for hook_name in _sort_hooks(os.listdir(hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
-                hook = _get_hook(hook_name)
+                hook = get_hook(hook_name)
                 if isinstance(hook, PortHook):
-                    config[hook_name] = _default_port(site_name, hook, site_configs)
+                    config[hook_name] = str(
+                        _next_free_port(
+                            hook.name, site_name, hook.default_port, site_configs.configs
+                        )
+                    )
                 else:
                     config[hook_name] = hook.default(edition(Path(site_home)))
     return config
@@ -264,16 +261,17 @@ def config_set_all(
         _config_set(site_name, config, hook_name)
 
 
-def _report_error(key: str, sites_with_unreadable_configs: Sequence[str]) -> None:
+def report_port_allocations(omd_path: Path = Path("/omd")) -> None:
+    sites_with_unreadable_configs = _build_site_configs(omd_path).sites_with_unreadable_configs
     if sites_with_unreadable_configs:
         sites_str = ",".join(sites_with_unreadable_configs)
         sys.stderr.write(
-            f"ERROR: Failed to read config of site {sites_str}. "
-            f"{key} port will possibly be allocated twice\n"
+            f"WARNING: Cannot read the configuration of site(s) {sites_str}: permission denied.\n"
+            f"         This site may allocate ports used by those sites.\n"
         )
 
 
-def _get_hook(hook_name: str) -> Hook | PortHook:
+def get_hook(hook_name: str) -> Hook | PortHook:
     for hook in _HOOKS:
         if hook.name == hook_name:
             return hook
@@ -288,10 +286,9 @@ def _config_set(
 ) -> None:
     site_home = Path(SitePaths.from_site_name(site_name).home)
 
-    hook = _get_hook(hook_name)
+    hook = get_hook(hook_name)
     if isinstance(hook, PortHook):
         site_configs = _build_site_configs(omd_path)
-        _report_error(hook_name, site_configs.sites_with_unreadable_configs)
         value = config[hook_name]
         new_value = str(_next_free_port(hook_name, site_name, int(value), site_configs.configs))
         if value != new_value:

@@ -37,18 +37,19 @@ import omdlib
 import omdlib.backup
 from omdlib.args_site_user import args_to_command_line, Copy, Create, Move, Restore
 from omdlib.buffer import BufferWithCopy
-from omdlib.config_api import Config, ConfigHookChoices, Error
+from omdlib.config_api import Config, ConfigHookChoices, Error, PortHook
 from omdlib.config_hooks import (
-    _get_hook,
     config_set_all,
     config_set_value,
     ConfigHook,
     ConfigHooks,
     create_config_environment,
+    get_hook,
     load_config,
     load_config_hooks,
     load_hook_dependencies,
     read_site_config,
+    report_port_allocations,
     save_site_conf,
 )
 from omdlib.console import ok, show_success
@@ -1462,7 +1463,7 @@ def validate_config_change_commands(
         if not hook:
             sys.exit("Invalid config option: %r" % key)
 
-        error_from_config_choice = _error_from_config_choice(_get_hook(key).choices, value)
+        error_from_config_choice = _error_from_config_choice(get_hook(key).choices, value)
         if error_from_config_choice is not None:
             sys.exit(f"Invalid value for '{value} for {key}'. {error_from_config_choice}\n")
 
@@ -1490,7 +1491,7 @@ def config_set(
         sys.stderr.write("No such variable '%s'\n" % hook_name)
         return []
 
-    error_from_config_choice = _error_from_config_choice(_get_hook(hook_name).choices, value)
+    error_from_config_choice = _error_from_config_choice(get_hook(hook_name).choices, value)
     if error_from_config_choice is not None:
         sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice}\n")
         return []
@@ -1629,7 +1630,7 @@ def config_configure_hook(
     title = hook.alias
     descr = hook.description.replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
     value = config[hook_name]
-    choices = _get_hook(hook_name).choices
+    choices = get_hook(hook_name).choices
 
     if isinstance(choices, list):
         change, new_value = dialog_menu(title, descr, choices, value, "Change", "Cancel")
@@ -2576,6 +2577,7 @@ def main_update(
 
             # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
             # new settings and default values.
+            report_port_allocations()
             config = load_config(site.name, site.hook_dir)
 
             # Let hooks of the new(!) version do their work and update configuration.
@@ -2894,6 +2896,8 @@ def main_config(
             f"WARNING: You have to execute 'omd update-apache-config {site.name}' as "
             "root to update and apply the configuration of the system apache.\n"
         )
+    if any(isinstance(get_hook(hook_name), PortHook) for hook_name in set_hooks):
+        report_port_allocations(Path("/omd/"))
 
     if need_start:
         start_site(site, config)

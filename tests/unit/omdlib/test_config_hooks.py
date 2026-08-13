@@ -10,10 +10,9 @@ import pytest
 from omdlib.config_api import PortHook
 from omdlib.config_hooks import (
     _build_site_configs,
-    _default_port,
     _HOOKS,
     _next_free_port,
-    _report_error,
+    report_port_allocations,
 )
 
 _PORT_HOOKS = [hook for hook in _HOOKS if isinstance(hook, PortHook)]
@@ -33,8 +32,8 @@ def test_next_free_port_many_sites(tmp_path: Path, capsys: pytest.CaptureFixture
     (sites / "ghost").mkdir(parents=True)  # no site.conf — silently ignored, does not block
     (sites / "stray_file").write_text("ignored")  # non-directory entry — skipped silently
 
+    report_port_allocations(tmp_path)
     site_configs = _build_site_configs(tmp_path)
-    _report_error("APACHE_TCP_PORT", site_configs.sites_with_unreadable_configs)
     assert _next_free_port("APACHE_TCP_PORT", "site3", 5000, site_configs.configs) == 5002
     assert capsys.readouterr().err == ""
 
@@ -74,7 +73,10 @@ def test_default_port_cross_key_conflict(tmp_path: Path, port_hook: PortHook) ->
     _make_site(sites, "mysite", "")
 
     site_configs = _build_site_configs(tmp_path)
-    assert _default_port("mysite", port_hook, site_configs) == str(port_hook.default_port + 1)
+    assert (
+        _next_free_port(port_hook.name, "mysite", port_hook.default_port, site_configs.configs)
+        == port_hook.default_port + 1
+    )
 
 
 @pytest.mark.parametrize("port_hook", _PORT_HOOKS, ids=[h.name for h in _PORT_HOOKS])
@@ -84,6 +86,5 @@ def test_default_port_ignores_missing_site_config(
     # A site without site.conf (e.g. created with --no-init) allocates no ports.
     (tmp_path / "sites" / "ghost").mkdir(parents=True)  # no site.conf
     site_configs = _build_site_configs(tmp_path)
-    _default_port("mysite", port_hook, site_configs)
-
+    assert _next_free_port(port_hook.name, "mysite", 5000, site_configs.configs) == 5000
     assert capsys.readouterr().err == ""

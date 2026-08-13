@@ -63,7 +63,7 @@ def parameter_form() -> Dictionary:
                                 title=Title("Login mode"),
                                 elements=[
                                     SingleChoiceElement(
-                                        name="basic", title=Title("HTTP Basic Authentication")
+                                        name="basic", title=Title("HTTP Basic authentication")
                                     ),
                                     SingleChoiceElement(name="digest", title=Title("HTTP Digest")),
                                 ],

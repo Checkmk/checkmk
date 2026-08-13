@@ -125,7 +125,7 @@ def _user_form(user_title: Title, help_text: Help) -> Dictionary:
                         SingleChoiceElement(
                             name="auto",
                             title=Title(
-                                "Automatic: Use existing user, if available. Otherwise create"
+                                "Automatic: use existing user, if available. Otherwise create"
                                 " new user."
                             ),
                         ),

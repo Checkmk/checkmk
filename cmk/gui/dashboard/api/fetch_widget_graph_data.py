@@ -43,10 +43,10 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.livestatus_client import MKLivestatusException
 
 from ._family import DASHBOARD_FAMILY
+from ._utils import validated_dashboard_token
 from .model.widget_content.graph import CombinedGraphContent
 
 
@@ -64,22 +64,6 @@ class WidgetGraphFetchRequest:
     )
 
 
-def _dashboard_token(token: AuthToken | None) -> tuple[AuthToken, DashboardToken]:
-    if token is None:
-        raise ProblemException(
-            status=401,
-            title="Authentication required",
-            detail="This endpoint requires token authentication.",
-        )
-    if not isinstance(token.details, DashboardToken) or token.details.disabled:
-        raise ProblemException(
-            status=401,
-            title="Authentication required",
-            detail="The provided token is not valid for dashboard access.",
-        )
-    return token, token.details
-
-
 def _combination_mode(widget_config: DashletConfig) -> ApiCombinationMode | None:
     """How a combined graph widget folds its metrics; the other graph types do not combine.
 
@@ -95,7 +79,7 @@ def fetch_widget_graph_data_v1(
     api_context: ApiContext, body: WidgetGraphFetchRequest
 ) -> GraphFetchResponse:
     """Fetch the data of a shared dashboard's graph widget over a requested time range"""
-    token, token_details = _dashboard_token(api_context.token)
+    token, token_details = validated_dashboard_token(api_context.token)
     user_permissions = api_context.config.user_permissions()
 
     try:

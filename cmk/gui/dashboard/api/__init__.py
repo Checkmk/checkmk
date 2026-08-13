@@ -25,6 +25,7 @@ from ._utils import (
     PERMISSIONS_DASHBOARD_EDIT,
     PERMISSIONS_DASHBOARD_READ,
     save_dashboard_to_file,
+    validated_dashboard_token,
 )
 
 __all__ = [
@@ -47,4 +48,5 @@ __all__ = [
     "make_pending_changes",
     "register_endpoints",
     "save_dashboard_to_file",
+    "validated_dashboard_token",
 ]

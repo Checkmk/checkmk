@@ -19,6 +19,7 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.framework.utils import dump_dict_without_omitted
 from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import AnnotatedUserId, VisualTypeName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import load_user
@@ -444,3 +445,24 @@ class DashboardConstants:
     def dict_output() -> dict[str, object]:
         response = DashboardConstants.generate_api_response()
         return dump_dict_without_omitted(DashboardConstantsResponse, response)
+
+
+def validated_dashboard_token(token: AuthToken | None) -> tuple[AuthToken, DashboardToken]:
+    """The dashboard token a token-authenticated endpoint was called with.
+
+    Endpoints that accept a dashboard token carry no session user, so the token is
+    what authorizes the call and has to be checked before anything is loaded.
+    """
+    if token is None:
+        raise ProblemException(
+            status=401,
+            title="Authentication required",
+            detail="This endpoint requires token authentication.",
+        )
+    if not isinstance(token.details, DashboardToken) or token.details.disabled:
+        raise ProblemException(
+            status=401,
+            title="Authentication required",
+            detail="The provided token is not valid for dashboard access.",
+        )
+    return token, token.details

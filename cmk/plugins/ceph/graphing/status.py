@@ -18,13 +18,13 @@ UNIT_COUNTER = Unit(DecimalNotation(""), StrictPrecision(2))
 
 metric_degraded_objects = Metric(
     name="degraded_objects",
-    title=Title("Degraded Objects"),
+    title=Title("Degraded objects"),
     unit=UNIT_COUNTER,
     color=Color.DARK_PINK,
 )
 metric_misplaced_objects = Metric(
     name="misplaced_objects",
-    title=Title("Misplaced Objects"),
+    title=Title("Misplaced objects"),
     unit=UNIT_COUNTER,
     color=Color.ORANGE,
 )

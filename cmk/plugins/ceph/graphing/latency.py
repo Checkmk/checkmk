@@ -11,13 +11,13 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_apply_latency = metrics.Metric(
     name="apply_latency",
-    title=Title("Apply Latency"),
+    title=Title("Apply latency"),
     unit=UNIT_TIME,
     color=metrics.Color.YELLOW,
 )
 metric_commit_latency = metrics.Metric(
     name="commit_latency",
-    title=Title("Commit Latency"),
+    title=Title("Commit latency"),
     unit=UNIT_TIME,
     color=metrics.Color.YELLOW,
 )

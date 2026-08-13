@@ -12,7 +12,7 @@ UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision
 
 metric_num_pgs = metrics.Metric(
     name="num_pgs",
-    title=Title("Number of Placement Groups"),
+    title=Title("Number of placement groups"),
     unit=UNIT_COUNTER,
     color=metrics.Color.DARK_BROWN,
 )
@@ -356,7 +356,7 @@ metric_pgstate_remapped_peering = metrics.Metric(
 )
 metric_pgstate_stale_active_undersized = metrics.Metric(
     name="pgstate_stale_active_undersized",
-    title=Title("PGs Stale+active + Undersized"),
+    title=Title("PGs Stale + Active + Undersized"),
     unit=UNIT_COUNTER,
     color=metrics.Color.DARK_RED,
 )

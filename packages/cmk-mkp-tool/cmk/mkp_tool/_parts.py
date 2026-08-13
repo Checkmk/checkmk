@@ -151,7 +151,7 @@ def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
         case PackagePart.EC_RULE_PACKS:
             return _("Event Console rule packs")
         case PackagePart.AGENT_BASED:
-            return _("Agent based plug-ins (outdated, ignored)")
+            return _("Agent-based plug-ins (outdated, ignored)")
         case PackagePart.CHECKS:
             return _("Legacy check plug-ins (outdated, ignored)")
         case PackagePart.HASI:

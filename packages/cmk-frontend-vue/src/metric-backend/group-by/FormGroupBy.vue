@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
-import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import type {
   QuerySuggestionsFn,
   Suggestions
@@ -14,21 +13,19 @@ import type {
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { randomId } from 'cmk-ui-library/lib/randomId'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import InlineEditPill from '../InlineEditPill.vue'
 import { attributeKindLabel } from '../attribute-kind'
 import { DEFAULT_QUANTILE, useHistogramParams } from '../histogram-params'
-import GroupByKeyPill from './GroupByKeyPill.vue'
+import GroupByKeysArea from './GroupByKeysArea.vue'
 import { clauseSummary, compactFunctionLabel, functionLabel } from './group-by-label'
 import {
   defaultFunction,
   functionParamKind,
   functionTakesKeys,
   functionsForInputType,
-  isFunctionValidForInputType,
-  isKeyValid
+  isFunctionValidForInputType
 } from './types'
 import type {
   AttributeKind,
@@ -127,8 +124,14 @@ const validationMessages = computed<string[]>(() =>
 )
 
 const functionDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('functionDropdownRef')
+const keysAreaRef = useTemplateRef<InstanceType<typeof GroupByKeysArea>>('keysAreaRef')
 
-const editingId = ref<string | null>(null)
+const keysModel = computed<GroupKey[]>({
+  get: () => model.value.keys,
+  set: (keys) => {
+    model.value = { ...model.value, keys }
+  }
+})
 
 function onEdit(): void {
   editing.value = true
@@ -141,92 +144,11 @@ function onEdit(): void {
     }
     // A lone key is the obvious target; open it directly.
     if (model.value.keys.length === 1) {
-      editingId.value = model.value.keys[0]!.id
+      keysAreaRef.value?.focusKey(model.value.keys[0]!.id)
       return
     }
     functionDropdownRef.value?.focus()
   })
-}
-
-const pillRefs = new Map<string, InstanceType<typeof GroupByKeyPill>>()
-
-// Cache one setter per pill id so :ref does not see a new function every render
-// and re-run the setter on every model mutation.
-const pillRefSetters = new Map<string, (el: unknown) => void>()
-function pillRefSetter(id: string): (el: unknown) => void {
-  let fn = pillRefSetters.get(id)
-  if (!fn) {
-    fn = (el: unknown) => {
-      if (el) {
-        pillRefs.set(id, el as InstanceType<typeof GroupByKeyPill>)
-      } else {
-        pillRefs.delete(id)
-        pillRefSetters.delete(id)
-      }
-    }
-    pillRefSetters.set(id, fn)
-  }
-  return fn
-}
-
-function tryChangeFocus(): boolean {
-  const id = editingId.value
-  if (id === null) {
-    return true
-  }
-  const key = model.value.keys.find((k) => k.id === id)
-  if (!key || isKeyValid(key)) {
-    return true
-  }
-  pillRefs.get(id)?.revealValidationErrors()
-  return false
-}
-
-function addKey(): void {
-  if (!keysEnabled.value || !tryChangeFocus()) {
-    return
-  }
-  const fresh: GroupKey = { id: randomId(), attributeKind: null, attributeKey: '' }
-  model.value = { ...model.value, keys: [...model.value.keys, fresh] }
-  editingId.value = fresh.id
-}
-
-function removeKey(target: GroupKey): void {
-  if (editingId.value === target.id) {
-    editingId.value = null
-  }
-  model.value = { ...model.value, keys: model.value.keys.filter((k) => k.id !== target.id) }
-}
-
-function mapKeys(fn: (key: GroupKey) => GroupKey): void {
-  model.value = { ...model.value, keys: model.value.keys.map(fn) }
-}
-
-function updateAttributeKind(target: GroupKey, value: AttributeKind): void {
-  mapKeys((k) => (k.id === target.id ? { ...k, attributeKind: value } : k))
-}
-
-// Override the kind only when the key resolves, so a user-picked kind survives free-text edits.
-function updateAttributeKey(target: GroupKey, value: string): void {
-  const inferred = value !== '' ? (props.resolveAttributeKind?.(value) ?? null) : null
-  mapKeys((k) =>
-    k.id === target.id
-      ? { ...k, attributeKey: value, ...(inferred !== null ? { attributeKind: inferred } : {}) }
-      : k
-  )
-}
-
-function startEditing(id: string): void {
-  if (!tryChangeFocus()) {
-    return
-  }
-  editingId.value = id
-}
-
-function onKeyEditDone(id: string): void {
-  if (editingId.value === id) {
-    editingId.value = null
-  }
 }
 
 // Veto closing while a param is invalid or a pending key is empty, revealing the error.
@@ -235,7 +157,7 @@ function canLeaveEdit(): boolean {
     showValidationErrors.value = true
     return false
   }
-  return tryChangeFocus()
+  return keysAreaRef.value?.tryChangeFocus() ?? true
 }
 </script>
 
@@ -328,38 +250,14 @@ function canLeaveEdit(): boolean {
             :placeholder="_t('Upper')"
           />
         </span>
-        <div
+        <GroupByKeysArea
           v-if="keysEnabled"
-          class="metric-backend-form-group-by__keys"
-          data-testid="group-by-keys"
-        >
-          <span v-if="model.keys.length === 0" class="metric-backend-form-group-by__everything">{{
-            _t('everything')
-          }}</span>
-          <GroupByKeyPill
-            v-for="key in model.keys"
-            :key="key.id"
-            :ref="pillRefSetter(key.id)"
-            :condition="key"
-            :query-suggestions="querySuggestions"
-            removable
-            :editing="key.id === editingId"
-            @remove="removeKey(key)"
-            @edit="startEditing(key.id)"
-            @done="onKeyEditDone(key.id)"
-            @update:attribute-kind="(value) => updateAttributeKind(key, value)"
-            @update:attribute-key="(value) => updateAttributeKey(key, value)"
-          />
-          <CmkIconButton
-            class="metric-backend-form-group-by__add"
-            name="add"
-            size="large"
-            :title="_t('Add group key')"
-            :aria-label="_t('Add group key')"
-            @mousedown.prevent
-            @click="addKey"
-          />
-        </div>
+          ref="keysAreaRef"
+          v-model="keysModel"
+          :query-suggestions="querySuggestions"
+          :resolve-attribute-kind="resolveAttributeKind"
+          testid="group-by-keys"
+        />
       </template>
     </InlineEditPill>
   </div>
@@ -409,20 +307,8 @@ function canLeaveEdit(): boolean {
   white-space: nowrap;
 }
 
-.metric-backend-form-group-by__keys {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--dimension-3) var(--dimension-4);
-  padding-left: var(--dimension-2);
-}
-
 .metric-backend-form-group-by__everything {
   color: var(--font-color-dimmed);
   font-style: italic;
-}
-
-.metric-backend-form-group-by__add:hover {
-  background-color: var(--input-hover-bg-color);
 }
 </style>

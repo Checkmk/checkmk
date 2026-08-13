@@ -527,8 +527,7 @@ def _rust_config(cfg: Config, bins: Bins, sections: list[str], threads: int = 1)
         f"    discovery:\n"
         f"      detect: no\n"
         f"{conn_block}"
-        + (f"    instances:\n      - service_name: {cfg.service}\n" if sections else "")
-        + f"    sections:\n"
+        f"    sections:\n"
         f"{sections_block}\n"
     )
 

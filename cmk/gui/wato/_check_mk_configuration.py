@@ -9,15 +9,12 @@
 # mypy: disable-error-code="unreachable"
 
 import logging
-import re
-from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
+from collections.abc import Generator, Iterable, Mapping, Sequence
 from typing import Any, Literal, override
 
-import cmk.ccc.regex
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.regex import regex, REGEX_ID
 from cmk.ccc.version import Edition
 from cmk.checkengine.snmplib import SNMPBackendEnum  # astrein: disable=cmk-module-layer-violation
 from cmk.gui.config import active_config
@@ -25,7 +22,7 @@ from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.form_specs._utils import create_validation_error_for_mk_user_error
 from cmk.gui.form_specs.generators.age import Age as FSAge
 from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
-from cmk.gui.form_specs.unstable import LegacyValueSpec, OptionalChoice
+from cmk.gui.form_specs.unstable import id_validators, LegacyValueSpec, OptionalChoice
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
@@ -360,20 +357,6 @@ def register(
 #   +----------------------------------------------------------------------+
 #   | Global configuration settings for main.mk and multisite.mk           |
 #   '----------------------------------------------------------------------'
-
-
-def _fs_id_validators() -> list[Callable[[str], object]]:
-    """Port of the ID() valuespec: a non-empty internal identifier."""
-    return [
-        fs.validators.LengthInRange(min_value=1),
-        fs.validators.MatchRegex(
-            regex=cmk.ccc.regex.regex(cmk.ccc.regex.REGEX_ID, re.ASCII),
-            error_msg=Message(
-                "An identifier must only consist of letters, digits, dash and "
-                "underscore and it must start with a letter or underscore."
-            ),
-        ),
-    ]
 
 
 def _fs_single_choice_elements[T](
@@ -1121,7 +1104,7 @@ ConfigVariableVirtualHostTrees = ConfigVariable(
                     required=True,
                     parameter_form=fs.String(
                         title=Title("ID"),
-                        custom_validate=_fs_id_validators(),
+                        custom_validate=id_validators(),
                     ),
                 ),
                 "title": fs.DictElement(
@@ -1552,7 +1535,7 @@ ConfigVariableUserIconsAndActions = ConfigVariable(
         fs.List[tuple[object, ...]](
             element_template=FSTuple(
                 elements=[
-                    fs.String(title=Title("ID"), custom_validate=_fs_id_validators()),
+                    fs.String(title=Title("ID"), custom_validate=id_validators()),
                     fs.Dictionary(
                         elements={
                             "icon": fs.DictElement(
@@ -3212,16 +3195,7 @@ ConfigVariableHTTPProxies = ConfigVariable(
                                 "The ID must be a unique text. It will be used as an internal key "
                                 "when objects refer to this object."
                             ),
-                            custom_validate=[
-                                fs.validators.LengthInRange(min_value=1),
-                                fs.validators.MatchRegex(
-                                    regex=regex(REGEX_ID, re.ASCII),
-                                    error_msg=Message(
-                                        "An identifier must only consist of letters, digits, dash "
-                                        "and underscore and it must start with a letter or underscore."
-                                    ),
-                                ),
-                            ],
+                            custom_validate=id_validators(),
                         ),
                     ),
                     "title": fs.DictElement(

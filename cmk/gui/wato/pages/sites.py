@@ -23,7 +23,6 @@ import cmk.gui.sites
 import cmk.gui.watolib.audit_log as _audit_log
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
-from cmk.ccc.regex import REGEX_ID
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
@@ -41,6 +40,7 @@ from cmk.gui.form_specs import (
     render_form_spec,
 )
 from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
+from cmk.gui.form_specs.unstable import id_validators
 from cmk.gui.form_specs.unstable.legacy_converter import (
     Tuple,
 )
@@ -556,17 +556,7 @@ class ModeEditSite(WatoMode):
                 ),
                 field_size=FieldSize.LARGE,
                 custom_validate=[
-                    validators.LengthInRange(
-                        min_value=1,
-                        error_msg=Message("Site ID cannot be empty"),
-                    ),
-                    validators.MatchRegex(
-                        regex=REGEX_ID,
-                        error_msg=Message(
-                            "An identifier must only consist of letters, digits, dash and "
-                            "underscore and it must start with a letter or underscore."
-                        ),
-                    ),
+                    *id_validators(Message("Site ID cannot be empty")),
                     create_validation_error_for_mk_user_error(self._validate_site_id),
                 ],
             )
@@ -1028,17 +1018,7 @@ class ModeEditBrokerConnection(WatoMode):
                 title=Title("Unique ID"),
                 field_size=FieldSize.LARGE,
                 custom_validate=[
-                    validators.LengthInRange(
-                        min_value=1,
-                        error_msg=Message("Unique ID cannot be empty"),
-                    ),
-                    validators.MatchRegex(
-                        regex=REGEX_ID,
-                        error_msg=Message(
-                            "An identifier must only consist of letters, digits, dash and "
-                            "underscore and it must start with a letter or underscore."
-                        ),
-                    ),
+                    *id_validators(Message("Unique ID cannot be empty")),
                     create_validation_error_for_mk_user_error(self._validate_connection_id),
                 ],
             )

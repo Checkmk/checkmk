@@ -10,6 +10,7 @@ from collections.abc import Callable, Sequence
 import pytest
 
 from cmk.gui.fields.definitions import FOLDER_PATTERN
+from cmk.gui.form_specs.unstable.validators import ID_REGEX
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.definitions import UniqueBundleIDStr, UniqueFormSpecIDStr
 from cmk.gui.quick_setup.v0_unstable.predefined import recaps, widgets
@@ -354,7 +355,7 @@ def test_id_validation(ident: str, is_valid: bool) -> None:
 
     The ID must start with a letter or underscore.
     """
-    regex = widgets.ID_VALIDATION_REGEX
+    regex = ID_REGEX
     if is_valid:
         assert regex.match(ident)
     else:

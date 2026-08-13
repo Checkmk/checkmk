@@ -27,7 +27,7 @@ from .static_text import StaticText
 from .time_picker import TimePicker
 from .time_specific import TimeSpecific
 from .two_column_dictionary import TwoColumnDictionary
-from .validators import not_empty
+from .validators import id_validators, not_empty
 
 __all__ = [
     "Autocompleter",
@@ -40,6 +40,7 @@ __all__ = [
     "ConditionChoices",
     "DatePicker",
     "FetchMethod",
+    "id_validators",
     "Labels",
     "LegacyValueSpec",
     "ListUniqueSelection",

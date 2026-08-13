@@ -7,15 +7,18 @@ import ipaddress
 import re
 import typing
 
+import cmk.ccc.regex
 from cmk.ccc.hostaddress import HostAddress as CheckmkHostAddress
 from cmk.rulesets.v1._localize import Message
-from cmk.rulesets.v1.form_specs.validators import LengthInRange, ValidationError
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, MatchRegex, ValidationError
 
 T = typing.TypeVar("T")
 
 ModelT = typing.TypeVar("ModelT")
 
 ValidatorType = typing.Callable[[ModelT], None]
+
+ID_REGEX: typing.Final = cmk.ccc.regex.regex(cmk.ccc.regex.REGEX_ID, re.ASCII)
 
 
 class EnforceSuffix:
@@ -72,6 +75,22 @@ def not_empty(error_msg: Message | None = None) -> LengthInRange:
         error_msg=error_msg
         if error_msg is not None
         else Message("An empty value is not allowed here"),
+    )
+
+
+def id_validators(
+    error_msg: Message = Message("The ID cannot be empty."),
+) -> tuple[ValidatorType[str], ...]:
+    """Validators of the ID() valuespec: a non-empty internal identifier."""
+    return (
+        LengthInRange(min_value=1, error_msg=error_msg),
+        MatchRegex(
+            regex=ID_REGEX,
+            error_msg=Message(
+                "An identifier must only consist of letters, digits, dash and "
+                "underscore and it must start with a letter or underscore."
+            ),
+        ),
     )
 
 

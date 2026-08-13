@@ -5,11 +5,9 @@
 
 # mypy: disable-error-code="type-arg"
 
-import re
-
-import cmk.ccc.regex
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
+from cmk.gui.form_specs.unstable import id_validators
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.quick_setup.v0_unstable.definitions import (
@@ -36,8 +34,6 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 
-ID_VALIDATION_REGEX = cmk.ccc.regex.regex(cmk.ccc.regex.REGEX_ID, re.ASCII)
-
 
 def unique_id_formspec_wrapper(
     title: Title,
@@ -51,18 +47,9 @@ def unique_id_formspec_wrapper(
                     parameter_form=String(
                         title=title,
                         field_size=FieldSize.MEDIUM,
-                        custom_validate=(
-                            validators.LengthInRange(
-                                min_value=1,
-                                error_msg=Message("%(title)s is required but not specified.")
-                                % {"title": title.localize(translate_to_current_language)},
-                            ),
-                            validators.MatchRegex(
-                                regex=ID_VALIDATION_REGEX,
-                                error_msg=Message(
-                                    "An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore."
-                                ),
-                            ),
+                        custom_validate=id_validators(
+                            Message("%(title)s is required but not specified.")
+                            % {"title": title.localize(translate_to_current_language)}
                         ),
                         prefill=DefaultValue(
                             unique_default_name_suggestion(

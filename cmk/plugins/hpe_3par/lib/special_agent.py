@@ -22,10 +22,10 @@ PASSWORD_OPTION = "password"
 
 DEFAULT_VALUES = {
     "system": Title("System: Storage Array Configuration"),
-    "cpgs": Title("Common Provisioning Groups: Virtual pool configuration"),
-    "volumes": Title("Volumes: Virtual Volume Summary"),
-    "hosts": Title("Hosts: Host Capacity & Utilization"),
-    "capacity": Title("Capacity: Array Capacity & Utilization"),
+    "cpgs": Title("Common provisioning groups: virtual pool configuration"),
+    "volumes": Title("Volumes: virtual volume summary"),
+    "hosts": Title("Hosts: host capacity & utilization"),
+    "capacity": Title("Capacity: array capacity & utilization"),
     "ports": Title("Ports: Port Utilization (FC and iSCSI)"),
     "remotecopy": Title("RemoteCopy: Remote Copy Configuration"),
 }
@@ -33,10 +33,10 @@ DEFAULT_VALUES = {
 
 VALID_VALUES = {
     **DEFAULT_VALUES,
-    "hostsets": Title("HostSets: Host Set Configuration"),
+    "hostsets": Title("HostSets: Host set configuration"),
     "volumesets": Title("VolumeSets: Volume Set Configuration"),
     "vluns": Title("VLUNs: Virtual LUN configuration"),
-    "flashcache": Title("FlashCache: Flash Cache Configuration"),
+    "flashcache": Title("FlashCache: Flash cache configuration"),
     "users": Title("Users: User management"),
     "roles": Title("Roles: Role management"),
     "qos": Title("QoS: Quality of service configuration"),

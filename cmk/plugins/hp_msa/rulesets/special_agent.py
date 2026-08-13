@@ -42,7 +42,7 @@ def _parameter_form() -> Dictionary:
 
 rule_spec_special_agent_hp_msa = SpecialAgent(
     name="hp_msa",
-    title=Title("HP MSA via Web Interface"),
+    title=Title("HP MSA via web interface"),
     topic=Topic.STORAGE,
     parameter_form=_parameter_form,
 )

@@ -15,7 +15,7 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 
 def _make_form() -> Dictionary:
     return Dictionary(
-        title=Title("Evaluation of PDisk States"),
+        title=Title("Evaluation of PDisk states"),
         elements={
             "dhs": DictElement(
                 required=False,
@@ -67,70 +67,70 @@ def _make_form() -> Dictionary:
             "good": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State for storcli2 status <i>Good</i>"),
+                    title=Title("State for StorCLI2 status <i>Good</i>"),
                     prefill=DefaultValue(ServiceState.OK),
                 ),
             ),
             "online": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State for storcli2 status <i>Online</i>"),
+                    title=Title("State for StorCLI2 status <i>Online</i>"),
                     prefill=DefaultValue(ServiceState.OK),
                 ),
             ),
             "various": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State for storcli2 status <i>Various</i>"),
+                    title=Title("State for StorCLI2 status <i>Various</i>"),
                     prefill=DefaultValue(ServiceState.WARN),
                 ),
             ),
             "replace": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State for storcli2 status <i>Replace</i>"),
+                    title=Title("State for StorCLI2 status <i>Replace</i>"),
                     prefill=DefaultValue(ServiceState.CRIT),
                 ),
             ),
             "missing": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State for storcli2 status <i>Missing</i>"),
+                    title=Title("State for StorCLI2 status <i>Missing</i>"),
                     prefill=DefaultValue(ServiceState.CRIT),
                 ),
             ),
             "unusable": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State for storcli2 status <i>Unusable</i>"),
+                    title=Title("State for StorCLI2 status <i>Unusable</i>"),
                     prefill=DefaultValue(ServiceState.CRIT),
                 ),
             ),
             "bad": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State for storcli2 status <i>Bad</i>"),
+                    title=Title("State for StorCLI2 status <i>Bad</i>"),
                     prefill=DefaultValue(ServiceState.CRIT),
                 ),
             ),
             "offline": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State for storcli2 status <i>Offline</i>"),
+                    title=Title("State for StorCLI2 status <i>Offline</i>"),
                     prefill=DefaultValue(ServiceState.CRIT),
                 ),
             ),
             "failed": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State for storcli2 status <i>Failed</i>"),
+                    title=Title("State for StorCLI2 status <i>Failed</i>"),
                     prefill=DefaultValue(ServiceState.CRIT),
                 ),
             ),
             "unknown": DictElement(
                 required=False,
                 parameter_form=ServiceState(
-                    title=Title("State for storcli2 status <i>Unknown</i>"),
+                    title=Title("State for StorCLI2 status <i>Unknown</i>"),
                     prefill=DefaultValue(ServiceState.UNKNOWN),
                 ),
             ),

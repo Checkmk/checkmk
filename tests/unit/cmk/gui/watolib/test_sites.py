@@ -21,7 +21,7 @@ Each chain has independently testable parts:
   central site" option.
 """
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -30,6 +30,7 @@ from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
+from cmk.gui.user_connection_config_types import LDAPUserConnectionConfig
 from cmk.gui.watolib.sites import (
     _auth_connections_from_disk,
     _auth_connections_to_disk,
@@ -43,6 +44,7 @@ from cmk.livestatus_client import (
     SiteConfiguration,
     SiteConfigurations,
 )
+from tests.testlib.gui.web_test_app import SetConfig
 
 
 def _local_site_config() -> SiteConfiguration:
@@ -307,6 +309,45 @@ def test_user_attribute_sync_form_spec_choices(
         "all",
         "list",
     ]
+
+
+def _ldap_connection(connection_id: str) -> LDAPUserConnectionConfig:
+    return cast(
+        LDAPUserConnectionConfig,
+        {"type": "ldap", "id": connection_id, "name": connection_id, "disabled": False},
+    )
+
+
+def test_user_attribute_sync_form_spec_accepts_dash_in_connection_id(
+    set_config: SetConfig,
+    request_context: None,
+) -> None:
+    """A dashed LDAP connection id can be offered for attribute sync.
+
+    Element names in the public form-spec API must be Python identifiers, so
+    building this selector from a dashed id used to raise ``ValueError`` and the
+    whole site-configuration page failed to render — while the connection form's
+    own id rule ("letters, digits, dash and underscore") hands such ids out. A
+    dynamically built choice list therefore has to use the extended element type,
+    which does not impose the identifier rule.
+
+    Site ids are a separate space with its own remedy: werk 18761 restricts a new
+    one to what ``omd create`` accepts, so it cannot carry a dash. Connection ids
+    keep the looser rule, which is why this selector still has to tolerate one.
+    """
+    with set_config(user_connections=[_ldap_connection("ldap-with-dash")]):
+        form_spec = SiteManagement.user_attribute_sync_connections_form_spec()
+
+    assert isinstance(form_spec, TransformDataForLegacyFormatOrRecomposeFunction)
+    inner = form_spec.wrapped_form_spec
+    assert hasattr(inner, "elements")
+    explicit_list = next(element for element in inner.elements if element.name == "list")
+    offered_connection_ids = [choice.name for choice in explicit_list.parameter_form.elements]
+
+    assert "ldap-with-dash" in offered_connection_ids, (
+        "The dashed LDAP connection id is not offered for attribute sync, so a "
+        "connection the creation form accepts cannot be selected here."
+    )
 
 
 def _editable_connection_elements(*, saml_supported: bool) -> list[Any]:

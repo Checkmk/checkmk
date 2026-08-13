@@ -179,7 +179,7 @@ metric_process_virtual_memory_max_bytes = Metric(
 
 metric_go_gc_duration_seconds_count = Metric(
     name=f"{name_prefix_bazel_cache_go}go_gc_duration_seconds_count",
-    title=Title("Timespan since last Go garbage collection cycle"),
+    title=Title("Time span since last Go garbage collection cycle"),
     unit=TIME_SINCE_BUILD_UNIT,
     color=Color.PURPLE,
 )

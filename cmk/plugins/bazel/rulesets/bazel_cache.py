@@ -30,14 +30,14 @@ def _formspec_bazel_cache() -> Dictionary:
         elements={
             "user": DictElement(
                 parameter_form=String(
-                    title=Title("Bazel Cache User"),
+                    title=Title("Bazel cache user"),
                     help_text=Help("The username used to connect to the Bazel cache"),
                 ),
                 required=False,
             ),
             "password": DictElement(
                 parameter_form=Password(
-                    title=Title("Bazel Cache password"),
+                    title=Title("Bazel cache password"),
                     help_text=Help("The password used to connect to the Bazel cache"),
                     migrate=migrate_to_password,
                 ),
@@ -45,7 +45,7 @@ def _formspec_bazel_cache() -> Dictionary:
             ),
             "port": DictElement(
                 parameter_form=Integer(
-                    title=Title("Bazel Cache Port"),
+                    title=Title("Bazel cache port"),
                     help_text=Help(
                         "Use this option to query a port which is different from standard port 8080."
                     ),
@@ -80,13 +80,13 @@ def _formspec_bazel_cache() -> Dictionary:
 
 rule_spec_bazel_cache = SpecialAgent(
     name="bazel_cache",
-    title=Title("Bazel Remote Cache"),
+    title=Title("Bazel remote cache"),
     topic=Topic.APPLICATIONS,
     parameter_form=_formspec_bazel_cache,
 )
 
 rule_spec_check_parameters = CheckParameters(
-    title=Title("Bazel Cache Version"),
+    title=Title("Bazel cache version"),
     topic=Topic.APPLICATIONS,
     parameter_form=lambda: Dictionary(
         elements={

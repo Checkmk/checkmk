@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -59,7 +58,7 @@ logs = [l for l in generate_logs() if l not in ["Security", "System"]]
 
 
 @contextlib.contextmanager
-def eventlog(logtype):
+def eventlog(logtype):  # type: ignore[misc]
     handle = win32evtlog.OpenEventLog(host, logtype)
     try:
         yield handle
@@ -225,7 +224,7 @@ def verify_eventstate():
 
 # disabled tests
 @pytest.mark.usefixtures("no_statefile")
-def test_section_eventlog__no_statefile__no_events(
+def test_section_eventlog__no_statefile__no_events(  # type: ignore[misc]
     request, testconfig, expected_output_no_events, actual_output, testfile
 ):
     # request.node.name gives test name
@@ -233,7 +232,7 @@ def test_section_eventlog__no_statefile__no_events(
 
 
 @pytest.mark.usefixtures("with_statefile", "create_events")
-def test_section_eventlog__application_warnings(
+def test_section_eventlog__application_warnings(  # type: ignore[misc]
     request, testconfig, expected_output_application_events, actual_output, testfile
 ):
     # request.node.name gives test name

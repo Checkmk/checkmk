@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="import"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -626,7 +625,7 @@ def _latin_1_encoding():
         ),
     ],
 )
-def test_non_ascii_line_processing(
+def test_non_ascii_line_processing(  # type: ignore[misc]
     tmpdir, monkeypatch, use_specific_encoding, lines, expected_result
 ):
     # Write test logfile first
@@ -763,7 +762,7 @@ class MockStdout:
         ),
     ],
 )
-def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state, expected_output):
+def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state, expected_output):  # type: ignore[misc]
 
     section = lw.LogfileSection((logfile, logfile))
     section.options.values.update(opt_raw)

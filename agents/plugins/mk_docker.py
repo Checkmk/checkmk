@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -353,7 +352,7 @@ def time_it(func):
     """Decorator to time the function"""
 
     @functools.wraps(func)
-    def wrapped(*args, **kwargs):
+    def wrapped(*args, **kwargs):  # type: ignore[misc]
         before = time.time()
         try:
             return func(*args, **kwargs)
@@ -367,7 +366,7 @@ def time_it(func):
 
 
 @time_it
-def set_version_info(client):
+def set_version_info(client):  # type: ignore[misc]
     data = client.version()
     LOGGER.debug(data)
     Section.version_info["ApiVersion"] = data.get("ApiVersion")
@@ -395,7 +394,7 @@ def is_disabled_section(config, section_name):
 
 
 @time_it
-def section_node_info(client, config):
+def section_node_info(client, config):  # type: ignore[misc]
     LOGGER.debug(client.node_info)
     section = Section("docker_node_info")
     section.append(json.dumps(client.node_info))
@@ -403,7 +402,7 @@ def section_node_info(client, config):
 
 
 @time_it
-def section_node_disk_usage(client, config):
+def section_node_disk_usage(client, config):  # type: ignore[misc]
     """docker system df"""
     persist_until = int(time.time()) + int(config["persist_period_node_disk_usage"])
     section = Section("docker_node_disk_usage", persist_until=persist_until)
@@ -480,7 +479,7 @@ def _robust_inspect(client, docker_object):
 
 
 @time_it
-def section_node_images(client, config):
+def section_node_images(client, config):  # type: ignore[misc]
     """in subsections list [[[images]]] and [[[containers]]]"""
     section = Section("docker_node_images")
 
@@ -502,7 +501,7 @@ def section_node_images(client, config):
 
 
 @time_it
-def section_node_network(client, config):
+def section_node_network(client, config):  # type: ignore[misc]
     networks = client.networks.list(filters={"driver": "bridge"})
     section = Section("docker_node_network")
     section += [json.dumps(n.attrs) for n in networks]

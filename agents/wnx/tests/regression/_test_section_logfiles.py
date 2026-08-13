@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="misc"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -234,7 +233,7 @@ def manage_logfiles(request):
 
 
 @pytest.mark.usefixtures("no_statefile")
-def test_section_logfiles__new_file(
+def test_section_logfiles__new_file(  # type: ignore[misc]
     request, testconfig_glob, expected_output_no_statefile, actual_output, testfile
 ):
     # request.node.name gives test name
@@ -242,7 +241,7 @@ def test_section_logfiles__new_file(
 
 
 @pytest.mark.usefixtures("with_statefile")
-def test_section_logfiles__new_entries_in_log(
+def test_section_logfiles__new_entries_in_log(  # type: ignore[misc]
     request, testconfig_glob, expected_output_with_statefile, actual_output, testfile
 ):
     # request.node.name gives test name

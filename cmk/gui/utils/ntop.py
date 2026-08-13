@@ -111,8 +111,8 @@ def get_ntop_misconfiguration_reason() -> str:
     custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
     if custom_attribute_name and not user.get_attribute(custom_attribute_name, ""):
         return _(
-            "The ntopng username should be derived from 'ntopng Username' "
-            "under the current's user settings (identity) but this is not "
+            "The ntopng username should be derived from 'ntopng username' "
+            "under the current user settings (identity) but this is not "
             "set for the current user."
         )
     return ""

@@ -12,6 +12,7 @@ import os
 import re
 import subprocess
 import tarfile
+from collections import Counter
 from functools import cache
 from pathlib import Path, PosixPath
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -773,6 +774,18 @@ FILE_PATTERNS_SIGNABLE = [
     re.compile(r".*\.msi$"),
 ]
 
+# signable files expected inside check_mk_agent.msi (paths as installed by msiexec);
+# additions are verified automatically, but must be acknowledged here. CMK-37147
+# check_mk_svc32.exe/check_mk_svc64.exe are the File table identifiers of the two
+# service binaries: both install as check_mk_agent.exe (selected by the VersionNT64
+# condition), so they are extracted under their identifier - see
+# _msi_signable_file_names - to get both signatures verified.
+MSI_EMBEDDED_SIGNED_FILES = (
+    "Program Files/checkmk/service/check_mk_svc32.exe",
+    "Program Files/checkmk/service/check_mk_svc64.exe",
+    "Program Files/checkmk/service/cmk-agent-ctl.exe",
+)
+
 
 def _should_be_signed(path: str) -> bool:
     if not any(pattern.match(path) for pattern in FILE_PATTERNS_SIGNABLE):
@@ -780,6 +793,51 @@ def _should_be_signed(path: str) -> bool:
     if any(pattern.match(path) for pattern in FILES_UNSIGNED):
         return False
     return True
+
+
+def _msi_signable_file_names(msi_path: Path) -> list[str]:
+    """Signable File table entries of an MSI, one name per row, made extractable.
+
+    The FileName column is `8.3|long` - keep the long variant. The MSI may
+    install several File table rows under the same target name (here:
+    check_mk_svc32.exe/check_mk_svc64.exe both install as check_mk_agent.exe,
+    selected by the VersionNT64 condition), which msiextract silently collapses
+    into a single file, leaving all but one of them unverified. Rename such
+    rows to their unique File identifier (SQL UPDATE on the extraction copy)
+    so every row is extracted - and signature-verified - separately.
+
+    Such duplicates only exist on branches <= 2.4.0 (2.5.0 ships a single
+    combined service binary); there the renaming is simply a no-op.
+    """
+    table = subprocess.check_output(["msiinfo", "export", str(msi_path), "File"], text=True)
+    rows = [
+        (columns[0], columns[2].split("|")[-1])
+        for line in table.splitlines()
+        if len(columns := line.split("\t")) >= 3
+    ]
+    name_counts = Counter(name for _, name in rows)
+    signable_names = []
+    for file_id, file_name in rows:
+        if not any(pattern.match(file_name) for pattern in FILE_PATTERNS_SIGNABLE):
+            continue
+        if name_counts[file_name] == 1:
+            signable_names.append(file_name)
+            continue
+        assert any(pattern.match(file_id) for pattern in FILE_PATTERNS_SIGNABLE), (
+            f"File table row '{file_id}' shares its target name '{file_name}' with "
+            "another row, but its identifier does not look signable - extracting it "
+            "under that identifier would skip its signature verification"
+        )
+        subprocess.check_call(
+            [
+                "msibuild",
+                str(msi_path),
+                "-q",
+                f"UPDATE `File` SET `FileName` = '{file_id}' WHERE `File` = '{file_id}'",  # nosec B608 # BNS:fa3c6c
+            ]
+        )
+        signable_names.append(file_id)
+    return sorted(signable_names)
 
 
 _TRUSTED_ROOTS_DIR = Path(__file__).parent / "certs"
@@ -794,6 +852,8 @@ def _signing_ca_bundle() -> str:
     store anyway):
       - Comodo AAA Certificate Services              -> YubiKey/Sectigo code signing
       - USERTrust RSA Certification Authority        -> Sectigo timestamp chain
+      - Microsoft Identity Verification Root CA 2020 -> Azure Trusted Signing
+                                                        (code signing + timestamp)
     The same bundle serves -TSA-CAfile too, since it covers the timestamp chains.
     """
     roots = sorted(_TRUSTED_ROOTS_DIR.glob("*.pem"))
@@ -919,6 +979,10 @@ def test_windows_artifacts_are_signed(
                 _verify_signature(Path(msi_file.name), f"{path_prefix_agents}/check_mk_agent.msi")
             )
             paths_checked.append(f"{path_prefix_agents}/check_mk_agent.msi")
+            # after the MSI's own signature is verified: rename colliding File table
+            # rows in the temporary copy so msiextract writes every signable row
+            # (duplicates only exist on branches <= 2.4.0)
+            msi_table_names = _msi_signable_file_names(Path(msi_file.name))
             with TemporaryDirectory() as msi_content:
                 try:
                     subprocess.run(
@@ -932,13 +996,31 @@ def test_windows_artifacts_are_signed(
                     LOGGER.warning("can be installed locally")
                     LOGGER.warning("  ubuntu: sudo apt install msitools")
                     raise
-                for file in ("check_mk_agent.exe", "cmk-agent-ctl.exe"):
+                extracted_signable = sorted(
+                    path
+                    for path in Path(msi_content).rglob("*")
+                    if path.is_file() and _should_be_signed(str(path))
+                )
+                for extracted_file in extracted_signable:
                     signing_failures.append(
                         _verify_signature(
-                            Path(msi_content + "/Program Files/checkmk/service/" + file),
-                            f"check_mk_agent.msi/Program Files/checkmk/service/{file}",
+                            extracted_file,
+                            f"check_mk_agent.msi/{extracted_file.relative_to(msi_content)}",
                         )
                     )
+                extracted_names = sorted(
+                    str(path.relative_to(msi_content)) for path in extracted_signable
+                )
+                assert extracted_names == sorted(MSI_EMBEDDED_SIGNED_FILES), (
+                    "Signable files inside check_mk_agent.msi changed - if intended, "
+                    f"update MSI_EMBEDDED_SIGNED_FILES. Found: {extracted_names}"
+                )
+                # One extracted file per signable File table row - catches rows
+                # that still collapse or get lost on extraction.
+                assert msi_table_names == sorted(path.name for path in extracted_signable), (
+                    "File table of check_mk_agent.msi does not match the extracted "
+                    f"files - signable entries were collapsed or lost: {msi_table_names}"
+                )
 
     # check for additional files in the package
     # (so we don't forget to add them to the signing process)

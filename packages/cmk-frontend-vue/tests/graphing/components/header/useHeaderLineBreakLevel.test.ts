@@ -7,7 +7,7 @@ import { render } from '@testing-library/vue'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { type Ref, defineComponent, h, nextTick, ref } from 'vue'
 
-import { useHeaderLineBreakLevel } from '@/graphing/components/private/useHeaderLineBreakLevel'
+import { useHeaderLineBreakLevel } from '@/graphing/components/header/useHeaderLineBreakLevel'
 
 // jsdom has no ResizeObserver and does no layout, so stub the observer and feed every element its
 // geometry by hand (getBoundingClientRect + the title's computed line-height).

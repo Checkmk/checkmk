@@ -7,7 +7,7 @@ import { render, screen } from '@testing-library/vue'
 import { afterEach, vi } from 'vitest'
 import { nextTick } from 'vue'
 
-import GraphTitle from '@/graphing/components/GraphTitle.vue'
+import GraphTitle from '@/graphing/components/header/GraphTitle.vue'
 
 // Give a rendered GraphTitle a measurable width and line-height, and make its hidden probe report a
 // height that only "fits" while the candidate stays within `maxChars` characters. This drives the

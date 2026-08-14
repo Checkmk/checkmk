@@ -22,11 +22,11 @@ import type {
   TimeRangeCommitKind
 } from '../types.ts'
 import GraphBrush from './GraphBrush/GraphBrush.vue'
-import GraphHeader from './GraphHeader.vue'
 import TimeSeriesGraph from './TimeSeriesGraph'
 import { deriveYAxis } from './TimeSeriesGraph/yAxis'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from './consolidation'
 import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, MIN_ZOOM_TIME_RANGE_SECONDS } from './constants'
+import GraphHeader from './header/GraphHeader.vue'
 import GraphLegend from './legend/GraphLegend.vue'
 
 const { _t } = usei18n()

@@ -7,7 +7,7 @@ import type * as intl from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 
-import GraphHeader from '@/graphing/components/GraphHeader.vue'
+import GraphHeader from '@/graphing/components/header/GraphHeader.vue'
 import type { BurgerMenuGroup } from '@/graphing/types'
 
 vi.mock('@internationalized/date', async (importOriginal) => {

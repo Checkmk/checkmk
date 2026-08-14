@@ -12,19 +12,19 @@ import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
-import type { BurgerMenuCallable, BurgerMenuGroup, TimeRange } from '../types.ts'
-import { isoDate, stepLabel } from '../utils/timeFormat'
-import GraphBurgerMenu from './GraphBurgerMenu.vue'
-import GraphTitle from './GraphTitle.vue'
-import type { ZoomMode } from './TimeSeriesGraph'
+import type { BurgerMenuCallable, BurgerMenuGroup, TimeRange } from '../../types.ts'
+import { isoDate, stepLabel } from '../../utils/timeFormat'
+import GraphBurgerMenu from '../GraphBurgerMenu.vue'
+import type { ZoomMode } from '../TimeSeriesGraph'
 import {
   CONSOLIDATION_FUNCTIONS,
   type ConsolidationFn,
   DEFAULT_CONSOLIDATION_FN,
   isConsolidationFn,
   useConsolidationFunctionLabels
-} from './consolidation'
-import { useHeaderLineBreakLevel } from './private/useHeaderLineBreakLevel'
+} from '../consolidation'
+import GraphTitle from './GraphTitle.vue'
+import { useHeaderLineBreakLevel } from './useHeaderLineBreakLevel'
 
 // TODO: readjust props to remove the possible omits
 const props = withDefaults(

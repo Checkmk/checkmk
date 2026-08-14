@@ -8,7 +8,7 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onMounted, ref, watch } from 'vue'
 
-import { middleTruncate } from '../utils/middleWordTruncation'
+import { middleTruncate } from './middleWordTruncation'
 
 const props = defineProps<{ title: string; isCompact?: boolean }>()
 

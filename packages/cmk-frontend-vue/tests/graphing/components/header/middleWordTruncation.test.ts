@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { middleTruncate } from '@/graphing/utils/middleWordTruncation'
+import { middleTruncate } from '@/graphing/components/header/middleWordTruncation'
 
 // A fit predicate that treats a fixed character budget as "the available width".
 const fitsWithin = (maxChars: number) => (candidate: string) => candidate.length <= maxChars

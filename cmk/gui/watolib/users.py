@@ -16,10 +16,6 @@ from cmk.crypto.password import Password, PasswordPolicy
 from cmk.events.notify_types import EventRule
 from cmk.gui import site_config, userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.generators.age import Age as FSAge
-from cmk.gui.form_specs.unstable.legacy_converter.transform import (
-    TransformDataForLegacyFormatOrRecomposeFunction,
-)
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser, user
@@ -49,8 +45,6 @@ from cmk.gui.watolib.user_scripts import (
 )
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 from cmk.livestatus_client import SiteConfigurations
-from cmk.rulesets.v1 import form_specs as fs
-from cmk.rulesets.v1 import Help, Title
 from cmk.utils import paths
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.security_event import log_security_event
@@ -480,28 +474,6 @@ def vs_idle_timeout_duration() -> Age:
             "This setting can be overridden in each individual user's profile.",
         ),
         default_value=5400,
-    )
-
-
-def form_spec_idle_timeout_duration() -> TransformDataForLegacyFormatOrRecomposeFunction:
-    return FSAge(
-        title=Title("Set an individual idle timeout"),
-        displayed_magnitudes=[
-            fs.TimeMagnitude.MINUTE,
-            fs.TimeMagnitude.HOUR,
-            fs.TimeMagnitude.DAY,
-        ],
-        help_text=Help(
-            "Normally a user login session is valid until the password is changed, the "
-            "browser is closed or the user is locked. By enabling this option, you "
-            "can apply a time limit to login sessions which is applied when the user "
-            "stops interacting with the GUI for a given amount of time. When a user "
-            "exceeds the configured maximum idle time, the user will be logged "
-            "out and redirected to the login screen to renew the login session. "
-            "This setting can be overridden in each individual user's profile.",
-        ),
-        prefill=fs.DefaultValue(5400.0),
-        custom_validate=[fs.validators.NumberInRange(min_value=60)],
     )
 
 

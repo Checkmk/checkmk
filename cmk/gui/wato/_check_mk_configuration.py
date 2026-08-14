@@ -134,16 +134,13 @@ from cmk.gui.watolib.translation import (
     HostnameTranslation,
     ServiceDescriptionTranslation,
 )
-from cmk.gui.watolib.users import form_spec_idle_timeout_duration
+from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
 from cmk.rulesets.internal.form_specs import (
     DictionaryExtended,
     ListExtended,
-    MultipleChoiceElementExtended,
-    MultipleChoiceExtended,
-    MultipleChoiceExtendedLayout,
     SingleChoiceElementExtended,
     SingleChoiceExtended,
 )
@@ -2404,20 +2401,19 @@ ConfigVariableDefaultDynamicVisualsPermission = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="default_dynamic_visual_permission",
-    form_spec=lambda context: fs.SingleChoice(
-        title=Title("Default dynamic visuals permission"),
-        help_text=Help(
+    valuespec=lambda context: DropdownChoice(
+        title=_("Default dynamic visuals permission"),
+        help=_(
             "Default permission for dynamic visuals (dashboards, views, etc.). If set to 'yes' "
             "all roles (including built-in roles) will have the permission to view dynamic "
             "visuals by default. If set to 'no' only the admin role can view dynamic visuals "
             "by default. "
             "Note: Applying this setting will cause a reload of apache."
         ),
-        elements=[
-            fs.SingleChoiceElement(name="yes", title=Title("yes")),
-            fs.SingleChoiceElement(name="no", title=Title("no")),
+        choices=[
+            ("yes", _("yes")),
+            ("no", _("no")),
         ],
-        prefill=fs.DefaultValue("yes"),
     ),
     # Reload of apache required because dynamic visual permissions are registered during startup
     need_apache_reload=True,
@@ -2427,10 +2423,10 @@ ConfigVariableLogLogonFailures = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="log_logon_failures",
-    form_spec=lambda context: fs.BooleanChoice(
-        title=Title("Logging of logon failures"),
-        label=Label("Enable logging of logon failures"),
-        help_text=Help(
+    valuespec=lambda context: Checkbox(
+        title=_("Logging of logon failures"),
+        label=_("Enable logging of logon failures"),
+        help=_(
             "This option enables automatic logging of failed logons. "
             "If enabled, the username and client IP, which the request "
             "is coming from, are logged."
@@ -2442,14 +2438,14 @@ ConfigVariableRequireTwoFactorAllUsers = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="require_two_factor_all_users",
-    form_spec=lambda context: fs.BooleanChoice(
-        title=Title("Enforce two-factor authentication"),
-        help_text=Help(
+    valuespec=lambda context: Checkbox(
+        title=_("Enforce two-factor authentication"),
+        help=_(
             "Enabling this option will enforce two-factor authentication for all users. "
             "Enabling this setting will override role based two-factor enforcement. "
             "Automation users are exempt, as they cannot use two-factor authentication."
         ),
-        label=Label("Enforce for all users"),
+        label=_("Enforce for all users"),
     ),
 )
 
@@ -2457,15 +2453,14 @@ ConfigVariableLockOnLogonFailures = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="lock_on_logon_failures",
-    form_spec=lambda context: OptionalChoice(
-        parameter_form=fs.Integer(
-            label=Label("Number of logon failures to lock the account"),
-            prefill=fs.DefaultValue(1),
-            custom_validate=[fs.validators.NumberInRange(min_value=1)],
+    valuespec=lambda context: Optional(
+        valuespec=Integer(
+            label=_("Number of logon failures to lock the account"),
+            minvalue=1,
         ),
-        title=Title("Lock user accounts after N logon failures"),
-        label=Label("Activate automatic locking of user accounts"),
-        help_text=Help(
+        title=_("Lock user accounts after N logon failures"),
+        label=_("Activate automatic locking of user accounts"),
+        help=_(
             "This options enables automatic locking of user accounts "
             "after the configured number of consecutive invalid login "
             "attempts. These attempts include failed two factor "
@@ -2482,28 +2477,30 @@ ConfigVariablePasswordPolicy = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="password_policy",
-    form_spec=lambda context: fs.Dictionary(
-        title=Title("Password policy for local accounts"),
-        help_text=Help(
+    valuespec=lambda context: Dictionary(
+        title=_("Password policy for local accounts"),
+        help=_(
             "You can define some rules that every user password must meet. By default, "
             "all passwords are accepted, even ones which are made of only a single character, "
             "which is obviously a bad idea. Using this option, you can enforce your users "
             "to choose more secure passwords."
         ),
-        elements={
-            "min_length": fs.DictElement(
-                required=False,
-                parameter_form=fs.Integer(
-                    title=Title("Minimum password length"),
-                    prefill=fs.DefaultValue(12),
-                    custom_validate=[fs.validators.NumberInRange(min_value=1)],
+        elements=[
+            (
+                "min_length",
+                Integer(
+                    title=_("Minimum password length"),
+                    minvalue=1,
+                    default_value=12,
                 ),
             ),
-            "num_groups": fs.DictElement(
-                required=False,
-                parameter_form=fs.Integer(
-                    title=Title("Number of character groups to use"),
-                    help_text=Help(
+            (
+                "num_groups",
+                Integer(
+                    title=_("Number of character groups to use"),
+                    minvalue=1,
+                    maxvalue=4,
+                    help=_(
                         "Force the user to choose a password that contains characters from at least "
                         "this number of different character groups. "
                         "Character groups are: <ul>"
@@ -2513,31 +2510,29 @@ ConfigVariablePasswordPolicy = ConfigVariable(
                         "<li>special characters such as an underscore or dash</li>"
                         "</ul>"
                     ),
-                    prefill=fs.DefaultValue(1),
-                    custom_validate=[fs.validators.NumberInRange(min_value=1, max_value=4)],
                 ),
             ),
-            "max_age": fs.DictElement(
-                required=False,
-                parameter_form=FSAge(
-                    title=Title("Maximum age of passwords"),
-                    displayed_magnitudes=[fs.TimeMagnitude.DAY],
-                    prefill=fs.DefaultValue(float(365 * 86400)),
-                    custom_validate=[fs.validators.NumberInRange(min_value=1)],
+            (
+                "max_age",
+                Age(
+                    title=_("Maximum age of passwords"),
+                    minvalue=1,
+                    display=["days"],
+                    default_value=365 * 86400,
                 ),
             ),
-            "wordlist_check": fs.DictElement(
-                required=False,
-                parameter_form=fs.BooleanChoice(
-                    title=Title("Common password wordlist"),
-                    help_text=Help(
+            (
+                "wordlist_check",
+                Checkbox(
+                    title=_("Common password wordlist"),
+                    help=_(
                         "Prevent users from setting new passwords which are within the Checkmk common password list or include their username."
                     ),
-                    prefill=fs.DefaultValue(True),
-                    label=Label("Prevent passwords within wordlist"),
+                    default_value=True,
+                    label="Prevent passwords within wordlist",
                 ),
             ),
-        },
+        ],
     ),
 )
 
@@ -2545,75 +2540,65 @@ ConfigVariableSessionManagement = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="session_mgmt",
-    form_spec=lambda context: fs.Dictionary(
-        title=Title("Session management"),
-        elements={
-            "max_duration": fs.DictElement(
-                required=False,
-                parameter_form=fs.Dictionary(
-                    title=Title("Maximum session duration"),
-                    elements={
-                        "enforce_reauth": fs.DictElement(
-                            required=True,
-                            parameter_form=FSAge(
-                                title=Title("Enforce re-authentication after"),
-                                displayed_magnitudes=[
-                                    fs.TimeMagnitude.MINUTE,
-                                    fs.TimeMagnitude.HOUR,
-                                    fs.TimeMagnitude.DAY,
-                                ],
-                                help_text=Help(
+    valuespec=lambda context: Dictionary(
+        title=_("Session management"),
+        elements=[
+            (
+                "max_duration",
+                Dictionary(
+                    title=_("Maximum session duration"),
+                    elements=[
+                        (
+                            "enforce_reauth",
+                            Age(
+                                title=_("Enforce re-authentication after"),
+                                display=["minutes", "hours", "days"],
+                                minvalue=60,
+                                help=_(
                                     "Define the maximum allowed session "
                                     "duration. If reached, the user has to "
                                     "re-authenticate. Sessions are not set "
                                     "to persist on browser termination.",
                                 ),
-                                prefill=fs.DefaultValue(86400.0),
-                                custom_validate=[fs.validators.NumberInRange(min_value=60)],
+                                default_value=86400,
                             ),
                         ),
-                        "enforce_reauth_warning_threshold": fs.DictElement(
-                            required=False,
-                            parameter_form=FSAge(
-                                title=Title("Advise re-authentication before termination"),
-                                displayed_magnitudes=[
-                                    fs.TimeMagnitude.MINUTE,
-                                    fs.TimeMagnitude.HOUR,
-                                    fs.TimeMagnitude.DAY,
-                                ],
-                                help_text=Help(
+                        (
+                            "enforce_reauth_warning_threshold",
+                            Age(
+                                title=_("Advise re-authentication before termination"),
+                                display=["minutes", "hours", "days"],
+                                minvalue=60,
+                                help=_(
                                     "Warn users at a specified time before "
                                     "the maximum session duration is reached "
                                     "to aid users in preserving data.",
                                 ),
-                                prefill=fs.DefaultValue(900.0),
-                                custom_validate=[fs.validators.NumberInRange(min_value=60)],
+                                default_value=900,
                             ),
                         ),
-                    },
-                    custom_validate=[_validate_max_duration],
+                    ],
+                    required_keys=["enforce_reauth"],
+                    validate=_validate_max_duration,
                 ),
             ),
-            "user_idle_timeout": fs.DictElement(
-                required=False,
-                parameter_form=form_spec_idle_timeout_duration(),
+            (
+                "user_idle_timeout",
+                vs_idle_timeout_duration(),
             ),
-        },
+        ],
+        optional_keys=["max_duration", "user_idle_timeout"],
     ),
 )
 
 
-def _validate_max_duration(d: Mapping[str, object]) -> None:
+def _validate_max_duration(d: dict, varprefix: str) -> None:
     if "enforce_reauth_warning_threshold" not in d:
         return
-    enforce_reauth = d["enforce_reauth"]
-    warning_threshold = d["enforce_reauth_warning_threshold"]
-    assert isinstance(enforce_reauth, int | float)
-    assert isinstance(warning_threshold, int | float)
-    if enforce_reauth > warning_threshold:
+    if d["enforce_reauth"] > d["enforce_reauth_warning_threshold"]:
         return
-    raise fs.validators.ValidationError(
-        Message("Warning threshold must be smaller than maximum session duration")
+    raise MKUserError(
+        varprefix, _("Warning threshold must be smaller than maximum session duration")
     )
 
 
@@ -2621,16 +2606,16 @@ ConfigVariableSingleUserSession = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="single_user_session",
-    form_spec=lambda context: OptionalChoice(
-        parameter_form=FSAge(
-            displayed_magnitudes=[fs.TimeMagnitude.MINUTE, fs.TimeMagnitude.HOUR],
-            label=Label("Session timeout:"),
-            prefill=fs.DefaultValue(60.0),
-            custom_validate=[fs.validators.NumberInRange(min_value=30)],
+    valuespec=lambda context: Optional(
+        valuespec=Age(
+            display=["minutes", "hours"],
+            label=_("Session timeout:"),
+            minvalue=30,
+            default_value=60,
         ),
-        title=Title("Limit login to single session at a time"),
-        label=Label("Users can only login from one client at a time"),
-        help_text=Help(
+        title=_("Limit login to single session at a time"),
+        label=_("Users can only login from one client at a time"),
+        help=_(
             "Normally, a user can log in to the GUI from an unlimited number of clients at "
             "the same time. If you want to enforce your users to be able to log in only once "
             "(from one client, which means device and browser), you can enable this option. "
@@ -2645,16 +2630,16 @@ ConfigVariableLDAPQuarantinePeriod = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="ldap_quarantine_period",
-    form_spec=lambda context: OptionalChoice(
-        parameter_form=FSAge(
-            displayed_magnitudes=[fs.TimeMagnitude.DAY, fs.TimeMagnitude.HOUR],
-            label=Label("Retention period:"),
-            prefill=fs.DefaultValue(2592000.0),
-            custom_validate=[fs.validators.NumberInRange(min_value=3600)],
+    valuespec=lambda context: Optional(
+        valuespec=Age(
+            display=["days", "hours"],
+            label=_("Retention period:"),
+            minvalue=3600,
+            default_value=2592000,
         ),
-        title=Title("Quarantine LDAP users before deletion"),
-        label=Label("Quarantine users that vanished from the directory instead of deleting them"),
-        help_text=Help(
+        title=_("Quarantine LDAP users before deletion"),
+        label=_("Quarantine users that vanished from the directory instead of deleting them"),
+        help=_(
             "When a user that was synchronized from an LDAP connection is no longer found "
             "during synchronization, Checkmk normally deletes the account immediately. With "
             "this option enabled, the account is instead locked and placed into quarantine: it "
@@ -2670,9 +2655,9 @@ ConfigVariableUserSecurityNotifications = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="user_security_notification_duration",
-    form_spec=lambda context: fs.Dictionary(
-        title=Title("User security notification duration"),
-        help_text=Help(
+    valuespec=lambda context: Dictionary(
+        title=_("User security notification duration"),
+        help=_(
             "If a user has an email address associated with their account, "
             "the user will not be shown a security notification in their user "
             "tab."
@@ -2680,105 +2665,78 @@ ConfigVariableUserSecurityNotifications = ConfigVariable(
             "an undismissable message in their user tab for the duration "
             "defined by this setting."
         ),
-        elements={
-            "max_duration": fs.DictElement(
-                required=True,
-                parameter_form=FSAge(
-                    displayed_magnitudes=[
-                        fs.TimeMagnitude.DAY,
-                        fs.TimeMagnitude.HOUR,
-                        fs.TimeMagnitude.MINUTE,
-                    ],
-                    label=Label("Session timeout:"),
-                    prefill=fs.DefaultValue(604800.0),
-                    title=Title("Display time for user security messages"),
-                    custom_validate=[_validate_min],
+        elements=[
+            (
+                "max_duration",
+                Age(
+                    display=["days", "minutes", "hours"],
+                    label=_("Session timeout:"),
+                    default_value=604800,
+                    title=_("Display time for user security messages"),
+                    validate=_validate_min,
                 ),
             ),
-            "update_existing_duration": fs.DictElement(
-                required=True,
-                parameter_form=fs.BooleanChoice(
-                    title=Title("Update existing security notifications"),
-                    label=Label("Retroactively apply max duration to existing notifications"),
-                    help_text=Help(
-                        "Update existing security notifications to use the new max duration."
-                    ),
+            (
+                "update_existing_duration",
+                Checkbox(
+                    title=_("Update existing security notifications"),
+                    label=_("Retroactively apply max duration to existing notifications"),
+                    help=_("Update existing security notifications to use the new max duration."),
+                    default_value=False,
                 ),
             ),
-        },
+        ],
+        optional_keys=[],
     ),
 )
 
 
-def _validate_min(value: float) -> None:
+def _validate_min(value: int, varprefix: str) -> None:
     if value < 900:
-        raise fs.validators.ValidationError(
-            Message("The minimum duration may not be less than 15 minutes")
-        )
-
-
-def _role_selection() -> MultipleChoiceExtended:
-    return MultipleChoiceExtended(
-        title=Title("User roles"),
-        help_text=Help("Specify the initial roles of an automatically created user."),
-        prefill=fs.DefaultValue(["user"]),
-        layout=MultipleChoiceExtendedLayout.checkbox_list,
-        elements=[
-            MultipleChoiceElementExtended(
-                name=ident,
-                title=Title(alias),  # astrein: disable=localization-checker
-            )
-            for ident, alias in _list_roles()
-        ],
-    )
-
-
-def _contactgroup_selection() -> MultipleChoiceExtended:
-    return MultipleChoiceExtended(
-        title=Title("Contact groups"),
-        help_text=Help("Specify the initial contact groups of an automatically created user."),
-        layout=MultipleChoiceExtendedLayout.checkbox_list,
-        elements=[
-            MultipleChoiceElementExtended(
-                name=ident,
-                title=Title(alias),  # astrein: disable=localization-checker
-            )
-            for ident, alias in _list_contactgroups()
-        ],
-    )
+        raise MKUserError(varprefix, _("The minimum duration may not be less than 15 minutes"))
 
 
 ConfigVariableDefaultUserProfile = ConfigVariable(
     group=ConfigVariableGroupUserManagement,
     primary_domain=ConfigDomainGUI,
     ident="default_user_profile",
-    form_spec=lambda context: fs.Dictionary(
-        title=Title("Default user profile"),
-        help_text=Help(
+    valuespec=lambda context: Dictionary(
+        title=_("Default user profile"),
+        help=_(
             "With this option you can specify the attributes a user which is created during "
             'its initial login gets added. For example, the default is to add the role "user" '
             "to all automatically created users."
         ),
-        elements={
-            "roles": fs.DictElement(
-                required=True,
-                parameter_form=_role_selection(),
-            ),
-            "contactgroups": fs.DictElement(
-                required=True,
-                parameter_form=_contactgroup_selection(),
-            ),
-            "force_authuser": fs.DictElement(
-                required=True,
-                parameter_form=fs.BooleanChoice(
-                    title=Title("Visibility of hosts/services"),
-                    label=Label("Only show hosts and services the user is a contact for"),
-                    help_text=Help(
-                        "Specify the initial setting for an automatically created user."
-                    ),
+        elements=[
+            (
+                "roles",
+                ListChoice(
+                    title=_("User roles"),
+                    help=_("Specify the initial roles of an automatically created user."),
+                    default_value=["user"],
+                    choices=_list_roles,
                 ),
             ),
-        },
+            (
+                "contactgroups",
+                ListChoice(
+                    title=_("Contact groups"),
+                    help=_("Specify the initial contact groups of an automatically created user."),
+                    default_value=[],
+                    choices=_list_contactgroups,
+                ),
+            ),
+            (
+                "force_authuser",
+                Checkbox(
+                    title=_("Visibility of hosts/services"),
+                    label=_("Only show hosts and services the user is a contact for"),
+                    help=_("Specify the initial setting for an automatically created user."),
+                    default_value=False,
+                ),
+            ),
+        ],
+        optional_keys=[],
     ),
 )
 

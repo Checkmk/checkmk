@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
 
 import time
 from collections.abc import Mapping
@@ -206,7 +205,7 @@ def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> Check
     alt_crit_capacity = None
     # the last_diag_date is reported as %m/%d/%Y or %y
     if (
-        params.get("post_calibration_levels")
+        params.get("post_calibration_levels")  # type: ignore[redundant-expr]
         and last_diag_date not in [None, "Unknown", ""]
         and len(last_diag_date) in [8, 10]
     ):

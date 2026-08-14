@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
-
 import enum
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -182,7 +180,7 @@ def parse_printer_supply(string_table: Sequence[StringTable]) -> Section:
         if name.startswith(("Toner Cartridge", "Image Drum Unit")):
             if raw_color:
                 colors += [raw_color]
-            elif raw_color == "" and colors:
+            elif raw_color == "" and colors:  # type: ignore[redundant-expr]
                 raw_color = colors[index - len(colors)]
             if raw_color:
                 name = f"{raw_color.title()} {name}"

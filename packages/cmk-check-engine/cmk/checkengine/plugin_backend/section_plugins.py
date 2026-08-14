@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 """Background tools required to register a section plug-in"""
@@ -156,12 +155,12 @@ def _validate_supersedings(own_name: SectionName, supersedes: list[SectionName])
 
 def _validate_detect_spec(detect_spec: SNMPDetectBaseType) -> None:
     if not (
-        isinstance(detect_spec, list) and all(isinstance(element, list) for element in detect_spec)
+        isinstance(detect_spec, list) and all(isinstance(element, list) for element in detect_spec)  # type: ignore[redundant-expr]
     ):
         raise TypeError("value of 'detect' keyword must be a list of lists of 3-tuples")
 
     for atom in itertools.chain(*detect_spec):
-        if not isinstance(atom, tuple) or len(atom) != 3:
+        if not isinstance(atom, tuple) or len(atom) != 3:  # type: ignore[redundant-expr]
             raise TypeError("value of 'detect' keyword must be a list of lists of 3-tuples")
         oid_string, expression, expected_match = atom
 

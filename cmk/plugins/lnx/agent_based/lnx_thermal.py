@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -157,7 +156,7 @@ def _get_levels(data: Thermal) -> tuple[float, float] | None:
         return None if crit is None else (crit, crit)
 
     if crit is None:
-        return None if warn is None else (warn, warn)
+        return None if warn is None else (warn, warn)  # type: ignore[redundant-expr]
 
     return (warn, crit)
 

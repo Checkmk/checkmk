@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 import re
@@ -319,7 +318,7 @@ def _get_averaged_disk(
             backlog_minutes=averaging / 60.0,
         )
         for key, value in list(disk.items())
-        if isinstance(value, int | float)
+        if isinstance(value, int | float)  # type: ignore[redundant-expr]
     }
 
 

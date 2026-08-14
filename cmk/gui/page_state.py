@@ -9,7 +9,6 @@ top right of the page.
 """
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="unreachable"
 
 from dataclasses import dataclass, field
@@ -51,7 +50,7 @@ class PageStateRenderer:
     def _get_css_classes(self, page_state: PageState) -> CSSSpec:
         classes = ["page_state"]
         if isinstance(page_state.css_classes, list):
-            classes.extend(c for c in page_state.css_classes if c is not None)
+            classes.extend(c for c in page_state.css_classes if c is not None)  # type: ignore[redundant-expr]
         elif page_state.css_classes is not None:
             classes.append(page_state.css_classes)
         return classes

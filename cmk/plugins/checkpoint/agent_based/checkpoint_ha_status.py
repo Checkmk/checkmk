@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="redundant-expr"
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -53,7 +52,7 @@ def check_checkpoint_ha_status(section: StringTable) -> CheckResult:
             (state, "Status", ["active", "standby"], None),
             (block_state, "Blocking", ["ok"], ["initializing"]),
         ]:
-            if ok_vals is None or val.lower() in ok_vals:
+            if ok_vals is None or val.lower() in ok_vals:  # type: ignore[redundant-expr]
                 status = State.OK
             elif warn_vals is not None and val.lower() in warn_vals:
                 status = State.WARN

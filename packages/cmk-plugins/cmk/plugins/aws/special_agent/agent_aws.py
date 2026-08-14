@@ -13,7 +13,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -2878,7 +2877,7 @@ class Glacier(AWSSection):
         :param colleague_contents:
         :return:
         """
-        if colleague_contents and colleague_contents.content:
+        if colleague_contents and colleague_contents.content:  # type: ignore[redundant-expr]
             return colleague_contents.content
         return self._get_response_content(self._client.list_vaults(), "VaultList")
 

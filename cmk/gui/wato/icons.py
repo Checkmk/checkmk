@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
-
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
@@ -127,7 +125,7 @@ def _paint_download_host_info(
     ty: Literal["agent", "walk"],
 ) -> tuple[StaticIcon | DynamicIcon, str, str] | None:
     if (
-        (what == "host" or (what == "service" and row["service_description"] == "Check_MK"))
+        (what == "host" or (what == "service" and row["service_description"] == "Check_MK"))  # type: ignore[redundant-expr]
         and user.may("wato.download_agent_output")
         and row["host_check_type"] != 2
     ):  # Not for shadow hosts

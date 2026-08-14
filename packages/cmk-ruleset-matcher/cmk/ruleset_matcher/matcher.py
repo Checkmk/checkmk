@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="redundant-expr"
 
 """This module provides generic Check_MK ruleset processing functionality"""
 
@@ -330,7 +329,7 @@ class RulesetMatcher:
             service_cache_id = (
                 (
                     match_text,
-                    hash(None if service_labels is None else frozenset(service_labels.items())),
+                    hash(None if service_labels is None else frozenset(service_labels.items())),  # type: ignore[redundant-expr]
                 ),
                 service_description_condition,
                 service_label_groups_cache_id,

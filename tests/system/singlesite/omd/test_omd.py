@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="redundant-expr"
 
 import shutil
 import tempfile
@@ -302,7 +301,7 @@ def test_run_omd_backup_and_omd_restore_empty() -> None:
     finally:
         if backup_path.exists():
             run(["rm", str(backup_path)], sudo=True)
-        if restored_site is not None and restored_site.exists():
+        if restored_site is not None and restored_site.exists():  # type: ignore[redundant-expr]
             restored_site.rm()
 
 
@@ -320,7 +319,7 @@ def test_run_omd_create_welcome_message() -> None:
         assert not site.exists()
         site.create()
     finally:
-        if site is not None and site.exists():
+        if site is not None and site.exists():  # type: ignore[redundant-expr]
             if site.is_running():
                 site.stop()
             site.rm()

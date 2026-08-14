@@ -8,8 +8,6 @@ password store compatible.
 We are working towards a more staight forward solution.
 """
 
-# mypy: disable-error-code="redundant-expr"
-
 import shlex
 import sys
 from collections.abc import Callable, Iterable, Mapping
@@ -192,7 +190,7 @@ def apply_password_hack(
             formatted.append(arg)
             continue
 
-        if isinstance(arg, tuple) and len(arg) == 3:
+        if isinstance(arg, tuple) and len(arg) == 3:  # type: ignore[redundant-expr]
             pw_ident, preformated_arg = arg[1:]
         else:
             raise ValueError(f"Invalid argument for command line: {arg!r}")

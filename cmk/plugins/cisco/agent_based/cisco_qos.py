@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 
 # Relevant SNMP OIDs:
 # .1.3.6.1.4.1.9.9.166.1.1.1.1.4.144 9
@@ -528,7 +527,7 @@ def _compute_thresholds(
 ) -> tuple[float, float] | None:
     if not raw_thresholds:
         return None
-    if isinstance(raw_thresholds[0], float) and bandwidth:
+    if isinstance(raw_thresholds[0], float) and bandwidth:  # type: ignore[redundant-expr]
         return bandwidth * raw_thresholds[0] / 100, bandwidth * raw_thresholds[1] / 100
     if isinstance(raw_thresholds[0], int):
         return raw_thresholds if unit == "bit" else (raw_thresholds[0] * 8, raw_thresholds[1] * 8)

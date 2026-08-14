@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -5808,7 +5807,7 @@ def _migrate_encryption_settings(p: Mapping[str, Any]) -> str | None:
     'this-is-also-for-the-agent'
 
     """
-    if p is None or isinstance(p, str):
+    if p is None or isinstance(p, str):  # type: ignore[redundant-expr]
         return p
     return p["passphrase"] if "use_regular" in p else None
 

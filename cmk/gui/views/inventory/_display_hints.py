@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -752,7 +751,7 @@ def _get_related_legacy_hints(
             related_legacy_hints.for_table.update(legacy_hint)
             continue
 
-        if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:
+        if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:  # type: ignore[redundant-expr]
             related_legacy_hints.by_key.setdefault(inventory_path.key, legacy_hint)
             continue
 
@@ -780,7 +779,7 @@ def _decorate_sort_function(sort_function: SortFunction) -> SortFunction:
             return 0 if val_b is None else -1
 
         if val_b is None:
-            return 0 if val_a is None else 1
+            return 0 if val_a is None else 1  # type: ignore[redundant-expr]
 
         return sort_function(val_a, val_b)
 

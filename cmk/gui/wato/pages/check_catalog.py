@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -204,7 +203,7 @@ class ModeCheckPluginSearch(WatoMode):
         def get_matched_entry(entry: CatalogEntry) -> CatalogEntry | None:
             return (
                 entry
-                if isinstance(entry, dict)
+                if isinstance(entry, dict)  # type: ignore[redundant-expr]
                 and (
                     entry_part_matches(entry, entry.get("name", ""))
                     or entry_part_matches(entry, entry.get("title", ""))

@@ -6,7 +6,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
 
 import abc
 import binascii
@@ -638,7 +637,7 @@ class IMAP(_Connection):
         ['Gelöscht', 'INBOX', 'OUTBOX']
         """
         pattern = re.compile(r'\((.*?)\) "(.*)" (.*)')
-        mb_list = [_mutf_7_decode(e) for e in folder_list if isinstance(e, bytes)]
+        mb_list = [_mutf_7_decode(e) for e in folder_list if isinstance(e, bytes)]  # type: ignore[redundant-expr]
         return [
             match.group(3).strip('"')
             for mb in mb_list

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
-
 from collections.abc import Iterable
 from itertools import chain
 from typing import Literal
@@ -58,7 +56,7 @@ def command_function(params: _Params, host_config: HostConfig) -> Iterable[Speci
                 _ipmitool_args(options)
                 if isinstance(options, _IPMIToolParams)
                 else _freeipmi_args(options)
-                if isinstance(options, _FreeIPMIParams)
+                if isinstance(options, _FreeIPMIParams)  # type: ignore[redundant-expr]
                 else ()
             ),
         ]

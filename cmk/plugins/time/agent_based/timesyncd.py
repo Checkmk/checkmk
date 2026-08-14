@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 
 import re
 from collections.abc import Iterable, Mapping, Sequence
@@ -256,7 +255,7 @@ def check_timesyncd(
         )
 
     # server is configured and can be resolved, but e.g. NTP blocked by firewall
-    if server is not None and all(item is None for item in [offset, stratum, jitter]):
+    if server is not None and all(item is None for item in [offset, stratum, jitter]):  # type: ignore[redundant-expr]
         yield Result(state=State.CRIT, summary="Found no time server")
         return
 

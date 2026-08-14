@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 from cmk.gui.i18n import _
@@ -41,7 +40,7 @@ def _levels(unit: str = "") -> Tuple:
 
 def _migrate(x: tuple[int, int] | tuple[str, tuple[int, int]]) -> tuple[str, tuple[int, int]]:
     return (
-        x if isinstance(x, tuple) and len(x) == 2 and isinstance(x[0], str) else ("percentage", x)
+        x if isinstance(x, tuple) and len(x) == 2 and isinstance(x[0], str) else ("percentage", x)  # type: ignore[redundant-expr]
     )
 
 

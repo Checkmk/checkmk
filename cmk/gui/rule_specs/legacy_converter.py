@@ -7,7 +7,6 @@
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -246,7 +245,7 @@ def _convert_to_legacy_check_parameter_rulespec(
         return CheckParameterRulespecWithItem(
             check_group_name=to_convert.name,
             title=(
-                None if to_convert.title is None else partial(to_convert.title.localize, localizer)
+                None if to_convert.title is None else partial(to_convert.title.localize, localizer)  # type: ignore[redundant-expr]
             ),
             group=_convert_to_legacy_rulespec_group(
                 legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
@@ -316,7 +315,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
             if to_convert.parameter_form is not None
             else None
         ),
-        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
+        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),  # type: ignore[redundant-expr]
         is_deprecated=False,
         match_type="all",
         item_spec=item_spec,
@@ -394,7 +393,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
         valuespec=partial(
             convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
         ),
-        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
+        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),  # type: ignore[redundant-expr]
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
         doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
@@ -416,7 +415,7 @@ def _convert_to_legacy_service_rule_spec_rulespec(
         valuespec=partial(
             convert_to_legacy_valuespec, FormSpecCallable(to_convert.parameter_form), localizer
         ),
-        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
+        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),  # type: ignore[redundant-expr]
         is_deprecated=to_convert.is_deprecated,
         match_type=(
             "dict" if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE else "all"

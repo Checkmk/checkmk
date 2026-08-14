@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="redundant-expr"
 
 # Example output from agent:
 # <<<chrony>>>
@@ -71,7 +70,7 @@ def parse_chrony(string_table: StringTable) -> dict[str, Any] | None:
 
 
 def is_error_message(info: StringTable) -> bool:
-    return len(info) == 1 and isinstance(info[0], list) and ":" not in info[0][0]
+    return len(info) == 1 and isinstance(info[0], list) and ":" not in info[0][0]  # type: ignore[redundant-expr]
 
 
 agent_section_chrony = AgentSection(

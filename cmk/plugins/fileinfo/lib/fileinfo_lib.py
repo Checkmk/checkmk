@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 import fnmatch
@@ -512,7 +511,7 @@ def _fileinfo_check_conjunctions(
         matches = 0
         for title, key, value, readable_f in check_definition:
             level = levels.get(key)
-            if level is not None and value and value is not None and value >= level:
+            if level is not None and value and value is not None and value >= level:  # type: ignore[redundant-expr]
                 match_texts.append(f"{title.lower()} at {readable_f(level)}")
                 matches += 1
 

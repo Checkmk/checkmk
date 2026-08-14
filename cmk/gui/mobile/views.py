@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
-
 from collections.abc import Sequence
 from typing import override
 
@@ -1041,7 +1039,7 @@ def render_mobile_list(
                     [
                         rendered_cell[1]
                         for rendered_cell in rendered_cells[1 : num_columns + 1]
-                        if isinstance(rendered_cell[1], str | HTML)
+                        if isinstance(rendered_cell[1], str | HTML)  # type: ignore[redundant-expr]
                     ]
                 )
                 html.h3(content)

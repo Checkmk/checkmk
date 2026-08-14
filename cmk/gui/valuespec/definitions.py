@@ -9,7 +9,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -2301,7 +2300,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
             for varname, value in request.itervars()
             if varname.startswith(list_prefix)
             and varname[len(list_prefix) :].isdigit()
-            and value is not None
+            and value is not None  # type: ignore[redundant-expr]
             and value.strip()
         ]
 
@@ -5627,16 +5626,16 @@ class Timerange(CascadingDropdown):
             if rangespec[0] == "age":
                 title = _("The last ") + str(Age().value_to_html(rangespec[1]))
                 return ComputedTimerange((int(now - rangespec[1]), int(now)), title)
-            if isinstance(rangespec, tuple) and rangespec[0] == "next":
+            if isinstance(rangespec, tuple) and rangespec[0] == "next":  # type: ignore[redundant-expr]
                 title = _("The next ") + str(Age().value_to_html(rangespec[1]))
                 return ComputedTimerange((int(now), int(now + rangespec[1])), title)
-            if isinstance(rangespec, tuple) and rangespec[0] == "until":
+            if isinstance(rangespec, tuple) and rangespec[0] == "until":  # type: ignore[redundant-expr]
                 return ComputedTimerange(
                     (int(now), int(rangespec[1])),
                     str(AbsoluteDate().value_to_html(rangespec[1])),
                 )
             # NOTE: can't use `in` here, because mypy doesn't understand it
-            if isinstance(rangespec, tuple) and (rangespec[0] == "date" or rangespec[0] == "time"):
+            if isinstance(rangespec, tuple) and (rangespec[0] == "date" or rangespec[0] == "time"):  # type: ignore[redundant-expr]
                 return _fixed_dates(rangespec)
 
             raise NotImplementedError
@@ -6408,7 +6407,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         param: str,
         vs: ValueSpec,
     ) -> None:
-        if not self._horizontal or self._horizontal and nr == 0:
+        if not self._horizontal or self._horizontal and nr == 0:  # type: ignore[redundant-expr]
             html.open_tr(class_="show_more_mode" if param in self._show_more_keys else None)
 
         self._render_td(
@@ -6487,7 +6486,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         # Remember: in complain mode we do not render 'value' (the default value),
         # but re-display the values from the HTML variables. We must not use 'value'
         # in that case.
-        the_value = value.get(param, vs.default_value()) if isinstance(value, dict) else None
+        the_value = value.get(param, vs.default_value()) if isinstance(value, dict) else None  # type: ignore[redundant-expr]
         vs.render_input(vp, the_value)
         if not is_required_plain_checkbox:
             html.close_div()
@@ -7929,9 +7928,9 @@ class AndOrNotDropdown(DropdownChoice):
         html.open_div(class_=["bool"])
         if self._vs_label and not self._choices:
             html.span(self._vs_label, class_=["vs_label"])
-            html.hidden_field(varprefix_bool, value[0] if value else None)
+            html.hidden_field(varprefix_bool, value[0] if value else None)  # type: ignore[redundant-expr]
         else:
-            super().render_input(varprefix_bool, value[0] if value else None)
+            super().render_input(varprefix_bool, value[0] if value else None)  # type: ignore[redundant-expr]
         html.div("", class_=["line"])
         html.close_div()
 
@@ -8406,7 +8405,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             raise MKUserError(varprefix, "The type is %s, but should be str or dict" % type(value))
 
         icon_dict = self._transform_icon_str(value)
-        if not (icon_dict["icon"] is None or isinstance(icon_dict["icon"], str)):
+        if not (icon_dict["icon"] is None or isinstance(icon_dict["icon"], str)):  # type: ignore[redundant-expr]
             raise MKUserError(
                 varprefix,
                 _("The icon type is %(type)s, but should be str")

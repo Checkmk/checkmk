@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="redundant-expr"
 
 from collections.abc import Mapping
 
@@ -32,7 +31,7 @@ def parse_netapp_ontap_psu(string_table: StringTable) -> Section:
     return {
         psu.item_name(): psu
         for line in string_table
-        if (psu := models.ShelfPsuModel.model_validate_json(line[0])) is not None
+        if (psu := models.ShelfPsuModel.model_validate_json(line[0])) is not None  # type: ignore[redundant-expr]
         and psu.consider_installed()
     }
 

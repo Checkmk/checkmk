@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="unreachable"
 
 import re
@@ -310,7 +309,7 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
         # convert escaped newline chars
         # (will be converted back later individually for the different cores)
         text = (raw_info or "").replace("\\n", "\n")
-        if state_msg or perf_msg:
+        if state_msg or perf_msg:  # type: ignore[redundant-expr]
             state = 3
             text = f"{state_msg}{perf_msg}Output is: {text}"
 

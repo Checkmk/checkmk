@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="redundant-expr"
 
 import base64
 from typing import Literal, override
@@ -137,9 +136,9 @@ class PasswordVisitor(FormSpecVisitor[Password, ParsedPassword, VuePassword]):
             return [
                 VueComponents.ValidationMessage(location=[], message=x, replacement_value="")
                 for x in optional_validation(compute_validators(self.form_spec), parsed_value[2][1])
-                if x is not None
+                if x is not None  # type: ignore[redundant-expr]
             ]
-        if parsed_value[1] == "stored_password" and not parsed_value[2][0]:
+        if parsed_value[1] == "stored_password" and not parsed_value[2][0]:  # type: ignore[redundant-expr]
             return create_validation_error("", Title("No password selected"))
 
         return []

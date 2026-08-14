@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
-
 from abc import ABC
 from collections.abc import Sequence
 from typing import Annotated, Literal, override, Self
@@ -107,7 +105,7 @@ class GraphRenderOptions:
             return ApiOmitted()
         if isinstance(value, str) and value == "fixed":
             return "fixed"
-        if isinstance(value, tuple) and value[0] == "explicit":
+        if isinstance(value, tuple) and value[0] == "explicit":  # type: ignore[redundant-expr]
             return value[1]
         raise ValueError(f"Invalid vertical axis width: {value!r}")
 

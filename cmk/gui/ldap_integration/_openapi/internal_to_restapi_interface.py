@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -809,7 +808,7 @@ def groups_to_attributes_internal_to_api(
                     {  # type: ignore[arg-type,misc]
                         "group_cn": group["cn"],
                         "attribute_to_set": "visibility_of_hosts_or_services",
-                        "value": ("show_all" if fa[1] is None else "show_for_user_contacts_only"),
+                        "value": ("show_all" if fa[1] is None else "show_for_user_contacts_only"),  # type: ignore[redundant-expr]
                     }
                 )
 
@@ -1091,7 +1090,7 @@ class SyncPlugins:
     def api_response(self) -> APISyncPlugins:
         def checkbox_state(plugin_key: str) -> SYNC_ATTRIBUTE:
             value = cast(dict, self.active_plugins.get(plugin_key))
-            if value is not None and (attr := value.get("attr")) is not None:
+            if value is not None and (attr := value.get("attr")) is not None:  # type: ignore[redundant-expr]
                 return {"state": "enabled", "attribute_to_sync": attr}
             return {"state": "disabled"}
 

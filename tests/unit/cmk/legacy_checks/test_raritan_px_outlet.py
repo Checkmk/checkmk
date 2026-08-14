@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
@@ -75,7 +73,7 @@ def test_raritan_px_outlets_check_with_label() -> None:
 
     # Additional results come from check_elphase function
     # Check that device status is included
-    has_device_status = any("Device status" in result[1] for result in results if len(result) >= 2)
+    has_device_status = any("Device status" in result[1] for result in results if len(result) >= 2)  # type: ignore[redundant-expr]
     assert has_device_status
 
 

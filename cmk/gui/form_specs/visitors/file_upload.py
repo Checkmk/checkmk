@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="redundant-expr"
 
 import base64
 import uuid
@@ -92,7 +91,7 @@ class _FileExtensionValidator:
 
     def __call__(self, value: tuple[str, str, bytes]) -> None:
         file_name = value[0]
-        if file_name is not None and any(file_name.endswith(ext) for ext in self._extension_types):
+        if file_name is not None and any(file_name.endswith(ext) for ext in self._extension_types):  # type: ignore[redundant-expr]
             return
 
         raise ValidationError(

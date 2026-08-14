@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 
 import hashlib
 from collections.abc import Callable, Sequence
@@ -93,7 +92,7 @@ def compute_validation_errors[ModelT](
             location=[], message=x, replacement_value=replacement_value()
         )
         for x in optional_validation(validators, raw_value)
-        if x is not None
+        if x is not None  # type: ignore[redundant-expr]
     ]
 
 

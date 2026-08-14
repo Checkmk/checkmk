@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -137,7 +136,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
     def render_input(self, varprefix: str, value: str | None) -> None:
         return super().render_input(
             varprefix,
-            self._MARKER_DEPRECATED_CHOICE if isinstance(value, int) else value,
+            self._MARKER_DEPRECATED_CHOICE if isinstance(value, int) else value,  # type: ignore[redundant-expr]
         )
 
 

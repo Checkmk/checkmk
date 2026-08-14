@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 
 import json
 from collections.abc import Mapping
@@ -153,7 +152,7 @@ def _scaled_metric(new_name: str, metric: Metric, factor: float) -> Metric:
                 metric.levels[0] * factor if metric.levels[0] is not None else None,
                 metric.levels[1] * factor if metric.levels[1] is not None else None,
             )
-            if metric.levels
+            if metric.levels  # type: ignore[redundant-expr]
             else None
         ),
         boundaries=(
@@ -161,7 +160,7 @@ def _scaled_metric(new_name: str, metric: Metric, factor: float) -> Metric:
                 metric.boundaries[0] * factor if metric.boundaries[0] is not None else None,
                 metric.boundaries[1] * factor if metric.boundaries[1] is not None else None,
             )
-            if metric.boundaries
+            if metric.boundaries  # type: ignore[redundant-expr]
             else None
         ),
     )

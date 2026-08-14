@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 import collections
@@ -243,8 +242,8 @@ class ValueTypedDictSchema(BaseSchema):
                 self._serialize_field(dynamic_fields, field=self.ValueTypedDict.value_type.field)
             )
 
-        elif isinstance(self.ValueTypedDict.value_type, BaseSchema) or (
-            isinstance(self.ValueTypedDict.value_type, type)
+        elif isinstance(self.ValueTypedDict.value_type, BaseSchema) or (  # type: ignore[redundant-expr]
+            isinstance(self.ValueTypedDict.value_type, type)  # type: ignore[redundant-expr]
             and issubclass(self.ValueTypedDict.value_type, Schema)
         ):
             schema = common.resolve_schema_instance(self.ValueTypedDict.value_type)
@@ -285,8 +284,8 @@ class ValueTypedDictSchema(BaseSchema):
                 self._deserialize_field(dynamic_fields, field=self.ValueTypedDict.value_type.field)
             )
 
-        elif isinstance(self.ValueTypedDict.value_type, BaseSchema) or (
-            isinstance(self.ValueTypedDict.value_type, type)
+        elif isinstance(self.ValueTypedDict.value_type, BaseSchema) or (  # type: ignore[redundant-expr]
+            isinstance(self.ValueTypedDict.value_type, type)  # type: ignore[redundant-expr]
             and issubclass(self.ValueTypedDict.value_type, Schema)
         ):
             schema = common.resolve_schema_instance(self.ValueTypedDict.value_type)

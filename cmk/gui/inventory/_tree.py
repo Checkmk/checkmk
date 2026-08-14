@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="redundant-expr"
 
 from __future__ import annotations
 
@@ -130,7 +129,7 @@ def _make_filter_choices_from_permitted_paths(
             nodes=_transform_attribute(SDNodeName, entry.get("nodes")),
         )
         for entry in permitted_paths
-        if entry
+        if entry  # type: ignore[redundant-expr]
     ]
 
 

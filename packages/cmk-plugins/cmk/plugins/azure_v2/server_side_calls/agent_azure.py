@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
-
 from collections.abc import Iterable
 from typing import assert_never, Literal
 
@@ -74,7 +72,7 @@ def _tag_based_args(tag_based: list[TagBased], is_subscription: bool = False) ->
                 "--subscriptions-require-tag" if is_subscription else "--require-tag",
                 tag_config.tag,
             ]
-        if isinstance(tag_config.condition, tuple) and tag_config.condition[0] == "equals":
+        if isinstance(tag_config.condition, tuple) and tag_config.condition[0] == "equals":  # type: ignore[redundant-expr]
             args += [
                 "--subscriptions-require-tag-value" if is_subscription else "--require-tag-value",
                 tag_config.tag,

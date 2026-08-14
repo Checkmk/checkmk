@@ -7,7 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
 
 from __future__ import annotations
 
@@ -537,7 +536,7 @@ class ServeSwaggerUI(AbstractWSGIApp):
 
 def _ensure_authenticated() -> None:
     session.session.is_gui_session = False
-    if session.session.user is None or isinstance(session.session.user, LoggedInNobody):
+    if session.session.user is None or isinstance(session.session.user, LoggedInNobody):  # type: ignore[redundant-expr]
         # As a user we want the most specific error messages. Due to the errors being
         # generated at the start of the request, where it isn't clear if Checkmk or RESTAPI
         # will take the request, we need to store them and emit them to the user afterwards.

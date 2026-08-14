@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Sequence
@@ -256,7 +255,7 @@ def Levels(
     def match_levels_alternative(v: dict[Any, Any] | tuple[Any, Any]) -> int:
         if isinstance(v, dict):
             return 2
-        if isinstance(v, tuple) and v != (None, None):
+        if isinstance(v, tuple) and v != (None, None):  # type: ignore[redundant-expr]
             return 1
         return 0
 

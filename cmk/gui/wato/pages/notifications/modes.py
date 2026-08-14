@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -4679,7 +4678,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
 
     def _validate_form_spec(self, data: RawDiskData | RawFrontendData) -> bool:
         return isinstance(data, RawFrontendData) or (
-            isinstance(data, RawDiskData) and not self._new
+            isinstance(data, RawDiskData) and not self._new  # type: ignore[redundant-expr]
         )
 
     @override

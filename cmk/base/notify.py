@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -1221,7 +1220,7 @@ def _create_notifications(
         # TODO CMK-20135 use old format for user notifications for now
         plugin_parameters = (
             parameters[plugin_name][plugin_parameter_id]["parameter_properties"]
-            if isinstance(plugin_parameter_id, str)
+            if isinstance(plugin_parameter_id, str)  # type: ignore[redundant-expr]
             else {"params": plugin_parameter_id}
         )
 
@@ -1344,7 +1343,7 @@ def _process_notifications(
                 # params can be a list (e.g. for custom notificatios)
                 split_contexts = (
                     entry.plugin_name not in ["", "mail", "asciimail", "slack"]
-                    or (isinstance(params, dict) and params.get("disable_multiplexing"))
+                    or (isinstance(params, dict) and params.get("disable_multiplexing"))  # type: ignore[redundant-expr]
                     or entry.bulk
                 )
                 if not split_contexts:

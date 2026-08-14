@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
-
 """Configures the global settings of a dashboard"""
 
 import time
@@ -47,7 +45,7 @@ def dashboard_info_handler(visual: DashboardConfig) -> SingleInfos:
 
 
 def dashboard_fields_handler(dashboard: DashboardConfig) -> None:
-    _vs_dashboard().render_input("dashboard", dict(dashboard) if dashboard else None)
+    _vs_dashboard().render_input("dashboard", dict(dashboard) if dashboard else None)  # type: ignore[redundant-expr]
 
 
 def create_dashboard(old_dashboard: DashboardConfig, dashboard: DashboardConfig) -> DashboardConfig:

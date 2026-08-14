@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="mutable-override"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 import datetime as dt
@@ -637,7 +636,7 @@ class NetworkScanModel:
             exclude_ranges=[
                 IPRangeConverter.from_internal_exclude(entry) for entry in value["exclude_ranges"]
             ]
-            if "exclude_ranges" in value
+            if "exclude_ranges" in value  # type: ignore[redundant-expr]
             else ApiOmitted(),
             scan_interval=value.get("scan_interval", ApiOmitted()),
             time_allowed=[

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="redundant-expr"
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
 from cmk.agent_based.v2 import IgnoreResultsError, render
@@ -16,7 +15,7 @@ check_info = {}
 
 def parse_docker_node_disk_usage(string_table):
     disk_usage = docker.parse_multiline(string_table).data
-    return {r.get("type"): r for r in disk_usage if r is not None}
+    return {r.get("type"): r for r in disk_usage if r is not None}  # type: ignore[redundant-expr]
 
 
 def check_docker_node_disk_usage(item, params, parsed):

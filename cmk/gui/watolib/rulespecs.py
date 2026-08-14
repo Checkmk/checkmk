@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 """The rulespecs are the ruleset specifications registered to Setup."""
@@ -1482,17 +1481,17 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
 
     # Checks whether the value itself already uses the tp-mode
     def is_active(self, value: dict[str, Any]) -> bool:
-        return isinstance(value, dict) and TIMESPECIFIC_DEFAULT_KEY in value
+        return isinstance(value, dict) and TIMESPECIFIC_DEFAULT_KEY in value  # type: ignore[redundant-expr]
 
     # Returns simply the value or converts a plain value to a tp-value
     def _get_timeperiod_value(self, value: dict[str, Any]) -> dict[str, Any]:
-        if isinstance(value, dict) and TIMESPECIFIC_DEFAULT_KEY in value:
+        if isinstance(value, dict) and TIMESPECIFIC_DEFAULT_KEY in value:  # type: ignore[redundant-expr]
             return value
         return {TIMESPECIFIC_VALUES_KEY: [], TIMESPECIFIC_DEFAULT_KEY: value}
 
     # Returns simply the value or converts tp-value back to a plain value
     def _get_timeless_value(self, value: dict[str, Any]) -> Any:
-        if isinstance(value, dict) and TIMESPECIFIC_DEFAULT_KEY in value:
+        if isinstance(value, dict) and TIMESPECIFIC_DEFAULT_KEY in value:  # type: ignore[redundant-expr]
             return value.get(TIMESPECIFIC_DEFAULT_KEY)
         return value
 

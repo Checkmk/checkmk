@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 #########################################################################################
@@ -127,7 +126,7 @@ def _discovery_make_groups(
     not_forwarded_logs = {
         item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
     }
-    all_group_patterns = [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
+    all_group_patterns = [p["grouping_patterns"] for p in params if "grouping_patterns" in p]  # type: ignore[redundant-expr]
 
     groups: dict[str, _Group] = {}
     for item in not_forwarded_logs:

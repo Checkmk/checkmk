@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
-
 from __future__ import annotations
 
 import os
@@ -215,7 +213,7 @@ def multipart_mail(
     for what, name, contents, how in attach:
         part = (
             MIMEImage(contents, name=name)
-            if what == "img"
+            if what == "img"  # type: ignore[redundant-expr]
             else MIMEApplication(contents, name=name)
         )
         part.add_header("Content-ID", "<%s>" % name)

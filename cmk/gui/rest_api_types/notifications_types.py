@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -421,7 +420,7 @@ class HTMLMailPlugin:
             "elements": self.info_to_be_displayed_in_the_email_body.to_mk_file_format(),
             "bulk_sort_order": self.sort_order_for_bulk_notifications.to_mk_file_format(),
             "insert_html_section": self.insert_html_section.to_mk_file_format(),
-            "smtp": None if self.smtp is None else self.smtp.to_mk_file_format(),
+            "smtp": None if self.smtp is None else self.smtp.to_mk_file_format(),  # type: ignore[redundant-expr]
             "graphs_per_notification": self.graphs_per_notification.to_mk_file_format(),
             "no_floating_graphs": self.no_floating_graphs.to_mk_file_format(),
             "notifications_with_graphs": self.notifications_with_graphs.to_mk_file_format(),

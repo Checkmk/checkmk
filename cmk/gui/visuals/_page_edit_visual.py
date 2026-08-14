@@ -7,7 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 """Edit global settings of the visual"""
@@ -534,7 +533,7 @@ def render_context_specs(
     forms.header(
         _("Context / search filters"),
         isopen=isopen,
-        show_more_toggle=any(vs.has_show_more() for _title, vs in context_specs if vs is not None),
+        show_more_toggle=any(vs.has_show_more() for _title, vs in context_specs if vs is not None),  # type: ignore[redundant-expr]
         help_text=help_text,
     )
     # Trick: the field "context" contains a dictionary with
@@ -546,7 +545,7 @@ def render_context_specs(
             is_show_more=(
                 spec.has_show_more()
                 if isinstance(spec, Transform)
-                else all(flt.is_show_more for _title, flt in spec.filter_items() if flt is not None)
+                else all(flt.is_show_more for _title, flt in spec.filter_items() if flt is not None)  # type: ignore[redundant-expr]
             ),
         )
         ident = "context_" + info_key

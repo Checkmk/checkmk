@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -2736,7 +2735,7 @@ def ajax_popup_service_action_menu(ctx: PageContext) -> None:
     checkbox_name = request.get_ascii_input_mandatory("checkboxname")
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))
-    if checkbox_name is None or hostname is None:
+    if checkbox_name is None or hostname is None:  # type: ignore[redundant-expr]
         html.show_error(_("Cannot render drop-down: Missing required information"))
         return
 

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="unreachable"
 
 from __future__ import annotations
@@ -272,7 +271,7 @@ class Table:
                 self.options["collect_headers"] = True
             elif self.options["collect_headers"] is True:
                 self.options["collect_headers"] = "finished"
-        elif not collect_headers and self.options["collect_headers"] is True:
+        elif not collect_headers and self.options["collect_headers"] is True:  # type: ignore[redundant-expr]
             self.options["collect_headers"] = False
 
         self.limit_reached = False if self.limit is None else len(self.rows) > self.limit
@@ -547,7 +546,7 @@ class Table:
             class_ = ["data", "%s%d" % (oddeven_name, row.state)]
 
             if isinstance(row.css, list):
-                class_.extend([c for c in row.css if c is not None])
+                class_.extend([c for c in row.css if c is not None])  # type: ignore[redundant-expr]
             elif row.css is not None:
                 class_.append(row.css)
 
@@ -674,7 +673,7 @@ class Table:
                 css_class = header.css
 
             assert isinstance(css_class, list)
-            css_class = [("header_%s" % c) for c in css_class if c is not None]
+            css_class = [("header_%s" % c) for c in css_class if c is not None]  # type: ignore[redundant-expr]
 
             if not self.options["sortable"] or not header.sortable:
                 html.open_th(class_=css_class)
@@ -741,7 +740,7 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
 
         for cell in row.cells:
             # Filter out buttons
-            if cell.css is not None and any("buttons" in css.split() for css in cell.css):
+            if cell.css is not None and any("buttons" in css.split() for css in cell.css):  # type: ignore[redundant-expr]
                 continue
 
             cell_string = str(cell.content)

@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="unreachable"
 
 import time
@@ -404,7 +403,7 @@ check_info["jolokia_metrics.bea_sess"] = LegacyCheckDefinition(
 def inventory_jolokia_metrics_cache(metrics, info):
     parsed = jolokia_metrics_parse(info)
     metrics_set = set(metrics)
-    for inst, vals in [x for x in parsed.items() if x[1] is not None]:
+    for inst, vals in [x for x in parsed.items() if x[1] is not None]:  # type: ignore[redundant-expr]
         for cache, cache_vars in vals.get("CacheStatistics", {}).items():
             if metrics_set.intersection(cache_vars) == metrics_set:
                 yield f"{inst} {cache}", {}

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 """Helper to register a new-style section based on config.check_info"""
@@ -43,7 +42,7 @@ def _create_discovery_function(check_info_element: LegacyCheckDefinition) -> Cal
                 yield element
                 continue
 
-            if isinstance(element, tuple) and len(element) in (2, 3):
+            if isinstance(element, tuple) and len(element) in (2, 3):  # type: ignore[redundant-expr]
                 item, params = element[0], element[-1]
                 if item is not None and not isinstance(item, str):
                     raise ValueError("item must be None or of type `str`")

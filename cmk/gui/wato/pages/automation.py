@@ -7,7 +7,6 @@ automation functions on slaves,"""
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 import secrets
@@ -305,7 +304,7 @@ class PageAutomation(AjaxPage):
 
         our_id = omd_site()
 
-        if our_id is not None and our_id != site_id:
+        if our_id is not None and our_id != site_id:  # type: ignore[redundant-expr]
             raise MKGeneralException(
                 _(
                     "Site ID mismatch. Our ID is '%(our_id)s', but you are saying we are '%(site_id)s'."

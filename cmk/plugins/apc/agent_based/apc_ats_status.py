@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
@@ -39,7 +38,7 @@ def parse_apc_ats_status(info: StringTable) -> Status | None:
 
 
 def discover_apc_ats_status(section: Status) -> DiscoveryResult:
-    if section and section.selected_source:
+    if section and section.selected_source:  # type: ignore[redundant-expr]
         yield Service(parameters={"power_source": section.selected_source.value})
 
 

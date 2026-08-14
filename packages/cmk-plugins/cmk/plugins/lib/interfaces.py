@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 
 import enum
 import itertools
@@ -784,7 +783,7 @@ class InterfaceWithRatesAndAverages:
                     value=average,
                     backlog=averaging_params.backlog_minutes,
                 )
-                if (
+                if (  # type: ignore[redundant-expr]
                     average := get_average(
                         value_store=averaging_params.value_store,
                         key=averaging_params.value_store_key,

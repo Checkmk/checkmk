@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="redundant-expr"
 
 from abc import ABC
 from typing import Annotated, assert_never, Literal, override, Self
@@ -95,7 +94,7 @@ def _metric_display_range_from_internal(
 ) -> MetricDisplayRangeModel:
     if value == "automatic":
         return "automatic"
-    if isinstance(value, tuple) and value[0] == "fixed":
+    if isinstance(value, tuple) and value[0] == "fixed":  # type: ignore[redundant-expr]
         _, (unit, (minimum, maximum)) = value
         return MetricDisplayRangeFixedModel(
             type="fixed",

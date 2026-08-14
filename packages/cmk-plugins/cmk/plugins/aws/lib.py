@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 import contextlib
@@ -157,7 +156,7 @@ def check_aws_limits(
         warn, crit = (None, None)
         if (
             isinstance(parameter, tuple)
-            and len(parameter) == 2
+            and len(parameter) == 2  # type: ignore[redundant-expr]
             and parameter[0] == "set_levels"
             and isinstance(parameter[1], dict)
         ):
@@ -182,7 +181,7 @@ def check_aws_limits(
         if (
             warn is not None
             and crit is not None
-            and isinstance(warn, float)
+            and isinstance(warn, float)  # type: ignore[redundant-expr]
             and isinstance(crit, float)
         ):
             upper_levels = ("fixed", (warn, crit))

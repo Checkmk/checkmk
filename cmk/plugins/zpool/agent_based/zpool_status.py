@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 
 from collections.abc import Mapping
 from typing import Any, NamedTuple
@@ -115,7 +114,7 @@ def parse_zpool_status(
 
 
 def discover_zpool_status(section: Section) -> DiscoveryResult:
-    if not section or section.message == "No pools available":
+    if not section or section.message == "No pools available":  # type: ignore[redundant-expr]
         return
     yield Service()
 

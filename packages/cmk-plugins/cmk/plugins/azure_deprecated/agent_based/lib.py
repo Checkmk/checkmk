@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 
 import json
 import time
@@ -344,7 +343,7 @@ def check_resource_metrics(
             )
 
         if (
-            metric_data.average_mins_param is not None
+            metric_data.average_mins_param is not None  # type: ignore[redundant-expr]
             and (average_mins := params.get(metric_data.average_mins_param)) is not None
         ):
             # Even if we alert on the average, we still emit the instantaneous value as a metric.

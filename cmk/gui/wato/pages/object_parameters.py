@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="exhaustive-match"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 """Mode for displaying and modifying the rule based host and service
@@ -378,7 +377,7 @@ class ModeObjectParameters(WatoMode):
         checkgroup = serviceinfo["checkgroup"]
         rulespec = rulespec_registry.get("static_checks:" + checkgroup)
         if rulespec is None or (
-            rulespec_allow_list is not None and not rulespec_allow_list.is_visible(rulespec.name)
+            rulespec_allow_list is not None and not rulespec_allow_list.is_visible(rulespec.name)  # type: ignore[redundant-expr]
         ):
             html.write_text_permissive(_("This check is not configurable via Setup"))
             return

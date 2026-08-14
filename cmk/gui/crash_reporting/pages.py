@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 from __future__ import annotations
@@ -503,7 +502,7 @@ class PageCrash(Page):
         )
         _crash_row(
             _("Local Variables"),
-            format_local_vars(info["local_vars"]) if "local_vars" in info else "",
+            format_local_vars(info["local_vars"]) if "local_vars" in info else "",  # type: ignore[redundant-expr]
             odd=True,
             pre=True,
         )

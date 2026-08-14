@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="redundant-expr"
 
 import json
 import sys
@@ -234,7 +233,7 @@ class VisualFilterList(ListOfMultiple):
 def filters_allowed_for_info(info: str) -> Iterator[tuple[str, Filter]]:
     """Returns a map of filter names and filter objects that are registered for the given info"""
     for fname, filt in filter_registry.items():
-        if filt.info is None or info == filt.info:
+        if filt.info is None or info == filt.info:  # type: ignore[redundant-expr]
             yield fname, filt
 
 
@@ -247,7 +246,7 @@ def filters_exist_for_infos(infos: SingleInfos) -> bool:
     """Returns True if any filter is registered for the given infos"""
     for _fname, filt in filter_registry.items():
         for info in infos:
-            if filt.info is None or info == filt.info:
+            if filt.info is None or info == filt.info:  # type: ignore[redundant-expr]
                 return True
     return False
 

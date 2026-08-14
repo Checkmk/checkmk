@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="mutable-override"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 """Marshmallow field/schema definitions for watolib domain objects."""
@@ -484,7 +483,7 @@ class IPNetworkCIDR(String):
         obj: object,
         **kwargs: object,
     ) -> str:
-        if isinstance(value, list | tuple) and len(value) == 2:
+        if isinstance(value, list | tuple) and len(value) == 2:  # type: ignore[redundant-expr]
             return f"{value[0]}/{value[1]}"
         raise ValidationError(
             f"Error handling {value!r}, expected a tuple of IPv4 address and network size e.g. ('192.168.0.0', 24)"

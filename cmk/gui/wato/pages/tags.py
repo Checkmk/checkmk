@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
@@ -670,7 +669,7 @@ class ModeTagUsage(ABCTagMode):
 
         table.cell(_("Tag group"), _u(tag_group.choice_title))
         # TODO: This check shouldn't be necessary if we get our types right.
-        if tag.title is None or tag_group.id is None:
+        if tag.title is None or tag_group.id is None:  # type: ignore[redundant-expr]
             raise Exception("uninitialized tag/tag group")
         table.cell(_("Tag"), _u(tag.title))
 

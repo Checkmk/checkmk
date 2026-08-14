@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 
 from __future__ import annotations
 
@@ -101,7 +100,7 @@ class AgentCtlMessage(Deserializer):
     @override
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, AgentCtlMessage):
-            return self.version == __o.version and self.payload == __o.payload
+            return self.version == __o.version and self.payload == __o.payload  # type: ignore[redundant-expr]
         return False
 
 

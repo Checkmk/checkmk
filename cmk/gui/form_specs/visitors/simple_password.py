@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="redundant-expr"
 
 import base64
 from collections.abc import Callable, Sequence
@@ -83,7 +82,7 @@ class SimplePasswordVisitor(FormSpecVisitor[SimplePassword, _ParsedValueModel, _
         return [
             shared_type_defs.ValidationMessage(location=[], message=x, replacement_value="")
             for x in optional_validation(self._validators(), parsed_value)
-            if x is not None
+            if x is not None  # type: ignore[redundant-expr]
         ]
 
     @override

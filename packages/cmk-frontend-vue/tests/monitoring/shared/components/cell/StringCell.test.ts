@@ -8,11 +8,11 @@ import { defineComponent, h } from 'vue'
 
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 
-function mountCell(value: string | undefined) {
+function mountCell(value: string | undefined, props: Record<string, unknown> = {}) {
   return render(
     defineComponent({
       render() {
-        return h('table', [h('tbody', [h('tr', [h(StringCell, { value })])])])
+        return h('table', [h('tbody', [h('tr', [h(StringCell, { value, ...props })])])])
       }
     })
   )
@@ -30,6 +30,19 @@ test('renders a placeholder instead of crashing when the value is missing', () =
   const cell = container.querySelector('td')
   expect(cell).not.toBeNull()
   expect(cell).toHaveTextContent('n/a')
+})
+
+test('leaves a state marker as written unless the cell shows plugin output', () => {
+  const { container } = mountCell('load: 3.1(!)')
+
+  expect(container.querySelector('.cmk-tag')).toBeNull()
+  expect(container.querySelector('td')).toHaveTextContent('(!)')
+})
+
+test('renders the state markers of plugin output as badges', () => {
+  const { container } = mountCell('load: 3.1(!)', { stateMarkers: true })
+
+  expect(container.querySelector('.cmk-tag--color-warning')).toHaveTextContent('WARN')
 })
 
 test('renders a button and forwards its click when the button prop is set', async () => {

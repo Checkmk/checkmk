@@ -15,14 +15,17 @@ const ZERO_WIDTH_SPACE = '​'
  * runs without any of those separators fall back to a break every
  * `hardBreakEvery` characters.
  */
+export function softBreak(text: string, hardBreakEvery: number = 15): string {
+  const hardBreak = new RegExp(`([^\\s\\-_.]{${hardBreakEvery}})`, 'g')
+  return text
+    .replace(SOFT_BREAK_CHARS, `$1${ZERO_WIDTH_SPACE}`)
+    .replace(hardBreak, `$1${ZERO_WIDTH_SPACE}`)
+}
+
+/** {@link softBreak} over reactive text. */
 export function useSoftBreak(
   text: MaybeRefOrGetter<string>,
   hardBreakEvery: MaybeRefOrGetter<number> = 15
 ): ComputedRef<string> {
-  return computed(() => {
-    const hardBreak = new RegExp(`([^\\s\\-_.]{${toValue(hardBreakEvery)}})`, 'g')
-    return toValue(text)
-      .replace(SOFT_BREAK_CHARS, `$1${ZERO_WIDTH_SPACE}`)
-      .replace(hardBreak, `$1${ZERO_WIDTH_SPACE}`)
-  })
+  return computed(() => softBreak(toValue(text), toValue(hardBreakEvery)))
 }

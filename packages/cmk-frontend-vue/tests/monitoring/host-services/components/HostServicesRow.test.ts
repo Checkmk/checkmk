@@ -66,6 +66,20 @@ test('renders one cell per column', () => {
   expect(tds).toHaveLength(12)
 })
 
+test('renders the state markers of the summary as badges', () => {
+  const { container } = mountRow(makeService({ summary: 'load: 3.1(!), temp: 90(!!)' }))
+
+  expect(container.querySelector('.cmk-tag--color-warning')).toHaveTextContent('WARN')
+  expect(container.querySelector('.cmk-tag--color-danger')).toHaveTextContent('CRIT')
+})
+
+test('keeps the whole summary readable on hover, markers and all', () => {
+  const summary = 'load: 3.1(!), temp: 90(!!)'
+  mountRow(makeService({ summary }))
+
+  expect(screen.getByTitle(summary)).toBeInTheDocument()
+})
+
 test('renders no action cell for a page that offers no menu', () => {
   const { container } = mountRow(makeService())
 

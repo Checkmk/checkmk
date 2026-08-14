@@ -11,7 +11,12 @@ import { computed } from 'vue'
 
 import type { ServiceState } from '@/monitoring/shared/api/types'
 
-const props = defineProps<{ state: ServiceState; pending?: boolean | undefined }>()
+const props = defineProps<{
+  state: ServiceState
+  pending?: boolean | undefined
+  /** Sized to sit inside a line of text rather than to fill the state column. */
+  inline?: boolean | undefined
+}>()
 
 const { _t } = usei18n()
 
@@ -52,6 +57,7 @@ const stateColor = computed<Colors>(() => {
 <template>
   <CmkTag
     class="monitoring-service-state-display"
+    :class="{ 'monitoring-service-state-display--inline': inline }"
     :color="stateColor"
     variant="weighted"
     :content="stateLabel"
@@ -71,5 +77,17 @@ const stateColor = computed<Colors>(() => {
   min-width: var(--service-state-display-min-width);
   align-items: center;
   justify-content: center;
+}
+
+/*
+ * Sized by its own text rather than by the line it sits in: a cell sets a line
+ * height for the row, and a flex badge inheriting that grows well past the small
+ * tag it is supposed to be.
+ */
+.monitoring-service-state-display--inline {
+  display: inline-block;
+  height: auto;
+  min-width: 0;
+  line-height: normal;
 }
 </style>

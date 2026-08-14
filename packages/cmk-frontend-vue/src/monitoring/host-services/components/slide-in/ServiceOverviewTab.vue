@@ -13,6 +13,7 @@ import { computed } from 'vue'
 import type { ServiceOverview } from '@/monitoring/shared/api/types'
 import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vue'
 import ModeIcons from '@/monitoring/shared/components/ModeIcons.vue'
+import PluginOutput from '@/monitoring/shared/components/PluginOutput.vue'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
@@ -104,7 +105,7 @@ const nextCheck = computed(() =>
 
     <OverviewDetailList align="start">
       <dt>{{ _t('Service summary:') }}</dt>
-      <dd>{{ data.summary }}</dd>
+      <dd><PluginOutput :output="data.summary" /></dd>
     </OverviewDetailList>
 
     <CmkCatalogPanel :title="_t('Service details')" :open="false">

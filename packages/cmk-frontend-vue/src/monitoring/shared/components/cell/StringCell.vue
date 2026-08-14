@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
+import PluginOutput from '../PluginOutput.vue'
 import BaseCell, { type CellLink, type CellVerticalAlign } from './BaseCell.vue'
 import { useSoftBreak } from './base/useSoftBreak'
 
@@ -18,6 +19,8 @@ const props = withDefaults(
     button?: boolean | undefined
     verticalAlign?: CellVerticalAlign | undefined
     noWrap?: boolean | undefined
+    /** Renders the state markers a check embeds in its output, for a cell showing one. */
+    stateMarkers?: boolean | undefined
   }>(),
   { hardBreakEvery: 15, linkedTo: undefined }
 )
@@ -50,7 +53,12 @@ const display = useSoftBreak(
           'monitoring-string-cell__text--empty-string': display === 'n/a' || display === emptyLabel
         }"
       >
-        {{ display }}
+        <PluginOutput
+          v-if="stateMarkers && value"
+          :output="value"
+          :hard-break-every="hardBreakEvery"
+        />
+        <template v-else>{{ display }}</template>
       </span>
     </template>
   </BaseCell>

@@ -29,11 +29,14 @@ from cmk.plugins.f5os_rseries.lib.detect import DETECT_F5OS_RSERIES
 
 @dataclass(frozen=True)
 class F5OSMemorySection:
-    mem_used: int  # platformMemUsed (bytes)
-    mem_free: int  # platformMemFree (bytes)
-    mem_used_percent: float  # platformMemUsedPercent (%)
-    mem_total: int  # platformMemTotal (bytes)
-    mem_avail: int  # platformMemAvail (bytes)
+    # Column semantics per F5-PLATFORM-STATS-MIB memoryStatsTable
+    # (.1.3.6.1.4.1.12276.1.2.1.4.1.1). Note memPercentageUsed is the overall figure
+    # (counts tenant reservations); the platform used/total pair is the appliance's own.
+    available: int  # memAvailable (bytes)
+    free: int  # memFree (bytes)
+    percentage_used: float  # memPercentageUsed - overall, incl. tenant reservations (%)
+    platform_total: int  # memPlatformTotal (bytes)
+    platform_used: int  # memPlatformUsed (bytes)
 
 
 def parse_f5os_rseries_memory(string_table: StringTable) -> F5OSMemorySection | None:
@@ -41,11 +44,11 @@ def parse_f5os_rseries_memory(string_table: StringTable) -> F5OSMemorySection | 
         return None
     row = string_table[0]
     return F5OSMemorySection(
-        mem_used=int(row[0]),  # platformMemUsed (unit: 1 byte)
-        mem_free=int(row[1]),  # platformMemFree (unit: 1 byte)
-        mem_used_percent=float(row[2]),  # platformMemUsedPercent (unit: 1%)
-        mem_total=int(row[3]),  # platformMemTotal (unit: 1 byte)
-        mem_avail=int(row[4]),  # platformMemAvail (unit: 1 byte)
+        available=int(row[0]),  # memAvailable (unit: 1 byte)
+        free=int(row[1]),  # memFree (unit: 1 byte)
+        percentage_used=float(row[2]),  # memPercentageUsed (unit: 1%)
+        platform_total=int(row[3]),  # memPlatformTotal (unit: 1 byte)
+        platform_used=int(row[4]),  # memPlatformUsed (unit: 1 byte)
     )
 
 
@@ -56,11 +59,11 @@ snmp_section_f5os_rseries_memory = SimpleSNMPSection(
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12276.1.2.1.4.1.1",
         oids=[
-            "2",  # platformMemUsed (unit: 1 byte)
-            "3",  # platformMemFree (unit: 1 byte)
-            "4",  # platformMemUsedPercent (unit: 1%)
-            "5",  # platformMemTotal (unit: 1 byte)
-            "6",  # platformMemAvail (unit: 1 byte)
+            "2",  # memAvailable (unit: 1 byte)
+            "3",  # memFree (unit: 1 byte)
+            "4",  # memPercentageUsed - overall, incl. tenant reservations (unit: 1%)
+            "5",  # memPlatformTotal (unit: 1 byte)
+            "6",  # memPlatformUsed (unit: 1 byte)
         ],
     ),
 )
@@ -75,9 +78,15 @@ class _MemoryParams(TypedDict):
 
 
 def check_f5os_rseries_memory(params: _MemoryParams, section: F5OSMemorySection) -> CheckResult:
+    # Alert on the platform's own memory usage. The MIB's overall memPercentageUsed counts
+    # tenant memory reservations and OS overhead, so it sits permanently high (~93 %) and is
+    # a poor health signal; memPlatformUsed / memPlatformTotal reflects the appliance itself.
+    platform_used_percent = (
+        100.0 * section.platform_used / section.platform_total if section.platform_total else 0.0
+    )
     yield from check_levels(
-        section.mem_used_percent,
-        label="Used",
+        platform_used_percent,
+        label="Platform used",
         metric_name="mem_used_percent",
         render_func=render.percent,
         levels_upper=params["levels"],
@@ -85,13 +94,14 @@ def check_f5os_rseries_memory(params: _MemoryParams, section: F5OSMemorySection)
     yield Result(
         state=State.OK,
         notice=(
-            f"Used: {render.bytes(section.mem_used)}, "
-            f"Total: {render.bytes(section.mem_total)}, "
-            f"Available: {render.bytes(section.mem_avail)}"
+            f"Platform used: {render.bytes(section.platform_used)} of "
+            f"{render.bytes(section.platform_total)}; "
+            f"Available: {render.bytes(section.available)}; "
+            f"Overall used incl. tenant reservations: {render.percent(section.percentage_used)}"
         ),
     )
-    yield Metric("mem_used", float(section.mem_used))
-    yield Metric("mem_total", float(section.mem_total))
+    yield Metric("mem_used", float(section.platform_used))
+    yield Metric("mem_total", float(section.platform_total))
 
 
 check_plugin_f5os_rseries_memory = CheckPlugin(

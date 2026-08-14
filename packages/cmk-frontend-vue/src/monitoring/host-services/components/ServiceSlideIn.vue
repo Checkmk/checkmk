@@ -36,10 +36,18 @@ const props = withDefaults(
     /** The actions this user may run, as reported by the backend; targets are service names. */
     actions?: MonitoringActionRegistry<string>
     permittedActions?: CellAction[]
+    /** Lazy loader for the overflow menu entries of a service. */
+    loadActionMenu?: ((service: string) => Promise<CellAction[]>) | undefined
     /** The tab on show, as a `v-model:activeTabId`; forwarded to the panel. */
     activeTabId?: string | undefined
   }>(),
-  { aiExplain: false, actions: () => ({}), permittedActions: () => [], activeTabId: undefined }
+  {
+    aiExplain: false,
+    actions: () => ({}),
+    permittedActions: () => [],
+    loadActionMenu: undefined,
+    activeTabId: undefined
+  }
 )
 
 const emit = defineEmits<{
@@ -122,6 +130,15 @@ const inlineActions = computed<CellAction[]>(() => {
   return actions
 })
 
+const actionMenuLoader = computed<(() => Promise<CellAction[]>) | undefined>(() => {
+  const service = props.service
+  const load = props.loadActionMenu
+  if (!service || !load) {
+    return undefined
+  }
+  return () => load(service.name)
+})
+
 const tabs = computed<SlideInTab[]>(() => {
   const service = props.service
   if (!service) {
@@ -160,6 +177,7 @@ const tabs = computed<SlideInTab[]>(() => {
         :service="service"
         :modes="overview?.modes ?? []"
         :actions="inlineActions"
+        :load-action-menu="actionMenuLoader"
       />
       <ServiceAiExplainButton v-if="aiExplain && overview" :overview="overview" />
     </template>

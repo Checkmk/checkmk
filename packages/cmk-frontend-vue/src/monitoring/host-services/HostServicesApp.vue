@@ -37,6 +37,7 @@ import { useUrlSync } from '../shared/urlState/useUrlSync'
 import { useAcknowledgeServicesAction } from './actions/acknowledgeServices'
 import { useRescheduleServicesAction } from './actions/rescheduleServices'
 import { useScheduleServiceDowntimeAction } from './actions/scheduleServiceDowntime'
+import { ServiceActionMenuApi } from './api/actionMenu'
 import { HostServicesApi } from './api/services'
 import { buildHostServicesColumnPinning, useHostServicesColumns } from './columns'
 import HostServicesRow from './components/HostServicesRow.vue'
@@ -54,6 +55,21 @@ const serviceActions: CellAction[] = (props.actions ?? []).map((action) => ({
   label: action.title as TranslatedString,
   icon: action.icon as SimpleIcons
 }))
+
+const actionMenuApi = new ServiceActionMenuApi()
+
+// The legacy action-menu links (graphs, log file viewer, custom actions, ...) of one service,
+// fetched when the overflow menu is opened.
+async function loadActionMenu(service: string): Promise<CellAction[]> {
+  const items = await actionMenuApi.fetchActionMenu(host, service)
+  return items.map((item) => ({
+    id: `${item.title}|${item.url}`,
+    label: item.title as TranslatedString,
+    icon: item.icon_name as SimpleIcons,
+    url: item.url,
+    target: item.target
+  }))
+}
 
 const columns = useHostServicesColumns()
 const columnPinning = buildHostServicesColumnPinning()
@@ -252,6 +268,7 @@ function onActionPerformed(result: ActionFeedbackResult): void {
       :ai-explain="props.ai_explain ?? false"
       :actions="actionRegistry"
       :permitted-actions="serviceActions"
+      :load-action-menu="loadActionMenu"
       @close="closeSlideIn"
       @performed="onActionPerformed"
     />

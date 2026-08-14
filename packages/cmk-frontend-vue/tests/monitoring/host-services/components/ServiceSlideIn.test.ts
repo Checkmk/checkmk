@@ -354,6 +354,37 @@ describe('ServiceSlideIn', () => {
     expect(screen.queryByTestId('service-ai-explain-button')).not.toBeInTheDocument()
   })
 
+  it('offers no action menu to a page that provides no loader for it', async () => {
+    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    await screen.findByText('Service details')
+
+    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
+  })
+
+  it('loads the action menu of the service on show, not before', async () => {
+    const loadActionMenu = vi.fn(async () => [
+      {
+        id: 'logwatch',
+        label: 'Open log file viewer' as TranslatedString,
+        icon: 'services' as const,
+        url: 'view.py?view_name=logwatch&host=web-server-01'
+      }
+    ])
+    render(ServiceSlideIn, {
+      props: { service: makeService({ name: 'Memory' }), host: HOST, loadActionMenu }
+    })
+    await screen.findByText('Service details')
+    expect(loadActionMenu).not.toHaveBeenCalled()
+
+    await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+    expect(loadActionMenu).toHaveBeenCalledWith('Memory')
+    expect(await screen.findByRole('menuitem', { name: /Open log file viewer/ })).toHaveAttribute(
+      'href',
+      'view.py?view_name=logwatch&host=web-server-01'
+    )
+  })
+
   it('emits close when the close button is used', async () => {
     const { emitted } = render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
     await screen.findByText('Service details')

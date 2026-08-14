@@ -1601,6 +1601,58 @@ class TestMonitorHostServicesReschedule:
         assert "credentials" in resp.json["detail"]
 
 
+class TestMonitorServiceActionMenu:
+    def test_unknown_site_is_rejected(self, clients: ClientRegistry) -> None:
+        resp = clients.MonitorHosts.service_action_menu(
+            hostname=_HOSTNAME,
+            site_id="no-such-site",
+            service_name=_SERVICE_DESCRIPTION,
+            expect_ok=False,
+        )
+
+        assert resp.status_code == 400
+
+    def test_missing_service_returns_404(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("services", [])
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Filter: host_name = {_HOSTNAME}",
+                "Filter: service_description = No such service",
+            ],
+            match_type="loose",
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.service_action_menu(
+                hostname=_HOSTNAME,
+                site_id=_SITE_ID,
+                service_name="No such service",
+                expect_ok=False,
+            )
+
+        assert resp.status_code == 404
+
+    def test_invalid_credentials(self, clients: ClientRegistry) -> None:
+        client = clients.MonitorHosts
+        client.set_credentials("foouser", "barpassword")
+
+        resp = client.service_action_menu(
+            hostname=_HOSTNAME,
+            site_id=_SITE_ID,
+            service_name=_SERVICE_DESCRIPTION,
+            expect_ok=False,
+        )
+
+        assert resp.status_code == 401
+        assert "credentials" in resp.json["detail"]
+
+
 _SITE_ID = "NO_SITE"
 _HOSTNAME = "heute"
 _SERVICE_DESCRIPTION = "CPU load"

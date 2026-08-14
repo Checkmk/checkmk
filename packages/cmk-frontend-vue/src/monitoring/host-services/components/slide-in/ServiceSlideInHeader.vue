@@ -16,13 +16,19 @@ withDefaults(
     // until it loads.
     modes?: ServiceMode[]
     actions?: CellAction[]
+    loadActionMenu?: (() => Promise<CellAction[]>) | undefined
   }>(),
-  { modes: () => [], actions: () => [] }
+  { modes: () => [], actions: () => [], loadActionMenu: undefined }
 )
 </script>
 
 <template>
-  <SlideInHeader :title="service.name" :modes="modes" :actions="actions">
+  <SlideInHeader
+    :title="service.name"
+    :modes="modes"
+    :actions="actions"
+    :load-action-menu="loadActionMenu"
+  >
     <template #state>
       <ServiceStateDisplay :state="service.state" />
     </template>

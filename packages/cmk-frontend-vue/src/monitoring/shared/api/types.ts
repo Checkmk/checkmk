@@ -47,6 +47,8 @@ export type LabelValue = HostLabelValue | ServiceLabelValue
 
 export type ActionMenuItem = components['schemas']['ActionMenuItem']
 
+export type ServiceActionMenuItem = components['schemas']['ServiceActionMenuItem']
+
 export interface HostRef {
   site_id: string
   name: string

@@ -24,6 +24,7 @@ import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import MonitoringTotalCount from '@/monitoring/shared/components/MonitoringTotalCount.vue'
 import RefreshCountdown from '@/monitoring/shared/components/RefreshCountdown.vue'
+import { useUrlSync } from '@/monitoring/shared/urlState/useUrlSync'
 import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
 import { useNetworkFlowSlideIns } from '@/network-flow/slide-ins/useNetworkFlowSlideIns'
 
@@ -39,7 +40,7 @@ import {
   withDefaultTime,
   withoutDefaultTime
 } from './filters/timeRange'
-import { writeFiltersToUrl } from './filters/urlFilters'
+import { flowFilterWriter } from './filters/urlFilters'
 import { FlowService } from './services/FlowService'
 
 const { _t } = usei18n()
@@ -104,10 +105,15 @@ onMounted(async () => {
   filterDefinitionsLoaded.value = true
 })
 
+// The URL carries only what deviates from how the page opens, so clearing the
+// filters leaves a bare URL instead of one spelling out the default window.
+useUrlSync([
+  flowFilterWriter(
+    computed(() => withoutDefaultTime(flowService.context.value, defaultTimeRangeSeconds.value))
+  )
+])
+
 function applyFilters(filters: ConfiguredFilters): void {
-  // The URL carries only what deviates from how the page opens, so clearing the
-  // filters leaves a bare URL instead of one spelling out the default window.
-  writeFiltersToUrl(withoutDefaultTime(filters, defaultTimeRangeSeconds.value))
   flowService.setContext(filters)
 }
 

@@ -6,6 +6,7 @@
 import type { SortingState, VisibilityState } from '@tanstack/vue-table'
 
 import type { RequestedLimit } from '@/monitoring/shared/types'
+import type { Problem as UrlStateProblem } from '@/monitoring/shared/urlState/types'
 
 /**
  * A table's non-filter display state, as it should apply right now.
@@ -46,8 +47,7 @@ export interface TableStateSchema {
 
 export type TableStateDimension = 'cols' | 'sort' | 'limit'
 
-/** A reconciliation rule dropped or clamped something; carries enough to log it. */
-export interface Problem {
+/** A reconciliation rule dropped or clamped something; every rule here names its dimension. */
+export interface Problem extends UrlStateProblem<TableStateDimension> {
   dimension: TableStateDimension
-  message: string
 }

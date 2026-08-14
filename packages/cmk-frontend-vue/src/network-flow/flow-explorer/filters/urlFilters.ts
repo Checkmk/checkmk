@@ -4,6 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
+import { type ComputedRef, computed } from 'vue'
+
+import type { UrlStateWriter } from '@/monitoring/shared/urlState/types'
+
+const ACTIVE_KEY = '_active'
 
 /**
  * The filters as page URL parameters, the way a dashboard's runtime filters are
@@ -24,19 +29,24 @@ export function filtersToSearchParams(filters: ConfiguredFilters): Record<string
   for (const [, filterValues] of entries) {
     Object.assign(values, filterValues)
   }
-  return { _active: entries.map(([filterId]) => filterId).join(';'), ...values }
+  return { [ACTIVE_KEY]: entries.map(([filterId]) => filterId).join(';'), ...values }
 }
 
 /**
- * Rewrites the current URL to carry `filters`, keeping nothing else.
+ * The flow explorer's filters as a slice for `useUrlSync` to mirror.
  *
- * `replaceState`, not `pushState`: narrowing a listing would otherwise fill the
- * history with intermediate filter states, so Back would walk them instead of
- * leaving the page. The filters stay shareable and survive a reload, which is
- * what the URL is for here - Python parses them back out of it on load.
+ * Only `_active` is claimed up front: the variable names come from the filter
+ * definitions the REST API serves, so there is no list to declare at
+ * registration. `useUrlSync` tracks what this wrote last flush instead, which
+ * is what drops a variable belonging to a filter the user has since removed.
+ *
+ * The filters stay shareable and survive a reload, which is what the URL is for
+ * here - Python parses them back out of it on load.
  */
-export function writeFiltersToUrl(filters: ConfiguredFilters): void {
-  const url = new URL(window.location.href)
-  url.search = new URLSearchParams(filtersToSearchParams(filters)).toString()
-  window.history.replaceState(window.history.state, '', url.toString())
+export function flowFilterWriter(filters: ComputedRef<ConfiguredFilters>): UrlStateWriter {
+  return {
+    name: 'flow filters',
+    keys: [ACTIVE_KEY],
+    params: computed(() => filtersToSearchParams(filters.value))
+  }
 }

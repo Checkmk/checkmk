@@ -27,10 +27,11 @@ import { type ActionFeedback as ActionFeedbackResult } from '../shared/component
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
-import { readFilterUrlState, useUrlFilterState } from '../shared/filterState/useUrlFilterState'
+import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
 import { buildColumnStorageKey } from '../shared/services/MonitoringService'
 import { buildTableStateSchema } from '../shared/tableState/schema'
-import { readTableStateFromUrl, useUrlTableState } from '../shared/tableState/useUrlTableState'
+import { readTableStateFromUrl, tableStateWriter } from '../shared/tableState/urlState'
+import { useUrlSync } from '../shared/urlState/useUrlSync'
 import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
 import { useRescheduleHostsAction } from './actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
@@ -150,8 +151,7 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
   ]
 })
 
-useUrlTableState(hostService, schema)
-useUrlFilterState(hostService)
+useUrlSync([tableStateWriter(hostService, schema), filterStateWriter(hostService)])
 
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 

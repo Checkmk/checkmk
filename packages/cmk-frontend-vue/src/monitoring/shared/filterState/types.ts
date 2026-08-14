@@ -34,7 +34,4 @@ export interface FilterUrlSchema {
   filterableFields: ReadonlySet<FilterField>
 }
 
-/** A reconciliation rule dropped or sanitised something; carries enough to log it. */
-export interface Problem {
-  message: string
-}
+export type { Problem } from '@/monitoring/shared/urlState/types'

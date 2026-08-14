@@ -7,16 +7,13 @@ import { describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import type { UrlSync } from '@/monitoring/shared/browserUrlSync'
+import { filterStateWriter, readFilterUrlState } from '@/monitoring/shared/filterState/urlState'
 import {
   MonitoringService,
   type MonitoringServiceOptions,
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
-import type { TableStateSchema } from '@/monitoring/shared/tableState/types'
-import {
-  readTableStateFromUrl,
-  useUrlTableState
-} from '@/monitoring/shared/tableState/useUrlTableState'
+import { useUrlSync } from '@/monitoring/shared/urlState/useUrlSync'
 
 import { makeKeyShortcutService, makeResponse } from '../services/testHelpers'
 
@@ -26,21 +23,12 @@ interface TestItem {
 
 class TestService extends MonitoringService<TestItem> {
   constructor(options: MonitoringServiceOptions<TestItem> = {}) {
-    super('url-table-state-test-service', makeKeyShortcutService(), options)
+    super('filter-url-state-test-service', makeKeyShortcutService(), options)
   }
 
   protected fetchBatch(): Promise<PagedResponse<TestItem>> {
     return Promise.resolve(makeResponse([], 0, 0))
   }
-}
-
-// No hideable columns: keeps `cols` at its default on every write, so these
-// tests can focus on sort/limit without unrelated noise in the URL.
-const schema: TableStateSchema = {
-  hideable: [],
-  sortable: new Set(['name']),
-  defaultVisibility: {},
-  offeredLimits: [1000, 5000]
 }
 
 function makeUrlSync(search = ''): { urlSync: UrlSync; replaceUrl: ReturnType<typeof vi.fn> } {
@@ -54,53 +42,65 @@ function makeUrlSync(search = ''): { urlSync: UrlSync; replaceUrl: ReturnType<ty
   }
 }
 
-describe('readTableStateFromUrl', () => {
+describe('readFilterUrlState', () => {
   it('decodes and reconciles the given query string', () => {
-    expect(readTableStateFromUrl('?limit=5000', schema).limit).toBe(5000)
+    expect(readFilterUrlState('?q=preexisting', { filterableFields: new Set() }).search).toBe(
+      'preexisting'
+    )
   })
 })
 
-describe('useUrlTableState', () => {
+describe('filterStateWriter', () => {
   it('never seeds the service - reading the URL is the app job, done before this runs', () => {
-    const service = new TestService({ limitTiers: [1000, 5000] })
-    const { urlSync } = makeUrlSync('?limit=5000')
+    const service = new TestService()
+    const { urlSync } = makeUrlSync('?q=preexisting')
 
-    useUrlTableState(service, schema, { urlSync })
+    useUrlSync([filterStateWriter(service)], { urlSync })
 
-    expect(service.requestedLimit.value).toBe(1000)
+    expect(service.searchQuery.value).toBe('')
 
     service.stopPolling()
   })
 
-  it('canonicalises once on setup, then once per applied mutation', async () => {
-    const service = new TestService({ limitTiers: [1000, 5000] })
+  it('writes once per applied mutation, and not at all for a URL that already matches', async () => {
+    const service = new TestService()
     const { urlSync, replaceUrl } = makeUrlSync()
 
-    useUrlTableState(service, schema, { urlSync })
+    useUrlSync([filterStateWriter(service)], { urlSync })
+    expect(replaceUrl).not.toHaveBeenCalled()
+
+    service.updateSearch('web01')
+    await nextTick()
     expect(replaceUrl).toHaveBeenCalledTimes(1)
 
-    service.setRequestedLimit(5000)
+    service.updateFilters({ type: 'condition', field: 'name', op: 'contains', value: 'web' })
     await nextTick()
     expect(replaceUrl).toHaveBeenCalledTimes(2)
 
-    service.updateSort([{ id: 'name', desc: true }])
-    await nextTick()
-    expect(replaceUrl).toHaveBeenCalledTimes(3)
+    service.stopPolling()
+  })
+
+  it('drops a stale search the URL was seeded with but the state does not carry', () => {
+    const service = new TestService()
+    const { urlSync, replaceUrl } = makeUrlSync('?q=preexisting')
+
+    useUrlSync([filterStateWriter(service)], { urlSync })
+
+    expect(replaceUrl).toHaveBeenCalledTimes(1)
+    expect(replaceUrl.mock.calls[0]![0]).not.toContain('q=')
 
     service.stopPolling()
   })
 
   it('keeps legacy-looking filter vars across several writes', async () => {
-    const service = new TestService({ limitTiers: [1000, 5000] })
+    const service = new TestService()
     const { urlSync, replaceUrl } = makeUrlSync('?host=v300&neg_host=&foo=bar')
 
-    useUrlTableState(service, schema, { urlSync })
-    service.setRequestedLimit(5000)
-    await nextTick()
-    service.updateSort([{ id: 'name', desc: true }])
+    useUrlSync([filterStateWriter(service)], { urlSync })
+    service.updateSearch('web01')
     await nextTick()
 
-    expect(replaceUrl).toHaveBeenCalledTimes(3)
+    expect(replaceUrl).toHaveBeenCalledTimes(1)
     for (const call of replaceUrl.mock.calls) {
       const url = call[0] as string
       expect(url).toContain('host=v300')
@@ -113,11 +113,11 @@ describe('useUrlTableState', () => {
 
   it('writes only through the injected sync, never touching the real browser', async () => {
     const replaceState = vi.spyOn(window.history, 'replaceState')
-    const service = new TestService({ limitTiers: [1000, 5000] })
+    const service = new TestService()
     const { urlSync } = makeUrlSync()
 
-    useUrlTableState(service, schema, { urlSync })
-    service.setRequestedLimit(5000)
+    useUrlSync([filterStateWriter(service)], { urlSync })
+    service.updateSearch('web01')
     await nextTick()
 
     expect(replaceState).not.toHaveBeenCalled()

@@ -26,6 +26,9 @@ const SORT_KEY = 'sort'
 const LIMIT_KEY = 'limit'
 const UNLIMITED_TOKEN = 'all'
 
+/** Every param this codec claims, for `useUrlSync` to settle ownership with. */
+export const TABLE_STATE_KEYS: readonly string[] = [COLS_KEY, SORT_KEY, LIMIT_KEY]
+
 function encodeLimit(limit: RequestedLimit): string {
   return limit === null ? UNLIMITED_TOKEN : String(limit)
 }

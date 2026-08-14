@@ -132,13 +132,9 @@ py_library(
     imports = [".."],
     deps = [
         "//tests/testlib/common:repo",
-        requirement("cryptography"),
         requirement("docker"),
         requirement("requests"),
         requirement("jinja2"),
-        requirement("prometheus-client"),
-        requirement("opentelemetry-sdk"),
-        requirement("opentelemetry-exporter-otlp"),
         "//tests/testlib",
     ],
 )

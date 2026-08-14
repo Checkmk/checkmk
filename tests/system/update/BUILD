@@ -25,6 +25,7 @@ py_library(
         "//tests/testlib/common:utils",
     ] + select({
         "//:gpl+nonfree_repo": [
+            "//non-free/packages/cmk-otel-collector:testlib",
             "//non-free/tests/testlib/system:metric_backend",
             "//non-free/tests/testlib/system:opentelemetry",
             "//non-free/tests/testlib/system/cloud",

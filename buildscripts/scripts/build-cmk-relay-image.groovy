@@ -23,6 +23,7 @@ void main() {
     def push_to_registry = params.PUSH_TO_REGISTRY == true;
 
     def artifact_directory = "${checkout_dir}/artifacts"
+    def docker_config_folder = "${checkout_dir}/.docker";
     def sbom_name = "check-mk-relay-${cmk_version}-bill-of-materials.json"
     def tarball_name = "check-mk-relay-${cmk_version}.tar"
 
@@ -95,13 +96,18 @@ void main() {
                         passwordVariable: 'DOCKER_PASSPHRASE',
                         usernameVariable: 'DOCKER_USERNAME'),
                 ]) {
-                    withEnv(["DOCKER_CONFIG=${checkout_dir}/.docker"]) {
-                        // DOCKER_PASSPHRASE needs special care regarding escaping, so the second sh block again uses
-                        // double ticks to expand "tags"
-                        sh('''
-                            mkdir -p ${DOCKER_CONFIG}
-                            echo "${DOCKER_PASSPHRASE}" | docker login --password-stdin -u "${DOCKER_USERNAME}"
-                        ''')
+                    // DOCKER_PASSPHRASE needs special care regarding escaping
+                    def docker_auth_encoded = "${DOCKER_USERNAME}:${DOCKER_PASSPHRASE}".bytes.encodeBase64().toString();
+                    /* groovylint-disable LineLength */
+                    // ''' uses system variables like $HOSTNAME, $PWD, ...
+                    // """ uses groovy variables like someCustomVar
+                    sh("""
+                        mkdir -p ${docker_config_folder}
+                        echo '{"auths":{"https://index.docker.io/v1/":{"auth":"${docker_auth_encoded}"}}}' > ${docker_config_folder}/config.json
+                    """);
+                    /* groovylint-enable LineLength */
+
+                    withEnv(["DOCKER_CONFIG=${docker_config_folder}"]) {
                         sh("""
                             bazel run --cmk_edition=ultimate //omd/non-free/relay:image_push -- --tag ${cmk_version}
                         """)
@@ -120,11 +126,14 @@ void main() {
                         passwordVariable: 'NEXUS_PASSWORD',
                         usernameVariable: 'NEXUS_USERNAME'),
                 ]) {
-                    withEnv(["DOCKER_CONFIG=${checkout_dir}/.docker"]) {
-                        sh('''
-                            mkdir -p ${DOCKER_CONFIG}
-                            echo "${NEXUS_PASSWORD}" | docker login --password-stdin -u "${NEXUS_USERNAME}" artifacts.lan.tribe29.com:4000
-                        ''')
+                    /* groovylint-disable LineLength */
+                    sh("""
+                        mkdir -p ${docker_config_folder}
+                        echo '{"auths":{"${docker_registry_no_http}":{"username":"${NEXUS_USERNAME}","password":"${NEXUS_PASSWORD}"}}}' > ${docker_config_folder}/config.json
+                    """);
+                    /* groovylint-enable LineLength */
+
+                    withEnv(["DOCKER_CONFIG=${docker_config_folder}"]) {
                         sh("""
                             bazel run --cmk_edition=ultimate //omd/non-free/relay:image_push_nexus -- --tag ${cmk_version}
                         """)

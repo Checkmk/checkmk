@@ -13,6 +13,7 @@ apply, see generate_config_variable_tests."""
 
 # mypy: disable-error-code="explicit-any"
 
+import datetime
 import json
 import pprint
 from collections.abc import Callable, Mapping
@@ -45,9 +46,11 @@ from cmk.gui.form_specs._utils import (
 )
 from cmk.gui.form_specs.unstable import (
     ConditionChoices,
+    DatePicker,
     Labels,
     ListUniqueSelection,
     OptionalChoice,
+    TimePicker,
 )
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FormSpecTuple
 from cmk.gui.form_specs.unstable.legacy_converter.transform import (
@@ -148,10 +151,28 @@ def factory_default_disk_value(config_variable: ConfigVariable) -> object:
 
 FACTORY_DEFAULTS_NORMALIZED_BY_LOAD: Mapping[str, object] = {
     "notification_spooling": "local",
+    "reporting_table_layout": {
+        "font_size": 8.0,
+        "show_headings": True,
+        "hrules": True,
+        "vrules": False,
+        "rule_width": 0.05,
+        "padding": (2.0, 1.0),
+        "spacing": (2.0, 0.0),
+        "row_shading": {
+            "enabled": True,
+            "odd": (247 / 255, 247 / 255, 247 / 255),
+            "even": (239 / 255, 239 / 255, 239 / 255),
+            "heading": (178 / 255, 178 / 255, 178 / 255),
+        },
+    },
 }
 """Factory defaults the GUI load path consciously rewrites: the disk world
 allows values the form cannot express, and the form spec's migrate maps them
-to the value with the same meaning."""
+to the value with the same meaning. The reporting_table_layout row shading
+colors are edited as 8-bit RGB integers, so loading snaps the hand-written
+factory floats (0.97, 0.94, 0.70) onto the nearest n/255 grid value below,
+exactly as the legacy Transform did on every edit."""
 
 
 def validate_disk_value(
@@ -317,6 +338,13 @@ def choice_cases(configured: object, not_a_choice: object) -> list[Case]:
         CasePass("configured", configured),
         CaseFail("not-a-choice", not_a_choice),
     ]
+
+
+def local_midnight(year: int, month: int, day: int) -> float:
+    """Date form fields serialize timestamps as local dates, so only local-midnight
+    timestamps survive a GUI save round trip regardless of the test environment's
+    timezone."""
+    return datetime.datetime(year, month, day).timestamp()
 
 
 CLOUD_EXCLUSIVE_VARIABLES = frozenset({"enable_ai_explanations"})
@@ -516,9 +544,11 @@ _FORM_SPEC_LEAVES = (
     form_specs.String,
     form_specs.TimeSpan,
     ConditionChoices,
+    DatePicker,
     Labels,
     MultipleChoiceExtended,
     SingleChoiceExtended,
+    TimePicker,
     UserSelection,
 )
 
@@ -936,11 +966,46 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     },
     "reporting_graph_layout": {
         "vertical_axis_width.explicit": 40.0,
+        "vertical_axis_width.fixed": True,
+    },
+    "reporting_pagesize": {
+        "a3": True,
+        "a4": True,
+        "a5": True,
+        "custom": (210.0, 297.0),
+        "executive": True,
+        "folio": True,
+        "legal": True,
+        "letter": True,
+        "size_10x14": True,
+        "statement": True,
+        "tabloid": True,
     },
     "reporting_rangespec": {
         "age": 0,
         "date": UnstableDefault(),
         "time": UnstableDefault(),
+        "d0": True,
+        "d1": True,
+        "d7": True,
+        "d8": True,
+        "fwd0": True,
+        "fwd1": True,
+        "lwd0": True,
+        "lwd1": True,
+        "last_3600": True,
+        "last_14400": True,
+        "last_90000": True,
+        "last_691200": True,
+        "last_3024000": True,
+        "last_34560000": True,
+        "m0": True,
+        "m1": True,
+        "w0": True,
+        "w1": True,
+        "w2": True,
+        "y0": True,
+        "y1": True,
     },
     "service_view_grouping": {
         "[add]": {
@@ -2264,7 +2329,10 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "reporting_rangespec": [
         CasePass("today", "d0"),
-        CasePass("date-range", ("date", (1753142400.0, 1753228800.0))),
+        CasePass(
+            "date-range", ("date", (local_midnight(2025, 7, 22), local_midnight(2025, 7, 23)))
+        ),
+        CaseFail("bools-are-not-timestamps", ("date", (True, False))),
         CaseFail("not-a-choice", "bogus-range"),
     ],
     "reporting_table_layout": [
@@ -2272,8 +2340,21 @@ CASES: Mapping[str, list[Case]] = {
             "configured",
             DefaultWithOverrides({"font_size": 10.0, "padding": (2.0, 0.5), "spacing": (4.0, 1.0)}),
         ),
-        CaseDirty("int-defaults-fail-float-validation", DefaultWithOverrides({}), MKUserError),
+        CasePass("int-defaults-accepted-since-form-spec-port", DefaultWithOverrides({})),
         CaseFail("unknown-key", DefaultWithOverrides({"bogus": 1})),
+        CaseFail(
+            "int-color-components-are-ambiguous",
+            DefaultWithOverrides(
+                {
+                    "row_shading": {
+                        "enabled": True,
+                        "odd": (247, 247, 247),
+                        "even": (240 / 255, 240 / 255, 240 / 255),
+                        "heading": (179 / 255, 179 / 255, 179 / 255),
+                    }
+                }
+            ),
+        ),
     ],
     "reporting_time_format": choice_cases("%H:%M", "%q"),
     "reporting_use": [

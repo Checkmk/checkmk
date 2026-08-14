@@ -14,6 +14,7 @@ from cmk.gui.graphing._valuespecs import (
     _vs_show_title,
     migrate_graph_render_options,
     migrate_graph_render_options_title_format,
+    migrate_graph_render_options_title_format_from_disk,
     vs_graph_render_option_elements,
 )
 from cmk.gui.http import request
@@ -58,6 +59,11 @@ def test_migrate_graph_render_options_title_format(
     result: Sequence[str],
 ) -> None:
     assert migrate_graph_render_options_title_format(entry) == result
+
+
+def test_migrate_graph_render_options_title_format_rejects_unknown_entries() -> None:
+    with pytest.raises(ValueError):
+        migrate_graph_render_options_title_format_from_disk(["plain", "bogus"])
 
 
 @pytest.mark.parametrize(

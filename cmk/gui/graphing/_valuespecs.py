@@ -89,6 +89,13 @@ def migrate_graph_render_options_title_format(
         | Sequence[GraphTitleFormatVS]
     ),
 ) -> Sequence[GraphTitleFormatVS]:
+    return migrate_graph_render_options_title_format_from_disk(p)
+
+
+def migrate_graph_render_options_title_format_from_disk(
+    p: object,
+) -> Sequence[GraphTitleFormatVS]:
+    """Same migration for FormSpec migrate hooks, which receive unvalidated disk data."""
     # ->1.5.0i2 pnp_graph reportlet
     if p == "add_host_name":
         return ["plain", "add_host_name"]
@@ -111,7 +118,13 @@ def migrate_graph_render_options_title_format(
     if isinstance(p, list) and len(p) == 2 and p[0] == "add_title_infos":
         return ["plain"] + p[1]
 
-    return p
+    if isinstance(p, list) and all(
+        entry in ("plain", "add_host_name", "add_host_alias", "add_service_description")
+        for entry in p
+    ):
+        return p
+
+    raise ValueError(f"invalid graph title format {p}")
 
 
 def migrate_graph_render_options(value):

@@ -11,7 +11,9 @@ export const CANVAS_MARGIN_RIGHT = 10
 export const CANVAS_MARGIN_HORIZONTAL = CANVAS_MARGIN_LEFT + CANVAS_MARGIN_RIGHT
 
 // Space between the widest value-axis label and the plot's left edge.
-export const VALUE_LABEL_GUTTER = 10
+const VALUE_LABEL_TICK_OFFSET = 9
+const VALUE_LABEL_EDGE_CLEARANCE = 3
+export const VALUE_LABEL_GUTTER = VALUE_LABEL_TICK_OFFSET + VALUE_LABEL_EDGE_CLEARANCE
 
 export const MIN_ZOOM_TIME_RANGE_SECONDS = 180
 

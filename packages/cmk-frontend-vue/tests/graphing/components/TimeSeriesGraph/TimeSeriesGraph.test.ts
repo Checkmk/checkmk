@@ -8,7 +8,9 @@ import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import TimeSeriesGraph from '@/graphing/components/TimeSeriesGraph/TimeSeriesGraph.vue'
+import { measureAxisLabel } from '@/graphing/components/TimeSeriesGraph/axes/labelWidth'
 import type { Metric, TimeSeriesGraphProps } from '@/graphing/components/TimeSeriesGraph/types'
+import { CANVAS_MARGIN_LEFT, VALUE_LABEL_GUTTER } from '@/graphing/components/constants'
 
 // jsdom implements neither a 2D canvas context nor matchMedia, both of which the graph
 // touches on mount (draw() + the devicePixelRatio watcher). Stub them so the component
@@ -36,9 +38,19 @@ beforeEach(() => {
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(createCanvasContextStub())
 })
 
+let themeLetterSpacing: HTMLStyleElement | null = null
+
+function letterSpaceEveryElement(): void {
+  themeLetterSpacing = document.createElement('style')
+  themeLetterSpacing.textContent = '* { letter-spacing: 0.5px; }'
+  document.head.appendChild(themeLetterSpacing)
+}
+
 afterEach(() => {
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
+  themeLetterSpacing?.remove()
+  themeLetterSpacing = null
 })
 
 const UNIT: components['schemas']['ApiUnitFormat'] = {
@@ -94,6 +106,55 @@ const DEFAULT_PROPS: TimeSeriesGraphProps = {
 
 function renderComponent(props: Partial<TimeSeriesGraphProps> = {}) {
   return render(TimeSeriesGraph, { props: { ...DEFAULT_PROPS, ...props } })
+}
+
+const IEC_UNIT: components['schemas']['ApiUnitFormat'] = {
+  notation: 'iec',
+  symbol: 'B',
+  precision: { type: 'auto', digits: 2 },
+  convertible: true
+}
+const MEMORY_METRIC: Metric = {
+  metadata: { name: 'mem_used', title: 'RAM used', unit: IEC_UNIT, color: '#ff0000' },
+  render: { stack: null, inverse: false, hidden: false },
+  data_points: [1.2e9, 1.4e9, 1.6e9, 1.8e9, 2.0e9]
+}
+const MEMORY_PROPS: Partial<TimeSeriesGraphProps> = {
+  metrics: [MEMORY_METRIC],
+  options: { ...DEFAULT_PROPS.options, y_axis: { title: '', unit: IEC_UNIT } }
+}
+
+function valueAxisGroup(container: Element): Element {
+  const axis = container.querySelector('g.graphing-time-series-graph__y-axis')
+  if (axis?.parentElement === null || axis?.parentElement === undefined) {
+    throw new Error('the value axis has not been drawn')
+  }
+  return axis.parentElement
+}
+
+function valueAxisMargin(container: Element): number {
+  const transform = valueAxisGroup(container).getAttribute('transform') ?? ''
+  return Number(/translate\(([\d.]+),/.exec(transform)?.[1])
+}
+
+function valueAxisLabels(container: Element): string[] {
+  return Array.from(
+    container.querySelectorAll('g.graphing-time-series-graph__y-axis .tick text')
+  ).map((tickLabel) => tickLabel.textContent ?? '')
+}
+
+async function renderMemoryGraph(): Promise<{ margin: number; widestLabel: number }> {
+  const { container } = renderComponent(MEMORY_PROPS)
+  await waitFor(() => {
+    expect(valueAxisLabels(container).filter((label) => label !== '')).not.toHaveLength(0)
+  })
+  const reference = valueAxisGroup(container)
+  return {
+    margin: valueAxisMargin(container),
+    widestLabel: Math.max(
+      ...valueAxisLabels(container).map((label) => measureAxisLabel(label, reference))
+    )
+  }
 }
 
 describe('TimeSeriesGraph', () => {
@@ -163,5 +224,22 @@ describe('TimeSeriesGraph', () => {
       expect(tickValues.some((value) => value < 0)).toBe(true)
       expect(tickValues.some((value) => value > 0)).toBe(true)
     })
+  })
+
+  test('sizes the value axis to hold its widest label', async () => {
+    const { margin, widestLabel } = await renderMemoryGraph()
+
+    expect(margin).toBeGreaterThanOrEqual(widestLabel + VALUE_LABEL_GUTTER)
+    expect(margin).toBeGreaterThan(CANVAS_MARGIN_LEFT)
+  })
+
+  test('sizes the value axis to labels the theme letter-spaces', async () => {
+    const unspaced = await renderMemoryGraph()
+
+    letterSpaceEveryElement()
+    const spaced = await renderMemoryGraph()
+
+    expect(spaced.margin).toBeGreaterThan(unspaced.margin)
+    expect(spaced.margin).toBeGreaterThanOrEqual(spaced.widestLabel + VALUE_LABEL_GUTTER)
   })
 })

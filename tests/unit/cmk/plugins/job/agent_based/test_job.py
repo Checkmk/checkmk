@@ -97,56 +97,32 @@ SECTION_1: job.Section = {
     },
 }
 
-SECTION_1_RUNNING: job.Section = {
-    "SHREK": {
-        "running": False,
-        "start_time": 1547301201,
-        "exit_code": 0,
-        "running_start_time": [
-            1557301261,
-            1557301321,
-            1557301381,
-            1557301441,
-            1537301501,
-            1557301561,
-        ],
-        "metrics": {
-            "real_time": 120.0,
-            "user_time": 1.0,
-            "system_time": 0.0,
-            "reads": 0,
-            "writes": 0,
-            "max_res_bytes": 1234000,
-            "avg_mem_bytes": 1000,
-            "invol_context_switches": 12,
-            "vol_context_switches": 23,
-        },
-    },
-    "SNOWWHITE": {
-        "running": True,
-        "start_time": 1557301201,
-        "exit_code": 1,
-        "running_start_time": [
-            1557301261,
-            1557301321,
-            1557301381,
-            1557301441,
-            1537301501,
-            1557301561,
-        ],
-        "metrics": {
-            "real_time": 360.0,
-            "user_time": 0.0,
-            "system_time": 0.0,
-            "reads": 0,
-            "writes": 0,
-            "max_res_bytes": 2224000,
-            "avg_mem_bytes": 0,
-            "invol_context_switches": 1,
-            "vol_context_switches": 2,
-        },
-    },
-}
+STRING_TABLE_1_RUNNING = [
+    ["==>", "SHREK", "<=="],
+    ["start_time", "1547301201"],
+    ["exit_code", "0"],
+    ["real_time", "2:00.00"],
+    ["user_time", "1.00"],
+    ["system_time", "0.00"],
+    ["reads", "0"],
+    ["writes", "0"],
+    ["max_res_kbytes", "1234"],
+    ["avg_mem_kbytes", "1"],
+    ["invol_context_switches", "12"],
+    ["vol_context_switches", "23"],
+    ["==>", "SHREK.27997running", "<=="],
+    ["start_time", "1557301261"],
+    ["==>", "SHREK.28912running", "<=="],
+    ["start_time", "1557301321"],
+    ["==>", "SHREK.29381running", "<=="],
+    ["start_time", "1557301381"],
+    ["==>", "SHREK.30094running", "<=="],
+    ["start_time", "1557301441"],
+    ["==>", "SHREK.30747running", "<=="],
+    ["start_time", "1537301501"],
+    ["==>", "SHREK.31440running", "<=="],
+    ["start_time", "1557301561"],
+]
 
 STRING_TABLE_2: StringTable = [
     ["==>", "backup.sh", "<=="],
@@ -528,13 +504,13 @@ _SHREK_METRIC_RESULTS_2 = [
 
 
 @pytest.mark.parametrize(
-    "item, params, section, expected_results",
+    "item, params, string_table, expected_results",
     [
         pytest.param(
             "SHREK",
             # which is what check_plugin_job.check_default_parameters holds
             {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
-            SECTION_1,
+            STRING_TABLE_1,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 *_SHREK_METRIC_RESULTS_1,
@@ -548,14 +524,14 @@ _SHREK_METRIC_RESULTS_2 = [
         pytest.param(
             "item",
             {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
-            {"item": {}},
+            [["==>", "item", "<=="]],
             [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
             id="item present but without any job data",
         ),
         pytest.param(
             "cleanup_remote_logs",
             {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
-            SECTION_2,
+            STRING_TABLE_2,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 10 seconds"),
@@ -585,7 +561,7 @@ _SHREK_METRIC_RESULTS_2 = [
         pytest.param(
             "backup.sh",
             {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
-            SECTION_2,
+            STRING_TABLE_2,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 4 minutes 42 seconds"),
@@ -621,34 +597,30 @@ _SHREK_METRIC_RESULTS_2 = [
         pytest.param(
             "missing",
             {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
-            SECTION_2,
+            STRING_TABLE_2,
             [],
             id="item not in section",
         ),
         pytest.param(
             "Cleanup-Cache-Files",
             {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
-            {
-                "Cleanup-Cache-Files": {
-                    "running": False,
-                    "exit_code": 0,
-                    "metrics": {"real_time": 0.96},
-                }
-            },
+            [
+                ["==>", "Cleanup-Cache-Files", "<=="],
+                ["real_time", "0.96"],
+                ["exit_code", "0"],
+            ],
             [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
             id="job without a start time",
         ),
         pytest.param(
             "Cleanup-Cache-Files",
             {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
-            {
-                "Cleanup-Cache-Files": {
-                    "running": True,
-                    "exit_code": 0,
-                    "running_start_time": [int(TIME) - 60],
-                    "metrics": {},
-                }
-            },
+            [
+                ["==>", "Cleanup-Cache-Files", "<=="],
+                ["exit_code", "0"],
+                ["==>", "Cleanup-Cache-Files.running", "<=="],
+                ["start_time", str(int(TIME) - 60)],
+            ],
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(
@@ -663,7 +635,7 @@ _SHREK_METRIC_RESULTS_2 = [
         pytest.param(
             "SHREK",
             {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
-            SECTION_1,
+            STRING_TABLE_1,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 *_SHREK_METRIC_RESULTS_1,
@@ -680,7 +652,7 @@ _SHREK_METRIC_RESULTS_2 = [
         pytest.param(
             "SHREK",
             {"age": (0, 0), "exit_code_to_state_map": [(0, 1)]},
-            SECTION_1,
+            STRING_TABLE_1,
             [
                 Result(
                     state=State.WARN,
@@ -697,7 +669,7 @@ _SHREK_METRIC_RESULTS_2 = [
         pytest.param(
             "SHREK",
             {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
-            SECTION_1_RUNNING,
+            STRING_TABLE_1_RUNNING,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 *_SHREK_METRIC_RESULTS_1,
@@ -729,9 +701,10 @@ _SHREK_METRIC_RESULTS_2 = [
 def test_check_job(
     item: str,
     params: job.CheckParameters,
-    section: job.Section,
+    string_table: StringTable,
     expected_results: Sequence[Result | Metric],
 ) -> None:
+    section = job.parse_job(string_table)
     with time_machine.travel(datetime.datetime.fromtimestamp(TIME, tz=ZoneInfo("CET"))):
         assert list(job.check_job(item, params, section)) == expected_results
 

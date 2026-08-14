@@ -69,7 +69,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.attributes import create_ipmi_parameters, IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import (
-    ABCHostAttributeFormSpec,
     ABCHostAttributeNagiosText,
     ABCHostAttributeValueSpec,
     all_host_attributes,
@@ -95,7 +94,6 @@ from cmk.rulesets.internal.form_specs import (
 )
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
-    DefaultValue,
     InvalidElementMode,
     InvalidElementValidator,
     List,
@@ -155,7 +153,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
         return fields.String(description=self.help())
 
 
-class HostAttributeIPv4Address(ABCHostAttributeFormSpec):
+class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
     @override
     def topic(self) -> HostAttributeTopic:
         return HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS
@@ -178,6 +176,28 @@ class HostAttributeIPv4Address(ABCHostAttributeFormSpec):
         return ["ip-v4"]
 
     @override
+    def valuespec(self) -> ValueSpec:
+        return HostAddress(
+            title=_("IPv4 address"),
+            help=_(
+                "Specify an explicit IP address or resolvable DNS name here, if "
+                "the host name is not resolvable via <tt>/etc/hosts</tt> or DNS. "
+                "If you do not set this attribute, host name resolution will be "
+                "performed when the configuration is enabled. The built-in DNS cache "
+                "of Checkmk is enabled by default in the global "
+                "configuration to speed up the activation process. The cache is "
+                "normally updated daily by a cronjob. You can manually update "
+                "the cache with the <tt>cmk -v --update-dns-cache</tt> "
+                "command.<br><br><b>Dynamic IP addresses only:</b><br>If you "
+                "enter a DNS name here, the DNS resolution will be performed "
+                "each time the host is checked. The DNS cache of Checkmk is "
+                "<b>NOT</b> queried."
+            ),
+            allow_empty=False,
+            allow_ipv6_address=False,
+        )
+
+    @override
     def form_spec(self) -> String:
         return create_host_address(
             title=Title("IPv4 address"),
@@ -197,7 +217,6 @@ class HostAttributeIPv4Address(ABCHostAttributeFormSpec):
             ),
             allow_empty=False,
             allow_ipv6_address=False,
-            prefill=DefaultValue(""),
         )
 
     @override

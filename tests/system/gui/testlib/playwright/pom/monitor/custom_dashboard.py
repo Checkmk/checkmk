@@ -12,6 +12,7 @@ from tests.system.gui.testlib.playwright.pom.customize.edit_dashboard import Edi
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import BaseDashboard
 from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
     AddWidgetSidebar,
+    AlertsAndNotificationsWidgetWizard,
     BaseWidgetWizard,
     MetricsAndGraphsWidgetWizard,
     WidgetType,
@@ -52,6 +53,11 @@ class CustomDashboard(BaseDashboard):
     def open_add_widget_sidebar(
         self, widget_type: Literal[WidgetType.METRICS_AND_GRAPHS]
     ) -> MetricsAndGraphsWidgetWizard: ...
+
+    @overload
+    def open_add_widget_sidebar(
+        self, widget_type: Literal[WidgetType.ALERTS_AND_NOTIFICATIONS]
+    ) -> AlertsAndNotificationsWidgetWizard: ...
 
     @overload
     def open_add_widget_sidebar(self, widget_type: WidgetType) -> BaseWidgetWizard: ...

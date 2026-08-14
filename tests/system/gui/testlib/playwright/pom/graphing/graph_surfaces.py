@@ -129,7 +129,7 @@ GRAPH_SURFACES: Final[tuple[GraphSurface, ...]] = (
             "tests.system.gui.testlib.playwright.pom.graphing.dashboard_graph_widget"
             ":DashboardGraphWidget"
         ),
-        notes="Average scatterplot widget; the non-time-series graph type also unified under the new engine.",
+        notes="Average scatterplot widget; drawn by the engine's time-series component.",
     ),
     GraphSurface(
         key="alert_notification_widget",

@@ -13,6 +13,13 @@ from playwright.sync_api import expect, Locator, Page
 from tests.system.gui.testlib.playwright.dropdown import DropdownHelper, DropdownOptions
 from tests.system.gui.testlib.playwright.pom.sidebar.base_sidebar import SidebarHelper
 
+# A selection region restricted to one host or service offers that one field instead of the
+# 'Add filter' menu, and the field carries no accessible name of its own.
+_SINGLE_FILTER_SELECTOR = ".db-restricted-to-single-filter__container"
+
+_SUGGESTIONS_SELECTOR = "ul.cmk-suggestions"
+_SUGGESTIONS_FILTER_BOX_SELECTOR = "input[aria-label='filter']"
+
 
 class AddWidgetSidebar(SidebarHelper):
     """Represents the sidebar to add a new widget to the dashboard.
@@ -66,11 +73,19 @@ class WidgetType(StrEnum):
     """Enumeration that defines the types of the widgets that can be added to a custom dashboard."""
 
     METRICS_AND_GRAPHS = "Metrics & graphs"
+    ALERTS_AND_NOTIFICATIONS = "Alerts & notifications"
 
     @overload
     def get_wizard(  # type: ignore[misc] # https://github.com/python/mypy/issues/15456
         self: Literal[WidgetType.METRICS_AND_GRAPHS], wizard_mode: WidgetWizardMode, page: Page
     ) -> MetricsAndGraphsWidgetWizard: ...
+
+    @overload
+    def get_wizard(  # type: ignore[misc] # https://github.com/python/mypy/issues/15456
+        self: Literal[WidgetType.ALERTS_AND_NOTIFICATIONS],
+        wizard_mode: WidgetWizardMode,
+        page: Page,
+    ) -> AlertsAndNotificationsWidgetWizard: ...
 
     @overload
     def get_wizard(
@@ -89,6 +104,8 @@ class WidgetType(StrEnum):
         match self:
             case WidgetType.METRICS_AND_GRAPHS:
                 return MetricsAndGraphsWidgetWizard(wizard_mode, page)
+            case WidgetType.ALERTS_AND_NOTIFICATIONS:
+                return AlertsAndNotificationsWidgetWizard(wizard_mode, page)
             case _:
                 raise NotImplementedError(f"Widget wizard for '{self}' is not implemented.")
 
@@ -111,6 +128,12 @@ class VisualizationType(StrEnum):
     BARPLOT = "Barplot"
     SCATTERPLOT = "Scatterplot"
     TOP_LIST = "Top list"
+
+
+class AlertsVisualizationType(StrEnum):
+    """Enumeration of the visualizations the 'Alerts & notifications' widget offers."""
+
+    PERCENTAGE_OF_SERVICE_PROBLEMS = "Percentage of service problems"
 
 
 class WidgetWizardMode(StrEnum):
@@ -140,6 +163,11 @@ class BaseWidgetWizard(SidebarHelper):
     def _sidebar_locator(self) -> Locator:
         """Locator property for the main area of the sidebar."""
         return self._iframe_locator.get_by_role("dialog", name=self._wizard_mode.wizard_dialog_name)
+
+    @property
+    def add_and_place_widget_button(self) -> Locator:
+        """Locator property of 'Add & place widget' button."""
+        return self.locator().get_by_role("button", name="Add & place widget")
 
 
 class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
@@ -189,11 +217,6 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
     def next_step_visualization_button(self) -> Locator:
         """Locator property of 'Next step: Visualization' button."""
         return self.locator().get_by_role("button", name="Next step: Visualization")
-
-    @property
-    def add_and_place_widget_button(self) -> Locator:
-        """Locator property of 'Add & place widget' button."""
-        return self.locator().get_by_role("button", name="Add & place widget")
 
     @property
     def save_widget_button(self) -> Locator:
@@ -310,6 +333,49 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
             self._combobox_text_input if search else None,
         )
 
+    def select_single_host(self, host_name: str) -> None:
+        """Restrict the widget to one host, in a region offering a single host.
+
+        Args:
+            host_name: the host to restrict the widget to.
+        """
+        self._select_single_object(self._host_selection_region, "host", host_name)
+
+    def select_single_service(self, service_name: str) -> None:
+        """Restrict the widget to one service, in a region offering a single service.
+
+        Args:
+            service_name: the service to restrict the widget to.
+        """
+        self._select_single_object(self._service_selection_region, "service", service_name)
+
+    def _select_single_object(self, region: Locator, object_type: str, value: str) -> None:
+        """Reveal the one field a restricted region offers and pick `value` in it."""
+        # Not an exact match: the button's icon is an <img> without alt text, which some
+        # engines still fold into the accessible name.
+        region.get_by_role("button", name=f"Add {object_type} name").click()
+        field = region.locator(_SINGLE_FILTER_SELECTOR).get_by_role("combobox")
+        expect(field, message=f"No field to name a single {object_type} appeared").to_be_visible()
+        field.click()
+
+        suggestions = self.locator().locator(_SUGGESTIONS_SELECTOR)
+        expect(suggestions, message=f"No list opened to offer {value!r}").to_be_visible()
+        # Unqueried, the field offers every host/service there is and the backend caps how
+        # many it returns, so narrow the list before picking out of it.
+        filter_box = suggestions.locator(_SUGGESTIONS_FILTER_BOX_SELECTOR)
+        expect(
+            filter_box, message=f"The field offering {value!r} never showed its filter box"
+        ).to_be_visible()
+        filter_box.fill(value)
+        option = suggestions.locator(f"[role='option'][aria-label='{value}']")
+        expect(option, message=f"No {object_type} named {value!r} was offered").to_be_visible()
+        option.click()
+        # A region that did not take the value leaves the metric list empty, which reads as a
+        # missing metric rather than a missing host or service.
+        expect(
+            field, message=f"The region still does not show {value!r} after it was picked"
+        ).to_contain_text(value)
+
     def add_filter_to_host_selection(self, filter_name: str, sub_menu: str | None = None) -> None:
         """Add filter to widget in host selection region.
 
@@ -341,4 +407,29 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         """
         self._host_selection_region.get_by_role(
             "button", name=f"Remove {filter_name} filter"
+        ).click()
+
+
+class AlertsAndNotificationsWidgetWizard(BaseWidgetWizard):
+    """Represents the widget wizard sidebar to configure an 'Alerts & notifications' widget.
+
+    To navigate: '{within any customized dashboard} > Add widget > Alerts & notifications'.
+    """
+
+    # The heading names the widget in the singular, unlike the tile that opens the wizard.
+    sidebar_title = "Alert & Notification"
+
+    @property
+    def _available_visualization_types_region(self) -> Locator:
+        """Locator property of 'Available visualization types' region."""
+        return self.locator().get_by_role("region", name="Available visualization types")
+
+    def select_visualization_type(self, visualization_type: AlertsVisualizationType) -> None:
+        """Select the type of visualization for the widget.
+
+        Args:
+            visualization_type: type of visualization to select.
+        """
+        self._available_visualization_types_region.get_by_role(
+            "button", name=visualization_type
         ).click()

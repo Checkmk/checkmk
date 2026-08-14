@@ -16,6 +16,7 @@ from playwright.sync_api import Locator
 
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
+from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import TimeSeriesGraph
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import BaseDashboard
 
 logger = logging.getLogger(__name__)
@@ -47,3 +48,36 @@ class DashboardGraphWidget:
         return self._accessor.container(
             GraphContainment.DASHBOARD_WIDGET, widget=self.widget, iframed=self._iframed
         )
+
+    @property
+    def figure(self) -> Locator:
+        """The engine's figure inside the widget; absent while the legacy renderer serves it."""
+        return self._accessor.engine_graph_figure(
+            GraphContainment.DASHBOARD_WIDGET, widget=self.widget, iframed=self._iframed
+        )
+
+    @property
+    def graph(self) -> TimeSeriesGraph:
+        """The graph the figure draws, with the same canvas and axes as on any other surface."""
+        return TimeSeriesGraph(
+            self.figure.locator(".graphing-time-series-graph"),
+            self._dashboard.page,
+            self._dashboard.main_area,
+        )
+
+    @property
+    def notice(self) -> Locator:
+        """The notice the figure shows in place of the graph it could not load.
+
+        A sibling of the graph rather than a branch beside it, so it is also what a failed
+        refetch states over data that is still on screen.
+        """
+        return self.figure.locator(".graphing-graph-figure__notice")
+
+    def wait_until_rendered(self) -> None:
+        """Wait for the graph to be on screen.
+
+        The widget holds a single graph, so its canvas being visible is the whole surface
+        having rendered.
+        """
+        self.graph.canvas.wait_for(state="visible")

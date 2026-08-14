@@ -9,6 +9,7 @@ from playwright.sync_api import expect, Locator
 
 from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
+    AlertsAndNotificationsWidgetWizard,
     BaseWidgetWizard,
     MetricsAndGraphsWidgetWizard,
     WidgetType,
@@ -55,6 +56,11 @@ class EmptyDashboard(CustomDashboard):
     def open_add_widget_sidebar(
         self, widget_type: Literal[WidgetType.METRICS_AND_GRAPHS]
     ) -> MetricsAndGraphsWidgetWizard: ...
+
+    @overload
+    def open_add_widget_sidebar(
+        self, widget_type: Literal[WidgetType.ALERTS_AND_NOTIFICATIONS]
+    ) -> AlertsAndNotificationsWidgetWizard: ...
 
     @overload
     def open_add_widget_sidebar(self, widget_type: WidgetType) -> BaseWidgetWizard: ...

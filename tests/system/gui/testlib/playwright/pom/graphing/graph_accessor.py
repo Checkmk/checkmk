@@ -30,6 +30,11 @@ ENGINE_GRAPH_PANEL_SELECTOR = ".graphing-graph-panel"
 # The designer embeds a single panel of its own instead of a painter's group.
 _ENGINE_DESIGNER_PREVIEW_SELECTOR = ".graphing-designer-body__preview"
 
+# A dashboard widget hosts a single graph and none of the panel's chrome, so the engine
+# mounts a figure there instead of a group of panels. Neither marker appears on the other's
+# surface, which is why a widget needs its own accessor rather than `graph_root`.
+_ENGINE_GRAPH_FIGURE_SELECTOR = ".graphing-graph-figure"
+
 
 class GraphAccessor:
     """Resolve the container that hosts a graph, hiding surface differences.
@@ -100,6 +105,20 @@ class GraphAccessor:
                 return widget.locator(ENGINE_GRAPH_GROUP_SELECTOR)
             case _:
                 raise ValueError(f"No painter graph group on containment: {containment!r}")
+
+    def engine_graph_figure(
+        self,
+        containment: GraphContainment = GraphContainment.DASHBOARD_WIDGET,
+        *,
+        widget: Locator,
+        iframed: bool = False,
+    ) -> Locator:
+        """Return the engine's figure holding the one graph a dashboard widget shows."""
+        if containment is not GraphContainment.DASHBOARD_WIDGET:
+            raise ValueError(f"The engine renders no figure on containment: {containment!r}")
+        if iframed:
+            return widget.frame_locator("iframe").locator(_ENGINE_GRAPH_FIGURE_SELECTOR)
+        return widget.locator(_ENGINE_GRAPH_FIGURE_SELECTOR)
 
     def graph_root(
         self,

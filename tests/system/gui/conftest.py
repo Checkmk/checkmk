@@ -22,6 +22,7 @@ from tests.system.gui.testlib.api_helpers import LOCALHOST_IPV4
 from tests.system.gui.testlib.host_details import HostDetails
 from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.plugin import PageGetter
+from tests.system.gui.testlib.playwright.pom.customize.edit_dashboard import EditDashboards
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
     fixture_combined_graphs_page,
     fixture_combined_graphs_page_all_services,
@@ -35,10 +36,13 @@ from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
     fixture_requested_urls,
     fixture_rrd_metric_source,
     fixture_saved_custom_graph,
+    fixture_scatterplot_widget,
     fixture_service_graphs,
 )
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
+from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import DashboardMobile, MainDashboard
+from tests.system.gui.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 from tests.system.gui.testlib.playwright.pom.setup.fixtures import notification_user
 from tests.system.gui.testlib.playwright.pom.setup.hosts import AddHost, SetupHost
@@ -73,6 +77,7 @@ graphing_fixtures = [
     fixture_requested_urls,
     fixture_rrd_metric_source,
     fixture_saved_custom_graph,
+    fixture_scatterplot_widget,
     fixture_service_graphs,
 ]
 
@@ -141,6 +146,29 @@ def fixture_dashboard_page(
 ) -> MainDashboard:
     """Entrypoint to test browser GUI. Navigates to 'Main Dashboard'."""
     return navigate_to_page(cmk_page, test_site.internal_url, credentials, MainDashboard)
+
+
+@pytest.fixture(name="cloned_linux_hosts_dashboard")
+def fixture_cloned_linux_hosts_dashboard(
+    dashboard_page: MainDashboard,
+) -> Iterator[CustomDashboard]:
+    """A customized copy of the built-in 'Linux hosts' dashboard, open and ready for edits.
+
+    A built-in dashboard takes no widgets of its own, so any test adding one works on a clone.
+    """
+    linux_hosts_dashboard = LinuxHostsDashboard(dashboard_page.page)
+    linux_hosts_dashboard.clone_dashboard()
+
+    cloned_linux_hosts_dashboard = CustomDashboard(
+        linux_hosts_dashboard.page, linux_hosts_dashboard.page_title, navigate_to_page=False
+    )
+
+    yield cloned_linux_hosts_dashboard
+
+    if is_cleanup_enabled():
+        dashboard_page.go("edit_dashboards.py", wait_until="load")
+        edit_dashboards = EditDashboards(dashboard_page.page, navigate_to_page=False)
+        edit_dashboards.delete_dashboard(cloned_linux_hosts_dashboard.page_title)
 
 
 @pytest.fixture(name="dashboard_page_mobile")

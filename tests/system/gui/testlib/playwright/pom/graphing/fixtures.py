@@ -17,11 +17,15 @@ from typing import Final, NamedTuple
 import pytest
 from playwright.sync_api import Page
 
+from tests.system.gui.testlib.playwright.pom.graphing.dashboard_graph_widget import (
+    DashboardGraphWidget,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.combined_graph import (
     CombinedGraphsServiceSearch,
 )
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
+from tests.system.gui.testlib.playwright.pom.monitor.hosts_dashboard import LinuxHostsDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
 from tests.system.gui.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
@@ -35,6 +39,11 @@ SERVICE_WITH_GRAPHS = "Memory"
 # filter spanning several templates leaves a test more than one card to judge. A linux dump
 # host's cpu services carry two.
 COMBINED_GRAPHS_SERVICE_FILTER = "cpu"
+
+# The built-in Linux hosts dashboard already carries a scatterplot widget - the agent
+# execution time over the hosts' Check_MK services - so that surface needs no dashboard of
+# its own.
+SCATTERPLOT_WIDGET_TITLE = "Total agent execution time"
 
 # The collection every user starts out with; adding to it clones it for the acting user.
 _BUILTIN_COLLECTION_NAME: Final = "default"
@@ -281,6 +290,23 @@ def fixture_service_graphs(
     before this navigates.
     """
     yield open_service_graphs(dashboard_page.page, graph_hosts_with_varying_data[0])
+
+
+@pytest.fixture(name="scatterplot_widget")
+def fixture_scatterplot_widget(
+    dashboard_page: MainDashboard,
+    graph_hosts_with_varying_data: list[str],
+    javascript_errors: list[str],
+) -> Iterator[DashboardGraphWidget]:
+    """The scatterplot widget of the built-in Linux hosts dashboard.
+
+    Deliberately does not wait for the graph: whether the widget renders at all is what the
+    tests judge, and waiting here would turn a failure to render into a fixture timeout
+    instead of a failed assertion naming it.
+
+    Depends on `javascript_errors` so its listener is attached before this navigates.
+    """
+    yield DashboardGraphWidget(LinuxHostsDashboard(dashboard_page.page), SCATTERPLOT_WIDGET_TITLE)
 
 
 def _open_combined_graphs(

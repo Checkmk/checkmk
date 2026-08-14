@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Iterator
 
 import pytest
 from playwright.sync_api import BrowserContext, expect, Page
@@ -13,6 +12,9 @@ from tests.system.gui.testlib.playwright.helpers import CmkCredentials
 from tests.system.gui.testlib.playwright.pom.customize.edit_dashboard import (
     EditDashboards,
     NewDashboardCharacteristics,
+)
+from tests.system.gui.testlib.playwright.pom.graphing.dashboard_graph_widget import (
+    DashboardGraphWidget,
 )
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
@@ -28,6 +30,7 @@ from tests.system.gui.testlib.playwright.pom.sidebar.create_dashboard_sidebar im
     CreateDashboardSidebar,
 )
 from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
+    AlertsVisualizationType,
     ServiceMetricDropdownOptions,
     SiteFilterDropdownOptions,
     VisualizationType,
@@ -36,25 +39,12 @@ from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar impor
 from tests.testlib.common.utils2 import is_cleanup_enabled
 from tests.testlib.site import Site
 
+# Carried by every agent host and reporting the metric the graph widget draws.
+_GRAPH_WIDGET_SERVICE = "Check_MK"
 
-@pytest.fixture(scope="function")
-def cloned_linux_hosts_dashboard(
-    dashboard_page: MainDashboard,
-) -> Iterator[CustomDashboard]:
-    """Fixture to clone the 'Linux hosts' dashboard and return the cloned instance."""
-    linux_hosts_dashboard = LinuxHostsDashboard(dashboard_page.page)
-    linux_hosts_dashboard.clone_dashboard()
-
-    cloned_linux_hosts_dashboard = CustomDashboard(
-        linux_hosts_dashboard.page, linux_hosts_dashboard.page_title, navigate_to_page=False
-    )
-
-    yield cloned_linux_hosts_dashboard
-    # Cleanup: delete the cloned dashboard after the test
-    if is_cleanup_enabled():
-        dashboard_page.go("edit_dashboards.py", wait_until="load")
-        edit_dashboards = EditDashboards(dashboard_page.page, navigate_to_page=False)
-        edit_dashboards.delete_dashboard(cloned_linux_hosts_dashboard.page_title)
+# The widget names itself after the dashlet, which says "total" where the wizard tile that
+# creates it does not.
+_PROBLEM_PERCENTAGE_WIDGET_TITLE = "Percentage of total service problems"
 
 
 def _create_new_dashboard(
@@ -624,3 +614,70 @@ def test_dashboard_created_by_another_user(
             users_page = Users(dashboard_page.page)
             users_page.delete_user(new_user_data.user_id, test_site.openapi.users)
             users_page.activate_changes(test_site)
+
+
+def test_graph_widget_renders_through_the_engine(
+    javascript_errors: list[str],
+    cloned_linux_hosts_dashboard: CustomDashboard,
+    linux_hosts: list[str],
+) -> None:
+    """A graph widget added to a dashboard is drawn by the new graph engine.
+
+    The graph visualisation is only offered for one host and one service, which is what the
+    wizard opens on, so both are named rather than filtered for; 'Check_MK' is the service
+    every agent host carries.
+    """
+    metric = ServiceMetricDropdownOptions.TOTAL_EXECUTION_TIME
+    widget_title = str(metric)
+
+    cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
+    widget_wizard = cloned_linux_hosts_dashboard.open_add_widget_sidebar(
+        WidgetType.METRICS_AND_GRAPHS
+    )
+
+    widget_wizard.select_single_host(linux_hosts[0])
+    widget_wizard.select_single_service(_GRAPH_WIDGET_SERVICE)
+    widget_wizard.select_service_metric(metric)
+    widget_wizard.select_visualization_type(VisualizationType.GRAPH)
+    widget_wizard.add_and_place_widget_button.click()
+    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.validate_page()
+
+    graph_widget = DashboardGraphWidget(cloned_linux_hosts_dashboard, widget_title)
+    expect(
+        graph_widget.figure, "The engine mounted no figure inside the graph widget"
+    ).to_have_count(1)
+    expect(graph_widget.graph.canvas, "The graph widget drew no plot").to_be_visible()
+    assert not javascript_errors, f"Rendering the widget raised page errors: {javascript_errors}"
+
+
+@pytest.mark.skip_if_edition("community")
+def test_problem_percentage_widget_renders_through_the_engine(
+    javascript_errors: list[str],
+    cloned_linux_hosts_dashboard: CustomDashboard,
+    linux_hosts: list[str],
+) -> None:
+    """The alerts & notifications widget renders through the engine as a problem percentage.
+
+    That visualisation is the one the widget offers on the engine; its alert and notification
+    timelines are drawn by the legacy figure component instead.
+    """
+    cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
+    widget_wizard = cloned_linux_hosts_dashboard.open_add_widget_sidebar(
+        WidgetType.ALERTS_AND_NOTIFICATIONS
+    )
+    widget_wizard.select_visualization_type(AlertsVisualizationType.PERCENTAGE_OF_SERVICE_PROBLEMS)
+    widget_wizard.add_and_place_widget_button.click()
+    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.validate_page()
+
+    problem_widget = DashboardGraphWidget(
+        cloned_linux_hosts_dashboard, _PROBLEM_PERCENTAGE_WIDGET_TITLE
+    )
+    expect(
+        problem_widget.figure, "The engine mounted no figure inside the problem percentage widget"
+    ).to_have_count(1)
+    expect(
+        problem_widget.graph.canvas, "The problem percentage widget drew no plot"
+    ).to_be_visible()
+    assert not javascript_errors, f"Rendering the widget raised page errors: {javascript_errors}"

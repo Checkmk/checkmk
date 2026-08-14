@@ -11,7 +11,7 @@ import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import type { DesignerItem } from '@/graphing/designer/drafts'
 import type { ItemId } from '@/graphing/designer/types'
 
-import { rrdMetricItem, rrdQueryItem } from '../fixtures'
+import { metricBackendItem, rrdMetricItem, rrdQueryItem } from '../fixtures'
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
@@ -30,6 +30,20 @@ function metric(name: string, points: (number | null)[], color = '#123456'): Met
     },
     render: { stack: null, inverse: false, hidden: false },
     data_points: points
+  }
+}
+
+function backendMetric(name: string): Metric {
+  const base = metric(name, [1])
+  return {
+    ...base,
+    metadata: {
+      ...base.metadata,
+      attributes: [
+        { kind: 'resource', name: 'host.arch', value: 'x64' },
+        { kind: 'data_point', name: 'status', value: '304' }
+      ]
+    }
   }
 }
 
@@ -125,6 +139,70 @@ test('expands a multi-line row into one legend-styled row per resolved line', as
   expect(swatches).toHaveLength(2)
   expect(swatches[0]!.getAttribute('style')).toMatch(/#00ff00|rgb\(0, 255, 0\)/)
   expect(swatches[1]!.getAttribute('style')).toMatch(/#ff0000|rgb\(255, 0, 0\)/)
+})
+
+test('a resolved metrics-backend series expands into its attribute table', async () => {
+  renderTable(
+    [metricBackendItem('B', { title: 'Latency' })],
+    new Map([['B', [backendMetric('line one')]]])
+  )
+
+  const toggles = () => screen.getAllByRole('button', { name: 'Toggle details' })
+
+  await fireEvent.click(toggles()[0]!)
+  expect(screen.getByText('line one')).toBeInTheDocument()
+  expect(screen.queryByText('host.arch')).not.toBeInTheDocument()
+
+  await fireEvent.click(toggles()[1]!)
+
+  expect(screen.getByText('Attribute name')).toBeInTheDocument()
+  const archRow = screen.getByText('host.arch').closest('tr')!
+  expect(archRow).toHaveTextContent('x64')
+  expect(archRow).toHaveTextContent('Resource')
+})
+
+// Names are unique per response, so this pins the invariant, not a reachable collision.
+test('expanding a series leaves the same-named series of another source row collapsed', async () => {
+  renderTable(
+    [
+      metricBackendItem('A', { title: 'Latency A' }),
+      metricBackendItem('B', { title: 'Latency B' })
+    ],
+    new Map([
+      ['A', [backendMetric('shared')]],
+      ['B', [backendMetric('shared')]]
+    ])
+  )
+
+  const toggles = () => screen.getAllByRole('button', { name: 'Toggle details' })
+
+  await fireEvent.click(toggles()[0]!) // source row A
+  await fireEvent.click(toggles()[1]!) // A's series
+  expect(screen.getAllByText('host.arch')).toHaveLength(1)
+
+  await fireEvent.click(toggles()[2]!) // source row B, whose series must stay collapsed
+  expect(screen.getAllByText('host.arch')).toHaveLength(1)
+})
+
+test('a series that loses its attributes while expanded leaves no table behind', async () => {
+  const metricsBySource = new Map([['B', [backendMetric('line one')]]])
+  const { rerender, store } = renderTable(
+    [metricBackendItem('B', { title: 'Latency' })],
+    metricsBySource
+  )
+
+  const toggles = () => screen.getAllByRole('button', { name: 'Toggle details' })
+  await fireEvent.click(toggles()[0]!)
+  await fireEvent.click(toggles()[1]!)
+  expect(screen.getByText('host.arch')).toBeInTheDocument()
+
+  await rerender({
+    store,
+    metricsBySource: new Map([['B', [metric('line one', [1])]]]),
+    groupTitlesBySource: new Map()
+  })
+
+  expect(screen.queryByText('Attribute name')).not.toBeInTheDocument()
 })
 
 test('collapsing an expanded multi-line row hides its per-line rows again', async () => {

@@ -9,6 +9,7 @@ import { fromAbsolute, getLocalTimeZone } from '@internationalized/date'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import { isoDate, isoTime, shortWeekday } from '../../../utils/timeFormat'
+import MetricAttributeGroups from '../../MetricAttributeGroups.vue'
 import type { HoverState } from '../interaction/hover'
 import { computeTooltipPosition } from './tooltipPosition'
 
@@ -17,6 +18,11 @@ const CURSOR_OFFSET = 16
 const props = defineProps<{
   hoverState: HoverState | null
 }>()
+
+// Only the hovered line's; every line's would outgrow the tooltip.
+const closestSample = computed(() =>
+  props.hoverState?.samples.find((sample) => sample.isClosest && sample.attributes.length > 0)
+)
 
 const formattedTime = computed(() => {
   if (!props.hoverState) {
@@ -88,6 +94,11 @@ const positionStyle = computed(() => {
           <span class="graphing-graph-tooltip__value">{{ sample.formattedValue }}</span>
         </div>
       </div>
+      <MetricAttributeGroups
+        v-if="closestSample"
+        class="graphing-graph-tooltip__attributes"
+        :attributes="closestSample.attributes"
+      />
     </div>
   </Teleport>
 </template>
@@ -154,5 +165,11 @@ const positionStyle = computed(() => {
   padding-left: var(--spacing);
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+.graphing-graph-tooltip__attributes {
+  margin-top: var(--spacing);
+  padding: var(--spacing) 8px 0;
+  border-top: 1px solid var(--ux-theme-6);
 }
 </style>

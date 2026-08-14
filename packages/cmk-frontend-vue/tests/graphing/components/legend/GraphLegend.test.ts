@@ -100,6 +100,22 @@ function legendRowTitles(container: Element): (string | undefined)[] {
   )
 }
 
+// Only metrics-backend series arrive with attributes.
+const REQUESTS: Metric = {
+  metadata: {
+    name: 'requests',
+    title: 'Requests',
+    unit: UNIT,
+    color: '#ff0000',
+    attributes: [
+      { kind: 'resource', name: 'host.arch', value: 'x64' },
+      { kind: 'data_point', name: 'status', value: '304' }
+    ]
+  },
+  render: { stack: null, inverse: false, hidden: false },
+  data_points: [1, 2]
+}
+
 const CPU = makeMetric('cpu', 'CPU', [10, 20, 30])
 const MEM = makeMetric('mem', 'Memory', [100, 200, 300])
 const WARN_LINE: HorizontalLine = {
@@ -431,6 +447,66 @@ test('fillHeight applies the fill modifier and lifts the metric-rows height cap'
   expect(container.querySelector('.graphing-graph-legend--fill')).toBeInTheDocument()
   const scroll = container.querySelector<HTMLElement>('.graphing-graph-legend__rows-scroll')!
   expect(scroll.style.maxHeight).toBe('none')
+})
+
+test('a metric without attributes offers nothing to expand', () => {
+  render(GraphLegend, { props: { metrics: [CPU] } })
+  expect(screen.queryByRole('button', { name: /toggle attributes/i })).not.toBeInTheDocument()
+})
+
+test('expanding a metrics-backend entry lists its attributes by name, value and type', async () => {
+  render(GraphLegend, { props: { metrics: [REQUESTS] } })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle attributes of Requests' }))
+
+  expect(screen.getByText('Attribute name')).toBeInTheDocument()
+  expect(screen.getByText('Attribute value')).toBeInTheDocument()
+  expect(screen.getByText('Attribute type')).toBeInTheDocument()
+
+  const archRow = screen.getByText('host.arch').closest('tr')!
+  expect(archRow).toHaveTextContent('x64')
+  expect(archRow).toHaveTextContent('Resource')
+
+  const statusRow = screen.getByText('status').closest('tr')!
+  expect(statusRow).toHaveTextContent('304')
+  expect(statusRow).toHaveTextContent('Data point')
+})
+
+test('collapsing a metrics-backend entry hides its attributes again', async () => {
+  render(GraphLegend, { props: { metrics: [REQUESTS] } })
+  const toggle = screen.getByRole('button', { name: 'Toggle attributes of Requests' })
+
+  await fireEvent.click(toggle)
+  expect(screen.getByText('host.arch')).toBeInTheDocument()
+
+  await fireEvent.click(toggle)
+  expect(screen.queryByText('host.arch')).not.toBeInTheDocument()
+})
+
+test('a metric that loses its attributes while expanded leaves no table behind', async () => {
+  const { rerender } = render(GraphLegend, { props: { metrics: [REQUESTS] } })
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle attributes of Requests' }))
+  expect(screen.getByText('host.arch')).toBeInTheDocument()
+
+  await rerender({
+    metrics: [{ ...REQUESTS, metadata: { ...REQUESTS.metadata, attributes: [] } }]
+  })
+
+  // Else a header-only table remains, with no toggle left to close it.
+  expect(screen.queryByText('Attribute name')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /toggle attributes/i })).not.toBeInTheDocument()
+})
+
+test('expanding one entry leaves the others collapsed', async () => {
+  const errors: Metric = {
+    ...REQUESTS,
+    metadata: { ...REQUESTS.metadata, name: 'errors', title: 'Errors' }
+  }
+  render(GraphLegend, { props: { metrics: [REQUESTS, errors] } })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle attributes of Requests' }))
+
+  expect(screen.getAllByText('host.arch')).toHaveLength(1)
 })
 
 test('recomputes padded rows when the scroll container is resized', async () => {

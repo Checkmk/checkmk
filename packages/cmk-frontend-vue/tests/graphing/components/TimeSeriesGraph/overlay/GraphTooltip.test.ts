@@ -18,12 +18,18 @@ function makeSample(overrides: Partial<HoverSample>): HoverSample {
     label: 'CPU',
     color: '#ff0000',
     formattedValue: '42 %',
+    attributes: [],
     pixelY: 10,
     snapTime: 1000,
     isClosest: false,
     ...overrides
   }
 }
+
+const BACKEND_ATTRIBUTES: HoverSample['attributes'] = [
+  { kind: 'resource', name: 'host.arch', value: 'x64' },
+  { kind: 'data_point', name: 'status', value: '304' }
+]
 
 function makeHoverState(overrides: Partial<HoverState>): HoverState {
   return {
@@ -99,6 +105,49 @@ describe('GraphTooltip', () => {
     // exact regression the previous reka-ui portal shipped with.
     const attributeNames = Array.from(tooltip!.attributes).map((attribute) => attribute.name)
     expect(attributeNames.some((name) => name.startsWith('data-v-'))).toBe(true)
+  })
+
+  test("lists the hovered line's attributes grouped by kind", () => {
+    renderGraphTooltip(
+      makeHoverState({
+        samples: [makeSample({ isClosest: true, attributes: BACKEND_ATTRIBUTES })]
+      })
+    )
+
+    expect(screen.getByText('Resource attributes')).toBeInTheDocument()
+    expect(screen.getByText('host.arch')).toBeInTheDocument()
+    expect(screen.getByText('x64')).toBeInTheDocument()
+    expect(screen.getByText('Data point attributes')).toBeInTheDocument()
+    expect(screen.getByText('status')).toBeInTheDocument()
+    expect(screen.getByText('304')).toBeInTheDocument()
+    expect(screen.queryByText('Scope attributes')).not.toBeInTheDocument()
+  })
+
+  test('lists the attributes of the hovered line only, not of every line under the cursor', () => {
+    renderGraphTooltip(
+      makeHoverState({
+        samples: [
+          makeSample({ metricName: 'cpu', label: 'CPU', isClosest: true, attributes: [] }),
+          makeSample({
+            metricName: 'mem',
+            label: 'Memory',
+            isClosest: false,
+            attributes: BACKEND_ATTRIBUTES
+          })
+        ]
+      })
+    )
+
+    expect(screen.getByText('Memory')).toBeInTheDocument()
+    expect(screen.queryByText('host.arch')).not.toBeInTheDocument()
+  })
+
+  test('an RRD line adds no attribute block at all', () => {
+    renderGraphTooltip(
+      makeHoverState({ samples: [makeSample({ isClosest: true, attributes: [] })] })
+    )
+
+    expect(document.querySelector('.graphing-graph-tooltip__attributes')).toBeNull()
   })
 
   test('renders nothing without a hover state', () => {

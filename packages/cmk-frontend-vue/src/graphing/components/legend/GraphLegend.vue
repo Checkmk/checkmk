@@ -4,11 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import useId from 'cmk-ui-library/lib/useId'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 
+import MetricAttributesTable from '../MetricAttributesTable.vue'
 import type { HorizontalLine, Metric } from '../TimeSeriesGraph'
 import {
   CONSOLIDATION_FUNCTIONS,
@@ -16,6 +19,7 @@ import {
   DEFAULT_CONSOLIDATION_FN,
   useConsolidationFunctionLabels
 } from '../consolidation'
+import { attributesOf, hasAttributes } from '../metricAttributes'
 import GraphLegendEyeButton from './GraphLegendEyeButton.vue'
 import {
   type MetricStats,
@@ -26,6 +30,8 @@ import {
 } from './legendUtils'
 
 const { _t, _tn } = usei18n()
+
+const componentId = useId()
 
 const consolidationFunctionLabels = useConsolidationFunctionLabels()
 
@@ -101,6 +107,21 @@ const metricStats = computed((): Map<string, MetricStats> => {
   }
   return map
 })
+
+const expandedMetricNames = ref<string[]>([])
+
+function toggleAttributes(name: string) {
+  expandedMetricNames.value = withNameToggled(expandedMetricNames.value, name)
+}
+
+function attributesId(index: number): string {
+  return `${componentId}-attributes-${index}`
+}
+
+/** Guards an expanded row whose metric came back without attributes. */
+function showsAttributes(metric: Metric): boolean {
+  return hasAttributes(metric) && expandedMetricNames.value.includes(metric.metadata.name)
+}
 
 function toggleMetric(name: string) {
   emit('update:hiddenMetricNames', withNameToggled(props.hiddenMetricNames, name))
@@ -212,45 +233,63 @@ watch(
           <col class="graphing-graph-legend__col--stat" />
         </colgroup>
         <tbody>
-          <tr
-            v-for="m in displayMetrics"
-            :key="m.metadata.name"
-            class="graphing-graph-legend__row"
-            :class="{
-              'graphing-graph-legend__row--hidden': hiddenMetricNames.includes(m.metadata.name)
-            }"
-            @mouseenter="$emit('hoverMetric', m.metadata.name)"
-            @mouseleave="$emit('hoverMetric', null)"
-          >
-            <td class="graphing-graph-legend__cell--eye">
-              <GraphLegendEyeButton
-                :hidden="hiddenMetricNames.includes(m.metadata.name)"
-                :aria-label="m.metadata.title"
-                @toggle="toggleMetric(m.metadata.name)"
-              />
-            </td>
-            <td class="graphing-graph-legend__cell--swatch">
-              <span
-                class="graphing-graph-legend__swatch"
-                :style="{ background: m.metadata.color }"
-              />
-            </td>
-            <td class="graphing-graph-legend__name" :title="m.metadata.title">
-              {{ m.metadata.title }}
-            </td>
-            <td class="graphing-graph-legend__stat">
-              {{ metricStats.get(m.metadata.name)?.min }}
-            </td>
-            <td class="graphing-graph-legend__stat">
-              {{ metricStats.get(m.metadata.name)?.avg }}
-            </td>
-            <td class="graphing-graph-legend__stat">
-              {{ metricStats.get(m.metadata.name)?.max }}
-            </td>
-            <td class="graphing-graph-legend__stat">
-              {{ metricStats.get(m.metadata.name)?.last }}
-            </td>
-          </tr>
+          <template v-for="(m, index) in displayMetrics" :key="m.metadata.name">
+            <tr
+              class="graphing-graph-legend__row"
+              :class="{
+                'graphing-graph-legend__row--hidden': hiddenMetricNames.includes(m.metadata.name)
+              }"
+              @mouseenter="$emit('hoverMetric', m.metadata.name)"
+              @mouseleave="$emit('hoverMetric', null)"
+            >
+              <td class="graphing-graph-legend__cell--eye">
+                <GraphLegendEyeButton
+                  :hidden="hiddenMetricNames.includes(m.metadata.name)"
+                  :aria-label="m.metadata.title"
+                  @toggle="toggleMetric(m.metadata.name)"
+                />
+              </td>
+              <td class="graphing-graph-legend__cell--swatch">
+                <span
+                  class="graphing-graph-legend__swatch"
+                  :style="{ background: m.metadata.color }"
+                />
+              </td>
+              <td class="graphing-graph-legend__name">
+                <span class="graphing-graph-legend__title" :title="m.metadata.title">
+                  {{ m.metadata.title }}
+                </span>
+                <CmkIconButton
+                  v-if="hasAttributes(m)"
+                  class="graphing-graph-legend__attributes-toggle"
+                  :name="showsAttributes(m) ? 'chevron-up' : 'chevron-down'"
+                  primary-color="font"
+                  size="small"
+                  :aria-expanded="showsAttributes(m)"
+                  :aria-controls="attributesId(index)"
+                  :aria-label="_t('Toggle attributes of %{metric}', { metric: m.metadata.title })"
+                  @click="toggleAttributes(m.metadata.name)"
+                />
+              </td>
+              <td class="graphing-graph-legend__stat">
+                {{ metricStats.get(m.metadata.name)?.min }}
+              </td>
+              <td class="graphing-graph-legend__stat">
+                {{ metricStats.get(m.metadata.name)?.avg }}
+              </td>
+              <td class="graphing-graph-legend__stat">
+                {{ metricStats.get(m.metadata.name)?.max }}
+              </td>
+              <td class="graphing-graph-legend__stat">
+                {{ metricStats.get(m.metadata.name)?.last }}
+              </td>
+            </tr>
+            <tr v-if="showsAttributes(m)">
+              <td :id="attributesId(index)" colspan="7" class="graphing-graph-legend__attributes">
+                <MetricAttributesTable :attributes="attributesOf(m)" />
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </CmkScrollContainer>
@@ -442,9 +481,27 @@ watch(
 
 .graphing-graph-legend__name {
   padding-left: var(--dimension-4);
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-3);
+}
+
+/* The title, not its cell, is what ellipsises, so the toggle stays visible next to it. */
+.graphing-graph-legend__title {
+  flex: 0 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.graphing-graph-legend__attributes-toggle {
+  flex: 0 0 auto;
+}
+
+.graphing-graph-legend td.graphing-graph-legend__attributes {
+  padding: var(--dimension-5) 0 var(--dimension-5) var(--dimension-8);
+  background: var(--ux-theme-3);
 }
 
 .graphing-graph-legend td.graphing-graph-legend__stat {

@@ -18,12 +18,14 @@ import DropdownCell from '@/monitoring/shared/components/cell/DropdownCell.vue'
 import SwitchCell from '@/monitoring/shared/components/cell/SwitchCell.vue'
 import VisibilityCell from '@/monitoring/shared/components/cell/VisibilityCell.vue'
 
+import MetricAttributesTable from '../../components/MetricAttributesTable.vue'
 import type { Metric } from '../../components/TimeSeriesGraph'
 import {
   type MetricStats,
   metricStats,
   orderMetricsForLegend
 } from '../../components/legend/legendUtils'
+import { attributesOf, hasAttributes } from '../../components/metricAttributes'
 import type { GraphItemsStore } from '../composables/useGraphItems'
 import { useRowLabels } from '../composables/useRowLabels'
 import type { DesignerItem } from '../drafts'
@@ -59,6 +61,19 @@ const columns: ColumnDef<DesignerItem>[] = [
 const colorColumnIndex = columns.findIndex((column) => column.id === 'color')
 
 const expandedRows = ref<Record<string, boolean>>({})
+
+/** Second expansion level: the attributes of a single resolved series. */
+const expandedSeries = ref<Record<string, boolean>>({})
+
+/** Row-qualified in case metric names stop being unique per response. */
+function seriesKey(rowId: ItemId, metric: Metric): string {
+  return `${rowId}:${metric.metadata.name}`
+}
+
+/** Guards an expanded row whose series came back without attributes. */
+function showsAttributes(rowId: ItemId, metric: Metric): boolean {
+  return hasAttributes(metric) && expandedSeries.value[seriesKey(rowId, metric)] === true
+}
 
 /** Row stats are only attributable when the row produced exactly one series. */
 const statsBySource = computed(() => {
@@ -162,24 +177,43 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
       </template>
 
       <template #expansion="{ row }">
-        <tr
+        <template
           v-for="entry in linesBySource.get(row.id) ?? []"
           :key="entry.metric.metadata.name"
-          class="graphing-appearance-table__expanded-row"
         >
-          <td :colspan="colorColumnIndex" />
-          <BaseCell column-id="color" vertical-align="middle">
-            <span
-              class="graphing-appearance-table__color-swatch"
-              :style="{ background: entry.metric.metadata.color }"
-            />
-          </BaseCell>
-          <BaseCell column-id="title" vertical-align="middle" no-wrap>{{
-            entry.metric.metadata.title
-          }}</BaseCell>
-          <td :colspan="2" />
-          <StatsCells :stats="entry.stats" />
-        </tr>
+          <tr class="graphing-appearance-table__expanded-row">
+            <td :colspan="colorColumnIndex" />
+            <BaseCell column-id="color" vertical-align="middle">
+              <span
+                class="graphing-appearance-table__color-swatch"
+                :style="{ background: entry.metric.metadata.color }"
+              />
+            </BaseCell>
+            <CollapsibleCell
+              v-if="hasAttributes(entry.metric)"
+              column-id="title"
+              vertical-align="middle"
+              :expanded="expandedSeries[seriesKey(row.id, entry.metric)] === true"
+              @update:expanded="
+                expandedSeries = {
+                  ...expandedSeries,
+                  [seriesKey(row.id, entry.metric)]: $event
+                }
+              "
+              >{{ entry.metric.metadata.title }}</CollapsibleCell
+            >
+            <BaseCell v-else column-id="title" vertical-align="middle" no-wrap>{{
+              entry.metric.metadata.title
+            }}</BaseCell>
+            <td :colspan="2" />
+            <StatsCells :stats="entry.stats" />
+          </tr>
+          <tr v-if="showsAttributes(row.id, entry.metric)">
+            <td :colspan="columns.length" class="graphing-appearance-table__attributes">
+              <MetricAttributesTable :attributes="attributesOf(entry.metric)" />
+            </td>
+          </tr>
+        </template>
       </template>
 
       <template #empty-state>
@@ -197,6 +231,11 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .graphing-appearance-table__expanded-row :deep(td) {
+  background-color: var(--ux-theme-3);
+}
+
+.graphing-appearance-table__attributes {
+  padding: var(--dimension-4) var(--dimension-4) var(--dimension-5) var(--dimension-8);
   background-color: var(--ux-theme-3);
 }
 

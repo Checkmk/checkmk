@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 
 import type { HorizontalLine, Metric } from '@/graphing/components/TimeSeriesGraph'
 import GraphLegendCompact from '@/graphing/components/legend/GraphLegendCompact.vue'
@@ -36,6 +36,31 @@ function makeMetricWithStack(name: string, title: string, stack: string | null):
     render: { stack, inverse: false, hidden: false },
     data_points: [1]
   }
+}
+
+function makeBackendMetric(name: string, title: string): Metric {
+  return {
+    metadata: {
+      name,
+      title,
+      unit: UNIT,
+      color: '#ff0000',
+      attributes: [
+        { kind: 'resource', name: 'host.arch', value: 'x64' },
+        { kind: 'data_point', name: 'status', value: '304' }
+      ]
+    },
+    render: { stack: null, inverse: false, hidden: false },
+    data_points: [1]
+  }
+}
+
+// Stubs render the popup content inline; it only opens on real pointer timing.
+const TOOLTIP_STUBS = {
+  CmkTooltipProvider: { template: '<div><slot /></div>' },
+  CmkTooltip: { template: '<div><slot /></div>' },
+  CmkTooltipTrigger: { template: '<div><slot /></div>' },
+  CmkTooltipContent: { template: '<div><slot /></div>' }
 }
 
 const CPU = makeMetric('cpu', 'CPU')
@@ -143,6 +168,51 @@ test('hovering a horizontal line item does not emit hoverMetric', async () => {
   await fireEvent.mouseLeave(item)
 
   expect(emitted()['hoverMetric']).toBeUndefined()
+})
+
+test('a metrics-backend item offers its attributes grouped by kind', () => {
+  render(GraphLegendCompact, {
+    props: { metrics: [makeBackendMetric('requests', 'Requests')] },
+    global: { stubs: TOOLTIP_STUBS }
+  })
+
+  expect(screen.getByText('Resource attributes')).toBeInTheDocument()
+  expect(screen.getByText('host.arch')).toBeInTheDocument()
+  expect(screen.getByText('x64')).toBeInTheDocument()
+  expect(screen.getByText('Data point attributes')).toBeInTheDocument()
+  expect(screen.queryByText('Scope attributes')).not.toBeInTheDocument()
+})
+
+// No stubs: only the real components show whether focus opens the popup.
+test('focusing a metrics-backend item reveals its attributes, blurring hides them', async () => {
+  render(GraphLegendCompact, { props: { metrics: [makeBackendMetric('requests', 'Requests')] } })
+  const trigger = document.querySelector('.graphing-graph-legend-compact__series--has-attributes')!
+
+  await fireEvent.focus(trigger)
+
+  await waitFor(() => expect(screen.getByText('Resource attributes')).toBeInTheDocument())
+  expect(screen.getByText('host.arch')).toBeInTheDocument()
+
+  await fireEvent.blur(trigger)
+
+  await waitFor(() => expect(screen.queryByText('Resource attributes')).not.toBeInTheDocument())
+})
+
+test('only an item that has attributes is reachable by keyboard to reveal them', () => {
+  const { container } = render(GraphLegendCompact, {
+    props: {
+      metrics: [makeBackendMetric('requests', 'Requests'), CPU],
+      horizontalLines: [WARN_LINE]
+    },
+    global: { stubs: TOOLTIP_STUBS }
+  })
+
+  const series = Array.from(container.querySelectorAll('.graphing-graph-legend-compact__series'))
+  const focusable = series.filter((element) => element.hasAttribute('tabindex'))
+
+  expect(series).toHaveLength(3)
+  expect(focusable).toHaveLength(1)
+  expect(focusable[0]).toHaveTextContent('Requests')
 })
 
 test('clicking a horizontal line eye emits update:hiddenLineNames with that name toggled', async () => {

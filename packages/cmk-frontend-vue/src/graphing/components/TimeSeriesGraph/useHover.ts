@@ -9,6 +9,7 @@ import type { ScaleLinear, ScaleTime } from 'd3-scale'
 import { type Ref, onBeforeUnmount, ref } from 'vue'
 
 import type { ConsolidationFn } from '../consolidation'
+import { attributesOf } from '../metricAttributes'
 import type { M4Bucket, M4Cache } from './decimation/types'
 import { type HoverSample, type HoverState, metricHitDistance } from './interaction/hover'
 import { bucketAnchorTime, selectConsolidatedValue } from './render/bucket'
@@ -88,6 +89,7 @@ export function useHover(options: HoverOptions) {
         metricName: metric.metadata.name,
         label: metric.metadata.title,
         color: metric.metadata.color,
+        attributes: attributesOf(metric),
         isClosest: false
       }
       const sampleWithoutValue = {

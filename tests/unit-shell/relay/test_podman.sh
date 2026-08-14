@@ -46,7 +46,7 @@ tearDown() {
 test_registry_not_accessible() {
     # Mock podman to fail on pull but track all calls
     # shellcheck disable=SC2317
-    podman() {
+    _podman_impl() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
         if [[ "$1" == "pull" ]]; then
             return 1 # Simulate pull failure
@@ -54,7 +54,7 @@ test_registry_not_accessible() {
             return 0 # Other podman commands succeed
         fi
     }
-    export -f podman
+    export -f _podman_impl
 
     # Run main in a subshell to capture output and exit code
     set +e

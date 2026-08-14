@@ -43,13 +43,7 @@ tearDown() {
 
 # Test: systemctl daemon-reload fails
 # If systemctl daemon-reload fails, main should exit with error and display the error message
-# shellcheck disable=SC2317  # body is unreachable while skipped
 test_systemctl_daemon_reload_failure() {
-    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
-    # fails intermittently. Re-enable once the mock fix is backported.
-    startSkipping "CMK-37910"
-    return 0
-
     # Mock systemctl to fail on daemon-reload but track all calls
     # shellcheck disable=SC2317
     systemctl() {
@@ -94,13 +88,7 @@ test_systemctl_daemon_reload_failure() {
 
 # Test: systemctl enable path unit fails
 # If systemctl enable path unit fails, main should exit with error and display the error message
-# shellcheck disable=SC2317  # body is unreachable while skipped
 test_systemctl_enable_path_failure() {
-    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
-    # fails intermittently. Re-enable once the mock fix is backported.
-    startSkipping "CMK-37910"
-    return 0
-
     # Mock systemctl to fail on enable path unit but track all calls
     # shellcheck disable=SC2317
     systemctl() {
@@ -149,13 +137,7 @@ test_systemctl_enable_path_failure() {
 
 # Test: systemctl start relay service fails.
 # If systemctl start relay service fails, main should exit with error and display the error message
-# shellcheck disable=SC2317  # body is unreachable while skipped
 test_systemctl_start_relay_service_failure() {
-    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
-    # fails intermittently. Re-enable once the mock fix is backported.
-    startSkipping "CMK-37910"
-    return 0
-
     # Mock systemctl to fail on start relay service but track all calls
     # shellcheck disable=SC2317
     systemctl() {

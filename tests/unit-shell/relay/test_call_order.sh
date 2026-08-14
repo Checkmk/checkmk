@@ -57,13 +57,7 @@ tearDown() {
     fi
 }
 
-# shellcheck disable=SC2317  # body is unreachable while skipped
 test_main_successful_call_order() {
-    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
-    # fails intermittently. Re-enable once the mock fix is backported.
-    startSkipping "CMK-37910"
-    return 0
-
     # Run main in a subshell as root
     set +e
     (

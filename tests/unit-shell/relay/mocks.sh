@@ -72,8 +72,36 @@ loginctl() {
 export -f loginctl
 
 # Mock: podman - Container operations
+#
+# Consumes stdin exactly as a real 'podman run -i' does, then delegates the
+# outcome to _podman_impl. Tests override _podman_impl, never podman, so every
+# mock inherits the drain.
+#
+# The drain matters: install_relay.sh feeds the credential to 'podman run'
+# through a pipe, so a mock that returns without reading closes the read end
+# while printf may still be mid-write. printf then takes SIGPIPE and, under
+# 'set -o pipefail', the whole pipeline reports failure - a successful
+# registration looks like a failed one.
+#
 # shellcheck disable=SC2317
 podman() {
+    local arg
+    if [[ "$1" == "run" ]]; then
+        for arg in "$@"; do
+            if [[ "$arg" == "-i" ]]; then
+                # Drain to EOF with the builtin - no external process needed.
+                while IFS= read -r _; do :; done
+                break
+            fi
+        done
+    fi
+    _podman_impl "$@"
+}
+export -f podman
+
+# Default podman outcomes. Override this - not podman() - in a test.
+# shellcheck disable=SC2317
+_podman_impl() {
     _record_call "podman $*"
     # Simulate successful podman operations
     case "$1" in
@@ -95,10 +123,10 @@ podman() {
     esac
     return 0
 }
-export -f podman
+export -f _podman_impl
 
 # Mock: _get_podman_version - Returns podman version string for check_podman_version.
-# Mocked separately so tests that override podman() for other behaviour (pull, run, etc.)
+# Mocked separately so tests that override _podman_impl for other behaviour (pull, run, etc.)
 # don't also need to handle --version.
 # shellcheck disable=SC2317
 _get_podman_version() {

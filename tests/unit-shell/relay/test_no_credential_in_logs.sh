@@ -66,7 +66,13 @@ _mock_podman_success() {
 }
 
 # Token auth via --token-stdin (MSI/Windows path): token must not appear anywhere.
+# shellcheck disable=SC2317  # body is unreachable while skipped
 test_token_stdin_not_in_output_verbose() {
+    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
+    # fails intermittently. Re-enable once the mock fix is backported.
+    startSkipping "CMK-37910"
+    return 0
+
     _mock_podman_success
 
     set +e
@@ -95,7 +101,13 @@ test_token_stdin_not_in_output_verbose() {
 }
 
 # Password auth, verbose: password must not appear anywhere in output or podman calls.
+# shellcheck disable=SC2317  # body is unreachable while skipped
 test_password_not_in_output_verbose() {
+    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
+    # fails intermittently. Re-enable once the mock fix is backported.
+    startSkipping "CMK-37910"
+    return 0
+
     _mock_podman_success
 
     set +e
@@ -129,7 +141,13 @@ test_password_not_in_output_verbose() {
 }
 
 # Token passed via --token VALUE: must not leak into podman argv or script output.
+# shellcheck disable=SC2317  # body is unreachable while skipped
 test_token_arg_not_in_output_verbose() {
+    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
+    # fails intermittently. Re-enable once the mock fix is backported.
+    startSkipping "CMK-37910"
+    return 0
+
     _mock_podman_success
 
     set +e

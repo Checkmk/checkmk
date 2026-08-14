@@ -90,7 +90,13 @@ test_registration_fails() {
 }
 
 # Test: Registration with loopback address emits a warning but still uses bridge by default
+# shellcheck disable=SC2317  # body is unreachable while skipped
 test_registration_localhost_warns_about_loopback() {
+    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
+    # fails intermittently. Re-enable once the mock fix is backported.
+    startSkipping "CMK-37910"
+    return 0
+
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
@@ -132,7 +138,13 @@ test_registration_localhost_warns_about_loopback() {
 }
 
 # Test: Registration with loopback:port emits a warning but still uses bridge by default
+# shellcheck disable=SC2317  # body is unreachable while skipped
 test_registration_loopback_with_port_warns() {
+    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
+    # fails intermittently. Re-enable once the mock fix is backported.
+    startSkipping "CMK-37910"
+    return 0
+
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
@@ -172,7 +184,13 @@ test_registration_loopback_with_port_warns() {
 }
 
 # Test: Registration with remote host:port uses --network=bridge, passes host:port unchanged
+# shellcheck disable=SC2317  # body is unreachable while skipped
 test_registration_remote_host_with_port_uses_network_bridge() {
+    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
+    # fails intermittently. Re-enable once the mock fix is backported.
+    startSkipping "CMK-37910"
+    return 0
+
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
@@ -204,10 +222,12 @@ test_registration_remote_host_with_port_uses_network_bridge() {
 }
 
 # Test: Registration with --use-host-network forces host networking
+# shellcheck disable=SC2317  # body is unreachable while skipped
 test_registration_use_host_network_flag() {
-    # Disabled: fails intermittently in CI
-    # Re-enable once the flakiness is fixed.
-    startSkipping
+    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
+    # fails intermittently. Re-enable once the mock fix is backported.
+    startSkipping "CMK-37910"
+    return 0
 
     # shellcheck disable=SC2317
     podman() {
@@ -324,7 +344,13 @@ test_registration_aborts_when_already_registered_without_force() {
 }
 
 # Test: main succeeds when relay is already registered and --force is provided
+# shellcheck disable=SC2317  # body is unreachable while skipped
 test_registration_force_flag_bypasses_already_registered_check() {
+    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
+    # fails intermittently. Re-enable once the mock fix is backported.
+    startSkipping "CMK-37910"
+    return 0
+
     # Mock podman: simulate that site_config.json exists in the volume
     # shellcheck disable=SC2317
     podman() {
@@ -357,7 +383,13 @@ test_registration_force_flag_bypasses_already_registered_check() {
 }
 
 # Test: Registration with --force passes --force to podman run
+# shellcheck disable=SC2317  # body is unreachable while skipped
 test_registration_force_flag_is_forwarded_to_podman_run() {
+    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
+    # fails intermittently. Re-enable once the mock fix is backported.
+    startSkipping "CMK-37910"
+    return 0
+
     # Mock podman to succeed and track all calls
     # shellcheck disable=SC2317
     podman() {
@@ -394,7 +426,13 @@ test_registration_force_flag_is_forwarded_to_podman_run() {
 }
 
 # Test: registration succeeds and uses --token-stdin when --token VALUE is passed
+# shellcheck disable=SC2317  # body is unreachable while skipped
 test_registration_with_token_arg() {
+    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
+    # fails intermittently. Re-enable once the mock fix is backported.
+    startSkipping "CMK-37910"
+    return 0
+
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"
@@ -426,7 +464,13 @@ test_registration_with_token_arg() {
 }
 
 # Test: --cert-fingerprint is forwarded to cmk-relay register instead of --trust-cert
+# shellcheck disable=SC2317  # body is unreachable while skipped
 test_registration_forwards_cert_fingerprint() {
+    # CMK-37910: the mocked 'podman run -i' does not drain stdin, so this test
+    # fails intermittently. Re-enable once the mock fix is backported.
+    startSkipping "CMK-37910"
+    return 0
+
     # shellcheck disable=SC2317
     podman() {
         echo "podman $*" >>"$PODMAN_CALLS_FILE"

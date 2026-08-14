@@ -1842,6 +1842,9 @@ class Site:
                 continue
             crash_type = crash.get("exc_type", "")
             crash_detail = crash.get("exc_value", "")
+            if re.search("ConnectionError", crash_type) and re.search("redis", crash_detail):
+                logger.warning("Ignored crash report. See CMK-38006")
+                continue
             if re.search("KeyError", crash_type) and re.search("all_hosts", crash_detail):
                 logger.warning("Ignored crash report. See CMK-29702")
                 continue

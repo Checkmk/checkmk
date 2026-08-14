@@ -41,7 +41,9 @@ from omdlib.config_hooks import (
     load_config,
     load_config_hooks,
     load_hook_dependencies,
+    PORT_HOOK_NAMES,
     read_site_config,
+    report_port_allocations,
     save_site_conf,
 )
 from omdlib.console import ok, show_success
@@ -2649,6 +2651,7 @@ def main_update(  # pylint: disable=too-many-branches
 
         # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
         # new settings and default values.
+        report_port_allocations()
         config = load_config(site, global_opts.verbose)
 
         # Let hooks of the new(!) version do their work and update configuration.
@@ -3043,6 +3046,8 @@ def main_config(
             f"WARNING: You have to execute 'omd update-apache-config {site.name}' as "
             "root to update and apply the configuration of the system apache.\n"
         )
+    if set(set_hooks).intersection(PORT_HOOK_NAMES):
+        report_port_allocations()
 
     if need_start:
         site.set_config(config)

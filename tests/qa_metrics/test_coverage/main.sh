@@ -281,6 +281,40 @@ if [[ "$GENERATE_HTML" == true ]]; then
         --quiet \
         --output "$COVERAGE_HTML_DIR" \
         "$COVERAGE_FILTERED_DAT"
+
+    # genhtml's low/medium/high limits (75%/90%) can be moved but not switched
+    # off, and no pair of them fits a report spanning the whole product, so
+    # recolor all three alike and let the bar graph's fill length carry the rate.
+    # Only the rate classes: coverFn{,Alias}{Lo,Hi} and the source view's
+    # tlaGNC/tlaUNC reuse the suffixes for a binary hit/miss signal. The td
+    # qualifier beats genhtml's own td.coverPerLo on specificity.
+    #
+    # Require the stylesheet: appending to a path genhtml did not write leaves an
+    # orphan nobody loads, and the coloring back with nothing failing.
+    #
+    # The bar graph is drawn from images, so a filter chain recolors it:
+    # contrast(0) flattens all three to one grey, which sepia and hue-rotate tint
+    # to roughly genhtml's own #6688d4. snow.png, the unfilled part, stays white.
+    if [[ ! -f "$COVERAGE_HTML_DIR/gcov.css" ]]; then
+        echo "Error: genhtml wrote no $COVERAGE_HTML_DIR/gcov.css, so the low/medium/high" >&2
+        echo "coloring cannot be neutralized." >&2
+        exit 1
+    fi
+    cat >>"$COVERAGE_HTML_DIR/gcov.css" <<'EOF'
+
+/* Neutralize the low/medium/high coloring, see main.sh */
+td[class$="coverPerLo"], td[class$="coverPerMed"], td[class$="coverPerHi"],
+td[class$="coverNumLo"], td[class$="coverNumMed"], td[class$="coverNumHi"],
+td.headerCovTableEntryLo, td.headerCovTableEntryMed, td.headerCovTableEntryHi
+{
+  background-color: #b8d0ff;
+}
+
+td.coverBarOutline img:not([src$="snow.png"])
+{
+  filter: contrast(0) sepia(1) hue-rotate(192deg) saturate(4) brightness(0.85);
+}
+EOF
 fi
 
 if [[ "$DO_UPLOAD" == true ]]; then

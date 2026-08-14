@@ -86,7 +86,7 @@
   "pkg:pypi/mdurl@0.1.2": "MIT",
   "pkg:pypi/multidict@6.7.1": "Apache-2.0",
   "pkg:pypi/mypy-extensions@1.1.0": "MIT",
-  "pkg:pypi/netapp-ontap@9.18.1.0": "BSD-3-Clause",
+  "pkg:pypi/netapp-ontap@9.19.1.0": "BSD-3-Clause",
   "pkg:pypi/numpy@2.3.5": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
   "pkg:pypi/opsgenie-sdk@2.1.5": "Apache-2.0",
   "pkg:pypi/pathspec@1.1.1": "MPL-2.0",

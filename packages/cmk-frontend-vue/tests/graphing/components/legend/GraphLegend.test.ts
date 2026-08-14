@@ -86,6 +86,20 @@ function makeMetricWithStack(name: string, title: string, stack: string | null):
   }
 }
 
+function makeMirroredMetric(name: string, title: string, stack: string | null): Metric {
+  return {
+    metadata: { name, title, unit: UNIT, color: '#ff0000' },
+    render: { stack, inverse: true, hidden: false },
+    data_points: [1]
+  }
+}
+
+function legendRowTitles(container: Element): (string | undefined)[] {
+  return Array.from(container.querySelectorAll('.graphing-graph-legend__name')).map((el) =>
+    el.textContent?.trim()
+  )
+}
+
 const CPU = makeMetric('cpu', 'CPU', [10, 20, 30])
 const MEM = makeMetric('mem', 'Memory', [100, 200, 300])
 const WARN_LINE: HorizontalLine = {
@@ -234,19 +248,66 @@ test('clicking a hidden horizontal line eye emits update:hiddenLineNames with th
   expect(emitted()['update:hiddenLineNames']).toEqual([[[]]])
 })
 
-test('reverses consecutive metrics sharing a stack id, leaving unstacked metrics and stack order untouched', () => {
-  const a = makeMetricWithStack('a', 'A', null)
-  const b = makeMetricWithStack('b', 'B', 's1')
-  const c = makeMetricWithStack('c', 'C', 's1')
-  const d = makeMetricWithStack('d', 'D', 's1')
-  const e = makeMetricWithStack('e', 'E', null)
-  const f = makeMetricWithStack('f', 'F', 's2')
-  const g = makeMetricWithStack('g', 'G', 's2')
-  const { container } = render(GraphLegend, { props: { metrics: [a, b, c, d, e, f, g] } })
-  const names = Array.from(container.querySelectorAll('.graphing-graph-legend__name')).map((el) =>
-    el.textContent?.trim()
-  )
-  expect(names).toEqual(['A', 'D', 'C', 'B', 'E', 'G', 'F'])
+test('lists lines above the areas they overlay, both in reverse draw order', () => {
+  const firstArea = makeMetricWithStack('b', 'B', 's1')
+  const secondArea = makeMetricWithStack('c', 'C', 's1')
+  const thirdArea = makeMetricWithStack('d', 'D', 's1')
+  const fourthArea = makeMetricWithStack('f', 'F', 's2')
+  const fifthArea = makeMetricWithStack('g', 'G', 's2')
+  const firstLine = makeMetricWithStack('a', 'A', null)
+  const secondLine = makeMetricWithStack('e', 'E', null)
+
+  const { container } = render(GraphLegend, {
+    props: {
+      metrics: [firstArea, secondArea, thirdArea, fourthArea, fifthArea, firstLine, secondLine]
+    }
+  })
+
+  expect(legendRowTitles(container)).toEqual(['E', 'A', 'G', 'F', 'D', 'C', 'B'])
+})
+
+test('lists mirrored series below the upward ones, reading the lower half downwards', () => {
+  const upperArea = makeMetricWithStack('upper-1', 'Upper 1', 'stack-0')
+  const upperAreaOnTop = makeMetricWithStack('upper-2', 'Upper 2', 'stack-0')
+  const lowerArea = makeMirroredMetric('lower-1', 'Lower 1', 'stack-1')
+  const lowerAreaBelow = makeMirroredMetric('lower-2', 'Lower 2', 'stack-1')
+  const upperLine = makeMetricWithStack('upper-sum', 'Upper sum', null)
+  const lowerLine = makeMirroredMetric('lower-sum', 'Lower sum', null)
+
+  const { container } = render(GraphLegend, {
+    props: {
+      metrics: [upperArea, upperAreaOnTop, lowerArea, lowerAreaBelow, upperLine, lowerLine]
+    }
+  })
+
+  expect(legendRowTitles(container)).toEqual([
+    'Upper sum',
+    'Upper 2',
+    'Upper 1',
+    'Lower 1',
+    'Lower 2',
+    'Lower sum'
+  ])
+})
+
+test('lists the CPU utilization line above its stack, as Checkmk 2.5 does', () => {
+  const metrics = [
+    makeMetricWithStack('user', 'User', 'stack-0'),
+    makeMetricWithStack('system', 'System', 'stack-0'),
+    makeMetricWithStack('io_wait', 'I/O-wait', 'stack-0'),
+    makeMetricWithStack('cpu_util_steal', 'Steal', 'stack-0'),
+    makeMetricWithStack('util', 'CPU utilization', null)
+  ]
+
+  const { container } = render(GraphLegend, { props: { metrics } })
+
+  expect(legendRowTitles(container)).toEqual([
+    'CPU utilization',
+    'Steal',
+    'I/O-wait',
+    'System',
+    'User'
+  ])
 })
 
 test('lists a stack top-to-bottom in the same order computeStackedSeries draws it bottom-to-top', () => {

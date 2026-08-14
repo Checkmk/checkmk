@@ -56,15 +56,15 @@ test('renders one item per metric and per horizontal line', () => {
   expect(screen.getByText('Warn')).toBeInTheDocument()
 })
 
-test('lists stacked metrics in the same top-to-bottom display order as the table legend', () => {
+test('lists metrics in the same order as the table legend', () => {
   const metrics = [
-    makeMetricWithStack('a', 'A', null),
     makeMetricWithStack('b', 'B', 's1'),
     makeMetricWithStack('c', 'C', 's1'),
     makeMetricWithStack('d', 'D', 's1'),
-    makeMetricWithStack('e', 'E', null),
     makeMetricWithStack('f', 'F', 's2'),
-    makeMetricWithStack('g', 'G', 's2')
+    makeMetricWithStack('g', 'G', 's2'),
+    makeMetricWithStack('a', 'A', null),
+    makeMetricWithStack('e', 'E', null)
   ]
 
   const { container } = render(GraphLegendCompact, { props: { metrics } })
@@ -72,7 +72,7 @@ test('lists stacked metrics in the same top-to-bottom display order as the table
   const names = Array.from(container.querySelectorAll('.graphing-graph-legend-compact__name')).map(
     (el) => el.textContent
   )
-  expect(names).toEqual(['A', 'D', 'C', 'B', 'E', 'G', 'F'])
+  expect(names).toEqual(['E', 'A', 'G', 'F', 'D', 'C', 'B'])
 })
 
 test('long names are split into a shrinkable head and a fixed tail', () => {

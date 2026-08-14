@@ -22,7 +22,7 @@ import type { Metric } from '../../components/TimeSeriesGraph'
 import {
   type MetricStats,
   metricStats,
-  metricsInGraphTopToBottomOrder
+  orderMetricsForLegend
 } from '../../components/legend/legendUtils'
 import type { GraphItemsStore } from '../composables/useGraphItems'
 import { useRowLabels } from '../composables/useRowLabels'
@@ -82,7 +82,7 @@ const linesBySource = computed(() => {
   for (const [id, series] of metricsBySource) {
     out.set(
       id,
-      metricsInGraphTopToBottomOrder([...series]).map((metric) => ({
+      orderMetricsForLegend([...series]).map((metric) => ({
         metric,
         stats: metricStats(metric)
       }))

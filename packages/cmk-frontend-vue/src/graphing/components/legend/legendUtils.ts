@@ -53,30 +53,34 @@ export function horizontalLineValue(line: HorizontalLine): string {
   return formatter.render(line.value)
 }
 
-export function metricsInGraphTopToBottomOrder(metrics: Metric[]): Metric[] {
-  return consecutiveStackGroups(metrics).flatMap(topmostSeriesFirst)
+export function orderMetricsForLegend(metrics: Metric[]): Metric[] {
+  const drawn = metrics.filter((metric) => !isStackReference(metric))
+  const upwardDrawnBottomUp = drawn.filter((metric) => !metric.render.inverse)
+  const mirroredDrawnTopDown = drawn.filter((metric) => metric.render.inverse)
+  return [
+    ...topmostFirst(upwardDrawnBottomUp.filter(isLine)),
+    ...topmostFirst(upwardDrawnBottomUp.filter(isArea)),
+    ...mirroredDrawnTopDown.filter(isArea),
+    ...mirroredDrawnTopDown.filter(isLine),
+    ...metrics.filter(isStackReference)
+  ]
 }
 
-function consecutiveStackGroups(metrics: Metric[]): Metric[][] {
-  const groups: Metric[][] = []
-  for (const metric of metrics) {
-    const currentGroup = groups[groups.length - 1]
-    if (currentGroup !== undefined && belongsToSameStack(currentGroup, metric)) {
-      currentGroup.push(metric)
-    } else {
-      groups.push([metric])
-    }
-  }
-  return groups
+function isLine(metric: Metric): boolean {
+  return metric.render.stack === null
 }
 
-function belongsToSameStack(group: Metric[], metric: Metric): boolean {
-  return metric.render.stack !== null && metric.render.stack === group[0]!.render.stack
+function isArea(metric: Metric): boolean {
+  return metric.render.stack !== null
 }
 
-function topmostSeriesFirst(group: Metric[]): Metric[] {
-  const stackedSeriesDrawBottomUp = group[0]!.render.stack !== null
-  return stackedSeriesDrawBottomUp ? [...group].reverse() : group
+/** Hidden members carry the baseline a stack is drawn from, not a series of their own. */
+function isStackReference(metric: Metric): boolean {
+  return metric.render.hidden
+}
+
+function topmostFirst(seriesInDrawOrder: Metric[]): Metric[] {
+  return [...seriesInDrawOrder].reverse()
 }
 
 export function withNameToggled(hiddenNames: string[], name: string): string[] {

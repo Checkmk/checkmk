@@ -20,7 +20,7 @@ import {
   type MetricStats,
   metricStats as computeMetricStats,
   horizontalLineValue,
-  metricsInGraphTopToBottomOrder,
+  orderMetricsForLegend,
   withNameToggled
 } from './legendUtils'
 
@@ -77,7 +77,7 @@ const metricsMaxHeight = computed(() => {
   return `${rowsForMetrics * ROW_HEIGHT_PX}px`
 })
 
-const displayMetrics = computed(() => metricsInGraphTopToBottomOrder(props.metrics))
+const displayMetrics = computed(() => orderMetricsForLegend(props.metrics))
 const allHidden = computed(
   () =>
     props.metrics.length > 0 &&

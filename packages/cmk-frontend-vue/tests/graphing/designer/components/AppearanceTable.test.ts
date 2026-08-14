@@ -107,10 +107,11 @@ test('expands a multi-line row into one legend-styled row per resolved line', as
 
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
 
+  // Legend order, so the last line drawn heads the list.
   const rows = container.querySelectorAll('.graphing-appearance-table__expanded-row')
   expect(rows).toHaveLength(2)
-  expect(rows[0]).toHaveTextContent('line one')
-  expect(rows[1]).toHaveTextContent('line two')
+  expect(rows[0]).toHaveTextContent('line two')
+  expect(rows[1]).toHaveTextContent('line one')
 
   // Each line renders its own [min, avg, max, last]: line one [10,20], line two [30,40].
   expect(screen.getByText('10')).toBeInTheDocument() // line one min
@@ -122,8 +123,8 @@ test('expands a multi-line row into one legend-styled row per resolved line', as
 
   const swatches = container.querySelectorAll('.graphing-appearance-table__color-swatch')
   expect(swatches).toHaveLength(2)
-  expect(swatches[0]!.getAttribute('style')).toMatch(/#ff0000|rgb\(255, 0, 0\)/)
-  expect(swatches[1]!.getAttribute('style')).toMatch(/#00ff00|rgb\(0, 255, 0\)/)
+  expect(swatches[0]!.getAttribute('style')).toMatch(/#00ff00|rgb\(0, 255, 0\)/)
+  expect(swatches[1]!.getAttribute('style')).toMatch(/#ff0000|rgb\(255, 0, 0\)/)
 })
 
 test('collapsing an expanded multi-line row hides its per-line rows again', async () => {

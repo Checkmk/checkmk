@@ -6,6 +6,7 @@
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import CmkSuggestions, {
+  ErrorResponse,
   NoSelection,
   Response,
   type Section,
@@ -399,6 +400,95 @@ test('callback-filtered omits header when sectioned response has a single sectio
   await screen.findByRole('option', { name: 'Alpha One' })
   expect(screen.queryByRole('heading', { name: 'Only' })).toBeNull()
   expect(screen.queryByRole('heading')).toBeNull()
+})
+
+test('callback-filtered mode: clearing resets the filter and queries the full set directly', async () => {
+  const queries: string[] = []
+  const { rerender } = render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new SelectionWithTitle('option2', 'Option Two'),
+      suggestions: {
+        type: 'callback-filtered',
+        querySuggestions: async (query: string) => {
+          queries.push(query)
+          return new Response(
+            flatSuggestions.filter((s) => s.title.toLowerCase().includes(query.toLowerCase()))
+          )
+        }
+      },
+      role: 'option'
+    }
+  })
+
+  const input = screen.getByRole('textbox', { name: 'filter' })
+  await waitFor(() => expect((input as HTMLInputElement).value).toBe('Option Two'))
+  await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(1))
+  const queriesBeforeClear = queries.length
+
+  await rerender({ selectedSuggestion: new NoSelection() })
+
+  await waitFor(() => expect((input as HTMLInputElement).value).toBe(''))
+  await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(3))
+  // Clearing must not re-query the stale title, which would flash the single entry.
+  expect(queries.slice(queriesBeforeClear).every((query) => query === '')).toBe(true)
+})
+
+test('callback-filtered mode: clearing resets the filter even when the clear-time query errors', async () => {
+  const { rerender } = render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new SelectionWithTitle('option2', 'Option Two'),
+      suggestions: {
+        type: 'callback-filtered',
+        querySuggestions: async (query: string) =>
+          query === ''
+            ? new ErrorResponse('backend unavailable')
+            : new Response(flatSuggestions.filter((s) => s.title === query))
+      },
+      role: 'option'
+    }
+  })
+
+  const input = screen.getByRole('textbox', { name: 'filter' })
+  await waitFor(() => expect((input as HTMLInputElement).value).toBe('Option Two'))
+
+  await rerender({ selectedSuggestion: new NoSelection() })
+
+  await waitFor(() => expect((input as HTMLInputElement).value).toBe(''))
+  await screen.findByText('backend unavailable')
+})
+
+test('callback-filtered mode: a slow stale response does not overwrite the latest query', async () => {
+  const user = userEvent.setup()
+  const pendingResolvers = new Map<string, (response: Response) => void>()
+  const querySuggestions = (query: string) =>
+    new Promise<Response>((resolve) => pendingResolvers.set(query, resolve))
+
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new NoSelection(),
+      suggestions: { type: 'callback-filtered', querySuggestions },
+      role: 'option'
+    }
+  })
+
+  const input = screen.getByRole('textbox', { name: 'filter' })
+  await waitFor(() => expect(pendingResolvers.has('')).toBe(true))
+  pendingResolvers.get('')!(new Response([]))
+  pendingResolvers.delete('')
+
+  await user.type(input, 'opt')
+  await waitFor(() => expect(pendingResolvers.has('opt')).toBe(true))
+  await user.clear(input)
+  await waitFor(() => expect(pendingResolvers.has('')).toBe(true))
+
+  // The newer empty query resolves first with the full list, ...
+  pendingResolvers.get('')!(new Response(flatSuggestions))
+  await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(3))
+
+  // ... then the stale 'opt' query resolves and must be ignored.
+  pendingResolvers.get('opt')!(new Response([{ name: 'option1', title: 'Option One' }]))
+  await new Promise((resolve) => setTimeout(resolve))
+  expect(screen.getAllByRole('option')).toHaveLength(3)
 })
 
 test('keyboard navigation skips headers and clicking a header does not select', async () => {

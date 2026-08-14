@@ -66,6 +66,7 @@ const filterString = ref<string>(
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
 
 const displaySections = ref<Array<DisplaySection>>([])
+let latestUpdateId = 0
 const filteredSuggestions = computed<Array<Suggestion>>(() =>
   displaySections.value.flatMap((section) => section.suggestions)
 )
@@ -214,7 +215,27 @@ async function handleSuggestionsUpdate(
   query: string,
   newSelectedSuggestion: SuggestionValue
 ): Promise<void> {
-  const result = await getDisplaySections(newSuggestions, query)
+  const hasNoSelection = newSelectedSuggestion instanceof NoSelection
+
+  // Reset before the query so an error or warning response still clears the stale filter.
+  let effectiveQuery = query
+  if (
+    newSuggestions.type === 'callback-filtered' &&
+    hasNoSelection &&
+    isSelectedSuggestionSetAsFilter.value
+  ) {
+    filterString.value = ''
+    isSelectedSuggestionSetAsFilter.value = false
+    effectiveQuery = ''
+  }
+
+  const updateId = ++latestUpdateId
+  const result = await getDisplaySections(newSuggestions, effectiveQuery)
+
+  // A newer query has superseded this response.
+  if (updateId !== latestUpdateId) {
+    return
+  }
 
   if (result instanceof ErrorResponse) {
     error.value = result.error
@@ -229,17 +250,17 @@ async function handleSuggestionsUpdate(
     error.value = ''
     warning.value = ''
     displaySections.value = result
-    const foundSuggestion =
-      newSelectedSuggestion instanceof NoSelection
-        ? null
-        : filteredSuggestions.value.find((s) => s.name === newSelectedSuggestion.getName())
+    const foundSuggestion = hasNoSelection
+      ? null
+      : filteredSuggestions.value.find((s) => s.name === newSelectedSuggestion.getName())
 
-    if (!(newSelectedSuggestion instanceof NoSelection) && !isSelectedSuggestionSetAsFilter.value) {
-      if (newSuggestions.type === 'callback-filtered') {
-        filterString.value = foundSuggestion?.title ?? newSelectedSuggestion.getName()
-
-        isSelectedSuggestionSetAsFilter.value = true
-      }
+    if (
+      newSuggestions.type === 'callback-filtered' &&
+      !hasNoSelection &&
+      !isSelectedSuggestionSetAsFilter.value
+    ) {
+      filterString.value = foundSuggestion?.title ?? newSelectedSuggestion.getName()
+      isSelectedSuggestionSetAsFilter.value = true
     }
     if (foundSuggestion && newSuggestions.type !== 'filtered') {
       activeSuggestion.value = foundSuggestion

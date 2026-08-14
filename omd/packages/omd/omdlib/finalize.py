@@ -16,6 +16,7 @@ from omdlib.config_hooks import (
     create_config_environment,
     load_config,
     read_site_config,
+    report_port_allocations,
     save_site_conf,
     update_cmk_core_config,
 )
@@ -136,6 +137,7 @@ def finalize_site_as_user(
     # configuration settings
     # avoid executing hook 'TMPFS' and cleaning an initialized tmp directory
     # see CMK-3067
+    report_port_allocations()
     config_set_all(site, config, verbose, ["TMPFS"])
     initialize_site_ca(site)
     initialize_agent_ca(site)

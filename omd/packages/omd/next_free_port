@@ -23,8 +23,8 @@ port_is_used() {
                 return 0
             fi
         else
+            # Errors are reported by omd, not here.
             if ! ls "${site_conf}" >/dev/null 2>&1; then
-                echo "ERROR: Failed to read config ${site_conf} of site ${S}. ${KEY} port will possibly be allocated twice" >&2
                 continue
             fi
 

@@ -41,6 +41,7 @@ from cmk.ccc.version import edition
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
 from omdlib.site_paths import SitePaths
+from omdlib.sites import all_sites
 
 ConfigHookChoiceItem = tuple[str, str]
 ConfigHookChoices = Pattern[str] | list[ConfigHookChoiceItem] | ConfigChoiceHasError
@@ -58,6 +59,42 @@ class ConfigHook:
 
 
 ConfigHooks = dict[str, ConfigHook]
+
+# Hooks which allocate a TCP port via lib/omd/next_free_port
+PORT_HOOK_NAMES = frozenset(
+    {
+        "AGENT_RECEIVER_PORT",
+        "APACHE_TCP_PORT",
+        "LIVESTATUS_TCP_PORT",
+        "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT",
+        "RABBITMQ_DIST_PORT",
+        "RABBITMQ_MANAGEMENT_PORT",
+        "RABBITMQ_PORT",
+        "TRACE_JAEGER_ADMIN_PORT",
+        "TRACE_JAEGER_UI_PORT",
+        "TRACE_RECEIVE_PORT",
+    }
+)
+
+
+def report_port_allocations(omd_path: Path = Path("/omd")) -> None:
+    sites_with_unreadable_configs = []
+    for sitename in all_sites(omd_path):
+        site_conf = Path(SitePaths.from_site_name(sitename, omd_path).home, "etc/omd/site.conf")
+        try:
+            with site_conf.open():
+                pass
+        except PermissionError:
+            sites_with_unreadable_configs.append(sitename)
+        except OSError:
+            # Correct for file not found errors. Other cases are just an educated guess.
+            continue
+    if sites_with_unreadable_configs:
+        sites_str = ",".join(sites_with_unreadable_configs)
+        sys.stderr.write(
+            f"WARNING: Cannot read the configuration of site(s) {sites_str}: permission denied.\n"
+            f"         This site may allocate ports used by those sites.\n"
+        )
 
 
 # Put all site configuration (explicit and defaults) into environment

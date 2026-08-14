@@ -7,12 +7,14 @@ import type { ColumnDef } from '@tanstack/vue-table'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
+import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import { useHostServicesColumns, visibleServiceFields } from '@/monitoring/host-services/columns'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 import {
   MonitoringService,
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
+import { columnId } from '@/monitoring/shared/tableState/schema'
 
 import { makeKeyShortcutService, makeResponse } from '../shared/services/testHelpers'
 
@@ -60,6 +62,22 @@ test('a column the user shows asks for its field again', () => {
   expect(visibleServiceFields({ labels: false, tags: false, contacts: false })).toEqual([
     'contact_groups'
   ])
+})
+
+test('the state column reads as the one in the hosts listing', () => {
+  const stateOf = (columns: ColumnDef<never>[]) => {
+    const column = columns.find((candidate) => columnId(candidate) === 'state')!
+    return {
+      sortDescFirst: column.sortDescFirst,
+      minSize: column.minSize,
+      maxSize: column.maxSize,
+      justify: column.meta?.justify
+    }
+  }
+
+  expect(stateOf(useHostServicesColumns() as ColumnDef<never>[])).toEqual(
+    stateOf(buildHostColumns({ includeActions: true, sites: [] }) as ColumnDef<never>[])
+  )
 })
 
 test('the hidden columns stay on offer in the picker', () => {

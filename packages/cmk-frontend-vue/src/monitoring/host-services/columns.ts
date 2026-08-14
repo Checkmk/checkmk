@@ -109,7 +109,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableHiding: false,
       minSize: 74,
       maxSize: 100,
-      meta: { justify: 'center', filter: stateFilter }
+      meta: { filter: stateFilter }
     },
     {
       accessorKey: 'modes',

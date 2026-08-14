@@ -6,9 +6,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime
-import time
 from collections.abc import Sequence
-from copy import copy
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -61,6 +59,57 @@ SECTION_1: job.Section = {
         "running": False,
         "start_time": 1547301201,
         "exit_code": 0,
+        "metrics": {
+            "real_time": 120.0,
+            "user_time": 1.0,
+            "system_time": 0.0,
+            "reads": 0,
+            "writes": 0,
+            "max_res_bytes": 1234000,
+            "avg_mem_bytes": 1000,
+            "invol_context_switches": 12,
+            "vol_context_switches": 23,
+        },
+    },
+    "SNOWWHITE": {
+        "running": True,
+        "start_time": 1557301201,
+        "exit_code": 1,
+        "running_start_time": [
+            1557301261,
+            1557301321,
+            1557301381,
+            1557301441,
+            1537301501,
+            1557301561,
+        ],
+        "metrics": {
+            "real_time": 360.0,
+            "user_time": 0.0,
+            "system_time": 0.0,
+            "reads": 0,
+            "writes": 0,
+            "max_res_bytes": 2224000,
+            "avg_mem_bytes": 0,
+            "invol_context_switches": 1,
+            "vol_context_switches": 2,
+        },
+    },
+}
+
+SECTION_1_RUNNING: job.Section = {
+    "SHREK": {
+        "running": False,
+        "start_time": 1547301201,
+        "exit_code": 0,
+        "running_start_time": [
+            1557301261,
+            1557301321,
+            1557301381,
+            1557301441,
+            1537301501,
+            1557301561,
+        ],
         "metrics": {
             "real_time": 120.0,
             "user_time": 1.0,
@@ -234,18 +283,6 @@ STRING_TABLE_RUNNING_FINISHED_PART = [
 
 
 TIME = 1594300620.0
-
-
-def _modify_start_time(
-    j: job.Job,
-    start_time: float | list[int],
-) -> job.Job:
-    new_job: job.Job = copy(j)
-    if isinstance(start_time, list):
-        new_job["running_start_time"] = start_time
-    else:
-        new_job["start_time"] = start_time
-    return new_job
 
 
 def test_split_job_tables() -> None:
@@ -466,12 +503,13 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
 
 
 @pytest.mark.parametrize(
-    "job_data, age_levels, exit_code_to_state_map, expected_results",
+    "item, params, section, expected_results",
     [
-        (
-            SECTION_1["SHREK"],
-            (0, 0),
-            {0: State.OK},
+        pytest.param(
+            "SHREK",
+            # which is what check_plugin_job.check_default_parameters holds
+            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
+            SECTION_1,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
@@ -496,11 +534,127 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                 Result(state=State.OK, notice="Filesystem writes: 0"),
                 Metric("writes", 0.0, boundaries=(0.0, None)),
             ],
+            id="no age levels configured",
         ),
-        (
-            SECTION_1["SHREK"],
-            (1, 2),
-            {0: State.OK},
+        pytest.param(
+            "item",
+            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
+            {"item": {}},
+            [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
+            id="item present but without any job data",
+        ),
+        pytest.param(
+            "cleanup_remote_logs",
+            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
+            SECTION_2,
+            [
+                Result(state=State.OK, summary="Latest exit code: 0"),
+                Result(state=State.OK, summary="Real time: 10 seconds"),
+                Metric("real_time", 9.9, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Latest job started at 2014-11-05 03:10:30"),
+                Result(state=State.OK, summary="Job age: 5 years 248 days"),
+                Metric("job_age", 179147190.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Avg. memory: 0 B"),
+                Metric("avg_mem_bytes", 0.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Invol. context switches: 15"),
+                Metric("invol_context_switches", 15.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Max. memory: 10.9 MiB"),
+                Metric("max_res_bytes", 11456000.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Filesystem reads: 96"),
+                Metric("reads", 96.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="System time: 970 milliseconds"),
+                Metric("system_time", 0.97, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="User time: 9 seconds"),
+                Metric("user_time", 8.85, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Vol. context switches: 274"),
+                Metric("vol_context_switches", 274.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Filesystem writes: 42016"),
+                Metric("writes", 42016.0, boundaries=(0.0, None)),
+            ],
+            id="completed job with all metrics",
+        ),
+        pytest.param(
+            "backup.sh",
+            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
+            SECTION_2,
+            [
+                Result(state=State.OK, summary="Latest exit code: 0"),
+                Result(state=State.OK, summary="Real time: 4 minutes 42 seconds"),
+                Metric("real_time", 281.65, boundaries=(0.0, None)),
+                Result(
+                    state=State.OK,
+                    notice="1 job is currently running, started at 2014-11-05 17:41:53",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="Job age (currently running): 5 years 247 days (warn/crit at 1 second/2 seconds)",
+                ),
+                Metric("job_age", 179094907.0, levels=(1.0, 2.0), boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Avg. memory: 0 B"),
+                Metric("avg_mem_bytes", 0.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Invol. context switches: 16806"),
+                Metric("invol_context_switches", 16806.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Max. memory: 124 MiB"),
+                Metric("max_res_bytes", 130304000.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Filesystem reads: 0"),
+                Metric("reads", 0.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="System time: 32 seconds"),
+                Metric("system_time", 32.12, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="User time: 4 minutes 38 seconds"),
+                Metric("user_time", 277.7, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Vol. context switches: 32779"),
+                Metric("vol_context_switches", 32779.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Filesystem writes: 251792"),
+                Metric("writes", 251792.0, boundaries=(0.0, None)),
+            ],
+            id="age levels breached while one job is running",
+        ),
+        pytest.param(
+            "missing",
+            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
+            SECTION_2,
+            [],
+            id="item not in section",
+        ),
+        pytest.param(
+            "Cleanup-Cache-Files",
+            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
+            {
+                "Cleanup-Cache-Files": {
+                    "running": False,
+                    "exit_code": 0,
+                    "metrics": {"real_time": 0.96},
+                }
+            },
+            [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
+            id="job without a start time",
+        ),
+        pytest.param(
+            "Cleanup-Cache-Files",
+            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
+            {
+                "Cleanup-Cache-Files": {
+                    "running": True,
+                    "exit_code": 0,
+                    "running_start_time": [int(TIME) - 60],
+                    "metrics": {},
+                }
+            },
+            [
+                Result(state=State.OK, summary="Latest exit code: 0"),
+                Result(
+                    state=State.OK,
+                    notice="1 job is currently running, started at 2020-07-09 15:16:00",
+                ),
+                Result(state=State.OK, summary="Job age (currently running): 1 minute 0 seconds"),
+                Metric("job_age", 60.0, boundaries=(0.0, None)),
+            ],
+            id="running job",
+        ),
+        pytest.param(
+            "SHREK",
+            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
+            SECTION_1,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
@@ -528,11 +682,12 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                 Result(state=State.OK, notice="Filesystem writes: 0"),
                 Metric("writes", 0.0, boundaries=(0.0, None)),
             ],
+            id="old job",
         ),
-        (
-            SECTION_1["SHREK"],
-            (0, 0),
-            {0: State.WARN},
+        pytest.param(
+            "SHREK",
+            {"age": (0, 0), "exit_code_to_state_map": [(0, 1)]},
+            SECTION_1,
             [
                 Result(
                     state=State.WARN,
@@ -560,14 +715,12 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                 Result(state=State.OK, notice="Filesystem writes: 0"),
                 Metric("writes", 0.0, boundaries=(0.0, None)),
             ],
+            id="failed job",
         ),
-        (
-            _modify_start_time(
-                SECTION_1["SHREK"],
-                [1557301261, 1557301321, 1557301381, 1557301441, 1537301501, 1557301561],
-            ),
-            (1, 2),
-            {0: State.OK},
+        pytest.param(
+            "SHREK",
+            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
+            SECTION_1_RUNNING,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
@@ -608,166 +761,7 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                 Result(state=State.OK, notice="Filesystem writes: 0"),
                 Metric("writes", 0.0, boundaries=(0.0, None)),
             ],
-        ),
-    ],
-)
-def test_process_job_stats(  # type: ignore[misc]
-    job_data,
-    age_levels,
-    exit_code_to_state_map,
-    expected_results,
-):
-    with time_machine.travel(datetime.datetime.fromtimestamp(TIME, tz=ZoneInfo("CET"))):
-        assert list(
-            job._process_job_stats(
-                job_data,
-                age_levels,
-                exit_code_to_state_map,
-                time.time(),
-            )
-        ) == list(expected_results)
-
-
-@pytest.mark.parametrize(
-    "item, params, section, expected_results",
-    [
-        (
-            "SHREK",
-            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
-            SECTION_1,
-            [
-                Result(state=State.OK, summary="Latest exit code: 0"),
-                Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
-                Metric("real_time", 120.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
-                Result(state=State.OK, summary="Job age: 1 year 178 days"),
-                Metric("job_age", 46999419.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Avg. memory: 1000 B"),
-                Metric("avg_mem_bytes", 1000.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Invol. context switches: 12"),
-                Metric("invol_context_switches", 12.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Max. memory: 1.18 MiB"),
-                Metric("max_res_bytes", 1234000.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Filesystem reads: 0"),
-                Metric("reads", 0.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="System time: 0 seconds"),
-                Metric("system_time", 0.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="User time: 1 second"),
-                Metric("user_time", 1.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Vol. context switches: 23"),
-                Metric("vol_context_switches", 23.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Filesystem writes: 0"),
-                Metric("writes", 0.0, boundaries=(0.0, None)),
-            ],
-        ),
-        (
-            "item",
-            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
-            {"item": {}},
-            [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
-        ),
-        (
-            "cleanup_remote_logs",
-            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
-            SECTION_2,
-            [
-                Result(state=State.OK, summary="Latest exit code: 0"),
-                Result(state=State.OK, summary="Real time: 10 seconds"),
-                Metric("real_time", 9.9, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at 2014-11-05 03:10:30"),
-                Result(state=State.OK, summary="Job age: 5 years 248 days"),
-                Metric("job_age", 179147190.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Avg. memory: 0 B"),
-                Metric("avg_mem_bytes", 0.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Invol. context switches: 15"),
-                Metric("invol_context_switches", 15.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Max. memory: 10.9 MiB"),
-                Metric("max_res_bytes", 11456000.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Filesystem reads: 96"),
-                Metric("reads", 96.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="System time: 970 milliseconds"),
-                Metric("system_time", 0.97, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="User time: 9 seconds"),
-                Metric("user_time", 8.85, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Vol. context switches: 274"),
-                Metric("vol_context_switches", 274.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Filesystem writes: 42016"),
-                Metric("writes", 42016.0, boundaries=(0.0, None)),
-            ],
-        ),
-        (
-            "backup.sh",
-            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
-            SECTION_2,
-            [
-                Result(state=State.OK, summary="Latest exit code: 0"),
-                Result(state=State.OK, summary="Real time: 4 minutes 42 seconds"),
-                Metric("real_time", 281.65, boundaries=(0.0, None)),
-                Result(
-                    state=State.OK,
-                    notice="1 job is currently running, started at 2014-11-05 17:41:53",
-                ),
-                Result(
-                    state=State.CRIT,
-                    summary="Job age (currently running): 5 years 247 days (warn/crit at 1 second/2 seconds)",
-                ),
-                Metric("job_age", 179094907.0, levels=(1.0, 2.0), boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Avg. memory: 0 B"),
-                Metric("avg_mem_bytes", 0.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Invol. context switches: 16806"),
-                Metric("invol_context_switches", 16806.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Max. memory: 124 MiB"),
-                Metric("max_res_bytes", 130304000.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Filesystem reads: 0"),
-                Metric("reads", 0.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="System time: 32 seconds"),
-                Metric("system_time", 32.12, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="User time: 4 minutes 38 seconds"),
-                Metric("user_time", 277.7, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Vol. context switches: 32779"),
-                Metric("vol_context_switches", 32779.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Filesystem writes: 251792"),
-                Metric("writes", 251792.0, boundaries=(0.0, None)),
-            ],
-        ),
-        (
-            "missing",
-            {"age": (1, 2), "exit_code_to_state_map": [(0, 0)]},
-            SECTION_2,
-            [],
-        ),
-        (
-            "Cleanup-Cache-Files",
-            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
-            {
-                "Cleanup-Cache-Files": {
-                    "running": False,
-                    "exit_code": 0,
-                    "metrics": {"real_time": 0.96},
-                }
-            },
-            [Result(state=State.UNKNOWN, summary="Got incomplete information for this job")],
-        ),
-        (
-            "Cleanup-Cache-Files",
-            {"age": (0, 0), "exit_code_to_state_map": [(0, 0)]},
-            {
-                "Cleanup-Cache-Files": {
-                    "running": True,
-                    "exit_code": 0,
-                    "running_start_time": [int(TIME) - 60],
-                    "metrics": {},
-                }
-            },
-            [
-                Result(state=State.OK, summary="Latest exit code: 0"),
-                Result(
-                    state=State.OK,
-                    notice="1 job is currently running, started at 2020-07-09 15:16:00",
-                ),
-                Result(state=State.OK, summary="Job age (currently running): 1 minute 0 seconds"),
-                Metric("job_age", 60.0, boundaries=(0.0, None)),
-            ],
+            id="long running job",
         ),
     ],
 )

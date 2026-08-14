@@ -10,6 +10,7 @@ import { computed, inject } from 'vue'
 
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
+import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
 import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
@@ -19,12 +20,21 @@ import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
 
-const props = defineProps<{ row: HostServiceEntry; tableRow: Row<HostServiceEntry> }>()
+const props = withDefaults(
+  defineProps<{
+    row: HostServiceEntry
+    tableRow: Row<HostServiceEntry>
+    /** Lazy loader for the entries of this service's action menu. */
+    loadActionMenu?: ((service: string) => Promise<CellAction[]>) | undefined
+  }>(),
+  { loadActionMenu: undefined }
+)
 
 const { _t } = usei18n()
 
 const emit = defineEmits<{
   (event: 'open', service: HostServiceEntry): void
+  (event: 'command', payload: { id: string; target: string }): void
 }>()
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
@@ -36,6 +46,15 @@ function hasColumn(columnId: string): boolean {
 function toggleSelected(selected: boolean): void {
   props.tableRow.toggleSelected(selected)
 }
+
+function onActionSelect(action: CellAction): void {
+  emit('command', { id: action.id, target: props.row.name })
+}
+
+const actionMenuLoader = computed<(() => Promise<CellAction[]>) | undefined>(() => {
+  const load = props.loadActionMenu
+  return load === undefined ? undefined : () => load(props.row.name)
+})
 
 const lastCheck = computed(() =>
   props.row.last_check === null ? '–' : formatTimestamp(props.row.last_check)
@@ -81,4 +100,12 @@ const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? [])
     size="small"
   />
   <PerfometerCell v-if="hasColumn('perfometer')" column-id="perfometer" :data="row.perfometer" />
+  <ActionsCell
+    v-if="actionMenuLoader && hasColumn('actions')"
+    column-id="actions"
+    :actions="[]"
+    :max-visible="0"
+    :load="actionMenuLoader"
+    @select="onActionSelect"
+  />
 </template>

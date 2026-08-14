@@ -24,6 +24,7 @@ import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
+import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
@@ -58,17 +59,30 @@ const serviceActions: CellAction[] = (props.actions ?? []).map((action) => ({
 
 const actionMenuApi = new ServiceActionMenuApi()
 
-// The legacy action-menu links (graphs, log file viewer, custom actions, ...) of one service,
-// fetched when the overflow menu is opened.
+// Command entries the row dropdown runs immediately with their default values, acting on that
+// single service. Only actions that are safe without user input belong here — form-based ones
+// (acknowledge, downtime) carry essential input and go through the action pane instead. They
+// carry no url, so ActionsCell emits `select`.
+const IMMEDIATE_ROW_COMMAND_IDS: readonly string[] = [RESCHEDULE_ACTION_ID]
+
+const rowCommands: CellAction[] = serviceActions.filter((action) =>
+  IMMEDIATE_ROW_COMMAND_IDS.includes(action.id)
+)
+
+// The immediate commands followed by the fetched legacy action-menu links (graphs, log file
+// viewer, custom actions, ...), read when the menu is opened.
 async function loadActionMenu(service: string): Promise<CellAction[]> {
   const items = await actionMenuApi.fetchActionMenu(host, service)
-  return items.map((item) => ({
-    id: `${item.title}|${item.url}`,
-    label: item.title as TranslatedString,
-    icon: item.icon_name as SimpleIcons,
-    url: item.url,
-    target: item.target
-  }))
+  return [
+    ...rowCommands,
+    ...items.map((item) => ({
+      id: `${item.title}|${item.url}`,
+      label: item.title as TranslatedString,
+      icon: item.icon_name as SimpleIcons,
+      url: item.url,
+      target: item.target
+    }))
+  ]
 }
 
 const columns = useHostServicesColumns()
@@ -253,12 +267,19 @@ function onActionPerformed(result: ActionFeedbackResult): void {
       :column-pinning="columnPinning"
       :get-row-key="rowKey"
       :get-action-target="serviceRef"
+      :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
       :selection-label="serviceSelectionLabel"
       :actions-label="_t('Actions for selected services')"
       @performed="onActionPerformed"
     >
-      <template #row="{ row, tableRow }">
-        <HostServicesRow :row="row" :table-row="tableRow" @open="openSlideIn" />
+      <template #row="{ row, tableRow, onCommand }">
+        <HostServicesRow
+          :row="row"
+          :table-row="tableRow"
+          :load-action-menu="loadActionMenu"
+          @open="openSlideIn"
+          @command="onCommand"
+        />
       </template>
     </MonitoringSplitPane>
     <ServiceSlideIn

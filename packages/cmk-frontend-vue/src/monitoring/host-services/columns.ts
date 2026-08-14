@@ -43,7 +43,7 @@ export function visibleServiceFields(visibility: VisibilityState): ServiceOption
  * horizontally.
  */
 export function buildHostServicesColumnPinning(): ColumnPinningState {
-  return { left: ['select', 'state', 'modes', 'name'] }
+  return { left: ['select', 'state', 'modes', 'name'], right: ['actions'] }
 }
 
 export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
@@ -186,6 +186,15 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       minSize: 168,
       maxSize: 168,
       meta: { justify: 'center' }
+    },
+    {
+      id: 'actions',
+      header: _t('Actions'),
+      enableSorting: false,
+      enableHiding: false,
+      minSize: 75,
+      maxSize: 75,
+      meta: { justify: 'right' }
     }
   ]
 }

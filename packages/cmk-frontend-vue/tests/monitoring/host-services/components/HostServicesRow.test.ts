@@ -4,7 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { Row } from '@tanstack/vue-table'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { defineComponent, h } from 'vue'
 
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
@@ -31,12 +33,18 @@ function makeTableRow(overrides: Partial<Row<HostServiceEntry>> = {}): Row<HostS
   } as unknown as Row<HostServiceEntry>
 }
 
-function mountRow(row: HostServiceEntry, tableRow: Row<HostServiceEntry> = makeTableRow()) {
+function mountRow(
+  row: HostServiceEntry,
+  tableRow: Row<HostServiceEntry> = makeTableRow(),
+  extraProps: Record<string, unknown> = {}
+) {
   return render(
     defineComponent({
       components: { HostServicesRow },
       render() {
-        return h('table', [h('tbody', [h('tr', [h(HostServicesRow, { row, tableRow })])])])
+        return h('table', [
+          h('tbody', [h('tr', [h(HostServicesRow, { row, tableRow, ...extraProps })])])
+        ])
       }
     })
   )
@@ -56,6 +64,65 @@ test('renders one cell per column', () => {
   // contact_groups, perfometer
   const tds = Array.from(container.querySelectorAll('td'))
   expect(tds).toHaveLength(12)
+})
+
+test('renders no action cell for a page that offers no menu', () => {
+  const { container } = mountRow(makeService())
+
+  expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
+  expect(Array.from(container.querySelectorAll('td'))).toHaveLength(12)
+})
+
+test('adds the action cell once a page offers the menu', () => {
+  const { container } = mountRow(makeService(), makeTableRow(), {
+    loadActionMenu: async () => []
+  })
+
+  expect(screen.getByRole('button', { name: 'More actions' })).toBeInTheDocument()
+  expect(Array.from(container.querySelectorAll('td'))).toHaveLength(13)
+})
+
+test('loads the menu of its own service, and only once it is opened', async () => {
+  const loadActionMenu = vi.fn(async () => [])
+  mountRow(makeService({ name: 'Memory' }), makeTableRow(), { loadActionMenu })
+  expect(loadActionMenu).not.toHaveBeenCalled()
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+
+  expect(loadActionMenu).toHaveBeenCalledWith('Memory')
+})
+
+test('emits a picked command with the service it acts on', async () => {
+  const command = {
+    id: 'reschedule',
+    label: 'Reschedule check' as TranslatedString,
+    icon: 'reload' as const
+  }
+  const onCommand = vi.fn()
+  render(
+    defineComponent({
+      components: { HostServicesRow },
+      render() {
+        return h('table', [
+          h('tbody', [
+            h('tr', [
+              h(HostServicesRow, {
+                row: makeService({ name: 'Memory' }),
+                tableRow: makeTableRow(),
+                loadActionMenu: async () => [command],
+                onCommand
+              })
+            ])
+          ])
+        ])
+      }
+    })
+  )
+
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+  await userEvent.click(await screen.findByRole('menuitem', { name: /Reschedule check/ }))
+
+  expect(onCommand).toHaveBeenCalledWith({ id: 'reschedule', target: 'Memory' })
 })
 
 test('renders the contact groups of a service, sorted alphabetically', () => {

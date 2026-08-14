@@ -35,13 +35,16 @@ const props = withDefaults(
     /** The actions the backend reports this user may run on a host. */
     permittedActions?: CellAction[]
     loadActionMenu: (host: HostRef) => Promise<CellAction[]>
+    /** The tab on show, as a `v-model:activeTabId`; forwarded to the panel. */
+    activeTabId?: string | undefined
   }>(),
-  { rowActions: () => [], permittedActions: () => [] }
+  { rowActions: () => [], permittedActions: () => [], activeTabId: undefined }
 )
 
 const emit = defineEmits<{
   (event: 'close'): void
   (event: 'performed', result: ActionFeedbackResult): void
+  (event: 'update:activeTabId', id: string): void
 }>()
 
 const { _t } = usei18n()
@@ -129,9 +132,11 @@ async function onCommand(payload: { id: string; host: HostRef }): Promise<void> 
   <CmkSlideInTabbed
     :open="open"
     :tabs="tabs"
+    :active-tab-id="activeTabId"
     :override-active="activeActionId !== null"
     :header="{ title: _t('Host details'), closeButton: true }"
     @close="emit('close')"
+    @update:active-tab-id="emit('update:activeTabId', $event)"
   >
     <template #above-tabs>
       <HostSlideInHeader

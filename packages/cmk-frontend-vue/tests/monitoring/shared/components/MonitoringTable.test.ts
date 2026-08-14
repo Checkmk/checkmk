@@ -79,7 +79,8 @@ function makeMockService(
     updateSort: vi.fn((newSort: SortingState) => {
       onSortUpdate(newSort)
     }),
-    columnVisibility
+    columnVisibility,
+    rowToReveal: ref<Row | null>(null)
   }
 }
 
@@ -118,36 +119,39 @@ function mountTable(overrides: {
     overrides.columnVisibility
   )
 
-  return render(
-    defineComponent({
-      components: { MonitoringTable },
-      setup() {
-        provide(MONITORING_SERVICE, mockService as unknown as MonitoringService<unknown>)
-        return { rows, fetchState, hasLoaded, filterState, onFilterUpdate, getRowKey }
-      },
-      render() {
-        return h(
-          MonitoringTable<Row>,
-          {
-            rows: this.rows,
-            fetchState: this.fetchState,
-            hasLoaded: this.hasLoaded,
-            columns: COLUMNS,
-            filterState: this.filterState,
-            ...(this.getRowKey ? { getRowKey: this.getRowKey } : {}),
-            'onUpdate:filterState': this.onFilterUpdate
-          },
-          {
-            row: ({ row, index }: { row: Row; index: number }) => [
-              h('td', { 'data-testid': `row-${row.id}` }, `${index}:${row.name}`),
-              h(layoutProbe)
-            ],
-            'empty-state': () => h('div', { 'data-testid': 'empty-state' }, 'nothing here')
-          }
-        )
-      }
-    })
-  )
+  return {
+    mockService,
+    ...render(
+      defineComponent({
+        components: { MonitoringTable },
+        setup() {
+          provide(MONITORING_SERVICE, mockService as unknown as MonitoringService<unknown>)
+          return { rows, fetchState, hasLoaded, filterState, onFilterUpdate, getRowKey }
+        },
+        render() {
+          return h(
+            MonitoringTable<Row>,
+            {
+              rows: this.rows,
+              fetchState: this.fetchState,
+              hasLoaded: this.hasLoaded,
+              columns: COLUMNS,
+              filterState: this.filterState,
+              ...(this.getRowKey ? { getRowKey: this.getRowKey } : {}),
+              'onUpdate:filterState': this.onFilterUpdate
+            },
+            {
+              row: ({ row, index }: { row: Row; index: number }) => [
+                h('td', { 'data-testid': `row-${row.id}` }, `${index}:${row.name}`),
+                h(layoutProbe)
+              ],
+              'empty-state': () => h('div', { 'data-testid': 'empty-state' }, 'nothing here')
+            }
+          )
+        }
+      })
+    )
+  }
 }
 
 test('renders all columns in the header', () => {
@@ -352,4 +356,25 @@ test('clicking a disabled header in the empty state does not sort', async () => 
   await userEvent.click(screen.getByRole('button', { name: 'Name' }))
 
   expect(onSortUpdate).not.toHaveBeenCalled()
+})
+
+test('consumes a reveal request for a row it lists', async () => {
+  const rows = makeRows(3)
+  const { mockService } = mountTable({ rows })
+  await flushVirtualizer()
+
+  mockService.rowToReveal.value = rows[2]!
+  await flushVirtualizer()
+
+  expect(mockService.rowToReveal.value).toBeNull()
+})
+
+test('consumes a reveal request for a row it does not list, rather than holding it', async () => {
+  const { mockService } = mountTable({ rows: makeRows(3) })
+  await flushVirtualizer()
+
+  mockService.rowToReveal.value = { id: 'elsewhere', name: 'host-9', state: 0 }
+  await flushVirtualizer()
+
+  expect(mockService.rowToReveal.value).toBeNull()
 })

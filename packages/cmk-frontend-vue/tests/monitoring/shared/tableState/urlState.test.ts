@@ -46,7 +46,9 @@ function makeUrlSync(search = ''): { urlSync: UrlSync; replaceUrl: ReturnType<ty
   return {
     urlSync: {
       getCurrentUrl: () => ({ pathname: '/monitor_all_hosts.py', search, hash: '' }),
-      replaceUrl
+      replaceUrl,
+      pushUrl: replaceUrl,
+      onNavigate: () => () => {}
     },
     replaceUrl
   }

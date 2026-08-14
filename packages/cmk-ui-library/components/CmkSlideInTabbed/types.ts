@@ -62,6 +62,13 @@ export interface CmkSlideInTabbedProps {
   /** Id of the tab shown first; defaults to the first tab. */
   defaultTabId?: string | undefined
   /**
+   * The tab on show, as a `v-model:activeTabId`. Bind it when the tab has to
+   * outlive the panel - a page persisting it in the URL, say. Left unbound, the
+   * container keeps the active tab to itself and `defaultTabId` decides where
+   * each opening starts.
+   */
+  activeTabId?: string | undefined
+  /**
    * When true, the tabs (and the `actions` slot) are hidden and the `override`
    * slot is rendered in their place. The `above-tabs` slot stays visible, so a
    * page can swap the tabbed body for a focused sub-view (e.g. an action form)

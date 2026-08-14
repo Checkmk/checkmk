@@ -31,6 +31,12 @@ import { filterStateWriter, readFilterUrlState } from '../shared/filterState/url
 import { buildColumnStorageKey } from '../shared/services/MonitoringService'
 import { buildTableStateSchema } from '../shared/tableState/schema'
 import { readTableStateFromUrl, tableStateWriter } from '../shared/tableState/urlState'
+import {
+  type SlideInUrlDescriptor,
+  exactPattern,
+  readSlideInFromHash,
+  slideInWriter
+} from '../shared/urlState/slideInState'
 import { useUrlSync } from '../shared/urlState/useUrlSync'
 import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
 import { useRescheduleHostsAction } from './actions/rescheduleHosts'
@@ -151,8 +157,6 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
   ]
 })
 
-useUrlSync([tableStateWriter(hostService, schema), filterStateWriter(hostService)])
-
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 
 const actionRegistry = createActionRegistry([
@@ -184,6 +188,7 @@ function hostSelectionLabel(count: number): TranslatedString {
 }
 
 const slideInHost = ref<HostEntry | null>(null)
+const slideInTabId = ref<string | undefined>(undefined)
 
 function openSlideIn(host: HostEntry): void {
   if (slideInHost.value === null) {
@@ -198,6 +203,57 @@ function closeSlideIn(): void {
   }
   slideInHost.value = null
 }
+
+// A host is identified by the site it lives on plus its name. The listing this
+// URL describes usually carries that row already; when it does not - filtered
+// out, or in a state it has since left - the panel is opened from a fetch of
+// that one host instead, so a shared link keeps working.
+const HOST_SLIDE_IN: SlideInUrlDescriptor<HostEntry, HostRef> = {
+  keys: ['host', 'site'],
+  defaultTabId: 'overview',
+  encode: (host) => ({ host: host.name, site: host.site_id }),
+  decode: (params) => {
+    const name = params['host']
+    const siteId = params['site']
+    return name === undefined || name === '' || siteId === undefined || siteId === ''
+      ? null
+      : { site_id: siteId, name }
+  },
+  matches: (host, identity) => host.name === identity.name && host.site_id === identity.site_id,
+  load: async (identity) => {
+    // `name` offers no equality operator, so an anchored pattern stands in for
+    // one and the exact row is picked out of what comes back.
+    const response = await hostApi.fetchHosts({
+      filter: {
+        type: 'and',
+        children: [
+          { type: 'condition', field: 'name', op: 'matches', value: exactPattern(identity.name) },
+          { type: 'condition', field: 'site_id', op: 'one_of', value: [identity.site_id] }
+        ]
+      },
+      limit: 1
+    })
+    return (
+      response.hosts.find(
+        (host) => host.name === identity.name && host.site_id === identity.site_id
+      ) ?? null
+    )
+  }
+}
+
+useUrlSync([
+  tableStateWriter(hostService, schema),
+  filterStateWriter(hostService),
+  slideInWriter({
+    descriptor: HOST_SLIDE_IN,
+    service: hostService,
+    current: slideInHost,
+    tabId: slideInTabId,
+    initial: readSlideInFromHash(HOST_SLIDE_IN, window.location.hash),
+    open: openSlideIn,
+    close: closeSlideIn
+  })
+])
 
 function onActionPerformed(result: ActionFeedbackResult): void {
   if (result.variant === 'success') {
@@ -276,6 +332,7 @@ function onActionPerformed(result: ActionFeedbackResult): void {
       </template>
     </MonitoringSplitPane>
     <HostSlideIn
+      v-model:active-tab-id="slideInTabId"
       :host="slideInHost"
       :actions="actionRegistry"
       :row-actions="rowActionButtons"

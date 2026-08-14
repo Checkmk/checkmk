@@ -175,6 +175,13 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly appliedSearchQuery: Ref<string> = ref('')
   /** The applied query the most recently completed fetch actually used. */
   readonly committedSearchQuery: Ref<string> = ref('')
+  /**
+   * A row to bring into view, cleared by the table once it has scrolled. Carries
+   * the row itself rather than a key: the table is the only place that knows how
+   * a row is keyed, and a row it does not currently list cannot be scrolled to
+   * at all.
+   */
+  readonly rowToReveal: Ref<T | null> = ref(null) as Ref<T | null>
   readonly filterState: Ref<FilterNode | undefined> = ref(undefined)
   /** The table's row-narrowing state - filter plus applied search - for a URL sync to watch. */
   readonly filterUrlState: ComputedRef<FilterUrlState>
@@ -510,6 +517,11 @@ export abstract class MonitoringService<T> extends ServiceBase {
 
   deactivateQuickFilter(quickFilter: QuickFilter): void {
     this.filters.deactivateQuickFilter(quickFilter)
+  }
+
+  /** Asks the table to scroll `row` into view. */
+  revealRow(row: T): void {
+    this.rowToReveal.value = row
   }
 
   /**

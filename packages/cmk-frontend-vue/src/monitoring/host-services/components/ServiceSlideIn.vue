@@ -36,13 +36,16 @@ const props = withDefaults(
     /** The actions this user may run, as reported by the backend; targets are service names. */
     actions?: MonitoringActionRegistry<string>
     permittedActions?: CellAction[]
+    /** The tab on show, as a `v-model:activeTabId`; forwarded to the panel. */
+    activeTabId?: string | undefined
   }>(),
-  { aiExplain: false, actions: () => ({}), permittedActions: () => [] }
+  { aiExplain: false, actions: () => ({}), permittedActions: () => [], activeTabId: undefined }
 )
 
 const emit = defineEmits<{
   (event: 'close'): void
   (event: 'performed', result: ActionFeedbackResult): void
+  (event: 'update:activeTabId', id: string): void
 }>()
 
 const { _t } = usei18n()
@@ -146,8 +149,10 @@ const tabs = computed<SlideInTab[]>(() => {
     :open="open"
     :tabs="tabs"
     :override-active="activeActionId !== null"
+    :active-tab-id="activeTabId"
     :header="{ title: _t('Service details'), closeButton: true }"
     @close="emit('close')"
+    @update:active-tab-id="emit('update:activeTabId', $event)"
   >
     <template #above-tabs>
       <ServiceSlideInHeader

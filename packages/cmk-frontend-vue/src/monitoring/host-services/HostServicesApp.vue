@@ -25,6 +25,13 @@ import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
 import { createActionRegistry } from '../shared/components/action/registry'
+import {
+  type SlideInUrlDescriptor,
+  exactPattern,
+  readSlideInFromHash,
+  slideInWriter
+} from '../shared/urlState/slideInState'
+import { useUrlSync } from '../shared/urlState/useUrlSync'
 import { useAcknowledgeServicesAction } from './actions/acknowledgeServices'
 import { useRescheduleServicesAction } from './actions/rescheduleServices'
 import { useScheduleServiceDowntimeAction } from './actions/scheduleServiceDowntime'
@@ -49,8 +56,10 @@ const serviceActions: CellAction[] = (props.actions ?? []).map((action) => ({
 const columns = useHostServicesColumns()
 const columnPinning = buildHostServicesColumnPinning()
 
+const servicesApi = new HostServicesApi()
+
 const hostServicesService = new HostServicesService(
-  new HostServicesApi(),
+  servicesApi,
   host,
   getKeyShortcutServiceInstance(),
   {
@@ -103,6 +112,7 @@ function rowKey(row: HostServiceEntry): string {
 }
 
 const slideInService = ref<HostServiceEntry | null>(null)
+const slideInTabId = ref<string | undefined>(undefined)
 
 function openSlideIn(service: HostServiceEntry): void {
   if (slideInService.value === null) {
@@ -117,6 +127,40 @@ function closeSlideIn(): void {
   }
   slideInService.value = null
 }
+
+// The host is the page, so a service needs nothing but its description to be
+// named - unlike the all hosts listing, where the site has to come along. A
+// service the listing does not show is fetched on its own, so a link to it opens
+// whether or not the filter would have let it through.
+const SERVICE_SLIDE_IN: SlideInUrlDescriptor<HostServiceEntry, string> = {
+  keys: ['service'],
+  defaultTabId: 'overview',
+  encode: (service) => ({ service: service.name }),
+  decode: (params) => {
+    const name = params['service']
+    return name === undefined || name === '' ? null : name
+  },
+  matches: (service, identity) => service.name === identity,
+  load: async (identity) => {
+    const response = await servicesApi.fetchServices(host, {
+      filter: { type: 'condition', field: 'name', op: 'matches', value: exactPattern(identity) },
+      limit: 1
+    })
+    return response.services.find((service) => service.name === identity) ?? null
+  }
+}
+
+useUrlSync([
+  slideInWriter({
+    descriptor: SERVICE_SLIDE_IN,
+    service: hostServicesService,
+    current: slideInService,
+    tabId: slideInTabId,
+    initial: readSlideInFromHash(SERVICE_SLIDE_IN, window.location.hash),
+    open: openSlideIn,
+    close: closeSlideIn
+  })
+])
 
 function serviceRef(row: HostServiceEntry): string {
   return row.name
@@ -195,6 +239,7 @@ function onActionPerformed(result: ActionFeedbackResult): void {
       </template>
     </MonitoringSplitPane>
     <ServiceSlideIn
+      v-model:active-tab-id="slideInTabId"
       :service="slideInService"
       :host="host"
       :ai-explain="props.ai_explain ?? false"

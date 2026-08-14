@@ -15,7 +15,7 @@ import {
 } from '@tanstack/vue-table'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { type ComponentPublicInstance, computed, inject, provide, ref, watch } from 'vue'
+import { type ComponentPublicInstance, computed, inject, nextTick, provide, ref, watch } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
 import type { FetchState } from '@/monitoring/shared/services/MonitoringService'
@@ -323,6 +323,26 @@ const rowVirtualizer = useVirtualizer(
     scrollMargin: headerHeight.value,
     getItemKey: rowKeyOf
   }))
+)
+
+// A row the page asked to reveal - a detail panel restored from the URL, whose
+// row may be far down the listing. Waits a tick so the virtualizer has measured
+// the rows it was handed, and clears the request either way: a row the listing
+// does not carry cannot be scrolled to, and retrying later would yank the
+// viewport around long after the fact.
+watch(
+  () => monitoringService?.rowToReveal.value ?? null,
+  async (row) => {
+    if (row === null || monitoringService === null) {
+      return
+    }
+    const index = props.rows.findIndex((candidate) => (candidate as unknown) === row)
+    await nextTick()
+    if (index !== -1) {
+      rowVirtualizer.value.scrollToIndex(index, { align: 'center' })
+    }
+    monitoringService.rowToReveal.value = null
+  }
 )
 
 const virtualRows = computed(() => rowVirtualizer.value.getVirtualItems())

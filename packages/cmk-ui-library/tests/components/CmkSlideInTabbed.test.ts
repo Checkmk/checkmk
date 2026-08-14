@@ -99,3 +99,47 @@ test('caches loaded tabs and re-fetches only on reopen', async () => {
   await screen.findByText('a-data')
   expect(loadA).toHaveBeenCalledTimes(2)
 })
+
+test('reports the tab the user picked, so a page can outlive the panel with it', async () => {
+  const tabs: SlideInTab[] = [
+    { id: 'a', title: 'A', component: tabBody },
+    { id: 'b', title: 'B', component: tabBody }
+  ]
+
+  const { emitted } = render(CmkSlideInTabbed, { props: { open: true, tabs, header } })
+
+  await userEvent.click(await screen.findByRole('tab', { name: 'B' }))
+
+  // Only what the user picked: opening on the default tab is not news.
+  expect(emitted()['update:activeTabId']).toEqual([['b']])
+})
+
+test('opens on the bound tab rather than the first one', async () => {
+  const loadA = vi.fn().mockResolvedValue('a-data')
+  const loadB = vi.fn().mockResolvedValue('b-data')
+  const tabs: SlideInTab[] = [
+    { id: 'a', title: 'A', component: tabBody, load: loadA },
+    { id: 'b', title: 'B', component: tabBody, load: loadB }
+  ]
+
+  render(CmkSlideInTabbed, { props: { open: true, tabs, header, activeTabId: 'b' } })
+
+  await screen.findByText('b-data')
+  expect(loadA).not.toHaveBeenCalled()
+})
+
+test('follows the bound tab when it changes from outside', async () => {
+  const tabs: SlideInTab[] = [
+    { id: 'a', title: 'A', component: tabBody, load: () => Promise.resolve('a-data') },
+    { id: 'b', title: 'B', component: tabBody, load: () => Promise.resolve('b-data') }
+  ]
+
+  const { rerender } = render(CmkSlideInTabbed, {
+    props: { open: true, tabs, header, activeTabId: 'a' }
+  })
+
+  await screen.findByText('a-data')
+  await rerender({ open: true, tabs, header, activeTabId: 'b' })
+
+  await screen.findByText('b-data')
+})

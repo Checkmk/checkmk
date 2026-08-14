@@ -37,6 +37,12 @@ export interface UrlStateFormat<TState, TRaw> {
 }
 
 /**
+ * Which half of the URL a slice owns. The two are separate namespaces: the same
+ * param name in the query and in the fragment is not a clash.
+ */
+export type UrlStateTarget = 'query' | 'hash'
+
+/**
  * A slice as {@link useUrlSync} sees it: a claim on some params, plus what
  * they should say right now. Deliberately state-agnostic - the one thing the
  * owner of `window.history` must not need is knowledge of what a slice means.
@@ -51,4 +57,18 @@ export interface UrlStateWriter {
   readonly name: string
   readonly keys: readonly string[]
   readonly params: ComputedRef<Record<string, string | null>>
+  /** Defaults to `'query'`. */
+  readonly target?: UrlStateTarget
+  /**
+   * `'push'` gives the change its own history entry, so Back undoes it;
+   * `'replace'` (the default) rewrites the current one. Adjusting the listing
+   * you are already looking at is not a navigation - opening a detail panel is.
+   */
+  readonly history?: 'push' | 'replace'
+  /**
+   * Called when the user navigates the history, with this slice's params as the
+   * URL now spells them. A slice without it is write-only: Back and Forward
+   * change the address bar and nothing else.
+   */
+  readonly apply?: (params: Record<string, string>) => void
 }

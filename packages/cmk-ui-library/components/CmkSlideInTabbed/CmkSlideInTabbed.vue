@@ -17,9 +17,14 @@ import type { CmkSlideInTabbedProps, SlideInTab, SlideInTabState } from './types
 const { _t } = usei18n()
 
 const props = defineProps<CmkSlideInTabbedProps>()
-const emit = defineEmits<{ close: [] }>()
+const emit = defineEmits<{ close: []; 'update:activeTabId': [id: string] }>()
 
-const activeTab = ref<string>(props.defaultTabId ?? props.tabs[0]?.id ?? '')
+/** Where an opening starts: what a bound `activeTabId` asks for, else the default. */
+function initialTab(): string {
+  return props.activeTabId ?? props.defaultTabId ?? props.tabs[0]?.id ?? ''
+}
+
+const activeTab = ref<string>(initialTab())
 
 // Loaded data is cached per tab so switching back and forth does not re-fetch.
 // The cache is cleared whenever the panel is (re)opened, so each opening starts
@@ -67,14 +72,24 @@ watch(
   (isOpen) => {
     if (isOpen) {
       resetTabs()
-      activeTab.value = props.defaultTabId ?? props.tabs[0]?.id ?? ''
+      activeTab.value = initialTab()
       void ensureLoaded(activeTab.value)
     }
   },
   { immediate: true }
 )
 
+watch(
+  () => props.activeTabId,
+  (id) => {
+    if (id !== undefined) {
+      activeTab.value = id
+    }
+  }
+)
+
 watch(activeTab, (id) => {
+  emit('update:activeTabId', id)
   if (props.open) {
     void ensureLoaded(id)
   }

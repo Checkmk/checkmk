@@ -4,25 +4,65 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { describe, expect, it, vi } from 'vitest'
-import { type Ref, computed, nextTick, ref } from 'vue'
+import { type Ref, computed, effectScope, nextTick, ref } from 'vue'
 
 import type { UrlSync } from '@/monitoring/shared/browserUrlSync'
 import type { UrlStateWriter } from '@/monitoring/shared/urlState/types'
 import { useUrlSync } from '@/monitoring/shared/urlState/useUrlSync'
 
-/** Remembers what was written, so a later flush sees the URL its predecessor left behind. */
-function makeUrlSync(search = ''): { urlSync: UrlSync; replaceUrl: ReturnType<typeof vi.fn> } {
-  let current = search
-  const replaceUrl = vi.fn((url: string) => {
-    const query = url.indexOf('?')
-    current = query === -1 ? '' : url.slice(query)
-  })
+const PATHNAME = '/monitor_all_hosts.py'
+
+interface FakeUrl {
+  urlSync: UrlSync
+  replaceUrl: ReturnType<typeof vi.fn>
+  pushUrl: ReturnType<typeof vi.fn>
+  /** Puts the browser on `url` and fires the navigation, as Back and Forward do. */
+  navigateTo: (url: string) => void
+  written: () => string[]
+}
+
+/**
+ * Remembers what was written, so a later flush sees the URL its predecessor
+ * left behind - the skip-when-unchanged and drop-what-I-wrote rules are only
+ * meaningful against a URL that actually moves.
+ */
+function makeUrlSync(url = PATHNAME): FakeUrl {
+  let current = url
+  const listeners: Array<() => void> = []
+  const written: string[] = []
+  const write = (next: string): void => {
+    current = next
+    written.push(next)
+  }
+  const replaceUrl = vi.fn(write)
+  const pushUrl = vi.fn(write)
   return {
     urlSync: {
-      getCurrentUrl: () => ({ pathname: '/monitor_all_hosts.py', search: current, hash: '' }),
-      replaceUrl
+      getCurrentUrl: () => {
+        const [beforeHash, hash = ''] = current.split('#')
+        const [pathname = '', search = ''] = beforeHash!.split('?')
+        return {
+          pathname,
+          search: search === '' ? '' : `?${search}`,
+          hash: hash === '' ? '' : `#${hash}`
+        }
+      },
+      replaceUrl,
+      pushUrl,
+      onNavigate: (listener) => {
+        listeners.push(listener)
+        return () => listeners.splice(listeners.indexOf(listener), 1)
+      }
     },
-    replaceUrl
+    replaceUrl,
+    pushUrl,
+    navigateTo: (next) => {
+      current = next
+      for (const listener of [...listeners]) {
+        listener()
+      }
+    },
+    written: () => written
   }
 }
 
@@ -103,10 +143,105 @@ describe('useUrlSync', () => {
 
   it('leaves the URL alone when it already says what the slices do', () => {
     const params = ref<Record<string, string | null>>({ q: 'web01' })
-    const { urlSync, replaceUrl } = makeUrlSync('?q=web01')
+    const { urlSync, replaceUrl } = makeUrlSync(`${PATHNAME}?q=web01`)
 
     useUrlSync([makeWriter('filter state', ['q'], params)], { urlSync })
 
     expect(replaceUrl).not.toHaveBeenCalled()
+  })
+
+  it('writes a hash slice into the fragment, leaving the query to the query slices', async () => {
+    const query = ref<Record<string, string | null>>({ q: 'web01' })
+    const fragment = ref<Record<string, string | null>>({ host: null })
+    const { urlSync, written } = makeUrlSync()
+
+    useUrlSync(
+      [
+        makeWriter('filter state', ['q'], query),
+        { ...makeWriter('slide-in', ['host'], fragment), target: 'hash' }
+      ],
+      { urlSync }
+    )
+
+    fragment.value = { host: 'web01' }
+    await nextTick()
+
+    expect(written().at(-1)).toBe(`${PATHNAME}?q=web01#host=web01`)
+  })
+
+  it('gives a push slice its own history entry, and keeps replacing for the others', async () => {
+    const query = ref<Record<string, string | null>>({ q: null })
+    const fragment = ref<Record<string, string | null>>({ host: null })
+    const { urlSync, replaceUrl, pushUrl } = makeUrlSync()
+
+    useUrlSync(
+      [
+        makeWriter('filter state', ['q'], query),
+        { ...makeWriter('slide-in', ['host'], fragment), target: 'hash', history: 'push' }
+      ],
+      { urlSync }
+    )
+
+    query.value = { q: 'web' }
+    await nextTick()
+    expect(replaceUrl).toHaveBeenCalledTimes(1)
+    expect(pushUrl).not.toHaveBeenCalled()
+
+    fragment.value = { host: 'web01' }
+    await nextTick()
+    expect(pushUrl).toHaveBeenCalledTimes(1)
+    expect(pushUrl.mock.calls[0]![0]).toBe(`${PATHNAME}?q=web#host=web01`)
+  })
+
+  it('hands a slice what the URL says once the user walks the history', () => {
+    const applied: Array<Record<string, string>> = []
+    const fragment = ref<Record<string, string | null>>({ host: 'web01' })
+    const { urlSync, navigateTo } = makeUrlSync(`${PATHNAME}#host=web01`)
+    const scope = effectScope()
+
+    scope.run(() => {
+      useUrlSync(
+        [
+          {
+            ...makeWriter('slide-in', ['host'], fragment),
+            target: 'hash',
+            history: 'push',
+            apply: (params) => applied.push(params)
+          }
+        ],
+        { urlSync }
+      )
+    })
+
+    navigateTo(PATHNAME)
+
+    expect(applied).toEqual([{}])
+
+    scope.stop()
+  })
+
+  it('stops listening for navigation once its scope is gone', () => {
+    const applied: Array<Record<string, string>> = []
+    const fragment = ref<Record<string, string | null>>({})
+    const { urlSync, navigateTo } = makeUrlSync()
+    const scope = effectScope()
+
+    scope.run(() => {
+      useUrlSync(
+        [
+          {
+            ...makeWriter('slide-in', ['host'], fragment),
+            target: 'hash',
+            apply: (params) => applied.push(params)
+          }
+        ],
+        { urlSync }
+      )
+    })
+    scope.stop()
+
+    navigateTo(`${PATHNAME}#host=web01`)
+
+    expect(applied).toEqual([])
   })
 })

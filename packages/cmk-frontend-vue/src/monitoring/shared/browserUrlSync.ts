@@ -15,14 +15,27 @@
 export interface UrlSync {
   getCurrentUrl(): { pathname: string; search: string; hash: string }
   replaceUrl(url: string): void
+  /**
+   * Adds a history entry instead of rewriting the current one, so Back undoes
+   * the change. For a state change the user reads as a navigation - opening a
+   * detail panel - rather than an adjustment of the page they are on.
+   */
+  pushUrl(url: string): void
+  /** Calls back whenever the user navigates the history; returns the unsubscribe. */
+  onNavigate(listener: () => void): () => void
 }
 
-/** Reads and replaces the real address bar via `window.location`/`window.history`. */
+/** Reads and writes the real address bar via `window.location`/`window.history`. */
 export const browserUrlSync: UrlSync = {
   getCurrentUrl: () => ({
     pathname: window.location.pathname,
     search: window.location.search,
     hash: window.location.hash
   }),
-  replaceUrl: (url) => window.history.replaceState(window.history.state, '', url)
+  replaceUrl: (url) => window.history.replaceState(window.history.state, '', url),
+  pushUrl: (url) => window.history.pushState(window.history.state, '', url),
+  onNavigate: (listener) => {
+    window.addEventListener('popstate', listener)
+    return () => window.removeEventListener('popstate', listener)
+  }
 }

@@ -1932,6 +1932,7 @@ class Site:
                 continue
             if re.search("Licensed phase: too many services.", crash_detail):
                 logger.warning("Ignored crash report due to license violation!")
+                continue
             if ignore_bakery_crashes and re.search(r"bake-agents|bake_agents", crash_detail):
                 logger.warning("Ignored bakery crash report (package contains faked artifacts)")
                 continue

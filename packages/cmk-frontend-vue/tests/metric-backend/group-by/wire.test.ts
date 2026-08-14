@@ -62,13 +62,14 @@ test('a function with no valid keys produces no aggregator', () => {
   ).toBeUndefined()
 })
 
-test('invalid (empty) keys are dropped while valid ones survive', () => {
+test('invalid keys (no key or no kind) are dropped while valid ones survive', () => {
   const aggregator = floatGroupByToAggregator(
     model({
       function: 'avg',
       keys: [
         { id: 'a', attributeKind: 'resource', attributeKey: '' },
-        { id: 'b', attributeKind: 'data_point', attributeKey: 'http.method' }
+        { id: 'b', attributeKind: null, attributeKey: 'unresolved.attr' },
+        { id: 'c', attributeKind: 'data_point', attributeKey: 'http.method' }
       ]
     })
   )

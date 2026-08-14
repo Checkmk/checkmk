@@ -186,7 +186,7 @@ function addKey(): void {
   if (!keysEnabled.value || !tryChangeFocus()) {
     return
   }
-  const fresh: GroupKey = { id: randomId(), attributeKind: 'resource', attributeKey: '' }
+  const fresh: GroupKey = { id: randomId(), attributeKind: null, attributeKey: '' }
   model.value = { ...model.value, keys: [...model.value.keys, fresh] }
   editingId.value = fresh.id
 }
@@ -264,6 +264,7 @@ function canLeaveEdit(): boolean {
             }}</span>
             <template v-for="(key, index) in model.keys" :key="key.id">
               <span
+                v-if="key.attributeKind !== null"
                 class="metric-backend-form-group-by__segment metric-backend-form-group-by__segment--dimmed"
                 >[{{ attributeKindLabel(key.attributeKind) }}]</span
               >

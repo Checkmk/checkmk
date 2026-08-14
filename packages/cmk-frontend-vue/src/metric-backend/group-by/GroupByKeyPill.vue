@@ -43,8 +43,12 @@ const emit = defineEmits<{
 
 const fullLabel = computed(() => keyPillLabel(props.condition))
 const keyEmpty = computed(() => props.condition.attributeKey === '')
+const attributeKindEmpty = computed(() => props.condition.attributeKind === null)
 
 const keyDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('keyDropdownRef')
+const attributeKindDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>(
+  'attributeKindDropdownRef'
+)
 const pillRef = useTemplateRef<InstanceType<typeof InlineEditPill>>('pillRef')
 
 const showValidationErrors = ref(false)
@@ -60,6 +64,17 @@ watch(
     }
   },
   { immediate: true }
+)
+
+// Key set but kind still unresolved: open the kind dropdown so the user picks one.
+watch(
+  () => props.condition.attributeKey,
+  (next, prev) => {
+    if (next === prev || next === '' || props.condition.attributeKind !== null) {
+      return
+    }
+    void nextTick(() => attributeKindDropdownRef.value?.open())
+  }
 )
 
 // Emit only the key; the parent infers the kind in one mutation (two emits would race and drop it).
@@ -84,7 +99,7 @@ const attributeKindOptions = computed(() => ({
   }))
 }))
 
-// Veto committing while the key is empty: reveal the error and keep editing.
+// Veto committing an incomplete key: reveal the error and keep editing.
 function canLeave(): boolean {
   if (!isKeyValid(props.condition)) {
     showValidationErrors.value = true
@@ -121,15 +136,19 @@ defineExpose({
   >
     <template #edit>
       <span
+        v-if="condition.attributeKey"
         data-gb-item
         class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--attribute-kind"
       >
         <CmkDropdown
+          ref="attributeKindDropdownRef"
           v-model="attributeKindInput"
           floating
           :options="attributeKindOptions"
           :label="_t('Attribute kind')"
           :input-hint="_t('Attribute kind')"
+          :required="showValidationErrors"
+          :form-validation="showValidationErrors && attributeKindEmpty"
         />
       </span>
       <span
@@ -151,6 +170,7 @@ defineExpose({
     </template>
     <template #read-only>
       <span
+        v-if="condition.attributeKind !== null"
         class="metric-backend-group-by-key-pill__segment metric-backend-group-by-key-pill__segment--attribute-kind metric-backend-group-by-key-pill__segment--dimmed"
         >[{{ attributeKindLabel(condition.attributeKind) }}]</span
       >

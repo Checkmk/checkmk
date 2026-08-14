@@ -6,9 +6,19 @@
 import {
   clauseSummary,
   compactFunctionLabel,
-  functionLabel
+  functionLabel,
+  keyPillLabel
 } from '@/metric-backend/group-by/group-by-label'
 import type { GroupByModel } from '@/metric-backend/group-by/types'
+
+test('a key label brackets its kind, and drops the prefix while the kind is still unset', () => {
+  expect(keyPillLabel({ id: '1', attributeKind: 'resource', attributeKey: 'service.name' })).toBe(
+    '[Resource] service.name'
+  )
+  expect(keyPillLabel({ id: '1', attributeKind: null, attributeKey: 'custom.attr' })).toBe(
+    'custom.attr'
+  )
+})
 
 test('grouping functions read as "<function> by", with "no grouping" for the inert option', () => {
   expect(functionLabel('none')).toBe('no grouping')

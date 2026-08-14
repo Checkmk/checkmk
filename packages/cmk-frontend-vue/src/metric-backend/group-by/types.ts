@@ -23,7 +23,7 @@ export type ParamKind = 'quantile' | 'fraction_below' | 'fraction_between' | 'no
 
 export interface GroupKey {
   id: string
-  attributeKind: AttributeKind
+  attributeKind: AttributeKind | null
   attributeKey: string
 }
 
@@ -70,6 +70,8 @@ export function functionParamKind(fn: GroupByFunction): ParamKind {
   }
 }
 
-export function isKeyValid(key: GroupKey): boolean {
-  return key.attributeKey !== ''
+export type ValidGroupKey = GroupKey & { attributeKind: AttributeKind }
+
+export function isKeyValid(key: GroupKey): key is ValidGroupKey {
+  return key.attributeKey !== '' && key.attributeKind !== null
 }

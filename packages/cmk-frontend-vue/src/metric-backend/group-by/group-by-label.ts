@@ -30,9 +30,10 @@ export function functionLabel(fn: GroupByFunction): TranslatedString {
   return functionLabels()[fn] ?? untranslated(fn)
 }
 
-/** Group key label, prefixed with its bracketed attribute kind: '[Resource] service.name'. */
+/** Group key label: '[Resource] service.name', or just the key while its kind is unset. */
 export function keyPillLabel(key: GroupKey): string {
-  return `[${attributeKindLabel(key.attributeKind)}] ${key.attributeKey}`
+  const prefix = key.attributeKind === null ? '' : `[${attributeKindLabel(key.attributeKind)}] `
+  return `${prefix}${key.attributeKey}`
 }
 
 /** Clause-head token for the collapsed chip, e.g. 'p95 by', 'fraction <0.1 by', 'avg by'. */

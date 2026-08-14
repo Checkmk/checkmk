@@ -77,7 +77,8 @@ test('the read-only chip shows the bracketed attribute kind and the key', () => 
 
 test('selecting a suggested key emits a single update:attributeKey (attribute-kind inference is the parent’s job)', async () => {
   const { condition, keyUpdates } = renderPill({ attributeKey: '' }, true)
-  expect(screen.getByRole('combobox', { name: 'Attribute kind' })).toBeVisible()
+  // The attribute-kind dropdown stays hidden until a key has been chosen.
+  expect(screen.queryByRole('combobox', { name: 'Attribute kind' })).toBeNull()
 
   // Let the auto-open (nextTick) settle so the click below cannot re-toggle the dropdown.
   await new Promise((resolve) => setTimeout(resolve, 0))
@@ -92,6 +93,28 @@ test('selecting a suggested key emits a single update:attributeKey (attribute-ki
 
   expect(condition.value.attributeKey).toBe('http.route')
   expect(keyUpdates).toEqual(['http.route'])
+  expect(screen.getByRole('combobox', { name: 'Attribute kind' })).toBeVisible()
+})
+
+test('picking a key whose kind is unresolved reveals and auto-opens the attribute-kind dropdown', async () => {
+  // Parent leaves the kind null (custom / ambiguous key the suggestions can't resolve).
+  const { condition } = renderPill({ attributeKind: null, attributeKey: '' }, true)
+  expect(screen.queryByRole('combobox', { name: 'Attribute kind' })).toBeNull()
+
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  const keyCombobox = screen.getByRole('combobox', { name: 'Attribute key' })
+  if (keyCombobox.getAttribute('aria-expanded') !== 'true') {
+    await userEvent.click(keyCombobox)
+  }
+  const filter = screen.getByRole('textbox', { name: 'filter' })
+  await userEvent.clear(filter)
+  await userEvent.type(filter, 'http.route')
+  await userEvent.click(await screen.findByRole('option', { name: 'http.route' }))
+
+  expect(condition.value.attributeKind).toBeNull()
+  const kindCombobox = await screen.findByRole('combobox', { name: 'Attribute kind' })
+  expect(kindCombobox).toBeVisible()
+  expect(kindCombobox).toHaveAttribute('aria-expanded', 'true')
 })
 
 test('the remove button emits remove', async () => {

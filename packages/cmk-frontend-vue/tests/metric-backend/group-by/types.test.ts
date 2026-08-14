@@ -8,9 +8,10 @@ import {
   HISTOGRAM_FUNCTIONS,
   defaultFunction,
   functionParamKind,
-  functionsForInputType
+  functionsForInputType,
+  isKeyValid
 } from '@/metric-backend/group-by/types'
-import type { GroupByFunction, GroupByInputType } from '@/metric-backend/group-by/types'
+import type { GroupByFunction, GroupByInputType, GroupKey } from '@/metric-backend/group-by/types'
 
 test.each<[GroupByInputType, readonly GroupByFunction[]]>([
   ['float', FLOAT_FUNCTIONS],
@@ -25,4 +26,13 @@ test('parameter kind maps histogram functions to their inputs, aggregations to n
   expect(functionParamKind('fraction_below')).toBe('fraction_below')
   expect(functionParamKind('fraction_between')).toBe('fraction_between')
   expect(functionParamKind('avg')).toBe('none')
+})
+
+test.each<[string, GroupKey, boolean]>([
+  ['both set', { id: '1', attributeKind: 'resource', attributeKey: 'service.name' }, true],
+  ['no key', { id: '1', attributeKind: 'resource', attributeKey: '' }, false],
+  ['no kind', { id: '1', attributeKind: null, attributeKey: 'service.name' }, false],
+  ['neither', { id: '1', attributeKind: null, attributeKey: '' }, false]
+])('a key is valid only with both a key and a kind (%s)', (_name, key, expected) => {
+  expect(isKeyValid(key)).toBe(expected)
 })

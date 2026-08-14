@@ -189,7 +189,7 @@ function itemActionLabel(id: ItemId): TranslatedString {
             v-model="title"
             :aria-labelledby="titleId"
             field-size="fill"
-            :placeholder="_t('<Default title>')"
+            :placeholder="_t('Default title')"
           />
         </div>
       </div>

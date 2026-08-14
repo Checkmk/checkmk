@@ -52,7 +52,7 @@ test('adds a committed formula and clears the input', async () => {
 
 test('a custom title is committed with the draft', async () => {
   const { emitted } = renderTab()
-  await fireEvent.update(screen.getByPlaceholderText('<Default title>'), 'My calculation')
+  await fireEvent.update(screen.getByPlaceholderText('Default title'), 'My calculation')
   await fireEvent.update(formulaInput(), 'A')
   await fireEvent.click(screen.getByRole('button', { name: 'Calculate & add' }))
   const [draft] = emitted('add')![0] as [{ title: string }]

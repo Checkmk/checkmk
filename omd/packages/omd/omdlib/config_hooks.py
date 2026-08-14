@@ -214,7 +214,7 @@ def load_config(site_name: str, hook_dir: str | None, omd_path: Path = Path("/om
     return config
 
 
-def read_site_config(site_home: str) -> Config:
+def read_site_config(site_home: str, *, print_errors: bool = True) -> Config:
     """Read and parse the file site.conf of a site into a dictionary and returns it"""
     config: Config = {}
     if not (confpath := Path(site_home, "etc/omd/site.conf")).exists():
@@ -227,7 +227,8 @@ def read_site_config(site_home: str) -> Config:
                 continue
             var, value = line.split("=", 1)
             if not var.startswith("CONFIG_"):
-                sys.stderr.write("Ignoring invalid variable %s.\n" % var)
+                if print_errors:
+                    sys.stderr.write("Ignoring invalid variable %s.\n" % var)
             else:
                 config[var[7:].strip()] = value.strip().strip("'")
 
@@ -311,7 +312,7 @@ def _build_site_configs(omd_path: Path = Path("/omd")) -> _SiteConfigs:
     for sitename in all_sites(omd_path):
         site_home = SitePaths.from_site_name(sitename, omd_path).home
         try:
-            site_configs[sitename] = read_site_config(site_home)
+            site_configs[sitename] = read_site_config(site_home, print_errors=False)
         except PermissionError:
             sites_with_unreadable_configs.append(sitename)
         except Exception:

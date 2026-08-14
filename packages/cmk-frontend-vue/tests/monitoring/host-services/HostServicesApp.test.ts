@@ -23,6 +23,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  window.history.replaceState(null, '', '/monitor_host_services.py')
 })
 
 function servicesResponse(
@@ -397,6 +398,66 @@ test('resetting all filters restores the full, unfiltered list', async () => {
     expect.objectContaining({
       body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
     })
+  )
+})
+
+test('requests only the states the URL a link arrived on names', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    `/monitor_host_services.py?host=web-1&site=local&filter=${encodeURIComponent(
+      JSON.stringify({ type: 'condition', field: 'state', op: 'one_of', value: ['CRIT'] })
+    )}`
+  )
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByText('Total rows: 1')
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        filter: { type: 'condition', field: 'state', op: 'one_of', value: ['CRIT'] },
+        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+      }
+    })
+  )
+})
+
+test('shows the state filter a link arrived with as an active filter', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    `/monitor_host_services.py?host=web-1&site=local&filter=${encodeURIComponent(
+      JSON.stringify({ type: 'condition', field: 'state', op: 'one_of', value: ['CRIT'] })
+    )}`
+  )
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State' }))
+
+  expect(
+    within(screen.getByRole('group', { name: 'Filter State' })).getByLabelText('CRIT')
+  ).toBeChecked()
+})
+
+test('keeps the host and site params a filter write leaves the URL with', async () => {
+  window.history.replaceState(null, '', '/monitor_host_services.py?host=web-1&site=local')
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter Service' }))
+  const panel = screen.getByRole('group', { name: 'Filter Service' })
+  await fireEvent.update(within(panel).getByRole('textbox'), 'cpu')
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  const params = new URLSearchParams(window.location.search)
+  expect(params.get('host')).toBe('web-1')
+  expect(params.get('site')).toBe('local')
+  expect(params.get('filter')).toBe(
+    JSON.stringify({ type: 'condition', field: 'name', op: 'contains', value: 'cpu' })
   )
 })
 

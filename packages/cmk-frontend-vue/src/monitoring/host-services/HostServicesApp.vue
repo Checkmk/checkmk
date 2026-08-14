@@ -25,6 +25,8 @@ import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
 import { createActionRegistry } from '../shared/components/action/registry'
+import { buildFilterUrlSchema } from '../shared/filterState/schema'
+import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
 import {
   type SlideInUrlDescriptor,
   exactPattern,
@@ -56,6 +58,9 @@ const serviceActions: CellAction[] = (props.actions ?? []).map((action) => ({
 const columns = useHostServicesColumns()
 const columnPinning = buildHostServicesColumnPinning()
 
+const filterSchema = buildFilterUrlSchema(columns)
+const initialFilterState = readFilterUrlState(window.location.search, filterSchema)
+
 const servicesApi = new HostServicesApi()
 
 const hostServicesService = new HostServicesService(
@@ -65,6 +70,7 @@ const hostServicesService = new HostServicesService(
   {
     pollIntervalMs: props.poll_interval_ms,
     columns,
+    initialFilterState,
     quickFilters: [
       {
         label: _t('Unhandled problems'),
@@ -151,6 +157,7 @@ const SERVICE_SLIDE_IN: SlideInUrlDescriptor<HostServiceEntry, string> = {
 }
 
 useUrlSync([
+  filterStateWriter(hostServicesService),
   slideInWriter({
     descriptor: SERVICE_SLIDE_IN,
     service: hostServicesService,

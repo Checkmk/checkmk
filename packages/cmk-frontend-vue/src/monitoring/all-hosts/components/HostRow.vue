@@ -8,9 +8,10 @@ import type { Row } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, inject } from 'vue'
 
-import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
+import type { HostEntry, HostRef, ServiceState } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
 import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
@@ -18,6 +19,7 @@ import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
 
 const props = withDefaults(
@@ -52,6 +54,15 @@ const actionButtons = computed<CellAction[]>(() =>
 
 function onActionSelect(action: CellAction): void {
   emit('command', { id: action.id, target: hostRef.value })
+}
+
+const allServicesLink = computed<CellLink>(() => ({
+  href: hostServicesPageUrl(hostRef.value),
+  target: '_top'
+}))
+
+function servicesInStateLink(state: ServiceState): CellLink {
+  return { href: hostServicesPageUrl(hostRef.value, [state]), target: '_top' }
 }
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
@@ -113,14 +124,7 @@ const lastStateChange = computed(() =>
             minWidth: SERVICE_COUNT_MIN_WIDTH
           }
     "
-    :linked-to="
-      !row.num_services
-        ? undefined
-        : {
-            href: `view.py?host=${row.name}&view_name=host`,
-            target: '_top'
-          }
-    "
+    :linked-to="!row.num_services ? undefined : allServicesLink"
   />
   <NumberCell
     v-if="hasColumn('num_services_ok')"
@@ -135,14 +139,7 @@ const lastStateChange = computed(() =>
             minWidth: SERVICE_COUNT_MIN_WIDTH
           }
     "
-    :linked-to="
-      !row.num_services_ok
-        ? undefined
-        : {
-            href: `view.py?host=${row.name}&view_name=host_ok`,
-            target: '_top'
-          }
-    "
+    :linked-to="!row.num_services_ok ? undefined : servicesInStateLink('OK')"
   />
   <NumberCell
     v-if="hasColumn('num_services_warn')"
@@ -157,14 +154,7 @@ const lastStateChange = computed(() =>
             minWidth: SERVICE_COUNT_MIN_WIDTH
           }
     "
-    :linked-to="
-      !row.num_services_warn
-        ? undefined
-        : {
-            href: `view.py?host=${row.name}&view_name=host_warn`,
-            target: '_top'
-          }
-    "
+    :linked-to="!row.num_services_warn ? undefined : servicesInStateLink('WARN')"
   />
   <NumberCell
     v-if="hasColumn('num_services_crit')"
@@ -179,14 +169,7 @@ const lastStateChange = computed(() =>
             minWidth: SERVICE_COUNT_MIN_WIDTH
           }
     "
-    :linked-to="
-      !row.num_services_crit
-        ? undefined
-        : {
-            href: `view.py?host=${row.name}&view_name=host_crit`,
-            target: '_top'
-          }
-    "
+    :linked-to="!row.num_services_crit ? undefined : servicesInStateLink('CRIT')"
   />
   <NumberCell
     v-if="hasColumn('num_services_unknown')"
@@ -201,14 +184,7 @@ const lastStateChange = computed(() =>
             minWidth: SERVICE_COUNT_MIN_WIDTH
           }
     "
-    :linked-to="
-      !row.num_services_unknown
-        ? undefined
-        : {
-            href: `view.py?host=${row.name}&view_name=host_unknown`,
-            target: '_top'
-          }
-    "
+    :linked-to="!row.num_services_unknown ? undefined : servicesInStateLink('UNKNOWN')"
   />
   <NumberCell
     v-if="hasColumn('num_services_pending')"

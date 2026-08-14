@@ -136,6 +136,82 @@ test('renders one cell per service state with its count', () => {
   expect(tds[13]).toHaveTextContent('5')
 })
 
+function serviceCountLinks(container: Element): Array<HTMLAnchorElement | null> {
+  const tds = Array.from(container.querySelectorAll('td'))
+  return tds.slice(8, 14).map((td) => td.querySelector('a'))
+}
+
+function filterParam(link: HTMLAnchorElement | null | undefined): string | null {
+  return new URL(
+    link!.getAttribute('href')!,
+    'http://checkmk.example/site/check_mk/'
+  ).searchParams.get('filter')
+}
+
+function stateFilter(...states: string[]): string {
+  return JSON.stringify({ type: 'condition', field: 'state', op: 'one_of', value: states })
+}
+
+test('links every service count to the services of that host', () => {
+  const { container } = mountRow(
+    makeHost({
+      num_services: 15,
+      num_services_ok: 1,
+      num_services_warn: 2,
+      num_services_crit: 3,
+      num_services_unknown: 4,
+      num_services_pending: 5
+    })
+  )
+
+  for (const link of serviceCountLinks(container).slice(0, 5)) {
+    expect(link).toHaveAttribute('target', '_top')
+    expect(link!.getAttribute('href')).toContain('monitor_host_services.py?host=web-1&site=local')
+  }
+})
+
+test('narrows each service count link to the state that column counts', () => {
+  const { container } = mountRow(
+    makeHost({
+      num_services: 15,
+      num_services_ok: 1,
+      num_services_warn: 2,
+      num_services_crit: 3,
+      num_services_unknown: 4,
+      num_services_pending: 5
+    })
+  )
+
+  const [total, ok, warn, crit, unknown] = serviceCountLinks(container)
+  expect(filterParam(total)).toBeNull()
+  expect(filterParam(ok)).toBe(stateFilter('OK'))
+  expect(filterParam(warn)).toBe(stateFilter('WARN'))
+  expect(filterParam(crit)).toBe(stateFilter('CRIT'))
+  expect(filterParam(unknown)).toBe(stateFilter('UNKNOWN'))
+})
+
+test('keeps the pending count on the legacy view, which alone knows that state', () => {
+  const { container } = mountRow(makeHost({ num_services_pending: 5 }))
+
+  const pending = serviceCountLinks(container)[5]
+  expect(pending).toHaveAttribute('href', 'view.py?host=web-1&view_name=host_pending')
+})
+
+test('links no service count a host has none of', () => {
+  const { container } = mountRow(
+    makeHost({
+      num_services: 0,
+      num_services_ok: 0,
+      num_services_warn: 0,
+      num_services_crit: 0,
+      num_services_unknown: 0,
+      num_services_pending: 0
+    })
+  )
+
+  expect(serviceCountLinks(container)).toEqual([null, null, null, null, null, null])
+})
+
 test('toggles the row selection when the checkbox is clicked', async () => {
   const toggleSelected = vi.fn()
   const { container } = mountRow(makeHost(), makeTableRow({ toggleSelected }))

@@ -314,6 +314,10 @@ def _build_site_configs(omd_path: Path = Path("/omd")) -> _SiteConfigs:
             site_configs[sitename] = read_site_config(site_home)
         except PermissionError:
             sites_with_unreadable_configs.append(sitename)
+        except Exception:
+            # Site config parsing may fail due to all kinds of errors, but shouldn't
+            # break the current site's command invocation.
+            continue
     return _SiteConfigs(site_configs, sites_with_unreadable_configs)
 
 

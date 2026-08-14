@@ -303,7 +303,19 @@ def _process_job_stats(
             ),
         )
 
-    for metric in sorted(metrics_to_output):
+    # Order metric in a meaningful way
+    for metric in (
+        "user_time",
+        "system_time",
+        "reads",
+        "writes",
+        "max_res_bytes",
+        "avg_mem_bytes",
+        "invol_context_switches",
+        "vol_context_switches",
+    ):
+        if metric not in metrics_to_output:
+            continue
         yield from _check_job_levels(job, metric)
 
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Annotated, Literal
 
 from cmk.ccc.site import SiteId
@@ -43,7 +41,7 @@ type _EventconsolehistoryQuery = Annotated[
 
 @api_model
 class HistoricalEventsCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["historical_event"] = api_field(
+    domainType: Literal["historical_event"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection",
         example="historical_event",
     )

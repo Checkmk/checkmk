@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from __future__ import annotations
 
 import dataclasses
@@ -81,7 +79,7 @@ class BIHostAliasRegexChoiceSchema(Schema):
 class BIHostChoice(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "all_hosts": BIAllHostsChoiceSchema,
         "host_name_regex": BIHostNameRegexChoiceSchema,
         "host_alias_regex": BIHostAliasRegexChoiceSchema,
@@ -448,7 +446,7 @@ class ChildWithSchema(Schema):
 class ReferToSchema(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "host": HostSchema,
         "parent": ParentSchema,
         "child": ChildSchema,
@@ -679,7 +677,7 @@ class BIFixedArgumentsSearchSchema(Schema):
 class BISearchSchema(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = {k: v.schema() for k, v in bi_search_registry.items()}
+    type_schemas = {k: v.schema() for k, v in bi_search_registry.items()}  # type: ignore[mutable-override]
 
     @override
     def get_obj_type(self, obj: ABCBISearch | SearchSerialized) -> SearchKind:

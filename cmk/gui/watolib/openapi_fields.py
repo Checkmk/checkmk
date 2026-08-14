@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="type-arg"
 
 """Marshmallow field/schema definitions for watolib domain objects."""
@@ -371,7 +370,7 @@ class RegexpRewrites(BaseSchema, CheckmkTuple):
 
     """
 
-    tuple_fields = ("search", "replace_with")
+    tuple_fields = ("search", "replace_with")  # type: ignore[mutable-override]
     cast_to_dict = True
 
     search = String(
@@ -427,7 +426,7 @@ class IPAddressRange(BaseSchema, CheckmkTuple):
 
     """
 
-    tuple_fields = ("type", ("from_address", "to_address"))
+    tuple_fields = ("type", ("from_address", "to_address"))  # type: ignore[mutable-override]
     cast_to_dict = True
 
     type = Constant(
@@ -500,7 +499,7 @@ class IPNetwork(BaseSchema, CheckmkTuple):
     ('ip_network', ('192.168.0.0', 24))
     """
 
-    tuple_fields = ("type", "network")
+    tuple_fields = ("type", "network")  # type: ignore[mutable-override]
     cast_to_dict = True
 
     type = Constant(
@@ -532,7 +531,7 @@ class IPAddresses(BaseSchema, CheckmkTuple):
 
     """
 
-    tuple_fields = ("type", "addresses")
+    tuple_fields = ("type", "addresses")  # type: ignore[mutable-override]
     cast_to_dict = True
 
     type = Constant(
@@ -557,7 +556,7 @@ class IPRegexp(BaseSchema, CheckmkTuple):
 
     """
 
-    tuple_fields = ("type", "regexp_list")
+    tuple_fields = ("type", "regexp_list")  # type: ignore[mutable-override]
     cast_to_dict = True
 
     type = Constant(
@@ -605,7 +604,7 @@ class IPRange(OneOfSchema):
     """
 
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "address_range": IPAddressRange,
         "network_range": IPNetwork,
         "explicit_addresses": IPAddresses,
@@ -622,7 +621,7 @@ class IPRange(OneOfSchema):
 
 class IPRangeWithRegexp(OneOfSchema):
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "address_range": IPAddressRange,
         "network_range": IPNetwork,
         "explicit_addresses": IPAddresses,
@@ -680,8 +679,8 @@ class TimeAllowedRange(BaseSchema, CheckmkTuple):
 
     """
 
-    tuple_fields = ("start", "end")
-    converter = (DateConverter(), DateConverter())
+    tuple_fields = ("start", "end")  # type: ignore[mutable-override]
+    converter = (DateConverter(), DateConverter())  # type: ignore[mutable-override]
 
     start = Time(
         description=("The start time of day. Inclusive. Use ISO8601 format. Seconds are stripped."),
@@ -717,7 +716,7 @@ def _enum_options(options: list[tuple[str, str]]) -> str:
 
 
 class DirectMapping(BaseSchema, CheckmkTuple):
-    tuple_fields = ("hostname", "replace_with")
+    tuple_fields = ("hostname", "replace_with")  # type: ignore[mutable-override]
 
     hostname = String(
         description="The host name to be replaced.",
@@ -944,7 +943,7 @@ class LockedBy(BaseSchema, CheckmkTuple):
     ('site', 'dcd', 'conn')
     """
 
-    tuple_fields = ("site_id", "program_id", "instance_id")
+    tuple_fields = ("site_id", "program_id", "instance_id")  # type: ignore[mutable-override]
     cast_to_dict = True
     site_id = String(
         description="Site ID",
@@ -1082,7 +1081,7 @@ class SNMPCommunity(BaseSchema):
 
 
 class SNMPv3NoAuthNoPrivacy(BaseSchema, CheckmkTuple):
-    tuple_fields = ("type", "security_name")
+    tuple_fields = ("type", "security_name")  # type: ignore[mutable-override]
     cast_to_dict = True
 
     type = Constant(
@@ -1097,8 +1096,8 @@ class SNMPv3NoAuthNoPrivacy(BaseSchema, CheckmkTuple):
 
 
 class SNMPv3AuthNoPrivacy(BaseSchema, CheckmkTuple):
-    tuple_fields = ("type", "auth_protocol", "security_name", "auth_password")
-    converter = (None, AuthProtocolConverter, None, None)
+    tuple_fields = ("type", "auth_protocol", "security_name", "auth_password")  # type: ignore[mutable-override]
+    converter = (None, AuthProtocolConverter, None, None)  # type: ignore[mutable-override]
     cast_to_dict = True
 
     type = Constant(
@@ -1124,7 +1123,7 @@ class SNMPv3AuthNoPrivacy(BaseSchema, CheckmkTuple):
 
 
 class SNMPv3AuthPrivacy(BaseSchema, CheckmkTuple):
-    tuple_fields = (
+    tuple_fields = (  # type: ignore[mutable-override]
         "type",
         "auth_protocol",
         "security_name",
@@ -1132,7 +1131,7 @@ class SNMPv3AuthPrivacy(BaseSchema, CheckmkTuple):
         "privacy_protocol",
         "privacy_password",
     )
-    converter = (
+    converter = (  # type: ignore[mutable-override]
         None,
         AuthProtocolConverter,
         None,
@@ -1240,7 +1239,7 @@ class SNMPCredentials(CmkOneOfSchema):
 
     # The sub-schemas require their type field, so it must survive loading.
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "v1_v2_community": SNMPCommunity,
         "v3_no_auth_no_privacy": SNMPv3NoAuthNoPrivacy,
         "v3_auth_no_privacy": SNMPv3AuthNoPrivacy,

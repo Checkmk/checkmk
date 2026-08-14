@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.openapi.api_endpoints.models.folder_attribute_models import FolderViewAttributeModel
@@ -39,7 +37,7 @@ class FolderExtensionsModel:
 
 @api_model
 class FolderModel(DomainObjectModel):
-    domainType: Literal["folder_config"] = api_field(
+    domainType: Literal["folder_config"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the object.",
     )
     members: FolderMembersModel | ApiOmitted = api_field(

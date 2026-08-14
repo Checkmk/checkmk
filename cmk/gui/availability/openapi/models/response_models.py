@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal, Self
 
 from cmk.ccc.site import SiteId
@@ -266,7 +264,7 @@ class HostAvailabilityExtension:
 
 @api_model
 class HostAvailabilityObject(DomainObjectModel):
-    domainType: Literal["host_availability"] = api_field(
+    domainType: Literal["host_availability"] = api_field(  # type: ignore[mutable-override]
         description="The type of the domain object.",
     )
     extensions: HostAvailabilityExtension = api_field(
@@ -287,7 +285,7 @@ class HostAvailabilityObject(DomainObjectModel):
 
 @api_model
 class HostAvailabilityCollection(DomainObjectCollectionModel):
-    domainType: Literal["host_availability"] = api_field(
+    domainType: Literal["host_availability"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection.",
     )
     value: list[HostAvailabilityObject] = api_field(
@@ -351,7 +349,7 @@ class ServiceAvailabilityExtension:
 
 @api_model
 class ServiceAvailabilityObject(DomainObjectModel):
-    domainType: Literal["service_availability"] = api_field(
+    domainType: Literal["service_availability"] = api_field(  # type: ignore[mutable-override]
         description="The type of the domain object.",
     )
     extensions: ServiceAvailabilityExtension = api_field(
@@ -378,7 +376,7 @@ class ServiceAvailabilityObject(DomainObjectModel):
 
 @api_model
 class ServiceAvailabilityCollection(DomainObjectCollectionModel):
-    domainType: Literal["service_availability"] = api_field(
+    domainType: Literal["service_availability"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection.",
     )
     value: list[ServiceAvailabilityObject] = api_field(

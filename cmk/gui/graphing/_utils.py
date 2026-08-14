@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
 
-# mypy: disable-error-code="mutable-override"
-
 import http
 from dataclasses import dataclass
 from typing import NewType, Self
@@ -14,15 +12,15 @@ from cmk.gui.exceptions import MKHTTPException
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
-    status = http.HTTPStatus.BAD_REQUEST
+    status = http.HTTPStatus.BAD_REQUEST  # type: ignore[mutable-override]
 
 
 class MKGraphRecipeNotFoundError(MKHTTPException):
-    status = http.HTTPStatus.NOT_FOUND
+    status = http.HTTPStatus.NOT_FOUND  # type: ignore[mutable-override]
 
 
 class MKGraphWidgetTooSmallError(MKHTTPException):
-    status = http.HTTPStatus.BAD_REQUEST
+    status = http.HTTPStatus.BAD_REQUEST  # type: ignore[mutable-override]
 
 
 SizeEx = NewType("SizeEx", float)

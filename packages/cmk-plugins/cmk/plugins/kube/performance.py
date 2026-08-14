@@ -7,8 +7,6 @@ Module which contains functions to parse and write out the performance data coll
 Cluster Collector for the Kubernetes Monitoring solution
 """
 
-# mypy: disable-error-code="mutable-override"
-
 from __future__ import annotations
 
 import enum
@@ -64,15 +62,15 @@ class PerformanceSample(common.IdentifiableSample):
 
 
 class MemorySample(PerformanceSample):
-    metric_name: Literal[UsedMetric.container_memory_working_set_bytes]
+    metric_name: Literal[UsedMetric.container_memory_working_set_bytes]  # type: ignore[mutable-override]
 
 
 class CPUSample(PerformanceSample):
-    metric_name: Literal[UsedMetric.container_cpu_usage_seconds_total]
+    metric_name: Literal[UsedMetric.container_cpu_usage_seconds_total]  # type: ignore[mutable-override]
 
 
 class SwapSample(PerformanceSample):
-    metric_name: Literal[UsedMetric.container_memory_swap]
+    metric_name: Literal[UsedMetric.container_memory_swap]  # type: ignore[mutable-override]
 
 
 class UnusedSample(BaseModel):

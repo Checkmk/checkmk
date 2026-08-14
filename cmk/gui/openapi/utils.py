@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 
 from collections.abc import Iterable
@@ -60,8 +59,8 @@ class GeneralRestAPIException(HTTPException):
         fields: FIELDS | None = None,
         ext: EXT | None = None,
     ) -> None:
-        self.code: int = status
-        self.description: str = title
+        self.code: int = status  # type: ignore[mutable-override]
+        self.description: str = title  # type: ignore[mutable-override]
         self.detail = detail
         self.fields = fields
         self.ext = ext
@@ -264,8 +263,8 @@ class ProblemException(HTTPException):
         """
         super().__init__(description=title)
         # These two are named as such for HTTPException compatibility.
-        self.code: int = status
-        self.description: str = title
+        self.code: int = status  # type: ignore[mutable-override]
+        self.description: str = title  # type: ignore[mutable-override]
 
         self.detail = detail
         self.type = type_

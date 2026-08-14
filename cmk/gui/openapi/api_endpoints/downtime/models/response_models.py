@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 import datetime as dt
 from typing import Annotated, Literal
 
@@ -86,13 +84,13 @@ class DowntimeExtensionsModel:
 
 @api_model
 class DowntimeObjectModel(DomainObjectModel):
-    domainType: Literal["downtime"] = api_field(description="The domain type of the object.")
+    domainType: Literal["downtime"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
     extensions: DowntimeExtensionsModel = api_field(description="The attributes of a downtime.")
 
 
 @api_model
 class DowntimeCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["downtime"] = api_field(
+    domainType: Literal["downtime"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection."
     )
     value: list[DowntimeObjectModel] = api_field(

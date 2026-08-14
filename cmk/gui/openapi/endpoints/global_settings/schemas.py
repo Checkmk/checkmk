@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 
 from typing import override
@@ -51,7 +50,7 @@ class _IconSchema(_IconBaseSchema):
 
 
 class IconSchema(GlobalSettingsOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": _IconSchema,
         "disabled": _IconBaseSchema,
     }
@@ -73,7 +72,7 @@ class _CAInputSchemaEnabled(_CAInputBaseSchema):
 
 
 class CAInputSchema(GlobalSettingsOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": _CAInputSchemaEnabled,
         "disabled": _CAInputBaseSchema,
     }
@@ -113,7 +112,7 @@ class _FileUploadSchemaRaw(_FileUploadBaseSchema):
 
 
 class FileUploadSchema(GlobalSettingsOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "raw": _FileUploadSchemaRaw,
         "file": _FileUploadSchemaFile,
         "disabled": _FileUploadBaseSchema,

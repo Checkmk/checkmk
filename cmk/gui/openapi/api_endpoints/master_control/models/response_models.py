@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model
@@ -51,7 +49,7 @@ class MasterControlExtensionsModel:
 
 @api_model
 class MasterControlModel(DomainObjectModel):
-    domainType: Literal["master_control"] = api_field(
+    domainType: Literal["master_control"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the object.",
     )
     extensions: MasterControlExtensionsModel = api_field(
@@ -61,7 +59,7 @@ class MasterControlModel(DomainObjectModel):
 
 @api_model
 class MasterControlCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["master_control"] = api_field(
+    domainType: Literal["master_control"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection.",
     )
     value: list[MasterControlModel] = api_field(

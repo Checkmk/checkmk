@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 """Configuration entities / OAuth2 connections API endpoints.
 
 This module defines the API endpoints for managing OAuth2 configuration entities
@@ -30,18 +28,18 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 class Oauth2ConnectionResponse(DomainObject):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         ConfigEntityType.oauth2_connection.value,
         description="The domain type of the object.",
     )
 
 
 class Oauth2ConnectionResponseCollection(DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         ConfigEntityType.oauth2_connection.value,
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
+    value = fields.List(  # type: ignore[mutable-override]
         fields.Nested(Oauth2ConnectionResponse),
         description="A list of OAuth2 configuration entities.",
     )

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 import datetime as dt
 
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
@@ -173,7 +171,7 @@ class AcknowledgeHostQueryProblem(ViaHostQuery, AcknowledgeProblemBase):
 class AcknowledgeHostRelatedProblem(OneOfSchema):
     type_field = "acknowledge_type"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "host": AcknowledgeHostProblem,
         "hostgroup": AcknowledgeHostGroupProblem,
         "host_by_query": AcknowledgeHostQueryProblem,
@@ -195,7 +193,7 @@ class AcknowledgeServiceQueryProblem(ViaServiceQuery, AcknowledgeProblemBase):
 class AcknowledgeServiceRelatedProblem(OneOfSchema):
     type_field = "acknowledge_type"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "service": AcknowledgeSpecificServiceProblem,
         "servicegroup": AcknowledgeServiceGroupProblem,
         "service_by_query": AcknowledgeServiceQueryProblem,
@@ -205,7 +203,7 @@ class AcknowledgeServiceRelatedProblem(OneOfSchema):
 class RemoveProblemAcknowledgement(OneOfSchema):
     type_field = "acknowledge_type"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "host": ViaSpecificHost,
         "hostgroup": ViaHostGroup,
         "host_by_query": ViaHostQuery,

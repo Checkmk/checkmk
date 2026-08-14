@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from collections.abc import Mapping, Sequence
 from typing import Annotated, Literal
 
@@ -68,7 +66,7 @@ class HostInventoryTree:
 
 @api_model
 class InventoryTreesCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["inventory"] = api_field(
+    domainType: Literal["inventory"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection",
         example="inventory",
     )

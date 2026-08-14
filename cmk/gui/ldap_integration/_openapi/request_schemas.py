@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import MutableMapping
@@ -126,7 +125,7 @@ class DirectoryTypeAutoRequest(DirectoryTypeBaseRequest):
 class DirectoryTypeSelectorRequest(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "active_directory_manual": DirectoryTypeManualRequest,
         "active_directory_automatic": DirectoryTypeAutoRequest,
         "open_ldap": DirectoryTypeManualRequest,
@@ -166,14 +165,14 @@ class BindCredentialsExplicitPasswordRequest(BindCredentialsBaseRequest):
 class BindCredentialsPasswordTypeSelectorRequest(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "store": BindCredentialsStoreIdRequest,
         "explicit": BindCredentialsExplicitPasswordRequest,
     }
 
 
 class BindCredentialsSelectorRequest(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": BindCredentialsPasswordTypeSelectorRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -189,7 +188,7 @@ class LDAPTCPPortRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPTCPPortSelectorRequest(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPTCPPortRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -204,7 +203,7 @@ class LDAPConnectTimeoutRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPConnectTimeoutSelectorRequest(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPConnectTimeoutRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -221,7 +220,7 @@ class LDAPVersionRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPVersionSelectorRequest(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPVersionRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -237,7 +236,7 @@ class LDAPPageSizeRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPPageSizeSelectorRequest(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPPageSizeRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -252,7 +251,7 @@ class LDAPResponseTimeoutRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPResponseTimeoutSelectorRequest(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPResponseTimeoutRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -267,7 +266,7 @@ class LDAPConnectionSuffixCreateRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPConnectionSuffixCreateSelectorRequest(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPConnectionSuffixCreateRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -283,7 +282,7 @@ class LDAPConnectionSuffixUpdateRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPConnectionSuffixUpdateSelectorRequest(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPConnectionSuffixUpdateRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -382,7 +381,7 @@ class LDAPUserSearchFilterRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPUserSearchFilterRequestSelector(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPUserSearchFilterRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -397,7 +396,7 @@ class LDAPUserGroupFilterRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPUserGroupFilterRequestSelector(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPUserGroupFilterRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -413,7 +412,7 @@ class LDAPUserIDAttributeRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPUserIDAttributeRequestSelector(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPUserIDAttributeRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -494,7 +493,7 @@ class LDAPGroupSearchFilterRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPGroupSearchFilterSelector(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPGroupSearchFilterRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -509,7 +508,7 @@ class LDAPMemberAttributeRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPMemberAttributeSelector(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPMemberAttributeRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -554,7 +553,7 @@ class LDAPSyncPluginAttributeRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPSyncPluginAttrubuteSelector(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPSyncPluginAttributeRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -578,7 +577,7 @@ class LDAPSyncPluginNestedOtherConnectionsRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPSyncPluginGroupsToContactGroupsSelector(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPSyncPluginNestedOtherConnectionsRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -598,7 +597,7 @@ class LDAPCheckboxCustomTimeRangeEnabledRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPCustomTimeRangeSelector(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPCheckboxCustomTimeRangeEnabledRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -664,7 +663,7 @@ class LDAPSyncPluginGroupAllOthersRequest(LDAPSyncPluginGroupBaseRequest):
 class LDAPSyncPluginGroupsToSyncSelector(OneOfSchema):
     type_field = "attribute_to_set"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disable_notifications": LDAPSyncPluginGroupDisableNotificationsRequest,
         "start_url": LDAPSyncPluginGroupStartURLRequest,
         "all_others": LDAPSyncPluginGroupAllOthersRequest,
@@ -689,7 +688,7 @@ class LDAPSyncPluginGroupsToAttributesRequest(LDAPSyncPluginNestedOtherConnectio
 
 
 class LDAPSyncPluginGroupsToAttributesSelector(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPSyncPluginGroupsToAttributesRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -765,7 +764,7 @@ class LDAPEnableGroupsToRoles(ValueTypedDictSchema):
 
 
 class LDAPGroupsToRolesSelector(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPEnableGroupsToRoles,
         "disabled": LDAPCheckboxDisabledRequest,
     }
@@ -954,7 +953,7 @@ class LDAPSyncPluginCustomRequest(LDAPCheckboxEnabledRequest):
 
 
 class LDAPSyncPluginCustomSelector(LDAPCheckboxSelector):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "enabled": LDAPSyncPluginCustomRequest,
         "disabled": LDAPCheckboxDisabledRequest,
     }

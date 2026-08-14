@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -310,8 +309,8 @@ class Request(
     request_timeout = 110
 
     # TODO investigate why there are so many form_parts
-    max_form_parts = 200000
-    max_form_memory_size = 200 * 1024 * 1024
+    max_form_parts = 200000  # type: ignore[mutable-override]
+    max_form_memory_size = 200 * 1024 * 1024  # type: ignore[mutable-override]
     meta: dict[str, Any]
 
     def __init__(self, environ: dict, populate_request: bool = True, shallow: bool = False) -> None:
@@ -637,7 +636,7 @@ class Response(flask.Response):
     # NOTE: Currently we rely on a *relative* Location header in redirects!
     autocorrect_location_header = False
 
-    default_mimetype = "text/html"
+    default_mimetype = "text/html"  # type: ignore[mutable-override]
 
     def set_http_cookie(
         self, key: str, value: str, *, secure: bool, max_age: int | None = None

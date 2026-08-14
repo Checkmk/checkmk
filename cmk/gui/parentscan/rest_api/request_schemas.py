@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
@@ -85,7 +83,7 @@ class CreateInHostLocation(GatewayHostOptions):
 class GatewayHosts(OneOfSchema):
     type_field = "option"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "no_gateway_hosts": NoGatewayHosts,
         "create_in_folder": CreateInFolder,
         "create_in_host_location": CreateInHostLocation,

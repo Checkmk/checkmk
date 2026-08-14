@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 import cmk.gui.utils.permission_verification as permissions
@@ -46,13 +44,13 @@ class ViewExtensions:
 
 @api_model
 class ViewModel(DomainObjectModel):
-    domainType: Literal["view"] = api_field(description="The domain type of the object.")
+    domainType: Literal["view"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
     extensions: ViewExtensions = api_field(description="Parts of the configuration of this view.")
 
 
 @api_model
 class ViewCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["view"] = api_field(
+    domainType: Literal["view"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection"
     )
     value: list[ViewModel] = api_field(description="A list of views.")

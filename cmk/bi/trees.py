@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -830,7 +829,7 @@ class BICompiledAggregationSchema(Schema):
 class BIResultSchema(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "leaf": BICompiledLeafSchema,
         "rule": BICompiledRuleSchema,
     }

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.openapi.framework import (
@@ -39,13 +37,13 @@ class VisualInfoExtensions:
 
 @api_model
 class VisualInfoModel(DomainObjectModel):
-    domainType: Literal["constant"] = api_field(description="The domain type of the object.")
+    domainType: Literal["constant"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
     extensions: VisualInfoExtensions = api_field(description="The configuration of this info.")
 
 
 @api_model
 class VisualInfoCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["constant"] = api_field(
+    domainType: Literal["constant"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection"
     )
     value: list[VisualInfoModel] = api_field(description="A list of info objects", example="")

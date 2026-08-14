@@ -21,7 +21,6 @@ class Correct(BaseModel):
 
 """
 
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="type-arg"
 
 import datetime
@@ -258,11 +257,11 @@ class MetaData(MetaDataNoNamespace):
 
 
 class NamespaceMetaData(MetaDataNoNamespace):
-    name: NamespaceName
+    name: NamespaceName  # type: ignore[mutable-override]
 
 
 class NodeMetaData(MetaDataNoNamespace):
-    name: NodeName
+    name: NodeName  # type: ignore[mutable-override]
 
 
 class Namespace(ClientModel):

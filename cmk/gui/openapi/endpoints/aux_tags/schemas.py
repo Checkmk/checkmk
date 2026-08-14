@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -116,11 +115,11 @@ EXAMPLE_AUX_TAG = {
 
 
 class AuxTagResponse(DomainObject):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "aux_tag",
         description="The domain type of the object.",
     )
-    extensions = fields.Nested(
+    extensions = fields.Nested(  # type: ignore[mutable-override]
         AuxTagAttrsResponse,
         description="The Auxiliary Tag attributes.",
         example=EXAMPLE_AUX_TAG,
@@ -128,11 +127,11 @@ class AuxTagResponse(DomainObject):
 
 
 class AuxTagResponseCollection(DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "aux_tag",
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
+    value = fields.List(  # type: ignore[mutable-override]
         fields.Nested(AuxTagResponse),
         description="A list of site configuration objects.",
         example=[

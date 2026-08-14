@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
@@ -114,11 +112,11 @@ class TimePeriodResponse(Linkable):
 
 
 class TimePeriodResponseCollection(DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "time_period",
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
+    value = fields.List(  # type: ignore[mutable-override]
         fields.Nested(TimePeriodResponse),
         description="A list of time period objects.",
         example=[

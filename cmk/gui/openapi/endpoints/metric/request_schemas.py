@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk.fields import String
@@ -48,7 +46,7 @@ class GetMetricSchema(_GetOneOfBaseSchema):
 class GetSchema(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "predefined_graph": GetGraphSchema,
         "single_metric": GetMetricSchema,
     }

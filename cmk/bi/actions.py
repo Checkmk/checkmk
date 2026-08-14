@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 
 from __future__ import annotations
@@ -336,7 +335,7 @@ class BIStateOfRemainingServicesActionSchema(Schema):
 class BIActionSchema(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = {k: v.schema() for k, v in bi_action_registry.items()}
+    type_schemas = {k: v.schema() for k, v in bi_action_registry.items()}  # type: ignore[mutable-override]
 
     # type_schemas = {
     #    "call_a_rule": BICallARuleActionSchema,

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 
 import re
 from typing import Any, cast, get_args
@@ -163,7 +162,7 @@ class TagGroupIsNotOrIs(TagGroupBase):
 class TagGroupSelector(OneOfSchema):
     type_field = "operator"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "one_of": TagGroupNoneOfOrOneof,
         "none_of": TagGroupNoneOfOrOneof,
         "is_not": TagGroupIsNotOrIs,
@@ -174,7 +173,7 @@ class TagGroupSelector(OneOfSchema):
 class TagTypeSelector(OneOfSchema):
     type_field = "tag_type"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "aux_tag": AuxTag,
         "tag_group": TagGroupSelector,
     }
@@ -283,7 +282,7 @@ class HttpProxyGlobal(HttpProxy):
 class HttpProxyOptions(OneOfSchema):
     type_field = "option"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "no_proxy": HttpProxy,
         "environment": HttpProxy,
         "url": HttpProxyUrl,
@@ -628,7 +627,7 @@ class CheckboxWithTimePeriod(Checkbox):
 
 
 class StrValueOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithStrValue,
     }
@@ -676,7 +675,7 @@ class OutsideTimeperiodValue(Checkbox):
 
 
 class TimePeriodOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": OutsideTimeperiodValue,
     }
@@ -737,7 +736,7 @@ class CheckboxWithListOfRuleIds(Checkbox):
 
 
 class MatchRuleIdsOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfRuleIds,
     }
@@ -775,14 +774,14 @@ class CheckboxWithSysLogFacility(Checkbox):
 
 
 class MatchSysLogPriOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithSysLogPriority,
     }
 
 
 class MatchSysLogFacOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithSysLogFacility,
     }
@@ -813,7 +812,7 @@ class EventConsoleAlertAttributes(EventConsoleAlertAttributesBase):
 class MatchTypeSelector(OneOfSchema):
     type_field = "match_type"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "match_only_event_console_alerts": EventConsoleAlertAttributes,
         "do_not_match_event_console_alerts": EventConsoleAlertAttributesBase,
     }
@@ -858,14 +857,14 @@ class ToEmailAndNameCheckbox(Checkbox):
 
 
 class FromDetailsOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": FromEmailAndNameCheckbox,
     }
 
 
 class ReplyToOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": ToEmailAndNameCheckbox,
     }
@@ -888,14 +887,14 @@ class SubjectForServiceNotificationsCheckbox(Checkbox):
 
 
 class SubjectHostOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": SubjectForHostNotificationsCheckbox,
     }
 
 
 class SubjectServiceOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": SubjectForServiceNotificationsCheckbox,
     }
@@ -911,7 +910,7 @@ class CheckboxSortOrderValue(Checkbox):
 
 
 class SortOrderOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxSortOrderValue,
     }
@@ -1006,7 +1005,7 @@ class AuthenticationValue(Checkbox):
 
 
 class AuthOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": AuthenticationValue,
     }
@@ -1041,21 +1040,21 @@ class EnableSynchronousDeliveryViaSMTPValue(Checkbox):
 
 
 class EmailInfoOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfEmailInfoStrs,
     }
 
 
 class InsertHtmlOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": HtmlSectionBetweenBodyAndTableCheckbox,
     }
 
 
 class EnableSyncOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": EnableSynchronousDeliveryViaSMTPValue,
     }
@@ -1070,7 +1069,7 @@ class GraphsPerNotification(Checkbox):
 
 
 class GraphsPerNotificationOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": GraphsPerNotification,
     }
@@ -1085,7 +1084,7 @@ class BulkNotificationsWithGraphs(Checkbox):
 
 
 class BulkNotificationsOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": BulkNotificationsWithGraphs,
     }
@@ -1104,7 +1103,7 @@ class CheckMKURLPrefixManual(CheckMKURLPrefixBase):
 
 
 class ManualOrAutomaticSelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "automatic": CheckMKURLPrefixAuto,
         "manual": CheckMKURLPrefixManual,
     }
@@ -1118,7 +1117,7 @@ class CheckMKURLPrefixValue(Checkbox):
 
 
 class UrlPrefixOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckMKURLPrefixValue,
     }
@@ -1200,14 +1199,14 @@ class CiscoExplicitWebhookUrl(ExplicitOrStoreOptions):
 
 
 class CiscoUrlOrStoreSelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "explicit": CiscoExplicitWebhookUrl,
         "store": CiscoPasswordStore,
     }
 
 
 class HttpProxyOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": HttpProxyValue,
     }
@@ -1246,7 +1245,7 @@ class CheckboxSysLogFacilityToUseValue(Checkbox):
 
 
 class SysLogFacilityOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxSysLogFacilityToUseValue,
     }
@@ -1260,7 +1259,7 @@ class CheckBoxIPAddressValue(Checkbox):
 
 
 class IPAddressOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckBoxIPAddressValue,
     }
@@ -1298,7 +1297,7 @@ class IlertAPIKey(ExplicitOrStoreOptions):
 
 
 class IlertKeyOrStoreSelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "explicit": IlertAPIKey,
         "store": IlertPasswordStoreID,
     }
@@ -1375,7 +1374,7 @@ class AuthStoreToken(AuthOptions):
 
 
 class AuthSelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "password_store_id": BasicAuthStorePassword,
         "explicit_password": BasicAuthExplicit,
         "explicit_token": ExplicitToken,
@@ -1483,7 +1482,7 @@ class OpsGenieExplicitKey(ExplicitOrStoreOptions):
 
 
 class OpsGenisStoreOrExplicitKeySelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "explicit": OpsGenieExplicitKey,
         "store": OpsGenieStoreID,
     }
@@ -1499,14 +1498,14 @@ class CheckboxOpsGeniePriorityValue(Checkbox):
 
 
 class OpsGeniePriorityOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxOpsGeniePriorityValue,
     }
 
 
 class ListOfStrOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfStr,
     }
@@ -1531,7 +1530,7 @@ class CheckboxWithListOfTypedResponders(Checkbox):
 
 
 class ListOfTypedRespondersOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfTypedResponders,
     }
@@ -1546,7 +1545,7 @@ class ListOfExtraProperties(Checkbox):
 
 
 class ListOfExtraPropertiesOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": ListOfExtraProperties,
     }
@@ -1745,7 +1744,7 @@ class PagerDutyExplicitKey(ExplicitOrStoreOptions):
 
 
 class PagerDutyStoreOrIntegrationKeySelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "explicit": PagerDutyExplicitKey,
         "store": PagerDutyAPIKeyStoreID,
     }
@@ -1810,7 +1809,7 @@ class PushOverPriorityEmergency(BaseSchema):
 class PushOverPrioritySelector(OneOfSchema):
     type_field = "level"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "lowest": PushOverPriorityBase,
         "low": PushOverPriorityBase,
         "normal": PushOverPriorityBase,
@@ -1829,7 +1828,7 @@ class PushOverPriority(Checkbox):
 
 
 class PushOverOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": PushOverPriority,
     }
@@ -1845,7 +1844,7 @@ class Sounds(Checkbox):
 
 
 class SoundsOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": Sounds,
     }
@@ -1893,7 +1892,7 @@ class CheckBoxUseSiteIDPrefix(Checkbox):
 
 
 class SiteIDPrefixOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckBoxUseSiteIDPrefix,
     }
@@ -1926,7 +1925,7 @@ class CheckboxWithMgmtTypePriorityValue(Checkbox):
 
 
 class PriorityOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithMgmtTypePriorityValue,
     }
@@ -1950,7 +1949,7 @@ class CheckboxWithManagementTypeStateCaseValues(Checkbox):
 
 
 class StateRecoveryOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithManagementTypeStateCaseValues,
     }
@@ -1993,7 +1992,7 @@ class CheckboxWithManagementTypeStateIncedentValues(Checkbox):
 
 
 class TypeStateOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithManagementTypeStateIncedentValues,
     }
@@ -2007,7 +2006,7 @@ class CheckboxWithMgmtTypeUrgencyValue(Checkbox):
 
 
 class TypeUrgencyOneOfSchema(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithMgmtTypeUrgencyValue,
     }
@@ -2058,7 +2057,7 @@ class MgmntTypeIncidentParams(MgmntTypeCommon):
 
 
 class MgmntTypeSelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "case": MgmntTypeCaseParams,
         "incident": MgmntTypeIncidentParams,
     }
@@ -2111,7 +2110,7 @@ class SignL4TeamSecret(ExplicitOrStoreOptions):
 
 
 class SignL4ExplicitOrStoreSelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "explicit": SignL4TeamSecret,
         "store": SignL4TeamSecretStoreID,
     }
@@ -2163,7 +2162,7 @@ class SlackWebhookURL(ExplicitOrStoreOptions):
 
 
 class SlackStoreOrExplicitURLSelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "explicit": SlackWebhookURL,
         "store": SlackWebhookStore,
     }
@@ -2197,7 +2196,7 @@ class SMSAPIExplicitPassword(ExplicitOrStoreOptions):
 
 
 class SMSAPIPasswordSelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "explicit": SMSAPIExplicitPassword,
         "store": SMSAPIPStoreID,
     }
@@ -2297,7 +2296,7 @@ class SplunkURLExplicit(ExplicitOrStoreOptions):
 
 
 class SplunkRESTEndpointSelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "explicit": SplunkURLExplicit,
         "store": SplunkStoreID,
     }
@@ -2332,7 +2331,7 @@ class MSTeamsExplicitWebhookUrl(ExplicitOrStoreOptions):
 
 
 class MSTeamsUrlOrStoreSelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "explicit": MSTeamsExplicitWebhookUrl,
         "store": MSTeamsURLResponse,
     }
@@ -2391,7 +2390,7 @@ class MSTeamsPluginCreate(BaseSchema):
 class PluginSelector(OneOfSchema):
     type_field = "plugin_name"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "asciimail": AsciiMailPluginCreate,
         "mail": HTMLMailPluginCreate,
         "cisco_webex_teams": CiscoWebexPluginCreate,
@@ -2528,7 +2527,7 @@ class CreateNotificationsWithCustomParameters(BaseSchema):
 class NotificationBulkingWhenToBulkSelector(OneOfSchema):
     type_field = "when_to_bulk"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "always": AlwaysBulk,
         "timeperiod": TimePeriod,
     }
@@ -2541,175 +2540,175 @@ class NotificationBulkingValue(Checkbox):
 
 
 class NotificationBulk(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": NotificationBulkingValue,
     }
 
 
 class StringCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithStrValue,
     }
 
 
 class ListOfStringCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfStr,
     }
 
 
 class TheFollowingUsers(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfStr,
     }
 
 
 class ListOfContactGroupsCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfContactGroups,
     }
 
 
 class ExplicitEmailAddressesCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfEmailAddresses,
     }
 
 
 class CustomMacrosCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": MatchCustomMacros,
     }
 
 
 class MatchSitesCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfSites,
     }
 
 
 class MatchFolderCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithFolderStr,
     }
 
 
 class MatchHostTagsCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxMatchHostTags,
     }
 
 
 class MatchHostsCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfHosts,
     }
 
 
 class MatchServiceGroupsCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfServiceGroups,
     }
 
 
 class MatchServicesCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfStr,
     }
 
 
 class MatchHostGroupsCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfHostGroups,
     }
 
 
 class MatchLabelsCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfLabels,
     }
 
 
 class MatchServiceGroupRegexCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfServiceGroupsRegex,
     }
 
 
 class MatchCheckTypesCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfCheckTypes,
     }
 
 
 class MatchContactGroupsCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithListOfContactGroups,
     }
 
 
 class MatchServiceLevelsCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithFromToServiceLevels,
     }
 
 
 class MatchTimePeriodCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithTimePeriod,
     }
 
 
 class MatchHostEventTypeCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxHostEventType,
     }
 
 
 class MatchServiceEventTypeCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxServiceEventType,
     }
 
 
 class RestrictNotificationNumCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxRestrictNotificationNumbers,
     }
 
 
 class ThrottlePeriodicNotificationsCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxThrottlePeriodicNotifcations,
     }
 
 
 class EventConsoleAlertCheckbox(CheckboxOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxEventConsoleAlerts,
     }
@@ -2744,7 +2743,7 @@ class RuleProperties(BaseSchema):
 
 
 class PluginOptionsSelector(OptionOneOfSchema):
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         PluginOptions.CANCEL.value: CancelPreviousNotification,
         PluginOptions.WITH_PARAMS.value: CreateNotificationsWithParameters,
         PluginOptions.WITH_CUSTOM_PARAMS.value: CreateNotificationsWithCustomParameters,

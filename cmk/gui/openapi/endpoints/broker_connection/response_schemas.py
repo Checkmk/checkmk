@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from cmk import fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
@@ -33,11 +31,11 @@ class BrokerConnectionExtension(BaseSchema):
 
 
 class BrokerConnectionResponse(DomainObject):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "broker_connection",
         description="The domain type of the object.",
     )
-    extensions = fields.Nested(
+    extensions = fields.Nested(  # type: ignore[mutable-override]
         BrokerConnectionExtension,
         description="The configuration attributes of a broker peer to peer connection.",
         example={
@@ -50,11 +48,11 @@ class BrokerConnectionResponse(DomainObject):
 
 
 class BrokerConnectionResponseCollection(DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "broker_connection",
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
+    value = fields.List(  # type: ignore[mutable-override]
         fields.Nested(BrokerConnectionResponse),
         description="A list of broker peer to peer configuration objects.",
         example=[

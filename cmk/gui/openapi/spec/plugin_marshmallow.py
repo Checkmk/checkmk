@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -186,5 +185,5 @@ class CheckmkOpenAPIResolver(marshmallow.SchemaResolver):  # type: ignore[name-d
 
 
 class CheckmkMarshmallowPlugin(marshmallow.MarshmallowPlugin):
-    Converter = CheckmkOpenAPIConverter
-    Resolver = CheckmkOpenAPIResolver
+    Converter = CheckmkOpenAPIConverter  # type: ignore[mutable-override]
+    Resolver = CheckmkOpenAPIResolver  # type: ignore[mutable-override]

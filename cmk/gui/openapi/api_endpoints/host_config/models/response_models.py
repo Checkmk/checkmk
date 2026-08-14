@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from collections.abc import Sequence
 from typing import Annotated, Literal
 
@@ -53,7 +51,7 @@ class HostMembersModel(DomainObjectModel):
 
 @api_model
 class HostConfigModel(DomainObjectModel):
-    domainType: Literal["host_config"] = api_field(description="The domain type of the object.")
+    domainType: Literal["host_config"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
     # The list endpoint omits the links entirely when they were not requested
     # (``include_links=False``), matching the behaviour of the previous implementation.
     links: list[LinkModel] | ApiOmitted = api_field(  # type: ignore[assignment]
@@ -71,7 +69,7 @@ class HostConfigModel(DomainObjectModel):
 
 @api_model
 class HostConfigCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["host_config"] = api_field(
+    domainType: Literal["host_config"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection",
         example="host_config",
     )
@@ -104,7 +102,7 @@ class BulkHostActionWithFailedHostsModel(ApiErrorDataclass):
         description="Detailed information on what exactly went wrong.",
         example="Some of the actions were performed but the following were faulty and were skipped: ['host1', 'host2'].",
     )
-    ext: FailedHostsModel = api_field(
+    ext: FailedHostsModel = api_field(  # type: ignore[mutable-override]
         title="Error extensions",
         description="Details for which hosts have failed",
     )

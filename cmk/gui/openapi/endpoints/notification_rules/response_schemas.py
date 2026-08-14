@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
@@ -210,7 +209,7 @@ class TagGroupIsNotOrIsOutput(TagGroupBaseOutput):
 
 class TagGroupSelectorOutput(OneOfSchema):
     type_field = "operator"
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "one_of": TagGroupNoneOfOrOneOfOutput,
         "none_of": TagGroupNoneOfOrOneOfOutput,
         "is_not": TagGroupIsNotOrIsOutput,
@@ -229,7 +228,7 @@ class TagGroupSelectorOutput(OneOfSchema):
 
 class TagTypeSelectorOutput(OneOfSchema):
     type_field = "tag_type"
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "aux_tag": AuxTagOutput,
         "tag_group": TagGroupSelectorOutput,
     }
@@ -1257,11 +1256,11 @@ class NotificationRuleConfig(BaseSchema):
 
 
 class NotificationRuleResponse(DomainObject):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "rule_notifications",
         description="The domain type of the object.",
     )
-    extensions = fields.Nested(
+    extensions = fields.Nested(  # type: ignore[mutable-override]
         NotificationRuleConfig,
         description="The configuration attributes of a notification rule.",
         example={"rule_config": notification_rule_request_example(), "rule_index": 0},
@@ -1269,11 +1268,11 @@ class NotificationRuleResponse(DomainObject):
 
 
 class NotificationRuleResponseCollection(DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "rule_notifications",
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
+    value = fields.List(  # type: ignore[mutable-override]
         fields.Nested(NotificationRuleResponse),
         description="A list of notification rule objects.",
         example=[

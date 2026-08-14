@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Annotated, Literal
 
 from pydantic import Discriminator, StringConstraints
@@ -201,13 +199,13 @@ class RuleExtensionsModel:
 
 @api_model
 class RuleObjectModel(DomainObjectModel):
-    domainType: Literal["rule"] = api_field(description="Domain type of this object.")
+    domainType: Literal["rule"] = api_field(description="Domain type of this object.")  # type: ignore[mutable-override]
     extensions: RuleExtensionsModel = api_field(description="Attributes specific to rule objects.")
 
 
 @api_model
 class RuleCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["rule"] = api_field(description="Domain type of this object.")
+    domainType: Literal["rule"] = api_field(description="Domain type of this object.")  # type: ignore[mutable-override]
     value: list[RuleObjectModel] = api_field(
         description="The collection itself. Each entry in here is part of the collection.",
     )

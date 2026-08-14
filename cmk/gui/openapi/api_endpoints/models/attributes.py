@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="type-arg"
 
 import datetime as dt
@@ -813,7 +812,7 @@ class FolderCustomHostAttributesAndTagGroupsModel(WithDynamicFields):
     # configured custom attributes and tag groups by `validate_custom_attributes_and_tag_groups`,
     # which is called from the input models only (the read-only view must keep rendering
     # attributes of since-deleted custom attributes).
-    dynamic_fields: dict[str, str | None] = api_field(
+    dynamic_fields: dict[str, str | None] = api_field(  # type: ignore[mutable-override]
         description=(
             "The property name must be\n\n"
             " * A custom host attribute\n"

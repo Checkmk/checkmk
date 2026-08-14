@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-def"
 
 from typing import Any, override
@@ -506,7 +505,7 @@ class LDAPGroupsToSyncAllOthers(LDAPGroupsToSyncBase):
 class LDAPGroupsToSyncSelector(OneOfSchema):
     type_field_remove = False
     type_field = "attribute_to_set"
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "disable_notifications": LDAPGroupsToSyncDisableNotifications,
         "start_url": LDAPGroupsToSyncStartURL,
     }
@@ -810,11 +809,11 @@ ldap_config_example: dict[str, dict[str, Any]] = {
 
 
 class LDAPConnectionResponse(DomainObject):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "ldap_connection",
         description="The domain type of the object.",
     )
-    extensions = fields.Nested(
+    extensions = fields.Nested(  # type: ignore[mutable-override]
         LDAPConnectionConfig,
         description="The configuration attributes of a user LDAP connection.",
         example=ldap_config_example,
@@ -822,11 +821,11 @@ class LDAPConnectionResponse(DomainObject):
 
 
 class LDAPConnectionResponseCollection(DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "ldap_connection",
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
+    value = fields.List(  # type: ignore[mutable-override]
         fields.Nested(LDAPConnectionResponse),
         description="A list of LDAP connections.",
         example=[

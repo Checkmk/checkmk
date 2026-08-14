@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 import datetime as dt
 from typing import Annotated, Literal, Self
 
@@ -121,7 +119,7 @@ class HistoricalEventExtensionsModel:
 
 @api_model
 class HistoricalEventModel(DomainObjectModel):
-    domainType: Literal["historical_event"] = api_field(
+    domainType: Literal["historical_event"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the object.",
     )
 

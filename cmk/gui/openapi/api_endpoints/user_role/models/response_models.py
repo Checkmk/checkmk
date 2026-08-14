@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
@@ -35,7 +33,7 @@ class UserRoleExtensionsModel:
 
 @api_model
 class UserRoleModel(DomainObjectModel):
-    domainType: Literal["user_role"] = api_field(
+    domainType: Literal["user_role"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the object.",
     )
     extensions: UserRoleExtensionsModel = api_field(

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Annotated, Literal
 
 from annotated_types import Ge
@@ -30,7 +28,7 @@ class GraphTimerangeExtension:
 
 @api_model
 class GraphTimerangeObject(DomainObjectModel):
-    domainType: Literal["graph_timerange"] = api_field(
+    domainType: Literal["graph_timerange"] = api_field(  # type: ignore[mutable-override]
         description="The type of the domain-object.",
     )
     extensions: GraphTimerangeExtension = api_field(
@@ -40,7 +38,7 @@ class GraphTimerangeObject(DomainObjectModel):
 
 @api_model
 class GraphTimerangeCollection(DomainObjectCollectionModel):
-    domainType: Literal["graph_timerange"] = api_field(
+    domainType: Literal["graph_timerange"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection.",
     )
     value: list[GraphTimerangeObject] = api_field(

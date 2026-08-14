@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="possibly-undefined"
@@ -7914,7 +7913,7 @@ class AndOrNotDropdown(DropdownChoice):
         )
 
         self._valuespec = valuespec
-        self._default_value: AndOrNotDropdownValue = ("and", valuespec.default_value())
+        self._default_value: AndOrNotDropdownValue = ("and", valuespec.default_value())  # type: ignore[mutable-override]
         self._vs_label = vs_label
 
     def _varprefixes(self, varprefix: str) -> tuple[str, str]:
@@ -8107,7 +8106,7 @@ class LabelGroups(LabelGroup):
             help,
         )
         self._default_value: ListOfAndOrNotDropdownValue = (
-            [("and", [("and", "")])] if show_empty_group_by_default else []
+            [("and", [("and", "")])] if show_empty_group_by_default else []  # type: ignore[mutable-override]
         )
 
     @property

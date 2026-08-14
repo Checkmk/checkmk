@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 
 from typing import Any, Literal, override, TypedDict
@@ -48,7 +47,7 @@ class RestrictValues(BaseSchema):
 class PathRestriction(OneOfSchema):
     type_field_remove = False
     type_field = "type"
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "no_restriction": NoRestriction,
         "restrict_all": RestrictAll,
         "restrict_values": RestrictValues,
@@ -116,7 +115,7 @@ class InventoryPathForbidAll(BaseSchema):
 class InventoryPaths(OneOfSchema):
     type_field_remove = False
     type_field = "type"
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "allow_all": InventoryPathAllowAll,
         "forbid_all": InventoryPathForbidAll,
         "specific_paths": InventoryPathSpecificPaths,

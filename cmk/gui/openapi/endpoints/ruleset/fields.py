@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from __future__ import annotations
 
 from cmk import fields
@@ -41,19 +39,19 @@ class RulesetExtensions(base.BaseSchema):
 
 
 class RulesetObject(response_schemas.DomainObject):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "ruleset",
         description="Domain type of this object.",
         example="ruleset",
     )
-    extensions = fields.Nested(
+    extensions = fields.Nested(  # type: ignore[mutable-override]
         RulesetExtensions,
         description="Specific attributes related to rulesets.",
     )
 
 
 class RulesetCollection(response_schemas.DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "ruleset",
         description="Domain type of this object.",
         example="ruleset",

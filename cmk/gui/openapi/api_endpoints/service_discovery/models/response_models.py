@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model
@@ -32,7 +30,7 @@ class ServiceDiscoveryRunExtensionsModel:
 
 @api_model
 class ServiceDiscoveryRunModel(DomainObjectModel):
-    domainType: Literal["service_discovery_run"] = api_field(
+    domainType: Literal["service_discovery_run"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the object"
     )
     extensions: ServiceDiscoveryRunExtensionsModel = api_field(
@@ -88,7 +86,7 @@ class ServiceDiscoveryResultExtensionsModel:
 
 @api_model
 class ServiceDiscoveryResultModel(DomainObjectModel):
-    domainType: Literal["service_discovery"] = api_field(
+    domainType: Literal["service_discovery"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the object"
     )
     extensions: ServiceDiscoveryResultExtensionsModel = api_field(

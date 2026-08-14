@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 """Configuration entities / Notification Parameter
 
 These endpoints can be used to manipulate notification parameter via the configuration
@@ -27,18 +25,18 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 class NotificationParamResponse(DomainObject):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         ConfigEntityType.notification_parameter.value,
         description="The domain type of the object.",
     )
 
 
 class NotificationParamResponseCollection(DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         ConfigEntityType.notification_parameter.value,
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
+    value = fields.List(  # type: ignore[mutable-override]
         fields.Nested(NotificationParamResponse),
         description="A list of notification parameter objects.",
     )

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 """Configuration entities / Passwordstore Password
 
 These endpoints can be used to manipulate passwordstore passwords via the
@@ -26,18 +24,18 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 class PasswordStorePasswordResponse(DomainObject):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         ConfigEntityType.passwordstore_password.value,
         description="The domain type of the object.",
     )
 
 
 class PasswordStorePasswordResponseCollection(DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         ConfigEntityType.passwordstore_password.value,
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
+    value = fields.List(  # type: ignore[mutable-override]
         fields.Nested(PasswordStorePasswordResponse),
         description="A list of password store passwords.",
     )

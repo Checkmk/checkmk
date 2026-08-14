@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 import datetime as dt
 from typing import Literal
 
@@ -265,7 +263,7 @@ class UserAttributesModel(WithDynamicFields):
         example="welcome_page",
         default_factory=ApiOmitted,
     )
-    dynamic_fields: dict[str, object] = api_field(
+    dynamic_fields: dict[str, object] = api_field(  # type: ignore[mutable-override]
         description="Each custom user attribute, keyed by its name. The value type depends on the "
         "attribute's valuespec (for example string, boolean or integer).",
     )
@@ -273,7 +271,7 @@ class UserAttributesModel(WithDynamicFields):
 
 @api_model
 class UserObject(DomainObjectModel):
-    domainType: Literal["user_config"] = api_field(
+    domainType: Literal["user_config"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the object.",
     )
     extensions: UserAttributesModel = api_field(
@@ -283,7 +281,7 @@ class UserObject(DomainObjectModel):
 
 @api_model
 class UserCollection(DomainObjectCollectionModel):
-    domainType: Literal["user_config"] = api_field(
+    domainType: Literal["user_config"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection.",
     )
     value: list[UserObject] = api_field(

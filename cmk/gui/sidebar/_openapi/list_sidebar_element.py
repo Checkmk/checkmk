@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.openapi.framework import (
@@ -30,12 +28,12 @@ from cmk.gui.utils import permission_verification as permissions
 
 @api_model
 class SidebarElementModel(DomainObjectModel):
-    domainType: Literal["constant"] = api_field(description="The domain type of the object.")
+    domainType: Literal["constant"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
 
 
 @api_model
 class SidebarElementModelCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["constant"] = api_field(
+    domainType: Literal["constant"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection"
     )
     value: list[SidebarElementModel] = api_field(

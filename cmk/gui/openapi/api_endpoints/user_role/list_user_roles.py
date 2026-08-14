@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.ccc.user import UserId
@@ -32,7 +30,7 @@ from .endpoint_family import USER_ROLE_FAMILY
 
 @api_model
 class UserRoleCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["user_role"] = api_field(
+    domainType: Literal["user_role"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection",
         example="host_config",
     )

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 import datetime as dt
 from typing import Annotated, Literal, override, Self
 
@@ -61,7 +59,7 @@ class DashboardTokenModel(DashboardTokenMetadata):
 
 @api_model
 class DashboardTokenObjectModel(DomainObjectModel):
-    domainType: Literal["dashboard_token"] = api_field(description="The domain type of the object.")
+    domainType: Literal["dashboard_token"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
     extensions: DashboardTokenMetadata = api_field(description="The metadata of this token.")
 
 

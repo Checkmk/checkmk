@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
@@ -57,14 +55,14 @@ _FILTER_GROUP_TITLES: Mapping[FilterGroup, str] = {
 
 @dataclass(kw_only=True, slots=True)
 class FilterGroupDomainObject(DomainObjectModel):
-    domainType: Literal["visual_filter_group"] = api_field(
+    domainType: Literal["visual_filter_group"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the object."
     )
 
 
 @dataclass(kw_only=True, slots=True)
 class FilterGroupCollection(DomainObjectCollectionModel):
-    domainType: Literal["visual_filter_group"] = api_field(
+    domainType: Literal["visual_filter_group"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection.",
         example="visual_filter_group",
     )

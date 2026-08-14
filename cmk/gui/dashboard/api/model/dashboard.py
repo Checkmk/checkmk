@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 import datetime as dt
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping
@@ -429,7 +427,7 @@ class BaseDashboardResponse(_BaseDashboard):
     public_token: DashboardTokenModel | None = api_field(
         description="The public token for sharing the dashboard, if it exists."
     )
-    filter_context: DashboardFilterContextResponse = api_field(
+    filter_context: DashboardFilterContextResponse = api_field(  # type: ignore[mutable-override]
         description="Filter context for the dashboard."
     )
 

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model
@@ -15,7 +13,7 @@ from .dashboard import RelativeGridDashboardResponse
 
 @api_model
 class RelativeGridDashboardDomainObject(DomainObjectModel):
-    domainType: Literal["dashboard"] = api_field(description="The domain type of the object.")
+    domainType: Literal["dashboard"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
     extensions: RelativeGridDashboardResponse = api_field(
         description="All the data about this dashboard."
     )

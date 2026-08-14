@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -326,7 +325,7 @@ class ExprSchema(CmkOneOfSchema):
 
     type_field = "op"
     type_field_remove = False
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "and": LogicalExprSchema,
         "or": LogicalExprSchema,
         "not": NotExprSchema,

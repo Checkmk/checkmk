@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 """Configuration entities / Rule form spec
 
 These endpoints can be used to manipulate rules via the configuration entity
@@ -30,18 +28,18 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 class RuleFormSpecResponse(DomainObject):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         ConfigEntityType.rule_form_spec.value,
         description="The domain type of the object.",
     )
 
 
 class RuleFormSpecResponseCollection(DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         ConfigEntityType.rule_form_spec.value,
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
+    value = fields.List(  # type: ignore[mutable-override]
         fields.Nested(RuleFormSpecResponse),
         description="A list of rules.",
     )

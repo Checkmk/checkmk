@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 import os
 
 from flask import current_app as current_flask_app
@@ -16,8 +14,8 @@ from cmk.gui.features import Features
 
 
 class CheckmkFlaskApp(Flask):
-    request_class = http.Request
-    response_class = http.Response
+    request_class = http.Request  # type: ignore[mutable-override]
+    response_class = http.Response  # type: ignore[mutable-override]
 
     def __init__(
         self,

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -716,7 +715,7 @@ class FileFromSite(ABCBakeryFile):
         if target is None:
             target = source
         super().__init__(base_os=base_os, target=target)
-        self.source: Path = source
+        self.source: Path = source  # type: ignore[mutable-override]
         self._line_mapping = line_mapping or {}
 
     @override

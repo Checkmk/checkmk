@@ -7,8 +7,6 @@ text representations optimized for human beings - with optional localization.
 The resulting strings are not ment to be parsed into values again later. They
 are just for optical output purposes."""
 
-# mypy: disable-error-code="mutable-override"
-
 import abc
 import math
 import time
@@ -172,7 +170,7 @@ class SIUnitPrefixes(_ABCUnitPrefixes):
     """
 
     _BASE = 1000
-    _PREFIXES = ("", "k", "M", "G", "T", "P", "E", "Z", "Y")
+    _PREFIXES = ("", "k", "M", "G", "T", "P", "E", "Z", "Y")  # type: ignore[mutable-override]
 
 
 class IECUnitPrefixes(_ABCUnitPrefixes):
@@ -188,7 +186,7 @@ class IECUnitPrefixes(_ABCUnitPrefixes):
     """
 
     _BASE = 1024
-    _PREFIXES = ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi")
+    _PREFIXES = ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi")  # type: ignore[mutable-override]
 
 
 def drop_dotzero(v: float, digits: int = 2) -> str:

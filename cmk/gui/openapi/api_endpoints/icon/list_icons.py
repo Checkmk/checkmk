@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.icons import all_available_icon_data
@@ -37,13 +35,13 @@ class IconExtensions:
 
 @api_model
 class IconModel(DomainObjectModel):
-    domainType: Literal["icon"] = api_field(description="The domain type of the object.")
+    domainType: Literal["icon"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
     extensions: IconExtensions = api_field(description="All the metadata of this icon.")
 
 
 @api_model
 class IconCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["icon"] = api_field(
+    domainType: Literal["icon"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection",
         example="icon",
     )

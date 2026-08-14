@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 import dataclasses
 import datetime
 import json
@@ -173,7 +171,7 @@ def test_json_schema_dynamic_field_custom_type() -> None:
     @dataclasses.dataclass(kw_only=True)
     class _CustomType(WithDynamicFields):
         field: int
-        dynamic_fields: dict[str, str] = dataclasses.field(
+        dynamic_fields: dict[str, str] = dataclasses.field(  # type: ignore[mutable-override]
             metadata={
                 "title": "custom_title",
                 "description": "custom_description",

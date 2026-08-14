@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.logged_in import user
@@ -31,7 +29,7 @@ from .utils import PERMISSIONS
 
 @api_model
 class SiteManagementCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["site_connection"] = api_field(
+    domainType: Literal["site_connection"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection",
         example="site_connection",
     )

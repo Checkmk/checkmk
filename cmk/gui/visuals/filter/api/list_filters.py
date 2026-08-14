@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Literal
@@ -49,13 +47,13 @@ class FilterExtensions:
 
 @dataclass(kw_only=True, slots=True)
 class FilterDomainObject(DomainObjectModel):
-    domainType: Literal["visual_filter"] = api_field(description="The domain type of the object.")
+    domainType: Literal["visual_filter"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
     extensions: FilterExtensions = api_field(description="All the data and metadata of this host.")
 
 
 @dataclass(kw_only=True, slots=True)
 class FilterCollection(DomainObjectCollectionModel):
-    domainType: Literal["visual_filter"] = api_field(
+    domainType: Literal["visual_filter"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection",
         example="visual_filter",
     )

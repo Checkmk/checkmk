@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="type-arg"
 
 from typing import Annotated, get_type_hints, Literal, Self
@@ -179,7 +178,7 @@ class FolderViewAttributeModel(
         default_factory=ApiOmitted,
     )
     # read-only overrides
-    contactgroups: HostContactGroupResponseModel | ApiOmitted = api_field(
+    contactgroups: HostContactGroupResponseModel | ApiOmitted = api_field(  # type: ignore[mutable-override]
         description=(
             "Only members of the contact groups listed here have Setup permission for the "
             "host/folder. Optionally, you can make these contact groups automatically monitor "
@@ -188,7 +187,7 @@ class FolderViewAttributeModel(
         default_factory=ApiOmitted,
     )
     site: Annotated[SiteId, PlainSerializer(render_view_site, return_type=str)] | ApiOmitted = (
-        api_field(
+        api_field(  # type: ignore[mutable-override]
             description="The site that should monitor the hosts in this folder.",
             default_factory=ApiOmitted,
         )
@@ -286,7 +285,7 @@ class FolderAttributeRequestModel(
 
     # Override the read base's non-validating ``site`` with an existence-checking variant.
     site: Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)] | ApiOmitted = (
-        api_field(
+        api_field(  # type: ignore[mutable-override]
             description="The site that should monitor the hosts in this folder.",
             default_factory=ApiOmitted,
         )

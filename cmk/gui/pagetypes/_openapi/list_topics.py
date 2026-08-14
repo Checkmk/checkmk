@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.openapi.framework import (
@@ -43,13 +41,13 @@ class PagetypeTopicExtensions:
 
 @api_model
 class PagetypeTopicModel(DomainObjectModel):
-    domainType: Literal["pagetype_topic"] = api_field(description="The domain type of the object.")
-    id: str = api_field(
+    domainType: Literal["pagetype_topic"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+    id: str = api_field(  # type: ignore[mutable-override]
         title="ID",
         description="The unique identifier for this topic.",
         example="other",
     )
-    title: str = api_field(
+    title: str = api_field(  # type: ignore[mutable-override]
         title="Title",
         description="A human readable title of this object. Can be used for user interfaces.",
         example="Other",
@@ -61,7 +59,7 @@ class PagetypeTopicModel(DomainObjectModel):
 
 @api_model
 class PagetypeTopicCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["pagetype_topic"] = api_field(
+    domainType: Literal["pagetype_topic"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection."
     )
     value: list[PagetypeTopicModel] = api_field(description="The list of pagetype topics.")

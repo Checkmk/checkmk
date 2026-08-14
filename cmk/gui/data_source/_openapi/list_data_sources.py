@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.data_source.registry import data_source_registry
@@ -33,7 +31,7 @@ class DataSourceExtensions:
 
 @api_model
 class DataSourceModel(DomainObjectModel):
-    domainType: Literal["constant"] = api_field(description="The domain type of the object.")
+    domainType: Literal["constant"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
     extensions: DataSourceExtensions = api_field(
         description="The configuration of this data source."
     )
@@ -41,7 +39,7 @@ class DataSourceModel(DomainObjectModel):
 
 @api_model
 class DataSourceCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["constant"] = api_field(
+    domainType: Literal["constant"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection"
     )
     value: list[DataSourceModel] = api_field(description="A list of host objects", example="")

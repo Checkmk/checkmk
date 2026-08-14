@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 import json
 from collections.abc import Mapping
 from typing import Annotated, Literal, Self
@@ -305,7 +303,7 @@ class BurgerMenuGroup:
 
 @api_model
 class BurgerMenuCollection(DomainObjectCollectionModel):
-    domainType: Literal["burger_menu"] = api_field(
+    domainType: Literal["burger_menu"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection.",
         example="burger_menu",
     )

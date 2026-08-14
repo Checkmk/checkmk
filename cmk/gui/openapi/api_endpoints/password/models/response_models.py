@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
@@ -47,7 +45,7 @@ class PasswordExtension:
 
 @api_model
 class PasswordObject(DomainObjectModel):
-    domainType: Literal["password"] = api_field(
+    domainType: Literal["password"] = api_field(  # type: ignore[mutable-override]
         description="The type of the domain-object.",
     )
     extensions: PasswordExtension = api_field(
@@ -57,7 +55,7 @@ class PasswordObject(DomainObjectModel):
 
 @api_model
 class PasswordCollection(DomainObjectCollectionModel):
-    domainType: Literal["password"] = api_field(
+    domainType: Literal["password"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection.",
     )
     value: list[PasswordObject] = api_field(

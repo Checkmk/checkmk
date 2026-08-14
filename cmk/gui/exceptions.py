@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 import http.client
 from typing import override
 
@@ -34,7 +32,7 @@ class HTTPRedirect(FinalizeRequest):
     """Is used to end the HTTP request processing from deeper code levels
     and making the client request another page after receiving the response."""
 
-    status = http.HTTPStatus.FOUND
+    status = http.HTTPStatus.FOUND  # type: ignore[mutable-override]
 
     def __init__(self, url: str, code: int = http.client.FOUND) -> None:
         super().__init__(code)
@@ -42,7 +40,7 @@ class HTTPRedirect(FinalizeRequest):
 
 
 class MKAuthException(MKHTTPException):
-    status = http.HTTPStatus.UNAUTHORIZED
+    status = http.HTTPStatus.UNAUTHORIZED  # type: ignore[mutable-override]
 
 
 class MKUnauthenticatedException(MKAuthException):
@@ -50,7 +48,7 @@ class MKUnauthenticatedException(MKAuthException):
 
 
 class MKConfigError(MKHTTPException):
-    status = http.HTTPStatus.BAD_REQUEST
+    status = http.HTTPStatus.BAD_REQUEST  # type: ignore[mutable-override]
 
 
 class MKUserError(MKHTTPException):
@@ -71,16 +69,16 @@ class MKUserError(MKHTTPException):
 
 
 class MKInternalError(MKHTTPException):
-    status = http.HTTPStatus.BAD_REQUEST
+    status = http.HTTPStatus.BAD_REQUEST  # type: ignore[mutable-override]
 
 
 class MKMissingDataError(MKHTTPException):
-    status = http.HTTPStatus.BAD_REQUEST
+    status = http.HTTPStatus.BAD_REQUEST  # type: ignore[mutable-override]
 
 
 class MKNotFound(MKHTTPException):
-    status = http.HTTPStatus.NOT_FOUND
+    status = http.HTTPStatus.NOT_FOUND  # type: ignore[mutable-override]
 
 
 class MKMethodNotAllowed(MKHTTPException):
-    status = http.HTTPStatus.METHOD_NOT_ALLOWED
+    status = http.HTTPStatus.METHOD_NOT_ALLOWED  # type: ignore[mutable-override]

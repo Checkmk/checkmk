@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 import logging
 from typing import override
 
@@ -233,7 +231,7 @@ class ActionResultScalar(ActionResultBase):
 
 class ActionResult(OneOfSchema):
     type_field = "resultType"
-    type_schemas = {
+    type_schemas = {  # type: ignore[mutable-override]
         "object": ActionResultObject,
         "scalar": ActionResultScalar,
     }
@@ -275,7 +273,7 @@ class MoveFolder(BaseSchema):
 
 
 class Configuration(DomainObject):
-    domainType = fields.Constant("config", required=True)
+    domainType = fields.Constant("config", required=True)  # type: ignore[mutable-override]
 
 
 class SiteStateMembers(BaseSchema):
@@ -304,7 +302,7 @@ class TypeSchemas(dict[str, type[Schema]]):
 
 
 class CollectionItem(OneOfSchema):
-    type_schemas = TypeSchemas({"link": LinkSchema})
+    type_schemas = TypeSchemas({"link": LinkSchema})  # type: ignore[mutable-override]
     type_field = "domainType"
     type_field_remove = False
 
@@ -375,18 +373,18 @@ class Version(LinkSchema):
 
 
 class AgentObject(DomainObject):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "agent",
         description="The domain type of the object.",
     )
 
 
 class AgentCollection(DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         "agent",
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
+    value = fields.List(  # type: ignore[mutable-override]
         fields.Nested(AgentObject),
         description="A list of agent objects.",
     )

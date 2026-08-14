@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 """Configuration entities / Folder
 
 These endpoints can be used to manipulate folders via the configuration entity API,
@@ -27,18 +25,18 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 class FolderResponse(DomainObject):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         ConfigEntityType.folder.value,
         description="The domain type of the object.",
     )
 
 
 class FolderResponseCollection(DomainObjectCollection):
-    domainType = fields.Constant(
+    domainType = fields.Constant(  # type: ignore[mutable-override]
         ConfigEntityType.folder.value,
         description="The domain type of the objects in the collection.",
     )
-    value = fields.List(
+    value = fields.List(  # type: ignore[mutable-override]
         fields.Nested(FolderResponse),
         description="A list of folder objects.",
     )

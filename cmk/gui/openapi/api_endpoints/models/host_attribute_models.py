@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Sequence
@@ -324,7 +323,7 @@ class HostAttributeResponseModel(
         description="Read only access to configured metadata.", default_factory=ApiOmitted
     )
     # Override the input model with the read-only variant, whose flags are always rendered.
-    contactgroups: HostContactGroupResponseModel | ApiOmitted = api_field(
+    contactgroups: HostContactGroupResponseModel | ApiOmitted = api_field(  # type: ignore[mutable-override]
         description="Only members of the contact groups listed here have Setup permission for the host/folder. Optionally, you can make these contact groups automatically monitor contacts. The assignment of hosts to contact groups can also be defined by rules.",
         default_factory=ApiOmitted,
     )

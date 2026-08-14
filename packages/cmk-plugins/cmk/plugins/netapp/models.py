@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
@@ -537,7 +536,7 @@ class ShelfTemperatureModel(ShelfObjectModel):
     """
 
     temperature: int | None
-    state: Literal["ok", "error"]
+    state: Literal["ok", "error"]  # type: ignore[mutable-override]
     ambient: bool
 
     low_warning: int | None = None

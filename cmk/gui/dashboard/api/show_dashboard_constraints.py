@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Literal
 
 from cmk.gui.openapi.framework import (
@@ -28,7 +26,7 @@ from .model.constants import (
 
 @api_model
 class DashboardConstantsObject(DomainObjectModel):
-    domainType: Literal["constant"] = api_field(description="The domain type of the object.")
+    domainType: Literal["constant"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
     extensions: DashboardConstantsResponse = api_field(
         description="All the constants data of a dashboard."
     )

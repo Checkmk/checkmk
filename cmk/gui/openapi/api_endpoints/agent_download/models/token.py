@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # Narrowing domainType from str to Literal is intentional for API response typing
-# mypy: disable-error-code="mutable-override"
 
 import datetime as dt
 from typing import Annotated, Literal, Self
@@ -40,7 +39,7 @@ class AgentDownloadTokenMetadata:
 
 @api_model
 class AgentDownloadTokenObjectModel(DomainObjectModel):
-    domainType: Literal["agent_download_token"] = api_field(
+    domainType: Literal["agent_download_token"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the object."
     )
     extensions: AgentDownloadTokenMetadata = api_field(description="The metadata of this token.")

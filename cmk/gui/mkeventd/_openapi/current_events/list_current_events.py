@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="mutable-override"
-
 from typing import Annotated, Literal
 
 from cmk.ccc.site import SiteId
@@ -37,7 +35,7 @@ from .utils import IGNORE_PERMISSIONS
 
 @api_model
 class CurrentEventsCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["event_console"] = api_field(
+    domainType: Literal["event_console"] = api_field(  # type: ignore[mutable-override]
         description="The domain type of the objects in the collection",
         example="event_console",
     )

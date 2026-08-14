@@ -106,7 +106,7 @@ test('requests the services sorted by name ascending on the first click of the S
       body: {
         limit: 1000,
         sort: ['name:asc'],
-        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+        fields: []
       }
     })
   )
@@ -125,7 +125,7 @@ test('requests a descending sort first for the State column', async () => {
       body: {
         limit: 1000,
         sort: ['state:desc'],
-        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+        fields: []
       }
     })
   )
@@ -144,7 +144,7 @@ test('requests the services matching a submitted search query', async () => {
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, q: 'CPU', fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+      body: { limit: 1000, q: 'CPU', fields: [] }
     })
   )
 })
@@ -178,7 +178,7 @@ test('requests services whose name contains the typed filter text', async () => 
       body: {
         limit: 1000,
         filter: { type: 'condition', field: 'name', op: 'contains', value: 'cpu' },
-        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+        fields: []
       }
     })
   )
@@ -201,7 +201,7 @@ test('clearing the name filter restores the full, unfiltered list', async () => 
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+      body: { limit: 1000, fields: [] }
     })
   )
 })
@@ -221,7 +221,7 @@ test('requests services whose summary contains the typed filter text', async () 
       body: {
         limit: 1000,
         filter: { type: 'condition', field: 'summary', op: 'contains', value: 'timeout' },
-        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+        fields: []
       }
     })
   )
@@ -244,7 +244,7 @@ test('clearing the summary filter restores the full, unfiltered list', async () 
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+      body: { limit: 1000, fields: [] }
     })
   )
 })
@@ -271,7 +271,7 @@ test('requests services that are not acknowledged and not in downtime', async ()
             { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
           ]
         },
-        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+        fields: []
       }
     })
   )
@@ -294,7 +294,7 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+      body: { limit: 1000, fields: [] }
     })
   )
 })
@@ -318,7 +318,7 @@ test('activating the unhandled-problems quick filter requests the WARN/CRIT, una
             { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
           ]
         },
-        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+        fields: []
       }
     })
   )
@@ -335,7 +335,7 @@ test('clicking the unhandled-problems chip again turns it back off', async () =>
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+      body: { limit: 1000, fields: [] }
     })
   )
 })
@@ -350,7 +350,7 @@ test('resetting all filters also turns off the unhandled-problems chip', async (
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+      body: { limit: 1000, fields: [] }
     })
   )
 })
@@ -396,7 +396,7 @@ test('resetting all filters restores the full, unfiltered list', async () => {
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: ['labels', 'tags', 'contacts', 'contact_groups'] }
+      body: { limit: 1000, fields: [] }
     })
   )
 })
@@ -419,7 +419,7 @@ test('requests only the states the URL a link arrived on names', async () => {
       body: {
         limit: 1000,
         filter: { type: 'condition', field: 'state', op: 'one_of', value: ['CRIT'] },
-        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+        fields: []
       }
     })
   )
@@ -505,7 +505,7 @@ test('requests services whose last state change is at or after the picked instan
           op: 'gte',
           value: picked
         },
-        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+        fields: []
       }
     })
   )

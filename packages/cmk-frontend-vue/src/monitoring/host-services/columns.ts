@@ -156,28 +156,32 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       header: _t('Labels'),
       enableSorting: false,
       minSize: 100,
-      maxSize: 400
+      maxSize: 400,
+      meta: { hidden: true }
     },
     {
       accessorKey: 'tags',
       header: _t('Tags'),
       enableSorting: false,
       minSize: 100,
-      maxSize: 400
+      maxSize: 400,
+      meta: { hidden: true }
     },
     {
       accessorKey: 'contacts',
       header: _t('Contacts'),
       enableSorting: false,
       minSize: 100,
-      maxSize: 300
+      maxSize: 300,
+      meta: { hidden: true }
     },
     {
       accessorKey: 'contact_groups',
       header: _t('Contact groups'),
       enableSorting: false,
       minSize: 100,
-      maxSize: 300
+      maxSize: 300,
+      meta: { hidden: true }
     },
     {
       accessorKey: 'perfometer',

@@ -100,6 +100,44 @@ test('renders an inline action with a url as a native link', () => {
   )
 })
 
+test('a linking action is drawn as the button a commanding one is', () => {
+  mountCell({
+    actions: [
+      { id: 'reschedule', label: 'Reschedule check' as TranslatedString, icon: 'reload' },
+      {
+        id: 'edit',
+        label: 'Edit host' as TranslatedString,
+        icon: 'edit',
+        url: 'wato.py?mode=edit_host&host=web-server-01'
+      }
+    ],
+    maxVisible: 2
+  })
+
+  const command = screen.getByRole('button', { name: 'Reschedule check' })
+  const link = screen.getByRole('link', { name: 'Edit host' })
+  expect(link.className).toBe(command.className)
+  expect(link).toHaveAttribute('target', '_top')
+})
+
+test('a linking action navigates rather than emitting a command', async () => {
+  const { emitted } = mountCell({
+    actions: [
+      {
+        id: 'edit',
+        label: 'Edit host' as TranslatedString,
+        icon: 'edit',
+        url: 'wato.py?mode=edit_host&host=web-server-01'
+      }
+    ],
+    maxVisible: 2
+  })
+
+  await userEvent.click(screen.getByRole('link', { name: 'Edit host' }))
+
+  expect(emitted('select')).toBeUndefined()
+})
+
 test('shows the menu trigger when only a lazy loader is provided', () => {
   const load = vi.fn(async () => LOADED)
   mountCell({ actions: [], load })

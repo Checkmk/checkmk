@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
-import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkSkeleton from 'cmk-ui-library/components/CmkSkeleton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -81,7 +81,8 @@ function onOpenChange(open: boolean): void {
 }
 
 function select(action: CellAction): void {
-  if (action.disabled) {
+  // A link navigates on its own; only a command is something for the parent to run.
+  if (action.disabled || action.url) {
     return
   }
   emit('select', action)
@@ -90,47 +91,30 @@ function select(action: CellAction): void {
 
 <template>
   <div class="monitoring-action-buttons">
-    <template v-for="action in visibleActions" :key="action.id">
-      <a
-        v-if="action.url"
-        class="monitoring-action-buttons__icon-button"
-        :href="action.url"
-        :target="action.target ?? '_top'"
-        :title="action.label"
-        :aria-label="action.label"
-      >
-        <ActionIcon :icon="action.icon" />
-      </a>
-      <CmkIconButton
-        v-else-if="typeof action.icon !== 'string'"
-        class="monitoring-action-buttons__icon-button"
-        :name="action.icon.name"
-        :primary-color="action.icon.color"
-        size="small"
-        :title="action.label"
-        :aria-label="action.label"
-        :disabled="action.disabled"
-        @click="select(action)"
-      />
-      <CmkIconButton
-        v-else
-        class="monitoring-action-buttons__icon-button"
-        :name="action.icon"
-        size="small"
-        :title="action.label"
-        :aria-label="action.label"
-        :disabled="action.disabled"
-        @click="select(action)"
-      />
-    </template>
+    <CmkButton
+      v-for="action in visibleActions"
+      :key="action.id"
+      variant="optional"
+      size="iconOnly"
+      :href="action.url"
+      :target="action.url ? (action.target ?? '_top') : undefined"
+      :title="action.label"
+      :aria-label="action.label"
+      :disabled="action.disabled"
+      @click="select(action)"
+    >
+      <ActionIcon :icon="action.icon" />
+    </CmkButton>
 
     <DropdownMenuRoot v-if="hasMenu" @update:open="onOpenChange">
-      <DropdownMenuTrigger
-        class="monitoring-action-buttons__icon-button"
-        :title="_t('More actions')"
-        :aria-label="_t('More actions')"
-      >
-        <CmkMultitoneIcon name="more-actions" primary-color="font" size="small" />
+      <DropdownMenuTrigger as-child>
+        <CmkIconButton
+          name="more-actions"
+          primary-color="font"
+          size="small"
+          :title="_t('More actions')"
+          :aria-label="_t('More actions')"
+        />
       </DropdownMenuTrigger>
       <DropdownMenuPortal>
         <DropdownMenuContent
@@ -223,30 +207,6 @@ function select(action: CellAction): void {
   flex-direction: row;
   align-items: center;
   gap: var(--dimension-2);
-}
-
-.monitoring-action-buttons__icon-button {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  padding: var(--dimension-2);
-  margin: 0;
-  background: transparent;
-  border: none;
-  border-radius: var(--dimension-2);
-  cursor: pointer;
-  color: inherit;
-  text-decoration: none;
-
-  &:hover {
-    background-color: var(--ux-theme-3);
-  }
-
-  &:focus-visible {
-    outline: 1px solid var(--success);
-    outline-offset: 1px;
-  }
 }
 </style>
 

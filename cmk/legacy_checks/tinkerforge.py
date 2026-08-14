@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 import time
 from collections.abc import Sequence
@@ -33,7 +32,7 @@ def parse_tinkerforge(string_table):
     # On this opportunity, also create an index of master bricks which we need
     # to query the stack topology
     master_index = {}
-    temp = {}
+    temp: dict[str, list[tuple[str, str, str | None, list[str]]]] = {}
     for line in string_table:
         brick_type, path = line[:2]
         try:
@@ -51,7 +50,7 @@ def parse_tinkerforge(string_table):
     # now go through all the bricks again and sort them within each brick_type-group by their
     # position in the topology. items higher up in the topology come first, and among
     # "siblings" they are sorted by the port on this host.
-    res = {}
+    res: dict[str, dict[str, list[str]]] = {}
     for brick_type, bricks in temp.items():
         counter = 1
         for brick in sorted(

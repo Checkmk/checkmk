@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="var-annotated"
 
 from collections.abc import Mapping
 from typing import Any, TypedDict
@@ -61,7 +60,7 @@ def parse_raritan_pdu_ocprot(
         [end_oid, state, value, scale]
         for (end_oid, state, value), (scale,) in zip(string_table[0], string_table[1])
     ]
-    parsed = {}
+    parsed: dict[str, ProtectorData] = {}
     for end_oid, state, value, scale in flattened_info:
         protector_id = "C" + end_oid.split(".")[1]  # 1.5.1 --> Item will be "C5"
 

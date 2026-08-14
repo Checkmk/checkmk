@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="unreachable"
-# mypy: disable-error-code="var-annotated"
 
 # <<<oracle_sessions>>>
 # pengt  15
@@ -38,7 +37,7 @@ type SectionOracleSessions = Mapping[str, Mapping[str, int]]
 
 def parse_oracle_sessions(string_table: StringTable) -> SectionOracleSessions:
     header = ["cursess", "maxsess", "curmax"]
-    parsed = {}
+    parsed: dict[str, dict[str, int]] = {}
     for line in string_table:
         for key, entry in zip(header, line[1:]):
             with contextlib.suppress(ValueError):

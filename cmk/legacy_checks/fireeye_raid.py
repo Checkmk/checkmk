@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
@@ -35,12 +34,13 @@ check_info = {}
 
 def parse_fireeye_raid(string_table):
     # We only discover in case of a raid system
-    parsed = {}
+    parsed: dict[str, object] = {}
+    disks: list[list[str]] = []
     if len(string_table[1]) > 1:
         for diskname, diskstatus, diskhealth in string_table[1]:
             parsed.setdefault("raid", string_table[0][0])
-            parsed.setdefault("disks", [])
-            parsed["disks"].append([diskname, diskstatus, diskhealth])
+            parsed.setdefault("disks", disks)
+            disks.append([diskname, diskstatus, diskhealth])
 
     return parsed
 

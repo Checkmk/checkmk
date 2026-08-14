@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
-# mypy: disable-error-code="var-annotated"
 
 import time
 from collections.abc import Mapping
@@ -109,7 +108,7 @@ def parse_apc_symmetra(
 ) -> ParsedSection:
     if len(string_table) == 2:
         sensor_info, battery_info = string_table
-        cartridge_info = []
+        cartridge_info: CartridgeInfo = []
     else:
         sensor_info, battery_info, cartridge_info = string_table
 

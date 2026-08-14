@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="var-annotated"
 
 #
 # .1.3.6.1.4.1.15983.1.1.4.2.1.1.2.1 AP1
@@ -19,7 +18,7 @@
 
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, TypedDict
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -35,6 +34,16 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+
+
+class AccessPoint(TypedDict):
+    descr: str
+    location: str
+    uptime: int | None
+    operational: str
+    availability: str
+    clients_count_24: int
+    clients_count_5: int
 
 
 def parse_fortinet_controller_aps(
@@ -58,7 +67,7 @@ def parse_fortinet_controller_aps(
         "6": "not installed",
     }
 
-    parsed = {}
+    parsed: dict[str, AccessPoint] = {}
     ap_table, client_table = string_table
     for descr, id_, location, uptime_str, oper_state, availability in ap_table:
         try:

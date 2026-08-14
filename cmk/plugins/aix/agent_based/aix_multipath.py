@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="var-annotated"
 
 # Example output:
 # <<<aix_multipath>>>
@@ -30,7 +29,7 @@ from cmk.agent_based.v2 import (
 
 
 def discover_aix_multipath(section: StringTable) -> DiscoveryResult:
-    disks = {}
+    disks: dict[str, int] = {}
     for disk, _controller, _status in section:
         # filtering here to only see disks. there are other multipath devices,
         # too, but those have incomplete status => false positives

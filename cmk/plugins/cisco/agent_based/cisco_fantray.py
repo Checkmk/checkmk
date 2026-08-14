@@ -48,8 +48,6 @@
 # ...
 
 
-# mypy: disable-error-code="var-annotated"
-
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import (
@@ -95,13 +93,13 @@ def parse_cisco_fantray(string_table: Sequence[StringTable]) -> Section:
         "4": (State.CRIT, "partial failure, needs replacement as soon as possible."),
     }
 
-    statuses = {}
+    statuses: dict[str, tuple[State, str]] = {}
     for end_oid, oper_state in string_table[0]:
         statuses.setdefault(
             end_oid, map_states.get(oper_state, (State.UNKNOWN, f"unexpected({oper_state})"))
         )
 
-    entries_by_name = {}
+    entries_by_name: dict[str, list[tuple[State, str]]] = {}
     for end_oid, raw_name in string_table[1]:
         if end_oid not in statuses:
             continue

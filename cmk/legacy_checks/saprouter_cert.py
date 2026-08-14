@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 # Valid
 # <<<saprouter_cert>>>
@@ -42,18 +41,20 @@ def parse_saprouter_cert(string_table):
         time_struct = time.strptime(" ".join(list_), "%b %d %H:%M:%S %Y")
         return time.mktime(time_struct), "%s-%s-%s" % time_struct[:3]
 
-    parsed = {}
+    parsed: dict[str, object] = {}
+    valid: dict[str, tuple[float, str]] = {}
+    failed: list[str] = []
     validity = None
     for line in string_table:
         if line[0] == "Validity":
             validity = "valid"
-            parsed.setdefault(validity, {})
+            parsed.setdefault(validity, valid)
 
         if validity and "NotBefore:" in line:
-            parsed[validity].setdefault("not_before", parse_date(line[-5:-1]))
+            valid.setdefault("not_before", parse_date(line[-5:-1]))
 
         elif validity and ("NotAfter:" in line or "NotAfter" in line):
-            parsed[validity].setdefault("not_after", parse_date(line[-5:-1]))
+            valid.setdefault("not_after", parse_date(line[-5:-1]))
 
         elif " ".join(line[:3]).lower() == "sso for user":
             parsed.setdefault("sso_user", line[-1].replace('"', ""))
@@ -62,8 +63,8 @@ def parse_saprouter_cert(string_table):
             parsed.setdefault("pse_file", line[-1].replace('"', ""))
 
         elif not validity:
-            parsed.setdefault("failed", [])
-            parsed["failed"].append(" ".join(line))
+            parsed.setdefault("failed", failed)
+            failed.append(" ".join(line))
 
     return parsed
 

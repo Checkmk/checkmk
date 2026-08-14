@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 import time
 
@@ -17,7 +16,7 @@ check_info = {}
 
 
 def parse_jolokia_jvm_garbagecollectors(string_table):
-    parsed = {}
+    parsed: dict[str, dict[str, object]] = {}
     for instance, _mbean, bulk_data in parse_jolokia_json_output(string_table):
         for data in bulk_data.values():
             name = data.get("Name")

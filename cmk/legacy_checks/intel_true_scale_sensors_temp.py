@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
@@ -12,6 +11,10 @@ from cmk.legacy_includes.temperature import check_temperature_list
 from cmk.plugins.intel.lib import DETECT_INTEL_TRUE_SCALE
 
 check_info = {}
+
+type SensorReading = tuple[str, float, dict[str, object]]
+# Every slot maps "slot_type" to a string and each sensor type to its readings.
+type SlotData = dict[str, str | list[SensorReading]]
 
 
 # .1.3.6.1.4.1.10222.2.1.2.9.1.1.1.1.1 1 --> ICS-CHASSIS-MIB::icsChassisSlotIndex.1.1.1
@@ -81,7 +84,7 @@ def parse_intel_true_scale_sensors(string_table):
     }
 
     slots, sensors = string_table
-    parsed = {}
+    parsed: dict[str, SlotData] = {}
     for slot_id, slot_ty in slots:
         parsed.setdefault("slot %s" % slot_id, {"slot_type": map_slot_types[slot_ty]})
 
@@ -97,10 +100,9 @@ def parse_intel_true_scale_sensors(string_table):
         kwargs = {"dev_status": state, "dev_status_name": state_readable}
 
         sensor_ty = map_sensor_types[ty]
-        parsed[slot_name].setdefault(sensor_ty, [])
-        parsed[slot_name][sensor_ty].append(
-            (f"{sensor_id} {sensor_name}", float(reading_str) * factor, kwargs)
-        )
+        readings = parsed[slot_name].setdefault(sensor_ty, [])
+        assert isinstance(readings, list)  # only "slot_type" maps to a string
+        readings.append((f"{sensor_id} {sensor_name}", float(reading_str) * factor, kwargs))
 
     return parsed
 

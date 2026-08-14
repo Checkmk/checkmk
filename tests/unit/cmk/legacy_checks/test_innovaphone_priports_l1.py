@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="var-annotated"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -129,7 +128,7 @@ def test_check_innovaphone_priports_l1_no_signal_loss(monkeypatch: pytest.Monkey
 
 def test_check_innovaphone_priports_l1_item_not_found() -> None:
     """Test check function with non-existent item"""
-    parsed = {}
+    parsed: dict[str, object] = {}
     result = list(innovaphone_priports_l1.check_innovaphone_priports_l1("NonExistent", {}, parsed))
 
     assert len(result) == 0

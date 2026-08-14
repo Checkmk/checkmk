@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
@@ -54,7 +53,7 @@ def parse_intel_true_scale_psus(string_table):
         "4": "unknown",
     }
 
-    parsed = {}
+    parsed: dict[str, dict[str, float | tuple[int, str] | str]] = {}
     for descr, operstate, source, voltage_str, power_str in string_table:
         name = descr.replace("Power Supply", "").strip()
 

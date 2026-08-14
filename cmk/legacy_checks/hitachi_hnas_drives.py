@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree
@@ -20,7 +19,7 @@ def discover_hitachi_hnas_drives(info):
 
 
 def parse_hitachi_hnas_drives(string_table):
-    parsed = {}
+    parsed: dict[str, int] = {}
     for (status,) in string_table:
         parsed.setdefault(status, 0)
         parsed[status] += 1

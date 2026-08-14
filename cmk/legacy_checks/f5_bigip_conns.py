@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="var-annotated"
 
 import time
 
@@ -28,7 +27,7 @@ def check_f5_bigip_conns(item, params, info):
     now = time.time()
     value_store = get_value_store()
     total_native_compat_rate = 0.0
-    conns_dict = {}
+    conns_dict: dict[str, int] = {}
 
     for line in info:
         if line[2] != "":

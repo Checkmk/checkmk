@@ -8,7 +8,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="unreachable"
-# mypy: disable-error-code="var-annotated"
 
 # redfishMockupServer.py
 # tested and developed Python 3.4
@@ -86,7 +85,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
     returns index.json file for Serverthe specified URL
     """
 
-    patchedLinks = {}
+    patchedLinks: dict[str, object] = {}
 
     def construct_path(self, path, filename):
         """construct_path
@@ -687,6 +686,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
         logger.info("   POST: Content: type=%s and params=%s", ctype, pdict)
         if "content-length" in self.headers:
             lenn = int(self.headers["content-length"])
+            data_received: dict[str, object] | None
             if lenn == 0:
                 data_received = {}
             elif ctype == "multipart/form-data":

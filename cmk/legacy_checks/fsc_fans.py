@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import all_of, any_of, exists, not_exists, SNMPTree, startswith
@@ -14,7 +13,7 @@ check_info = {}
 
 
 def parse_fsc_fans(string_table):
-    parsed = {}
+    parsed: dict[str, int] = {}
     for fan_name, rpm_str in string_table:
         try:
             rpm = int(rpm_str)

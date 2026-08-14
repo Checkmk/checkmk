@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="var-annotated"
 
 import time
 from collections.abc import Mapping
@@ -28,7 +27,7 @@ Section = Mapping[str, Any]
 
 
 def parse_jolokia_jvm_threading(string_table: StringTable) -> Section:
-    parsed = {}
+    parsed: dict[str, dict[str, dict[str, object]]] = {}
     for instance, mbean, data in parse_jolokia_json_output(string_table):
         type_ = jolokia_mbean_attribute("type", mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})

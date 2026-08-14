@@ -65,8 +65,6 @@
 # }
 
 
-# mypy: disable-error-code="var-annotated"
-
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,

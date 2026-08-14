@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 import time
 
@@ -16,7 +15,7 @@ check_info = {}
 
 
 def parse_f5_bigip_snat(string_table):
-    snats = {}
+    snats: dict[str, dict[str, list[int]]] = {}
     for line in string_table:
         name = line[0]
         snat_info = snats.setdefault(name, {})
@@ -48,7 +47,7 @@ def check_f5_bigip_snat(item, params, parsed):
     if item in parsed:
         snat = parsed[item]
 
-        summed_values = {}
+        summed_values: dict[str, float] = {}
         now = time.time()
         # Calculate counters
         for what in [

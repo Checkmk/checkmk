@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 # <<<rabbitmq_vhosts>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,
@@ -31,7 +30,7 @@ check_info = {}
 
 
 def parse_rabbitmq_vhosts(string_table):
-    parsed = {}
+    parsed: dict[str, dict[str, object]] = {}
 
     for vhosts in string_table:
         for vhost_json in vhosts:

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 
@@ -12,7 +11,7 @@ check_info = {}
 
 
 def parse_jolokia_info(string_table):
-    parsed = {}
+    parsed: dict[str, list[list[str]]] = {}
     for line in string_table:
         parsed.setdefault(line[0], []).append(line[1:])
     return parsed

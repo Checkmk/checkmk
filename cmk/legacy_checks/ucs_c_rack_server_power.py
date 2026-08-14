@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
 
 # exemplary output of special agent agent_ucs_bladecenter (separator is <TAB> and means tabulator):
 #
@@ -29,7 +28,7 @@ def parse_ucs_c_rack_server_power(string_table):
     Returns dict with indexed rack motherboards mapped to keys and consumed power,
     input current status and input voltage status as value.
     """
-    parsed = {}
+    parsed: dict[str, dict[str, float]] = {}
     # The element count of string_table lines is under our control (agent output) and
     # ensured to have expected length. It is ensured that elements contain a
     # string. Handles invalid values provided by the XML API which cannot be

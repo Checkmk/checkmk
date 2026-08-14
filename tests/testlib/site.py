@@ -3071,10 +3071,6 @@ def connection(
             "disable_remote_configuration": disable_remote_configuration,
             "ignore_tls_errors": True,
             "direct_login_to_web_gui_allowed": True,
-            "authentication_connections": {
-                "type": "all",
-                "connection_types": ["ldap", "saml"],
-            },
             "user_sync": {"sync_with_ldap_connections": "all"},
             "replicate_event_console": True,
             "replicate_extensions": True,
@@ -3084,6 +3080,12 @@ def connection(
         # only set message_broker_port for CMK2.4.0+
         if remote_site.version >= CMKVersion("2.4.0"):
             configuration_connection["message_broker_port"] = remote_site.message_broker_port
+        # the site management endpoint only knows authentication_connections since CMK3.0.0
+        if central_site.version >= CMKVersion("3.0.0b1"):
+            configuration_connection["authentication_connections"] = {
+                "type": "all",
+                "connection_types": ["ldap", "saml"],
+            }
     else:
         configuration_connection = {
             "enable_replication": False,

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="mutable-override,no-any-return"
+# mypy: disable-error-code="mutable-override"
+# mypy: disable-error-code="no-any-return"
 
 from collections.abc import Iterable
 from typing import Any, Literal, NewType, override

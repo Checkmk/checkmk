@@ -10,7 +10,7 @@ import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkLabeledSwitch from 'cmk-ui-library/components/CmkLabeledSwitch.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { BurgerMenuCallable, BurgerMenuGroup, TimeRange } from '../types.ts'
 import { isoDate, stepLabel } from '../utils/timeFormat'
@@ -23,6 +23,7 @@ import {
   isConsolidationFn,
   useConsolidationFunctionLabels
 } from './consolidation'
+import { useHeaderLineBreakLevel } from './private/useHeaderLineBreakLevel'
 
 // TODO: readjust props to remove the possible omits
 const props = withDefaults(
@@ -87,15 +88,64 @@ function withMinutesSpelledOut(label: string): string {
   return label.replace(/ m$/, ' min')
 }
 
-const resolutionLabel = computed(() =>
-  props.timeRange ? withMinutesSpelledOut(stepLabel(props.timeRange.step)) : null
+// The header renders title, values-and-time and zoom-and-menu as three atomic blocks; useHeaderLineBreakLevel
+// resolves how they flow onto rows as it resizes.
+const headerEl = ref<HTMLElement | null>(null)
+const titleComp = ref<InstanceType<typeof GraphTitle> | null>(null)
+const titleEl = computed<HTMLElement | null>(() => (titleComp.value?.$el as HTMLElement) ?? null)
+const valuesAndTimeEl = ref<HTMLElement | null>(null)
+const zoomAndMenuEl = ref<HTMLElement | null>(null)
+
+const showValuesAndTime = computed(
+  () => !!props.showConsolidation || (!!props.showTimestamp && !!props.timeRange)
 )
+const showZoomAndMenu = computed(() => props.showControls || !!props.showBurgerMenu)
+
+const { headerLineBreakLevel } = useHeaderLineBreakLevel(
+  {
+    headerRef: headerEl,
+    titleRef: titleEl,
+    valuesAndTimeRef: valuesAndTimeEl,
+    zoomAndMenuRef: zoomAndMenuEl
+  },
+  {
+    showTitle: () => !!props.showTitle,
+    showValuesAndTime: () => showValuesAndTime.value,
+    showZoomAndMenu: () => showZoomAndMenu.value
+  }
+)
+
+const resolutionLabel = computed(() => {
+  const prefix = !!props.isCompact || headerLineBreakLevel.value > 1 ? '@' : _t('resolution:')
+  const resolution = props.timeRange ? withMinutesSpelledOut(stepLabel(props.timeRange.step)) : ''
+  return `${prefix} ${resolution}`
+})
 </script>
 
 <template>
-  <div class="graphing-graph-header" :class="{ 'graphing-graph-header--compact': !!isCompact }">
-    <GraphTitle v-if="showTitle" :title="title ?? ''" :is-compact="!!isCompact" />
-    <div class="graphing-graph-header__controls" role="group" :aria-label="_t('Graph controls')">
+  <div
+    ref="headerEl"
+    class="graphing-graph-header"
+    :class="{
+      'graphing-graph-header--compact': !!isCompact,
+      'graphing-graph-header--title-wrapped': headerLineBreakLevel === 2
+    }"
+  >
+    <GraphTitle
+      v-if="showTitle"
+      ref="titleComp"
+      :title="title ?? ''"
+      :is-compact="!!isCompact"
+      class="graphing-graph-header__title"
+    />
+    <div
+      v-if="showValuesAndTime"
+      ref="valuesAndTimeEl"
+      class="graphing-graph-header__values-and-time"
+      :class="{ 'graphing-graph-header__values-and-time--second-row': headerLineBreakLevel >= 1 }"
+      role="group"
+      :aria-label="_t('Graph values and time information')"
+    >
       <template v-if="showConsolidation">
         <span class="graphing-graph-header__values-label">{{ _t('Graph values') }}</span>
         <CmkDropdown
@@ -108,9 +158,17 @@ const resolutionLabel = computed(() =>
       <span v-if="showTimestamp && timeRange" class="graphing-graph-header__timestamp">
         {{ _t('for %{date},', { date: dateLabel ?? '' }) }}
         <span class="graphing-graph-header__resolution">
-          {{ _t('resolution: %{resolution}', { resolution: resolutionLabel ?? '' }) }}
+          {{ resolutionLabel }}
         </span>
       </span>
+    </div>
+    <div
+      v-if="showZoomAndMenu"
+      ref="zoomAndMenuEl"
+      class="graphing-graph-header__zoom-and-menu"
+      role="group"
+      :aria-label="_t('Graph zoom controls and action menu')"
+    >
       <CmkLabeledSwitch
         v-if="showControls"
         v-model="peakZoomActive"
@@ -131,24 +189,62 @@ const resolutionLabel = computed(() =>
 
 <style scoped lang="scss">
 .graphing-graph-header {
+  --graphing-graph-header-gap: var(--spacing-double);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--spacing-double);
-  padding: var(--dimension-4) var(--dimension-5);
+  column-gap: var(--graphing-graph-header-gap);
+  row-gap: var(--dimension-6);
+  padding: var(--dimension-4) var(--spacing-double);
   background: var(--ux-theme-3);
   border-radius: var(--border-radius);
 }
 
-.graphing-graph-header__controls {
+.graphing-graph-header__title {
+  flex: 0 0 auto;
+  order: 0;
+  // with the parent's gap the effective margin-right of the title resolve to --dimension-8 (24px)
+  margin-right: calc(var(--dimension-8) - var(--graphing-graph-header-gap));
+}
+
+.graphing-graph-header__values-and-time,
+.graphing-graph-header__zoom-and-menu {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: var(--spacing-double);
-  margin-left: auto;
+  gap: var(--dimension-6);
+  order: 0;
 
   > :deep(.cmk-dropdown) {
     align-self: center;
   }
+}
+
+.graphing-graph-header__values-and-time {
+  margin-left: auto;
+  gap: var(--dimension-4);
+}
+
+.graphing-graph-header__values-and-time--second-row {
+  order: 1;
+  margin-left: 0;
+}
+
+.graphing-graph-header--title-wrapped .graphing-graph-header__title {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+// Keep values-and-time on its own row at level 2 - the zero-basis title above would otherwise leave
+// room for it to slot back beside the actions on row 1.
+.graphing-graph-header--title-wrapped .graphing-graph-header__values-and-time {
+  flex-basis: 100%;
+}
+
+.graphing-graph-header--title-wrapped .graphing-graph-header__zoom-and-menu {
+  align-self: flex-start;
 }
 
 .graphing-graph-header__values-label,

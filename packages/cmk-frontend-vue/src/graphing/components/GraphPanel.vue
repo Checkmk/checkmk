@@ -276,7 +276,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
 }
 
 .graphing-graph-panel__header {
-  margin-bottom: var(--spacing-double);
+  margin-bottom: var(--dimension-3);
 }
 
 .graphing-graph-panel__header--compact {

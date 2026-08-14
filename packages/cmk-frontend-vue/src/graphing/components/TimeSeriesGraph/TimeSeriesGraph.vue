@@ -67,7 +67,7 @@ function showMaxZoomHint(point: { x: number; y: number }): void {
   }, MAX_ZOOM_HINT_DURATION_MS)
 }
 
-const MARGIN = { top: 5, right: CANVAS_MARGIN_RIGHT, bottom: 24 } as const
+const MARGIN = { top: 4, right: CANVAS_MARGIN_RIGHT, bottom: 24 } as const
 const X_AXIS_BAND_HEIGHT = 20
 // The strip's top edge doubles as the plot's baseline rule, so anything laid over the strip
 // starts below it rather than covering it.

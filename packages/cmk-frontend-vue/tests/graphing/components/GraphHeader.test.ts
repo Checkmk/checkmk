@@ -138,7 +138,9 @@ test('shows the burger action menu when showBurgerMenu is set - BP-C01', async (
 test('exposes the controls as an accessible group', () => {
   render(GraphHeader, { props: { showBurgerMenu: true, burgerMenuGroups: [] } })
 
-  expect(screen.getByRole('group', { name: 'Graph controls' })).toBeInTheDocument()
+  expect(
+    screen.getByRole('group', { name: 'Graph zoom controls and action menu' })
+  ).toBeInTheDocument()
 })
 
 test('draws the burger menu at the right-hand end of the header', () => {

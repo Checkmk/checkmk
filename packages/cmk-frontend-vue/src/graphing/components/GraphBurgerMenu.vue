@@ -135,6 +135,7 @@ function doAction(onClick: BurgerMenuCallable) {
   justify-content: center;
   width: 28px;
   height: 28px;
+  margin: 0;
   padding: 0;
   border: var(--dimension-1) solid var(--button-form-border-color);
   border-radius: var(--border-radius);

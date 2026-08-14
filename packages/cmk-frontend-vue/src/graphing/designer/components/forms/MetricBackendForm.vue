@@ -301,7 +301,8 @@ watch([groupBy, thenSteps], () => storeCurrentWith({}))
 // The group-by pills pick from the same attribute keys as the where clause.
 const {
   querySuggestions: groupByQuerySuggestions,
-  resolveAttributeKind: groupByResolveAttributeKind
+  resolveAttributeKind: groupByResolveAttributeKind,
+  suggestionRevision: groupBySuggestionRevision
 } = useAttributeKeySuggestions(() => buildAutocompleteContext([], { metricName: metricName.value }))
 </script>
 
@@ -364,6 +365,7 @@ const {
             v-model="groupBy"
             :input-type="groupByInputType"
             :query-suggestions="groupByQuerySuggestions"
+            :suggestion-revision="groupBySuggestionRevision"
             :resolve-attribute-kind="groupByResolveAttributeKind"
           />
         </td>

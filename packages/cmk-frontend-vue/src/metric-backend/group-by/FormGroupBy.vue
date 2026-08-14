@@ -38,13 +38,17 @@ import type {
 
 const { _t } = usei18n()
 
-const props = defineProps<{
-  // The consolidation output type for the same graph line.
-  inputType: GroupByInputType
-  querySuggestions: QuerySuggestionsFn
-  resolveAttributeKind?: ((key: string) => AttributeKind | null) | undefined
-  ariaLabel?: string | undefined
-}>()
+const props = withDefaults(
+  defineProps<{
+    // The consolidation output type for the same graph line.
+    inputType: GroupByInputType
+    querySuggestions: QuerySuggestionsFn
+    suggestionRevision?: number
+    resolveAttributeKind?: ((key: string) => AttributeKind | null) | undefined
+    ariaLabel?: string | undefined
+  }>(),
+  { suggestionRevision: 0 }
+)
 
 const model = defineModel<GroupByModel>({ required: true })
 
@@ -255,6 +259,7 @@ function canLeaveEdit(): boolean {
           ref="keysAreaRef"
           v-model="keysModel"
           :query-suggestions="querySuggestions"
+          :suggestion-revision="suggestionRevision"
           :resolve-attribute-kind="resolveAttributeKind"
           testid="group-by-keys"
         />

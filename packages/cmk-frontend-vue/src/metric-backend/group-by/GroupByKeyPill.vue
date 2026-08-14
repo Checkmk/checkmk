@@ -22,12 +22,14 @@ const props = withDefaults(
   defineProps<{
     condition: GroupKey
     querySuggestions: QuerySuggestionsFn
+    suggestionRevision?: number
     removable?: boolean
     editing?: boolean
     hideAttributeKind?: boolean
     ariaLabel?: string | undefined
   }>(),
   {
+    suggestionRevision: 0,
     removable: false,
     editing: false,
     hideAttributeKind: false,
@@ -46,6 +48,12 @@ const emit = defineEmits<{
 const fullLabel = computed(() => keyPillLabel(props.condition))
 const keyEmpty = computed(() => props.condition.attributeKey === '')
 const attributeKindEmpty = computed(() => props.condition.attributeKind === null)
+
+// Reading the revision yields a fresh options identity on each bump, so CmkSuggestions re-queries.
+const keyOptions = computed(() => {
+  void props.suggestionRevision
+  return { type: 'callback-filtered' as const, querySuggestions: props.querySuggestions }
+})
 
 const keyDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('keyDropdownRef')
 const attributeKindDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>(
@@ -161,7 +169,7 @@ defineExpose({
           ref="keyDropdownRef"
           floating
           :model-value="condition.attributeKey || null"
-          :options="{ type: 'callback-filtered', querySuggestions }"
+          :options="keyOptions"
           :label="_t('Attribute key')"
           :input-hint="_t('Attribute key')"
           :required="showValidationErrors"

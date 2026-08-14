@@ -20,12 +20,13 @@ const { _t } = usei18n()
 const props = withDefaults(
   defineProps<{
     querySuggestions: QuerySuggestionsFn
+    suggestionRevision?: number
     resolveAttributeKind?: ((key: string) => AttributeKind | null) | undefined
     canAdd?: boolean
     hideAttributeKind?: boolean
     testid?: string | undefined
   }>(),
-  { canAdd: true, hideAttributeKind: false }
+  { suggestionRevision: 0, canAdd: true, hideAttributeKind: false }
 )
 
 const keys = defineModel<GroupKey[]>({ required: true })
@@ -120,6 +121,7 @@ defineExpose({ tryChangeFocus, focusKey })
       :ref="(element) => registerPill(key.id, element)"
       :condition="key"
       :query-suggestions="querySuggestions"
+      :suggestion-revision="suggestionRevision"
       :hide-attribute-kind="hideAttributeKind"
       removable
       :editing="key.id === editingId"

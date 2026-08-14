@@ -1515,6 +1515,9 @@ allows = ["cmk.mcp"]
 [components."cmk.testlib.metric_backend"]
 allows = ["cmk.metric_backend"]
 
+[components."cmk.testlib.otel_collector"]
+allows = ["cmk.otel_collector"]
+
 [components."cmk.testlib.relay"]
 allows = [
   "@ccc",

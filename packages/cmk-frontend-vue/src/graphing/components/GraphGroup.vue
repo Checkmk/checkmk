@@ -203,6 +203,7 @@ const definitionCount = computed(() => props.graphs.length)
           :figure-width="effectiveWidth"
           :figure-height="figure_height"
           :add-to="graph?.addTo"
+          :header-is-compact="layout === 'wrap'"
           @update:requested-time-range="onPanelTimeRange"
           @update:consolidation-fn="consolidationFn = $event"
         />

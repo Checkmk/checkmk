@@ -161,8 +161,6 @@ const showGraphHeader: Ref<boolean> = computed(
     props.showConsolidation
 )
 
-const headerIsCompact = computed(() => props.figureWidth < 400)
-
 // The renderer sizes its own value-axis margin to the labels it draws; the brush track mirrors
 // it so the strip stays under the plot.
 const plotLeft = ref(CANVAS_MARGIN_LEFT)

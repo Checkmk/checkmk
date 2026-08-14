@@ -75,6 +75,7 @@ export interface GraphPanelProps {
   // Coarse, wider, end-anchored dataset for the navigator brush (separate fetch / mock).
   overview?: { metrics: Metric[]; timeRange: TimeRange } | undefined
   addTo?: AddTo | null | undefined
+  headerIsCompact?: boolean
 }
 
 export type GraphPanelEmits = {

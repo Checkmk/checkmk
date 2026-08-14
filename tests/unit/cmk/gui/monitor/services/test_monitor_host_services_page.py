@@ -3,16 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterator
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import login
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.monitor.command import monitor_command_registry, MonitorCommands
-from cmk.gui.monitor.services._pages._monitor_host_services import MonitorHostServicesPage
+from cmk.gui.monitor.services._pages._monitor_host_services import (
+    _make_breadcrumb,
+    MonitorHostServicesPage,
+)
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
@@ -39,3 +46,64 @@ def test_page_denied_without_legacy_view_permission(user_without_permissions: Us
 
     with pytest.raises(MKAuthException):
         page.page(PageContext(config=Config(), request=request))
+
+
+def _breadcrumb_of(host: str = "web-1", site: str = "local") -> Breadcrumb:
+    return _make_breadcrumb(
+        PageContext(config=Config(), request=request), HostName(host), SiteId(site)
+    )
+
+
+def _url_of(breadcrumb: Breadcrumb, title: str) -> tuple[str, dict[str, list[str]]]:
+    url = next(item.url for item in breadcrumb if item.title == title)
+    assert url is not None
+    parsed = urlparse(url)
+    return parsed.path, parse_qs(parsed.query)
+
+
+def _panel_of(breadcrumb: Breadcrumb, title: str) -> tuple[str, dict[str, list[str]]]:
+    url = next(item.url for item in breadcrumb if item.title == title)
+    assert url is not None
+    parsed = urlparse(url)
+    return parsed.path, parse_qs(parsed.fragment)
+
+
+def test_breadcrumb_links_the_host_to_its_panel_in_the_all_hosts_listing(
+    with_user_login: UserId,
+) -> None:
+    assert _panel_of(_breadcrumb_of(), "web-1") == (
+        "monitor_all_hosts.py",
+        {"host": ["web-1"], "site": ["local"]},
+    )
+
+
+def test_breadcrumb_falls_back_to_the_status_view_without_the_listing(
+    user_without_permissions: UserId,
+) -> None:
+    assert _url_of(_breadcrumb_of(), "web-1") == (
+        "view.py",
+        {"view_name": ["hoststatus"], "host": ["web-1"], "site": ["local"]},
+    )
+
+
+def test_breadcrumb_names_the_host_between_all_hosts_and_this_page(
+    with_user_login: UserId,
+) -> None:
+    assert [item.title for item in _breadcrumb_of()][-3:] == [
+        "All hosts (experimental)",
+        "web-1",
+        "Services of host",
+    ]
+
+
+def test_breadcrumb_keeps_this_page_reachable_from_its_own_item(with_user_login: UserId) -> None:
+    assert _url_of(_breadcrumb_of(), "Services of host") == (
+        "monitor_host_services.py",
+        {"host": ["web-1"], "site": ["local"]},
+    )
+
+
+def test_breadcrumb_drops_all_hosts_without_permission_for_it(
+    user_without_permissions: UserId,
+) -> None:
+    assert "All hosts (experimental)" not in [item.title for item in _breadcrumb_of()]

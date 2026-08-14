@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import asdict
 from typing import override
+from urllib.parse import urlencode
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -14,6 +15,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.monitor.command import MonitorCommands
+from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.pages import Page, PageContext
@@ -36,6 +38,9 @@ _SUPPORTED_ACTIONS: tuple[str, ...] = (
 _LEGACY_VIEW_NAME = "host"
 _LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
 
+_HOST_STATUS_VIEW_NAME = "hoststatus"
+_ALL_HOSTS_PERMISSION = "view.allhosts"
+
 
 class MonitorHostServicesPage(Page):
     def __init__(self, commands: MonitorCommands) -> None:
@@ -55,7 +60,7 @@ class MonitorHostServicesPage(Page):
         site_id = SiteId(ctx.request.get_str_input_mandatory("site"))
         title = _("Services of host %(host)s") % {"host": hostname}
 
-        breadcrumb = _make_breadcrumb(ctx, title)
+        breadcrumb = _make_breadcrumb(ctx, hostname, site_id)
 
         make_header(
             html,
@@ -105,16 +110,53 @@ class MonitorHostServicesPage(Page):
         html.footer()
 
 
-def _make_breadcrumb(ctx: PageContext, title: str) -> Breadcrumb:
+def _host_url(ctx: PageContext, hostname: HostName, site_id: SiteId) -> str:
+    """Where the host itself is shown: the all hosts listing with its panel open.
+
+    The panel is named in the fragment, the way the listing writes it when a user
+    opens one, so going up from a service lands on the host it belongs to rather
+    than on a listing the user has to find it in again. A user who may not see
+    that listing keeps the classic host status view.
+    """
+    if not user.may(_ALL_HOSTS_PERMISSION):
+        return makeuri_contextless(
+            ctx.request,
+            [("view_name", _HOST_STATUS_VIEW_NAME), ("host", hostname), ("site", site_id)],
+            filename="view.py",
+        )
+    panel = urlencode([("host", hostname), ("site", site_id)])
+    return f"{makeuri_contextless(ctx.request, [], filename='monitor_all_hosts.py')}#{panel}"
+
+
+def _make_breadcrumb(ctx: PageContext, hostname: HostName, site_id: SiteId) -> Breadcrumb:
     user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
     breadcrumb = make_topic_breadcrumb(
         main_menu_registry.menu_monitoring(),
         PagetypeTopics.get_topic("overview", user_permissions).title(),
     )
+    if user.may(_ALL_HOSTS_PERMISSION):
+        breadcrumb.append(
+            BreadcrumbItem(
+                title=str(monitor_all_hosts_visual_spec()["title"]),
+                url=makeuri_contextless(ctx.request, [], filename="monitor_all_hosts.py"),
+                id="monitor_all_hosts",
+            )
+        )
     breadcrumb.append(
         BreadcrumbItem(
-            title=title,
-            url=makeuri_contextless(ctx.request, [], filename="monitor_host_services.py"),
+            title=hostname,
+            url=_host_url(ctx, hostname, site_id),
+            id=None,
+        )
+    )
+    breadcrumb.append(
+        BreadcrumbItem(
+            title=_("Services of host"),
+            url=makeuri_contextless(
+                ctx.request,
+                [("host", hostname), ("site", site_id)],
+                filename="monitor_host_services.py",
+            ),
             id="monitor_host_services",
         )
     )

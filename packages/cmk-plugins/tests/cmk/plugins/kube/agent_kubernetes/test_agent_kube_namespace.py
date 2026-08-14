@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="name-defined"
-
 from kubernetes import client
 
 from cmk.plugins.kube.schemata import api
@@ -14,7 +12,11 @@ from tests.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class TestAPINamespace:
-    def test_parse_metadata(self, core_client: client.CoreV1Api, dummy_host: str) -> None:
+    def test_parse_metadata(
+        self,
+        core_client: client.CoreV1Api,  # type: ignore[name-defined]
+        dummy_host: str,
+    ) -> None:
         namespace_metadata = {
             "metadata": {
                 "name": "checkmk-monitoring",
@@ -42,7 +44,9 @@ class TestAPINamespace:
         assert ns.metadata.annotations == {}
 
     def test_parse_metadata_missing_annotations_and_labels(
-        self, core_client: client.CoreV1Api, dummy_host: str
+        self,
+        core_client: client.CoreV1Api,  # type: ignore[name-defined]
+        dummy_host: str,
     ) -> None:
         namespace_metadata = {
             "metadata": {

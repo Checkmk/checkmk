@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="arg-type"
-
 import logging
 import re
 
@@ -76,4 +74,4 @@ def test_log_duration_print_params_with_kwargs(caplog: pytest.LogCaptureFixture)
 
 def test_log_duration_invalid_level_passed() -> None:
     with pytest.raises(ValueError, match="Invalid log level passed: 'foobar'"):
-        log_duration(logger=logging.getLogger(), level="foobar")
+        log_duration(logger=logging.getLogger(), level="foobar")  # type: ignore[arg-type]

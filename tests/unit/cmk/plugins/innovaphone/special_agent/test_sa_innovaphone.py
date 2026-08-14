@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# INFO: these flags are for the vcr package which isn't typed.
-# mypy: disable-error-code="import-untyped"
-# mypy: disable-error-code="no-untyped-call"
-
 from pathlib import Path
 
 import pytest
@@ -17,7 +13,7 @@ from cmk.plugins.innovaphone.special_agent import agent_innovaphone
 
 def test_agent_innovaphone_vcrtrace(capsys: pytest.CaptureFixture[str]) -> None:
     cassette_path = Path(__file__).parent / "innovaphone_vcrtrace.yaml"
-    with vcr.use_cassette(cassette_path, record_mode="none"):
+    with vcr.use_cassette(cassette_path, record_mode="none"):  # type: ignore[no-untyped-call]
         agent_innovaphone.main(["192.168.178.10", "--user", "USER", "--password", "PASSWORD"])
 
     value = capsys.readouterr().out

@@ -5,9 +5,6 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
-# Pydantic requires the property to be under computed_field to work.
-# mypy: disable-error-code="prop-decorator"
-
 import json
 from collections.abc import Sequence
 from typing import Literal
@@ -49,7 +46,7 @@ class Organization(BaseModel, frozen=True):
     licensing: Licensing
     cloud: Cloud
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def api_status(self) -> Literal["enabled", "disabled"]:
         return "enabled" if self.api.enabled else "disabled"

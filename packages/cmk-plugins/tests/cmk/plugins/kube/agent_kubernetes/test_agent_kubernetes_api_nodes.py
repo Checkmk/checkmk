@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="name-defined"
 # mypy: disable-error-code="type-arg"
 
 import datetime
@@ -76,7 +75,11 @@ class TestAPINode:
         metadata = _metadata_no_namespace_from_json(node_raw_metadata)
         assert metadata.creation_timestamp == now.timestamp()
 
-    def test_parse_node_info(self, dummy_host: str, core_client: client.CoreV1Api) -> None:
+    def test_parse_node_info(
+        self,
+        dummy_host: str,
+        core_client: client.CoreV1Api,  # type: ignore[name-defined]
+    ) -> None:
         node_info = {
             "machineID": "abd0bd9c2f234af099e849787da63620",
             "systemUUID": "e2902c84-10c9-4d81-b52b-85a27d62b7ca",
@@ -98,7 +101,11 @@ class TestAPINode:
         assert parsed_node_info.kernel_version == "5.4.0-88-generic"
         assert parsed_node_info.os_image == "Ubuntu 20.04.3 LTS"
 
-    def test_parse_conditions(self, core_client: client.CoreV1Api, dummy_host: str) -> None:
+    def test_parse_conditions(
+        self,
+        core_client: client.CoreV1Api,  # type: ignore[name-defined]
+        dummy_host: str,
+    ) -> None:
         node_with_conditions = {
             "status": {
                 "conditions": [
@@ -154,7 +161,9 @@ class TestAPINode:
         assert [c.status for c in conditions if c.type_ == "Ready"] == [api.ConditionStatus.TRUE]
 
     def test_parse_conditions_no_status(
-        self, core_client: client.CoreV1Api, dummy_host: str
+        self,
+        core_client: client.CoreV1Api,  # type: ignore[name-defined]
+        dummy_host: str,
     ) -> None:
         node_with_conditions: dict = {"status": {}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")
@@ -162,7 +171,9 @@ class TestAPINode:
         assert conditions is None
 
     def test_parse_conditions_no_conditions(
-        self, core_client: client.CoreV1Api, dummy_host: str
+        self,
+        core_client: client.CoreV1Api,  # type: ignore[name-defined]
+        dummy_host: str,
     ) -> None:
         node_with_conditions: dict = {"status": {"conditions": []}}
         node = core_client.api_client.deserialize(FakeResponse(node_with_conditions), "V1Node")

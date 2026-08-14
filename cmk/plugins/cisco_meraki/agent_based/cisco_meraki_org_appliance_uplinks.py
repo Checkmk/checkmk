@@ -5,9 +5,6 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
-# Pydantic requires the property to be under computed_field to work.
-# mypy: disable-error-code="prop-decorator"
-
 import json
 from typing import TypedDict
 
@@ -42,7 +39,7 @@ class Uplink(BaseModel, frozen=True):
     secondary_dns: str | None = Field(default=None, alias="secondaryDns")
     status: str
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def status_key(self) -> str:
         return self.status.replace(" ", "_")
@@ -61,7 +58,7 @@ class ApplianceStatus(BaseModel, frozen=True):
         None, alias="usageByInterface"
     )
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def uplinks(self) -> dict[str, Uplink]:
         return {up.interface: up for up in self.uplinks_list}

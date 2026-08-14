@@ -2,8 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="typeddict-item"
-
 import pytest
 
 from cmk.plugins.kube.from_json.pod.pod_status import pod_status
@@ -21,7 +19,7 @@ from cmk.plugins.kube.schemata.api import IpAddress, Phase
     ],
 )
 def test_phase_parsing(phase_str: str, expected: Phase) -> None:
-    result = pod_status({"phase": phase_str})
+    result = pod_status({"phase": phase_str})  # type: ignore[typeddict-item]
     assert result.phase == expected
     assert result.conditions is None
     assert result.start_time is None

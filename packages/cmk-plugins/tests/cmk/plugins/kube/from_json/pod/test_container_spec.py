@@ -2,8 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="typeddict-item"
-
 import pytest
 
 from cmk.plugins.kube.from_json.pod.container_spec import (
@@ -53,7 +51,11 @@ def test_container_resources(
     expected_requests_cpu: float | None,
 ) -> None:
     result = container_resources(
-        {"name": "test", "imagePullPolicy": "Always", "resources": resources}
+        {
+            "name": "test",
+            "imagePullPolicy": "Always",
+            "resources": resources,  # type: ignore[typeddict-item]
+        }
     )
     assert result.limits.memory == expected_limits_memory
     assert result.limits.cpu == expected_limits_cpu

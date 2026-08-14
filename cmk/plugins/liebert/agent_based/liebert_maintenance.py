@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="arg-type"
 # mypy: disable-error-code="explicit-any"
 
 import time
@@ -60,7 +59,7 @@ def check_liebert_maintenance(params: Mapping[str, Any], section: Section) -> Ch
 
     yield Result(state=State.OK, summary=f"Next maintenance: {month}/{year}")
 
-    time_left_seconds = time.mktime((year, month, 0, 0, 0, 0, 0, 0, 0)) - time.time()
+    time_left_seconds = time.mktime((year, month, 0, 0, 0, 0, 0, 0, 0)) - time.time()  # type: ignore[arg-type]
 
     warn_days, crit_days = params["levels"]
     yield from check_levels_v1(

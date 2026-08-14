@@ -5,9 +5,6 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
-# Pydantic requires the property to be under computed_field to work.
-# mypy: disable-error-code="prop-decorator"
-
 # TODO: create service label cmk/meraki/uplink:yes/no
 
 import json
@@ -102,7 +99,7 @@ class SwitchPortsStatus(BaseModel, frozen=True):
     def port_id(self) -> int:
         return int(self.raw_port_id)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def has_valid_port_id(self) -> bool:
         match self.raw_port_id:
@@ -113,17 +110,17 @@ class SwitchPortsStatus(BaseModel, frozen=True):
             case _:
                 return False
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def admin_status(self) -> int:
         return 1 if self.enabled else 2
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def admin_state(self) -> Status:
         return "up" if self.enabled else "down"
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def oper_status(self) -> int | None:
         match self.status.lower():
@@ -134,7 +131,7 @@ class SwitchPortsStatus(BaseModel, frozen=True):
             case _:
                 return None
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def oper_state(self) -> Status:
         match self.status.lower():
@@ -145,12 +142,12 @@ class SwitchPortsStatus(BaseModel, frozen=True):
             case _:
                 return "unknown"
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def speed_summary(self) -> str:
         return self.speed if self.speed else "unknown"
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def speed_as_int(self) -> int | None:
         if not self.speed:
@@ -171,7 +168,7 @@ class SwitchPortsStatus(BaseModel, frozen=True):
             case _:
                 return None
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def name(self) -> str:
         return f"Port {self.port_id}"

@@ -3,11 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# dict-item: Unpacking literal keys into dictionary with str keys is a known mypy bug:
-# https://github.com/python/mypy/issues/19893
-# prop-decorator: Pydantic requires the property to be under computed_field to work.
-# mypy: disable-error-code="dict-item"
-# mypy: disable-error-code="prop-decorator"
 
 import json
 import time
@@ -60,19 +55,21 @@ class LicensesOverview(BaseModel, frozen=True):
     raw_expiration_date: str | None = Field(default=None, alias="expirationDate")
     licensed_device_counts: dict[str, int] = Field(alias="licensedDeviceCounts")
 
-    @computed_field
+    # Pydantic requires the property to be under computed_field to work, but mypy has problems with
+    # that, see https://github.com/python/mypy/issues/14461.
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def identifier(self) -> str:
         return f"{self.organisation_name}/{self.organisation_id}"
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def expiration_date(self) -> datetime | None:
         if not self.raw_expiration_date:
             return None
         return self._try_and_parse_datetime(self.raw_expiration_date)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def license_total(self) -> int:
         return sum(self.licensed_device_counts.values())
@@ -210,7 +207,7 @@ def inventorize_licenses_overview(section: Section) -> InventoryResult:
             inventory_columns={
                 "org_name": overview.organisation_name,
                 "summary": overview.license_total,
-                **overview.get_device_counts_by_type(),
+                **overview.get_device_counts_by_type(),  # type: ignore[dict-item]
             },
         )
 

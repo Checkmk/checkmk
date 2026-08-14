@@ -6,7 +6,6 @@
 
 Checkmk special agent for monitoring HPE StoreOnce appliances.
 """
-# mypy: disable-error-code="union-attr"
 
 import argparse
 import re
@@ -4546,8 +4545,8 @@ def process_cluster_info(
     xml_instance = query_cluster_info(
         host, username, password, opt_demo=opt_demo, opt_cert=opt_cert
     )
-    tbody = xml_instance.find("body").find("div").find("table").find("tbody")
-    for child in tbody:
+    tbody = xml_instance.find("body").find("div").find("table").find("tbody")  # type: ignore[union-attr]
+    for child in tbody:  # type: ignore[union-attr]
         name = child[0].text
         value = child[1].text
         output_lines.append(f"{name}\t{value}")
@@ -4572,13 +4571,13 @@ def process_servicesets(
 ) -> list[str]:
     output_lines = ["<<<storeonce_servicesets:sep(9)>>>"]
     xml_instance = query_servicesets(host, username, password, opt_demo=opt_demo, opt_cert=opt_cert)
-    servicesets = xml_instance.find("body").find("div")
-    for element in servicesets:
-        tbody = element.find("table").find("tbody")
+    servicesets = xml_instance.find("body").find("div")  # type: ignore[union-attr]
+    for element in servicesets:  # type: ignore[union-attr]
+        tbody = element.find("table").find("tbody")  # type: ignore[union-attr]
         serviceset_id = str(tbody[0][1].text)  # type: ignore[index]
         serviceset_ids.add(serviceset_id)
         output_lines.append("[%s]" % serviceset_id)
-        for child in tbody:
+        for child in tbody:  # type: ignore[union-attr]
             name = child[0].text
             value = child[1].text
             output_lines.append(f"{name}\t{value}")
@@ -4603,12 +4602,12 @@ def process_stores_info(
         xml_instance = query_stores_info(
             serviceset_id, host, username, password, opt_demo=opt_demo, opt_cert=opt_cert
         )
-        stores = xml_instance.find("body").find("div")
-        for element in stores:
-            tbody = element.find("table").find("tbody")
+        stores = xml_instance.find("body").find("div")  # type: ignore[union-attr]
+        for element in stores:  # type: ignore[union-attr]
+            tbody = element.find("table").find("tbody")  # type: ignore[union-attr]
             store_id = tbody[0][1].text  # type: ignore[index]
             output_lines.append(f"[{serviceset_id}/{store_id}]")
-            for child in tbody:
+            for child in tbody:  # type: ignore[union-attr]
                 name = child[0].text
                 value = child[1].text
                 output_lines.append(f"{name}\t{value}")

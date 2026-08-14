@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Pydantic requires the property to be under computed_field to work.
-# mypy: disable-error-code="prop-decorator"
-
 import json
 from collections.abc import Mapping
 from datetime import datetime
@@ -49,7 +46,7 @@ class DeviceStatus(BaseModel, frozen=True):
     last_reported: datetime | None = Field(default=None, alias="lastReportedAt")
     components: PossiblyMissing[Components] = None
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def power_supplies(self) -> dict[str, PowerSupply]:
         if not self.components:

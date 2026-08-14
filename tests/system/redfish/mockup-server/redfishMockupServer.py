@@ -3,8 +3,6 @@
 # Copyright 2016-2019 DMTF. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Mockup-Server/blob/main/LICENSE.md
 
-# mypy: disable-error-code="arg-type"
-# mypy: disable-error-code="assignment"
 # mypy: disable-error-code="attr-defined"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -201,7 +199,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
         event_payload["@odata.type"] = "#Event.v1_2_1.Event"
         event_payload["Name"] = "Test Event"
         event_payload["Id"] = str(self.event_id)
-        event_payload["Events"] = []
+        event_payload["Events"] = []  # type: ignore[assignment]
         event_payload["Events"].append(data_received)
 
         # Go through each subscriber
@@ -282,7 +280,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
             event_payload["@odata.id"] = "/redfish/v1/TelemetryService/MetricReports/" + my_name
             event_payload["Id"] = my_name
             event_payload["Name"] = my_name
-            event_payload["MetricReportDefinition"] = {
+            event_payload["MetricReportDefinition"] = {  # type: ignore[assignment]
                 "@odata.id": "/redfish/v1/TelemetryService/MetricReportDefinitions/" + my_name
             }
             now = datetime.datetime.now()
@@ -295,7 +293,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
                     # uncomment for stricter payload check
                     # ex: if all(x in expected_keys + other_keys for x in tup):
                     value_list.append(tup)
-            event_payload["MetricValues"] = value_list
+            event_payload["MetricValues"] = value_list  # type: ignore[assignment]
             logger.info(event_payload)
 
             # construct path "mockdir/path/to/resource/<filename>"
@@ -508,7 +506,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
             encoded_data = json.dumps({"v1": "/redfish/v1"}, indent=4).encode()
 
             if not (self.server.headers and (os.path.isfile(fpath_headers))):
-                self.send_header("Content-Length", len(encoded_data))
+                self.send_header("Content-Length", len(encoded_data))  # type: ignore[arg-type]
             self.end_headers()
 
             self.wfile.write(encoded_data)
@@ -570,7 +568,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
             ).encode()
 
             if not (self.server.headers and (os.path.isfile(fpath_headers))):
-                self.send_header("Content-Length", len(encoded_data))
+                self.send_header("Content-Length", len(encoded_data))  # type: ignore[arg-type]
             self.end_headers()
 
             self.wfile.write(encoded_data)

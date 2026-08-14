@@ -5,9 +5,6 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
-# Pydantic requires the property to be under computed_field to work.
-# mypy: disable-error-code="prop-decorator"
-
 import json
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
@@ -42,12 +39,12 @@ class ResponseCodes(BaseModel, frozen=True):
     api_enabled: bool
     counts: list[ResponseCodeCount]
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def identifier(self) -> str:
         return f"{self.organization_name}/{self.organization_id}"
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def api_status(self) -> str:
         return "enabled" if self.api_enabled else "disabled"

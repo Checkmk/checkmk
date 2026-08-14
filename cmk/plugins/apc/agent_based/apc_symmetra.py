@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="arg-type"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="redundant-expr"
@@ -378,7 +377,7 @@ snmp_section_apc_symmetra = SNMPSection(
             oids=["10"],
         ),
     ],
-    parse_function=parse_apc_symmetra,
+    parse_function=parse_apc_symmetra,  # type: ignore[arg-type]
 )
 
 

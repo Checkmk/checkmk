@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="deprecated"
 # mypy: disable-error-code="explicit-any"
 
 import time
@@ -74,7 +73,7 @@ def parse_attached_persistent_volumes(
     string_table: StringTable,
 ) -> AttachedPersistentVolumes:
     """Parses `string_table` into a PersistentVolumeClaimAttachedPersistentVolumes instance"""
-    return AttachedPersistentVolumes.parse_raw(string_table[0][0])
+    return AttachedPersistentVolumes.parse_raw(string_table[0][0])  # type: ignore[deprecated]
 
 
 agent_section_kube_pvc_v1 = AgentSection(

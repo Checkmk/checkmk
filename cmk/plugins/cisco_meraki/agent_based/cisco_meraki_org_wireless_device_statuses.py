@@ -5,9 +5,6 @@
 #
 # Original author: thl-cmk[at]outlook[dot]com
 
-# Pydantic requires the property to be under computed_field to work.
-# mypy: disable-error-code="prop-decorator"
-
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -43,7 +40,7 @@ class BasicServiceSet(BaseModel, frozen=True):
     visible: bool
     broadcasting: bool
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def normalized_channel_width(self) -> int | None:
         if self.channel_width is None:
@@ -52,7 +49,7 @@ class BasicServiceSet(BaseModel, frozen=True):
         value, *_ = self.channel_width.split()
         return int(value) * _MHZ_TO_HZ
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def normalized_power(self) -> int | None:
         if self.power is None:

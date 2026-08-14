@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="arg-type"
-
 import re
 from collections.abc import Mapping
 from typing import Literal, NamedTuple, TypedDict
@@ -47,7 +45,8 @@ def _parse_mysql_replica_slave(
             line[0][:-1]: int(" ".join(line[1:]))
             if " ".join(line[1:]).isdigit()
             else {"Yes": True, "No": False, "None": None}.get(
-                " ".join(line[1:]), " ".join(line[1:])
+                " ".join(line[1:]),
+                " ".join(line[1:]),  # type: ignore[arg-type]
             )
             for line in string_table
             if line[0].endswith(":")

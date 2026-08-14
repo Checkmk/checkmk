@@ -3,17 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="attr-defined"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
 import pytest
 from kubernetes import client
-from kubernetes.client import ApiClient
+from kubernetes.client import ApiClient  # type: ignore[attr-defined]
 
 
 def kubernetes_api_client():
-    config = client.Configuration()
+    config = client.Configuration()  # type: ignore[attr-defined]
     config.host = "http://dummy"
     config.api_key_prefix["authorization"] = "Bearer"
     config.api_key["authorization"] = "dummy"
@@ -23,17 +22,17 @@ def kubernetes_api_client():
 
 @pytest.fixture
 def core_client():
-    return client.CoreV1Api(kubernetes_api_client())
+    return client.CoreV1Api(kubernetes_api_client())  # type: ignore[attr-defined]
 
 
 @pytest.fixture
 def batch_client():
-    return client.BatchV1Api(kubernetes_api_client())
+    return client.BatchV1Api(kubernetes_api_client())  # type: ignore[attr-defined]
 
 
 @pytest.fixture
 def apps_client():
-    return client.AppsV1Api(kubernetes_api_client())
+    return client.AppsV1Api(kubernetes_api_client())  # type: ignore[attr-defined]
 
 
 @pytest.fixture

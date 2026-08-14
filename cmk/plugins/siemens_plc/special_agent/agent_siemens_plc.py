@@ -3,12 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="arg-type"
-# mypy: disable-error-code="assignment"
-# mypy: disable-error-code="dict-item"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="operator"
 
 """agent_siemens_plc
 
@@ -97,8 +92,8 @@ def parse_spec(hostspec: str) -> dict[str, Any] | int:
             return 1
 
         if ":" in p[0]:
-            area_name, db_number = p[0].split(":")
-            db_number = int(db_number)
+            area_name, db_number_str = p[0].split(":")
+            db_number = int(db_number_str)
         elif p[0] in ["merker", "input", "output", "counter", "timer"]:
             area_name, db_number = p[0], None
         else:
@@ -123,7 +118,7 @@ def parse_spec(hostspec: str) -> dict[str, Any] | int:
             datatype = p[2]
         value.update(
             {
-                "datatype": datatype,
+                "datatype": datatype,  # type: ignore[dict-item]
             }
         )
 
@@ -245,7 +240,7 @@ def _cast_values(
         else:
             size, parse_func = DATATYPES[datatype]
 
-        value = parse_func(
+        value = parse_func(  # type: ignore[no-untyped-call]
             area_value,
             device_value["byte"] - start_address,
             size,
@@ -326,23 +321,23 @@ def main(sys_argv: Sequence[str] | None = None) -> None:
             try:
                 area_value = client.read_area(
                     _area_name_to_area_id(area_name),
-                    db_number,
-                    start_address,
-                    size=end_address - start_address,
+                    db_number,  # type: ignore[arg-type]
+                    start_address,  # type: ignore[arg-type]
+                    size=end_address - start_address,  # type: ignore[operator]
                 )
             except Exception as e:
                 sys.stderr.write(_snap7error(hostname, "Error reading data area", e) + "\n")
                 has_error = True
                 continue
 
-            parsed_area_values.extend(_cast_values(values, start_address, area_value))
+            parsed_area_values.extend(_cast_values(values, start_address, area_value))  # type: ignore[arg-type]
 
         sys.stdout.write("<<<siemens_plc_cpu_state>>>\n")
         if cpu_state is not None:
             sys.stdout.write(f"{cpu_state}\n")
 
         sys.stdout.write("<<<siemens_plc>>>\n")
-        for values in parsed_area_values:
+        for values in parsed_area_values:  # type: ignore[assignment]
             sys.stdout.write("{} {} {} {}\n".format(hostname, *values))
 
     if has_error:

@@ -2,8 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="typeddict-item"
-
 from cmk.plugins.kube.from_json.pod.pod_spec import pod_spec
 from cmk.plugins.kube.schemata.api import ContainerName, NodeName, VolumeName
 
@@ -30,7 +28,7 @@ def test_minimal_spec() -> None:
 def test_full_spec() -> None:
     result = pod_spec(
         {
-            "nodeName": "worker-1",
+            "nodeName": "worker-1",  # type: ignore[typeddict-item]
             "hostNetwork": False,
             "dnsPolicy": "ClusterFirst",
             "restartPolicy": "Never",

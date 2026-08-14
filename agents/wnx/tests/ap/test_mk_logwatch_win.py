@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="import"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
@@ -19,7 +18,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-import agents.plugins.mk_logwatch as lw
+import agents.plugins.mk_logwatch as lw  # type: ignore[import-not-found]
 
 with contextlib.suppress(ImportError):  # only needed for type comments
     from collections.abc import Sequence

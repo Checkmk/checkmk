@@ -3,8 +3,6 @@
 # Copyright 2016-2019 DMTF. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/python-redfish-library/blob/main/LICENSE.md
 
-# mypy: disable-error-code="assignment"
-# mypy: disable-error-code="attr-defined"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
@@ -120,9 +118,9 @@ class RfSSDPServer:
                 ]
 
                 response.extend(("", ""))
-                response = "\r\n".join(response)
+                response = "\r\n".join(response)  # type: ignore[assignment]
 
-                self.sock.sendto(response.encode(), addr)
+                self.sock.sendto(response.encode(), addr)  # type: ignore[attr-defined]
                 logger.info("SSDP Packet sent to %s", addr)
 
 

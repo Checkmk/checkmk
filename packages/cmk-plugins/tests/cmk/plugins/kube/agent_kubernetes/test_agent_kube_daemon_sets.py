@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="name-defined"
-
 from kubernetes import client
 
 from cmk.plugins.kube.schemata import api
@@ -13,7 +11,11 @@ from tests.cmk.plugins.kube.agent_kubernetes.utils import FakeResponse
 
 
 class TestAPIDaemonSets:
-    def test_parse_metadata(self, apps_client: client.AppsV1Api, dummy_host: str) -> None:
+    def test_parse_metadata(
+        self,
+        apps_client: client.AppsV1Api,  # type: ignore[name-defined]
+        dummy_host: str,
+    ) -> None:
         daemon_sets_metadata = {
             "metadata": {
                 "name": "node-collector-container-metrics",
@@ -45,7 +47,9 @@ class TestAPIDaemonSets:
         }
 
     def test_parse_metadata_missing_annotations_and_labels(
-        self, apps_client: client.AppsV1Api, dummy_host: str
+        self,
+        apps_client: client.AppsV1Api,  # type: ignore[name-defined]
+        dummy_host: str,
     ) -> None:
         daemon_sets_metadata = {
             "metadata": {
@@ -67,7 +71,9 @@ class TestAPIDaemonSets:
         assert metadata.annotations == {}
 
     def test_parse_status_failed_creation(
-        self, apps_client: client.AppsV1Api, dummy_host: str
+        self,
+        apps_client: client.AppsV1Api,  # type: ignore[name-defined]
+        dummy_host: str,
     ) -> None:
         daemon_sets_data = {
             "status": {
@@ -91,7 +97,9 @@ class TestAPIDaemonSets:
         assert status.updated_number_scheduled == 1
 
     def test_parse_status_no_matching_node(
-        self, apps_client: client.AppsV1Api, dummy_host: str
+        self,
+        apps_client: client.AppsV1Api,  # type: ignore[name-defined]
+        dummy_host: str,
     ) -> None:
         """
 

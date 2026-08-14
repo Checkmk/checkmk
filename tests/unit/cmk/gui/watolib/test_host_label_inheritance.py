@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="typeddict-unknown-key"
-
 """Tests for clearing inherited host labels via the LABEL_CLEAR_VALUE sentinel.
 
 A child folder or host can override a label set by a parent folder back to
@@ -48,7 +46,7 @@ def test_child_clears_inherited_label() -> None:
     parent = root.create_subfolder(
         "parent",
         "parent",
-        {"clearing_test": "relay1"},
+        {"clearing_test": "relay1"},  # type: ignore[typeddict-unknown-key]
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
         acting_user=LoggedInSuperUser(),
@@ -56,7 +54,7 @@ def test_child_clears_inherited_label() -> None:
     sub = parent.create_subfolder(
         "sub",
         "sub",
-        {"clearing_test": ""},
+        {"clearing_test": ""},  # type: ignore[typeddict-unknown-key]
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
         acting_user=LoggedInSuperUser(),
@@ -81,7 +79,7 @@ def test_grandchild_reenables_after_clear() -> None:
     parent = root.create_subfolder(
         "parent",
         "parent",
-        {"clearing_test": "relay1"},
+        {"clearing_test": "relay1"},  # type: ignore[typeddict-unknown-key]
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
         acting_user=LoggedInSuperUser(),
@@ -89,7 +87,7 @@ def test_grandchild_reenables_after_clear() -> None:
     sub = parent.create_subfolder(
         "sub",
         "sub",
-        {"clearing_test": ""},
+        {"clearing_test": ""},  # type: ignore[typeddict-unknown-key]
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
         acting_user=LoggedInSuperUser(),
@@ -97,7 +95,7 @@ def test_grandchild_reenables_after_clear() -> None:
     grandsub = sub.create_subfolder(
         "grandsub",
         "grandsub",
-        {"clearing_test": "relay2"},
+        {"clearing_test": "relay2"},  # type: ignore[typeddict-unknown-key]
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
         acting_user=LoggedInSuperUser(),
@@ -122,7 +120,7 @@ def test_inherited_relay_label_without_override() -> None:
     parent = root.create_subfolder(
         "parent",
         "parent",
-        {"clearing_test": "relay1"},
+        {"clearing_test": "relay1"},  # type: ignore[typeddict-unknown-key]
         pprint_value=False,
         pending_changes=_noop_pending_changes(),
         acting_user=LoggedInSuperUser(),

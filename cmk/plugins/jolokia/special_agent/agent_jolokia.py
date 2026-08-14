@@ -7,10 +7,6 @@
 Checkmk special agent for monitoring JMX using Mbeans exposed by jolokia.
 """
 
-# mypy: disable-error-code="import-not-found"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="unused-ignore"
-
 import argparse
 import sys
 from collections.abc import Sequence
@@ -71,7 +67,7 @@ def main(sys_argv: list[str] | None = None) -> None:
         sys_argv = sys.argv[1:]
 
     args = parse_arguments(sys_argv)
-    config = mk_jolokia.get_default_config_dict()
+    config = mk_jolokia.get_default_config_dict()  # type: ignore[no-untyped-call]
 
     if args.no_cert_check:
         config["verify"] = False
@@ -86,7 +82,7 @@ def main(sys_argv: list[str] | None = None) -> None:
 
     instance = mk_jolokia.JolokiaInstance(config, USER_AGENT)
     with suppress(mk_jolokia.SkipInstance):
-        mk_jolokia.query_instance(instance)
+        mk_jolokia.query_instance(instance)  # type: ignore[no-untyped-call]
 
 
 if __name__ == "__main__":

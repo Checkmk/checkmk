@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# TODO: Using BaseClient all over the place is wrong and leads to the tons of attr-defined errors.
+# The code and types have to be restructured to use the right subclass of BaseClient for the client
+# in question. In addition, BaseClient does some weird __getattr__ Kung Fu, which doesn't exactly
+# help mypy, either... :-/
 # mypy: disable-error-code="attr-defined"
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
@@ -17,10 +21,6 @@
 
 Checkmk special agent for monitoring Amazon Web Services (AWS).
 """
-
-# TODO: Using BaseClient all over the place is wrong and leads to the tons of attr-defined errors.
-# The code and types have to be restructured to use the right subclass of BaseClient for the client
-# in question.
 
 import abc
 import argparse

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="deprecated"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
@@ -244,7 +243,7 @@ def postgres_execute(
 def mysql_connect(host: str, port: int, db_name: str, user: str, pwd: str) -> Any:
     import pymysql
 
-    return pymysql.connect(host=host, port=port, db=db_name, user=user, passwd=pwd)
+    return pymysql.connect(host=host, port=port, db=db_name, user=user, passwd=pwd)  # type: ignore[deprecated]
 
 
 def mysql_execute(

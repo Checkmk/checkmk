@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="attr-defined"
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="name-defined"
 # mypy: disable-error-code="no-untyped-call"
 
 import datetime
@@ -27,12 +25,16 @@ class TestAPICronJob:
             ).replace(tzinfo=datetime.UTC),
             "uid": "uid",
         }
-        metadata_obj = client.V1ObjectMeta(**node_raw_metadata)
+        metadata_obj = client.V1ObjectMeta(**node_raw_metadata)  # type: ignore[attr-defined]
         metadata = parse_metadata(metadata_obj)
         assert metadata.name == "cronjob"
         assert metadata.namespace is not None
 
-    def test_parse_cron_job_spec(self, dummy_host: str, batch_client: client.BatchV1Api) -> None:
+    def test_parse_cron_job_spec(
+        self,
+        dummy_host: str,
+        batch_client: client.BatchV1Api,  # type: ignore[name-defined]
+    ) -> None:
         cron_job_list_with_info = {
             "spec": {
                 "schedule": "*/5 * * * *",
@@ -60,7 +62,11 @@ class TestAPICronJob:
         assert spec.schedule is not None
         assert spec.schedule == "*/5 * * * *"
 
-    def test_parse_cron_job_status(self, dummy_host: str, batch_client: client.BatchV1Api) -> None:
+    def test_parse_cron_job_status(
+        self,
+        dummy_host: str,
+        batch_client: client.BatchV1Api,  # type: ignore[name-defined]
+    ) -> None:
         cron_job_list_with_info = {
             "status": {
                 "active": None,

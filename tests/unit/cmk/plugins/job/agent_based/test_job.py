@@ -479,11 +479,9 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
 
 
 # The metrics of SECTION_1["SHREK"], in the order check_job emits them.
-_SHREK_METRIC_RESULTS_1 = [
+_SHREK_METRIC_RESULTS = [
     Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
     Metric("real_time", 120.0, boundaries=(0.0, None)),
-]
-_SHREK_METRIC_RESULTS_2 = [
     Result(state=State.OK, notice="User time: 1 second"),
     Metric("user_time", 1.0, boundaries=(0.0, None)),
     Result(state=State.OK, notice="System time: 0 seconds"),
@@ -513,11 +511,10 @@ _SHREK_METRIC_RESULTS_2 = [
             STRING_TABLE_1,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
-                *_SHREK_METRIC_RESULTS_1,
+                *_SHREK_METRIC_RESULTS,
                 Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
                 Result(state=State.OK, summary="Job age: 1 year 178 days"),
                 Metric("job_age", 46999419.0, boundaries=(0.0, None)),
-                *_SHREK_METRIC_RESULTS_2,
             ],
             id="no age levels configured",
         ),
@@ -536,9 +533,6 @@ _SHREK_METRIC_RESULTS_2 = [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 10 seconds"),
                 Metric("real_time", 9.9, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at 2014-11-05 03:10:30"),
-                Result(state=State.OK, summary="Job age: 5 years 248 days"),
-                Metric("job_age", 179147190.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="User time: 9 seconds"),
                 Metric("user_time", 8.85, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="System time: 970 milliseconds"),
@@ -555,6 +549,9 @@ _SHREK_METRIC_RESULTS_2 = [
                 Metric("invol_context_switches", 15.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Vol. context switches: 274"),
                 Metric("vol_context_switches", 274.0, boundaries=(0.0, None)),
+                Result(state=State.OK, notice="Latest job started at 2014-11-05 03:10:30"),
+                Result(state=State.OK, summary="Job age: 5 years 248 days"),
+                Metric("job_age", 179147190.0, boundaries=(0.0, None)),
             ],
             id="completed job with all metrics",
         ),
@@ -566,15 +563,6 @@ _SHREK_METRIC_RESULTS_2 = [
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 4 minutes 42 seconds"),
                 Metric("real_time", 281.65, boundaries=(0.0, None)),
-                Result(
-                    state=State.OK,
-                    notice="1 job is currently running, started at 2014-11-05 17:41:53",
-                ),
-                Result(
-                    state=State.CRIT,
-                    summary="Job age (currently running): 5 years 247 days (warn/crit at 1 second/2 seconds)",
-                ),
-                Metric("job_age", 179094907.0, levels=(1.0, 2.0), boundaries=(0.0, None)),
                 Result(state=State.OK, notice="User time: 4 minutes 38 seconds"),
                 Metric("user_time", 277.7, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="System time: 32 seconds"),
@@ -591,6 +579,15 @@ _SHREK_METRIC_RESULTS_2 = [
                 Metric("invol_context_switches", 16806.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Vol. context switches: 32779"),
                 Metric("vol_context_switches", 32779.0, boundaries=(0.0, None)),
+                Result(
+                    state=State.OK,
+                    notice="1 job is currently running, started at 2014-11-05 17:41:53",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="Job age (currently running): 5 years 247 days (warn/crit at 1 second/2 seconds)",
+                ),
+                Metric("job_age", 179094907.0, levels=(1.0, 2.0), boundaries=(0.0, None)),
             ],
             id="age levels breached while one job is running",
         ),
@@ -638,14 +635,13 @@ _SHREK_METRIC_RESULTS_2 = [
             STRING_TABLE_1,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
-                *_SHREK_METRIC_RESULTS_1,
+                *_SHREK_METRIC_RESULTS,
                 Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
                 Result(
                     state=State.CRIT,
                     summary="Job age: 1 year 178 days (warn/crit at 1 second/2 seconds)",
                 ),
                 Metric("job_age", 46999419.0, levels=(1.0, 2.0), boundaries=(0.0, None)),
-                *_SHREK_METRIC_RESULTS_2,
             ],
             id="old job",
         ),
@@ -658,11 +654,10 @@ _SHREK_METRIC_RESULTS_2 = [
                     state=State.WARN,
                     summary="Latest exit code: 0",
                 ),
-                *_SHREK_METRIC_RESULTS_1,
+                *_SHREK_METRIC_RESULTS,
                 Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
                 Result(state=State.OK, summary="Job age: 1 year 178 days"),
                 Metric("job_age", 46999419.0, boundaries=(0.0, None)),
-                *_SHREK_METRIC_RESULTS_2,
             ],
             id="failed job",
         ),
@@ -672,7 +667,7 @@ _SHREK_METRIC_RESULTS_2 = [
             STRING_TABLE_1_RUNNING,
             [
                 Result(state=State.OK, summary="Latest exit code: 0"),
-                *_SHREK_METRIC_RESULTS_1,
+                *_SHREK_METRIC_RESULTS,
                 Result(
                     state=State.OK,
                     notice=(
@@ -692,7 +687,6 @@ _SHREK_METRIC_RESULTS_2 = [
                 # The age of the job that has been running the longest (started
                 # 2018-09-18), not of the one that started last.
                 Metric("job_age", 56999119.0, levels=(1.0, 2.0), boundaries=(0.0, None)),
-                *_SHREK_METRIC_RESULTS_2,
             ],
             id="long running job",
         ),

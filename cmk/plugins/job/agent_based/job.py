@@ -256,6 +256,21 @@ def _process_job_stats(
         metrics_to_output.remove("real_time")
         yield from _check_job_levels(job, "real_time", notice_only=False)
 
+    # Order metric in a meaningful way
+    for metric in (
+        "user_time",
+        "system_time",
+        "reads",
+        "writes",
+        "max_res_bytes",
+        "avg_mem_bytes",
+        "invol_context_switches",
+        "vol_context_switches",
+    ):
+        if metric not in metrics_to_output:
+            continue
+        yield from _check_job_levels(job, metric)
+
     currently_running = " (currently running)" if "running_start_time" in job else ""
     if currently_running:
         start_times = job["running_start_time"]
@@ -302,21 +317,6 @@ def _process_job_stats(
                 " in the future (check your system time)"
             ),
         )
-
-    # Order metric in a meaningful way
-    for metric in (
-        "user_time",
-        "system_time",
-        "reads",
-        "writes",
-        "max_res_bytes",
-        "avg_mem_bytes",
-        "invol_context_switches",
-        "vol_context_switches",
-    ):
-        if metric not in metrics_to_output:
-            continue
-        yield from _check_job_levels(job, metric)
 
 
 def check_job(

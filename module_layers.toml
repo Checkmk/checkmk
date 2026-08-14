@@ -1307,7 +1307,7 @@ allows = [
   "cmk.validate_config",
 ]
 
-[components."cmk.update_config.plugins.actions.builtin_host_labels"] # lives in cmk-multi-tenancy
+[components."cmk.update_config.plugins.actions.create_customer_host_label"] # lives in cmk-multi-tenancy
 allows = [
   "@ccc",
   "cmk.multi_tenancy.shared",

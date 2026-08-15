@@ -861,16 +861,6 @@ msgstr "%s: %s"
 msgid "%s: Cannot parse manual page: %s"
 msgstr "%s: Cannot parse man page: %s."
 
-#, python-format
-msgid "%s: Not using SSL. Consider enabling it in the connection settings."
-msgstr ""
-"%s: Nu se utilizează SSL. Luați în considerare activarea acestuia în "
-"setările de conectare."
-
-#, python-format
-msgid "%s: Uses SSL"
-msgstr "%s: Utilizează SSL"
-
 #, fuzzy, python-format
 msgid "%s: download agent output"
 msgstr "%s: Descărcați ieșirea agentului"
@@ -880,8 +870,18 @@ msgid "%s: no discovery result"
 msgstr "%s: Nici un rezultat de descoperire"
 
 #, fuzzy, python-format
+msgid "%s: not using SSL. Consider enabling it in the connection settings."
+msgstr ""
+"%s: Nu se utilizează SSL. Luați în considerare activarea acestuia în "
+"setările de conectare."
+
+#, fuzzy, python-format
 msgid "%s: service discovery: permission denied"
 msgstr "%s: Descoperirea serviciilor: Permisiune refuzată"
+
+#, fuzzy, python-format
+msgid "%s: uses SSL"
+msgstr "%s: Utilizează SSL"
 
 #, python-format
 msgid ""
@@ -3876,7 +3876,8 @@ msgstr "ID-ul Acțiunii"
 msgid "Action menu"
 msgstr "Meniu de acțiune"
 
-msgid "Action on Error"
+#, fuzzy
+msgid "Action on error"
 msgstr "Acțiune în caz de eroare"
 
 #, fuzzy
@@ -7542,9 +7543,6 @@ msgstr "Aplicație / Syslog-Tag (regex)"
 msgid "Application Gateway"
 msgstr "Poarta de aplicații"
 
-msgid "Application Key"
-msgstr "Cheie de aplicație"
-
 #, fuzzy
 msgid "Application Type"
 msgstr "Cheie de aplicație"
@@ -7560,6 +7558,10 @@ msgstr "Poarta de aplicații"
 #, fuzzy
 msgid "Application gateways"
 msgstr "Porți de aplicații"
+
+#, fuzzy
+msgid "Application key"
+msgstr "Cheie de aplicație"
 
 msgid "Application load balancer certificates"
 msgstr "Certificatele de echilibrare a încărcăturii aplicației"
@@ -8263,9 +8265,6 @@ msgstr "Autentificare (valori implicite)"
 msgid "Authentication (instance-specific)"
 msgstr "Autentificare (specifică instanței)"
 
-msgid "Authentication Expiration"
-msgstr "Expirarea autentificării"
-
 #, fuzzy
 msgid "Authentication context class reference"
 msgstr "Sursa de autentificare"
@@ -8279,6 +8278,10 @@ msgstr ""
 
 msgid "Authentication error"
 msgstr "Eroare de autentificare"
+
+#, fuzzy
+msgid "Authentication expiration"
+msgstr "Expirarea autentificării"
 
 msgid "Authentication failed"
 msgstr "Autentificarea a eșuat"
@@ -8381,9 +8384,6 @@ msgstr "Site-uri autorizate"
 msgid "Auto (DEFAULT)"
 msgstr "Auto (DEFAULT)"
 
-msgid "Auto Restart on Crash"
-msgstr "Repornire automată la avarie"
-
 #, fuzzy
 msgid "Auto-close off"
 msgstr "Închidere automată"
@@ -8425,6 +8425,10 @@ msgid "Auto-extend will be ignored"
 msgstr "Extinderea automată va fi ignorată"
 
 #, fuzzy
+msgid "Auto-restart on crash"
+msgstr "Repornire automată la avarie"
+
+#, fuzzy
 msgid "Auto-shrink off"
 msgstr "Auto shrink off"
 
@@ -8462,9 +8466,6 @@ msgstr "Automat HTTP"
 
 msgid "Automatic HTTPs"
 msgstr "HTTP-uri automate"
-
-msgid "Automatic Updates"
-msgstr "Actualizări automate"
 
 msgid "Automatic activation"
 msgstr "Activare automată"
@@ -8517,7 +8518,7 @@ msgstr "Preluare automată"
 msgid "Automatic updates"
 msgstr "Actualizări automate"
 
-msgid "Automatic: Use existing user, if available. Otherwise create new user."
+msgid "Automatic: use existing user, if available. Otherwise create new user."
 msgstr ""
 
 msgid "Automatically activate changes"
@@ -8577,7 +8578,8 @@ msgstr ""
 msgid "Automatically track downtimes of aggregation"
 msgstr "Urmăriți automat timpii de întrerupere a agregării"
 
-msgid "Automatically update agents at <i>Activate Changes</i>, if necessary"
+#, fuzzy
+msgid "Automatically update agents at <i>Activate changes</i>, if necessary"
 msgstr ""
 "Actualizați automat agenții la <i>Activați modificările</i>, dacă este "
 "necesar"
@@ -11120,21 +11122,6 @@ msgstr ""
 "Prin configurarea acestei reguli pentru o gazdă - în locul agentului "
 "Check_MK normal vor fi create date de monitorizare aleatorii."
 
-#, fuzzy
-msgid ""
-"By default the agent updater communicates with the Agent Bakery of the "
-"central site to update the agent. If you want to make the agent updater "
-"fetch its agent from its remote site, you need to configure this option to "
-"make it possible for the remote site to communicate with the central site on "
-"behalf of the agent updater."
-msgstr ""
-"În mod prestabilit, actualizatorul de agenți comunică cu brutăria de agenți "
-"a site-ului central pentru a actualiza agentul. Dacă doriți să faceți ca "
-"actualizatorul de agenți să preia agentul de la site-ul său la distanță, "
-"trebuie să configurați această opțiune pentru a face posibilă comunicarea "
-"site-ului la distanță cu site-ul central în numele actualizatorului de "
-"agenți."
-
 #, python-brace-format
 msgid ""
 "By default, Checkmk does not import annotations. If this option is enabled, "
@@ -11566,6 +11553,21 @@ msgid ""
 "By default, the agent determines the location dynamically based on a few "
 "well-known locations. You can specify a full path here instead."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"By default, the agent updater communicates with the Agent Bakery of the "
+"central site to update the agent. If you want to make the agent updater "
+"fetch its agent from its remote site, you need to configure this option to "
+"make it possible for the remote site to communicate with the central site on "
+"behalf of the agent updater."
+msgstr ""
+"În mod prestabilit, actualizatorul de agenți comunică cu brutăria de agenți "
+"a site-ului central pentru a actualiza agentul. Dacă doriți să faceți ca "
+"actualizatorul de agenți să preia agentul de la site-ul său la distanță, "
+"trebuie să configurați această opțiune pentru a face posibilă comunicarea "
+"site-ului la distanță cu site-ul central în numele actualizatorului de "
+"agenți."
 
 msgid ""
 "By default, the check will use any IP address protocol. Selecting a specific "
@@ -12140,9 +12142,6 @@ msgstr "Sarcina maximă de redimensionare a procesorului este Nespecificată."
 msgid "CPU reservation"
 msgstr "Rezervare CPU"
 
-msgid "CPU resources: Cluster"
-msgstr "Resurse CPU: Cluster"
-
 msgid "CPU resources: DaemonSet"
 msgstr "Resurse CPU: DaemonSet"
 
@@ -12154,6 +12153,10 @@ msgstr "Resurse CPU: Spațiul de nume"
 
 msgid "CPU resources: StatefulSet"
 msgstr "Resurse CPU: StatefulSet"
+
+#, fuzzy
+msgid "CPU resources: cluster"
+msgstr "Resurse CPU: Cluster"
 
 #, fuzzy
 msgid "CPU threads"
@@ -12341,7 +12344,8 @@ msgstr "Utilizarea CPU a dispozitivelor cu module"
 msgid "CPU utilization on Linux/Unix"
 msgstr "Utilizare CPU pe Linux/UNIX"
 
-msgid "CPU utilization: Cluster"
+#, fuzzy
+msgid "CPU utilization: cluster"
 msgstr "Utilizare CPU: Cluster"
 
 msgid "CPUs"
@@ -13489,8 +13493,9 @@ msgstr "Cisco Meraki"
 msgid "Check Point tunnel status"
 msgstr "Starea tunelului Check Point"
 
-msgid "Check SFTP Service"
-msgstr "Verificați serviciul SFTP"
+#, fuzzy
+msgid "Check SFTP service"
+msgstr "Verificați serviciul FTP"
 
 msgid "Check SMB share access"
 msgstr "Verificați accesul la partajarea SMB"
@@ -14179,7 +14184,7 @@ msgstr "Checkmk: BI"
 msgid "Checkmk: License verification failed"
 msgstr "Verificarea licenței a eșuat"
 
-msgid "Checkmk: Service Risk Advisory - agent signature keys expire"
+msgid "Checkmk: Service risk advisory - agent signature keys expire"
 msgstr ""
 
 #, fuzzy
@@ -14591,14 +14596,14 @@ msgid ""
 "<ul><li><i>Do not remove anything</i>: Leave all files in place after "
 "uninstallation.<br><li><i>Remove data managed by the Checkmk agent</i>: "
 "Remove only files that got created on Checkmk agent installation. This "
-"includes files that came from bakery plugins, even if they have been edited "
+"includes files that came from Bakery plug-ins, even if they have been edited "
 "by a user. Keep runtime files that have been created after installation, "
 "like state files, registration files, and logs.<li><i>Remove all files and "
 "subdirectories</i>: Remove all files regardless of their origin.</"
 "ul><b>Caution</b>: Uninstallation also happens on every agent update! As a "
 "consequence, this rule will break automatic agent updates and TLS encrypted "
 "agent communication on setting <i>Remove all files and subdirectories</i>, "
-"since the removed files also include your agent updater and agent controller "
+"since the removed files also include your agent updater and Agent Controller "
 "registrations."
 msgstr ""
 
@@ -16177,10 +16182,11 @@ msgstr ""
 "Configurați acțiunile posibile care pot fi efectuate atunci când se "
 "declanșează o regulă și, de asemenea, manual de către un utilizator."
 
+#, fuzzy
 msgid ""
-"Configure the DNS domain name of your Active directory domain here, Checkmk "
-"will then query this domain for it's closest domain controller to "
-"communicate with."
+"Configure the DNS domain name of your Active Directory domain here, Checkmk "
+"will then query this domain for its closest domain controller to communicate "
+"with."
 msgstr ""
 "Configurați aici numele de domeniu DNS al domeniului dvs. Active Directory, "
 "Checkmk va interoga acest domeniu pentru cel mai apropiat controler de "
@@ -16830,9 +16836,9 @@ msgstr ""
 msgid "Connector: Collecting metric backend hosts on site  \"%s\""
 msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 
-#, python-format
-msgid "Connector: Collecting piggyback hosts on site  \"%s\""
-msgstr ""
+#, fuzzy, python-format
+msgid "Connector: Collecting piggyback hosts on site \"%s\""
+msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 
 #, fuzzy
 msgid "Connectors"
@@ -17640,11 +17646,9 @@ msgstr "Contul"
 msgid "Count (number of recent occurrences)"
 msgstr "Count (numărul de apariții recente)"
 
-msgid "Count Groups"
+#, fuzzy
+msgid "Count groups"
 msgstr "Grupuri de numărare"
-
-msgid "Count Users"
-msgstr "Numărați utilizatorii"
 
 msgid "Count messages in interval"
 msgstr "Numără mesajele în interval"
@@ -17678,6 +17682,10 @@ msgstr "Numărați numărul de noduri în starea OK"
 
 msgid "Count until triggered"
 msgstr "Numără până la declanșare"
+
+#, fuzzy
+msgid "Count users"
+msgstr "Numărați utilizatorii"
 
 msgid "Count, size and age of files"
 msgstr "Numărul, dimensiunea și vechimea fișierelor"
@@ -21118,16 +21126,16 @@ msgid "Deploy Windows McAfee AV client plug-in"
 msgstr "Implementați pluginul pentru clientul Windows McAfee AV"
 
 #, fuzzy
-msgid "Deploy Windows Printer Queue plug-in"
-msgstr "Implementarea pluginului Windows Printer Queue"
-
-#, fuzzy
 msgid "Deploy Windows license plug-in"
 msgstr "Implementarea pluginului de licență Windows"
 
 #, fuzzy
 msgid "Deploy Windows multipath plug-in"
 msgstr "Implementarea pluginului Windows Multipath"
+
+#, fuzzy
+msgid "Deploy Windows printer queue plug-in"
+msgstr "Implementarea pluginului Windows Printer Queue"
 
 #, fuzzy
 msgid "Deploy Windows updates plug-in"
@@ -22860,24 +22868,24 @@ msgid "Do not deploy VxVM plug-in"
 msgstr "Nu implementați pluginul VxVM"
 
 #, fuzzy
-msgid "Do not deploy Windows License plug-in"
-msgstr "Nu implementați pluginul de licență Windows"
-
-#, fuzzy
 msgid "Do not deploy Windows McAfee AV client plug-in"
 msgstr "Nu implementați pluginul pentru clientul Windows McAfee AV"
-
-#, fuzzy
-msgid "Do not deploy Windows Printer Queue plug-in"
-msgstr "Nu implementați pluginul Windows Printer Queue"
 
 #, fuzzy
 msgid "Do not deploy Windows Updates plug-in"
 msgstr "Nu implementați pluginul Windows Updates"
 
 #, fuzzy
+msgid "Do not deploy Windows license plug-in"
+msgstr "Nu implementați pluginul de licență Windows"
+
+#, fuzzy
 msgid "Do not deploy Windows multipath plug-in"
 msgstr "Nu implementați pluginul Windows Multipath"
+
+#, fuzzy
+msgid "Do not deploy Windows printer queue plug-in"
+msgstr "Nu implementați pluginul Windows Printer Queue"
 
 #, fuzzy
 msgid "Do not deploy automatic agent update plug-in"
@@ -24819,10 +24827,12 @@ msgstr ""
 msgid "Enable"
 msgstr "Activați"
 
-msgid "Enable 'Run As <b>Local Group</b>' for scripts"
+#, fuzzy
+msgid "Enable 'Run as <b>local group</b>' for scripts"
 msgstr "Activați 'Run As <b>Local Group</b>' pentru scripturi"
 
-msgid "Enable 'Run As <b>User</b>' for scripts"
+#, fuzzy
+msgid "Enable 'Run as <b>user</b>' for scripts"
 msgstr "Activați 'Run As <b>User</b>' pentru scripturi"
 
 #, fuzzy
@@ -25387,7 +25397,8 @@ msgstr "Aplică schimbarea"
 msgid "Enforce for all users"
 msgstr "Impuneți utilizarea literelor mici pentru ID-urile de utilizator."
 
-msgid "Enforce lower case User-IDs."
+#, fuzzy
+msgid "Enforce lower case user IDs."
 msgstr "Impuneți utilizarea literelor mici pentru ID-urile de utilizator."
 
 #, fuzzy
@@ -26196,13 +26207,15 @@ msgid "Events of the last 4 hours."
 msgstr "Evenimentele din ultimele 4 ore."
 
 #, fuzzy
-msgid "Events: Host name"
+msgid "Events: host name"
 msgstr "Evenimente: Numele gazdei"
 
-msgid "Events: Syslog application"
+#, fuzzy
+msgid "Events: syslog application"
 msgstr "Evenimente: Aplicație Syslog"
 
-msgid "Events: Syslog facility"
+#, fuzzy
+msgid "Events: syslog facility"
 msgstr "Evenimente: Facilitatea Syslog"
 
 msgid "Every day"
@@ -26520,9 +26533,6 @@ msgstr "Executați acest program acum"
 msgid "Execute this schedule now in background job"
 msgstr "Executați acest program acum în jobul de fundal"
 
-msgid "Execution Mode"
-msgstr "Modul de execuție"
-
 msgid "Execution configuration"
 msgstr "Configurația de execuție"
 
@@ -26542,6 +26552,10 @@ msgstr "Istoricul de execuție al acestui %s"
 
 msgid "Execution interval"
 msgstr "Interval de execuție"
+
+#, fuzzy
+msgid "Execution mode"
+msgstr "Modul de execuție"
 
 msgid "Execution of checks"
 msgstr "Executarea controalelor"
@@ -26623,11 +26637,8 @@ msgstr "DC așteptat"
 msgid "Expected DNS answers"
 msgstr "Răspunsuri DNS așteptate"
 
-msgid "Expected String"
-msgstr "Șirul așteptat"
-
 #, fuzzy
-msgid "Expected VM Generation"
+msgid "Expected VM generation"
 msgstr "Situația așteptată a traiectoriei"
 
 msgid "Expected active paths"
@@ -26705,6 +26716,10 @@ msgstr "Numărul preconizat de noduri de date"
 
 msgid "Expected state"
 msgstr "Starea așteptată"
+
+#, fuzzy
+msgid "Expected string"
+msgstr "Șirul așteptat"
 
 msgid "Expected update interval"
 msgstr "Intervalul de actualizare preconizat"
@@ -28732,7 +28747,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"For these hosts there is a new agent available that is not yet installed. "
+"For these hosts, there is a new agent available that is not yet installed. "
 "This simply means that the target agent configuration hash does not match "
 "the hash of the configuration that is currently installed."
 msgstr ""
@@ -29069,7 +29084,8 @@ msgstr "Gratuit"
 msgid "Free DHCP leases"
 msgstr "Contracte de închiriere DHCP gratuite"
 
-msgid "Free Pods: Cluster"
+#, fuzzy
+msgid "Free Pods: cluster"
 msgstr "Poduri gratuite: Cluster"
 
 msgid "Free SGA memory available"
@@ -30707,67 +30723,6 @@ msgid "Helvetica"
 msgstr "Helvetica"
 
 msgid ""
-"Here you can configure absolute levels for total restart count and restarts "
-"in the last hour."
-msgstr ""
-"Aici puteți configura niveluri absolute pentru numărul total de reporniri și "
-"pentru repornirile din ultima oră."
-
-msgid ""
-"Here you can configure levels for usage, requests utilization and limits "
-"utilization, respectively."
-msgstr ""
-"Aici puteți configura nivelurile de utilizare, de utilizare a cererilor și, "
-"respectiv, de utilizare a limitelor."
-
-msgid ""
-"Here you can configure levels for usage, requests utilization, limits "
-"utilization and node utilization, respectively."
-msgstr ""
-"Aici puteți configura nivelurile de utilizare, de utilizare a cererilor, de "
-"utilizare a limitelor și, respectiv, de utilizare a nodurilor."
-
-#, fuzzy
-msgid "Here you can configure messages filtering parameters"
-msgstr "Aici puteți configura setările de temporizare."
-
-#, fuzzy
-msgid "Here you can configure messages filtering parameters using event user"
-msgstr "Aici puteți configura setările de temporizare în secunde."
-
-msgid ""
-"Here you can configure messages filtering parameters using regular "
-"expressions. The rule is case insensitive."
-msgstr ""
-
-# georgem ###
-msgid ""
-"Here you can configure which messages should be discovered and reported from "
-"which Eventlog. When you set the severity to <i>disabled</i> then this "
-"Eventlog will totally be ignored. The switch <i>without context</i> will "
-"disable sending so-called context messages. When at least one new relevant "
-"message is being found in an Eventlog, the agent usually sends <i>all</i> "
-"new messages from that check cycle. This makes it more convenient when "
-"viewing the messages in Checkmk. In high-volume logfiles it might be "
-"necessary to switch the context off in order to save networking and disk "
-"resources. <b>Note</b>: When several configuration tuning entries match for "
-"a logfile then only the first one is being executed. So it does not make "
-"sense to create more then one entry for <i>All Eventlogs</i>."
-msgstr ""
-"Aici puteți configura mesajele care trebuie descoperite și raportate din "
-"care Eventlog. Când setați severitatea la <i>dezactivat</i>, atunci acest "
-"Eventlog va fi ignorat în totalitate. Comutatorul <i>fără context</i> va "
-"dezactiva trimiterea așa-numitelor mesaje de context. Atunci când se găsește "
-"cel puțin un nou mesaj relevant într-un Eventlog, agentul trimite de obicei "
-"<i>toate</i> mesajele noi din acel ciclu de verificare. Acest lucru este mai "
-"convenabil atunci când se vizualizează mesajele în Checkmk. În fișierele "
-"jurnal de volum mare, ar putea fi necesară dezactivarea contextului pentru a "
-"economisi resurse de rețea și de disc. <b>Nota</b>: Atunci când mai multe "
-"intrări de reglare a configurației se potrivesc pentru un fișier jurnal, "
-"atunci se execută numai prima. Prin urmare, nu are sens să se creeze mai "
-"mult de o intrare pentru <i>All Eventlogs</i>."
-
-msgid ""
 "Here you can configured the credentials to be used. Keep in mind that the "
 "<tt>automation</tt> user need to exist if you choose this option"
 msgstr ""
@@ -30806,59 +30761,6 @@ msgstr ""
 "query.html\"target=\"_blank\">aici</a>. Pentru a optimiza viteza de căutare, "
 "utilizați indici și câmpuri definite, altfel vor fi căutați toți indicii și "
 "câmpurile."
-
-msgid ""
-"Here you can provide CA or self-signed certificates that will be sent to the "
-"contacting agent updater alongside the remote site's URL on registration or "
-"update. This list will be used by the agent updater to verify HTTPS "
-"connections to Checkmk sites."
-msgstr ""
-"Aici puteți furniza certificate CA sau certificate autofirmate care vor fi "
-"trimise agentului de contact care actualizează alături de URL-ul site-ului "
-"la distanță la înregistrare sau actualizare. Această listă va fi utilizată "
-"de către agentul de actualizare a agentului pentru a verifica conexiunile "
-"HTTPS la site-urile Checkmk."
-
-#, fuzzy
-msgid ""
-"Here you can see all hosts that have sent an error status to the deployment "
-"server."
-msgstr ""
-"Aici puteți vedea toate gazdele care au trimis o stare negativă către "
-"serverul de implementare."
-
-#, fuzzy
-msgid ""
-"Here you can specify a service name. If this parameter is not set, the "
-"service is named <tt>TCP Port [PORT NUMBER]</tt>"
-msgstr ""
-"Aici puteți specifica o descriere a serviciului. Dacă acest parametru nu "
-"este setat, serviciul se numește <tt>TCP Port [PORT NUMBER]</tt>."
-
-msgid ""
-"Here you can specify the subject text instead of default text 'Check_MK-Mail-"
-"Loop'."
-msgstr ""
-"Aici puteți specifica textul subiectului în locul textului implicit "
-"'Check_MK-Mail-Loop'."
-
-msgid ""
-"Here you get feedback about recent agent rollouts. If you e.g. restrict a "
-"new rollout to a known list of five hosts, then these five should appear "
-"here at latest after one configured update interval."
-msgstr ""
-"Aici primiți feedback despre recentele lansări de agenți. Dacă, de exemplu, "
-"restricționați o nouă lansare la o listă cunoscută de cinci gazde, atunci "
-"aceste cinci gazde ar trebui să apară aici cel târziu după un interval de "
-"actualizare configurat."
-
-msgid ""
-"Here you see hosts that have registered for updates but have no available "
-"agent. You need to bake agents again in order to create agents for them."
-msgstr ""
-"Aici sunt afișate gazdele care s-au înregistrat pentru actualizări, dar care "
-"nu au niciun agent disponibil. Trebuie să coaceți din nou agenți pentru a "
-"crea agenți pentru acestea."
 
 #, fuzzy
 msgid ""
@@ -30980,6 +30882,14 @@ msgstr ""
 "Aici puteți configura niveluri absolute pentru numărul total de reporniri și "
 "pentru repornirile din ultima oră."
 
+#, fuzzy
+msgid ""
+"Here, you can configure absolute levels for total restart count and restarts "
+"in the last hour."
+msgstr ""
+"Aici puteți configura niveluri absolute pentru numărul total de reporniri și "
+"pentru repornirile din ultima oră."
+
 msgid ""
 "Here, you can configure additional properties of the dashboard. This is "
 "completely optional and only needed to create more advanced dashboards. For "
@@ -31005,6 +30915,36 @@ msgstr ""
 "Aici puteți configura setările globale, care trebuie aplicate doar pe site-"
 "ul respectiv. <b>Nota</b>: acest lucru are sens doar dacă site-ul face parte "
 "dintr-o configurație distribuită."
+
+#, fuzzy
+msgid ""
+"Here, you can configure levels for usage, requests utilization and limits "
+"utilization, respectively."
+msgstr ""
+"Aici puteți configura nivelurile de utilizare, de utilizare a cererilor și, "
+"respectiv, de utilizare a limitelor."
+
+#, fuzzy
+msgid ""
+"Here, you can configure levels for usage, requests utilization, limits "
+"utilization and node utilization, respectively."
+msgstr ""
+"Aici puteți configura nivelurile de utilizare, de utilizare a cererilor, de "
+"utilizare a limitelor și, respectiv, de utilizare a nodurilor."
+
+#, fuzzy
+msgid "Here, you can configure messages filtering parameters"
+msgstr "Aici puteți configura setările de temporizare."
+
+#, fuzzy
+msgid "Here, you can configure messages filtering parameters using event user"
+msgstr "Aici puteți configura setările de temporizare în secunde."
+
+#, fuzzy
+msgid ""
+"Here, you can configure messages filtering parameters using regular "
+"expressions. The rule is case insensitive."
+msgstr "Aici puteți configura setările de temporizare în secunde."
 
 #, fuzzy
 msgid ""
@@ -31073,6 +31013,34 @@ msgid ""
 msgstr ""
 "Aici puteți configura dacă și cum este înregistrată crearea fișierelor RRD "
 "(în fișierul jurnal var/log/cmc.log)."
+
+# georgem ###
+#, fuzzy
+msgid ""
+"Here, you can configure which messages should be discovered and reported "
+"from which event log. When you set the severity to <i>disabled</i> then this "
+"event log will totally be ignored. The switch <i>without context</i> will "
+"disable sending so-called context messages. When at least one new relevant "
+"message is being found in an event log, the agent usually sends <i>all</i> "
+"new messages from that check cycle. This makes it more convenient when "
+"viewing the messages in Checkmk. In high-volume log files it might be "
+"necessary to switch the context off in order to save networking and disk "
+"resources. <b>Note</b>: When several configuration tuning entries match for "
+"a log file then only the first one is being executed. So it does not make "
+"sense to create more then one entry for <i>All event logs</i>."
+msgstr ""
+"Aici puteți configura mesajele care trebuie descoperite și raportate din "
+"care Eventlog. Când setați severitatea la <i>dezactivat</i>, atunci acest "
+"Eventlog va fi ignorat în totalitate. Comutatorul <i>fără context</i> va "
+"dezactiva trimiterea așa-numitelor mesaje de context. Atunci când se găsește "
+"cel puțin un nou mesaj relevant într-un Eventlog, agentul trimite de obicei "
+"<i>toate</i> mesajele noi din acel ciclu de verificare. Acest lucru este mai "
+"convenabil atunci când se vizualizează mesajele în Checkmk. În fișierele "
+"jurnal de volum mare, ar putea fi necesară dezactivarea contextului pentru a "
+"economisi resurse de rețea și de disc. <b>Nota</b>: Atunci când mai multe "
+"intrări de reglare a configurației se potrivesc pentru un fișier jurnal, "
+"atunci se execută numai prima. Prin urmare, nu are sens să se creeze mai "
+"mult de o intrare pentru <i>All Eventlogs</i>."
 
 #, fuzzy
 msgid ""
@@ -31377,6 +31345,19 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"Here, you can provide CA or self-signed certificates that will be sent to "
+"the contacting agent updater alongside the remote site's URL on registration "
+"or update. This list will be used by the agent updater to verify HTTPS "
+"connections to Checkmk sites."
+msgstr ""
+"Aici puteți furniza certificate CA sau certificate autofirmate care vor fi "
+"trimise agentului de contact care actualizează alături de URL-ul site-ului "
+"la distanță la înregistrare sau actualizare. Această listă va fi utilizată "
+"de către agentul de actualizare a agentului pentru a verifica conexiunile "
+"HTTPS la site-urile Checkmk."
+
+#, fuzzy
+msgid ""
 "Here, you can see a list of all deprecated rule sets (which are not used by "
 "Checkmk anymore). If you have defined some rules here, you might have to "
 "migrate the rules to their successors. Please refer to the release notes or "
@@ -31387,6 +31368,14 @@ msgstr ""
 "posibil să trebuiască să migrați regulile către succesoarele lor. Vă rugăm "
 "să consultați notele de lansare sau ajutorul contextual al seturilor de "
 "reguli pentru detalii."
+
+#, fuzzy
+msgid ""
+"Here, you can see all hosts that have sent an error status to the deployment "
+"server."
+msgstr ""
+"Aici puteți vedea toate gazdele care au trimis o stare negativă către "
+"serverul de implementare."
 
 #, fuzzy, python-format
 msgid ""
@@ -31544,6 +31533,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"Here, you can specify a service name. If this parameter is not set, the "
+"service is named <tt>TCP Port [PORT NUMBER]</tt>"
+msgstr ""
+"Aici puteți specifica o descriere a serviciului. Dacă acest parametru nu "
+"este setat, serviciul se numește <tt>TCP Port [PORT NUMBER]</tt>."
+
+#, fuzzy
+msgid ""
 "Here, you can specify alternative names that the service might have. This "
 "helps, when the exact spelling of the services can change from one version "
 "to another."
@@ -31625,6 +31622,14 @@ msgstr "Aici puteți specifica unitatea de măsură a interfeței de rețea."
 
 #, fuzzy
 msgid ""
+"Here, you can specify the subject text instead of default text 'Check_MK-"
+"Mail-Loop'."
+msgstr ""
+"Aici puteți specifica textul subiectului în locul textului implicit "
+"'Check_MK-Mail-Loop'."
+
+#, fuzzy
+msgid ""
 "Here, you can specify the total memory usage levels for clustered hosts."
 msgstr ""
 "Aici puteți specifica nivelurile totale de utilizare a memoriei pentru "
@@ -31666,6 +31671,17 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"Here, you get feedback about recent agent rollouts. If you e.g. restrict a "
+"new rollout to a known list of five hosts, then these five should appear "
+"here at latest after one configured update interval."
+msgstr ""
+"Aici primiți feedback despre recentele lansări de agenți. Dacă, de exemplu, "
+"restricționați o nouă lansare la o listă cunoscută de cinci gazde, atunci "
+"aceste cinci gazde ar trebui să apară aici cel târziu după un interval de "
+"actualizare configurat."
+
+#, fuzzy
+msgid ""
 "Here, you have to use macros which are defined above below <tt>Macros for "
 "joining service data or inventory tables</tt>. The joining of different "
 "inventory tables is based on these macros."
@@ -31678,6 +31694,15 @@ msgstr ""
 #, fuzzy
 msgid "Here, you need to insert the original file or path name."
 msgstr "Aici trebuie să introduceți fișierul original sau numele de cale"
+
+#, fuzzy
+msgid ""
+"Here, you see hosts that have registered for updates but have no available "
+"agent. You need to bake agents again in order to create agents for them."
+msgstr ""
+"Aici sunt afișate gazdele care s-au înregistrat pentru actualizări, dar care "
+"nu au niciun agent disponibil. Trebuie să coaceți din nou agenți pentru a "
+"crea agenți pentru acestea."
 
 msgid "Hidden"
 msgstr "Ascuns"
@@ -34804,12 +34829,12 @@ msgstr ""
 #, fuzzy, python-format
 msgid ""
 "If activated, the Agent Bakery will bake a generic agent package for this "
-"folder. In the configuration all rules are considered that unconditionally "
-"match all hosts in the folder. This package will be created even if the "
+"folder. In the configuration all rules that unconditionally match all hosts "
+"in the folder are considered. This package will be created even if the "
 "folder is empty.\n"
-"This is option is useful in combination with the %s feature of the %s. It "
-"allows for baking agent packages for hosts which will be created in this "
-"folder in the future, usually via the auto registration."
+"This option is useful in combination with the %s feature of the %s. It "
+"allows baking agent packages for hosts which will be created in this folder "
+"in the future, usually via the auto-registration."
 msgstr ""
 "Dacă este activat, programul de coacere a agenților va coace un pachet de "
 "agenți generic pentru acest dosar. În configurație sunt luate în considerare "
@@ -36327,9 +36352,9 @@ msgid ""
 "them into the subdirectory <tt>plugins</tt> of your agent's installation "
 "directory. <i>Local checks</i> work just the same, but are installed in "
 "<tt>local</tt>. Plug-ins that are deployed with the Agent Bakery are "
-"installed by the MSI installer into the same directory. This ruleset limits "
+"installed by the MSI installer into the same directory. This rule set limits "
 "the file extensions that the agent will run. This for example avoids "
-"starting a Notepad when a file with the extension <tt>.txt</tt> is found. "
+"starting a notepad when a file with the extension <tt>.txt</tt> is found. "
 "<b>Note:</b> If you remove some of the default extensions, not all of the "
 "shipped agent plug-ins will continue to work!<br><br>Specify the extensions "
 "in lower case and without a leading dot."
@@ -46153,14 +46178,14 @@ msgid "Monitoring state if task is not enabled"
 msgstr "Starea de monitorizare în cazul în care sarcina nu este activată"
 
 #, fuzzy
-msgid "Monitoring state if the VPN peer is not reachable"
-msgstr "Starea de monitorizare în cazul în care sarcina nu este activată"
-
-#, fuzzy
-msgid "Monitoring state if the cluster collector reports no machine metrics"
+msgid "Monitoring state if the Cluster Collector reports no machine metrics"
 msgstr ""
 "Starea de monitorizare în cazul în care Cluster Collector nu raportează "
 "Metrici mașină"
+
+#, fuzzy
+msgid "Monitoring state if the VPN peer is not reachable"
+msgstr "Starea de monitorizare în cazul în care sarcina nu este activată"
 
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr ""
@@ -48234,10 +48259,6 @@ msgstr "Fără căutare, specificați lista de argumente"
 
 #, fuzzy, python-format
 msgid "No site with ID \"%s\" is configured."
-msgstr "Nu este configurat niciun interval IP"
-
-#, fuzzy, python-format
-msgid "No site with id \"%s\" is configured."
 msgstr "Nu este configurat niciun interval IP"
 
 #, fuzzy
@@ -50469,7 +50490,7 @@ msgid "On down host"
 msgstr "Pe jos gazdă"
 
 #, fuzzy
-msgid "On every Agent controller registration"
+msgid "On every Agent Controller registration"
 msgstr "Înregistrarea automată a controlerului agent"
 
 #, fuzzy
@@ -55619,9 +55640,10 @@ msgstr "Niveluri specifice politicii (numai în modul Cluster)"
 msgid "Pool name"
 msgstr "Numele bazinului"
 
+#, fuzzy
 msgid ""
 "Populates the alias attribute of the Setup user by synchronizing an "
-"attribute from the LDAP user account. By default the LDAP attribute <tt>cn</"
+"attribute from the LDAP user account. By default, the LDAP attribute <tt>cn</"
 "tt> is used."
 msgstr ""
 "Completează atributul alias al utilizatorului de configurare prin "
@@ -62079,6 +62101,8 @@ msgstr ""
 "ca wildcards. Etichetele și modelele pot fi, de asemenea, combinate cu "
 "operatorii <tt>AND</tt>, <tt>OR</tt> și <tt>NOT</tt>."
 
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
 "CronJobs are treated separately as they are usually quite short lived. Those "
@@ -62087,7 +62111,7 @@ msgid ""
 "having their own host. Your Dynamic host management rule should be "
 "configured accordingly to avoid that the piggyback hosts for terminated "
 "CronJob pods are kept for too long. This 'Pods of CronJobs' option has no "
-"effect if Pods are not monitored"
+"effect if Pods are not monitored."
 msgstr ""
 "Selectați obiectele Kubernetes pe care doriți să le monitorizați. Podurile "
 "controlate de CronJobs sunt tratate separat, deoarece acestea au, de obicei, "
@@ -70505,22 +70529,23 @@ msgstr ""
 "Atributul LDAP al cărui conținut trebuie sincronizat în acest atribut "
 "personalizat."
 
+#, fuzzy
 msgid ""
 "The LDAP connection suffix can be used to distinguish equal named objects "
 "(name conflicts), for example user accounts, from different LDAP connections."
 "<br>It is used in the following situations:<br><br>During LDAP "
 "synchronization, the LDAP sync might discover that a user to be synchronized "
-"from from the current LDAP is already being synchronized from another LDAP "
-"connection. Without the suffix configured this results in a name conflict "
+"from the current LDAP is already being synchronized from another LDAP "
+"connection. Without the suffix configured, this results in a name conflict "
 "and the later user not being synchronized. If the connection has a suffix "
 "configured, this suffix is added to the later username in case of the name "
 "conflict to resolve it. The user will then be named <tt>[username]@[suffix]</"
-"tt> instead of just <tt>[username]</tt>.<br><br>In the case a user which "
-"users name is existing in multiple LDAP directories, but associated to "
-"different persons, your user can insert <tt>[username]@[suffix]</tt> during "
-"login instead of just the plain <tt>[username]</tt> to tell which LDAP "
-"directory he is assigned to. Users without name conflict just need to "
-"provide their regular username as usual."
+"tt> instead of just <tt>[username]</tt>.<br><br>In case a user's username "
+"exists in multiple LDAP directories, but associated to different persons, "
+"the user can insert <tt>[username]@[suffix]</tt> during login instead of "
+"just the plain <tt>[username]</tt> to specify which LDAP directory they are "
+"assigned to. Users without name conflict just need to provide their regular "
+"username as usual."
 msgstr ""
 "Sufixul conexiunii LDAP poate fi utilizat pentru a distinge obiectele cu "
 "nume egale (conflicte de nume), de exemplu conturi de utilizator, de la "
@@ -72434,9 +72459,10 @@ msgstr ""
 msgid "The graphical user interface (GUI) URL must end with /check_mk/"
 msgstr "URL-ul Multisite trebuie să se termine cu /check_mk/"
 
+#, fuzzy
 msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "
-"either deleting them or moving them to a subfolder. By default nothing is "
+"either deleting them or moving them to a subfolder. By default, nothing is "
 "cleaned up."
 msgstr ""
 "Mesajele gestionate (a se vedea <i>corespondența subiectului</i>) pot fi "
@@ -74353,8 +74379,8 @@ msgstr "Regula nu se potrivește"
 #, fuzzy
 msgid ""
 "The rule gives the possibility to run any script using a given user account. "
-"There are two modes of the rule: <i>group mode</i>, in the case Windows "
-"Agent provides its own internal user in the requested group to run the "
+"There are two modes of the rule: <i>group mode</i>, in this case Windows "
+"agent provides its own internal user in the requested group to run the "
 "script, or <i>user mode</i>, in this case you should specify the full "
 "credentials. The <i>group mode</i> is more secure, because no credentials "
 "need to be stored anywhere, except in the agent internally. When using the "
@@ -78269,7 +78295,7 @@ msgstr ""
 msgid ""
 "This plug-in synchronizes a field of the users LDAP account to the pager "
 "attribute of the Setup user accounts, which is then forwarded to the "
-"monitoring core and can be used for notifications. By default the LDAP "
+"monitoring core and can be used for notifications. By default, the LDAP "
 "attribute <tt>mobile</tt> is used."
 msgstr ""
 "Acest plugin sincronizează un câmp al contului LDAP al utilizatorilor cu "
@@ -79179,6 +79205,37 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This rule set allows to deploy an agent plug-in that updates the Checkmk "
+"agent for Linux, Solaris and Windows on a regular base. The agent will look "
+"for new updates on a regular base and update itself, when a newly baked "
+"agent is available, released and signed. <br><b>Note<sup>1</sup>:</b> This "
+"update mechanism is baked into the agent itself. So after activating this "
+"feature you need at least one more manual update of the agent, of course."
+"<br><b>Note<sup>2</sup>:</b> After deploying this new plug-in it must be "
+"registered at your Checkmk server. This can be done either by registering "
+"the Agent Controller, or by manual agent updater registration call. "
+"Customizable in _Registration_ option below. See there for details."
+"<br><b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
+"Python 3.7 installation (or newer) with installed python packages "
+"\"cryptography\", \"requests\" and \"PySocks\" is required on the target "
+"hosts."
+msgstr ""
+"Acest set de reguli permite implementarea unui plugin de agent care "
+"actualizează în mod regulat agentul Checkmk pentru Linux, Solaris și "
+"Windows. Agentul va căuta noi actualizări în mod regulat și se va actualiza "
+"singur, atunci când un agent nou este disponibil, lansat și semnat. "
+"<br><b>Notă<sup>1</sup>:</b> Acest mecanism de actualizare este integrat în "
+"agentul însuși. Deci, după activarea acestei funcții, aveți nevoie de cel "
+"puțin încă o actualizare manuală a agentului, bineînțeles.<br><b>Notă<sup>2</"
+"sup>:</b> După implementarea acestui nou plugin, trebuie să îl apelați o "
+"dată manual pentru a înregistra agentul la serverul de actualizare. Apelați "
+"<tt>cmk-update-agent register -H <i>HOST</i></tt> (UNIX), sau "
+"<tt>check_mk_agent.exe updater.exe updater register -H <i>HOST</i></tt> "
+"(Windows), unde <i>HOST</i> trebuie să fie numele acelei gazde din "
+"monitorizarea dumneavoastră."
+
+#, fuzzy
+msgid ""
 "This rule set allows you to configure explicit ping monitoring of hosts. "
 "Usually a ping is being used as a host check, so this is not necessary. "
 "There are some situations, however, where this can be useful. One of them is "
@@ -79648,37 +79705,6 @@ msgid ""
 msgstr ""
 "Aceste reguli stabilesc numărul preconizat de căi diferite pentru un LUN "
 "multipath pe serverele HPUX"
-
-#, fuzzy
-msgid ""
-"This ruleset allows to deploy an agent plug-in that updates the Checkmk "
-"agent for Linux, Solaris and Windows on a regular base. The agent will look "
-"for new updates on a regular base and update itself, when a newly baked "
-"agent is available, released and signed. <br><b>Note<sup>1</sup>:</b> This "
-"update mechanism is baked into the agent itself. So after activating this "
-"feature you need at least one more manual update of the agent, of course."
-"<br><b>Note<sup>2</sup>:</b> After deploying this new plug-in it must be "
-"registered at your Checkmk server. This can be done either by registering "
-"the agent controller, or by manual agent updater registration call. "
-"Customizable in _Registration_ option below. See there for details."
-"<br><b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
-"Python 3.7 installation (or newer) with installed python packages "
-"\"cryptography\", \"requests\" and \"PySocks\" is required on the target "
-"hosts."
-msgstr ""
-"Acest set de reguli permite implementarea unui plugin de agent care "
-"actualizează în mod regulat agentul Checkmk pentru Linux, Solaris și "
-"Windows. Agentul va căuta noi actualizări în mod regulat și se va actualiza "
-"singur, atunci când un agent nou este disponibil, lansat și semnat. "
-"<br><b>Notă<sup>1</sup>:</b> Acest mecanism de actualizare este integrat în "
-"agentul însuși. Deci, după activarea acestei funcții, aveți nevoie de cel "
-"puțin încă o actualizare manuală a agentului, bineînțeles.<br><b>Notă<sup>2</"
-"sup>:</b> După implementarea acestui nou plugin, trebuie să îl apelați o "
-"dată manual pentru a înregistra agentul la serverul de actualizare. Apelați "
-"<tt>cmk-update-agent register -H <i>HOST</i></tt> (UNIX), sau "
-"<tt>check_mk_agent.exe updater.exe updater register -H <i>HOST</i></tt> "
-"(Windows), unde <i>HOST</i> trebuie să fie numele acelei gazde din "
-"monitorizarea dumneavoastră."
 
 #, fuzzy
 msgid ""
@@ -81804,7 +81830,7 @@ msgid ""
 "To start updating the agent package, the agent updater must register at a "
 "monitoring site.<br><br><i>New with Checkmk 2.5</i>: By default, the agent "
 "updater will be registered by the agent controller, after its own successful "
-"registration, at the same site and with the same hostname.<br><br>Here you "
+"registration, at the same site and with the same host name.<br><br>Here you "
 "can configure the overwriting behavior of subsequent agent controller "
 "registrations, or opt to skip the agent controller triggered agent updater "
 "registration entirely.<br>Consider the differences between agent controller "
@@ -88562,8 +88588,9 @@ msgstr ""
 "Utilizați această proprietate pentru a activa autentificarea prin metoda GET "
 "pentru toți utilizatorii."
 
+#, fuzzy
 msgid ""
-"Using this option you can define an optional LDAP filter which is used "
+"Using this option, you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
 "objects in LDAP:<br> <tt>(&(objectclass=user)(objectcategory=person))</"
@@ -88584,8 +88611,9 @@ msgstr ""
 "(memberof:1.2.840.113556.1.4.1941:=CN=cmk-"
 "users,OU=groups,DC=example,DC=com))</tt><br>"
 
+#, fuzzy
 msgid ""
-"Using this option you can define an optional LDAP filter which is used "
+"Using this option, you can define an optional LDAP filter which is used "
 "during group related LDAP searches. It can be used to only handle a subset "
 "of the groups below the given base DN.<br><br>e.g. <tt>(objectclass=group)</"
 "tt>"
@@ -88595,8 +88623,9 @@ msgstr ""
 "pentru a gestiona numai un subset de grupuri sub DN-ul de bază dat."
 "<br><br>de exemplu <tt>(objectclass=group)</tt>"
 
+#, fuzzy
 msgid ""
-"Using this option you can define the DN of a group object which is used to "
+"Using this option, you can define the DN of a group object which is used to "
 "filter the users. Only members of this group will then be synchronized. This "
 "is a filter which can be used to extend capabilities of the regular \"Search "
 "Filter\". Using the search filter you can only define filters which directly "
@@ -88605,10 +88634,10 @@ msgid ""
 "some directories do not have such attributes because the memberships are "
 "stored in the group objects as e.g. <tt>member</tt> attributes. You should "
 "use the regular search filter whenever possible and only use this filter "
-"when it is really necessary. Finally you can say, you should not use this "
-"option when using Active Directory. This option is necessary in OpenLDAP "
-"directories when you like to filter by group membership.<br><br>If using, "
-"give a plain distinguished name of a group here, e. g. <tt>CN=cmk-"
+"when it is really necessary. So, this option should not be used when using "
+"Active Directory. This option is necessary in OpenLDAP directories when you "
+"want to filter by group membership.<br><br>If used, enter a plain "
+"distinguished name of a group here, e. g. <tt>CN=cmk-"
 "users,OU=groups,DC=example,DC=com</tt>"
 msgstr ""
 "Cu ajutorul acestei opțiuni puteți defini DN-ul unui obiect de grup care "
@@ -91356,11 +91385,12 @@ msgstr ""
 "număr, cele mai vechi mesaje din mesajele spoilere în curs sunt aruncate "
 "până când mesajele rămase au jumătate din dimensiunea maximă."
 
+#, fuzzy
 msgid ""
 "When the value of this attribute changes for a user account, all current "
 "authenticated sessions of the user are invalidated and the user must login "
-"again. By default this field uses the fields which hold the time of the last "
-"password change of the user."
+"again. By default, this field uses the fields which hold the time of the "
+"last password change of the user."
 msgstr ""
 "Atunci când valoarea acestui atribut se modifică pentru un cont de "
 "utilizator, toate sesiunile autentificate curente ale utilizatorului sunt "
@@ -91941,6 +91971,10 @@ msgid "Windows Time service peers"
 msgstr "Servicii Windows"
 
 #, fuzzy
+msgid "Windows Time service status"
+msgstr "Afișați starea serviciului"
+
+#, fuzzy
 msgid "Windows Update notification time"
 msgstr "Autentificare Windows"
 
@@ -91987,10 +92021,6 @@ msgstr "Programator de sarcini Windows"
 #, fuzzy
 msgid "Windows time service peers summary"
 msgstr "Rezumatul serviciului Windows"
-
-#, fuzzy
-msgid "Windows time service status"
-msgstr "Afișați starea serviciului"
 
 msgid "Windows, Linux, Solaris, AIX"
 msgstr "Windows, Linux, Solaris, AIX"
@@ -102514,6 +102544,20 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Automatic Updates"
+#~ msgstr "Actualizări automate"
+
+#~ msgid "Check SFTP Service"
+#~ msgstr "Verificați serviciul SFTP"
+
+#, fuzzy, python-format
+#~ msgid "No site with id \"%s\" is configured."
+#~ msgstr "Nu este configurat niciun interval IP"
+
+#, fuzzy
+#~ msgid "Windows time service status"
+#~ msgstr "Afișați starea serviciului"
 
 #~ msgid "1 Host"
 #~ msgstr "1 Element"

@@ -854,15 +854,6 @@ msgstr "%s: %s"
 msgid "%s: Cannot parse manual page: %s"
 msgstr "%s: マニュアルページを解析できません: %s"
 
-#, python-format
-msgid "%s: Not using SSL. Consider enabling it in the connection settings."
-msgstr ""
-"%s: SSLを使用していません。接続設定で有効にすることを検討してください。"
-
-#, python-format
-msgid "%s: Uses SSL"
-msgstr "%s: SSLを使用"
-
 #, fuzzy, python-format
 msgid "%s: download agent output"
 msgstr "%s:エージェント出力のダウンロード"
@@ -872,8 +863,17 @@ msgid "%s: no discovery result"
 msgstr "%s: 結果なし"
 
 #, fuzzy, python-format
+msgid "%s: not using SSL. Consider enabling it in the connection settings."
+msgstr ""
+"%s: SSLを使用していません。接続設定で有効にすることを検討してください。"
+
+#, fuzzy, python-format
 msgid "%s: service discovery: permission denied"
 msgstr "%s:サービス検出:パーミッションが拒否されました"
+
+#, fuzzy, python-format
+msgid "%s: uses SSL"
+msgstr "%s: SSLを使用"
 
 #, python-format
 msgid ""
@@ -3801,7 +3801,8 @@ msgstr "アクションID"
 msgid "Action menu"
 msgstr "アクションメニュー"
 
-msgid "Action on Error"
+#, fuzzy
+msgid "Action on error"
 msgstr "エラー時のアクション"
 
 msgid "Action result not found"
@@ -7312,9 +7313,6 @@ msgstr "アプリケーション/ Syslog-タグ(正規表現)"
 msgid "Application Gateway"
 msgstr "アプリケーションゲートウェイ"
 
-msgid "Application Key"
-msgstr "アプリケーションキー"
-
 #, fuzzy
 msgid "Application Type"
 msgstr "アプリケーションキー"
@@ -7328,6 +7326,10 @@ msgstr "アプリケーションゲートウェイ"
 
 msgid "Application gateways"
 msgstr "アプリケーションゲートウェイ"
+
+#, fuzzy
+msgid "Application key"
+msgstr "アプリケーションキー"
 
 msgid "Application load balancer certificates"
 msgstr "アプリケーションロードバランサー証明書"
@@ -8009,9 +8011,6 @@ msgstr "認証(デフォルト)"
 msgid "Authentication (instance-specific)"
 msgstr "認証(インスタンス固有)"
 
-msgid "Authentication Expiration"
-msgstr "認証の有効期限"
-
 msgid "Authentication context class reference"
 msgstr "認証コンテキストクラスリファレンス"
 
@@ -8027,6 +8026,10 @@ msgstr ""
 
 msgid "Authentication error"
 msgstr "認証エラー"
+
+#, fuzzy
+msgid "Authentication expiration"
+msgstr "認証の有効期限"
 
 msgid "Authentication failed"
 msgstr "認証失敗"
@@ -8124,9 +8127,6 @@ msgstr "認証ユーザー"
 msgid "Auto (DEFAULT)"
 msgstr "オート（初期設定）"
 
-msgid "Auto Restart on Crash"
-msgstr "クラッシュ時に自動再起動"
-
 #, fuzzy
 msgid "Auto-close off"
 msgstr "自動クローズオフ"
@@ -8164,6 +8164,10 @@ msgstr "自動拡張はオンになると予想されます"
 #, fuzzy
 msgid "Auto-extend will be ignored"
 msgstr "自動拡張は無視されます"
+
+#, fuzzy
+msgid "Auto-restart on crash"
+msgstr "クラッシュ時に自動再起動"
 
 #, fuzzy
 msgid "Auto-shrink off"
@@ -8205,9 +8209,6 @@ msgstr "自動HTTP"
 
 msgid "Automatic HTTPs"
 msgstr "自動HTTPS"
-
-msgid "Automatic Updates"
-msgstr "自動アップデート"
 
 msgid "Automatic activation"
 msgstr "自動アクティベーション"
@@ -8262,7 +8263,8 @@ msgstr "自動テイクオーバー"
 msgid "Automatic updates"
 msgstr "自動的にアップデート"
 
-msgid "Automatic: Use existing user, if available. Otherwise create new user."
+#, fuzzy
+msgid "Automatic: use existing user, if available. Otherwise create new user."
 msgstr ""
 "自動： 利用可能な場合は既存のユーザーを使用します。そうでない場合は新しいユー"
 "ザーを作成します。"
@@ -8318,7 +8320,8 @@ msgstr "手動入力の必要なく、自動的にホストキーを保存"
 msgid "Automatically track downtimes of aggregation"
 msgstr "アグリゲーションのダウンタイムを自動でトラッキング"
 
-msgid "Automatically update agents at <i>Activate Changes</i>, if necessary"
+#, fuzzy
+msgid "Automatically update agents at <i>Activate changes</i>, if necessary"
 msgstr ""
 "必要に応じて、<i>変更のアクティブ化</i>でエージェントを自動的に更新します"
 
@@ -10663,19 +10666,6 @@ msgstr ""
 "このルールをホストに対して設定すると、通常のCheck_MKエージェントの代わりに、"
 "ランダムな監視データが作成されます。"
 
-msgid ""
-"By default the agent updater communicates with the Agent Bakery of the "
-"central site to update the agent. If you want to make the agent updater "
-"fetch its agent from its remote site, you need to configure this option to "
-"make it possible for the remote site to communicate with the central site on "
-"behalf of the agent updater."
-msgstr ""
-"デフォルトでは、エージェントアップデーターは中央サイトのエージェントベーカ"
-"リーと通信してエージェントを更新します。エージェントアップデーターにリモート"
-"サイトからエージェントを取得するようにしたい場合は、リモートサイトがエージェ"
-"ントアップデーターに代わって中央サイトと通信できるようにこのオプションを構成"
-"する必要があります。"
-
 #, python-brace-format
 msgid ""
 "By default, Checkmk does not import annotations. If this option is enabled, "
@@ -11099,6 +11089,20 @@ msgid ""
 msgstr ""
 "デフォルトでは、エージェントはいくつかのよく利用されている場所に基づいて動的"
 "に保存場所を決定します。代わりにフルパスを指定することができます。"
+
+#, fuzzy
+msgid ""
+"By default, the agent updater communicates with the Agent Bakery of the "
+"central site to update the agent. If you want to make the agent updater "
+"fetch its agent from its remote site, you need to configure this option to "
+"make it possible for the remote site to communicate with the central site on "
+"behalf of the agent updater."
+msgstr ""
+"デフォルトでは、エージェントアップデーターは中央サイトのエージェントベーカ"
+"リーと通信してエージェントを更新します。エージェントアップデーターにリモート"
+"サイトからエージェントを取得するようにしたい場合は、リモートサイトがエージェ"
+"ントアップデーターに代わって中央サイトと通信できるようにこのオプションを構成"
+"する必要があります。"
 
 #, fuzzy
 msgid ""
@@ -11643,9 +11647,6 @@ msgstr "CPUリスケールの最大負荷は指定されていません。"
 msgid "CPU reservation"
 msgstr "CPU予約"
 
-msgid "CPU resources: Cluster"
-msgstr "CPUリソース: クラスター"
-
 msgid "CPU resources: DaemonSet"
 msgstr "CPUリソース: デーモンセット"
 
@@ -11657,6 +11658,10 @@ msgstr "CPUリソース: 名前空間"
 
 msgid "CPU resources: StatefulSet"
 msgstr "CPUリソース: ステートフルセット"
+
+#, fuzzy
+msgid "CPU resources: cluster"
+msgstr "CPUリソース: クラスター"
 
 #, fuzzy
 msgid "CPU threads"
@@ -11831,7 +11836,8 @@ msgstr "モジュールを備えたデバイスのCPU利用率"
 msgid "CPU utilization on Linux/Unix"
 msgstr "Linux/UNIXでのCPU利用率"
 
-msgid "CPU utilization: Cluster"
+#, fuzzy
+msgid "CPU utilization: cluster"
 msgstr "CPU 利用率: クラスター"
 
 msgid "CPUs"
@@ -12949,8 +12955,9 @@ msgstr "Check Point powersupply"
 msgid "Check Point tunnel status"
 msgstr "チェックポイントトンネルステータス"
 
-msgid "Check SFTP Service"
-msgstr "SFTPサービスを確認する"
+#, fuzzy
+msgid "Check SFTP service"
+msgstr "FTPサービスを確認する"
 
 msgid "Check SMB share access"
 msgstr "SMB共有アクセスを確認する"
@@ -13625,7 +13632,8 @@ msgstr "Checkmk: BI: Secs"
 msgid "Checkmk: License verification failed"
 msgstr "Checkmk:ライセンス認証に失敗しました"
 
-msgid "Checkmk: Service Risk Advisory - agent signature keys expire"
+#, fuzzy
+msgid "Checkmk: Service risk advisory - agent signature keys expire"
 msgstr ""
 "Checkmk: サービスリスクアドバイザリ - エージェント署名キーの有効期限切れ"
 
@@ -14005,19 +14013,20 @@ msgid ""
 msgstr ""
 "使用するモデムを選択します。現在、対応しているのはTeltonika-TRB140のみです。"
 
+#, fuzzy
 msgid ""
 "Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
 "<ul><li><i>Do not remove anything</i>: Leave all files in place after "
 "uninstallation.<br><li><i>Remove data managed by the Checkmk agent</i>: "
 "Remove only files that got created on Checkmk agent installation. This "
-"includes files that came from bakery plugins, even if they have been edited "
+"includes files that came from Bakery plug-ins, even if they have been edited "
 "by a user. Keep runtime files that have been created after installation, "
 "like state files, registration files, and logs.<li><i>Remove all files and "
 "subdirectories</i>: Remove all files regardless of their origin.</"
 "ul><b>Caution</b>: Uninstallation also happens on every agent update! As a "
 "consequence, this rule will break automatic agent updates and TLS encrypted "
 "agent communication on setting <i>Remove all files and subdirectories</i>, "
-"since the removed files also include your agent updater and agent controller "
+"since the removed files also include your agent updater and Agent Controller "
 "registrations."
 msgstr ""
 "<tt>%PROGRAMDATA%\\checkmk</tt>フォルダー内のファイルの処理方法を選択してくだ"
@@ -15569,10 +15578,11 @@ msgstr ""
 "ルールがトリガーされたときに実行可能なアクションと、ユーザーによる手動アク"
 "ションを設定します。"
 
+#, fuzzy
 msgid ""
-"Configure the DNS domain name of your Active directory domain here, Checkmk "
-"will then query this domain for it's closest domain controller to "
-"communicate with."
+"Configure the DNS domain name of your Active Directory domain here, Checkmk "
+"will then query this domain for its closest domain controller to communicate "
+"with."
 msgstr ""
 "ここでActive DirectoryドメインのDNSドメイン名を構成すると、Checkmkはこのドメ"
 "インに、通信するのに最も近いドメインコントローラーを照会します。"
@@ -16200,8 +16210,8 @@ msgstr "コネクター：ホストの変更をキューに追加する"
 msgid "Connector: Collecting metric backend hosts on site  \"%s\""
 msgstr "コネクター：サイト \"%s\"でピギーバックホストを習得しています"
 
-#, python-format
-msgid "Connector: Collecting piggyback hosts on site  \"%s\""
+#, fuzzy, python-format
+msgid "Connector: Collecting piggyback hosts on site \"%s\""
 msgstr "コネクター：サイト \"%s\"でピギーバックホストを習得しています"
 
 #, fuzzy
@@ -17010,11 +17020,9 @@ msgstr "カウント"
 msgid "Count (number of recent occurrences)"
 msgstr "カウント(最近の発生数)"
 
-msgid "Count Groups"
+#, fuzzy
+msgid "Count groups"
 msgstr "グループを数える"
-
-msgid "Count Users"
-msgstr "ユーザーを数える"
 
 msgid "Count messages in interval"
 msgstr "間隔でメッセージを数える"
@@ -17048,6 +17056,10 @@ msgstr "OK状態のノードの数を数えます"
 
 msgid "Count until triggered"
 msgstr "トリガーされるまでのカウント"
+
+#, fuzzy
+msgid "Count users"
+msgstr "ユーザーを数える"
 
 msgid "Count, size and age of files"
 msgstr "ファイルの数、サイズ、および経過時間"
@@ -20364,9 +20376,6 @@ msgstr "VxVMプラグインをデプロイする"
 msgid "Deploy Windows McAfee AV client plug-in"
 msgstr "Windows McAfee AVクライアントプラグインをデプロイする"
 
-msgid "Deploy Windows Printer Queue plug-in"
-msgstr "Windowsプリンターキュープラグインをデプロイする"
-
 #, fuzzy
 msgid "Deploy Windows license plug-in"
 msgstr "Windowsライセンスプラグインをデプロイする"
@@ -20374,6 +20383,10 @@ msgstr "Windowsライセンスプラグインをデプロイする"
 #, fuzzy
 msgid "Deploy Windows multipath plug-in"
 msgstr "Windowsマルチパスプラグインをデプロイする"
+
+#, fuzzy
+msgid "Deploy Windows printer queue plug-in"
+msgstr "Windowsプリンターキュープラグインをデプロイする"
 
 #, fuzzy
 msgid "Deploy Windows updates plug-in"
@@ -21974,21 +21987,23 @@ msgstr "Unitrendsプラグインをデプロイしないでください"
 msgid "Do not deploy VxVM plug-in"
 msgstr "VxVMプラグインをデプロイしないでください"
 
-msgid "Do not deploy Windows License plug-in"
-msgstr "Windowsライセンスプラグインを展開しないでください"
-
 msgid "Do not deploy Windows McAfee AV client plug-in"
 msgstr "Windows McAfee AVクライアントプラグインをデプロイしないでください"
-
-msgid "Do not deploy Windows Printer Queue plug-in"
-msgstr "Windowsプリンターキュープラグインをデプロイしないでください"
 
 msgid "Do not deploy Windows Updates plug-in"
 msgstr "Windows Updateプラグインを展開しないでください"
 
 #, fuzzy
+msgid "Do not deploy Windows license plug-in"
+msgstr "Windowsライセンスプラグインを展開しないでください"
+
+#, fuzzy
 msgid "Do not deploy Windows multipath plug-in"
 msgstr "Windowsマルチパスプラグインを展開しないでください"
+
+#, fuzzy
+msgid "Do not deploy Windows printer queue plug-in"
+msgstr "Windowsプリンターキュープラグインをデプロイしないでください"
 
 msgid "Do not deploy automatic agent update plug-in"
 msgstr "エージェントの自動アップデートプラグインをデプロイしないでください"
@@ -23824,10 +23839,12 @@ msgstr "最小権限ロール用の空のテンプレート"
 msgid "Enable"
 msgstr "有効にする"
 
-msgid "Enable 'Run As <b>Local Group</b>' for scripts"
+#, fuzzy
+msgid "Enable 'Run as <b>local group</b>' for scripts"
 msgstr "スクリプトに対して'<b>ローカルグループ</b>として実行'を有効にする"
 
-msgid "Enable 'Run As <b>User</b>' for scripts"
+#, fuzzy
+msgid "Enable 'Run as <b>user</b>' for scripts"
 msgstr "スクリプトに対して'<b>ユーザー</b>として実行'を有効にする"
 
 #, fuzzy
@@ -24394,7 +24411,8 @@ msgstr "変更を強制する"
 msgid "Enforce for all users"
 msgstr "すべてのユーザーに適用"
 
-msgid "Enforce lower case User-IDs."
+#, fuzzy
+msgid "Enforce lower case user IDs."
 msgstr "小文字のユーザーIDを適用します。"
 
 msgid "Enforce primary address family"
@@ -25191,13 +25209,16 @@ msgstr "直近4時間の出来事（ダッシュボード用）"
 msgid "Events of the last 4 hours."
 msgstr "直近4時間のイベント。"
 
-msgid "Events: Host name"
+#, fuzzy
+msgid "Events: host name"
 msgstr "イベント：ホスト名"
 
-msgid "Events: Syslog application"
+#, fuzzy
+msgid "Events: syslog application"
 msgstr "イベント: Syslogアプリケーション"
 
-msgid "Events: Syslog facility"
+#, fuzzy
+msgid "Events: syslog facility"
 msgstr "イベント:Syslogファシリティ"
 
 msgid "Every day"
@@ -25497,9 +25518,6 @@ msgstr "このスケジュールを今すぐ実行する"
 msgid "Execute this schedule now in background job"
 msgstr "このスケジュールをバックグラウンドジョブで今すぐ実行します"
 
-msgid "Execution Mode"
-msgstr "実行モード"
-
 msgid "Execution configuration"
 msgstr "実行構成"
 
@@ -25519,6 +25537,10 @@ msgstr "この %s の実行履歴"
 
 msgid "Execution interval"
 msgstr "実行間隔"
+
+#, fuzzy
+msgid "Execution mode"
+msgstr "実行モード"
 
 msgid "Execution of checks"
 msgstr "チェックの実行"
@@ -25600,11 +25622,8 @@ msgstr "期待されるDC"
 msgid "Expected DNS answers"
 msgstr "期待されるDNSの回答"
 
-msgid "Expected String"
-msgstr "期待される文字列"
-
 #, fuzzy
-msgid "Expected VM Generation"
+msgid "Expected VM generation"
 msgstr "予想される経路の状況"
 
 msgid "Expected active paths"
@@ -25681,6 +25700,10 @@ msgstr "期待される特定のゲートウェイフォルダ"
 
 msgid "Expected state"
 msgstr "期待される状態"
+
+#, fuzzy
+msgid "Expected string"
+msgstr "期待される文字列"
 
 msgid "Expected update interval"
 msgstr "予想される更新間隔"
@@ -27647,7 +27670,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"For these hosts there is a new agent available that is not yet installed. "
+"For these hosts, there is a new agent available that is not yet installed. "
 "This simply means that the target agent configuration hash does not match "
 "the hash of the configuration that is currently installed."
 msgstr ""
@@ -27970,7 +27993,8 @@ msgstr "空き"
 msgid "Free DHCP leases"
 msgstr "フリーDHCPース"
 
-msgid "Free Pods: Cluster"
+#, fuzzy
+msgid "Free Pods: cluster"
 msgstr "空きPods: クラスター"
 
 msgid "Free SGA memory available"
@@ -29564,67 +29588,6 @@ msgid "Helvetica"
 msgstr "ヘルベチカ"
 
 msgid ""
-"Here you can configure absolute levels for total restart count and restarts "
-"in the last hour."
-msgstr ""
-"ここでは、総際起動回数と過去1時間の再起動回数の絶対値を設定することができま"
-"す。"
-
-msgid ""
-"Here you can configure levels for usage, requests utilization and limits "
-"utilization, respectively."
-msgstr ""
-"ここでは、使用量、リクエスト使用率、制限使用率のレベルをそれぞれ設定すること"
-"ができます。"
-
-msgid ""
-"Here you can configure levels for usage, requests utilization, limits "
-"utilization and node utilization, respectively."
-msgstr ""
-"ここでは、使用量、リクエスト使用率、制限使用率、ノード使用率のレベルをそれぞ"
-"れ設定することができます。"
-
-#, fuzzy
-msgid "Here you can configure messages filtering parameters"
-msgstr "ここで、タイムアウト設定を構成できます。"
-
-#, fuzzy
-msgid "Here you can configure messages filtering parameters using event user"
-msgstr "ここでは、タイムアウト設定を秒単位で構成できます。"
-
-msgid ""
-"Here you can configure messages filtering parameters using regular "
-"expressions. The rule is case insensitive."
-msgstr ""
-"ここでは、正規表現を使用してメッセージのフィルタリングパラメータを設定できま"
-"す。このルールでは大文字と小文字は区別されません。"
-
-msgid ""
-"Here you can configure which messages should be discovered and reported from "
-"which Eventlog. When you set the severity to <i>disabled</i> then this "
-"Eventlog will totally be ignored. The switch <i>without context</i> will "
-"disable sending so-called context messages. When at least one new relevant "
-"message is being found in an Eventlog, the agent usually sends <i>all</i> "
-"new messages from that check cycle. This makes it more convenient when "
-"viewing the messages in Checkmk. In high-volume logfiles it might be "
-"necessary to switch the context off in order to save networking and disk "
-"resources. <b>Note</b>: When several configuration tuning entries match for "
-"a logfile then only the first one is being executed. So it does not make "
-"sense to create more then one entry for <i>All Eventlogs</i>."
-msgstr ""
-"ここでは、どのメッセージをどのイベントログから検出して報告するかを構成できま"
-"す。重大度を<i>無効</i>に設定すると、このイベントログは完全に無視されます。"
-"<i>コンテキストなし</i>のスイッチは、いわゆるコンテキストメッセージの送信を無"
-"効にします。イベントログで少なくとも1つの新しい関連メッセージが見つかると、"
-"エージェントは通常、そのチェックサイクルから<i>すべて</i>の新しいメッセージを"
-"送信します。これにより、Checkmkでメッセージを表示するときに便利になります。大"
-"量のログファイルでは、ネットワークとディスクリソースを節約するために、コンテ"
-"キストをオフにする必要がある場合があります。<b>注</b>:複数の構成調整エントリ"
-"がログファイルに一致する場合、最初のエントリのみが実行されます。したがって、"
-"<i>すべてのイベントログ</i>に対して複数のエントリを作成することは意味がありま"
-"せん。"
-
-msgid ""
 "Here you can configured the credentials to be used. Keep in mind that the "
 "<tt>automation</tt> user need to exist if you choose this option"
 msgstr ""
@@ -29661,56 +29624,6 @@ msgstr ""
 "\"_blank\">こちら</a>で説明されているようにKibanaクエリ言語を使用できます。検"
 "索速度を最適化するには、定義済みのインデックスとフィールドを使用します。そう"
 "しないと、すべてのインデックスとフィールドが検索されます。"
-
-msgid ""
-"Here you can provide CA or self-signed certificates that will be sent to the "
-"contacting agent updater alongside the remote site's URL on registration or "
-"update. This list will be used by the agent updater to verify HTTPS "
-"connections to Checkmk sites."
-msgstr ""
-"ここでは、登録または更新時にリモートサイトのURLと一緒に連絡先エージェントアッ"
-"プデーターに送信されるCAまたは自己署名証明書を提供できます。このリストは、"
-"CheckmkサイトへのHTTPS接続を確認するためにエージェントアップデーターによって"
-"使用されます。"
-
-#, fuzzy
-msgid ""
-"Here you can see all hosts that have sent an error status to the deployment "
-"server."
-msgstr ""
-"ここでは、デプロイサーバーにネガティブステータスを送信したすべてのホストを確"
-"認できます。"
-
-msgid ""
-"Here you can specify a service name. If this parameter is not set, the "
-"service is named <tt>TCP Port [PORT NUMBER]</tt>"
-msgstr ""
-"ここで、サービス名を指定できます。このパラメータが設定されていない場合、サー"
-"ビスの名前は<tt>TCP Port [PORT NUMBER]</tt>になります"
-
-msgid ""
-"Here you can specify the subject text instead of default text 'Check_MK-Mail-"
-"Loop'."
-msgstr ""
-"ここでは、デフォルトのテキスト\"Check_MK-Mail-Loop\"の代わりに件名のテキスト"
-"を指定できます。"
-
-msgid ""
-"Here you get feedback about recent agent rollouts. If you e.g. restrict a "
-"new rollout to a known list of five hosts, then these five should appear "
-"here at latest after one configured update interval."
-msgstr ""
-"ここでは、最近のエージェントのロールアウトに関するフィードバックを取得しま"
-"す。たとえば、新しいロールアウトを5つのホストの既知のリストに制限する場合、こ"
-"れらの5つは、構成された1つの更新間隔の後に遅くともここに表示されます。"
-
-msgid ""
-"Here you see hosts that have registered for updates but have no available "
-"agent. You need to bake agents again in order to create agents for them."
-msgstr ""
-"ここには、更新に登録されているが、使用可能なエージェントがないホストが表示さ"
-"れます。エージェントのエージェントを作成するには、エージェントを再度ベイク処"
-"理する必要があります。"
 
 #, fuzzy
 msgid ""
@@ -29825,6 +29738,14 @@ msgstr ""
 "ここでは、総際起動回数と過去1時間の再起動回数の絶対値を設定することができま"
 "す。"
 
+#, fuzzy
+msgid ""
+"Here, you can configure absolute levels for total restart count and restarts "
+"in the last hour."
+msgstr ""
+"ここでは、総際起動回数と過去1時間の再起動回数の絶対値を設定することができま"
+"す。"
+
 msgid ""
 "Here, you can configure additional properties of the dashboard. This is "
 "completely optional and only needed to create more advanced dashboards. For "
@@ -29848,6 +29769,38 @@ msgid ""
 msgstr ""
 "ここでは、そのサイトに適用する必要があるグローバル設定を構成できます。<b>注</"
 "b>: これは、サイトが分散セットアップの一部である場合にのみ意味があります。"
+
+#, fuzzy
+msgid ""
+"Here, you can configure levels for usage, requests utilization and limits "
+"utilization, respectively."
+msgstr ""
+"ここでは、使用量、リクエスト使用率、制限使用率のレベルをそれぞれ設定すること"
+"ができます。"
+
+#, fuzzy
+msgid ""
+"Here, you can configure levels for usage, requests utilization, limits "
+"utilization and node utilization, respectively."
+msgstr ""
+"ここでは、使用量、リクエスト使用率、制限使用率、ノード使用率のレベルをそれぞ"
+"れ設定することができます。"
+
+#, fuzzy
+msgid "Here, you can configure messages filtering parameters"
+msgstr "ここで、タイムアウト設定を構成できます。"
+
+#, fuzzy
+msgid "Here, you can configure messages filtering parameters using event user"
+msgstr "ここでは、タイムアウト設定を秒単位で構成できます。"
+
+#, fuzzy
+msgid ""
+"Here, you can configure messages filtering parameters using regular "
+"expressions. The rule is case insensitive."
+msgstr ""
+"ここでは、正規表現を使用してメッセージのフィルタリングパラメータを設定できま"
+"す。このルールでは大文字と小文字は区別されません。"
 
 #, fuzzy
 msgid ""
@@ -29908,6 +29861,32 @@ msgid ""
 msgstr ""
 "ここで、RRDファイルの作成がログに記録されるかどうかとその方法を構成できます"
 "(ログファイルvar/log/cmc.logに)"
+
+#, fuzzy
+msgid ""
+"Here, you can configure which messages should be discovered and reported "
+"from which event log. When you set the severity to <i>disabled</i> then this "
+"event log will totally be ignored. The switch <i>without context</i> will "
+"disable sending so-called context messages. When at least one new relevant "
+"message is being found in an event log, the agent usually sends <i>all</i> "
+"new messages from that check cycle. This makes it more convenient when "
+"viewing the messages in Checkmk. In high-volume log files it might be "
+"necessary to switch the context off in order to save networking and disk "
+"resources. <b>Note</b>: When several configuration tuning entries match for "
+"a log file then only the first one is being executed. So it does not make "
+"sense to create more then one entry for <i>All event logs</i>."
+msgstr ""
+"ここでは、どのメッセージをどのイベントログから検出して報告するかを構成できま"
+"す。重大度を<i>無効</i>に設定すると、このイベントログは完全に無視されます。"
+"<i>コンテキストなし</i>のスイッチは、いわゆるコンテキストメッセージの送信を無"
+"効にします。イベントログで少なくとも1つの新しい関連メッセージが見つかると、"
+"エージェントは通常、そのチェックサイクルから<i>すべて</i>の新しいメッセージを"
+"送信します。これにより、Checkmkでメッセージを表示するときに便利になります。大"
+"量のログファイルでは、ネットワークとディスクリソースを節約するために、コンテ"
+"キストをオフにする必要がある場合があります。<b>注</b>:複数の構成調整エントリ"
+"がログファイルに一致する場合、最初のエントリのみが実行されます。したがって、"
+"<i>すべてのイベントログ</i>に対して複数のエントリを作成することは意味がありま"
+"せん。"
 
 #, fuzzy
 msgid ""
@@ -30200,6 +30179,18 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"Here, you can provide CA or self-signed certificates that will be sent to "
+"the contacting agent updater alongside the remote site's URL on registration "
+"or update. This list will be used by the agent updater to verify HTTPS "
+"connections to Checkmk sites."
+msgstr ""
+"ここでは、登録または更新時にリモートサイトのURLと一緒に連絡先エージェントアッ"
+"プデーターに送信されるCAまたは自己署名証明書を提供できます。このリストは、"
+"CheckmkサイトへのHTTPS接続を確認するためにエージェントアップデーターによって"
+"使用されます。"
+
+#, fuzzy
+msgid ""
 "Here, you can see a list of all deprecated rule sets (which are not used by "
 "Checkmk anymore). If you have defined some rules here, you might have to "
 "migrate the rules to their successors. Please refer to the release notes or "
@@ -30209,6 +30200,14 @@ msgstr ""
 "ストを見ることができます。ここでルールを定義した場合、そのルールを後継ルール"
 "に移行する必要があるかもしれません。詳細については、ルールセットのリリース"
 "ノートまたはコンテキストヘルプを参照してください。"
+
+#, fuzzy
+msgid ""
+"Here, you can see all hosts that have sent an error status to the deployment "
+"server."
+msgstr ""
+"ここでは、デプロイサーバーにネガティブステータスを送信したすべてのホストを確"
+"認できます。"
 
 #, fuzzy, python-format
 msgid ""
@@ -30360,6 +30359,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"Here, you can specify a service name. If this parameter is not set, the "
+"service is named <tt>TCP Port [PORT NUMBER]</tt>"
+msgstr ""
+"ここで、サービス名を指定できます。このパラメータが設定されていない場合、サー"
+"ビスの名前は<tt>TCP Port [PORT NUMBER]</tt>になります"
+
+#, fuzzy
+msgid ""
 "Here, you can specify alternative names that the service might have. This "
 "helps, when the exact spelling of the services can change from one version "
 "to another."
@@ -30437,6 +30444,14 @@ msgstr "ここでは、ネットワークインターフェイスの測定単位
 
 #, fuzzy
 msgid ""
+"Here, you can specify the subject text instead of default text 'Check_MK-"
+"Mail-Loop'."
+msgstr ""
+"ここでは、デフォルトのテキスト\"Check_MK-Mail-Loop\"の代わりに件名のテキスト"
+"を指定できます。"
+
+#, fuzzy
+msgid ""
 "Here, you can specify the total memory usage levels for clustered hosts."
 msgstr ""
 "ここでは、クラスター化されたホストの合計メモリ使用量レベルを指定できます。"
@@ -30477,6 +30492,16 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"Here, you get feedback about recent agent rollouts. If you e.g. restrict a "
+"new rollout to a known list of five hosts, then these five should appear "
+"here at latest after one configured update interval."
+msgstr ""
+"ここでは、最近のエージェントのロールアウトに関するフィードバックを取得しま"
+"す。たとえば、新しいロールアウトを5つのホストの既知のリストに制限する場合、こ"
+"れらの5つは、構成された1つの更新間隔の後に遅くともここに表示されます。"
+
+#, fuzzy
+msgid ""
 "Here, you have to use macros which are defined above below <tt>Macros for "
 "joining service data or inventory tables</tt>. The joining of different "
 "inventory tables is based on these macros."
@@ -30489,6 +30514,15 @@ msgstr ""
 #, fuzzy
 msgid "Here, you need to insert the original file or path name."
 msgstr "ここで、元のファイルまたはパス名を挿入する必要があります"
+
+#, fuzzy
+msgid ""
+"Here, you see hosts that have registered for updates but have no available "
+"agent. You need to bake agents again in order to create agents for them."
+msgstr ""
+"ここには、更新に登録されているが、使用可能なエージェントがないホストが表示さ"
+"れます。エージェントのエージェントを作成するには、エージェントを再度ベイク処"
+"理する必要があります。"
 
 msgid "Hidden"
 msgstr "隠し"
@@ -33274,15 +33308,15 @@ msgstr ""
 "有効にすると、 \"Failed Action\"エントリがメインチェックに表示され、チェック"
 "はWARN状態になります。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "If activated, the Agent Bakery will bake a generic agent package for this "
-"folder. In the configuration all rules are considered that unconditionally "
-"match all hosts in the folder. This package will be created even if the "
+"folder. In the configuration all rules that unconditionally match all hosts "
+"in the folder are considered. This package will be created even if the "
 "folder is empty.\n"
-"This is option is useful in combination with the %s feature of the %s. It "
-"allows for baking agent packages for hosts which will be created in this "
-"folder in the future, usually via the auto registration."
+"This option is useful in combination with the %s feature of the %s. It "
+"allows baking agent packages for hosts which will be created in this folder "
+"in the future, usually via the auto-registration."
 msgstr ""
 "有効にすると、エージェントベーカリーは、このフォルダのための一般的なエージェ"
 "ントパッケージをベイクします。設定では、フォルダ内のすべてのホストに無条件に"
@@ -34750,14 +34784,15 @@ msgstr ""
 "Checkmk の使用を継続したい場合は、%s をサポートするライセンスを購入するか、"
 "%s の Checkmk 営業チームまでご連絡ください。"
 
+#, fuzzy
 msgid ""
 "If you want to run your own custom agent plug-ins on Windows, simply put "
 "them into the subdirectory <tt>plugins</tt> of your agent's installation "
 "directory. <i>Local checks</i> work just the same, but are installed in "
 "<tt>local</tt>. Plug-ins that are deployed with the Agent Bakery are "
-"installed by the MSI installer into the same directory. This ruleset limits "
+"installed by the MSI installer into the same directory. This rule set limits "
 "the file extensions that the agent will run. This for example avoids "
-"starting a Notepad when a file with the extension <tt>.txt</tt> is found. "
+"starting a notepad when a file with the extension <tt>.txt</tt> is found. "
 "<b>Note:</b> If you remove some of the default extensions, not all of the "
 "shipped agent plug-ins will continue to work!<br><br>Specify the extensions "
 "in lower case and without a leading dot."
@@ -44214,12 +44249,12 @@ msgid "Monitoring state if task is not enabled"
 msgstr "タスクが有効になっていない場合の状態の監視"
 
 #, fuzzy
-msgid "Monitoring state if the VPN peer is not reachable"
-msgstr "タスクが有効になっていない場合の状態の監視"
+msgid "Monitoring state if the Cluster Collector reports no machine metrics"
+msgstr "クラスタコレクターがマシンメトリクスを報告しない場合の監視状態"
 
 #, fuzzy
-msgid "Monitoring state if the cluster collector reports no machine metrics"
-msgstr "クラスタコレクターがマシンメトリクスを報告しない場合の監視状態"
+msgid "Monitoring state if the VPN peer is not reachable"
+msgstr "タスクが有効になっていない場合の状態の監視"
 
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr "誤ったユニットがアクティブ/スタンバイの場合の監視状態"
@@ -46173,10 +46208,6 @@ msgstr "検索なし、引数のリストを指定"
 
 #, fuzzy, python-format
 msgid "No site with ID \"%s\" is configured."
-msgstr "IP範囲が構成されていません"
-
-#, fuzzy, python-format
-msgid "No site with id \"%s\" is configured."
 msgstr "IP範囲が構成されていません"
 
 msgid "No smarthosts"
@@ -48308,7 +48339,7 @@ msgid "On down host"
 msgstr "ダウンホスト上"
 
 #, fuzzy
-msgid "On every Agent controller registration"
+msgid "On every Agent Controller registration"
 msgstr "エージェントコントローラー自動登録"
 
 #, fuzzy
@@ -53103,9 +53134,10 @@ msgstr "ポリシー固有のレベル(クラスターモードのみ)"
 msgid "Pool name"
 msgstr "プール名"
 
+#, fuzzy
 msgid ""
 "Populates the alias attribute of the Setup user by synchronizing an "
-"attribute from the LDAP user account. By default the LDAP attribute <tt>cn</"
+"attribute from the LDAP user account. By default, the LDAP attribute <tt>cn</"
 "tt> is used."
 msgstr ""
 "LDAPユーザーアカウントの属性を同期することにより、セットアップユーザーのエイ"
@@ -59297,6 +59329,8 @@ msgstr ""
 "は <tt>AND</tt>、<tt>OR</tt>、<tt>NOT</tt> 演算子と組み合わせることもできま"
 "す。"
 
+#. weblate-flags: read-only, domain-specific
+#, fuzzy
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
 "CronJobs are treated separately as they are usually quite short lived. Those "
@@ -59305,7 +59339,7 @@ msgid ""
 "having their own host. Your Dynamic host management rule should be "
 "configured accordingly to avoid that the piggyback hosts for terminated "
 "CronJob pods are kept for too long. This 'Pods of CronJobs' option has no "
-"effect if Pods are not monitored"
+"effect if Pods are not monitored."
 msgstr ""
 "監視したいKubernetesオブジェクトを選択します。CronJobによって制御されるPod"
 "は、通常非常に短命であるため、別に扱われます。これらのPodは、通常のPodと同じ"
@@ -67332,22 +67366,23 @@ msgid ""
 "The LDAP attribute whose contents shall be synced into this custom attribute."
 msgstr "このカスタム属性に内容が同期されるLDAP属性。"
 
+#, fuzzy
 msgid ""
 "The LDAP connection suffix can be used to distinguish equal named objects "
 "(name conflicts), for example user accounts, from different LDAP connections."
 "<br>It is used in the following situations:<br><br>During LDAP "
 "synchronization, the LDAP sync might discover that a user to be synchronized "
-"from from the current LDAP is already being synchronized from another LDAP "
-"connection. Without the suffix configured this results in a name conflict "
+"from the current LDAP is already being synchronized from another LDAP "
+"connection. Without the suffix configured, this results in a name conflict "
 "and the later user not being synchronized. If the connection has a suffix "
 "configured, this suffix is added to the later username in case of the name "
 "conflict to resolve it. The user will then be named <tt>[username]@[suffix]</"
-"tt> instead of just <tt>[username]</tt>.<br><br>In the case a user which "
-"users name is existing in multiple LDAP directories, but associated to "
-"different persons, your user can insert <tt>[username]@[suffix]</tt> during "
-"login instead of just the plain <tt>[username]</tt> to tell which LDAP "
-"directory he is assigned to. Users without name conflict just need to "
-"provide their regular username as usual."
+"tt> instead of just <tt>[username]</tt>.<br><br>In case a user's username "
+"exists in multiple LDAP directories, but associated to different persons, "
+"the user can insert <tt>[username]@[suffix]</tt> during login instead of "
+"just the plain <tt>[username]</tt> to specify which LDAP directory they are "
+"assigned to. Users without name conflict just need to provide their regular "
+"username as usual."
 msgstr ""
 "LDAP接続サフィックスは、ユーザーアカウントなど、同じ名前のオブジェクト(名前の"
 "競合)を異なるLDAP接続から区別するために使用できます。<br>次の状況で使用されま"
@@ -69281,9 +69316,10 @@ msgid "The graphical user interface (GUI) URL must end with /check_mk/"
 msgstr ""
 "グラフィカルインターフェイス(GUI)ユーザーは /check_mk/で終わる必要があります"
 
+#, fuzzy
 msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "
-"either deleting them or moving them to a subfolder. By default nothing is "
+"either deleting them or moving them to a subfolder. By default, nothing is "
 "cleaned up."
 msgstr ""
 "処理されたメッセージ(<i>件名の一致</i>を参照)は、メッセージを削除するか、サブ"
@@ -71135,10 +71171,11 @@ msgstr "ルールの条件が一致しません。"
 msgid "The rule does not match"
 msgstr "ルールが一致しません"
 
+#, fuzzy
 msgid ""
 "The rule gives the possibility to run any script using a given user account. "
-"There are two modes of the rule: <i>group mode</i>, in the case Windows "
-"Agent provides its own internal user in the requested group to run the "
+"There are two modes of the rule: <i>group mode</i>, in this case Windows "
+"agent provides its own internal user in the requested group to run the "
 "script, or <i>user mode</i>, in this case you should specify the full "
 "credentials. The <i>group mode</i> is more secure, because no credentials "
 "need to be stored anywhere, except in the agent internally. When using the "
@@ -74889,10 +74926,11 @@ msgstr ""
 "gnuwin32.sourceforge.net/packages/dmidecode.htm'>ここ</a>から無償でダウンロー"
 "ドできます。 "
 
+#, fuzzy
 msgid ""
 "This plug-in synchronizes a field of the users LDAP account to the pager "
 "attribute of the Setup user accounts, which is then forwarded to the "
-"monitoring core and can be used for notifications. By default the LDAP "
+"monitoring core and can be used for notifications. By default, the LDAP "
 "attribute <tt>mobile</tt> is used."
 msgstr ""
 "このプラグインは、ユーザーのLDAPアカウントのフィールドをセットアップユーザー"
@@ -75792,6 +75830,36 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"This rule set allows to deploy an agent plug-in that updates the Checkmk "
+"agent for Linux, Solaris and Windows on a regular base. The agent will look "
+"for new updates on a regular base and update itself, when a newly baked "
+"agent is available, released and signed. <br><b>Note<sup>1</sup>:</b> This "
+"update mechanism is baked into the agent itself. So after activating this "
+"feature you need at least one more manual update of the agent, of course."
+"<br><b>Note<sup>2</sup>:</b> After deploying this new plug-in it must be "
+"registered at your Checkmk server. This can be done either by registering "
+"the Agent Controller, or by manual agent updater registration call. "
+"Customizable in _Registration_ option below. See there for details."
+"<br><b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
+"Python 3.7 installation (or newer) with installed python packages "
+"\"cryptography\", \"requests\" and \"PySocks\" is required on the target "
+"hosts."
+msgstr ""
+"このルールセットを使用すると、Linux、Solaris、およびWindows用のCheckmkエー"
+"ジェントを定期的に更新するエージェントプラグインを展開できます。エージェント"
+"は定期的に新しい更新を探し、新しくベイク処理されたエージェントが利用可能にな"
+"り、リリースされ、署名されると、自身を更新します。<br><b>注意<sup>1</sup>:</"
+"b>この更新メカニズムは、エージェント自体に組み込まれています。したがって、こ"
+"の機能をアクティブにした後は、もちろん、エージェントを少なくとももう1回手動で"
+"更新する必要があります。<br><b>注意<sup>2</sup>:</b>この新しいプラグインをデ"
+"プロイした後、アップデートサーバーにエージェントを登録するために、手動で一度"
+"呼び出す必要があります。<tt>cmk-update-agent register -H <i>HOST</i></tt> "
+"(UNIX)、または<tt>check_mk_agent.exe updater register -H <i>HOST</i></tt> "
+"(Windows)を呼び出します。この<i>HOST</i> は監視中のホスト名と一致する必要があ"
+"ります。"
+
+#, fuzzy
+msgid ""
 "This rule set allows you to configure explicit ping monitoring of hosts. "
 "Usually a ping is being used as a host check, so this is not necessary. "
 "There are some situations, however, where this can be useful. One of them is "
@@ -76236,36 +76304,6 @@ msgid ""
 msgstr ""
 "このルールは、HPUXサーバー上のマルチパスLUNのさまざまなパスの予想数を設定しま"
 "す"
-
-#, fuzzy
-msgid ""
-"This ruleset allows to deploy an agent plug-in that updates the Checkmk "
-"agent for Linux, Solaris and Windows on a regular base. The agent will look "
-"for new updates on a regular base and update itself, when a newly baked "
-"agent is available, released and signed. <br><b>Note<sup>1</sup>:</b> This "
-"update mechanism is baked into the agent itself. So after activating this "
-"feature you need at least one more manual update of the agent, of course."
-"<br><b>Note<sup>2</sup>:</b> After deploying this new plug-in it must be "
-"registered at your Checkmk server. This can be done either by registering "
-"the agent controller, or by manual agent updater registration call. "
-"Customizable in _Registration_ option below. See there for details."
-"<br><b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
-"Python 3.7 installation (or newer) with installed python packages "
-"\"cryptography\", \"requests\" and \"PySocks\" is required on the target "
-"hosts."
-msgstr ""
-"このルールセットを使用すると、Linux、Solaris、およびWindows用のCheckmkエー"
-"ジェントを定期的に更新するエージェントプラグインを展開できます。エージェント"
-"は定期的に新しい更新を探し、新しくベイク処理されたエージェントが利用可能にな"
-"り、リリースされ、署名されると、自身を更新します。<br><b>注意<sup>1</sup>:</"
-"b>この更新メカニズムは、エージェント自体に組み込まれています。したがって、こ"
-"の機能をアクティブにした後は、もちろん、エージェントを少なくとももう1回手動で"
-"更新する必要があります。<br><b>注意<sup>2</sup>:</b>この新しいプラグインをデ"
-"プロイした後、アップデートサーバーにエージェントを登録するために、手動で一度"
-"呼び出す必要があります。<tt>cmk-update-agent register -H <i>HOST</i></tt> "
-"(UNIX)、または<tt>check_mk_agent.exe updater register -H <i>HOST</i></tt> "
-"(Windows)を呼び出します。この<i>HOST</i> は監視中のホスト名と一致する必要があ"
-"ります。"
 
 #, fuzzy
 msgid ""
@@ -78291,7 +78329,7 @@ msgid ""
 "To start updating the agent package, the agent updater must register at a "
 "monitoring site.<br><br><i>New with Checkmk 2.5</i>: By default, the agent "
 "updater will be registered by the agent controller, after its own successful "
-"registration, at the same site and with the same hostname.<br><br>Here you "
+"registration, at the same site and with the same host name.<br><br>Here you "
 "can configure the overwriting behavior of subsequent agent controller "
 "registrations, or opt to skip the agent controller triggered agent updater "
 "registration entirely.<br>Consider the differences between agent controller "
@@ -84340,8 +84378,9 @@ msgstr ""
 "メソッドによるログインを無効にしています。すべてのユーザーに対してGETメソッド"
 "によるログインを有効にするには、このプロパティを使用します。"
 
+#, fuzzy
 msgid ""
-"Using this option you can define an optional LDAP filter which is used "
+"Using this option, you can define an optional LDAP filter which is used "
 "during LDAP searches. It can be used to only handle a subset of the users "
 "below the given base DN.<br><br>Some common examples:<br><br> All user "
 "objects in LDAP:<br> <tt>(&(objectclass=user)(objectcategory=person))</"
@@ -84361,8 +84400,9 @@ msgstr ""
 "(objectcategory=person)(memberof:1.2.840.113556.1.4.1941:=CN=cmk-"
 "users,OU=groups,DC=example,DC=com))</tt><br>"
 
+#, fuzzy
 msgid ""
-"Using this option you can define an optional LDAP filter which is used "
+"Using this option, you can define an optional LDAP filter which is used "
 "during group related LDAP searches. It can be used to only handle a subset "
 "of the groups below the given base DN.<br><br>e.g. <tt>(objectclass=group)</"
 "tt>"
@@ -84372,8 +84412,9 @@ msgstr ""
 "プのサブセットのみを処理するために使用されます。<br><br>e.g. "
 "<tt>(objectclass=group)</tt>"
 
+#, fuzzy
 msgid ""
-"Using this option you can define the DN of a group object which is used to "
+"Using this option, you can define the DN of a group object which is used to "
 "filter the users. Only members of this group will then be synchronized. This "
 "is a filter which can be used to extend capabilities of the regular \"Search "
 "Filter\". Using the search filter you can only define filters which directly "
@@ -84382,10 +84423,10 @@ msgid ""
 "some directories do not have such attributes because the memberships are "
 "stored in the group objects as e.g. <tt>member</tt> attributes. You should "
 "use the regular search filter whenever possible and only use this filter "
-"when it is really necessary. Finally you can say, you should not use this "
-"option when using Active Directory. This option is necessary in OpenLDAP "
-"directories when you like to filter by group membership.<br><br>If using, "
-"give a plain distinguished name of a group here, e. g. <tt>CN=cmk-"
+"when it is really necessary. So, this option should not be used when using "
+"Active Directory. This option is necessary in OpenLDAP directories when you "
+"want to filter by group membership.<br><br>If used, enter a plain "
+"distinguished name of a group here, e. g. <tt>CN=cmk-"
 "users,OU=groups,DC=example,DC=com</tt>"
 msgstr ""
 "このオプションを使用すると、ユーザーのフィルタリングに使用されるグループオブ"
@@ -87030,11 +87071,12 @@ msgstr ""
 "るメッセージの最も古いメッセージは、左側のメッセージが最大サイズの半分になる"
 "まで破棄されます。"
 
+#, fuzzy
 msgid ""
 "When the value of this attribute changes for a user account, all current "
 "authenticated sessions of the user are invalidated and the user must login "
-"again. By default this field uses the fields which hold the time of the last "
-"password change of the user."
+"again. By default, this field uses the fields which hold the time of the "
+"last password change of the user."
 msgstr ""
 "この属性の値がユーザーアカウントで変更されると、ユーザーの現在認証されている"
 "すべてのセッションが無効になり、ユーザーは再度ログインする必要があります。デ"
@@ -87588,6 +87630,10 @@ msgid "Windows Time service peers"
 msgstr "Windowsサービス"
 
 #, fuzzy
+msgid "Windows Time service status"
+msgstr "サービスステータスを表示する"
+
+#, fuzzy
 msgid "Windows Update notification time"
 msgstr "Windows認証"
 
@@ -87632,10 +87678,6 @@ msgstr "Windowsタスクスケジューラ"
 #, fuzzy
 msgid "Windows time service peers summary"
 msgstr "Windowsサービスの概要"
-
-#, fuzzy
-msgid "Windows time service status"
-msgstr "サービスステータスを表示する"
 
 msgid "Windows, Linux, Solaris, AIX"
 msgstr "Windows、Linux、Solaris、AIX"
@@ -97862,6 +97904,20 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Automatic Updates"
+#~ msgstr "自動アップデート"
+
+#~ msgid "Check SFTP Service"
+#~ msgstr "SFTPサービスを確認する"
+
+#, fuzzy, python-format
+#~ msgid "No site with id \"%s\" is configured."
+#~ msgstr "IP範囲が構成されていません"
+
+#, fuzzy
+#~ msgid "Windows time service status"
+#~ msgstr "サービスステータスを表示する"
 
 #~ msgid "1 Host"
 #~ msgstr "1ホスト"

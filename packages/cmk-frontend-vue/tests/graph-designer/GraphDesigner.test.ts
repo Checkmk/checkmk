@@ -419,7 +419,7 @@ test("Graph line of type 'query' has help text", () => {
     }
   })
 
-  const helpTextElement = screen.getByLabelText('Help: Metric backend (Custom query)')
+  const helpTextElement = screen.getByLabelText('Help: Metrics backend (custom query)')
   expect(helpTextElement).toBeInTheDocument()
 })
 
@@ -455,7 +455,7 @@ test.each(graphLineTypesExceptQuery)(
       }
     })
 
-    const helpTextElement = screen.queryByLabelText('Help: Metric backend (Custom query)')
+    const helpTextElement = screen.queryByLabelText('Help: Metrics backend (custom query)')
     expect(helpTextElement).not.toBeInTheDocument()
   }
 )
@@ -496,7 +496,7 @@ test("Graph line of type 'query' has inline help text", () => {
     }
   })
 
-  const inlineHelpTextElement = screen.getByLabelText('Inline Help: Metric backend (Custom query)')
+  const inlineHelpTextElement = screen.getByLabelText('Inline help: Metrics backend (custom query)')
   expect(inlineHelpTextElement).toBeInTheDocument()
 })
 
@@ -533,7 +533,7 @@ test.each(graphLineTypesExceptQuery)(
     })
 
     const inlineHelpTextElement = screen.queryByLabelText(
-      'Inline Help: Metric backend (Custom query)'
+      'Inline help: Metrics backend (custom query)'
     )
     expect(inlineHelpTextElement).not.toBeInTheDocument()
   }

@@ -29,7 +29,7 @@ const emit = defineEmits<{
     ></div>
     <button
       class="sidebar-add-sidebar-snapin__button"
-      :aria-label="_t(`Add snapin ${props.name}`)"
+      :aria-label="_t(`Add snap-in ${props.name}`)"
       @click="emit('add-snapin', props)"
     >
       <span>{{ _t(`Add "${props.title}" to sidebar`) }}</span>

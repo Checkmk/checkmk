@@ -175,7 +175,7 @@ const tooltipText = computed(() => {
     return _t('SNMP connection failed')
   }
   if (!hostname.value) {
-    return _t('Please enter a hostname to test SNMP connection')
+    return _t('Please enter a host name to test SNMP connection')
   }
   return _t('Test SNMP connection')
 })

@@ -730,7 +730,7 @@ class Sidebar(LocatorHelper):
     def add_snapin(self, snapin_id: str) -> "Snapin":
         self.open_add_snapin_sidebar()
 
-        self.page.get_by_label(f"Add snapin {snapin_id}").click()
+        self.page.get_by_label(f"Add snap-in {snapin_id}").click()
 
         self.close_add_snapin_sidebar()
 

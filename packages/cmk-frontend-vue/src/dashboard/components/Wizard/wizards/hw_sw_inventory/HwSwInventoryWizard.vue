@@ -152,7 +152,7 @@ const recapAndNext = () => {
 
   wizardStages[0]!.recapContent = h(FiltersRecap, {
     customValue: inventoryPathLabel,
-    customValueTitle: _t('Inventory single value'),
+    customValueTitle: _t('HW/SW inventory single value'),
     contextConfiguredFilters: contextConfiguredFilters.value,
     widgetFilters: widgetFilterManager.getConfiguredFilters()
   })

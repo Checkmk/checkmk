@@ -1330,13 +1330,13 @@ const graphDesignerContentAsJson = computed(() => {
             <CmkHelpText
               v-if="graphLine.type === 'query'"
               :help="METRIC_BACKEND_MACRO_HELP"
-              :aria-label="_t('Help: Metric backend (Custom query)')"
+              :aria-label="_t('Help: Metrics backend (custom query)')"
             />
           </div>
           <FormHelp
             v-if="graphLine.type === 'query'"
             :help="METRIC_BACKEND_MACRO_HELP"
-            :aria-label="_t('Inline Help: Metric backend (Custom query)')"
+            :aria-label="_t('Inline help: Metrics backend (custom query)')"
           />
         </td>
         <td class="buttons"><CmkSwitch v-model="graphLine.visible" /></td>

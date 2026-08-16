@@ -502,7 +502,7 @@ def check(pyrfc, cfg_entry):
     sys.stdout.write("<<<<>>>>\n")
 
     for host, host_logs in logs.items():
-        sys.stdout.write("<<<<%s>>>>\n" % host)
+        sys.stdout.write("<<<<%s%s>>>>\n" % (cfg_entry.get("host_prefix", ""), host))
         sys.stdout.write("<<<logwatch>>>\n")
         for log, lines in host_logs.items():
             sys.stdout.write("[[[%s]]]\n" % log)

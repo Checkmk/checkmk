@@ -1,0 +1,22 @@
+title: Pure Storage FlashArray: Certificate Status
+agents: pure_storage_fa
+catalog: hw/storagehw/pure_storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status of a Pure Storage Ethernet Port.
+
+ The status is mapped to the following Checkmk state:
+
+ - {OK} if certificate is valid
+
+ - {CRIT} if certificate isn't valid
+
+ To make this check work you have to configure the related special agent
+ {Pure Storage FlashArray}.
+
+item:
+ Name of the certificate.
+
+discovery:
+ One service per certificate is created.

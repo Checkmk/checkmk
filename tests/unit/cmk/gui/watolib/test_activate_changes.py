@@ -30,7 +30,9 @@ from cmk.gui.http import Request
 from cmk.gui.sites import SiteStatus
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib import activate_changes
+from cmk.gui.watolib import activate_changes as activate_changes_module
 from cmk.gui.watolib.activate_changes import (
+    _confirm_activated_changes,
     ActivateChanges,
     ActivateChangesManager,
     ActivationCleanupJob,
@@ -1345,6 +1347,7 @@ def _make_change_spec(
     change_id: str,
     user_id: str = "cmkadmin",
     has_been_activated: bool = False,
+    change_time: float = 1720800176.0,
 ) -> ChangeSpec:
     return {
         "id": change_id,
@@ -1353,12 +1356,54 @@ def _make_change_spec(
         "object": None,
         "user_id": user_id,
         "domains": ["check_mk"],
-        "time": 1720800176.0,
+        "time": change_time,
         "need_sync": True,
         "need_restart": True,
         "has_been_activated": has_been_activated,
         "prevent_discard_changes": False,
     }
+
+
+class _ActivateUntil:
+    """Stands in for the activation whose id the changes are looked up by."""
+
+    def __init__(self, change_id: str) -> None:
+        self._change_id = change_id
+
+    def activate_until(self) -> str:
+        return self._change_id
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_change_older_than_the_marker_is_removed_by_its_activation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A change stored behind a newer one is still activated, so it must be removed.
+
+    The remote-site sync appends a remote's changes to the central's log, and those were
+    recorded earlier than what is already queued for that site -- so the log is not in
+    time order. An activation runs up to the newest change by time and has to drop
+    everything it covered, wherever in the log those entries happen to sit.
+    """
+    site_id = SiteId("mysite")
+    site_changes = SiteChanges(site_id)
+    site_changes.append(_make_change_spec("newer", change_time=200.0))
+    site_changes.append(_make_change_spec("older", change_time=100.0))
+    try:
+        monkeypatch.setattr(
+            activate_changes_module,
+            "load_activate_change_manager_with_id",
+            lambda _activation_id: _ActivateUntil("newer"),
+        )
+        changes = ActivateChanges()
+        changes.load([site_id])
+        changes.load_changes_until("activation-id", [site_id])
+
+        _confirm_activated_changes(site_id, changes.get_changes_to_activate(site_id))
+
+        assert site_changes.read() == []
+    finally:
+        site_changes.clear()
 
 
 class _NoLicenseEffect:

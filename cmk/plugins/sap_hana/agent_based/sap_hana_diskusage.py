@@ -73,11 +73,14 @@ def check_sap_hana_diskusage(
     if not data:
         raise IgnoreResultsError("Login into database failed.")
 
+    # Possible states: OK, WARNING, ERROR
     state_name = data["state_name"]
     if state_name == "OK":
         state = State.OK
     elif state_name == "UNKNOWN":
         state = State.UNKNOWN
+    elif state_name == "WARNING":
+        state = State.WARN
     else:
         state = State.CRIT
     yield Result(state=state, summary="Status: %s" % state_name)

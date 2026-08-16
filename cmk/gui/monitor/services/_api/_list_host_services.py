@@ -2,7 +2,6 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import datetime as dt
 from collections.abc import Sequence, Set
 from typing import Annotated, Self
 
@@ -39,6 +38,7 @@ from .._models import (
     ServiceSortColumn,
     ServiceSortDirection,
     ServiceStateLabel,
+    UnixTimestamp,
 )
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
@@ -67,16 +67,16 @@ class HostServiceEntry:
         description="Service summary",
         example="Found no data, execution time 0.0 sec",
     )
-    last_check: dt.datetime | None = api_field(
+    last_check: UnixTimestamp | None = api_field(
         description=(
-            "Timestamp of the service's last check. Null for services that have never been "
+            "Unix timestamp of the service's last check. Null for services that have never been "
             "checked, i.e. those still pending their first check."
         ),
-        example="2026-07-13T11:38:30Z",
+        example=1752405510,
     )
-    last_state_change: dt.datetime = api_field(
-        description="Timestamp of the host's last state change",
-        example="2026-07-13T11:39:00Z",
+    last_state_change: UnixTimestamp = api_field(
+        description="Unix timestamp of the service's last state change",
+        example=1752405540,
     )
     modes: list[ServiceModeInfo] | ApiOmitted = api_field(
         description=(

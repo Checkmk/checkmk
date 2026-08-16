@@ -14,8 +14,8 @@ function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntr
     name: 'CPU load',
     state: 'CRIT',
     summary: 'CRIT - load average: 9.10, 8.05, 7.01',
-    last_check: '2026-07-13T11:38:30Z',
-    last_state_change: '2026-07-13T11:39:00Z',
+    last_check: 1783942710,
+    last_state_change: 1783942740,
     ...overrides
   }
 }

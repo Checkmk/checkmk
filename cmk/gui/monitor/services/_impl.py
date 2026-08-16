@@ -10,7 +10,6 @@ Our application should depend only interfaces as arguments, but receive a concre
 when instantiated.
 """
 
-import datetime as dt
 from collections.abc import Mapping, Sequence, Set
 
 from cmk.ccc.hostaddress import HostName
@@ -100,14 +99,8 @@ class LiveStatusHostServicesRepository:
                         notifications_enabled=bool(row["notifications_enabled"]),
                         is_flapping=bool(row["is_flapping"]),
                         summary=row["plugin_output"],
-                        last_check=(
-                            dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC)
-                            if row["last_check"]
-                            else None
-                        ),
-                        last_state_change=dt.datetime.fromtimestamp(
-                            row["last_state_change"], tz=dt.UTC
-                        ),
+                        last_check=int(row["last_check"]) or None,
+                        last_state_change=int(row["last_state_change"]),
                         perf_data=row["perf_data"],
                         check_command=row["check_command"],
                         labels=(
@@ -169,12 +162,8 @@ class LiveStatusHostServicesRepository:
             site_id=row["site"],
             state=ServiceState(row["state"]),
             summary=row["plugin_output"],
-            last_check=(
-                dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC)
-                if row["last_check"]
-                else None
-            ),
-            last_state_change=dt.datetime.fromtimestamp(row["last_state_change"], tz=dt.UTC),
+            last_check=int(row["last_check"]) or None,
+            last_state_change=int(row["last_state_change"]),
             perf_data=row["perf_data"],
             check_command=row["check_command"],
             labels=ServiceLabelValue.by_label(row["labels"], row["label_sources"]),
@@ -190,11 +179,7 @@ class LiveStatusHostServicesRepository:
             long_output=row["long_plugin_output"],
             current_attempt=row["current_attempt"],
             max_check_attempts=row["max_check_attempts"],
-            next_check=(
-                dt.datetime.fromtimestamp(row["next_check"], tz=dt.UTC)
-                if row["next_check"]
-                else None
-            ),
+            next_check=int(row["next_check"]) or None,
             tags=dict(row["tags"]),
             # The overview does not expose contacts, so its query does not read them.
             contacts=[],

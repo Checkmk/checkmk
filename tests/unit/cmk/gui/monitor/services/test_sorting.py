@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime as dt
 import functools
 
 import pytest
@@ -97,17 +96,17 @@ def test_multi_column_sorting() -> None:
 
 def test_service_sorter_timestamp_columns() -> None:
     services = [
-        ServiceFactory.build(last_check=dt.datetime(2026, 1, 3, tzinfo=dt.UTC)),
-        ServiceFactory.build(last_check=dt.datetime(2026, 1, 1, tzinfo=dt.UTC)),
-        ServiceFactory.build(last_check=dt.datetime(2026, 1, 2, tzinfo=dt.UTC)),
+        ServiceFactory.build(last_check=1767398400),
+        ServiceFactory.build(last_check=1767225600),
+        ServiceFactory.build(last_check=1767312000),
     ]
     sorters = [ServiceSort(column=ServiceSortColumn.LAST_CHECK, direction=ServiceSortDirection.ASC)]
 
     value = [service.last_check for service in sorted(services, key=service_sorter(sorters))]
     expected = [
-        dt.datetime(2026, 1, 1, tzinfo=dt.UTC),
-        dt.datetime(2026, 1, 2, tzinfo=dt.UTC),
-        dt.datetime(2026, 1, 3, tzinfo=dt.UTC),
+        1767225600,
+        1767312000,
+        1767398400,
     ]
 
     assert value == expected
@@ -115,17 +114,17 @@ def test_service_sorter_timestamp_columns() -> None:
 
 def test_service_sorter_sorts_never_checked_services_first() -> None:
     services = [
-        ServiceFactory.build(last_check=dt.datetime(2026, 1, 2, tzinfo=dt.UTC)),
+        ServiceFactory.build(last_check=1767312000),
         ServiceFactory.build(last_check=None),
-        ServiceFactory.build(last_check=dt.datetime(2026, 1, 1, tzinfo=dt.UTC)),
+        ServiceFactory.build(last_check=1767225600),
     ]
     sorters = [ServiceSort(column=ServiceSortColumn.LAST_CHECK, direction=ServiceSortDirection.ASC)]
 
     value = [service.last_check for service in sorted(services, key=service_sorter(sorters))]
     expected = [
         None,
-        dt.datetime(2026, 1, 1, tzinfo=dt.UTC),
-        dt.datetime(2026, 1, 2, tzinfo=dt.UTC),
+        1767225600,
+        1767312000,
     ]
 
     assert value == expected

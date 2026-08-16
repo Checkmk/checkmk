@@ -55,8 +55,8 @@ function makeApiEntry(): ApiServiceEntry {
     name: 'CPU load',
     state: 'OK',
     summary: 'OK - 15 min load: 0.5',
-    last_check: '2026-07-13T11:38:30Z',
-    last_state_change: '2026-07-13T11:39:00Z'
+    last_check: 1783942710,
+    last_state_change: 1783942740
   }
 }
 

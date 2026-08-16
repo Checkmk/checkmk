@@ -23,8 +23,8 @@ function makeData(overrides: Partial<HostOverview> = {}): HostOverview {
     labels: { 'cmk/os_family': { source: 'discovered', value: 'linux' } },
     modes: [],
     service_counts: { ok: 9, warn: 2, crit: 3, unknown: 1, pending: 0, total: 15 },
-    last_check: '2026-07-14T10:00:00Z',
-    last_state_change: '2026-07-14T09:00:00Z',
+    last_check: 1784023200,
+    last_state_change: 1784019600,
     legacy_host_status_link: '/check_mk/index.py',
     ...overrides
   }

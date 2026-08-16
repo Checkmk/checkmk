@@ -19,6 +19,9 @@ from typing import assert_never, Literal, NewType, override, Self
 
 from cmk.ruleset_matcher.labels import LabelSource
 
+type UnixTimestamp = int
+"""An instant as whole seconds since the epoch (UTC)."""
+
 type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE"]
 
 
@@ -67,8 +70,8 @@ class Host:
     acknowledged: bool
     in_downtime: bool
     folder: str | None
-    last_check: dt.datetime | None
-    last_state_change: dt.datetime | None
+    last_check: UnixTimestamp | None
+    last_state_change: UnixTimestamp | None
     labels: dict[str, HostLabelValue] | None
     tags: dict[str, str] | None
     contacts: list[str] | None

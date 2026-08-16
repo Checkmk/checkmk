@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime as dt
 from typing import Annotated, Self
 
 from cmk.ccc.site import SiteId
@@ -28,7 +27,13 @@ from cmk.gui.utils import permission_verification as permissions
 
 from .._exceptions import HostNotFoundError
 from .._impl import LiveStatusHostRepository
-from .._models import HostLabelValue, HostOverview, HostStateLabel, ServiceCounts
+from .._models import (
+    HostLabelValue,
+    HostOverview,
+    HostStateLabel,
+    ServiceCounts,
+    UnixTimestamp,
+)
 from .._repositories import HostRepository
 from ._family import MONITOR_HOSTS_FAMILY
 from ._modes import build_host_modes, ModeInfo
@@ -54,13 +59,13 @@ class HostOverviewResponse:
         ),
         example=[],
     )
-    last_check: dt.datetime = api_field(
-        description="Timestamp of the host's last check",
-        example="2026-07-13T11:38:30Z",
+    last_check: UnixTimestamp = api_field(
+        description="Unix timestamp of the host's last check",
+        example=1752405510,
     )
-    last_state_change: dt.datetime = api_field(
-        description="Timestamp of the host's last state change",
-        example="2026-07-13T11:39:00Z",
+    last_state_change: UnixTimestamp = api_field(
+        description="Unix timestamp of the host's last state change",
+        example=1752405540,
     )
     customer: str | None = api_field(
         description=(

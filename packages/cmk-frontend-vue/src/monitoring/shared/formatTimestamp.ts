@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-/** Renders an ISO timestamp as `YYYY-MM-DD HH:MM:SS` in the viewer's local time. */
-export function formatTimestamp(iso: string): string {
-  const date = new Date(iso)
+/** Renders a unix timestamp as `YYYY-MM-DD HH:MM:SS` in the viewer's local time. */
+export function formatTimestamp(unixSeconds: number): string {
+  const date = new Date(unixSeconds * 1000)
   const pad = (value: number): string => String(value).padStart(2, '0')
   return (
     `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +

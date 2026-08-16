@@ -234,8 +234,8 @@ class TestMonitorHostServicesFilters:
                 "name": "CPU load",
                 "state": "WARN",
                 "summary": "WARN - load average: 3.10, 2.05, 1.01",
-                "last_check": "2026-07-13T11:39:00Z",
-                "last_state_change": "2026-07-13T11:39:00Z",
+                "last_check": 1783942740,
+                "last_state_change": 1783942740,
             }
         ]
 
@@ -327,8 +327,8 @@ class TestMonitorHostServicesFilters:
                 "name": "CPU load",
                 "state": "WARN",
                 "summary": "WARN - load average: 3.10, 2.05, 1.01",
-                "last_check": "2026-07-13T11:39:00Z",
-                "last_state_change": "2026-07-13T11:39:00Z",
+                "last_check": 1783942740,
+                "last_state_change": 1783942740,
             }
         ]
 
@@ -425,8 +425,8 @@ class TestMonitorHostServices:
                     "name": "CPU load",
                     "state": "OK",
                     "summary": "OK - load average: 0.10, 0.05, 0.01",
-                    "last_check": "2026-07-13T11:38:30Z",
-                    "last_state_change": "2026-07-13T11:39:00Z",
+                    "last_check": 1783942710,
+                    "last_state_change": 1783942740,
                 }
             ],
             "meta": {
@@ -1257,11 +1257,11 @@ class TestMonitorServiceOverview:
         assert resp.json["contact_groups"] == ["all"]
         assert resp.json["summary"] == "WARN - load average: 3.10, 2.05, 1.01"
         assert resp.json["long_output"] == "15 min load: 0.01 (per core: 0.01)"
-        assert resp.json["last_check"] == "2026-07-13T11:39:00Z"
-        assert resp.json["last_state_change"] == "2026-07-13T11:39:00Z"
+        assert resp.json["last_check"] == 1783942740
+        assert resp.json["last_state_change"] == 1783942740
         assert resp.json["current_attempt"] == 2
         assert resp.json["max_check_attempts"] == 4
-        assert resp.json["next_check"] == "2026-07-13T11:40:00Z"
+        assert resp.json["next_check"] == 1783942800
         assert resp.json["tags"] == {"criticality": "prod"}
         assert resp.json["labels"] == {
             "cmk/check_plugin": {"value": "cpu_load", "source": "discovered"}

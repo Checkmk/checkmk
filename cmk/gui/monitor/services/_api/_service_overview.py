@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime as dt
 from typing import Annotated, Self
 
 from cmk.ccc.site import SiteId
@@ -28,7 +27,13 @@ from cmk.gui.utils import permission_verification as permissions
 
 from .._exceptions import ServiceNotFoundError
 from .._impl import LiveStatusHostServicesRepository
-from .._models import HostStateLabel, ServiceLabelValue, ServiceOverview, ServiceStateLabel
+from .._models import (
+    HostStateLabel,
+    ServiceLabelValue,
+    ServiceOverview,
+    ServiceStateLabel,
+    UnixTimestamp,
+)
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
 from ._modes import build_host_modes, build_service_modes, ServiceModeInfo
@@ -90,27 +95,27 @@ class ServiceOverviewResponse:
         ),
         example="15 min load: 0.01 (per core: 0.01)",
     )
-    last_check: dt.datetime | None = api_field(
+    last_check: UnixTimestamp | None = api_field(
         description=(
-            "Timestamp of the service's last check. Null for services that have never been "
+            "Unix timestamp of the service's last check. Null for services that have never been "
             "checked, i.e. those still pending their first check."
         ),
-        example="2026-07-13T11:38:30Z",
+        example=1752405510,
     )
-    last_state_change: dt.datetime = api_field(
-        description="Timestamp of the service's last state change",
-        example="2026-07-13T11:39:00Z",
+    last_state_change: UnixTimestamp = api_field(
+        description="Unix timestamp of the service's last state change",
+        example=1752405540,
     )
     current_attempt: int = api_field(description="The current check attempt", example=2)
     max_check_attempts: int = api_field(
         description="Number of attempts after which a problem turns hard", example=4
     )
-    next_check: dt.datetime | None = api_field(
+    next_check: UnixTimestamp | None = api_field(
         description=(
-            "Timestamp of the next scheduled check. Null for passive services, which are never "
-            "scheduled."
+            "Unix timestamp of the next scheduled check. Null for passive services, which are "
+            "never scheduled."
         ),
-        example="2026-07-13T11:40:00Z",
+        example=1752405600,
     )
     tags: dict[str, str] = api_field(
         description="Service tags",

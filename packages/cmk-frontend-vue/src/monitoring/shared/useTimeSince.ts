@@ -6,11 +6,11 @@
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 /** Render how long ago a timestamp was, in the coarsest unit that still says something. */
-export function useTimeSince(): (iso: string) => string {
+export function useTimeSince(): (unixSeconds: number) => string {
   const { _t } = usei18n()
 
-  return (iso: string): string => {
-    const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000))
+  return (unixSeconds: number): string => {
+    const seconds = Math.max(0, Math.round(Date.now() / 1000 - unixSeconds))
     if (seconds < 60) {
       return _t('%{count} sec', { count: seconds })
     }

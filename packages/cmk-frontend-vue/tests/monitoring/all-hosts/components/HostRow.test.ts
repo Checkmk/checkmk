@@ -25,8 +25,8 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     num_services_crit: 0,
     num_services_unknown: 0,
     num_services_pending: 0,
-    last_check: '2026-07-13T11:38:30Z',
-    last_state_change: '2026-07-13T11:39:00Z',
+    last_check: 1783942710,
+    last_state_change: 1783942740,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-1',
     ...overrides
   }

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime as dt
 import functools
 
 import pytest
@@ -78,17 +77,17 @@ def test_multi_column_sorting() -> None:
 
 def test_host_sorter_timestamp_columns() -> None:
     hosts = [
-        HostFactory.build(last_check=dt.datetime(2026, 1, 3, tzinfo=dt.UTC)),
-        HostFactory.build(last_check=dt.datetime(2026, 1, 1, tzinfo=dt.UTC)),
-        HostFactory.build(last_check=dt.datetime(2026, 1, 2, tzinfo=dt.UTC)),
+        HostFactory.build(last_check=1767398400),
+        HostFactory.build(last_check=1767225600),
+        HostFactory.build(last_check=1767312000),
     ]
     sorters = [HostSort(column=HostSortColumn.LAST_CHECK, direction=HostSortDirection.ASC)]
 
     value = [host.last_check for host in sorted(hosts, key=host_sorter(sorters))]
     expected = [
-        dt.datetime(2026, 1, 1, tzinfo=dt.UTC),
-        dt.datetime(2026, 1, 2, tzinfo=dt.UTC),
-        dt.datetime(2026, 1, 3, tzinfo=dt.UTC),
+        1767225600,
+        1767312000,
+        1767398400,
     ]
 
     assert value == expected

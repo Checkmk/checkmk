@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-import datetime as dt
 import functools
 import re
 from collections.abc import Callable, Sequence
@@ -13,7 +12,7 @@ from typing import Any, assert_never
 
 from ._models import Service, ServiceSort, ServiceSortColumn, ServiceSortDirection
 
-_NEVER_CHECKED = dt.datetime.min.replace(tzinfo=dt.UTC)
+_NEVER_CHECKED = 0
 
 
 def service_sorter(sorters: Sequence[ServiceSort]) -> Callable[[Service], Any]:

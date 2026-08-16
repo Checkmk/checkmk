@@ -10,7 +10,6 @@ Our application should depend only interfaces as arguments, but receive a concre
 when instantiated.
 """
 
-import datetime as dt
 from collections.abc import Mapping, Sequence, Set
 from pathlib import PurePosixPath
 
@@ -38,6 +37,7 @@ from ._models import (
     HostState,
     RescheduleTarget,
     ServiceCounts,
+    UnixTimestamp,
 )
 from ._sorting import host_sorter
 
@@ -161,8 +161,8 @@ class LiveStatusHostRepository:
             ),
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
-            last_check=dt.datetime.fromtimestamp(row["last_check"], tz=dt.UTC),
-            last_state_change=dt.datetime.fromtimestamp(row["last_state_change"], tz=dt.UTC),
+            last_check=int(row["last_check"]),
+            last_state_change=int(row["last_state_change"]),
             customer=row["custom_variables"].get("CUSTOMER"),
             folder=_wato_folder_from_filename(row["filename"]),
             contact_groups=list(row["contact_groups"]),
@@ -294,8 +294,8 @@ def _columns_to_read(
     }
 
 
-def _timestamp(value: float | None) -> dt.datetime | None:
-    return None if value is None else dt.datetime.fromtimestamp(value, tz=dt.UTC)
+def _timestamp(value: float | None) -> UnixTimestamp | None:
+    return None if value is None else int(value)
 
 
 def _service_counts(row: Mapping[str, object]) -> ServiceCounts | None:

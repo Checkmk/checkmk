@@ -48,8 +48,8 @@ function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntr
     name: 'CPU load',
     state: 'OK',
     summary: 'OK - load average: 0.10, 0.05, 0.01',
-    last_check: '2026-07-13T11:38:30Z',
-    last_state_change: '2026-07-13T11:39:00Z',
+    last_check: 1783942710,
+    last_state_change: 1783942740,
     ...overrides
   }
 }
@@ -72,11 +72,11 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
     contact_groups: ['all'],
     summary: 'OK - load average: 0.10, 0.05, 0.01',
     long_output: '',
-    last_check: '2026-07-13T11:38:30Z',
-    last_state_change: '2026-07-13T11:39:00Z',
+    last_check: 1783942710,
+    last_state_change: 1783942740,
     current_attempt: 1,
     max_check_attempts: 3,
-    next_check: '2026-07-13T11:40:00Z',
+    next_check: 1783942800,
     tags: {},
     labels: {},
     ...overrides

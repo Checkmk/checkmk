@@ -19,6 +19,9 @@ from typing import assert_never, Literal, NewType, override, Self
 
 from cmk.ruleset_matcher.labels import LabelSource
 
+type UnixTimestamp = int
+"""An instant as whole seconds since the epoch (UTC)."""
+
 type ServiceStateLabel = Literal["OK", "WARN", "CRIT", "UNKNOWN"]
 
 type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE"]
@@ -58,8 +61,8 @@ class Service:
     notifications_enabled: bool
     is_flapping: bool
     summary: str
-    last_check: dt.datetime | None
-    last_state_change: dt.datetime
+    last_check: UnixTimestamp | None
+    last_state_change: UnixTimestamp
     perf_data: str
     check_command: str
     labels: dict[str, ServiceLabelValue] | None
@@ -94,7 +97,7 @@ class ServiceOverview(Service):
     current_attempt: int
     max_check_attempts: int
     # Passive services are never scheduled, so livestatus reports no next check for them.
-    next_check: dt.datetime | None
+    next_check: UnixTimestamp | None
 
     @property
     def host_state_label(self) -> HostStateLabel:

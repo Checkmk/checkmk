@@ -75,6 +75,11 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
     field: 'last_check'
   }
 
+  const lastStateChangeFilter: DateTimeRangeFilter<'last_state_change'> = {
+    type: 'date-time-range',
+    field: 'last_state_change'
+  }
+
   const modesFilter: BooleanGroupFilter<
     'in_downtime' | 'acknowledged' | 'notifications_enabled' | 'is_flapping'
   > = {
@@ -143,7 +148,8 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       header: _t('Last state change'),
       sortDescFirst: true,
       minSize: 120,
-      maxSize: 200
+      maxSize: 200,
+      meta: { filter: lastStateChangeFilter }
     },
     {
       accessorKey: 'labels',

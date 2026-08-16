@@ -473,3 +473,40 @@ test('marks the sorted column with its direction', async () => {
     'ascending'
   )
 })
+
+test('requests services whose last state change is at or after the picked instant', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter Last state change' }))
+  const panel = screen.getByRole('group', { name: 'Filter Last state change' })
+  const from = within(panel).getByRole('group', { name: 'From' })
+
+  await userEvent.click(within(from).getByRole('button', { name: 'Open calendar' }))
+  await userEvent.click(within(from).getByRole('button', { name: /\b20,/ }))
+  await fireEvent.update(within(from).getByRole('spinbutton', { name: 'Hours' }), '08')
+  await fireEvent.update(within(from).getByRole('spinbutton', { name: 'Minutes' }), '45')
+  await userEvent.click(within(from).getByRole('button', { name: 'Apply' }))
+
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  // The picker works in the browser zone, so the expectation is built from the same local clock.
+  const today = new Date()
+  const picked = new Date(today.getFullYear(), today.getMonth(), 20, 8, 45).getTime() / 1000
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        filter: {
+          type: 'condition',
+          field: 'last_state_change',
+          op: 'gte',
+          value: picked
+        },
+        fields: ['labels', 'tags', 'contacts', 'contact_groups']
+      }
+    })
+  )
+})

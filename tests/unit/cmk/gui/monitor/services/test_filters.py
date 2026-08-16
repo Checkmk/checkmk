@@ -6,16 +6,20 @@
 from typing import Literal
 
 import pytest
+from pydantic import TypeAdapter, ValidationError
 
 from cmk.gui.monitor.services._api._filters import (
     parse_as_livestatus_filter,
     ServiceAndNode,
     ServiceBooleanCondition,
+    ServiceFilterNode,
     ServiceNotNode,
     ServiceOrNode,
     ServiceStateChoiceCondition,
     ServiceStringCondition,
     ServiceStringOp,
+    ServiceTimestampCondition,
+    ServiceTimestampOp,
 )
 
 
@@ -165,3 +169,59 @@ def test_query_builder_combines_multiple_boolean_conditions() -> None:
     expected = "Filter: acknowledged = 0\nFilter: scheduled_downtime_depth = 0\nAnd: 2"
 
     assert value == expected
+
+
+@pytest.mark.parametrize(
+    "op, ls_op",
+    [
+        ("lt", "<"),
+        ("lte", "<="),
+        ("gt", ">"),
+        ("gte", ">="),
+    ],
+)
+@pytest.mark.parametrize("field", ["last_check", "last_state_change"])
+def test_query_builder_timestamp_condition(
+    field: Literal["last_check", "last_state_change"],
+    op: ServiceTimestampOp,
+    ls_op: str,
+) -> None:
+    condition = ServiceTimestampCondition(type="condition", field=field, op=op, value=1752405510)
+    assert parse_as_livestatus_filter(condition) == f"Filter: {field} {ls_op} 1752405510"
+
+
+def test_query_builder_timestamp_range() -> None:
+    nodes = ServiceAndNode(
+        type="and",
+        children=[
+            ServiceTimestampCondition(
+                type="condition", field="last_check", op="gte", value=1752405510
+            ),
+            ServiceTimestampCondition(
+                type="condition", field="last_check", op="lte", value=1752491910
+            ),
+        ],
+    )
+
+    value = parse_as_livestatus_filter(nodes)
+    expected = "Filter: last_check >= 1752405510\nFilter: last_check <= 1752491910\nAnd: 2"
+
+    assert value == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("1752405510", id="numeric string"),
+        pytest.param(1752405510.0, id="float"),
+        pytest.param("2026-07-13T11:38:30Z", id="iso timestamp"),
+        pytest.param(True, id="boolean"),
+    ],
+)
+def test_timestamp_condition_only_accepts_unix_timestamps(value: object) -> None:
+    payload = {"type": "condition", "field": "last_check", "op": "gte", "value": value}
+
+    with pytest.raises(ValidationError):
+        TypeAdapter(ServiceFilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
+            payload, strict=False
+        )

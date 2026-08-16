@@ -15,6 +15,17 @@ def validate_uniqueness[T](values: Sequence[T]) -> Sequence[T]:
     return values
 
 
+def validate_unix_timestamp(value: object) -> int:
+    # A PlainValidator receives the raw body value, so this cannot be annotated `int`.
+    # TypedPlainValidator would allow that, but raises TypeError -> 500 instead of 400 (CMK-38100).
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(
+            f"Expected a unix timestamp in whole seconds, got {type(value).__name__!r}."
+        )
+
+    return value
+
+
 def parse_service_search_query(value: object) -> str:
     if not isinstance(value, str):
         raise ValueError(f"Expected a search string, got {type(value).__name__!r}.")

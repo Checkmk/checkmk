@@ -7,13 +7,13 @@ from collections.abc import Mapping
 from typing import Annotated, Literal
 
 from annotated_types import MinLen
-from pydantic import AfterValidator
+from pydantic import AfterValidator, PlainValidator
 
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.livestatus_client.expressions import LqSafe
 
 from .._models import ServiceFilter, ServiceState, ServiceStateLabel
-from ._validators import validate_uniqueness
+from ._validators import validate_uniqueness, validate_unix_timestamp
 
 # NOTE: these models are named with a "Service" prefix (unlike their hosts counterparts) because
 # the OpenAPI spec registers component schemas by class name across every endpoint family; an
@@ -23,6 +23,8 @@ from ._validators import validate_uniqueness
 _NO_NEWLINES_REGEX = r"^[^\n]*$"
 
 type ServiceStringOp = Literal["contains", "matches"]
+
+type ServiceTimestampOp = Literal["lt", "lte", "gt", "gte"]
 
 
 @api_model
@@ -66,8 +68,31 @@ class ServiceBooleanCondition:
     value: bool = api_field(description="Boolean value to compare against", example=False)
 
 
+@api_model
+class ServiceTimestampCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: Literal["last_check", "last_state_change"] = api_field(
+        description="Timestamp service field to filter on", example="last_check"
+    )
+    op: ServiceTimestampOp = api_field(description="Timestamp comparison operation", example="gte")
+    value: Annotated[
+        int, PlainValidator(func=validate_unix_timestamp, json_schema_input_type=int)
+    ] = api_field(
+        description=(
+            "Unix timestamp to compare against, in whole seconds since the epoch (UTC). "
+            "Formatted timestamps such as ISO-8601 strings are not accepted."
+        ),
+        example=1752405510,
+    )
+
+
 type ServiceConditionNode = (
-    ServiceStateChoiceCondition | ServiceStringCondition | ServiceBooleanCondition
+    ServiceStateChoiceCondition
+    | ServiceStringCondition
+    | ServiceBooleanCondition
+    | ServiceTimestampCondition
 )
 
 
@@ -130,6 +155,9 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
                 case "one_of" if len(node.value) > 1:
                     filters.append(f"Or: {len(node.value)}")
 
+        case ServiceTimestampCondition():
+            filters.append(f"Filter: {node.field} {_TIMESTAMP_OP_TO_LS[node.op]} {node.value}")
+
         case ServiceBooleanCondition():
             match node.field:
                 case "in_downtime":
@@ -158,6 +186,12 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
 _STRING_OP_TO_LS = {
     "contains": "~~",
     "matches": "~",
+}
+_TIMESTAMP_OP_TO_LS = {
+    "lt": "<",
+    "lte": "<=",
+    "gt": ">",
+    "gte": ">=",
 }
 # The domain names these fields after what the table shows, which for some of them differs from
 # the livestatus column they are read from.

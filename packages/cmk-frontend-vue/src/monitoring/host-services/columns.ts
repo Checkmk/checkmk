@@ -14,6 +14,7 @@ import type {
 import type {
   BooleanGroupFilter,
   CheckboxListFilter,
+  DateTimeRangeFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 
@@ -67,6 +68,11 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
   const summaryFilter: StringInputFilter<'summary'> = {
     type: 'string-input',
     field: 'summary'
+  }
+
+  const lastCheckFilter: DateTimeRangeFilter<'last_check'> = {
+    type: 'date-time-range',
+    field: 'last_check'
   }
 
   const modesFilter: BooleanGroupFilter<
@@ -129,7 +135,8 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       header: _t('Last check'),
       sortDescFirst: true,
       minSize: 120,
-      maxSize: 200
+      maxSize: 200,
+      meta: { filter: lastCheckFilter }
     },
     {
       accessorKey: 'last_state_change',

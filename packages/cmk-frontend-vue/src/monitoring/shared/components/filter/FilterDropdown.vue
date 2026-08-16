@@ -32,6 +32,7 @@ import { MONITORING_SERVICE } from '../MonitoringTableContext'
 import FilterBooleanGroup from './FilterBooleanGroup.vue'
 import FilterCheckboxList from './FilterCheckboxList.vue'
 import FilterColumnVisibility from './FilterColumnVisibility.vue'
+import FilterDateTimeRange from './FilterDateTimeRange.vue'
 import FilterNumeric from './FilterNumeric.vue'
 import FilterStringInput from './FilterStringInput.vue'
 import FilterVisualFilter from './FilterVisualFilter.vue'
@@ -41,6 +42,7 @@ const FILTER_COMPONENTS: Record<ColumnFilterDefinition['type'], Component> = {
   'checkbox-list': FilterCheckboxList,
   'string-input': FilterStringInput,
   numeric: FilterNumeric,
+  'date-time-range': FilterDateTimeRange,
   'boolean-group': FilterBooleanGroup,
   'column-visibility': FilterColumnVisibility,
   'visual-filter': FilterVisualFilter
@@ -235,7 +237,8 @@ function moveFocus(delta: number): void {
 // ArrowDown for row navigation; Tab still moves between rows.
 const ARROW_NAV_DISABLED_TYPES = new Set<ColumnFilterDefinition['type']>([
   'numeric',
-  'boolean-group'
+  'boolean-group',
+  'date-time-range'
 ])
 
 function registerShortcuts(): void {

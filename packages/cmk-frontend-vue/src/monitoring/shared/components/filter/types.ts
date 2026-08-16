@@ -50,6 +50,21 @@ export interface NumericFilter<F extends FilterField = FilterField> {
   unit?: string
 }
 
+/**
+ * Filter that matches a timestamp field against a closed/open range of instants, each picked
+ * with a `CmkDateTimePicker`. The lower and upper bounds map onto `gte` / `lte` conditions
+ * carrying unix timestamps; supplying both produces an `and` of the two, a single bound a lone
+ * condition.
+ *
+ * The v-model value is a `ColumnFilterNode<F>` so the column filter state stores a typed condition
+ * directly — no `filterToNode` translation needed.
+ */
+export interface DateTimeRangeFilter<F extends FilterField = FilterField> {
+  type: 'date-time-range'
+  /** API field this filter targets. Used to produce the correct condition node. */
+  field: F
+}
+
 /** A single boolean field shown as a tri-state radio group in a {@link BooleanGroupFilter}. */
 export interface BooleanFilterGroup<F extends FilterField = FilterField> {
   /** Boolean API field this group targets (e.g. `in_downtime`, `acknowledged`). */
@@ -104,6 +119,7 @@ export type ColumnFilterDefinition<F extends FilterField = FilterField> =
   | CheckboxListFilter<F>
   | StringInputFilter<F>
   | NumericFilter<F>
+  | DateTimeRangeFilter<F>
   | BooleanGroupFilter<F>
   | ColumnVisibilityFilter
   | VisualFilterColumnFilter

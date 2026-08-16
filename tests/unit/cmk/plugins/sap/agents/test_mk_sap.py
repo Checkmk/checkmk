@@ -111,6 +111,59 @@ STATES = {
 }
 
 
+@pytest.mark.parametrize(
+    "monitor, exclude, path, toplevel_match, expected",
+    [
+        # default behaviour without exclude_paths stays untouched
+        (["SAP CCMS Monitor Templates/Dialog Overview/*"], [], "SAP CCMS Monitor Templates/Dialog Overview/ResponseTime", False, True),
+        (["SAP CCMS Monitor Templates/Dialog Overview/*"], [], "SAP CCMS Monitor Templates/Other Monitor/Foo", False, False),
+        # toplevel matching shortens monitor rules to the first two segments
+        (["SAP CCMS Monitor Templates/Dialog Overview/ResponseTime"], [], "SAP CCMS Monitor Templates/Dialog Overview", True, True),
+        # a matching exclude rule wins over a matching monitor rule.
+        # Note the truncated last path segment: segments come from the
+        # 40 character SAP field MTNAMESHRT, patterns must match the
+        # truncated name (pattern anchored to the subtree as recommended
+        # in sap.cfg)
+        (
+            ["SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges/*"],
+            ["SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges/Critical Number Ranges All Clients/Client 000 Alert Messages for Number Ran*"],
+            "SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges/Critical Number Ranges All Clients/Client 000 Alert Messages for Number Ran",
+            False,
+            False,
+        ),
+        # sibling nodes not matching the exclude rule are still monitored
+        (
+            ["SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges/*"],
+            ["SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges/Critical Number Ranges All Clients/Client 000 Alert Messages for Number Ran*"],
+            "SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges/Critical Number Ranges All Clients/Client 100 Alert Messages for Number Ran",
+            False,
+            True,
+        ),
+        # an exclude rule targeting a subtree node must not skip the whole
+        # monitor during toplevel matching (exclude rules are not shortened)
+        (
+            ["SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges/*"],
+            ["SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges/Critical Number Ranges All Clients/Client 000 Alert Messages for Number Ran*"],
+            "SAP CCMS Technical Expert Monitors/All Monitoring Contexts",
+            True,
+            True,
+        ),
+        # an exclude rule matching the toplevel path skips the whole monitor
+        (
+            ["*"],
+            ["SAP CCMS Monitor Templates/Dialog Overview*"],
+            "SAP CCMS Monitor Templates/Dialog Overview",
+            True,
+            False,
+        ),
+    ],
+)
+def test_to_be_monitored(monkeypatch, monitor, exclude, path, toplevel_match, expected):
+    monkeypatch.setattr(mk_sap, "monitor_paths", monitor)
+    monkeypatch.setattr(mk_sap, "exclude_paths", exclude)
+    assert mk_sap.to_be_monitored(path, toplevel_match) is expected
+
+
 def test_state_file_round_trip(monkeypatch, tmp_path):
     state_file = tmp_path / "sap.state"
     state_file.write_text(mk_sap.serialize_states(STATES))

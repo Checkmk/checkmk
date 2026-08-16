@@ -991,8 +991,14 @@ def _confirm_synchronized_changes(site_id: SiteId) -> None:
 def _confirm_activated_changes(
     site_id: SiteId, site_changes_activate_until: Sequence[ChangeSpec]
 ) -> None:
+    # Drop the activated changes by id rather than as a positional prefix: the log is
+    # not necessarily ordered by time (``_store_site_changes`` appends a remote's
+    # carried-over changes, which are older than what is already queued for that site),
+    # and the activated ones are selected by time. Where the two orders agree -- the
+    # usual append-only case -- this removes exactly the same leading entries as before.
+    activated_ids = {change["id"] for change in site_changes_activate_until}
     with SiteChanges(site_id).mutable_view() as changes:
-        changes[: len(site_changes_activate_until)] = []
+        changes[:] = [change for change in changes if change["id"] not in activated_ids]
 
 
 def _get_domains_needing_activation(
@@ -1236,17 +1242,23 @@ class ActivateChanges:
         manager = load_activate_change_manager_with_id(activation_id)
         change_id = manager.activate_until()
 
-        # Find the last activated change and return all changes till this entry
-        # (including the one we were searching for)
+        # Take every change up to and including the one we were searching for. The
+        # activation runs "until" that change, which was picked as the newest *by time*
+        # (``get_last_change_id`` reads the time-sorted pending changes), so select by
+        # time as well: a site's log is not necessarily in that order, and walking it
+        # positionally would stop short of an older entry stored behind a newer one.
         self._changes_by_site_until = {}
         for site_id in sites:
-            changes = []
-            for change in self._changes_by_site[site_id]:
-                changes.append(change)
-                if change["id"] == change_id:
-                    break
-
-            self._changes_by_site_until[site_id] = changes
+            site_changes = self._changes_by_site[site_id]
+            activate_until_time = next(
+                (change["time"] for change in site_changes if change["id"] == change_id),
+                None,
+            )
+            self._changes_by_site_until[site_id] = (
+                list(site_changes)
+                if activate_until_time is None
+                else [change for change in site_changes if change["time"] <= activate_until_time]
+            )
 
     @staticmethod
     def confirm_site_changes(site_id: SiteId) -> None:

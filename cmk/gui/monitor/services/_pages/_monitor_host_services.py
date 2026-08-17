@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.config import Config
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -26,6 +27,7 @@ from cmk.shared_typing.monitoring.host_services import (
     MonitoringAction,
     MonitoringHostServicesApp,
     MonitoringPageLinkButton,
+    RowAction,
 )
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -40,6 +42,27 @@ _LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
 
 _HOST_STATUS_VIEW_NAME = "hoststatus"
 _ALL_HOSTS_PERMISSION = "view.allhosts"
+_RULESETS_PERMISSION = "wato.rulesets"
+
+
+def _row_actions(config: Config, hostname: HostName) -> list[RowAction]:
+    """The links a row offers on the service it shows.
+
+    The host is the page, so it is part of the address already; the service is not, and travels as
+    the `{service}` placeholder the listing resolves per row - the same shape the hosts listing
+    uses for `{host}`.
+    """
+    if not config.wato_enabled or not user.may(_RULESETS_PERMISSION):
+        return []
+    return [
+        RowAction(
+            ident="parameters",
+            title=_("Parameters"),
+            icon="rulesets",
+            url=f"wato.py?{urlencode([('mode', 'object_parameters'), ('host', hostname)])}"
+            "&service={service}",
+        )
+    ]
 
 
 class MonitorHostServicesPage(Page):
@@ -89,6 +112,7 @@ class MonitorHostServicesPage(Page):
                     site=site_id,
                     ai_explain=ai_explain.is_enabled(),
                     actions=self._permitted_actions(),
+                    row_actions=_row_actions(ctx.config, hostname),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,

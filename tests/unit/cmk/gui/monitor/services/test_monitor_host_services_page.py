@@ -18,6 +18,7 @@ from cmk.gui.http import request
 from cmk.gui.monitor.command import monitor_command_registry, MonitorCommands
 from cmk.gui.monitor.services._pages._monitor_host_services import (
     _make_breadcrumb,
+    _row_actions,
     MonitorHostServicesPage,
 )
 from cmk.gui.pages import PageContext
@@ -107,3 +108,28 @@ def test_breadcrumb_drops_all_hosts_without_permission_for_it(
     user_without_permissions: UserId,
 ) -> None:
     assert "All hosts (experimental)" not in [item.title for item in _breadcrumb_of()]
+
+
+def test_row_actions_link_the_parameters_of_the_service_in_the_row(with_user_login: UserId) -> None:
+    config = Config()
+    config.wato_enabled = True
+
+    assert [(action.ident, action.url) for action in _row_actions(config, HostName("web-1"))] == [
+        ("parameters", "wato.py?mode=object_parameters&host=web-1&service={service}")
+    ]
+
+
+def test_row_actions_are_dropped_where_setup_is_off(with_user_login: UserId) -> None:
+    config = Config()
+    config.wato_enabled = False
+
+    assert _row_actions(config, HostName("web-1")) == []
+
+
+def test_row_actions_are_dropped_without_the_rulesets_permission(
+    user_without_permissions: UserId,
+) -> None:
+    config = Config()
+    config.wato_enabled = True
+
+    assert _row_actions(config, HostName("web-1")) == []

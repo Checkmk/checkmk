@@ -80,6 +80,24 @@ test('keeps the whole summary readable on hover, markers and all', () => {
   expect(screen.getByTitle(summary)).toBeInTheDocument()
 })
 
+test('resolves the service into the url of a row action', () => {
+  mountRow(makeService({ name: 'CPU load' }), makeTableRow(), {
+    rowActions: [
+      {
+        id: 'parameters',
+        label: 'Parameters' as TranslatedString,
+        icon: 'rulesets' as const,
+        url: 'wato.py?mode=object_parameters&host=web-1&service={service}'
+      }
+    ]
+  })
+
+  expect(screen.getByRole('link', { name: 'Parameters' })).toHaveAttribute(
+    'href',
+    'wato.py?mode=object_parameters&host=web-1&service=CPU%20load'
+  )
+})
+
 test('renders no action cell for a page that offers no menu', () => {
   const { container } = mountRow(makeService())
 

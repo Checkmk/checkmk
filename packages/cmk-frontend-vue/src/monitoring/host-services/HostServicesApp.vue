@@ -57,6 +57,15 @@ const serviceActions: CellAction[] = (props.actions ?? []).map((action) => ({
   icon: action.icon as SimpleIcons
 }))
 
+// Always-visible inline buttons (parameters). Their url keeps the {service} placeholder,
+// resolved per row in HostServicesRow.
+const rowActionButtons: CellAction[] = (props.row_actions ?? []).map((action) => ({
+  id: action.ident,
+  label: action.title as TranslatedString,
+  icon: action.icon as SimpleIcons,
+  url: action.url
+}))
+
 const actionMenuApi = new ServiceActionMenuApi()
 
 // Command entries the row dropdown runs immediately with their default values, acting on that
@@ -276,6 +285,7 @@ function onActionPerformed(result: ActionFeedbackResult): void {
         <HostServicesRow
           :row="row"
           :table-row="tableRow"
+          :row-actions="rowActionButtons"
           :load-action-menu="loadActionMenu"
           @open="openSlideIn"
           @command="onCommand"

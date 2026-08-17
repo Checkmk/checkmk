@@ -24,10 +24,12 @@ const props = withDefaults(
   defineProps<{
     row: HostServiceEntry
     tableRow: Row<HostServiceEntry>
+    // Always-visible inline buttons; their url may contain a {service} placeholder resolved per row.
+    rowActions?: CellAction[]
     /** Lazy loader for the entries of this service's action menu. */
     loadActionMenu?: ((service: string) => Promise<CellAction[]>) | undefined
   }>(),
-  { loadActionMenu: undefined }
+  { rowActions: () => [], loadActionMenu: undefined }
 )
 
 const { _t } = usei18n()
@@ -46,6 +48,13 @@ function hasColumn(columnId: string): boolean {
 function toggleSelected(selected: boolean): void {
   props.tableRow.toggleSelected(selected)
 }
+
+const actionButtons = computed<CellAction[]>(() =>
+  props.rowActions.map((action) => ({
+    ...action,
+    url: action.url?.replace('{service}', encodeURIComponent(props.row.name))
+  }))
+)
 
 function onActionSelect(action: CellAction): void {
   emit('command', { id: action.id, target: props.row.name })
@@ -101,10 +110,10 @@ const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? [])
   />
   <PerfometerCell v-if="hasColumn('perfometer')" column-id="perfometer" :data="row.perfometer" />
   <ActionsCell
-    v-if="actionMenuLoader && hasColumn('actions')"
+    v-if="(actionMenuLoader || actionButtons.length > 0) && hasColumn('actions')"
     column-id="actions"
-    :actions="[]"
-    :max-visible="0"
+    :actions="actionButtons"
+    :max-visible="actionButtons.length"
     :load="actionMenuLoader"
     @select="onActionSelect"
   />

@@ -96,13 +96,25 @@ const overflowLabel = computed(() =>
 
 /**
  * An entry too wide for the cell is ellipsised to what is left once the "+X" button has its room,
- * so the button never ends up clipped by the row.
+ * so the button never ends up clipped by the row. While measuring nothing caps an entry: a cap is
+ * a width the entry could shrink to, and the measurement is after the width it wants.
  */
-const tagMaxWidth = computed(() =>
-  !measuring.value && hasOverflow.value && !expanded.value
-    ? `calc(100% - ${overflowReserve.value}px)`
-    : '100%'
-)
+const tagMaxWidth = computed(() => {
+  if (measuring.value) {
+    return 'none'
+  }
+  return hasOverflow.value && !expanded.value ? `calc(100% - ${overflowReserve.value}px)` : '100%'
+})
+
+/**
+ * A row that has not been laid out yet - mounted inside a hidden ancestor, or measured before the
+ * table settled on its widths - reports zero-width rectangles for everything. Reading "they all
+ * fit" off that would drop the overflow button for the life of the cell, and a cell that lost it
+ * looks exactly like one with room to spare.
+ */
+function isLaidOut(element: HTMLElement, items: DOMRect[]): boolean {
+  return element.clientWidth > 0 && items.every((rect) => rect.width > 0)
+}
 
 async function measure(): Promise<void> {
   measuring.value = true
@@ -115,6 +127,16 @@ async function measure(): Promise<void> {
   const items = Array.from(element.querySelectorAll<HTMLElement>('[data-label-cell-item]')).map(
     (node) => node.getBoundingClientRect()
   )
+  if (props.items.length > 0 && !isLaidOut(element, items)) {
+    // Stays measuring, so every entry is on show meanwhile and this runs again once the row has a
+    // width: through the column it belongs to, or through the next frame.
+    requestAnimationFrame(() => {
+      if (measuring.value) {
+        void measure()
+      }
+    })
+    return
+  }
   itemEnds.value = items.map((rect) => rect.right - rowLeft)
   const button = element.querySelector<HTMLElement>('[data-label-cell-overflow]')
   const lastItem = items[items.length - 1]
@@ -140,6 +162,15 @@ watch(
     void measure()
   }
 )
+
+// The width the table hands down can arrive after the row mounted, and the inset the measurement
+// takes off it is only right once it has. A later change of that width `fittingCount` follows on
+// its own; the first one has to be measured against.
+watch(columnWidth, (width, previous) => {
+  if (width !== null && previous === null) {
+    void measure()
+  }
+})
 </script>
 
 <template>
@@ -222,6 +253,10 @@ watch(
   white-space: nowrap;
   text-overflow: ellipsis;
   line-height: normal;
+}
+
+.monitoring-label-cell__row--measuring .monitoring-label-cell__tag {
+  flex: 0 0 auto;
 }
 
 .monitoring-label-cell__overflow {

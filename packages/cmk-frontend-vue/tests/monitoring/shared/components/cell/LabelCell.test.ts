@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, defineComponent, h, nextTick } from 'vue'
+import { computed, defineComponent, h, nextTick, ref } from 'vue'
 
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import LabelCell, { type LabelCellItem } from '@/monitoring/shared/components/cell/LabelCell.vue'
@@ -163,4 +163,90 @@ test('takes the available width from the table column layout when there is one',
   await nextTick()
 
   expect(visibleTags(container)).toHaveLength(3)
+})
+
+/**
+ * The failure this cell must not have: a row measured before it had a layout - mounted inside a
+ * hidden ancestor, or ahead of the table settling on its widths - reports zero for everything, and
+ * concluding "they all fit" from that leaves the column showing every entry, each ellipsised, with
+ * no way to reach the rest and nothing that would ever measure again.
+ */
+test('does not read "they all fit" off a row that has no layout yet', async () => {
+  const { container } = await mountCell(makeItems(5), 0)
+
+  expect(visibleTags(container)).toHaveLength(5)
+
+  stubLayout(250)
+
+  await waitFor(() => expect(visibleTags(container)).toHaveLength(2))
+  expect(screen.getByRole('button', { name: 'Show all 5 entries' })).toHaveTextContent('+3')
+})
+
+/**
+ * The column width the table hands down covers the whole cell, padding included, so what the row
+ * itself has is only known once both have been read. A width arriving after the row mounted has to
+ * be measured against rather than taken as the row's own, which would give the entries 16px of
+ * room that is not there.
+ */
+test('measures again against a column width that only arrives after the row mounted', async () => {
+  stubLayout(236)
+  const layout = ref(
+    new Map([
+      [
+        'labels',
+        {
+          width: null as number | null,
+          pinnedLeft: null,
+          pinnedRight: null,
+          isLastPinned: false,
+          isFirstPinnedRight: false,
+          justify: 'left' as const
+        }
+      ]
+    ])
+  )
+  const { container } = render(
+    defineComponent({
+      render() {
+        return h('table', [
+          h('tbody', [h('tr', [h(LabelCell, { items: makeItems(5), columnId: 'labels' })])])
+        ])
+      }
+    }),
+    { global: { provide: { [COLUMN_LAYOUT_KEY as symbol]: layout } } }
+  )
+  await nextTick()
+  await nextTick()
+  expect(visibleTags(container)).toHaveLength(1)
+
+  // The 236px row inside a 252px column: read as the row's own width, 252px would fit a second
+  // entry beside the button that the row has no room for.
+  layout.value = new Map(layout.value)
+  layout.value.set('labels', { ...layout.value.get('labels')!, width: 252 })
+
+  await waitFor(() => expect(visibleTags(container)).toHaveLength(1))
+  expect(screen.getByRole('button', { name: 'Show all 5 entries' })).toHaveTextContent('+4')
+})
+
+/**
+ * The other half of that failure, and the one the classic column showed: an entry that shrank to
+ * make the row fit reports the width the row had room for rather than the width it wants, under
+ * which the entries always fit and the button is never drawn. Nothing may cap them while measured
+ * - the row's `--measuring` rule drops their shrink, and no cap is written on them here.
+ */
+test('measures the entries at the width they want, not one the row has room for', async () => {
+  stubLayout(250)
+  const { container } = render(
+    defineComponent({
+      render() {
+        return h('table', [
+          h('tbody', [h('tr', [h(LabelCell, { items: makeItems(5), columnId: 'labels' })])])
+        ])
+      }
+    })
+  )
+
+  for (const tag of visibleTags(container)) {
+    expect(tag).toHaveStyle({ maxWidth: 'none' })
+  }
 })

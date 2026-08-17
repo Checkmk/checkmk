@@ -41,7 +41,8 @@ const {
   externalErrors,
   validators,
   inline = false,
-  hideValidationMessage = false
+  hideValidationMessage = false,
+  describedBy
 } = defineProps<{
   type?: T
   fieldSize?: keyof typeof inputSizes
@@ -50,6 +51,7 @@ const {
   validators?: ((value: InputDataType<T>) => string[])[]
   inline?: boolean
   hideValidationMessage?: boolean
+  describedBy?: string | undefined
 }>()
 
 const wrapperStyle = computed(() => (inline ? { display: 'inline-block' } : undefined))
@@ -60,6 +62,13 @@ const width = computed(() => inputSizes[fieldSize].width)
 
 const validationId = useId()
 const showsValidation = computed(() => !hideValidationMessage && validation.value.length > 0)
+
+const describedByIds = computed(() => {
+  const ids = [describedBy, showsValidation.value ? validationId : undefined].filter(
+    (id) => id !== undefined
+  )
+  return ids.length > 0 ? ids.join(' ') : undefined
+})
 
 const inputRef = ref<HTMLInputElement | null>(null)
 
@@ -105,7 +114,7 @@ immediateWatch(
         :type="type"
         step="any"
         :aria-invalid="validation.length > 0 || undefined"
-        :aria-describedby="showsValidation ? validationId : undefined"
+        :aria-describedby="describedByIds"
       />
       <div v-if="unit" class="cmk-input__unit"><CmkSpace size="small" />{{ unit }}</div>
     </div>

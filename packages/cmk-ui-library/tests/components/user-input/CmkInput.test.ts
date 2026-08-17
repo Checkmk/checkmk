@@ -164,3 +164,54 @@ test('CmkInput without validation is neither marked nor described', async () => 
   expect(input).not.toHaveAttribute('aria-invalid')
   expect(input).toHaveAccessibleDescription('')
 })
+
+test('CmkInput takes a description from outside', async () => {
+  render(
+    defineComponent({
+      components: { CmkInput },
+      setup() {
+        const data = ref('foo')
+        return { data }
+      },
+      template: `
+        <p id="hint-id">some external hint</p>
+        <CmkInput
+          v-model="data"
+          described-by="hint-id"
+          hide-validation-message
+          :external-errors="['some validation']"
+        />
+      `
+    })
+  )
+
+  const input = screen.getByRole('textbox')
+
+  expect(input).toHaveAttribute('aria-invalid', 'true')
+  expect(input).toHaveAccessibleDescription('some external hint')
+})
+
+test('CmkInput keeps an outside description alongside its own validation message', async () => {
+  render(
+    defineComponent({
+      components: { CmkInput },
+      setup() {
+        const data = ref('foo')
+        return { data }
+      },
+      template: `
+        <p id="hint-id">some external hint</p>
+        <CmkInput
+          v-model="data"
+          described-by="hint-id"
+          :external-errors="['some validation']"
+        />
+      `
+    })
+  )
+
+  const input = screen.getByRole('textbox')
+
+  expect(input).toHaveAccessibleDescription(/some external hint/)
+  expect(input).toHaveAccessibleDescription(/some validation/)
+})

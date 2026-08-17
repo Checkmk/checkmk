@@ -13,6 +13,7 @@ from enum import Enum
 
 from redis import ConnectionError as RedisConnectionError
 from redis import Redis
+from redis import TimeoutError as RedisTimeoutError
 from redis.client import Pipeline
 
 from cmk.ccc.exceptions import MKTimeout
@@ -35,9 +36,16 @@ def get_redis_client() -> Redis:
 
 
 def redis_server_reachable(client: Redis) -> bool:
+    """Whether redis answers right now
+
+    A timeout counts as unreachable, too: redis is single threaded, so a
+    client blocking it with a long running script or scan makes it miss the
+    five second socket timeout redis-py defaults to. Callers of this fall
+    back to computing their answers without redis, which beats failing.
+    """
     try:
         client.ping()
-    except RedisConnectionError:
+    except (RedisConnectionError, RedisTimeoutError):
         return False
     return True
 

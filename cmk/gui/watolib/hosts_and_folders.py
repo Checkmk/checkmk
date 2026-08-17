@@ -43,6 +43,7 @@ from typing import (
 
 from redis import ConnectionError as RedisConnectionError
 from redis import Redis
+from redis import TimeoutError as RedisTimeoutError
 from redis.client import Pipeline
 from redis.typing import EncodableT, FieldT
 
@@ -857,33 +858,38 @@ class NullFolderCache:
 def _degrade_to_cache_miss[**P, T](
     query: Callable[Concatenate[RedisFolderCache, P], T],
 ) -> Callable[Concatenate[RedisFolderCache, P], T | None]:
-    """Turn a lost redis connection into a cache miss
+    """Turn an unusable redis into a cache miss
 
-    Redis is stopped and started again while the rest of the site keeps
-    serving: its init script implements "reload" as stop and start, and it is
-    reloaded before the ui-job-scheduler and apache (40-redis vs. 60- and 85-
-    in etc/rc.d). A plain "omd reload" leaves such a window, and so does an
-    MKP change, which reloads redis, the ui-job-scheduler and the automation
-    helper concurrently. Crashes from that window were seen from job
-    scheduler cron jobs and from REST API requests alike.
+    We observed the following failures in the system level test environments:
 
-    Answer such a query like NullFolderCache does and let the caller compute
-    the answer from disk. Losing an update is just as harmless: it would only
-    have advanced wato:folder_list:last_update, so the next
-    _RedisHelper._cache_integrity_ok() finds redis lagging behind disk and
-    rebuilds the cache from scratch.
+    1. Redis being restarted while the site is running. Two cases observed:
+        a) "omd reload" does not execute a graceful reload of redis but stop/start
+        b) MKP changes reload redis, the ui-job-scheduler and the automation helper concurrently
+
+    2. Redis is up but does not answer within the five second socket timeout
+        redis-py defaults to, because another client keeps the single threaded
+        server busy.
+
+    Since the Redis cache is mainly used to improve the performance, answer the query like
+    NullFolderCache does and let the caller compute the answer from disk.
+
+    This silent fallback behaves the same as if redis was not available at the start of the
+    request handling (_make_folder_cache). So this seems to be fine for now.
+
+    However, such a silent fallback is a bit dangerous, because it can hide problems with the redis
+    server and lead to a degraded performance. So we log a warning to make the problem visible.
 
     The helper is dropped so that the next query reconnects and, if redis is
-    back, repopulates the cache.
+    usable again, repopulates the cache.
     """
 
     @wraps(query)
     def wrapper(self: RedisFolderCache, /, *args: P.args, **kwargs: P.kwargs) -> T | None:
         try:
             return query(self, *args, **kwargs)
-        except RedisConnectionError as e:
+        except (RedisConnectionError, RedisTimeoutError) as e:
             logger.warning(
-                "Redis is not available (%(error)s). Computing folder information from disk",
+                "Redis is not usable (%(error)s). Computing folder information from disk",
                 {"error": e},
             )
             self.reset()

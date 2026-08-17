@@ -27,6 +27,7 @@ import time_machine
 from pytest import MonkeyPatch
 from redis import ConnectionError as RedisConnectionError
 from redis import Redis
+from redis import TimeoutError as RedisTimeoutError
 
 import cmk.ruleset_matcher.tags
 import cmk.utils.paths
@@ -1207,18 +1208,36 @@ def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch, tree: FolderTree
         assert isinstance(wato_folders._raw_dict[""], hosts_and_folders.Folder)
 
 
-class DeadRedisClient:
-    """Redis client whose server went away, e.g. during an `omd reload`"""
+class UnusableRedisClient:
+    """Redis client that fails on any interaction"""
+
+    def __init__(self, error: Exception) -> None:
+        self._error = error
 
     def __getattr__(self, _name: str) -> object:
-        raise RedisConnectionError(
-            "Error 2 connecting to /omd/sites/heute/tmp/run/redis. No such file or directory."
-        )
+        raise self._error
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            # The socket is gone, e.g. during an `omd reload`
+            RedisConnectionError(
+                "Error 2 connecting to /omd/sites/heute/tmp/run/redis. No such file or directory."
+            ),
+            id="connection_error",
+        ),
+        pytest.param(
+            # Redis is up, but another client keeps it busy past the socket timeout
+            RedisTimeoutError("Timeout reading from socket"),
+            id="timeout_error",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("with_admin_login", "allow_redis")
-def test_redis_folder_cache_degrades_when_redis_dies(
-    monkeypatch: MonkeyPatch, tree: FolderTree
+def test_redis_folder_cache_degrades_when_redis_is_unusable(
+    monkeypatch: MonkeyPatch, tree: FolderTree, error: Exception
 ) -> None:
     subfolder = tree.root_folder().create_subfolder(
         "sub",
@@ -1229,7 +1248,7 @@ def test_redis_folder_cache_degrades_when_redis_dies(
         acting_user=_SUPERUSER,
     )
     tree.invalidate_caches()
-    cache = hosts_and_folders.RedisFolderCache(tree, cast(Redis, DeadRedisClient()))
+    cache = hosts_and_folders.RedisFolderCache(tree, cast(Redis, UnusableRedisClient(error)))
     monkeypatch.setattr(tree, "cache", cache)
 
     # Queries miss instead of raising, so the callers fall back to disk
@@ -1244,7 +1263,7 @@ def test_redis_folder_cache_degrades_when_redis_dies(
     cache.folder_updated(subfolder.filesystem_path())
     cache.save_folder_info(subfolder)
 
-    # The failed connection is not kept around, the next query reconnects
+    # The failed helper is not kept around, the next query reconnects
     assert cache._helper is None
 
     assert set(tree.all_folders()) == {"", "sub"}

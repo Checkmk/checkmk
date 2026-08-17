@@ -22,7 +22,8 @@ const propsCva = cva('', {
       danger: 'cmk-tag--color-danger',
       discovered: 'cmk-tag--color-discovered',
       explicit: 'cmk-tag--color-explicit',
-      ruleset: 'cmk-tag--color-ruleset'
+      ruleset: 'cmk-tag--color-ruleset',
+      label: 'cmk-tag--color-label'
     },
     variant: {
       fill: 'cmk-tag--variant-fill',
@@ -114,6 +115,11 @@ defineProps<CmkTagProps>()
   --tag-color: var(--tag-ruleset-color);
 }
 
+/* What the classic view gives a label that carries no source of its own, and a tag. */
+.cmk-tag--color-label {
+  --tag-color: var(--tag-label-color);
+}
+
 /* weighted variant: success -> danger gets more recognizable in color and contrast */
 .cmk-tag--variant-weighted.cmk-tag--color-default {
   --tag-color: var(--font-color);
@@ -161,6 +167,12 @@ defineProps<CmkTagProps>()
   --tag-color: var(--color-pink-0);
   --tag-border-color: var(--color-pink-40);
   --tag-fill-color: var(--color-pink-90);
+}
+
+.cmk-tag--variant-weighted.cmk-tag--color-label {
+  --tag-color: var(--color-cyan-0);
+  --tag-border-color: var(--color-cyan-40);
+  --tag-fill-color: var(--color-cyan-90);
 }
 
 .cmk-tag--variant-fill {

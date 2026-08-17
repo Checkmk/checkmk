@@ -131,6 +131,7 @@
     --tag-explicit-color: var(--color-purple-70);
     --tag-discovered-color: var(--color-orange-30);
     --tag-ruleset-color: var(--color-pink-70);
+    --tag-label-color: var(--color-cyan-80);
     --tag-font-color-light: var(--color-white-100);
     --tag-font-color-dark: var(--color-conference-grey-100);
 
@@ -271,6 +272,7 @@
     --tag-explicit-color: var(--color-purple-70);
     --tag-discovered-color: var(--color-orange-30);
     --tag-ruleset-color: var(--color-pink-70);
+    --tag-label-color: var(--color-cyan-80);
     --tag-font-color-light: var(--color-white-100);
     --tag-font-color-dark: var(--color-conference-grey-100);
 

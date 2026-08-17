@@ -42,7 +42,7 @@ void main() {
             ],
         ]);
 
-        stage("Archive / process test reports") {
+        stage("Archive test reports") {
             dir("${checkout_dir}/${result_dir}") {
                 show_duration("archiveArtifacts") {
                     archiveArtifacts(
@@ -50,16 +50,19 @@ void main() {
                         fingerprint: true,
                     );
                 }
-                xunit([Custom(
-                    customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
-                    deleteOutputFiles: true,
-                    failIfNotNew: true,
-                    pattern: "**/junit.xml",
-                    skipNoTestFiles: false,
-                    stopProcessingIfError: true
-                )]);
             }
         }
+    }
+
+    stage("Process test reports") {
+        xunit([Custom(
+            customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
+            deleteOutputFiles: true,
+            failIfNotNew: true,
+            pattern: "checkout/${result_dir}/**/junit.xml",
+            skipNoTestFiles: false,
+            stopProcessingIfError: true
+        )]);
     }
 }
 

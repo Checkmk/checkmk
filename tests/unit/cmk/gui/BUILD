@@ -267,7 +267,6 @@ py_cmk_test(
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//tests/unit:conftest",
         requirement("fido2"),
-        requirement("matplotlib"),
         requirement("opentelemetry-sdk"),
         requirement("polyfactory"),
         requirement("pydantic"),

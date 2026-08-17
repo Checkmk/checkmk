@@ -51,13 +51,13 @@ from ._artwork import (
     compute_graph_artwork,
     Curve,
     CurveAnnotations,
+    get_step_label,
     GraphArtwork,
     GraphArtworkAnnotations,
     GraphArtworkOrErrors,
     LayoutedCurve,
     Scalars,
 )
-from ._engine_series import get_step_label
 from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import metrics_from_api, RegisteredMetric
 from ._frontend import render_engine_graph_group

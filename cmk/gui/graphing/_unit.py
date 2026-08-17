@@ -24,7 +24,6 @@ from cmk.gui.unit_formatter import (
     TimeFormatter,
 )
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.shared_typing.cmk_time_series_graph import UnitFormat as SharedUnitFormat
 
 
 class DecimalNotation(BaseModel, frozen=True):
@@ -162,47 +161,6 @@ def user_specific_unit(
         formatter=formatter,
         conversion=conversion.converter,
     )
-
-
-def user_specific_unit_from_unit_format(
-    unit_format: SharedUnitFormat, temperature_unit: TemperatureUnit
-) -> UserSpecificUnit:
-    """Same shape as ``user_specific_unit``, keyed off the shared ``UnitFormat`` - a notation
-    string and a ``convertible`` flag - instead of the pydantic Convertible/NonConvertible unit
-    specification. ``UnitFormat`` is what PNG and the Vue graph both already carry."""
-    noop_conversion = _Conversion(symbol=unit_format.symbol, converter=lambda v: v)
-    conversion = (
-        _TEMPERATURE_CONVERSION_COMPUTER.get(unit_format.symbol, lambda *_: noop_conversion)(
-            temperature_unit
-        )
-        if unit_format.convertible is not False
-        else noop_conversion
-    )
-    precision: AutoPrecision | StrictPrecision = (
-        AutoPrecision(digits=unit_format.precision.digits)
-        if unit_format.precision.type == "auto"
-        else StrictPrecision(digits=unit_format.precision.digits)
-    )
-    formatter: NotationFormatter
-    match unit_format.notation:
-        case "decimal":
-            formatter = DecimalFormatter(symbol=conversion.symbol, precision=precision)
-        case "si":
-            formatter = SIFormatter(symbol=conversion.symbol, precision=precision)
-        case "iec":
-            formatter = IECFormatter(symbol=conversion.symbol, precision=precision)
-        case "standard_scientific":
-            formatter = StandardScientificFormatter(symbol=conversion.symbol, precision=precision)
-        case "engineering_scientific":
-            formatter = EngineeringScientificFormatter(
-                symbol=conversion.symbol, precision=precision
-            )
-        case "time":
-            formatter = TimeFormatter(symbol=conversion.symbol, precision=precision)
-        case other:
-            assert_never(other)
-
-    return UserSpecificUnit(formatter=formatter, conversion=conversion.converter)
 
 
 def _degree_celsius_conversion(temperature_unit: TemperatureUnit) -> _Conversion:

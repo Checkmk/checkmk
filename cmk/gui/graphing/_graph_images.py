@@ -16,9 +16,7 @@ import cmk.livestatus_client as livestatus
 from cmk import trace
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.graphing_engine import ConsolidationFunction, TimeRange
-from cmk.graphing_engine import HostName as EngineHostName
-from cmk.graphing_engine import ServiceName as EngineServiceName
+from cmk.gui import pdf
 from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
@@ -29,10 +27,11 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.roles import UserPermissions
 
-from . import _engine_plugins as engine_plugins
-from ._engine_dispatch import evaluate_built_graphs
-from ._engine_source import RRDFetchMetricNames
-from ._engine_template_graphs import build_template_graphs
+from ._artwork import (
+    GraphArtwork,
+    GraphArtworkAnnotations,
+    iter_graph_artworks,
+)
 from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import graphs_from_api, metrics_from_api
 from ._graph_display_config import (
@@ -44,8 +43,9 @@ from ._graph_metric_expressions import LineType
 from ._graph_pdf import (
     compute_pdf_graph_ranges,
     get_mm_per_ex,
+    graph_legend_height,
+    render_graph_pdf,
 )
-from ._graph_png import render_png
 from ._graph_specification import (
     AugmentedTimeSeriesOfGraphMetric,
     GraphEnvironment,
@@ -108,28 +108,8 @@ def _answer_graph_image_request(
         destination=GraphDestinations.notification,
     )
 
-    # Always use 25h graph in notifications
-    end_time = int(time.time())
-    start_time = end_time - (25 * 3600)
-
-    display_config = GraphDisplayConfigImage.from_user_context_and_options(
-        user,
-        graph_image_render_options(),
-    )
-
     try:
-        built_graphs = build_template_graphs(
-            graph_specification,
-            registered_graphs=engine_plugins.registered_graphs(),
-            registered_metrics=engine_plugins.registered_metrics(),
-            fetch_metric_names=RRDFetchMetricNames(
-                host_name=EngineHostName(str(host_name)),
-                service_name=EngineServiceName(service_description),
-                debug=env.debug,
-                site_id=site_id,
-                registered_translations=engine_plugins.registered_translations(),
-            ),
-        )
+        rows = graph_specification.fetch_graph_rows(env)
     except livestatus.MKLivestatusNotFoundError:
         logger.debug(
             "Cannot fetch graph data: site: %(site_id)s, host %(host_name)s, service %(service_description)s",
@@ -143,28 +123,39 @@ def _answer_graph_image_request(
             raise
         return []
 
-    num_graphs = request.get_integer_input("num_graphs")
-    graphs = [built.graph for built in itertools.islice(built_graphs, num_graphs)]
-    ranges = compute_image_graph_ranges(display_config, start_time, end_time)
-    step = ranges.step if isinstance(ranges.step, int) else 60
-    evaluated = evaluate_built_graphs(
-        graphs,
-        {
-            "consolidation_function": ConsolidationFunction.MAX,
-            "time_range": TimeRange(
-                start=ranges.time_range[0], end=ranges.time_range[1], step=step
-            ),
-            "destination": graph_specification.destination,
-        },
+    # Always use 25h graph in notifications
+    end_time = int(time.time())
+    start_time = end_time - (25 * 3600)
+
+    display_config = GraphDisplayConfigImage.from_user_context_and_options(
+        user,
+        graph_image_render_options(),
     )
 
-    return [
-        base64.b64encode(render_png(evaluated_graph, display_config)).decode("ascii")
-        # Assumes evaluate_built_graphs returns exactly one evaluated graph per input graph -
-        # true for template graphs (the only kind this notification path builds above), but not
-        # guaranteed for every GraphSpecification kind in general.
-        for _graph, evaluated_graph in zip(graphs, evaluated.graphs, strict=True)
-    ]
+    num_graphs = request.get_integer_input("num_graphs")
+
+    graphs = []
+    for rwo, result in itertools.islice(
+        iter_graph_artworks(
+            graph_specification.recipes(env, rows),
+            compute_image_graph_ranges(display_config, start_time, end_time),
+            display_config.size,
+            env,
+        ),
+        num_graphs,
+    ):
+        graphs.append(
+            base64.b64encode(
+                render_graph_png(
+                    result.artwork,
+                    result.annotations,
+                    rwo.recipe.title,
+                    display_config,
+                )
+            ).decode("ascii")
+        )
+
+    return graphs
 
 
 def compute_image_graph_ranges(
@@ -202,6 +193,45 @@ def graph_image_render_options(
         graph_render_options = graph_render_options.model_copy(update=render_opts)
 
     return graph_render_options
+
+
+@tracer.instrument("graphing.render_graph_png")
+def render_graph_png(
+    artwork: GraphArtwork,
+    annotations: GraphArtworkAnnotations,
+    title: str,
+    display_config: GraphDisplayConfigImage,
+) -> bytes:
+    width_ex, height_ex = display_config.size
+    mm_per_ex = get_mm_per_ex(display_config.font_size)
+
+    legend_height = graph_legend_height(artwork, display_config)
+    image_height = (height_ex * mm_per_ex) + legend_height
+
+    # TODO: Better use reporting.get_report_instance()
+    doc = pdf.Document(
+        font_family="Helvetica",
+        font_size=display_config.font_size,
+        lineheight=1.2,
+        pagesize=(width_ex * mm_per_ex, image_height),
+        margins=(0, 0, 0, 0),
+    )
+
+    render_graph_pdf(
+        doc,
+        artwork,
+        annotations,
+        title,
+        display_config,
+        pos_left=0.0,
+        pos_top=0.0,
+        total_width=(width_ex * mm_per_ex),
+        total_height=image_height,
+    )
+
+    pdf_graph = doc.end(do_send=False)
+    assert pdf_graph is not None
+    return pdf.pdf2png(pdf_graph)
 
 
 def graph_recipes_from_request(

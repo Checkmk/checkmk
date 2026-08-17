@@ -310,9 +310,8 @@ class TestMonitorHostsQuery:
                 "GET hosts",
                 f"Columns: {_HOST_TABLE_COLUMNS}",
                 "Filter: name ~~ no-such-host",
-                "Filter: alias ~~ no-such-host",
                 "Filter: address ~~ no-such-host",
-                "Or: 3",
+                "Or: 2",
                 "OrderBy: name asc natural",
                 f"Limit: {_LIMIT}",
             ]
@@ -322,13 +321,42 @@ class TestMonitorHostsQuery:
                 "GET hosts",
                 "Stats: state >= 0",
                 "Filter: name ~~ no-such-host",
-                "Filter: alias ~~ no-such-host",
                 "Filter: address ~~ no-such-host",
-                "Or: 3",
+                "Or: 2",
             ]
         )
         with mock_livestatus():
             resp = clients.MonitorHosts.list_all(limit=_LIMIT, q="no-such-host")
+
+        assert len(resp.json["hosts"]) == 0
+
+    def test_search_only_reads_the_fields_asked_for(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        search_filter = [
+            "Filter: name ~~ no-such-host",
+            "Filter: alias ~~ no-such-host",
+            r"Filter: filename ~~ ^/wato.*no-such-host.*/hosts\.mk$",
+            "Or: 3",
+        ]
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_host_columns('alias', 'folder')}",
+                *search_filter,
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0", *search_filter])
+        with mock_livestatus():
+            resp = clients.MonitorHosts.list_all(
+                limit=_LIMIT, q="no-such-host", fields=["alias", "folder"]
+            )
 
         assert len(resp.json["hosts"]) == 0
 

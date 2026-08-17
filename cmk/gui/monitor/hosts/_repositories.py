@@ -37,6 +37,8 @@ class HostRepository(Protocol):
         """Count the total hosts in your environment."""
         ...
 
-    def count_matched(self, *, query: str, filters: HostFilter) -> int:
-        """Count the hosts matching the given criteria."""
+    def count_matched(
+        self, *, query: str, filters: HostFilter, fields: Set[HostOptionalField]
+    ) -> int:
+        """Count the hosts matching the given criteria, searching `fields` alongside the name."""
         ...

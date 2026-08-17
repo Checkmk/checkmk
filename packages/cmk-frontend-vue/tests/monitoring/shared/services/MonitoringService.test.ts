@@ -809,6 +809,25 @@ describe('MonitoringService', () => {
       service.stopPolling()
     })
 
+    it('refetches when a column is hidden under a search, which no longer searches it', async () => {
+      const fetchBatch = vi.fn().mockResolvedValue(makeResponse([], 0, 0))
+      const service = new TestService(fetchBatch, {
+        columns: [{ accessorKey: 'address', header: 'IP address' }]
+      })
+
+      await vi.advanceTimersByTimeAsync(0)
+      service.updateSearch('10.0.0.1')
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fetchBatch).toHaveBeenCalledTimes(2)
+
+      service.updateColumnVisibility({ address: false })
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(fetchBatch).toHaveBeenCalledTimes(3)
+
+      service.stopPolling()
+    })
+
     describe('persistence', () => {
       const STORAGE_KEY = 'test-service-columns'
       const COLUMNS: ColumnDef<TestItem>[] = [

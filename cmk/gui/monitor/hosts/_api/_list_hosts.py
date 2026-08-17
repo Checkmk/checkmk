@@ -251,7 +251,10 @@ class HostsRequestBody:
         str | ApiOmitted,
         PlainValidator(func=parse_host_search_query, json_schema_input_type=str),
     ] = api_field(
-        description="Filter hosts by name, alias, or IP. Omit or pass empty string to return all hosts.",
+        description=(
+            "Search text, matched against the host name and every text field asked for through "
+            "`fields` (alias, address, folder). Omit or pass empty string to return all hosts."
+        ),
         example="web-server",
         default_factory=ApiOmitted,
     )
@@ -364,7 +367,7 @@ def _handle_list_hosts(
     if limit is None:
         matched_host_count = len(hosts)
     elif query or filters or has_site_filter:
-        matched_host_count = host_repo.count_matched(query=query, filters=filters)
+        matched_host_count = host_repo.count_matched(query=query, filters=filters, fields=fields)
     else:
         matched_host_count = total_host_count
 

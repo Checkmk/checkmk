@@ -10,7 +10,7 @@ Our application should depend only interfaces as arguments, but receive a concre
 when instantiated.
 """
 
-from collections.abc import Mapping, Sequence, Set
+from collections.abc import Callable, Mapping, Sequence, Set
 from pathlib import PurePosixPath
 
 from cmk.ccc.hostaddress import HostName
@@ -76,7 +76,7 @@ class LiveStatusHostRepository:
                     for column in columns
                 ),
             ],
-            _build_query_filter(query_),
+            _build_query_filter(query_, fields),
             extra_headers=extra_headers,
         )
 
@@ -178,12 +178,14 @@ class LiveStatusHostRepository:
         # they may see, while an unrestricted user still counts every host.
         return self._count_hosts()
 
-    def count_matched(self, *, query: str, filters: HostFilter) -> int:
+    def count_matched(
+        self, *, query: str, filters: HostFilter, fields: Set[HostOptionalField]
+    ) -> int:
         # A filtered total can't be read from the ``status`` table, so the matches are counted
         # server-side via ``Stats`` instead of transferring and counting every matching row. The
         # ``Query`` class can't emit ``Stats`` headers yet, so the filter is assembled by hand.
         query_filter = (
-            ": ".join(line) for line in _build_query_filter(_sanitize_query(query)).render()
+            ": ".join(line) for line in _build_query_filter(_sanitize_query(query), fields).render()
         )
         return self._count_hosts(extra_lines=[*query_filter, *filters.splitlines()])
 
@@ -227,14 +229,26 @@ def _sanitize_query(q: str) -> str:
     return q.replace("*", ".*")
 
 
-def _build_query_filter(query: str) -> QueryExpression:
+def _folder_pattern(query: str) -> str:
+    return rf"^/wato.*{query}.*/hosts\.mk$"
+
+
+_SEARCHED_FIELDS: Mapping[HostOptionalField, Callable[[str], QueryExpression]] = {
+    HostOptionalField.ALIAS: lambda query: Hosts.alias.contains(query, ignore_case=True),
+    HostOptionalField.ADDRESS: lambda query: Hosts.address.contains(query, ignore_case=True),
+    HostOptionalField.FOLDER: lambda query: Hosts.filename.contains(
+        _folder_pattern(query), ignore_case=True
+    ),
+}
+
+
+def _build_query_filter(query: str, fields: Set[HostOptionalField]) -> QueryExpression:
     if not query:
         return NothingExpression()
 
     return Or(
         Hosts.name.contains(query, ignore_case=True),
-        Hosts.alias.contains(query, ignore_case=True),
-        Hosts.address.contains(query, ignore_case=True),
+        *(build(query) for field, build in _SEARCHED_FIELDS.items() if field in fields),
     )
 
 

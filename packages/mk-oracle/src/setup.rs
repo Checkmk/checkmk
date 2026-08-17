@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::args::Args;
+use crate::config::grid::GridInfrastructure;
 use crate::config::merge;
 use crate::config::options::Options;
 use crate::config::system::{Logging, SystemConfig};
@@ -476,9 +477,13 @@ impl ClientRuntime {
     }
 }
 
+/// Searches for the Oracle client to load.
+/// The Grid home is a last resort, and only where the configuration leaves the
+/// choice open.
 pub fn detect_runtime(
     use_host_client: &UseHostClient,
     lib_dir: Option<&Path>,
+    grid: Option<&GridInfrastructure>,
 ) -> Option<ClientRuntime> {
     log::info!("Oracle client selection mode: {use_host_client:?}");
     let factory_runtime = || {
@@ -487,12 +492,14 @@ pub fn detect_runtime(
             .map(ClientRuntime::instant_client)
     };
     match use_host_client {
-        UseHostClient::Always => detect_host_runtime(),
+        UseHostClient::Always => detect_host_runtime().or_else(|| grid_runtime(grid)),
         UseHostClient::Never => factory_runtime(),
-        UseHostClient::Auto => factory_runtime().or_else(|| {
-            log::info!("No client bundled with the agent");
-            detect_host_runtime()
-        }),
+        UseHostClient::Auto => factory_runtime()
+            .or_else(|| {
+                log::info!("No client bundled with the agent");
+                detect_host_runtime()
+            })
+            .or_else(|| grid_runtime(grid)),
         // an operator-supplied path is the one case where nothing knows what
         // was pointed at, so it has to be inspected
         UseHostClient::Path(p) => {
@@ -534,6 +541,15 @@ fn validate_runtime(candidate: ClientRuntime) -> Option<ClientRuntime> {
     Some(candidate)
 }
 
+/// The client of the Grid home named by the Oracle Local Registry. Grid
+/// Infrastructure stops maintaining oratab from 12.2 on, so on such a node this
+/// can be the only Oracle client present.
+fn grid_runtime(grid: Option<&GridInfrastructure>) -> Option<ClientRuntime> {
+    let crs_home = grid?.crs_home();
+    log::debug!("Trying the Grid home {crs_home:?}");
+    Some(ClientRuntime::in_home(crs_home.to_path_buf()))
+}
+
 #[cfg(windows)]
 pub const RUNTIME_PATH_ENV_VAR: &str = "PATH";
 #[cfg(unix)]
@@ -573,8 +589,12 @@ pub fn detect_runtime_env(config: &OracleConfig) -> RuntimeEnv {
         .ok()
         .filter(|v| !v.is_empty());
     let client = config.ora_sql().and_then(|ora_sql| {
-        detect_runtime(ora_sql.options().use_host_client(), lib_dir.as_deref())
-            .filter(|runtime| runtime_permissions_ok(runtime, ora_sql.options()))
+        detect_runtime(
+            ora_sql.options().use_host_client(),
+            lib_dir.as_deref(),
+            ora_sql.conn().grid(),
+        )
+        .filter(|runtime| runtime_permissions_ok(runtime, ora_sql.options()))
     });
     RuntimeEnv {
         oracle_home: effective_oracle_home(client.as_ref(), inherited),

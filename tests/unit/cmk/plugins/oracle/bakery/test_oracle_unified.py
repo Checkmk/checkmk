@@ -842,6 +842,65 @@ custom_metrics_files: list[Plugin] = [
 ]
 
 
+# The rule may leave the host unset. The plug-in then picks its own default,
+# which is the node name on a host running Grid Infrastructure and localhost
+# elsewhere, so the bakery must not decide it here.
+oracle_config_no_host: GuiConfig = GuiConfig(
+    deploy=(DEPLOY, None),
+    main=GuiMainConf(
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.STANDARD,
+                GuiAuthUserPasswordData(
+                    username="cmk",
+                    password=Secret("pw", "", ""),
+                ),
+            ),
+            role=None,
+        ),
+        connection=GuiConnectionConf(
+            host=None,
+            port=None,
+            timeout=None,
+            tns_admin=None,
+        ),
+        cache_age=None,
+        discovery=None,
+        sections=None,
+    ),
+    instances=None,
+)
+
+expected_yaml_lines_no_host = [
+    "---",
+    "oracle:",
+    "  main:",
+    "    authentication:",
+    "      password: pw",
+    "      type: standard",
+    "      username: cmk",
+    "    cache_age: 600",
+    "    custom_metrics_cache_age: 600",
+]
+
+
+def test_oracle_without_host_omits_hostname() -> None:
+    assert _process(oracle_config_no_host) == _combine(files_base, expected_yaml_lines_no_host)
+
+
+def test_oracle_without_host_keeps_other_connection_keys() -> None:
+    config = oracle_config_no_host.model_copy(deep=True)
+    config.main.connection = GuiConnectionConf(host=None, port=1234, timeout=None, tns_admin=None)
+    lines = [
+        line
+        for entry in _process(config)
+        if isinstance(entry, PluginConfig)
+        for line in entry.lines
+    ]
+    assert "      port: 1234" in lines
+    assert not any(line.strip().startswith("hostname:") for line in lines)
+
+
 def test_custom_metrics_cache_age_in_yaml() -> None:
     assert _process(oracle_config_custom_metrics_cache_age) == _combine(
         files_base + custom_metrics_files, expected_yaml_lines_custom_metrics_cache_age

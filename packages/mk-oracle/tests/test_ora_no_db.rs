@@ -19,7 +19,9 @@
 //! This is the only component test binary executed on hosts without
 //! access to a test database (e.g. the Solaris and AIX test machines).
 
-use mk_oracle::config::connection::setup_wallet_environment;
+use mk_oracle::config::connection::{setup_wallet_environment, Connection};
+use mk_oracle::config::grid::GridInfrastructure;
+use mk_oracle::config::yaml::test_tools::create_yaml;
 use mk_oracle::config::OracleConfig;
 use mk_oracle::platform::get_local_instances;
 use mk_oracle::setup::{
@@ -107,17 +109,22 @@ fn test_detect_runtime_with_runtime() {
     let local_exists = local_oracle_client_present();
 
     // Never
-    assert!(detect_runtime(&UseHostClient::Never, None).is_none()); // no MK_LIBDIR
-    assert!(detect_runtime(&UseHostClient::Never, Some(std::path::Path::new("Hurz"))).is_none()); // no such directory
-    assert!(detect_runtime(&UseHostClient::Never, lib_dir).is_some()); // detected
+    assert!(detect_runtime(&UseHostClient::Never, None, None).is_none()); // no MK_LIBDIR
+    assert!(detect_runtime(
+        &UseHostClient::Never,
+        Some(std::path::Path::new("Hurz")),
+        None
+    )
+    .is_none()); // no such directory
+    assert!(detect_runtime(&UseHostClient::Never, lib_dir, None).is_some()); // detected
 
     // Always
     assert_eq!(
-        detect_runtime(&UseHostClient::Always, lib_dir).is_some(),
+        detect_runtime(&UseHostClient::Always, lib_dir, None).is_some(),
         local_exists
     ); // detected only if local exists(skip factory)
     if local_exists {
-        assert!(!detect_runtime(&UseHostClient::Always, lib_dir)
+        assert!(!detect_runtime(&UseHostClient::Always, lib_dir, None)
             .unwrap()
             .dir
             .into_os_string()
@@ -127,7 +134,7 @@ fn test_detect_runtime_with_runtime() {
     }
 
     // Auto
-    let path = detect_runtime(&UseHostClient::Auto, lib_dir)
+    let path = detect_runtime(&UseHostClient::Auto, lib_dir, None)
         .unwrap()
         .dir
         .into_os_string()
@@ -141,6 +148,7 @@ fn test_detect_runtime_with_runtime() {
     let path = to_string(detect_runtime(
         &UseHostClient::Path(correct_path.clone()),
         lib_dir,
+        None,
     ))
     .unwrap();
     assert_eq!(path, correct_path);
@@ -151,11 +159,11 @@ fn test_detect_runtime_with_runtime() {
         .into_os_string()
         .into_string()
         .unwrap();
-    assert!(detect_runtime(&UseHostClient::Path(lib_less_path), lib_dir).is_none());
+    assert!(detect_runtime(&UseHostClient::Path(lib_less_path), lib_dir, None).is_none());
 
     // path is wrong -> expected nothing
     let wrong_path = correct_path + "something-missing";
-    let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir);
+    let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir, None);
     assert!(path.is_none());
 }
 
@@ -171,12 +179,12 @@ fn test_detect_runtime_without_runtime() {
     let local_installation = local_oracle_client_present();
 
     // Never
-    assert!(detect_runtime(&UseHostClient::Never, lib_dir).is_none());
+    assert!(detect_runtime(&UseHostClient::Never, lib_dir, None).is_none());
 
     // Auto and Always are the same if no runtimes
     // If local exists -> expected path to local client otherwise nothing
     for mode in [UseHostClient::Auto, UseHostClient::Always] {
-        let path = to_string(detect_runtime(&mode, lib_dir));
+        let path = to_string(detect_runtime(&mode, lib_dir, None));
         if local_installation {
             eprintln!(
                 "Local installation path = {:?} {}",
@@ -197,13 +205,14 @@ fn test_detect_runtime_without_runtime() {
     let path = to_string(detect_runtime(
         &UseHostClient::Path(correct_path.clone()),
         lib_dir,
+        None,
     ))
     .unwrap();
     assert_eq!(path, correct_path);
 
     // path is wrong -> expected nothing
     let wrong_path = correct_path + "something-missing";
-    let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir);
+    let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir, None);
     assert!(path.is_none());
 }
 
@@ -242,7 +251,8 @@ fn test_add_runtime_to_path() {
         }
         let ora_sql = cfg.ora_sql().unwrap();
         let runtime_env = RuntimeEnv {
-            runtime_dir: detect_runtime(ora_sql.options().use_host_client(), mk_lib).map(|r| r.dir),
+            runtime_dir: detect_runtime(ora_sql.options().use_host_client(), mk_lib, None)
+                .map(|r| r.dir),
             oracle_home: None,
         };
         apply_runtime_env(&runtime_env, Some(mut_env_var.clone()), None)
@@ -668,6 +678,7 @@ fn test_configured_client_path_reports_its_home() {
     let found = detect_runtime(
         &UseHostClient::Path(home_lib.to_str().unwrap().to_string()),
         None,
+        None,
     )
     .expect("full home accepted");
     assert_eq!(found.dir, home_lib);
@@ -680,6 +691,7 @@ fn test_configured_client_path_reports_its_home() {
     let found = detect_runtime(
         &UseHostClient::Path(instant_client.to_str().unwrap().to_string()),
         None,
+        None,
     )
     .expect("instant client accepted");
     assert_eq!(found.dir, instant_client);
@@ -691,6 +703,7 @@ fn test_configured_client_path_reports_its_home() {
     std::fs::write(rpm_lib.join("libclntsh.so.19.1"), "").expect("create client lib");
     let found = detect_runtime(
         &UseHostClient::Path(rpm_lib.to_str().unwrap().to_string()),
+        None,
         None,
     )
     .expect("rpm instant client accepted");
@@ -1414,4 +1427,202 @@ foo_views_chk1 () {{
         )),
         "custom SQL section from mk_oracle.d not migrated:\n{yml}"
     );
+}
+
+/// Writes an `olr.loc` naming `<dir>/grid` and creates that directory, so
+/// that the result looks like a node running Grid Infrastructure.
+fn make_grid_node(dir: &std::path::Path) -> (std::path::PathBuf, std::path::PathBuf) {
+    let crs_home = dir.join("grid");
+    std::fs::create_dir_all(&crs_home).unwrap();
+    let local_registry = dir.join("olr.loc");
+    std::fs::write(
+        &local_registry,
+        format!(
+            "olrconfig_loc={}/olr\ncrs_home={}\n",
+            dir.display(),
+            crs_home.display()
+        ),
+    )
+    .unwrap();
+    (local_registry, crs_home)
+}
+
+fn connection_from_olr(local_registry: &std::path::Path) -> Connection {
+    let path = local_registry.to_str().unwrap().replace('\\', "/");
+    Connection::from_yaml(&create_yaml(format!(
+        "connection:\n  oracle_local_registry: \"{path}\"\n"
+    )))
+    .unwrap()
+    .unwrap()
+}
+
+#[test]
+fn test_grid_detect_uses_configured_registry() {
+    let tmp = tempfile::tempdir().unwrap();
+    let (local_registry, crs_home) = make_grid_node(tmp.path());
+
+    let grid = GridInfrastructure::detect_in(Some(&local_registry), &[]).unwrap();
+    assert_eq!(grid.local_registry(), local_registry);
+    assert_eq!(grid.crs_home(), crs_home);
+}
+
+#[test]
+fn test_grid_detect_probes_standard_locations() {
+    let tmp = tempfile::tempdir().unwrap();
+    let (local_registry, crs_home) = make_grid_node(tmp.path());
+    let locations = ["/no/such/olr.loc", local_registry.to_str().unwrap()];
+
+    let grid = GridInfrastructure::detect_in(None, &locations).unwrap();
+    assert_eq!(grid.crs_home(), crs_home);
+}
+
+#[test]
+fn test_grid_detect_prefers_configured_registry_over_standard_locations() {
+    let tmp = tempfile::tempdir().unwrap();
+    let (standard, _) = make_grid_node(tmp.path());
+    let (configured, configured_home) = make_grid_node(&tmp.path().join("other"));
+
+    let grid =
+        GridInfrastructure::detect_in(Some(&configured), &[standard.to_str().unwrap()]).unwrap();
+    assert_eq!(grid.crs_home(), configured_home);
+}
+
+#[test]
+fn test_grid_detect_none_when_grid_home_is_not_a_directory() {
+    let tmp = tempfile::tempdir().unwrap();
+    let local_registry = tmp.path().join("olr.loc");
+    std::fs::write(&local_registry, "crs_home=/no/such/grid\n").unwrap();
+
+    assert!(GridInfrastructure::detect_in(Some(&local_registry), &[]).is_none());
+}
+
+#[test]
+fn test_grid_detect_none_without_crs_home_entry() {
+    let tmp = tempfile::tempdir().unwrap();
+    let local_registry = tmp.path().join("olr.loc");
+    std::fs::write(&local_registry, "olrconfig_loc=/etc/oracle/olr\n").unwrap();
+
+    assert!(GridInfrastructure::detect_in(Some(&local_registry), &[]).is_none());
+}
+
+/// Legacy `mk_oracle` connects to the node name rather than to localhost once
+/// it finds Grid Infrastructure, because the listener binds the node address.
+#[test]
+fn test_connection_host_defaults_to_node_name_under_grid_infrastructure() {
+    let tmp = tempfile::tempdir().unwrap();
+    let (local_registry, _) = make_grid_node(tmp.path());
+
+    let conn = connection_from_olr(&local_registry);
+    assert!(conn.grid().is_some());
+    assert!(!conn.is_local());
+    // the default is the node name the operating system reports, not merely
+    // "something other than localhost"
+    let node_name = mk_oracle::platform::node_name().expect("the node has a name");
+    assert_eq!(conn.hostname().to_string(), node_name.to_lowercase());
+}
+
+/// The node name is read through libc rather than the gethostname crate, which
+/// cannot be built on AIX. This is the test that the call itself works.
+#[test]
+fn test_node_name() {
+    let name = mk_oracle::platform::node_name().expect("the node has a name");
+    assert!(!name.is_empty());
+    assert!(!name.contains('\0'), "must stop at the NUL terminator");
+}
+
+#[test]
+fn test_connection_host_stays_localhost_without_grid_infrastructure() {
+    let conn = connection_from_olr(std::path::Path::new("/no/such/olr.loc"));
+    assert!(conn.grid().is_none());
+    assert!(conn.is_local());
+}
+
+/// On a Grid Infrastructure node oratab may list nothing, which leaves the Grid
+/// home as the only Oracle client on the host. Skipped when the machine has a
+/// host client of its own, because that one legitimately wins.
+#[cfg(unix)]
+#[test]
+fn test_runtime_dir_falls_back_to_grid_home() {
+    if local_oracle_client_present() {
+        eprintln!("SKIPPED: a host Oracle client is present and takes precedence");
+        return;
+    }
+
+    let tmp = tempfile::tempdir().unwrap();
+    let (local_registry, crs_home) = make_grid_node(tmp.path());
+    let lib_dir = crs_home.join("lib");
+    std::fs::create_dir_all(&lib_dir).unwrap();
+    std::fs::File::create(lib_dir.join(CLIENT_LIB_NAME)).unwrap();
+
+    let path = local_registry.to_str().unwrap().replace('\\', "/");
+    let yaml = format!(
+        r#"
+---
+oracle:
+  main:
+    options:
+      use_host_client: always
+    authentication:
+      username: "foo"
+      password: "bar"
+    discovery:
+       detect: no
+    connection:
+      hostname: "localhost"
+      oracle_local_registry: "{path}"
+"#
+    );
+    let config = OracleConfig::load_str(&yaml).unwrap();
+    let ora_sql = config.ora_sql().unwrap();
+
+    assert_eq!(
+        detect_runtime(
+            ora_sql.options().use_host_client(),
+            None,
+            ora_sql.conn().grid()
+        )
+        .map(|r| r.dir),
+        Some(lib_dir)
+    );
+}
+
+/// `never` means the bundled runtime only, so the Grid home must not be used.
+#[cfg(unix)]
+#[test]
+fn test_runtime_dir_ignores_grid_home_when_host_client_is_never() {
+    let tmp = tempfile::tempdir().unwrap();
+    let (local_registry, crs_home) = make_grid_node(tmp.path());
+    let lib_dir = crs_home.join("lib");
+    std::fs::create_dir_all(&lib_dir).unwrap();
+    std::fs::File::create(lib_dir.join(CLIENT_LIB_NAME)).unwrap();
+
+    let path = local_registry.to_str().unwrap().replace('\\', "/");
+    let yaml = format!(
+        r#"
+---
+oracle:
+  main:
+    options:
+      use_host_client: never
+    authentication:
+      username: "foo"
+      password: "bar"
+    discovery:
+       detect: no
+    connection:
+      hostname: "localhost"
+      oracle_local_registry: "{path}"
+"#
+    );
+    let config = OracleConfig::load_str(&yaml).unwrap();
+    let ora_sql = config.ora_sql().unwrap();
+
+    // no agent library directory either, so the Grid home is the only client
+    // that could be found, and `never` must not find it
+    assert!(detect_runtime(
+        ora_sql.options().use_host_client(),
+        None,
+        ora_sql.conn().grid()
+    )
+    .is_none());
 }

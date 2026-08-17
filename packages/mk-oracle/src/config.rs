@@ -17,6 +17,7 @@
 pub mod authentication;
 pub mod connection;
 pub mod defines;
+pub mod grid;
 pub mod merge;
 pub mod migration;
 pub mod options;

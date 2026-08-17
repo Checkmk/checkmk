@@ -265,11 +265,11 @@ function itemActionLabel(id: ItemId): TranslatedString {
   display: flex;
   flex-direction: column;
 
-  --graphing-rrd-tab-panel-border: var(--color-mid-grey-10);
+  --graphing-rrd-tab-separator: var(--color-mid-grey-10);
 }
 
 body[data-theme='modern-dark'] .graphing-rrd-tab {
-  --graphing-rrd-tab-panel-border: var(--color-mid-grey-90);
+  --graphing-rrd-tab-separator: var(--color-mid-grey-90);
 }
 
 .graphing-rrd-tab__toggle {
@@ -335,17 +335,15 @@ body[data-theme='modern-dark'] .graphing-rrd-tab {
 .graphing-rrd-tab__panel {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--graphing-rrd-tab-panel-border);
-  border-radius: var(--border-radius);
+  background: var(--ux-theme-3);
 }
 
 .graphing-rrd-tab__operators {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-3);
+  gap: var(--dimension-4);
   padding: var(--dimension-5);
-  border-bottom: 1px solid var(--graphing-rrd-tab-panel-border);
+  border-bottom: 1px solid var(--graphing-rrd-tab-separator);
 }
 
 .graphing-rrd-tab__list {

@@ -9,6 +9,9 @@ from ._artwork import (
     GraphArtworkAnnotations,
     iter_graph_artworks,
 )
+from ._engine_dispatch import evaluate_built_graphs
+from ._engine_source import RRDFetchMetricNames
+from ._engine_template_graphs import build_template_graphs
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
     GraphFromAPI,
@@ -48,7 +51,7 @@ from ._graph_pdf import (
     get_mm_per_ex,
     render_graph_pdf,
 )
-from ._graph_png import render_png
+from ._graph_png import compute_png_size_mm, mm_per_ex, render_png, render_png_ex
 from ._graph_specification import (
     GraphEnvironment,
     GraphMetric,
@@ -129,6 +132,7 @@ __all__ = [
     "DecimalNotation",
     "ExplicitGraphSpecification",
     "FetchTimeSeriesProtocol",
+    "RRDFetchMetricNames",
     "GraphArtwork",
     "GraphArtworkAnnotations",
     "GraphConsolidationFunction",
@@ -200,8 +204,14 @@ __all__ = [
     "parse_graph_specification",
     "perfometers_from_api",
     "registered_metric_ids_and_titles",
+    "build_template_graphs",
+    "evaluate_built_graphs",
+    "compute_png_size_mm",
+    "mm_per_ex",
     "render_graph_pdf",
     "render_png",
+    "render_png_ex",
+    "render_deferred_graphs_html",
     "render_engine_graph_group",
     "render_plain_graph_title",
     "resolve_graph_id_from_index",

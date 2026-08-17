@@ -32,8 +32,11 @@ from cmk.gui.graphing._graph_png import (
     _notation_formatter,
     _plot_stack,
     _rules_in_range,
+    _stack_extents,
+    _values,
     _vertical_range_bounds,
     _y_axis_limits,
+    compute_png_size_mm,
     render_png,
     render_png_ex,
     render_png_graphs,
@@ -308,6 +311,48 @@ def test_render_png_ex_self_derives_the_y_axis_when_none_is_passed() -> None:
     assert default_bytes == explicit_bytes
 
 
+def test_compute_png_size_mm_matches_render_png_ex_without_a_legend() -> None:
+    curve = _curve("m", [1.0, 2.0, 3.0])
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        vertical_range=None,
+        stacks=[EvaluatedStack(members=[curve], inverse=False)],
+        lines=[],
+    )
+    config = GraphDisplayConfigImage(show_legend=False)
+
+    _png_bytes, width_mm, height_mm = render_png_ex(graph, config)
+
+    assert compute_png_size_mm(graph, config) == (width_mm, height_mm)
+
+
+def test_compute_png_size_mm_matches_render_png_ex_with_a_legend() -> None:
+    """compute_png_size_mm() must reproduce render_png_ex()'s own legend-table height
+    calculation (based on scalar/rule counts) without actually rendering, so callers can plan
+    layout/pagination without paying for a matplotlib render per graph."""
+    curve = _curve("m", [1.0, 2.0, 3.0])
+    rule = EvaluatedRule(
+        id="crit",
+        attributes=CurveAttributes(title="Crit", unit=_UNIT, color="#ff0000"),
+        value=2.5,
+        inverse=False,
+    )
+    graph = EvaluatedGraph(
+        name="g",
+        title="Graph",
+        vertical_range=None,
+        stacks=[EvaluatedStack(members=[curve], inverse=False)],
+        lines=[],
+        rules=[rule],
+    )
+    config = GraphDisplayConfigImage(show_legend=True)
+
+    _png_bytes, width_mm, height_mm = render_png_ex(graph, config)
+
+    assert compute_png_size_mm(graph, config) == (width_mm, height_mm)
+
+
 def test_render_png_graphs_formats_ticks_via_the_unit_formatter() -> None:
     """render_png_graphs (the multi-graph combined path) must derive and apply its own
     per-graph Y-axis unit, not render with unformatted (raw) ticks."""
@@ -323,3 +368,32 @@ def test_render_png_graphs_formats_ticks_via_the_unit_formatter() -> None:
     png_bytes = render_png_graphs([graph], GraphDisplayConfigImage())
 
     assert png_bytes.startswith(b"\x89PNG")
+
+
+def test_values_pads_a_shorter_curve_with_nan_to_match_length() -> None:
+    """A Sum/Product curve whose own RRD fetch came up shorter than another operand's (see
+    _curves_length's docstring) must be padded with NaN out to the shared length, not raise or
+    silently drop the mismatch."""
+    curve = _curve("m", [1.0, 2.0])
+
+    padded = _values(curve, length=4)
+
+    assert padded.tolist()[:2] == [1.0, 2.0]
+    assert np.isnan(padded[2:]).all()
+
+
+def test_stack_extents_pads_a_shorter_member_to_the_longest_curve() -> None:
+    """Mirrors _curves_length's rationale: two stack members can legitimately differ in length,
+    so _stack_extents must pad the shorter one instead of crashing on the numpy broadcast."""
+    longer = _curve("longer", [1.0, 1.0, 1.0])
+    shorter = _curve("shorter", [10.0, 20.0])
+    stack = EvaluatedStack(members=[longer, shorter], inverse=False)
+
+    extents = _stack_extents(stack, timestamps=[0, 60, 120])
+
+    _bottom, longer_top, longer_has_value = extents[0]
+    _bottom, _top, shorter_has_value = extents[1]
+    assert longer_has_value.tolist() == [True, True, True]
+    assert shorter_has_value.tolist() == [True, True, False]
+    # The padded (missing) position must not contribute to the running stack sum.
+    assert longer_top[2] == 1.0

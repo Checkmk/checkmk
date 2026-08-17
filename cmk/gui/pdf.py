@@ -758,13 +758,25 @@ class Document:
             path = str(png_path)
 
         image = CMKImage.from_path(Path(path), ImageType.PNG)
-        ir = ImageReader(image.pil())
         try:
-            self._canvas.drawImage(
-                ir, left_mm * mm, top_mm * mm, width_mm * mm, height_mm * mm, mask="auto"
-            )
+            self.render_image_bytes(left_mm, top_mm, width_mm, height_mm, image)
         except Exception as e:
             raise Exception(f"Cannot render image {path}: {e}")
+
+    def render_image_bytes(
+        self,
+        left_mm: SizeMM,
+        top_mm: SizeMM,
+        width_mm: SizeMM,
+        height_mm: SizeMM,
+        image: CMKImage,
+    ) -> None:
+        """Like render_image(), but for an already-loaded image (e.g. bytes rendered
+        in-memory) instead of one read from a filesystem path."""
+        ir = ImageReader(image.pil())
+        self._canvas.drawImage(
+            ir, left_mm * mm, top_mm * mm, width_mm * mm, height_mm * mm, mask="auto"
+        )
 
     def get_line_skip(self) -> SizeMM:
         return self.lineskip() / mm  # fixed: true-division

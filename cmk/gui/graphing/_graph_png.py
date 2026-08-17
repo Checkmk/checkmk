@@ -76,15 +76,42 @@ def _time_range(graph: EvaluatedGraph) -> TimeRange | None:
     return None
 
 
-def _timestamps(time_range: TimeRange) -> list[int]:
+def _curves_length(graph: EvaluatedGraph) -> int:
+    """The longest time_series.values of any curve actually drawn (stack members, their hidden
+    references, and lines).
+
+    Curves built from a Sum/Difference/Product/Fraction expression are padded by the engine to
+    the longest of their operands (see graphing_engine._quantities._apply_operator) whenever one
+    operand's own RRD fetch came up shorter than another's - so two curves nominally on "the
+    same" time_range can still legitimately differ in length. Sizing the shared timestamps axis
+    to the longest one, and padding every shorter curve out to it, avoids a numpy broadcast
+    crash instead of assuming every curve already agrees.
+    """
+    lengths = [len(curve.time_series.values) for curve, _sign in _all_curves_with_sign(graph)]
+    lengths.extend(
+        len(stack.reference.time_series.values)
+        for stack in graph.stacks
+        if stack.reference is not None
+    )
+    return max(lengths, default=0)
+
+
+def _timestamps(time_range: TimeRange, length: int) -> list[int]:
     # Deliberately not cmk.gui.graphing._engine_series._timestamps: that one returns each
     # bucket's *end* (t + step) for resampling; plotting needs each bucket's *start* (t) to line
-    # up with the curve's own time_series.values.
-    return list(range(time_range.start, time_range.end, time_range.step))
+    # up with the curve's own time_series.values. Built from `length` (see _curves_length),
+    # not range(time_range.start, time_range.end, time_range.step): the two agree whenever every
+    # curve's values matches time_range exactly, but not every curve is guaranteed to.
+    return [time_range.start + i * time_range.step for i in range(length)]
 
 
-def _values(curve: EvaluatedCurve, *, sign: float = 1.0) -> npt.NDArray[np.float64]:
-    return sign * np.array([np.nan if v is None else float(v) for v in curve.time_series.values])
+def _values(
+    curve: EvaluatedCurve, *, sign: float = 1.0, length: int | None = None
+) -> npt.NDArray[np.float64]:
+    raw = sign * np.array([np.nan if v is None else float(v) for v in curve.time_series.values])
+    if length is not None and len(raw) != length:
+        raw = np.pad(raw, (0, length - len(raw)), constant_values=np.nan)
+    return raw
 
 
 def _last_non_null(values: Sequence[float | None]) -> float | None:
@@ -127,7 +154,7 @@ def _stack_extents(
     _drawn_vertical_extent so the Y-axis bounds always match the drawn area exactly."""
     sign = -1.0 if stack.inverse else 1.0
     bottom = (
-        _values(stack.reference, sign=sign)
+        _values(stack.reference, sign=sign, length=len(timestamps))
         if stack.reference is not None
         else np.zeros(len(timestamps))
     )
@@ -136,7 +163,7 @@ def _stack_extents(
         tuple[npt.NDArray[np.float64], npt.NDArray[np.float64], npt.NDArray[np.bool_]]
     ] = []
     for member in stack.members:
-        raw = _values(member, sign=sign)
+        raw = _values(member, sign=sign, length=len(timestamps))
         has_value = ~np.isnan(raw)
         top = bottom + np.where(has_value, raw, 0.0)
         extents.append((bottom, top, has_value))
@@ -163,7 +190,7 @@ def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
     """Plot every stack (cumulatively, on top of its optional hidden reference) and line of the
     graph, mirroring inverse ones below zero."""
     time_range = _time_range(graph)
-    timestamps = _timestamps(time_range) if time_range is not None else []
+    timestamps = _timestamps(time_range, _curves_length(graph)) if time_range is not None else []
 
     for stack in graph.stacks:
         if stack.members:
@@ -171,7 +198,11 @@ def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
 
     for line in graph.lines:
         sign = -1.0 if line.inverse else 1.0
-        ax.plot(timestamps, _values(line.curve, sign=sign), color=line.curve.attributes.color)
+        ax.plot(
+            timestamps,
+            _values(line.curve, sign=sign, length=len(timestamps)),
+            color=line.curve.attributes.color,
+        )
 
     ax.margins(y=0)
 
@@ -198,7 +229,7 @@ def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float |
     whenever every member's own value is > 0.
     """
     time_range = _time_range(graph)
-    timestamps = _timestamps(time_range) if time_range is not None else []
+    timestamps = _timestamps(time_range, _curves_length(graph)) if time_range is not None else []
     values: list[float] = []
     for stack in graph.stacks:
         for bottom, top, has_value in _stack_extents(stack, timestamps):
@@ -206,7 +237,7 @@ def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float |
             values.extend(top[has_value].tolist())
     for line in graph.lines:
         sign = -1.0 if line.inverse else 1.0
-        raw = _values(line.curve, sign=sign)
+        raw = _values(line.curve, sign=sign, length=len(timestamps))
         values.extend(raw[~np.isnan(raw)].tolist())
     if not values:
         return None, None
@@ -538,10 +569,47 @@ def _ex_to_inches(size_ex: float, font_size_pt: float) -> float:
     return size_ex * font_size_pt / 72
 
 
+def mm_per_ex(font_size_pt: float) -> SizeMM:
+    """The physical size (in mm) this module's GraphDisplayConfigImage.size grows by for each
+    additional "ex", i.e. the exact inverse of the ex->inches->mm conversion render_png_ex/
+    render_png_graphs use internally.
+
+    A caller translating a target physical width/height into `size` (ex) before calling
+    render_png*() must use this - not cmk.gui.graphing._graph_pdf.get_mm_per_ex(), a
+    differently-calibrated ex convention that only applies to the legacy vector PDF renderer -
+    or the resulting image will come out a few percent off the intended physical size.
+    """
+    return _ex_to_inches(1.0, font_size_pt) * _MM_PER_INCH
+
+
 def _derive_y_axis(graph: EvaluatedGraph) -> YAxis | None:
     """derive_y_axis (_frontend.py) works on the pre-evaluation Graph; this one works on the
     EvaluatedGraph, which carries the same CurveAttributes.unit on its curves."""
     return y_axis_from_units(curve.attributes.unit for curve, _sign in _all_curves_with_sign(graph))
+
+
+def _legend_height_ex(graph: EvaluatedGraph, config: GraphDisplayConfigImage) -> float:
+    """The "ex" height render_png_ex() reserves below the plot for the scalar/rule legend table,
+    e.g. 0.0 if there is nothing to show. Depends only on the graph's own scalar/rule counts and
+    config.show_legend - never on config.size - so it's safe to call before an actual render."""
+    scalars = _graph_scalars(graph)
+    show_legend_table = config.show_legend and bool(scalars or graph.rules)
+    n_legend_rows = len(scalars) + len(graph.rules)
+    return 2.0 * (n_legend_rows + 1) if show_legend_table else 0.0
+
+
+def compute_png_size_mm(
+    graph: EvaluatedGraph, config: GraphDisplayConfigImage
+) -> tuple[SizeMM, SizeMM]:
+    """The (width_mm, height_mm) render_png_ex() would return for this graph/config, without
+    paying for an actual matplotlib render.
+
+    Useful for layout/pagination planning that only needs the size a graph will occupy, not its
+    pixels yet - e.g. deciding how many graphs fit on a report page before rendering any of them.
+    """
+    width_in = _ex_to_inches(config.size[0], config.font_size)
+    height_in = _ex_to_inches(config.size[1] + _legend_height_ex(graph, config), config.font_size)
+    return width_in * _MM_PER_INCH, height_in * _MM_PER_INCH
 
 
 def render_png_ex(
@@ -565,8 +633,7 @@ def render_png_ex(
     in_range_rules = _rules_in_range(graph.rules, lower, upper)
     formatter = _notation_formatter(y_axis)
     show_legend_table = config.show_legend and bool(scalars or graph.rules)
-    n_legend_rows = len(scalars) + len(graph.rules)
-    table_height_ex = 2.0 * (n_legend_rows + 1) if show_legend_table else 0.0
+    table_height_ex = _legend_height_ex(graph, config)
 
     width_in = _ex_to_inches(config.size[0], config.font_size)
     height_in = _ex_to_inches(config.size[1] + table_height_ex, config.font_size)

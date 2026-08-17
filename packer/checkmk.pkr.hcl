@@ -21,9 +21,9 @@ packer {
 
 
 source "qemu" "builder" {
-  vm_name          = "ubuntu-2204-amd64-qemu-build"
-  iso_url          = "http://www.releases.ubuntu.com/22.04/ubuntu-22.04.1-live-server-amd64.iso"
-  iso_checksum     = "sha256:10f19c5b2b8d6db711582e0e27f5116296c34fe4b313ba45f9b201a5007056cb"
+  vm_name          = "ubuntu-2404-amd64-qemu-build"
+  iso_url          = "https://www.releases.ubuntu.com/24.04/ubuntu-24.04.4-live-server-amd64.iso"
+  iso_checksum     = "sha256:e907d92eeec9df64163a7e454cbc8d7755e8ddc7ed42f99dbc80c40f1a138433"
   memory           = 1024
   disk_image       = false
   output_directory = var.qemu_output_dir_name
@@ -69,9 +69,11 @@ source "azure-arm" "builder" {
   }
   client_id                           = "${var.azure_client_id}"
   client_secret                       = "${var.azure_client_secret}"
-  image_offer                         = "0001-com-ubuntu-server-jammy"
+  image_offer                         = "ubuntu-24_04-lts"
   image_publisher                     = "Canonical"
-  image_sku                           = "22_04-lts"
+  # Gen1 (V1) SKU: must match the hypervisor generation of the existing
+  # image definitions in the marketplace / compute gallery
+  image_sku                           = "server-gen1"
   build_resource_group_name           = var.azure_build_resource_group_name
   virtual_network_resource_group_name = var.azure_virtual_network_resource_group_name
   virtual_network_name                = var.azure_virtual_network_name
@@ -87,10 +89,21 @@ source "azure-arm" "builder" {
 # https://cloud-images.ubuntu.com/locator/ec2/
 # filter for region=us-east-1, arch=amd64, version=latest lts
 source "amazon-ebs" "builder" {
-  region        = "us-east-1"
-  access_key    = var.aws_access_key
-  secret_key    = var.aws_secret_key
-  source_ami    = "ami-04ab94c703fb30101"
+  region     = "us-east-1"
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
+  # pinned to one specific release serial for reproducible builds; find newer
+  # serials at https://cloud-images.ubuntu.com/releases/streams/v1/com.ubuntu.cloud:released:aws.json
+  # (currently resolves to ami-052355af2a014bd2c in us-east-1)
+  source_ami_filter {
+    filters = {
+      name                = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-20260714"
+      root-device-type    = "ebs"
+      virtualization-type = "hvm"
+    }
+    # Canonical
+    owners = ["099720109477"]
+  }
   instance_type = "t2.micro"
   ssh_username  = "ubuntu"
   ami_name      = var.aws_ami_name

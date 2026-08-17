@@ -159,16 +159,15 @@ def fixture_cloned_linux_hosts_dashboard(
     linux_hosts_dashboard = LinuxHostsDashboard(dashboard_page.page)
     linux_hosts_dashboard.clone_dashboard()
 
-    cloned_linux_hosts_dashboard = CustomDashboard(
-        linux_hosts_dashboard.page, linux_hosts_dashboard.page_title, navigate_to_page=False
-    )
-
-    yield cloned_linux_hosts_dashboard
-
-    if is_cleanup_enabled():
-        dashboard_page.go("edit_dashboards.py", wait_until="load")
-        edit_dashboards = EditDashboards(dashboard_page.page, navigate_to_page=False)
-        edit_dashboards.delete_dashboard(cloned_linux_hosts_dashboard.page_title)
+    try:
+        yield CustomDashboard(
+            linux_hosts_dashboard.page, linux_hosts_dashboard.page_title, navigate_to_page=False
+        )
+    finally:
+        if is_cleanup_enabled():
+            dashboard_page.go("edit_dashboards.py", wait_until="load")
+            edit_dashboards = EditDashboards(dashboard_page.page, navigate_to_page=False)
+            edit_dashboards.delete_dashboard(linux_hosts_dashboard.page_title)
 
 
 @pytest.fixture(name="dashboard_page_mobile")

@@ -55,11 +55,7 @@ class BaseDashboard(CmkPage):
         """Check that the dashboard selector has the expected placeholder text."""
         expect(
             self.dashboard_selector,
-            message=(
-                "The dashboard selector does not contain the expected dashboard name."
-                f" Expected: '{self.page_title}';"
-                f" actual value: '{self.dashboard_selector.get_attribute('placeholder')}'"
-            ),
+            message="The dashboard selector does not contain the expected dashboard name.",
         ).to_have_attribute("placeholder", self.page_title)
 
     @property
@@ -117,14 +113,16 @@ class BaseDashboard(CmkPage):
         clone_dashboard_sidebar = CloneDashboardSidebar(self.page)
 
         if automatic_unique_id:
+            unique_id = self.page_title.lower().replace(" ", "_")
             clone_dashboard_sidebar.automatic_unique_id_checkbox.check()
-            clone_dashboard_sidebar.expect_auto_generated_unique_id_to_be_populated(
-                self.page_title.lower().replace(" ", "_")
-            )
+            clone_dashboard_sidebar.expect_auto_generated_unique_id_to_be_populated(unique_id)
         else:
             raise NotImplementedError("Custom unique id is not yet implemented")
 
-        clone_dashboard_sidebar.clone_button.click()
+        self.click_and_wait_for_navigation(
+            clone_dashboard_sidebar.clone_button,
+            re.compile(rf"dashboard\.py\?name={unique_id}(?:&|$)"),
+        )
 
     def get_widget(self, widget_title: str) -> Locator:
         """Get the Locator of the widget with the given title.

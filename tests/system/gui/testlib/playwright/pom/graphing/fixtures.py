@@ -225,12 +225,6 @@ def fixture_graph_collection(
         test_site.delete_file(collections_of_user)
 
 
-@pytest.fixture(name="forecast_graph")
-def fixture_forecast_graph(test_site: Site) -> str:
-    """A saved forecast graph; complete via the forecast-graph creation flow."""
-    pytest.skip("forecast_graph is scaffolding: graph engine not implemented yet.")
-
-
 @pytest.fixture(name="javascript_errors")
 def fixture_javascript_errors(dashboard_page: MainDashboard) -> Iterator[list[str]]:
     """Uncaught page errors raised while the test runs."""

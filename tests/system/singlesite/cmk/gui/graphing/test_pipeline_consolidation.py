@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Data pipeline: RRD consolidation functions (R1.1 Area 2).
+"""Data pipeline: RRD consolidation functions.
 
-P-01 and P-02 both query a window older than 48h, so RRDtool serves it from a consolidated
+Both tests query a window older than 48h, so RRDtool serves it from a consolidated
 archive rather than the raw one - only then do the three consolidation functions differ, and
 only then does a gap have to survive being averaged over.
 """

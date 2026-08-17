@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Shared support for the graphing (IGU) tests (CMK-35973).
+"""Shared support for the graphing (IGU) tests.
 
 Skip reasons for the skeletons, and RRD injection for the tests that need a graph whose
 values they chose rather than whatever a check happened to measure.
@@ -11,8 +11,8 @@ values they chose rather than whatever a check happened to measure.
 A skip reason names a skeleton's dependency, which also sets the enablement order (grep a
 constant to find every skeleton blocked on the same dependency):
 
-- ``SKIP_PENDING_GRAPH_BACKEND`` - integration/composition tests needing only the backend
-  (discovery/data REST + ``<cmk-graph>`` embedding); enablable first.
+- ``SKIP_PENDING_GRAPH_BACKEND`` - integration tests needing the ``<cmk-graph>`` embedding;
+  enablable first.
 - ``SKIP_PENDING_GRAPH_ENGINE`` - GUI E2E tests needing the engine to render on a surface.
 
 `injected_ping_rrds` is the cheapest way to get one: a no-agent host has exactly one service

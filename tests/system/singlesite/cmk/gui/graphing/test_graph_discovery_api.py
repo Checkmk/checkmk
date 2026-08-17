@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Graph discovery / data via the REST API (R1.1 Area 1).
+"""Graph discovery / data via the REST API.
 
-D-01 and D-02, plus the graph set a real service resolves to. Discovery matches a service's
-metrics against the graph plugins the site ships, so only a site can say what a real service
-resolves to - the engine's own unit tests match against synthetic plugins instead.
+Discovery matches a service's metrics against the graph plugins the site ships, so only a
+site can say what a real service resolves to - the engine's own unit tests match against
+synthetic plugins instead.
 
-E-05 (R1.4 Area 3, folded from the struck R1.1 E-01) lives here too: it needs the same site,
-and its subject is a service this module's fixture already monitors.
+The missing-RRD case lives here too: it needs the same site, and its subject is a service
+this module's fixture already monitors.
 """
 
 import time
@@ -131,7 +131,7 @@ def test_discovery_falls_back_to_one_graph_per_unclaimed_metric(site: Site) -> N
 
 @pytest.mark.usefixtures("discovery_hosts")
 def test_graph_data_for_missing_rrd_returns_empty_not_error(site: Site) -> None:
-    """E-05 (R1.4 Area 3): graph data for a service with no RRD is empty, not a 500.
+    """Graph data for a service with no RRD is empty, not a 500.
 
     The service is monitored and checked, so it is in livestatus, but it reports no perf data
     and the core therefore never created an RRD for it. That is the state a freshly discovered

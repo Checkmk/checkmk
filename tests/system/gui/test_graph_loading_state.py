@@ -3,20 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Graph loading and error states (R1.4).
+"""Graph loading and error states.
 
-L-01 is the browser backstop for the whole area: it is the one test proving the
-skeleton -> canvas transition wires up against a real fetch. Everything else the test plan
-lists here - the fast load, the widgets' spinner and its containment, the error states and
-their retry - is component-level behaviour and is covered in the Vitest suites
-(`GraphGroup.test.ts`, `DashboardContentGraph.test.ts`), where the pending, 500 and 404
-responses can be driven exactly.
+The single test here is the browser backstop for the whole concern: it proves the
+skeleton -> canvas transition wires up against a real fetch. Everything else - the fast
+load, the widgets' spinner and its containment, the error states and their retry - is
+component-level behaviour and is covered in the Vitest suites (`GraphGroup.test.ts`,
+`DashboardContentGraph.test.ts`), where the pending, 500 and 404 responses can be driven
+exactly.
 
-C-01 to C-04 extend the same concern to the remaining surfaces and are skipped
-skeletons until the engine renders on them.
+The remaining surfaces need no browser test of their own: each renders the same
+`cmk-graph-group`, so the skeleton follows from `GraphGroup`.
 """
 
-import pytest
 from playwright.sync_api import expect, Route
 
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import SERVICE_WITH_GRAPHS
@@ -24,7 +23,6 @@ from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import Se
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
-from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
 
 # The endpoint every rendered graph fetches its data from; holding it holds the load window open.
 _GRAPH_DATA_URL = "**/domain-types/graph/actions/fetch_data/invoke"
@@ -51,7 +49,7 @@ def test_skeleton_visible_while_loading_then_canvas(
     graph_hosts_with_varying_data: list[str],
     javascript_errors: list[str],
 ) -> None:
-    """L-01 (R1.4 Area 1): a page skeleton shows during load, then the canvas.
+    """A page skeleton shows during load, then the canvas.
 
     The requests are collected and continued by hand rather than delayed inside the handler:
     the sync API runs handlers on the thread the assertions need, so a sleeping handler would
@@ -90,52 +88,3 @@ def test_skeleton_visible_while_loading_then_canvas(
         "The skeleton outlived the data it was standing in for",
     ).to_have_count(0)
     assert not javascript_errors, f"The load raised uncaught page errors: {javascript_errors}"
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_skeleton_on_combined_graphs_page(
-    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
-) -> None:
-    """C-01 (R1.4 Area 5): the combined-graphs page shows a skeleton per graph.
-
-    Do: delay the time-series endpoint; navigate to the combined graphs view.
-    Assert: skeleton in each graph container during the delay; canvas after; no dashboard
-    skeleton.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_skeleton_on_graph_collection_page(
-    dashboard_page: MainDashboard, graph_collection: str
-) -> None:
-    """C-02 (R1.4 Area 5): the graph collection page shows a skeleton per graph.
-
-    Do: delay the time-series endpoint; navigate to the graph collection page.
-    Assert: skeleton in each graph container during the delay; canvas after.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_skeleton_on_custom_graph_view(
-    dashboard_page: MainDashboard, saved_custom_graph: str
-) -> None:
-    """C-03 (R1.4 Area 5): the custom graph view shows a skeleton during load.
-
-    Do: delay the time-series endpoint; navigate to the custom graph view mode.
-    Assert: skeleton during the delay; canvas after.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_skeleton_on_forecast_graph_view(
-    dashboard_page: MainDashboard, forecast_graph: str
-) -> None:
-    """C-04 (R1.4 Area 5): the forecast graph view shows a skeleton during load.
-
-    Do: delay the time-series endpoint; navigate to the forecast graph view.
-    Assert: skeleton during the delay; canvas after.
-    """
-    pytest.fail("CMK-35973 skeleton: body not implemented")

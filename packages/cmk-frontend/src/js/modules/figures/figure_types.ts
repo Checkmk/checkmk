@@ -168,8 +168,3 @@ export interface GaugeContent extends FigureWidgetContent {
   type: 'gauge'
   display_range: MetricDisplayRangeFixedModel
 }
-export interface SingleMetricContent extends FigureWidgetContent {
-  type: 'single_metric'
-  display_range: MetricDisplayRangeModel
-  show_display_range_limits: boolean
-}

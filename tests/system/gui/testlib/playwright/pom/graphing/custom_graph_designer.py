@@ -34,9 +34,7 @@ _ERROR_NOTICE_SELECTOR = ".graphing-graph-notice--error"
 # The metrics selection tab - the designer's default tab in edit mode.
 _METRICS_TABLE_SELECTOR = ".graphing-metrics-table"
 _SOURCE_ROW_SELECTOR = ".monitoring-editable-table__row"
-# The cell an expanded row renders its source form into; the forms themselves are built
-# from shared primitives and carry no per-type class.
-_SOURCE_FORM_SELECTOR = ".graphing-metrics-table__expansion"
+_SOURCE_FORM_NAME = re.compile(r"^Source \w+ details$")
 # Only one dropdown list is mounted at a time, so this need not be scoped to its field.
 _SUGGESTIONS_SELECTOR = ".cmk-suggestions"
 _FILTER_BOX_SELECTOR = "input[aria-label='filter']"
@@ -123,7 +121,7 @@ class CustomGraphDesigner(CmkPage):
         ).to_have_count(rows_before + 1)
 
         # The new row is appended and auto-expanded, so its form is the last one.
-        form = self.main_area.locator(_SOURCE_FORM_SELECTOR).last
+        form = self.main_area.locator().get_by_role("group", name=_SOURCE_FORM_NAME).last
         self._fill_autocompleter(form, "Host name", host_name)
         self._fill_autocompleter(form, "Service", service_name)
         self._fill_autocompleter(form, "Service metric", metric_title)

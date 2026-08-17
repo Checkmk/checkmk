@@ -69,7 +69,11 @@ function messagesFor(field: RowField): TranslatedString[] {
 </script>
 
 <template>
-  <div class="graphing-row-editor">
+  <div
+    class="graphing-row-editor"
+    role="group"
+    :aria-label="_t('Source %{id} details', { id: row.id })"
+  >
     <FormulaForm
       v-if="row.type === 'rrd_formula'"
       :item="row"

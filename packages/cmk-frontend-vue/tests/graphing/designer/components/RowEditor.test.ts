@@ -158,3 +158,9 @@ test('the confirmation dismisses itself and returns for the next edit', async ()
 
   expect(await screen.findByText('Preview updated')).toBeInTheDocument()
 })
+
+test('the form is a group named after the source it edits', () => {
+  renderEditor(constantItem('A'))
+
+  expect(screen.getByRole('group', { name: 'Source A details' })).toBeInTheDocument()
+})

@@ -666,10 +666,10 @@ def _view_editor_spec(
                 raw_vs["tooltip"] = column_spec.tooltip
             return column_type, raw_vs
 
-        if column_type == "join_column" and column_spec.join_value:
+        if column_type == "join_column":
             raw_vs = _RawVSJoinColumnSpec(
                 painter_spec=_get_painter_spec(column_spec),
-                join_value=column_spec.join_value,
+                join_value=column_spec.join_value or "",
                 column_title=column_spec.column_title or "",
             )
             if column_spec.link_spec:

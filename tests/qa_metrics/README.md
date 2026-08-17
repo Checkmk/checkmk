@@ -8,6 +8,9 @@ push the result to the QA Metabase postgres for dashboarding.
 - `db/` — shared library: psycopg connection (env / SSL fallback),
   `upsert_record`, `apply_schema_file`, and a `Table[RowT]` binding from
   row dataclass to postgres table. Every metric depends on this.
+- `components/` — shared library: resolves repository paths to the components
+  that own them, reading the `OWNERS` files through Gerrit's code-owners API.
+  Ownership reflects the remote branch, not the local checkout.
 - `change_quality/` — first metric. Per-werk row of "did the introducing
   commit include a test?", written to `cmk_change_tested`.
 - `test_coverage/` — Python test coverage. Uploads overall coverage history to
@@ -44,8 +47,9 @@ Per-target test invocations:
 
 ```bash
 bazel test //tests/unit/qa_metrics/db:db                            # shared-lib tests
+bazel test //tests/unit/qa_metrics/components:tests                 # ownership shared-lib tests
 bazel test //tests/unit/qa_metrics/change_quality:change_quality    # change-quality metric tests
-bazel test //tests/unit/qa_metrics/test_coverage:tests               # code-coverage metric tests
+bazel test //tests/unit/qa_metrics/test_coverage:tests              # code-coverage metric tests
 ```
 
 The change-quality test target opts out of the bazel sandbox (`tags =

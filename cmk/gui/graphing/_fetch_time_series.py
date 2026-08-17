@@ -111,16 +111,12 @@ def fetch_augmented_time_series(
         for augmented_time_series in graph_metric.operation.compute_augmented_time_series(
             registered_metrics, rrd_data, query_data, fallback_time_range
         ):
-            if recipe.omit_zero_metrics and not augmented_time_series.time_series:
-                # TODO omit_zero_metrics: Do we need this? (it was part of the
-                # legacy API, check other call sites)
-                continue
-
             yield OK(
                 AugmentedTimeSeriesOfGraphMetric(
                     time_series=list(
                         _refine_augmented_time_series(
                             augmented_time_series.time_series,
+                            omit_zero_metrics=recipe.omit_zero_metrics,
                             graph_metric_title=graph_metric.title,
                             graph_metric_line_type=graph_metric.line_type,
                             graph_metric_color=graph_metric.color,
@@ -144,6 +140,7 @@ def fetch_augmented_time_series(
 def _refine_augmented_time_series(
     augmented_time_series: Sequence[AugmentedTimeSeries],
     *,
+    omit_zero_metrics: bool,
     graph_metric_title: str,
     graph_metric_line_type: LineType | Literal["ref"],
     graph_metric_color: str,
@@ -152,6 +149,9 @@ def _refine_augmented_time_series(
 ) -> Iterator[AugmentedTimeSeries]:
     multi = len(augmented_time_series) > 1
     for i, ats in enumerate(augmented_time_series):
+        if omit_zero_metrics and not any(ats.time_series):
+            continue
+
         title = graph_metric_title
         line_type = graph_metric_line_type
         color = graph_metric_color

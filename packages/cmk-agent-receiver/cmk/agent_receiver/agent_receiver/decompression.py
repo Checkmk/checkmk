@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import zlib
 from enum import Enum
-from zlib import decompress
-from zlib import error as zlibError
+
+MAX_SIZE_AGENT_DATA = 512 * 1024**2  # 512 MiB
 
 
 class DecompressionError(Exception): ...
@@ -33,7 +34,11 @@ class Decompressor(Enum):
             ...
         packages.cmk-agent-receiver.cmk.agent_receiver.agent_receiver.decompression.DecompressionError: ...
         """
+        decompressor = zlib.decompressobj()
         try:
-            return decompress(data)
-        except zlibError as e:
+            uncompressed = decompressor.decompress(data, max_length=MAX_SIZE_AGENT_DATA)
+            if decompressor.unconsumed_tail:
+                raise DecompressionError("Decompression failed: data is too long")
+            return uncompressed
+        except zlib.error as e:
             raise DecompressionError(f"Decompression with zlib failed: {e}") from e

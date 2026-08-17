@@ -23,8 +23,8 @@ void main() {
         "VERSION",
     ])
 
-    if (params.EDITION != 'cloud') {
-        error("The AMI/Azure builds must currently *only* use the cloud edition.");
+    if (params.EDITION != 'ultimate') {
+        error("The AMI/Azure builds must currently *only* use the ultimate edition.");
     }
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");

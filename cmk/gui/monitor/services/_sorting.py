@@ -7,7 +7,7 @@
 
 import functools
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, assert_never
 
 from ._models import Service, ServiceSort, ServiceSortColumn, ServiceSortDirection
@@ -16,6 +16,16 @@ _NEVER_CHECKED = 0
 
 
 def service_sorter(sorters: Sequence[ServiceSort]) -> Callable[[Service], Any]:
+    """Build a sort key for the requested sorters, or for the page default if there are none.
+
+    An empty list is not "leave the order alone": it is what the page sends while the user has
+    not sorted a column, and that state leads with Checkmk's own services. Every explicitly
+    requested sorter is taken literally instead, so sorting by name ascending really is a plain
+    natural sort.
+    """
+    if not sorters:
+        return functools.cmp_to_key(lambda a, b: compare_service_names(a.name, b.name))
+
     def _get_value(service: Service, column: ServiceSortColumn) -> Any:
         match column:
             case ServiceSortColumn.NAME:
@@ -66,3 +76,21 @@ def _natural_sort_keys(s: str) -> tuple[tuple[NaturalSortChunk, ...], tuple[Natu
     sort_key = tuple(chunk.lower() if isinstance(chunk, str) else chunk for chunk in chunks)
     tiebreak_key = tuple(chunks)
     return sort_key, tiebreak_key
+
+
+_SERVICE_NAME_RANKS: Mapping[str, int] = {
+    "Check_MK": 0,
+    "Check_MK Agent": 1,
+    "Check_MK Discovery": 2,
+    "Check_MK inventory": 3,
+    "Check_MK HW/SW Inventory": 4,
+}
+
+
+def compare_service_names(a: str, b: str) -> int:
+    """Compare service names: Checkmk's own first, everything else naturally."""
+    rank_a, rank_b = (
+        _SERVICE_NAME_RANKS.get(a, len(_SERVICE_NAME_RANKS)),
+        _SERVICE_NAME_RANKS.get(b, len(_SERVICE_NAME_RANKS)),
+    )
+    return (rank_a > rank_b) - (rank_a < rank_b) or sort_naturally(a, b)

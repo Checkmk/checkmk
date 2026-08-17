@@ -244,8 +244,17 @@ class LiveStatusServiceActions:
 
 
 def _build_primary_sort(sorters: Sequence[ServiceSort]) -> str:
+    """Pre-sort in livestatus so that a ``Limit`` cuts by the primary sorter rather than at random.
+
+    This only approximates the final order: neither the secondary sorters nor the priority Checkmk's
+    own services get in the default order can be expressed in an ``OrderBy``, so both are applied by
+    the Python re-sort afterwards. In the default order, a host with more services than the limit
+    whose names all sort before "Check_MK" would therefore lose those rows, same as in the legacy
+    view.
+    """
     if not sorters:
-        return "OrderBy: description asc"
+        # The default order sorts by name, so pre-sort the same way the Python re-sort will.
+        return "OrderBy: description asc natural"
 
     primary = sorters[0]
     column = _LIVESTATUS_COLUMN_OVERRIDES.get(primary.column, primary.column.value)

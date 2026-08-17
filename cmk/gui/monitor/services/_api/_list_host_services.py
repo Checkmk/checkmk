@@ -53,7 +53,9 @@ _MIN_HOST_SVC_LIMIT = 0
 _MAX_HOST_SVC_LIMIT = 5_000
 _DEFAULT_LIMIT = 1_000
 
-_DEFAULT_SORT = (ServiceSort(column=ServiceSortColumn.NAME, direction=ServiceSortDirection.ASC),)
+# Requesting no sorter is not the same as requesting no order: the repository reads an empty list
+# as "the page default", which leads with Checkmk's own services.
+_DEFAULT_SORT: tuple[ServiceSort, ...] = ()
 
 # The page's default columns; everything else has to be asked for.
 _DEFAULT_FIELDS: frozenset[ServiceOptionalField] = frozenset()

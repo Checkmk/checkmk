@@ -13,12 +13,18 @@ from cmk.gui.monitor.services._models import (
     ServiceSortDirection,
     ServiceState,
 )
-from cmk.gui.monitor.services._sorting import service_sorter, sort_naturally
+from cmk.gui.monitor.services._sorting import (
+    _SERVICE_NAME_RANKS,
+    service_sorter,
+    sort_naturally,
+)
+from cmk.gui.view_utils import cmp_service_name_equiv
 
 from .testlib import ServiceFactory
 
 
-def test_no_sorting() -> None:
+def test_requesting_no_sorter_applies_the_page_default() -> None:
+    """An empty sorter list means the page default, which sorts by name."""
     services = [
         ServiceFactory.build(name="banana"),
         ServiceFactory.build(name="chocolate"),
@@ -27,9 +33,9 @@ def test_no_sorting() -> None:
 
     value = [service.name for service in sorted(services, key=service_sorter([]))]
     expected = [
+        "apple",
         "banana",
         "chocolate",
-        "apple",
     ]
 
     assert value == expected
@@ -157,6 +163,124 @@ def test_service_sorter_uses_natural_sort_for_string_columns(
     ]
 
     assert value == expected
+
+
+_PRIORITIZED_NAMES = [
+    "Check_MK",
+    "Check_MK Agent",
+    "Check_MK Discovery",
+    "Check_MK inventory",
+    "Check_MK HW/SW Inventory",
+]
+
+# Deliberately shuffled, and picked so that a plain natural sort disagrees twice over: "APT Updates"
+# would lead, and "Check_MK HW/SW Inventory" would precede "Check_MK inventory" ("h" < "i").
+_MIXED_NAMES = [
+    "Check_MK HW/SW Inventory",
+    "CPU load",
+    "Check_MK inventory",
+    "APT Updates",
+    "Check_MK",
+    "Check_MK Discovery",
+    "Check_MK Agent",
+    "Interface 2",
+    "Interface 10",
+]
+
+_UNPRIORITIZED_NAMES = ["APT Updates", "CPU load", "Interface 2", "Interface 10"]
+
+
+def test_check_mk_services_sort_before_everything_else_in_the_default_order() -> None:
+    services = [ServiceFactory.build(name=name) for name in _MIXED_NAMES]
+
+    value = [service.name for service in sorted(services, key=service_sorter([]))]
+
+    assert value == [*_PRIORITIZED_NAMES, *_UNPRIORITIZED_NAMES]
+
+
+def test_an_explicitly_requested_name_sort_does_not_prioritize_check_mk_services() -> None:
+    """The priority belongs to the default order only; a requested sort is taken literally."""
+    services = [ServiceFactory.build(name=name) for name in _MIXED_NAMES]
+    sorters = [ServiceSort(column=ServiceSortColumn.NAME, direction=ServiceSortDirection.ASC)]
+
+    value = [service.name for service in sorted(services, key=service_sorter(sorters))]
+
+    assert value == sorted(_MIXED_NAMES, key=functools.cmp_to_key(sort_naturally))
+    # The discriminating pair: natural sort leads with "APT Updates", the default order does not.
+    assert value[0] == "APT Updates"
+
+
+def test_descending_name_sort_is_a_plain_reverse_natural_sort() -> None:
+    services = [ServiceFactory.build(name=name) for name in _MIXED_NAMES]
+    sorters = [ServiceSort(column=ServiceSortColumn.NAME, direction=ServiceSortDirection.DESC)]
+
+    value = [service.name for service in sorted(services, key=service_sorter(sorters))]
+
+    assert value == sorted(_MIXED_NAMES, key=functools.cmp_to_key(sort_naturally), reverse=True)
+
+
+def test_check_mk_priority_does_not_apply_to_a_secondary_name_sort() -> None:
+    services = [
+        ServiceFactory.build(state=ServiceState.OK, name="Check_MK"),
+        ServiceFactory.build(state=ServiceState.OK, name="APT Updates"),
+        ServiceFactory.build(state=ServiceState.CRIT, name="Memory"),
+    ]
+    sorters = [
+        ServiceSort(column=ServiceSortColumn.STATE, direction=ServiceSortDirection.DESC),
+        ServiceSort(column=ServiceSortColumn.NAME, direction=ServiceSortDirection.ASC),
+    ]
+
+    value = [
+        (service.state, service.name) for service in sorted(services, key=service_sorter(sorters))
+    ]
+
+    assert value == [
+        (ServiceState.CRIT, "Memory"),
+        (ServiceState.OK, "APT Updates"),
+        (ServiceState.OK, "Check_MK"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "near_miss",
+    [
+        pytest.param("check_mk", id="wrong case"),
+        pytest.param("Check_MK Agent Deployment", id="longer name"),
+        pytest.param("Check_MK HW/SW inventory", id="wrong case in suffix"),
+        pytest.param("Check_MK Discovery ", id="trailing space"),
+    ],
+)
+def test_only_exact_service_names_are_prioritized(near_miss: str) -> None:
+    services = [
+        ServiceFactory.build(name=near_miss),
+        ServiceFactory.build(name="AAA"),
+    ]
+
+    value = [service.name for service in sorted(services, key=service_sorter([]))]
+
+    assert value == ["AAA", near_miss]
+
+
+def test_service_name_priority_does_not_affect_the_summary_sort() -> None:
+    services = [
+        ServiceFactory.build(name="Check_MK", summary="zzz"),
+        ServiceFactory.build(name="APT Updates", summary="aaa"),
+    ]
+    sorters = [ServiceSort(column=ServiceSortColumn.SUMMARY, direction=ServiceSortDirection.ASC)]
+
+    value = [service.summary for service in sorted(services, key=service_sorter(sorters))]
+
+    assert value == ["aaa", "zzz"]
+
+
+def test_service_name_ranks_match_the_legacy_sorter() -> None:
+    """Guard our copy of the legacy ranking against drift on either side."""
+    ours = sorted(_SERVICE_NAME_RANKS, key=_SERVICE_NAME_RANKS.__getitem__)
+
+    assert ours == _PRIORITIZED_NAMES
+    # cmp_service_name_equiv ranks anything it does not know last, so a stable sort by it has to
+    # reproduce our order with the unknown name at the end.
+    assert sorted([*ours, "APT Updates"], key=cmp_service_name_equiv) == [*ours, "APT Updates"]
 
 
 @pytest.mark.parametrize(

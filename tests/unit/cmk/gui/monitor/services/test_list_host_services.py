@@ -80,6 +80,44 @@ def test_handle_list_services_forwards_requested_sort() -> None:
     )
 
 
+def test_handle_list_services_defaults_to_the_legacy_service_order() -> None:
+    """Without a requested sort the page must show Checkmk's own services first, as legacy does."""
+    names = ["Memory", "Check_MK Discovery", "APT Updates", "Check_MK"]
+    services_repo = get_fake_host_services_repository(n_services=len(names), names=names)
+
+    response = _handle_list_services(
+        services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID, limit=None
+    )
+
+    assert [service.name for service in response.services] == [
+        "Check_MK",
+        "Check_MK Discovery",
+        "APT Updates",
+        "Memory",
+    ]
+
+
+def test_handle_list_services_takes_a_requested_name_sort_literally() -> None:
+    """An explicitly requested name sort is plain alphabetical, unlike the page default."""
+    names = ["Memory", "Check_MK Discovery", "APT Updates", "Check_MK"]
+    services_repo = get_fake_host_services_repository(n_services=len(names), names=names)
+
+    response = _handle_list_services(
+        services_repo,
+        hostname=KNOWN_HOSTNAME,
+        site_id=_SITE_ID,
+        limit=None,
+        sorters=[ServiceSort(column=ServiceSortColumn.NAME, direction=ServiceSortDirection.ASC)],
+    )
+
+    assert [service.name for service in response.services] == [
+        "APT Updates",
+        "Check_MK",
+        "Check_MK Discovery",
+        "Memory",
+    ]
+
+
 def test_handle_list_services_filters_by_search_query() -> None:
     services_repo = get_fake_host_services_repository(n_services=10)
     items = services_repo.fetch(

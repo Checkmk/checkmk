@@ -29,7 +29,7 @@ _SERVICES_COLUMNS = (
     "description host_name state plugin_output acknowledged scheduled_downtime_depth "
     "notifications_enabled is_flapping last_check last_state_change perf_data check_command"
 )
-_DEFAULT_ORDER_BY = "OrderBy: description asc"
+_DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 
 
 def test_fetch_filters_by_exact_hostname_and_applies_limit() -> None:
@@ -185,8 +185,8 @@ def test_count_total_query_shape() -> None:
     [
         pytest.param(
             [],
-            "OrderBy: description asc",
-            id="default fallback",
+            "OrderBy: description asc natural",
+            id="page default order",
         ),
         pytest.param(
             [ServiceSort(ServiceSortColumn.STATE, ServiceSortDirection.DESC)],

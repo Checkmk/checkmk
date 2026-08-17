@@ -4,12 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import asyncio
-import io
-import json
 import logging
 import os
-import re
-import tarfile
 import time
 import traceback
 from collections import deque
@@ -23,7 +19,6 @@ from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urls
 
 import playwright.async_api
 import requests
-import requests.utils
 from bs4 import BeautifulSoup
 from lxml import etree
 from playwright.async_api import async_playwright
@@ -34,7 +29,6 @@ from tests.testlib.site import Site
 logger = logging.getLogger()
 
 CrashIdRegex = r"\w{8}-\w{4}-\w{4}-\w{4}-\w{12}"
-CrashLinkRegex = rf"crash\.py\?crash_id=({CrashIdRegex})"
 # We allow a 120s timeout since a very new page might take a while to setup
 PW_TIMEOUT = 120_000
 SkipReason = str
@@ -353,81 +347,6 @@ class Crawler:
         self.results[url.url].duration = duration
         logger.debug("page done in %.2f secs (%s)", duration, url.url)
         return self.results[url.url].skipped is None and len(self.results[url.url].errors) == 0
-
-    def handle_crash_reports(self) -> None:
-        crash_reports_url = urljoin(self.site.internal_url, "view.py?view_name=crash_reports")
-        try:
-            response = self.requests_session.get(crash_reports_url)
-        except requests.RequestException as exception:
-            self.handle_error(Url(url=crash_reports_url), "GetCrashReportsFailed", str(exception))
-            return
-
-        if response.status_code != 200:
-            self.handle_error(
-                Url(url=crash_reports_url), "CrashReportsPageFailed", str(response.status_code)
-            )
-
-        for crash_id_match in re.finditer(rf"crash_id=({CrashIdRegex})", response.text):
-            self.handle_crash_report(Url("unknown url"), crash_id_match.group(1))
-
-    def handle_crash_report(self, url: Url, crash_id: str) -> bool:
-        crash_report_url = urljoin(
-            self.site.internal_url,
-            f"download_crash_report.py?crash_id={crash_id}&site={self.site.id}",
-        )
-        try:
-            response = self.requests_session.get(crash_report_url)
-        except requests.RequestException as exception:
-            self.handle_error(
-                Url(url=crash_report_url, referer_url=url.url),
-                "CrashReportDownloadFailed",
-                str(exception),
-            )
-            return False
-
-        status_code = response.status_code
-        expected_status_code = 200
-        if status_code != expected_status_code:
-            self.handle_error(
-                Url(url=crash_report_url, referer_url=url.url),
-                "CrashReportDownloadFailed",
-                f"status code: {status_code}, expected: {expected_status_code}",
-            )
-            return False
-
-        content_type = response.headers.get("content-type", "").split(";", 1)[0].strip()
-        expected_content_type = "application/x-tgz"
-        if content_type != expected_content_type:
-            self.handle_error(
-                Url(url=crash_report_url, referer_url=url.url),
-                "CrashReportDownloadFailed",
-                f"content-type: {content_type}, expected: {expected_content_type}",
-            )
-            return False
-
-        try:
-            with tarfile.open(fileobj=io.BytesIO(response.content)) as tar:
-                crash_info_file = tar.extractfile("crash.info")
-                if crash_info_file is None:
-                    self.handle_error(
-                        Url(url=crash_report_url, referer_url=url.url),
-                        "EmptyCrashReportTarFile",
-                        message=crash_id,
-                    )
-                    return False
-
-                crash_info = json.loads(crash_info_file.read().decode("utf-8"))
-        except tarfile.ReadError:
-            self.handle_error(
-                Url(url=crash_report_url, referer_url=url.url),
-                "InvalidCrashReportTarFile",
-                repr(response.content),
-            )
-            return False
-
-        # reads the crash report and dumps it indented for better readability
-        crash_report = json.dumps(crash_info, indent=4)
-        return self.handle_error(url, "CrashReport", message=crash_report)
 
     async def visit_url(
         self,

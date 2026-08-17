@@ -47,5 +47,4 @@ def crawler(test_site: Site, pytestconfig: pytest.Config) -> Generator[Crawler]:
         yield test_crawler
     finally:
         # teardown: creating report
-        test_crawler.handle_crash_reports()
         test_crawler.report()

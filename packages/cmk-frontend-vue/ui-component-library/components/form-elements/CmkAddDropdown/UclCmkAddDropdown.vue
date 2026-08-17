@@ -55,7 +55,7 @@ export const panelConfig = {
     title: 'Floating',
     initialState: false
   }
-} satisfies PanelConfigFor<typeof CmkAddDropdown, 'options'>
+} satisfies PanelConfigFor<typeof CmkAddDropdown, 'options' | 'componentId'>
 </script>
 
 <script setup lang="ts">
@@ -74,7 +74,10 @@ import { ref } from 'vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkAddDropdown, 'options'>().createRef(panelConfig)
+const propState = new PanelStateCreator<
+  typeof CmkAddDropdown,
+  'options' | 'componentId'
+>().createRef(panelConfig)
 
 const options: Suggestions = {
   type: 'fixed',

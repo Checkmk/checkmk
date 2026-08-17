@@ -12,9 +12,10 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import CmkDropdown from './CmkDropdown.vue'
 import type { ButtonVariants } from './CmkDropdownButton.vue'
 
-defineProps<{
+const { componentId = null } = defineProps<{
   options: Suggestions
   label: TranslatedString
+  componentId?: string | null
   width?: ButtonVariants['width']
   floating?: boolean
 }>()
@@ -33,6 +34,7 @@ function onSelect(value: string | null): void {
 <template>
   <CmkDropdown
     :model-value="null"
+    :component-id="componentId"
     :options="options"
     :label="label"
     :input-hint="label"

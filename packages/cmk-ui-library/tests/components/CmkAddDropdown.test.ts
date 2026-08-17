@@ -86,3 +86,25 @@ test('a second pick of the same option emits again', async () => {
   expect(onSelect).toHaveBeenCalledTimes(2)
   expect(onSelect).toHaveBeenNthCalledWith(2, 'cmk_rrd')
 })
+
+test('a component id lands on the button, so a label outside can point at it', () => {
+  render(
+    defineComponent({
+      render() {
+        return [
+          h('label', { for: 'add-id' }, 'Host filter'),
+          h(CmkAddDropdown, {
+            options: OPTIONS,
+            label: untranslated('Add host filter'),
+            componentId: 'add-id'
+          })
+        ]
+      }
+    })
+  )
+
+  // The button keeps naming itself: an aria-label wins over the label pointing at it.
+  expect(screen.getByLabelText('Host filter')).toBe(
+    screen.getByRole('combobox', { name: 'Add host filter' })
+  )
+})

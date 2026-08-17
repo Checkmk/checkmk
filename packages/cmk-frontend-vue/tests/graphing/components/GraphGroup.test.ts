@@ -19,10 +19,19 @@ import GraphGroup from '@/graphing/components/GraphGroup.vue'
 // "zoom" changes it.
 vi.mock('@/graphing/components/GraphPanel.vue', () => ({
   default: {
-    props: ['metrics', 'dataTimeRange', 'requestedTimeRange', 'title', 'figureWidth'],
+    props: [
+      'metrics',
+      'dataTimeRange',
+      'requestedTimeRange',
+      'title',
+      'figureWidth',
+      'consolidationFn'
+    ],
     emits: ['update:requestedTimeRange', 'update:consolidationFn'],
     template: `<div data-testid="graph-panel" :data-figure-width="figureWidth">
       <span>{{ title }}</span>
+      <span data-testid="panel-consolidation">{{ consolidationFn }}</span>
+      <button @click="$emit('update:consolidationFn', 'min')">consolidate by min</button>
       <button @click="$emit('update:requestedTimeRange', { start: 1500, end: 2500 }, 'translated_timerange')">
         pan
       </button>
@@ -67,7 +76,7 @@ function makeGraphDefinition(title: string): CmkTimeSeriesGraph {
       hover: 'enabled',
       pin: 'enabled'
     },
-    internal: '{"graphs": []}'
+    internal: JSON.stringify({ graphs: [], title })
   }
 }
 
@@ -99,6 +108,17 @@ let postSpy: any
 const requestedRanges = (): { start: number; end: number; step: number }[] =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postSpy.mock.calls.map((call: any) => call[1].body.requested_time_range)
+
+const requestedConsolidationsByGraphTitle = (): string[] =>
+  postSpy.mock.calls.map(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (call: any) =>
+      `${JSON.parse(call[1].body.internal).title}: ${call[1].body.consolidation_function}`
+  )
+
+// GraphGroup runs useGraphData twice - once for the graphs, once for the brush overviews beneath
+// them - so fetching one panel issues this many requests.
+const REQUESTS_PER_PANEL = 2
 
 // A full-width group (no figure_width) derives its width from #main_page_content. jsdom reports
 // zero-sized rects, so we mock rect sizes here to enable the fetch guard (so GraphPanel elements
@@ -368,12 +388,45 @@ test('fetches the graph with the initial range and the overview with the multipl
 
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
   const body = postSpy.mock.calls[0][1].body
-  expect(body.internal).toBe('{"graphs": []}')
-  expect(body.consolidation_function).toBe('avg')
+  expect(JSON.parse(body.internal).graphs).toEqual([])
+  expect(body.consolidation_function).toBe('max')
   const ranges = requestedRanges()
   expect(ranges).toContainEqual({ start: 1_000, end: 2_000, step: 60 })
   // 1000s active span → 7× multiplier → 7000s overview domain centered on the range.
   expect(ranges).toContainEqual({ start: -2_000, end: 5_000, step: 60 })
+})
+
+test('asks only the panel whose consolidation function was selected for data again', async () => {
+  const PANEL_TITLES = ['CPU utilization', 'Memory']
+  renderGroup(PANEL_TITLES.map(makeGraphDefinition))
+  const requestsOnLoad = PANEL_TITLES.length * REQUESTS_PER_PANEL
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(requestsOnLoad))
+
+  await fireEvent.click((await screen.findAllByText('consolidate by min'))[0]!)
+
+  // Only the selected panel is asked again, so exactly one panel's worth of requests is added.
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(requestsOnLoad + REQUESTS_PER_PANEL))
+  expect(requestedConsolidationsByGraphTitle().slice(requestsOnLoad)).toEqual([
+    'CPU utilization: min',
+    'CPU utilization: min'
+  ])
+  const stated = screen.getAllByTestId('panel-consolidation').map((node) => node.textContent)
+  expect(stated).toEqual(['min', 'max'])
+})
+
+test('keeps a panel it did not refetch showing the data it already holds', async () => {
+  const PANEL_TITLES = ['CPU utilization', 'Memory']
+  renderGroup(PANEL_TITLES.map(makeGraphDefinition))
+  const requestsOnLoad = PANEL_TITLES.length * REQUESTS_PER_PANEL
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(requestsOnLoad))
+  expect(await screen.findAllByTestId('graph-panel')).toHaveLength(PANEL_TITLES.length)
+
+  await fireEvent.click((await screen.findAllByText('consolidate by min'))[0]!)
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(requestsOnLoad + REQUESTS_PER_PANEL))
+
+  const titles = screen.getAllByTestId('graph-panel').map((panel) => panel.textContent)
+  expect(titles[0]).toContain('CPU utilization')
+  expect(titles[1]).toContain('Memory')
 })
 
 test('fetches graph and overview with the combination mode from props', async () => {

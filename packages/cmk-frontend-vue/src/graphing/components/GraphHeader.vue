@@ -20,6 +20,7 @@ import type { ZoomMode } from './TimeSeriesGraph'
 import {
   CONSOLIDATION_FUNCTIONS,
   type ConsolidationFn,
+  DEFAULT_CONSOLIDATION_FN,
   isConsolidationFn,
   useConsolidationFunctionLabels
 } from './consolidation'
@@ -43,7 +44,9 @@ const props = withDefaults(
 
 const emit = defineEmits<{ doAction: [onClick: BurgerMenuCallable] }>()
 
-const consolidationFn = defineModel<ConsolidationFn>('consolidationFn', { default: 'avg' })
+const consolidationFn = defineModel<ConsolidationFn>('consolidationFn', {
+  default: DEFAULT_CONSOLIDATION_FN
+})
 const zoomMode = defineModel<ZoomMode>('zoomMode', { default: 'time' })
 
 const { _t } = usei18n()

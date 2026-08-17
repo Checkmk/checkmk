@@ -6,7 +6,6 @@
 import { type Ref, computed, ref } from 'vue'
 
 import type { HorizontalLine, Metric } from '../components/TimeSeriesGraph'
-import type { ConsolidationFn } from '../components/consolidation'
 
 export function useGraphVisibility(
   getMetrics: () => Metric[],
@@ -15,15 +14,11 @@ export function useGraphVisibility(
     hiddenMetricNames?: Ref<string[]>
     hiddenLineNames?: Ref<string[]>
     highlightedMetricName?: Ref<string | null>
-    defaultConsolidationFunction?: ConsolidationFn
   } = {}
 ) {
   const hiddenMetricNames = options.hiddenMetricNames ?? ref<string[]>([])
   const hiddenLineNames = options.hiddenLineNames ?? ref<string[]>([])
   const highlightedMetricName = options.highlightedMetricName ?? ref<string | null>(null)
-  const activeConsolidationFunction = ref<ConsolidationFn>(
-    options.defaultConsolidationFunction ?? 'max'
-  )
 
   const visibleMetrics = computed(() =>
     getMetrics().filter((m) => !hiddenMetricNames.value.includes(m.metadata.name))
@@ -33,17 +28,11 @@ export function useGraphVisibility(
     getHorizontalLines().filter((l) => !hiddenLineNames.value.includes(l.name))
   )
 
-  function setConsolidationFunction(val: ConsolidationFn) {
-    activeConsolidationFunction.value = val
-  }
-
   return {
     hiddenMetricNames,
     hiddenLineNames,
     highlightedMetricName,
-    activeConsolidationFunction,
     visibleMetrics,
-    visibleHorizontalLines,
-    setConsolidationFunction
+    visibleHorizontalLines
   }
 }

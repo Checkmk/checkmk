@@ -25,7 +25,7 @@ import GraphBrush from './GraphBrush/GraphBrush.vue'
 import GraphHeader from './GraphHeader.vue'
 import TimeSeriesGraph from './TimeSeriesGraph'
 import { deriveYAxis } from './TimeSeriesGraph/yAxis'
-import type { ConsolidationFn } from './consolidation'
+import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from './consolidation'
 import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, MIN_ZOOM_TIME_RANGE_SECONDS } from './constants'
 import GraphLegend from './legend/GraphLegend.vue'
 
@@ -76,12 +76,10 @@ const hiddenLineNames = defineModel<string[]>('hiddenLineNames', { default: () =
 const highlightedMetricName = defineModel<string | null>('highlightedMetricName', {
   default: null
 })
-const {
-  visibleMetrics,
-  visibleHorizontalLines,
-  activeConsolidationFunction,
-  setConsolidationFunction
-} = useGraphVisibility(
+const consolidationFn = defineModel<ConsolidationFn>('consolidationFn', {
+  default: DEFAULT_CONSOLIDATION_FN
+})
+const { visibleMetrics, visibleHorizontalLines } = useGraphVisibility(
   () => props.metrics,
   () => props.horizontalLines ?? [],
   { hiddenMetricNames, hiddenLineNames, highlightedMetricName }
@@ -92,11 +90,6 @@ function updateTimeRange(val: RequestedTimeRange, kind: TimeRangeCommitKind) {
   const asked = props.requestedTimeRange
   const end = kind === 'translated_timerange' ? val.start + (asked.end - asked.start) : val.end
   emit('update:requestedTimeRange', { start: val.start, end }, kind)
-}
-
-function updateConsolidationFunction(val: ConsolidationFn) {
-  setConsolidationFunction(val)
-  emit('update:consolidationFn', val)
 }
 
 // Backend-hidden metrics (stack references, render.hidden) are structural: they feed the
@@ -144,7 +137,7 @@ const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
     internal: target.internal,
     timeStart: props.requestedTimeRange.start,
     timeEnd: props.requestedTimeRange.end,
-    consolidationFunction: activeConsolidationFunction.value
+    consolidationFunction: consolidationFn.value
   })
 }
 
@@ -174,10 +167,10 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
       :class="{ 'graphing-graph-panel__container--legend-right': legendPosition === 'right' }"
     >
       <div class="graphing-graph-panel__canvas-area">
-        <!-- TODO: wire the remaining header interactions (consolidation dropdown) into the panel state -->
         <GraphHeader
           v-if="showGraphHeader"
           v-model:zoom-mode="zoomMode"
+          v-model:consolidation-fn="consolidationFn"
           class="graphing-graph-panel__header"
           :class="{ 'graphing-graph-panel__header--compact': headerIsCompact }"
           :title="title"
@@ -206,6 +199,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
             :min-time-range="MIN_ZOOM_TIME_RANGE_SECONDS"
             :at-min-time-zoom="atMinTimeZoom"
             :min-value-range="null"
+            :consolidation-function="consolidationFn"
             :inspecting="inspectionActive"
             :pan-enabled="interaction.panning === 'enabled'"
             :zoom-enabled="interaction.zoom === 'enabled'"
@@ -254,10 +248,9 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
         class="graphing-graph-panel__legend"
         :metrics="legendMetrics"
         :horizontal-lines="horizontalLines ?? []"
-        :consolidation-fn="activeConsolidationFunction"
+        :consolidation-fn="consolidationFn"
         :hidden-metric-names="hiddenMetricNames"
         :hidden-line-names="hiddenLineNames"
-        @update:consolidation-fn="updateConsolidationFunction($event)"
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
         @hover-metric="highlightedMetricName = $event"

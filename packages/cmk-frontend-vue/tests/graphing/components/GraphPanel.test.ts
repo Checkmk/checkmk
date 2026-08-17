@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
@@ -27,7 +28,8 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       'highlightedMetricName',
       'pinEnabled',
       'pinTime',
-      'atMinTimeZoom'
+      'atMinTimeZoom',
+      'consolidationFunction'
     ],
     emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
     template: `<div data-testid="time-series-graph">
@@ -38,6 +40,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       <span data-testid="show-pin">{{ pinEnabled }}</span>
       <span data-testid="pin-time">{{ pinTime }}</span>
       <span data-testid="at-min-time-zoom">{{ atMinTimeZoom }}</span>
+      <span data-testid="renderer-consolidation">{{ consolidationFunction }}</span>
       <span data-testid="emit-pin-create" @click="$emit('pinCreate', { time: 1234 })" />
       <span data-testid="emit-pin-action" @click="$emit('pinAction', { time: 1234 })" />
       <span
@@ -408,6 +411,69 @@ test('a do-action from the header runs the callback with the graph the backends 
     timeEnd: REQUESTED.end,
     consolidationFunction: 'max'
   })
+})
+
+async function selectConsolidationFromHeaderDropdown(label: string): Promise<void> {
+  const user = userEvent.setup()
+  await user.click(screen.getByRole('combobox', { name: 'Graph values' }))
+  await user.click(await screen.findByRole('option', { name: label }))
+}
+
+function rendererConsolidation(): HTMLElement {
+  return screen.getByTestId('renderer-consolidation')
+}
+
+function renderPanelWithConsolidation() {
+  return render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      timePickerRequests: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE,
+      showConsolidation: true
+    }
+  })
+}
+
+test('consolidates with max until the header selects otherwise', () => {
+  renderPanelWithConsolidation()
+  expect(rendererConsolidation()).toHaveTextContent('max')
+})
+
+test('reports the header selection to the host and hands it to the renderer', async () => {
+  const { emitted } = renderPanelWithConsolidation()
+
+  await selectConsolidationFromHeaderDropdown('Min')
+
+  expect(emitted()['update:consolidationFn']).toEqual([['min']])
+  expect(rendererConsolidation()).toHaveTextContent('min')
+})
+
+test('the burger menu addresses the graph with the selected consolidation function', async () => {
+  const onClick: BurgerMenuCallable = vi.fn()
+  vi.mocked(loadMenu).mockResolvedValue([
+    { heading: 'Export', actions: [{ label: 'Export', ariaLabel: 'Export', onClick }] }
+  ])
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      timePickerRequests: 0,
+      figureWidth: FIGURE_WIDTH,
+      addTo: { type: 'test', specification: {}, internal: '{"graphs":[]}' },
+      interaction: { ...INTERACTION_NONE, burger: 'enabled' },
+      showConsolidation: true
+    }
+  })
+
+  await selectConsolidationFromHeaderDropdown('Average')
+  await fireEvent.click(screen.getByRole('button', { name: 'Action menu' }))
+  await fireEvent.click(await screen.findByRole('button', { name: 'Export' }))
+
+  expect(onClick).toHaveBeenCalledWith(expect.objectContaining({ consolidationFunction: 'avg' }))
 })
 
 test('renders title when showTitle is true', () => {

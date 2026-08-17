@@ -7,7 +7,6 @@ import { render } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
 import type { HorizontalLine, Metric } from '@/graphing/components/TimeSeriesGraph'
-import type { ConsolidationFn } from '@/graphing/components/consolidation'
 import { useGraphVisibility } from '@/graphing/composables/useGraphVisibility'
 
 // Minimal fixtures — the composable only accesses metadata.name and line.name
@@ -15,11 +14,7 @@ const CPU = { metadata: { name: 'cpu' } } as Metric
 const MEM = { metadata: { name: 'mem' } } as Metric
 const WARNING_LINE = { name: 'Warning' } as HorizontalLine
 
-function mountComposable(
-  initialMetrics: Metric[] = [],
-  initialLines: HorizontalLine[] = [],
-  initialConsolidationFunction: ConsolidationFn = 'max'
-) {
+function mountComposable(initialMetrics: Metric[] = [], initialLines: HorizontalLine[] = []) {
   const metricsRef = ref(initialMetrics)
   const linesRef = ref(initialLines)
   let api!: ReturnType<typeof useGraphVisibility>
@@ -28,8 +23,7 @@ function mountComposable(
       setup() {
         api = useGraphVisibility(
           () => metricsRef.value,
-          () => linesRef.value,
-          { defaultConsolidationFunction: initialConsolidationFunction }
+          () => linesRef.value
         )
         return () => null
       }
@@ -58,22 +52,6 @@ test('visibleHorizontalLines excludes lines listed in hiddenLineNames', () => {
   const { api } = mountComposable([], [WARNING_LINE])
   api.hiddenLineNames.value = ['Warning']
   expect(api.visibleHorizontalLines.value).toHaveLength(0)
-})
-
-test('activeConsolidationFunction initializes from the supplied default consolidation function', () => {
-  const { api } = mountComposable([], [], 'min')
-  expect(api.activeConsolidationFunction.value).toBe('min')
-})
-
-test('activeConsolidationFunction defaults to max when no default is supplied', () => {
-  const { api } = mountComposable([], [])
-  expect(api.activeConsolidationFunction.value).toBe('max')
-})
-
-test('setConsolidationFunction updates activeConsolidationFunction', () => {
-  const { api } = mountComposable([], [], 'min')
-  api.setConsolidationFunction('avg')
-  expect(api.activeConsolidationFunction.value).toBe('avg')
 })
 
 test('highlightedMetricName starts as null', () => {

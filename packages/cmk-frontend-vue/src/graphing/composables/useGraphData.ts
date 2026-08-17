@@ -6,10 +6,10 @@
 import type { AddTo, CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
-import { type Ref, readonly, ref, watch } from 'vue'
+import { type Ref, computed, readonly, ref, watch } from 'vue'
 
 import type { HorizontalLine, Metric, TimeRange } from '../components/TimeSeriesGraph'
-import type { ConsolidationFn } from '../components/consolidation'
+import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../components/consolidation'
 import type { RequestedTimeRange } from '../types'
 
 // The fetch endpoint only needs the self-contained definition (the graph kind is embedded in
@@ -107,7 +107,7 @@ export function useGraphData(
   getGraphs: () => GraphDataDefinition[],
   getRequestedTimeRange: () => RequestedTimeRange,
   getCanvasWidth: () => number,
-  getConsolidationFn: () => ConsolidationFn,
+  getConsolidationFnPerGraph: () => ConsolidationFn[],
   getCombinationMode: () => GraphCombinationMode | null = () => null,
   fetchGraph: GraphDataFetcher = fetchGraphDataByDefinition
 ): {
@@ -119,117 +119,183 @@ export function useGraphData(
   reload: () => void
 } {
   const graphsRef = ref<ResolvedGraph[]>([])
-  const isLoadingRef = ref(false)
   const errorRef = ref<string | null>(null)
-  // Kept apart from the fatal `error` above; FetchedGraph.errors documents what they are.
-  const partialErrorsRef = ref<string[]>([])
-  // Apart again from those: FetchedGraph.warnings are advisory, not a failure of any kind.
-  const warningsRef = ref<string[]>([])
+  const diagnosticsPerGraphRef = ref<{ errors: string[]; warnings: string[] }[]>([])
+  const partialErrors = computed(() =>
+    diagnosticsPerGraphRef.value.flatMap((entry) => entry.errors)
+  )
+  const warnings = computed(() => diagnosticsPerGraphRef.value.flatMap((entry) => entry.warnings))
+
+  const loadsInFlight = ref(0)
+  const isLoading = computed(() => loadsInFlight.value > 0)
 
   // Step of the most recently requested load; a resize only re-fetches when the
   // width-derived step actually changes.
   let lastRequestedStep: number | null = null
 
-  // Drops a response landing after a newer load was issued; a clickable retry makes that likely.
   let loadToken = 0
+  let tokenOwningSlot: number[] = []
+  let tokenOwningAllSlots = 0
 
-  async function load() {
+  interface ResolvedEntry {
+    graph: ResolvedGraph
+    errors: string[]
+    warnings: string[]
+  }
+
+  // Width not measured yet (0, or negative once the axis margin is subtracted from an unmeasured
+  // figure). Skip rather than fetch at a bogus step; the resize watch below fires the first real
+  // load once a usable width arrives.
+  function canvasWidthIsMeasured(): boolean {
     const canvasWidth = getCanvasWidth()
-    // Width not measured yet (0, or negative once the axis margin is subtracted from an unmeasured
-    // figure). Skip rather than fetch at a bogus step; the resize watch below fires the first real
-    // load once a usable width arrives.
-    if (!Number.isFinite(canvasWidth) || canvasWidth <= 0) {
+    return Number.isFinite(canvasWidth) && canvasWidth > 0
+  }
+
+  function currentRequest(): { requestedTimeRange: GraphFetchParams['requestedTimeRange'] } {
+    const range = getRequestedTimeRange()
+    const step = computeStep(range.start, range.end, getCanvasWidth())
+    lastRequestedStep = step
+    return { requestedTimeRange: { start: range.start, end: range.end, step } }
+  }
+
+  async function fetchOne(
+    definition: GraphDataDefinition,
+    index: number,
+    requestedTimeRange: GraphFetchParams['requestedTimeRange']
+  ): Promise<ResolvedEntry> {
+    const fetched = await fetchGraph(definition, {
+      requestedTimeRange,
+      consolidationFunction: getConsolidationFnPerGraph()[index] ?? DEFAULT_CONSOLIDATION_FN,
+      combinationMode: getCombinationMode()
+    })
+    return {
+      graph: {
+        title: fetched.title || (definition.options?.header.title ?? ''),
+        metrics: fetched.metrics,
+        timeRange: fetched.timeRange,
+        horizontalLines: fetched.horizontalLines,
+        addTo: definition.add_to,
+        internal: definition.internal
+      },
+      errors: fetched.errors ?? [],
+      warnings: fetched.warnings ?? []
+    }
+  }
+
+  async function loadAllGraphs() {
+    if (!canvasWidthIsMeasured()) {
       return
     }
 
     const token = ++loadToken
+    tokenOwningAllSlots = token
     const definitions = getGraphs()
-    const range = getRequestedTimeRange()
+    tokenOwningSlot = definitions.map(() => token)
 
-    isLoadingRef.value = true
-    // Cleared on success below, not here, so a retry keeps the failure stated until a result lands.
+    loadsInFlight.value += 1
 
     try {
-      const step = computeStep(range.start, range.end, canvasWidth)
-      lastRequestedStep = step
-      const requestedTimeRange = { start: range.start, end: range.end, step }
-      const consolidationFunction = getConsolidationFn()
-      const combinationMode = getCombinationMode()
-
+      const { requestedTimeRange } = currentRequest()
       const resolved = await Promise.all(
-        definitions.map(async (definition) => {
-          const fetched = await fetchGraph(definition, {
-            requestedTimeRange,
-            consolidationFunction,
-            combinationMode
-          })
-          return {
-            graph: {
-              title: fetched.title || (definition.options?.header.title ?? ''),
-              metrics: fetched.metrics,
-              timeRange: fetched.timeRange,
-              horizontalLines: fetched.horizontalLines,
-              addTo: definition.add_to,
-              internal: definition.internal
-            },
-            // `GraphDataFetcher` is a public extension point, so guard both fields rather than
-            // trusting them: `flatMap` would fold a missing array into a one-element one and raise
-            // a notice, with no message in it, over a fetch that had in fact succeeded.
-            errors: fetched.errors ?? [],
-            warnings: fetched.warnings ?? []
-          }
-        })
+        definitions.map((definition, index) => fetchOne(definition, index, requestedTimeRange))
       )
-      if (token !== loadToken) {
+      if (tokenOwningAllSlots !== token) {
         return
       }
-      graphsRef.value = resolved.map((entry) => entry.graph)
-      partialErrorsRef.value = resolved.flatMap((entry) => entry.errors)
-      warningsRef.value = resolved.flatMap((entry) => entry.warnings)
+      const supersededGraphs = graphsRef.value
+      const supersededDiagnostics = diagnosticsPerGraphRef.value
+      const stillOwnsSlot = (index: number): boolean => tokenOwningSlot[index] === token
+      graphsRef.value = resolved.map((entry, index) =>
+        stillOwnsSlot(index) ? entry.graph : (supersededGraphs[index] ?? entry.graph)
+      )
+      diagnosticsPerGraphRef.value = resolved.map((entry, index) =>
+        stillOwnsSlot(index) ? entry : (supersededDiagnostics[index] ?? entry)
+      )
       errorRef.value = null
     } catch (e) {
-      if (token !== loadToken) {
-        return
+      if (tokenOwningAllSlots === token) {
+        errorRef.value = e instanceof Error ? e.message : String(e)
       }
-      // Graphs are left in place, so a failed refetch keeps the data the caller overlays.
-      errorRef.value = e instanceof Error ? e.message : String(e)
     } finally {
-      if (token === loadToken) {
-        isLoadingRef.value = false
-      }
+      loadsInFlight.value -= 1
     }
   }
 
-  watch([getGraphs, getRequestedTimeRange, getConsolidationFn], () => void load(), {
+  async function loadGraph(index: number): Promise<void> {
+    if (!canvasWidthIsMeasured()) {
+      return
+    }
+
+    const definitions = getGraphs()
+    const definition = definitions[index]
+    const everySlotIsFilled = graphsRef.value.length === definitions.length
+    if (definition === undefined || !everySlotIsFilled) {
+      return loadAllGraphs()
+    }
+
+    const token = ++loadToken
+    tokenOwningSlot[index] = token
+    loadsInFlight.value += 1
+
+    try {
+      const { requestedTimeRange } = currentRequest()
+      const entry = await fetchOne(definition, index, requestedTimeRange)
+      if (tokenOwningSlot[index] !== token) {
+        return
+      }
+      graphsRef.value = graphsRef.value.map((graph, slot) => (slot === index ? entry.graph : graph))
+      diagnosticsPerGraphRef.value = diagnosticsPerGraphRef.value.map((diagnostics, slot) =>
+        slot === index ? entry : diagnostics
+      )
+      errorRef.value = null
+    } catch (e) {
+      if (tokenOwningSlot[index] === token) {
+        errorRef.value = e instanceof Error ? e.message : String(e)
+      }
+    } finally {
+      loadsInFlight.value -= 1
+    }
+  }
+
+  watch([getGraphs, getRequestedTimeRange], () => void loadAllGraphs(), {
     immediate: true,
     deep: true
+  })
+
+  const snapshotConsolidationFnPerGraph = (): ConsolidationFn[] => [...getConsolidationFnPerGraph()]
+  watch(snapshotConsolidationFnPerGraph, (current, previous) => {
+    current.forEach((consolidationFn, index) => {
+      if (consolidationFn !== previous[index]) {
+        void loadGraph(index)
+      }
+    })
   })
 
   // A resize only re-renders client-side; re-fetch (debounced, resizes stream) when the
   // plotted width changes the requested step, so the data resolution keeps matching the
   // drawn pixels.
-  const debouncedLoad = useDebounceFn(() => void load(), 300)
+  const debouncedLoadAllGraphs = useDebounceFn(() => void loadAllGraphs(), 300)
   watch(getCanvasWidth, (width) => {
     if (!Number.isFinite(width) || width <= 0) {
       return
     }
-    // First usable width after an unmeasured start: run the initial load that load() skipped.
+    // First usable width after an unmeasured start: run the initial load that was skipped.
     if (lastRequestedStep === null) {
-      void load()
+      void loadAllGraphs()
       return
     }
     const range = getRequestedTimeRange()
     if (computeStep(range.start, range.end, width) !== lastRequestedStep) {
-      debouncedLoad()
+      debouncedLoadAllGraphs()
     }
   })
 
   return {
     graphs: graphsRef,
-    isLoading: readonly(isLoadingRef),
+    isLoading,
     error: readonly(errorRef),
-    partialErrors: readonly(partialErrorsRef),
-    warnings: readonly(warningsRef),
-    reload: () => void load()
+    partialErrors,
+    warnings,
+    reload: () => void loadAllGraphs()
   }
 }

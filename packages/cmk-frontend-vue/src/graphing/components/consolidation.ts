@@ -11,6 +11,10 @@ export const CONSOLIDATION_FUNCTIONS = ['min', 'avg', 'max'] as const
 
 export type ConsolidationFn = (typeof CONSOLIDATION_FUNCTIONS)[number]
 
+// Mirrors what the backend consolidates with when a request names no function
+// (cmk/gui/graphing/_graph_templates.py).
+export const DEFAULT_CONSOLIDATION_FN: ConsolidationFn = 'max'
+
 export function isConsolidationFn(value: string | null): value is ConsolidationFn {
   return CONSOLIDATION_FUNCTIONS.some((consolidationFunction) => consolidationFunction === value)
 }

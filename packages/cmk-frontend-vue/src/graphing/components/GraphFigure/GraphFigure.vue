@@ -21,7 +21,7 @@ import GraphNotice from '../GraphNotice.vue'
 import GraphTimestamp from '../GraphTimestamp.vue'
 import TimeSeriesGraph, { type GraphOptions, type Size } from '../TimeSeriesGraph'
 import { deriveYAxis } from '../TimeSeriesGraph/yAxis'
-import type { ConsolidationFn } from '../consolidation'
+import { DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../constants'
 import GraphLegendCompact from '../legend/GraphLegendCompact.vue'
 import { computeEpochTimeRange } from './computeEpochTimeRange'
@@ -31,7 +31,6 @@ const { _t } = usei18n()
 
 const MIN_FIGURE_SIZE = 50
 const REFRESH_INTERVAL_MS = 60_000
-const CONSOLIDATION_FUNCTION: ConsolidationFn = 'max'
 const FONT_SIZE_PT = 8
 
 const props = withDefaults(defineProps<GraphFigureProps>(), {
@@ -73,7 +72,7 @@ const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphDa
   () => graphDefinitions.value,
   () => requestedTimeRange.value,
   () => plotWidth.value,
-  () => CONSOLIDATION_FUNCTION,
+  () => [DEFAULT_CONSOLIDATION_FN],
   () => props.combinationMode,
   props.fetchGraph ?? fetchGraphDataByDefinition
 )
@@ -225,7 +224,7 @@ onBeforeUnmount(() => {
           :inspecting="inspectionActive"
           :pan-enabled="true"
           :zoom-enabled="true"
-          :consolidation-function="CONSOLIDATION_FUNCTION"
+          :consolidation-function="DEFAULT_CONSOLIDATION_FN"
           :options="graphOptions"
           :highlighted-metric-name="highlightedMetricName"
           @zoom="onZoom"

@@ -25,7 +25,7 @@ import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
 import GraphNotice from './GraphNotice.vue'
 import GraphPanel from './GraphPanel.vue'
 import GraphSkeleton from './GraphSkeleton.vue'
-import type { ConsolidationFn } from './consolidation'
+import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from './consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from './constants'
 
 const { _t } = usei18n()
@@ -95,7 +95,9 @@ const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } = useReq
   start: props.initial_time_range_start,
   end: props.initial_time_range_end
 })
-const consolidationFn = ref<ConsolidationFn>('avg')
+const consolidationFnPerPanel = ref<ConsolidationFn[]>([])
+const consolidationFnOfPanel = (panelIndex: number): ConsolidationFn =>
+  consolidationFnPerPanel.value[panelIndex] ?? DEFAULT_CONSOLIDATION_FN
 
 const brushCoordination = useBrushCoordination(
   () => Math.floor(Date.now() / 1000),
@@ -118,7 +120,7 @@ const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphDa
   () => props.graphs,
   () => requestedTimeRange.value,
   () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
-  () => consolidationFn.value,
+  () => consolidationFnPerPanel.value,
   () => props.combination_mode
 )
 
@@ -126,7 +128,7 @@ const { graphs: overviewGraphs, reload: reloadOverview } = useGraphData(
   () => props.graphs,
   () => brushCoordination.brushDomain.value,
   () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
-  () => consolidationFn.value,
+  () => consolidationFnPerPanel.value,
   () => props.combination_mode
 )
 const overviews = computed(() =>
@@ -188,6 +190,7 @@ const definitionCount = computed(() => props.graphs.length)
       />
       <div v-for="(graph, i) in graphs" :key="i" class="graphing-graph-group__panel">
         <GraphPanel
+          :consolidation-fn="consolidationFnOfPanel(i)"
           :metrics="graph.metrics"
           :data-time-range="graph.timeRange"
           :requested-time-range="requestedTimeRange"
@@ -205,7 +208,7 @@ const definitionCount = computed(() => props.graphs.length)
           :add-to="graph?.addTo"
           :header-is-compact="layout === 'wrap'"
           @update:requested-time-range="onPanelTimeRange"
-          @update:consolidation-fn="consolidationFn = $event"
+          @update:consolidation-fn="consolidationFnPerPanel[i] = $event"
         />
         <GraphNotice
           v-if="notice"

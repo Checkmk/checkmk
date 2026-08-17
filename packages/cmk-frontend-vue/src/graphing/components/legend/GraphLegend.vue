@@ -13,6 +13,7 @@ import type { HorizontalLine, Metric } from '../TimeSeriesGraph'
 import {
   CONSOLIDATION_FUNCTIONS,
   type ConsolidationFn,
+  DEFAULT_CONSOLIDATION_FN,
   useConsolidationFunctionLabels
 } from '../consolidation'
 import GraphLegendEyeButton from './GraphLegendEyeButton.vue'
@@ -39,7 +40,7 @@ const props = withDefaults(
   }>(),
   {
     horizontalLines: () => [],
-    consolidationFn: 'avg',
+    consolidationFn: DEFAULT_CONSOLIDATION_FN,
     hiddenMetricNames: () => [],
     hiddenLineNames: () => [],
     fillHeight: false
@@ -47,8 +48,6 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  // TODO: implement this emit through a dropdown for consolidation function selection
-  'update:consolidationFn': [value: ConsolidationFn]
   'update:hiddenMetricNames': [value: string[]]
   'update:hiddenLineNames': [value: string[]]
   hoverMetric: [metricName: string | null]

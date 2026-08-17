@@ -58,7 +58,7 @@ function fetchFor(range: RequestedTimeRange, canvasWidth: number): void {
         () => [{ internal: '{"graphs": []}', add_type: null }],
         () => range,
         () => canvasWidth,
-        () => 'max'
+        () => ['max']
       )
       return () => h('div')
     }
@@ -93,7 +93,7 @@ test('a resolved graph takes its title from the fetched data, not from the defin
         ],
         () => ({ start: 0, end: 3_600 }),
         () => 800,
-        () => 'max'
+        () => ['max']
       )
       return () => {
         titles.splice(0, titles.length, ...graphs.value.map((graph) => graph.title))
@@ -154,7 +154,7 @@ function renderWithFetcher(fetchGraph: GraphDataFetcher): {
         () => [{ internal: '{"graphs": []}', add_to: null } as never],
         () => ({ start: 0, end: 3_600 }),
         () => 800,
-        () => 'max',
+        () => ['max'],
         () => null,
         fetchGraph
       )

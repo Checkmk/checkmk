@@ -18,7 +18,7 @@ import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { scaleLinear, scaleTime } from 'd3-scale'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import type { ConsolidationFn } from '../consolidation'
+import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, VALUE_LABEL_GUTTER } from '../constants'
 import { measureAxisLabel } from './axes/labelWidth'
 import { computeTimeAxis } from './axes/timeAxis'
@@ -49,7 +49,9 @@ const emit = defineEmits<{
   'update:plotLeft': [number]
 }>()
 
-const consolidationFn = computed<ConsolidationFn>(() => props.consolidationFunction ?? 'avg')
+const consolidationFn = computed<ConsolidationFn>(
+  () => props.consolidationFunction ?? DEFAULT_CONSOLIDATION_FN
+)
 
 const MAX_ZOOM_HINT_DURATION_MS = 1200
 const MAX_ZOOM_HINT_CURSOR_OFFSET = 12

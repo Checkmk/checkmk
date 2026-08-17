@@ -2227,16 +2227,25 @@ def _rm_downtime_from_hst_or_svc_datasource(
     if not user.may("action.remove_all_downtimes"):
         return None
 
-    downtime_ids = []
     if cmdtag == "HOST":
         prefix = "host_"
         cmd: type[BaseDeleteDowntime] = DeleteHostDowntime
     else:
         prefix = "service_"
         cmd = DeleteServiceDowntime
-    for id_ in row[prefix + "downtimes"]:
-        if id_ != "":
-            downtime_ids.append(int(id_))
+
+    downtime_ids = []
+    if (downtimes := row.get(prefix + "downtimes")) is None:
+        downtime_ids = _query_downtime_ids_for_leaf(
+            row.get("site"),
+            row["host_name"],
+            row["service_description"] if cmdtag == "SVC" else None,
+        )
+    else:
+        for id_ in downtimes:
+            if id_ != "":
+                downtime_ids.append(int(id_))
+
     commands = []
     for dtid in downtime_ids:
         commands.append(cmd(dtid))

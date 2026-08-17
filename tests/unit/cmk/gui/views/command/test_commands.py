@@ -132,9 +132,6 @@ class TestRemoveDowntimeFromHostOrServiceDatasource:
     covered by TestQueryDowntimeIdsForLeaf.
     """
 
-    @pytest.mark.xfail(
-        strict=True, reason="Crash report 78e9a63c-fbc7-11f0-b7a7-020bc683718f: KeyError"
-    )
     def test_service_row_without_the_downtimes_column(
         self,
         request_context: None,
@@ -162,3 +159,25 @@ class TestRemoveDowntimeFromHostOrServiceDatasource:
         downtime_commands, _dialog = result
         assert list(downtime_commands) == [DeleteServiceDowntime(7)]
         assert queried_for == [("heute", "heute", "CPU")]
+
+    def test_service_row_with_the_downtimes_column_does_not_query(
+        self,
+        request_context: None,
+        with_admin_login: UserId,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        def _must_not_query(*_args: object) -> list[int]:
+            raise AssertionError("the downtime ids are already in the row")
+
+        monkeypatch.setattr(commands, "_query_downtime_ids_for_leaf", _must_not_query)
+
+        result = commands._rm_downtime_from_hst_or_svc_datasource(
+            commands.CommandRemoveDowntimesHostServicesTable,
+            "SVC",
+            {"host_name": "heute", "service_description": "CPU", "service_downtimes": ["7", ""]},
+            [],
+        )
+
+        assert result is not None
+        downtime_commands, _dialog = result
+        assert list(downtime_commands) == [DeleteServiceDowntime(7)]

@@ -27,6 +27,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u, ungettext
 from cmk.gui.logged_in import user
+from cmk.gui.monitor.command import DowntimeRecurrence
 from cmk.gui.permissions import (
     Permission,
     PermissionRegistry,
@@ -1451,6 +1452,8 @@ class CommandGroupDowntimes(CommandGroup):
 class RecurringDowntimes(Protocol):
     def choices(self) -> Choices: ...
 
+    def recurrences(self) -> Sequence[DowntimeRecurrence]: ...
+
     def show_input_elements(self, default: str) -> None: ...
 
     def number(self) -> int: ...
@@ -1461,6 +1464,9 @@ class RecurringDowntimes(Protocol):
 class NoRecurringDowntimes:
     def choices(self) -> Choices:
         return [("0", "never")]
+
+    def recurrences(self) -> Sequence[DowntimeRecurrence]:
+        return [DowntimeRecurrence(recur="fixed", title=_("never"))]
 
     def show_input_elements(self, default: str) -> None:
         html.open_div(class_="group")
@@ -1482,6 +1488,7 @@ class NoRecurringDowntimes:
 
 class CommandScheduleDowntimes(Command):
     def __init__(self, recurring_downtimes: RecurringDowntimes) -> None:
+        self.recurring_downtimes = recurring_downtimes
         super().__init__(
             ident="schedule_downtimes",
             title=_l("Schedule downtimes"),

@@ -21,6 +21,11 @@
       "type": "boolean",
       "default": false
     },
+    "downtime_recurrences": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/downtime_recurrence" },
+      "default": []
+    },
     "legacy_view_button": { "$ref": "page_link_button.json" }
   },
   "$defs": {
@@ -32,6 +37,14 @@
         "icon": { "type": "string" }
       },
       "required": ["ident", "title", "icon"]
+    },
+    "downtime_recurrence": {
+      "type": "object",
+      "properties": {
+        "recur": { "type": "string" },
+        "title": { "type": "string" }
+      },
+      "required": ["recur", "title"]
     },
     "row_action": {
       "type": "object",

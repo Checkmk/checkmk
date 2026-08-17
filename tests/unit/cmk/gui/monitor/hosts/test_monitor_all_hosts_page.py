@@ -11,7 +11,11 @@ from cmk.gui import login
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
-from cmk.gui.monitor.command import monitor_command_registry, MonitorCommands
+from cmk.gui.monitor.command import (
+    DowntimeRecurrences,
+    monitor_command_registry,
+    MonitorCommands,
+)
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import (
     _availability_dropdowns,
     MonitorAllHostsPage,
@@ -38,7 +42,7 @@ def fixture_user_without_permissions(load_config: Config) -> Iterator[UserId]:
 
 
 def test_page_denied_without_legacy_view_permission(user_without_permissions: UserId) -> None:
-    page = MonitorAllHostsPage(MonitorCommands(monitor_command_registry))
+    page = MonitorAllHostsPage(MonitorCommands(monitor_command_registry), DowntimeRecurrences())
 
     with pytest.raises(MKAuthException):
         page.page(PageContext(config=Config(), request=request))

@@ -49,7 +49,7 @@ from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.form_specs import registration as vue_registration
 from cmk.gui.graphing.openapi import register as register_graphing_openapi_endpoints
 from cmk.gui.main_menu import MainMenuRegistry
-from cmk.gui.monitor.command import monitor_commands
+from cmk.gui.monitor.command import downtime_recurrences, monitor_commands
 from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
 from cmk.gui.monitor.services import registration as monitor_services_registration
 from cmk.gui.nodevis import nodevis
@@ -238,17 +238,20 @@ def register(
         versioned_endpoint_registry,
     )
     monitor_commands.use_legacy_source(command_registry)
+    downtime_recurrences.use_legacy_source(command_registry)
     monitor_hosts_registration.register(
         endpoint_family_registry,
         versioned_endpoint_registry,
         page_registry,
         monitor_commands,
+        downtime_recurrences,
     )
     monitor_services_registration.register(
         endpoint_family_registry,
         versioned_endpoint_registry,
         page_registry,
         monitor_commands,
+        downtime_recurrences,
     )
     crash_reporting.register(
         page_registry,

@@ -15,7 +15,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
-from cmk.gui.monitor.command import MonitorCommands
+from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.page_menu import PageMenu
@@ -24,6 +24,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.host_services import (
+    DowntimeRecurrence,
     MonitoringAction,
     MonitoringHostServicesApp,
     MonitoringPageLinkButton,
@@ -66,8 +67,9 @@ def _row_actions(config: Config, hostname: HostName) -> list[RowAction]:
 
 
 class MonitorHostServicesPage(Page):
-    def __init__(self, commands: MonitorCommands) -> None:
+    def __init__(self, commands: MonitorCommands, recurrences: DowntimeRecurrences) -> None:
         self._commands = commands
+        self._recurrences = recurrences
 
     def _permitted_actions(self) -> list[MonitoringAction]:
         return [
@@ -112,6 +114,10 @@ class MonitorHostServicesPage(Page):
                     site=site_id,
                     ai_explain=ai_explain.is_enabled(),
                     actions=self._permitted_actions(),
+                    downtime_recurrences=[
+                        DowntimeRecurrence(recur=recurrence.recur, title=recurrence.title)
+                        for recurrence in self._recurrences.offered()
+                    ],
                     row_actions=_row_actions(ctx.config, hostname),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(

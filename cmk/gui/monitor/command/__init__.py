@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._commands import monitor_commands, MonitorCommands
+from ._downtime import downtime_recurrences, DowntimeRecurrence, DowntimeRecurrences
 from ._legacy import LegacyCommand, LegacyCommandSource
 from ._registry import (
     monitor_command_registry,
@@ -13,6 +14,9 @@ from ._registry import (
 )
 
 __all__ = [
+    "downtime_recurrences",
+    "DowntimeRecurrence",
+    "DowntimeRecurrences",
     "LegacyCommand",
     "LegacyCommandSource",
     "monitor_command_registry",

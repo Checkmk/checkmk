@@ -13,6 +13,8 @@ from cmk.gui.views.command import commands
 from cmk.gui.views.command.commands import (
     _acknowledgement_needs_removal,
     _query_downtime_ids_for_leaf,
+    CommandScheduleDowntimes,
+    NoRecurringDowntimes,
 )
 from cmk.livestatus_client import DeleteServiceDowntime
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -181,3 +183,27 @@ class TestRemoveDowntimeFromHostOrServiceDatasource:
         assert result is not None
         downtime_commands, _dialog = result
         assert list(downtime_commands) == [DeleteServiceDowntime(7)]
+
+
+def test_a_downtime_repeats_never_where_no_core_repeats_it() -> None:
+    assert [
+        (recurrence.recur, recurrence.title) for recurrence in NoRecurringDowntimes().recurrences()
+    ] == [("fixed", "never")]
+
+
+def test_a_named_interval_reads_the_way_the_classic_dropdown_reads() -> None:
+    """The two views of one list, so neither can be added to without the other."""
+    downtimes = NoRecurringDowntimes()
+
+    assert [recurrence.title for recurrence in downtimes.recurrences()] == [
+        title for _value, title in downtimes.choices()
+    ]
+
+
+def test_the_registered_command_hands_on_the_intervals_it_was_given() -> None:
+    """What a page offers is read back off the command, so the two cannot part ways."""
+    recurring_downtimes = NoRecurringDowntimes()
+
+    command = CommandScheduleDowntimes(recurring_downtimes=recurring_downtimes)
+
+    assert command.recurring_downtimes is recurring_downtimes

@@ -1,19 +1,19 @@
 ---
 - name: "Preflight - Fail if target host is not stable for this Role."
   ansible.builtin.fail:
-    msg: "This role is not stable for the target operating system, {{ ansible_distribution }} {{ ansible_distribution_major_version }}."
-  when: (ansible_distribution is not defined) or
-        (ansible_distribution_version is not defined) or
-        (ansible_distribution + "-" + ansible_distribution_major_version not in checkmk_server_server_stable_os)
+    msg: "This role is not stable for the target operating system, {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_major_version'] }}."
+  when: (ansible_facts['distribution'] is not defined) or
+        (ansible_facts['distribution_version'] is not defined) or
+        (ansible_facts['distribution'] + "-" + ansible_facts['distribution_major_version'] not in checkmk_server_server_stable_os)
 
 - name: "Include OS Family specific Variables."
-  ansible.builtin.include_vars: "{{ ansible_os_family }}.yml"
+  ansible.builtin.include_vars: "{{ ansible_facts['os_family'] }}.yml"
 
 - name: "Update APT Cache."
   become: true
   ansible.builtin.apt:
     update_cache: true
-  when: ansible_os_family == "Debian"
+  when: ansible_facts['os_family'] == "Debian"
 
 - name: "Install Checkmk Prerequisites."
   become: true
@@ -57,14 +57,14 @@
     - name: "Print Verification Output."
       ansible.builtin.debug:
         msg: "{{ checkmk_server_verify_state.stderr_lines }} "
-  when: checkmk_server_verify_setup | bool and ansible_os_family == "Debian"
+  when: checkmk_server_verify_setup | bool and ansible_facts['os_family'] == "Debian"
 
 - name: "Import Checkmk GPG Key."
   become: true
   ansible.builtin.rpm_key:
     key: "/tmp/Check_MK-pubkey.gpg"
     state: present
-  when: checkmk_server_verify_setup | bool and ansible_os_family == "RedHat"
+  when: checkmk_server_verify_setup | bool and ansible_facts['os_family'] == "RedHat"
 
 - name: "Install Checkmk Server."
   become: true

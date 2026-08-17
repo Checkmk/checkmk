@@ -181,7 +181,10 @@ class ServicesRequestBody:
         str | ApiOmitted,
         PlainValidator(func=parse_service_search_query, json_schema_input_type=str),
     ] = api_field(
-        description="Filter services by name. Omit or pass empty string to return all services.",
+        description=(
+            "Search text, matched against the service name and its summary. Omit or pass empty "
+            "string to return all services."
+        ),
         example="CPU",
         default_factory=ApiOmitted,
     )

@@ -19,7 +19,7 @@ from cmk.livestatus_client import (
     MultiSiteConnection,
     ScheduleForcedServiceCheck,
 )
-from cmk.livestatus_client.expressions import And, NothingExpression, QueryExpression
+from cmk.livestatus_client.expressions import And, NothingExpression, Or, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query
 from cmk.livestatus_client.tables import Hosts, Services
 from cmk.livestatus_client.types import Column
@@ -264,7 +264,10 @@ def _build_query_filter(query: str) -> QueryExpression:
     if not query:
         return NothingExpression()
 
-    return Services.description.contains(query, ignore_case=True)
+    return Or(
+        Services.description.contains(query, ignore_case=True),
+        Services.plugin_output.contains(query, ignore_case=True),
+    )
 
 
 def _build_host_services_filter(hostname: str, query: str) -> QueryExpression:

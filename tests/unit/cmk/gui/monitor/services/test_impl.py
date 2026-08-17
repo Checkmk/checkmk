@@ -8,6 +8,7 @@ import pytest
 
 from cmk.gui.monitor.services._impl import (
     _build_primary_sort,
+    _build_query_filter,
     _OPTIONAL_COLUMNS,
     LiveStatusHostServicesRepository,
 )
@@ -81,11 +82,11 @@ def test_fetch_orders_by_the_primary_sorter() -> None:
         )
 
 
-def test_fetch_filters_by_search_query_on_description() -> None:
+def test_fetch_filters_by_search_query_on_name_and_summary() -> None:
     with expect_single_query(
         f"GET services\nColumns: {_SERVICES_COLUMNS}\n"
         f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n"
-        "Filter: description ~~ CPU\nAnd: 2\n"
+        "Filter: description ~~ CPU\nFilter: plugin_output ~~ CPU\nOr: 2\nAnd: 2\n"
         f"{_DEFAULT_ORDER_BY}",
         match_type="ellipsis",
     ) as live:
@@ -139,7 +140,7 @@ def test_count_matched_query_shape() -> None:
     with expect_single_query(
         f"GET services\nStats: state >= 0\n"
         f"Filter: host_name = {_UNKNOWN_HOSTNAME}\n"
-        "Filter: description ~~ CPU\nAnd: 2",
+        "Filter: description ~~ CPU\nFilter: plugin_output ~~ CPU\nOr: 2\nAnd: 2",
     ) as live:
         repo = LiveStatusHostServicesRepository(connection=live)
         assert repo.count_matched(_UNKNOWN_HOSTNAME, query="CPU", filters=ServiceFilter("")) == 0
@@ -225,3 +226,15 @@ def test_build_primary_sort(sorters: Sequence[ServiceSort], expected: str) -> No
 def test_every_optional_field_names_the_columns_it_needs() -> None:
     """A new ServiceOptionalField must say which livestatus columns it reads."""
     assert set(_OPTIONAL_COLUMNS) == set(ServiceOptionalField)
+
+
+def test_build_query_filter_without_a_query_matches_everything() -> None:
+    assert _build_query_filter("").render() == []
+
+
+def test_build_query_filter_searches_the_name_and_the_summary() -> None:
+    assert _build_query_filter("CPU").render() == [
+        ("Filter", "description ~~ CPU"),
+        ("Filter", "plugin_output ~~ CPU"),
+        ("Or", "2"),
+    ]

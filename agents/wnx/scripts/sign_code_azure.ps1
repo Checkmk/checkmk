@@ -67,6 +67,11 @@ try {
         -ExcludeAzurePowerShellCredential `
         -ExcludeInteractiveBrowserCredential
     Write-Host "Signed: $FilePath"
+    # Azure picks the currently active short-lived certificate of the profile;
+    # log which one was used so it can be matched against the portal.
+    $cert = (Get-AuthenticodeSignature $FilePath).SignerCertificate
+    Write-Host ("Signing certificate: thumbprint={0} serial={1} notBefore={2:u} notAfter={3:u}" -f `
+            $cert.Thumbprint, $cert.SerialNumber, $cert.NotBefore, $cert.NotAfter)
 }
 finally {
     Remove-Item Env:\AZURE_TENANT_ID     -ErrorAction SilentlyContinue

@@ -7,10 +7,7 @@ py_cmk_test(
     srcs = glob(["**/*.py"]),
     deps = [
         "//packages/cmk-plugins/cmk/plugins/azure_deprecated",
-        requirement("msal"),
-        requirement("pydantic"),
         requirement("pytest-asyncio"),
-        requirement("requests"),
         requirement("time-machine"),
     ],
 )

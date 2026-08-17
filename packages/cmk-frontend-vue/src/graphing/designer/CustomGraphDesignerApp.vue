@@ -53,6 +53,10 @@ if (activeTimeRange.value === null) {
 
 seedRefreshIntervalSeconds(props.time_picker.default_refresh_time)
 
+function returnToLiveMonitoring(): void {
+  setActiveTimeRange(rollingRange(props.time_picker.default_time_range), 'time_picker')
+}
+
 const current = ref<{ name: string; owner: string }>({
   name: props.graph_name,
   owner: props.graph_owner
@@ -328,7 +332,10 @@ const saveFailureButtons = computed(() => {
           class="graphing-custom-graph-designer-app__breadcrumb"
           :items="activeBreadcrumb"
         />
-        <GlobalRefreshControl class="graphing-custom-graph-designer-app__refresh" />
+        <GlobalRefreshControl
+          class="graphing-custom-graph-designer-app__refresh"
+          @resume="returnToLiveMonitoring"
+        />
       </div>
 
       <DesignerHeader

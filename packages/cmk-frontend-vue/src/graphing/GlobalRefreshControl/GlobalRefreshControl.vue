@@ -58,7 +58,10 @@ const intervalModel = computed<string | null>({
   }
 })
 
+const emit = defineEmits<{ resume: [] }>()
+
 function resume(): void {
+  emit('resume')
   setRefreshPaused(false)
 }
 

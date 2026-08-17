@@ -30,6 +30,10 @@ const range = computed<DateTimeRange>({
   get: () => activeTimeRange.value ?? fallback,
   set: (value: DateTimeRange) => setActiveTimeRange(value, 'time_picker')
 })
+
+function returnToLiveMonitoring(): void {
+  setActiveTimeRange(rollingRange(props.default_time_range), 'time_picker')
+}
 </script>
 
 <template>
@@ -40,7 +44,10 @@ const range = computed<DateTimeRange>({
     :first-day-of-week="props.first_day_of_week"
   >
     <template #aside>
-      <GlobalRefreshControl class="graphing-global-time-picker-app__refresh" />
+      <GlobalRefreshControl
+        class="graphing-global-time-picker-app__refresh"
+        @resume="returnToLiveMonitoring"
+      />
     </template>
   </GlobalTimePicker>
 </template>

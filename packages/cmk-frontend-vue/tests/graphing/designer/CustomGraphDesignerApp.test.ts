@@ -13,6 +13,8 @@ import {
   resetGlobalRefresh,
   useGlobalRefresh
 } from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
+import { durationSeconds, rollingRange } from '@/graphing/GlobalTimePicker/private/timeRange'
+import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
 import CustomGraphDesignerApp from '@/graphing/designer/CustomGraphDesignerApp.vue'
 
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
@@ -609,6 +611,22 @@ test('a preferred refresh time is preselected and used by the auto-started refre
 
   expect(useGlobalRefresh().refreshPaused.value).toBe(false)
   expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(90)
+})
+
+test('resuming the refresh reverts a zoomed range to the configured default', async () => {
+  await renderApp()
+  const zoomed = rollingRange(PROPS.time_picker.default_time_range)
+  useGlobalTimeRange().setActiveTimeRange(
+    { from: zoomed.from.add({ hours: 1 }), to: zoomed.to.subtract({ hours: 2 }) },
+    'external'
+  )
+
+  await fireEvent.click(await screen.findByRole('button', { name: /Resume/ }))
+
+  const active = useGlobalTimeRange().activeTimeRange.value
+  expect(active).not.toBeNull()
+  expect(durationSeconds(active!)).toBe(PROPS.time_picker.default_time_range)
+  expect(useGlobalRefresh().refreshPaused.value).toBe(false)
 })
 
 test('a failed graph load offers a retry that reloads the definition', async () => {

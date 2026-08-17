@@ -102,6 +102,23 @@ describe('GlobalTimePickerApp', () => {
     )
   })
 
+  test('resuming the refresh reverts a zoomed range to the configured default', async () => {
+    render(GlobalTimePickerApp, { props: { ...PROPS } })
+    const seeded = rollingRange(4 * HOUR)
+    useGlobalTimeRange().setActiveTimeRange(
+      {
+        from: seeded.from.add({ hours: 1 }),
+        to: seeded.to.subtract({ hours: 2 })
+      },
+      'external'
+    )
+
+    await fireEvent.click(screen.getByRole('button', { name: /Resume/ }))
+
+    expect(activeDurationSeconds()).toBe(4 * HOUR)
+    expect(useGlobalRefresh().refreshPaused.value).toBe(false)
+  })
+
   test('the preference decides the initial selection, not the configured order', () => {
     // The preference names the *second* range, so a picker that simply took the first would fail.
     render(GlobalTimePickerApp, { props: { ...PROPS, default_time_range: 25 * HOUR } })

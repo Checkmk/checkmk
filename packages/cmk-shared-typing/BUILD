@@ -15,6 +15,7 @@ load(
 load("@openapi_spec_editions//:editions.bzl", "OPENAPI_SPEC_EDITION_GENERATORS")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 load("//bazel/rules:shared_typing_generators.bzl", "json2python", "json2typescript")
 
@@ -196,6 +197,13 @@ py_library(
         requirement("datamodel_code_generator"),
         requirement("libcst"),
     ],
+)
+
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/**/*.py"]),
+    deps = [":cmk_shared_typing_formatter"],
 )
 
 json2python(

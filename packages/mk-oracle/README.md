@@ -447,7 +447,9 @@ discovery:
 - When `detect: yes` is set, the plugin reads the local Oracle configuration to discover running instances.
 - Use `include` to restrict monitoring to a specific set of instance names.
 - Use `exclude` to skip specific instances.
-- If both `include` and `exclude` are specified, `exclude` takes precedence.
+- If both `include` and `exclude` are specified, `include` takes precedence and
+  `exclude` is ignored. This matches the legacy `ONLY_SIDS` and `SKIP_SIDS`
+  priorities.
 - `instances` is required when `discovery` is not enabled. When discovery is enabled, `instances` can still be specified to add additional databases that are not discoverable locally.
 
 ### Options

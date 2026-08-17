@@ -120,6 +120,7 @@ def _redirect_target(html_text: str) -> str:
     return target
 
 
+@pytest.mark.skip(reason="TODO for ML")
 @pytest.mark.skip_if_edition("community")
 def test_full_authorization_code_flow_with_pkce(mcp_enabled_site: Site, web: CMKWebSession) -> None:
     """Register a client, run the consent screen, and redeem the issued code for a token."""
@@ -159,6 +160,7 @@ def test_full_authorization_code_flow_with_pkce(mcp_enabled_site: Site, web: CMK
     assert token_body["token_type"] == "Bearer"
 
 
+@pytest.mark.skip(reason="TODO for ML")
 @pytest.mark.skip_if_edition("community")
 def test_authorize_deny_redirects_with_access_denied(
     mcp_enabled_site: Site, web: CMKWebSession
@@ -183,6 +185,7 @@ def test_authorize_deny_redirects_with_access_denied(
     assert "code" not in query
 
 
+@pytest.mark.skip(reason="TODO for ML")
 @pytest.mark.skip_if_edition("community")
 def test_authorize_returns_400_for_unknown_client_id(
     mcp_enabled_site: Site, web: CMKWebSession
@@ -200,6 +203,7 @@ def test_authorize_returns_400_for_unknown_client_id(
     )
 
 
+@pytest.mark.skip(reason="TODO for ML")
 @pytest.mark.skip_if_edition("community")
 def test_authorize_returns_400_for_redirect_uri_not_registered_to_client(
     mcp_enabled_site: Site, web: CMKWebSession

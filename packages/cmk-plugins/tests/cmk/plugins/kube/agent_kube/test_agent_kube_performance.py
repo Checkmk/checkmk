@@ -7,30 +7,63 @@ from typing import Any
 import pytest
 
 from cmk.plugins.kube.common import create_sections, Piggyback, PodsToHost, SectionName, Selector
-from cmk.plugins.kube.performance import _determine_cpu_rate_metrics
+from cmk.plugins.kube.performance import (
+    _determine_cpu_rate_samples,
+    ContainersStore,
+    PREVIOUS_RATE_VALIDITY_SECS,
+    TimestampedRate,
+)
 from tests.cmk.plugins.kube.agent_kube.factory import (
+    CPURateSampleFactory,
     CPUSampleFactory,
     IdentifiableSampleFactory,
 )
 
 
-def test_determine_cpu_rate_metrics() -> None:
+def test_determine_cpu_rate_samples() -> None:
     current_cpu_metric = CPUSampleFactory.build(timestamp=1)
     old_cpu_metric = current_cpu_metric.model_copy()
     old_cpu_metric.timestamp = 0
-    containers_rate_metrics = _determine_cpu_rate_metrics([current_cpu_metric], [old_cpu_metric])
+
+    containers_rate_metrics, rates = _determine_cpu_rate_samples(
+        [current_cpu_metric], ContainersStore(cpu=[old_cpu_metric]), 100.0
+    )
+
     assert len(containers_rate_metrics) == 1
     assert (
         containers_rate_metrics[0].pod_lookup_from_metric()
         == current_cpu_metric.pod_lookup_from_metric()
     )
+    assert rates[current_cpu_metric.container_name].emitted_at == 100.0
 
 
-def test_determine_cpu_rate_metrics_for_containers_with_same_timestamp() -> None:
-    """Test that no rate metrics are returned if no rates can be determined."""
+def test_determine_cpu_rate_samples_for_containers_with_same_timestamp() -> None:
+    """No rate can be determined and none was computed previously."""
     cpu_metric = CPUSampleFactory.build()
-    containers_rate_metrics = _determine_cpu_rate_metrics([cpu_metric], [cpu_metric])
+
+    containers_rate_metrics, rates = _determine_cpu_rate_samples(
+        [cpu_metric], ContainersStore(cpu=[cpu_metric]), 100.0
+    )
+
     assert len(containers_rate_metrics) == 0
+    assert not rates
+
+
+def test_determine_cpu_rate_samples_reuses_previously_computed_rate() -> None:
+    cpu_metric = CPUSampleFactory.build()
+    previous_rate = CPURateSampleFactory.build()
+    previous = ContainersStore(
+        cpu=[cpu_metric],
+        rates={cpu_metric.container_name: TimestampedRate(sample=previous_rate, emitted_at=100.0)},
+    )
+
+    containers_rate_metrics, rates = _determine_cpu_rate_samples(
+        [cpu_metric], previous, 100.0 + PREVIOUS_RATE_VALIDITY_SECS
+    )
+
+    assert list(containers_rate_metrics) == [previous_rate]
+    # the age of a reused rate must not be reset, or it would never expire
+    assert rates[cpu_metric.container_name].emitted_at == 100.0
 
 
 @pytest.mark.parametrize("size", [2, 4])

@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import enum
 import json
-from collections.abc import Iterable, Sequence
+import time
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, Literal, NewType, TypeVar
 
@@ -24,6 +25,11 @@ from cmk.plugins.kube.schemata import section
 from cmk.server_side_programs.v1_unstable import Storage
 
 AGENT_NAME: Final = "agent_kube"
+
+# How long, in seconds, a previously-computed rate may be reused when the
+# collector returns a sample we have already seen and with which we cannot
+# calculate a new rate.
+PREVIOUS_RATE_VALIDITY_SECS: Final[int] = 300
 
 ContainerName = NewType("ContainerName", str)
 
@@ -78,8 +84,16 @@ class CPURateSample(common.IdentifiableSample):
     rate: float
 
 
+class TimestampedRate(BaseModel):
+    sample: CPURateSample
+    emitted_at: float
+
+
 class ContainersStore(BaseModel):
     cpu: Sequence[CPUSample]
+    # Rates computed in the previous cycles, so they can be reused while the
+    # collector keeps returning unchanged samples.
+    rates: Mapping[ContainerName, TimestampedRate] = {}
 
 
 @dataclass
@@ -107,8 +121,8 @@ def create_selectors(
 
     metrics = _group_metric_types(container_metrics)
     container_store_key = "containers_counters.json"
-    cpu_rate_metrics = create_cpu_rate_metrics(
-        Storage(AGENT_NAME, cluster_name), container_store_key, metrics.cpu
+    cpu_rate_metrics = create_cpu_rate_samples(
+        Storage(AGENT_NAME, cluster_name), container_store_key, metrics.cpu, time.time()
     )
     return (
         common.Selector(cpu_rate_metrics, aggregator=_aggregate_cpu_metrics),
@@ -146,21 +160,28 @@ def _group_metric_types(metrics: Sequence[_AllSamples]) -> Samples:
     return Samples(memory=memory_metrics, cpu=cpu_metrics)
 
 
-def create_cpu_rate_metrics(
-    storage: Storage, container_store_key: str, cpu_metrics: Sequence[CPUSample]
+def create_cpu_rate_samples(
+    storage: Storage,
+    container_store_key: str,
+    cpu_samples: Sequence[CPUSample],
+    now: float,
 ) -> Sequence[CPURateSample]:
-    # We only persist the relevant counter metrics (not all metrics)
-    current_cycle_store = ContainersStore(cpu=cpu_metrics)
     previous_cycle_store = _load_containers_store(storage, container_store_key)
 
-    # The agent will store the latest counter values returned by the collector overwriting the
-    # previous ones. The collector will return the same metric values for a certain time interval
-    # while the values are not updated or outdated. This will result in no rate value if the agent
-    # is polled too frequently (no performance section for the checks). All cases where no
-    # performance section can be generated should be handled on the check side (reusing the same
-    # value, etc.)
+    # The collector returns identical samples with the same timestamp for a container
+    # if its own data hasn't been updated yet (i.e. the node collector hasn't pushed a
+    # new sample to it between two of our polls). No new rate can be computed from an
+    # unchanged sample, so the previously computed rate is reused for some time defined
+    # by PREVIOUS_RATE_VALIDITY_SECS.
+    #
+    # Without this, polling the collector twice and getting the same sample would drop the
+    # container from the performance sections entirely (missing "CPU usage" on the affected
+    # piggyback hosts).
+    rate_samples, rates = _determine_cpu_rate_samples(cpu_samples, previous_cycle_store, now)
+    current_cycle_store = ContainersStore(cpu=cpu_samples, rates=rates)
+
     _persist_containers_store(storage, container_store_key, current_cycle_store)
-    return _determine_cpu_rate_metrics(current_cycle_store.cpu, previous_cycle_store.cpu)
+    return rate_samples
 
 
 def _load_containers_store(storage: Storage, container_store_key: str) -> ContainersStore:
@@ -186,24 +207,56 @@ def _persist_containers_store(
     )
 
 
-def _determine_cpu_rate_metrics(
+def _determine_cpu_rate_samples(
     cpu_metrics: Sequence[CPUSample],
-    cpu_metrics_old: Sequence[CPUSample],
-) -> Sequence[CPURateSample]:
+    previous: ContainersStore,
+    now: float,
+) -> tuple[Sequence[CPURateSample], Mapping[ContainerName, TimestampedRate]]:
     """Determine the rate metrics for each container based on the current and previous
-    counter metric values"""
+    counter metric values. If the previous sample and new sample share the same timestamp,
+    we cannot calculate a new rate and return the previous one if it exists, unless the
+    previous one is older than PREVIOUS_RATE_VALIDITY_SECS."""
     common.LOGGER.debug("Determine rate metrics from the latest containers counters stores")
-    cpu_metrics_old_map = {metric.container_name: metric for metric in cpu_metrics_old}
-    return [
-        CPURateSample(
-            pod_name=metric.pod_name,
-            namespace=metric.namespace,
-            rate=_calculate_rate(metric, old_metric),
-        )
-        for metric in cpu_metrics
-        if (old_metric := cpu_metrics_old_map.get(metric.container_name)) is not None
-        and old_metric.timestamp != metric.timestamp
-    ]
+    cpu_metrics_old_map = {metric.container_name: metric for metric in previous.cpu}
+    samples: list[CPURateSample] = []
+    rates: dict[ContainerName, TimestampedRate] = {}
+    for new_sample in cpu_metrics:
+        old_sample = cpu_metrics_old_map.get(new_sample.container_name)
+        if old_sample is None:
+            # We have never seen this container before, and have no raw sample for it.
+            # We need two readings before we can calculate a rate.
+            continue
+        if old_sample.timestamp != new_sample.timestamp:
+            # We have a previous old raw sample, its timestamp is different from the current one
+            # so we can treat the data as new and use it to compute a new rate.
+            sample = CPURateSample(
+                pod_name=new_sample.pod_name,
+                namespace=new_sample.namespace,
+                rate=_calculate_rate(new_sample, old_sample),
+            )
+            rates[new_sample.container_name] = TimestampedRate(sample=sample, emitted_at=now)
+            samples.append(sample)
+        else:
+            # Otherwise, the old raw sample's timestamp matches the new one. We cannot compute
+            # a rate in this case, because we'd end up dividing by 0 ((s2-s1)/(t2-t1) with t2==t1).
+            # This means the cluster collector has not gathered a new data point yet.
+            # If we have an old rate, we give a grace period where in this case we return the
+            # previous rate (up to a point... after a while we give up and let it go stale).
+
+            # We have an old raw sample, but not necessarily an old _calculated rate_.
+            # If there's no old calculated rate, there is nothing we could possibly emit anyway.
+            stored = previous.rates.get(new_sample.container_name)
+            if stored is None:
+                continue
+
+            # We have an old rate. If we are within the grace period, emit it, but keep its
+            # timestamp so that next time, if we still don't have a new sample, we can see if
+            # we should stop emitting.
+            if now - stored.emitted_at <= PREVIOUS_RATE_VALIDITY_SECS:
+                rates[new_sample.container_name] = stored
+                samples.append(stored.sample)
+
+    return samples, rates
 
 
 def _calculate_rate(counter_metric: CPUSample, old_counter_metric: CPUSample) -> float:

@@ -334,6 +334,9 @@ fn build_thread_pool(threads: usize) -> rayon::ThreadPool {
 
 /// builds a table [(OpenedSpot, [QueryBlock, ...]), ...]
 fn make_job_data(spots: Vec<Spot<Opened>>, query_blocks: &[QueryBlock]) -> Vec<JobData> {
+    if query_blocks.is_empty() {
+        return Vec::new();
+    }
     let job_count = spots.len();
     let chunk_size = query_blocks.len().div_ceil(job_count);
     let chunks = query_blocks.chunks(chunk_size);
@@ -581,6 +584,11 @@ mod tests {
     use crate::config::target::TargetIdBuilder;
     use crate::config::yaml::test_tools::create_yaml;
     use crate::types::ServiceName;
+
+    #[test]
+    fn test_make_job_data_no_query_blocks() {
+        assert!(make_job_data(vec![], &[]).is_empty());
+    }
 
     #[test]
     fn test_calc_spots() {

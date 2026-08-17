@@ -121,14 +121,13 @@ class CustomGraphDesigner(CmkPage):
 
         # The new row is appended and auto-expanded, so its form is the last one.
         form = self.main_area.locator(".graphing-rrd-metric-form").last
-        self._fill_autocompleter(form.locator(".graphing-host-name-select"), host_name)
-        self._fill_autocompleter(form.locator(".graphing-service-name-select"), service_name)
-        self._fill_autocompleter(form.locator(".graphing-service-metric-select"), metric_title)
+        self._fill_autocompleter(form, "Host name", host_name)
+        self._fill_autocompleter(form, "Service", service_name)
+        self._fill_autocompleter(form, "Service metric", metric_title)
 
-    def _fill_autocompleter(self, field: Locator, value: str) -> None:
-        # The field's dropdown button carries no accessible name, so it is addressed by
-        # tag within its own wrapper rather than by role.
-        button = field.locator("button")
+    def _fill_autocompleter(self, form: Locator, field_name: str, value: str) -> None:
+        # Exact matching: "Service" is otherwise also the metric field's name.
+        button = form.get_by_role("combobox", name=field_name, exact=True)
         button.click()
         suggestions = self._open_suggestions(value)
         # An unqueried autocompleter offers every host/service/metric there is, and the

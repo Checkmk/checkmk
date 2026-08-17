@@ -27,6 +27,8 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 
+const label = _t('Host name')
+
 const hostAutocompleter: Autocompleter = {
   fetch_method: 'rest_autocomplete',
   data: { ident: 'monitored_hostname', params: { strict: true } }
@@ -36,12 +38,13 @@ const hostAutocompleter: Autocompleter = {
 <template>
   <DesignerField
     v-slot="{ controlId, describedBy, invalid }"
-    :label="_t('Host name')"
+    :label="label"
     :required="required"
     :errors="errors"
   >
     <FormAutocompleter
       :id="controlId"
+      :label="label"
       :model-value="modelValue"
       :autocompleter="hostAutocompleter"
       :size="0"

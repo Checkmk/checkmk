@@ -31,6 +31,8 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 
+const label = _t('Service')
+
 const serviceAutocompleter = computed<Autocompleter>(() => ({
   fetch_method: 'rest_autocomplete',
   data: {
@@ -47,12 +49,13 @@ const serviceAutocompleter = computed<Autocompleter>(() => ({
 <template>
   <DesignerField
     v-slot="{ controlId, describedBy, invalid }"
-    :label="_t('Service')"
+    :label="label"
     :required="required"
     :errors="errors"
   >
     <FormAutocompleter
       :id="controlId"
+      :label="label"
       :model-value="modelValue"
       :autocompleter="serviceAutocompleter"
       :size="0"

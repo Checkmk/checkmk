@@ -56,7 +56,8 @@ const {
   createServicesAvailable,
   metricBackendDefaultTitle,
   titleMacros,
-  issuesByRow
+  issuesByRow,
+  resolvedTitles
 } = defineProps<{
   store: GraphItemsStore
   thresholds: { warning: string; critical: string }
@@ -66,6 +67,7 @@ const {
   metricBackendDefaultTitle: string
   titleMacros: TitleMacroGroup[]
   issuesByRow: ReadonlyMap<ItemId, RowIssue[]>
+  resolvedTitles: ReadonlyMap<ItemId, string>
 }>()
 
 const emit = defineEmits<{
@@ -100,8 +102,9 @@ const columns: ColumnDef<DesignerItem>[] = [
     id: 'title',
     header: _t('Title'),
     minSize: 260,
-    meta: { stretch: true, headerHelp: titleMacroHelp }
+    meta: { headerHelp: titleMacroHelp }
   },
+  { id: 'display_name', header: _t('Display name'), meta: { stretch: true, justify: 'left' } },
   { id: 'line_style', header: _t('Line style'), meta: { justify: 'left' } },
   { id: 'mirrored', header: _t('Mirrored'), meta: { justify: 'center' } },
   { id: 'actions', header: _t('Actions') }
@@ -318,6 +321,9 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
               />
             </div>
           </CollapsibleCell>
+          <BaseCell column-id="display_name" vertical-align="middle" no-wrap>{{
+            resolvedTitles.get(row.id) ?? row.title
+          }}</BaseCell>
           <DropdownCell
             column-id="line_style"
             vertical-align="middle"

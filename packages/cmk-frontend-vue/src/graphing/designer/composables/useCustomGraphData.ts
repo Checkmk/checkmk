@@ -16,7 +16,7 @@ import {
   fetchCustomGraphData
 } from '../api'
 import { toApiDataSources } from '../drafts'
-import type { ApiDataSource, GraphItem, ItemId } from '../types'
+import { type ApiDataSource, type GraphItem, type ItemId, isSingleLine } from '../types'
 
 export type ApiGraphOptions = FetchCustomGraphDataRequest['content']['graph_options']
 
@@ -48,7 +48,8 @@ export interface CustomGraphData {
   metrics: Readonly<Ref<CustomGraphMetric[]>>
   /** The same series grouped by the data-source row that produced them. */
   metricsBySource: Readonly<Ref<Map<ItemId, Metric[]>>>
-  groupTitlesBySource: Readonly<Ref<Map<ItemId, string>>>
+  /** The title each source resolved to in the last completed fetch; unresolved ones are absent. */
+  resolvedTitles: Readonly<Ref<Map<ItemId, string>>>
   dataTimeRange: Readonly<Ref<TimeRange | undefined>>
   horizontalLines: Readonly<Ref<HorizontalLine[]>>
   overview: Readonly<Ref<OverviewData | undefined>>
@@ -77,6 +78,23 @@ function groupBySource(metrics: readonly CustomGraphMetric[]): Map<ItemId, Metri
   return groups
 }
 
+function resolveTitles(
+  items: readonly GraphItem[],
+  metricsBySource: ReadonlyMap<ItemId, Metric[]>,
+  groupTitles: ReadonlyMap<ItemId, string>
+): Map<ItemId, string> {
+  const titles = new Map<ItemId, string>()
+  for (const item of items) {
+    const resolved = isSingleLine(item)
+      ? metricsBySource.get(item.id)?.[0]?.metadata.title
+      : groupTitles.get(item.id)
+    if (resolved !== undefined) {
+      titles.set(item.id, resolved)
+    }
+  }
+  return titles
+}
+
 /**
  * Evaluates the (possibly unsaved) definition over the requested range. Edits are debounced;
  * `refetch` bypasses the debounce. Incomplete rows are excluded from the posted definition,
@@ -87,7 +105,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
 
   const metrics = ref<CustomGraphMetric[]>([])
   const metricsBySource = ref<Map<ItemId, Metric[]>>(new Map())
-  const groupTitlesBySource = ref<Map<ItemId, string>>(new Map())
+  const resolvedTitles = ref<Map<ItemId, string>>(new Map())
   const dataTimeRange = ref<TimeRange | undefined>(undefined)
   const horizontalLines = ref<HorizontalLine[]>([])
   const overview = ref<OverviewData | undefined>(undefined)
@@ -100,8 +118,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
   /** The data sources to post, with visibility forced on when hidden rows should be fetched. */
-  function requestDataSources(): ApiDataSource[] {
-    const sources = toApiDataSources(options.getItems())
+  function requestDataSources(items: readonly GraphItem[]): ApiDataSource[] {
+    const sources = toApiDataSources(items)
     return options.getFetchHidden?.()
       ? sources.map((source) => ({ ...source, visible: true }))
       : sources
@@ -110,7 +128,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   function clear(): void {
     metrics.value = []
     metricsBySource.value = new Map()
-    groupTitlesBySource.value = new Map()
+    resolvedTitles.value = new Map()
     dataTimeRange.value = undefined
     horizontalLines.value = []
     overview.value = undefined
@@ -121,7 +139,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
 
   async function load(): Promise<void> {
     const requestId = ++requestCounter
-    const dataSources = requestDataSources()
+    const items = options.getItems()
+    const dataSources = requestDataSources(items)
     if (dataSources.length === 0) {
       clear()
       isLoading.value = false
@@ -161,11 +180,13 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
       if (requestId !== requestCounter) {
         return
       }
-      metrics.value = [...main.metrics]
-      metricsBySource.value = groupBySource(main.metrics)
-      groupTitlesBySource.value = new Map(
+      const bySource = groupBySource(main.metrics)
+      const groupTitles = new Map(
         main.group_titles.map((groupTitle) => [groupTitle.source_id, groupTitle.title])
       )
+      metrics.value = [...main.metrics]
+      metricsBySource.value = bySource
+      resolvedTitles.value = resolveTitles(items, bySource, groupTitles)
       dataTimeRange.value = main.time_range
       horizontalLines.value = main.horizontal_lines
       overview.value =
@@ -219,7 +240,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   watch(
     () =>
       JSON.stringify({
-        dataSources: requestDataSources(),
+        dataSources: requestDataSources(options.getItems()),
         graphOptions: options.getGraphOptions(),
         requestedTimeRange: options.getRequestedTimeRange(),
         consolidationFn: options.getConsolidationFn(),
@@ -233,7 +254,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   return {
     metrics,
     metricsBySource,
-    groupTitlesBySource,
+    resolvedTitles,
     dataTimeRange,
     horizontalLines,
     overview,

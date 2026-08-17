@@ -60,7 +60,7 @@ function renderTable(
   seed: DesignerItem[] = [],
   metricBackendAvailable = true,
   createServicesAvailable = true,
-  { issuesByRow = new Map<ItemId, RowIssue[]>() } = {}
+  { issuesByRow = new Map<ItemId, RowIssue[]>(), resolvedTitles = new Map<ItemId, string>() } = {}
 ) {
   const store = useGraphItems(PALETTE)
   store.replaceAll(seed)
@@ -72,7 +72,8 @@ function renderTable(
       createServicesAvailable,
       metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
       titleMacros: TITLE_MACROS,
-      issuesByRow
+      issuesByRow,
+      resolvedTitles
     }
   })
   return { store, ...utils }
@@ -196,6 +197,21 @@ test('title edits patch the row', async () => {
   const { store } = renderTable([rrdMetricItem('A')])
   await fireEvent.update(screen.getByLabelText('Title'), 'My title')
   expect(store.items.value[0]!.title).toBe('My title')
+})
+
+test('the display name states what a row resolved to, next to its editable title', () => {
+  renderTable([rrdMetricItem('A', { title: '$DEFAULT_TITLE$' })], true, true, {
+    resolvedTitles: new Map([['A', 'CPU utilization']])
+  })
+
+  expect(screen.getByText('CPU utilization')).toBeInTheDocument()
+  expect(screen.getByLabelText('Title')).toHaveValue('$DEFAULT_TITLE$')
+})
+
+test('the display name falls back to the stored title of an unresolved row', () => {
+  renderTable([rrdMetricItem('A', { title: 'Raw title' })])
+
+  expect(screen.getByText('Raw title')).toBeInTheDocument()
 })
 
 test('a formula row expands to the read-only formula form', async () => {

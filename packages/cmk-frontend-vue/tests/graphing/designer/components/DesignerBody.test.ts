@@ -3,16 +3,16 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, nextTick } from 'vue'
 
 import type { CustomGraphObject } from '@/graphing/designer/api'
 import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { fromApiDataSource } from '@/graphing/designer/drafts'
-import type { ItemId } from '@/graphing/designer/types'
+import type { ApiDataSourceInput, ItemId } from '@/graphing/designer/types'
 import type { RowIssue } from '@/graphing/designer/validation'
 
 import { metricBackendItem } from '../fixtures'
@@ -56,6 +56,20 @@ function rrdSource(id: string): unknown {
     color: '#28a2f3',
     host_name: 'my-host',
     service_name: 'CPU utilization',
+    metric_name: 'util',
+    consolidation: 'avg'
+  }
+}
+
+function rrdQuerySource(id: string): unknown {
+  return {
+    type: 'rrd_query',
+    id,
+    title: id,
+    line_type: 'line',
+    mirrored: false,
+    visible: true,
+    context: { host: { host: 'my-host' } },
     metric_name: 'util',
     consolidation: 'avg'
   }
@@ -232,6 +246,58 @@ test('a blocked source marks the metrics tab, from whichever tab is open', async
   expect(
     screen.getByRole('tab', { name: 'Graph appearance' }).querySelector('.cmk-icon')
   ).toBeNull()
+})
+
+test('the metrics tab names a row by what the fetch resolved it to', async () => {
+  const response = fetchDataResponse() as { data: Record<string, unknown> }
+  vi.spyOn(client, 'POST').mockResolvedValue({
+    ...response,
+    data: {
+      ...response.data,
+      metrics: [metric('A', 'metric-a', 'CPU'), metric('Q', 'metric-q', 'CPU of my-host')],
+      group_titles: [{ source_id: 'Q', title: 'util - <HOST_NAME>/<SERVICE_DESCRIPTION>' }]
+    }
+  } as never)
+  renderBody('edit', { graph: graphObject([rrdSource('A'), rrdQuerySource('Q')]) })
+
+  const metricsTab = await screen.findByRole('tabpanel')
+  await waitFor(() => expect(within(metricsTab).getByText('CPU')).toBeInTheDocument())
+  // Q fanned out to a single series, yet a group row is named by its group title.
+  expect(
+    within(metricsTab).getByText('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
+  ).toBeInTheDocument()
+  expect(within(metricsTab).queryByText('CPU of my-host')).not.toBeInTheDocument()
+})
+
+test('a row keeps the name of the last fetch until the one its edit triggers lands', async () => {
+  const response = fetchDataResponse() as { data: Record<string, unknown> }
+  vi.spyOn(client, 'POST').mockResolvedValue({
+    ...response,
+    data: {
+      ...response.data,
+      metrics: [metric('A', 'metric-a', 'CPU'), metric('Q', 'metric-q', 'CPU of my-host')],
+      group_titles: [{ source_id: 'Q', title: 'util - <HOST_NAME>/<SERVICE_DESCRIPTION>' }]
+    }
+  } as never)
+  const props = bodyProps(graphObject([rrdSource('A'), rrdQuerySource('Q')]))
+  render(DesignerBody, { props: { ...props, mode: 'edit' as const } })
+
+  const metricsTab = await screen.findByRole('tabpanel')
+  await waitFor(() =>
+    expect(
+      within(metricsTab).getByText('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
+    ).toBeInTheDocument()
+  )
+
+  props.store.replace(fromApiDataSource(rrdSource('Q') as ApiDataSourceInput))
+  await nextTick()
+
+  expect(
+    within(metricsTab).getByText('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
+  ).toBeInTheDocument()
+  expect(within(metricsTab).queryByText('CPU of my-host')).not.toBeInTheDocument()
+
+  await waitFor(() => expect(within(metricsTab).getByText('CPU of my-host')).toBeInTheDocument())
 })
 
 test('the metrics tab carries no marker while nothing blocks the save', async () => {

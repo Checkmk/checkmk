@@ -32,12 +32,12 @@ import type { DesignerItem } from '../drafts'
 import { type ItemId, isSingleLine, parseLineType } from '../types'
 import StatsCells from './StatsCells.vue'
 
-const { store, metricsBySource, groupTitlesBySource } = defineProps<{
+const { store, metricsBySource, resolvedTitles } = defineProps<{
   store: GraphItemsStore
   /** Fetched series per data-source row, for the live-data columns. */
   metricsBySource: Map<ItemId, Metric[]>
-  /** Representative titles for group (fan-out) rows, macros filled with placeholders. */
-  groupTitlesBySource: Map<ItemId, string>
+  /** The title each row resolved to in the last fetch; rows that resolved to none are absent. */
+  resolvedTitles: ReadonlyMap<ItemId, string>
 }>()
 
 const { _t } = usei18n()
@@ -85,11 +85,6 @@ const statsBySource = computed(() => {
   }
   return stats
 })
-
-/** The resolved (legend) title of a single-line row, falling back to its stored template. */
-function resolvedTitle(row: DesignerItem): string {
-  return metricsBySource.get(row.id)?.[0]?.metadata.title ?? row.title
-}
 
 /** Per source: its resolved lines in legend order, each with pre-formatted stats. */
 const linesBySource = computed(() => {
@@ -149,7 +144,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
         />
         <BaseCell v-else column-id="color" vertical-align="middle" />
         <BaseCell v-if="isSingleLine(row)" column-id="title" vertical-align="middle" no-wrap>{{
-          resolvedTitle(row)
+          resolvedTitles.get(row.id) ?? row.title
         }}</BaseCell>
         <CollapsibleCell
           v-else
@@ -157,7 +152,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           vertical-align="middle"
           :expanded="expandedRows[row.id] === true"
           @update:expanded="expandedRows = { ...expandedRows, [row.id]: $event }"
-          >{{ groupTitlesBySource.get(row.id) ?? row.title }}</CollapsibleCell
+          >{{ resolvedTitles.get(row.id) ?? row.title }}</CollapsibleCell
         >
         <DropdownCell
           column-id="line_style"

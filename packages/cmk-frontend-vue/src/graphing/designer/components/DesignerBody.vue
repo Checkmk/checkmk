@@ -280,7 +280,7 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
             <AppearanceTable
               :store="store"
               :metrics-by-source="data.metricsBySource.value"
-              :group-titles-by-source="data.groupTitlesBySource.value"
+              :resolved-titles="data.resolvedTitles.value"
             />
           </CmkTabContent>
           <CmkTabContent id="metrics" class="graphing-designer-body__tab-panel">
@@ -292,6 +292,7 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
               :metric-backend-default-title="metricBackendDefaultTitle"
               :title-macros="titleMacros"
               :issues-by-row="issuesByRow"
+              :resolved-titles="data.resolvedTitles.value"
               @add-calculation="slideoutOpen = true"
             />
           </CmkTabContent>

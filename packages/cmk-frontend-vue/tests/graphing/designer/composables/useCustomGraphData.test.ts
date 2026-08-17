@@ -14,7 +14,7 @@ import {
 import type { GraphItem } from '@/graphing/designer/types'
 import type { RequestedTimeRange } from '@/graphing/types'
 
-import { constantItem, rrdMetricItem } from '../fixtures'
+import { constantItem, rrdMetricItem, rrdQueryItem } from '../fixtures'
 
 const FETCH_PATH = '/domain-types/custom_graph/actions/fetch_data/invoke'
 const GRAPH_OPTIONS: ApiGraphOptions = {
@@ -118,16 +118,35 @@ test('fetches immediately on mount and exposes the mapped response', async () =>
   expect(data.overview.value).toBeUndefined()
 })
 
-test('maps the response group titles by source id', async () => {
+test('resolves a single-line source to its series title and a fan-out to its group title', async () => {
   postSpy.mockImplementation(async () => ({
-    data: fetchResponse(['B'], [{ source_id: 'B', title: 'CPU load - <HOST_NAME>' }]),
+    data: fetchResponse(['A', 'B'], [{ source_id: 'B', title: 'CPU load - <HOST_NAME>' }]),
     error: undefined,
     response: new Response(null, { status: 200 })
   }))
-  const { data } = mount([rrdMetricItem('B')])
+  const { data } = mount([rrdMetricItem('A'), rrdQueryItem('B')])
   await flush()
 
-  expect(data.groupTitlesBySource.value.get('B')).toBe('CPU load - <HOST_NAME>')
+  expect(data.resolvedTitles.value.get('A')).toBe('A')
+  expect(data.resolvedTitles.value.get('B')).toBe('CPU load - <HOST_NAME>')
+})
+
+test('keeps the resolved titles of the last fetch until the one an edit triggers lands', async () => {
+  postSpy.mockImplementation(async () => ({
+    data: fetchResponse(['A'], [{ source_id: 'A', title: 'CPU load - <HOST_NAME>' }]),
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  }))
+  const { items, data } = mount([rrdQueryItem('A')])
+  await flush()
+  expect(data.resolvedTitles.value.get('A')).toBe('CPU load - <HOST_NAME>')
+
+  items.value = [rrdMetricItem('A')]
+  await nextTick()
+  expect(data.resolvedTitles.value.get('A')).toBe('CPU load - <HOST_NAME>')
+
+  await flush()
+  expect(data.resolvedTitles.value.get('A')).toBe('A')
 })
 
 test('fetches hidden rows as visible so their stats are available', async () => {

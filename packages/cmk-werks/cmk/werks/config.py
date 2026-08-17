@@ -91,9 +91,10 @@ class RuntimeConfiguration:
         if self.__version is not None:
             return self.__version
 
-        version = try_load_current_version_from_defines_make(self._repo_root / "defines.make")
+        defines_make = self._repo_root / "defines.make"
+        version = try_load_current_version_from_defines_make(defines_make)
         if version is None:
-            raise RuntimeError("Could not load version from defines.make")
+            raise RuntimeError(f"Could not load version from defines.make ({defines_make})")
 
         self.__version = version
 

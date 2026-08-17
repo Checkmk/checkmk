@@ -44,6 +44,7 @@ py_library(
         "cmk/werks/schemas/werk.py",
         "cmk/werks/utils/__init__.py",
         "cmk/werks/utils/__main__.py",
+        "cmk/werks/utils/burn.py",
         "cmk/werks/utils/collect.py",
         "cmk/werks/validate.py",
     ],

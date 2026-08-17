@@ -18,16 +18,13 @@ def _a_join_painter_name(user_permissions: UserPermissions) -> str:
 
 
 @pytest.mark.usefixtures("request_context")
-@pytest.mark.xfail(
-    strict=True, reason="Crash report 7b5174bc-85ca-11f1-ba93-0222456d7c48: ValueError"
-)
 def test_column_spec_join_column_without_join_value_is_a_user_error() -> None:
     # Adding a "Joined column" in the view editor without filling in the service it
     # joins on. The user must get a validation error on that field, not a crash.
     user_permissions = UserPermissions({}, {}, {}, [])
     vs = view_editor_column_spec("columns", "hosts", user_permissions)
 
-    with pytest.raises(MKUserError):
+    with pytest.raises(MKUserError) as excinfo:
         vs.validate_value(
             {
                 "columns": [
@@ -41,3 +38,6 @@ def test_column_spec_join_column_without_join_value_is_a_user_error() -> None:
             },
             "columns",
         )
+
+    # The error must point at the join value field, not at some unrelated element.
+    assert "join_value" in (excinfo.value.varname or "")

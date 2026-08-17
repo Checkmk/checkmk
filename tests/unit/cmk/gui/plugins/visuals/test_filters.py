@@ -631,9 +631,6 @@ def test_filters_filter(test: FilterTest, set_config: SetConfig, request_context
         assert filt.filter(filter_vars) == test.expected_filters
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Crash report 8768e808-6f99-11f1-b3dd-100000636891: KeyError"
-)
 def test_custom_attribute_filter_without_the_value_variable(
     set_config: SetConfig, request_context: None
 ) -> None:

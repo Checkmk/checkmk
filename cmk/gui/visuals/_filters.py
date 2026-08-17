@@ -1639,7 +1639,7 @@ class CustomAttributeFilter(Filter):
                 _("The requested item %(attribute_id)s does not exist")
                 % {"attribute_id": attribute_id},
             )
-        val = value[self.value_varname(self.ident)]
+        val = value.get(self.value_varname(self.ident), "")
         return f"Filter: {self.info}_custom_variables ~~ {livestatus.lqencode(attribute_id.upper())} ^{livestatus.lqencode(val)}\n"
 
     @override

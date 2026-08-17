@@ -172,6 +172,29 @@ fn optional_value(s: &str) -> Option<String> {
     (!s.is_empty()).then(|| s.to_string())
 }
 
+// Escaping mirrors yaml_rust2::YamlEmitter (its private escape_str) for a
+// double-quoted scalar.
+fn yaml_quote(value: &str) -> String {
+    let mut out = String::from("\"");
+    for c in value.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\t' => out.push_str("\\t"),
+            '\r' => out.push_str("\\r"),
+            '\x08' => out.push_str("\\b"),
+            '\x0c' => out.push_str("\\f"),
+            c if (c as u32) < 0x20 || c as u32 == 0x7f => {
+                out.push_str(&format!("\\u{:04x}", c as u32))
+            }
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
+}
+
 fn parse_sections(variables: &HashMap<String, String>, key: &str) -> HashSet<String> {
     variables
         .get(key)
@@ -697,8 +720,9 @@ pub fn convert(
         values::STANDARD
     };
     out.push_str(&format!(
-        "    authentication:\n      username: \"{}\"\n      password: \"{}\"\n      type: {auth_type}\n",
-        dbuser.username, dbuser.password
+        "    authentication:\n      username: {}\n      password: {}\n      type: {auth_type}\n",
+        yaml_quote(&dbuser.username),
+        yaml_quote(&dbuser.password)
     ));
     if let Some(role) = &dbuser.role {
         out.push_str(&format!("      role: {}\n", role.to_lowercase()));
@@ -706,10 +730,16 @@ pub fn convert(
     if let Some(asm_raw) = variables.get("ASMUSER") {
         if let Ok(asm) = parse_asmuser(asm_raw) {
             if !asm.username.is_empty() {
-                out.push_str(&format!("      asm_username: \"{}\"\n", asm.username));
+                out.push_str(&format!(
+                    "      asm_username: {}\n",
+                    yaml_quote(&asm.username)
+                ));
             }
             if !asm.password.is_empty() {
-                out.push_str(&format!("      asm_password: \"{}\"\n", asm.password));
+                out.push_str(&format!(
+                    "      asm_password: {}\n",
+                    yaml_quote(&asm.password)
+                ));
             }
             // Like DBUSER, a "/" ASMUSER is external auth. The username is erased
             // to empty, so declare `asm_type: wallet` explicitly; without it the
@@ -858,8 +888,9 @@ fn format_instances(
                 values::STANDARD
             };
             lines.push(format!(
-                    "        authentication:\n          username: \"{}\"\n          password: \"{}\"\n          type: {auth_type}\n",
-                    entry.username, entry.password
+                    "        authentication:\n          username: {}\n          password: {}\n          type: {auth_type}\n",
+                    yaml_quote(&entry.username),
+                    yaml_quote(&entry.password)
                 ));
             if let Some(role) = &entry.role {
                 lines.push(format!("          role: {}\n", role.to_lowercase()));
@@ -1341,6 +1372,14 @@ mod tests {
         let result = convert(legacy, "/test/mk_oracle.cfg", &vars, TS).unwrap();
         assert!(result.contains("# SQLS.mysec.SQLS_DBPASSWORD ***"));
         assert!(!result.contains("topsecret"));
+    }
+
+    #[test]
+    fn test_convert_escapes_special_chars_in_password() {
+        let legacy = "DBUSER='checkmk:a\\b\"c\td::localhost::XE'\n";
+        let vars = HashMap::from([("DBUSER".into(), "checkmk:a\\b\"c\td::localhost::XE".into())]);
+        let result = convert(legacy, "/test/mk_oracle.cfg", &vars, TS).unwrap();
+        assert!(result.contains(r#"password: "a\\b\"c\td""#));
     }
 
     #[test]

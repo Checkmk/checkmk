@@ -46,15 +46,14 @@ def cloned_linux_hosts_dashboard(
     linux_hosts_dashboard = LinuxHostsDashboard(dashboard_page.page)
     linux_hosts_dashboard.clone_dashboard()
 
-    cloned_linux_hosts_dashboard = CustomDashboard(
-        linux_hosts_dashboard.page, linux_hosts_dashboard.page_title, navigate_to_page=False
-    )
-
-    yield cloned_linux_hosts_dashboard
-    # Cleanup: delete the cloned dashboard after the test
-    if is_cleanup_enabled():
-        edit_dashboards = EditDashboards(dashboard_page.page)
-        edit_dashboards.delete_dashboard(cloned_linux_hosts_dashboard.page_title)
+    try:
+        yield CustomDashboard(
+            linux_hosts_dashboard.page, linux_hosts_dashboard.page_title, navigate_to_page=False
+        )
+    finally:
+        if is_cleanup_enabled():
+            edit_dashboards = EditDashboards(dashboard_page.page)
+            edit_dashboards.delete_dashboard(linux_hosts_dashboard.page_title)
 
 
 def _create_new_dashboard(
@@ -432,7 +431,6 @@ def test_widget_filters(
     ).to_have_count(hosts_count)
 
 
-@pytest.mark.xfail(reason="CMK-37975; skip failing test.")
 def test_add_top_list_widget(
     linux_hosts: list[str], cloned_linux_hosts_dashboard: CustomDashboard
 ) -> None:

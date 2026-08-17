@@ -80,7 +80,7 @@ fn is_filtered_name(name: &str) -> bool {
 /// Match compiled PDB patterns against discovered PDBs.
 /// Each PDB name is collected only once.
 /// Patterns matching nothing are skipped.
-pub fn resolve_pdb_patterns(patterns: &[Regex], discovered: &Pdbs) -> Vec<PdbName> {
+pub fn resolve_pdb_patterns(patterns: &[Regex], discovered: &Pdbs, instance: &str) -> Vec<PdbName> {
     let mut matched = HashSet::new();
     for re in patterns {
         let hits: Vec<_> = discovered
@@ -90,7 +90,11 @@ pub fn resolve_pdb_patterns(patterns: &[Regex], discovered: &Pdbs) -> Vec<PdbNam
             .map(|pdb| pdb.as_ref().to_string())
             .collect();
         if hits.is_empty() {
-            log::warn!("PDB pattern {:?} matched no discovered PDBs", re.as_str());
+            log::warn!(
+                "PDB pattern {:?} matched no discovered PDBs for instance {}",
+                re.as_str(),
+                instance
+            );
             continue;
         }
         matched.extend(hits);
@@ -164,7 +168,7 @@ mod tests {
     #[test]
     fn test_resolve_returns_all_matched_pdbs() {
         let pdbs = Pdbs::from_names(&["PDB1", "PDB2", "OTHER"]);
-        let result = resolve_pdb_patterns(&[exact("PDB1"), exact("PDB2")], &pdbs);
+        let result = resolve_pdb_patterns(&[exact("PDB1"), exact("PDB2")], &pdbs, "TESTDB");
 
         assert_eq!(result.len(), 2);
         assert!(result.contains(&PdbName::from("PDB1")));
@@ -175,7 +179,7 @@ mod tests {
     fn test_resolve_each_pdb_appears_once() {
         let pdbs = Pdbs::from_names(&["PDB1"]);
         assert_eq!(
-            resolve_pdb_patterns(&[exact("PDB1"), exact("PDB1")], &pdbs),
+            resolve_pdb_patterns(&[exact("PDB1"), exact("PDB1")], &pdbs, "TESTDB"),
             vec![PdbName::from("PDB1")]
         );
     }
@@ -183,6 +187,6 @@ mod tests {
     #[test]
     fn test_resolve_returns_nothing_when_unmatched() {
         let pdbs = Pdbs::from_names(&["PDB1"]);
-        assert!(resolve_pdb_patterns(&[exact("MISSING")], &pdbs).is_empty());
+        assert!(resolve_pdb_patterns(&[exact("MISSING")], &pdbs, "TESTDB").is_empty());
     }
 }

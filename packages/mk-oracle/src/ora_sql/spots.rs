@@ -202,7 +202,7 @@ fn _make_work_result_ok(
                             container: None,
                         }]
                     } else {
-                        resolve_pdb_patterns(section.pdb_patterns(), pdbs)
+                        resolve_pdb_patterns(section.pdb_patterns(), pdbs, &service.to_string())
                             .into_iter()
                             .map(|pdb| QueryBlock {
                                 queries: q.clone(),

@@ -41,6 +41,15 @@ Gerrit/Jenkins/Jira/crash-report helpers, backports, etc.) are maintained as
 Claude Code plugins in the internal marketplace repository:
 https://github.com/Checkmk/checkmk-claude-marketplace
 
+Notable entry points:
+
+- [`code-review` agent](https://github.com/Checkmk/checkmk-claude-marketplace/blob/main/plugins/checkmk-core/agents/code-review.md)
+  — after committing a change (or a relation chain of commits), consider
+  running it, or propose doing so, to catch logical, semantic, and
+  architectural issues before pushing for review.
+- [`/test-review` skill](https://github.com/Checkmk/checkmk-claude-marketplace/blob/main/plugins/checkmk-core/skills/test-review/SKILL.md)
+  — run it whenever implementing or changing tests.
+
 Do not add skills or agents under `.claude/` or `.github/` in this repo —
 contribute them to the marketplace instead.
 

@@ -201,7 +201,7 @@ test('title edits patch the row', async () => {
 test('a formula row expands to the read-only formula form', async () => {
   renderTable([formulaItem('A', { ast: { op: 'num', value: 5 } })])
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
-  expect(await screen.findByRole('button', { name: /= 5/ })).toBeInTheDocument()
+  expect(await screen.findByText(/= 5/)).toBeInTheDocument()
 })
 
 test('a metric_backend row expands to the metric backend form', async () => {

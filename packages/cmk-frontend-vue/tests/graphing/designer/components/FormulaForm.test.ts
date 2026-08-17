@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { render, screen } from '@testing-library/vue'
 import { expect, test } from 'vitest'
 
 import FormulaForm from '@/graphing/designer/components/forms/FormulaForm.vue'
@@ -22,29 +22,23 @@ function renderFormulaForm(seed: DesignerItem[]) {
   if (item?.type !== 'rrd_formula') {
     throw new Error(`expected an rrd_formula row, got ${item?.type}`)
   }
-  render(FormulaForm, { props: { item, store, astErrors: [] } })
-  return store
+  return render(FormulaForm, { props: { item, store, astErrors: [] } })
 }
 
-test('lists the direct refs as id + description, toggled by the formula display value', async () => {
+test('lists the direct refs as id + description under the formula', () => {
   renderFormulaForm([
     rrdMetricItem('A'),
     rrdMetricItem('B', { host_name: 'h2', service_name: 's2', metric_name: 'm2' }),
     formulaItem('F', { ast: parseOrThrow('A + B') })
   ])
 
-  const trigger = screen.getByRole('button', { name: /= A \+ B/ })
-  expect(trigger).toHaveAttribute('aria-expanded', 'false')
-
-  await fireEvent.click(trigger)
-  expect(trigger).toHaveAttribute('aria-expanded', 'true')
-
+  expect(screen.getByText(/= A \+ B/)).toBeInTheDocument()
   expect(screen.getByText('my-host > CPU utilization > util')).toBeInTheDocument()
   expect(screen.getByText('h2 > s2 > m2')).toBeInTheDocument()
 })
 
-test('shows an empty message when the formula references no sources', () => {
-  renderFormulaForm([formulaItem('F', { ast: { op: 'num', value: 5 } })])
+test('shows nothing but the formula when it references no sources', () => {
+  const { container } = renderFormulaForm([formulaItem('F', { ast: { op: 'num', value: 5 } })])
 
-  expect(screen.getByText('This formula references no sources.')).toBeInTheDocument()
+  expect(container.textContent?.trim()).toBe('= 5')
 })

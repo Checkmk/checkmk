@@ -176,7 +176,7 @@ class GuiOracleIdentificationConf(BaseModel):
 
 
 class GuiConnectionConf(BaseModel):
-    host: str = "localhost"
+    host: str | None = None
     port: int | None = None
     timeout: int | None = None
     tns_admin: str | None = None
@@ -283,7 +283,10 @@ class OracleAuth(BaseModel):
 
 
 class OracleConnection(BaseModel):
-    hostname: str
+    # Left out when the rule does not name a host, so that the plug-in applies
+    # its own default. That default is not always localhost: on a node running
+    # Grid Infrastructure the plug-in connects to the node itself.
+    hostname: str | None = None
     port: int | None = None
     timeout: int | None = None
     tns_admin: str | None = None
@@ -421,13 +424,18 @@ def _get_oracle_connection(conn: GuiConnectionConf | None) -> OracleConnection |
     if conn is None:
         return None
 
-    return OracleConnection(
+    connection = OracleConnection(
         hostname=conn.host,
         port=conn.port,
         timeout=conn.timeout,
         tns_admin=conn.tns_admin,
         oracle_local_registry=conn.oracle_local_registry,
     )
+    # An entirely empty block would say nothing that the plug-in does not
+    # already default to.
+    if not connection.model_dump(exclude_none=True):
+        return None
+    return connection
 
 
 def _get_oracle_additional_options(

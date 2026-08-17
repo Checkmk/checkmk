@@ -59,6 +59,39 @@ pub fn get_row_value_by_idx(row: &[String], idx: usize) -> String {
     row.get(idx).cloned().unwrap_or_default()
 }
 
+/// The name of this node, as the operating system reports it.
+///
+/// This calls POSIX `gethostname` through `libc` rather than using the
+/// `gethostname` crate. That crate reaches the same call through `rustix`,
+/// whose libc backend also references `sethostname`, which AIX does not have,
+/// so it fails to build there. We only ever read the name.
+#[cfg(unix)]
+pub fn node_name() -> Option<String> {
+    let mut buf = [0 as libc::c_char; 256];
+    // SAFETY: buf is a valid, writable array of exactly the length passed on.
+    if unsafe { libc::gethostname(buf.as_mut_ptr(), buf.len()) } != 0 {
+        log::warn!("gethostname failed");
+        return None;
+    }
+    // gethostname may leave the name untruncated and unterminated when it fills
+    // the buffer, so stop at the first NUL or at the end, whichever comes first.
+    let bytes: Vec<u8> = buf
+        .iter()
+        .take_while(|&&c| c != 0)
+        .map(|&c| c as u8)
+        .collect();
+    String::from_utf8(bytes)
+        .ok()
+        .filter(|name| !name.is_empty())
+}
+
+#[cfg(windows)]
+pub fn node_name() -> Option<String> {
+    std::env::var("COMPUTERNAME")
+        .ok()
+        .filter(|name| !name.is_empty())
+}
+
 pub fn get_local_instances() -> Result<Vec<LocalInstance>> {
     registry::get_instances(None)
 }

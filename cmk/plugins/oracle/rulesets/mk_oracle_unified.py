@@ -455,6 +455,18 @@ def _connection_options() -> Dictionary:
         "oracle_local_registry": DictElement(
             parameter_form=String(
                 title=Title("Oracle local registry path"),
+                help_text=Help(
+                    "Path to the olr.loc file of Oracle Grid Infrastructure, which "
+                    "covers both Oracle Clusterware and Oracle Restart. If not "
+                    "specified, /etc/oracle/olr.loc and /var/opt/oracle/olr.loc are "
+                    "probed in that order. Once the Grid home named in that file is "
+                    "found, the plug-in connects to this node by its own name instead "
+                    "of localhost, because a listener under Grid Infrastructure binds "
+                    "the node address. The Grid home is also used as the last "
+                    "candidate for ORACLE_HOME, since Grid Infrastructure stops "
+                    "maintaining oratab from version 12.2 on. Set this to a path that "
+                    "does not exist to switch the behavior off."
+                ),
                 custom_validate=(
                     validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
                 ),

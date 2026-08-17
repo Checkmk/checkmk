@@ -235,11 +235,23 @@ connection:
   port: 1521 # optional, default: 1521
   timeout: 5 # optional, default: 5 (seconds)
   tns_admin: '/path/to/oracle/config/files/' # optional, default: MK_CONFDIR
-  oracle_local_registry: '/etc/oracle/olr.loc' # optional, path to Oracle Local Registry
+  oracle_local_registry: '/etc/oracle/olr.loc' # optional, default: /etc/oracle/olr.loc, /var/opt/oracle/olr.loc
 ```
 
 - `tns_admin` points to the directory containing `sqlnet.ora` and `tnsnames.ora`.
-- `oracle_local_registry` points to the Oracle Local Registry file used for instance discovery via `oratab`.
+- `oracle_local_registry` points to the `olr.loc` pointer file of Oracle Grid
+  Infrastructure, which covers both Oracle Clusterware and Oracle Restart. When
+  the setting is absent, `/etc/oracle/olr.loc` and `/var/opt/oracle/olr.loc` are
+  probed in that order.
+
+Two things change once the Grid home named in that file is found. The default
+`hostname` becomes the name of this node instead of `localhost`, because a
+listener under Grid Infrastructure binds the node address. And the Grid home
+becomes the last candidate for `ORACLE_HOME`, which matters because Grid
+Infrastructure stops maintaining `oratab` from version 12.2 on.
+
+Pointing `oracle_local_registry` at a path that does not exist switches this
+handling off, which is what legacy `mk_oracle` documents for `OLRLOC`.
 
 ### Instances
 
@@ -435,7 +447,7 @@ oracle:
 
 ### Discovery
 
-As an alternative to listing instances explicitly, the plugin can automatically detect Oracle instances running on the host using the Oracle Local Registry (`oratab`).
+As an alternative to listing instances explicitly, the plugin can automatically detect Oracle instances running on the host. On Unix it scans the process table for PMON processes, so only a running instance is found. On Windows there are no per-instance processes, so it reads the instance registry under `HKLM\SOFTWARE\Oracle` instead, which lists installed instances rather than running ones.
 
 ```yaml
 discovery:
@@ -444,7 +456,7 @@ discovery:
   exclude: ['TEST'] # optional, skip these instances
 ```
 
-- When `detect: yes` is set, the plugin reads the local Oracle configuration to discover running instances.
+- When `detect: yes` is set, the plugin discovers instances as described above.
 - Use `include` to restrict monitoring to a specific set of instance names.
 - Use `exclude` to skip specific instances.
 - If both `include` and `exclude` are specified, `include` takes precedence and

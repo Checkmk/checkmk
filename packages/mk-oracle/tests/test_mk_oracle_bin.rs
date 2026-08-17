@@ -1412,11 +1412,8 @@ fn test_connection_olr_loc_parsing() {
         .expect("valid YAML")
         .expect("connection present");
 
-    assert_eq!(conn.crs_home(), Some(&crs_home));
-    assert_eq!(
-        conn.crsctl_bin(),
-        Some(&crs_home.join("bin").join("crsctl"))
-    );
+    let grid = conn.grid().expect("Grid Infrastructure must be detected");
+    assert_eq!(grid.crs_home(), crs_home);
     assert_eq!(
         conn.oracle_local_registry(),
         Some(&PathBuf::from(&olr_loc_yaml))

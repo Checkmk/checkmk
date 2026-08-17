@@ -76,7 +76,7 @@ function messagesFor(field: RowField): TranslatedString[] {
       :store="store"
       :ast-errors="messagesFor('ast')"
     />
-    <div v-else class="graphing-row-editor__panel">
+    <template v-else>
       <CmkAlertBox
         v-if="alertText !== null"
         class="graphing-row-editor__alert"
@@ -118,34 +118,24 @@ function messagesFor(field: RowField): TranslatedString[] {
         :metric-name-errors="messagesFor('metric_name')"
         :consolidation-errors="messagesFor('consolidation_function')"
       />
-    </div>
+    </template>
   </div>
 </template>
 
 <style scoped>
 .graphing-row-editor {
-  --graphing-row-editor-panel-border: var(--color-mid-grey-10);
+  position: relative;
+  padding: var(--dimension-5) var(--dimension-4) var(--dimension-7) 0;
 }
 
 .graphing-row-editor__alert {
   position: absolute;
-  top: var(--dimension-4);
+  top: var(--dimension-5);
   right: var(--dimension-4);
   z-index: 1;
   white-space: nowrap;
   margin: 0;
   padding: var(--dimension-2) var(--dimension-4);
   align-items: center;
-}
-
-body[data-theme='modern-dark'] .graphing-row-editor {
-  --graphing-row-editor-panel-border: var(--color-mid-grey-90);
-}
-
-.graphing-row-editor__panel {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--graphing-row-editor-panel-border);
-  border-radius: var(--border-radius);
 }
 </style>

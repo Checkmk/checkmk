@@ -358,10 +358,11 @@ const {
 </template>
 
 <style scoped>
+/* border-spacing also pads the table's outer edges; the negative margin hands those back. */
 .graphing-metric-backend-form {
-  padding: var(--dimension-7);
   border-collapse: separate;
   border-spacing: var(--dimension-4);
+  margin: calc(-1 * var(--dimension-4));
 }
 
 .graphing-metric-backend-form__label-cell {

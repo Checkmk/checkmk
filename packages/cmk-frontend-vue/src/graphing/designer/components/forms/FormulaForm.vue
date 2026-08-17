@@ -90,7 +90,6 @@ function chipColor(referenced: DesignerItem): string | undefined {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
-  padding-left: var(--dimension-4);
 
   --graphing-formula-form-border: var(--color-mid-grey-10);
 }

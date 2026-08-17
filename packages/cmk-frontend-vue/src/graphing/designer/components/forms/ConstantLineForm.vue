@@ -50,7 +50,6 @@ function onValueChange(value: unknown): void {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-5);
-  padding: var(--dimension-7);
 }
 
 .graphing-constant-line-form__field {

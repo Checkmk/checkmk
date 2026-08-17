@@ -124,7 +124,6 @@ function onMetricChange(metricName: string | null): void {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-5);
-  padding: var(--dimension-7);
 }
 
 .graphing-service-reference-line-form__field {

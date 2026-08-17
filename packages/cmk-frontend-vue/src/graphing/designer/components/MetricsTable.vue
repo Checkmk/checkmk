@@ -438,9 +438,9 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
   margin-right: auto;
 }
 
+/* Indent to the title input: the title cell's padding, its chevron, and the gap between them. */
 .graphing-metrics-table__expansion {
-  padding: var(--dimension-5);
-  padding-left: 0;
+  padding: 0 0 0 var(--dimension-8);
 }
 
 /* Fill the source cell without the global 10em floor forcing the column wider. */

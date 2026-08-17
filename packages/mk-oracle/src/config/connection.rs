@@ -130,10 +130,7 @@ impl Connection {
                     .get_string(keys::ENGINE)
                     .unwrap_or_default()
                     .to_lowercase();
-                EngineTag::from_string(value.as_str()).unwrap_or_else(|| {
-                    log::info!("Engine is not set, fallback to default");
-                    EngineTag::default()
-                })
+                EngineTag::from_string(value.as_str()).unwrap_or_default()
             },
         }))
     }

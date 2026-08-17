@@ -16,10 +16,11 @@
 
 use crate::args::Args;
 use crate::config::merge;
+use crate::config::options::Options;
 use crate::config::system::{Logging, SystemConfig};
 use crate::config::OracleConfig;
 use crate::constants::{get_user_config_file, RUNTIME_DIR};
-use crate::platform::{get_local_instances, registry};
+use crate::platform::get_local_instances;
 use crate::types::{EnvVarName, SectionFilter, UseHostClient};
 use crate::version::VERSION;
 use crate::{constants, setup};
@@ -322,7 +323,7 @@ pub fn contains_oracle_client_lib(dir: &Path) -> bool {
 
 /// Detects Oracle runtime path using local Oracle instances or environment variables
 /// Do not obligated to validate permissions
-pub fn detect_host_runtime() -> Option<PathBuf> {
+pub fn detect_host_runtime() -> Option<ClientRuntime> {
     match get_local_instances() {
         Err(e) => {
             log::info!("Local Oracle instances detection failed with {} - can't use them to detect runtime path", &e.to_string());
@@ -336,11 +337,10 @@ pub fn detect_host_runtime() -> Option<PathBuf> {
         }
         Ok(locals) => {
             for local in &locals {
-                log::info!(
-                    "Try to find runtime using local Oracle instance: name={}, home={:?}, base={:?}",
+                log::debug!(
+                    "Trying local Oracle instance {}: home={:?}",
                     local.name,
-                    local.home,
-                    local.base
+                    local.home
                 );
                 // shared libraries live in lib on Unix, DLLs in bin on Windows
                 let candidate = local.home.join(if cfg!(windows) { "bin" } else { "lib" });
@@ -361,14 +361,14 @@ pub fn detect_host_runtime() -> Option<PathBuf> {
                     );
                     continue;
                 }
-                return Some(candidate);
+                return Some(ClientRuntime::in_home(local.home.clone()));
             }
             None
         }
     }
 }
 
-fn find_std_env_var_runtime() -> Option<PathBuf> {
+fn find_std_env_var_runtime() -> Option<ClientRuntime> {
     const CLIENT_ENV_VAR: &str = "ORACLE_INSTANT_CLIENT";
     if let Ok(env_var) = std::env::var(CLIENT_ENV_VAR) {
         let candidate = PathBuf::from(env_var);
@@ -385,12 +385,15 @@ fn find_std_env_var_runtime() -> Option<PathBuf> {
             );
             return None;
         }
-        return Some(candidate);
+        return Some(ClientRuntime::instant_client(candidate));
     };
 
     const ENV_VAR: &str = "ORACLE_HOME";
-    if let Some(runtime) = find_env_var_lib_runtime(ENV_VAR) {
-        Some(runtime)
+    if find_env_var_lib_runtime(ENV_VAR).is_some() {
+        std::env::var(ENV_VAR)
+            .ok()
+            .map(PathBuf::from)
+            .map(ClientRuntime::in_home)
     } else {
         log::info!("Failed to find local Oracle instances using {ENV_VAR}");
         None
@@ -425,35 +428,17 @@ pub fn find_env_var_lib_runtime(env_var: &str) -> Option<PathBuf> {
     Some(candidate)
 }
 
-/// Finds runtime dir using MK_LIBDIR or custom env var
-/// usually at: MK_LIBDIR/plugins/packages/mk-oracle
-/// Returns None if env var is not set or path is not a directory
-pub fn detect_factory_runtime(env_var: Option<String>) -> Option<PathBuf> {
-    let env_var = env_var.unwrap_or_else(|| constants::environment::LIB_DIR_ENV_VAR.to_string());
-    let lib_dir = match std::env::var(&env_var) {
-        Ok(v) => v,
-        Err(_) => {
-            log::warn!("{:?} is not set", &env_var);
-            return None;
-        }
-    };
-    let runtime_path = if env_var == constants::environment::LIB_DIR_ENV_VAR {
-        RUNTIME_DIR.to_path_buf()
-    } else {
-        Path::new(&lib_dir).join("plugins/packages/mk-oracle")
-    };
-
+/// The Oracle client shipped with the agent, below the agent's library
+/// directory at plugins/packages/mk-oracle. `lib_dir` is what MK_LIBDIR names.
+pub fn detect_factory_runtime(lib_dir: &Path) -> Option<PathBuf> {
+    let runtime_path = lib_dir.join("plugins/packages/mk-oracle");
     let runtime_path = if cfg!(windows) && runtime_path.join("runtime").is_dir() {
         runtime_path.join("runtime")
     } else {
         runtime_path
     };
     if !runtime_path.is_dir() {
-        log::error!(
-            "{:?} is set but {:?} is not a directory",
-            &env_var,
-            runtime_path
-        );
+        log::error!("{:?} is not a directory", runtime_path);
         return None;
     }
     if !contains_oracle_client_lib(&runtime_path) {
@@ -467,29 +452,86 @@ pub fn detect_factory_runtime(env_var: Option<String>) -> Option<PathBuf> {
     Some(runtime_path)
 }
 
-/// Detects Oracle runtime path using local Oracle instances or environment variables
-pub fn detect_runtime(use_host_client: &UseHostClient, env_var: Option<String>) -> Option<PathBuf> {
+/// The Oracle client the monitoring process will load, together with the
+/// installation it belongs to.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ClientRuntime {
+    /// prepended to LD_LIBRARY_PATH (PATH on Windows)
+    pub dir: PathBuf,
+    /// ORACLE_HOME: None for an Instant Client, which carries its own message and timezone data
+    pub home: Option<PathBuf>,
+}
+
+impl ClientRuntime {
+    fn instant_client(dir: PathBuf) -> Self {
+        Self { dir, home: None }
+    }
+
+    /// The client of a full Oracle home, whose location the caller already knows.
+    fn in_home(home: PathBuf) -> Self {
+        Self {
+            dir: home.join(if cfg!(windows) { "bin" } else { "lib" }),
+            home: Some(home),
+        }
+    }
+}
+
+pub fn detect_runtime(
+    use_host_client: &UseHostClient,
+    lib_dir: Option<&Path>,
+) -> Option<ClientRuntime> {
+    log::info!("Oracle client selection mode: {use_host_client:?}");
+    let factory_runtime = || {
+        lib_dir
+            .and_then(detect_factory_runtime)
+            .map(ClientRuntime::instant_client)
+    };
     match use_host_client {
         UseHostClient::Always => detect_host_runtime(),
-        UseHostClient::Never => detect_factory_runtime(env_var),
-        UseHostClient::Auto => detect_factory_runtime(env_var).or_else(|| {
-            log::info!("Factory setup not found");
+        UseHostClient::Never => factory_runtime(),
+        UseHostClient::Auto => factory_runtime().or_else(|| {
+            log::info!("No client bundled with the agent");
             detect_host_runtime()
         }),
-        UseHostClient::Path(p) => Some(PathBuf::from(p)),
+        // an operator-supplied path is the one case where nothing knows what
+        // was pointed at, so it has to be inspected
+        UseHostClient::Path(p) => {
+            let dir = PathBuf::from(p);
+            let home = derive_home_from_runtime_dir(&dir);
+            Some(ClientRuntime { dir, home })
+        }
     }
-    .and_then(|p| {
-        if !p.is_dir() {
-            log::error!("Runtime path {:?} is not a directory or missing", p);
-            return None;
-        }
-        if !contains_oracle_client_lib(&p) {
-            log::error!("Runtime path {:?} has no {}", p, CLIENT_LIB_NAME);
-            return None;
-        }
-        log::info!("Runtime detected at {:?}", p);
-        Some(p)
-    })
+    .and_then(validate_runtime)
+}
+
+fn validate_runtime(candidate: ClientRuntime) -> Option<ClientRuntime> {
+    if !candidate.dir.is_dir() {
+        log::error!(
+            "Runtime path {:?} is not a directory or missing",
+            candidate.dir
+        );
+        return None;
+    }
+    if !contains_oracle_client_lib(&candidate.dir) {
+        log::error!(
+            "Runtime path {:?} has no {}",
+            candidate.dir,
+            CLIENT_LIB_NAME
+        );
+        return None;
+    }
+    match &candidate.home {
+        Some(home) => log::info!(
+            "Oracle client at {:?}, belonging to the Oracle home {:?}",
+            candidate.dir,
+            home
+        ),
+        None => log::info!(
+            "Oracle client at {:?}, an Instant Client that needs no {ORACLE_HOME_ENV_VAR}",
+            candidate.dir
+        ),
+    }
+    Some(candidate)
 }
 
 #[cfg(windows)]
@@ -507,22 +549,6 @@ const ENV_VAR_SEP: &str = ":";
 
 pub const ORACLE_HOME_ENV_VAR: &str = "ORACLE_HOME";
 
-/// The ORACLE_HOME the spawned monitoring process will see: either inherited
-/// from the current environment or derived from the local instances (oratab).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum OracleHome {
-    Inherited(PathBuf),
-    Derived(PathBuf),
-}
-
-impl OracleHome {
-    pub fn path(&self) -> &Path {
-        match self {
-            OracleHome::Inherited(path) | OracleHome::Derived(path) => path,
-        }
-    }
-}
-
 /// The environment the monitoring process is spawned with: computed by
 /// detect_runtime_env, exported by apply_runtime_env and rendered for
 /// --find-runtime by format_runtime_env.
@@ -531,50 +557,55 @@ pub struct RuntimeEnv {
     /// directory to prepend to LD_LIBRARY_PATH (PATH on Windows)
     pub runtime_dir: Option<PathBuf>,
     /// effective ORACLE_HOME of the spawned process, if any
-    pub oracle_home: Option<OracleHome>,
+    pub oracle_home: Option<PathBuf>,
 }
 
-/// Computes the runtime environment without touching the process environment.
-/// Must run before apply_runtime_env: runtime detection reads the current
-/// ORACLE_HOME/ORACLE_INSTANT_CLIENT values.
+/// Detect the oracle client and the ORACLE_HOME that comes with it.
+/// ORACLE_HOME can be overridden by an inherited env var, while the client
+/// is always set based on the config and the search.
 pub fn detect_runtime_env(config: &OracleConfig) -> RuntimeEnv {
-    let runtime_dir = detect_runtime_dir(config, None, true);
-    let oracle_home = detect_oracle_home(config, None, None, runtime_dir.as_deref());
+    const LIB_DIR: &str = constants::environment::LIB_DIR_ENV_VAR;
+    let lib_dir = std::env::var(LIB_DIR)
+        .inspect_err(|_| log::warn!("{LIB_DIR} is not set"))
+        .ok()
+        .map(PathBuf::from);
+    let inherited = std::env::var(ORACLE_HOME_ENV_VAR)
+        .ok()
+        .filter(|v| !v.is_empty());
+    let client = config.ora_sql().and_then(|ora_sql| {
+        detect_runtime(ora_sql.options().use_host_client(), lib_dir.as_deref())
+            .filter(|runtime| runtime_permissions_ok(runtime, ora_sql.options()))
+    });
     RuntimeEnv {
-        runtime_dir,
-        oracle_home,
+        oracle_home: effective_oracle_home(client.as_ref(), inherited),
+        runtime_dir: client.map(|c| c.dir),
     }
 }
 
-/// Detects the directory with the Oracle client runtime to be prepended to
-/// LD_LIBRARY_PATH (PATH on Windows) using config and, by default, MK_LIBDIR.
-/// May validate permissions of the detected path: returns None if they are
-/// not correct.
-pub fn detect_runtime_dir(
-    config: &OracleConfig,
-    mk_lib_dir: Option<String>,
-    check_permissions: bool,
-) -> Option<PathBuf> {
-    let use_host_client: UseHostClient = config.ora_sql()?.options().use_host_client().clone();
-    log::info!("Use host client {:?}", use_host_client);
-    let runtime = detect_runtime(&use_host_client, mk_lib_dir)?;
-    if !check_permissions {
-        log::info!("Skip permissions check for runtime path {:?}", runtime);
-        return Some(runtime);
-    }
-    let options = config
-        .ora_sql()
-        .map(|c| c.options().clone())
-        .unwrap_or_default();
-    if !validate_permissions(
-        &runtime,
+fn runtime_permissions_ok(runtime: &ClientRuntime, options: &Options) -> bool {
+    if validate_permissions(
+        &runtime.dir,
         options.permissions_check(),
         options.permissions_safe_entries(),
     ) {
-        log::error!("Runtime path {:?} has wrong permissions", runtime);
+        return true;
+    }
+    log::error!("Runtime path {:?} has wrong permissions", runtime.dir);
+    false
+}
+
+pub fn effective_oracle_home(
+    client: Option<&ClientRuntime>,
+    inherited: Option<String>,
+) -> Option<PathBuf> {
+    if let Some(current) = inherited {
+        log::info!("{ORACLE_HOME_ENV_VAR} is already set to {current}, keeping it");
+        return Some(PathBuf::from(current));
+    }
+    if cfg!(windows) {
         return None;
     }
-    Some(runtime)
+    client?.home.clone()
 }
 
 /// A full Oracle home (server or full client) ships the client library in
@@ -583,107 +614,20 @@ pub fn detect_runtime_dir(
 /// that data, needs no ORACLE_HOME and has no oracore sibling of its lib dir.
 fn derive_home_from_runtime_dir(runtime_dir: &Path) -> Option<PathBuf> {
     if runtime_dir.file_name() != Some(std::ffi::OsStr::new("lib")) {
-        log::info!(
-            "Runtime dir {:?} is not a lib dir of an Oracle home: treating as Instant Client, {ORACLE_HOME_ENV_VAR} stays unset",
-            runtime_dir
-        );
+        log::debug!("{runtime_dir:?} is not the lib dir of an Oracle home");
         return None;
     }
     let home = runtime_dir.parent()?;
     if !home.join("oracore").is_dir() {
-        log::info!(
-            "Runtime dir {:?} has no oracore next to it: treating as Instant Client, {ORACLE_HOME_ENV_VAR} stays unset",
-            runtime_dir
-        );
+        log::debug!("{home:?} has no oracore: not a full Oracle home");
         return None;
     }
-    log::info!(
-        "Deriving {ORACLE_HOME_ENV_VAR} {:?} from configured client runtime dir {:?}",
-        home,
-        runtime_dir
-    );
     Some(home.to_path_buf())
 }
 
-/// Determines the ORACLE_HOME the spawned monitoring process will see: the
-/// value already set in the environment wins; otherwise (on Unix) it is
-/// derived - for an explicit use_host_client path from the parent of the
-/// runtime dir when that is the lib dir of a full Oracle home, for auto or
-/// always from the home of the first local instance (as listed in oratab)
-/// which exists and has a lib dir. Windows never derives: OCI is served by
-/// the registry there.
-pub fn detect_oracle_home(
-    config: &OracleConfig,
-    custom_path: Option<String>,
-    home_var: Option<EnvVarName>,
-    runtime_dir: Option<&Path>,
-) -> Option<OracleHome> {
-    let env_var = home_var.unwrap_or_else(|| EnvVarName::from(ORACLE_HOME_ENV_VAR.to_string()));
-    let current = std::env::var(env_var.to_str()).unwrap_or_default();
-    if !current.is_empty() {
-        log::info!("{env_var} is already set to {current}, keeping it");
-        return Some(OracleHome::Inherited(PathBuf::from(current)));
-    }
-
-    if cfg!(windows) {
-        log::debug!("{ORACLE_HOME_ENV_VAR} based setup is not supported on Windows");
-        return None;
-    }
-
-    let use_host_client: UseHostClient = config.ora_sql()?.options().use_host_client().clone();
-    match use_host_client {
-        UseHostClient::Always | UseHostClient::Auto => {}
-        UseHostClient::Path(_) => {
-            return derive_home_from_runtime_dir(runtime_dir?).map(OracleHome::Derived);
-        }
-        UseHostClient::Never => {
-            log::info!("Use host client is Never: skipping {ORACLE_HOME_ENV_VAR} based setup");
-            return None;
-        }
-    }
-
-    let locals = match registry::get_instances(custom_path) {
-        Ok(locals) if !locals.is_empty() => locals,
-        Ok(_) => {
-            log::info!("Local Oracle instances are not detected - can't use them to set {env_var}");
-            return None;
-        }
-        Err(e) => {
-            log::info!(
-                "Local Oracle instances detection failed with {e} - can't use them to set {env_var}"
-            );
-            return None;
-        }
-    };
-
-    let home = locals.into_iter().find_map(|local| {
-        log::info!(
-            "Checking Oracle home {:?} of local instance {}",
-            local.home,
-            local.name
-        );
-        if !local.home.is_dir() {
-            log::warn!("Oracle home {:?} doesn't exist", local.home);
-            return None;
-        }
-        let lib_dir = local.home.join("lib");
-        if lib_dir.is_dir() {
-            Some(local.home)
-        } else {
-            log::warn!("Oracle home {:?} has no lib dir", local.home);
-            None
-        }
-    });
-
-    if home.is_none() {
-        log::info!("No suitable Oracle home found to set {env_var}");
-    }
-    home.map(OracleHome::Derived)
-}
-
 /// Exports the runtime environment to the process environment: prepends the
-/// runtime directory to LD_LIBRARY_PATH (PATH on Windows) and sets a derived
-/// ORACLE_HOME (an inherited one is already in the environment and left untouched).
+/// runtime directory to LD_LIBRARY_PATH (PATH on Windows) and sets ORACLE_HOME.
+/// Re-exporting an inherited ORACLE_HOME writes the value it already has.
 /// Returns the old content of the modified path variable so that reset_env
 /// can restore it after the spawn; None if there is no runtime.
 pub fn apply_runtime_env(
@@ -694,7 +638,7 @@ pub fn apply_runtime_env(
     let runtime_dir = runtime_env.runtime_dir.as_ref()?;
     let path_var = path_var.unwrap_or(DEFAULT_ENV_VAR.clone());
     let old_content = std::env::var(path_var.to_str()).ok().unwrap_or_default();
-    log::info!("Current {path_var}={old_content}");
+    log::debug!("Current {path_var}={old_content}");
     let mut new_content = runtime_dir.clone().into_os_string();
     if !old_content.is_empty() {
         new_content.push(ENV_VAR_SEP);
@@ -704,10 +648,10 @@ pub fn apply_runtime_env(
         std::env::set_var(path_var.to_str(), &new_content);
     }
 
-    if let Some(OracleHome::Derived(home)) = &runtime_env.oracle_home {
+    if let Some(home) = &runtime_env.oracle_home {
         let home_var =
             home_var.unwrap_or_else(|| EnvVarName::from(ORACLE_HOME_ENV_VAR.to_string()));
-        log::info!("Setting {home_var} to {:?}", home);
+        log::info!("Exporting {home_var}={:?}", home);
         unsafe {
             std::env::set_var(home_var.to_str(), home);
         }
@@ -728,10 +672,7 @@ pub fn format_runtime_env(runtime_env: &RuntimeEnv, current: &str) -> String {
         output.push('\n');
     }
     if let Some(home) = &runtime_env.oracle_home {
-        output.push_str(&format!(
-            "{ORACLE_HOME_ENV_VAR}={}\n",
-            home.path().display()
-        ));
+        output.push_str(&format!("{ORACLE_HOME_ENV_VAR}={}\n", home.display()));
     }
     output
 }
@@ -1092,7 +1033,7 @@ mod tests {
     fn test_format_runtime_env_full() {
         let runtime_env = RuntimeEnv {
             runtime_dir: Some(PathBuf::from("/runtime/lib")),
-            oracle_home: Some(OracleHome::Derived(PathBuf::from("/oracle/home"))),
+            oracle_home: Some(PathBuf::from("/oracle/home")),
         };
         assert_eq!(
             format_runtime_env(&runtime_env, "/existing/path"),
@@ -1118,7 +1059,7 @@ mod tests {
     fn test_format_runtime_env_inherited_home() {
         let runtime_env = RuntimeEnv {
             runtime_dir: Some(PathBuf::from("/runtime/lib")),
-            oracle_home: Some(OracleHome::Inherited(PathBuf::from("/inherited/home"))),
+            oracle_home: Some(PathBuf::from("/inherited/home")),
         };
         assert_eq!(
             format_runtime_env(&runtime_env, ""),

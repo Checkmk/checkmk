@@ -71,18 +71,11 @@ fn test_detect_factory_runtime_without_client_lib() {
     let lib_dir = tempfile::tempdir().unwrap();
     let runtime = lib_dir.path().join("plugins/packages/mk-oracle");
     std::fs::create_dir_all(&runtime).unwrap();
-    const LIBDIR_VAR: &str = "MK_LIBDIR_NO_CLIENT_LIB";
-    unsafe {
-        std::env::set_var(LIBDIR_VAR, lib_dir.path());
-    }
     // the directory exists but has no client library -> rejected
-    assert!(detect_factory_runtime(Some(LIBDIR_VAR.to_string())).is_none());
+    assert!(detect_factory_runtime(lib_dir.path()).is_none());
 
     std::fs::File::create(runtime.join(CLIENT_LIB_NAME)).unwrap();
-    assert_eq!(
-        detect_factory_runtime(Some(LIBDIR_VAR.to_string())),
-        Some(runtime)
-    );
+    assert_eq!(detect_factory_runtime(lib_dir.path()), Some(runtime));
 }
 
 fn base_dir() -> std::path::PathBuf {
@@ -108,28 +101,25 @@ fn client_runtime_dir() -> std::path::PathBuf {
 
 #[test]
 fn test_detect_runtime_with_runtime() {
-    // MK_LIBDIR is set so that runtimes exist
+    // the agent library directory below which a runtime exists
     let good_path = base_dir().join("runtimes");
-    const LIBDIR_VAR: &str = "MK_LIBDIR_TEST1";
-    unsafe {
-        std::env::set_var(LIBDIR_VAR, &good_path);
-    }
-    let lib_dir_var: Option<String> = Some(LIBDIR_VAR.to_string());
+    let lib_dir = Some(good_path.as_path());
     let local_exists = local_oracle_client_present();
 
     // Never
-    assert!(detect_runtime(&UseHostClient::Never, Some("Hurz".to_string())).is_none()); // env var does not exist
-    eprintln!("good_path = {:?}", lib_dir_var.clone());
-    assert!(detect_runtime(&UseHostClient::Never, lib_dir_var.clone()).is_some()); // detected
+    assert!(detect_runtime(&UseHostClient::Never, None).is_none()); // no MK_LIBDIR
+    assert!(detect_runtime(&UseHostClient::Never, Some(std::path::Path::new("Hurz"))).is_none()); // no such directory
+    assert!(detect_runtime(&UseHostClient::Never, lib_dir).is_some()); // detected
 
     // Always
     assert_eq!(
-        detect_runtime(&UseHostClient::Always, lib_dir_var.clone()).is_some(),
+        detect_runtime(&UseHostClient::Always, lib_dir).is_some(),
         local_exists
     ); // detected only if local exists(skip factory)
     if local_exists {
-        assert!(!detect_runtime(&UseHostClient::Always, lib_dir_var.clone())
+        assert!(!detect_runtime(&UseHostClient::Always, lib_dir)
             .unwrap()
+            .dir
             .into_os_string()
             .into_string()
             .unwrap()
@@ -137,8 +127,9 @@ fn test_detect_runtime_with_runtime() {
     }
 
     // Auto
-    let path = detect_runtime(&UseHostClient::Auto, lib_dir_var.clone())
+    let path = detect_runtime(&UseHostClient::Auto, lib_dir)
         .unwrap()
+        .dir
         .into_os_string()
         .into_string()
         .unwrap();
@@ -149,7 +140,7 @@ fn test_detect_runtime_with_runtime() {
     let correct_path = client_runtime_dir().into_os_string().into_string().unwrap();
     let path = to_string(detect_runtime(
         &UseHostClient::Path(correct_path.clone()),
-        lib_dir_var.clone(),
+        lib_dir,
     ))
     .unwrap();
     assert_eq!(path, correct_path);
@@ -160,36 +151,32 @@ fn test_detect_runtime_with_runtime() {
         .into_os_string()
         .into_string()
         .unwrap();
-    assert!(detect_runtime(&UseHostClient::Path(lib_less_path), lib_dir_var.clone()).is_none());
+    assert!(detect_runtime(&UseHostClient::Path(lib_less_path), lib_dir).is_none());
 
     // path is wrong -> expected nothing
     let wrong_path = correct_path + "something-missing";
-    let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir_var.clone());
+    let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir);
     assert!(path.is_none());
 }
 
-fn to_string(p: Option<std::path::PathBuf>) -> Option<String> {
-    p.map(|pb| pb.into_os_string().into_string().unwrap())
+fn to_string(p: Option<mk_oracle::setup::ClientRuntime>) -> Option<String> {
+    p.map(|r| r.dir.into_os_string().into_string().unwrap())
 }
 
 #[test]
 fn test_detect_runtime_without_runtime() {
-    // MK_LIBDIR is set so that runtimes is missing
+    // the agent library directory below which no runtime exists
     let bad_path = base_dir().join("runtimes-wrong");
-    const LIBDIR_VAR: &str = "MK_LIBDIR_TEST2";
-    unsafe {
-        std::env::set_var(LIBDIR_VAR, &bad_path);
-    }
-    let lib_dir_var: Option<String> = Some(LIBDIR_VAR.to_string());
+    let lib_dir = Some(bad_path.as_path());
     let local_installation = local_oracle_client_present();
 
     // Never
-    assert!(detect_runtime(&UseHostClient::Never, lib_dir_var.clone()).is_none());
+    assert!(detect_runtime(&UseHostClient::Never, lib_dir).is_none());
 
     // Auto and Always are the same if no runtimes
     // If local exists -> expected path to local client otherwise nothing
     for mode in [UseHostClient::Auto, UseHostClient::Always] {
-        let path = to_string(detect_runtime(&mode, lib_dir_var.clone()));
+        let path = to_string(detect_runtime(&mode, lib_dir));
         if local_installation {
             eprintln!(
                 "Local installation path = {:?} {}",
@@ -209,14 +196,14 @@ fn test_detect_runtime_without_runtime() {
     let correct_path = client_runtime_dir().into_os_string().into_string().unwrap();
     let path = to_string(detect_runtime(
         &UseHostClient::Path(correct_path.clone()),
-        lib_dir_var.clone(),
+        lib_dir,
     ))
     .unwrap();
     assert_eq!(path, correct_path);
 
     // path is wrong -> expected nothing
     let wrong_path = correct_path + "something-missing";
-    let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir_var.clone());
+    let path = detect_runtime(&UseHostClient::Path(wrong_path), lib_dir);
     assert!(path.is_none());
 }
 
@@ -243,73 +230,59 @@ oracle:
 /// NOT ALL CONDITIONS TESTED
 #[test]
 fn test_add_runtime_to_path() {
-    use mk_oracle::setup::{apply_runtime_env, detect_runtime_dir, RuntimeEnv};
+    use mk_oracle::setup::{apply_runtime_env, RuntimeEnv};
 
     fn exec_add_runtime_to_path(
         cfg: &OracleConfig,
-        mk_lib: &str,
+        mk_lib: Option<&std::path::Path>,
         mut_env_var: &EnvVarName,
     ) -> Option<std::path::PathBuf> {
         unsafe {
             std::env::set_var(mut_env_var.to_str(), "xxx");
         }
+        let ora_sql = cfg.ora_sql().unwrap();
         let runtime_env = RuntimeEnv {
-            runtime_dir: detect_runtime_dir(cfg, Some(mk_lib.to_owned()), false),
+            runtime_dir: detect_runtime(ora_sql.options().use_host_client(), mk_lib).map(|r| r.dir),
             oracle_home: None,
         };
         apply_runtime_env(&runtime_env, Some(mut_env_var.clone()), None)
     }
-    let mk_lib_dir_env_var = "MK_LIB_DIR_TEST_VAR_XXX".to_string();
     let mut_env_var = EnvVarName::from("SOME_PATH_TEST_VAR_XXX".to_string());
     let good_path = base_dir().join("runtimes");
+    let good_lib_dir = Some(good_path.as_path());
     let local_db_exists = local_oracle_client_present();
     let good_path_str = good_path.clone().into_os_string().into_string().unwrap();
 
     // *** AUTO ***
     let cfg = OracleConfig::load_str(&make_config_with_use_host("auto")).unwrap();
     // MK_LIBDIR ABSENT
-    unsafe {
-        std::env::remove_var(&mk_lib_dir_env_var);
-    }
     // depends on local SQL endpoint, if exist -> found otherwise not
-    let result = exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    let result = exec_add_runtime_to_path(&cfg, None, &mut_env_var);
     assert_eq!(result.is_some(), local_db_exists);
     // MK_LIBDIR is good_path
-    unsafe {
-        std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
-    }
-    exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    exec_add_runtime_to_path(&cfg, good_lib_dir, &mut_env_var);
     let var_value = std::env::var(mut_env_var.to_str()).unwrap();
     assert!(var_value.starts_with(good_path_str.as_str()));
 
     // *** NEVER ***
     let cfg = OracleConfig::load_str(&make_config_with_use_host("never")).unwrap();
     // MK_LIBDIR ABSENT
-    unsafe {
-        std::env::remove_var(&mk_lib_dir_env_var);
-    }
-    assert!(exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var).is_none());
+    assert!(exec_add_runtime_to_path(&cfg, None, &mut_env_var).is_none());
     assert!(std::env::var(mut_env_var.to_str())
         .unwrap()
         .starts_with("xxx"));
 
     // MK_LIBDIR is good_path
-    unsafe {
-        std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
-    }
-    exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    exec_add_runtime_to_path(&cfg, good_lib_dir, &mut_env_var);
     assert!(std::env::var(mut_env_var.to_str())
         .unwrap()
         .starts_with(good_path_str.as_str()));
 
     // *** ALWAYS ***
     let cfg = OracleConfig::load_str(&make_config_with_use_host("always")).unwrap();
-    unsafe {
-        std::env::remove_var(&mk_lib_dir_env_var);
-    }
 
     // depends on local SQL endpoint, if exist -> found otherwise not
-    let result = exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    let result = exec_add_runtime_to_path(&cfg, None, &mut_env_var);
     assert_eq!(result.is_some(), local_db_exists);
     assert_eq!(
         std::env::var(mut_env_var.to_str())
@@ -317,30 +290,24 @@ fn test_add_runtime_to_path() {
             .starts_with("xxx"),
         !local_db_exists
     );
-    unsafe {
-        std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
-    }
-    exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    // MK_LIBDIR is good_path
+    exec_add_runtime_to_path(&cfg, good_lib_dir, &mut_env_var);
     // depends on local SQL endpoint, if exist -> found otherwise not
     assert_eq!(
-        exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var).is_some(),
+        exec_add_runtime_to_path(&cfg, good_lib_dir, &mut_env_var).is_some(),
         local_db_exists
     );
 
     // SOME PATH with a client library
     let some_path = client_runtime_dir().into_os_string().into_string().unwrap();
     let cfg = OracleConfig::load_str(&make_config_with_use_host(some_path.as_str())).unwrap();
-    unsafe {
-        std::env::remove_var(&mk_lib_dir_env_var);
-    }
-    exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    // MK_LIBDIR ABSENT
+    exec_add_runtime_to_path(&cfg, None, &mut_env_var);
     assert!(std::env::var(mut_env_var.to_str())
         .unwrap()
         .starts_with(some_path.as_str()));
-    unsafe {
-        std::env::set_var(&mk_lib_dir_env_var, good_path_str.as_str());
-    }
-    exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var);
+    // MK_LIBDIR is good_path
+    exec_add_runtime_to_path(&cfg, good_lib_dir, &mut_env_var);
     assert!(std::env::var(mut_env_var.to_str())
         .unwrap()
         .starts_with(some_path.as_str()));
@@ -348,7 +315,7 @@ fn test_add_runtime_to_path() {
     // SOME PATH without a client library is rejected
     let lib_less_path = base_dir().into_os_string().into_string().unwrap();
     let cfg = OracleConfig::load_str(&make_config_with_use_host(lib_less_path.as_str())).unwrap();
-    assert!(exec_add_runtime_to_path(&cfg, &mk_lib_dir_env_var, &mut_env_var).is_none());
+    assert!(exec_add_runtime_to_path(&cfg, good_lib_dir, &mut_env_var).is_none());
     assert!(std::env::var(mut_env_var.to_str())
         .unwrap()
         .starts_with("xxx"));
@@ -566,11 +533,13 @@ mod find_sids {
         }
     }
 
+    /// On Unix, get_instances is the oratab parser. It is still live code, so
+    /// it keeps its own coverage: comments, a line without colons, and two
+    /// entries.
     #[cfg(unix)]
     #[test]
-    fn test_find_oracle_home_from_oratab_sid_found() {
-        use mk_oracle::ora_sql::detect::find_oracle_home;
-        use mk_oracle::types::Sid;
+    fn test_get_instances_parses_oratab() {
+        use mk_oracle::platform::registry::get_instances;
 
         let tmp_dir = tempfile::tempdir().expect("create temp dir");
         let oratab_path = tmp_dir.path().join("oratab");
@@ -582,94 +551,46 @@ mod find_sids {
         writeln!(file, "ORCL:/opt/oracle/product/19c/dbhome1:Y # nothing")
             .expect("write ORCL entry");
 
-        let oratab_str = oratab_path.to_str().unwrap().to_string();
-        let sid = Sid::from("xE");
-        let result = find_oracle_home(&sid, Some(oratab_str));
-        assert!(result.is_ok());
+        let instances =
+            get_instances(Some(oratab_path.to_str().unwrap().to_string())).expect("read oratab");
+        let parsed: Vec<(String, String)> = instances
+            .iter()
+            .map(|i| (i.name.to_string(), i.home.display().to_string()))
+            .collect();
         assert_eq!(
-            result.unwrap(),
-            Some(std::path::PathBuf::from("/opt/oracle/product/21c/dbhomeXE"))
+            parsed,
+            vec![
+                (
+                    "XE".to_string(),
+                    "/opt/oracle/product/21c/dbhomeXE".to_string()
+                ),
+                (
+                    "ORCL".to_string(),
+                    "/opt/oracle/product/19c/dbhome1".to_string()
+                ),
+            ]
         );
-
-        let oratab_str = oratab_path.to_str().unwrap();
-        let result = find_oracle_home(&Sid::from("NONEXISTENT"), Some(oratab_str.to_string()));
-        assert!(result.unwrap().is_none());
     }
 }
 
+/// ORACLE_HOME is only exported by apply_runtime_env, never by detection.
 #[cfg(unix)]
 #[test]
 fn test_add_oracle_home_to_env() {
-    use mk_oracle::setup::{apply_runtime_env, detect_oracle_home, OracleHome, RuntimeEnv};
+    use mk_oracle::setup::{apply_runtime_env, RuntimeEnv};
     use mk_oracle::types::EnvVarName;
 
     let make_env_var = |name: &str| Some(EnvVarName::from(name.to_string()));
-
-    // oratab with two instances: the home of the first doesn't exist,
-    // the home of the second does and contains a lib dir
     let tmp_dir = tempfile::tempdir().expect("create temp dir");
     let home = tmp_dir.path().join("dbhome");
-    std::fs::create_dir_all(home.join("lib")).expect("create home/lib");
-    let oratab_path = tmp_dir.path().join("oratab");
-    std::fs::write(
-        &oratab_path,
-        format!("BAD:/nonexistent/oracle/home:N\nXE:{}:Y\n", home.display()),
-    )
-    .expect("write oratab");
-    let oratab = oratab_path.to_str().unwrap().to_string();
+    let home_lib = home.join("lib");
+    std::fs::create_dir_all(&home_lib).expect("create home/lib");
 
-    let config_auto = OracleConfig::load_str(&make_config_with_use_host("auto")).unwrap();
-    let config_never = OracleConfig::load_str(&make_config_with_use_host("never")).unwrap();
-
-    // use_host_client "never" -> gated out, no home detected
-    let env_var = "_MK_TEST_ORACLE_HOME_GATED";
-    let result = detect_oracle_home(
-        &config_never,
-        Some(oratab.clone()),
-        make_env_var(env_var),
-        None,
-    );
-    assert!(result.is_none());
-    assert!(std::env::var(env_var).is_err());
-
-    // variable already set -> reported as inherited, apply leaves it untouched
-    let env_var = "_MK_TEST_ORACLE_HOME_PRESET";
-    unsafe {
-        std::env::set_var(env_var, "/already/set");
-    }
-    let result = detect_oracle_home(
-        &config_auto,
-        Some(oratab.clone()),
-        make_env_var(env_var),
-        None,
-    );
-    assert_eq!(
-        result,
-        Some(OracleHome::Inherited(std::path::PathBuf::from(
-            "/already/set"
-        )))
-    );
-    let runtime_env = RuntimeEnv {
-        runtime_dir: Some(home.clone()),
-        oracle_home: result,
-    };
-    apply_runtime_env(
-        &runtime_env,
-        make_env_var("_MK_TEST_RUNTIME_PATH_PRESET"),
-        make_env_var(env_var),
-    )
-    .expect("apply with a runtime dir");
-    assert_eq!(std::env::var(env_var).unwrap(), "/already/set");
-
-    // "auto" -> the first suitable home is derived: BAD doesn't exist,
-    // XE wins; only apply exports it
     let env_var = "_MK_TEST_ORACLE_HOME_SET";
-    let result = detect_oracle_home(&config_auto, Some(oratab), make_env_var(env_var), None);
-    assert_eq!(result, Some(OracleHome::Derived(home.clone())));
     assert!(std::env::var(env_var).is_err());
     let runtime_env = RuntimeEnv {
-        runtime_dir: Some(home.clone()),
-        oracle_home: result,
+        runtime_dir: Some(home_lib.clone()),
+        oracle_home: Some(home.clone()),
     };
     apply_runtime_env(
         &runtime_env,
@@ -679,27 +600,62 @@ fn test_add_oracle_home_to_env() {
     .expect("apply with a runtime dir");
     assert_eq!(std::env::var(env_var).unwrap(), home.to_str().unwrap());
 
-    // no suitable home at all -> nothing detected
-    let bad_oratab_path = tmp_dir.path().join("oratab_bad");
-    std::fs::write(&bad_oratab_path, "BAD:/nonexistent/oracle/home:N\n").expect("write oratab");
-    let env_var = "_MK_TEST_ORACLE_HOME_NO_HOME";
-    let result = detect_oracle_home(
-        &config_auto,
-        Some(bad_oratab_path.to_str().unwrap().to_string()),
+    // no home at all -> the variable is left alone
+    let env_var = "_MK_TEST_ORACLE_HOME_UNSET";
+    let runtime_env = RuntimeEnv {
+        runtime_dir: Some(home_lib),
+        oracle_home: None,
+    };
+    apply_runtime_env(
+        &runtime_env,
+        make_env_var("_MK_TEST_RUNTIME_PATH_UNSET"),
         make_env_var(env_var),
-        None,
-    );
-    assert!(result.is_none());
+    )
+    .expect("apply with a runtime dir");
     assert!(std::env::var(env_var).is_err());
 }
 
+/// effective_oracle_home is pure: an inherited value wins, otherwise the home
+/// comes from the client that was selected, and an Instant Client supplies none.
 #[cfg(unix)]
 #[test]
-fn test_derive_oracle_home_from_client_path() {
-    use mk_oracle::setup::{apply_runtime_env, detect_oracle_home, OracleHome, RuntimeEnv};
-    use mk_oracle::types::EnvVarName;
+fn test_effective_oracle_home() {
+    use mk_oracle::setup::{effective_oracle_home, ClientRuntime};
 
-    let make_env_var = |name: &str| Some(EnvVarName::from(name.to_string()));
+    let in_home = ClientRuntime {
+        dir: std::path::PathBuf::from("/u01/dbhome_1/lib"),
+        home: Some(std::path::PathBuf::from("/u01/dbhome_1")),
+    };
+    let instant_client = ClientRuntime {
+        dir: std::path::PathBuf::from("/opt/instantclient_21_19"),
+        home: None,
+    };
+
+    assert_eq!(
+        effective_oracle_home(Some(&in_home), None),
+        Some(std::path::PathBuf::from("/u01/dbhome_1"))
+    );
+    assert_eq!(effective_oracle_home(Some(&instant_client), None), None);
+    assert_eq!(effective_oracle_home(None, None), None);
+
+    // an inherited value wins over anything the client would supply
+    assert_eq!(
+        effective_oracle_home(Some(&in_home), Some("/already/set".to_string())),
+        Some(std::path::PathBuf::from("/already/set"))
+    );
+    assert_eq!(
+        effective_oracle_home(Some(&instant_client), Some("/already/set".to_string())),
+        Some(std::path::PathBuf::from("/already/set"))
+    );
+}
+
+/// An operator-supplied path is the one client the plug-in has to inspect,
+/// because nothing else knows what was pointed at.
+#[cfg(unix)]
+#[test]
+fn test_configured_client_path_reports_its_home() {
+    use mk_oracle::setup::detect_runtime;
+    use mk_oracle::types::UseHostClient;
 
     let tmp_dir = tempfile::tempdir().expect("create temp dir");
 
@@ -708,86 +664,37 @@ fn test_derive_oracle_home_from_client_path() {
     let home_lib = home.join("lib");
     std::fs::create_dir_all(&home_lib).expect("create home/lib");
     std::fs::write(home_lib.join("libclntsh.so.19.1"), "").expect("create client lib");
-    std::fs::create_dir_all(home.join("oracore").join("mesg")).expect("create oracore/mesg");
-
-    let config_home_lib =
-        OracleConfig::load_str(&make_config_with_use_host(home_lib.to_str().unwrap())).unwrap();
-
-    // explicit path to a full home's lib dir -> the home is derived from its
-    // parent; only apply exports it
-    let env_var = "_MK_TEST_ORACLE_HOME_PATH_DERIVED";
-    let result = detect_oracle_home(
-        &config_home_lib,
+    std::fs::create_dir_all(home.join("oracore")).expect("create oracore");
+    let found = detect_runtime(
+        &UseHostClient::Path(home_lib.to_str().unwrap().to_string()),
         None,
-        make_env_var(env_var),
-        Some(&home_lib),
-    );
-    assert_eq!(result, Some(OracleHome::Derived(home.clone())));
-    assert!(std::env::var(env_var).is_err());
-    let runtime_env = RuntimeEnv {
-        runtime_dir: Some(home_lib.clone()),
-        oracle_home: result,
-    };
-    apply_runtime_env(
-        &runtime_env,
-        make_env_var("_MK_TEST_RUNTIME_PATH_PATH_DERIVED"),
-        make_env_var(env_var),
     )
-    .expect("apply with a runtime dir");
-    assert_eq!(std::env::var(env_var).unwrap(), home.to_str().unwrap());
+    .expect("full home accepted");
+    assert_eq!(found.dir, home_lib);
+    assert_eq!(found.home, Some(home));
 
-    // variable already set -> reported as inherited, no derivation
-    let env_var = "_MK_TEST_ORACLE_HOME_PATH_PRESET";
-    unsafe {
-        std::env::set_var(env_var, "/already/set");
-    }
-    let result = detect_oracle_home(
-        &config_home_lib,
-        None,
-        make_env_var(env_var),
-        Some(&home_lib),
-    );
-    assert_eq!(
-        result,
-        Some(OracleHome::Inherited(std::path::PathBuf::from(
-            "/already/set"
-        )))
-    );
-
-    // Instant Client: the client library sits in the directory itself, not in
-    // a lib subdir -> nothing derived
+    // Instant Client: the library sits in the directory itself -> no home
     let instant_client = tmp_dir.path().join("instantclient_19_19");
     std::fs::create_dir_all(&instant_client).expect("create instant client dir");
     std::fs::write(instant_client.join("libclntsh.so.19.1"), "").expect("create client lib");
-    let config_instant_client =
-        OracleConfig::load_str(&make_config_with_use_host(instant_client.to_str().unwrap()))
-            .unwrap();
-    let env_var = "_MK_TEST_ORACLE_HOME_PATH_IC";
-    let result = detect_oracle_home(
-        &config_instant_client,
+    let found = detect_runtime(
+        &UseHostClient::Path(instant_client.to_str().unwrap().to_string()),
         None,
-        make_env_var(env_var),
-        Some(&instant_client),
-    );
-    assert!(result.is_none());
-    assert!(std::env::var(env_var).is_err());
+    )
+    .expect("instant client accepted");
+    assert_eq!(found.dir, instant_client);
+    assert_eq!(found.home, None);
 
-    // RPM Instant Client: a lib dir, but no oracore next to it -> nothing derived
+    // RPM Instant Client: a lib dir, but no oracore next to it -> no home
     let rpm_lib = tmp_dir.path().join("client64").join("lib");
     std::fs::create_dir_all(&rpm_lib).expect("create client64/lib");
     std::fs::write(rpm_lib.join("libclntsh.so.19.1"), "").expect("create client lib");
-    let config_rpm =
-        OracleConfig::load_str(&make_config_with_use_host(rpm_lib.to_str().unwrap())).unwrap();
-    let env_var = "_MK_TEST_ORACLE_HOME_PATH_RPM";
-    let result = detect_oracle_home(&config_rpm, None, make_env_var(env_var), Some(&rpm_lib));
-    assert!(result.is_none());
-    assert!(std::env::var(env_var).is_err());
-
-    // runtime detection failed -> nothing derived
-    let env_var = "_MK_TEST_ORACLE_HOME_PATH_NO_RUNTIME";
-    let result = detect_oracle_home(&config_home_lib, None, make_env_var(env_var), None);
-    assert!(result.is_none());
-    assert!(std::env::var(env_var).is_err());
+    let found = detect_runtime(
+        &UseHostClient::Path(rpm_lib.to_str().unwrap().to_string()),
+        None,
+    )
+    .expect("rpm instant client accepted");
+    assert_eq!(found.home, None);
 }
 
 // NOTE: Test mutates a process-wide environment variable. The unique prefix

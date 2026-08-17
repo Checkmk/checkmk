@@ -68,14 +68,19 @@ async fn main() {
             // the parent process has already prepared the environment
             execute(config, environment).await
         } else {
-            // Detect the Oracle client runtime and the ORACLE_HOME the
-            // monitoring process needs (on Unix derived from the local
-            // instances; on Windows ORACLE_HOME is never derived), export
-            // them and re-run ourselves: the child sees --runtime-ready and
-            // executes the actual monitoring.
+            // Select the Oracle client and the ORACLE_HOME that goes with it,
+            // export both, and re-run ourselves: the child sees
+            // --runtime-ready and executes the actual monitoring. The re-run
+            // is what makes the library search path take effect, since the
+            // dynamic loader reads it once, when a process starts.
             let runtime_env = setup::detect_runtime_env(&config);
             if let Some(old_path) = setup::apply_runtime_env(&runtime_env, None, None) {
-                log::info!("Spawn new process {args:?} with runtime path {old_path:?}");
+                // old_path is the search path as it was before the runtime was
+                // prepended; it is kept so that reset_env can restore it.
+                log::info!(
+                    "Spawn new process {args:?}, previous {}={old_path:?}",
+                    setup::RUNTIME_PATH_ENV_VAR
+                );
                 setup::spawn_new_process(args, old_path)
             } else {
                 setup::display_and_log("No Oracle client runtime found");

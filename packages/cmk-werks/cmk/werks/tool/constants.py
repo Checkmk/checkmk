@@ -11,6 +11,7 @@ NON_WERK_FILES_IN_WERK_FOLDER = {
     "first_free",
     ".f12",
     ".gitignore",
+    ".last",
     "README.md",
 }
 

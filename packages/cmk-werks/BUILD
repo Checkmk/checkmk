@@ -51,6 +51,7 @@ py_library(
         "cmk/werks/tool/utils/__init__.py",
         "cmk/werks/tool/utils/__main__.py",
         "cmk/werks/tool/utils/collect.py",
+        "cmk/werks/tool/utils/burn.py",
         "cmk/werks/tool/validate.py",
     ],
     data = ["cmk/werks/py.typed"],

@@ -18,6 +18,7 @@ from cmk.werks.tool.utils import (
     resolve_version,
     write_precompiled_werks,
 )
+from cmk.werks.tool.utils.burn import main as burn
 from cmk.werks.tool.utils.collect import main as collect
 
 
@@ -65,6 +66,10 @@ def main_collect(args: argparse.Namespace) -> None:
     collect(args.flavor, args.path, branches)
 
 
+def main_burn(args: argparse.Namespace) -> None:
+    burn(args.repo_root)
+
+
 def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
@@ -98,6 +103,14 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "use '2.3.0:HEAD' to only collect from HEAD and use 2.3.0 as branch name.",
     )
     parser_collect.set_defaults(func=main_collect)
+
+    parser_burn = subparsers.add_parser(
+        "burn", help="Burn released Checkmk version into Werks without version"
+    )
+    parser_burn.add_argument(
+        "repo_root", type=path_dir, help="path to git repo, containing .werk folder"
+    )
+    parser_burn.set_defaults(func=main_burn)
 
     return parser.parse_args(argv)
 

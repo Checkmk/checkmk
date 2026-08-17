@@ -32,9 +32,6 @@ def _message(msg_id: str, timestamp: int, **extra: object) -> Message:
 
 
 @pytest.mark.usefixtures("request_context", "patch_theme")
-@pytest.mark.xfail(
-    strict=True, reason="Crash report 71bfc088-8a7b-11f1-af92-00155d02190d: TypeError"
-)
 def test_show_user_messages_with_message_lacking_the_security_flag(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

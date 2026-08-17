@@ -144,7 +144,7 @@ def show_user_messages() -> None:
 
     security_count = 0
     for num, entry in enumerate(
-        sorted(messages, key=lambda e: (e.get("security"), e["time"]), reverse=True)
+        sorted(messages, key=lambda e: (bool(e.get("security")), e["time"]), reverse=True)
     ):
         if entry.get("security"):
             security_count = num + 1

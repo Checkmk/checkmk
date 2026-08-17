@@ -204,7 +204,7 @@ def test_content_security_policy_header(site: Site) -> None:
     default_csp = (
         "default-src 'self' 'unsafe-inline' 'unsafe-eval' ssh: rdp:; "
         "img-src 'self' data: https://*.tile.openstreetmap.org/ ; "
-        "connect-src 'self' https://crash.checkmk.com/ https://license.checkmk.com/api/verify; "
+        "connect-src 'self' https://crash.checkmk.com/; "
         "frame-ancestors 'self' ; "
         "base-uri 'self'; "
         "form-action 'self' javascript: 'unsafe-inline'; "

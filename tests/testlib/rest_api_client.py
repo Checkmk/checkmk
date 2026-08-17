@@ -471,6 +471,14 @@ class LicensingClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def call_download_license_usage(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url="/domain-types/license_usage/actions/download/invoke",
+            headers={"Accept": "application/x-tgz"},
+            expect_ok=expect_ok,
+        )
+
     def call_verify_offline(
         self, verification_response: dict[str, Any], expect_ok: bool = True
     ) -> Response:

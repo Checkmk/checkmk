@@ -16,6 +16,7 @@ import DashboardContentSidebarElement from './DashboardContentSidebarElement.vue
 import DashboardContentSingleMetric from './DashboardContentSingleMetric.vue'
 import DashboardContentStaticText from './DashboardContentStaticText.vue'
 import DashboardContentTimeSeriesGraph from './DashboardContentTimeSeriesGraph.vue'
+import DashboardContentTimelineCount from './DashboardContentTimelineCount.vue'
 import DashboardContentTopList from './DashboardContentTopList.vue'
 import DashboardContentUserMessages from './DashboardContentUserMessages.vue'
 import DashboardContentNetworkFlowDonut from './NetworkFlow/DashboardContentNetworkFlowDonut.vue'
@@ -26,14 +27,25 @@ import { CONTENT_FIGURE_TYPES, GRAPH_TYPES, NTOP_TYPES } from './types.ts'
 </script>
 
 <script setup lang="ts">
-import type { WidgetContent } from '@/dashboard/types/widget'
+import type { TimelineContent, WidgetContent } from '@/dashboard/types/widget'
 
 import type { ContentProps } from './types.ts'
 
 defineProps<ContentProps>()
 
-function contentTypeToComponent(contentType: string): Component {
+function isTimeline(content: WidgetContent): content is TimelineContent {
+  return content.type === 'alert_timeline' || content.type === 'notification_timeline'
+}
+
+// Dispatch is by content type, except for the timelines: their render mode decides
+// whether they are a chart over time or a single number, and the two are drawn by
+// different components.
+function contentToComponent(content: WidgetContent): Component {
+  const contentType: string = content.type
   switch (true) {
+    // NOTE: this branch must match with the keys generated in componentKey() below.
+    case isTimeline(content) && content.render_mode.type === 'simple_number':
+      return DashboardContentTimelineCount
     case contentType === 'url':
       return DashboardContentIFrame
     case contentType === 'linked_view':
@@ -81,7 +93,7 @@ function contentTypeToComponent(contentType: string): Component {
 }
 
 function componentKey(content: WidgetContent): string {
-  if (content.type === 'alert_timeline' || content.type === 'notification_timeline') {
+  if (isTimeline(content)) {
     return `${content.type}-${content.render_mode.type}`
   }
   return content.type
@@ -90,7 +102,7 @@ function componentKey(content: WidgetContent): string {
 
 <template>
   <component
-    :is="contentTypeToComponent(content.type)"
+    :is="contentToComponent(content)"
     :key="componentKey(content)"
     :widget_id="widget_id"
     :general_settings="general_settings"

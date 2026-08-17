@@ -37,8 +37,8 @@ export interface CmkKpiStatCardProps {
   deltaRatio?: number | undefined
   /** What an increase means for this metric; defaults to neutral. */
   deltaSemantics?: DeltaSemantics | undefined
-  /** Sparkline data points over the displayed window, oldest first. */
-  series: number[]
+  /** Sparkline data points over the displayed window, oldest first; omit for a plain value. */
+  series?: number[] | undefined
   /** CSS color of the value and the sparkline. */
   color: string
   /** Monitoring state shown beside the value; omit to show none. */

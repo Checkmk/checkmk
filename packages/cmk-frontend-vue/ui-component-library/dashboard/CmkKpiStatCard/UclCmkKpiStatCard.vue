@@ -66,7 +66,7 @@ export const panelConfig = {
   pointCount: {
     type: 'number' as const,
     title: 'Spark line points',
-    help: 'Points taken from the sample series. Fewer than two draw no line at all.',
+    help: 'Points taken from the sample series. Fewer than two draw no line at all, which is also what omitting the series does.',
     initialState: 30
   },
   showState: {

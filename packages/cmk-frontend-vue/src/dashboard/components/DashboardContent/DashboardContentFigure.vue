@@ -118,14 +118,10 @@ const httpVars: Ref<FilterHTTPVars> = computed(() => {
 
 // Resolve figure type for special cases where figure and content type are not the same
 const figureType: Ref<string> = computed(() => {
-  // NOTE: this logic must match with the keys generated in DashboardContent componentKey()
+  // The timelines only reach this component in their bar chart mode; their simple number
+  // is a Vue KPI stat card, dispatched in DashboardContent.
   if (props.content.type === 'alert_timeline' || props.content.type === 'notification_timeline') {
-    const renderType: string = props.content.render_mode.type
-    if (renderType === 'bar_chart') {
-      return 'timeseries'
-    } else if (renderType === 'simple_number') {
-      return 'single_metric'
-    }
+    return 'timeseries'
   }
   return props.content.type
 })

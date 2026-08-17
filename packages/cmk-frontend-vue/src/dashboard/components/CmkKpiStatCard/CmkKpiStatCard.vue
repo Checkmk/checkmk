@@ -14,6 +14,7 @@ import type { CmkKpiStatCardProps, DeltaSemantics, KpiStateSeverity } from './ty
 
 const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   unit: undefined,
+  series: () => [],
   deltaRatio: undefined,
   deltaSemantics: 'neutral',
   state: undefined,

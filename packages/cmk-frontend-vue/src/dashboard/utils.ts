@@ -35,6 +35,7 @@ import type {
   ComputedNetworkFlowTopTableResponse,
   ComputedNetworkFlowTrendChartResponse,
   ComputedSingleMetricResponse,
+  ComputedTimelineCountResponse,
   ComputedTopListResponse,
   ComputedWidgetSpecResponse,
   EffectiveWidgetFilterContext,
@@ -43,6 +44,7 @@ import type {
   NetworkFlowTopTableContent,
   NetworkFlowTrendChartContent,
   SingleMetricContent,
+  TimelineContent,
   TopListContent,
   VisualContext,
   WidgetAvailableInventory,
@@ -296,6 +298,30 @@ export const dashboardAPI = {
   ): Promise<ComputedSingleMetricResponse> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-shared-single-metric/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
+        body: { widget_id: widgetId }
+      })
+    )
+  },
+  computeTimelineCountData: async (
+    content: TimelineContent,
+    context: VisualContext
+  ): Promise<ComputedTimelineCountResponse> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-timeline-count/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        body: { content, context }
+      })
+    )
+  },
+  /** The same count on a shared (token-authenticated) dashboard, named by widget as above. */
+  computeSharedTimelineCountData: async (
+    widgetId: string,
+    cmkToken: string
+  ): Promise<ComputedTimelineCountResponse> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-shared-timeline-count/invoke', {
         ...CONTENT_TYPE_HEADER,
         headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
         body: { widget_id: widgetId }

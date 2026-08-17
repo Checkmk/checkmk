@@ -12,6 +12,8 @@ export type TopListEntry = components['schemas']['TopListEntry']
 export type TopListError = components['schemas']['TopListError']
 export type ComputedSingleMetricResponse = components['schemas']['ComputedSingleMetricResponse']
 export type ComputedSingleMetric = components['schemas']['SingleMetric']
+export type ComputedTimelineCountResponse = components['schemas']['ComputedTimelineCountResponse']
+export type ComputedTimelineCount = components['schemas']['TimelineCount']
 
 export type WidgetContent = components['schemas']['WidgetContent']
 export type WidgetSizeValue = components['schemas']['WidgetSizeValue']
@@ -81,6 +83,10 @@ export type SidebarElementContent = components['schemas']['SidebarElementContent
 export type PerformanceGraphContent = components['schemas']['PerformanceGraphContent']
 export type SingleTimeseriesContent = components['schemas']['SingleTimeseriesContent']
 export type SingleMetricContent = components['schemas']['SingleMetricContent']
+export type AlertTimelineContent = components['schemas']['AlertTimelineContent']
+export type NotificationTimelineContent = components['schemas']['NotificationTimelineContent']
+/** Either timeline widget; they share their render modes and their computed count. */
+export type TimelineContent = AlertTimelineContent | NotificationTimelineContent
 export type CombinedGraphContent = components['schemas']['CombinedGraphContent']
 export type AverageScatterplotContent = components['schemas']['AverageScatterplotContent']
 export type ProblemGraphContent = components['schemas']['ProblemGraphContent']

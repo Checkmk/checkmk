@@ -107,6 +107,14 @@ source "amazon-ebs" "builder" {
   instance_type = "t2.micro"
   ssh_username  = "ubuntu"
   ami_name      = var.aws_ami_name
+  # the 8GB root volume of the base AMI is too small for the checkmk
+  # package + site + dist-upgrade; this also becomes the AMI's volume size
+  launch_block_device_mappings {
+    device_name           = "/dev/sda1"
+    volume_size           = 15
+    volume_type           = "gp3"
+    delete_on_termination = true
+  }
 }
 
 

@@ -74,6 +74,15 @@
     state: present
   notify: Start Apache
 
+- name: "Remove Checkmk Setup File."
+  become: true
+  ansible.builtin.file:
+    path: "/tmp/{{ item }}"
+    state: absent
+  loop:
+    - "{{ checkmk_server_setup_file }}"
+    - "Check_MK-pubkey.gpg"
+
 - name: "Flush Handlers."
   ansible.builtin.meta:
     flush_handlers

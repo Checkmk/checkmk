@@ -176,7 +176,7 @@ fn parse_sections(variables: &HashMap<String, String>, key: &str) -> HashSet<Str
     variables
         .get(key)
         .map(|v| {
-            v.split(' ')
+            v.split_whitespace()
                 .filter(|s| !s.is_empty())
                 .map(String::from)
                 .collect()
@@ -280,7 +280,7 @@ fn parse_custom_sqls(legacy: &str, variables: &HashMap<String, String>) -> Vec<L
     let raw_sids = collect_raw_sqls_sids(legacy);
 
     section_names
-        .split([',', ' '])
+        .split(|c: char| c == ',' || c.is_whitespace())
         .filter(|s| !s.is_empty())
         .filter_map(|name| {
             let section_var = |var: &str| variables.get(&format!("SQLS.{name}.{var}"));
@@ -2513,6 +2513,31 @@ sec3 () {
             HashSet::from(["instance".into(), "performance".into(), "locks".into()])
         );
         assert!(parse_sections(&vars, "MISSING").is_empty());
+    }
+
+    #[test]
+    fn test_parse_sections_splits_on_tabs() {
+        let vars = HashMap::from([("SYNC_SECTIONS".into(), "instance\tperformance".into())]);
+        assert_eq!(
+            parse_sections(&vars, "SYNC_SECTIONS"),
+            HashSet::from(["instance".into(), "performance".into()])
+        );
+    }
+
+    #[test]
+    fn test_parse_custom_sqls_splits_on_comma_tab_and_space() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1,sec2\tsec3 sec4".into()),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+            ("SQLS.sec2.SQLS_SQL".into(), "b.sql".into()),
+            ("SQLS.sec3.SQLS_SQL".into(), "c.sql".into()),
+            ("SQLS.sec4.SQLS_SQL".into(), "d.sql".into()),
+        ]);
+        let names: Vec<String> = parse_custom_sqls("", &vars)
+            .into_iter()
+            .map(|s| s.name)
+            .collect();
+        assert_eq!(names, vec!["sec1", "sec2", "sec3", "sec4"]);
     }
 
     #[test]

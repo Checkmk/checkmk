@@ -25,11 +25,12 @@ from collections.abc import Awaitable, Callable, Collection, Iterable, Iterator,
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from enum import Enum
-from functools import cached_property
+from functools import cached_property, wraps
 from pathlib import Path
 from typing import (
     Any,
     cast,
+    Concatenate,
     Final,
     Literal,
     NamedTuple,
@@ -40,6 +41,7 @@ from typing import (
     TypedDict,
 )
 
+from redis import ConnectionError as RedisConnectionError
 from redis import Redis
 from redis.client import Pipeline
 from redis.typing import EncodableT, FieldT
@@ -852,6 +854,44 @@ class NullFolderCache:
         pass
 
 
+def _degrade_to_cache_miss[**P, T](
+    query: Callable[Concatenate[RedisFolderCache, P], T],
+) -> Callable[Concatenate[RedisFolderCache, P], T | None]:
+    """Turn a lost redis connection into a cache miss
+
+    Redis is stopped and started again while the rest of the site keeps
+    serving: its init script implements "reload" as stop and start, and it is
+    reloaded before the ui-job-scheduler and apache (40-redis vs. 60- and 85-
+    in etc/rc.d). A plain "omd reload" leaves such a window, and so does an
+    MKP change, which reloads redis, the ui-job-scheduler and the automation
+    helper concurrently. Crashes from that window were seen from job
+    scheduler cron jobs and from REST API requests alike.
+
+    Answer such a query like NullFolderCache does and let the caller compute
+    the answer from disk. Losing an update is just as harmless: it would only
+    have advanced wato:folder_list:last_update, so the next
+    _RedisHelper._cache_integrity_ok() finds redis lagging behind disk and
+    rebuilds the cache from scratch.
+
+    The helper is dropped so that the next query reconnects and, if redis is
+    back, repopulates the cache.
+    """
+
+    @wraps(query)
+    def wrapper(self: RedisFolderCache, /, *args: P.args, **kwargs: P.kwargs) -> T | None:
+        try:
+            return query(self, *args, **kwargs)
+        except RedisConnectionError as e:
+            logger.warning(
+                "Redis is not available (%(error)s). Computing folder information from disk",
+                {"error": e},
+            )
+            self.reset()
+            return None
+
+    return wrapper
+
+
 class RedisFolderCache:
     """Answers folder hierarchy queries from the redis cache
 
@@ -872,6 +912,7 @@ class RedisFolderCache:
             self._helper = _RedisHelper(self._tree, self._client)
         return self._helper
 
+    @_degrade_to_cache_miss
     def all_folders(self) -> Mapping[PathWithoutSlash, Folder] | None:
         if (loaded_folders := self._redis.loaded_wato_folders) is not None:
             # Folders were already completely loaded during cache generation -> use these
@@ -881,9 +922,11 @@ class RedisFolderCache:
             self._tree, {x.rstrip("/"): None for x in self._redis.folder_paths}
         )
 
+    @_degrade_to_cache_miss
     def folder_metadata(self, path: PathWithoutSlash) -> FolderMetaData | None:
         return self._redis.folder_metadata(path)
 
+    @_degrade_to_cache_miss
     def num_hosts_recursively(
         self, path_with_slash: PathWithSlash, acting_user: LoggedInUser
     ) -> int | None:
@@ -896,6 +939,7 @@ class RedisFolderCache:
             user_contact_groups=self._contact_groups_of(acting_user),
         )
 
+    @_degrade_to_cache_miss
     def choices_for_moving(
         self, path: PathWithoutSlash, move_type: _MoveType, acting_user: LoggedInUser
     ) -> Choices | None:
@@ -912,12 +956,15 @@ class RedisFolderCache:
             return set()
         return set(userdb.contactgroups_of_user(acting_user.id))
 
+    @_degrade_to_cache_miss
     def recursive_subfolders_for_path(self, path: PathWithSlash) -> Sequence[PathWithSlash] | None:
         return self._redis.recursive_subfolders_for_path(path)
 
+    @_degrade_to_cache_miss
     def folder_updated(self, filesystem_path: str) -> None:
         self._redis.folder_updated(filesystem_path)
 
+    @_degrade_to_cache_miss
     def save_folder_info(self, folder: Folder) -> None:
         self._redis.save_folder_info(folder)
 
@@ -935,6 +982,9 @@ def _make_folder_cache(tree: FolderTree) -> WATOFolderCache:
     Redis can't be used in certain scenarios, e.g. when the redis server is
     not running during cmk_update_config.py. In these cases all cache queries
     miss and the callers compute their answers from disk.
+
+    This is only a fast path for a redis that is already known to be down. A
+    redis dying later on is handled per query, see _degrade_to_cache_miss().
     """
     if not redis_enabled():
         return NullFolderCache()

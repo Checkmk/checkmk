@@ -25,6 +25,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 from pytest import MonkeyPatch
+from redis import ConnectionError as RedisConnectionError
 from redis import Redis
 
 import cmk.ruleset_matcher.tags
@@ -1204,6 +1205,49 @@ def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch, tree: FolderTree
         assert wato_folders._raw_dict["sub1.2"] is None
         # Check if parent(main) folder got instantiated as well
         assert isinstance(wato_folders._raw_dict[""], hosts_and_folders.Folder)
+
+
+class DeadRedisClient:
+    """Redis client whose server went away, e.g. during an `omd reload`"""
+
+    def __getattr__(self, _name: str) -> object:
+        raise RedisConnectionError(
+            "Error 2 connecting to /omd/sites/heute/tmp/run/redis. No such file or directory."
+        )
+
+
+@pytest.mark.usefixtures("with_admin_login", "allow_redis")
+def test_redis_folder_cache_degrades_when_redis_dies(
+    monkeypatch: MonkeyPatch, tree: FolderTree
+) -> None:
+    subfolder = tree.root_folder().create_subfolder(
+        "sub",
+        "sub",
+        {},
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=_SUPERUSER,
+    )
+    tree.invalidate_caches()
+    cache = hosts_and_folders.RedisFolderCache(tree, cast(Redis, DeadRedisClient()))
+    monkeypatch.setattr(tree, "cache", cache)
+
+    # Queries miss instead of raising, so the callers fall back to disk
+    assert cache.all_folders() is None
+    assert cache.folder_metadata("sub") is None
+    assert cache.num_hosts_recursively("sub/", _SUPERUSER) is None
+    assert cache.choices_for_moving("sub", hosts_and_folders._MoveType.Folder, _SUPERUSER) is None
+    assert cache.recursive_subfolders_for_path("sub/") is None
+
+    # Updates are dropped. They only advance the last_update timestamp, so the
+    # next integrity check rebuilds the cache from scratch anyway.
+    cache.folder_updated(subfolder.filesystem_path())
+    cache.save_folder_info(subfolder)
+
+    # The failed connection is not kept around, the next query reconnects
+    assert cache._helper is None
+
+    assert set(tree.all_folders()) == {"", "sub"}
 
 
 def test_folder_exists(tree: FolderTree) -> None:

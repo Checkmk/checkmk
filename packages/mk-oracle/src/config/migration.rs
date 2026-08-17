@@ -638,6 +638,7 @@ pub fn convert(
             || name == "ASMUSER"
             || name.starts_with("DBUSER_")
             || name.starts_with("REMOTE_INSTANCE_")
+            || name.ends_with("SQLS_DBPASSWORD")
         {
             out.push_str(&format!("# {name} ***\n"));
         } else {
@@ -1328,6 +1329,18 @@ mod tests {
         assert!(result.contains("      - alias: XE"));
         assert!(result.contains("username: \"checkmk\""));
         assert!(result.contains("password: \"secret\""));
+    }
+
+    #[test]
+    fn test_convert_masks_sqls_dbpassword() {
+        let legacy = "DBUSER='checkmk:secret::localhost::XE'\n";
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::localhost::XE".into()),
+            ("SQLS.mysec.SQLS_DBPASSWORD".into(), "topsecret".into()),
+        ]);
+        let result = convert(legacy, "/test/mk_oracle.cfg", &vars, TS).unwrap();
+        assert!(result.contains("# SQLS.mysec.SQLS_DBPASSWORD ***"));
+        assert!(!result.contains("topsecret"));
     }
 
     #[test]

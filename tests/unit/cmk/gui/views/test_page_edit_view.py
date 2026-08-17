@@ -17,9 +17,6 @@ def _a_join_painter_name() -> str:
 
 
 @pytest.mark.usefixtures("request_context")
-@pytest.mark.xfail(
-    strict=True, reason="Crash report 7b5174bc-85ca-11f1-ba93-0222456d7c48: ValueError"
-)
 def test_column_spec_join_column_without_join_value_is_a_user_error() -> None:
     # Adding a "Joined column" in the view editor without filling in the service it
     # joins on. The user must get a validation error on that field, not a crash.

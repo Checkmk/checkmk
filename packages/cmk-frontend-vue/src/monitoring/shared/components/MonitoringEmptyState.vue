@@ -38,7 +38,7 @@ const hint = computed(() => {
     return _t('Check for typing errors, try using wildcards or a broader term.')
   }
   if (props.hasActiveFilter) {
-    return _t('Remove one or more filters to widen the result.')
+    return _t('Remove one or more filters to widen the results.')
   }
   return null
 })

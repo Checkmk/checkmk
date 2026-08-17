@@ -29,7 +29,7 @@ test('shows the filter-specific message and hint when only a filter is active', 
   render(MonitoringEmptyState, { props: { hasActiveFilter: true } })
 
   expect(screen.getByText('No results found for your active filters.')).toBeInTheDocument()
-  expect(screen.getByText('Remove one or more filters to widen the result.')).toBeInTheDocument()
+  expect(screen.getByText('Remove one or more filters to widen the results.')).toBeInTheDocument()
 })
 
 test('shows the combined message and hint when both a filter and a search are active', () => {

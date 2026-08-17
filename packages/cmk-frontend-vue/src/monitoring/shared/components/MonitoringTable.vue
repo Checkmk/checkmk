@@ -383,7 +383,7 @@ function tableRowAt(index: number): Row<T> {
       </colgroup>
       <MonitoringTableHeader :header-groups="table.getHeaderGroups()" :disabled="showEmptyState" />
       <tbody>
-        <tr v-if="showEmptyState" class="monitoring-table__row">
+        <tr v-if="showEmptyState">
           <td :colspan="columnLayout.length" class="monitoring-table__empty-cell">
             <slot name="empty-state" />
           </td>

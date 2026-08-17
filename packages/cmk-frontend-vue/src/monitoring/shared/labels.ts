@@ -15,8 +15,12 @@ const SOURCE_COLORS: Record<string, Colors> = {
   ruleset: 'ruleset'
 }
 
+/**
+ * The colour of the source a label was set from, and the cyan the classic view gives one whose
+ * source says nothing. A service label is the usual one to arrive that way.
+ */
 export function labelColor(source: string): Colors {
-  return SOURCE_COLORS[source] ?? 'default'
+  return SOURCE_COLORS[source] ?? 'label'
 }
 
 /** Order entries alphabetically, so a row reads the same on every refresh. */
@@ -42,10 +46,7 @@ export function toNameItems(names: string[]): LabelCellItem[] {
   return sortedByText(names.map((name) => ({ text: name as TranslatedString })))
 }
 
-/**
- * Render tags as `group: value` entries. Tags have no source to distinguish, so they all carry
- * the same color.
- */
+/** Render tags as `group: value` entries, in the plain grey they share with a contact group. */
 export function toTagItems(tags: Record<string, string>): LabelCellItem[] {
   return sortedByText(
     Object.entries(tags).map(([group, value]) => ({

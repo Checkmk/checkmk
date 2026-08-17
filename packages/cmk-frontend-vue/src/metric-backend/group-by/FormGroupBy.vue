@@ -190,7 +190,7 @@ function canLeaveEdit(): boolean {
                 class="metric-backend-form-group-by__segment metric-backend-form-group-by__segment--dimmed"
                 >[{{ attributeKindLabel(key.attributeKind) }}]</span
               >
-              <!-- Comma hugs the key; the segment's own right padding spaces it from the next term. -->
+              <!-- Comma stays glued to the key so the summary gap only spaces whole terms. -->
               <span class="metric-backend-form-group-by__segment"
                 >{{ key.attributeKey }}{{ index < model.keys.length - 1 ? ',' : '' }}</span
               >
@@ -274,10 +274,11 @@ function canLeaveEdit(): boolean {
 .metric-backend-form-group-by__summary {
   display: inline-flex;
   align-items: center;
+  gap: var(--dimension-4);
 }
 
 .metric-backend-form-group-by__segment {
-  padding: var(--dimension-2) var(--dimension-3);
+  padding: var(--dimension-2) 0;
   display: inline-flex;
   align-items: center;
 }
@@ -290,7 +291,7 @@ function canLeaveEdit(): boolean {
 .metric-backend-form-group-by__param {
   display: inline-flex;
   align-items: center;
-  padding-left: var(--dimension-2);
+  gap: var(--dimension-2);
 }
 
 /* Widen the narrow default number field so the placeholder fits. */
@@ -302,7 +303,6 @@ function canLeaveEdit(): boolean {
 .metric-backend-form-group-by__word {
   display: inline-flex;
   align-items: center;
-  padding: 0 var(--dimension-2);
   color: var(--font-color-dimmed);
   white-space: nowrap;
 }

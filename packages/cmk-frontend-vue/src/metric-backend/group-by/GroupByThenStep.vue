@@ -170,7 +170,6 @@ function canLeaveEdit(): boolean {
       <GroupByKeysArea
         ref="keysAreaRef"
         v-model="keysModel"
-        class="metric-backend-group-by-then-step__keys"
         :query-suggestions="querySuggestions"
         :can-add="allowedKeys.length > 0"
         :resolve-attribute-kind="resolveAttributeKind"
@@ -185,10 +184,11 @@ function canLeaveEdit(): boolean {
 .metric-backend-group-by-then-step__summary {
   display: inline-flex;
   align-items: center;
+  gap: var(--dimension-4);
 }
 
 .metric-backend-group-by-then-step__segment {
-  padding: var(--dimension-2) var(--dimension-3);
+  padding: var(--dimension-2) 0;
   display: inline-flex;
   align-items: center;
 }
@@ -201,10 +201,5 @@ function canLeaveEdit(): boolean {
 .metric-backend-group-by-then-step__everything {
   color: var(--font-color-dimmed);
   font-style: italic;
-  padding-right: var(--dimension-3);
-}
-
-.metric-backend-group-by-then-step__keys {
-  padding-right: var(--dimension-2);
 }
 </style>

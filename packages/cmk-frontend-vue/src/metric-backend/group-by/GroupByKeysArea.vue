@@ -148,7 +148,6 @@ defineExpose({ tryChangeFocus, focusKey })
   flex-wrap: wrap;
   align-items: center;
   gap: var(--dimension-3) var(--dimension-4);
-  padding-left: var(--dimension-2);
 }
 
 .metric-backend-group-by-keys-area__everything {

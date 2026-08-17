@@ -166,11 +166,6 @@ defineExpose({
   white-space: nowrap;
 }
 
-/* Pad the right so the remove button clears the border; absent otherwise. */
-.metric-backend-inline-edit-pill:has(.metric-backend-inline-edit-pill__remove) {
-  padding-right: var(--dimension-3);
-}
-
 .metric-backend-inline-edit-pill:not(.metric-backend-inline-edit-pill--editing):hover {
   background-color: var(--input-hover-bg-color);
 }
@@ -179,13 +174,12 @@ defineExpose({
   background: var(--ux-theme-3);
 }
 
-.metric-backend-inline-edit-pill__edit {
-  display: inline-flex;
-}
-
+.metric-backend-inline-edit-pill__edit,
 .metric-backend-inline-edit-pill__closed {
   display: inline-flex;
   align-items: stretch;
+  gap: var(--dimension-4);
+  padding: 0 var(--dimension-3);
 }
 
 .metric-backend-inline-edit-pill__closed:focus-visible {
@@ -194,6 +188,7 @@ defineExpose({
 
 .metric-backend-inline-edit-pill__main {
   display: inline-flex;
+  gap: var(--dimension-4);
   background: transparent;
   border: none;
   padding: 0;
@@ -210,7 +205,6 @@ defineExpose({
 .metric-backend-inline-edit-pill__remove {
   display: inline-flex;
   align-items: center;
-  padding: 0 var(--dimension-2);
 }
 
 .metric-backend-inline-edit-pill--editing .metric-backend-inline-edit-pill__remove:hover {

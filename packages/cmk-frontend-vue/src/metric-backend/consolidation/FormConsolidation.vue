@@ -306,7 +306,7 @@ const editAriaLabel = computed(
 }
 
 .metric-backend-form-consolidation__segment {
-  padding: var(--dimension-2) var(--dimension-3);
+  padding: var(--dimension-2) 0;
   display: inline-flex;
   align-items: center;
 }
@@ -319,7 +319,7 @@ const editAriaLabel = computed(
 .metric-backend-form-consolidation__param {
   display: inline-flex;
   align-items: center;
-  padding-left: var(--dimension-2);
+  gap: var(--dimension-2);
 }
 
 .metric-backend-form-consolidation__lookback {
@@ -331,7 +331,6 @@ const editAriaLabel = computed(
 .metric-backend-form-consolidation__word {
   display: inline-flex;
   align-items: center;
-  padding: 0 var(--dimension-2);
   color: var(--font-color-dimmed);
   white-space: nowrap;
 }

@@ -381,7 +381,7 @@ defineExpose({
 
 <style scoped>
 .metric-backend-attribute-filter-pill__segment {
-  padding: var(--dimension-2) var(--dimension-3);
+  padding: var(--dimension-2) 0;
   display: inline-flex;
   align-items: center;
 }

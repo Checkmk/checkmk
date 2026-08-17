@@ -696,8 +696,10 @@ pub fn apply_runtime_env(
     let old_content = std::env::var(path_var.to_str()).ok().unwrap_or_default();
     log::info!("Current {path_var}={old_content}");
     let mut new_content = runtime_dir.clone().into_os_string();
-    new_content.push(ENV_VAR_SEP);
-    new_content.push(&old_content);
+    if !old_content.is_empty() {
+        new_content.push(ENV_VAR_SEP);
+        new_content.push(&old_content);
+    }
     unsafe {
         std::env::set_var(path_var.to_str(), &new_content);
     }

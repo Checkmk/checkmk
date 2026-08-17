@@ -5,9 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import useId from 'cmk-ui-library/lib/useId'
 import { computed } from 'vue'
 
 import {
@@ -16,6 +14,8 @@ import {
   isConsolidationFn,
   useConsolidationFunctionLabels
 } from '@/graphing/components/consolidation'
+
+import SourceFormField from '../SourceFormField.vue'
 
 const { modelValue } = defineProps<{
   modelValue: ConsolidationFn
@@ -27,8 +27,6 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 const labels = useConsolidationFunctionLabels()
-
-const consolidationId = useId()
 
 const suggestions = computed(() => ({
   type: 'fixed' as const,
@@ -43,23 +41,20 @@ function onChange(value: string | null): void {
 </script>
 
 <template>
-  <div class="graphing-consolidation-select">
-    <CmkLabel variant="subtitle" :for="consolidationId">{{ _t('Then consolidate by') }}</CmkLabel>
+  <SourceFormField
+    v-slot="{ controlId }"
+    :label="_t('Then consolidate by')"
+    label-variant="description"
+    :required="false"
+    :errors="[]"
+  >
     <CmkDropdown
       :model-value="modelValue"
-      :component-id="consolidationId"
+      :component-id="controlId"
       :options="suggestions"
       :label="_t('Consolidation function')"
       floating
       @update:model-value="onChange"
     />
-  </div>
+  </SourceFormField>
 </template>
-
-<style scoped>
-.graphing-consolidation-select {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
-}
-</style>

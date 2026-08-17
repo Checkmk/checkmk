@@ -11,8 +11,12 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import useId from 'cmk-ui-library/lib/useId'
 import { computed } from 'vue'
 
-const { label, errors, required } = defineProps<{
+import SourceFormStack from './SourceFormStack.vue'
+import SourceFormText from './SourceFormText.vue'
+
+const { label, labelVariant, errors, required } = defineProps<{
   label: TranslatedString
+  labelVariant: 'name' | 'description'
   errors: TranslatedString[]
   required: boolean
 }>()
@@ -24,9 +28,10 @@ const invalid = computed(() => errors.length > 0)
 </script>
 
 <template>
-  <div class="graphing-designer-field">
-    <CmkLabel variant="subtitle" :for="controlId">
-      {{ label }}<CmkLabelRequired :show="required" space="before" />
+  <SourceFormStack spacing="label">
+    <CmkLabel :for="controlId">
+      <SourceFormText :variant="labelVariant">{{ label }}</SourceFormText
+      ><CmkLabelRequired :show="required" space="before" />
     </CmkLabel>
     <CmkInlineValidation v-if="invalid" :id="validationId" :validation="errors" />
     <slot
@@ -34,13 +39,5 @@ const invalid = computed(() => errors.length > 0)
       :described-by="invalid ? validationId : undefined"
       :invalid="invalid"
     />
-  </div>
+  </SourceFormStack>
 </template>
-
-<style scoped>
-.graphing-designer-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
-}
-</style>

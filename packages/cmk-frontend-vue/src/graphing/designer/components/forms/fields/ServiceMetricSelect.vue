@@ -11,7 +11,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
-import DesignerField from '../DesignerField.vue'
+import SourceFormField from '../SourceFormField.vue'
 
 const {
   modelValue,
@@ -48,9 +48,10 @@ const metricAutocompleter = computed<Autocompleter>(() => ({
 </script>
 
 <template>
-  <DesignerField
+  <SourceFormField
     v-slot="{ controlId, describedBy, invalid }"
     :label="label"
+    label-variant="name"
     :required="required"
     :errors="errors"
   >
@@ -67,5 +68,5 @@ const metricAutocompleter = computed<Autocompleter>(() => ({
       :described-by="describedBy"
       @update:model-value="emit('update:modelValue', $event)"
     />
-  </DesignerField>
+  </SourceFormField>
 </template>

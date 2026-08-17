@@ -9,7 +9,7 @@ import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormA
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import DesignerField from '../DesignerField.vue'
+import SourceFormField from '../SourceFormField.vue'
 
 const {
   modelValue,
@@ -36,9 +36,10 @@ const hostAutocompleter: Autocompleter = {
 </script>
 
 <template>
-  <DesignerField
+  <SourceFormField
     v-slot="{ controlId, describedBy, invalid }"
     :label="label"
+    label-variant="name"
     :required="required"
     :errors="errors"
   >
@@ -55,5 +56,5 @@ const hostAutocompleter: Autocompleter = {
       :described-by="describedBy"
       @update:model-value="emit('update:modelValue', $event)"
     />
-  </DesignerField>
+  </SourceFormField>
 </template>

@@ -112,7 +112,7 @@ test('adding a constant line opens the constant form', async () => {
   await fireEvent.click(await screen.findByRole('option', { name: 'Constant line' }))
 
   expect(store.items.value[0]).toMatchObject({ type: 'constant', value: null })
-  expect(await screen.findByRole('spinbutton', { name: 'Constant at' })).toBeInTheDocument()
+  expect(await screen.findByRole('spinbutton', { name: /^Constant at/ })).toBeInTheDocument()
 })
 
 test('adding a service reference line opens the scalar form', async () => {

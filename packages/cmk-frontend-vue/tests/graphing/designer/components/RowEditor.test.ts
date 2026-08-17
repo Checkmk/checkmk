@@ -64,7 +64,7 @@ function renderEditor(seed: DesignerItem) {
 }
 
 async function enterConstant(value: string): Promise<void> {
-  await fireEvent.update(screen.getByRole('spinbutton', { name: 'Constant at' }), value)
+  await fireEvent.update(screen.getByRole('spinbutton', { name: /^Constant at/ }), value)
 }
 
 /** The pill takes a quantile; the store holds the percentile. */

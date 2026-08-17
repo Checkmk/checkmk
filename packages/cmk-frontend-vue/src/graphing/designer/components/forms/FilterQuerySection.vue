@@ -5,7 +5,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { CmkAddDropdown } from 'cmk-ui-library/components/CmkDropdown'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import {
   CmkFilterInputItem,
@@ -14,6 +13,8 @@ import {
   type FilterDefinitions
 } from 'cmk-ui-library/components/filter'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+
+import SourceFormField from './SourceFormField.vue'
 
 defineProps<{
   title: TranslatedString
@@ -32,8 +33,14 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="graphing-filter-query-section">
-    <CmkLabel variant="subtitle">{{ title }}</CmkLabel>
+  <SourceFormField
+    v-slot="{ controlId }"
+    class="graphing-filter-query-section"
+    :label="title"
+    label-variant="name"
+    :required="false"
+    :errors="[]"
+  >
     <div class="graphing-filter-query-section__container">
       <div
         v-for="filterId in activeFilterIds"
@@ -53,6 +60,7 @@ defineEmits<{
       </div>
       <div class="graphing-filter-query-section__add">
         <CmkAddDropdown
+          :component-id="controlId"
           width="fill"
           floating
           :options="addSuggestions"
@@ -61,15 +69,11 @@ defineEmits<{
         />
       </div>
     </div>
-  </div>
+  </SourceFormField>
 </template>
 
 <style scoped>
 .graphing-filter-query-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
-
   --graphing-filter-query-section-border: var(--color-mid-grey-10);
 }
 

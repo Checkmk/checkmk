@@ -5,15 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import useId from 'cmk-ui-library/lib/useId'
 import { computed } from 'vue'
 
 import type { GraphItemsStore } from '../../composables/useGraphItems'
 import { type DraftScalarItem, scalarColor } from '../../drafts'
 import type { ScalarItem } from '../../types'
+import SourceFormField from './SourceFormField.vue'
+import SourceFormStack from './SourceFormStack.vue'
 import HostNameSelect from './fields/HostNameSelect.vue'
 import ServiceMetricSelect from './fields/ServiceMetricSelect.vue'
 import ServiceNameSelect from './fields/ServiceNameSelect.vue'
@@ -30,8 +30,6 @@ const { item, store, thresholds, hostNameErrors, serviceNameErrors, metricNameEr
   }>()
 
 const { _t } = usei18n()
-
-const thresholdId = useId()
 
 const SCALAR_TYPE_TITLES: Record<ScalarItem['scalar_type'], TranslatedString> = {
   warning: _t('Warning'),
@@ -83,7 +81,7 @@ function onMetricChange(metricName: string | null): void {
 </script>
 
 <template>
-  <div class="graphing-service-reference-line-form">
+  <SourceFormStack spacing="field">
     <HostNameSelect
       :model-value="item.host_name"
       required
@@ -105,30 +103,21 @@ function onMetricChange(metricName: string | null): void {
       @update:model-value="onMetricChange"
     />
 
-    <div class="graphing-service-reference-line-form__field">
-      <CmkLabel variant="subtitle" :for="thresholdId">{{ _t('Threshold') }}</CmkLabel>
+    <SourceFormField
+      v-slot="{ controlId }"
+      :label="_t('Threshold')"
+      label-variant="name"
+      :required="false"
+      :errors="[]"
+    >
       <CmkDropdown
         :model-value="item.scalar_type"
-        :component-id="thresholdId"
+        :component-id="controlId"
         :options="scalarTypeSuggestions"
         :label="_t('Threshold type')"
         floating
         @update:model-value="onScalarTypeChange"
       />
-    </div>
-  </div>
+    </SourceFormField>
+  </SourceFormStack>
 </template>
-
-<style scoped>
-.graphing-service-reference-line-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-5);
-}
-
-.graphing-service-reference-line-form__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
-}
-</style>

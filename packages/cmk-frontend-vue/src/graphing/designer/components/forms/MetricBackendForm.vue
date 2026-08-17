@@ -48,6 +48,7 @@ import {
   DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN
 } from '../../metricBackend'
 import type { MetricBackendItem } from '../../types'
+import SourceFormText from './SourceFormText.vue'
 
 const { item, store, metricNameErrors, consolidationErrors } = defineProps<{
   item: DraftMetricBackendItem
@@ -296,8 +297,9 @@ const {
     <tbody>
       <tr>
         <td class="graphing-metric-backend-form__label-cell">
-          <CmkLabel>{{ _t('Metric') }}</CmkLabel
-          ><CmkLabelRequired />
+          <CmkLabel
+            ><SourceFormText variant="name">{{ _t('Metric') }}</SourceFormText></CmkLabel
+          ><CmkLabelRequired space="before" />
         </td>
         <td>
           <CmkInlineValidation
@@ -342,7 +344,7 @@ const {
       </tr>
       <tr>
         <td class="graphing-metric-backend-form__label-cell">
-          {{ _t('Group by') }}
+          <SourceFormText variant="description">{{ _t('Group by') }}</SourceFormText>
         </td>
         <td>
           <FormGroupBy
@@ -361,8 +363,8 @@ const {
 /* border-spacing also pads the table's outer edges; the negative margin hands those back. */
 .graphing-metric-backend-form {
   border-collapse: separate;
-  border-spacing: var(--dimension-4);
-  margin: calc(-1 * var(--dimension-4));
+  border-spacing: var(--dimension-4) var(--dimension-6);
+  margin: calc(-1 * var(--dimension-6)) calc(-1 * var(--dimension-4));
 }
 
 .graphing-metric-backend-form__label-cell {

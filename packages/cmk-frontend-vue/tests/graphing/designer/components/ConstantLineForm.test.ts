@@ -21,7 +21,7 @@ function renderForm(draft: DraftConstantItem): GraphItemsStore {
 test('entering a value completes a constant', async () => {
   const store = renderForm(newConstantDraft('A', '#28a2f3'))
 
-  await fireEvent.update(screen.getByRole('spinbutton', { name: 'Constant at' }), '42')
+  await fireEvent.update(screen.getByRole('spinbutton', { name: /^Constant at/ }), '42')
 
   expect(store.items.value[0]).toMatchObject({ type: 'constant', value: 42 })
 })
@@ -29,7 +29,7 @@ test('entering a value completes a constant', async () => {
 test('clearing the value leaves the constant unset rather than blank', async () => {
   const store = renderForm({ ...newConstantDraft('A', '#28a2f3'), value: 42 })
 
-  await fireEvent.update(screen.getByRole('spinbutton', { name: 'Constant at' }), '')
+  await fireEvent.update(screen.getByRole('spinbutton', { name: /^Constant at/ }), '')
 
   expect(store.items.value[0]).toMatchObject({ type: 'constant', value: null })
 })

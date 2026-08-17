@@ -12,6 +12,7 @@ import type { ConsolidationFn } from '@/graphing/components/consolidation'
 import { resolveMetricColor } from '../../api'
 import type { GraphItemsStore } from '../../composables/useGraphItems'
 import type { DraftRRDMetricItem } from '../../drafts'
+import SourceFormStack from './SourceFormStack.vue'
 import ConsolidationSelect from './fields/ConsolidationSelect.vue'
 import HostNameSelect from './fields/HostNameSelect.vue'
 import ServiceMetricSelect from './fields/ServiceMetricSelect.vue'
@@ -62,7 +63,7 @@ function onConsolidationChange(value: ConsolidationFn): void {
 </script>
 
 <template>
-  <div class="graphing-rrd-metric-form">
+  <SourceFormStack spacing="field">
     <HostNameSelect
       :model-value="item.host_name"
       required
@@ -87,13 +88,5 @@ function onConsolidationChange(value: ConsolidationFn): void {
       :model-value="item.consolidation"
       @update:model-value="onConsolidationChange"
     />
-  </div>
+  </SourceFormStack>
 </template>
-
-<style scoped>
-.graphing-rrd-metric-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-5);
-}
-</style>

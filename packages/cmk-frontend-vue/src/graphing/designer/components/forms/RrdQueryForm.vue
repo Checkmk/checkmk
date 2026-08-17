@@ -24,6 +24,7 @@ import type { ConsolidationFn } from '@/graphing/components/consolidation'
 import type { GraphItemsStore } from '../../composables/useGraphItems'
 import type { DraftRRDQueryItem } from '../../drafts'
 import FilterQuerySection from './FilterQuerySection.vue'
+import SourceFormStack from './SourceFormStack.vue'
 import ConsolidationSelect from './fields/ConsolidationSelect.vue'
 import ServiceMetricSelect from './fields/ServiceMetricSelect.vue'
 
@@ -130,7 +131,7 @@ function onConsolidationChange(value: ConsolidationFn): void {
 </script>
 
 <template>
-  <div class="graphing-rrd-query-form">
+  <SourceFormStack spacing="field">
     <FilterQuerySection
       :title="_t('Host filter')"
       :add-label="_t('Add host filter')"
@@ -166,13 +167,5 @@ function onConsolidationChange(value: ConsolidationFn): void {
       :model-value="item.consolidation"
       @update:model-value="onConsolidationChange"
     />
-  </div>
+  </SourceFormStack>
 </template>
-
-<style scoped>
-.graphing-rrd-query-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-5);
-}
-</style>

@@ -4,7 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkLabeledSwitch from 'cmk-ui-library/components/CmkLabeledSwitch.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -18,6 +17,8 @@ import {
 } from '../../drafts'
 import RrdMetricForm from './RrdMetricForm.vue'
 import RrdQueryForm from './RrdQueryForm.vue'
+import SourceFormStack from './SourceFormStack.vue'
+import SourceFormText from './SourceFormText.vue'
 
 const { item, store, hostNameErrors, serviceNameErrors, metricNameErrors } = defineProps<{
   item: DraftRRDMetricItem | DraftRRDQueryItem
@@ -39,7 +40,7 @@ function onModeChange(isQuery: boolean): void {
 </script>
 
 <template>
-  <div class="graphing-rrd-form">
+  <SourceFormStack spacing="section">
     <CmkLabeledSwitch
       :model-value="item.type === 'rrd_query'"
       :off-label="_t('Single selection')"
@@ -47,29 +48,23 @@ function onModeChange(isQuery: boolean): void {
       @update:model-value="onModeChange"
     />
 
-    <CmkLabel>{{ _t('Show') }}</CmkLabel>
+    <SourceFormStack spacing="label">
+      <SourceFormText variant="description">{{ _t('Show') }}</SourceFormText>
 
-    <RrdMetricForm
-      v-if="item.type === 'rrd_metric'"
-      :item="item"
-      :store="store"
-      :host-name-errors="hostNameErrors"
-      :service-name-errors="serviceNameErrors"
-      :metric-name-errors="metricNameErrors"
-    />
-    <RrdQueryForm
-      v-else-if="item.type === 'rrd_query'"
-      :item="item"
-      :store="store"
-      :metric-name-errors="metricNameErrors"
-    />
-  </div>
+      <RrdMetricForm
+        v-if="item.type === 'rrd_metric'"
+        :item="item"
+        :store="store"
+        :host-name-errors="hostNameErrors"
+        :service-name-errors="serviceNameErrors"
+        :metric-name-errors="metricNameErrors"
+      />
+      <RrdQueryForm
+        v-else-if="item.type === 'rrd_query'"
+        :item="item"
+        :store="store"
+        :metric-name-errors="metricNameErrors"
+      />
+    </SourceFormStack>
+  </SourceFormStack>
 </template>
-
-<style scoped>
-.graphing-rrd-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-5);
-}
-</style>

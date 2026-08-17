@@ -8,7 +8,7 @@
 ///     EDITION: Ultimate only currently
 ///
 /// Jenkins artifacts: will be directly pushed into the cloud
-/// Depends on: Ubuntu 22.04 package beeing available on download.checkmk.com (will be fetched by ansible collection)
+/// Depends on: Ubuntu 24.04 package beeing available on download.checkmk.com (will be fetched by ansible collection)
 
 String build_cloud_images_names(version) {
     def version_suffix = "${version}-build-${env.BUILD_NUMBER}";

@@ -24,7 +24,7 @@ specifying one file will lead to an error.
 
 ## qemu/kvm
 
-The image is located in the folder output-ubuntu-2204-amd64-qemu. The default OS user and password are ubuntu:ubuntu. Upon first login
+The image is located in the folder output-ubuntu-2404-amd64-qemu. The default OS user and password are ubuntu:ubuntu. Upon first login
 you are required to change your password.
 
 # Developer Notes

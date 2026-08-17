@@ -1,6 +1,6 @@
 ---
 checkmk_server_server_stable_os:
-  - Ubuntu-22
+  - Ubuntu-24
 
 checkmk_server_edition: ultimate
 checkmk_server_version: 2.1.0p18

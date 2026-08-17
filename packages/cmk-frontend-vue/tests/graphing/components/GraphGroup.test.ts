@@ -11,6 +11,10 @@ import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { nextTick } from 'vue'
 
+import {
+  resetGlobalRefresh,
+  useGlobalRefresh
+} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
 import GraphGroup from '@/graphing/components/GraphGroup.vue'
 
@@ -27,7 +31,7 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
       'figureWidth',
       'consolidationFn'
     ],
-    emits: ['update:requestedTimeRange', 'update:consolidationFn'],
+    emits: ['update:requestedTimeRange', 'update:consolidationFn', 'inspect'],
     template: `<div data-testid="graph-panel" :data-figure-width="figureWidth">
       <span>{{ title }}</span>
       <span data-testid="panel-consolidation">{{ consolidationFn }}</span>
@@ -38,6 +42,7 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
       <button @click="$emit('update:requestedTimeRange', { start: 100, end: 200 }, 'changed_timerange_span')">
         zoom
       </button>
+      <button @click="$emit('inspect')">inspect</button>
     </div>`
   }
 }))
@@ -181,6 +186,7 @@ beforeEach(() => {
 
 afterEach(() => {
   document.getElementById(MAIN_PAGE_CONTENT_ID)?.remove()
+  resetGlobalRefresh()
   vi.restoreAllMocks()
   vi.useRealTimers()
 })
@@ -572,6 +578,16 @@ test('a span-changing panel commit (resize/zoom) reseeds the overview domain', a
   expect(ranges).toContainEqual({ start: 100, end: 200, step: 60 })
   // 100s span → 7× multiplier → 700s overview domain centered on the new range.
   expect(ranges).toContainEqual({ start: -200, end: 500, step: 60 })
+})
+
+test('a panel reporting inspection pauses the live refresh', async () => {
+  resetGlobalRefresh()
+  useGlobalRefresh().setRefreshPaused(false)
+  renderGroup()
+
+  await fireEvent.click(await screen.findByText('inspect'))
+
+  expect(useGlobalRefresh().refreshPaused.value).toBe(true)
 })
 
 test('announces one message for the group rather than one per panel', async () => {

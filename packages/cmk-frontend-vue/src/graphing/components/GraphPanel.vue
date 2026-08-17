@@ -22,7 +22,7 @@ import type {
   TimeRangeCommitKind
 } from '../types.ts'
 import GraphBrush from './GraphBrush/GraphBrush.vue'
-import TimeSeriesGraph from './TimeSeriesGraph'
+import TimeSeriesGraph, { type ZoomPayload } from './TimeSeriesGraph'
 import { deriveYAxis } from './TimeSeriesGraph/yAxis'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from './consolidation'
 import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, MIN_ZOOM_TIME_RANGE_SECONDS } from './constants'
@@ -70,6 +70,21 @@ const {
 )
 
 watch(() => props.timePickerRequests, abandonInspection)
+
+function onZoomIntent(payload: ZoomPayload): void {
+  emit('inspect')
+  onZoom(payload)
+}
+
+function onPanIntent(payload: { timeRange: TimeRange }): void {
+  emit('inspect')
+  onPan(payload)
+}
+
+function onBrushIntent(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
+  emit('inspect')
+  onBrush(range, kind)
+}
 
 const hiddenMetricNames = defineModel<string[]>('hiddenMetricNames', { default: () => [] })
 const hiddenLineNames = defineModel<string[]>('hiddenLineNames', { default: () => [] })
@@ -213,8 +228,8 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
             }"
             :highlighted-metric-name="highlightedMetricName"
             :pin-time="pinTime"
-            @zoom="onZoom"
-            @pan="onPan"
+            @zoom="onZoomIntent"
+            @pan="onPanIntent"
             @reset="onReset"
             @pin-create="onPinCreate"
             @pin-action="clearPin"
@@ -239,7 +254,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
           :width="figureWidth"
           :plot-left="plotLeft"
           :plot-width="brushPlotWidth"
-          @update:requested-time-range="onBrush"
+          @update:requested-time-range="onBrushIntent"
         />
       </div>
 

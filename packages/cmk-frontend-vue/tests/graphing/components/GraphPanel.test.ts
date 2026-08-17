@@ -637,6 +637,57 @@ test('a pan asks for the span that was requested, not the wider one that was ser
   ])
 })
 
+describe('reporting inspection to the host', () => {
+  test.each([
+    ['a value-zoom', 'emit-value-zoom'],
+    ['a time-zoom', 'emit-time-zoom'],
+    ['a pan', 'emit-pan']
+  ])('%s intent from the renderer reports inspection', async (_gesture, emitTestId) => {
+    const { emitted } = render(GraphPanel, {
+      props: {
+        metrics: [CPU],
+        dataTimeRange: TIME_RANGE,
+        requestedTimeRange: REQUESTED,
+        timePickerRequests: 0,
+        figureWidth: FIGURE_WIDTH,
+        interaction: INTERACTION_NONE
+      }
+    })
+
+    await fireEvent.click(screen.getByTestId(emitTestId))
+
+    expect(emitted()['inspect']).toHaveLength(1)
+  })
+
+  test.each([
+    ['a brush move', 'emit-brush-move'],
+    ['a brush resize', 'emit-brush-resize']
+  ])('%s reports inspection', async (_gesture, emitTestId) => {
+    const { emitted } = renderPanelWithBrush()
+
+    await fireEvent.click(screen.getByTestId(emitTestId))
+
+    expect(emitted()['inspect']).toHaveLength(1)
+  })
+
+  test('a reset intent does not report inspection', async () => {
+    const { emitted } = render(GraphPanel, {
+      props: {
+        metrics: [CPU],
+        dataTimeRange: TIME_RANGE,
+        requestedTimeRange: REQUESTED,
+        timePickerRequests: 0,
+        figureWidth: FIGURE_WIDTH,
+        interaction: INTERACTION_NONE
+      }
+    })
+
+    await fireEvent.click(screen.getByTestId('emit-reset'))
+
+    expect(emitted()['inspect']).toBeUndefined()
+  })
+})
+
 test('a reset intent from the renderer also publishes a requested time range update', async () => {
   const { emitted } = render(GraphPanel, {
     props: {

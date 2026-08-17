@@ -17,6 +17,7 @@ import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComponentPublicInstance, computed, onMounted, ref, watch } from 'vue'
 
+import { useGlobalRefresh } from '../GlobalRefreshControl/useGlobalRefresh'
 import { useBrushCoordination } from '../composables/useBrushCoordination'
 import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
 import { useGraphNotice } from '../composables/useGraphNotice'
@@ -98,6 +99,8 @@ const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } = useReq
 const consolidationFnPerPanel = ref<ConsolidationFn[]>([])
 const consolidationFnOfPanel = (panelIndex: number): ConsolidationFn =>
   consolidationFnPerPanel.value[panelIndex] ?? DEFAULT_CONSOLIDATION_FN
+
+const { setRefreshPaused } = useGlobalRefresh()
 
 const brushCoordination = useBrushCoordination(
   () => Math.floor(Date.now() / 1000),
@@ -243,6 +246,7 @@ function onRetry(): void {
           :header-is-compact="layout === 'wrap'"
           @update:requested-time-range="onPanelTimeRange"
           @update:consolidation-fn="consolidationFnPerPanel[panelSlot.index] = $event"
+          @inspect="setRefreshPaused(true)"
         />
         <GraphNotice
           v-if="notice"

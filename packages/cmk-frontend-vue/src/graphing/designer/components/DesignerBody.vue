@@ -141,7 +141,7 @@ const emptyStateNotice = computed<GraphNoticeDescriptor | null>(() =>
 // to fail - but which wins should be stated rather than left to that coincidence.
 const previewNotice = computed(() => fetchNotice.value ?? emptyStateNotice.value)
 
-const { refreshTick } = useGlobalRefresh()
+const { refreshTick, setRefreshPaused } = useGlobalRefresh()
 watch(refreshTick, () => data.refetch())
 watch(
   () => mode,
@@ -230,6 +230,7 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
         }"
         :overview="drawnOverview"
         @update:requested-time-range="setRequestedTimeRange($event)"
+        @inspect="setRefreshPaused(true)"
       />
       <GraphNotice
         v-if="previewNotice"

@@ -81,4 +81,5 @@ export interface GraphPanelProps {
 // `update:consolidationFn` is absent by necessity: `defineModel` already declares it in the panel.
 export type GraphPanelEmits = {
   'update:requestedTimeRange': [value: RequestedTimeRange, kind: TimeRangeCommitKind]
+  inspect: []
 }

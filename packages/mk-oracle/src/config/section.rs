@@ -380,18 +380,16 @@ impl Section {
             });
 
         let pdbs = yaml.get_string_vector(keys::PDBS, &[]);
-
         if !pdbs.is_empty() {
-            builder.set_pdb_patterns(pdbs)
-        } else if yaml.get_optional_bool(keys::DISABLED) == Some(true) {
-            builder.set_disabled()
-        } else if let Some(v) = yaml.get_optional_bool(keys::IS_ASYNC) {
-            builder.set_async(v)
-        } else {
-            builder
+            builder = builder.set_pdb_patterns(pdbs);
         }
-        .set_affinity(affinity)
-        .build()
+        if yaml.get_optional_bool(keys::DISABLED) == Some(true) {
+            builder = builder.set_disabled();
+        }
+        if let Some(v) = yaml.get_optional_bool(keys::IS_ASYNC) {
+            builder = builder.set_async(v);
+        }
+        builder.set_affinity(affinity).build()
     }
 }
 
@@ -822,6 +820,32 @@ custom_metrics:
             .filter(|sec| sec.is_custom_metric())
             .collect();
         assert_eq!(custom[0].pdb_patterns(), &["PDB1", ".*PDB"]);
+    }
+
+    #[test]
+    fn test_pdbs_keep_async_and_disabled() {
+        let async_metric = parse_custom_metrics(
+            r#"
+custom_metrics:
+  - m:
+      sql: "select 'details:x' from dual"
+      pdbs: ["PDB1"]
+      is_async: yes
+"#,
+        );
+        assert_eq!(async_metric[0].kind(), SectionKind::Async);
+        assert_eq!(async_metric[0].pdb_patterns(), &["PDB1"]);
+
+        let disabled_metric = parse_custom_metrics(
+            r#"
+custom_metrics:
+  - m:
+      sql: "select 'details:x' from dual"
+      pdbs: ["PDB1"]
+      disabled: yes
+"#,
+        );
+        assert_eq!(disabled_metric[0].kind(), SectionKind::Disabled);
     }
 
     fn parse_custom_metrics(source: &str) -> Vec<Section> {

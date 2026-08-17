@@ -15,11 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::platform::registry::get_instances;
-use crate::types::{LocalInstance, Sid};
+use crate::types::LocalInstance;
 use anyhow::Result;
 use regex::Regex;
 use std::collections::HashSet;
-use std::path::PathBuf;
 
 /// Regex pattern to match Oracle PMON processes and capture the SID.
 ///
@@ -28,9 +27,13 @@ use std::path::PathBuf;
 const SID_MASK: &str = r"^(asm_pmon_|ora_pmon_|xe_pmon_|db_pmon_)(.+)";
 
 /// Retrieves local Oracle SIDs.
-/// On Windows: the instance registry (SOFTWARE\Oracle).
-/// On Unix: only SIDs with a running PMON process; oratab is consulted later
-/// (`find_oracle_home`) solely to resolve ORACLE_HOME, not for discovery.
+/// On Windows: the instance registry (SOFTWARE\Oracle), which lists installed
+/// instances rather than running ones.
+/// On Unix: only SIDs with a running PMON process.
+/// Note: oratab plays no part in discovery. Two other places do read it on
+/// Unix: `setup::detect_host_runtime`, to search for a host Oracle client, and
+/// `dump_detected_sids` below, which therefore names other instances than this
+/// function returns.
 pub fn get_local_sid_names() -> Vec<String> {
     if cfg!(windows) {
         get_instances(None)
@@ -146,28 +149,6 @@ fn names_container(path: &str) -> bool {
 fn is_foreign(own: &[String], candidate: &[String]) -> bool {
     let containerized = own.is_empty() || own.iter().any(|p| p == "/" || p.contains("/.."));
     !containerized && candidate.iter().any(|p| names_container(p))
-}
-
-/// Finds ORACLE_HOME for a given SID using the platform's instance registry.
-/// On Unix: parses oratab (standard locations: /etc/oratab, /var/opt/oracle/oratab).
-/// On Windows: queries the Windows registry under SOFTWARE\Oracle.
-/// Comparison of SID is case-insensitive.
-/// Returns the Result with optional ORACLE_HOME.
-/// None means "SID is not found in registry | oratab". It's not an error, rather misconfiguration.
-/// Error means a problem with reading registry | oratab file: lack of Oracle, bad permissions, etc.
-pub fn find_oracle_home(
-    sid: &Sid,
-    custom_path: Option<String>, // can be a registry branch for Windows or a path for Linux
-) -> Result<Option<PathBuf>> {
-    let locals = get_instances(custom_path)?;
-
-    for local in locals {
-        if local.name.to_string().eq_ignore_ascii_case(sid.as_ref()) {
-            return Ok(Some(local.home));
-        }
-    }
-
-    Ok(None)
 }
 
 fn format_instance_info(

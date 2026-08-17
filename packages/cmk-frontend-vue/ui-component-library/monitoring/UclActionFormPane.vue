@@ -43,10 +43,20 @@ import { type Component, computed, ref } from 'vue'
 import { useRescheduleHostsAction } from '@/monitoring/all-hosts/actions/rescheduleHosts'
 import { useScheduleHostDowntimeAction } from '@/monitoring/all-hosts/actions/scheduleHostDowntime'
 import ActionFormPane from '@/monitoring/shared/components/action/ActionFormPane.vue'
+import type { DowntimeRecurrenceOption } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
 import { useCommentAction } from '@/monitoring/shared/components/action/actions/comment'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
 defineProps<{ screenshotMode: boolean }>()
+
+/** What a site running the Micro Core offers to repeat a downtime on. */
+const DOWNTIME_RECURRENCES: DowntimeRecurrenceOption[] = [
+  { recur: 'fixed', title: 'never' },
+  { recur: 'hour', title: 'hour' },
+  { recur: 'day', title: 'day' },
+  { recur: 'week', title: 'week' },
+  { recur: 'day_of_month', title: 'same day of the month' }
+]
 
 const propState = ref(
   Object.fromEntries(
@@ -57,7 +67,7 @@ const propState = ref(
 const actions: Record<Exclude<FormKind, 'none'>, MonitoringAction> = {
   comment: useCommentAction(),
   reschedule: useRescheduleHostsAction(),
-  'schedule-downtime': useScheduleHostDowntimeAction()
+  'schedule-downtime': useScheduleHostDowntimeAction(DOWNTIME_RECURRENCES)
 }
 
 const activeAction = computed<MonitoringAction | undefined>(() =>

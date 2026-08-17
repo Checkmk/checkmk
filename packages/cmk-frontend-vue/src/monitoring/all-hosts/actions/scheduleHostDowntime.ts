@@ -6,14 +6,16 @@
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { HostRef } from '@/monitoring/shared/api/types'
-import { type ScheduleDowntimeFormValues } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
+import {
+  type DowntimeRecurrenceOption,
+  type ScheduleDowntimeFormValues
+} from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
 import { createScheduleDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
-export function useScheduleHostDowntimeAction(): MonitoringAction<
-  ScheduleDowntimeFormValues,
-  HostRef
-> {
+export function useScheduleHostDowntimeAction(
+  recurrences: DowntimeRecurrenceOption[]
+): MonitoringAction<ScheduleDowntimeFormValues, HostRef> {
   const { _t, _tn } = usei18n()
 
   return createScheduleDowntimeAction<HostRef>({
@@ -23,6 +25,7 @@ export function useScheduleHostDowntimeAction(): MonitoringAction<
       _t('Downtimes reduce false alarms and avoid skewed availability statistics.')
     ],
     targetKind: 'host',
+    recurrences,
     async schedule(api, targets, values, options) {
       const hostNames = targets.map((target) => target.name)
       if (values.includeChildHosts) {

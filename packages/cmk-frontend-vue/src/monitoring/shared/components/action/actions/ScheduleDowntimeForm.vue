@@ -8,6 +8,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type ZonedDateTime, getLocalTimeZone, now } from '@internationalized/date'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types'
 
+import type { DowntimeRecur } from '@/monitoring/shared/api/actions/downtime'
+
+/** An interval the downtime may repeat on, as the page was told its site offers. */
+export interface DowntimeRecurrenceOption {
+  recur: string
+  title: string
+}
+
 export type DurationPreset = '4h' | '24h' | '10d'
 
 /** Presets that run until the end of a calendar period rather than for a fixed duration. */
@@ -24,6 +32,7 @@ export interface ScheduleDowntimeFormValues {
   adhocMinutes: number | undefined
   flexible: boolean
   includeChildHosts: boolean
+  recur: DowntimeRecur
 }
 
 const PRESET_MINUTES: Record<DurationPreset, number> = {
@@ -67,7 +76,8 @@ export function defaultScheduleDowntimeValues(): ScheduleDowntimeFormValues {
     adhocHours: 2,
     adhocMinutes: 30,
     flexible: false,
-    includeChildHosts: false
+    includeChildHosts: false,
+    recur: 'fixed'
   }
 }
 
@@ -77,7 +87,19 @@ export function adhocMinutesTotal(values: ScheduleDowntimeFormValues): number {
 
 export function isScheduleDowntimeValid(values: ScheduleDowntimeFormValues): boolean {
   const durationValid = values.selection !== 'adhoc' || adhocMinutesTotal(values) > 0
-  return values.comment.trim() !== '' && durationValid
+  return values.comment.trim() !== '' && durationValid && repeatsOnADayEveryMonthHas(values)
+}
+
+/**
+ * A downtime repeating on the same day of each month can only start on a day that every month
+ * has, or the months short of it would go without.
+ */
+export function repeatsOnADayEveryMonthHas(values: ScheduleDowntimeFormValues): boolean {
+  if (values.recur !== 'day_of_month') {
+    return true
+  }
+  const window = downtimeWindow(values)
+  return window === null || new Date(window.start).getDate() <= 28
 }
 
 /** The absolute downtime window in ISO 8601, or `null` when the selected duration is empty. */
@@ -125,9 +147,16 @@ import { computed, ref, watch } from 'vue'
 
 import type { ActionTargetKind } from '../types'
 
-const props = withDefaults(defineProps<{ targetKind?: ActionTargetKind }>(), {
-  targetKind: 'host'
-})
+const props = withDefaults(
+  defineProps<{
+    targetKind?: ActionTargetKind
+    recurrences?: DowntimeRecurrenceOption[]
+  }>(),
+  {
+    targetKind: 'host',
+    recurrences: () => []
+  }
+)
 
 const model = defineModel<ScheduleDowntimeFormValues>({ required: true })
 
@@ -142,7 +171,6 @@ const timeZone = getLocalTimeZone()
 const customOpen = ref(false)
 const durationOpen = ref(true)
 const advancedOpen = ref(false)
-const repeat = ref<string | null>('fixed')
 
 const durationChips: {
   id: DurationSelection
@@ -160,10 +188,26 @@ const durationChips: {
   { id: 'year', label: _t('This year') }
 ]
 
-const repeatOptions = {
+const repeatOptions = computed(() => ({
   type: 'fixed' as const,
-  suggestions: [{ name: 'fixed', title: _t('never') }]
-}
+  suggestions: (props.recurrences.length > 0
+    ? props.recurrences
+    : [{ recur: 'fixed', title: _t('never') }]
+  ).map(({ recur, title }) => ({ name: recur, title: title as TranslatedString }))
+}))
+
+const monthDayHint = computed(() =>
+  repeatsOnADayEveryMonthHas(model.value)
+    ? null
+    : _t('A downtime repeating monthly has to start between the 1st and the 28th.')
+)
+
+const repeat = computed({
+  get: () => model.value.recur,
+  set: (recur) => {
+    model.value.recur = (recur ?? 'fixed') as DowntimeRecur
+  }
+})
 
 const presetDuration = computed(
   () => durationChips.find((chip) => chip.id === model.value.selection)?.duration ?? ''
@@ -276,6 +320,9 @@ function selectDuration(id: DurationSelection): void {
             <span class="monitoring-schedule-downtime-form__label">{{ _t('Repeat') }}</span>
             <CmkDropdown v-model="repeat" :options="repeatOptions" :label="_t('Repeat')" />
           </label>
+          <p v-if="monthDayHint" class="monitoring-schedule-downtime-form__preset-hint">
+            {{ monthDayHint }}
+          </p>
         </div>
       </CmkCollapsible>
     </section>

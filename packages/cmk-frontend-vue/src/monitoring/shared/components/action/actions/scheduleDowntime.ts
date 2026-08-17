@@ -13,6 +13,7 @@ import {
 
 import type { ActionTargetKind, MonitoringAction } from '../types'
 import ScheduleDowntimeForm, {
+  type DowntimeRecurrenceOption,
   type ScheduleDowntimeFormValues,
   defaultScheduleDowntimeValues,
   downtimeWindow
@@ -33,6 +34,8 @@ export interface ScheduleDowntimeKindConfig<Target> {
   ): Promise<number>
   successMessage(count: number): TranslatedString
   errorMessage: TranslatedString
+  /** The intervals the site offers to repeat the downtime on. */
+  recurrences: DowntimeRecurrenceOption[]
 }
 
 /** Shared downtime-scheduling flow for hosts and services: only the API call and wording differ. */
@@ -48,7 +51,7 @@ export function createScheduleDowntimeAction<Target>(
     submitLabel: config.submitLabel,
     description: config.description,
     form: ScheduleDowntimeForm,
-    formProps: { targetKind: config.targetKind },
+    formProps: { targetKind: config.targetKind, recurrences: config.recurrences },
     defaultValues: defaultScheduleDowntimeValues,
     perform: async (targets: Target[], values: ScheduleDowntimeFormValues) => {
       const window = downtimeWindow(values)
@@ -66,7 +69,8 @@ export function createScheduleDowntimeAction<Target>(
           comment: values.comment.trim(),
           startTime: window.start,
           endTime: window.end,
-          durationMinutes
+          durationMinutes,
+          recur: values.recur
         })
         return { variant: 'success', message: config.successMessage(count) }
       } catch {

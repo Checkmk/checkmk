@@ -6,15 +6,19 @@
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ScheduleDowntimeApi } from '@/monitoring/shared/api/actions/downtime'
+import {
+  ScheduleDowntimeApi,
+  type ScheduleDowntimeOptions
+} from '@/monitoring/shared/api/actions/downtime'
 
 const CONTENT_TYPE = { params: { header: { 'Content-Type': 'application/json' } } }
 
-const OPTIONS = {
+const OPTIONS: ScheduleDowntimeOptions = {
   comment: 'planned maintenance',
   startTime: '2026-07-01T10:00:00.000Z',
   endTime: '2026-07-01T14:00:00.000Z',
-  durationMinutes: 0
+  durationMinutes: 0,
+  recur: 'fixed'
 }
 
 describe('ScheduleDowntimeApi.scheduleDowntime', () => {

@@ -9,6 +9,7 @@ import { render, screen } from '@testing-library/vue'
 import { describe, expect, it, test } from 'vitest'
 
 import ScheduleDowntimeForm, {
+  type DowntimeRecurrenceOption,
   type ScheduleDowntimeFormValues,
   defaultScheduleDowntimeValues,
   downtimeWindow,
@@ -16,12 +17,15 @@ import ScheduleDowntimeForm, {
   untilPresetEnd
 } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
 
-function mountForm(overrides: Partial<ScheduleDowntimeFormValues> = {}) {
+function mountForm(
+  overrides: Partial<ScheduleDowntimeFormValues> = {},
+  recurrences: DowntimeRecurrenceOption[] = []
+) {
   const modelValue: ScheduleDowntimeFormValues = {
     ...defaultScheduleDowntimeValues(),
     ...overrides
   }
-  return render(ScheduleDowntimeForm, { props: { modelValue } })
+  return { ...render(ScheduleDowntimeForm, { props: { modelValue, recurrences } }), modelValue }
 }
 
 test('is invalid until a comment is provided', async () => {
@@ -124,5 +128,96 @@ describe('untilPresetEnd', () => {
 
   it('ends at the start of the next year', () => {
     expect(untilPresetEnd('year', start).toString()).toBe('2027-01-01T00:00:00+00:00[UTC]')
+  })
+})
+
+describe('Repeat', () => {
+  const RECURRENCES: DowntimeRecurrenceOption[] = [
+    { recur: 'fixed', title: 'never' },
+    { recur: 'day', title: 'day' },
+    { recur: 'day_of_month', title: 'same day of the month' }
+  ]
+
+  it('offers every interval the page was told the site has', async () => {
+    mountForm({ comment: 'maintenance' }, RECURRENCES)
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'Repeat' }))
+
+    expect(screen.getAllByRole('option').map((option) => option.textContent?.trim())).toEqual([
+      'never',
+      'day',
+      'same day of the month'
+    ])
+  })
+
+  /** A site whose edition repeats no downtime still has the one interval every core can do. */
+  it('offers never alone when the page was told of no interval', async () => {
+    mountForm({ comment: 'maintenance' })
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'Repeat' }))
+
+    expect(screen.getAllByRole('option').map((option) => option.textContent?.trim())).toEqual([
+      'never'
+    ])
+  })
+
+  it('carries the chosen interval in the form values, for the request to take', async () => {
+    const { modelValue } = mountForm({ comment: 'maintenance' }, RECURRENCES)
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'Repeat' }))
+    await userEvent.click(screen.getByRole('option', { name: 'day' }))
+
+    expect(modelValue.recur).toBe('day')
+  })
+
+  /**
+   * The classic view rejects the same thing: a downtime repeating on a day the short months do
+   * not have would skip them.
+   */
+  it('is invalid when a monthly repeat starts after the 28th', () => {
+    const start = toZoned(parseAbsolute('2026-08-29T10:00:00Z', 'UTC'), 'UTC')
+
+    expect(
+      isScheduleDowntimeValid({
+        ...defaultScheduleDowntimeValues(),
+        comment: 'maintenance',
+        selection: 'custom',
+        customRange: { from: start, to: start.add({ hours: 4 }) },
+        recur: 'day_of_month'
+      })
+    ).toBe(false)
+  })
+
+  it('is valid when a monthly repeat starts on a day every month has', () => {
+    const start = toZoned(parseAbsolute('2026-08-28T10:00:00Z', 'UTC'), 'UTC')
+
+    expect(
+      isScheduleDowntimeValid({
+        ...defaultScheduleDowntimeValues(),
+        comment: 'maintenance',
+        selection: 'custom',
+        customRange: { from: start, to: start.add({ hours: 4 }) },
+        recur: 'day_of_month'
+      })
+    ).toBe(true)
+  })
+
+  it('says why a monthly repeat is refused', async () => {
+    const start = toZoned(parseAbsolute('2026-08-29T10:00:00Z', 'UTC'), 'UTC')
+    mountForm(
+      {
+        comment: 'maintenance',
+        selection: 'custom',
+        customRange: { from: start, to: start.add({ hours: 4 }) },
+        recur: 'day_of_month'
+      },
+      RECURRENCES
+    )
+
+    expect(
+      await screen.findByText(
+        'A downtime repeating monthly has to start between the 1st and the 28th.'
+      )
+    ).toBeInTheDocument()
   })
 })

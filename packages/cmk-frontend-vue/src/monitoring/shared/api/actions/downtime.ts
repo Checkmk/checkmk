@@ -7,12 +7,25 @@ import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 import { hostNameQuery } from '@/monitoring/shared/api/actions/query'
 
+/** The intervals the downtime API repeats a downtime on, `fixed` being no repeat at all. */
+export type DowntimeRecur =
+  | 'fixed'
+  | 'hour'
+  | 'day'
+  | 'week'
+  | 'second_week'
+  | 'fourth_week'
+  | 'weekday_start'
+  | 'weekday_end'
+  | 'day_of_month'
+
 export interface ScheduleDowntimeOptions {
   comment: string
   startTime: string
   endTime: string
   /** Downtime duration in minutes. `0` schedules a fixed downtime, a positive value a flexible one. */
   durationMinutes: number
+  recur: DowntimeRecur
 }
 
 export class ScheduleDowntimeApi {
@@ -63,7 +76,7 @@ export class ScheduleDowntimeApi {
           query: hostNameQuery(hostNames),
           start_time: options.startTime,
           end_time: options.endTime,
-          recur: 'fixed',
+          recur: options.recur,
           duration: options.durationMinutes,
           comment: options.comment
         }
@@ -85,7 +98,7 @@ export class ScheduleDowntimeApi {
           service_descriptions: serviceDescriptions,
           start_time: options.startTime,
           end_time: options.endTime,
-          recur: 'fixed',
+          recur: options.recur,
           duration: options.durationMinutes,
           comment: options.comment
         }

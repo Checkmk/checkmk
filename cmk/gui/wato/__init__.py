@@ -156,6 +156,9 @@ from ._http_proxy import HTTPProxyReference as HTTPProxyReference
 from ._levels import Levels as Levels
 from ._levels import PredictiveLevels as PredictiveLevels
 from ._permissions import PERMISSION_SECTION_WATO as PERMISSION_SECTION_WATO
+from .pages._match_conditions import (
+    fs_multifolder_host_rule_match_conditions as fs_multifolder_host_rule_match_conditions,
+)
 from .pages._match_conditions import FullPathFolderChoice as FullPathFolderChoice
 from .pages._match_conditions import (
     multifolder_host_rule_match_conditions as multifolder_host_rule_match_conditions,

@@ -43,7 +43,12 @@ from cmk.gui.form_specs._utils import (
     parse_and_validate_frontend_data,
     validate_value_from_frontend,
 )
-from cmk.gui.form_specs.unstable import ListUniqueSelection, OptionalChoice
+from cmk.gui.form_specs.unstable import (
+    ConditionChoices,
+    Labels,
+    ListUniqueSelection,
+    OptionalChoice,
+)
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FormSpecTuple
 from cmk.gui.form_specs.unstable.legacy_converter.transform import (
     TransformDataForLegacyFormatOrRecomposeFunction,
@@ -61,6 +66,7 @@ from cmk.rulesets.internal.form_specs import (
     ListOfStrings,
     MultipleChoiceExtended,
     SingleChoiceExtended,
+    UserSelection,
 )
 from cmk.rulesets.v1 import form_specs
 from cmk.rulesets.v1.form_specs import FormSpec
@@ -499,6 +505,7 @@ _FORM_SPEC_LEAVES = (
     form_specs.FixedValue,
     form_specs.Float,
     form_specs.Integer,
+    form_specs.MonitoredHost,
     form_specs.MultilineText,
     form_specs.MultipleChoice,
     form_specs.Password,
@@ -507,8 +514,11 @@ _FORM_SPEC_LEAVES = (
     form_specs.SingleChoice,
     form_specs.String,
     form_specs.TimeSpan,
+    ConditionChoices,
+    Labels,
     MultipleChoiceExtended,
     SingleChoiceExtended,
+    UserSelection,
 )
 
 
@@ -634,28 +644,26 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[enable]": 30,
     },
     "agent_deployment_central": {
-        "automation_user": None,
-        "central_url": "",
+        "automation_user": NoSaveableDefault(),
+        "central_url": NoSaveableDefault(),
     },
     "agent_deployment_host_selection": {
         "match_exclude_hosts": [],
-        "match_exclude_hosts[add]": None,
+        "match_exclude_hosts[add]": NoSaveableDefault(),
         "match_folders": [],
         "match_folders[add]": "",
         "match_hostgroups": [],
-        "match_hostlabels": {},
+        "match_hostlabels": NoSaveableDefault(),
         "match_hosts": [],
-        "match_hosts[add]": None,
-        "match_hosttags": {},
+        "match_hosts[add]": NoSaveableDefault(),
+        "match_hosttags": NoSaveableDefault(),
         "match_site": [],
     },
     "agent_deployment_remote": {
         "certificates": [],
-        "certificates[add]": None,
-        "certificates[add].[choice 0]": None,
-        "certificates[add].[choice 1]": b"",
-        "certificates[add].[choice 2]": None,
-        "remote_url": "",
+        # An added row starts out empty, which is not a valid certificate.
+        "certificates[add]": NoSaveableDefault(),
+        "remote_url": NoSaveableDefault(),
     },
     "auth_by_http_header": {
         "[enable]": "X-Remote-User",
@@ -1435,7 +1443,9 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "agent_deployment_remote": [
         CasePass("configured", {"remote_url": "https://remote.example.com/site/check_mk/"}),
+        CasePass("with-ca", {"certificates": [CA_PEM]}),
         CaseFail("unknown-key", {"bogus": 1}),
+        CaseFail("not-a-pem", {"certificates": ["not a pem"]}),
     ],
     "alert_handler_event_types": [
         CasePass("configured", ["checkresult", "statechange"]),

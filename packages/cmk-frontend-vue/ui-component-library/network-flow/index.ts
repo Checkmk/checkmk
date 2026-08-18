@@ -6,9 +6,5 @@
 import { Page } from '@ucl/_ucl/types/page'
 
 import UclCmkDonutChart from './CmkDonutChart/UclCmkDonutChart.vue'
-import UclCmkTrendChart from './CmkTrendChart/UclCmkTrendChart.vue'
 
-export const pages: Array<Page> = [
-  new Page('CmkDonutChart', UclCmkDonutChart),
-  new Page('CmkTrendChart', UclCmkTrendChart)
-]
+export const pages: Array<Page> = [new Page('CmkDonutChart', UclCmkDonutChart)]

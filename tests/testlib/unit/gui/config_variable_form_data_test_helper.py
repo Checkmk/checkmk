@@ -1636,9 +1636,15 @@ CASES: Mapping[str, list[Case]] = {
     "default_temperature_unit": choice_cases("fahrenheit", "kelvin"),
     "default_user_profile": [
         CasePass("configured", {"roles": ["admin"], "contactgroups": [], "force_authuser": False}),
-        CaseFail(
-            "unknown-role",
+        CaseMigrates(
+            "order-normalized",
+            {"roles": ["user", "admin"], "contactgroups": [], "force_authuser": False},
+            {"roles": ["admin", "user"], "contactgroups": [], "force_authuser": False},
+        ),
+        CaseMigrates(
+            "unknown-role-dropped-silently",
             {"roles": ["no_such_role"], "contactgroups": [], "force_authuser": False},
+            {"roles": [], "contactgroups": [], "force_authuser": False},
         ),
         CaseFail("missing-required-keys", {}),
     ],

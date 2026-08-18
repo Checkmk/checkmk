@@ -93,6 +93,20 @@ def test_host_collapsing_ignored_with_only_setup_item() -> None:
     assert counts == initial_count
 
 
+def test_results_that_are_no_host_at_all_are_passed_through() -> None:
+    initial_results = [
+        UnifiedSearchResultItemFactory.build(title="CPU load", topic="Services"),
+        UnifiedSearchResultItemFactory.build(title="Notifications", topic="Setup"),
+    ]
+    initial_count = UnifiedSearchResultCounts(total=2, setup=1, monitoring=1, customize=0)
+    collapse = get_collapser(provider=None, disabled=False)
+
+    results, counts = collapse(initial_results, initial_count)
+
+    assert results == initial_results
+    assert counts == initial_count
+
+
 def test_host_name_topic_converted_to_hosts_without_setup_item() -> None:
     initial_results = [
         UnifiedSearchResultItemFactory.build(title="testhost", topic="Host name"),

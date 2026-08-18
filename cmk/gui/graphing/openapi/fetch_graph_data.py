@@ -17,8 +17,8 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client import MKLivestatusException
+from cmk.web.utils import permission_verification as permissions
 
 from .._engine_dispatch import evaluate_built_graphs, evaluate_graphs, EvaluatedGraphs
 from ._family import GRAPH_FAMILY

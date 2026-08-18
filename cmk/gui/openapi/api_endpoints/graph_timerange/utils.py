@@ -6,7 +6,7 @@
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.type_defs import GraphTimerange
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 from .models.response_models import (
     GraphTimerangeExtension,

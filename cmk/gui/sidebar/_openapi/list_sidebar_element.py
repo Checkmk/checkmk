@@ -23,7 +23,7 @@ from cmk.gui.openapi.framework.model.base_models import (
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.sidebar._openapi.endpoint_family import SIDEBAR_ELEMENT_FAMILY
 from cmk.gui.sidebar._snapin import all_snapins
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 
 @api_model

@@ -54,6 +54,7 @@ py_library(
         "//packages/cmk-ccc:tar-archive",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("jinja2"),
         requirement("marshmallow"),
         requirement("marshmallow-oneofschema"),

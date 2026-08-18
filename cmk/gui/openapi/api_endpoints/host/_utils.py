@@ -7,9 +7,9 @@ from collections.abc import Generator, Sequence
 
 from cmk.gui.openapi.framework.model.common_fields import BinaryBase64
 from cmk.gui.openapi.framework.model.constructors import generate_links
-from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client.queries import ResultRow
 from cmk.livestatus_client.types import Column
+from cmk.web.utils import permission_verification as permissions
 
 from .models.response_models import HostStatusObjectModel
 

@@ -16,13 +16,13 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client import (
     MKLivestatusException,
     MKLivestatusQueryError,
     MultiSiteConnection,
 )
 from cmk.livestatus_client.queries import Query, ResultRow
+from cmk.web.utils import permission_verification as permissions
 
 from ._family import LIVESTATUS_QUERY_FAMILY
 from .models.request_models import LivestatusQueryBody

@@ -38,7 +38,6 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import FIELDS, problem, ProblemException, serve_json
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
@@ -58,6 +57,7 @@ from cmk.gui.watolib.timeperiods import (
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import dateutils
 from cmk.utils.timeperiod import TimeperiodSpec
+from cmk.web.utils import permission_verification as permissions
 
 TIME_RANGE = tuple[str, str]
 

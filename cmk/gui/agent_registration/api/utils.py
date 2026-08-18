@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.gui.utils.permission_verification as permissions
+import cmk.web.utils.permission_verification as permissions
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.utils import ProblemException

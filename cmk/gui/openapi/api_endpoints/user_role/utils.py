@@ -6,8 +6,8 @@
 
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.userdb import UserRole
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import UserPermissions
+from cmk.web.utils import permission_verification as permissions
 
 from .models.response_models import UserRoleExtensionsModel, UserRoleModel
 

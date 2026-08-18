@@ -22,7 +22,7 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 from .._impl import LiveStatusHostRepository
 from .._models import (

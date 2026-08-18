@@ -48,7 +48,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 from .._packs import get_cached_bi_packs
 from .._valuespecs import may_use_rules_in_pack

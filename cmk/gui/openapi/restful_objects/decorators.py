@@ -75,13 +75,13 @@ from cmk.gui.openapi.utils import (
     RestAPIPermissionException,
     RestAPIWatoDisabledException,
 )
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
 from cmk.gui.watolib.git import do_git_commit
 from cmk.licensing.basics.options import OptionName
 from cmk.utils.paths import configuration_lockfile
+from cmk.web.utils import permission_verification as permissions
 
 tracer = trace.get_tracer()
 _logger = logging.getLogger(__name__)

@@ -16,7 +16,6 @@ from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.restful_objects.constructors import expand_rel
 from cmk.gui.site_config import site_is_local
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
@@ -36,6 +35,7 @@ from cmk.gui.watolib.services import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import HostLabelValueDict
+from cmk.web.utils import permission_verification as permissions
 
 from ._family import SERVICE_DISCOVERY_FAMILY
 from .models.response_models import (

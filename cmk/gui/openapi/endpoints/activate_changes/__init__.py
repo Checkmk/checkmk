@@ -42,7 +42,6 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import ProblemException, serve_json
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.activate_changes import (
     activate_changes_start,
@@ -53,6 +52,7 @@ from cmk.gui.watolib.activate_changes import (
     load_activate_change_manager_with_id,
     MKLicensingError,
 )
+from cmk.web.utils import permission_verification as permissions
 
 ACTIVATION_ID = {
     "activation_id": fields.String(

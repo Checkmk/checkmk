@@ -25,7 +25,6 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
@@ -36,6 +35,7 @@ from cmk.gui.watolib.rulesets import (
     visible_rulesets,
 )
 from cmk.gui.watolib.rulesets import RulesetCollection as RulesetCollection_
+from cmk.web.utils import permission_verification as permissions
 from cmk.web.utils.escaping import strip_tags
 
 LIST_PERMISSIONS = permissions.AllPerm(

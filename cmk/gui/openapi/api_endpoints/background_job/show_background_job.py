@@ -24,11 +24,11 @@ from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.site_config import site_is_local
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.automations import (
     do_remote_automation,
     remote_automation_config_from_site_config,
 )
+from cmk.web.utils import permission_verification as permissions
 
 from ._family import BACKGROUND_JOB_FAMILY
 from .models.response_models import (

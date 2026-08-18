@@ -21,8 +21,8 @@ from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client import MKLivestatusException
+from cmk.web.utils import permission_verification as permissions
 
 from .._engine_plugins import registered_translations
 from .._engine_source import RRDFetchMetricNameMapping

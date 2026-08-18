@@ -16,5 +16,6 @@ py_library(
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/pagetypes",
         "//cmk/gui/utils:middle",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

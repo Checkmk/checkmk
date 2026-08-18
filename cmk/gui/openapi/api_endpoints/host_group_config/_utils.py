@@ -19,13 +19,13 @@ from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.restful_objects.constructors import collection_href, versioned_absolute_url
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
     PendingChangesStore,
 )
+from cmk.web.utils import permission_verification as permissions
 
 PERMISSIONS = permissions.Perm("wato.groups")
 

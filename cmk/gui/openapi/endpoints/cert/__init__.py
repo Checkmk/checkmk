@@ -32,10 +32,10 @@ from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.utils import permission_verification as permissions
 from cmk.utils.certs import agent_root_ca_path, cert_dir, CertManagementEvent, RootCA, SiteCA
 from cmk.utils.paths import omd_root
 from cmk.utils.security_event import log_security_event
+from cmk.web.utils import permission_verification as permissions
 
 _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
 

@@ -34,7 +34,6 @@ py_library(
         "misc.py",
         "mobile.py",
         "output_funnel.py",
-        "permission_verification.py",
         "popups.py",
         "roles.py",
         "security_log_events.py",

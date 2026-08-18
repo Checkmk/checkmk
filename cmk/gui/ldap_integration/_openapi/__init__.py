@@ -54,7 +54,6 @@ from cmk.gui.user_connection_config_types import (
 )
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_ldap_connections, UserConnectionConfigFile
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.wato.pages.userdb_common import get_affected_sites
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
@@ -63,6 +62,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
+from cmk.web.utils import permission_verification as permissions
 
 RO_PERMISSIONS = permissions.AllPerm(
     [

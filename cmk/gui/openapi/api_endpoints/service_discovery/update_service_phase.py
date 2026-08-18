@@ -20,13 +20,13 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainValidator
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.services import Discovery, DiscoveryAction, get_check_table
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
+from cmk.web.utils import permission_verification as permissions
 
 from ._family import SERVICE_DISCOVERY_FAMILY
 from ._utils import make_pending_changes, SERVICE_DISCOVERY_PHASES

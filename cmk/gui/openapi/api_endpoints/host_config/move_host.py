@@ -23,8 +23,8 @@ from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainV
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.web.utils import permission_verification as permissions
 
 from ._family import HOST_CONFIG_FAMILY
 from ._utils import host_etag, make_pending_changes, rw_permissions, serialize_host

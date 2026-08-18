@@ -8,7 +8,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from http import HTTPStatus
 from typing import Literal
 
-import cmk.gui.utils.permission_verification as permissions
+import cmk.web.utils.permission_verification as permissions
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.gui.dashboard.dashlet import dashlet_registry

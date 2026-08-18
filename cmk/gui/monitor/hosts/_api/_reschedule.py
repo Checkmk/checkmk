@@ -20,7 +20,7 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 from .._commands import HostRescheduler
 from .._impl import LiveStatusHostActions

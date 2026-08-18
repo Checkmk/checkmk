@@ -47,7 +47,6 @@ from cmk.gui.userdb import (
     load_connection_config,
     load_users,
 )
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.pending_changes import (
@@ -56,6 +55,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.gui.watolib.users import verify_password_policy
+from cmk.web.utils import permission_verification as permissions
 
 TIMESTAMP_RANGE = tuple[float, float]
 

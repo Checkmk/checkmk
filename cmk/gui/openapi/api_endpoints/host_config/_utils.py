@@ -20,7 +20,6 @@ from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.restful_objects import constructors
 from cmk.gui.openapi.utils import EXT, ProblemException
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -30,6 +29,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
+from cmk.web.utils import permission_verification as permissions
 
 from .models.request_models import UpdateHost
 from .models.response_models import (

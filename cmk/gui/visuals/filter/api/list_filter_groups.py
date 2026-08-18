@@ -22,7 +22,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 from .._base import FilterGroup
 from ._family import VISUAL_FILTER_FAMILY

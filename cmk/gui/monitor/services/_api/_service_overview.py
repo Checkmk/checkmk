@@ -23,7 +23,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 from .._exceptions import ServiceNotFoundError
 from .._impl import LiveStatusHostServicesRepository

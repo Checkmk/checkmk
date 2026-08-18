@@ -54,7 +54,7 @@ from cmk.gui.openapi.utils import (
     RestAPIRequestGeneralException,
     RestAPIResponseException,
 )
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 tracer = trace.get_tracer()
 _logger = logging.getLogger(__name__)

@@ -435,6 +435,7 @@ py_cmk_test(
         "//cmk/gui/watolib",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-web/cmk/web/utils",
         "//packages/cmk-wsgi",
         "//tests/testlib",
         "//tests/testlib:rest_api_client",

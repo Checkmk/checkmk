@@ -20,7 +20,7 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 from ._family import AUTOCOMPLETE_FAMILY
 from .models.request_models import AutocompleteRequestModel

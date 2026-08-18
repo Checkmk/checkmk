@@ -19,7 +19,6 @@ from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.restful_objects import constructors
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.pending_changes import (
@@ -27,6 +26,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
+from cmk.web.utils import permission_verification as permissions
 
 from .models.response_models import FolderCollectionModel
 

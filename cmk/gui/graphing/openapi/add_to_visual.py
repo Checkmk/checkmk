@@ -21,8 +21,8 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.visuals.type import visual_type_registry
+from cmk.web.utils import permission_verification as permissions
 
 # Views are a registered visual type but cannot hold a graph: their add_visual_handler is a no-op
 # and they offer no add-to entries. Accepting them would report success while storing nothing.

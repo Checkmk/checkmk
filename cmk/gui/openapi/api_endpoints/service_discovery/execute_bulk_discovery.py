@@ -20,7 +20,6 @@ from cmk.gui.openapi.framework.endpoint_link import path_to_endpoint
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
     BulkSize,
@@ -30,6 +29,7 @@ from cmk.gui.watolib.bulk_discovery import (
     start_bulk_discovery,
 )
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
+from cmk.web.utils import permission_verification as permissions
 
 from ._family import SERVICE_DISCOVERY_FAMILY
 from .models.request_models import BulkDiscoveryModel

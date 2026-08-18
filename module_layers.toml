@@ -843,6 +843,7 @@ allows = [
 
 [components."cmk.gui.openapi.spec.spec_generator"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "cmk.gui",
   "cmk.gui.community_registration",
@@ -1139,10 +1140,7 @@ allows = [
   "cmk.web.exceptions",
   "cmk.web.page_container",
   "cmk.web.pages",
-  "cmk.web.utils.html",
-  "cmk.web.utils.escaping",
-  "cmk.web.utils.speaklater",
-  "cmk.web.utils.urls",
+  "cmk.web.utils",
   "cmk.werks.site",
 ]
 excludes = [

@@ -11,8 +11,8 @@ from cmk.ccc.site import SiteId
 from cmk.gui.availability.options import get_default_avoptions
 from cmk.gui.availability.type_defs import AVOptions
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client import lqencode, OnlySites
+from cmk.web.utils import permission_verification as permissions
 
 PERMISSIONS = permissions.AllPerm([permissions.Perm("general.see_availability")])
 

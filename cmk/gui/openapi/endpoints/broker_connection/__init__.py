@@ -47,7 +47,6 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.broker_connections import (
     BrokerConnectionConfig,
@@ -64,6 +63,7 @@ from cmk.gui.watolib.site_management import (
     SitesApiMgr,
 )
 from cmk.livestatus_client import BrokerConnections, ConnectionId, SiteConfigurations
+from cmk.web.utils import permission_verification as permissions
 
 PERMISSIONS = permissions.Perm("wato.sites")
 

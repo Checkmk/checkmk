@@ -23,10 +23,10 @@ from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.user_config import USER_CONFIG_FAMILY
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import get_user_attributes
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.users import create_user as wato_create_user
 from cmk.gui.watolib.users import user_features_registry
 from cmk.utils import paths
+from cmk.web.utils import permission_verification as permissions
 
 from ._utils import (
     api_to_internal_format,

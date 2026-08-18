@@ -29,8 +29,8 @@ from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_s
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode, QuickSetupBackgroundAction
 from cmk.gui.quick_setup.v0_unstable.type_defs import ActionId, RawFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
+from cmk.web.utils import permission_verification as permissions
 
 from .models.request_models import QuickSetupFinalActionRequestModel
 from .models.response_models import (

@@ -24,11 +24,11 @@ from cmk.gui.openapi.shared_endpoint_families.agent import AGENTS_FAMILY
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.site_config import site_is_local
 from cmk.gui.token_auth import AgentDownloadToken, AuthToken, get_token_store
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.agent_token_automations import (
     AgentDownloadTokenCreateRequest,
     forward_token_create,
 )
+from cmk.web.utils import permission_verification as permissions
 
 from .models.token import (
     AgentDownloadTokenMetadata,

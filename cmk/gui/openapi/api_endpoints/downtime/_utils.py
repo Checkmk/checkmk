@@ -17,8 +17,8 @@ from cmk.gui.openapi.api_endpoints.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.endpoint_link import link_to_endpoint
 from cmk.gui.openapi.framework.model.base_models import LinkModel
-from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client.queries import ResultRow
+from cmk.web.utils import permission_verification as permissions
 
 PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(

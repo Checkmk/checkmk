@@ -17,5 +17,6 @@ py_library(
         "//cmk/gui/utils:middle",
         "//cmk/gui/views:components",
         "//packages/cmk-ruleset-matcher",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

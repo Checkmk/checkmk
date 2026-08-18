@@ -29,7 +29,6 @@ from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import DismissableWarning, UserSpec
-from cmk.gui.utils.permission_verification import BasePerm
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import PermissionCheckFailureEvent
 from cmk.gui.utils.selection_id import SelectionId
@@ -37,6 +36,7 @@ from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.livestatus_client import SiteConfigurations
 from cmk.shared_typing.user_frontend_config import UserFrontendConfig
 from cmk.utils.security_event import log_security_event
+from cmk.web.utils.permission_verification import BasePerm
 
 _logger = logging.getLogger(__name__)
 _ContactgroupName = str

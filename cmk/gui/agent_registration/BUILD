@@ -22,6 +22,7 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/utils",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("python-dateutil"),
     ],
 )

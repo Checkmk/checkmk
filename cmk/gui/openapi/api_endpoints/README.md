@@ -262,7 +262,7 @@ individual classes for more details.
 from cmk.gui.openapi.framework import *
 from cmk.gui.openapi.framework.model.response import ApiErrorDataclass
 from cmk.gui.token_auth import TokenType
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 
 def handler() -> None:
@@ -314,7 +314,7 @@ Once you have your versioned endpoint defined, you can register it in the
 
 Permissions are defined using `EndpointPermissions`. The `required` argument
 takes a permission object. Available permission classes are in
-`cmk.gui.utils.permission_verification` (usually imported as `permissions`):
+`cmk.web.utils.permission_verification` (usually imported as `permissions`):
 
 - `Perm("name")`: a single permission.
 - `AnyPerm([p1, p2])`: matches if _any_ of the permissions are present.
@@ -326,7 +326,7 @@ takes a permission object. Available permission classes are in
 - `PrefixPerm("name")`: matches any permission starting with the given prefix.
 
 ```python
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 from cmk.gui.openapi.framework import EndpointPermissions
 
 permissions = EndpointPermissions(

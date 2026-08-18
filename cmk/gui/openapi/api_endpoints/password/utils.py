@@ -11,8 +11,8 @@ from cmk.gui.openapi.framework import ETag
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.restful_objects.constructors import object_href
-from cmk.gui.utils import permission_verification as permissions
 from cmk.utils.password_store import PasswordConfig
+from cmk.web.utils import permission_verification as permissions
 
 PERMISSIONS = permissions.AllPerm(
     [

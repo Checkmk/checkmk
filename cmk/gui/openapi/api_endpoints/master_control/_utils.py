@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client import (
     Command,
     DisableEventHandlers,
@@ -30,6 +29,7 @@ from cmk.livestatus_client._connection import MultiSiteConnection
 from cmk.livestatus_client.queries import Query, ResultRow
 from cmk.livestatus_client.tables import Status
 from cmk.livestatus_client.types import Column
+from cmk.web.utils import permission_verification as permissions
 
 from .models.response_models import MasterControlExtensionsModel, MasterControlModel
 

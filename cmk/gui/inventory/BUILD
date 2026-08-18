@@ -37,6 +37,7 @@ py_library(
         "//packages/cmk-inventory:inventory",
         "//packages/cmk-plugin-apis:inventory_ui",
         "//packages/cmk-ruleset-matcher",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

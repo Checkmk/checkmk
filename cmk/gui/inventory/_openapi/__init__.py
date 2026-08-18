@@ -14,7 +14,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamily, EndpointFamilyRegistry
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 from ._get_inventory_trees import get_inventory_trees
 

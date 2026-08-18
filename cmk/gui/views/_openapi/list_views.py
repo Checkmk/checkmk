@@ -5,7 +5,7 @@
 
 from typing import Literal
 
-import cmk.gui.utils.permission_verification as permissions
+import cmk.web.utils.permission_verification as permissions
 from cmk.gui.openapi.framework import (
     APIVersion,
     EndpointDoc,

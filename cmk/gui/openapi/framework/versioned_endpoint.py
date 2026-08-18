@@ -23,8 +23,8 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     TagGroup,
 )
 from cmk.gui.token_auth import TokenType
-from cmk.gui.utils import permission_verification as permissions
 from cmk.licensing.basics.options import OptionName
+from cmk.web.utils import permission_verification as permissions
 
 type HandlerFunction = Callable[..., TypedResponse[object | None]]  # type: ignore[explicit-any]
 

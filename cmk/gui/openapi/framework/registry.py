@@ -33,8 +33,8 @@ from cmk.gui.openapi.restful_objects.type_defs import (
 )
 from cmk.gui.openapi.restful_objects.utils import endpoint_ident, format_to_routing_path
 from cmk.gui.token_auth import TokenType
-from cmk.gui.utils.permission_verification import BasePerm
 from cmk.licensing.basics.options import OptionName
+from cmk.web.utils.permission_verification import BasePerm
 
 
 @dataclass(frozen=True, slots=True)

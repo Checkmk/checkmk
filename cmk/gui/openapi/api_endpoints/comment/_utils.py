@@ -12,7 +12,7 @@ from cmk.gui.openapi.api_endpoints.comment.models.response_models import (
 )
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.constructors import generate_links
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(

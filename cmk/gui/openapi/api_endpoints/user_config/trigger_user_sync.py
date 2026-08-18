@@ -21,7 +21,7 @@ from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.shared_endpoint_families.user_config import USER_CONFIG_FAMILY
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.userdb.user_sync_job import sync_entry_point, UserSyncArgs, UserSyncBackgroundJob
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 
 def trigger_user_sync_v1(api_context: ApiContext) -> ApiResponse[None]:

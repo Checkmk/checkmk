@@ -58,7 +58,6 @@ from cmk.gui.openapi.restful_objects.parameters import GROUP_NAME_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
@@ -70,6 +69,7 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import paths
+from cmk.web.utils import permission_verification as permissions
 
 PERMISSIONS = permissions.Perm("wato.groups")
 

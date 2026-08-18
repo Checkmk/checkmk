@@ -17,8 +17,8 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.host_rename import RenameHostsBackgroundJob
+from cmk.web.utils import permission_verification as permissions
 
 from ._family import HOST_CONFIG_FAMILY
 

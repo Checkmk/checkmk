@@ -17,8 +17,8 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.visuals import page_menu_dropdown_add_to_visual
+from cmk.web.utils import permission_verification as permissions
 
 from ._family import GRAPH_FAMILY
 from .models import BurgerMenuCollection

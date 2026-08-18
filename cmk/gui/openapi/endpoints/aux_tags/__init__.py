@@ -39,10 +39,10 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config, update_tag_config
 from cmk.ruleset_matcher.tags import AuxTag, AuxTagInUseError, TagID
+from cmk.web.utils import permission_verification as permissions
 
 PERMISSIONS = permissions.Perm("wato.hosttags")
 

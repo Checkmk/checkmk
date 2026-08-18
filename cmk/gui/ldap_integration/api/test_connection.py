@@ -23,7 +23,7 @@ from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.shared_endpoint_families.ldap_connection import LDAP_CONNECTION_FAMILY
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.userdb import get_connection
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 
 @api_model

@@ -11,13 +11,13 @@ from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
     PendingChangesStore,
 )
+from cmk.web.utils import permission_verification as permissions
 
 RO_PERMISSIONS = permissions.Perm("general.edit_notifications")
 RW_PERMISSIONS = permissions.AllPerm(

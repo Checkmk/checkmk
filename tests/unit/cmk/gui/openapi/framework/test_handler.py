@@ -41,7 +41,7 @@ from cmk.gui.openapi.utils import (
     RestAPIResponseException,
     RestAPIWatoDisabledException,
 )
-from cmk.gui.utils.permission_verification import AllPerm, Perm
+from cmk.web.utils.permission_verification import AllPerm, Perm
 from tests.unit.cmk.gui.openapi.framework.factories import (
     RawRequestDataFactory,
     RequestEndpointFactory,

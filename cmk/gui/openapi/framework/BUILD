@@ -72,6 +72,7 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-ruleset-matcher",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("werkzeug"),
     ],
 )

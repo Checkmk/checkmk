@@ -29,8 +29,8 @@ from cmk.gui.openapi.endpoints.audit_log.response_schemas import AuditLogEntryCo
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import serve_json
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
+from cmk.web.utils import permission_verification as permissions
 
 AuditLogResponse = dict[str, Any]
 

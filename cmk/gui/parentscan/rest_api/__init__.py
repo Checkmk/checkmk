@@ -34,8 +34,8 @@ from cmk.gui.parentscan.background_job import (
 )
 from cmk.gui.parentscan.rest_api.request_schemas import ParentScan
 from cmk.gui.parentscan.rest_api.response_schemas import BackgroundJobStatusObject
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.web.utils import permission_verification as permissions
 
 
 @Endpoint(

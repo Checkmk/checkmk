@@ -14,8 +14,8 @@ from cmk.gui.openapi.framework import ETag
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.type_defs import CustomHostAttrSpec
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.custom_attributes import CustomAttrSpecs, load_custom_attrs_from_mk_file
+from cmk.web.utils import permission_verification as permissions
 
 PERMISSIONS = permissions.AllPerm(
     [

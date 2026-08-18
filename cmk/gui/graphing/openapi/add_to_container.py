@@ -22,7 +22,7 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.pagetypes import all_page_types, OverridableContainer
-from cmk.gui.utils import permission_verification as permissions
+from cmk.web.utils import permission_verification as permissions
 
 
 def _container_names() -> str:

@@ -41,7 +41,6 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import (
@@ -63,6 +62,7 @@ from cmk.gui.watolib.tags import (
     update_tag_config,
 )
 from cmk.ruleset_matcher.tags import BuiltinTagConfig, TagGroup, TagGroupID, TagGroupSpec
+from cmk.web.utils import permission_verification as permissions
 
 PERMISSIONS = permissions.AllPerm(
     [

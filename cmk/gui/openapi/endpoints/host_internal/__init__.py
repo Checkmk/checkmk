@@ -38,13 +38,13 @@ from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.utils.agent_registration import (
     connection_mode_from_host_config,
     HostAgentConnectionMode,
     UUIDLinkManager,
 )
+from cmk.web.utils import permission_verification as permissions
 
 permission_registry.register(
     Permission(

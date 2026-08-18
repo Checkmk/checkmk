@@ -493,6 +493,7 @@ sections:
   - asm_instance:
       affinity: 'asm'
   - dataguard_stats:
+  - locks:
   - logswitches:
   - longactivesessions:
   - performance:
@@ -509,8 +510,6 @@ sections:
   - iostats:
       is_async: yes
   - jobs:
-      is_async: yes
-  - locks:
       is_async: yes
   - resumable:
       is_async: yes

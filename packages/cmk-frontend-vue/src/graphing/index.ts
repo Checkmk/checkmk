@@ -15,4 +15,17 @@ export type {
   GraphDataFetcher,
   GraphFetchParams
 } from './composables/useGraphData'
-export type { BurgerMenuGroup } from './types'
+export type { BurgerMenuGroup, RequestedTimeRange } from './types'
+
+export { default as TimeSeriesGraph } from './components/TimeSeriesGraph'
+export { default as GraphLegendCompact } from './components/legend/GraphLegendCompact.vue'
+export { useGraphInteraction } from './composables/useGraphInteraction'
+export { useGraphVisibility } from './composables/useGraphVisibility'
+export { deriveYAxis } from './components/TimeSeriesGraph/yAxis'
+export type {
+  GraphOptions,
+  Metric,
+  Size,
+  TimeRange,
+  UnitFormat
+} from './components/TimeSeriesGraph'

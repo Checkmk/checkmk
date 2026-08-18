@@ -2393,7 +2393,7 @@ def _get_cached_tags() -> Sequence[TagGroup | AuxTag]:
     return choices
 
 
-def _get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
+def get_host_tags_condition_choices() -> dict[str, ConditionGroup]:
     choices: dict[str, ConditionGroup] = {}
     for tag in _get_cached_tags():
         match tag:
@@ -2444,7 +2444,7 @@ def _create_explicit_rule_conditions_dict(
                 help_text=Help(
                     "Rule only applies to hosts that meet all of the host tag conditions listed here."
                 ),
-                get_conditions=_get_host_tags_condition_choices,
+                get_conditions=get_host_tags_condition_choices,
                 custom_validate=[
                     not_empty(error_msg=Message("Please add at least one tag condition."))
                 ],

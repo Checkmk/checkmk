@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from collections.abc import Mapping, Sequence
-from typing import assert_never, cast, Final, get_args, Literal
+from typing import cast, Final, get_args, Literal
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
@@ -29,16 +29,11 @@ from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
     CascadingSingleChoiceElementExtended,
     CascadingSingleChoiceLayout,
 )
-from cmk.gui.form_specs.unstable.condition_choices import (
-    Condition,
-    ConditionGroup,
-)
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple
 from cmk.gui.form_specs.unstable.list_unique_selection import (
     UniqueCascadingSingleChoiceElement,
     UniqueSingleChoiceElement,
 )
-from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user as logged_in_user
@@ -97,12 +92,12 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
+from cmk.gui.watolib.rulesets import get_host_tags_condition_choices
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.gui.watolib.user_scripts import load_notification_scripts, NotificationUserScripts
 from cmk.gui.watolib.users import notification_script_choices
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
-from cmk.ruleset_matcher.tags import AuxTag, TagGroup
 from cmk.rulesets.internal.form_specs import (
     DictionaryExtended,
     ListExtended,
@@ -449,44 +444,6 @@ def _get_service_levels_single_choice() -> Sequence[SingleChoiceElementExtended[
     ]
 
 
-@request_memoize()
-def _get_cached_tags() -> Sequence[TagGroup | AuxTag]:
-    choices: list[TagGroup | AuxTag] = []
-    all_topics = active_config.tags.get_topic_choices()
-    tag_groups_by_topic = dict(active_config.tags.get_tag_groups_by_topic())
-    aux_tags_by_topic = dict(active_config.tags.get_aux_tags_by_topic())
-    for topic_id, _topic_title in all_topics:
-        for tag_group in tag_groups_by_topic.get(topic_id, []):
-            choices.append(tag_group)
-
-        for aux_tag in aux_tags_by_topic.get(topic_id, []):
-            choices.append(aux_tag)
-
-    return choices
-
-
-def _get_condition_choices() -> dict[str, ConditionGroup]:
-    choices: dict[str, ConditionGroup] = {}
-    for tag in _get_cached_tags():
-        match tag:
-            case TagGroup():
-                choices[tag.id] = ConditionGroup(
-                    title=tag.choice_title,
-                    conditions=[
-                        Condition(name=tag_id, title=tag_title)
-                        for tag_id, tag_title in tag.get_non_empty_tag_choices()
-                    ],
-                )
-            case AuxTag():
-                choices[tag.id] = ConditionGroup(
-                    title=tag.choice_title,
-                    conditions=[Condition(name=tag.id, title=tag.title)],
-                )
-            case other:
-                assert_never(other)
-    return choices
-
-
 def custom_recap_formspec_filter_for_hosts_and_services(
     quick_setup_id: QuickSetupId,
     stage_index: StageIndex,
@@ -642,7 +599,7 @@ def filter_for_hosts_and_services() -> QuickSetupStage:
                                         no_more_condition_groups_to_add=Label(
                                             "No more tags to add"
                                         ),
-                                        get_conditions=_get_condition_choices,
+                                        get_conditions=get_host_tags_condition_choices,
                                         custom_validate=[
                                             not_empty(
                                                 error_msg=Message(

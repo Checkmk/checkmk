@@ -93,3 +93,25 @@ def test_read_and_remove_update_requests_coerces_change_action_types() -> None:
     expected = {"rebuild": False, "change_actions": ["1", "2"]}
 
     assert value == expected
+
+
+def test_main_requests_an_index_rebuild() -> None:
+    index.main()
+
+    assert index._read_and_remove_update_requests() == {"rebuild": True, "change_actions": []}
+
+
+def test_main_reports_a_failed_request_without_raising(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    # main() is the init-redis entry point, so a site must still come up when the
+    # rebuild request cannot be written.
+    def _fail() -> None:
+        raise OSError("read-only file system")
+
+    monkeypatch.setattr(index, "request_rebuild", _fail)
+
+    index.main()
+
+    assert "Failed to request building of Setup search index" in caplog.text
+    assert index._updates_requested() is False

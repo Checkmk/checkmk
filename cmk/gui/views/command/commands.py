@@ -1645,16 +1645,20 @@ class CommandScheduleDowntimesForm:
 
     def _get_duration_options(self) -> HTML:
         duration_options = HTML.empty()
-        for nr, time_range in enumerate(active_config.user_downtime_timeranges):
+        is_first_rendered = True
+        for time_range in active_config.user_downtime_timeranges:
             css_class = ["button", "duration"]
             time_range_end = time_range["end"]
-            if nr == 0:
-                end_time = time_interval_end(time_range_end, self._current_local_time())
+            end_time = time_interval_end(time_range_end, self._current_local_time())
+            if (local_end_time := _local_time_if_representable(end_time)) is None:
+                continue
+            if is_first_rendered:
+                is_first_rendered = False
                 html.final_javascript(
-                    f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d", time.localtime(end_time))}");'
+                    f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d", local_end_time)}");'
                 )
                 html.final_javascript(
-                    f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", time.localtime(end_time))}");'
+                    f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", local_end_time)}");'
                 )
                 css_class += ["active"]
 
@@ -2160,6 +2164,15 @@ def _find_all_leaves(
 
     # place holders
     return []
+
+
+def _local_time_if_representable(timestamp: float | None) -> time.struct_time | None:
+    if timestamp is None:
+        return None
+    try:
+        return time.localtime(timestamp)
+    except (OverflowError, OSError, ValueError):
+        return None
 
 
 def time_interval_end(

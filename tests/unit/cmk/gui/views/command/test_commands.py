@@ -9,6 +9,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.gui.htmllib.html import html
 from cmk.gui.views.command import commands
 from cmk.gui.views.command.commands import (
     _acknowledgement_needs_removal,
@@ -236,7 +237,6 @@ class TestDowntimeDurationPresets:
         with set_config(user_downtime_timeranges=[{"title": "2 hours", "end": 7200}]):
             assert "_downrange__7200" in str(form._get_duration_options())
 
-    @pytest.mark.xfail(strict=True, reason="Crash group 4038: OverflowError in _get_onclick")
     def test_skips_a_preset_whose_end_is_not_representable(
         self,
         request_context: None,
@@ -247,3 +247,29 @@ class TestDowntimeDurationPresets:
 
         with set_config(user_downtime_timeranges=[{"title": "far future", "end": 10**18}]):
             assert form._get_duration_options() == HTML.empty()
+
+    def test_activates_the_first_preset_it_can_render(
+        self,
+        request_context: None,
+        set_config: SetConfig,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """The active button is the one that pre-fills the form's date & time.
+
+        A skipped preset must not consume that role, or the form opens with no button
+        marked and the date & time fields left blank.
+        """
+        form = self._form(monkeypatch)
+
+        with set_config(
+            user_downtime_timeranges=[
+                {"title": "far future", "end": 10**18},
+                {"title": "2 hours", "end": 7200},
+            ]
+        ):
+            duration_options = str(form._get_duration_options())
+
+        assert 'id="_downrange__7200"' in duration_options
+        assert 'class="button duration active"' in duration_options
+        assert "date__down_to_date" in html.final_javascript_code()
+        assert "time__down_to_time" in html.final_javascript_code()

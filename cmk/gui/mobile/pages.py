@@ -28,9 +28,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.saml2_login import show_saml2_login
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.userdb import get_saml_connections_for_current_site
-from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
-from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
@@ -48,6 +46,8 @@ from cmk.gui.views.page_show_view import (
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import get_only_sites_from_context, view_title
 from cmk.gui.visuals.filter import Filter
+from cmk.web.utils import escaping
+from cmk.web.utils.escaping import escape_text
 from cmk.web.utils.urls import makeuri, requested_file_name
 
 HeaderButton = tuple[str, str, str] | tuple[str, str, str, str]

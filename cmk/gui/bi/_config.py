@@ -63,7 +63,6 @@ from cmk.gui.type_defs import (
     StaticIcon,
 )
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_references import DocReference
@@ -116,6 +115,7 @@ from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils import paths
+from cmk.web.utils import escaping
 from cmk.web.utils.urls import (
     makeactionuri,
     makeactionuri_contextless,

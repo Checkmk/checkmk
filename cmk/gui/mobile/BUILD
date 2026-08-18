@@ -26,5 +26,6 @@ py_library(
         "//cmk/gui/views:components",
         "//cmk/gui/visuals",
         "//packages/cmk-ccc:user",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

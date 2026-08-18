@@ -11,8 +11,8 @@ import cmk.utils.render
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.ifaceoper import interface_oper_state_name, interface_port_types
-from cmk.gui.utils.escaping import escape_text
 from cmk.inventory.structured_data import SDValue
+from cmk.web.utils.escaping import escape_text
 
 from .registry import InvPaintFunction, InvPaintFunctions, PaintResult
 

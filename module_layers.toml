@@ -1384,6 +1384,7 @@ allows = ["@ccc", "cmk.crash", "cmk.events"]
 
 [components."cmk.metric_backend.gui"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@livestatus_client",
   "@metric_backend",

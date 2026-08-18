@@ -45,7 +45,6 @@ from cmk.gui.type_defs import (
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
@@ -92,6 +91,7 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.definition import RuleGroup, RuleGroupType
+from cmk.web.utils.escaping import escape_to_html_permissive
 
 
 def register(

@@ -61,6 +61,7 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ruleset-matcher",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -158,6 +159,7 @@ py_library(
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-profiling:gui",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
         "//packages/cmk-werks:tool",
         requirement("fido2"),
         requirement("icalendar"),

@@ -32,7 +32,6 @@ from cmk.gui.type_defs import (
     IconNames,
     StaticIcon,
 )
-from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_links import get_confirm_link_title
 from cmk.gui.utils.doc_references import (
     doc_reference_url,
@@ -50,6 +49,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.utils import paths
+from cmk.web.utils import escaping
 from cmk.web.utils.urls import makeuri, requested_file_name, urlencode, urlencode_vars
 
 

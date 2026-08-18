@@ -9,8 +9,8 @@ from collections.abc import Iterable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _u
-from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
+from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.urls import is_allowed_url
 
 

@@ -87,6 +87,7 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("annotated-types"),
         requirement("pydantic"),
         requirement("python-dateutil"),

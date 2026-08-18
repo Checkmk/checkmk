@@ -42,7 +42,6 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualContext,
 )
-from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
@@ -51,6 +50,7 @@ from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_vi
 from cmk.gui.views.store import get_permitted_views, get_view_by_name
 from cmk.gui.visuals import get_merged_context, get_only_sites_from_context
 from cmk.gui.visuals.info import visual_info_registry
+from cmk.web.utils.escaping import escape_to_html_permissive
 
 __all__ = [
     "ViewWidgetIFramePage",

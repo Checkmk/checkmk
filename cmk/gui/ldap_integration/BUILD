@@ -34,6 +34,7 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:groups_io",
         "//cmk/utils",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("marshmallow"),
         requirement("marshmallow-oneofschema"),
         requirement("python-active-directory"),

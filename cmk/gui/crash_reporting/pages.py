@@ -52,12 +52,12 @@ from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Dictionary, EmailAddress, TextInput
+from cmk.web.utils import escaping
 from cmk.web.utils.urls import makeuri, makeuri_contextless, urlencode, urlencode_vars
 
 from .helpers import local_files_involved_in_crash

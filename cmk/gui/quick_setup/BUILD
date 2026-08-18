@@ -39,6 +39,7 @@ py_library(
         "//packages/cmk-plugins:azure_v2",
         "//packages/cmk-plugins:gcp",
         "//packages/cmk-plugins:proxmox_ve",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

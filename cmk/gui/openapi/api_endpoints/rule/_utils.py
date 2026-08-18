@@ -17,7 +17,6 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.utils import ProblemException, RestAPIRequestDataValidationException
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import permission_verification as permissions
-from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
 from cmk.gui.watolib.pending_changes import (
@@ -54,6 +53,7 @@ from cmk.ruleset_matcher.matcher import (
     TagConditionOR,
 )
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.web.utils.escaping import strip_tags
 
 from ._family import RULE_FAMILY
 from .models.request_models import (

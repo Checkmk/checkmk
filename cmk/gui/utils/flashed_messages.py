@@ -17,8 +17,8 @@ from typing import Literal
 
 import flask
 
-from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
+from cmk.web.utils.escaping import escape_text
 
 MsgType = Literal["message", "waiting", "warning", "error", "info"]
 

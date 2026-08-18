@@ -31,5 +31,6 @@ py_library(
         "//packages/cmk-crash:crash",
         "//packages/cmk-crash:crash_reporting",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

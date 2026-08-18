@@ -112,5 +112,6 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

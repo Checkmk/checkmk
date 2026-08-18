@@ -52,6 +52,7 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -80,5 +81,6 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

@@ -16,8 +16,8 @@ from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import Cell, join_row
 from cmk.gui.type_defs import Rows, ViewSpec
-from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
+from cmk.web.utils import escaping
 
 
 class Exporter(NamedTuple):

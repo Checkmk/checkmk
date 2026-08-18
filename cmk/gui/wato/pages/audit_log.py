@@ -59,7 +59,6 @@ from cmk.gui.pages import PageContext
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.userdb.store import load_users
-from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -89,6 +88,7 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 from cmk.utils import render
+from cmk.web.utils import escaping
 from cmk.web.utils.urls import makeactionuri, makeuri
 
 

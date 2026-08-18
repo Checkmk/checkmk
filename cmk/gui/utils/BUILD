@@ -29,7 +29,6 @@ py_library(
         "confirm_links.py",
         "dataclasses.py",
         "doc_references.py",
-        "escaping.py",
         "flashed_messages.py",
         "html.py",
         "language_cookie.py",

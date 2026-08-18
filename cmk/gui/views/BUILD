@@ -57,6 +57,7 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -117,5 +118,6 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-inventory:inventory",
         "//packages/cmk-plugin-apis:inventory_ui",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

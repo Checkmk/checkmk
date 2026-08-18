@@ -33,6 +33,7 @@ py_library(
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
         "//packages/cmk-livestatus-client",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("python-dateutil"),
     ],
 )

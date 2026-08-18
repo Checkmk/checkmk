@@ -54,7 +54,6 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
@@ -86,6 +85,7 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.tags import TagGroup
+from cmk.web.utils.escaping import escape_to_html_permissive
 
 ImportTuple = tuple[HostName, HostAttributes, None]
 

@@ -32,7 +32,6 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.site_config import is_distributed_setup_remote_site
-from cmk.gui.utils import escaping
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -43,6 +42,7 @@ from cmk.gui.watolib.sites import get_effective_global_setting
 from cmk.livestatus_client import LocalConnection, SiteConfigurations
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.statename import short_service_state_name
+from cmk.web.utils import escaping
 
 
 class ACResultState(enum.IntEnum):

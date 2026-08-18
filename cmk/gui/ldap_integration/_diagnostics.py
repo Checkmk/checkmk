@@ -15,7 +15,7 @@ from cmk.gui.ldap_integration.ldap_connector import (
     LDAPUserConnector,
 )
 from cmk.gui.userdb import get_user_attributes
-from cmk.gui.utils.escaping import strip_tags
+from cmk.web.utils.escaping import strip_tags
 
 LDAPDiagnosticTest = Callable[[LDAPUserConnector, str], tuple[bool, str | None]]
 

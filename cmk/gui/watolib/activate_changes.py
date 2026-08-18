@@ -101,7 +101,6 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
 from cmk.gui.userdb.store import load_users_uncached, save_users
-from cmk.gui.utils import escaping
 from cmk.gui.utils.misc import gen_id, validate_uuid_str
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.roles import (
@@ -182,6 +181,7 @@ from cmk.utils import agent_registration, paths, render
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.visuals import invalidate_visuals_cache
+from cmk.web.utils import escaping
 from cmk.web.utils.urls import makeuri_contextless
 
 # TODO: Make private

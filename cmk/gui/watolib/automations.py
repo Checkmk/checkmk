@@ -49,7 +49,6 @@ from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import is_replication_enabled, site_is_local
-from cmk.gui.utils import escaping
 from cmk.gui.utils.compatibility import (
     EditionsIncompatible,
     is_distributed_setup_compatible_for_licensing,
@@ -64,6 +63,7 @@ from cmk.licensing.registry import get_license_state
 from cmk.livestatus_client import SiteConfiguration
 from cmk.utils import paths
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
+from cmk.web.utils import escaping
 from cmk.web.utils.urls import urlencode_vars
 
 auto_logger = logger.getChild("automations")

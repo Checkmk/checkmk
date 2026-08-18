@@ -91,7 +91,6 @@ from cmk.gui.type_defs import (
     IconNames,
     StaticIcon,
 )
-from cmk.gui.utils import escaping
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.html import HTML
@@ -115,6 +114,7 @@ from cmk.livestatus_client import LivestatusResponse
 from cmk.ruleset_matcher.labels import AndOrNotLiteral, LabelSources
 from cmk.utils import dateutils
 from cmk.utils.render import SecondsRenderer
+from cmk.web.utils import escaping
 from cmk.web.utils.urls import is_allowed_url, makeuri, urlencode
 
 seconds_per_day = 86400

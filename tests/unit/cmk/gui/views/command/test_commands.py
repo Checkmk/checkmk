@@ -9,6 +9,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.gui.http import request
 from cmk.gui.utils.html import HTML
 from cmk.gui.views.command import commands
 from cmk.gui.views.command.commands import (
@@ -221,3 +222,44 @@ class TestDowntimeDurationPresets:
 
         with set_config(user_downtime_timeranges=[{"title": "far future", "end": 10**18}]):
             assert form._get_duration_options() == HTML.empty()
+
+
+class TestDowntimeSpecsForHosts:
+    """Scheduling host downtime from a service view.
+
+    ``action_rows`` are the rows of whichever view the user selected in, so they only
+    carry the columns that view's painters ask for -- ``host_name`` can be absent.
+    The rows are used to count the affected hosts; the commands themselves come from
+    ``spec``, so a missing column must not take the page down.
+    """
+
+    @staticmethod
+    def _specs(action_rows: list[dict[str, str]]) -> tuple[str, list[str], list[dict[str, str]]]:
+        form = CommandScheduleDowntimesForm(NoRecurringDowntimes())
+        request.set_var("_down_host", "1")
+        return form._downtime_specs("SVC", {"site": "heute"}, action_rows, "myhost;CPU")
+
+    def test_counts_one_row_per_affected_host(
+        self, request_context: None, with_admin_login: UserId
+    ) -> None:
+        cmdtag, specs, action_rows = self._specs(
+            [
+                {"site": "heute", "host_name": "myhost"},
+                {"site": "heute", "host_name": "myhost"},
+                {"site": "heute", "host_name": "otherhost"},
+            ]
+        )
+
+        assert cmdtag == "HOST"
+        assert specs == ["myhost"]
+        assert [r["host_name"] for r in action_rows] == ["myhost", "otherhost"]
+
+    @pytest.mark.xfail(strict=True, reason="Crash group 4545: KeyError 'host_name'")
+    def test_tolerates_rows_without_the_host_name_column(
+        self, request_context: None, with_admin_login: UserId
+    ) -> None:
+        cmdtag, specs, action_rows = self._specs([{"site": "heute"}, {"site": "heute"}])
+
+        assert cmdtag == "HOST"
+        assert specs == ["myhost"]
+        assert len(action_rows) == 1

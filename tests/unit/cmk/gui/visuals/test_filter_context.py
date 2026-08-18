@@ -5,8 +5,6 @@
 
 from typing import cast
 
-import pytest
-
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.visuals._filter_context import missing_context_filters
 
@@ -15,8 +13,5 @@ from cmk.gui.visuals._filter_context import missing_context_filters
 SCALAR_CONTEXT = cast(VisualContext, {"host": "myhost"})
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Crash group 3218: AttributeError in missing_context_filters"
-)
 def test_missing_context_filters_reports_scalar_filter_context_as_missing() -> None:
     assert missing_context_filters({"host"}, SCALAR_CONTEXT) == {"host"}

@@ -205,7 +205,7 @@ def missing_context_filters(
     set_filters = (
         filter_name
         for filter_name, filter_context in context.items()
-        if any(filter_context.values())
+        if isinstance(filter_context, dict) and any(filter_context.values())
     )
 
     return require_filters.difference(set_filters)

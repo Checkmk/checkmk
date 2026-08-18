@@ -58,12 +58,25 @@ function renderForm(seed: DraftMetricBackendItem) {
   return store
 }
 
-test('composes the metric, attributes and consolidation sections', async () => {
+test('composes the metric, where, consolidation and group by sections', async () => {
   renderForm(newMetricBackendDraft('A'))
 
   expect(await screen.findByText('Metric')).toBeInTheDocument()
-  expect(screen.getByText('Attributes')).toBeInTheDocument()
-  expect(screen.getByText('Consolidation')).toBeInTheDocument()
+  expect(screen.getByText('Where')).toBeInTheDocument()
+  expect(screen.getByText('Then consolidate by')).toBeInTheDocument()
+  expect(screen.getByText('And group by')).toBeInTheDocument()
+})
+
+test('names each section for assistive technology', async () => {
+  renderForm(newMetricBackendDraft('A'))
+
+  expect(await screen.findByRole('group', { name: 'Where: attribute filter' })).toBeInTheDocument()
+  expect(
+    screen.getByRole('group', { name: 'Then consolidate by: consolidation function and lookback' })
+  ).toBeInTheDocument()
+  expect(
+    screen.getByRole('group', { name: 'And group by: grouping function and keys' })
+  ).toBeInTheDocument()
 })
 
 const SUM_BY_SERVICE: Aggregator = {

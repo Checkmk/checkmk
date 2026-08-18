@@ -6,12 +6,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
-import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref, watch } from 'vue'
 
 import FormMetricBackendAttributes from '@/metric-backend/FormMetricBackendAttributes.vue'
@@ -52,6 +49,8 @@ import {
   DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN
 } from '../../metricBackend'
 import type { MetricBackendItem } from '../../types'
+import SourceFormField from './SourceFormField.vue'
+import SourceFormStack from './SourceFormStack.vue'
 import SourceFormText from './SourceFormText.vue'
 
 const { item, store, metricNameErrors, consolidationErrors } = defineProps<{
@@ -62,8 +61,6 @@ const { item, store, metricNameErrors, consolidationErrors } = defineProps<{
 }>()
 
 const { _t } = usei18n()
-
-const metricNameValidationId = useId()
 
 type Consolidation = MetricBackendItem['consolidation_function']
 
@@ -307,101 +304,78 @@ const {
 </script>
 
 <template>
-  <table class="graphing-metric-backend-form">
-    <tbody>
-      <tr>
-        <td class="graphing-metric-backend-form__label-cell">
-          <CmkLabel
-            ><SourceFormText variant="name">{{ _t('Metric') }}</SourceFormText></CmkLabel
-          ><CmkLabelRequired space="before" />
-        </td>
-        <td>
-          <CmkInlineValidation
-            v-if="metricNameErrors.length > 0"
-            :id="metricNameValidationId"
-            :validation="metricNameErrors"
-          />
-          <FormMetricNameAutocompleter
-            v-model:metric-name="metricName"
-            v-model:metric-types="metricTypes"
-            :placeholder="_t('Metric name')"
-            :label="_t('Metric name')"
-            :has-error="metricNameErrors.length > 0"
-            :described-by="metricNameErrors.length > 0 ? metricNameValidationId : undefined"
-          />
-        </td>
-      </tr>
-      <tr>
-        <td class="graphing-metric-backend-form__label-cell">{{ _t('Attributes') }}</td>
-        <td>
-          <FormMetricBackendAttributes
-            v-model:attribute-filter="attributeFilter"
-            :label="_t('Attributes')"
-            :metric-name="metricName"
-          />
-        </td>
-      </tr>
-      <tr>
-        <td class="graphing-metric-backend-form__label-cell">{{ _t('Consolidation') }}</td>
-        <td>
-          <FormMetricBackendConsolidation
-            v-model:aggregation-lookback="aggregationLookback"
-            v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
-            v-model:aggregation-histogram-threshold-for-fraction-below="
-              aggregationHistogramThresholdForFractionBelow
-            "
-            v-model:aggregation-histogram-lower-threshold-for-fraction-between="
-              aggregationHistogramLowerThresholdForFractionBetween
-            "
-            v-model:aggregation-histogram-upper-threshold-for-fraction-between="
-              aggregationHistogramUpperThresholdForFractionBetween
-            "
-            v-model:consolidation-function="consolidationFunction"
-            :label="_t('Consolidation')"
-            :metric-types="metricTypes"
-          />
-        </td>
-      </tr>
-      <tr v-if="consolidationErrors.length > 0">
-        <td></td>
-        <td>
-          <CmkInlineValidation :validation="consolidationErrors" />
-        </td>
-      </tr>
-      <tr>
-        <td class="graphing-metric-backend-form__label-cell">
-          <SourceFormText variant="description">{{ _t('Group by') }}</SourceFormText>
-        </td>
-        <td>
-          <FormGroupBy
-            v-model="groupBy"
-            :input-type="groupByInputType"
-            :query-suggestions="groupByQuerySuggestions"
-            :suggestion-revision="groupBySuggestionRevision"
-            :resolve-attribute-kind="groupByResolveAttributeKind"
-          />
-        </td>
-      </tr>
-      <GroupByThenSteps
-        v-if="thenStepsShown"
-        v-model="thenSteps"
-        :group-by-keys="groupBy.keys"
-        label-class="graphing-metric-backend-form__label-cell"
-      />
-    </tbody>
-  </table>
+  <SourceFormStack spacing="label">
+    <SourceFormText variant="description">{{ _t('Show') }}</SourceFormText>
+
+    <SourceFormStack spacing="field">
+      <SourceFormField
+        v-slot="{ controlId, describedBy, invalid }"
+        :label="_t('Metric')"
+        label-variant="name"
+        required
+        :errors="metricNameErrors"
+      >
+        <FormMetricNameAutocompleter
+          v-model:metric-name="metricName"
+          v-model:metric-types="metricTypes"
+          :component-id="controlId"
+          :placeholder="_t('Metric name')"
+          :label="_t('Metric name')"
+          :has-error="invalid"
+          :described-by="describedBy"
+        />
+      </SourceFormField>
+
+      <SourceFormStack spacing="label">
+        <SourceFormText variant="description">{{ _t('Where') }}</SourceFormText>
+        <FormMetricBackendAttributes
+          v-model:attribute-filter="attributeFilter"
+          :label="_t('Where: attribute filter')"
+          :metric-name="metricName"
+        />
+      </SourceFormStack>
+
+      <SourceFormStack spacing="label">
+        <SourceFormText variant="description">{{ _t('Then consolidate by') }}</SourceFormText>
+        <CmkInlineValidation
+          v-if="consolidationErrors.length > 0"
+          :validation="consolidationErrors"
+        />
+        <FormMetricBackendConsolidation
+          v-model:aggregation-lookback="aggregationLookback"
+          v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
+          v-model:aggregation-histogram-threshold-for-fraction-below="
+            aggregationHistogramThresholdForFractionBelow
+          "
+          v-model:aggregation-histogram-lower-threshold-for-fraction-between="
+            aggregationHistogramLowerThresholdForFractionBetween
+          "
+          v-model:aggregation-histogram-upper-threshold-for-fraction-between="
+            aggregationHistogramUpperThresholdForFractionBetween
+          "
+          v-model:consolidation-function="consolidationFunction"
+          :label="_t('Then consolidate by: consolidation function and lookback')"
+          :metric-types="metricTypes"
+        />
+      </SourceFormStack>
+
+      <SourceFormStack spacing="label">
+        <SourceFormText variant="description">{{ _t('And group by') }}</SourceFormText>
+        <FormGroupBy
+          v-model="groupBy"
+          :input-type="groupByInputType"
+          :query-suggestions="groupByQuerySuggestions"
+          :suggestion-revision="groupBySuggestionRevision"
+          :resolve-attribute-kind="groupByResolveAttributeKind"
+          :aria-label="_t('And group by: grouping function and keys')"
+        />
+        <!-- GroupByThenSteps emits <tr> rows, so it needs a table of its own here. -->
+        <table v-if="thenStepsShown">
+          <tbody>
+            <GroupByThenSteps v-model="thenSteps" :group-by-keys="groupBy.keys" />
+          </tbody>
+        </table>
+      </SourceFormStack>
+    </SourceFormStack>
+  </SourceFormStack>
 </template>
-
-<style scoped>
-/* border-spacing also pads the table's outer edges; the negative margin hands those back. */
-.graphing-metric-backend-form {
-  border-collapse: separate;
-  border-spacing: var(--dimension-4) var(--dimension-6);
-  margin: calc(-1 * var(--dimension-6)) calc(-1 * var(--dimension-4));
-}
-
-.graphing-metric-backend-form__label-cell {
-  vertical-align: baseline;
-  white-space: nowrap;
-}
-</style>

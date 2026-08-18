@@ -223,7 +223,7 @@ test('a formula row expands to the read-only formula form', async () => {
 test('a metric_backend row expands to the metric backend form', async () => {
   renderTable([metricBackendItem('A')])
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
-  expect(await screen.findByText('Consolidation')).toBeInTheDocument()
+  expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
 })
 
 test('the metric backend source is offered only when the feature is available', async () => {
@@ -238,7 +238,7 @@ test('adding a metric backend source opens its form', async () => {
   await fireEvent.click(await screen.findByRole('option', { name: 'Metrics backend' }))
 
   expect(store.items.value[0]).toMatchObject({ type: 'metric_backend', metric_name: null })
-  expect(await screen.findByText('Consolidation')).toBeInTheDocument()
+  expect(await screen.findByText('Then consolidate by')).toBeInTheDocument()
 })
 
 test('the title column header exposes the rendered macro help', async () => {

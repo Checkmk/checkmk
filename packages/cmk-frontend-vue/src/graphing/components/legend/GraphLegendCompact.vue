@@ -26,11 +26,13 @@ const props = withDefaults(
     horizontalLines?: HorizontalLine[]
     hiddenMetricNames?: string[]
     hiddenLineNames?: string[]
+    clickableMetricNames?: string[]
   }>(),
   {
     horizontalLines: () => [],
     hiddenMetricNames: () => [],
-    hiddenLineNames: () => []
+    hiddenLineNames: () => [],
+    clickableMetricNames: () => []
   }
 )
 
@@ -38,6 +40,7 @@ const emit = defineEmits<{
   'update:hiddenMetricNames': [value: string[]]
   'update:hiddenLineNames': [value: string[]]
   hoverMetric: [metricName: string | null]
+  metricClick: [metricName: string]
 }>()
 
 const DISTINCTIVE_TAIL_CHARS = 5
@@ -74,6 +77,7 @@ interface CompactLegendItem {
   color: string
   hidden: boolean
   metricName: string | null
+  clickable: boolean
   /** Empty for threshold lines and for RRD metrics. */
   attributes: MetricAttribute[]
   toggle: () => void
@@ -94,6 +98,7 @@ const items = computed((): CompactLegendItem[] => [
       color: metric.metadata.color,
       hidden: props.hiddenMetricNames.includes(metric.metadata.name),
       metricName: metric.metadata.name,
+      clickable: props.clickableMetricNames.includes(metric.metadata.name),
       attributes: attributesOf(metric),
       toggle: () =>
         emit(
@@ -109,6 +114,7 @@ const items = computed((): CompactLegendItem[] => [
       color: line.color,
       hidden: props.hiddenLineNames.includes(line.name),
       metricName: null,
+      clickable: false,
       attributes: [],
       toggle: () =>
         emit('update:hiddenLineNames', withNameToggled(props.hiddenLineNames, line.name))
@@ -131,6 +137,12 @@ function onItemEnter(item: CompactLegendItem): void {
 function onItemLeave(item: CompactLegendItem): void {
   if (item.metricName !== null) {
     emit('hoverMetric', null)
+  }
+}
+
+function onNameClick(item: CompactLegendItem): void {
+  if (item.metricName !== null) {
+    emit('metricClick', item.metricName)
   }
 }
 </script>
@@ -171,10 +183,21 @@ function onItemLeave(item: CompactLegendItem): void {
                 class="graphing-graph-legend-compact__swatch"
                 :style="{ background: item.color }"
               />
-              <span class="graphing-graph-legend-compact__name">
+              <component
+                :is="item.clickable ? 'button' : 'span'"
+                class="graphing-graph-legend-compact__name"
+                :class="{ 'graphing-graph-legend-compact__name--clickable': item.clickable }"
+                :type="item.clickable ? 'button' : undefined"
+                :aria-label="
+                  item.clickable
+                    ? _t('Show details for %{metric}', { metric: item.title })
+                    : undefined
+                "
+                @click="item.clickable && onNameClick(item)"
+              >
                 <span class="graphing-graph-legend-compact__name-head">{{ item.nameHead }}</span
                 ><span class="graphing-graph-legend-compact__name-tail">{{ item.nameTail }}</span>
-              </span>
+              </component>
             </span>
           </CmkTooltipTrigger>
           <CmkTooltipContent v-if="item.attributes.length > 0" use-portal>
@@ -249,6 +272,23 @@ function onItemLeave(item: CompactLegendItem): void {
 .graphing-graph-legend-compact__name {
   display: flex;
   min-width: 0;
+
+  &--clickable {
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--success);
+    }
+
+    &:focus-visible {
+      outline: revert;
+    }
+  }
 }
 
 .graphing-graph-legend-compact__name-head {

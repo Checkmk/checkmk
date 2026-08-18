@@ -226,3 +226,20 @@ test('clicking a horizontal line eye emits update:hiddenLineNames with that name
     [['scalar_of(warning,rrd_metric(h/svc/util))']]
   ])
 })
+
+test('a metric named as clickable offers its name as a button emitting metricClick', async () => {
+  const { emitted } = render(GraphLegendCompact, {
+    props: { metrics: [CPU, MEM], clickableMetricNames: ['cpu'] }
+  })
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Show details for CPU' }))
+
+  expect(emitted()['metricClick']).toEqual([['cpu']])
+  expect(screen.queryByRole('button', { name: 'Show details for Memory' })).not.toBeInTheDocument()
+})
+
+test('metric names are plain text unless named as clickable', () => {
+  render(GraphLegendCompact, { props: { metrics: [CPU] } })
+
+  expect(screen.queryByRole('button', { name: 'Show details for CPU' })).not.toBeInTheDocument()
+})

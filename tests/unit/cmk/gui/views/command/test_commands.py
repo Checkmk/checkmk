@@ -211,7 +211,6 @@ class TestDowntimeDurationPresets:
         with set_config(user_downtime_timeranges=[{"title": "2 hours", "end": 7200}]):
             assert "_downrange__7200" in str(form._get_duration_options())
 
-    @pytest.mark.xfail(strict=True, reason="Crash group 4038: OverflowError in _get_onclick")
     def test_skips_a_preset_whose_end_is_not_representable(
         self,
         request_context: None,

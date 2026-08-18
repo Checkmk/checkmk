@@ -1594,8 +1594,10 @@ class CommandScheduleDowntimesForm:
         for nr, time_range in enumerate(active_config.user_downtime_timeranges):
             css_class = ["button", "duration"]
             time_range_end = time_range["end"]
+            end_time = time_interval_end(time_range_end, self._current_local_time())
+            if _local_time_if_representable(end_time) is None:
+                continue
             if nr == 0:
-                end_time = time_interval_end(time_range_end, self._current_local_time())
                 html.final_javascript(
                     f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d", time.localtime(end_time))}");'
                 )
@@ -2125,6 +2127,15 @@ def _find_all_leaves(
 
     # place holders
     return []
+
+
+def _local_time_if_representable(timestamp: float | None) -> time.struct_time | None:
+    if timestamp is None:
+        return None
+    try:
+        return time.localtime(timestamp)
+    except (OverflowError, OSError, ValueError):
+        return None
 
 
 def time_interval_end(

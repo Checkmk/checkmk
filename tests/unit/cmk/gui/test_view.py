@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from typing import cast
+
+import pytest
+
+from cmk.gui import view as view_module
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.type_defs import ViewSpec
+from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.view import View
+
+HOST_BREADCRUMB = Breadcrumb([BreadcrumbItem("myhost", "view.py?view_name=host", None)])
+USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
+
+
+def _single_service_view_without_service_context() -> View:
+    # A single service view that was opened with a host but no service filter, e.g. through a
+    # hand written or outdated bookmark
+    return View(
+        "svcproblems",
+        cast(ViewSpec, {"single_infos": ["host", "service"], "datasource": "services"}),
+        {"host": {"host": "myhost"}},
+        USER_PERMISSIONS,
+    )
+
+
+@pytest.mark.xfail(strict=True, reason="Crash group 3667: KeyError in _host_hierarchy_breadcrumb")
+def test_host_hierarchy_breadcrumb_stops_at_host_without_service_context(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        view_module, "make_host_breadcrumb", lambda *_args, **_kwargs: HOST_BREADCRUMB
+    )
+
+    view = _single_service_view_without_service_context()
+
+    assert view._host_hierarchy_breadcrumb(USER_PERMISSIONS) == HOST_BREADCRUMB

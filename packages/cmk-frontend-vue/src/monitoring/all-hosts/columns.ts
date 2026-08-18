@@ -11,6 +11,7 @@ import type { HostEntry, HostOptionalField, HostState } from '@/monitoring/share
 import type {
   BooleanGroupFilter,
   CheckboxListFilter,
+  DateTimeRangeFilter,
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
@@ -157,6 +158,16 @@ export function buildHostColumns({
   const pendingServicesFilter: NumericFilter<'num_services_pending'> = {
     type: 'numeric',
     field: 'num_services_pending'
+  }
+
+  const lastCheckFilter: DateTimeRangeFilter<'last_check'> = {
+    type: 'date-time-range',
+    field: 'last_check'
+  }
+
+  const lastStateChangeFilter: DateTimeRangeFilter<'last_state_change'> = {
+    type: 'date-time-range',
+    field: 'last_state_change'
   }
 
   const modesFilter: BooleanGroupFilter<'in_downtime' | 'acknowledged'> = {
@@ -309,7 +320,7 @@ export function buildHostColumns({
       sortDescFirst: true,
       minSize: 120,
       maxSize: 200,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: lastCheckFilter }
     },
     {
       accessorKey: 'last_state_change',
@@ -317,7 +328,7 @@ export function buildHostColumns({
       sortDescFirst: true,
       minSize: 120,
       maxSize: 200,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: lastStateChangeFilter }
     },
     {
       accessorKey: 'labels',

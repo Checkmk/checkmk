@@ -6,7 +6,7 @@
 from typing import Annotated, Literal
 
 from annotated_types import MinLen
-from pydantic import AfterValidator
+from pydantic import AfterValidator, PlainValidator
 
 from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model
@@ -14,7 +14,7 @@ from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlai
 from cmk.livestatus_client.expressions import LqSafe
 
 from .._models import HostFilter, HostState, HostStateLabel
-from ._validators import validate_uniqueness
+from ._validators import validate_uniqueness, validate_unix_timestamp
 
 # TODO: look into whether we can utilize generics when generating our shared typing. It's not great
 # that this functionality is tied to the field names or the state choice enum. This information
@@ -25,6 +25,8 @@ _NO_NEWLINES_REGEX = r"^[^\n]*$"
 type StringOp = Literal["contains", "matches"]
 
 type NumericOp = Literal["lt", "lte", "eq", "gt", "gte"]
+
+type TimestampOp = Literal["lt", "lte", "gt", "gte"]
 
 type NumericField = Literal[
     "num_services",
@@ -92,6 +94,26 @@ class NumericCondition:
 
 
 @api_model
+class TimestampCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: Literal["last_check", "last_state_change"] = api_field(
+        description="Timestamp host field to filter on", example="last_check"
+    )
+    op: TimestampOp = api_field(description="Timestamp comparison operation", example="gte")
+    value: Annotated[
+        int, PlainValidator(func=validate_unix_timestamp, json_schema_input_type=int)
+    ] = api_field(
+        description=(
+            "Unix timestamp to compare against, in whole seconds since the epoch (UTC). "
+            "Formatted timestamps such as ISO-8601 strings are not accepted."
+        ),
+        example=1752405510,
+    )
+
+
+@api_model
 class BooleanCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
@@ -108,6 +130,7 @@ type ConditionNode = (
     | StateChoiceCondition
     | SiteChoiceCondition
     | NumericCondition
+    | TimestampCondition
     | BooleanCondition
 )
 
@@ -248,6 +271,9 @@ def _accumulate_filters(node: FilterNode, filters: list[str]) -> None:
         case NumericCondition():
             filters.append(f"Filter: {node.field} {_NUMERIC_OP_TO_LS[node.op]} {node.value}")
 
+        case TimestampCondition():
+            filters.append(f"Filter: {node.field} {_TIMESTAMP_OP_TO_LS[node.op]} {node.value}")
+
         case BooleanCondition():
             match node.field:
                 case "in_downtime":
@@ -294,4 +320,10 @@ _NUMERIC_OP_TO_LS = {
 _STRING_OP_TO_LS = {
     "contains": "~~",
     "matches": "~",
+}
+_TIMESTAMP_OP_TO_LS = {
+    "gt": ">",
+    "gte": ">=",
+    "lt": "<",
+    "lte": "<=",
 }

@@ -179,3 +179,20 @@ test('the site column filter offers the configured sites as options', () => {
     ]
   })
 })
+
+test.each(['last_check', 'last_state_change'])(
+  'the %s column offers a from/to filter on the instant',
+  (field) => {
+    const columns = buildHostColumns({ includeActions: true, sites: [] })
+    const column = columns.find((candidate) => columnId(candidate) === field)
+
+    expect(column?.meta?.filter).toEqual({ type: 'date-time-range', field })
+  }
+)
+
+test('a timestamp column stays hidden until the user shows it', () => {
+  const columns = buildHostColumns({ includeActions: true, sites: [] })
+  const column = columns.find((candidate) => columnId(candidate) === 'last_check')
+
+  expect(column?.meta?.hidden).toBe(true)
+})

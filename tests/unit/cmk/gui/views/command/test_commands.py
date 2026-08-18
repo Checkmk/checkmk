@@ -70,7 +70,6 @@ class TestRemoveDowntimeFromHostOrServiceDatasource:
     The ids are then looked up from the downtimes table instead.
     """
 
-    @pytest.mark.xfail(strict=True, reason="Crash group 4563: KeyError 'service_downtimes'")
     def test_service_row_without_the_downtimes_column(
         self,
         request_context: None,

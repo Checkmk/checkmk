@@ -10,7 +10,7 @@ from typing import Final, Literal
 import pytest
 
 from tests.system.mk_oracle.comparison import ComparisonResult, PluginOutput
-from tests.system.mk_oracle.conftest import OracleDatabase
+from tests.system.mk_oracle.conftest import OracleDatabase, SECTION_LINES
 from tests.system.mk_oracle.test_plugin_comparison import (
     KNOWN_DEVIATIONS,
     run_old_plugin,
@@ -461,19 +461,19 @@ def test_docker_oracle(
         "oracle_recovery_status",
         "oracle_longactivesessions",
         "oracle_performance",
-        "oracle_locks",
         "oracle_systemparameter",
         "oracle_instance",
         "oracle_processes",
     ]
+    # async sections stay empty until the plugin's cache is populated
     expected_sections = expected_non_empty_sections + [
+        "oracle_locks",
         "oracle_recovery_area",
         "oracle_dataguard_stats",
         "oracle_tablespaces",
         "oracle_rman",
         "oracle_jobs",
         "oracle_resumable",
-        "oracle_iostats",
         "oracle_asm_diskgroup",
     ]
 
@@ -511,6 +511,7 @@ def _legacy_migration_cfg(oracle: OracleDatabase) -> str:
             f"DBUSER='{oracle.cmk_username}:{oracle.cmk_password}"
             f"::localhost:{oracle.PORT}:{oracle.SID}'",
             f"TNS_ADMIN={oracle.tns_admin_dir.as_posix()}",
+            *SECTION_LINES,
             "",
             f'SQLS_SECTIONS="{_MIGRATION_METRIC}"',
             f"{_MIGRATION_METRIC}() {{",

@@ -32,6 +32,17 @@ from tests.testlib.utils import is_cleanup_enabled
 
 logger = logging.getLogger()
 
+# The rulesets' default sections, which the new plugin's defaults are aligned with.
+SECTION_LINES: Final[tuple[str, ...]] = (
+    (
+        "SYNC_SECTIONS='instance sessions logswitches undostat recovery_area processes"
+        " recovery_status longactivesessions dataguard_stats performance systemparameter'"
+    ),
+    "ASYNC_SECTIONS='locks tablespaces rman jobs resumable'",
+    "SYNC_ASM_SECTIONS='instance processes'",
+    "ASYNC_ASM_SECTIONS='asm_diskgroup'",
+)
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
@@ -156,12 +167,14 @@ class OracleDatabase:
                 [
                     "MAX_TASKS=10",
                     f"DBUSER='{self.cmk_username}:{self.cmk_password}::localhost:{self.PORT}:{self.SID}'",
+                    *SECTION_LINES,
                 ]
             ),
             self.cmk_wallet_cfg.name: "\n".join(
                 [
                     "MAX_TASKS=10",
                     "DBUSER='/:'",
+                    *SECTION_LINES,
                 ]
             ),
         }

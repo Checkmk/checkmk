@@ -135,6 +135,7 @@ ignore = [
 "packages/cmk-plugin-apis/*" = ["ARG002"]
 "non-free/packages/cmk-dcd/*" = ["ARG001", "ARG002", "ARG003", "SLF001"]
 "non-free/packages/cmk-mcp/tests/*" = ["SLF001"]
+"non-free/packages/cmk-mcp/cmk/testlib/*" = ["SLF001"]
 "non-free/packages/cmk-network-flow/*" = ["ARG001"]
 "non-free/packages/cmk-network-flow/tests/*" = ["SLF001"]
 "non-free/packages/cmk-mknotifyd/*" = ["ARG001", "ARG002", "SLF001"]

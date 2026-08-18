@@ -7,13 +7,15 @@ from __future__ import annotations
 import hashlib
 import secrets
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, UTC
 
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.user import UserId
 from cmk.gui.log import logger
-from cmk.gui.oauth.store.backend import Backend, shared_connection
+from cmk.gui.oauth.store.backend import Backend, connect, oauth_db_path
 from cmk.gui.scopes import format_scopes, InvalidScopeError, parse_scopes, ScopeId
 
 
@@ -152,9 +154,11 @@ class TokenStore(Backend):
         return [record for row in rows if (record := _row_to_record(row)) is not None]
 
 
-def get_token_store() -> TokenStore:
-    """Get the token store, backed by the shared per-process connection."""
-    return TokenStore(shared_connection())
+@contextmanager
+def get_token_store() -> Iterator[TokenStore]:
+    """Get the token store, on a connection closed at the end of the with block."""
+    with connect(oauth_db_path()) as connection:
+        yield TokenStore(connection)
 
 
 def _row_to_record(row: sqlite3.Row) -> TokenRecord | None:

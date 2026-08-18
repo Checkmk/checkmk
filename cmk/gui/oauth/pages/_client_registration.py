@@ -67,27 +67,28 @@ class OAuthClientRegistrationPage(Page):
             response.set_data(_registration_error(exc).model_dump_json())
             return None
 
-        match get_client_store().register(body.redirect_uris, body.client_name):
-            case Error(RegistryFull()):
-                response.status_code = http_client.BAD_REQUEST
-                response.set_content_type("application/json")
-                response.set_data(
-                    OAuthClientRegistrationErrorResponse(
-                        error="invalid_client_metadata",
-                        error_description="client registration limit reached",
-                    ).model_dump_json()
-                )
-                return None
-            case OK(registration):
-                response.status_code = http_client.CREATED
-                response.set_content_type("application/json")
-                response.set_data(
-                    OAuthClientRegistrationResponse(
-                        client_id=registration.client_id,
-                        redirect_uris=body.redirect_uris,
-                        client_name=body.client_name,
-                    ).model_dump_json()
-                )
-                return None
-            case _:
-                assert False
+        with get_client_store() as store:
+            match store.register(body.redirect_uris, body.client_name):
+                case Error(RegistryFull()):
+                    response.status_code = http_client.BAD_REQUEST
+                    response.set_content_type("application/json")
+                    response.set_data(
+                        OAuthClientRegistrationErrorResponse(
+                            error="invalid_client_metadata",
+                            error_description="client registration limit reached",
+                        ).model_dump_json()
+                    )
+                    return None
+                case OK(registration):
+                    response.status_code = http_client.CREATED
+                    response.set_content_type("application/json")
+                    response.set_data(
+                        OAuthClientRegistrationResponse(
+                            client_id=registration.client_id,
+                            redirect_uris=body.redirect_uris,
+                            client_name=body.client_name,
+                        ).model_dump_json()
+                    )
+                    return None
+                case _:
+                    assert False

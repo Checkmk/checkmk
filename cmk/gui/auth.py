@@ -31,6 +31,7 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.oauth.store.backend import StoreUnavailableError
 from cmk.gui.oauth.store.token_store import get_token_store, looks_like_token, TokenRecord
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
@@ -350,7 +351,15 @@ def _check_oauth_access_token(token: str) -> TokenRecord | None:
         still exists and isn't locked
         None otherwise
     """
-    record = get_token_store().get_by_token(token)
+    # Authentication runs inside the Flask session interface, before the
+    # request handling that would otherwise turn an unavailable store into a
+    # 503 (see StoreUnavailableError) -- a token this site cannot check
+    # authenticates nobody instead.
+    try:
+        with get_token_store() as store:
+            record = store.get_by_token(token)
+    except StoreUnavailableError:
+        record = None
     if record is None or not record.is_valid():
         return None
 

@@ -197,26 +197,27 @@ class OAuthTokenPage(Page):
         # scopes into the AuthCodeStore ourselves. If it still goes wrong it's not a user error.
         granted_scopes = parse_scopes(record.scope)
 
-        match get_token_store().issue_token(
-            UserId(record.user_id),
-            expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
-            resource=record.resource,
-            scope=granted_scopes,
-            client_id=record.client_id,
-        ):
-            case Error(UnknownClient()):
-                # The client was deleted after the code was issued. Its grants
-                # died with it (tokens.client_id is ON DELETE CASCADE), so the
-                # code must not become a token either.
-                _error("invalid_grant")
-                return None
-            case OK(access_token):
-                response.set_content_type("application/json")
-                response.set_data(
-                    OAuthTokenResponse(
-                        access_token=access_token, scope=format_scopes(granted_scopes)
-                    ).model_dump_json()
-                )
-                return None
-            case _:
-                assert False
+        with get_token_store() as store:
+            match store.issue_token(
+                UserId(record.user_id),
+                expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
+                resource=record.resource,
+                scope=granted_scopes,
+                client_id=record.client_id,
+            ):
+                case Error(UnknownClient()):
+                    # The client was deleted after the code was issued. Its grants
+                    # died with it (tokens.client_id is ON DELETE CASCADE), so the
+                    # code must not become a token either.
+                    _error("invalid_grant")
+                    return None
+                case OK(access_token):
+                    response.set_content_type("application/json")
+                    response.set_data(
+                        OAuthTokenResponse(
+                            access_token=access_token, scope=format_scopes(granted_scopes)
+                        ).model_dump_json()
+                    )
+                    return None
+                case _:
+                    assert False

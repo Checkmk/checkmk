@@ -21,7 +21,7 @@ def test_static_permissions_returns_users_permission() -> None:
     assert ModeRegisteredOAuthClients.static_permissions() == ["users"]
 
 
-@pytest.mark.usefixtures("request_context", "cleanup_registered_clients")
+@pytest.mark.usefixtures("request_context")
 def test_page_renders_registered_client_details(
     monkeypatch: pytest.MonkeyPatch, test_edition: Edition
 ) -> None:
@@ -29,10 +29,11 @@ def test_page_renders_registered_client_details(
     # user's profile. The anonymous test session is LoggedInNobody, which
     # refuses to save a profile -- same workaround as test_table.py.
     monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda self: None)
-    registered = get_client_store().register(
-        ["https://client.example/callback", "https://client.example/other"],
-        "Example Client",
-    )
+    with get_client_store() as store:
+        registered = store.register(
+            ["https://client.example/callback", "https://client.example/other"],
+            "Example Client",
+        )
     assert registered.is_ok()
 
     with output_funnel.plugged():
@@ -62,7 +63,8 @@ def test_page_renders_empty_table_without_error(test_edition: Edition) -> None:
 @pytest.mark.usefixtures("request_context")
 class TestModeRegisteredOAuthClientsAction:
     def test_deletes_single_client(self, flask_app: Flask, test_edition: Edition) -> None:
-        registered = get_client_store().register(["https://client.example/callback"], "Example")
+        with get_client_store() as store:
+            registered = store.register(["https://client.example/callback"], "Example")
         assert registered.is_ok()
 
         with flask_app.test_request_context(
@@ -80,14 +82,15 @@ class TestModeRegisteredOAuthClientsAction:
                 test_edition, PageContext(config=Config(), request=request)
             ).action(Config())
 
-        assert get_client_store().get(registered.ok.client_id) is None
+        with get_client_store() as store:
+            assert store.get(registered.ok.client_id) is None
 
-    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_bulk_deletes_checked_clients_only(
         self, flask_app: Flask, test_edition: Edition
     ) -> None:
-        checked = get_client_store().register(["https://client.example/checked"], "Checked")
-        unchecked = get_client_store().register(["https://client.example/unchecked"], "Unchecked")
+        with get_client_store() as store:
+            checked = store.register(["https://client.example/checked"], "Checked")
+            unchecked = store.register(["https://client.example/unchecked"], "Unchecked")
         assert checked.is_ok()
         assert unchecked.is_ok()
 
@@ -107,14 +110,15 @@ class TestModeRegisteredOAuthClientsAction:
                 test_edition, PageContext(config=Config(), request=request)
             ).action(Config())
 
-        assert get_client_store().get(checked.ok.client_id) is None
-        assert get_client_store().get(unchecked.ok.client_id) == unchecked.ok
+        with get_client_store() as store:
+            assert store.get(checked.ok.client_id) is None
+            assert store.get(unchecked.ok.client_id) == unchecked.ok
 
-    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_does_not_delete_when_transaction_is_invalid(
         self, flask_app: Flask, test_edition: Edition
     ) -> None:
-        registered = get_client_store().register(["https://client.example/callback"], "Example")
+        with get_client_store() as store:
+            registered = store.register(["https://client.example/callback"], "Example")
         assert registered.is_ok()
 
         with flask_app.test_request_context(
@@ -130,4 +134,5 @@ class TestModeRegisteredOAuthClientsAction:
                 test_edition, PageContext(config=Config(), request=request)
             ).action(Config())
 
-        assert get_client_store().get(registered.ok.client_id) == registered.ok
+        with get_client_store() as store:
+            assert store.get(registered.ok.client_id) == registered.ok

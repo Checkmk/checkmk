@@ -85,7 +85,9 @@ class OAuthAuthorizePage(Page):
             response.status_code = http_client.BAD_REQUEST
             return None
 
-        registration = get_client_store().get(client_id)
+        with get_client_store() as store:
+            registration = store.get(client_id)
+
         if registration is None:
             self._log_authorization_failure("unknown client_id")
             response.status_code = http_client.BAD_REQUEST

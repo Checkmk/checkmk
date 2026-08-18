@@ -57,15 +57,15 @@ def _stored_record(
 @pytest.fixture(autouse=True)
 def seeded_test_client(flask_app: Flask) -> None:
     # Issued tokens reference their client (tokens.client_id), so _VALID_FORM's
-    # client has to exist in the registry for redemption to succeed. Idempotent
-    # because the store's connection is a process-wide singleton that outlives
-    # the test (see cleanup_registered_clients in conftest).
-    get_client_store()._connection.execute(
-        """
-        INSERT OR IGNORE INTO clients (client_id, redirect_uris, client_name, registered_at)
-        VALUES ('test-client', '["https://client.example/callback"]', NULL, 0)
-        """
-    )
+    # client has to exist in the registry for redemption to succeed. Raw SQL
+    # because register() mints its own client_id.
+    with get_client_store() as store:
+        store._connection.execute(
+            """
+            INSERT OR IGNORE INTO clients (client_id, redirect_uris, client_name, registered_at)
+            VALUES ('test-client', '["https://client.example/callback"]', NULL, 0)
+            """
+        )
 
 
 @pytest.mark.usefixtures("request_context")
@@ -100,7 +100,8 @@ class TestOAuthTokenPage:
             assert response.json["scope"] == "read write"
             # The response is not just a claim: it is what the token really
             # grants, as stored alongside the token itself.
-            stored = get_token_store().get_by_token(response.json["access_token"])
+            with get_token_store() as store:
+                stored = store.get_by_token(response.json["access_token"])
             assert stored is not None
             assert format_scopes(stored.scope) == "read write"
 
@@ -125,12 +126,14 @@ class TestOAuthTokenPage:
         # The client can be deleted (Setup > Registered OAuth clients) between
         # receiving the code and redeeming it; a code issued to a client that
         # no longer exists must not become a token.
-        registered = get_client_store().register(["https://client.example/callback"], None)
+        with get_client_store() as store:
+            registered = store.register(["https://client.example/callback"], None)
         assert registered.is_ok()
         AuthCodeStore().store(
             _VALID_FORM["code"], _stored_record(client_id=registered.ok.client_id)
         )
-        get_client_store().delete([registered.ok.client_id])
+        with get_client_store() as store:
+            store.delete([registered.ok.client_id])
         with flask_app.test_request_context(
             method="POST", data={**_VALID_FORM, "client_id": registered.ok.client_id}
         ):

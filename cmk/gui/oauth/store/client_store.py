@@ -7,13 +7,14 @@ from __future__ import annotations
 import json
 import secrets
 import sqlite3
-from collections.abc import Collection
+from collections.abc import Collection, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, UTC
 from typing import NewType
 
 from cmk.ccc.resulttype import Error, OK, Result
-from cmk.gui.oauth.store.backend import Backend, shared_connection
+from cmk.gui.oauth.store.backend import Backend, connect, oauth_db_path
 
 _MAX_REGISTERED_CLIENTS = 1000
 
@@ -104,9 +105,11 @@ class ClientStore(Backend):
         return cursor.rowcount
 
 
-def get_client_store() -> ClientStore:
-    """Get the registered-client store, backed by the shared per-process connection."""
-    return ClientStore(shared_connection())
+@contextmanager
+def get_client_store() -> Iterator[ClientStore]:
+    """Get the registered-client store, on a connection closed at the end of the with block."""
+    with connect(oauth_db_path()) as connection:
+        yield ClientStore(connection)
 
 
 def _row_to_registration(row: sqlite3.Row) -> ClientRegistration:

@@ -15,7 +15,6 @@ from cmk.gui.pages import PageContext
 
 @pytest.mark.usefixtures("request_context")
 class TestOAuthClientRegistrationPage:
-    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_returns_client_id_when_enabled(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
             method="POST",
@@ -35,7 +34,6 @@ class TestOAuthClientRegistrationPage:
             assert isinstance(client_id, str)
             assert client_id
 
-    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_response_echoes_all_submitted_client_metadata(self, flask_app: Flask) -> None:
         # Extend this payload as more RFC 7591 client metadata fields get modeled --
         # section 3.2.1 requires the response to include all registered (accepted)
@@ -55,7 +53,6 @@ class TestOAuthClientRegistrationPage:
             for field, value in submitted.items():
                 assert response.json[field] == value
 
-    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_returns_different_client_id_on_each_call(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
             method="POST", json={"redirect_uris": ["https://client.example/callback"]}
@@ -171,7 +168,6 @@ class TestOAuthClientRegistrationPage:
             assert isinstance(response.json, dict)
             assert response.json["error"] == "invalid_client_metadata"
 
-    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_registered_client_id_is_persisted(self, flask_app: Flask) -> None:
         with flask_app.test_request_context(
             method="POST",
@@ -185,18 +181,18 @@ class TestOAuthClientRegistrationPage:
             assert isinstance(response.json, dict)
             client_id = response.json["client_id"]
 
-        assert get_client_store().get(client_id) is not None
+        with get_client_store() as store:
+            assert store.get(client_id) is not None
 
-    @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_returns_400_when_registration_limit_is_reached(self, flask_app: Flask) -> None:
-        store = get_client_store()
-        store._connection.executemany(
-            """
-            INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
-            VALUES (?, '["https://client.example/callback"]', NULL, 0)
-            """,
-            [(f"limit-test-client-{i}",) for i in range(1000)],
-        )
+        with get_client_store() as store:
+            store._connection.executemany(
+                """
+                INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)
+                VALUES (?, '["https://client.example/callback"]', NULL, 0)
+                """,
+                [(f"limit-test-client-{i}",) for i in range(1000)],
+            )
 
         with flask_app.test_request_context(
             method="POST",

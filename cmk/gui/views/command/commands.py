@@ -2014,14 +2014,14 @@ class CommandScheduleDowntimesForm:
                         if all(host[1] in user_hosts for host in ar["aggr_hosts"])
                     ]
                 else:
-                    action_rows = [ar for ar in action_rows if ar["host_name"] in user_hosts]
+                    action_rows = [ar for ar in action_rows if ar.get("host_name") in user_hosts]
 
             if not downtime_from_bi_aggregation:
                 seen = set()
                 host_action_rows = []
                 for action_row in action_rows:
-                    if action_row["host_name"] not in seen:
-                        seen.add(action_row["host_name"])
+                    if (host_name := action_row.get("host_name")) not in seen:
+                        seen.add(host_name)
                         host_action_rows.append(action_row)
                 action_rows = host_action_rows
         else:

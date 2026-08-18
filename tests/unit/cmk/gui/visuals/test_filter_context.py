@@ -5,10 +5,12 @@
 
 from typing import cast
 
-import pytest
-
 from cmk.gui.type_defs import VisualContext
-from cmk.gui.visuals._filter_context import context_to_uri_vars, missing_context_filters
+from cmk.gui.visuals._filter_context import (
+    context_to_uri_vars,
+    get_singlecontext_vars,
+    missing_context_filters,
+)
 
 # A context that stores the filter value directly instead of the mapping of HTTP variables the
 # type demands, as written by older versions or by hand editing
@@ -19,9 +21,15 @@ def test_missing_context_filters_reports_scalar_filter_context_as_missing() -> N
     assert missing_context_filters({"host"}, SCALAR_CONTEXT) == {"host"}
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4338: AttributeError in context_to_uri_vars")
 def test_context_to_uri_vars_skips_scalar_filter_context() -> None:
     # The well formed entries must still reach the URL; only the unusable one is dropped
     context = cast(VisualContext, {"host": "myhost", "service": {"service": "CPU"}})
 
     assert context_to_uri_vars(context) == [("service", "CPU")]
+
+
+def test_get_singlecontext_vars_skips_scalar_filter_context(request_context: None) -> None:
+    # The well formed entries must still reach the linked view; only the unusable one is dropped
+    context = cast(VisualContext, {"host": "myhost", "service": {"service": "CPU"}})
+
+    assert get_singlecontext_vars(context, ["host", "service"]) == {"host": "", "service": "CPU"}

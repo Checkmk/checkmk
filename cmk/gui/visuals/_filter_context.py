@@ -11,6 +11,7 @@ from itertools import chain
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.type_defs import (
+    FilterHTTPVariables,
     FilterName,
     HTTPVariables,
     InfoName,
@@ -111,7 +112,11 @@ def visible_filters_of_visual(visual: Visual, use_filters: list[Filter]) -> list
 
 def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
     """Produce key/value tuples for HTTP variables from the visual context"""
-    return list(chain.from_iterable(filter_vars.items() for filter_vars in context.values()))
+    return list(
+        chain.from_iterable(
+            filter_vars.items() for filter_vars in context.values() if isinstance(filter_vars, dict)
+        )
+    )
 
 
 # Vice versa: find all filters that belong to the current URI variables
@@ -270,7 +275,11 @@ def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) ->
     }
 
     def var_value(filter_name: FilterName) -> str:
-        if (filter_vars := context.get(filter_name)) and (filt := filter_registry.get(filter_name)):
+        # A saved context can hold the filter value directly instead of the HTTP variables
+        if not isinstance(raw_vars := context.get(filter_name), dict):
+            return ""
+        filter_vars: FilterHTTPVariables = raw_vars
+        if filt := filter_registry.get(filter_name):
             return filter_vars.get(filt.htmlvars[0], "")
         return ""
 

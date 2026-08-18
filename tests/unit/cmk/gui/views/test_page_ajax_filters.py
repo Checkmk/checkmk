@@ -29,7 +29,6 @@ class _RequestReturning:
         return self._api_request
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4109: AssertionError on page_request_vars")
 def test_page_reports_a_request_without_page_request_vars(
     request_context: None,
     load_config: Config,

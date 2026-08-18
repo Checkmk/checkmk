@@ -30,7 +30,10 @@ class ABCAjaxInitialFilters(AjaxPage):
         page_name = api_request.get("page_name", "")
         context = self._get_context(page_name)
         page_request_vars = api_request.get("page_request_vars")
-        assert isinstance(page_request_vars, dict)
+        if not isinstance(page_request_vars, dict) or "infos" not in page_request_vars:
+            raise MKUserError(
+                "page_request_vars", _("The request is missing the filter infos to render")
+            )
         vs_filters = visuals.VisualFilterListWithAddPopup(info_list=page_request_vars["infos"])
         with output_funnel.plugged():
             vs_filters.render_input(varprefix, context)

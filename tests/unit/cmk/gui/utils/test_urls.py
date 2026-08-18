@@ -11,13 +11,9 @@ from werkzeug.test import create_environ
 from cmk.gui.http import Request
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.doc_references import (
-    doc_reference_url,
-    DocReference,
-    DocReferenceUtm,
-    get_docs_base_url,
-)
+from cmk.gui.utils.doc_reference_urls import doc_reference_url, get_docs_base_url
 from cmk.web.exceptions import MKNotFound
+from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.urls import (
     add_kiosk_to_url,
     is_kiosk_request,

@@ -14,7 +14,7 @@ from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.permissions import PermissionRegistry
-from cmk.gui.utils.doc_references import doc_reference_url, DocReference, DocReferenceUtm
+from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.shared_typing.agent_slideout import (
     AgentInstallCmds,
     AgentRegistrationCmds,
@@ -45,6 +45,7 @@ from cmk.shared_typing.setup import AgentRegistrationCmds as SetupAgentRegistrat
 from cmk.shared_typing.setup import AgentSlideout as SetupAgentSlideout
 from cmk.shared_typing.setup import AgentStatusCmds as SetupAgentStatusCmds
 from cmk.shared_typing.setup import UnbakedFallback as SetupUnbakedFallback
+from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 
 WINDOWS_AGENT_DOWNLOAD_CMD = (
     "curl.exe -o check-mk-agent_{version}.msi -fG"

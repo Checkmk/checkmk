@@ -32,7 +32,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
-from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.messaging import get_cert_info
 from cmk.utils.paths import (
@@ -41,6 +40,7 @@ from cmk.utils.paths import (
     root_cert_file,
     site_cert_file,
 )
+from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
 
 

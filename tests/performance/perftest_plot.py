@@ -1806,7 +1806,6 @@ def parse_args() -> PerftestPlotArgs:
         "--skip-filesystem-reads",
         action=argparse.BooleanOptionalAction,
         dest="skip_filesystem_reads",
-        type=bool,
         default=False,
         help="Specifies to read from the database only and ignore filesystem data"
         " (default: %(default)s).",
@@ -1815,7 +1814,6 @@ def parse_args() -> PerftestPlotArgs:
         "--skip-filesystem-writes",
         action=argparse.BooleanOptionalAction,
         dest="skip_filesystem_writes",
-        type=bool,
         default=False,
         help="Specifies to update the database only and skip writing to the filesystem"
         " (default: %(default)s).",
@@ -1824,7 +1822,6 @@ def parse_args() -> PerftestPlotArgs:
         "--skip-database-reads",
         action=argparse.BooleanOptionalAction,
         dest="skip_database_reads",
-        type=bool,
         default=False,
         help="Specifies to read from the filesystem only and ignore database data"
         " (default: %(default)s).",
@@ -1833,7 +1830,6 @@ def parse_args() -> PerftestPlotArgs:
         "--skip-database-writes",
         action=argparse.BooleanOptionalAction,
         dest="skip_database_writes",
-        type=bool,
         default=False,
         help="Specifies to update the filesystem only and skip writing to the database"
         " (default: %(default)s).",
@@ -1842,7 +1838,6 @@ def parse_args() -> PerftestPlotArgs:
         "--skip-graph-generation",
         action=argparse.BooleanOptionalAction,
         dest="skip_graph_generation",
-        type=bool,
         default=False,
         help="Specifies to skip the graph generation (default: %(default)s).",
     )
@@ -1850,7 +1845,6 @@ def parse_args() -> PerftestPlotArgs:
         "--write-json-files",
         action=argparse.BooleanOptionalAction,
         dest="write_json_files",
-        type=bool,
         default=False,
         help="Specifies to write JSON files back to the filesystem (default: %(default)s).",
     )
@@ -1886,7 +1880,6 @@ def parse_args() -> PerftestPlotArgs:
         "--dbcheck",
         action=argparse.BooleanOptionalAction,
         dest="dbcheck",
-        type=bool,
         default=False,
         help="Specifies if the DB connection should be checked only (default: %(default)s).",
     )
@@ -1894,7 +1887,6 @@ def parse_args() -> PerftestPlotArgs:
         "--validate-baselines",
         action=argparse.BooleanOptionalAction,
         dest="validate_baselines",
-        type=bool,
         default=False,
         help="Enable performance baseline validation (default: %(default)s).",
     )
@@ -1902,7 +1894,6 @@ def parse_args() -> PerftestPlotArgs:
         "--alert-on-failure",
         action=argparse.BooleanOptionalAction,
         dest="alert_on_failure",
-        type=bool,
         default=False,
         help="Enable Jira alerter on baseline validation failure (default: %(default)s).",
     )
@@ -1985,7 +1976,6 @@ def parse_args() -> PerftestPlotArgs:
         "--update-db",
         action=argparse.BooleanOptionalAction,
         dest="update_db",
-        type=bool,
         default=False,
         help="Specifies if the DB will be updated, even if job data for that job exists already.",
     )
@@ -1993,7 +1983,6 @@ def parse_args() -> PerftestPlotArgs:
         "--purge-db",
         action=argparse.BooleanOptionalAction,
         dest="purge_db",
-        type=bool,
         default=False,
         help="Specifies if the DB will be purged, if job data for a selected job exists already.",
     )

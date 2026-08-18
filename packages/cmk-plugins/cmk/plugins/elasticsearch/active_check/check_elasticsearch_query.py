@@ -250,7 +250,6 @@ def parse_arguments(argv=None):
     )
     parser.add_argument(
         "--verify-tls-cert",
-        type=bool,
         default=True,
         action=argparse.BooleanOptionalAction,
         help=("Enable or disable TLS cert validation."),

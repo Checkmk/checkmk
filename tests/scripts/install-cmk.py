@@ -47,7 +47,6 @@ def parse_args() -> tuple[InstallCmkArgs, list[str]]:
     parser.add_argument(
         "--uninstall",
         dest="uninstall",
-        type=bool,
         help="Perform an uninstallation instead of an installation",
         action=argparse.BooleanOptionalAction,
         default=False,

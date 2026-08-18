@@ -13,7 +13,7 @@ import MetricAttributeGroups from '../../MetricAttributeGroups.vue'
 import type { HoverState } from '../interaction/hover'
 import { computeTooltipPosition } from './tooltipPosition'
 
-const CURSOR_OFFSET = 16
+const CURSOR_OFFSET = 19
 
 const props = defineProps<{
   hoverState: HoverState | null

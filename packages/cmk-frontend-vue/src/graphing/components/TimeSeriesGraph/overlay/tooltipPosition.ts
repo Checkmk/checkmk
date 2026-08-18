@@ -27,11 +27,7 @@ export function computeTooltipPosition(input: TooltipPlacementInput): {
   }
   left = clamp(left, 0, Math.max(0, input.viewportWidth - input.tooltipWidth))
 
-  const top = clamp(
-    input.cursorY - input.tooltipHeight / 2,
-    0,
-    Math.max(0, input.viewportHeight - input.tooltipHeight)
-  )
+  const top = clamp(input.cursorY, 0, Math.max(0, input.viewportHeight - input.tooltipHeight))
 
   return { left, top }
 }

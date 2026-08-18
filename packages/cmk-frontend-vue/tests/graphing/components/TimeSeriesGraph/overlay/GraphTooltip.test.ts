@@ -92,7 +92,7 @@ describe('GraphTooltip', () => {
     const tooltip = document.querySelector<HTMLElement>('.graphing-graph-tooltip')
     // jsdom reports a zero-size element, so the position degrades to cursor + offset;
     // flip and clamp behaviour is covered by the computeTooltipPosition unit tests.
-    expect(tooltip!.style.left).toBe('121px')
+    expect(tooltip!.style.left).toBe('124px')
     expect(tooltip!.style.top).toBe('205px')
   })
 

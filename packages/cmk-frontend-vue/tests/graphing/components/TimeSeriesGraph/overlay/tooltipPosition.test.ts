@@ -24,14 +24,14 @@ function placementInput(overrides: Partial<TooltipPlacementInput>): TooltipPlace
 }
 
 describe('computeTooltipPosition', () => {
-  test('places the tooltip right of the cursor, vertically centered on it', () => {
-    expect(computeTooltipPosition(placementInput({}))).toEqual({ left: 416, top: 250 })
+  test('places the tooltip right of the cursor, top aligned with it', () => {
+    expect(computeTooltipPosition(placementInput({}))).toEqual({ left: 416, top: 300 })
   })
 
   test('flips to the left of the cursor when it would cross the right viewport edge', () => {
     expect(computeTooltipPosition(placementInput({ cursorX: 800 }))).toEqual({
       left: 800 - 16 - 300,
-      top: 250
+      top: 300
     })
   })
 
@@ -43,7 +43,7 @@ describe('computeTooltipPosition', () => {
   })
 
   test('clamps to the top viewport edge', () => {
-    expect(computeTooltipPosition(placementInput({ cursorY: 20 })).top).toBe(0)
+    expect(computeTooltipPosition(placementInput({ cursorY: -20 })).top).toBe(0)
   })
 
   test('clamps to the bottom viewport edge', () => {

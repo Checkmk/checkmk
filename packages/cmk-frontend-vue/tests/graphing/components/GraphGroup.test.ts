@@ -176,6 +176,8 @@ afterEach(() => {
 
 const skeletons = (): NodeListOf<Element> => document.querySelectorAll('.graphing-graph-skeleton')
 
+const panels = (): NodeListOf<Element> => document.querySelectorAll('[data-testid="graph-panel"]')
+
 const group = (): Element | null => document.querySelector('.graphing-graph-group')
 
 // Scoped deliberately: the group's live region carries the same message as the pill, so an
@@ -219,18 +221,73 @@ test('reports the busy state from the first moment, ahead of the skeletons', asy
   expect(group()).toHaveAttribute('aria-busy', 'true')
 })
 
-test('stays clear of the busy state while refetching with panels on screen', async () => {
+test('swaps the panels for skeletons once a refetch outlasts the delay', async () => {
+  vi.useFakeTimers()
   renderGroup()
-  // Waiting on the request count would be too early: it is still an initial load until data lands.
-  expect(await screen.findAllByTestId('graph-panel')).toHaveLength(1)
-  expect(group()).toHaveAttribute('aria-busy', 'false')
+  await vi.advanceTimersByTimeAsync(0)
+  expect(panels()).toHaveLength(1)
 
   postSpy.mockReturnValue(new Promise(() => {}))
-  await fireEvent.click(await screen.findByText('pan'))
+  await fireEvent.click(screen.getByText('pan'))
+  await vi.advanceTimersByTimeAsync(1_000)
+
+  expect(panels()).toHaveLength(0)
+  expect(skeletons()).toHaveLength(1)
+})
+
+test('reports the busy state from the first moment of a refetch too', async () => {
+  vi.useFakeTimers()
+  renderGroup()
+  await vi.advanceTimersByTimeAsync(0)
+
+  postSpy.mockReturnValue(new Promise(() => {}))
+  await fireEvent.click(screen.getByText('pan'))
   await nextTick()
 
-  expect(document.querySelectorAll('[data-testid="graph-panel"]')).toHaveLength(1)
+  expect(group()).toHaveAttribute('aria-busy', 'true')
+  expect(panels()).toHaveLength(1)
+  expect(skeletons()).toHaveLength(0)
+})
+
+test('a fast refetch swaps straight to the new panels without a skeleton', async () => {
+  vi.useFakeTimers()
+  renderGroup()
+  await vi.advanceTimersByTimeAsync(0)
+  expect(panels()).toHaveLength(1)
+
+  await fireEvent.click(screen.getByText('pan'))
+  await vi.advanceTimersByTimeAsync(999)
+
+  // The assertions below would hold just as well had the pan never fetched at all.
+  expect(requestedRanges()).toContainEqual({ start: 1_500, end: 2_500, step: 60 })
+  expect(skeletons()).toHaveLength(0)
+  expect(panels()).toHaveLength(1)
   expect(group()).toHaveAttribute('aria-busy', 'false')
+})
+
+test('a refetch failing after its skeletons are up replaces them with the error', async () => {
+  vi.useFakeTimers()
+  renderGroup()
+  await vi.advanceTimersByTimeAsync(0)
+  expect(panels()).toHaveLength(1)
+
+  let fail!: (reason: Error) => void
+  postSpy.mockReturnValue(
+    new Promise((_resolve, reject) => {
+      fail = reject
+    })
+  )
+  await fireEvent.click(screen.getByText('pan'))
+  await vi.advanceTimersByTimeAsync(1_000)
+  expect(skeletons()).toHaveLength(1)
+
+  fail(new Error('gone'))
+  await vi.advanceTimersByTimeAsync(0)
+
+  // A failed refetch keeps the previous data, so the notice lands over its panel.
+  expect(skeletons()).toHaveLength(0)
+  expect(panels()).toHaveLength(1)
+  expect(within(notice()!).getByText('gone')).toBeInTheDocument()
 })
 
 test('an error arriving after the skeletons are up replaces them', async () => {
@@ -264,7 +321,7 @@ test('a fast load resolves straight into the panels without a skeleton', async (
 
   // Flush the already-resolved fetch without reaching the one-second threshold.
   await vi.advanceTimersByTimeAsync(999)
-  expect(document.querySelectorAll('[data-testid="graph-panel"]')).toHaveLength(1)
+  expect(panels()).toHaveLength(1)
   expect(skeletons()).toHaveLength(0)
   expect(group()).toHaveAttribute('aria-busy', 'false')
 

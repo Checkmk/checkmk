@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <!--
 A placeholder occupying one GraphPanel's footprint while its data is still being fetched.
 
-Following the design's "skeleton by area", each of the panel's four areas becomes one block rather
+Following the design's "skeleton by area", each of the panel's areas becomes one block rather
 than skeletonising the axis ticks, legend rows and controls inside them.
 
 Decorative only; GraphGroup owns the announcement for assistive tech.
@@ -28,8 +28,10 @@ withDefaults(
   defineProps<{
     figureWidth?: number
     figureHeight?: number
+    showLegend?: boolean
+    showBrush?: boolean
   }>(),
-  { figureWidth: 800, figureHeight: 300 }
+  { figureWidth: 800, figureHeight: 300, showLegend: true, showBrush: true }
 )
 </script>
 
@@ -42,10 +44,10 @@ withDefaults(
     <div class="graphing-graph-skeleton__plot" :style="{ height: `${figureHeight}px` }">
       <CmkSkeleton type="box" />
     </div>
-    <div class="graphing-graph-skeleton__brush">
+    <div v-if="showBrush" class="graphing-graph-skeleton__brush">
       <CmkSkeleton type="box" />
     </div>
-    <div class="graphing-graph-skeleton__legend">
+    <div v-if="showLegend" class="graphing-graph-skeleton__legend">
       <CmkSkeleton type="box" />
     </div>
   </div>

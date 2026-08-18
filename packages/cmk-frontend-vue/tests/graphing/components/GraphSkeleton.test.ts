@@ -34,6 +34,13 @@ test("falls back to GraphPanel's own default figure size of 800x300", () => {
   expect(area('plot')!.style.height).toBe('300px')
 })
 
+test('reserves no legend space for a panel that shows none', () => {
+  render(GraphSkeleton, { props: { showLegend: false } })
+
+  expect(area('legend')).not.toBeInTheDocument()
+  expect(area('plot')).toBeInTheDocument()
+})
+
 test('is hidden from assistive tech', () => {
   render(GraphSkeleton)
 

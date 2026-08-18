@@ -116,7 +116,7 @@ watch(requestedTimeRange, (range) => {
   }
 })
 
-const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphData(
+const { graphs, isLoading, loadingSlots, error, partialErrors, warnings, reload } = useGraphData(
   () => props.graphs,
   () => requestedTimeRange.value,
   () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
@@ -135,15 +135,22 @@ const overviews = computed(() =>
   overviewGraphs.value.map((graph) => ({ metrics: graph.metrics, timeRange: graph.timeRange }))
 )
 
-// A refetch (zoom, pan, brush, global picker) keeps the panels rendered, so it is not an initial
-// load. Both the skeletons and aria-busy key off this rather than off `isLoading`.
-const isInitialLoad = computed(() => isLoading.value && graphs.value.length === 0)
-
-// Only the visuals wait; aria-busy below is undelayed. The skeleton also stands down for a failure,
-// which already occupies the area with its own notice.
+// A refetch is skeletonised too: the curves still on screen are the previous range's, so leaving
+// them up reads as nothing having happened. A failure is exempt, its notice occupies the area.
 const showSkeletons = useDelayedFlag(
-  () => isInitialLoad.value && error.value === null,
+  () => loadingSlots.value.some(Boolean) && error.value === null,
   LOADING_AFFORDANCE_DELAY_MS
+)
+
+// One entry per graph definition, so a panel waiting on its own data is the only one replaced:
+// a consolidation change refetches that panel alone, and blanking its neighbours would lose
+// data they still hold.
+const slots = computed(() =>
+  Array.from({ length: props.graphs.length }, (_unused, index) => ({
+    index,
+    graph: graphs.value[index] ?? null,
+    isSkeleton: showSkeletons.value && (loadingSlots.value[index] ?? false)
+  }))
 )
 
 const notice = useGraphNotice({
@@ -158,9 +165,6 @@ function onRetry(): void {
   reload()
   reloadOverview()
 }
-
-// Named because the resolved `graphs` above shadows `props.graphs` in the template.
-const definitionCount = computed(() => props.graphs.length)
 </script>
 
 <template>
@@ -168,47 +172,47 @@ const definitionCount = computed(() => props.graphs.length)
     ref="groupEl"
     class="graphing-graph-group"
     :class="`graphing-graph-group--${layout}`"
-    :aria-busy="isInitialLoad"
+    :aria-busy="isLoading"
   >
-    <!-- Until the delay elapses no branch matches and no panels exist yet, leaving the area blank. -->
-    <template v-if="showSkeletons">
-      <CmkVisuallyHidden :text="_t('Loading graphs…')" live="polite" />
+    <!-- The pills below repeat one message over every panel, so they stay silent and the group
+         announces it once here. -->
+    <CmkVisuallyHidden v-if="showSkeletons" :text="_t('Loading graphs…')" live="polite" />
+    <CmkVisuallyHidden
+      v-else-if="notice"
+      :text="notice.message"
+      :live="notice.variant === 'error' ? 'assertive' : 'polite'"
+    />
+    <!-- A slot with neither yet is a first load still inside the delay, and stays blank. -->
+    <template v-for="panelSlot in slots" :key="panelSlot.index">
       <GraphSkeleton
-        v-for="n in definitionCount"
-        :key="n"
+        v-if="panelSlot.isSkeleton"
         class="graphing-graph-group__panel"
         :figure-width="effectiveWidth"
+        :figure-height="figure_height"
+        :show-legend="show_legend"
+        :show-brush="props.graphs[panelSlot.index]!.interaction.brush === 'enabled'"
       />
-    </template>
-    <template v-else>
-      <!-- The pills below repeat one message over every panel, so they stay silent and the group
-           announces it once here. -->
-      <CmkVisuallyHidden
-        v-if="notice"
-        :text="notice.message"
-        :live="notice.variant === 'error' ? 'assertive' : 'polite'"
-      />
-      <div v-for="(graph, i) in graphs" :key="i" class="graphing-graph-group__panel">
+      <div v-else-if="panelSlot.graph" class="graphing-graph-group__panel">
         <GraphPanel
-          :consolidation-fn="consolidationFnOfPanel(i)"
-          :metrics="graph.metrics"
-          :data-time-range="graph.timeRange"
+          :consolidation-fn="consolidationFnOfPanel(panelSlot.index)"
+          :metrics="panelSlot.graph.metrics"
+          :data-time-range="panelSlot.graph.timeRange"
           :requested-time-range="requestedTimeRange"
           :time-picker-requests="timePickerRequests"
-          :title="graph.title"
+          :title="panelSlot.graph.title"
           :show-title="true"
           :show-timestamp="true"
           :show-consolidation="show_consolidation"
           :show-legend="show_legend"
-          :interaction="props.graphs[i]!.interaction"
-          :overview="overviews[i]"
-          :horizontal-lines="graph.horizontalLines"
+          :interaction="props.graphs[panelSlot.index]!.interaction"
+          :overview="overviews[panelSlot.index]"
+          :horizontal-lines="panelSlot.graph.horizontalLines"
           :figure-width="effectiveWidth"
           :figure-height="figure_height"
-          :add-to="graph?.addTo"
+          :add-to="panelSlot.graph.addTo"
           :header-is-compact="layout === 'wrap'"
           @update:requested-time-range="onPanelTimeRange"
-          @update:consolidation-fn="consolidationFnPerPanel[i] = $event"
+          @update:consolidation-fn="consolidationFnPerPanel[panelSlot.index] = $event"
         />
         <GraphNotice
           v-if="notice"
@@ -218,15 +222,15 @@ const definitionCount = computed(() => props.graphs.length)
           @retry="onRetry"
         />
       </div>
-      <!-- A first load that failed has no panel to sit over, so the notice stands on its own. -->
-      <GraphNotice
-        v-if="notice && graphs.length === 0"
-        v-bind="notice"
-        silent
-        class="graphing-graph-group__notice--standalone"
-        @retry="onRetry"
-      />
     </template>
+    <!-- A first load that failed has no panel to sit over, so the notice stands on its own. -->
+    <GraphNotice
+      v-if="notice && graphs.length === 0"
+      v-bind="notice"
+      silent
+      class="graphing-graph-group__notice--standalone"
+      @retry="onRetry"
+    />
   </div>
 </template>
 

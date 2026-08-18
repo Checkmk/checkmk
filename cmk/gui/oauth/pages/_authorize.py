@@ -31,31 +31,23 @@ from cmk.gui.utils.security_log_events import OAuthAuthorizationFailureEvent
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.utils.security_event import log_security_event
 
+_SCOPE_REQUESTED_VARNAME = "scope"
+_SCOPE_SELECTED_VARNAME = "_scope"
+
+ScopeLabels = {
+    ScopeId.READ: _("Read only"),
+    ScopeId.WRITE: _("Read & write"),
+}
+
 
 class OAuthAuthorizePage(Page):
-    """RFC 6749 section 3.1 authorization endpoint for this site.
+    """RFC 6749 section 3.1 authorization endpoint, advertised by the RFC 8414 metadata.
 
-    Referenced via the "authorization_endpoint" field of the RFC 8414
-    authorization server metadata document. Requires an active Checkmk login
-    session (enforced by the page registry via the missing "noauth:" prefix,
-    see cmk.gui.oauth.registration.register()) and shows a consent screen before issuing a
-    code. Returns 404 while no OAuth-consuming feature is enabled for the
-    site (the enabled predicate is injected at registration).
-
-    This is where the granted scope is decided: the requested scope is
-    validated and normalized (see cmk.gui.scopes), shown to the user,
-    and bound to the code in that form, so the client's raw scope string never
-    reaches the token. There is no per-scope selection UI; approving grants
-    what was asked for.
-
-    Codes minted on approval are persisted PKCE-bound via AuthCodeStore; the
-    token endpoint later redeems them single-use. Validates client_id against
-    the registered-client store (see cmk.gui.oauth.store.client_store) and requires
-    redirect_uri to exactly match one of that client's registered
-    redirect_uris. A request naming a client, redirect_uri or scope this site
-    does not have is logged as a security event (see
-    OAuthAuthorizationFailureEvent); a merely malformed one is a client bug and
-    is not.
+    Requires an active Checkmk login session, enforced by the page registry via
+    the missing "noauth:" prefix (see cmk.gui.oauth.registration.register()).
+    This is where the token's scope is decided: the consent form offers every
+    supported scope, and only the selection is bound to the code, so the
+    client's raw scope string never reaches the token.
     """
 
     def __init__(self, enabled: Callable[[], bool]) -> None:
@@ -115,16 +107,16 @@ class OAuthAuthorizePage(Page):
             self._error_redirect(ctx, redirect_uri, "invalid_request")
             return None
 
-        if len(request.values.getlist("scope")) > 1:
+        if len(scope_values := request.values.getlist(_SCOPE_REQUESTED_VARNAME)) > 1:
             # RFC 6749 section 3.1 forbids repeating a request parameter, and
             # with duplicates there is no answer to what the user is approving.
             self._error_redirect(ctx, redirect_uri, "invalid_request")
             return None
 
-        raw_scope = request.var("scope", "").strip()
+        raw_scope = scope_values[0].strip() if scope_values else ""
         try:
             # RFC 6749 section 3.3 leaves what an omitted scope means to us.
-            granted_scopes = parse_scopes(raw_scope) if raw_scope else DEFAULT_SCOPE
+            requested_scopes = parse_scopes(raw_scope) if raw_scope else DEFAULT_SCOPE
         except InvalidScopeError as exc:
             # RFC 6749 section 4.1.2.1. Rejected rather than downscoped.
             self._log_authorization_failure(f"unknown scope: {exc}")
@@ -137,20 +129,21 @@ class OAuthAuthorizePage(Page):
                 self._post(
                     ctx,
                     redirect_uri=redirect_uri,
-                    granted_scopes=granted_scopes,
                     client_id=client_id,
                     code_challenge=code_challenge,
                 )
             case "GET" | "HEAD":
                 # Werkzeug adds HEAD to every GET route and strips the body.
-                self._get(ctx, redirect_uri=redirect_uri, granted_scopes=granted_scopes)
+                self._get(ctx, redirect_uri=redirect_uri, requested_scopes=requested_scopes)
             case _:
                 # RFC 6749 section 3.1 gives this endpoint GET and POST, so
                 # there is nothing else to answer.
                 response.status_code = http_client.METHOD_NOT_ALLOWED
         return None
 
-    def _get(self, ctx: PageContext, redirect_uri: str, granted_scopes: frozenset[ScopeId]) -> None:
+    def _get(
+        self, ctx: PageContext, redirect_uri: str, requested_scopes: frozenset[ScopeId]
+    ) -> None:
         client_id = request.var("client_id")
 
         self._open_center_frame(ctx, _("Authorize access"))
@@ -162,22 +155,15 @@ class OAuthAuthorizePage(Page):
                 _('The application "%(client_id)s" is requesting access to this Checkmk site.')
                 % {"client_id": client_id}
             )
-        descriptions = {
-            ScopeId.READ: _("read data"),
-            ScopeId.WRITE: _("change data and configuration"),
-        }
-        html.p(
-            _("It is requesting permission to: %(grants)s.")
-            # ScopeId order, so a given grant always reads the same way.
-            % {"grants": ", ".join(descriptions[s] for s in ScopeId if s in granted_scopes)}
-        )
-        html.p(_("Your own user permissions still apply."))
-        html.p(_("Redirect target: %(redirect_uri)s") % {"redirect_uri": redirect_uri})
         # Explicit action: this page is also reachable via the external OAuth
         # issuer alias (/oauth-<site>/authorize, see system_apache.py), where
         # the default relative "oauth_authorize.py" action would resolve
         # against the wrong base path and never reach the backend.
         with html.form_context("oauth_authorize", method="POST", action=request.path):
+            html.p(_("It is requesting these permissions:"))
+            self._render_scope_choice(requested_scopes)
+            html.p(_("Your own user permissions still apply."))
+            html.p(_("Redirect target: %(redirect_uri)s") % {"redirect_uri": redirect_uri})
             html.button("_authorize", _("Authorize"), cssclass="hot")
             html.button("_deny", _("Deny"))
             html.hidden_fields()
@@ -188,20 +174,28 @@ class OAuthAuthorizePage(Page):
         ctx: PageContext,
         *,
         redirect_uri: str,
-        granted_scopes: frozenset[ScopeId],
         client_id: str,
         code_challenge: str,
     ) -> None:
         check_csrf_token()
         if not transactions.check_transaction(request):
-            # A replayed or expired transaction id: ask again rather than
-            # answer a submission we cannot attribute to the form we sent.
-            self._get(ctx, redirect_uri=redirect_uri, granted_scopes=granted_scopes)
+            # In the seconds it takes to click Authorize, this transaction id
+            # can only already be used -- a double submit or a replay, not
+            # staleness -- so it is answered like any other tampered POST.
+            self._log_authorization_failure("reused or invalid transaction id")
+            self._error_redirect(ctx, redirect_uri, "invalid_request")
             return
         if request.var("_deny") is not None:
             self._error_redirect(ctx, redirect_uri, "access_denied")
             return
-        self._issue_code(ctx, redirect_uri, client_id, code_challenge, granted_scopes)
+        selection = request.var(_SCOPE_SELECTED_VARNAME, "")
+        if selection not in (scope.value for scope in ScopeLabels):
+            # The rendered form only ever submits an offered scope, so this is
+            # a tampered POST, not a user error.
+            self._log_authorization_failure("selected scope was not offered")
+            self._error_redirect(ctx, redirect_uri, "invalid_request")
+            return
+        self._issue_code(ctx, redirect_uri, client_id, code_challenge, parse_scopes(selection))
 
     def _open_center_frame(self, ctx: PageContext, title: str) -> None:
         # Reuses the login/two-factor page chrome: this page is shown before
@@ -238,7 +232,7 @@ class OAuthAuthorizePage(Page):
         redirect_uri: str,
         client_id: str,
         code_challenge: str,
-        granted_scopes: frozenset[ScopeId],
+        selected_scopes: frozenset[ScopeId],
     ) -> None:
         # The bound user is the server-side session user; the page registry
         # guarantees an authenticated session before this code runs.
@@ -248,9 +242,9 @@ class OAuthAuthorizePage(Page):
             user_id=user.id,
             client_id=client_id,
             redirect_uri=redirect_uri,
-            # The normalized grant the consent page showed, not the client's
-            # raw scope string.
-            scope=format_scopes(granted_scopes),
+            # What the consent page showed and the user picked, not the
+            # client's raw scope string.
+            scope=format_scopes(selected_scopes),
             resource=request.var("resource"),
             code_challenge=code_challenge,
         )
@@ -306,3 +300,18 @@ class OAuthAuthorizePage(Page):
         html.p(_("Redirecting..."))
         html.a(_("Click here if you are not redirected automatically."), href=target_url)
         self._close_center_frame()
+
+    def _render_scope_choice(self, requested_scopes: frozenset[ScopeId]) -> None:
+        # Preselected, so approving an untouched form binds what was asked for.
+        as_requested = ScopeId.WRITE if ScopeId.WRITE in requested_scopes else ScopeId.READ
+        html.open_p()
+        for index, scope in enumerate(ScopeLabels.keys()):
+            if index:
+                html.br()
+            html.radiobutton(
+                _SCOPE_SELECTED_VARNAME,
+                scope.value,
+                checked=scope is as_requested,
+                label=ScopeLabels[scope],
+            )
+        html.close_p()

@@ -19,7 +19,7 @@ from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.http import request, response
-from cmk.gui.oauth.pages._authorize import OAuthAuthorizePage
+from cmk.gui.oauth.pages._authorize import _SCOPE_SELECTED_VARNAME, OAuthAuthorizePage
 from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.pages import PageContext
@@ -40,6 +40,7 @@ def _authorize_request(
     code_challenge: str | None = "test-challenge",
     code_challenge_method: str | None = "S256",
     scope: str | None = None,
+    selected_scope: str | None = None,
     state: str | None = None,
     resource: str | None = None,
     deny: str | None = None,
@@ -51,6 +52,7 @@ def _authorize_request(
         "code_challenge": code_challenge,
         "code_challenge_method": code_challenge_method,
         "scope": scope,
+        _SCOPE_SELECTED_VARNAME: selected_scope,
         "state": state,
         "resource": resource,
         "_deny": deny,
@@ -62,6 +64,26 @@ def _extract_redirect_target(body: str) -> str:
     match = re.search(r'<a[^>]+href="([^"]+)"', body)
     assert match is not None, "no fallback link in the redirect page"
     return unescape(match.group(1))
+
+
+def _offered_and_selected_scopes(body: str) -> dict[str, bool]:
+    """Which scopes the consent form offers, and which one of them is selected.
+
+    The radios are located by attribute content rather than by an exact tag
+    string, so attribute order and spelling stay free.
+    """
+    offered = {}
+    for tag in re.findall(r"<input[^>]*>", body):
+        if f'name="{_SCOPE_SELECTED_VARNAME}"' not in tag:
+            continue
+        value = re.search(r'value="([^"]*)"', tag)
+        assert value is not None, f"scope radio without a value: {tag}"
+        # Attribute *names* only: HTML attribute names are case insensitive,
+        # and matching them as names keeps "checked" from being found inside
+        # the value of some other attribute.
+        names = {name.lower() for name in re.findall(r"""[\s"']([A-Za-z-]+)=""", tag)}
+        offered[value.group(1)] = "checked" in names
+    return offered
 
 
 def _logged_reason(security_log: MagicMock) -> str:
@@ -163,21 +185,39 @@ class TestOAuthAuthorizePage:
 
             assert response.status_code == 405
 
+    def test_consent_page_offers_the_wider_scope_too(
+        self, flask_app: Flask, registered_client_id: str
+    ) -> None:
+        # Every supported scope is offered regardless of what was requested;
+        # only the preselection reflects what the client actually asked for.
+        with flask_app.test_request_context(
+            query_string=_authorize_request(client_id=registered_client_id, scope="read")
+        ):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
+            assert response.status_code == 200
+            body = response.get_data(as_text=True)
+
+        assert _offered_and_selected_scopes(body) == {"read": True, "write": False}
+        assert "Read only" in body
+        assert "Read &amp; write" in body
+
     @pytest.mark.parametrize(
-        "requested_scope, expected_grants",
+        "requested_scope",
         [
-            # The user is told what they are approving, in the normalized form
-            # the code will actually be bound to -- not the client's wording.
-            ("read", "read data"),
-            ("write", "read data, change data and configuration"),
+            pytest.param("write", id="the-scope-itself"),
+            # What first contact from either official MCP SDK literally looks
+            # like: with no scope in our 401 challenge, both fall back to
+            # requesting the join of the advertised scopes_supported. The page
+            # must offer the widest scope named rather than reject the request.
+            pytest.param("read write", id="a-list-of-every-advertised-scope"),
         ],
     )
-    def test_consent_page_lists_the_grants(
-        self,
-        flask_app: Flask,
-        registered_client_id: str,
-        requested_scope: str,
-        expected_grants: str,
+    def test_consent_page_offers_the_narrower_scope_too(
+        self, flask_app: Flask, registered_client_id: str, requested_scope: str
     ) -> None:
         with flask_app.test_request_context(
             query_string=_authorize_request(client_id=registered_client_id, scope=requested_scope)
@@ -189,15 +229,21 @@ class TestOAuthAuthorizePage:
 
             assert response.status_code == 200
             body = response.get_data(as_text=True)
-            assert f"It is requesting permission to: {expected_grants}." in body
+
+        # Preselected as requested, so approving an untouched form grants what
+        # the client asked for.
+        assert _offered_and_selected_scopes(body) == {"read": False, "write": True}
+        assert "Read only" in body
+        assert "Read &amp; write" in body
 
     def test_redirects_with_invalid_request_when_scope_is_repeated(
         self, flask_app: Flask, registered_client_id: str
     ) -> None:
-        # A repeated *parameter*, which RFC 6749 section 3.1 forbids outright:
-        # with two of them there is no single answer to what the user is
-        # approving. Hand-built rather than a case of the table below, because
-        # a parameter dict cannot carry the same name twice.
+        # A repeated *parameter*, which RFC 6749 section 3.1 forbids outright.
+        # Distinct from a single scope parameter naming several scopes, which
+        # is the list form section 3.3 defines and parse_scopes() accepts --
+        # this is about the request being malformed. Hand-built rather than a
+        # case of the table below: a parameter dict cannot carry a name twice.
         with flask_app.test_request_context(
             query_string=(
                 f"redirect_uri={_REDIRECT_URI}"
@@ -240,7 +286,10 @@ class TestOAuthAuthorizePage:
         self, flask_app: Flask, registered_client_id: str
     ) -> None:
         with flask_app.test_request_context(
-            method="POST", data=_authorize_request(client_id=registered_client_id, state="xyz")
+            method="POST",
+            data=_authorize_request(
+                client_id=registered_client_id, state="xyz", selected_scope="read"
+            ),
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
@@ -317,7 +366,11 @@ class TestOAuthAuthorizePage:
         assert registration.is_ok()
         with flask_app.test_request_context(
             method="POST",
-            data=_authorize_request(client_id=registration.ok.client_id, redirect_uri=redirect_uri),
+            data=_authorize_request(
+                client_id=registration.ok.client_id,
+                redirect_uri=redirect_uri,
+                selected_scope="read",
+            ),
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
@@ -341,7 +394,8 @@ class TestOAuthAuthorizePage:
         # a form submission -- blocking the navigation to redirect_uri since
         # it's necessarily a different origin (the OAuth client's callback).
         with flask_app.test_request_context(
-            method="POST", data=_authorize_request(client_id=registered_client_id)
+            method="POST",
+            data=_authorize_request(client_id=registered_client_id, selected_scope="read"),
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
@@ -353,14 +407,17 @@ class TestOAuthAuthorizePage:
             body = response.get_data(as_text=True)
             assert 'http-equiv="refresh"' in body
 
-    @pytest.mark.usefixtures("valid_csrf_token")
-    def test_shows_consent_page_again_when_not_confirmed(
-        self, flask_app: Flask, registered_client_id: str
+    @pytest.mark.usefixtures("clean_redis", "valid_csrf_token")
+    def test_redirects_with_invalid_request_when_the_transaction_is_invalid(
+        self, flask_app: Flask, security_log: MagicMock, registered_client_id: str
     ) -> None:
         # No valid_transaction fixture and no _transid in the submission, so
-        # the real check fails it: a replayed or expired form submission.
+        # the real check fails it. Within the seconds a consent decision
+        # takes, that can only be a double submit or a replay, not
+        # staleness -- so it is answered like any other tampered POST rather
+        # than quietly asking again.
         with flask_app.test_request_context(
-            method="POST", data=_authorize_request(client_id=registered_client_id)
+            method="POST", data=_authorize_request(client_id=registered_client_id, state="xyz")
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
@@ -368,8 +425,13 @@ class TestOAuthAuthorizePage:
                     PageContext(config=Config(), request=request)
                 )
 
-            assert response.status_code == 200
-            assert "<form" in response.get_data(as_text=True)
+            target_url = _extract_redirect_target(response.get_data(as_text=True))
+
+        query = parse_qs(urlsplit(target_url).query)
+        assert query["error"] == ["invalid_request"]
+        assert query["state"] == ["xyz"]
+        assert get_redis_client().keys() == []
+        assert _logged_reason(security_log) == "reused or invalid transaction id"
 
     @pytest.mark.parametrize(
         "overrides",
@@ -517,6 +579,7 @@ class TestOAuthAuthorizePage:
             data=_authorize_request(
                 client_id=registered_client_id,
                 scope="read",
+                selected_scope="read",
                 resource="https://host/mysite/check_mk/mcp",
                 code_challenge="foobar",
             ),
@@ -540,13 +603,35 @@ class TestOAuthAuthorizePage:
         )
 
     @pytest.mark.usefixtures("clean_redis", "valid_transaction", "valid_csrf_token")
-    def test_approve_binds_the_normalized_scope(
-        self, flask_app: Flask, registered_client_id: str
+    @pytest.mark.parametrize(
+        "requested_scope, selected_scope, bound_scope",
+        [
+            pytest.param("read", "read", "read", id="read-as-requested"),
+            # A client asking to write is granted read as well -- one grant,
+            # one spelling.
+            pytest.param("write", "write", "read write", id="write-as-requested"),
+            pytest.param("write", "read", "read", id="write-narrowed-to-read"),
+            pytest.param("read", "write", "read write", id="read-widened-to-write"),
+        ],
+    )
+    def test_approve_binds_the_selected_scope(
+        self,
+        flask_app: Flask,
+        registered_client_id: str,
+        requested_scope: str,
+        selected_scope: str,
+        bound_scope: str,
     ) -> None:
-        # A client asking to write is granted read as well -- one grant, one
-        # spelling, decided here rather than at redemption.
+        # What the user picked rather than what the client asked for, and bound
+        # here rather than at redemption, so the token endpoint has nothing
+        # left to decide.
         with flask_app.test_request_context(
-            method="POST", data=_authorize_request(client_id=registered_client_id, scope="write")
+            method="POST",
+            data=_authorize_request(
+                client_id=registered_client_id,
+                scope=requested_scope,
+                selected_scope=selected_scope,
+            ),
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
@@ -559,7 +644,40 @@ class TestOAuthAuthorizePage:
         code = parse_qs(urlsplit(target_url).query)["code"][0]
         record = AuthCodeStore().consume(code)
         assert record is not None
-        assert record.scope == "read write"
+        assert record.scope == bound_scope
+
+    @pytest.mark.usefixtures("clean_redis", "valid_transaction", "valid_csrf_token")
+    @pytest.mark.parametrize(
+        "selection",
+        [
+            pytest.param({}, id="nothing-selected"),
+            pytest.param({"selected_scope": "mcp"}, id="not-a-scope-at-all"),
+        ],
+    )
+    def test_redirects_with_invalid_request_when_the_selection_was_not_offered(
+        self,
+        flask_app: Flask,
+        security_log: MagicMock,
+        registered_client_id: str,
+        selection: dict[str, str],
+    ) -> None:
+        # Only reachable by tampering with the consent form, so it goes to the
+        # security log instead of silently falling back to some other scope.
+        with flask_app.test_request_context(
+            method="POST",
+            data=_authorize_request(client_id=registered_client_id, scope="read", **selection),
+        ):
+            flask_app.preprocess_request()
+            with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
+                OAuthAuthorizePage(lambda: True).handle_page(
+                    PageContext(config=Config(), request=request)
+                )
+
+            target_url = _extract_redirect_target(response.get_data(as_text=True))
+
+        assert parse_qs(urlsplit(target_url).query)["error"] == ["invalid_request"]
+        assert get_redis_client().keys() == []
+        assert _logged_reason(security_log) == "selected scope was not offered"
 
     @pytest.mark.usefixtures("clean_redis", "valid_transaction", "valid_csrf_token")
     @pytest.mark.parametrize(
@@ -574,7 +692,9 @@ class TestOAuthAuthorizePage:
     ) -> None:
         with flask_app.test_request_context(
             method="POST",
-            data=_authorize_request(client_id=registered_client_id, scope=requested_scope),
+            data=_authorize_request(
+                client_id=registered_client_id, scope=requested_scope, selected_scope="read"
+            ),
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
@@ -587,7 +707,7 @@ class TestOAuthAuthorizePage:
         code = parse_qs(urlsplit(target_url).query)["code"][0]
         record = AuthCodeStore().consume(code)
         assert record is not None
-        # An absent scope is a read grant (RFC 6749 section 3.3 allows a
+        # An absent scope defaults to read (RFC 6749 section 3.3 allows a
         # server-defined default), so unlike resource it never binds None.
         assert record.scope == "read"
         assert record.resource is None
@@ -610,7 +730,10 @@ class TestOAuthAuthorizePage:
         self, flask_app: Flask, registered_client_id: str
     ) -> None:
         with flask_app.test_request_context(
-            method="POST", data=_authorize_request(client_id=registered_client_id, state="xyz")
+            method="POST",
+            data=_authorize_request(
+                client_id=registered_client_id, state="xyz", selected_scope="read"
+            ),
         ):
             flask_app.preprocess_request()
             with (
@@ -632,11 +755,9 @@ class TestOAuthAuthorizePage:
     def test_logs_the_exception_when_the_store_is_unavailable(
         self, flask_app: Flask, caplog: pytest.LogCaptureFixture, registered_client_id: str
     ) -> None:
-        # A store outage is nobody's attempt at anything, so it is not a
-        # security event: this log entry, with the traceback, is the only
-        # record of why no code was issued.
         with flask_app.test_request_context(
-            method="POST", data=_authorize_request(client_id=registered_client_id)
+            method="POST",
+            data=_authorize_request(client_id=registered_client_id, selected_scope="read"),
         ):
             flask_app.preprocess_request()
             with (
@@ -658,7 +779,8 @@ class TestOAuthAuthorizePage:
         # A timeout inside store() takes the store-outage path, not the framework's handling.
         mocker.patch.object(AuthCodeStore, "store", side_effect=MKTimeout)
         with flask_app.test_request_context(
-            method="POST", data=_authorize_request(client_id=registered_client_id)
+            method="POST",
+            data=_authorize_request(client_id=registered_client_id, selected_scope="read"),
         ):
             flask_app.preprocess_request()
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):

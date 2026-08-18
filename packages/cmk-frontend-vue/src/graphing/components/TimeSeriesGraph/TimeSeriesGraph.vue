@@ -319,15 +319,43 @@ function draw(): void {
   }
 }
 
+// Guard against cycling through
+//    watch(plotWidth) -> draw() -> fitMarginToValueLabels() -> set marginLeft -> watch(plotWidth)
+// for adjacent plot widths with different label widths. In that case we keep the larger margin and
+// refuse the lower one (refusedLowMargin).
+let lastMargin = CANVAS_MARGIN_LEFT
+let refusedLowMargin: number | null = null
+
 // The value axis is drawn into the left margin, so the margin has to hold the widest label
 // the current domain produces. Writing it back grows plotWidth, which redraws once more with
 // the labels the wider plot resolves to; that second pass settles.
 function fitMarginToValueLabels(): void {
-  const widestLabel = valueTickLabels().reduce(
-    (widest, label) => Math.max(widest, measureLabel(label)),
-    0
-  )
-  marginLeft.value = Math.max(CANVAS_MARGIN_LEFT, Math.ceil(widestLabel) + VALUE_LABEL_GUTTER)
+  const widestLabel = valueTickLabels().reduce((w, l) => Math.max(w, measureLabel(l)), 0)
+  const next = Math.max(CANVAS_MARGIN_LEFT, Math.ceil(widestLabel) + VALUE_LABEL_GUTTER)
+
+  // Holding the high end of a detected flip: ignore the low value that keeps recurring.
+  if (next === refusedLowMargin) {
+    return
+  }
+  refusedLowMargin = null
+
+  if (next === marginLeft.value) {
+    lastMargin = next
+    return
+  }
+
+  if (next === lastMargin) {
+    // Detected sequence A -> B -> A (last -> current -> next === last)
+    // Hold the larger value so labels never clip; refuse the smaller one in the next iteration to
+    // break the cycle
+    refusedLowMargin = Math.min(next, marginLeft.value)
+    marginLeft.value = Math.max(next, marginLeft.value)
+    lastMargin = marginLeft.value
+    return
+  }
+
+  lastMargin = marginLeft.value
+  marginLeft.value = next
 }
 
 function plotCoords(ev: MouseEvent): { x: number; y: number } | null {

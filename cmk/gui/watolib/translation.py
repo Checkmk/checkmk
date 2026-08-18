@@ -80,8 +80,8 @@ def translation_elements(what: str) -> list[tuple[str, ValueSpec]]:
                                 maxgroups=9,
                                 size=30,
                                 allow_empty=False,
-                                mode=RegExp.prefix,
-                                case_sensitive=False,
+                                mode=RegExp.complete,
+                                case_sensitive=True,
                             ),
                             TextInput(
                                 title=_("Replacement"),

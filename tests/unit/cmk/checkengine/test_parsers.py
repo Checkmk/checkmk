@@ -867,6 +867,113 @@ class TestSectionMarker:
             assert expected is None
 
 
+class TestPiggybackMarker:
+    @staticmethod
+    def _parse_header(header: bytes, translation: TranslationOptions) -> PiggybackMarker:
+        parsed: PiggybackMarker | None = None
+
+        class ExpectPiggybackHeader(ParserStateAdapter):
+            def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
+                nonlocal parsed
+                parsed = piggyback_header
+                return self
+
+        ExpectPiggybackHeader(translation=translation)(header)
+        assert parsed is not None
+        return parsed
+
+    @pytest.mark.parametrize(
+        "header, translation, expected_hostname",
+        [
+            pytest.param(
+                b"<<<<My virtual machine>>>>",
+                TranslationOptions(),
+                HostName("My_virtual_machine"),
+                id="invalid characters are converted into underscores",
+            ),
+            pytest.param(
+                b"<<<<VM01 - Testserver>>>>",
+                TranslationOptions(regex=[(r"(\S+) .*", r"\1")]),
+                HostName("VM01"),
+                # The expression only matches the space-containing name, so
+                # this pins that translation happens before the conversion
+                # into underscores.
+                id="regexes match the raw name as sent by the agent",
+            ),
+            pytest.param(
+                b"<<<<host123.foobar.de>>>>",
+                TranslationOptions(drop_domain=True),
+                HostName("host123"),
+                id="convert FQHN drops the domain part",
+            ),
+            pytest.param(
+                b"<<<<vm42>>>>",
+                TranslationOptions(case="upper"),
+                HostName("VM42"),
+                id="case translation converts the case",
+            ),
+            pytest.param(
+                b"<<<<VM01 - Testserver>>>>",
+                TranslationOptions(regex=[(r"(VM\d+)", r"\1")]),
+                HostName("VM01_-_Testserver"),
+                id="regex pattern must match the whole name",
+            ),
+            pytest.param(
+                b"<<<<VM01 - Testserver>>>>",
+                TranslationOptions(regex=[(r"(vm\d+) .*", r"\1")]),
+                HostName("VM01_-_Testserver"),
+                id="regex match is case sensitive",
+            ),
+            pytest.param(
+                b"<<<<VM01 - Testserver>>>>",
+                TranslationOptions(case="lower", regex=[(r"(vm\d+) .*", r"\1")]),
+                HostName("vm01"),
+                id="regexes are applied after the case translation",
+            ),
+            pytest.param(
+                b"<<<<vm42>>>>",
+                TranslationOptions(regex=[(r"(vm\d+)", r"first-\1"), (r"(v.*)", r"second-\1")]),
+                HostName("first-vm42"),
+                id="regexes are executed successively until the first match",
+            ),
+            pytest.param(
+                b"<<<<vm42>>>>",
+                TranslationOptions(
+                    case="upper",
+                    regex=[(r"(VM\d+)", r"\1-translated")],
+                    mapping=[("VM42-translated", "mapped")],
+                ),
+                HostName("mapped"),
+                id="mapping is applied after case conversion and regexes",
+            ),
+        ],
+    )
+    def test_translation_behaves_as_documented(
+        self,
+        header: bytes,
+        translation: TranslationOptions,
+        expected_hostname: HostName,
+    ) -> None:
+        """Pins the behavior documented in the help texts of the "Host name translation for
+        piggybacked hosts" rule. If one of these cases needs adjusting, the help texts must be
+        adjusted as well, and vice versa.
+        """
+        parsed = self._parse_header(header, translation)
+        assert parsed.hostname == expected_hostname
+
+    def test_translation_results_in_None(self) -> None:
+        parsed = self._parse_header(
+            b"<<<<x>>>>",
+            TranslationOptions(
+                case=None,
+                drop_domain=False,
+                mapping=[],
+                regex=[(".*(.*?)", r"\1")],
+            ),
+        )
+        assert parsed.hostname is None
+
+
 class TestSNMPParser:
     @pytest.fixture
     def hostname(self):
@@ -1374,21 +1481,6 @@ class TestMarkers:
                 return self
 
         ExpectPiggybackHeader()(b"<<<<x>>>>")
-
-    def test_piggybacked_host_translation_results_in_None(self) -> None:
-        class ExpectPiggybackHeader(ParserStateAdapter):
-            def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
-                assert piggyback_header.hostname is None
-                return self
-
-        ExpectPiggybackHeader(
-            translation=TranslationOptions(
-                case=None,
-                drop_domain=False,
-                mapping=[],
-                regex=[(".*(.*?)", r"\1")],
-            )
-        )(b"<<<<x>>>>")
 
     def test_piggybacked_host_footer(self) -> None:
         class ExpectPiggybackFooter(ParserStateAdapter):

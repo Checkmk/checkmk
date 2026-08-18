@@ -14,6 +14,7 @@ import {
   hourCycleKnob,
   nullableKnob,
   saveModeKnob,
+  serverTimeZoneKnob,
   weekendDaysKnob
 } from './uclKnobs'
 
@@ -22,6 +23,7 @@ export const panelConfig = {
   hourCycle: hourCycleKnob,
   firstDayOfWeek: firstDayOfWeekKnob,
   weekendDays: weekendDaysKnob,
+  serverTimeZone: serverTimeZoneKnob,
   saveMode: saveModeKnob,
   disabled: disabledKnob,
   nullable: nullableKnob
@@ -48,7 +50,12 @@ import {
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, shallowRef } from 'vue'
 
-import { resolveFirstDayOfWeek, resolveHourCycleKnob, resolveWeekendDays } from './uclKnobs'
+import {
+  resolveFirstDayOfWeek,
+  resolveHourCycleKnob,
+  resolveServerTimeZone,
+  resolveWeekendDays
+} from './uclKnobs'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -89,6 +96,7 @@ function onSave(): boolean {
         :disabled="propState.disabled"
         :save-mode="propState.saveMode"
         :save-handler="propState.saveMode ? onSave : undefined"
+        :server-time-zone="resolveServerTimeZone(propState.serverTimeZone)"
       >
         <template #save>
           <CmkLabel>{{ untranslated('Custom save content goes here.') }}</CmkLabel>

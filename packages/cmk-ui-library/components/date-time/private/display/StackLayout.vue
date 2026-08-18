@@ -8,9 +8,11 @@ withDefaults(
   defineProps<{
     /** Stacking axis: `column` (default) stacks children vertically, `row` lays them side by side. */
     direction?: 'row' | 'column'
+    inset?: boolean
   }>(),
   {
-    direction: 'column'
+    direction: 'column',
+    inset: true
   }
 )
 
@@ -21,7 +23,10 @@ defineSlots<{
 </script>
 
 <template>
-  <div class="cmk-stack-layout" :class="`cmk-stack-layout--${direction}`">
+  <div
+    class="cmk-stack-layout"
+    :class="[`cmk-stack-layout--${direction}`, { 'cmk-stack-layout--inset': inset }]"
+  >
     <slot />
   </div>
 </template>
@@ -32,8 +37,11 @@ defineSlots<{
 .cmk-stack-layout {
   display: flex;
   gap: var(--dimension-7);
-  padding: var(--dimension-7);
   align-items: center;
+}
+
+.cmk-stack-layout--inset {
+  padding: var(--dimension-7);
 }
 
 .cmk-stack-layout--column {

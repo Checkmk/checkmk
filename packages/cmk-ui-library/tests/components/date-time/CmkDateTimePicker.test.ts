@@ -10,13 +10,14 @@ import {
   toZoned
 } from '@internationalized/date'
 import * as intl from '@internationalized/date'
-import { fireEvent } from '@testing-library/vue'
+import { fireEvent, within } from '@testing-library/vue'
 import CmkDateTimePicker from 'cmk-ui-library/components/date-time/CmkDateTimePicker.vue'
+import { timeZoneRegionLabel } from 'cmk-ui-library/components/date-time/dateTimeUtils'
 import type { DateTimePickerSettings } from 'cmk-ui-library/components/date-time/types'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
-import { TZ_UTC } from './dateTimeTestFixtures'
+import { TZ_BERLIN, TZ_TOKYO, TZ_UTC } from './dateTimeTestFixtures'
 import { lastValue, renderModelPicker } from './pickerTestHarness'
 
 // Mock `today` so a null-model calendar opens on a known month (June 2026).
@@ -142,5 +143,26 @@ describe('CmkDateTimePicker', () => {
 
     expect(saveHandler).toHaveBeenCalledOnce()
     expect(view.getByText('Saving…')).toBeInTheDocument()
+  })
+})
+
+describe('CmkDateTimePicker — timezone readouts', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  test('the open flyout names the picked zone and the current server time', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-06-10T10:00:00Z'))
+    const view = renderPicker(utc(2026, 6, 10, 8, 45), {
+      timeZone: TZ_BERLIN,
+      serverTimeZone: TZ_TOKYO
+    })
+    await openCalendar(view)
+
+    const zone = view.getByText('Timezone:').closest<HTMLElement>('.cmk-time-zone-info__entry')!
+    expect(within(zone).getByText(timeZoneRegionLabel(TZ_BERLIN))).toBeInTheDocument()
+    // 2026-06-10T10:00:00Z is 2026-06-10 19:00 in Tokyo (UTC+9). ISO date + 24h time.
+    expect(view.container.textContent).toContain('2026-06-10, 19:00')
   })
 })

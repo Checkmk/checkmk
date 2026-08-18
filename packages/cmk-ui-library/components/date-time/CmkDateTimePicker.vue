@@ -16,7 +16,9 @@ import {
   partsToInstant
 } from './dateTimeUtils'
 import DateCalendar from './private/calendar/DateCalendar.vue'
+import HorizontalRule from './private/display/HorizontalRule.vue'
 import StackLayout from './private/display/StackLayout.vue'
+import TimeZoneInfo from './private/display/TimeZoneInfo.vue'
 import VerticalRule from './private/display/VerticalRule.vue'
 import DateTimeFlyout from './private/flyout/DateTimeFlyout.vue'
 import DateTimeInput from './private/input/DateTimeInput.vue'
@@ -146,15 +148,25 @@ async function toggleFromButton(): Promise<void> {
       />
     </template>
 
-    <StackLayout direction="row">
-      <DateCalendar
-        ref="calendar"
-        v-model:selection="draftDate"
-        mode="single"
+    <StackLayout direction="column">
+      <StackLayout direction="row" :inset="false">
+        <DateCalendar
+          ref="calendar"
+          v-model:selection="draftDate"
+          mode="single"
+          :settings="settings"
+        />
+        <VerticalRule />
+        <TimeSelector v-model="selectorTime" :hour-cycle="settings.hourCycle" @commit="confirm" />
+      </StackLayout>
+
+      <HorizontalRule />
+
+      <TimeZoneInfo
+        class="cmk-date-time-picker__zones"
         :settings="settings"
+        :server-time-zone="props.serverTimeZone"
       />
-      <VerticalRule />
-      <TimeSelector v-model="selectorTime" :hour-cycle="settings.hourCycle" @commit="confirm" />
     </StackLayout>
 
     <template #save>
@@ -162,3 +174,9 @@ async function toggleFromButton(): Promise<void> {
     </template>
   </DateTimeFlyout>
 </template>
+
+<style scoped>
+.cmk-date-time-picker__zones {
+  align-self: stretch;
+}
+</style>

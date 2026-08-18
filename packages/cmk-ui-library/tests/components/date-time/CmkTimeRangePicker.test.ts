@@ -279,7 +279,7 @@ describe('CmkTimeRangePicker — ordering', () => {
     expect(view.getByRole('group', { name: 'Time range' })).toBeInTheDocument()
 
     // The TimeZoneTag's hidden text voices the zone, the visible elements should be hidden
-    const zone = view.getByText('Timezone:').closest<HTMLElement>('.cmk-time-range-picker__zone')!
+    const zone = view.getByText('Timezone:').closest<HTMLElement>('.cmk-time-zone-info__entry')!
     expect(zone.querySelector('.cmk-tag')).toHaveAttribute('aria-hidden', 'true')
     expect(within(zone).getByText('Europe, Berlin')).toHaveAttribute('aria-hidden', 'true')
   })
@@ -366,7 +366,7 @@ describe('CmkTimeRangePicker — server time readout', () => {
     await openFlyout(view)
     const serverBlock = view
       .getByText('Current server time:')
-      .closest<HTMLElement>('.cmk-time-range-picker__zone')!
+      .closest<HTMLElement>('.cmk-time-zone-info__entry')!
     expect(serverBlock.textContent).toContain('—')
   })
 })

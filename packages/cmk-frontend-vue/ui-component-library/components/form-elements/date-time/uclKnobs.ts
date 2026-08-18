@@ -56,6 +56,19 @@ export const weekendDaysKnob = {
   initialState: 'locale'
 }
 
+export const serverTimeZoneKnob = {
+  type: 'list' as const,
+  title: 'Server timezone',
+  options: [
+    { title: 'Unset', name: 'unset' },
+    { title: 'America/Los_Angeles', name: 'America/Los_Angeles' },
+    { title: 'Europe/Berlin', name: 'Europe/Berlin' },
+    { title: 'Asia/Tokyo', name: 'Asia/Tokyo' },
+    { title: 'UTC', name: 'UTC' }
+  ],
+  initialState: 'America/Los_Angeles'
+}
+
 export const saveModeKnob = { type: 'boolean' as const, title: 'Save mode', initialState: false }
 
 export const disabledKnob = { type: 'boolean' as const, title: 'Disabled', initialState: false }
@@ -83,6 +96,10 @@ export function resolveFirstDayOfWeek(value: string): Weekday | undefined {
   }
   // The knob only offers 0 / 1 / 6, all valid Weekday values.
   return parseInt(value, 10) as Weekday
+}
+
+export function resolveServerTimeZone(value: string): string | undefined {
+  return value === 'unset' ? undefined : value
 }
 
 export function resolveWeekendDays(value: string): Weekday[] | undefined {

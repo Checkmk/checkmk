@@ -6,13 +6,14 @@
 import { type Ref, onScopeDispose, shallowRef, watch } from 'vue'
 
 /**
- * A `Date` ref that re-reads the wall clock at each minute boundary while `active`, then stops and
- * cleans up. It self-reschedules to the next minute (a beat late, never early) rather than polling
- * every second, recomputing the delay on each tick so it stays aligned across drift / DST shifts.
+ * A `Date` ref that re-reads the wall clock at each minute boundary while `active` (by default for
+ * as long as the owning scope lives), then stops and cleans up. It self-reschedules to the next
+ * minute (a beat late, never early) rather than polling every second, recomputing the delay on each
+ * tick so it stays aligned across drift / DST shifts.
  * Intended for minute-granular readouts (e.g. a "current time" badge) that need not be precise to
  * the second.
  */
-export function useNowTicker(active: Ref<boolean>): Ref<Date> {
+export function useNowTicker(active: Ref<boolean> = shallowRef(true)): Ref<Date> {
   const now = shallowRef(new Date())
   let handle: ReturnType<typeof setTimeout> | undefined
 

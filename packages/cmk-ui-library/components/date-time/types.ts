@@ -187,6 +187,9 @@ export interface CmkDateTimePickerProps<
   /** IANA timezone for converting the selected wall-clock date & time to/from the `ZonedDateTime`
    * value. Defaults to the browser zone. */
   timeZone?: string | undefined
+  /** IANA timezone of the server; the displayed server time is derived from the browser
+   * clock in that zone (and ticks while the flyout is open). */
+  serverTimeZone?: string | undefined
   /** Allow clearing the value. This is static configuration and must not change ad hoc after mount. */
   nullable?: Nullable
   /** Render the trigger non-interactive and prevent the flyout from opening. */

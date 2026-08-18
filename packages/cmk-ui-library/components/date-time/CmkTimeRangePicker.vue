@@ -4,11 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts" generic="Nullable extends boolean = false">
-import { fromDate as instantToZoned } from '@internationalized/date'
 import type { TriggerAria } from 'cmk-ui-library/components/CmkFlyout'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
-import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import { CmkRadioButton, CmkRadioGroup } from 'cmk-ui-library/components/user-input/CmkRadioButton'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -23,16 +21,13 @@ import {
 
 import CmkTimePicker from './CmkTimePicker.vue'
 import {
-  formatDate,
   formatTime,
   instantToParts,
   isDateTimeParts,
   isEmptyDateTimePartsDraft,
   isRangeInverted,
   partsToInstant,
-  swapRangeEndpoints,
-  timeZoneRegionLabel,
-  zonedToParts
+  swapRangeEndpoints
 } from './dateTimeUtils'
 import { focusLeftElement } from './focusLeftElement'
 import DateCalendar from './private/calendar/DateCalendar.vue'
@@ -40,7 +35,7 @@ import type { CalendarSelection } from './private/calendar/types'
 import CmkTimeRangeDisplay from './private/display/CmkTimeRangeDisplay.vue'
 import HorizontalRule from './private/display/HorizontalRule.vue'
 import StackLayout from './private/display/StackLayout.vue'
-import TimeZoneTag from './private/display/TimeZoneTag.vue'
+import TimeZoneInfo from './private/display/TimeZoneInfo.vue'
 import DateTimeFlyout from './private/flyout/DateTimeFlyout.vue'
 import DateTimeInputRow from './private/input/DateTimeInputRow.vue'
 import type {
@@ -53,7 +48,6 @@ import type {
   TimeValue
 } from './types'
 import { useDateTimeDraft } from './useDateTimeDraft'
-import { useNowTicker } from './useNowTicker'
 import { useRangePresets } from './useRangePresets'
 import { useResolvedDateTimeSettings } from './useResolvedDateTimeSettings'
 
@@ -264,23 +258,6 @@ async function toggleTrigger(): Promise<void> {
   await nextTick()
   calendar.value?.focus()
 }
-
-// --- timezone / server time display ----------------------------------------------------------
-// A coarse "now" driving the timezone badges and the server time readout. Ticks on the minute while
-// the flyout is open (nothing else displays it); badge offsets are DST-dependent, hence date-based.
-const now = useNowTicker(open)
-
-// The browser zone's long region name (e.g. "Europe, Berlin"), shown as plain text under its short
-// badge. Unlike the offset it isn't DST-dependent, so it needs no `now`.
-const browserTimeZoneRegion = computed(() => timeZoneRegionLabel(settings.timeZone))
-
-const serverTimeText = computed(() => {
-  if (!props.serverTimeZone) {
-    return null
-  }
-  const parts = zonedToParts(instantToZoned(now.value, props.serverTimeZone))
-  return `${formatDate(parts.date, settings.dateFormat)}, ${formatTime(parts.time, settings.hourCycle)}`
-})
 </script>
 
 <template>
@@ -403,18 +380,11 @@ const serverTimeText = computed(() => {
           <CmkLabel>{{ _t('End time') }}</CmkLabel>
           <CmkTimePicker v-model="toTime" nullable :settings="{ hourCycle: settings.hourCycle }" />
         </div>
-        <div class="cmk-time-range-picker__zone">
-          <CmkLabel>{{ _t('Timezone:') }}</CmkLabel>
-          <TimeZoneTag :time-zone="settings.timeZone" :at="now" />
-          <CmkParagraph aria-hidden="true">{{ untranslated(browserTimeZoneRegion) }}</CmkParagraph>
-        </div>
-        <div class="cmk-time-range-picker__zone">
-          <CmkLabel>{{ _t('Current server time:') }}</CmkLabel>
-          <TimeZoneTag v-if="serverTimeZone" :time-zone="serverTimeZone" :at="now" />
-          <CmkParagraph>{{
-            serverTimeText !== null ? untranslated(serverTimeText) : untranslated('—')
-          }}</CmkParagraph>
-        </div>
+        <TimeZoneInfo
+          class="cmk-time-range-picker__zones"
+          :settings="settings"
+          :server-time-zone="serverTimeZone"
+        />
       </div>
     </StackLayout>
 
@@ -490,12 +460,16 @@ const serverTimeText = computed(() => {
   gap: var(--dimension-4) var(--dimension-6);
 }
 
-.cmk-time-range-picker__time,
-.cmk-time-range-picker__zone {
+.cmk-time-range-picker__time {
   display: grid;
   grid-template-rows: subgrid;
   grid-row: span 3;
   place-items: center start;
+}
+
+.cmk-time-range-picker__zones {
+  grid-row: span 3;
+  align-self: start;
 }
 
 .cmk-time-range-picker__time-dash {

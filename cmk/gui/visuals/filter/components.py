@@ -11,8 +11,8 @@ from typing import Literal, override
 from cmk.gui.htmllib.html import html
 from cmk.gui.query_filters import AllLabelGroupsQuery
 from cmk.gui.type_defs import ChoiceMapping, Choices, FilterHTTPVariables
-from cmk.gui.utils.autocompleter_config import AutocompleterConfig
 from cmk.gui.valuespec import DualListChoice, LabelGroups
+from cmk.web.utils.autocompleter_config import AutocompleterConfig
 
 
 @dataclass(kw_only=True, slots=True)

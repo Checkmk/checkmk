@@ -63,7 +63,6 @@ from cmk.gui.type_defs import HTTPVariables, IconNames, PermissionName, StaticIc
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_references import DocReference
-from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -135,6 +134,7 @@ from cmk.utils.html import get_html_state_marker
 from cmk.utils.paths import omd_root
 from cmk.utils.servicename import Item
 from cmk.utils.statename import short_service_state_name
+from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
 

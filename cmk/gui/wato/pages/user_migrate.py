@@ -38,11 +38,11 @@ from cmk.gui.userdb import (
     UserAttribute,
 )
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.urls import makeuri_contextless
 
 

@@ -27,7 +27,6 @@ from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import CustomUserAttrSpec, UserSpec
 from cmk.gui.userdb import get_user_attributes, get_user_attributes_by_topic, UserAttribute
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
@@ -35,6 +34,7 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.wato.pages.users import select_language
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
+from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 
 from .page_menu import user_profile_page_menu
 from .verify_requirements import verify_requirements

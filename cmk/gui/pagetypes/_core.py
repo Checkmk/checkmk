@@ -95,7 +95,6 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.roles import is_user_with_publish_permissions, UserPermissions
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.speaklater import LazyString
@@ -127,6 +126,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopic,
     NavItemTopicEntry,
 )
+from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 

@@ -53,7 +53,6 @@ from cmk.gui.type_defs import (
     SizePT,
     VisualContext,
 )
-from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
@@ -64,6 +63,7 @@ from cmk.gui.visuals import (
     get_singlecontext_vars,
 )
 from cmk.utils.servicename import ServiceName
+from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
 
 from ..base import (
     Dashlet,

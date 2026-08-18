@@ -27,14 +27,14 @@ from cmk.gui.type_defs import (
     Rows,
     VisualContext,
 )
-from cmk.gui.utils.autocompleter_config import (
-    AutocompleterConfig,
-    GroupAutocompleterConfig,
-)
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.watolib.groups_io import all_groups
+from cmk.web.utils.autocompleter_config import (
+    AutocompleterConfig,
+    GroupAutocompleterConfig,
+)
 
 from ._livestatus import get_only_sites_from_context
 from .filter import (

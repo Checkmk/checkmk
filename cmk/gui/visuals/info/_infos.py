@@ -10,7 +10,6 @@ from typing import override
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
-from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Integer,
     MonitoredHostname,
@@ -20,6 +19,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.visuals.filter import components
 from cmk.gui.visuals.filter.components import DynamicDropdown, FilterComponent
+from cmk.web.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 
 from ._base import VisualInfo
 from ._openapi import register_endpoints

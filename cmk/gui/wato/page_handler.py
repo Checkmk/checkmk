@@ -15,7 +15,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import PageContext
-from cmk.gui.utils.flashed_messages import get_flashed_messages_with_categories
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.watolib import read_only
 from cmk.gui.watolib.activate_changes import update_config_generation
@@ -23,6 +22,7 @@ from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.mode import mode_registry, WatoMode
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
 from cmk.utils.paths import configuration_lockfile
+from cmk.web.utils.flashed_messages import get_flashed_messages_with_categories
 
 from .pages._html_elements import initialize_wato_html_head, wato_html_footer, wato_html_head
 from .pages.not_implemented import ModeNotImplemented

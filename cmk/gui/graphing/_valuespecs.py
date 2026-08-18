@@ -29,7 +29,6 @@ from cmk.gui.unit_formatter import (
     StrictPrecision,
     TimeFormatter,
 )
-from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Age,
@@ -52,6 +51,7 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 from cmk.utils.metrics import MetricName as MetricName_
+from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
 
 from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_display_config import GraphDisplayConfigHTML

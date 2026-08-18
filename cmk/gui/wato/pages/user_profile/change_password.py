@@ -28,7 +28,6 @@ from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.userdb.htpasswd import hash_password
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.utils.transaction_manager import transactions
@@ -44,6 +43,7 @@ from cmk.gui.watolib.users import (
 )
 from cmk.utils import paths
 from cmk.utils.security_event import log_security_event
+from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.urls import makeuri_contextless
 
 from .page_menu import user_profile_page_menu

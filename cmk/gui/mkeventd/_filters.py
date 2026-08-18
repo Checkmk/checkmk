@@ -12,7 +12,6 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
-from cmk.gui.utils.autocompleter_config import AutocompleterConfig, GroupAutocompleterConfig
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.visuals.filter import (
     AjaxDropdownFilter,
@@ -28,6 +27,7 @@ from cmk.gui.visuals.filter import (
     RegexFilter,
 )
 from cmk.gui.visuals.filter.components import Dropdown, FilterComponent
+from cmk.web.utils.autocompleter_config import AutocompleterConfig, GroupAutocompleterConfig
 
 from .defines import action_whats, phase_names, syslog_priorities
 

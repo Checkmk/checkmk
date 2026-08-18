@@ -103,11 +103,9 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes, UserAttribute
-from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_references import DocReference
-from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.transaction_manager import transactions
@@ -214,6 +212,8 @@ from cmk.shared_typing.notifications import (
 )
 from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.statename import host_state_name, service_state_name
+from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 

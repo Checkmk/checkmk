@@ -91,7 +91,6 @@ from cmk.gui.type_defs import (
     IconNames,
     StaticIcon,
 )
-from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.images import CMKImage, ImageType
 from cmk.gui.utils.labels import (
@@ -114,6 +113,7 @@ from cmk.ruleset_matcher.labels import AndOrNotLiteral, LabelSources
 from cmk.utils import dateutils
 from cmk.utils.render import SecondsRenderer
 from cmk.web.utils import escaping
+from cmk.web.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import is_allowed_url, makeuri, urlencode
 

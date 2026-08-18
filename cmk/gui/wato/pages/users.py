@@ -77,7 +77,6 @@ from cmk.gui.userdb.user_sync_job import sync_entry_point, UserSyncArgs, UserSyn
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_references import DocReference
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
@@ -115,6 +114,7 @@ from cmk.gui.watolib.users import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import paths, render
+from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 

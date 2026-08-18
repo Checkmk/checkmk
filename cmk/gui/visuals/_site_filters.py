@@ -15,8 +15,8 @@ from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.config import active_config, Config
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import Choices, FilterHTTPVariables, Row
-from cmk.gui.utils.autocompleter_config import AutocompleterConfig
 from cmk.gui.utils.speaklater import LazyString
+from cmk.web.utils.autocompleter_config import AutocompleterConfig
 
 from .filter import Filter, FilterGroup, FilterRegistry
 from .filter.components import DualList, DynamicDropdown, FilterComponent, StaticText

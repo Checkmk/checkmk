@@ -60,6 +60,7 @@ py_library(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

@@ -110,7 +110,7 @@ const dynamicParamsCallbacks = {
   }
 }
 
-//I got these types from cmk/gui/utils/autocompleter_config.py
+//I got these types from packages/cmk-web/cmk/web/utils/autocompleter_config.py
 type DynamicParamsCallbackName = keyof typeof dynamicParamsCallbacks
 
 type AutoCompleterGroupType =

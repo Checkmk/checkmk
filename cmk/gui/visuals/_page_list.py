@@ -37,12 +37,12 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.confirm_links import make_confirm_delete_link, make_confirm_link
 from cmk.gui.utils.doc_references import DocReference
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.mkp_tool import PackageName
+from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless, urlencode
 
 from ._breadcrumb import visual_page_breadcrumb

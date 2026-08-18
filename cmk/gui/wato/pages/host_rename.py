@@ -45,7 +45,6 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -77,6 +76,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_host_uniqueness,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 
 

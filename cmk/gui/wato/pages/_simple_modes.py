@@ -64,7 +64,6 @@ from cmk.gui.type_defs import ActionResult, IconNames, RenderMode, StaticIcon
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -103,6 +102,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.form_specs import Dictionary as FormSpecDictionary
 from cmk.rulesets.v1.form_specs.validators import ValidationError
+from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.urls import is_allowed_url, makeuri_contextless
 
 DoValidate = bool

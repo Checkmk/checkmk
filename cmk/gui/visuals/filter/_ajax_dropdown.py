@@ -20,8 +20,8 @@ from cmk.gui.type_defs import (
     Rows,
     VisualContext,
 )
-from cmk.gui.utils.autocompleter_config import AutocompleterConfig
 from cmk.gui.utils.speaklater import LazyString
+from cmk.web.utils.autocompleter_config import AutocompleterConfig
 
 from ._base import Filter, FilterGroup
 from .components import Checkbox, DynamicDropdown, FilterComponent, HorizontalGroup

@@ -12,6 +12,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//packages/cmk-web/cmk/web/utils",
         requirement("pydantic"),
         requirement("redis"),
         "//cmk/gui:core_toolkit",

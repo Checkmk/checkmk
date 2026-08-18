@@ -29,7 +29,6 @@ py_library(
         "confirm_links.py",
         "dataclasses.py",
         "doc_references.py",
-        "flashed_messages.py",
         "language_cookie.py",
         "misc.py",
         "mobile.py",
@@ -70,7 +69,6 @@ py_library(
 py_library(
     name = "utils",
     srcs = [
-        "autocompleter_config.py",
         "compatibility.py",
         "confirm_with_preview.py",
         "csrf_token.py",

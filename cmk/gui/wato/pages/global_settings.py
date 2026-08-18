@@ -66,7 +66,6 @@ from cmk.gui.site_config import has_distributed_setup_remote_sites
 from cmk.gui.type_defs import ActionResult, GlobalSettings, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Checkbox, Transform, ValueSpec
@@ -110,6 +109,7 @@ from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.paths import log_dir, var_dir
 from cmk.web.utils import escaping
+from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 

@@ -45,7 +45,6 @@ from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry, PageRes
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
-from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -61,6 +60,7 @@ from cmk.gui.web_pages import web_page_endpoint
 from cmk.utils import paths
 from cmk.utils.man_pages import make_man_page_path_map
 from cmk.web.utils.escaping import escape_to_html_permissive, strip_tags
+from cmk.web.utils.flashed_messages import get_flashed_messages
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 from cmk.werks.site import load_werk_entries

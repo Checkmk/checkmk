@@ -40,10 +40,10 @@ from cmk.gui.session_context import _user_defaults
 from cmk.gui.type_defs import AuthType, SessionInfo, SessionState, SessionStateMachine
 from cmk.gui.userdb.session import auth_cookie_value
 from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
-from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import AuthenticationSuccessEvent
 from cmk.utils.security_event import log_security_event
+from cmk.web.utils.flashed_messages import MsgType
 
 tracer = trace.get_tracer()
 

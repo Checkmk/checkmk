@@ -33,10 +33,10 @@ from typing import Any, assert_never, Final, final
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.i18n import _
-from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.web.htmllib.builder import HtmlBuilder
 from cmk.web.utils import escaping
+from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
 
 from .tag_rendering import (

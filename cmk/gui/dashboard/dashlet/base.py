@@ -52,31 +52,31 @@ class ResponsiveLayoutBreakpointConstraints:
 class ResponsiveLayoutConstraints:
     XS: ResponsiveLayoutBreakpointConstraints = field(
         default_factory=lambda: ResponsiveLayoutBreakpointConstraints(
-            minimum_size=WidgetSize(width=4, height=7),
+            minimum_size=WidgetSize(width=4, height=4),
             initial_size=WidgetSize(width=4, height=7),
         )
     )
     S: ResponsiveLayoutBreakpointConstraints = field(
         default_factory=lambda: ResponsiveLayoutBreakpointConstraints(
-            minimum_size=WidgetSize(width=4, height=7),
+            minimum_size=WidgetSize(width=4, height=4),
             initial_size=WidgetSize(width=4, height=7),
         )
     )
     M: ResponsiveLayoutBreakpointConstraints = field(
         default_factory=lambda: ResponsiveLayoutBreakpointConstraints(
-            minimum_size=WidgetSize(width=4, height=7),
+            minimum_size=WidgetSize(width=4, height=4),
             initial_size=WidgetSize(width=6, height=7),
         )
     )
     L: ResponsiveLayoutBreakpointConstraints = field(
         default_factory=lambda: ResponsiveLayoutBreakpointConstraints(
-            minimum_size=WidgetSize(width=3, height=7),
+            minimum_size=WidgetSize(width=3, height=4),
             initial_size=WidgetSize(width=4, height=7),
         )
     )
     XL: ResponsiveLayoutBreakpointConstraints = field(
         default_factory=lambda: ResponsiveLayoutBreakpointConstraints(
-            minimum_size=WidgetSize(width=3, height=7),
+            minimum_size=WidgetSize(width=3, height=4),
             initial_size=WidgetSize(width=6, height=7),
         )
     )
@@ -86,7 +86,7 @@ class ResponsiveLayoutConstraints:
         """Larger default size for widgets that need more space."""
         return cls(
             S=ResponsiveLayoutBreakpointConstraints(
-                minimum_size=WidgetSize(width=4, height=7),
+                minimum_size=WidgetSize(width=4, height=4),
                 initial_size=WidgetSize(width=8, height=7),
             ),
         )

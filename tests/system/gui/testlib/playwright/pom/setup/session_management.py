@@ -7,7 +7,7 @@ import re
 from dataclasses import dataclass
 from typing import override
 
-from playwright.sync_api import expect, Page
+from playwright.sync_api import expect, Locator, Page
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
@@ -36,45 +36,35 @@ class SessionManagementPage(CmkPage):
         super().__init__(page)
         self._init_locators()
 
-    def _init_locators(self) -> None:
-        # Main sections
-        self.current_setting = self.main_area.locator().get_by_role("row", name="Current setting")
-        self.current_state = self.main_area.locator().get_by_role("row", name="Current state")
+    def _time_span_input(self, time_span_title: str, magnitude: str) -> Locator:
+        time_span = self.main_area.locator(f"span[role='group'][aria-label='{time_span_title}']")
+        return time_span.locator(f"label:has-text('{magnitude}') input")
 
-        checkbox_locate = "span.checkbox input[type='checkbox']"
-        days_locate = "input[name*='days']"
-        hours_locate = "input[name*='hours']"
-        minutes_locate = "input[name*='minutes']"
+    def _init_locators(self) -> None:
+        main_area = self.main_area.locator()
 
         # Maximum session duration section
-        self.max_session_duration = self.current_setting.get_by_role(
-            "row", name="Maximum session duration"
+        self.max_session_duration_checkbox = main_area.get_by_role(
+            "checkbox", name="Maximum session duration"
         )
-        self.enforce_reauth = self.max_session_duration.get_by_role(
-            "row", name="Enforce re-authentication"
-        )
-        self.max_session_duration_checkbox = self.max_session_duration.locator(
-            "span.checkbox", has_text="Maximum session duration"
-        )
-        self.max_duration_days = self.enforce_reauth.locator(days_locate)
-        self.max_duration_hours = self.enforce_reauth.locator(hours_locate)
-        self.max_duration_minutes = self.enforce_reauth.locator(minutes_locate)
+        enforce_reauth_title = "Enforce re-authentication after"
+        self.max_duration_days = self._time_span_input(enforce_reauth_title, "Days")
+        self.max_duration_hours = self._time_span_input(enforce_reauth_title, "Hours")
+        self.max_duration_minutes = self._time_span_input(enforce_reauth_title, "Minutes")
 
         # Advise re-authentication section
-        self.advise_reauth = self.max_session_duration.get_by_role(
-            "row", name="Advise re-authentication before termination"
-        )
-        self.advise_reauth_checkbox = self.advise_reauth.locator(checkbox_locate)
-        self.advise_reauth_days = self.advise_reauth.locator(days_locate)
-        self.advise_reauth_hours = self.advise_reauth.locator(hours_locate)
-        self.advise_reauth_minutes = self.advise_reauth.locator(minutes_locate)
+        advise_reauth_title = "Advise re-authentication before termination"
+        self.advise_reauth_checkbox = main_area.get_by_role("checkbox", name=advise_reauth_title)
+        self.advise_reauth_days = self._time_span_input(advise_reauth_title, "Days")
+        self.advise_reauth_hours = self._time_span_input(advise_reauth_title, "Hours")
+        self.advise_reauth_minutes = self._time_span_input(advise_reauth_title, "Minutes")
 
         # Idle timeout section
-        self.idle_timeout = self.current_setting.get_by_role("row", name="Idle timeout")
-        self.idle_timeout_checkbox = self.idle_timeout.locator(checkbox_locate)
-        self.idle_timeout_days = self.idle_timeout.locator(days_locate)
-        self.idle_timeout_hours = self.idle_timeout.locator(hours_locate)
-        self.idle_timeout_minutes = self.idle_timeout.locator(minutes_locate)
+        idle_timeout_title = "Set an individual idle timeout"
+        self.idle_timeout_checkbox = main_area.get_by_role("checkbox", name=idle_timeout_title)
+        self.idle_timeout_days = self._time_span_input(idle_timeout_title, "Days")
+        self.idle_timeout_hours = self._time_span_input(idle_timeout_title, "Hours")
+        self.idle_timeout_minutes = self._time_span_input(idle_timeout_title, "Minutes")
 
     @override
     def navigate(self) -> None:
@@ -85,8 +75,8 @@ class SessionManagementPage(CmkPage):
     @override
     def validate_page(self) -> None:
         expect(
-            self.main_area.locator().get_by_role("cell", name="Session management"),
-            message="Session management page heading is not visible",
+            self.main_area.locator().get_by_role("checkbox", name="Maximum session duration"),
+            message="'Maximum session duration' checkbox is not visible",
         ).to_be_visible()
 
     @override
@@ -99,6 +89,12 @@ class SessionManagementPage(CmkPage):
         self.page.wait_for_url(url=re.compile(re.escape("varname=session_mgmt")), wait_until="load")
         self.validate_page()
 
+    @staticmethod
+    def _magnitude_value(magnitude_input: Locator) -> int:
+        """An empty magnitude input means a zero contribution to the time span."""
+        value = magnitude_input.input_value()
+        return int(value) if value else 0
+
     def get_max_duration_values(self) -> TimeoutValues:
         """Get all maximum session duration values.
 
@@ -106,9 +102,9 @@ class SessionManagementPage(CmkPage):
             TimeoutValues instanse representing the maximum session duration.
         """
         return TimeoutValues(
-            int(self.max_duration_days.input_value()),
-            int(self.max_duration_hours.input_value()),
-            int(self.max_duration_minutes.input_value()),
+            self._magnitude_value(self.max_duration_days),
+            self._magnitude_value(self.max_duration_hours),
+            self._magnitude_value(self.max_duration_minutes),
         )
 
     def set_max_duration_values(self, timeouts: TimeoutValues) -> None:
@@ -117,8 +113,7 @@ class SessionManagementPage(CmkPage):
         Args:
             timeouts: TimeoutValues instanse representing the maximum session duration.
         """
-        if not self.max_session_duration.get_by_label("Maximum session duration").is_checked():
-            self.max_session_duration_checkbox.click()
+        self.max_session_duration_checkbox.set_checked(True)
         self.max_duration_days.fill(str(timeouts.days))
         self.max_duration_hours.fill(str(timeouts.hours))
         self.max_duration_minutes.fill(str(timeouts.minutes))
@@ -129,9 +124,9 @@ class SessionManagementPage(CmkPage):
         Returns:
             TimeoutValues instanse representing the advise re-authentication time."""
         return TimeoutValues(
-            int(self.advise_reauth_days.input_value()),
-            int(self.advise_reauth_hours.input_value()),
-            int(self.advise_reauth_minutes.input_value()),
+            self._magnitude_value(self.advise_reauth_days),
+            self._magnitude_value(self.advise_reauth_hours),
+            self._magnitude_value(self.advise_reauth_minutes),
         )
 
     def set_advise_reauth_values(self, timeouts: TimeoutValues) -> None:
@@ -152,9 +147,9 @@ class SessionManagementPage(CmkPage):
             TimeoutValues instanse representing the idle timeout.
         """
         return TimeoutValues(
-            int(self.idle_timeout_days.input_value()),
-            int(self.idle_timeout_hours.input_value()),
-            int(self.idle_timeout_minutes.input_value()),
+            self._magnitude_value(self.idle_timeout_days),
+            self._magnitude_value(self.idle_timeout_hours),
+            self._magnitude_value(self.idle_timeout_minutes),
         )
 
     def set_idle_timeout_values(self, timeouts: TimeoutValues) -> None:
@@ -170,6 +165,12 @@ class SessionManagementPage(CmkPage):
 
     def is_at_factory_settings(self) -> bool:
         self.validate_page()
+        if not (
+            self.max_session_duration_checkbox.is_checked()
+            and self.advise_reauth_checkbox.is_checked()
+            and self.idle_timeout_checkbox.is_checked()
+        ):
+            return False
         return (
             self.get_max_duration_values() == TimeoutValues(days=1, hours=0, minutes=0)
             and self.get_advise_reauth_values() == TimeoutValues(days=0, hours=0, minutes=15)

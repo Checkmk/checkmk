@@ -25,14 +25,18 @@ class PasswordPolicy(CmkPage):
     page_title: str = "Change password"
 
     @property
-    def _num_groups_label(self) -> Locator:
-        """Returns the label for the number of character groups checkbox."""
-        return self.main_area.locator("label[for='cb_ve_p_num_groups_USE']")
-
-    @property
     def _num_groups_checkbox(self) -> Locator:
         """Returns the checkbox for the number of character groups."""
-        return self.main_area.locator("input#cb_ve_p_num_groups_USE")
+        return self.main_area.locator().get_by_role(
+            "checkbox", name="Number of character groups to use"
+        )
+
+    @property
+    def _num_groups_input(self) -> Locator:
+        """Returns the input for the number of character groups."""
+        return self.main_area.locator().get_by_role(
+            "spinbutton", name="Number of character groups to use"
+        )
 
     @override
     def navigate(self) -> None:
@@ -48,8 +52,8 @@ class PasswordPolicy(CmkPage):
     @override
     def validate_page(self) -> None:
         expect(
-            self._num_groups_label,
-            message="'Number of character groups to use' label is not visible",
+            self._num_groups_checkbox,
+            message="'Number of character groups to use' checkbox is not visible",
         ).to_be_visible()
 
     @override
@@ -66,8 +70,7 @@ class PasswordPolicy(CmkPage):
         Args:
             check_state: The desired check state (True for checked, False for unchecked).
         """
-        if self._num_groups_checkbox.is_checked() != check_state:
-            self._num_groups_label.click()
+        self._num_groups_checkbox.set_checked(check_state)
 
     def set_the_number_of_character_groups(self, number_of_groups: str) -> None:
         """Sets the number of character groups for the password policy.
@@ -79,7 +82,7 @@ class PasswordPolicy(CmkPage):
 
         self._set_state_of_number_of_character_groups_checkbox(check_state=True)
 
-        self.main_area.locator("input[name='ve_p_num_groups']").fill(number_of_groups)
+        self._num_groups_input.fill(number_of_groups)
         self._save_options()
 
     def disable_the_number_of_charachter_groups(self) -> None:

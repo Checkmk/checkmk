@@ -18,7 +18,6 @@ ALLHOSTS_VIEW_SPEC = cast(
 )
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4245: KeyError in make_host_breadcrumb")
 def test_make_host_breadcrumb_without_permission_for_the_host_view(
     monkeypatch: pytest.MonkeyPatch, request_context: None
 ) -> None:

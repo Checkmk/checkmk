@@ -6,8 +6,12 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
+import io
+import threading
 from collections.abc import Iterable, Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
+from logging import getLogger
+from pathlib import Path
 from typing import override
 
 import pytest
@@ -18,15 +22,19 @@ from redis import Redis
 
 import cmk.gui.search._engines._redis
 from cmk.automations.results import GetConfigurationResult
+from cmk.gui.background_job.job import BackgroundJobDefines, BackgroundProcessInterface
 from cmk.gui.config import Config
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.search._engines._redis import (
+    _process_update_requests,
     _SearchResultWithVisibilityCheck,
     IndexBuilder,
     IndexNotFoundException,
     IndexSearcher,
+    RedisSearchEngine,
 )
+from cmk.gui.search.index import _UpdateRequests
 from cmk.gui.search.matchers import (
     ABCMatchItemGenerator,
     MatchItem,
@@ -44,6 +52,7 @@ from cmk.gui.wato._omd_configuration import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.shared_typing.unified_search import ProviderName
 
 
 class _FakePermissionsHandler:
@@ -558,3 +567,185 @@ class TestRealisticSearch:
             real_index_builder.build_full_index(UserPermissions({}, {}, {}, []))
 
         assert not list(index_searcher.search("custom host attributes"))
+
+
+class _DenyAllPermissionsHandler:
+    """Stand-in for a user who may not see any search category."""
+
+    def may_see_category(self, category: str) -> bool:
+        return False
+
+    def get_visibility_check(self, category: str) -> VisibilityCheck:
+        return lambda _url: True
+
+
+class _JobInterface:
+    """A real BackgroundProcessInterface over a temporary work dir, so that the
+    messages the update job reports can be read back."""
+
+    def __init__(self, work_dir: Path) -> None:
+        self._work_dir = work_dir
+        self._progress = io.StringIO()
+        self.interface = BackgroundProcessInterface(
+            work_dir=str(work_dir),
+            job_id="test",
+            logger=getLogger("test"),
+            stop_event=threading.Event(),
+            gui_context=lambda _user_permissions: nullcontext(),
+            progress_update=self._progress,
+        )
+
+    @property
+    def progress(self) -> str:
+        return self._progress.getvalue()
+
+    @property
+    def result(self) -> str:
+        path = self._work_dir / BackgroundJobDefines.result_message_filename
+        return path.read_text() if path.exists() else ""
+
+
+@pytest.fixture(name="job_interface")
+def fixture_job_interface(tmp_path: Path) -> _JobInterface:
+    return _JobInterface(tmp_path)
+
+
+@pytest.fixture(name="patched_registry")
+def fixture_patched_registry(
+    monkeypatch: MonkeyPatch, match_item_generator_registry: MatchItemGeneratorRegistry
+) -> MatchItemGeneratorRegistry:
+    """The module level functions and RedisSearchEngine read the global registry."""
+    monkeypatch.setattr(
+        cmk.gui.search._engines._redis,
+        "match_item_generator_registry",
+        match_item_generator_registry,
+    )
+    return match_item_generator_registry
+
+
+class TestIndexSearcherConstruction:
+    def test_an_unreachable_redis_server_is_reported(
+        self, config: Config, clean_redis_client: "Redis", monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            cmk.gui.search._engines._redis, "redis_server_reachable", lambda _client: False
+        )
+
+        with pytest.raises(RuntimeError, match="not reachable"):
+            IndexSearcher(config, clean_redis_client, _FakePermissionsHandler())
+
+
+class TestSearchCategoryFiltering:
+    @pytest.fixture(name="built_index")
+    @staticmethod
+    def fixture_built_index(index_builder: IndexBuilder) -> None:
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+
+    @pytest.mark.usefixtures("with_admin_login", "built_index")
+    def test_categories_outside_the_allowed_set_are_not_searched(
+        self, index_searcher: IndexSearcher
+    ) -> None:
+        assert list(index_searcher.search("**")) != []
+
+        assert list(index_searcher.search("**", allowed_categories=frozenset())) == []
+
+    @pytest.mark.usefixtures("with_admin_login", "built_index")
+    def test_a_category_the_user_may_not_see_is_not_searched(
+        self, config: Config, clean_redis_client: "Redis", index_searcher: IndexSearcher
+    ) -> None:
+        assert list(index_searcher.search("**")) != []
+        searcher = IndexSearcher(config, clean_redis_client, _DenyAllPermissionsHandler())
+
+        assert list(searcher.search("**")) == []
+
+
+class TestProcessUpdateRequests:
+    @staticmethod
+    def _requests(*, rebuild: bool, change_actions: list[str] | None = None) -> _UpdateRequests:
+        return _UpdateRequests(rebuild=rebuild, change_actions=change_actions or [])
+
+    @pytest.mark.usefixtures("with_admin_login", "patched_registry")
+    def test_a_rebuild_request_builds_the_whole_index(
+        self, job_interface: _JobInterface, clean_redis_client: "Redis"
+    ) -> None:
+        _process_update_requests(
+            self._requests(rebuild=True),
+            job_interface.interface,
+            clean_redis_client,
+            UserPermissions({}, {}, {}, []),
+        )
+
+        assert IndexBuilder.index_is_built(clean_redis_client)
+        assert "successfully built" in job_interface.result
+
+    @pytest.mark.usefixtures("with_admin_login", "patched_registry")
+    def test_a_missing_index_is_built_from_scratch(
+        self, job_interface: _JobInterface, clean_redis_client: "Redis"
+    ) -> None:
+        # An update request can only be answered against an existing index, so the job
+        # falls back to a full build instead of silently doing nothing.
+        _process_update_requests(
+            self._requests(rebuild=False, change_actions=["change_dependent"]),
+            job_interface.interface,
+            clean_redis_client,
+            UserPermissions({}, {}, {}, []),
+        )
+
+        assert "re-building from scratch" in job_interface.progress
+        assert IndexBuilder.index_is_built(clean_redis_client)
+
+    @pytest.mark.usefixtures("with_admin_login", "patched_registry")
+    def test_an_existing_index_is_updated_incrementally(
+        self,
+        job_interface: _JobInterface,
+        index_builder: IndexBuilder,
+        clean_redis_client: "Redis",
+    ) -> None:
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+
+        _process_update_requests(
+            self._requests(rebuild=False, change_actions=["change_dependent"]),
+            job_interface.interface,
+            clean_redis_client,
+            UserPermissions({}, {}, {}, []),
+        )
+
+        assert "Updating of search index started" in job_interface.progress
+        assert "successfully updated" in job_interface.result
+
+
+class TestRedisSearchEngine:
+    @pytest.fixture(name="engine")
+    @staticmethod
+    def fixture_engine(
+        config: Config,
+        clean_redis_client: "Redis",
+        permissions_handler: SearchPermissionsHandler,
+    ) -> RedisSearchEngine:
+        return RedisSearchEngine(
+            config,
+            {ProviderName.setup: permissions_handler},
+            redis_client=clean_redis_client,
+        )
+
+    @pytest.mark.usefixtures("with_admin_login", "patched_registry")
+    def test_a_match_is_reported_with_the_provider_of_its_category(
+        self, engine: RedisSearchEngine, index_builder: IndexBuilder
+    ) -> None:
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+
+        results = list(engine.search("change_dependent", provider=ProviderName.setup))
+
+        assert [(result.title, result.topic, result.provider) for result in results] == [
+            ("change_dependent", "Change-dependent", ProviderName.setup)
+        ]
+
+    @pytest.mark.usefixtures("with_admin_login", "patched_registry")
+    def test_only_the_categories_of_the_requested_provider_are_searched(
+        self, engine: RedisSearchEngine, index_builder: IndexBuilder
+    ) -> None:
+        # Both registered generators belong to the setup provider, so a customize
+        # search must come back empty rather than leaking setup results.
+        index_builder.build_full_index(UserPermissions({}, {}, {}, []))
+
+        assert list(engine.search("change_dependent", provider=ProviderName.customize)) == []

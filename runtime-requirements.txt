@@ -1296,7 +1296,6 @@ httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
     #   -c requirements.txt
-    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   meraki
@@ -1305,6 +1304,7 @@ httpx2==2.11.0 \
     --hash=sha256:ea01b2e8febfb026e2601814c77ecb1e64fff114a87bc789cb520e67f27e7809
     # via
     #   -c requirements.txt
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   mcp
 icalendar==7.2.2 \
     --hash=sha256:6cf904a928881e20c89b682e75bca2eb97e8c5ca629782ed44a519abf4cac1cc \

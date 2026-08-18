@@ -1892,14 +1892,15 @@ httpx==0.28.1 \
     --hash=sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
-    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   meraki
 httpx2==2.11.0 \
     --hash=sha256:c9790f62a327110f52a099f1e2030cbe32f78b28781ad68fe58bfd6f23e73ab0 \
     --hash=sha256:ea01b2e8febfb026e2601814c77ecb1e64fff114a87bc789cb520e67f27e7809
-    # via mcp
+    # via
+    #   -r non-free/packages/cmk-mcp/requirements.in
+    #   mcp
 hypothesis==6.165.10 \
     --hash=sha256:00de0abdcf8c05c9d0eab735a3c49a276376b55151e6fcb903c2b39a90e5e5c3 \
     --hash=sha256:057d0232f1224dcd0b7698902551a4341a7399f90670b036db6c4376715fe889 \

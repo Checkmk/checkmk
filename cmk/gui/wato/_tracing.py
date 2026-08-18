@@ -9,13 +9,10 @@ from cmk.gui.form_specs.generators.cascading_choice_utils import (
     CascadingDataConversion,
     enable_deprecated_cascading_elements,
 )
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    IPAddress,
-    NetworkPort,
-    Optional,
-    Transform,
+from cmk.gui.form_specs.generators.host_address import HostAddressValidator
+from cmk.gui.form_specs.unstable import OptionalChoice
+from cmk.gui.form_specs.unstable.legacy_converter.transform import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
 )
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
@@ -102,35 +99,40 @@ ConfigVariableSiteTraceReceive = ConfigVariable(
     group=ConfigVariableGroupSupport,
     primary_domain=ConfigDomainOMD,
     ident="site_trace_receive",
-    valuespec=lambda context: Optional(
-        title=_("Receive traces"),
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "address",
-                    Transform(
-                        IPAddress(
-                            title=_("Listen for spans on this local IP address"),
-                            default_value="::1",
+    form_spec=lambda context: OptionalChoice(
+        title=Title("Receive traces"),
+        parameter_form=fs.Dictionary(
+            elements={
+                "address": fs.DictElement(
+                    required=True,
+                    parameter_form=TransformDataForLegacyFormatOrRecomposeFunction(
+                        wrapped_form_spec=fs.String(
+                            title=Title("Listen for spans on this local IP address"),
+                            prefill=fs.DefaultValue("::1"),
+                            custom_validate=[
+                                HostAddressValidator(
+                                    allow_host_name=False,
+                                    allow_empty=False,
+                                )
+                            ],
                         ),
-                        to_valuespec=lambda v: (
-                            v[1:-1] if v.startswith("[") and v.endswith("]") else v
-                        ),
-                        from_valuespec=_ipv6_from_vs,
+                        from_disk=_ipv6_from_disk,
+                        to_disk=_ipv6_to_disk,
                     ),
                 ),
-                (
-                    "port",
-                    NetworkPort(
-                        title=_("TCP port"),
-                        minvalue=1025,
-                        default_value=4317,
+                "port": fs.DictElement(
+                    required=True,
+                    parameter_form=fs.Integer(
+                        title=Title("TCP port"),
+                        prefill=fs.DefaultValue(4317),
+                        custom_validate=[
+                            fs.validators.NumberInRange(min_value=1025, max_value=65535)
+                        ],
                     ),
                 ),
-            ],
-            optional_keys=[],
+            },
         ),
-        help=_(
+        help_text=Help(
             "This option enables receiving OpenTelemetry traces in a Jaeger instance "
             "running in the Checkmk site. This instance is run for diagnostic "
             "purposes of Checkmk and currently not intended to be used for external "
@@ -138,14 +140,22 @@ ConfigVariableSiteTraceReceive = ConfigVariable(
             "In addition to this option, you need to configure the global setting "
             '"Support > Send traces from Checkmk".'
         ),
-        label=_("Enable receiving traces"),
-        none_label=_("Receiving traces is disabled"),
-        indent=False,
+        label=Label("Enable receiving traces"),
+        none_label=Label("Receiving traces is disabled"),
     ),
 )
 
 
-def _ipv6_from_vs(value: str) -> str:
+def _ipv6_from_disk(value: object) -> str:
+    """On disk an IPv6 address is bracketed so it can be combined with a port."""
+    if not isinstance(value, str):
+        raise ValueError(f"Expected a string, got {value!r}")
+    return value[1:-1] if value.startswith("[") and value.endswith("]") else value
+
+
+def _ipv6_to_disk(value: object) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f"Expected a string, got {value!r}")
     try:
         ipaddress.IPv6Address(value)
         return f"[{value}]"

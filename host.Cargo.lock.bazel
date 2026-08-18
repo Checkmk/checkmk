@@ -1,5 +1,5 @@
 {
-  "checksum": "e5ee7da849bda2b1798e72985bb12414337bb5d0a6d4c3d8fd3a31f03d5fa5c0",
+  "checksum": "e84d919e73e5b8c3deee332fac21860cde98d240629edca0c33b99e48799f3be",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -1981,53 +1981,6 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "bincode 1.3.3": {
-      "name": "bincode",
-      "version": "1.3.3",
-      "package_url": "https://github.com/servo/bincode",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/bincode/1.3.3/download",
-          "sha256": "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "bincode",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "bincode",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "serde 1.0.228",
-              "target": "serde"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2015",
-        "version": "1.3.3"
-      },
-      "license": "MIT",
-      "license_ids": [
-        "MIT"
-      ],
-      "license_file": "LICENSE.md"
-    },
     "bitflags 1.3.2": {
       "name": "bitflags",
       "version": "1.3.2",
@@ -3254,10 +3207,6 @@
             {
               "id": "anyhow 1.0.99",
               "target": "anyhow"
-            },
-            {
-              "id": "bincode 1.3.3",
-              "target": "bincode"
             },
             {
               "id": "clap 4.5.45",
@@ -31419,7 +31368,6 @@
     "aes-gcm 0.10.3",
     "anyhow 1.0.99",
     "async-trait 0.1.89",
-    "bincode 1.3.3",
     "bytes 1.12.0",
     "clap 4.5.45",
     "der-parser 8.2.0",

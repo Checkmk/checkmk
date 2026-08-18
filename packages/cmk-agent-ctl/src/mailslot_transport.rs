@@ -6,7 +6,6 @@ use anyhow::{bail, Result as AnyhowResult};
 use is_elevated::is_elevated;
 use log::warn;
 use mail_slot::{MailslotClient, MailslotName, MailslotServer};
-use serde::{Deserialize, Serialize};
 use std::convert::From;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
@@ -46,8 +45,9 @@ pub fn service_mailslot_name() -> String {
     AGENT_SERVICE_MAILSLOT_NAME.to_string()
 }
 
-// struct must be in sync with windows agent
-#[derive(Serialize, Deserialize)]
+// Struct and wire format must be in sync with the windows agent:
+// `CarrierDataHeader` in agents/wnx/include/wnx/carrier.h reads these
+// bytes as a packed little-endian struct, fields in declaration order.
 pub struct MailSlotHeader {
     pub provider: [u8; PROVIDER_NAME_LENGTH],
     pub data_id: u64,
@@ -55,6 +55,49 @@ pub struct MailSlotHeader {
     info: u64,
     reserved: [u32; 16],
     pub length: u64,
+}
+
+impl MailSlotHeader {
+    pub const WIRE_SIZE: usize = PROVIDER_NAME_LENGTH + 3 * 8 + 16 * 4 + 8;
+
+    fn to_le_bytes(&self) -> [u8; Self::WIRE_SIZE] {
+        let mut bytes = Vec::with_capacity(Self::WIRE_SIZE);
+        bytes.extend_from_slice(&self.provider);
+        bytes.extend_from_slice(&self.data_id.to_le_bytes());
+        bytes.extend_from_slice(&self.type_id.to_le_bytes());
+        bytes.extend_from_slice(&self.info.to_le_bytes());
+        for r in &self.reserved {
+            bytes.extend_from_slice(&r.to_le_bytes());
+        }
+        bytes.extend_from_slice(&self.length.to_le_bytes());
+        bytes.try_into().expect("field sizes sum to WIRE_SIZE")
+    }
+
+    #[cfg(test)]
+    fn from_le_bytes(mut bytes: &[u8]) -> Self {
+        fn take<const N: usize>(bytes: &mut &[u8]) -> [u8; N] {
+            let (head, tail) = bytes.split_at(N);
+            *bytes = tail;
+            head.try_into().expect("split_at returned N bytes")
+        }
+        let provider = take::<PROVIDER_NAME_LENGTH>(&mut bytes);
+        let data_id = u64::from_le_bytes(take(&mut bytes));
+        let type_id = u64::from_le_bytes(take(&mut bytes));
+        let info = u64::from_le_bytes(take(&mut bytes));
+        let mut reserved = [0u32; 16];
+        for r in &mut reserved {
+            *r = u32::from_le_bytes(take(&mut bytes));
+        }
+        let length = u64::from_le_bytes(take(&mut bytes));
+        Self {
+            provider,
+            data_id,
+            type_id,
+            info,
+            reserved,
+            length,
+        }
+    }
 }
 
 pub fn provider_name() -> [u8; PROVIDER_NAME_LENGTH] {
@@ -76,11 +119,8 @@ pub fn send_to_mailslot(mailslot_name: &str, data_type: DataType, data: &[u8]) {
                 reserved: [0; 16],
                 length: data.len() as u64,
             };
-            let mut bytes = bincode::serialize(&header).unwrap();
-            let payload = bincode::serialize(&data).unwrap();
-            // remove encoded length of the log_text:
-            let offset = payload.len() - data.len();
-            bytes.extend_from_slice(&payload[offset..]);
+            let mut bytes = header.to_le_bytes().to_vec();
+            bytes.extend_from_slice(data);
             client.send_message(&bytes).unwrap_or_default(); // we can't log in the function
         }
         Err(_) => {
@@ -331,9 +371,51 @@ mod tests {
     }
 
     fn parse_message(msg: &[u8]) -> (MailSlotHeader, Vec<u8>) {
-        let hdr_end = std::mem::size_of::<MailSlotHeader>();
-        let hdr: MailSlotHeader = bincode::deserialize(&msg[..hdr_end]).unwrap();
-        (hdr, msg[hdr_end..].to_vec())
+        let (hdr, payload) = msg.split_at(MailSlotHeader::WIRE_SIZE);
+        (MailSlotHeader::from_le_bytes(hdr), payload.to_vec())
+    }
+
+    #[test]
+    fn test_header_to_le_bytes_pins_wire_format() {
+        let mut provider = [0u8; PROVIDER_NAME_LENGTH];
+        provider[..10].copy_from_slice(b"ctl:golden");
+        let mut reserved = [0u32; 16];
+        reserved[0] = 0xAABB_CCDD;
+        reserved[15] = 0x1122_3344;
+        let header = MailSlotHeader {
+            provider,
+            data_id: 0x0102_0304_0506_0708,
+            type_id: DataType::Yaml.into(),
+            info: 0xA1A2_A3A4_A5A6_A7A8,
+            reserved,
+            length: 0xDEAD_BEEF,
+        };
+        // The packed little-endian layout `CarrierDataHeader` in the
+        // windows agent (agents/wnx/include/wnx/carrier.h) reads.
+        #[rustfmt::skip]
+        let expected: [u8; MailSlotHeader::WIRE_SIZE] = [
+            0x63, 0x74, 0x6C, 0x3A, 0x67, 0x6F, 0x6C, 0x64, // provider[0..8]
+            0x65, 0x6E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // provider[8..16]
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // provider[16..24]
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // provider[24..32]
+            0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, // data_id
+            0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // type_id
+            0xA8, 0xA7, 0xA6, 0xA5, 0xA4, 0xA3, 0xA2, 0xA1, // info
+            0xDD, 0xCC, 0xBB, 0xAA, 0x00, 0x00, 0x00, 0x00, // reserved[0..2]
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserved[2..4]
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserved[4..6]
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserved[6..8]
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserved[8..10]
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserved[10..12]
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserved[12..14]
+            0x00, 0x00, 0x00, 0x00, 0x44, 0x33, 0x22, 0x11, // reserved[14..16]
+            0xEF, 0xBE, 0xAD, 0xDE, 0x00, 0x00, 0x00, 0x00, // length
+        ];
+        assert_eq!(header.to_le_bytes(), expected);
+        assert_eq!(
+            MailSlotHeader::from_le_bytes(&expected).to_le_bytes(),
+            expected
+        );
     }
 
     #[test]

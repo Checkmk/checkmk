@@ -38,6 +38,7 @@ defineProps<{
   placeholder: TranslatedString
   label?: string
   hasError?: boolean
+  componentId?: string | undefined
   describedBy?: string | undefined
   disabled?: boolean
 }>()
@@ -171,6 +172,7 @@ function clearMetricName(): void {
     :width="'wide'"
     :no-results-hint="_t('No results found')"
     :form-validation="hasError || false"
+    :component-id="componentId ?? null"
     :described-by="describedBy"
     :disabled="disabled || false"
   >

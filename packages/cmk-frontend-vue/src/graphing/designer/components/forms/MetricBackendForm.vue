@@ -331,25 +331,37 @@ const {
           />
         </td>
       </tr>
-      <FormMetricBackendAttributes
-        v-model:attribute-filter="attributeFilter"
-        :metric-name="metricName"
-      />
-      <FormMetricBackendConsolidation
-        v-model:aggregation-lookback="aggregationLookback"
-        v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
-        v-model:aggregation-histogram-threshold-for-fraction-below="
-          aggregationHistogramThresholdForFractionBelow
-        "
-        v-model:aggregation-histogram-lower-threshold-for-fraction-between="
-          aggregationHistogramLowerThresholdForFractionBetween
-        "
-        v-model:aggregation-histogram-upper-threshold-for-fraction-between="
-          aggregationHistogramUpperThresholdForFractionBetween
-        "
-        v-model:consolidation-function="consolidationFunction"
-        :metric-types="metricTypes"
-      />
+      <tr>
+        <td class="graphing-metric-backend-form__label-cell">{{ _t('Attributes') }}</td>
+        <td>
+          <FormMetricBackendAttributes
+            v-model:attribute-filter="attributeFilter"
+            :label="_t('Attributes')"
+            :metric-name="metricName"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td class="graphing-metric-backend-form__label-cell">{{ _t('Consolidation') }}</td>
+        <td>
+          <FormMetricBackendConsolidation
+            v-model:aggregation-lookback="aggregationLookback"
+            v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
+            v-model:aggregation-histogram-threshold-for-fraction-below="
+              aggregationHistogramThresholdForFractionBelow
+            "
+            v-model:aggregation-histogram-lower-threshold-for-fraction-between="
+              aggregationHistogramLowerThresholdForFractionBetween
+            "
+            v-model:aggregation-histogram-upper-threshold-for-fraction-between="
+              aggregationHistogramUpperThresholdForFractionBetween
+            "
+            v-model:consolidation-function="consolidationFunction"
+            :label="_t('Consolidation')"
+            :metric-types="metricTypes"
+          />
+        </td>
+      </tr>
       <tr v-if="consolidationErrors.length > 0">
         <td></td>
         <td>

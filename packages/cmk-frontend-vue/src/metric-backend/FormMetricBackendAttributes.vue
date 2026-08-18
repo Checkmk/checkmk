@@ -16,7 +16,8 @@ import {
   flattenSuggestions
 } from 'cmk-ui-library/components/CmkSuggestions'
 import FormValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { ref, watch } from 'vue'
@@ -34,10 +35,9 @@ import {
 } from './attributeFilterAdapter'
 import { useAttributeKeySuggestions } from './attributeKeySuggestions'
 
-const { _t } = usei18n()
-
 const props = withDefaults(
   defineProps<{
+    label: TranslatedString
     metricName?: string | null
     staticResourceAttributeKeys?: string[] | null
     indent?: boolean
@@ -183,30 +183,19 @@ defineExpose({ clearAttributeSelection, hasInvalidAttributes, getValidationMessa
 </script>
 
 <template>
-  <tr>
-    <td class="metric-backend-form-metric-backend-attributes__label-cell">
-      {{ _t('Attributes') }}
-    </td>
-    <td>
-      <FormValidation :validation="validationMessages" />
-      <component :is="props.indent ? CmkIndent : 'div'">
-        <FormAttributeFilter
-          v-model="filterModel"
-          :allow-or="props.allowOr"
-          :operators="props.operators"
-          :query-suggestions="queryKeySuggestions"
-          :query-value-suggestions="queryValueSuggestions"
-          :suggestion-revision="suggestionRevision"
-          :resolve-attribute-kind="resolveAttributeKind"
-          :aria-label="_t('Attributes')"
-        />
-      </component>
-    </td>
-  </tr>
+  <div>
+    <FormValidation :validation="validationMessages" />
+    <component :is="props.indent ? CmkIndent : 'div'">
+      <FormAttributeFilter
+        v-model="filterModel"
+        :allow-or="props.allowOr"
+        :operators="props.operators"
+        :query-suggestions="queryKeySuggestions"
+        :query-value-suggestions="queryValueSuggestions"
+        :suggestion-revision="suggestionRevision"
+        :resolve-attribute-kind="resolveAttributeKind"
+        :aria-label="props.label"
+      />
+    </component>
+  </div>
 </template>
-
-<style scoped>
-.metric-backend-form-metric-backend-attributes__label-cell {
-  vertical-align: top;
-}
-</style>

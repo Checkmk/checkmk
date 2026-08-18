@@ -52,9 +52,11 @@ function renderAttributes(
       return { model, allowOr }
     },
     template: `
-      <table><tbody>
-        <FormMetricBackendAttributes v-model:attribute-filter="model" :allow-or="allowOr" />
-      </tbody></table>
+      <FormMetricBackendAttributes
+        v-model:attribute-filter="model"
+        :allow-or="allowOr"
+        label="Attributes"
+      />
     `
   })
   render(wrapper)

@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { computed, ref, watch } from 'vue'
 
@@ -25,12 +25,11 @@ import type {
   MetricType
 } from '@/metric-backend/consolidation/types'
 
-const { _t } = usei18n()
-
 // Fall back to histogram before the type resolves so the percentile stays reachable.
 const FALLBACK_TYPE: MetricType = 'histogram'
 
 const props = defineProps<{
+  label: TranslatedString
   metricTypes: string[]
 }>()
 
@@ -191,19 +190,8 @@ immediateWatch(
 </script>
 
 <template>
-  <tr>
-    <td class="metric-backend-form-metric-backend-consolidation__label-cell">
-      {{ _t('Consolidation') }}
-    </td>
-    <td>
-      <CmkInlineValidation :validation="validationMessages" />
-      <FormConsolidation v-model="model" :available-types="availableTypes" />
-    </td>
-  </tr>
+  <div>
+    <CmkInlineValidation :validation="validationMessages" />
+    <FormConsolidation v-model="model" :available-types="availableTypes" :label="props.label" />
+  </div>
 </template>
-
-<style scoped>
-.metric-backend-form-metric-backend-consolidation__label-cell {
-  vertical-align: top;
-}
-</style>

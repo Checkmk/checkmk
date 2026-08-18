@@ -15,6 +15,7 @@ import {
   minimumSecondsValidator
 } from 'cmk-ui-library/components/user-input/CmkTimeSpan/timeSpan'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import InlineEditPill from '../InlineEditPill.vue'
@@ -44,6 +45,7 @@ const props = defineProps<{
   availableTypes: MetricType[]
   // Restricts offered functions per type; undefined offers the full catalog.
   allowedFunctions?: AllowedFunctions
+  label?: TranslatedString | undefined
 }>()
 
 const model = defineModel<ConsolidationModel>({ required: true })
@@ -194,6 +196,7 @@ const editAriaLabel = computed(
       :editing="editing"
       :tab-focusable="false"
       :can-leave="canLeaveEdit"
+      :aria-label="label"
       :edit-aria-label="editAriaLabel"
       scope-marker-attr="data-consolidation-scope"
       item-marker-attr="data-consolidation-item"

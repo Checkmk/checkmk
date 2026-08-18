@@ -43,23 +43,22 @@ function renderConsolidation(initial: {
       return { models }
     },
     template: `
-      <table><tbody>
-        <FormMetricBackendConsolidation
-          v-model:aggregation-lookback="models.aggregationLookback.value"
-          v-model:aggregation-histogram-percentile="models.aggregationHistogramPercentile.value"
-          v-model:aggregation-histogram-threshold-for-fraction-below="
-            models.aggregationHistogramThresholdForFractionBelow.value
-          "
-          v-model:aggregation-histogram-lower-threshold-for-fraction-between="
-            models.aggregationHistogramLowerThresholdForFractionBetween.value
-          "
-          v-model:aggregation-histogram-upper-threshold-for-fraction-between="
-            models.aggregationHistogramUpperThresholdForFractionBetween.value
-          "
-          v-model:backend-validation="models.backendValidation.value"
-          :metric-types="models.metricTypes.value"
-        />
-      </tbody></table>
+      <FormMetricBackendConsolidation
+        v-model:aggregation-lookback="models.aggregationLookback.value"
+        v-model:aggregation-histogram-percentile="models.aggregationHistogramPercentile.value"
+        v-model:aggregation-histogram-threshold-for-fraction-below="
+          models.aggregationHistogramThresholdForFractionBelow.value
+        "
+        v-model:aggregation-histogram-lower-threshold-for-fraction-between="
+          models.aggregationHistogramLowerThresholdForFractionBetween.value
+        "
+        v-model:aggregation-histogram-upper-threshold-for-fraction-between="
+          models.aggregationHistogramUpperThresholdForFractionBetween.value
+        "
+        v-model:backend-validation="models.backendValidation.value"
+        :metric-types="models.metricTypes.value"
+        label="Consolidation"
+      />
     `
   })
   render(wrapper)

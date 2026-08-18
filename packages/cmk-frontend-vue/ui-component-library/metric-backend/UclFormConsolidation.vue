@@ -50,7 +50,10 @@ export const panelConfig = {
       '"Backend-supported" mirrors the custom graph editor: one function per type ' +
       '(gauge last value, sum rate, histogram quantile).'
   }
-} satisfies PanelConfigFor<typeof FormConsolidation, 'modelValue' | 'allowedFunctions'> & {
+} satisfies PanelConfigFor<
+  typeof FormConsolidation,
+  'modelValue' | 'allowedFunctions' | 'label'
+> & {
   preset: ListPropDef<PresetName>
   availableTypes: MultiSelectPropDef<MetricType>
   scope: ListPropDef<ScopeName>
@@ -81,7 +84,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<
   typeof FormConsolidation,
-  'modelValue' | 'allowedFunctions'
+  'modelValue' | 'allowedFunctions' | 'label'
 >().createRef(panelConfig)
 
 function clonePreset(name: PresetName): ConsolidationModel {

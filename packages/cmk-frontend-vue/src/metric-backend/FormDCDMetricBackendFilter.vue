@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { DcdMetricBackendFilter } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { type ValidationMessages } from '@/form'
@@ -16,6 +17,8 @@ defineProps<{
   spec: DcdMetricBackendFilter
   backendValidation: ValidationMessages
 }>()
+
+const { _t } = usei18n()
 
 const data = defineModel<DcdMetricBackendFilter>('data', { required: true })
 
@@ -42,16 +45,24 @@ onBeforeUnmount(() => {
 
 <template>
   <table>
-    <!-- AND-only until DCD's REST models support disjunction (CMK-37370). -->
-    <FormMetricBackendAttributes
-      ref="attributesComponent"
-      v-model:attribute-filter="data.attribute_filter"
-      v-model:backend-validation="validation"
-      :static-resource-attribute-keys="['service.name']"
-      :operators="['equals']"
-      :allow-or="false"
-      :indent="true"
-    />
+    <tbody>
+      <tr>
+        <td>{{ _t('Attributes') }}</td>
+        <td>
+          <!-- AND-only until DCD's REST models support disjunction (CMK-37370). -->
+          <FormMetricBackendAttributes
+            ref="attributesComponent"
+            v-model:attribute-filter="data.attribute_filter"
+            v-model:backend-validation="validation"
+            :label="_t('Attributes')"
+            :static-resource-attribute-keys="['service.name']"
+            :operators="['equals']"
+            :allow-or="false"
+            :indent="true"
+          />
+        </td>
+      </tr>
+    </tbody>
   </table>
 </template>
 
@@ -59,5 +70,9 @@ onBeforeUnmount(() => {
 table {
   border-collapse: separate;
   border-spacing: 5px;
+}
+
+table td:first-child {
+  vertical-align: top;
 }
 </style>

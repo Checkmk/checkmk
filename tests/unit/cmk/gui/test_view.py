@@ -28,7 +28,6 @@ def _single_service_view_without_service_context() -> View:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 3667: KeyError in _host_hierarchy_breadcrumb")
 def test_host_hierarchy_breadcrumb_stops_at_host_without_service_context(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

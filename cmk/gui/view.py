@@ -369,6 +369,9 @@ class View:
             )
             return breadcrumb
 
+        if "service" in self.missing_single_infos:
+            return breadcrumb
+
         breadcrumb = make_service_breadcrumb(
             host_name, ServiceName(self.context["service"]["service"]), user_permissions
         )

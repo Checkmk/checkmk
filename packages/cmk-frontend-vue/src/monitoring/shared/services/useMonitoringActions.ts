@@ -19,7 +19,8 @@ export interface MonitoringActions<Id extends string = string> {
 }
 
 export function useMonitoringActions<Id extends string = string>(
-  rowSelection: Ref<RowSelectionState>
+  rowSelection: Ref<RowSelectionState>,
+  selectableKeys: Ref<readonly string[]>
 ): MonitoringActions<Id> {
   const activeAction = ref<Id | null>(null) as Ref<Id | null>
   const feedback = ref<ActionFeedback | null>(null)
@@ -44,6 +45,16 @@ export function useMonitoringActions<Id extends string = string>(
     feedbackOpen.value = true
     closeAction()
   }
+
+  watch(selectableKeys, (keys) => {
+    const onOffer = new Set(keys)
+    const kept = Object.entries(rowSelection.value).filter(
+      ([key, selected]) => selected && onOffer.has(key)
+    )
+    if (kept.length !== Object.keys(rowSelection.value).length) {
+      rowSelection.value = Object.fromEntries(kept)
+    }
+  })
 
   watch(selectedCount, (count) => {
     if (count === 0) {

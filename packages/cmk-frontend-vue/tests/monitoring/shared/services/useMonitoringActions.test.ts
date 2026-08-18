@@ -9,8 +9,10 @@ import { nextTick, ref } from 'vue'
 
 import { useMonitoringActions } from '@/monitoring/shared/services/useMonitoringActions'
 
+const onOffer = (...keys: string[]) => ref<readonly string[]>(keys)
+
 test('opens and closes an action', () => {
-  const actions = useMonitoringActions<'acknowledge'>(ref<RowSelectionState>({}))
+  const actions = useMonitoringActions<'acknowledge'>(ref<RowSelectionState>({}), onOffer())
 
   actions.openAction('acknowledge')
   expect(actions.activeAction.value).toBe('acknowledge')
@@ -21,7 +23,7 @@ test('opens and closes an action', () => {
 
 test('successful feedback clears the selection, stores the message and closes the pane', () => {
   const rowSelection = ref<RowSelectionState>({ 'heute/web-01': true })
-  const actions = useMonitoringActions<'acknowledge'>(rowSelection)
+  const actions = useMonitoringActions<'acknowledge'>(rowSelection, onOffer('heute/web-01'))
   actions.openAction('acknowledge')
 
   actions.applyFeedback({ variant: 'success', message: 'done' as TranslatedString })
@@ -34,7 +36,7 @@ test('successful feedback clears the selection, stores the message and closes th
 
 test('error feedback keeps the selection', () => {
   const rowSelection = ref<RowSelectionState>({ 'heute/web-01': true })
-  const actions = useMonitoringActions<'acknowledge'>(rowSelection)
+  const actions = useMonitoringActions<'acknowledge'>(rowSelection, onOffer('heute/web-01'))
 
   actions.applyFeedback({ variant: 'error', message: 'nope' as TranslatedString })
 
@@ -43,10 +45,45 @@ test('error feedback keeps the selection', () => {
 
 test('closes the open pane once the selection empties', async () => {
   const rowSelection = ref<RowSelectionState>({ 'heute/web-01': true })
-  const actions = useMonitoringActions<'acknowledge'>(rowSelection)
+  const actions = useMonitoringActions<'acknowledge'>(rowSelection, onOffer('heute/web-01'))
   actions.openAction('acknowledge')
 
   rowSelection.value = {}
+  await nextTick()
+
+  expect(actions.activeAction.value).toBeNull()
+})
+
+test('a selected row that leaves the offer is dropped from the selection', async () => {
+  const rowSelection = ref<RowSelectionState>({ 'heute/web-01': true, 'heute/db-01': true })
+  const keys = onOffer('heute/web-01', 'heute/db-01')
+  const actions = useMonitoringActions<'acknowledge'>(rowSelection, keys)
+
+  keys.value = ['heute/web-01']
+  await nextTick()
+
+  expect(rowSelection.value).toEqual({ 'heute/web-01': true })
+  expect(actions.selectedCount.value).toBe(1)
+})
+
+test('a selection survives rows arriving and reordering around it', async () => {
+  const rowSelection = ref<RowSelectionState>({ 'heute/web-01': true })
+  const keys = onOffer('heute/web-01', 'heute/db-01')
+  useMonitoringActions<'acknowledge'>(rowSelection, keys)
+
+  keys.value = ['heute/db-01', 'heute/web-01', 'heute/app-01']
+  await nextTick()
+
+  expect(rowSelection.value).toEqual({ 'heute/web-01': true })
+})
+
+test('the open pane closes once the last selected row leaves the offer', async () => {
+  const rowSelection = ref<RowSelectionState>({ 'heute/web-01': true })
+  const keys = onOffer('heute/web-01')
+  const actions = useMonitoringActions<'acknowledge'>(rowSelection, keys)
+  actions.openAction('acknowledge')
+
+  keys.value = ['heute/db-01']
   await nextTick()
 
   expect(actions.activeAction.value).toBeNull()

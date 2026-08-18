@@ -56,6 +56,10 @@ const emit = defineEmits<{
 const rowSelection = ref<RowSelectionState>({})
 const runningActionId = ref<string | null>(null)
 
+const selectableKeys = computed<string[]>(() =>
+  props.service.items.value.map((row) => props.getRowKey(row))
+)
+
 const {
   activeAction,
   selectedCount,
@@ -64,7 +68,7 @@ const {
   openAction,
   closeAction,
   applyFeedback
-} = useMonitoringActions(rowSelection)
+} = useMonitoringActions(rowSelection, selectableKeys)
 
 const selectedTargets = computed<Target[]>(() =>
   props.service.items.value

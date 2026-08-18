@@ -124,6 +124,19 @@ example_snmp_string_table_v9 = [
     ],
 ]
 
+example_snmp_string_table_v9_1 = [
+    [["9.1.0-54969"]],
+    [
+        ["7", "1", "Running"],
+        ["13", "1", "59% - System memory usage is OK."],
+        ["40", "1", "CPU Usage: 20%"],
+        ["58", "4", ""],
+        ["59", "4", ""],
+        ["60", "1", ""],
+        ["61", "4", "NIOS/DFP Service is not running. Cloud/DFP is not running."],
+    ],
+]
+
 example_parsed_data_lower_v9 = {
     "node-status": ("working", "Running"),
     "disk-usage": ("working", "2% - Primary drive usage is OK."),
@@ -164,12 +177,19 @@ example_parsed_data_v9 = {
     "discovery-capacity": ("working", "0% - Discovery capacity usage is OK."),
 }
 
+example_parsed_data_v9_1 = {
+    "node-status": ("working", "Running"),
+    "memory": ("working", "59% - System memory usage is OK."),
+    "cpu-usage": ("working", "CPU Usage: 20%"),
+}
+
 
 @pytest.mark.parametrize(
     "string_table,expected_parsed_data",
     [
         (example_snmp_string_table_lower_v9, example_parsed_data_lower_v9),
         (example_snmp_string_table_v9, example_parsed_data_v9),
+        (example_snmp_string_table_v9_1, example_parsed_data_v9_1),
     ],
 )
 def test_parse_infoblox_services(

@@ -14,11 +14,14 @@ from cmk.gui.views.command.commands import (
     _acknowledgement_needs_removal,
     _query_downtime_ids_for_leaf,
     CommandScheduleDowntimes,
+    CommandScheduleDowntimesForm,
     NoRecurringDowntimes,
 )
 from cmk.livestatus_client import DeleteServiceDowntime
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.servicename import ServiceName
+from cmk.web.utils.html import HTML
+from tests.testlib.gui.web_test_app import SetConfig
 
 COMMENT_TABLE = [
     # Host comments
@@ -207,3 +210,40 @@ def test_the_registered_command_hands_on_the_intervals_it_was_given() -> None:
     command = CommandScheduleDowntimes(recurring_downtimes=recurring_downtimes)
 
     assert command.recurring_downtimes is recurring_downtimes
+
+
+class TestDowntimeDurationPresets:
+    """Downtime duration presets are admin configured, so their end can be absurd.
+
+    ``user_downtime_timeranges`` entries carry a duration in seconds; a large enough
+    one puts the resulting end timestamp outside the platform's time_t range.
+    """
+
+    @staticmethod
+    def _form(monkeypatch: pytest.MonkeyPatch) -> CommandScheduleDowntimesForm:
+        form = CommandScheduleDowntimesForm(NoRecurringDowntimes())
+        monkeypatch.setattr(form, "_current_local_time", lambda: 0.0)
+        return form
+
+    def test_renders_a_button_for_a_usable_preset(
+        self,
+        request_context: None,
+        set_config: SetConfig,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        form = self._form(monkeypatch)
+
+        with set_config(user_downtime_timeranges=[{"title": "2 hours", "end": 7200}]):
+            assert "_downrange__7200" in str(form._get_duration_options())
+
+    @pytest.mark.xfail(strict=True, reason="Crash group 4038: OverflowError in _get_onclick")
+    def test_skips_a_preset_whose_end_is_not_representable(
+        self,
+        request_context: None,
+        set_config: SetConfig,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        form = self._form(monkeypatch)
+
+        with set_config(user_downtime_timeranges=[{"title": "far future", "end": 10**18}]):
+            assert form._get_duration_options() == HTML.empty()

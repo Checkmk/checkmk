@@ -822,27 +822,31 @@ ConfigVariableExperimentalFeatures = ConfigVariable(
     group=ConfigVariableGroupDeveloperTools,
     primary_domain=ConfigDomainGUI,
     ident="vue_experimental_features",
-    valuespec=lambda context: Dictionary(
-        title=_("Vue experimental features"),
-        help=_("These settings only affect features that are currently under development."),
-        elements=[
-            (
-                "rule_render_mode",
-                DropdownChoice(
-                    title=_("Rule rendering mode"),
-                    help=_(
+    form_spec=lambda context: fs.Dictionary(
+        title=Title("Vue experimental features"),
+        help_text=Help("These settings only affect features that are currently under development."),
+        elements={
+            "rule_render_mode": fs.DictElement(
+                required=True,
+                parameter_form=SingleChoiceExtended[str](
+                    title=Title("Rule rendering mode"),
+                    help_text=Help(
                         "Enable experimental rendering modes for form specs. Keep in mind that "
                         "some form specs are always rendered in the frontend, regardless "
                         "of this setting."
                     ),
-                    choices=[
-                        ("frontend", "Frontend (vue rendering)"),
-                        ("backend", "Backend (legacy rendering)"),
+                    elements=[
+                        SingleChoiceElementExtended(
+                            name="frontend", title=Title("Frontend (vue rendering)")
+                        ),
+                        SingleChoiceElementExtended(
+                            name="backend", title=Title("Backend (legacy rendering)")
+                        ),
                     ],
+                    prefill=fs.DefaultValue("frontend"),
                 ),
             ),
-        ],
-        optional_keys=False,
+        },
     ),
 )
 
@@ -850,9 +854,8 @@ ConfigVariableInjectJsProfiling = ConfigVariable(
     group=ConfigVariableGroupDeveloperTools,
     primary_domain=ConfigDomainGUI,
     ident="inject_js_profiling_code",
-    valuespec=lambda context: Checkbox(
-        title=_("Inject JavaScript profiling code"),
-        default_value=False,
+    form_spec=lambda context: fs.BooleanChoice(
+        title=Title("Inject JavaScript profiling code"),
     ),
 )
 
@@ -860,9 +863,9 @@ ConfigVariableProfilingOptions = ConfigVariable(
     group=ConfigVariableGroupDeveloperTools,
     primary_domain=ConfigDomainGUI,
     ident="profiling_options",
-    valuespec=lambda context: Dictionary(
-        title=_("Performance profiles"),
-        help=_(
+    form_spec=lambda context: fs.Dictionary(
+        title=Title("Performance profiles"),
+        help_text=Help(
             "Controls the performance-profile feature. When enabled, profiled GUI "
             "requests and <tt>cmk --profile</tt> runs are stored under "
             "<tt>var/check_mk/profiles</tt> and the <b>Setup > Maintenance > "
@@ -873,42 +876,40 @@ ConfigVariableProfilingOptions = ConfigVariable(
             "and is therefore restricted to administrators. Disable the feature "
             "on hardened deployments if untrusted admin sessions are a concern."
         ),
-        elements=[
-            (
-                "enabled",
-                Checkbox(
-                    title=_("Enable performance profiles"),
-                    label=_("Show the Performance profiles page and record profiled requests"),
-                    default_value=False,
+        elements={
+            "enabled": fs.DictElement(
+                required=True,
+                parameter_form=fs.BooleanChoice(
+                    title=Title("Enable performance profiles"),
+                    label=Label("Show the Performance profiles page and record profiled requests"),
                 ),
             ),
-            (
-                "max_count",
-                Integer(
-                    title=_("Maximum number of stored profiles"),
-                    help=_(
+            "max_count": fs.DictElement(
+                required=True,
+                parameter_form=fs.Integer(
+                    title=Title("Maximum number of stored profiles"),
+                    help_text=Help(
                         "When a new profile is saved and this count is exceeded, the "
                         "oldest profiles are removed first."
                     ),
-                    default_value=100,
-                    minvalue=1,
+                    prefill=fs.DefaultValue(100),
+                    custom_validate=[fs.validators.NumberInRange(min_value=1)],
                 ),
             ),
-            (
-                "max_age_days",
-                Integer(
-                    title=_("Maximum age of stored profiles"),
-                    help=_(
+            "max_age_days": fs.DictElement(
+                parameter_form=fs.Integer(
+                    title=Title("Maximum age of stored profiles"),
+                    help_text=Help(
                         "Profiles older than this are discarded on the next save or "
                         "housekeeping run. Leave unset to keep profiles indefinitely "
                         "(count-based cap still applies)."
                     ),
-                    unit=_("days"),
-                    minvalue=1,
+                    unit_symbol="days",
+                    prefill=fs.DefaultValue(1),
+                    custom_validate=[fs.validators.NumberInRange(min_value=1)],
                 ),
             ),
-        ],
-        optional_keys=["max_age_days"],
+        },
     ),
 )
 
@@ -916,16 +917,21 @@ ConfigVariableLoadFrontendVue = ConfigVariable(
     group=ConfigVariableGroupDeveloperTools,
     primary_domain=ConfigDomainGUI,
     ident="load_frontend_vue",
-    valuespec=lambda context: DropdownChoice(
-        title=_("Inject frontend_vue files via vite client"),
-        help=_(
+    form_spec=lambda context: SingleChoiceExtended[str](
+        title=Title("Inject frontend_vue files via vite client"),
+        help_text=Help(
             "If you change this to 'inject' and there is no vite dev server running "
             "you may not be able to deactivate this option via UI, so be careful!"
         ),
-        choices=[
-            ("static_files", "Load JavaScript from shipped, static files"),
-            ("inject", "Inject vite client to enable auto hot reloading"),
+        elements=[
+            SingleChoiceElementExtended(
+                name="static_files", title=Title("Load JavaScript from shipped, static files")
+            ),
+            SingleChoiceElementExtended(
+                name="inject", title=Title("Inject vite client to enable auto hot reloading")
+            ),
         ],
+        prefill=fs.DefaultValue("static_files"),
     ),
 )
 

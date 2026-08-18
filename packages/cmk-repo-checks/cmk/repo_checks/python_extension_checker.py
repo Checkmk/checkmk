@@ -111,6 +111,14 @@ KNOWN_VIOLATIONS = [
     r"bin/.*",
     r"packages/.*/notifications/.*",
     r"non-free/packages/.*/notifications/.*",
+    # External (third-party) Python scripts
+    r"omd/packages/Python/pip$",
+    r"omd/packages/nagios/merge-nagios-config$",
+    # Demo / example scripts, not part of production
+    r"doc/treasures/.*",
+    # Bazel BUILD files are Starlark, not Python — false positives on content
+    # detection. (BUILD.bazel needs no entry: ".bazel" is in IGNORE_SUFFIXES.)
+    r"(.*/)?BUILD$",
 ]
 
 PYTHON_SUFFIXES = [

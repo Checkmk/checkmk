@@ -105,7 +105,11 @@ function isScalarFunction(fn: GroupByFunction): fn is ScalarFunction {
   return (SCALAR_FUNCTIONS as readonly string[]).includes(fn)
 }
 
-/** The aggregator a float grouping serializes to, or undefined when there is nothing to group. */
+/**
+ * The aggregator a float grouping serializes to, or undefined for a non-scalar function.
+ *
+ * A scalar function always aggregates; empty keys mean "aggregate over everything".
+ */
 export function floatGroupByToAggregator(groupBy: GroupByModel): Aggregator | undefined {
   if (!isScalarFunction(groupBy.function)) {
     return undefined
@@ -113,10 +117,6 @@ export function floatGroupByToAggregator(groupBy: GroupByModel): Aggregator | un
   const aggregateBy = groupBy.keys
     .filter(isKeyValid)
     .map(({ attributeKind, attributeKey }) => ({ kind: attributeKind, name: attributeKey }))
-  // A scalar function without any valid key has nothing to group by, so it is no aggregator.
-  if (aggregateBy.length === 0) {
-    return undefined
-  }
   return {
     stages: [
       { aggregate_by: aggregateBy, aggregation_fn: { type: 'scalar', name: groupBy.function } }

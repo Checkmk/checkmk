@@ -54,12 +54,14 @@ test('the "none" function produces no aggregator', () => {
   expect(floatGroupByToAggregator(model({ function: 'none' }))).toBeUndefined()
 })
 
-test('a function with no valid keys produces no aggregator', () => {
+test('a scalar function with no valid keys aggregates over everything', () => {
   expect(
     floatGroupByToAggregator(
       model({ keys: [{ id: 'a', attributeKind: 'resource', attributeKey: '' }] })
     )
-  ).toBeUndefined()
+  ).toEqual<Aggregator>({
+    stages: [{ aggregate_by: [], aggregation_fn: { type: 'scalar', name: 'sum' } }]
+  })
 })
 
 test('invalid keys (no key or no kind) are dropped while valid ones survive', () => {

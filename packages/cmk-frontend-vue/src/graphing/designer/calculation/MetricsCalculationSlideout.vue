@@ -61,7 +61,6 @@ function onTabChange(value: string | number): void {
       <CmkTabs :model-value="activeTab" @update:model-value="onTabChange">
         <template #tabs>
           <CmkTab id="rrd">{{ _t('CMK RRD data') }}</CmkTab>
-          <CmkTab id="metric_backend">{{ _t('Metrics backend queries') }}</CmkTab>
         </template>
         <template #tab-contents>
           <CmkTabContent id="rrd" spacing="none">
@@ -77,13 +76,6 @@ function onTabChange(value: string | number): void {
               />
             </div>
           </CmkTabContent>
-          <CmkTabContent id="metric_backend" spacing="none">
-            <div class="graphing-metrics-calculation-slideout__tab">
-              <p class="graphing-metrics-calculation-slideout__placeholder">
-                {{ _t('Metrics backend queries are not available yet.') }}
-              </p>
-            </div>
-          </CmkTabContent>
         </template>
       </CmkTabs>
     </div>
@@ -97,11 +89,5 @@ function onTabChange(value: string | number): void {
 
 .graphing-metrics-calculation-slideout__tab {
   padding: var(--dimension-7);
-}
-
-.graphing-metrics-calculation-slideout__placeholder {
-  margin: 0;
-  opacity: 0.6;
-  font-style: italic;
 }
 </style>

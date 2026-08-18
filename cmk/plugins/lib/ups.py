@@ -153,12 +153,20 @@ def _output_time_remaining(
     # Metric for time left on battery always - check remaining time only when on battery
     ignore_levels = seconds_left == 0 and not on_battery
     if seconds_left is not None:
-        yield from check_levels_v1(
-            seconds_left,
-            metric_name="battery_seconds_remaining",
-            levels_lower=None if ignore_levels else (levels[0] * 60, levels[1] * 60),
-            render_func=render.timespan,
-        )
+        if seconds_left < 0:
+            yield Result(
+                state=State.UNKNOWN,
+                summary=(
+                    f"Device reported an invalid remaining battery time ({seconds_left} seconds)"
+                ),
+            )
+        else:
+            yield from check_levels_v1(
+                seconds_left,
+                metric_name="battery_seconds_remaining",
+                levels_lower=None if ignore_levels else (levels[0] * 60, levels[1] * 60),
+                render_func=render.timespan,
+            )
 
     if not on_battery:
         yield Result(

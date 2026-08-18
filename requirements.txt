@@ -144,9 +144,7 @@ alabaster==1.0.0 \
 annotated-doc==0.0.5 \
     --hash=sha256:117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101 \
     --hash=sha256:c7e58ce09192557605d8bbd92836d7e1d520ac9580096042c0bfd197efacf1bb
-    # via
-    #   fastapi
-    #   typer
+    # via fastapi
 annotated-types==0.8.0 \
     --hash=sha256:13b2beaad985e05e2d6407ee4c4f35590b11f8d693a258a561055cac8f64cab7 \
     --hash=sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0
@@ -160,6 +158,7 @@ anyio==4.14.2 \
     --hash=sha256:cfa139f3ed1a23ee8f88a145ddb5ac7605b8bbfd8592baacd7ce3d8bb4313c7f
     # via
     #   httpx
+    #   httpx2
     #   mcp
     #   sse-starlette
     #   starlette
@@ -1873,11 +1872,16 @@ h11==0.16.0 \
     # via
     #   -r packages/cmk-agent-receiver/requirements.in
     #   httpcore
+    #   httpcore2
     #   uvicorn
 httpcore==1.0.9 \
     --hash=sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55 \
     --hash=sha256:6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8
     # via httpx
+httpcore2==2.11.0 \
+    --hash=sha256:82e6fc95d784e6ee22ebd4b2cb57df53a2efb13ad6a11260a236ecebbc5f50c7 \
+    --hash=sha256:c7c899fbc6b8abb6e747dda427aa6f52934c45e191eabb986965164ebb02a908
+    # via httpx2
 httplib2==0.32.0 \
     --hash=sha256:48a0ef30a42db65d8f3399045e1d09ab0ba66e3b9efc360d07f80ea55d286025 \
     --hash=sha256:dc6705cacdf3fb0a2aba7629fa33c90fd93e30035db0c157325826be177e4816
@@ -1888,15 +1892,13 @@ httpx==0.28.1 \
     --hash=sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
-    #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
-    #   mcp
     #   meraki
-httpx-sse==0.4.3 \
-    --hash=sha256:0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc \
-    --hash=sha256:9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d
+httpx2==2.11.0 \
+    --hash=sha256:c9790f62a327110f52a099f1e2030cbe32f78b28781ad68fe58bfd6f23e73ab0 \
+    --hash=sha256:ea01b2e8febfb026e2601814c77ecb1e64fff114a87bc789cb520e67f27e7809
     # via mcp
 hypothesis==6.165.10 \
     --hash=sha256:00de0abdcf8c05c9d0eab735a3c49a276376b55151e6fcb903c2b39a90e5e5c3 \
@@ -2002,6 +2004,7 @@ idna==3.18 \
     # via
     #   anyio
     #   httpx
+    #   httpx2
     #   requests
     #   yarl
 imagesize==2.0.0 \
@@ -2978,19 +2981,14 @@ matplotlib==3.11.1 \
     # via
     #   -r tests/dev-requirements.in
     #   sarif-tools
-mcp[cli, rich]==2.0.0b1 \
-    --hash=sha256:7e169929da99487b1998f8f53548bb93ff5157165f2f5a10fb45202c02a91fce \
-    --hash=sha256:f0bb4543507117f872613fc76bd7b73cc2a8f6ddd9426f0402f268447f21b260
-    # via
-    #   -r non-free/packages/cmk-mcp/dev-requirements.in
-    #   -r non-free/packages/cmk-mcp/requirements.in
-mcp-types==2.0.0b1 \
-    --hash=sha256:6a26910a737c4cd4de36c7d5629febe7d33d4556a9d196166b5c7187a6516944 \
-    --hash=sha256:c1b22b56b0ba7b1d51c84dc99afdd603ae225c55e9e8f07477774552bf34c8cd
-    # via
-    #   -r non-free/packages/cmk-mcp/dev-requirements.in
-    #   -r non-free/packages/cmk-mcp/requirements.in
-    #   mcp
+mcp==2.0.0 \
+    --hash=sha256:0f440e735c13ece8bb19bc62cf0b86f4313448432fbb77d35e14034f4e050728 \
+    --hash=sha256:1cb4c75d2d2c7b8c1d756355e5d82a39f2822cc7f13e22a2051d7ca3592349d6
+    # via -r non-free/packages/cmk-mcp/requirements.in
+mcp-types==2.0.0 \
+    --hash=sha256:6b2de797ca2797f568b79529e1b25948e34de511bcc0bd82fef1039a6d1b8eb0 \
+    --hash=sha256:d7d939b9285c9961ae8866ba75ef85da34d12bafe276efbf4eb6a131786d8379
+    # via mcp
 mdit-py-plugins==0.6.1 \
     --hash=sha256:214c82fb2ac524472ab6a5bcab1de80f73b50443e187f401bfd77efbc7c6481d \
     --hash=sha256:a2bca0f039f39dbd35fb74ae1b5f998608c437463371f0ff7f49a19a17a114d0
@@ -3388,6 +3386,7 @@ opentelemetry-api==1.44.0 \
     --hash=sha256:94b98c893a91b88657eaac1e3ba89618cdb85be6918196705354f34728b2cdef
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   -r packages/cmk-wsgi/requirements.in
     #   mcp
@@ -3500,6 +3499,7 @@ opentelemetry-sdk==1.44.0 \
     --hash=sha256:df081c4c6bcfdb1211e3e86140376792643128a25f8d72d1d27675936e7e96ad
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   opentelemetry-container-distro
     #   opentelemetry-exporter-otlp-proto-grpc
@@ -4252,7 +4252,6 @@ pydantic-settings==2.15.0 \
     --hash=sha256:0ba092c291c94baceb5eff768aa0d56400a457585bc0175925a5a5510303da42 \
     --hash=sha256:694b793e84f766ba76a90ebdefc01d0a9a045dab0382bee70393da93712ad117
     # via
-    #   mcp
     #   openapi-schema-validator
     #   openapi-spec-validator
 pyee==13.0.1 \
@@ -4731,9 +4730,7 @@ python-docx==1.2.0 \
 python-dotenv==1.2.3 \
     --hash=sha256:904552145e8bfed22162c09dab1c2b9b54fefa7b23ba780f4f26ca0316b0f0d9 \
     --hash=sha256:a20a594dabeaa385725aa239d5244871c143ecb356add8a20fcf23773a6c3a35
-    # via
-    #   mcp
-    #   pydantic-settings
+    # via pydantic-settings
 python-jenkins==1.8.3 \
     --hash=sha256:2e1766b253e3b2f28f52abfd0de45ffeaa1191f98520cc8d74d2c317786e59d0 \
     --hash=sha256:8f4761c391ac11e8c1f23f771010920c10440497705ab7175d52358f5a12dc98
@@ -5168,10 +5165,8 @@ rich==15.0.0 \
     #   -r packages/cmk-werks/requirements.in
     #   bandit
     #   checkmk-dev-tools
-    #   mcp
     #   textual
     #   twine
-    #   typer
 robotframework==7.4.2 \
     --hash=sha256:1c934e7f43600de407860cd2bd2fdc41adad4a4a785d8b46b1ed485fdc0f6c9f \
     --hash=sha256:6e80f84cdc997bdde2abb6b729ac3531457ecf6d2e41abfb87a541877ab367bf
@@ -5468,10 +5463,6 @@ setuptools-scm==10.2.1 \
 sgmllib3k==1.0.0 \
     --hash=sha256:7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9
     # via feedparser
-shellingham==1.5.4 \
-    --hash=sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686 \
-    --hash=sha256:8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de
-    # via typer
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
@@ -5774,6 +5765,12 @@ trickkiste==0.3.7 \
     # via
     #   checkmk-dev-tools
     #   cmk-werk-zeug
+truststore==0.10.4 \
+    --hash=sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301 \
+    --hash=sha256:adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981
+    # via
+    #   httpcore2
+    #   httpx2
 twine==7.0.0 \
     --hash=sha256:85cdb29c518efef867360ae4acd4b0dfd61c8654a22fca08e6f8539f05022177 \
     --hash=sha256:b854164df26db268af05f49aa5c0344b10e27a494343ff05b1e0bad3b135f5a7
@@ -5782,10 +5779,6 @@ typeguard==4.6.0 \
     --hash=sha256:79878165bb86f2cf5d41d159a0ff1792a796cf496882d2fe1b1c6c7049b9cdd7 \
     --hash=sha256:e7414f09111317de3e335de92cd397c5c0ca00b1cc1676de12e1d444a79b3f21
     # via inflect
-typer==0.27.1 \
-    --hash=sha256:53150287edd11baeb4e4722c8e394fcdf8181c0ae89485cba8d25c778d5edd56 \
-    --hash=sha256:a79bef8469a79c45498e7b814ecf8d603cc7644e9acbd9e19cac0334240b18df
-    # via mcp
 types-docker==7.2.0.20260813 \
     --hash=sha256:8d25c84424ec911cf71eb023ab271f9f6f214e7d2515ed9ce61d6be13fa6d507 \
     --hash=sha256:c42eae5a10afad99864aec144daf62f33422baf265f58be9112ffc037f0e9783

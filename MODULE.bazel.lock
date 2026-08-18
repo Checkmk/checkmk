@@ -5218,6 +5218,10 @@
             "https://files.pythonhosted.org/packages/06/94/82699a10bca87a5556c9c59b5963f2d039dbd239f25bc2a63907a05a14cb/httpcore-1.0.9.tar.gz": "6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8",
             "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55"
           },
+          "httpcore2": {
+            "https://files.pythonhosted.org/packages/30/7d/ee6787efd5fe675d7cfd5eb149e40ccb5bdfc7e7c9252edcf7825c38986f/httpcore2-2.11.0.tar.gz": "82e6fc95d784e6ee22ebd4b2cb57df53a2efb13ad6a11260a236ecebbc5f50c7",
+            "https://files.pythonhosted.org/packages/f3/54/e84a5c82ac0959d5e55b3970d326fd95306446b2bf0702302888745f7e5c/httpcore2-2.11.0-py3-none-any.whl": "c7c899fbc6b8abb6e747dda427aa6f52934c45e191eabb986965164ebb02a908"
+          },
           "httplib2": {
             "https://files.pythonhosted.org/packages/33/a0/550eec327e5f5c7b732531c489f5307efec41f047b0d703bd4ca1e5ad2db/httplib2-0.32.0-py3-none-any.whl": "dc6705cacdf3fb0a2aba7629fa33c90fd93e30035db0c157325826be177e4816",
             "https://files.pythonhosted.org/packages/84/f5/ccf58de92d61e3ad921119668f54ed36ca1d0cf5dcc5c1657dfb164fd78b/httplib2-0.32.0.tar.gz": "48a0ef30a42db65d8f3399045e1d09ab0ba66e3b9efc360d07f80ea55d286025"
@@ -5226,9 +5230,9 @@
             "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad",
             "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz": "75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc"
           },
-          "httpx-sse": {
-            "https://files.pythonhosted.org/packages/0f/4c/751061ffa58615a32c31b2d82e8482be8dd4a89154f003147acee90f2be9/httpx_sse-0.4.3.tar.gz": "9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d",
-            "https://files.pythonhosted.org/packages/d2/fd/6668e5aec43ab844de6fc74927e155a3b37bf40d7c3790e49fc0406b6578/httpx_sse-0.4.3-py3-none-any.whl": "0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc"
+          "httpx2": {
+            "https://files.pythonhosted.org/packages/39/29/f60bcf54028601920c0ce3da81537bcd0af4ee19dd9672af85dc9dfd60e0/httpx2-2.11.0-py3-none-any.whl": "c9790f62a327110f52a099f1e2030cbe32f78b28781ad68fe58bfd6f23e73ab0",
+            "https://files.pythonhosted.org/packages/d5/4d/b3fcae38f29bfb0f300517d085c488f41f65e5b0a73023976b2122f568cc/httpx2-2.11.0.tar.gz": "ea01b2e8febfb026e2601814c77ecb1e64fff114a87bc789cb520e67f27e7809"
           },
           "hypothesis": {
             "https://files.pythonhosted.org/packages/01/39/f5b9a5d390d4edd1ad472334493ac442963ebeb4daaa74ff4bdac6ef292f/hypothesis-6.165.10-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl": "6caadcd1afb62630ff5c5ff353626eaa616553a5971295ad6dc2b19ca8a39620",
@@ -6311,12 +6315,12 @@
             "https://files.pythonhosted.org/packages/f6/4a/907ed190ee81a9df581e0ed5456134fc0f7cb55ffcfda2f9e54ca900761c/matplotlib-3.11.1-cp314-cp314t-win_amd64.whl": "f2912f647f3fbe1ccf085f91e213936f9101bead81a5e670565b1f1b3712f4fb"
           },
           "mcp": {
-            "https://files.pythonhosted.org/packages/ac/bb/9c5c4e428e63d40b5542cfc9c61a0438943ccb260bf9929dc02c47527235/mcp-2.0.0b1-py3-none-any.whl": "7e169929da99487b1998f8f53548bb93ff5157165f2f5a10fb45202c02a91fce",
-            "https://files.pythonhosted.org/packages/d6/78/9f540a2f8f673973c9dee7977d020a0c10b97be3a6417a833bc3af166811/mcp-2.0.0b1.tar.gz": "f0bb4543507117f872613fc76bd7b73cc2a8f6ddd9426f0402f268447f21b260"
+            "https://files.pythonhosted.org/packages/67/72/7d7897418912c1d12e87556630dfb7bf0eac71160e9bef8b447960804ee3/mcp-2.0.0-py3-none-any.whl": "1cb4c75d2d2c7b8c1d756355e5d82a39f2822cc7f13e22a2051d7ca3592349d6",
+            "https://files.pythonhosted.org/packages/74/33/32d4dff2c95bb5d897c3ef4c83649a08996b17b58f0a326d2495d4c81179/mcp-2.0.0.tar.gz": "0f440e735c13ece8bb19bc62cf0b86f4313448432fbb77d35e14034f4e050728"
           },
           "mcp-types": {
-            "https://files.pythonhosted.org/packages/2b/88/f3e4322a5bfc382f8851e584f2e2c87354467dc17fb602dd4b13dee65b7c/mcp_types-2.0.0b1.tar.gz": "6a26910a737c4cd4de36c7d5629febe7d33d4556a9d196166b5c7187a6516944",
-            "https://files.pythonhosted.org/packages/3f/05/2da79c73dd07d028163c2b24d4cc6e988da11dff83f7902a07d69a87df80/mcp_types-2.0.0b1-py3-none-any.whl": "c1b22b56b0ba7b1d51c84dc99afdd603ae225c55e9e8f07477774552bf34c8cd"
+            "https://files.pythonhosted.org/packages/bb/56/9b8e1c152f61f6c6b07c4b5896c88c7d0ae90bac6ee6306f852fcc5c1eb0/mcp_types-2.0.0.tar.gz": "d7d939b9285c9961ae8866ba75ef85da34d12bafe276efbf4eb6a131786d8379",
+            "https://files.pythonhosted.org/packages/f5/4c/c78d78c3d52b0ac594ad7cc8ef5972adfe070e3597a8a4c6ce0cd39196ea/mcp_types-2.0.0-py3-none-any.whl": "6b2de797ca2797f568b79529e1b25948e34de511bcc0bd82fef1039a6d1b8eb0"
           },
           "mdit-py-plugins": {
             "https://files.pythonhosted.org/packages/59/fc/f8d0863f8862f25602c0404d75568e89fb6b4109804645e5cdfb1be5cf56/mdit_py_plugins-0.6.1.tar.gz": "a2bca0f039f39dbd35fb74ae1b5f998608c437463371f0ff7f49a19a17a114d0",
@@ -8438,10 +8442,6 @@
           "sgmllib3k": {
             "https://files.pythonhosted.org/packages/9e/bd/3704a8c3e0942d711c1299ebf7b9091930adae6675d7c8f476a7ce48653c/sgmllib3k-1.0.0.tar.gz": "7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9"
           },
-          "shellingham": {
-            "https://files.pythonhosted.org/packages/58/15/8b3609fd3830ef7b27b655beb4b4e9c62313a4e8da8c676e142cc210d58e/shellingham-1.5.4.tar.gz": "8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de",
-            "https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl": "7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686"
-          },
           "six": {
             "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz": "ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81",
             "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"
@@ -8710,6 +8710,10 @@
             "https://files.pythonhosted.org/packages/7f/fb/b8862d2e799f0927c39a377393c2587d44e3161304895b9972f8393faaa2/trickkiste-0.3.7-py3-none-any.whl": "f02f79a59eb9756e97c54bd531ba41a736953a18f94809bd05a10869186ef9ed",
             "https://files.pythonhosted.org/packages/e1/82/95e2840864bbf6be2e3773424400773e9ab104c59ada744fe03412ddd2be/trickkiste-0.3.7.tar.gz": "c0f447922ce76310fcb7f1b8b446da4f921d290c57bdd82126b9fe2c3a4284d3"
           },
+          "truststore": {
+            "https://files.pythonhosted.org/packages/19/97/56608b2249fe206a67cd573bc93cd9896e1efb9e98bce9c163bcdc704b88/truststore-0.10.4-py3-none-any.whl": "adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981",
+            "https://files.pythonhosted.org/packages/53/a3/1585216310e344e8102c22482f6060c7a6ea0322b63e026372e6dcefcfd6/truststore-0.10.4.tar.gz": "9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301"
+          },
           "twine": {
             "https://files.pythonhosted.org/packages/5d/ec/00f9d5fd040ae29867355e559a94e9a8429225a0284a3f5f091a3878bfc0/twine-5.1.1-py3-none-any.whl": "215dbe7b4b94c2c50a7315c0275d2258399280fbb7d04182c7e55e24b5f93997",
             "https://files.pythonhosted.org/packages/77/68/bd982e5e949ef8334e6f7dcf76ae40922a8750aa2e347291ae1477a4782b/twine-5.1.1.tar.gz": "9aa0825139c02b3434d913545c7b847a21c835e11597f5255842d457da2322db",
@@ -8719,10 +8723,6 @@
           "typeguard": {
             "https://files.pythonhosted.org/packages/8f/eb/461d5f167b6f5c7d97696f397c82f82e3480e003fce3f0a1cd1dd26e2eb2/typeguard-4.6.0-py3-none-any.whl": "79878165bb86f2cf5d41d159a0ff1792a796cf496882d2fe1b1c6c7049b9cdd7",
             "https://files.pythonhosted.org/packages/b4/de/4420db493fa8fc0856d5e5c1b159c63a323d2de2317babe36b01568928e8/typeguard-4.6.0.tar.gz": "e7414f09111317de3e335de92cd397c5c0ca00b1cc1676de12e1d444a79b3f21"
-          },
-          "typer": {
-            "https://files.pythonhosted.org/packages/43/89/9518bc0c3929bee36b3a4a8e3daddd6e03f92f9961c66d4983b837160543/typer-0.27.1-py3-none-any.whl": "53150287edd11baeb4e4722c8e394fcdf8181c0ae89485cba8d25c778d5edd56",
-            "https://files.pythonhosted.org/packages/ae/40/4a3db7990d1f62a53182aa96eaef57aeb2886a27f90a195bc66713565d31/typer-0.27.1.tar.gz": "a79bef8469a79c45498e7b814ecf8d603cc7644e9acbd9e19cac0334240b18df"
           },
           "types-docker": {
             "https://files.pythonhosted.org/packages/06/48/a1eeaffe58bfc0d1fd61fc8e1c6a450e73e4ec7181a3720b2a28bce6fabc/types_docker-7.2.0.20260813.tar.gz": "c42eae5a10afad99864aec144daf62f33422baf265f58be9112ffc037f0e9783",
@@ -9383,9 +9383,10 @@
           "gunicorn": "/simple/gunicorn/",
           "h11": "/simple/h11/",
           "httpcore": "/simple/httpcore/",
+          "httpcore2": "/simple/httpcore2/",
           "httplib2": "/simple/httplib2/",
           "httpx": "/simple/httpx/",
-          "httpx_sse": "/simple/httpx-sse/",
+          "httpx2": "/simple/httpx2/",
           "hypothesis": "/simple/hypothesis/",
           "icalendar": "/simple/icalendar/",
           "id": "/simple/id/",
@@ -9600,7 +9601,6 @@
           "setuptools": "/simple/setuptools/",
           "setuptools_scm": "/simple/setuptools-scm/",
           "sgmllib3k": "/simple/sgmllib3k/",
-          "shellingham": "/simple/shellingham/",
           "six": "/simple/six/",
           "smmap": "/simple/smmap/",
           "sniffio": "/simple/sniffio/",
@@ -9636,9 +9636,9 @@
           "toml": "/simple/toml/",
           "tqdm": "/simple/tqdm/",
           "trickkiste": "/simple/trickkiste/",
+          "truststore": "/simple/truststore/",
           "twine": "/simple/twine/",
           "typeguard": "/simple/typeguard/",
-          "typer": "/simple/typer/",
           "types_docker": "/simple/types-docker/",
           "types_docutils": "/simple/types-docutils/",
           "types_html5lib": "/simple/types-html5lib/",

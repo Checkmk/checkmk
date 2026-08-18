@@ -158,6 +158,7 @@ anyio==4.14.2 \
     # via
     #   -c requirements.txt
     #   httpx
+    #   httpx2
     #   mcp
     #   sse-starlette
     #   starlette
@@ -1269,6 +1270,7 @@ h11==0.16.0 \
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
     #   httpcore
+    #   httpcore2
     #   uvicorn
 httpcore==1.0.9 \
     --hash=sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55 \
@@ -1276,6 +1278,12 @@ httpcore==1.0.9 \
     # via
     #   -c requirements.txt
     #   httpx
+httpcore2==2.11.0 \
+    --hash=sha256:82e6fc95d784e6ee22ebd4b2cb57df53a2efb13ad6a11260a236ecebbc5f50c7 \
+    --hash=sha256:c7c899fbc6b8abb6e747dda427aa6f52934c45e191eabb986965164ebb02a908
+    # via
+    #   -c requirements.txt
+    #   httpx2
 httplib2==0.32.0 \
     --hash=sha256:48a0ef30a42db65d8f3399045e1d09ab0ba66e3b9efc360d07f80ea55d286025 \
     --hash=sha256:dc6705cacdf3fb0a2aba7629fa33c90fd93e30035db0c157325826be177e4816
@@ -1291,11 +1299,10 @@ httpx==0.28.1 \
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
-    #   mcp
     #   meraki
-httpx-sse==0.4.3 \
-    --hash=sha256:0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc \
-    --hash=sha256:9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d
+httpx2==2.11.0 \
+    --hash=sha256:c9790f62a327110f52a099f1e2030cbe32f78b28781ad68fe58bfd6f23e73ab0 \
+    --hash=sha256:ea01b2e8febfb026e2601814c77ecb1e64fff114a87bc789cb520e67f27e7809
     # via
     #   -c requirements.txt
     #   mcp
@@ -1314,6 +1321,7 @@ idna==3.18 \
     #   -c requirements.txt
     #   anyio
     #   httpx
+    #   httpx2
     #   requests
     #   yarl
 inflect==7.5.0 \
@@ -1847,18 +1855,17 @@ marshmallow-oneofschema==3.2.0 \
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-dcd/requirements.in
     #   apispec-oneofschema
-mcp==2.0.0b1 \
-    --hash=sha256:7e169929da99487b1998f8f53548bb93ff5157165f2f5a10fb45202c02a91fce \
-    --hash=sha256:f0bb4543507117f872613fc76bd7b73cc2a8f6ddd9426f0402f268447f21b260
+mcp==2.0.0 \
+    --hash=sha256:0f440e735c13ece8bb19bc62cf0b86f4313448432fbb77d35e14034f4e050728 \
+    --hash=sha256:1cb4c75d2d2c7b8c1d756355e5d82a39f2822cc7f13e22a2051d7ca3592349d6
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-mcp/requirements.in
-mcp-types==2.0.0b1 \
-    --hash=sha256:6a26910a737c4cd4de36c7d5629febe7d33d4556a9d196166b5c7187a6516944 \
-    --hash=sha256:c1b22b56b0ba7b1d51c84dc99afdd603ae225c55e9e8f07477774552bf34c8cd
+mcp-types==2.0.0 \
+    --hash=sha256:6b2de797ca2797f568b79529e1b25948e34de511bcc0bd82fef1039a6d1b8eb0 \
+    --hash=sha256:d7d939b9285c9961ae8866ba75ef85da34d12bafe276efbf4eb6a131786d8379
     # via
     #   -c requirements.txt
-    #   -r non-free/packages/cmk-mcp/requirements.in
     #   mcp
 mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
@@ -2159,6 +2166,7 @@ opentelemetry-api==1.44.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   -r packages/cmk-wsgi/requirements.in
     #   mcp
@@ -2955,7 +2963,6 @@ pydantic-settings==2.15.0 \
     --hash=sha256:694b793e84f766ba76a90ebdefc01d0a9a045dab0382bee70393da93712ad117
     # via
     #   -c requirements.txt
-    #   mcp
     #   openapi-schema-validator
     #   openapi-spec-validator
 pyghmi==1.6.19 \
@@ -3860,6 +3867,13 @@ tqdm==4.70.0 \
     # via
     #   -c requirements.txt
     #   pysmb
+truststore==0.10.4 \
+    --hash=sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301 \
+    --hash=sha256:adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981
+    # via
+    #   -c requirements.txt
+    #   httpcore2
+    #   httpx2
 typeguard==4.6.0 \
     --hash=sha256:79878165bb86f2cf5d41d159a0ff1792a796cf496882d2fe1b1c6c7049b9cdd7 \
     --hash=sha256:e7414f09111317de3e335de92cd397c5c0ca00b1cc1676de12e1d444a79b3f21

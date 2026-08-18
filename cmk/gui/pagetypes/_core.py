@@ -217,7 +217,7 @@ def register(
             title=_l("Customize"),
             sort_index=10,
             get_topics=_customize_menu_topics,
-            shortcut=NavItemShortcut(key="c", alt=True),
+            shortcut=NavItemShortcut(key="c", alt=True, prevent_default=True),
             header=NavItemHeader(show_more=False),
             set_focus_on_element_by_id="unified-search-input-customize",
             hide=hide_customize_menu,

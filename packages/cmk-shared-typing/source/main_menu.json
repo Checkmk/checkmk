@@ -151,7 +151,8 @@
         "key": { "type": "string" },
         "alt": { "type": "boolean" },
         "ctrl": { "type": "boolean" },
-        "shift": { "type": "boolean" }
+        "shift": { "type": "boolean" },
+        "prevent_default": { "type": "boolean", "default": false }
       },
       "required": ["key"]
     },

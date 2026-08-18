@@ -274,7 +274,8 @@ export class MainMenuService extends ServiceBase {
             key: [item.shortcut.key],
             ctrl: item.shortcut.ctrl || false,
             alt: item.shortcut.alt || false,
-            shift: item.shortcut.shift || false
+            shift: item.shortcut.shift || false,
+            preventDefault: item.shortcut.prevent_default || false
           },
           () => {
             if (this.isNavItemActive(item.id)) {

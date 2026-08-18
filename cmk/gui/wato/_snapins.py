@@ -147,7 +147,7 @@ MainMenuSetup = MainMenuItem(
     title=_l("Setup"),
     sort_index=15,
     get_topics=get_wato_menu_items,
-    shortcut=NavItemShortcut(key="s", alt=True),
+    shortcut=NavItemShortcut(key="s", alt=True, prevent_default=True),
     hide=_hide_menu,
     header=NavItemHeader(show_more=True),
     set_focus_on_element_by_id="unified-search-input-setup",

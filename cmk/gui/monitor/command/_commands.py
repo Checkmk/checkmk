@@ -79,6 +79,17 @@ class MonitorCommands:
             yield self._adapt(command)
 
     @staticmethod
+    def _icon_of(command: LegacyCommand) -> str:
+        """The name the pages' icon set knows this command's icon by.
+
+        A legacy command names its icon after the image it ships, ``icon_service_duration.svg``;
+        the set the pages draw from spells the same icon ``service-duration``, as it spells all
+        but two of its names. A command whose icon is more than one word arrives without a
+        picture until the one is read as the other.
+        """
+        return str(command.icon_name).replace("_", "-")
+
+    @staticmethod
     def _adapt(command: LegacyCommand) -> MonitorCommand:
         object_types: frozenset[MonitorObjectType] = frozenset(
             object_type for object_type in ("host", "service") if object_type in command.tables
@@ -86,7 +97,7 @@ class MonitorCommands:
         return MonitorCommand(
             ident=command.ident,
             title=command.title,
-            icon=str(command.icon_name),
+            icon=MonitorCommands._icon_of(command),
             object_types=object_types,
             permission_name=command.permission.name,
             is_prominent=command.is_shortcut or command.is_suggested,

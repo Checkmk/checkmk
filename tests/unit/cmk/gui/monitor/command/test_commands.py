@@ -114,6 +114,17 @@ def test_legacy_command_is_adapted() -> None:
     assert [(command.ident, command.icon) for command in permitted] == [("acknowledge", "ack")]
 
 
+def test_an_icon_of_more_than_one_word_arrives_as_the_icon_set_spells_it() -> None:
+    """The legacy name is the image file's, ``icon_service_duration.svg``."""
+    source = _LegacySource([_LegacyCommand(ident="reschedule", icon_name="service_duration")])
+
+    permitted = _commands(source).permitted_for(
+        cast(LoggedInUser, _StubUser({"action.test"})), "host", ["reschedule"]
+    )
+
+    assert [command.icon for command in permitted] == ["service-duration"]
+
+
 def test_command_registered_after_wiring_is_still_seen() -> None:
     """The source is read on demand, so registration order must not matter."""
     source = _LegacySource([])

@@ -23,10 +23,7 @@ from tests.system.mk_oracle.conftest import OracleDatabase
 # 23ai Free (SID FREE) with the restricted ``c##checkmk`` test user. Each entry has
 # a rationale; anything not listed is treated as a regression and fails the test.
 KNOWN_DEVIATIONS: dict[str, set[str]] = {
-    "only_in_old": {
-        # the new plugin runs locks async, so its cached header is ignored here
-        "oracle_locks:sep(124)",
-    },
+    "only_in_old": set(),
     "only_in_new": set(),
     "different": {
         # oracle_performance: two independent, accepted differences —
@@ -45,7 +42,8 @@ KNOWN_DEVIATIONS: dict[str, set[str]] = {
         # and the aggregate FREE row count differs (71 vs 1) — a counting-scope
         # difference. Per-container rows otherwise match.
         "oracle_sessions:sep(124)",
-        # oracle_undostat values might differ between the two runs
+        # oracle_locks and oracle_undostat sections might have different values
+        "oracle_locks:sep(124)",
         "oracle_undostat:sep(124)",
     },
 }

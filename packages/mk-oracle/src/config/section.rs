@@ -80,7 +80,7 @@ pub enum SectionKind {
     Disabled,
 }
 
-const PREDEFINED_SECTIONS: [&str; 18] = [
+const PREDEFINED_SECTIONS: [&str; 19] = [
     names::INSTANCE,
     names::ASM_INSTANCE,
     names::SESSIONS,
@@ -98,15 +98,16 @@ const PREDEFINED_SECTIONS: [&str; 18] = [
     names::RMAN,
     names::JOBS,
     names::RESUMABLE,
+    names::IO_STATS,
     names::ASM_DISK_GROUP,
 ];
 
 const PREDEFINED_ASYNC_SECTIONS: [&str; 6] = [
-    names::LOCKS,
     names::TABLESPACES,
     names::RMAN,
     names::JOBS,
     names::RESUMABLE,
+    names::IO_STATS,
     names::ASM_DISK_GROUP,
 ];
 
@@ -654,7 +655,7 @@ sections:
                 .unwrap()
                 .sections()
                 .len(),
-            18
+            19
         );
         assert_eq!(s.sections.len(), PREDEFINED_SECTIONS.len());
         s.sections.iter().for_each(|s| {

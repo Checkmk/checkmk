@@ -75,3 +75,16 @@ test('wraps the perfometer in a link when linkedTo is set', () => {
   expect(link).not.toBeNull()
   expect(link).toHaveAttribute('href', 'graph.py?host=web-1')
 })
+
+test('the perfometer sits at the top of its row, as every other cell does', () => {
+  const { container } = mountCell({
+    data: {
+      value: 10,
+      value_range: { min: 0, max: 100 },
+      formatted: '10%',
+      color: 'rgb(0, 128, 0)'
+    }
+  })
+
+  expect(container.querySelector('td')).not.toHaveClass('monitoring-base-cell--vertical-middle')
+})

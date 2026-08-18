@@ -20,7 +20,7 @@ const props = defineProps<PerfometerCellProps>()
 </script>
 
 <template>
-  <BaseCell :column-id="columnId" :linked-to="linkedTo" vertical-align="middle">
+  <BaseCell :column-id="columnId" :linked-to="linkedTo">
     <template #default>
       <CmkPerfometer
         v-if="props.data"

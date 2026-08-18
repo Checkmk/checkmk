@@ -16,7 +16,7 @@ apply, see generate_config_variable_tests."""
 import json
 import pprint
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -35,6 +35,7 @@ from cmk.gui.form_specs import (
     get_visitor,
     RawDiskData,
     RawFrontendData,
+    serialize_data_for_frontend,
     VisitorOptions,
 )
 from cmk.gui.form_specs._utils import (
@@ -101,12 +102,14 @@ def round_trip_disk_value(
 
 def gui_save_round_trip_disk_value[T](form_spec: FormSpec[T], value: object) -> object:
     """The unedited GUI save path: the stored value is rendered to the frontend
-    (serialize_data_for_frontend), reported as valid by the live validation
+    (serialize_data_for_frontend, handed to the vue component as asdict, see
+    render_form_spec), reported as valid by the live validation
     (validate_value_from_frontend) and submitted back unchanged as JSON
     (parse_and_validate_frontend_data), see cmk.gui.form_specs._utils."""
-    render_visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
-    _vue_spec, frontend_value = render_visitor.to_vue(RawDiskData(value))
-    submitted = RawFrontendData(json.loads(json.dumps(frontend_value)))
+    rendered = serialize_data_for_frontend(
+        form_spec, field_id="test", do_validate=False, value=RawDiskData(value)
+    )
+    submitted = RawFrontendData(json.loads(json.dumps(asdict(rendered)))["data"])
     assert validate_value_from_frontend(form_spec, submitted) == []
     return parse_and_validate_frontend_data(form_spec, submitted)
 

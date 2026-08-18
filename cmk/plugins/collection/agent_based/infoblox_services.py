@@ -201,6 +201,8 @@ def parse_infoblox_services(string_table: Sequence[StringTable]) -> Section:
     return {
         service_id_map[service_id]: (status, description)
         for service_id, status_id, description in table
+        # newer NIOS releases report service IDs we don't know yet
+        if service_id in service_id_map
         for status in (STATUS_ID.get(status_id, "unexpected"),)
         if status not in {"inactive", "unknown"}
     }

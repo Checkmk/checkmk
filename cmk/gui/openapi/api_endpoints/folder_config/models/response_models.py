@@ -14,7 +14,7 @@ __all__ = ["FolderCollectionModel", "FolderModel"]
 
 @api_model
 class FolderCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["folder_config"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["folder_config"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[FolderModel] = api_field(description="A list of folder objects.", example=[])

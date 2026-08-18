@@ -41,7 +41,7 @@ type _EventconsolehistoryQuery = Annotated[
 
 @api_model
 class HistoricalEventsCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["historical_event"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["historical_event"] = api_field(
         description="The domain type of the objects in the collection",
         example="historical_event",
     )

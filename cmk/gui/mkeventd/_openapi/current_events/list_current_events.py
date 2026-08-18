@@ -35,7 +35,7 @@ from .utils import IGNORE_PERMISSIONS
 
 @api_model
 class CurrentEventsCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["event_console"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["event_console"] = api_field(
         description="The domain type of the objects in the collection",
         example="event_console",
     )

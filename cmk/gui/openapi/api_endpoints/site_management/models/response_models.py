@@ -128,7 +128,7 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
 
 @api_model
 class SiteConnectionModel(DomainObjectModel):
-    domainType: Literal["site_connection"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["site_connection"] = api_field(
         description="The domain type of the object.",
     )
     extensions: SiteConnectionExtensionsModel = api_field(

@@ -386,7 +386,7 @@ class BurgerMenuGroup:
 
 @api_model
 class BurgerMenuCollection(DomainObjectCollectionModel):
-    domainType: Literal["burger_menu"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["burger_menu"] = api_field(
         description="The domain type of the objects in the collection.",
         example="burger_menu",
     )

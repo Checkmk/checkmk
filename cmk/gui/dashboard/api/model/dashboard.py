@@ -425,7 +425,7 @@ class BaseDashboardResponse(_BaseDashboard):
     public_token: DashboardTokenModel | None = api_field(
         description="The public token for sharing the dashboard, if it exists."
     )
-    filter_context: DashboardFilterContextResponse = api_field(  # type: ignore[mutable-override]
+    filter_context: DashboardFilterContextResponse = api_field(
         description="Filter context for the dashboard."
     )
 

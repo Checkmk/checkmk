@@ -178,7 +178,7 @@ class FolderViewAttributeModel(
         default_factory=ApiOmitted,
     )
     # read-only overrides
-    contactgroups: HostContactGroupResponseModel | ApiOmitted = api_field(  # type: ignore[mutable-override]
+    contactgroups: HostContactGroupResponseModel | ApiOmitted = api_field(
         description=(
             "Only members of the contact groups listed here have Setup permission for the "
             "host/folder. Optionally, you can make these contact groups automatically monitor "
@@ -187,7 +187,7 @@ class FolderViewAttributeModel(
         default_factory=ApiOmitted,
     )
     site: Annotated[SiteId, PlainSerializer(render_view_site, return_type=str)] | ApiOmitted = (
-        api_field(  # type: ignore[mutable-override]
+        api_field(
             description="The site that should monitor the hosts in this folder.",
             default_factory=ApiOmitted,
         )
@@ -285,7 +285,7 @@ class FolderAttributeRequestModel(
 
     # Override the read base's non-validating ``site`` with an existence-checking variant.
     site: Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)] | ApiOmitted = (
-        api_field(  # type: ignore[mutable-override]
+        api_field(
             description="The site that should monitor the hosts in this folder.",
             default_factory=ApiOmitted,
         )

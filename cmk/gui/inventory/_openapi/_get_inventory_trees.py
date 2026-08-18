@@ -66,7 +66,7 @@ class HostInventoryTree:
 
 @api_model
 class InventoryTreesCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["inventory"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["inventory"] = api_field(
         description="The domain type of the objects in the collection",
         example="inventory",
     )

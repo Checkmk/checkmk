@@ -540,6 +540,8 @@ def _api_error_schema(
                 ),
             ],
             bases=(ApiErrorDataclass,),
+            kw_only=True,
+            frozen=True,
         ),
     )
 

@@ -92,7 +92,7 @@ class CurrentEventFieldsModel:
 
 @api_model
 class CurrentEventModel(DomainObjectModel):
-    domainType: Literal["event_console"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["event_console"] = api_field(
         description="The domain type of the object.",
     )
 

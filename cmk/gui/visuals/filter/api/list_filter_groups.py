@@ -52,16 +52,16 @@ _FILTER_GROUP_TITLES: Mapping[FilterGroup, str] = {
 }
 
 
-@dataclass(kw_only=True, slots=True)
+@dataclass(kw_only=True, slots=True, frozen=True)
 class FilterGroupDomainObject(DomainObjectModel):
-    domainType: Literal["visual_filter_group"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["visual_filter_group"] = api_field(
         description="The domain type of the object."
     )
 
 
-@dataclass(kw_only=True, slots=True)
+@dataclass(kw_only=True, slots=True, frozen=True)
 class FilterGroupCollection(DomainObjectCollectionModel):
-    domainType: Literal["visual_filter_group"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["visual_filter_group"] = api_field(
         description="The domain type of the objects in the collection.",
         example="visual_filter_group",
     )

@@ -26,12 +26,12 @@ from cmk.gui.openapi.restful_objects.constructors import collection_href
 
 @api_model
 class IconCategoryModel(DomainObjectModel):
-    domainType: Literal["icon_category"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+    domainType: Literal["icon_category"] = api_field(description="The domain type of the object.")
 
 
 @api_model
 class IconCategoryCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["icon_category"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["icon_category"] = api_field(
         description="The domain type of the objects in the collection",
         example="icon_category",
     )

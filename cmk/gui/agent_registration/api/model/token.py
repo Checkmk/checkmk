@@ -50,7 +50,7 @@ class AgentRegistrationTokenMetadata:
 
 @api_model
 class AgentRegistrationTokenObjectModel(DomainObjectModel):
-    domainType: Literal["agent_registration_token"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["agent_registration_token"] = api_field(
         description="The domain type of the object."
     )
     extensions: AgentRegistrationTokenMetadata = api_field(

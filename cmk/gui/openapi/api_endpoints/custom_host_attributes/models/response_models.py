@@ -34,7 +34,7 @@ class CustomHostAttrExtensions:
 
 @api_model
 class CustomHostAttrObject(DomainObjectModel):
-    domainType: Literal["custom_host_attribute"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["custom_host_attribute"] = api_field(
         description="The domain type of the object.",
     )
     extensions: CustomHostAttrExtensions = api_field(
@@ -44,7 +44,7 @@ class CustomHostAttrObject(DomainObjectModel):
 
 @api_model
 class CustomHostAttrCollection(DomainObjectCollectionModel):
-    domainType: Literal["custom_host_attribute"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["custom_host_attribute"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[CustomHostAttrObject] = api_field(

@@ -28,7 +28,7 @@ class GraphTimerangeExtension:
 
 @api_model
 class GraphTimerangeObject(DomainObjectModel):
-    domainType: Literal["graph_timerange"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["graph_timerange"] = api_field(
         description="The type of the domain-object.",
     )
     extensions: GraphTimerangeExtension = api_field(
@@ -38,7 +38,7 @@ class GraphTimerangeObject(DomainObjectModel):
 
 @api_model
 class GraphTimerangeCollection(DomainObjectCollectionModel):
-    domainType: Literal["graph_timerange"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["graph_timerange"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[GraphTimerangeObject] = api_field(

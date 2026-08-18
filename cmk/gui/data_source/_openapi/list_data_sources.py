@@ -31,7 +31,7 @@ class DataSourceExtensions:
 
 @api_model
 class DataSourceModel(DomainObjectModel):
-    domainType: Literal["constant"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+    domainType: Literal["constant"] = api_field(description="The domain type of the object.")
     extensions: DataSourceExtensions = api_field(
         description="The configuration of this data source."
     )
@@ -39,7 +39,7 @@ class DataSourceModel(DomainObjectModel):
 
 @api_model
 class DataSourceCollectionModel(DomainObjectCollectionModel):
-    domainType: Literal["constant"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["constant"] = api_field(
         description="The domain type of the objects in the collection"
     )
     value: list[DataSourceModel] = api_field(description="A list of host objects", example="")

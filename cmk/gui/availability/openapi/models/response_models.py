@@ -264,7 +264,7 @@ class HostAvailabilityExtension:
 
 @api_model
 class HostAvailabilityObject(DomainObjectModel):
-    domainType: Literal["host_availability"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["host_availability"] = api_field(
         description="The type of the domain object.",
     )
     extensions: HostAvailabilityExtension = api_field(
@@ -285,7 +285,7 @@ class HostAvailabilityObject(DomainObjectModel):
 
 @api_model
 class HostAvailabilityCollection(DomainObjectCollectionModel):
-    domainType: Literal["host_availability"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["host_availability"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[HostAvailabilityObject] = api_field(
@@ -349,7 +349,7 @@ class ServiceAvailabilityExtension:
 
 @api_model
 class ServiceAvailabilityObject(DomainObjectModel):
-    domainType: Literal["service_availability"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["service_availability"] = api_field(
         description="The type of the domain object.",
     )
     extensions: ServiceAvailabilityExtension = api_field(
@@ -376,7 +376,7 @@ class ServiceAvailabilityObject(DomainObjectModel):
 
 @api_model
 class ServiceAvailabilityCollection(DomainObjectCollectionModel):
-    domainType: Literal["service_availability"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["service_availability"] = api_field(
         description="The domain type of the objects in the collection.",
     )
     value: list[ServiceAvailabilityObject] = api_field(

@@ -59,7 +59,7 @@ class DashboardTokenModel(DashboardTokenMetadata):
 
 @api_model
 class DashboardTokenObjectModel(DomainObjectModel):
-    domainType: Literal["dashboard_token"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+    domainType: Literal["dashboard_token"] = api_field(description="The domain type of the object.")
     extensions: DashboardTokenMetadata = api_field(description="The metadata of this token.")
 
 

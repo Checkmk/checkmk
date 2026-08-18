@@ -30,7 +30,7 @@ class ServiceDiscoveryRunExtensionsModel:
 
 @api_model
 class ServiceDiscoveryRunModel(DomainObjectModel):
-    domainType: Literal["service_discovery_run"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["service_discovery_run"] = api_field(
         description="The domain type of the object"
     )
     extensions: ServiceDiscoveryRunExtensionsModel = api_field(
@@ -86,7 +86,7 @@ class ServiceDiscoveryResultExtensionsModel:
 
 @api_model
 class ServiceDiscoveryResultModel(DomainObjectModel):
-    domainType: Literal["service_discovery"] = api_field(  # type: ignore[mutable-override]
+    domainType: Literal["service_discovery"] = api_field(
         description="The domain type of the object"
     )
     extensions: ServiceDiscoveryResultExtensionsModel = api_field(

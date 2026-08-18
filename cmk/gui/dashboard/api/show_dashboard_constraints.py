@@ -26,7 +26,7 @@ from .model.constants import (
 
 @api_model
 class DashboardConstantsObject(DomainObjectModel):
-    domainType: Literal["constant"] = api_field(description="The domain type of the object.")  # type: ignore[mutable-override]
+    domainType: Literal["constant"] = api_field(description="The domain type of the object.")
     extensions: DashboardConstantsResponse = api_field(
         description="All the constants data of a dashboard."
     )

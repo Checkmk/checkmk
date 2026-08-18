@@ -11,25 +11,30 @@ from ._api_field import api_field
 
 
 @overload
-@dataclass_transform(kw_only_default=True, field_specifiers=(dataclasses.field, api_field))
+@dataclass_transform(
+    kw_only_default=True,
+    frozen_default=True,
+    field_specifiers=(dataclasses.field, api_field),
+)
 def api_model[T](cls: type[T]) -> type[T]: ...
 
 
 @overload
-@dataclass_transform(kw_only_default=True, field_specifiers=(dataclasses.field, api_field))
-def api_model[T](
-    *,
-    slots: bool = True,
-    frozen: bool = False,
-) -> Callable[[type[T]], type[T]]: ...
+@dataclass_transform(
+    kw_only_default=True,
+    frozen_default=True,
+    field_specifiers=(dataclasses.field, api_field),
+)
+def api_model[T](*, slots: bool = True) -> Callable[[type[T]], type[T]]: ...
 
 
-@dataclass_transform(kw_only_default=True, field_specifiers=(dataclasses.field, api_field))
+@dataclass_transform(
+    kw_only_default=True,
+    frozen_default=True,
+    field_specifiers=(dataclasses.field, api_field),
+)
 def api_model[T](
-    cls: type[T] | None = None,
-    *,
-    slots: bool = True,
-    frozen: bool = False,
+    cls: type[T] | None = None, *, slots: bool = True
 ) -> type[T] | Callable[[type[T]], type[T]]:
     """Decorator to mark a class as an API model.
 
@@ -41,7 +46,7 @@ def api_model[T](
     dataclass_wrapper = dataclasses.dataclass(
         kw_only=True,
         slots=slots,
-        frozen=frozen,
+        frozen=True,
     )
 
     def wrapper(class_: type[T]) -> type[T]:

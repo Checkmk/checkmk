@@ -812,7 +812,7 @@ class FolderCustomHostAttributesAndTagGroupsModel(WithDynamicFields):
     # configured custom attributes and tag groups by `validate_custom_attributes_and_tag_groups`,
     # which is called from the input models only (the read-only view must keep rendering
     # attributes of since-deleted custom attributes).
-    dynamic_fields: dict[str, str | None] = api_field(  # type: ignore[mutable-override]
+    dynamic_fields: dict[str, str | None] = api_field(
         description=(
             "The property name must be\n\n"
             " * A custom host attribute\n"

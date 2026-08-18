@@ -5,8 +5,6 @@
 
 from typing import cast
 
-import pytest
-
 from cmk.gui.type_defs import Visual
 from cmk.gui.visuals import visual_title
 
@@ -15,6 +13,5 @@ from cmk.gui.visuals import visual_title
 VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE = cast(Visual, {"title": "My view", "single_infos": []})
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4447: KeyError 'add_context_to_title'")
 def test_visual_title_without_add_context_to_title(request_context: None) -> None:
     assert visual_title("view", VISUAL_WITHOUT_ADD_CONTEXT_TO_TITLE, {}) == "My view"

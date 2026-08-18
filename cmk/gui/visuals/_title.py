@@ -27,7 +27,7 @@ def visual_title(
     assert isinstance(site_filter_vars, dict)
     title = title.replace("$SITE$", site_filter_vars.get("site", ""))
 
-    if visual["add_context_to_title"] and not skip_title_context:
+    if visual.get("add_context_to_title", True) and not skip_title_context:
         title = _add_context_title(context, visual["single_infos"], title)
 
     return title

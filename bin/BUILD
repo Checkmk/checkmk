@@ -148,7 +148,6 @@ py_library(
         "//cmk/gui:app",
         "//cmk/gui/watolib",
         "//cmk/update_config",
-        "//cmk/utils",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
     ],

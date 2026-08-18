@@ -11,7 +11,6 @@ py_library(
     deps = [
         "//cmk/gui/monitor/command",
         "//cmk/gui/openapi/framework",
-        "//cmk/gui/openapi/framework:api_config",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/pagetypes",
         "//cmk/gui/utils:middle",

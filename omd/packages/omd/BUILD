@@ -242,7 +242,6 @@ py_library(
     deps = [
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
-        "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:tar-archive",
         "//packages/cmk-ccc:tty",

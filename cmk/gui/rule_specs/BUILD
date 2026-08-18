@@ -42,7 +42,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":compatibility",
         ":types",
         "//cmk/gui:agent",
         "//cmk/gui:core_toolkit",
@@ -52,7 +51,6 @@ py_library(
         "//cmk/gui/oauth2_connections",
         "//cmk/gui/oauth2_connections:watolib_store",
         "//cmk/gui/userdb",
-        "//cmk/gui/utils",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib",

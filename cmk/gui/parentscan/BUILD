@@ -16,7 +16,6 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
-        "//cmk/gui:session_context",
         "//cmk/gui/background_job/job",
         "//cmk/gui/fields",
         "//cmk/gui/fields:base",

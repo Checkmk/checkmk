@@ -24,6 +24,7 @@ from cmk.repo_checks.deballast import (
     load_dep_info,
     load_target_spec,
     main,
+    ModuleRefs,
     parse_python_source,
     resolve_imports_root,
     sarif_report,
@@ -121,7 +122,7 @@ def test_parse_python_source_valid_file(tmp_path: Path) -> None:
     src.write_text("import os\n")
     tree = parse_python_source(src)
     assert tree is not None
-    assert imports_in_tree(tree) == {"os"}
+    assert imports_in_tree(tree).referenced == {"os"}
 
 
 def test_parse_python_source_syntax_error_returns_none(tmp_path: Path) -> None:
@@ -135,46 +136,76 @@ def test_parse_python_source_missing_file_returns_none() -> None:
 
 
 def test_imports_in_tree_absolute_import() -> None:
-    assert imports_in_tree(ast.parse("import cmk.gui.foo")) == {"cmk.gui.foo"}
+    assert imports_in_tree(ast.parse("import cmk.gui.foo")) == ModuleRefs(
+        referenced=frozenset({"cmk.gui.foo"}),
+        namespaces=frozenset({"cmk.gui.foo"}),
+    )
 
 
 def test_imports_in_tree_from_import_yields_module_and_attribute() -> None:
-    assert imports_in_tree(ast.parse("from cmk.gui import foo")) == {"cmk.gui", "cmk.gui.foo"}
+    # The imported name is a namespace; the module it came from is not - see
+    # test_dep_is_used_from_import_parent_does_not_match_siblings.
+    assert imports_in_tree(ast.parse("from cmk.gui import foo")) == ModuleRefs(
+        referenced=frozenset({"cmk.gui", "cmk.gui.foo"}),
+        namespaces=frozenset({"cmk.gui.foo"}),
+    )
+
+
+def test_imports_in_tree_star_import_makes_the_module_a_namespace() -> None:
+    # There is no child name to record, and the statement binds whatever the
+    # package re-exports - so the package itself has to license descendants.
+    assert imports_in_tree(ast.parse("from cmk.gui import *")) == ModuleRefs(
+        referenced=frozenset({"cmk.gui"}),
+        namespaces=frozenset({"cmk.gui"}),
+    )
 
 
 def test_imports_in_tree_relative_import_resolved_against_containing_package() -> None:
     # `cmk/gui/htmllib/generator.py` (pkg = cmk.gui.htmllib) does
-    # `from .tag_rendering import X` — resolves to `cmk.gui.htmllib.tag_rendering`.
+    # `from .tag_rendering import X` - resolves to `cmk.gui.htmllib.tag_rendering`.
     assert imports_in_tree(
         ast.parse("from .tag_rendering import X"), containing_packages=["cmk.gui.htmllib"]
-    ) == {
-        "cmk.gui.htmllib.tag_rendering",
-        "cmk.gui.htmllib.tag_rendering.X",
-    }
+    ) == ModuleRefs(
+        referenced=frozenset({"cmk.gui.htmllib.tag_rendering", "cmk.gui.htmllib.tag_rendering.X"}),
+        namespaces=frozenset({"cmk.gui.htmllib.tag_rendering.X"}),
+    )
 
 
 def test_imports_in_tree_dotdot_relative_import() -> None:
-    # `from ..utils import X` at pkg `cmk.gui.htmllib` → `cmk.gui.utils.X`.
+    # `from ..utils import X` at pkg `cmk.gui.htmllib` -> `cmk.gui.utils.X`.
     assert imports_in_tree(
         ast.parse("from ..utils import X"), containing_packages=["cmk.gui.htmllib"]
-    ) == {
-        "cmk.gui.utils",
-        "cmk.gui.utils.X",
-    }
+    ) == ModuleRefs(
+        referenced=frozenset({"cmk.gui.utils", "cmk.gui.utils.X"}),
+        namespaces=frozenset({"cmk.gui.utils.X"}),
+    )
 
 
 def test_imports_in_tree_relative_import_without_containing_package_is_dropped() -> None:
-    assert imports_in_tree(ast.parse("from . import sibling")) == set()
+    assert imports_in_tree(ast.parse("from . import sibling")) == ModuleRefs.empty()
 
 
 def test_imports_in_tree_mixed_imports() -> None:
     tree = ast.parse("import os\nfrom cmk.ccc.store import load\nimport cmk.gui.foo.bar as bar\n")
-    assert imports_in_tree(tree) == {
-        "os",
-        "cmk.ccc.store",
-        "cmk.ccc.store.load",
-        "cmk.gui.foo.bar",
-    }
+    assert imports_in_tree(tree) == ModuleRefs(
+        referenced=frozenset({"os", "cmk.ccc.store", "cmk.ccc.store.load", "cmk.gui.foo.bar"}),
+        namespaces=frozenset({"os", "cmk.ccc.store.load", "cmk.gui.foo.bar"}),
+    )
+
+
+def test_module_refs_or_merges_both_tiers() -> None:
+    combined = imports_in_tree(ast.parse("from cmk.gui import foo")) | imports_in_tree(
+        ast.parse("import cmk.ccc.debug")
+    )
+    assert combined == ModuleRefs(
+        referenced=frozenset({"cmk.gui", "cmk.gui.foo", "cmk.ccc.debug"}),
+        namespaces=frozenset({"cmk.gui.foo", "cmk.ccc.debug"}),
+    )
+
+
+def test_module_refs_empty_is_the_identity_of_or() -> None:
+    refs = imports_in_tree(ast.parse("from cmk.gui import foo"))
+    assert refs | ModuleRefs.empty() == refs
 
 
 def test_uses_plugin_discovery_api_name_call() -> None:
@@ -200,34 +231,65 @@ def test_uses_plugin_discovery_api_plain_code_does_not_match() -> None:
 
 
 def test_dep_is_used_exact_module_match() -> None:
-    assert dep_is_used({"cmk.ccc.debug"}, {"cmk.ccc.debug"})
+    assert dep_is_used({"cmk.ccc.debug"}, imports_in_tree(ast.parse("import cmk.ccc.debug")))
 
 
 def test_dep_is_used_from_import_with_attribute() -> None:
-    assert dep_is_used({"cmk.ccc.debug"}, {"cmk.ccc", "cmk.ccc.debug"})
+    assert dep_is_used({"cmk.ccc.debug"}, imports_in_tree(ast.parse("from cmk.ccc import debug")))
 
 
 def test_dep_is_used_submodule_import_matches_parent_package_dep() -> None:
-    assert dep_is_used({"cmk.gui.foo"}, {"cmk.gui.foo.bar"})
+    assert dep_is_used({"cmk.gui.foo"}, imports_in_tree(ast.parse("import cmk.gui.foo.bar")))
 
 
 def test_dep_is_used_prefix_must_be_proper() -> None:
-    assert not dep_is_used({"cmk.gui.foo"}, {"cmk.gui.foobar"})
+    assert not dep_is_used({"cmk.gui.foo"}, imports_in_tree(ast.parse("import cmk.gui.foobar")))
 
 
 def test_dep_is_used_dep_module_under_imported_namespace() -> None:
     # `//cmk/gui/plugins/views:views` has no __init__.py at its namespace root,
     # only `icons/utils.py` etc. Consumers `import cmk.gui.plugins.views`
     # (the implicit namespace); the dep's deeper module should still count.
-    assert dep_is_used({"cmk.gui.plugins.views.icons.utils"}, {"cmk.gui.plugins.views"})
+    assert dep_is_used(
+        {"cmk.gui.plugins.views.icons.utils"},
+        imports_in_tree(ast.parse("import cmk.gui.plugins.views")),
+    )
+
+
+def test_dep_is_used_namespace_reached_via_from_import_name() -> None:
+    # The name in `from X import Y` is the namespace, not X - so a dep whose
+    # modules live under `cmk.gui.plugins.views` still counts here.
+    assert dep_is_used(
+        {"cmk.gui.plugins.views.icons.utils"},
+        imports_in_tree(ast.parse("from cmk.gui.plugins import views")),
+    )
+
+
+def test_dep_is_used_star_import_reaches_a_module_below_the_package() -> None:
+    # `from cmk.gui.plugins.legacy_bakery_rulesets import *` can bind anything
+    # the package re-exports, so a dep providing a module below it is used.
+    assert dep_is_used(
+        {"cmk.gui.plugins.views.icons.utils"},
+        imports_in_tree(ast.parse("from cmk.gui.plugins.views import *")),
+    )
+
+
+def test_dep_is_used_from_import_parent_does_not_match_siblings() -> None:
+    # `from cmk import trace` names `cmk` only to reach `cmk.trace`. Matching
+    # everything under `cmk.` would exempt every first-party dep of every target
+    # using this import form.
+    imports = imports_in_tree(ast.parse("from cmk import trace"))
+    assert dep_is_used({"cmk.trace.export"}, imports)
+    assert not dep_is_used({"cmk.utils.paths"}, imports)
+    assert not dep_is_used({"cmk.base.configlib.loaded_config"}, imports)
 
 
 def test_dep_is_used_no_overlap_returns_false() -> None:
-    assert not dep_is_used({"unrelated.module"}, {"cmk.gui.foo"})
+    assert not dep_is_used({"unrelated.module"}, imports_in_tree(ast.parse("import cmk.gui.foo")))
 
 
 def test_dep_is_used_empty_dep_modules_returns_false() -> None:
-    assert not dep_is_used(set(), {"cmk.gui.foo"})
+    assert not dep_is_used(set(), imports_in_tree(ast.parse("import cmk.gui.foo")))
 
 
 def test_is_namespace_shim_pure_init_target() -> None:
@@ -400,6 +462,19 @@ def test_flags_a_dep_whose_modules_are_never_imported(tmp_path: Path) -> None:
 def test_does_not_flag_a_dep_whose_module_is_imported(tmp_path: Path) -> None:
     spec = _app_spec(tmp_path, "import dep.lib\n")
     assert analyze_spec(spec, [_dep_lib()]) == []
+
+
+def test_flags_a_dep_only_the_bare_parent_of_a_from_import_reaches(tmp_path: Path) -> None:
+    # `from dep import other` names `dep` only to reach `dep.other`; it must not
+    # keep `//dep:lib` (which provides `dep.lib`) alive.
+    spec = _app_spec(tmp_path, "from dep import other\n")
+    assert analyze_spec(spec, [_dep_lib()]) == ["//dep:lib"]
+
+
+def test_does_not_flag_a_dep_reached_by_a_star_import_of_its_package(tmp_path: Path) -> None:
+    nested = DepInfo(label="//dep:nested", package="dep", imports=["."], srcs=["dep/lib/impl.py"])
+    spec = _app_spec(tmp_path, "from dep.lib import *\n")
+    assert analyze_spec(spec, [nested]) == []
 
 
 def test_does_not_flag_a_namespace_shim_dep(tmp_path: Path) -> None:

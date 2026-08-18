@@ -117,7 +117,6 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:groups_io",
         "//cmk/gui/watolib:passwords",
-        "//cmk/utils",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
         "//packages/cmk-licensing",

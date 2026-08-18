@@ -23,6 +23,7 @@ from typing import Final, Literal, NamedTuple, TypedDict
 import cmk.base.dump_host
 import cmk.ccc.cleanup
 import cmk.ccc.debug
+import cmk.ccc.site
 import cmk.ccc.version as cmk_version
 import cmk.livestatus_client as livestatus
 import cmk.utils.password_store

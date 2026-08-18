@@ -31,8 +31,6 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
-        "//packages/cmk-ccc:user",
-        "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugins:aws",
         "//packages/cmk-plugins:azure_deprecated",

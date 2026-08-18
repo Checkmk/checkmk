@@ -12,7 +12,6 @@ py_library(
         "//cmk/gui/monitor/command",
         "//cmk/gui/monitor/hosts",
         "//cmk/gui/openapi/framework",
-        "//cmk/gui/openapi/framework:api_config",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/pagetypes",
         "//cmk/gui/utils:middle",

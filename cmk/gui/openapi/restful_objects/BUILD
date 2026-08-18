@@ -43,7 +43,6 @@ py_library(
         "//cmk/gui/openapi:permission_tracking",
         "//cmk/gui/openapi:utils",
         "//cmk/gui/openapi/framework:api_config",
-        "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:timeperiods",

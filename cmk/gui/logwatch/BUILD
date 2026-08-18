@@ -23,7 +23,6 @@ py_library(
         "//cmk/gui/search:matchers",
         "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
-        "//cmk/gui/views",
         "//cmk/gui/wato",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:registries",

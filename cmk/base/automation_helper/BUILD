@@ -18,7 +18,6 @@ py_library(
         "//cmk/utils:redis",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-trace",

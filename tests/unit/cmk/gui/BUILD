@@ -73,7 +73,6 @@ py_cmk_test(
     deps = [
         ":conftest",
         ":init_py",
-        "//cmk/gui:app",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
@@ -473,6 +472,9 @@ py_cmk_test(
     env = {
         "EDITION": "community",
     },
+    tags = [
+        "deballast-keep=//cmk/gui/background_job/process:process",  # background jobs launched at runtime via the inline_background_jobs fixture
+    ],
     use_project_pytest_config = True,
     deps = [
         ":compare_html",
@@ -482,14 +484,11 @@ py_cmk_test(
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
-        "//cmk/gui:customer",
         "//cmk/gui:general_pages",
         "//cmk/gui:html_toolkit",
         "//cmk/gui:ntop",
         "//cmk/gui:page_toolkit",
-        "//cmk/gui:painter_options",
         "//cmk/gui:view_toolkit",
-        "//cmk/gui:visual_link",
         "//cmk/gui/availability",
         "//cmk/gui/background_job/job",
         "//cmk/gui/background_job/process",
@@ -505,7 +504,6 @@ py_cmk_test(
         "//cmk/gui/visuals",
         "//cmk/gui/wato",
         "//cmk/gui/watolib",
-        "//cmk/gui/watolib:config_infra",
         "//cmk/utils",
         "//packages/cmk-backup:gui",
         "//packages/cmk-ccc:exceptions",

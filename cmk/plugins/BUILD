@@ -40,7 +40,6 @@ py_library(
     deps = [
         "//cmk/bi",
         "//cmk/utils",
-        "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",

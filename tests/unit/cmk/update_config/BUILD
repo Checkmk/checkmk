@@ -31,7 +31,6 @@ py_cmk_test(
     deps = [
         ":conftest",
         "//cmk/update_config",
-        "//cmk/utils:werks",
         "//packages/cmk-backup:utils",
         "//packages/cmk-ccc:store",
         "//packages/cmk-werks:site",

@@ -65,13 +65,14 @@ py_cmk_test(
         "--random-order-bucket=global",
     ],
     env = {"EDITION": "community"},
+    tags = [
+        "deballast-keep=//cmk/gui/background_job/process:process",  # background jobs launched at runtime via the inline_background_jobs fixture
+    ],
     use_project_pytest_config = True,
     deps = [
         ":conftest",
         "//cmk/gui:auth_core",
         "//cmk/gui:core_toolkit",
-        "//cmk/gui:general_pages",
-        "//cmk/gui:html_toolkit",
         "//cmk/gui/background_job/process",
         "//cmk/gui/fields",
         "//cmk/gui/form_specs",

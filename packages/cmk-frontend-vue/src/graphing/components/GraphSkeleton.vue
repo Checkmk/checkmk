@@ -15,6 +15,7 @@ Decorative only; GraphGroup owns the announcement for assistive tech.
 
 <script setup lang="ts">
 import CmkSkeleton from 'cmk-ui-library/components/CmkSkeleton.vue'
+import { computed } from 'vue'
 
 // Matches GraphBrush's own HEIGHT, which it derives from its track and label geometry.
 const brushHeight = '71px'
@@ -24,19 +25,33 @@ const brushHeight = '71px'
 const legendHeight = '160px'
 
 // GraphPanel's defaults, so an unsized skeleton covers the same box as the panel replacing it.
-withDefaults(
+const props = withDefaults(
   defineProps<{
     figureWidth?: number
     figureHeight?: number
     showLegend?: boolean
     showBrush?: boolean
+    height?: number | undefined
   }>(),
   { figureWidth: 800, figureHeight: 300, showLegend: true, showBrush: true }
 )
+
+const rootStyle = computed(() => ({
+  width: `${props.figureWidth}px`,
+  ...(props.height === undefined ? {} : { height: `${props.height}px` })
+}))
 </script>
 
 <template>
-  <div class="graphing-graph-skeleton" :style="{ width: `${figureWidth}px` }" aria-hidden="true">
+  <div
+    class="graphing-graph-skeleton"
+    :class="{
+      'graphing-graph-skeleton--sized': height !== undefined,
+      'graphing-graph-skeleton--no-legend': !showLegend
+    }"
+    :style="rootStyle"
+    aria-hidden="true"
+  >
     <div class="graphing-graph-skeleton__header">
       <CmkSkeleton type="text" width="120px" />
       <CmkSkeleton type="text" width="45%" />
@@ -56,6 +71,24 @@ withDefaults(
 <style scoped lang="scss">
 .graphing-graph-skeleton {
   pointer-events: none;
+}
+
+.graphing-graph-skeleton--sized {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  > * {
+    flex: none;
+  }
+
+  // Whichever block legitimately varies takes up the slack; the brush's geometry is fixed.
+  .graphing-graph-skeleton__legend,
+  &.graphing-graph-skeleton--no-legend .graphing-graph-skeleton__plot {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
 }
 
 // The spacings below mirror GraphPanel's, so each block sits where its area will.

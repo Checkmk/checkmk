@@ -15,7 +15,7 @@ import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { computed, onMounted, ref, watch } from 'vue'
+import { type ComponentPublicInstance, computed, onMounted, ref, watch } from 'vue'
 
 import { useBrushCoordination } from '../composables/useBrushCoordination'
 import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
@@ -153,6 +153,31 @@ const slots = computed(() =>
   }))
 )
 
+// Keyed by slot rather than collected in order: skeletons and panels interleave, so a ref array
+// would not line up with the slots the heights are read back against.
+const panelEls = new Map<number, HTMLElement>()
+
+function registerPanel(index: number, el: Element | ComponentPublicInstance | null): void {
+  if (el instanceof HTMLElement) {
+    panelEls.set(index, el)
+  } else {
+    panelEls.delete(index)
+  }
+}
+
+// Read as the skeletons go up but before they render, so the panels they replace are still on
+// screen and each skeleton can hold its own one's footprint.
+const panelHeights = ref<(number | undefined)[]>([])
+
+watch(showSkeletons, (showing) => {
+  if (!showing) {
+    return
+  }
+  panelHeights.value = slots.value.map(
+    ({ index }) => panelEls.get(index)?.getBoundingClientRect().height
+  )
+})
+
 const notice = useGraphNotice({
   error: () => error.value,
   isLoading: () => isLoading.value,
@@ -191,8 +216,13 @@ function onRetry(): void {
         :figure-height="figure_height"
         :show-legend="show_legend"
         :show-brush="props.graphs[panelSlot.index]!.interaction.brush === 'enabled'"
+        :height="panelHeights[panelSlot.index]"
       />
-      <div v-else-if="panelSlot.graph" class="graphing-graph-group__panel">
+      <div
+        v-else-if="panelSlot.graph"
+        :ref="(el) => registerPanel(panelSlot.index, el)"
+        class="graphing-graph-group__panel"
+      >
         <GraphPanel
           :consolidation-fn="consolidationFnOfPanel(panelSlot.index)"
           :metrics="panelSlot.graph.metrics"

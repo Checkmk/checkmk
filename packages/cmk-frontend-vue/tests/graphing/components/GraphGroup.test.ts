@@ -127,15 +127,22 @@ const MAIN_PAGE_CONTENT_ID = 'main_page_content'
 let containerRight = 1_000
 let groupLeft = 0
 
-const domRect = (left: number, right: number): DOMRect => ({
+// Per title, so a skeleton taking the wrong slot's height is caught. A skeleton carries the same
+// class but none of this text, so measuring one would read 0 here.
+const PANEL_HEIGHTS: Record<string, number> = {
+  'CPU utilization': 583,
+  Memory: 421
+}
+
+const domRect = (left: number, right: number, height = 0): DOMRect => ({
   x: left,
   y: 0,
   left,
   right,
   top: 0,
-  bottom: 0,
+  bottom: height,
   width: right - left,
-  height: 0,
+  height,
   toJSON: () => ({})
 })
 
@@ -155,6 +162,10 @@ beforeEach(() => {
     }
     if (this.classList.contains('graphing-graph-group')) {
       return domRect(groupLeft, containerRight)
+    }
+    if (this.classList.contains('graphing-graph-group__panel')) {
+      const title = Object.keys(PANEL_HEIGHTS).find((name) => this.textContent?.includes(name))
+      return domRect(0, 0, title === undefined ? 0 : PANEL_HEIGHTS[title]!)
     }
     return domRect(0, 0)
   })
@@ -207,6 +218,8 @@ test('holds the skeletons back for a second, then shows one per graph definition
   await nextTick()
 
   expect(skeletons()).toHaveLength(2)
+  // No panel has been rendered to measure, so the skeleton keeps its own estimate.
+  expect((skeletons()[0] as HTMLElement).style.height).toBe('')
   // The skeletons are aria-hidden; the announcement comes from the group's live region.
   expect(screen.getByRole('status')).toBeInTheDocument()
 })
@@ -233,6 +246,22 @@ test('swaps the panels for skeletons once a refetch outlasts the delay', async (
 
   expect(panels()).toHaveLength(0)
   expect(skeletons()).toHaveLength(1)
+})
+
+test("sizes a refetch's skeletons from the panels they replace", async () => {
+  vi.useFakeTimers()
+  renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')])
+  await vi.advanceTimersByTimeAsync(0)
+  expect(panels()).toHaveLength(2)
+
+  postSpy.mockReturnValue(new Promise(() => {}))
+  await fireEvent.click(screen.getAllByText('pan')[0]!)
+  await vi.advanceTimersByTimeAsync(1_000)
+
+  expect(Array.from(skeletons(), (el) => (el as HTMLElement).style.height)).toEqual([
+    `${PANEL_HEIGHTS['CPU utilization']}px`,
+    `${PANEL_HEIGHTS['Memory']}px`
+  ])
 })
 
 test('reports the busy state from the first moment of a refetch too', async () => {

@@ -286,6 +286,13 @@ class ServiceGraphs:
         return self._main_area.locator(".graphing-graph-skeleton")
 
     @property
+    def panel_slots(self) -> Locator:
+        """The group's per-graph slots: the wrapper around a rendered panel, and the skeleton
+        replacing it. One locator, so the same box is measured on both sides of the swap.
+        """
+        return self._main_area.locator(".graphing-graph-group__panel")
+
+    @property
     def broken_graphs(self) -> Locator:
         """The notices the engine shows in place of the graphs it could not load.
 

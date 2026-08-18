@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "global_settings_app",
+  "properties": {
+    "title": { "type": "string" },
+    "site": {
+      "description": "Site id. Null means the global global settings.",
+      "type": ["string", "null"]
+    },
+    "topics": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/global_settings_topic" }
+    }
+  },
+  "required": ["title", "site", "topics"],
+  "$defs": {
+    "global_settings_topic": {
+      "type": "object",
+      "properties": {
+        "icon": { "$ref": "icon.json#/$defs/icon_names" },
+        "headline": { "type": "string" },
+        "subline": { "type": "string" },
+        "warning": {
+          "description": "Warning shown at the top of the topic, e.g. for internal developer settings.",
+          "type": ["string", "null"]
+        },
+        "variables": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/global_settings_variable" }
+        }
+      },
+      "required": ["icon", "headline", "subline", "warning", "variables"]
+    },
+    "global_settings_variable": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "spec": { "$ref": "vue_formspec/components.json#/$defs/components" },
+        "value": {},
+        "modified": {
+          "description": "Whether the variable is explicitly configured in the scope of this app.",
+          "type": "boolean"
+        }
+      },
+      "required": ["name", "spec", "value", "modified"]
+    }
+  }
+}

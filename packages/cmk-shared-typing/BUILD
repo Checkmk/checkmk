@@ -32,6 +32,7 @@ SOURCES_COMMON = [
     "create_relay.json",
     "custom_graph_designer.json",
     "dialog.json",
+    "global_settings.json",
     "global_time_picker.json",
     "loading_transition.json",
     "main_menu.json",

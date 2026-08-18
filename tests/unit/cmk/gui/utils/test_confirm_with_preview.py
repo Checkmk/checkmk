@@ -8,8 +8,8 @@ import pytest
 
 from cmk.gui.http import request
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog, confirm_with_preview
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.web.utils.html import HTML
 
 
 @pytest.mark.usefixtures("request_context")

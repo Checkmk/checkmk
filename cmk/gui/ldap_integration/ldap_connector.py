@@ -125,7 +125,6 @@ from cmk.gui.userdb.store import (
     release_users_lock,
     save_users,
 )
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -146,6 +145,7 @@ from cmk.utils import password_store
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.security_event import log_security_event
 from cmk.web.utils import escaping
+from cmk.web.utils.html import HTML
 
 
 def register(

@@ -53,7 +53,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.type_defs import AnnotatedUserId, IconNames, StaticIcon
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import AbsoluteDate
@@ -74,6 +73,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
+from cmk.web.utils.html import HTML
 
 type MessageMethod = Literal["gui_hint", "gui_popup", "mail", "dashlet"]
 type MessageDestination = (

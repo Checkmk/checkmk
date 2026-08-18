@@ -34,7 +34,6 @@ from cmk.gui.permissions import (
     PermissionSectionRegistry,
 )
 from cmk.gui.type_defs import Choices, DynamicIconName, IconNames, Row, Rows, StaticIcon
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
 from cmk.gui.view_utils import render_community_upgrade_button
@@ -83,6 +82,7 @@ from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils import escaping
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 from .base import Command, CommandActionResult, CommandConfirmDialogOptions, CommandSpec

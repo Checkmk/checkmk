@@ -20,7 +20,6 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, IconNames, Row, StaticIcon
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group, Label
 from cmk.gui.utils.loading_transition import with_loading_transition
 from cmk.livestatus_client import SiteConfigurations
@@ -29,6 +28,7 @@ from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.utils.html import replace_state_markers
 from cmk.utils.macros import replace_macros_in_str
 from cmk.web.utils import escaping
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri, makeuri_contextless, urlencode
 
 

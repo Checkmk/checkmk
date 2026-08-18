@@ -32,7 +32,6 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
 from cmk.gui.type_defs import PermissionName
-from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple, ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.automations import (
@@ -62,6 +61,7 @@ from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.labels import Labels, LabelSources
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.servicename import Item
+from cmk.web.utils.html import HTML
 
 from ._status_links import make_service_status_link
 from .rulesets import render_value_model_readonly

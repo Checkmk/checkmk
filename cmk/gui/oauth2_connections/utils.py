@@ -9,9 +9,9 @@ from cmk.gui.oauth2_connections.watolib.store import (
     is_locked_by_oauth2_connection,
     load_oauth2_connections,
 )
-from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.mode import mode_url
 from cmk.utils.global_ident_type import GlobalIdent
+from cmk.web.utils.html import HTML
 
 
 def oauth2_render_link(ident: GlobalIdent) -> HTML:

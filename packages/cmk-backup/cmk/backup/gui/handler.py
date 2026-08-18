@@ -96,7 +96,6 @@ from cmk.gui.utils.confirm_links import make_confirm_delete_link, make_confirm_l
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -130,6 +129,7 @@ from cmk.utils.certs import CertManagementEvent
 from cmk.utils.keypair_store import Key, KeyId, KeypairMap
 from cmk.utils.paths import omd_root
 from cmk.utils.schedule import next_scheduled_time
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeactionuri_contextless, makeuri_contextless
 
 DictionaryElements = Sequence[DictElement]

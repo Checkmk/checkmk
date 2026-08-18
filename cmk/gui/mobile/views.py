@@ -21,11 +21,11 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualLinkSpec,
 )
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.layout import Layout, make_link_renderer
 from cmk.gui.views.store import multisite_builtin_views
+from cmk.web.utils.html import HTML
 
 #   .--Views---------------------------------------------------------------.
 #   |                    __     ___                                        |

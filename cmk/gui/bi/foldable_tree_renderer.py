@@ -21,8 +21,8 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import DynamicIconName, IconNames, Row, StaticIcon
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless, urlencode_vars
 
 from .helpers import get_state_assumption_key

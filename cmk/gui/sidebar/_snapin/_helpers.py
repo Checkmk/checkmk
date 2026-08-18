@@ -20,12 +20,12 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import get_main_menu_items_prefixed_by_segment
 from cmk.gui.sites import SiteStatus, states
 from cmk.gui.type_defs import Choices, DynamicIcon, IconNames, StaticIcon, Visual
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visuals import visual_title
 from cmk.shared_typing.main_menu import LoadingTransition as SharedLoadingTransition
 from cmk.shared_typing.main_menu import NavItemTopic, NavItemTopicEntry
+from cmk.web.utils.html import HTML
 
 # Constants to be used in snap-ins
 snapin_width = 240

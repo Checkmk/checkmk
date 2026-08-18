@@ -55,7 +55,6 @@ from cmk.gui.type_defs import (
     StaticIcon,
     VisualLinkSpec,
 )
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -89,6 +88,7 @@ from cmk.utils import man_pages
 from cmk.utils.render import approx_age
 from cmk.utils.statename import short_host_state_name, short_service_state_name
 from cmk.web.utils import escaping
+from cmk.web.utils.html import HTML
 
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from .base import Cell, Painter

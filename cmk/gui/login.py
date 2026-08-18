@@ -44,7 +44,6 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.userdb import get_saml_connections_for_current_site, get_user_attributes
 from cmk.gui.userdb.session import auth_cookie_name
 from cmk.gui.utils import roles
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import AuthenticationFailureEvent, AuthenticationSuccessEvent
@@ -53,6 +52,7 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.licensing.registry import get_remaining_trial_time_rounded
 from cmk.utils.security_event import log_security_event
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import is_allowed_url, makeuri, requested_file_name, urlencode
 
 

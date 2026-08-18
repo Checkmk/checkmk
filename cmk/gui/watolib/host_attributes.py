@@ -50,7 +50,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.type_defs import Choices, CustomHostAttrSpec
-from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import Labels
@@ -59,6 +58,7 @@ from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, Single
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import String as StringFormSpec
+from cmk.web.utils.html import HTML
 
 # A host attribute's labels() may return this sentinel as the value for a label
 # key to signal that the key must be REMOVED from the effective labels — i.e. it

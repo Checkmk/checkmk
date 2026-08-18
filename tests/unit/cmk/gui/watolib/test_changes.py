@@ -15,11 +15,11 @@ import time_machine
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.utils.object_diff import make_diff_text
+from cmk.web.utils.html import HTML
 
 
 class TestObjectRef:

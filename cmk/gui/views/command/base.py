@@ -14,10 +14,10 @@ from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.page_menu import PageMenuVue
 from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import DynamicIconName, Row, Rows
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.livestatus_client import Command as LivestatusCommand
 from cmk.livestatus_client import LivestatusClient
+from cmk.web.utils.html import HTML
 
 from .group import CommandGroup
 

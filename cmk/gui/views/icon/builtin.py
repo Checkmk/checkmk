@@ -20,12 +20,12 @@ from cmk.gui.painter.v0.helpers import render_cache_info
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import paint_age, PainterOptions
 from cmk.gui.type_defs import DynamicIcon, IconNames, Row, StaticIcon, VisualLinkSpec
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visual_link import url_to_visual
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 from ..graph import cmk_graph_url

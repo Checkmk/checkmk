@@ -26,6 +26,7 @@ py_library(
         "//cmk/gui/watolib:password_store",
         "//packages/cmk-ccc:site",
         "//packages/cmk-plugins:aws",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

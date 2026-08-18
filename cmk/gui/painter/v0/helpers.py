@@ -18,11 +18,11 @@ from cmk.gui.htmllib.tag_rendering import HTMLTagAttributeValue
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName, HTTPVariables, Row
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.view_utils import CellSpec, get_host_list_links
 from cmk.ruleset_matcher.labels import Labels, LabelSources
 from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
 
 

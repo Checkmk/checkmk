@@ -11,10 +11,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import CSSSpec
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri
 
 

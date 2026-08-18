@@ -69,6 +69,7 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

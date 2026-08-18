@@ -34,7 +34,6 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.type_defs import Choices
-from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Age,
@@ -100,6 +99,7 @@ from cmk.rulesets.v1.form_specs import (
     MonitoredHost,
     String,
 )
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import urlencode_vars
 
 from . import openapi_fields

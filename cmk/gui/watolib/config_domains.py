@@ -41,7 +41,6 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings, TrustedCertificateAuthorities
-from cmk.gui.utils.html import HTML
 from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -56,6 +55,7 @@ from cmk.utils.certs import cert_dir, CertManagementEvent, CN_TEMPLATE, RemoteSi
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.security_event import log_security_event
+from cmk.web.utils.html import HTML
 
 ProcessId = NewType("ProcessId", int)
 

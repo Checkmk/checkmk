@@ -40,7 +40,6 @@ from cmk.gui.utils.doc_references import (
     youtube_reference_url,
     YouTubeReference,
 )
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import (
     loading_transition_onclick,
     LoadingTransition,
@@ -50,6 +49,7 @@ from cmk.gui.utils.popups import MethodInline
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.utils import paths
 from cmk.web.utils import escaping
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri, requested_file_name, urlencode, urlencode_vars
 
 

@@ -20,13 +20,13 @@ from cmk.gui.utils.flashed_messages import (
     get_flashed_messages,
     get_flashed_messages_with_categories,
 )
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wsgi.app import (
     application_and_request_context,
     request_context,
     session_wsgi_app,
 )
+from cmk.web.utils.html import HTML
 
 
 @pytest.fixture(name="user_id")

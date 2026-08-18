@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.utils.html import HTML
+from cmk.web.utils.html import HTML
 
 
 def test_HTML_value() -> None:

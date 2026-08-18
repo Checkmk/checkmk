@@ -10,7 +10,6 @@ from typing import Final, override
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
@@ -25,6 +24,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.paths import default_config_dir, omd_root
+from cmk.web.utils.html import HTML
 
 PRODUCT_USAGE_ANALYTICS_CONFIG_ID: Final[ConfigDomainName] = "product_usage_analytics"
 

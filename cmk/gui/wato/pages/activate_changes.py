@@ -49,7 +49,6 @@ from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, ReadOnlyS
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.timeout_manager import timeout_manager
@@ -88,6 +87,7 @@ from cmk.licensing.registry import get_licensing_user_effect
 from cmk.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils import paths, render
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 
 from .sites import sort_sites

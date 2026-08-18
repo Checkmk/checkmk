@@ -16,8 +16,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.table import table_element
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.web.utils.html import HTML
 from tests.unit.cmk.gui.compare_html import compare_html
 
 

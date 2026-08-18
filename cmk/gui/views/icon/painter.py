@@ -20,7 +20,6 @@ from cmk.gui.type_defs import (
     Row,
     StaticIcon,
 )
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import (
     CellSpec,
@@ -28,6 +27,7 @@ from cmk.gui.view_utils import (
     replace_action_url_macros,
     transform_action_url,
 )
+from cmk.web.utils.html import HTML
 
 from .base import IconConfig
 from .entries import (

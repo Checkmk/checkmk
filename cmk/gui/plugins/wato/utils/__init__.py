@@ -36,7 +36,6 @@ from cmk.gui.site_config import is_distributed_setup_remote_site as is_wato_slav
 from cmk.gui.type_defs import Choices as Choices
 from cmk.gui.type_defs import ChoiceText as ChoiceText
 from cmk.gui.utils.confirm_links import make_confirm_link as make_confirm_link
-from cmk.gui.utils.html import HTML as HTML
 from cmk.gui.utils.transaction_manager import transactions as transactions
 from cmk.gui.valuespec import Alternative as Alternative
 from cmk.gui.valuespec import CascadingDropdown as CascadingDropdown
@@ -226,6 +225,7 @@ from cmk.gui.watolib.translation import (
 from cmk.gui.watolib.translation import translation_elements as translation_elements
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.web.utils.html import HTML as HTML
 
 
 def check_icmp_params() -> list[DictionaryEntry]:

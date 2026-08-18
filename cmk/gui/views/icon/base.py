@@ -11,10 +11,10 @@ from typing import Literal
 
 from cmk.gui.config import Config
 from cmk.gui.type_defs import ColumnName, DynamicIcon, Row, StaticIcon
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.speaklater import LazyString
 from cmk.ruleset_matcher.tags import TagID
+from cmk.web.utils.html import HTML
 
 IconSpec = DynamicIcon | StaticIcon
 

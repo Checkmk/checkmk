@@ -46,7 +46,6 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualLinkSpec,
 )
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import (
@@ -57,6 +56,7 @@ from cmk.gui.view_utils import (
 )
 from cmk.web.utils import escaping
 from cmk.web.utils.escaping import replace_anchor_tags_with_urls, replace_br_with_newlines
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri
 
 from ..v1.painter_lib import (

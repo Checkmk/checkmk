@@ -36,7 +36,7 @@ py_library(
     srcs = ["compare_html.py"],
     visibility = ["//tests/unit/cmk/gui:__subpackages__"],
     deps = [
-        "//cmk/gui/utils:middle",
+        "//packages/cmk-web/cmk/web/utils",
         requirement("beautifulsoup4"),
     ],
 )
@@ -208,6 +208,7 @@ py_cmk_test(
         "//packages/cmk-plugins:azure_deprecated",
         "//packages/cmk-ruleset-matcher",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
         "//packages/cmk-wsgi",
         "//tests/unit:conftest",
         requirement("beautifulsoup4"),
@@ -329,6 +330,7 @@ py_cmk_test(
         "//cmk/utils",
         "//packages/cmk-ccc:site",
         "//packages/cmk-livestatus-client:livestatus-api",
+        "//packages/cmk-web/cmk/web/utils",
         "//tests/testlib:rest_api_client",
         "//tests/unit:conftest",
         requirement("flask"),
@@ -520,6 +522,7 @@ py_cmk_test(
         "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-plugin-apis:inventory_ui",
         "//packages/cmk-trace",
+        "//packages/cmk-web/cmk/web/utils",
         "//packages/cmk-wsgi",
         "//tests/testlib:rest_api_client",
         "//tests/unit:conftest",

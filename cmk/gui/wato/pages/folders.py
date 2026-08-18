@@ -65,7 +65,6 @@ from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_references import DocReference, YouTubeReference
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -122,6 +121,7 @@ from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.web.utils.escaping import escape_to_html_permissive
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 from ._bulk_actions import get_hostnames_from_checkboxes

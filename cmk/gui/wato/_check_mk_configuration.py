@@ -37,7 +37,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
-from cmk.gui.utils import html
 from cmk.gui.utils.temperate_unit import temperature_unit_choices, TemperatureUnit
 from cmk.gui.valuespec import (
     Age,
@@ -146,6 +145,7 @@ from cmk.rulesets.internal.form_specs import (
 )
 from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.web.utils import html
 from cmk.web.utils.urls import makeuri_contextless
 
 from ._check_plugin_selection import CheckPluginSelection

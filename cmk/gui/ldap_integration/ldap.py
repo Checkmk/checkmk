@@ -51,7 +51,6 @@ from cmk.gui.userdb import (
 )
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_references import DocReference
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Age,
@@ -88,6 +87,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
+from cmk.web.utils.html import HTML
 
 
 def register(mode_registry: ModeRegistry) -> None:

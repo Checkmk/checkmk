@@ -22,7 +22,6 @@ from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptions
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import ColumnName, PainterParameters, Row
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue
 from cmk.gui.view_utils import CellSpec, CSVExportError
@@ -38,6 +37,7 @@ from cmk.inventory.structured_data import (
     serialize_delta_tree,
     serialize_tree,
 )
+from cmk.web.utils.html import HTML
 
 from ._display_hints import (
     AttributeDisplayHint,

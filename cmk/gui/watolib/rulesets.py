@@ -61,7 +61,6 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.valuespec import DropdownChoiceEntries
 from cmk.gui.watolib.check_mk_automations import (
@@ -131,6 +130,7 @@ from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationC
 from cmk.utils.global_ident_type import GlobalIdent
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
 
 from .check_mk_automations import get_services_labels, update_merged_password_file

@@ -26,9 +26,9 @@ from cmk.gui.inventory.filters import (
     FilterInvText,
 )
 from cmk.gui.type_defs import DynamicIconName
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.inventory.structured_data import SDValue
+from cmk.web.utils.html import HTML
 
 
 class _Comparable(Protocol):

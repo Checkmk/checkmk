@@ -869,6 +869,7 @@ allows = ["cmk"]
 
 [components."cmk.gui.plugins"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "@livestatus_client",
   "@plugin_apis",
@@ -1460,6 +1461,7 @@ allows = ["@ccc"]
 
 [components."cmk.otel_collector.gui"]
 allows = [
+  "cmk.web.utils",
   "@ccc",
   "cmk.cloud",
   "cmk.gui",

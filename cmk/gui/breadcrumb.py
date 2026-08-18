@@ -14,9 +14,9 @@ from collections.abc import Iterable, MutableSequence
 from typing import NamedTuple, overload, override
 
 import cmk.gui.htmllib.html
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.shared_typing.main_menu import NavItem
+from cmk.web.utils.html import HTML
 
 
 class BreadcrumbItem(NamedTuple):

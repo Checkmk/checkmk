@@ -9,7 +9,7 @@ from typing import overload
 from bs4 import BeautifulSoup, Tag
 from bs4.element import NavigableString
 
-from cmk.gui.utils.html import HTML
+from cmk.web.utils.html import HTML
 
 
 def prettify(html_text: str) -> str:

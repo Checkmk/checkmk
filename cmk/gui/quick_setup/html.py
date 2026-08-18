@@ -6,7 +6,6 @@
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.table import Table
-from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.configuration_bundle_store import (
     BundleId,
     is_locked_by_quick_setup,
@@ -14,6 +13,7 @@ from cmk.gui.watolib.configuration_bundle_store import (
 )
 from cmk.gui.watolib.mode import mode_url
 from cmk.utils.global_ident_type import GlobalIdent
+from cmk.web.utils.html import HTML
 
 _BUNDLE_GROUP_EDIT_MODES: dict[str, str] = {}
 

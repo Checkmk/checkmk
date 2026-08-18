@@ -18,7 +18,6 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GraphTimerange
-from cmk.gui.utils.html import HTML
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
     CmkTimeSeriesGraph,
@@ -34,6 +33,7 @@ from cmk.shared_typing.global_time_picker import (
     FirstDayOfWeek,
     GlobalTimePickerProps,
 )
+from cmk.web.utils.html import HTML
 
 from . import _engine_plugins as engine_plugins
 from ._engine_dispatch import serialize_graphs

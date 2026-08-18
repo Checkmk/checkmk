@@ -19,7 +19,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row
-from cmk.gui.utils.html import HTML
+from cmk.web.utils.html import HTML
 
 
 class Perfometer:

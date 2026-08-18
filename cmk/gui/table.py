@@ -28,12 +28,12 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
 from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.web.utils import escaping
 from cmk.web.utils.escaping import escape_to_html_permissive
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri, requested_file_name
 
 

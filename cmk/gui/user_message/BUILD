@@ -22,5 +22,6 @@ py_library(
         "//cmk/gui/token_auth",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

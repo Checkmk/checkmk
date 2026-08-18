@@ -58,6 +58,7 @@ py_library(
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
         "//cmk/gui/utils:middle",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 

@@ -78,7 +78,6 @@ from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.wato.pages._html_elements import wato_html_head
@@ -186,6 +185,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.paths import omd_root
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeactionuri_contextless, makeuri_contextless
 
 

@@ -17,8 +17,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.utils.html import HTML
 from cmk.web.utils import escaping
+from cmk.web.utils.html import HTML
 
 # New functions for painting forms
 

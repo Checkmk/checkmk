@@ -37,7 +37,6 @@ from cmk.gui.search.matchers import (
 )
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import IconNames, PermissionName, StaticIcon
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.watolib.automations import (
@@ -59,6 +58,7 @@ from cmk.gui.watolib.rulesets import Rule, rules_grouped_by_folder, SingleRulese
 from cmk.gui.watolib.utils import mk_repr
 from cmk.livestatus_client import SiteConfiguration
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
 
 

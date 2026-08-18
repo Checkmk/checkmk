@@ -15,7 +15,6 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.type_defs import ColumnName, Row, SorterName
-from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import Sorter
 from cmk.gui.watolib.hosts_and_folders import (
@@ -23,6 +22,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     get_folder_title_path,
     get_folder_title_path_with_links,
 )
+from cmk.web.utils.html import HTML
 
 
 class PainterHostFilename(Painter):

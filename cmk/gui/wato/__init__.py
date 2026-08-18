@@ -42,7 +42,6 @@ from cmk.gui.pages import Page, page_registry
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
-from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Age as Age
 from cmk.gui.valuespec import Alternative as Alternative
 from cmk.gui.valuespec import Dictionary as Dictionary
@@ -143,6 +142,7 @@ from cmk.gui.watolib.rulespec_groups import (
 )
 from cmk.gui.watolib.sites import LivestatusViaTCP
 from cmk.gui.watolib.translation import HostnameTranslation
+from cmk.web.utils.html import HTML
 
 from ._check_mk_configuration import monitoring_macro_help as monitoring_macro_help
 from ._check_mk_configuration import PluginCommandLine as PluginCommandLine

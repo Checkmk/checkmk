@@ -39,5 +39,6 @@ py_library(
         "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

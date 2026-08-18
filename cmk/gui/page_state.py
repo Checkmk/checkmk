@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import CSSSpec
 from cmk.gui.type_defs import StaticIcon
-from cmk.gui.utils.html import HTML
+from cmk.web.utils.html import HTML
 
 
 @dataclass

@@ -62,7 +62,6 @@ from cmk.gui.userdb.store import load_users
 from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import AbsoluteDate
@@ -89,6 +88,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.utils import render
 from cmk.web.utils import escaping
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeuri
 
 

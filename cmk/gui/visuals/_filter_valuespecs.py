@@ -21,7 +21,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import FilterHTTPVariables, IconNames, SingleInfos, StaticIcon, VisualContext
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import (
     ABCPageListOfMultipleGetChoice,
@@ -40,6 +39,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.visuals.filter import Filter, filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.livestatus_client import LivestatusTestingError
+from cmk.web.utils.html import HTML
 
 
 def FilterChoices(infos: SingleInfos, title: str, help: str) -> DualListChoice:

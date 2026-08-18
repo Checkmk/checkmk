@@ -34,7 +34,6 @@ from cmk.gui.logged_in import (
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import GraphTimerange, IconNames, SizePT, StaticIcon
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
@@ -45,6 +44,7 @@ from cmk.shared_typing.cmk_time_series_graph import Interaction, Size
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
+from cmk.web.utils.html import HTML
 
 from ._artwork import (
     compute_curves_at_timestamp,

@@ -28,10 +28,10 @@ from cmk.gui.painter_options import PainterOptions
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec, VisualLinkSpec
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.misc import saveint
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visual_link import render_link_to_view
+from cmk.web.utils.html import HTML
 
 from .base import Layout
 from .helpers import group_value

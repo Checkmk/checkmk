@@ -11,7 +11,7 @@ import pytest
 
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils.html import HTML
+from cmk.web.utils.html import HTML
 
 from .utils import expect_validate_failure, expect_validate_success, raise_exception, request_var
 

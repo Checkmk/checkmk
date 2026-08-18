@@ -10,10 +10,10 @@ from typing import Any, Literal, NotRequired, TypedDict
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import TimerangeValue, ValueSpec
 from cmk.gui.view_utils import CSSClass
 from cmk.utils.servicename import ServiceName
+from cmk.web.utils.html import HTML
 
 AVMode = Literal["availability", "timeline"]
 AVObjectType = Literal["host", "service", "bi"]

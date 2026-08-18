@@ -59,7 +59,6 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualLinkSpec,
 )
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -77,6 +76,7 @@ from cmk.gui.view_utils import (
     PythonExportError,
 )
 from cmk.shared_typing.cmk_time_series_graph import Size
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
 
 

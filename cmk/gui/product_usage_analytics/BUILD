@@ -14,7 +14,6 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
-        "//cmk/gui/utils:middle",
         "//cmk/gui/valuespec",
         "//cmk/gui/wato:base",
         "//cmk/gui/watolib",
@@ -23,5 +22,6 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:site",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )

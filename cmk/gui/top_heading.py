@@ -17,9 +17,9 @@ from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenu, PageMenuPopupsRenderer, PageMenuRenderer
 from cmk.gui.page_state import PageState, PageStateRenderer
 from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.utils.html import HTML
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.utils import paths
+from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
 
 

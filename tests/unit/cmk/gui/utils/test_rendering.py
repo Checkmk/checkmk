@@ -5,8 +5,8 @@
 
 import pytest
 
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
+from cmk.web.utils.html import HTML
 
 
 @pytest.mark.parametrize(

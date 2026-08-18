@@ -13,7 +13,7 @@ from cmk.gui.htmllib.tag_rendering import (
     render_start_tag,
 )
 from cmk.gui.htmllib.type_defs import CSSSpec
-from cmk.gui.utils.html import HTML
+from cmk.web.utils.html import HTML
 
 
 def test_render_start_tag_no_attributes() -> None:

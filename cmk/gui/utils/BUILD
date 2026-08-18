@@ -30,7 +30,6 @@ py_library(
         "dataclasses.py",
         "doc_references.py",
         "flashed_messages.py",
-        "html.py",
         "language_cookie.py",
         "misc.py",
         "mobile.py",

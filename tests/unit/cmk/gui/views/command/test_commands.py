@@ -254,7 +254,6 @@ class TestDowntimeSpecsForHosts:
         assert specs == ["myhost"]
         assert [r["host_name"] for r in action_rows] == ["myhost", "otherhost"]
 
-    @pytest.mark.xfail(strict=True, reason="Crash group 4545: KeyError 'host_name'")
     def test_tolerates_rows_without_the_host_name_column(
         self, request_context: None, with_admin_login: UserId
     ) -> None:

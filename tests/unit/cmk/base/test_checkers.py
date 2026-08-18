@@ -97,6 +97,136 @@ def test_special_processing_hack_for_predictive_otel_metrics_injects_reference_m
     }
 
 
+def test_special_processing_hack_for_predictive_otel_metrics_defaults_missing_levels_lower() -> (
+    None
+):
+    """Regression test for CMK-38135: the otel_azure_metrics ruleset allows configuring only
+    upper levels for a metric, leaving "levels_lower" absent from the parameter dict entirely."""
+    params: Mapping[str, object] = {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_firewalllatencypng_average",
+                    "levels_upper": (
+                        "cmk_postprocessed",
+                        "predictive_levels",
+                        {"period": "minute"},
+                    ),
+                }
+            ],
+        )
+    }
+
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)
+
+    assert result == {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_firewalllatencypng_average",
+                    "levels_lower": ("no_levels", None),
+                    "levels_upper": (
+                        "cmk_postprocessed",
+                        "predictive_levels",
+                        {
+                            "period": "minute",
+                            "__reference_metric__": "azure_firewalllatencypng_average",
+                            "__direction__": "upper",
+                        },
+                    ),
+                }
+            ],
+        )
+    }
+
+
+def test_special_processing_hack_for_predictive_otel_metrics_defaults_missing_levels_upper() -> (
+    None
+):
+    params: Mapping[str, object] = {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_available_memory_bytes_average",
+                    "levels_lower": ("fixed", (10.0, 5.0)),
+                }
+            ],
+        )
+    }
+
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)
+
+    assert result == {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_available_memory_bytes_average",
+                    "levels_lower": ("fixed", (10.0, 5.0)),
+                    "levels_upper": ("no_levels", None),
+                }
+            ],
+        )
+    }
+
+
+def test_special_processing_hack_for_predictive_otel_metrics_multiple_metrics_missing_levels_lower() -> (
+    None
+):
+    """Reproduces the exact crash payload from CMK-38135's crash report: two metrics, neither
+    configuring a lower level, one with predictive upper levels and one with fixed upper levels."""
+    params: Mapping[str, object] = {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_firewalllatencypng_average",
+                    "levels_upper": (
+                        "cmk_postprocessed",
+                        "predictive_levels",
+                        {"period": "minute"},
+                    ),
+                },
+                {
+                    "metric_name": "azure_networkrulehit_total",
+                    "levels_upper": ("fixed", (3.0, 5.0)),
+                },
+            ],
+        )
+    }
+
+    result = checkers._special_processing_hack_for_predictive_otel_metrics(params)
+
+    assert result == {
+        "metrics": (
+            "multi_metrics",
+            [
+                {
+                    "metric_name": "azure_firewalllatencypng_average",
+                    "levels_lower": ("no_levels", None),
+                    "levels_upper": (
+                        "cmk_postprocessed",
+                        "predictive_levels",
+                        {
+                            "period": "minute",
+                            "__reference_metric__": "azure_firewalllatencypng_average",
+                            "__direction__": "upper",
+                        },
+                    ),
+                },
+                {
+                    "metric_name": "azure_networkrulehit_total",
+                    "levels_lower": ("no_levels", None),
+                    "levels_upper": ("fixed", (3.0, 5.0)),
+                },
+            ],
+        )
+    }
+
+
 @pytest.mark.parametrize(
     "subresults, aggregated_results",
     [

@@ -729,10 +729,14 @@ def _special_processing_hack_for_predictive_otel_metrics(
         case {"metrics": ("multi_metrics", list() as metrics)}:
             for metric in metrics:
                 metric["levels_lower"] = update_predictive_levels(
-                    metric["metric_name"], metric["levels_lower"], "lower"
+                    metric["metric_name"],
+                    metric.get("levels_lower", ("no_levels", None)),
+                    "lower",
                 )
                 metric["levels_upper"] = update_predictive_levels(
-                    metric["metric_name"], metric["levels_upper"], "upper"
+                    metric["metric_name"],
+                    metric.get("levels_upper", ("no_levels", None)),
+                    "upper",
                 )
             return {"metrics": ("multi_metrics", metrics)}
         case _:

@@ -982,9 +982,12 @@ def test_registered_painters() -> None:
             "downtime_recurring",
             "host_azure_resource_group",
             "host_azure_subscription",
+            "oracle_active_sessions_figure",
+            "oracle_active_undo_blocks_figure",
             "oracle_buffer_hit_ratio_gauge",
             "oracle_instance_dashboard_link",
             "oracle_library_hit_ratio_gauge",
+            "oracle_long_active_sessions_figure",
         ]
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:

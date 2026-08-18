@@ -15,6 +15,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <iomanip>
+#include <ranges>
 #include <sstream>
 #include <stdexcept>
 

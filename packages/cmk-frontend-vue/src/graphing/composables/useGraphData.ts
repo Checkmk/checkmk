@@ -113,6 +113,7 @@ export function useGraphData(
 ): {
   graphs: Readonly<Ref<ResolvedGraph[]>>
   isLoading: Readonly<Ref<boolean>>
+  loadingSlots: Readonly<Ref<readonly boolean[]>>
   error: Readonly<Ref<string | null>>
   partialErrors: Readonly<Ref<readonly string[]>>
   warnings: Readonly<Ref<readonly string[]>>
@@ -128,6 +129,17 @@ export function useGraphData(
 
   const loadsInFlight = ref(0)
   const isLoading = computed(() => loadsInFlight.value > 0)
+
+  // Per slot, because `isLoading` counts requests: it cannot say which graphs are waiting.
+  const loadingSlots = ref<boolean[]>([])
+
+  // Only the owning token releases a slot, or a superseded load would clear its successor's flag.
+  function settle(token: number): void {
+    loadsInFlight.value -= 1
+    loadingSlots.value = loadingSlots.value.map((loading, index) =>
+      loading && tokenOwningSlot[index] === token ? false : loading
+    )
+  }
 
   // Step of the most recently requested load; a resize only re-fetches when the
   // width-derived step actually changes.
@@ -191,6 +203,7 @@ export function useGraphData(
     tokenOwningAllSlots = token
     const definitions = getGraphs()
     tokenOwningSlot = definitions.map(() => token)
+    loadingSlots.value = definitions.map(() => true)
 
     loadsInFlight.value += 1
 
@@ -217,7 +230,7 @@ export function useGraphData(
         errorRef.value = e instanceof Error ? e.message : String(e)
       }
     } finally {
-      loadsInFlight.value -= 1
+      settle(token)
     }
   }
 
@@ -235,6 +248,7 @@ export function useGraphData(
 
     const token = ++loadToken
     tokenOwningSlot[index] = token
+    loadingSlots.value[index] = true
     loadsInFlight.value += 1
 
     try {
@@ -253,7 +267,7 @@ export function useGraphData(
         errorRef.value = e instanceof Error ? e.message : String(e)
       }
     } finally {
-      loadsInFlight.value -= 1
+      settle(token)
     }
   }
 
@@ -293,6 +307,7 @@ export function useGraphData(
   return {
     graphs: graphsRef,
     isLoading,
+    loadingSlots,
     error: readonly(errorRef),
     partialErrors,
     warnings,

@@ -29,14 +29,31 @@ class _RequestReturning:
         return self._api_request
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4109: AssertionError on page_request_vars")
-def test_page_reports_a_request_without_page_request_vars(
+@pytest.mark.parametrize(
+    "api_request",
+    [
+        pytest.param(
+            {"varprefix": "", "page_name": "allhosts"},
+            id="page_request_vars_missing",
+        ),
+        pytest.param(
+            {"varprefix": "", "page_name": "allhosts", "page_request_vars": "allhosts"},
+            id="page_request_vars_not_a_mapping",
+        ),
+        pytest.param(
+            {"varprefix": "", "page_name": "allhosts", "page_request_vars": {}},
+            id="infos_missing",
+        ),
+    ],
+)
+def test_page_reports_a_malformed_filter_request(
     request_context: None,
     load_config: Config,
     with_admin_login: UserId,
+    api_request: dict[str, object],
 ) -> None:
-    # A well formed request for an existing view, but with no page_request_vars entry
-    page_request = _RequestReturning({"varprefix": "", "page_name": "allhosts"})
+    # A well formed request for an existing view, but with no filter infos to render
+    page_request = _RequestReturning(api_request)
     ctx = PageContext(config=load_config, request=cast(Request, page_request))
 
     with pytest.raises(MKUserError) as excinfo:

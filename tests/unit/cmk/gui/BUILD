@@ -390,6 +390,7 @@ py_cmk_test(
         requirement("pytest-mock"),
         requirement("python-dateutil"),
         requirement("python-ldap"),
+        requirement("time-machine"),
         requirement("werkzeug"),
     ],
 )

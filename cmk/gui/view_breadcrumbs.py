@@ -208,17 +208,17 @@ def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions)
     )
 
     # 3. level: host home page
-    host_view_spec = permitted_views["host"]
-    breadcrumb.append(
-        BreadcrumbItem(
-            title=view_title(host_view_spec, context={}),
-            url=makeuri_contextless(
-                request,
-                append_site_from_request(request, [("view_name", "host"), ("host", host_name)]),
-                filename="view.py",
-            ),
-            id=None,
+    if host_view_spec := permitted_views.get("host"):
+        breadcrumb.append(
+            BreadcrumbItem(
+                title=view_title(host_view_spec, context={}),
+                url=makeuri_contextless(
+                    request,
+                    append_site_from_request(request, [("view_name", "host"), ("host", host_name)]),
+                    filename="view.py",
+                ),
+                id=None,
+            )
         )
-    )
 
     return breadcrumb

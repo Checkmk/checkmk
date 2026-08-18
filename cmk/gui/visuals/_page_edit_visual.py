@@ -456,7 +456,8 @@ def _visual_spec_single(info_key: InfoName) -> Transform[dict]:
         return {
             ident: value
             for ident, vs in single_spec
-            for value in [context.get(ident, {}).get(ident)]
+            if isinstance(filter_vars := context.get(ident), dict)
+            for value in [filter_vars.get(ident)]
             if value
         }
 

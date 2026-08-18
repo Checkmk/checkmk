@@ -366,12 +366,18 @@ export const dashboardAPI = {
   },
   computeNetworkFlowTrendChartData: async (
     content: NetworkFlowTrendChartContent,
-    context: VisualContext
+    context: VisualContext,
+    // Set once the graph was zoomed or panned; without it the time filter decides the window.
+    requestedTimeRange: { start: number; end: number } | null = null
   ): Promise<ComputedNetworkFlowTrendChartResponse> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-network-flow-trend-chart/invoke', {
         ...CONTENT_TYPE_HEADER,
-        body: { content, context }
+        body: {
+          content,
+          context,
+          ...(requestedTimeRange === null ? {} : { requested_time_range: requestedTimeRange })
+        }
       })
     )
   },

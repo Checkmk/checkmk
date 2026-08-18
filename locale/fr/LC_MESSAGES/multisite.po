@@ -2937,12 +2937,6 @@ msgstr "Certificats ACME"
 msgid "ACTIVE"
 msgstr "ACTIF"
 
-msgid "ADMIN"
-msgstr ""
-
-msgid "ADMINISTRATOR"
-msgstr ""
-
 msgid "AES-128"
 msgstr "AES-128"
 
@@ -7666,10 +7660,6 @@ msgstr "Règle de traitement des alertes"
 msgid "Apply & test notification rule"
 msgstr "Supprimer cette règle de notification"
 
-#, fuzzy
-msgid "Apply Latency"
-msgstr "Latence"
-
 msgid "Apply OMD config changes"
 msgstr "Appliquer les changements de configuration de l'OMD"
 
@@ -7714,6 +7704,10 @@ msgstr "Appliquer le décalage : Temps minimum"
 msgid "Apply lag: state in case the apply lag is not known"
 msgstr ""
 "Délai d'application : Indiquer si le délai d'application n'est pas connu"
+
+#, fuzzy
+msgid "Apply latency"
+msgstr "Latence"
 
 msgid "Apply logwatch patterns"
 msgstr "Appliquer les modèles de logwatch"
@@ -11946,9 +11940,6 @@ msgstr "Modes de port CA"
 msgid "CAA - Incomplete calls"
 msgstr "CAA - Appels incomplets"
 
-msgid "CALLBACK"
-msgstr ""
-
 msgid "CARA"
 msgstr "CARA"
 
@@ -12237,6 +12228,14 @@ msgstr "Utilisation du CPU"
 
 msgid "CPU utilization & Kernel performance"
 msgstr "Utilisation du CPU et performance du noyau"
+
+#, fuzzy
+msgid "CPU utilization (5 min avg)"
+msgstr "Utilisation du CPU (moyenne)"
+
+#, fuzzy
+msgid "CPU utilization (5 sec avg)"
+msgstr "Utilisation du CPU (moyenne)"
 
 msgid "CPU utilization (50th percentile)"
 msgstr "Utilisation de l'unité centrale (50e percentile)"
@@ -12563,6 +12562,9 @@ msgstr "Appel avec les paramètres suivants :"
 
 msgid "Call with the following parameters:"
 msgstr "Appel avec les paramètres suivants :"
+
+msgid "Callback"
+msgstr ""
 
 msgid "Caller ID"
 msgstr "Identification de l'appelant"
@@ -14773,13 +14775,16 @@ msgstr "Utilisation de la mémoire du superviseur Cisco Nexus"
 msgid "Cisco Prime"
 msgstr "Cisco Prime"
 
-msgid "Cisco Prime WLAN Controller Access Points"
+#, fuzzy
+msgid "Cisco Prime WLAN controller access points"
 msgstr "Points d'accès du contrôleur Cisco Prime WLAN"
 
-msgid "Cisco Prime WLAN Controller Clients"
+#, fuzzy
+msgid "Cisco Prime WLAN controller clients"
 msgstr "Clients du contrôleur WLAN Cisco Prime"
 
-msgid "Cisco Prime WLAN Controller Last Backup"
+#, fuzzy
+msgid "Cisco Prime WLAN controller last backup"
 msgstr "Dernière sauvegarde du contrôleur WLAN Cisco Prime"
 
 #, fuzzy
@@ -14848,11 +14853,11 @@ msgid "Citrix NetScaler SSL certificates"
 msgstr "Certificats SSL de Citrix Netscaler"
 
 #, fuzzy
-msgid "Citrix NetScaler load balancer TCP connections"
+msgid "Citrix NetScaler load balancer HA"
 msgstr "Connexions TCP de l'équilibreur de charge Citrix Netscaler"
 
 #, fuzzy
-msgid "Citrix Netscaler load balancer HA"
+msgid "Citrix NetScaler load balancer TCP connections"
 msgstr "Connexions TCP de l'équilibreur de charge Citrix Netscaler"
 
 msgid "Citrix VM state"
@@ -15665,7 +15670,7 @@ msgid "Comments of service"
 msgstr "Commentaires sur le service"
 
 #, fuzzy
-msgid "Commit Latency"
+msgid "Commit latency"
 msgstr "Latence d'écriture"
 
 msgid "Commit limit"
@@ -20457,11 +20462,11 @@ msgstr ""
 "pouvez également interroger la santé des composants et les alertes "
 "déclenchées."
 
-#, fuzzy
-msgid "Degraded Objects"
+msgid "Degraded hosts"
 msgstr "Hôtes dégradés"
 
-msgid "Degraded hosts"
+#, fuzzy
+msgid "Degraded objects"
 msgstr "Hôtes dégradés"
 
 msgid "Degree Celsius"
@@ -23812,7 +23817,8 @@ msgstr "Conducteur"
 msgid "Driver date"
 msgstr "Date du conducteur"
 
-msgid "Driver type to use instead of doing an auto selection"
+#, fuzzy
+msgid "Driver type to use instead of doing an auto-selection"
 msgstr ""
 "Type de conducteur à utiliser au lieu de faire une sélection automatique"
 
@@ -27173,6 +27179,17 @@ msgstr "Pools d'équilibreurs de charge F5"
 #, fuzzy
 msgid "F5 load balancer source NAT"
 msgstr "F5 Loadbalancer Source NAT"
+
+#, fuzzy
+msgid "F5OS CPU utilization averages"
+msgstr "Utilisation du CPU (moyenne)"
+
+msgid "F5OS PSU power"
+msgstr ""
+
+#, fuzzy
+msgid "F5OS platform temperature"
+msgstr "Température de la batterie"
 
 msgid "FAULTED"
 msgstr "DÉFAUT"
@@ -34276,6 +34293,10 @@ msgid "Hyperthreads per CPU"
 msgstr "Hyperthreads par CPU"
 
 #, fuzzy
+msgid "I/O bandwidth"
+msgstr "Bande passante"
+
+#, fuzzy
 msgid "I/O database reads (attached) average latency"
 msgstr "I/O Lectures de la base de données (attachées) Latence moyenne"
 
@@ -34484,10 +34505,6 @@ msgstr "STARTTLS"
 msgid "INFO"
 msgstr ""
 
-#, fuzzy
-msgid "IO Bandwith"
-msgstr "Bande passante"
-
 msgid "IOPS"
 msgstr ""
 
@@ -34637,19 +34654,6 @@ msgstr "Sémaphores IPC"
 msgid "IPMI"
 msgstr "IPMI"
 
-msgid "IPMI Interface"
-msgstr "Interface IPMI"
-
-msgid ""
-"IPMI Interface to be used. If not specified, the default interface as set at "
-"compile time will be used."
-msgstr ""
-"Interface IPMI à utiliser. Si elle n'est pas spécifiée, l'interface par "
-"défaut telle que définie au moment de la compilation sera utilisée."
-
-msgid "IPMI Sensors via Freeipmi or IPMItool"
-msgstr "Capteurs IPMI via Freeipmi ou IPMItool"
-
 msgid "IPMI credentials"
 msgstr "Informations d'identification IPMI"
 
@@ -34660,6 +34664,18 @@ msgid "IPMI driver type"
 msgstr "Type de pilote IPMI"
 
 #, fuzzy
+msgid "IPMI interface"
+msgstr "Interface IPMI"
+
+#, fuzzy
+msgid ""
+"IPMI interface to be used. If not specified, the default interface as set at "
+"compile time will be used."
+msgstr ""
+"Interface IPMI à utiliser. Si elle n'est pas spécifiée, l'interface par "
+"défaut telle que définie au moment de la compilation sera utilisée."
+
+#, fuzzy
 msgid "IPMI management board"
 msgstr "Conseil d'administration de l'IPMI"
 
@@ -34668,6 +34684,10 @@ msgstr "Découverte des capteurs IPMI"
 
 msgid "IPMI sensors"
 msgstr "Capteurs IPMI"
+
+#, fuzzy
+msgid "IPMI sensors via Freeipmi or IPMItool"
+msgstr "Capteurs IPMI via Freeipmi ou IPMItool"
 
 #, fuzzy
 msgid ""
@@ -45684,7 +45704,7 @@ msgid "Miscellaneous"
 msgstr "Divers"
 
 #, fuzzy
-msgid "Misplaced Objects"
+msgid "Misplaced objects"
 msgstr "Objets gérés"
 
 msgid "Misscheduled duration (DaemonSet only)"
@@ -46043,7 +46063,7 @@ msgid "Monitor (min. 1)"
 msgstr "Surveillance"
 
 #, fuzzy
-msgid "Monitor Acropolis State"
+msgid "Monitor Acropolis state"
 msgstr "État de surveillance"
 
 msgid "Monitor Android devices"
@@ -49560,10 +49580,6 @@ msgid "Number of OS threads created"
 msgstr "Nombre de fils"
 
 #, fuzzy
-msgid "Number of Placement Groups"
-msgstr "Nombre de groupes de règles"
-
-#, fuzzy
 msgid "Number of Podman containers"
 msgstr "Nombre de conteneurs"
 
@@ -50008,6 +50024,10 @@ msgstr "Nombre de tâches en attente"
 #, fuzzy
 msgid "Number of ping probes"
 msgstr "Nombre de problèmes"
+
+#, fuzzy
+msgid "Number of placement groups"
+msgstr "Nombre de groupes de règles"
 
 msgid "Number of positive responses required for OK state"
 msgstr "Nombre de réponses positives requises pour l'état OK"
@@ -50538,9 +50558,6 @@ msgstr "OO/Notif"
 msgid "OO/Service"
 msgstr "OO/Service"
 
-msgid "OPERATOR"
-msgstr ""
-
 msgid ""
 "OPPROCS: The number of applications that are currently connected to the "
 "queue to put messages on the queue."
@@ -50679,10 +50696,6 @@ msgstr ""
 
 msgid "Older events"
 msgstr "Événements plus anciens"
-
-#, fuzzy
-msgid "Oldest Message Age"
-msgstr "Âge du message le plus ancien"
 
 #, fuzzy
 msgid "Oldest RMAN backups"
@@ -51423,6 +51436,10 @@ msgstr "Opérations par seconde"
 #, fuzzy
 msgid "Operations states"
 msgstr "États d'opérations"
+
+#, fuzzy
+msgid "Operator"
+msgstr "Opération"
 
 #, fuzzy
 msgid "Opsgenie parameters"
@@ -53341,6 +53358,10 @@ msgstr ""
 msgid "PGs Stale + Active + Clean"
 msgstr ""
 
+#, fuzzy
+msgid "PGs Stale + Active + Undersized"
+msgstr "Activation nécessaire"
+
 msgid "PGs Stale + Active + Undersized + Degraded"
 msgstr ""
 
@@ -53348,9 +53369,6 @@ msgid "PGs Stale + Undersized + Degraded + Peered"
 msgstr ""
 
 msgid "PGs Stale + Undersized + Peered"
-msgstr ""
-
-msgid "PGs Stale+active + Undersized"
 msgstr ""
 
 msgid "PGs Undersized + Degraded + Peered"
@@ -53449,6 +53467,22 @@ msgstr "PSU (Châssis/Baie)"
 #, fuzzy
 msgid "PSU capacity levels"
 msgstr "Niveaux de capacité des PSU"
+
+#, fuzzy
+msgid "PSU input current"
+msgstr "Comptage des entrées ouvertes"
+
+#, fuzzy
+msgid "PSU input power"
+msgstr "Puissance d'entrée"
+
+#, fuzzy
+msgid "PSU input voltage"
+msgstr "Tension électrique"
+
+#, fuzzy
+msgid "PSU output power"
+msgstr "Puissance de sortie"
 
 msgid "PUBLISH messages received"
 msgstr "Messages PUBLISH reçus"
@@ -68294,7 +68328,7 @@ msgid "States of Juniper alarms"
 msgstr "Début de l'année prochaine"
 
 #, fuzzy
-msgid "States of Nutanix Host"
+msgid "States of Nutanix host"
 msgstr "État d'un hôte"
 
 msgid "States other than the above"
@@ -69991,6 +70025,14 @@ msgstr "Teltonika-TRB140"
 
 msgid "Temperature"
 msgstr "Température"
+
+#, fuzzy
+msgid "Temperature (average)"
+msgstr "Alerte de température"
+
+#, fuzzy
+msgid "Temperature (maximum)"
+msgstr "Unité de température"
 
 msgid "Temperature Alert"
 msgstr "Alerte de température"
@@ -72068,10 +72110,6 @@ msgstr "L'identifiant n'existe pas"
 
 #, fuzzy
 msgid "The credentials for API calls with authentication."
-msgstr ""
-"Les informations d'identification pour les appels api avec authentification."
-
-msgid "The credentials for api calls with authentication."
 msgstr ""
 "Les informations d'identification pour les appels api avec authentification."
 
@@ -79481,14 +79519,6 @@ msgstr ""
 "surveillance nécessaires de ce fichier."
 
 msgid ""
-"This rule selects the Agent IPMI Sensors instead of the normal Checkmk Agent "
-"which collects the data through the FreeIPMI resp. IPMItool command"
-msgstr ""
-"Cette règle sélectionne l'agent IPMI Sensors au lieu de l'agent Checkmk "
-"normal qui collecte les données par le biais de la commande FreeIPMI resp. "
-"IPMItool"
-
-msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
 "about configuration and connection status information."
 msgstr ""
@@ -79514,9 +79544,10 @@ msgstr ""
 "Vous pouvez configurer vos paramètres de connexion et les valeurs à "
 "récupérer ici."
 
+#, fuzzy
 msgid ""
 "This rule selects the UCS Bladecenter agent instead of the normal Checkmk "
-"Agent which collects the data through the UCS Bladecenter Web API"
+"agent which collects the data through the UCS Bladecenter Web API"
 msgstr ""
 "Cette règle sélectionne l'agent UCS Bladecenter au lieu de l'agent Checkmk "
 "normal qui collecte les données par l'intermédiaire de l'API Web UCS "
@@ -79529,6 +79560,15 @@ msgid ""
 msgstr ""
 "Cette règle sélectionne l'agent HP MSA au lieu de l'agent Checkmk normal qui "
 "collecte les données via l'interface web HP MSA"
+
+#, fuzzy
+msgid ""
+"This rule selects the agent IPMI Sensors instead of the normal Checkmk agent "
+"which collects the data through the FreeIPMI resp. IPMItool command"
+msgstr ""
+"Cette règle sélectionne l'agent IPMI Sensors au lieu de l'agent Checkmk "
+"normal qui collecte les données par le biais de la commande FreeIPMI resp. "
+"IPMItool"
 
 msgid "This rule selects the special agent for Salesforce."
 msgstr "Cette règle sélectionne l'agent spécial pour Salesforce."
@@ -85800,9 +85840,6 @@ msgstr ""
 
 msgid "URL:"
 msgstr "URL :"
-
-msgid "USER"
-msgstr ""
 
 #, fuzzy
 msgid "USrv - Allocation latency"
@@ -98682,10 +98719,6 @@ msgid "Type to search..."
 msgstr "Index à rechercher"
 
 #, fuzzy
-msgid "Operator"
-msgstr "Opération"
-
-#, fuzzy
 msgid "Select label..."
 msgstr "Sélectionnez le fichier"
 
@@ -103090,6 +103123,15 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Oldest Message Age"
+#~ msgstr "Âge du message le plus ancien"
+
+#~ msgid "The credentials for api calls with authentication."
+#~ msgstr ""
+#~ "Les informations d'identification pour les appels api avec "
+#~ "authentification."
 
 #~ msgid "Automatic Updates"
 #~ msgstr "Mises à jour automatiques"

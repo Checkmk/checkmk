@@ -2915,12 +2915,6 @@ msgstr "Certificate ACME"
 msgid "ACTIVE"
 msgstr "ACTIVE"
 
-msgid "ADMIN"
-msgstr ""
-
-msgid "ADMINISTRATOR"
-msgstr ""
-
 msgid "AES-128"
 msgstr "AES-128"
 
@@ -7618,10 +7612,6 @@ msgstr "Regula de gestionare a alertelor"
 msgid "Apply & test notification rule"
 msgstr "Ștergeți această regulă de notificare"
 
-#, fuzzy
-msgid "Apply Latency"
-msgstr "Latență"
-
 msgid "Apply OMD config changes"
 msgstr "Aplicați modificările de configurare OMD"
 
@@ -7666,6 +7656,10 @@ msgid "Apply lag: state in case the apply lag is not known"
 msgstr ""
 "Aplicați lag: Se menționează în cazul în care nu se cunoaște decalajul de "
 "aplicare"
+
+#, fuzzy
+msgid "Apply latency"
+msgstr "Latență"
 
 msgid "Apply logwatch patterns"
 msgstr "Aplicați modelele logwatch"
@@ -11922,9 +11916,6 @@ msgstr "Moduri de port CA"
 msgid "CAA - Incomplete calls"
 msgstr "CAA - Apeluri incomplete"
 
-msgid "CALLBACK"
-msgstr ""
-
 msgid "CARA"
 msgstr "CARA"
 
@@ -12212,6 +12203,14 @@ msgstr "Utilizare CPU"
 
 msgid "CPU utilization & Kernel performance"
 msgstr "Utilizarea procesorului și performanța nucleului"
+
+#, fuzzy
+msgid "CPU utilization (5 min avg)"
+msgstr "Utilizare CPU (medie)"
+
+#, fuzzy
+msgid "CPU utilization (5 sec avg)"
+msgstr "Utilizare CPU (medie)"
 
 msgid "CPU utilization (50th percentile)"
 msgstr "Utilizare CPU (percentila 50)"
@@ -12539,6 +12538,9 @@ msgstr "Se apelează cu următorii parametri:"
 
 msgid "Call with the following parameters:"
 msgstr "Se apelează cu următorii parametri:"
+
+msgid "Callback"
+msgstr ""
 
 msgid "Caller ID"
 msgstr "Identificarea apelantului"
@@ -14714,13 +14716,16 @@ msgstr "Utilizarea memoriei Cisco Nexus Supervisor"
 msgid "Cisco Prime"
 msgstr "Cisco Prime"
 
-msgid "Cisco Prime WLAN Controller Access Points"
+#, fuzzy
+msgid "Cisco Prime WLAN controller access points"
 msgstr "Puncte de acces Cisco Prime WLAN Controller"
 
-msgid "Cisco Prime WLAN Controller Clients"
+#, fuzzy
+msgid "Cisco Prime WLAN controller clients"
 msgstr "Clienți ai controlerului Cisco Prime WLAN"
 
-msgid "Cisco Prime WLAN Controller Last Backup"
+#, fuzzy
+msgid "Cisco Prime WLAN controller last backup"
 msgstr "Ultima copie de rezervă a controlerului Cisco Prime WLAN"
 
 #, fuzzy
@@ -14789,11 +14794,11 @@ msgid "Citrix NetScaler SSL certificates"
 msgstr "Certificate SSL Citrix Netscaler"
 
 #, fuzzy
-msgid "Citrix NetScaler load balancer TCP connections"
+msgid "Citrix NetScaler load balancer HA"
 msgstr "Conexiuni TCP ale Loadbalancerului Citrix Netscaler Loadbalancer"
 
 #, fuzzy
-msgid "Citrix Netscaler load balancer HA"
+msgid "Citrix NetScaler load balancer TCP connections"
 msgstr "Conexiuni TCP ale Loadbalancerului Citrix Netscaler Loadbalancer"
 
 msgid "Citrix VM state"
@@ -15601,7 +15606,7 @@ msgid "Comments of service"
 msgstr "Comentarii de serviciu"
 
 #, fuzzy
-msgid "Commit Latency"
+msgid "Commit latency"
 msgstr "Latență de scriere"
 
 msgid "Commit limit"
@@ -20357,11 +20362,11 @@ msgstr ""
 "în meniul lucrărilor din Splunk. De asemenea, puteți interoga starea de "
 "sănătate a componentelor și alertele declanșate."
 
-#, fuzzy
-msgid "Degraded Objects"
+msgid "Degraded hosts"
 msgstr "Gazde degradate"
 
-msgid "Degraded hosts"
+#, fuzzy
+msgid "Degraded objects"
 msgstr "Gazde degradate"
 
 msgid "Degree Celsius"
@@ -23699,7 +23704,8 @@ msgstr "Șofer"
 msgid "Driver date"
 msgstr "Șofer Data"
 
-msgid "Driver type to use instead of doing an auto selection"
+#, fuzzy
+msgid "Driver type to use instead of doing an auto-selection"
 msgstr ""
 "Tipul de șofer care trebuie utilizat în loc să se facă o selecție automată"
 
@@ -27051,6 +27057,17 @@ msgstr "Grupuri F5 Loadbalancer"
 #, fuzzy
 msgid "F5 load balancer source NAT"
 msgstr "F5 Loadbalancer Source NAT"
+
+#, fuzzy
+msgid "F5OS CPU utilization averages"
+msgstr "Utilizare CPU (medie)"
+
+msgid "F5OS PSU power"
+msgstr ""
+
+#, fuzzy
+msgid "F5OS platform temperature"
+msgstr "Temperatura bateriei"
 
 msgid "FAULTED"
 msgstr "DEFECȚIUNE"
@@ -34084,6 +34101,10 @@ msgid "Hyperthreads per CPU"
 msgstr "Hyperthread-uri per CPU"
 
 #, fuzzy
+msgid "I/O bandwidth"
+msgstr "IO Bandwith"
+
+#, fuzzy
 msgid "I/O database reads (attached) average latency"
 msgstr "Citiri ale bazei de date I/O (atașate) Latență medie"
 
@@ -34292,9 +34313,6 @@ msgstr "STARTTLS"
 msgid "INFO"
 msgstr ""
 
-msgid "IO Bandwith"
-msgstr "IO Bandwith"
-
 msgid "IOPS"
 msgstr "IOPS"
 
@@ -34446,19 +34464,6 @@ msgstr "Semafoare IPC"
 msgid "IPMI"
 msgstr "IPMI"
 
-msgid "IPMI Interface"
-msgstr "Interfața IPMI"
-
-msgid ""
-"IPMI Interface to be used. If not specified, the default interface as set at "
-"compile time will be used."
-msgstr ""
-"Interfața IPMI care urmează să fie utilizată. Dacă nu este specificată, se "
-"va utiliza interfața implicită, așa cum este setată în momentul compilării."
-
-msgid "IPMI Sensors via Freeipmi or IPMItool"
-msgstr "Senzori IPMI prin Freeipmi sau IPMItool"
-
 msgid "IPMI credentials"
 msgstr "Acreditive IPMI"
 
@@ -34469,6 +34474,18 @@ msgid "IPMI driver type"
 msgstr "Tipul de driver IPMI"
 
 #, fuzzy
+msgid "IPMI interface"
+msgstr "Interfața IPMI"
+
+#, fuzzy
+msgid ""
+"IPMI interface to be used. If not specified, the default interface as set at "
+"compile time will be used."
+msgstr ""
+"Interfața IPMI care urmează să fie utilizată. Dacă nu este specificată, se "
+"va utiliza interfața implicită, așa cum este setată în momentul compilării."
+
+#, fuzzy
 msgid "IPMI management board"
 msgstr "Consiliul de administrație al IPMI"
 
@@ -34477,6 +34494,10 @@ msgstr "Descoperirea senzorilor IPMI"
 
 msgid "IPMI sensors"
 msgstr "Senzori IPMI"
+
+#, fuzzy
+msgid "IPMI sensors via Freeipmi or IPMItool"
+msgstr "Senzori IPMI prin Freeipmi sau IPMItool"
 
 #, fuzzy
 msgid ""
@@ -45449,7 +45470,7 @@ msgid "Miscellaneous"
 msgstr "Diverse"
 
 #, fuzzy
-msgid "Misplaced Objects"
+msgid "Misplaced objects"
 msgstr "Obiecte gestionate"
 
 msgid "Misscheduled duration (DaemonSet only)"
@@ -45806,7 +45827,7 @@ msgid "Monitor (min. 1)"
 msgstr "Monitorizare"
 
 #, fuzzy
-msgid "Monitor Acropolis State"
+msgid "Monitor Acropolis state"
 msgstr "Starea de monitorizare"
 
 msgid "Monitor Android devices"
@@ -49323,10 +49344,6 @@ msgid "Number of OS threads created"
 msgstr "Numărul de fire"
 
 #, fuzzy
-msgid "Number of Placement Groups"
-msgstr "Numărul de grupuri de reguli"
-
-#, fuzzy
 msgid "Number of Podman containers"
 msgstr "Numărul de containere"
 
@@ -49768,6 +49785,10 @@ msgstr "Numărul de sarcini în așteptare"
 #, fuzzy
 msgid "Number of ping probes"
 msgstr "Numărul de probleme"
+
+#, fuzzy
+msgid "Number of placement groups"
+msgstr "Numărul de grupuri de reguli"
 
 msgid "Number of positive responses required for OK state"
 msgstr "Numărul de răspunsuri pozitive necesare pentru statul OK"
@@ -50286,9 +50307,6 @@ msgstr "OO/Notif"
 msgid "OO/Service"
 msgstr "OO/Serviciu"
 
-msgid "OPERATOR"
-msgstr ""
-
 msgid ""
 "OPPROCS: The number of applications that are currently connected to the "
 "queue to put messages on the queue."
@@ -50422,10 +50440,6 @@ msgstr ""
 
 msgid "Older events"
 msgstr "Evenimente mai vechi"
-
-#, fuzzy
-msgid "Oldest Message Age"
-msgstr "Vârsta celui mai vechi mesaj"
 
 #, fuzzy
 msgid "Oldest RMAN backups"
@@ -51171,6 +51185,10 @@ msgstr "Operațiuni pe secundă"
 #, fuzzy
 msgid "Operations states"
 msgstr "Operațiuni Statele"
+
+#, fuzzy
+msgid "Operator"
+msgstr "Operațiunea"
 
 #, fuzzy
 msgid "Opsgenie parameters"
@@ -53076,6 +53094,10 @@ msgstr ""
 msgid "PGs Stale + Active + Clean"
 msgstr ""
 
+#, fuzzy
+msgid "PGs Stale + Active + Undersized"
+msgstr "Activare necesară"
+
 msgid "PGs Stale + Active + Undersized + Degraded"
 msgstr ""
 
@@ -53083,9 +53105,6 @@ msgid "PGs Stale + Undersized + Degraded + Peered"
 msgstr ""
 
 msgid "PGs Stale + Undersized + Peered"
-msgstr ""
-
-msgid "PGs Stale+active + Undersized"
 msgstr ""
 
 msgid "PGs Undersized + Degraded + Peered"
@@ -53183,6 +53202,22 @@ msgstr "Sursă de alimentare (șasiu/bază)"
 #, fuzzy
 msgid "PSU capacity levels"
 msgstr "Nivele de capacitate PSU"
+
+#, fuzzy
+msgid "PSU input current"
+msgstr "Numărătoarea de intrare deschisă"
+
+#, fuzzy
+msgid "PSU input power"
+msgstr "Putere de intrare"
+
+#, fuzzy
+msgid "PSU input voltage"
+msgstr "Tensiune electrică"
+
+#, fuzzy
+msgid "PSU output power"
+msgstr "Puterea de ieșire"
 
 msgid "PUBLISH messages received"
 msgstr "Mesaje PUBLISH primite"
@@ -67983,7 +68018,7 @@ msgid "States of Juniper alarms"
 msgstr "Începutul anului viitor"
 
 #, fuzzy
-msgid "States of Nutanix Host"
+msgid "States of Nutanix host"
 msgstr "Starea unei gazde"
 
 msgid "States other than the above"
@@ -69654,6 +69689,14 @@ msgstr "Teltonika-TRB140"
 
 msgid "Temperature"
 msgstr "Temperatura"
+
+#, fuzzy
+msgid "Temperature (average)"
+msgstr "Alertă de temperatură"
+
+#, fuzzy
+msgid "Temperature (maximum)"
+msgstr "Unitatea de temperatură"
 
 msgid "Temperature Alert"
 msgstr "Alertă de temperatură"
@@ -71708,9 +71751,6 @@ msgstr "Acreditivul nu există"
 
 #, fuzzy
 msgid "The credentials for API calls with authentication."
-msgstr "Datele de identificare pentru apelurile api cu autentificare."
-
-msgid "The credentials for api calls with authentication."
 msgstr "Datele de identificare pentru apelurile api cu autentificare."
 
 msgid ""
@@ -79137,14 +79177,6 @@ msgstr ""
 "monitorizare necesare din acest fișier."
 
 msgid ""
-"This rule selects the Agent IPMI Sensors instead of the normal Checkmk Agent "
-"which collects the data through the FreeIPMI resp. IPMItool command"
-msgstr ""
-"Această regulă selectează agentul IPMI Sensors în locul agentului Checkmk "
-"normal, care colectează datele prin intermediul comenzii FreeIPMI sau "
-"IPMItool."
-
-msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
 "about configuration and connection status information."
 msgstr ""
@@ -79169,9 +79201,10 @@ msgstr ""
 "normal și permite monitorizarea Siemens PLC utilizând Snap7 API. Puteți "
 "configura aici setările de conectare și valorile de preluat."
 
+#, fuzzy
 msgid ""
 "This rule selects the UCS Bladecenter agent instead of the normal Checkmk "
-"Agent which collects the data through the UCS Bladecenter Web API"
+"agent which collects the data through the UCS Bladecenter Web API"
 msgstr ""
 "Această regulă selectează agentul UCS Bladecenter în locul agentului Checkmk "
 "normal, care colectează datele prin intermediul UCS Bladecenter Web API"
@@ -79183,6 +79216,15 @@ msgid ""
 msgstr ""
 "Această regulă selectează agentul HP MSA în locul agentului Checkmk normal "
 "care colectează datele prin interfața web HP MSA."
+
+#, fuzzy
+msgid ""
+"This rule selects the agent IPMI Sensors instead of the normal Checkmk agent "
+"which collects the data through the FreeIPMI resp. IPMItool command"
+msgstr ""
+"Această regulă selectează agentul IPMI Sensors în locul agentului Checkmk "
+"normal, care colectează datele prin intermediul comenzii FreeIPMI sau "
+"IPMItool."
 
 msgid "This rule selects the special agent for Salesforce."
 msgstr "Această regulă selectează agentul special pentru Salesforce."
@@ -85365,9 +85407,6 @@ msgstr ""
 
 msgid "URL:"
 msgstr "URL:"
-
-msgid "USER"
-msgstr ""
 
 #, fuzzy
 msgid "USrv - Allocation latency"
@@ -98120,10 +98159,6 @@ msgid "Type to search..."
 msgstr "Indicii de căutare"
 
 #, fuzzy
-msgid "Operator"
-msgstr "Operațiunea"
-
-#, fuzzy
 msgid "Select label..."
 msgstr "Selectați fișierul"
 
@@ -102544,6 +102579,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Oldest Message Age"
+#~ msgstr "Vârsta celui mai vechi mesaj"
+
+#~ msgid "The credentials for api calls with authentication."
+#~ msgstr "Datele de identificare pentru apelurile api cu autentificare."
 
 #~ msgid "Automatic Updates"
 #~ msgstr "Actualizări automate"

@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-08-17 15:01+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
@@ -2866,12 +2866,6 @@ msgstr "ACME 証明書"
 msgid "ACTIVE"
 msgstr "アクティブ"
 
-msgid "ADMIN"
-msgstr "ADMIN"
-
-msgid "ADMINISTRATOR"
-msgstr "ADMINISTRATOR"
-
 msgid "AES-128"
 msgstr "AES-128"
 
@@ -3692,8 +3686,8 @@ msgid ""
 "Account names on Windows, user or group names - or numeric IDs - on Linux "
 "and UNIX."
 msgstr ""
-"Windowsでのアカウント名、LinuxおよびUnixでのユーザー名やグループ名、数値のID"
-"。"
+"Windowsでのアカウント名、LinuxおよびUnixでのユーザー名やグループ名、数値の"
+"ID。"
 
 msgid "Accounts display name"
 msgstr "アカウント表示名"
@@ -7385,9 +7379,6 @@ msgstr "別のルールを適用・作成する"
 msgid "Apply & test notification rule"
 msgstr "通知ルールの適用とテスト"
 
-msgid "Apply Latency"
-msgstr "レイテンシーの適用"
-
 msgid "Apply OMD config changes"
 msgstr "OMDの設定変更を適用する"
 
@@ -7430,6 +7421,10 @@ msgstr "ラグの適用: 最小時間"
 #, fuzzy
 msgid "Apply lag: state in case the apply lag is not known"
 msgstr "Apply lag: アプライラグが不明な場合の状態"
+
+#, fuzzy
+msgid "Apply latency"
+msgstr "レイテンシーの適用"
 
 msgid "Apply logwatch patterns"
 msgstr "ログウォッチパターンを適用する"
@@ -11447,9 +11442,6 @@ msgstr "CAポートモード"
 msgid "CAA - Incomplete calls"
 msgstr "CAA - 不完全な呼び出し"
 
-msgid "CALLBACK"
-msgstr "CALLBACK"
-
 msgid "CARA"
 msgstr "CARA"
 
@@ -11714,6 +11706,14 @@ msgstr "CPU利用率%"
 
 msgid "CPU utilization & Kernel performance"
 msgstr "CPU利用率とカーネルパフォーマンス"
+
+#, fuzzy
+msgid "CPU utilization (5 min avg)"
+msgstr "CPU利用率(平均)"
+
+#, fuzzy
+msgid "CPU utilization (5 sec avg)"
+msgstr "CPU利用率(平均)"
 
 msgid "CPU utilization (50th percentile)"
 msgstr "CPU利用率(50パーセンタイル)"
@@ -12022,6 +12022,9 @@ msgstr "次のパラメータを使用して呼び出す"
 
 msgid "Call with the following parameters:"
 msgstr "次のパラメータを使用して呼び出します。"
+
+msgid "Callback"
+msgstr ""
 
 msgid "Caller ID"
 msgstr "発信者ID"
@@ -14144,13 +14147,16 @@ msgstr "Cisco Nexusスーパーバイザのメモリ使用量"
 msgid "Cisco Prime"
 msgstr "Cisco Prime"
 
-msgid "Cisco Prime WLAN Controller Access Points"
+#, fuzzy
+msgid "Cisco Prime WLAN controller access points"
 msgstr "Cisco Prime WLAN コントローラーアクセスポイント"
 
-msgid "Cisco Prime WLAN Controller Clients"
+#, fuzzy
+msgid "Cisco Prime WLAN controller clients"
 msgstr "Cisco Prime WLANコントローラークライアント"
 
-msgid "Cisco Prime WLAN Controller Last Backup"
+#, fuzzy
+msgid "Cisco Prime WLAN controller last backup"
 msgstr "Cisco Prime WLAN Controllerの最終バックアップ"
 
 #, fuzzy
@@ -14217,11 +14223,11 @@ msgid "Citrix NetScaler SSL certificates"
 msgstr "Citrix Netscaler SSL証明書"
 
 #, fuzzy
-msgid "Citrix NetScaler load balancer TCP connections"
+msgid "Citrix NetScaler load balancer HA"
 msgstr "Citrix Netscaler Loadbalancer TCP接続"
 
 #, fuzzy
-msgid "Citrix Netscaler load balancer HA"
+msgid "Citrix NetScaler load balancer TCP connections"
 msgstr "Citrix Netscaler Loadbalancer TCP接続"
 
 msgid "Citrix VM state"
@@ -15019,7 +15025,8 @@ msgstr "ホストのコメント"
 msgid "Comments of service"
 msgstr "サービスのコメント"
 
-msgid "Commit Latency"
+#, fuzzy
+msgid "Commit latency"
 msgstr "コミットレイテンシ"
 
 msgid "Commit limit"
@@ -19644,11 +19651,12 @@ msgstr ""
 "状態と使用状況、Splunkシステムメッセージ、Splunkジョブをクエリすることを選択"
 "できます。コンポーネントの状態と発生したアラートを照会することもできます。"
 
-msgid "Degraded Objects"
-msgstr "デグレードしたオブジェクト"
-
 msgid "Degraded hosts"
 msgstr "デグレードしたホスト"
+
+#, fuzzy
+msgid "Degraded objects"
+msgstr "デグレードしたオブジェクト"
 
 msgid "Degree Celsius"
 msgstr "摂氏"
@@ -22740,7 +22748,8 @@ msgstr "ドライバ"
 msgid "Driver date"
 msgstr "ドライバ日付"
 
-msgid "Driver type to use instead of doing an auto selection"
+#, fuzzy
+msgid "Driver type to use instead of doing an auto-selection"
 msgstr "自動選択せずに使用するドライバの種類"
 
 msgid "Driver version"
@@ -26020,6 +26029,17 @@ msgstr "F5ロードバランサープール"
 msgid "F5 load balancer source NAT"
 msgstr "F5ロードバランサーソースNAT"
 
+#, fuzzy
+msgid "F5OS CPU utilization averages"
+msgstr "CPU利用率(平均)"
+
+msgid "F5OS PSU power"
+msgstr ""
+
+#, fuzzy
+msgid "F5OS platform temperature"
+msgstr "バッテリー温度"
+
 msgid "FAULTED"
 msgstr "故障"
 
@@ -27620,24 +27640,23 @@ msgid ""
 "with the check enabled you may allow specific groups and/or users to have "
 "write access to the Oracle client files."
 msgstr ""
-"セキュリティ上の理由から、プラグインは読み込もうとしているOracle"
-"クライアントファイルの許可をチェックします。これは、管理者ユーザーとしてこれ"
-"らのファイルを読み込むと、そのファイルを作成したユーザーの許可で実行されてし"
-"まうためです。Oracleインストール環境の外からファイルが変更可能な場合、"
-"プラグインはプロセスを停止し、Oracleの監視機能が停止します。 Windows では、"
-"クライアントファイルへの書き込み権限は、特権アカウント（SYSTEM、ローカルの "
-"Administrators グループ、Domain Admins および Enterprise Admins）にのみ付与さ"
-"れる必要があります。Linux および Unix では、クライアントライブラリ、その"
-"ディレクトリとそれらの親ディレクトリへの書き込み権限は、 <tt>root</tt>、また"
-"は従来の Oracle 所有者であるユーザー <tt>oracle</tt>およびグループ <tt>"
-"oinstall</tt>にのみ付与される必要があります。したがって、標準的なインストール"
-"環境では変更なしで動作します。その他のアカウントやグループで管理されている "
-"Oracle ソフトウェアについては、以下で明示的に許可する必要があります。 Oracle "
-"データベースの監視を継続する唯一の手段である場合（通常、許可を修正できず、監"
-"視専用のアカウントも使用できない場合など）、オプションを <tt>無効</tt>にする"
-"ことができます。このチェックが有効になっている場合でも、特定のグループや"
-"ユーザーに対して Oracle クライアントファイルへの書き込みアクセスを許可するこ"
-"とは可能です。"
+"セキュリティ上の理由から、プラグインは読み込もうとしているOracleクライアント"
+"ファイルの許可をチェックします。これは、管理者ユーザーとしてこれらのファイル"
+"を読み込むと、そのファイルを作成したユーザーの許可で実行されてしまうためで"
+"す。Oracleインストール環境の外からファイルが変更可能な場合、プラグインはプロ"
+"セスを停止し、Oracleの監視機能が停止します。 Windows では、クライアントファイ"
+"ルへの書き込み権限は、特権アカウント（SYSTEM、ローカルの Administrators グ"
+"ループ、Domain Admins および Enterprise Admins）にのみ付与される必要がありま"
+"す。Linux および Unix では、クライアントライブラリ、そのディレクトリとそれら"
+"の親ディレクトリへの書き込み権限は、 <tt>root</tt>、または従来の Oracle 所有"
+"者であるユーザー <tt>oracle</tt>およびグループ <tt>oinstall</tt>にのみ付与さ"
+"れる必要があります。したがって、標準的なインストール環境では変更なしで動作し"
+"ます。その他のアカウントやグループで管理されている Oracle ソフトウェアについ"
+"ては、以下で明示的に許可する必要があります。 Oracle データベースの監視を継続"
+"する唯一の手段である場合（通常、許可を修正できず、監視専用のアカウントも使用"
+"できない場合など）、オプションを <tt>無効</tt>にすることができます。この"
+"チェックが有効になっている場合でも、特定のグループやユーザーに対して Oracle "
+"クライアントファイルへの書き込みアクセスを許可することは可能です。"
 
 msgid ""
 "For security reasons, RCC normally requires a non-root installation. Enable "
@@ -32583,6 +32602,10 @@ msgstr "OMDモニタリングコア"
 msgid "Hyperthreads per CPU"
 msgstr "CPUあたりのハイパースレッド"
 
+#, fuzzy
+msgid "I/O bandwidth"
+msgstr "IO帯域幅"
+
 msgid "I/O database reads (attached) average latency"
 msgstr "I/Oデータベースの読み取り(添付)平均レイテンシ"
 
@@ -32780,9 +32803,6 @@ msgstr "STARTTLS"
 msgid "INFO"
 msgstr "INFO"
 
-msgid "IO Bandwith"
-msgstr "IO帯域幅"
-
 msgid "IOPS"
 msgstr "IOPS"
 
@@ -32924,19 +32944,6 @@ msgstr "IPCセマフォ"
 msgid "IPMI"
 msgstr "IPMI"
 
-msgid "IPMI Interface"
-msgstr "IPMI インターフェース"
-
-msgid ""
-"IPMI Interface to be used. If not specified, the default interface as set at "
-"compile time will be used."
-msgstr ""
-"使用する IPMI インターフェース。指定しない場合は、コンパイル時に設定されたデ"
-"フォルトのインターフェイスが使用されます。"
-
-msgid "IPMI Sensors via Freeipmi or IPMItool"
-msgstr "FreeipmiまたはIPMItoolを介したIPMIセンサー"
-
 msgid "IPMI credentials"
 msgstr "IPMI資格情報"
 
@@ -32947,6 +32954,18 @@ msgid "IPMI driver type"
 msgstr "IPMIドライバタイプ"
 
 #, fuzzy
+msgid "IPMI interface"
+msgstr "IPMI インターフェース"
+
+#, fuzzy
+msgid ""
+"IPMI interface to be used. If not specified, the default interface as set at "
+"compile time will be used."
+msgstr ""
+"使用する IPMI インターフェース。指定しない場合は、コンパイル時に設定されたデ"
+"フォルトのインターフェイスが使用されます。"
+
+#, fuzzy
 msgid "IPMI management board"
 msgstr "IPMIマネージメントボード"
 
@@ -32955,6 +32974,10 @@ msgstr "IPMIセンサーの発見"
 
 msgid "IPMI sensors"
 msgstr "IPMIセンサー"
+
+#, fuzzy
+msgid "IPMI sensors via Freeipmi or IPMItool"
+msgstr "FreeipmiまたはIPMItoolを介したIPMIセンサー"
 
 #, fuzzy
 msgid ""
@@ -43555,7 +43578,8 @@ msgstr "Misc"
 msgid "Miscellaneous"
 msgstr "その他"
 
-msgid "Misplaced Objects"
+#, fuzzy
+msgid "Misplaced objects"
 msgstr "置き忘れたもの"
 
 msgid "Misscheduled duration (DaemonSet only)"
@@ -43909,7 +43933,8 @@ msgstr "レーンの監視とグラフ化"
 msgid "Monitor (min. 1)"
 msgstr "監視（最小1）"
 
-msgid "Monitor Acropolis State"
+#, fuzzy
+msgid "Monitor Acropolis state"
 msgstr "アクロポリス州の監視含めて"
 
 msgid "Monitor Android devices"
@@ -47222,9 +47247,6 @@ msgstr "OKノードの数"
 msgid "Number of OS threads created"
 msgstr "作成されたOSスレッド数"
 
-msgid "Number of Placement Groups"
-msgstr "配置グループの数"
-
 #, fuzzy
 msgid "Number of Podman containers"
 msgstr "コンテナの数"
@@ -47649,6 +47671,10 @@ msgstr "保留中のタスク数"
 #, fuzzy
 msgid "Number of ping probes"
 msgstr "問題の数"
+
+#, fuzzy
+msgid "Number of placement groups"
+msgstr "配置グループの数"
 
 msgid "Number of positive responses required for OK state"
 msgstr "OK状態に必要な肯定的な応答数"
@@ -48142,9 +48168,6 @@ msgstr "OO/Notif"
 msgid "OO/Service"
 msgstr "OO/サービス"
 
-msgid "OPERATOR"
-msgstr "OPERATOR"
-
 msgid ""
 "OPPROCS: The number of applications that are currently connected to the "
 "queue to put messages on the queue."
@@ -48275,10 +48298,6 @@ msgstr ""
 
 msgid "Older events"
 msgstr "古いイベント"
-
-#, fuzzy
-msgid "Oldest Message Age"
-msgstr "最も古いメッセージ経過時間"
 
 #, fuzzy
 msgid "Oldest RMAN backups"
@@ -49009,6 +49028,10 @@ msgstr "1秒あたりの操作数"
 #, fuzzy
 msgid "Operations states"
 msgstr "運用状態"
+
+#, fuzzy
+msgid "Operator"
+msgstr "操作"
 
 msgid "Opsgenie parameters"
 msgstr "Opsgenie パラメータ"
@@ -50735,6 +50758,10 @@ msgstr "PGs Remapped + Peering"
 msgid "PGs Stale + Active + Clean"
 msgstr "PGs Stale + Active + Clean"
 
+#, fuzzy
+msgid "PGs Stale + Active + Undersized"
+msgstr "PGs Stale+active + Undersized"
+
 msgid "PGs Stale + Active + Undersized + Degraded"
 msgstr "PGs Stale + Active + Undersized + Degraded"
 
@@ -50743,9 +50770,6 @@ msgstr "PGs Stale + Undersized + Degraded + Peered"
 
 msgid "PGs Stale + Undersized + Peered"
 msgstr "PGs Stale + Undersized + Peered"
-
-msgid "PGs Stale+active + Undersized"
-msgstr "PGs Stale+active + Undersized"
 
 msgid "PGs Undersized + Degraded + Peered"
 msgstr "PGs Undersized + Degraded + Peered"
@@ -50840,6 +50864,22 @@ msgstr "PSU(シャーシ/ベイ)"
 
 msgid "PSU capacity levels"
 msgstr "PSU容量レベル"
+
+#, fuzzy
+msgid "PSU input current"
+msgstr "オープン入力カウント"
+
+#, fuzzy
+msgid "PSU input power"
+msgstr "入力電力"
+
+#, fuzzy
+msgid "PSU input voltage"
+msgstr "入力電圧"
+
+#, fuzzy
+msgid "PSU output power"
+msgstr "出力電力"
 
 msgid "PUBLISH messages received"
 msgstr "PUBLISHメッセージの受信"
@@ -64945,7 +64985,8 @@ msgstr "状態"
 msgid "States of Juniper alarms"
 msgstr "Juniper のアラームの状態"
 
-msgid "States of Nutanix Host"
+#, fuzzy
+msgid "States of Nutanix host"
 msgstr "Nutanixホストの状態"
 
 msgid "States other than the above"
@@ -66548,6 +66589,14 @@ msgstr "Teltonika-TRB140"
 
 msgid "Temperature"
 msgstr "温度"
+
+#, fuzzy
+msgid "Temperature (average)"
+msgstr "温度アラート"
+
+#, fuzzy
+msgid "Temperature (maximum)"
+msgstr "温度ユニット"
 
 msgid "Temperature Alert"
 msgstr "温度アラート"
@@ -68555,9 +68604,6 @@ msgstr "資格情報が存在しません"
 
 #, fuzzy
 msgid "The credentials for API calls with authentication."
-msgstr "認証付きのAPI呼び出しの資格情報。"
-
-msgid "The credentials for api calls with authentication."
 msgstr "認証付きのAPI呼び出しの資格情報。"
 
 msgid ""
@@ -75765,13 +75811,6 @@ msgstr ""
 "す。"
 
 msgid ""
-"This rule selects the Agent IPMI Sensors instead of the normal Checkmk Agent "
-"which collects the data through the FreeIPMI resp. IPMItool command"
-msgstr ""
-"このルールは、FreeIPMI respを介してデータを収集する通常のCheckmkエージェント"
-"の代わりに、Agent IPMIセンサーを選択します。IPMItoolコマンド"
-
-msgid ""
 "This rule selects the Fritz!Box agent, which uses UPNP to gather information "
 "about configuration and connection status information."
 msgstr ""
@@ -75796,9 +75835,10 @@ msgstr ""
 "択し、Snap7 APIを使用してSiemens PLCを監視できるようにします。ここでフェッチ"
 "する接続設定と値を構成できます。"
 
+#, fuzzy
 msgid ""
 "This rule selects the UCS Bladecenter agent instead of the normal Checkmk "
-"Agent which collects the data through the UCS Bladecenter Web API"
+"agent which collects the data through the UCS Bladecenter Web API"
 msgstr ""
 "このルールは、Checkmkエージェントの代わりにUCSBladecenterエージェントを選択し"
 "ます。UCS Bladecenter WebAPIを介してデータを収集します"
@@ -75810,6 +75850,14 @@ msgid ""
 msgstr ""
 "このルールは、HP MSAのWebインターフェイスを通じてデータを収集する通常の"
 "Checkmk Agentではなく、HP MSA Agentを選択します"
+
+#, fuzzy
+msgid ""
+"This rule selects the agent IPMI Sensors instead of the normal Checkmk agent "
+"which collects the data through the FreeIPMI resp. IPMItool command"
+msgstr ""
+"このルールは、FreeIPMI respを介してデータを収集する通常のCheckmkエージェント"
+"の代わりに、Agent IPMIセンサーを選択します。IPMItoolコマンド"
 
 msgid "This rule selects the special agent for Salesforce."
 msgstr "このルールは、Salesforceの特別なエージェントを選択します。"
@@ -81341,9 +81389,6 @@ msgstr ""
 
 msgid "URL:"
 msgstr "URL:"
-
-msgid "USER"
-msgstr "USER"
 
 msgid "USrv - Allocation latency"
 msgstr "USrv-割り当てレイテンシー"
@@ -93567,10 +93612,6 @@ msgid "Type to search..."
 msgstr "検索するインデックス"
 
 #, fuzzy
-msgid "Operator"
-msgstr "操作"
-
-#, fuzzy
 msgid "Select label..."
 msgstr "ファイルを選択"
 
@@ -97906,6 +97947,28 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "ADMIN"
+#~ msgstr "ADMIN"
+
+#~ msgid "ADMINISTRATOR"
+#~ msgstr "ADMINISTRATOR"
+
+#~ msgid "CALLBACK"
+#~ msgstr "CALLBACK"
+
+#~ msgid "OPERATOR"
+#~ msgstr "OPERATOR"
+
+#, fuzzy
+#~ msgid "Oldest Message Age"
+#~ msgstr "最も古いメッセージ経過時間"
+
+#~ msgid "The credentials for api calls with authentication."
+#~ msgstr "認証付きのAPI呼び出しの資格情報。"
+
+#~ msgid "USER"
+#~ msgstr "USER"
 
 #~ msgid "Automatic Updates"
 #~ msgstr "自動アップデート"

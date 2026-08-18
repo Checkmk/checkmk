@@ -644,6 +644,7 @@ class ModeBIPacks(ABCBIMode):
                         edit_url, _("Edit properties of this BI pack"), StaticIcon(IconNames.edit)
                     )
                     delete_url = make_confirm_delete_link(
+                        i18n=_,
                         url=makeactionuri(request, transactions.get(), [("_delete", pack.id)]),
                         title=_("Delete BI pack #%(nr)d") % {"nr": nr},
                         suffix=pack.title,
@@ -1095,6 +1096,7 @@ class ModeBIRules(ABCBIMode):
 
                     if refs == 0:
                         delete_url = make_confirm_delete_link(
+                            i18n=_,
                             url=makeactionuri_contextless(
                                 request,
                                 transactions.get(),
@@ -2492,6 +2494,7 @@ class BIModeAggregations(ABCBIMode):
 
                 if is_contact_for_pack(self.bi_pack):
                     delete_url = make_confirm_delete_link(
+                        i18n=_,
                         url=makeactionuri(
                             request, transactions.get(), [("_del_aggr", aggregation_id)]
                         ),

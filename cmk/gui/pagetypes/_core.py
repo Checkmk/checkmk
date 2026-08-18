@@ -703,6 +703,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
             confirm_message += "<br>" + _("Owner: %(owner)s") % {"owner": self.owner()}
 
         return make_confirm_delete_link(
+            i18n=_,
             url=makeactionuri(request, transactions.get(), add_vars),
             title=_("Delete %(title)s") % {"title": self.phrase("title").lower()},
             suffix=self.title(),

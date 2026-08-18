@@ -1851,6 +1851,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     icon_name=StaticIcon(IconNames.reload_cmk),
                     item=make_simple_link(
                         make_confirm_delete_link(
+                            i18n=_,
                             url=make_action_link(
                                 request,
                                 [("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")],
@@ -2022,6 +2023,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         rep_mode = replication_mode()
         if rep_mode in ["sync", "takeover"]:
             copy_url = make_confirm_delete_link(
+                i18n=_,
                 url=make_action_link(
                     request, [("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")]
                 ),
@@ -2111,6 +2113,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
                 if type_ == ec.RulePackType.internal:
                     delete_url = make_confirm_delete_link(
+                        i18n=_,
                         url=make_action_link(
                             request, [("mode", "mkeventd_rule_packs"), ("_delete", nr)]
                         ),
@@ -2568,6 +2571,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             for nr, rule in enumerate(rules):
                 table.row(css=["matches_search"] if rule in found_rules else [])
                 delete_url = make_confirm_delete_link(
+                    i18n=_,
                     url=make_action_link(
                         request,
                         [
@@ -3647,6 +3651,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 table.cell(_("Actions"), css=["buttons"])
                 if deletable:
                     delete_url = make_confirm_delete_link(
+                        i18n=_,
                         url=make_action_link(
                             request, [("mode", "mkeventd_mibs"), ("_delete", filename)]
                         ),

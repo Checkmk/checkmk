@@ -462,6 +462,7 @@ class ModeTags(ABCTagMode):
         )
 
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=make_action_link(request, [("mode", "tags"), ("_delete", tag_group.id)]),
             title=_("Delete tag group"),
             suffix=tag_group.title,
@@ -510,6 +511,7 @@ class ModeTags(ABCTagMode):
 
         edit_url = folder_preserving_link(request, [("mode", "edit_auxtag"), ("edit", aux_tag.id)])
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=make_action_link(request, [("mode", "tags"), ("_del_aux", aux_tag.id)]),
             title=_("Delete auxiliary tag"),
             suffix=aux_tag.title,

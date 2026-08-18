@@ -1553,6 +1553,7 @@ class ModeDistributedMonitoring(WatoMode):
         )
 
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=makeactionuri(
                 request, transactions.get(), [("_delete_connection_id", connection_id)]
             ),
@@ -1585,6 +1586,7 @@ class ModeDistributedMonitoring(WatoMode):
             html.empty_icon_button()
         else:
             delete_url = make_confirm_delete_link(
+                i18n=_,
                 url=makeactionuri(request, transactions.get(), [("_delete", site_id)]),
                 title=_("Delete connection to site"),
                 suffix=site.get("alias", ""),
@@ -1682,6 +1684,7 @@ class ModeDistributedMonitoring(WatoMode):
         if is_replication_enabled(site):
             if site.get("secret"):
                 logout_url = make_confirm_delete_link(
+                    i18n=_,
                     url=make_action_link(request, [("mode", "sites"), ("_logout", site_id)]),
                     title=_("Log out of site"),
                     suffix=site["alias"],

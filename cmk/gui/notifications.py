@@ -271,6 +271,7 @@ class ClearFailedNotificationPage(Page):
     ) -> PageMenu:
         confirm_url = make_simple_link(
             make_confirm_delete_link(
+                i18n=_,
                 url=makeactionuri(
                     request,
                     transactions.get(),

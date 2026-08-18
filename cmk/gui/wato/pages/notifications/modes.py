@@ -821,6 +821,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             if search := request.get_str_input("search", ""):
                 httpvars.append(("search", search))
             return make_confirm_delete_link(
+                i18n=_,
                 url=make_action_link(request, httpvars + back_mode),
                 title=_("Delete notification rule #%(nr)d") % {"nr": nr},
                 suffix=rule.get("description", ""),
@@ -856,6 +857,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             if search := request.get_str_input("search", ""):
                 httpvars.append(("search", search))
             return make_confirm_delete_link(
+                i18n=_,
                 url=folder_preserving_link(request, httpvars + back_mode),
                 title=_("Clone & edit notification rule #%(nr)d") % {"nr": nr},
                 suffix=rule.get("description", ""),
@@ -4543,6 +4545,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
         additional_vars += self._search_vars()
 
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=make_action_link(
                 request,
                 [

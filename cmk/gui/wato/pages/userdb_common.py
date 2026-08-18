@@ -161,6 +161,7 @@ def render_connections_page(
                 [("mode", edit_mode_path), ("id", connection_id), ("edit", connection_id)],
             )
             delete_url = make_confirm_delete_link(
+                i18n=_,
                 url=make_action_link(
                     request, [("mode", config_mode_path), ("_delete", real_index)]
                 ),

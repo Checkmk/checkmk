@@ -118,6 +118,7 @@ class ModePerformanceProfiles(WatoMode[None]):
             ) % {"days": max_age_days}
 
         delete_all_url = make_confirm_delete_link(
+            i18n=_,
             url=makeactionuri_contextless(
                 request,
                 transactions.get(),
@@ -128,6 +129,7 @@ class ModePerformanceProfiles(WatoMode[None]):
             message=_("Do you really want to delete all stored profiles?"),
         )
         housekeeping_url = make_confirm_delete_link(
+            i18n=_,
             url=makeactionuri_contextless(
                 request,
                 transactions.get(),
@@ -253,6 +255,7 @@ class ModePerformanceProfiles(WatoMode[None]):
                         filename="profile_download.py",
                     ),
                     "delete_url": make_confirm_delete_link(
+                        i18n=_,
                         url=makeactionuri_contextless(
                             request,
                             transactions.get(),

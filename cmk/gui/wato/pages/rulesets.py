@@ -1486,6 +1486,7 @@ class ModeEditRuleset(WatoMode):
             table.element_dragger_url("tr", base_url=self._action_url("move_to", folder, rule.id))
             html.icon_button(
                 url=make_confirm_delete_link(
+                    i18n=_,
                     url=self._action_url("delete", folder, rule.id),
                     title=_("Delete rule #%(rulenr)d") % {"rulenr": rulenr},
                     suffix=rule.rule_options.description,
@@ -3810,6 +3811,7 @@ class ModeUnknownRulesets(WatoMode):
         table.cell(_("Actions"), css=["buttons"])
         html.icon_button(
             make_confirm_delete_link(
+                i18n=_,
                 url=make_action_link(
                     request,
                     [
@@ -3866,6 +3868,7 @@ class ModeUnknownRulesets(WatoMode):
         table.cell(_("Actions"), css=["buttons"])
         html.icon_button(
             make_confirm_delete_link(
+                i18n=_,
                 url=make_action_link(
                     request,
                     [

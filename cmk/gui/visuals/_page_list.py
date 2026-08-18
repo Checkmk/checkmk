@@ -279,6 +279,7 @@ def page_list(
                         confirm_message += "<br>" + _("Owner: %(owner)s") % {"owner": owner}
                     html.icon_button(
                         make_confirm_delete_link(
+                            i18n=_,
                             url=makeactionuri(request, transactions.get(), add_vars),
                             title=_("Delete %(title)s") % {"title": visual_type.title},
                             suffix=str(visual["title"]),
@@ -356,6 +357,7 @@ def _render_extension_package_icons(
     """Render icons needed for extension package handling of visuals"""
     if not is_packaged:
         export_url = make_confirm_link(
+            i18n=_,
             url=makeuri_contextless(
                 request,
                 [
@@ -394,6 +396,7 @@ def _render_extension_package_icons(
 
     if not (mkp_name := installed_packages.get(visual_name)):
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=makeuri_contextless(
                 request,
                 [

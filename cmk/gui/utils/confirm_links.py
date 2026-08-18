@@ -5,8 +5,8 @@
 """Links that ask the user for confirmation before following through."""
 
 import json
+from collections.abc import Callable
 
-from cmk.gui.i18n import _
 from cmk.web.utils.escaping import escape_text
 from cmk.web.utils.urls import quote_plus
 
@@ -15,6 +15,7 @@ def make_confirm_link(
     *,
     url: str,
     title: str,
+    i18n: Callable[[str], str],
     suffix: str | None = None,
     message: str | None = None,
     confirm_button: str | None = None,
@@ -23,8 +24,8 @@ def make_confirm_link(
     return _make_customized_confirm_link(
         url=url,
         title=get_confirm_link_title(title, suffix),
-        confirm_button=confirm_button if confirm_button else _("Yes"),
-        cancel_button=cancel_button if cancel_button else _("No"),
+        confirm_button=confirm_button if confirm_button else i18n("Yes"),
+        cancel_button=cancel_button if cancel_button else i18n("No"),
         message=message,
     )
 
@@ -33,6 +34,7 @@ def make_confirm_delete_link(
     *,
     url: str,
     title: str,
+    i18n: Callable[[str], str],
     suffix: str | None = None,
     message: str | None = None,
     confirm_button: str | None = None,
@@ -43,8 +45,8 @@ def make_confirm_delete_link(
     return _make_customized_confirm_link(
         url=url,
         title=get_confirm_link_title(title, suffix),
-        confirm_button=confirm_button if confirm_button else _("Delete"),
-        cancel_button=cancel_button if cancel_button else _("Cancel"),
+        confirm_button=confirm_button if confirm_button else i18n("Delete"),
+        cancel_button=cancel_button if cancel_button else i18n("Cancel"),
         message=message,
         icon="warning" if warning else "question",
         custom_class_options={

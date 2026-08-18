@@ -223,6 +223,7 @@ def _page_menu_entries_ack_all_werks(request: Request) -> Iterator[PageMenuEntry
         is_suggested=True,
         item=make_simple_link(
             make_confirm_delete_link(
+                i18n=_,
                 url=makeactionuri(request, transactions.get(), [("_ack_all", "1")]),
                 title=_("Acknowledge all incompatible Werks"),
                 confirm_button=_("Acknowledge all"),

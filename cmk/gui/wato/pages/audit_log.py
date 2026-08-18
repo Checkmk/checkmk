@@ -247,6 +247,7 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                 icon_name=StaticIcon(IconNames.delete),
                 item=make_simple_link(
                     make_confirm_delete_link(
+                        i18n=_,
                         url=makeactionuri(
                             request,
                             transactions.get(),

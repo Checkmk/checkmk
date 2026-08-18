@@ -923,6 +923,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                 icon_name=StaticIcon(IconNames.delete),
                 item=make_simple_link(
                     make_confirm_delete_link(
+                        i18n=_,
                         url=makeactionuri(request, transactions.get(), [("delete", "1")]),
                         title=_("Delete host"),
                         suffix=host.name(),
@@ -943,6 +944,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                 icon_name=StaticIcon(IconNames.tls, emblem="remove"),
                 item=make_simple_link(
                     make_confirm_delete_link(
+                        i18n=_,
                         url=makeactionuri(
                             request, transactions.get(), [("_remove_tls_registration", "1")]
                         ),

@@ -486,6 +486,7 @@ class ModeEditConfigurationBundles(WatoMode):
 
         html.icon_button(
             url=make_confirm_delete_link(
+                i18n=_,
                 url=self._action_url("delete", bundle_id),
                 title=_("Delete configuration %(bundle_id)s") % {"bundle_id": bundle_id},
             ),

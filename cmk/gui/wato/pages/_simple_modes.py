@@ -397,6 +397,7 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
         if delete_confirm_msg := self._delete_confirm_message():
             confirm_delete += "<br><br>" + delete_confirm_msg
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=make_action_link(
                 request,
                 [

@@ -617,6 +617,7 @@ class ModeBackup(WatoMode[object]):
                 state = job.state()
                 job_state = state.state
                 delete_url = make_confirm_delete_link(
+                    i18n=_,
                     url=makeactionuri_contextless(
                         request,
                         transactions.get(),
@@ -1791,6 +1792,7 @@ def _show_target_list(
 
             if not targets_are_cma:
                 delete_url = make_confirm_delete_link(
+                    i18n=_,
                     url=makeactionuri_contextless(
                         request,
                         transactions.get(),
@@ -2291,6 +2293,7 @@ class ModeBackupRestore(WatoMode[object]):
                                     icon_name=StaticIcon(IconNames.backup_stop),
                                     item=make_simple_link(
                                         make_confirm_delete_link(
+                                            i18n=_,
                                             url=makeactionuri(
                                                 request,
                                                 transactions.get(),
@@ -2529,6 +2532,7 @@ class ModeBackupRestore(WatoMode[object]):
 
                 from_info = f"{info.hostname} (Site: {info.site_id}, Version: {info.site_version})"
                 delete_url = make_confirm_delete_link(
+                    i18n=_,
                     url=makeactionuri(
                         request,
                         transactions.get(),
@@ -2542,6 +2546,7 @@ class ModeBackupRestore(WatoMode[object]):
                 html.icon_button(delete_url, _("Delete this backup"), StaticIcon(IconNames.delete))
 
                 start_url = make_confirm_link(
+                    i18n=_,
                     url=makeactionuri(
                         request,
                         transactions.get(),

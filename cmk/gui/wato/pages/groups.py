@@ -211,6 +211,7 @@ class ModeGroups(WatoMode, abc.ABC):
             [("mode", "edit_%s_group" % self.type_name), ("edit", name)],
         )
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=makeactionuri(request, transactions.get(), [("_delete", name)]),
             title=_("Delete %(type_name)s group #%(nr)d") % {"type_name": self.type_name, "nr": nr},
             suffix=group["alias"],

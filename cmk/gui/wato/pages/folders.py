@@ -1045,6 +1045,7 @@ class ModeFolder(WatoMode):
 
         html.icon_button(
             make_confirm_delete_link(
+                i18n=_,
                 url=make_action_link(
                     request, [("mode", "folder"), ("_delete_folder", subfolder.name())]
                 ),

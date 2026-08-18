@@ -134,6 +134,7 @@ class ModeRegisteredOAuthClients(WatoMode):
 
                     table.cell(_("Actions"), css=["buttons"])
                     delete_url = make_confirm_delete_link(
+                        i18n=_,
                         url=make_action_link(
                             request, [("mode", self.name()), ("_delete", client.client_id)]
                         ),

@@ -353,6 +353,7 @@ class ModeTimeperiods(WatoMode):
             ],
         )
         delete_url = make_confirm_delete_link(
+            i18n=_,
             url=make_action_link(
                 request,
                 [

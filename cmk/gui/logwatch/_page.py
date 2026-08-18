@@ -616,6 +616,7 @@ def _page_menu_entry_acknowledge(
         icon_name=StaticIcon(IconNames.delete),
         item=make_simple_link(
             make_confirm_delete_link(
+                i18n=_,
                 url=makeactionuri(request, transactions.get(), urivars),
                 title=_("Clear logs by deleting all stored messages"),
                 message=_(

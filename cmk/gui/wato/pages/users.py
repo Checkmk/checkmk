@@ -617,6 +617,7 @@ class ModeUsers(WatoMode):
                 user_alias = user_spec.get("alias", "")
                 if self._can_create_and_delete_users:
                     delete_url = make_confirm_delete_link(
+                        i18n=_,
                         url=make_action_link(request, [("mode", "users"), ("_delete", uid)]),
                         title=_("Delete user"),
                         suffix=user_alias,
@@ -988,6 +989,7 @@ class ModeEditUser(WatoMode):
                 icon_name=StaticIcon(IconNames.twofa),
                 item=make_simple_link(
                     make_confirm_delete_link(
+                        i18n=_,
                         url=make_action_link(
                             request,
                             [

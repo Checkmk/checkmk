@@ -238,6 +238,7 @@ class JobRenderer:
         if may_stop:
             html.icon_button(
                 make_confirm_delete_link(
+                    i18n=_,
                     url=makeactionuri(
                         request, transactions.get(), [(ActionHandler.stop_job_var, job_id)]
                     ),
@@ -253,6 +254,7 @@ class JobRenderer:
         if may_delete:
             html.icon_button(
                 make_confirm_delete_link(
+                    i18n=_,
                     url=makeactionuri(
                         request, transactions.get(), [(ActionHandler.delete_job_var, job_id)]
                     ),

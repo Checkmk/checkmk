@@ -392,6 +392,7 @@ class UserTwoFactorOverview(Page):
         if backup_codes_given:
             backup_codes_item = make_simple_link(
                 make_confirm_delete_link(
+                    i18n=_,
                     url=makeactionuri(request, transactions.get(), [("_backup_codes", "SET")]),
                     title=_("Regenerate backup codes"),
                     confirm_button=_("Regenerate codes"),
@@ -517,6 +518,7 @@ class UserTwoFactorOverview(Page):
             )
 
             invalidate_codes_url = make_confirm_delete_link(
+                i18n=_,
                 url=makeactionuri(request, transactions.get(), [("_delete_codes", "")]),
                 title=_("Invalidate all backup codes"),
                 confirm_button=_("Invalidate all"),
@@ -665,6 +667,7 @@ class UserTwoFactorOverview(Page):
                 + (f" '{alias}'" if (alias := credential["alias"]) else "")
             )
             delete_url = make_confirm_delete_link(
+                i18n=_,
                 url=makeactionuri(
                     request,
                     transactions.get(),

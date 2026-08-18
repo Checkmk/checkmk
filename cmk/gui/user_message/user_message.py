@@ -120,6 +120,7 @@ def _page_menu_entries_ack_all_messages() -> Iterator[PageMenuEntry]:
         is_suggested=True,
         item=make_simple_link(
             make_confirm_delete_link(
+                i18n=_,
                 url=makeactionuri(request, transactions.get(), [("_ack_all", "1")]),
                 title=_("Acknowledge all received messages"),
                 confirm_button=_("Acknowledge all"),

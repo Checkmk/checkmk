@@ -2976,7 +2976,6 @@ matplotlib==3.11.1 \
     --hash=sha256:e4b9ac2f1f607ecda2af90a5232beee2af7582fce1cc30c4b6a1b012dc21ee99 \
     --hash=sha256:f2912f647f3fbe1ccf085f91e213936f9101bead81a5e670565b1f1b3712f4fb
     # via
-    #   -r cmk/requirements.in
     #   -r tests/dev-requirements.in
     #   sarif-tools
 mcp[cli, rich]==2.0.0b1 \

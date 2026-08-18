@@ -5,38 +5,10 @@ load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR")
 
 def get_pip_options(module_name):
     return {
-        # matplotlib's meson build defaults to downloading and building its own vendored
-        # freetype as a subproject, which requires network access at build time.
-        # Use the system library instead, which is already provided by the build image.
-        # qhull and libraqm are left vendored (system-qhull/system-libraqm are NOT
-        # set): our build images don't provide a usable libqhull_r, and ship
-        # libraqm 0.10.1, older than the >=0.10.4 matplotlib requires. Their sources
-        # (and harfbuzz/sheenbidi) are instead seeded offline, see get_extra_setup().
-        "matplotlib": '--config-settings=setup-args="-Dsystem-freetype=true"',
-
         # * avoid compiling with BLAS support - we don't need super fast numpy (yet)
         "numpy": '--config-settings=setup-args="-Dallow-noblas=true"',
         # pillow in version 11.2 and above would require libavif>=1.0.0 which is per default not available on debian-12, see https://github.com/radarhere/Pillow/commit/7d50816f0a6e607b04f9bdc8af7482a29ba578e3 and as we don't need avif support, we simply disable it
         "pillow": "--config-settings=avif=disable",
-    }.get(module_name, "")
-
-def get_extra_setup(module_name):
-    """Shell snippet executed right before `pip install`.
-
-    Used to seed a local meson subproject package cache (MESON_PACKAGE_CACHE_DIR)
-    so meson resolves vendored C deps from disk instead of downloading them at
-    build time. The Bazel-fetched srcs referenced here must be added to that
-    module's `srcs` in the calling BUILD file.
-    """
-    return {
-        "matplotlib": """
-            export MESON_PACKAGE_CACHE_DIR="$$HOME/mpl_packagecache"
-            mkdir -p "$$MESON_PACKAGE_CACHE_DIR"
-            cp "$(execpath @matplotlib_harfbuzz_src//file)" "$$MESON_PACKAGE_CACHE_DIR/harfbuzz-14.1.0.tar.xz"
-            cp "$(execpath @matplotlib_sheenbidi_src//file)" "$$MESON_PACKAGE_CACHE_DIR/sheenbidi-3.0.0.tar.gz"
-            cp "$(execpath @matplotlib_libraqm_src//file)" "$$MESON_PACKAGE_CACHE_DIR/libraqm-0.10.5.tar.gz"
-            cp "$(execpath @matplotlib_qhull_src//file)" "$$MESON_PACKAGE_CACHE_DIR/qhull-8.0.2.tgz"
-        """,
     }.get(module_name, "")
 
 def create_requirements_file(name, outs):
@@ -59,7 +31,6 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
     openssl_dir = Label("@openssl").repo_name
     freetds_dir = Label("@freetds").repo_name
     python_dir = Label("@python").repo_name
-    extra_setup = get_extra_setup(name)
     native.genrule(
         name = name + "_compile",
         srcs = srcs,
@@ -74,7 +45,6 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
                 constraints = constraints,
-                extra_setup = extra_setup,
                 openssl_dir = openssl_dir,
                 freetds_dir = freetds_dir,
                 python_dir = python_dir,
@@ -84,7 +54,6 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
                 constraints = constraints,
-                extra_setup = extra_setup,
                 openssl_dir = openssl_dir,
                 freetds_dir = freetds_dir,
                 python_dir = python_dir,
@@ -183,7 +152,6 @@ build_cmd = """
     export CFLAGS="-Wno-error=incompatible-pointer-types -ffile-prefix-map=$$HOME=."
     export CPPFLAGS="-I$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/include -I$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/include -I$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/include/python{pyMajMin}/"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/{openssl_dir}/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/{freetds_dir}/freetds/lib -L$$HOME/$$EXT_DEPS_PATH/{python_dir}/python/lib -Wl,--strip-debug"
-    {extra_setup}
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\

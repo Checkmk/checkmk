@@ -2951,7 +2951,6 @@ matplotlib==3.11.1 \
     --hash=sha256:f2912f647f3fbe1ccf085f91e213936f9101bead81a5e670565b1f1b3712f4fb
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
     #   -r tests/dev-requirements.in
     #   sarif-tools
 mdit-py-plugins==0.6.1 \

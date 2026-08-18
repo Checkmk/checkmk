@@ -16,29 +16,13 @@ config_setting(
     ],
 ) for module in all_requirements]
 
-# Extra Bazel-fetched srcs some modules need on top of the common set below, e.g.
-# offline meson subproject sources seeded by get_extra_setup() in
-# build-python3-modules.bzl.
-_EXTRA_MODULE_SRCS = {
-    "matplotlib": [
-        "@matplotlib_harfbuzz_src//file",
-        "@matplotlib_sheenbidi_src//file",
-        "@matplotlib_libraqm_src//file",
-        "@matplotlib_qhull_src//file",
-    ],
-}
-
 # Third Party packages parsed from runtime-requirements.txt
 [build_python_module(
     name = module,
-    # @python must stay last: the genrule's EXT_DEPS_PATH extraction (see
-    # build-python3-modules.bzl) greedily matches up to the last "external" src
-    # in $(SRCS), so any extra external srcs must be inserted before it.
     srcs = [
         "%s_requirements.txt" % module,
         ":git_wrapper",
         "//:constraints.txt",
-    ] + _EXTRA_MODULE_SRCS.get(module, []) + [
         "@freetds",
         "@openssl",
         "@python",

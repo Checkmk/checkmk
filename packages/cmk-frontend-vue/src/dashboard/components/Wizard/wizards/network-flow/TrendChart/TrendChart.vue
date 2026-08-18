@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
+import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
@@ -105,6 +106,15 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
               type="number"
               :unit="_t('series (max. %{max_series})', { max_series: `${MAX_SERIES}` })"
               :external-errors="handler.limitToValidationErrors.value"
+            />
+          </FieldComponent>
+        </TableFormRow>
+        <TableFormRow>
+          <FieldDescription>{{ _t('Legend') }}</FieldDescription>
+          <FieldComponent>
+            <CmkCheckbox
+              v-model="handler.showLegend.value"
+              :label="_t('List the plotted series below the graph')"
             />
           </FieldComponent>
         </TableFormRow>

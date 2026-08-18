@@ -28,6 +28,7 @@ export interface UseTrendChart extends UseWidgetHandler, UseWidgetVisualizationO
   displayMode: Ref<DisplayMode>
   limitTo: Ref<number>
   limitToValidationErrors: Ref<string[]>
+  showLegend: Ref<boolean>
 }
 
 export function useTrendChart(currentSpec: WidgetSpec | null): UseTrendChart {
@@ -69,6 +70,7 @@ export function useTrendChart(currentSpec: WidgetSpec | null): UseTrendChart {
   const displayMode = ref<DisplayMode>(currentContent?.display_mode ?? 'stacked_area')
   const limitTo = ref<number>(currentContent?.limit_to ?? 6)
   const limitToValidationErrors = ref<string[]>([])
+  const showLegend = ref<boolean>(currentContent?.show_legend ?? true)
 
   // Unless the user has customized the title, keep it in sync with the
   // dimension's default as the dimension changes.
@@ -95,7 +97,8 @@ export function useTrendChart(currentSpec: WidgetSpec | null): UseTrendChart {
       type: CONTENT_TYPE,
       dimension: dimension.value,
       display_mode: displayMode.value,
-      limit_to: limitTo.value
+      limit_to: limitTo.value,
+      show_legend: showLegend.value
     }
   })
 
@@ -138,6 +141,7 @@ export function useTrendChart(currentSpec: WidgetSpec | null): UseTrendChart {
     displayMode,
     limitTo,
     limitToValidationErrors,
+    showLegend,
 
     widgetProps,
     getSubmitProps: async () => widgetProps.value

@@ -188,6 +188,7 @@ class NetworkFlowTrendChartDashletConfig(DashletConfig):
     dimension: NetworkFlowTrendChartDimension
     display_mode: NetworkFlowTrendChartDisplayMode
     limit_to: int
+    show_legend: bool
 
 
 class StateDashletConfig(DashletConfig):

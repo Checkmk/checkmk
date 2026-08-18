@@ -195,6 +195,7 @@ const graphOptions = computed(
           />
         </div>
         <GraphLegendCompact
+          v-if="content.show_legend"
           :metrics="metrics"
           :hidden-metric-names="hiddenMetricNames"
           :hidden-line-names="hiddenLineNames"

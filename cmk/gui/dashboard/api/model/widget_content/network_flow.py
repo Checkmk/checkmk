@@ -146,6 +146,7 @@ class NetworkFlowTrendChartContent(BaseWidgetContent):
     limit_to: int = api_field(
         description="Maximum number of top series to plot before the rest are dropped."
     )
+    show_legend: bool = api_field(description="Whether to list the plotted series below the graph.")
 
     @classmethod
     @override
@@ -159,6 +160,8 @@ class NetworkFlowTrendChartContent(BaseWidgetContent):
             dimension=config["dimension"],
             display_mode=config["display_mode"],
             limit_to=config["limit_to"],
+            # Widgets stored before the legend became optional always showed it.
+            show_legend=config.get("show_legend", True),
         )
 
     @override
@@ -168,4 +171,5 @@ class NetworkFlowTrendChartContent(BaseWidgetContent):
             dimension=self.dimension,
             display_mode=self.display_mode,
             limit_to=self.limit_to,
+            show_legend=self.show_legend,
         )

@@ -61,7 +61,6 @@ from cmk.gui.type_defs import (
     StaticIcon,
 )
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_references import DocReference, YouTubeReference
 from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
@@ -119,6 +118,7 @@ from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
+from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML

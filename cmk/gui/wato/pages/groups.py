@@ -37,7 +37,6 @@ from cmk.gui.pages import PageContext
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -64,6 +63,7 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.livestatus_client import SiteConfigurations
+from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeuri
 

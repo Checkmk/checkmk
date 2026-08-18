@@ -25,9 +25,9 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import AjaxPage, Page, PageContext, PageResult
 from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.flashed_messages import get_flashed_messages
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri

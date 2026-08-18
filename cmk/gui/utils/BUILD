@@ -26,7 +26,6 @@ py_library(
 py_library(
     name = "middle",
     srcs = [
-        "confirm_links.py",
         "dataclasses.py",
         "doc_references.py",
         "language_cookie.py",

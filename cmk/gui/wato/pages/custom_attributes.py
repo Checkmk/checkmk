@@ -47,7 +47,6 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import CORE
@@ -74,6 +73,7 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.users import remove_custom_attribute_from_all_users, user_features_registry
 from cmk.livestatus_client import SiteConfigurations
+from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.urls import makeactionuri, makeuri, makeuri_contextless
 
 

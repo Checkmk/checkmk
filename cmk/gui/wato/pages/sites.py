@@ -74,7 +74,6 @@ from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIco
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import distributed_saml_supported
 from cmk.gui.utils.compatibility import make_site_version_info
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.doc_references import DocReference
 from cmk.gui.utils.transaction_manager import transactions
@@ -184,6 +183,7 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.paths import omd_root
+from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeactionuri_contextless, makeuri_contextless

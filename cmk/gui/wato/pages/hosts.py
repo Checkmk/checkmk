@@ -60,7 +60,6 @@ from cmk.gui.search.matchers import MatchItemGeneratorRegistry
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -136,6 +135,7 @@ from cmk.shared_typing.mode_host import (
 )
 from cmk.utils.agent_registration import HostAgentConnectionMode, UUIDStore
 from cmk.utils.paths import omd_root, uuid_lookup_dir
+from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
 

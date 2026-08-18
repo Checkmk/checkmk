@@ -35,11 +35,11 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.utils.confirm_links import make_confirm_delete_link
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.profile_replication import start_profile_replication_job
 from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
 from cmk.livestatus_client import LivestatusResponse, MKLivestatusNotFoundError
+from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.urls import makeactionuri
 
 

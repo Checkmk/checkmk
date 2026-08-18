@@ -134,7 +134,7 @@ class NetworkFlowKpiStatCardContent(BaseWidgetContent):
 class NetworkFlowTrendChartContent(BaseWidgetContent):
     type: Literal["network_flow_trend_chart"] = api_field(
         description="Displays how network flow traffic evolved over time, broken down into "
-        "the top series of a dimension, with a statistics legend."
+        "the top series of a dimension."
     )
     dimension: NetworkFlowTrendChartDimension = api_field(
         description="Which dimension to break the traffic down into series (applications, "

@@ -81,6 +81,33 @@ RESULTS_NOT_ON_BATTERY_HEALTHY: CheckResult = [
 ]
 
 
+# The device reports -1 minutes remaining, which cannot be rendered as a timespan
+SECTION_BATTERY_CAPACITY_NEGATIVE_TIME = Battery(
+    seconds_left=-60,
+    percent_charged=80,
+)
+
+RESULTS_NEGATIVE_TIME_ON_BATTERY: CheckResult = [
+    Result(
+        state=State.UNKNOWN,
+        summary="Device reported an invalid remaining battery time (-60 seconds)",
+    ),
+    Result(state=State.CRIT, summary="80.00% (warn/crit below 95.00%/90.00%)"),
+    Metric("battery_capacity", 80.0),
+    Result(state=State.OK, summary="Time running on battery: 1 minute 40 seconds"),
+]
+
+RESULTS_NEGATIVE_TIME_NOT_ON_BATTERY: CheckResult = [
+    Result(
+        state=State.UNKNOWN,
+        summary="Device reported an invalid remaining battery time (-60 seconds)",
+    ),
+    Result(state=State.OK, summary="On mains"),
+    Result(state=State.CRIT, summary="80.00% (warn/crit below 95.00%/90.00%)"),
+    Metric("battery_capacity", 80.0),
+]
+
+
 @pytest.mark.parametrize(
     [
         "params",
@@ -128,6 +155,20 @@ RESULTS_NOT_ON_BATTERY_HEALTHY: CheckResult = [
             None,
             RESULTS_NOT_ON_BATTERY_HEALTHY,
         ),
+        (
+            CHECK_DEFAULT_PARAMETERS,
+            SECTION_BATTERY_CAPACITY_NEGATIVE_TIME,
+            SECTION_ON_BATTERY_YES,
+            SECTION_SECONDS_ON_BATTERY_DEFAULT,
+            RESULTS_NEGATIVE_TIME_ON_BATTERY,
+        ),
+        (
+            CHECK_DEFAULT_PARAMETERS,
+            SECTION_BATTERY_CAPACITY_NEGATIVE_TIME,
+            SECTION_ON_BATTERY_NO,
+            None,
+            RESULTS_NEGATIVE_TIME_NOT_ON_BATTERY,
+        ),
     ],
     ids=[
         "on_battery",
@@ -135,6 +176,8 @@ RESULTS_NOT_ON_BATTERY_HEALTHY: CheckResult = [
         "on_battery_no_flag",
         "not_on_battery",
         "not_on_battery_healthy",
+        "negative_time_on_battery",
+        "negative_time_not_on_battery",
     ],
 )
 def test_check_ups_capacity(

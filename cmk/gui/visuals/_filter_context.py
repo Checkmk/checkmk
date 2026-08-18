@@ -112,7 +112,11 @@ def visible_filters_of_visual(visual: Visual, use_filters: list[Filter]) -> list
 
 def context_to_uri_vars(context: VisualContext) -> HTTPVariables:
     """Produce key/value tuples for HTTP variables from the visual context"""
-    return list(chain.from_iterable(filter_vars.items() for filter_vars in context.values()))
+    return list(
+        chain.from_iterable(
+            filter_vars.items() for filter_vars in context.values() if isinstance(filter_vars, dict)
+        )
+    )
 
 
 # Vice versa: find all filters that belong to the current URI variables

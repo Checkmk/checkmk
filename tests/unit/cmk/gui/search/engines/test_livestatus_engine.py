@@ -14,6 +14,7 @@ from cmk.gui.http import Request
 from cmk.gui.permissions import permission_registry
 from cmk.gui.search._engines._livestatus import (
     ABCQuicksearchConductor,
+    BasicPluginQuicksearchConductor,
     FilterBehaviour,
     get_url_builder,
     GroupMatchPlugin,
@@ -22,7 +23,6 @@ from cmk.gui.search._engines._livestatus import (
     LivestatusResult,
     LivestatusSearchEngine,
     QuicksearchManager,
-    ServiceStateMatchPlugin,
     UrlBuilder,
     UsedFilters,
 )
@@ -90,68 +90,27 @@ class TestGetSearchUrlParams:
 
         assert not any(key == "site" for key, _value in url_params)
 
+    def test_a_filter_the_target_view_does_not_know_is_skipped(self) -> None:
+        # "hg" has no url variables for the single host view, so it must not contribute
+        # anything - otherwise the view is filtered by a variable it cannot interpret.
+        # The table and the plugin list are derived the way production does it, because
+        # a hand-picked combination is easily one the engine can never build.
+        conductor = LivestatusQuicksearchConductor(
+            {"h": ["myhost"], "hg": ["mygroup"]}, FilterBehaviour.CONTINUE, row_limit=80
+        )
+        conductor._determine_livestatus_table()
+        conductor._used_search_plugins = conductor._get_used_search_plugins()
+        conductor._rows = [
+            {"site": "mysite", "name": "myhost", "host_name": "myhost", "host_groups": ["mygroup"]}
+        ]
 
-class TestServiceStateMatchPlugin:
-    @pytest.fixture
-    def plugin(self) -> ServiceStateMatchPlugin:
-        return ServiceStateMatchPlugin()
+        url_params = conductor.get_search_url_params()
 
-    @pytest.mark.parametrize(
-        "used_filters, expected",
-        [
-            pytest.param(
-                {"st": ["ok"]},
-                "Filter: state = 0",
-                id="single value",
-            ),
-            pytest.param(
-                {"st": ["ok", "warn"]},
-                "Filter: state = 0\nFilter: state = 1\nOr: 2",
-                id="multiple values",
-            ),
-            pytest.param(
-                {"st": ["ok|warn"]},
-                "Filter: state = 0\nFilter: state = 1\nOr: 2",
-                id="with pipe operator",
-            ),
-            pytest.param(
-                {"st": ["ok|warn|crit"]},
-                "Filter: state = 0\nFilter: state = 1\nFilter: state = 2\nOr: 3",
-                id="with pipe operator multiple pipes",
-            ),
-            pytest.param(
-                {"st": ["(ok|warn)"]},
-                "Filter: state = 0\nFilter: state = 1\nOr: 2",
-                id="wrapped in parentheses",
-            ),
-            pytest.param(
-                {"st": ["ok|warn "]},
-                "Filter: state = 0\nFilter: state = 1\nOr: 2",
-                id="trailing right whitespace",
-            ),
-            pytest.param(
-                {"st": [" ok|warn"]},
-                "Filter: state = 0\nFilter: state = 1\nOr: 2",
-                id="trailing left whitespace",
-            ),
-            pytest.param(
-                {"st": [" ok|warn "]},
-                "Filter: state = 0\nFilter: state = 1\nOr: 2",
-                id="left and right whitespace",
-            ),
-            pytest.param(
-                {"st": ["ok | warn"]},
-                "Filter: state = 0\nFilter: state = 1\nOr: 2",
-                id="whitespace between operator",
-            ),
-        ],
-    )
-    def test_get_livestatus_filters(
-        self, plugin: ServiceStateMatchPlugin, used_filters: UsedFilters, expected: str
-    ) -> None:
-        livestatus_table = plugin.get_preferred_livestatus_table()
-        value = plugin.get_livestatus_filters(livestatus_table, used_filters)
-        assert value == expected
+        assert conductor.livestatus_table == "hosts"
+        assert {plugin.name for plugin in conductor._used_search_plugins} == {"h", "hg"}
+        assert ("view_name", "host") in url_params
+        assert ("host", "myhost") in url_params
+        assert not any("group" in key for key, _value in url_params)
 
 
 class TestIsInvalidRegex:
@@ -922,3 +881,56 @@ class TestSearch:
             results = list(engine.search("(myhost", provider=ProviderName.monitoring))
 
         assert results == []
+
+
+class TestBasicPluginQuicksearchConductor:
+    @staticmethod
+    def _conductor(titles: list[str], row_limit: int) -> BasicPluginQuicksearchConductor:
+        conductor = BasicPluginQuicksearchConductor(
+            {"menu": ["hosts"]},
+            FilterBehaviour.CONTINUE,
+            UserPermissions({}, {}, {}, []),
+            row_limit,
+        )
+        conductor._results = [SearchResult(title=title, url="index.py") for title in titles]
+        return conductor
+
+    def test_results_are_stripped_from_the_end(self) -> None:
+        conductor = self._conductor(["a", "b", "c"], row_limit=10)
+
+        conductor.remove_rows_from_end(2)
+
+        assert conductor.num_rows() == 1
+
+    @pytest.mark.parametrize(
+        "titles, expected",
+        [
+            pytest.param(["a", "b"], False, id="exactly at the limit"),
+            pytest.param(["a", "b", "c"], True, id="one above the limit"),
+        ],
+    )
+    def test_the_row_limit_is_reported(self, titles: list[str], expected: bool) -> None:
+        assert self._conductor(titles, row_limit=2).row_limit_exceeded() is expected
+
+    def test_the_results_are_capped_at_the_row_limit(self) -> None:
+        conductor = self._conductor(["a", "b", "c"], row_limit=2)
+
+        assert [result.title for result in conductor.create_results(_build_url())] == ["a", "b"]
+
+    def test_a_plugin_search_has_no_content_page_to_open(self) -> None:
+        # Pressing Enter on a non-livestatus match (e.g. a monitor menu entry) has no
+        # view to navigate to, so there are no search url params to build.
+        with pytest.raises(NotImplementedError):
+            self._conductor(["a"], row_limit=10).get_search_url_params()
+
+
+class TestRemoveRowsFromEndOfLivestatusRows:
+    def test_rows_are_stripped_from_the_end(self) -> None:
+        conductor = LivestatusQuicksearchConductor(
+            {"h": ["myhost"]}, FilterBehaviour.CONTINUE, row_limit=10
+        )
+        conductor._rows = [{"site": "mysite", "name": f"myhost{idx}"} for idx in range(3)]
+
+        conductor.remove_rows_from_end(2)
+
+        assert conductor.num_rows() == 1

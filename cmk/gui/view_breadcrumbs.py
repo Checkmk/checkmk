@@ -105,6 +105,9 @@ def _host_hierarchy_breadcrumb(view: View) -> Breadcrumb:
         )
         return breadcrumb
 
+    if "service" in view.missing_single_infos:
+        return breadcrumb
+
     breadcrumb = make_service_breadcrumb(
         host_name, ServiceName(view.context["service"]["service"]), view.user_permissions
     )

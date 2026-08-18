@@ -85,6 +85,13 @@ class OAuthTokenResponse(BaseModel):
     scope: str
 
 
+class OAuthTokenIntrospectionResponse(BaseModel):
+    """RFC 7662 section 2.2 introspection response."""
+
+    active: bool
+    exp: int | None = Field(None, exclude_if=lambda v: v is None)
+
+
 class OAuthTokenErrorResponse(BaseModel):
     """RFC 6749 section 5.2 token endpoint error response.
 

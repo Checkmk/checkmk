@@ -32,8 +32,9 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.oauth.active_token import active_token
 from cmk.gui.oauth.store.backend import StoreUnavailableError
-from cmk.gui.oauth.store.token_store import get_token_store, looks_like_token, TokenRecord
+from cmk.gui.oauth.store.token_store import looks_like_token, TokenRecord
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import AuthType, CustomUserAttrSpec, UserSpec
@@ -340,18 +341,9 @@ def _check_oauth_access_token(token: str) -> TokenRecord | None:
     # 503 (see StoreUnavailableError) -- a token this site cannot check
     # authenticates nobody instead.
     try:
-        with get_token_store() as store:
-            record = store.get_by_token(token)
+        return active_token(token)
     except StoreUnavailableError:
-        record = None
-    if record is None or not record.is_valid():
         return None
-
-    user_id = record.user_id
-    if not userdb.user_exists(user_id) or userdb.user_locked(user_id, load_user(user_id)):
-        return None
-
-    return record
 
 
 def _get_bearer_token() -> str | None:

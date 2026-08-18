@@ -246,6 +246,7 @@ def test_registered_pages() -> None:
             "oauth_authorize",
             "noauth:oauth_client_registration",
             "noauth:oauth_token",
+            "noauth:oauth_introspect",
         ]
 
     if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:

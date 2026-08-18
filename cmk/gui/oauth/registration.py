@@ -7,6 +7,7 @@ from collections.abc import Callable
 
 from cmk.gui.oauth.pages._authorize import OAuthAuthorizePage
 from cmk.gui.oauth.pages._client_registration import OAuthClientRegistrationPage
+from cmk.gui.oauth.pages._introspect import OAuthIntrospectPage
 from cmk.gui.oauth.pages._oauth_well_known import OAuthAuthorizationServerMetadataPage
 from cmk.gui.oauth.pages._token import OAuthTokenPage
 from cmk.gui.oauth.wato._main_module import register as register_main_module
@@ -46,5 +47,6 @@ def register(
         PageEndpoint("noauth:oauth_client_registration", OAuthClientRegistrationPage(enabled))
     )
     page_registry.register(PageEndpoint("noauth:oauth_token", OAuthTokenPage(enabled)))
+    page_registry.register(PageEndpoint("noauth:oauth_introspect", OAuthIntrospectPage(enabled)))
     register_registered_clients_mode(mode_registry)
     register_main_module(main_module_registry)

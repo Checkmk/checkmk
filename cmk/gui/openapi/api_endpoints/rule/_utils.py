@@ -475,23 +475,20 @@ def _properties_to_api(config: RuleOptionsSpec) -> RulePropertiesResponseModel:
 
 
 def _conditions_to_api(conditions: RuleConditions) -> RuleConditionsModel:
-    # host_tags / host_label_groups / service_label_groups are always emitted (the old serializer
-    # only dropped `None` values, and these internal fields default to `{}` / `[]`, never `None`).
-    model = RuleConditionsModel(
-        host_tags=host_tags_to_api(conditions.host_tags),
-        host_label_groups=label_groups_to_api(conditions.host_label_groups),
-        service_label_groups=label_groups_to_api(conditions.service_label_groups),
-    )
     # `match_expr_to_api` returns `None` only for an absent (`None`) condition; an empty
     # match_on list is a distinct, meaningful condition ("matches no host/service") and
     # must not be conflated with "no condition set".
-    if (host_name := match_expr_to_api(conditions.host_name, "adaptive")) is not None:
-        model.host_name = host_name
-    if (
-        service_description := match_expr_to_api(conditions.service_description, "always")
-    ) is not None:
-        model.service_description = service_description
-    return model
+    host_name = match_expr_to_api(conditions.host_name, "adaptive")
+    service_description = match_expr_to_api(conditions.service_description, "always")
+    # host_tags / host_label_groups / service_label_groups are always emitted (the old serializer
+    # only dropped `None` values, and these internal fields default to `{}` / `[]`, never `None`).
+    return RuleConditionsModel(
+        host_name=ApiOmitted() if host_name is None else host_name,
+        host_tags=host_tags_to_api(conditions.host_tags),
+        host_label_groups=label_groups_to_api(conditions.host_label_groups),
+        service_description=ApiOmitted() if service_description is None else service_description,
+        service_label_groups=label_groups_to_api(conditions.service_label_groups),
+    )
 
 
 def serialize_rule(rule_entry: RuleEntry, api_context: ApiContext) -> RuleObjectModel:
@@ -507,7 +504,7 @@ def serialize_rule(rule_entry: RuleEntry, api_context: ApiContext) -> RuleObject
                 version=api_context.version,
                 host_url=api_context.host_url,
                 parameters={"rule_id": rule.id},
-                as_self=True,
+                as_relation="self",
             ),
             link_to_endpoint(
                 family=RULE_FAMILY.name,

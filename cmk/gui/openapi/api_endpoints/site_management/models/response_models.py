@@ -55,13 +55,15 @@ class BasicSettingsModel:
 
     @classmethod
     def from_internal(cls, site_configuration: SiteConfiguration) -> Self:
-        model = cls(
+        return cls(
             site_id=site_configuration["id"],
             alias=site_configuration["alias"],
+            customer=(
+                site_configuration.get("customer", "global")
+                if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT
+                else ApiOmitted()
+            ),
         )
-        if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
-            model.customer = site_configuration.get("customer", "global")
-        return model
 
 
 @api_model

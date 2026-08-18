@@ -189,7 +189,7 @@ def link_to_endpoint(
     *,
     parameters: Mapping[str, str] | None = None,
     body: Mapping[str, object] | None = None,
-    as_self: bool = False,
+    as_relation: str | None = None,
     title: str | None = None,
 ) -> LinkModel:
     """Return a :class:`LinkModel` (with absolute href) for a registered endpoint.
@@ -206,8 +206,8 @@ def link_to_endpoint(
     If the endpoint expects a request body, ``body`` is included in the
     returned :class:`LinkModel`.
 
-    If ``as_self`` is ``True``, the returned link's ``rel`` is set to
-    ``"self"`` instead of the expanded endpoint link relation.
+    If ``as_relation`` is `None``, the returned link's ``rel`` is set to the expanded
+    endpoint link relation, otherwise the string is used directly.
 
     If ``title`` is provided it is included in the returned :class:`LinkModel`
     as a human-readable label.
@@ -226,7 +226,7 @@ def link_to_endpoint(
     _validate_body(info, body)
     absolute = f"{host_url.rstrip('/')}{path}"
     method = cast(Literal["GET", "POST", "PUT", "DELETE"], endpoint.metadata.method.upper())
-    rel = "self" if as_self else expand_rel(endpoint.metadata.link_relation, {})
+    rel = expand_rel(endpoint.metadata.link_relation, {}) if as_relation is None else as_relation
     return LinkModel(
         rel=rel,
         href=absolute,

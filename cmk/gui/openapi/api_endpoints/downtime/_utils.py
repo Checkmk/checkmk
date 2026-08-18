@@ -16,6 +16,7 @@ from cmk.gui.openapi.api_endpoints.downtime.models.response_models import (
 from cmk.gui.openapi.api_endpoints.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.endpoint_link import link_to_endpoint
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.livestatus_client.queries import ResultRow
 from cmk.web.utils import permission_verification as permissions
@@ -64,7 +65,7 @@ def serialize_single_downtime(
             version=APIVersion.V1,
             host_url=host_url,
             parameters={"downtime_id": downtime_id},
-            as_self=True,
+            as_relation="self",
         ),
         link_to_endpoint(
             family="Downtimes",
@@ -98,9 +99,8 @@ def serialize_single_downtime(
         recurring=bool(downtime["recurring"]),
         comment=downtime["comment"],
         mode=_downtime_mode(downtime),
+        service_description=downtime["service_description"] if is_service else ApiOmitted(),
     )
-    if is_service:
-        extensions.service_description = downtime["service_description"]
 
     return DowntimeObjectModel(
         domainType="downtime",
@@ -123,7 +123,7 @@ def serialize_downtimes(
                 link_relation=".../collection",
                 version=version,
                 host_url=host_url,
-                as_self=True,
+                as_relation="self",
             )
         ],
         value=[

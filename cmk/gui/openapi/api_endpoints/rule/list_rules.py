@@ -63,7 +63,7 @@ def list_rules_v1(
                 link_relation=".../collection",
                 version=api_context.version,
                 host_url=api_context.host_url,
-                as_self=True,
+                as_relation="self",
             )
         ],
     )

@@ -202,7 +202,7 @@ def _move_service_link(
     # LinkModel's rel reflects the endpoint metadata (.../modify). We override
     # rel so each link advertises its specific target phase, which API consumers
     # rely on to distinguish the three move actions.
-    link = link_to_endpoint(
+    return link_to_endpoint(
         family=SERVICE_DISCOVERY_FAMILY.name,
         link_relation=".../modify",
         version=version,
@@ -213,10 +213,9 @@ def _move_service_link(
             "check_type": check_plugin_name,
             "service_item": service_item,
         },
+        as_relation=expand_rel(_move_phase_rel(target_phase)),
         title=f"Move the service to {target_phase}",
     )
-    link.rel = expand_rel(_move_phase_rel(target_phase))
-    return link
 
 
 def serialize_discovery_result(

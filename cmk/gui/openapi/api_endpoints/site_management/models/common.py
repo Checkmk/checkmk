@@ -195,33 +195,31 @@ class ProxyParamsModel:
 
     @classmethod
     def from_internal(cls, params: ProxyConfigParams | None) -> Self | ApiOmitted:
-        if params is None:
-            return ApiOmitted()
-
-        params_model = cls()
-
-        if "channels" in params:
-            params_model.channels = params["channels"]
-
-        if "heartbeat" in params:
-            params_model.heartbeat = HeartbeatModel(
-                interval=params["heartbeat"][0],
-                timeout=params["heartbeat"][1],
+        return (
+            ApiOmitted()
+            if params is None
+            else cls(
+                channels=params["channels"] if "channels" in params else ApiOmitted(),
+                heartbeat=(
+                    HeartbeatModel(
+                        interval=params["heartbeat"][0],
+                        timeout=params["heartbeat"][1],
+                    )
+                    if "heartbeat" in params
+                    else ApiOmitted()
+                ),
+                channel_timeout=(
+                    params["channel_timeout"] if "channel_timeout" in params else ApiOmitted()
+                ),
+                query_timeout=(
+                    params["query_timeout"] if "query_timeout" in params else ApiOmitted()
+                ),
+                connect_retry=(
+                    params["connect_retry"] if "connect_retry" in params else ApiOmitted()
+                ),
+                cache=params["cache"] if "cache" in params else ApiOmitted(),
             )
-
-        if "channel_timeout" in params:
-            params_model.channel_timeout = params["channel_timeout"]
-
-        if "query_timeout" in params:
-            params_model.query_timeout = params["query_timeout"]
-
-        if "connect_retry" in params:
-            params_model.connect_retry = params["connect_retry"]
-
-        if "cache" in params:
-            params_model.cache = params["cache"]
-
-        return params_model
+        )
 
 
 @api_model
@@ -433,30 +431,23 @@ class StatusConnectionModel:
 
             if socket[0] == "tcp":
                 tls = socket[1]["tls"]
-                ip4_socket = IP4Socket(
+                return IP4Socket(
                     socket_type="tcp",
                     host=HostAddress(socket[1]["address"][0]),
                     port=socket[1]["address"][1],
                     encrypted=tls[0] == "encrypted",
+                    verify=tls[1]["verify"] if "verify" in tls[1] else ApiOmitted(),
                 )
-
-                if "verify" in tls[1]:
-                    ip4_socket.verify = tls[1]["verify"]
-
-                return ip4_socket
 
             if socket[0] == "tcp6":
                 tls = socket[1]["tls"]
-                ip6_socket = IP6Socket(
+                return IP6Socket(
                     socket_type="tcp6",
                     host=HostAddress(socket[1]["address"][0]),
                     port=socket[1]["address"][1],
                     encrypted=tls[0] == "encrypted",
+                    verify=tls[1]["verify"] if "verify" in tls[1] else ApiOmitted(),
                 )
-                if "verify" in tls[1]:
-                    ip6_socket.verify = tls[1]["verify"]
-
-                return ip6_socket
 
             return LocalSocket(socket_type="local")
 

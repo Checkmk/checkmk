@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.gui.userdb import UserRole
 from cmk.gui.utils.roles import UserPermissions
@@ -21,7 +22,7 @@ RW_PERMISSIONS = permissions.AllPerm(
 
 
 def serialize_role(role: UserRole, user_permissions: UserPermissions) -> UserRoleModel:
-    user_role_model = UserRoleModel(
+    return UserRoleModel(
         domainType="user_role",
         id=role.name,
         title=role.alias,
@@ -30,11 +31,9 @@ def serialize_role(role: UserRole, user_permissions: UserPermissions) -> UserRol
             permissions=user_permissions.get_role_permissions()[role.name],
             builtin=role.builtin,
             enforce_two_factor_authentication=role.two_factor,
+            basedon=role.basedon if role.basedon else ApiOmitted(),
         ),
         links=generate_links(
             domain_type="user_role", identifier=role.name, deletable=not role.builtin
         ),
     )
-    if role.basedon:
-        user_role_model.extensions.basedon = role.basedon
-    return user_role_model

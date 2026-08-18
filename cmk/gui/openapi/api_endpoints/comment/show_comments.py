@@ -106,7 +106,7 @@ def show_comments_v1(
                 version=APIVersion.V1,
                 host_url=api_context.host_url,
                 parameters={"collection_name": collection_name},
-                as_self=True,
+                as_relation="self",
             )
         ],
         value=[serialize_comment(comment) for _, comment in sorted(comments_dict.items())],

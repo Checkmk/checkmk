@@ -88,7 +88,7 @@ def _path(version: APIVersion = APIVersion.V1, **parameters: str) -> str:
 def _link(
     version: APIVersion = APIVersion.V1,
     body: Mapping[str, object] | None = None,
-    as_self: bool = False,
+    as_relation: str | None = None,
     title: str | None = None,
     **parameters: str,
 ) -> LinkModel:
@@ -99,7 +99,7 @@ def _link(
         host_url="https://example.com/",
         parameters=parameters,
         body=body,
-        as_self=as_self,
+        as_relation=as_relation,
         title=title,
     )
 
@@ -292,7 +292,7 @@ def test_link_to_endpoint_returns_link_model() -> None:
 def test_link_to_endpoint_as_self_sets_rel_to_self() -> None:
     _register((APIVersion.V1, _handler_with_path_param), method="get")
 
-    link = _link(thing_id="abc", as_self=True)
+    link = _link(thing_id="abc", as_relation="self")
 
     assert link.rel == "self"
 

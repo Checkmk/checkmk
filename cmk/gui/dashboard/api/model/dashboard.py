@@ -271,12 +271,13 @@ class DashboardGeneralSettings:
 
     @classmethod
     def from_internal(cls, dashboard: DashboardConfig) -> Self:
-        api_general_settings = cls(
+        return cls(
             title=DashboardTitle(
                 text=str(dashboard["title"]),
                 render=dashboard["show_title"],
                 include_context=dashboard["add_context_to_title"],
             ),
+            description=str(dashboard.get("description", "")),
             menu=DashboardMenuSettings(
                 topic=dashboard["topic"],
                 sort_index=dashboard["sort_index"],
@@ -290,9 +291,6 @@ class DashboardGeneralSettings:
                 share=DashboardVisibility.share_from_internal(dashboard["public"]),
             ),
         )
-        if "description" in dashboard:
-            api_general_settings.description = str(dashboard["description"])
-        return api_general_settings
 
     def iter_validation_errors(
         self, location: tuple[str | int, ...], context: ApiContext

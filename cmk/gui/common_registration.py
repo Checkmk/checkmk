@@ -53,12 +53,14 @@ from cmk.gui.monitor.command import downtime_recurrences, monitor_commands
 from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
 from cmk.gui.monitor.hosts._folder import monitor_folders
 from cmk.gui.monitor.services import registration as monitor_services_registration
+from cmk.gui.monitor.services._page_menu import host_menus
 from cmk.gui.nodevis import nodevis
 from cmk.gui.oauth2_connections.registration import register as register_oauth2_connections
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.page_menu_utils import LegacyHostMenus
 from cmk.gui.pages import PageRegistry
 from cmk.gui.pagetypes import registration as pagetypes_registration
 from cmk.gui.painter.v0 import PainterRegistry
@@ -240,6 +242,7 @@ def register(
     )
     monitor_commands.use_legacy_source(command_registry)
     downtime_recurrences.use_legacy_source(command_registry)
+    host_menus.use_legacy_source(LegacyHostMenus())
     # The tree is request-scoped, so the factory is injected rather than one of its instances.
     monitor_folders.use_setup_source(folder_tree)
     monitor_hosts_registration.register(
@@ -255,6 +258,7 @@ def register(
         page_registry,
         monitor_commands,
         downtime_recurrences,
+        host_menus,
     )
     crash_reporting.register(
         page_registry,

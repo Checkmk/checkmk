@@ -20,11 +20,13 @@ from cmk.gui.monitor.command import (
     monitor_command_registry,
     MonitorCommands,
 )
+from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
 from cmk.gui.monitor.services._pages._monitor_host_services import (
     _make_breadcrumb,
     _row_actions,
     MonitorHostServicesPage,
 )
+from cmk.gui.page_menu import PageMenu, PageMenuEntry, PageMenuLink
 from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
@@ -47,15 +49,21 @@ def fixture_user_without_permissions(load_config: Config) -> Iterator[UserId]:
 
 
 def test_page_denied_without_legacy_view_permission(user_without_permissions: UserId) -> None:
-    page = MonitorHostServicesPage(MonitorCommands(monitor_command_registry), DowntimeRecurrences())
+    page = MonitorHostServicesPage(
+        MonitorCommands(monitor_command_registry), DowntimeRecurrences(), HostMenus()
+    )
 
     with pytest.raises(MKAuthException):
         page.page(PageContext(config=Config(), request=request))
 
 
 def _breadcrumb_of(host: str = "web-1", site: str = "local") -> Breadcrumb:
+    ctx = PageContext(config=Config(), request=request)
     return _make_breadcrumb(
-        PageContext(config=Config(), request=request), HostName(host), SiteId(site)
+        ctx,
+        HostName(host),
+        SiteId(site),
+        UserPermissions.from_config(ctx.config, permission_registry),
     )
 
 
@@ -137,3 +145,34 @@ def test_row_actions_are_dropped_without_the_rulesets_permission(
     config.wato_enabled = True
 
     assert _row_actions(config, HostName("web-1")) == []
+
+
+def _build_page_menu() -> PageMenu:
+    # The menus themselves come from the injected legacy source, covered in test_page_menu.py.
+    return build_page_menu(
+        host_menus=HostMenus(),
+        hostname="myhost",
+        site_id="mysite",
+        breadcrumb=Breadcrumb(),
+    )
+
+
+def _entry(menu: PageMenu, dropdown_name: str, entry_name: str) -> PageMenuEntry | None:
+    return next(
+        (
+            entry
+            for topic in menu[dropdown_name].topics
+            for entry in topic.entries
+            if entry.name == entry_name
+        ),
+        None,
+    )
+
+
+def test_display_dropdown_keeps_the_kiosk_toggle(with_admin_login: UserId) -> None:
+    # The only entry of the "display" dropdown, and the only way out of kiosk mode.
+    toggle = _entry(_build_page_menu(), "display", "hide_navigation")
+
+    assert toggle is not None
+    assert isinstance(toggle.item, PageMenuLink)
+    assert "kiosk=true" in (toggle.item.link.url or "")

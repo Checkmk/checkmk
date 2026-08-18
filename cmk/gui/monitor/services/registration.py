@@ -11,6 +11,7 @@ from cmk.gui.pages import PageRegistry
 
 from ._api._registration import register_endpoints
 from ._legacy_view_link import show_host_services_link_button
+from ._page_menu import HostMenus
 from ._pages._registration import register_pages
 
 
@@ -20,7 +21,8 @@ def register(
     page_registry: PageRegistry,
     command_registry: MonitorCommands,
     downtime_recurrences: DowntimeRecurrences,
+    host_menus: HostMenus,
 ) -> None:
     register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
-    register_pages(page_registry, command_registry, downtime_recurrences)
+    register_pages(page_registry, command_registry, downtime_recurrences, host_menus)
     register_builtin("experimental_view_button", show_host_services_link_button)

@@ -3,16 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping, Sequence
+from dataclasses import dataclass
 
 import cmk.ccc.version as cmk_version
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui import pagetypes, visuals
+from cmk.gui import pagetypes, sites, visuals
 from cmk.gui.bi._compiler import is_part_of_aggregation
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_external_link,
@@ -22,20 +25,36 @@ from cmk.gui.page_menu import (
     PageMenuLink,
     PageMenuTopic,
 )
-from cmk.gui.type_defs import IconNames, InfoName, Rows, SingleInfos, StaticIcon, Visual
+from cmk.gui.permissions import permission_registry
+from cmk.gui.type_defs import (
+    DynamicIcon,
+    IconNames,
+    InfoName,
+    Rows,
+    SingleInfos,
+    StaticIcon,
+    Visual,
+)
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
+from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visual_link import get_linked_visual_request_vars, make_linked_visual_url
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
 from cmk.gui.visuals.type import visual_type_registry, VisualType
+from cmk.livestatus_client.queries import Query
+from cmk.livestatus_client.tables import Hosts
 from cmk.utils import paths
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 
 def get_context_page_menu_dropdowns(
-    view: View, rows: Rows, user_permissions: UserPermissions
+    view: View,
+    rows: Rows,
+    user_permissions: UserPermissions,
+    *,
+    availability_url: str | None = None,
 ) -> list[PageMenuDropdown]:
     """For the given visual find other visuals to link to
 
@@ -47,6 +66,10 @@ def get_context_page_menu_dropdowns(
 
     Each of these gets a dedicated dropdown which contain entries to the visuals that
     share this context. The entries are grouped by the topics defined by the visuals.
+
+    availability_url: Where the "Availability" entry links to. Defaults to the current URL
+    plus "mode=availability", which is only correct while the browser is on view.py. Pages
+    that reuse these dropdowns outside of the view renderer have to pass their own URL.
     """
     dropdowns = []
 
@@ -111,6 +134,7 @@ def get_context_page_menu_dropdowns(
                         dropdown_visuals,
                         singlecontext_request_vars,
                         mobile=False,
+                        availability_url=availability_url,
                     )
                 ),
             )
@@ -127,6 +151,7 @@ def _get_context_page_menu_topics(
     dropdown_visuals: Iterator[tuple[VisualType, Visual]],
     singlecontext_request_vars: dict[str, str],
     mobile: bool,
+    availability_url: str | None = None,
 ) -> Iterator[PageMenuTopic]:
     """Create the page menu topics for the given dropdown from the flat linked visuals list"""
     by_topic: dict[pagetypes.PagetypeTopics, list[PageMenuEntry]] = {}
@@ -162,7 +187,9 @@ def _get_context_page_menu_topics(
         by_topic.setdefault(topic, []).append(entry)
 
     if user.may("pagetype_topic.history"):
-        if availability_entry := _get_availability_entry(view, info, is_single_info):
+        if availability_entry := _get_availability_entry(
+            view, info, is_single_info, availability_url
+        ):
             by_topic.setdefault(topics["history"], []).append(availability_entry)
 
         if combined_graphs_entry := _get_combined_graphs_entry(view, info, is_single_info):
@@ -300,7 +327,7 @@ def _make_page_menu_entry_for_visual(
 
 
 def _get_availability_entry(
-    view: View, info: VisualInfo, is_single_info: bool
+    view: View, info: VisualInfo, is_single_info: bool, availability_url: str | None = None
 ) -> PageMenuEntry | None:
     """Detect whether or not to add an availability link to the dropdown currently being rendered
 
@@ -327,8 +354,13 @@ def _get_availability_entry(
         title=_("Availability"),
         icon_name=StaticIcon(IconNames.availability),
         item=make_simple_link(
-            makeuri(request, [("mode", "availability")], delvars=["show_checkboxes", "selection"])
+            availability_url
+            if availability_url is not None
+            else makeuri(
+                request, [("mode", "availability")], delvars=["show_checkboxes", "selection"]
+            )
         ),
+        name="availability",
         is_enabled=not view.missing_single_infos,
         disabled_tooltip=(
             _("Missing required context information") if view.missing_single_infos else None
@@ -615,3 +647,140 @@ def page_menu_entries_service_setup(host_name: str, serivce_name: str) -> Iterat
             )
         ),
     )
+
+
+# .
+#   .--host menus for the monitor domain-----------------------------------.
+#   |  The "Host" and "Services" menus of the "host" view, handed to the   |
+#   |  new services page as plain data so it needs nothing from here.      |
+#   '----------------------------------------------------------------------'
+
+_HOST_VIEW_NAME = "host"
+
+# get_context_page_menu_dropdowns names one dropdown per (info, single?) pair of the view.
+# For the "host" view those are the two below plus an always empty "Hosts" one, and these
+# spellings are ours, not something a consumer should have to know.
+_MONITOR_HOST_MENU_IDENTS = {"host_single": "host", "service_multiple": "services"}
+
+
+@dataclass(frozen=True)
+class _HostMenuEntry:
+    ident: str | None
+    title: str
+    icon: StaticIcon | DynamicIcon
+    url: str
+    is_show_more: bool
+
+
+@dataclass(frozen=True)
+class _HostMenuTopic:
+    title: str
+    entries: Sequence[_HostMenuEntry]
+
+
+@dataclass(frozen=True)
+class _HostMenu:
+    ident: str
+    title: str
+    topics: Sequence[_HostMenuTopic]
+
+
+def host_availability_url(hostname: str, site_id: str) -> str:
+    """Where a page asking for these menus should send a user after availability.
+
+    The entry's own default is the asking page's URL plus "mode=availability", which only
+    this view understands - it is the only place availability is implemented.
+    """
+    return makeuri_contextless(
+        request,
+        [
+            ("view_name", _HOST_VIEW_NAME),
+            ("host", hostname),
+            ("site", site_id),
+            ("mode", "availability"),
+        ],
+        filename="view.py",
+    )
+
+
+class LegacyHostMenus:
+    """Derives a host's context menus the way the legacy view does.
+
+    Written for the new "Services of host" page, which shows the same menus but must not
+    reach into this layer to get them: it declares what it needs as protocols and has this
+    injected. The classes above satisfy those structurally, so neither side imports the
+    other.
+
+    Left to the page's own coverage rather than unit tested here - it needs the real view
+    store and a live status connection to produce anything at all.
+    """
+
+    def host_menus(self, *, hostname: str, site_id: str) -> Sequence[_HostMenu]:
+        if (view_spec := get_permitted_views().get(_HOST_VIEW_NAME)) is None:
+            return []
+
+        user_permissions = UserPermissions.from_config(active_config, permission_registry)
+        view = View(
+            _HOST_VIEW_NAME,
+            view_spec,
+            {"host": {"host": hostname}},
+            user_permissions,
+        )
+
+        dropdowns = get_context_page_menu_dropdowns(
+            view,
+            self._link_from_rows(hostname, site_id),
+            user_permissions,
+            availability_url=host_availability_url(hostname, site_id),
+        )
+
+        return [
+            menu
+            for dropdown in dropdowns
+            if (ident := _MONITOR_HOST_MENU_IDENTS.get(dropdown.name)) is not None
+            and (menu := self._adapt(ident, dropdown)).topics
+        ]
+
+    @staticmethod
+    def _adapt(ident: str, dropdown: PageMenuDropdown) -> _HostMenu:
+        topics = []
+        for topic in dropdown.topics:
+            # An entry the page cannot express as a link - a popup or a bit of JavaScript -
+            # is dropped rather than shown as something that does not lead anywhere.
+            entries = [
+                _HostMenuEntry(
+                    ident=entry.name,
+                    title=entry.title,
+                    icon=entry.icon_name,
+                    url=entry.item.link.url,
+                    is_show_more=entry.is_show_more,
+                )
+                for entry in topic.entries
+                if isinstance(entry.item, PageMenuLink) and entry.item.link.url is not None
+            ]
+            if entries:
+                topics.append(_HostMenuTopic(title=topic.title, entries=entries))
+        return _HostMenu(ident=ident, title=dropdown.title, topics=topics)
+
+    @staticmethod
+    def _link_from_rows(hostname: str, site_id: str) -> Rows:
+        """The row data the `link_from` mechanism decides a visual's visibility on.
+
+        A visual may condition itself on the host's labels, which are read off the first
+        row. The legacy view has them because it fetches the "host_labels" column for
+        exactly this purpose - see `_get_needed_regular_columns`.
+        """
+        query = Query([Hosts.labels], Hosts.name == hostname)
+        try:
+            row = query.fetchone(sites.live(), only_site=SiteId(site_id))
+            labels: Mapping[str, str] = row["labels"]
+        except Exception:
+            # Only visuals conditioned on labels care, and they are hidden without them.
+            # Reaching the core must not be what keeps the menus from being built at all.
+            logger.debug(
+                "Reading the labels of %(host_name)s failed",
+                {"host_name": hostname},
+                exc_info=True,
+            )
+            labels = {}
+        return [{"site": site_id, "host_name": hostname, "host_labels": dict(labels)}]

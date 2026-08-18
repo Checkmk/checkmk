@@ -19,7 +19,7 @@ from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.monitor.services._ai_explain import ai_explain
-from cmk.gui.page_menu import PageMenu
+from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import permission_registry
@@ -70,9 +70,15 @@ def _row_actions(config: Config, hostname: HostName) -> list[RowAction]:
 
 
 class MonitorHostServicesPage(Page):
-    def __init__(self, commands: MonitorCommands, recurrences: DowntimeRecurrences) -> None:
+    def __init__(
+        self,
+        commands: MonitorCommands,
+        recurrences: DowntimeRecurrences,
+        host_menus: HostMenus,
+    ) -> None:
         self._commands = commands
         self._recurrences = recurrences
+        self._host_menus = host_menus
 
     def _permitted_actions(self) -> list[MonitoringAction]:
         return [
@@ -88,13 +94,19 @@ class MonitorHostServicesPage(Page):
         site_id = SiteId(ctx.request.get_str_input_mandatory("site"))
         title = _("Services of host %(host)s") % {"host": hostname}
 
-        breadcrumb = _make_breadcrumb(ctx, hostname, site_id)
+        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+        breadcrumb = _make_breadcrumb(ctx, hostname, site_id, user_permissions)
 
         make_header(
             html,
             title=str(title),
             breadcrumb=breadcrumb,
-            page_menu=PageMenu(breadcrumb=breadcrumb),
+            page_menu=build_page_menu(
+                host_menus=self._host_menus,
+                hostname=hostname,
+                site_id=site_id,
+                breadcrumb=breadcrumb,
+            ),
             enable_main_page_scrollbar=False,
             debug=ctx.config.debug,
             lang=user.language,
@@ -163,8 +175,12 @@ def _host_url(ctx: PageContext, hostname: HostName, site_id: SiteId) -> str:
     return f"{makeuri_contextless(ctx.request, [], filename='monitor_all_hosts.py')}#{panel}"
 
 
-def _make_breadcrumb(ctx: PageContext, hostname: HostName, site_id: SiteId) -> Breadcrumb:
-    user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
+def _make_breadcrumb(
+    ctx: PageContext,
+    hostname: HostName,
+    site_id: SiteId,
+    user_permissions: UserPermissions,
+) -> Breadcrumb:
     breadcrumb = make_topic_breadcrumb(
         main_menu_registry.menu_monitoring(),
         PagetypeTopics.get_topic("overview", user_permissions).title(),

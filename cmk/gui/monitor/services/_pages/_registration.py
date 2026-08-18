@@ -5,6 +5,7 @@
 from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
 from cmk.gui.pages import PageEndpoint, PageRegistry
 
+from .._page_menu import HostMenus
 from ._monitor_host_services import MonitorHostServicesPage
 
 
@@ -12,9 +13,11 @@ def register_pages(
     page_registry: PageRegistry,
     command_registry: MonitorCommands,
     recurrences: DowntimeRecurrences,
+    host_menus: HostMenus,
 ) -> None:
     page_registry.register(
         PageEndpoint(
-            "monitor_host_services", MonitorHostServicesPage(command_registry, recurrences)
+            "monitor_host_services",
+            MonitorHostServicesPage(command_registry, recurrences, host_menus),
         )
     )

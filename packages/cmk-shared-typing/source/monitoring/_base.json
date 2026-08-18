@@ -46,6 +46,10 @@
       },
       "required": ["recur", "title"]
     },
+    "edition": {
+      "type": "string",
+      "enum": ["community", "pro", "ultimate", "ultimatemt", "cloud"]
+    },
     "row_action": {
       "type": "object",
       "properties": {

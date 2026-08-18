@@ -23,6 +23,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks()
+  localStorage.clear()
   window.history.replaceState(null, '', '/monitor_host_services.py')
 })
 
@@ -61,7 +62,9 @@ function makeApiEntry(): ApiServiceEntry {
 }
 
 function renderApp() {
-  return render(HostServicesApp, { props: { host: 'web-1', site: 'local' } })
+  return render(HostServicesApp, {
+    props: { host: 'web-1', site: 'local', user_id: 'cmkadmin', edition: 'pro' }
+  })
 }
 
 test('shows the empty-state message once a load returns no services', async () => {
@@ -509,4 +512,20 @@ test('requests services whose last state change is at or after the picked instan
       }
     })
   )
+})
+
+test('a column decision applied in the picker outlives the page', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByRole('columnheader', { name: 'Service' })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Show or hide columns' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Labels' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
+
+  expect(
+    JSON.parse(
+      localStorage.getItem('monitoring-host-services-columns-local-cmkadmin-pro') ?? 'null'
+    )
+  ).toMatchObject({ labels: true })
 })

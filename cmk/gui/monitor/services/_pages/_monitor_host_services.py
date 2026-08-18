@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import edition
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.header import make_header
@@ -25,11 +26,13 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.host_services import (
     DowntimeRecurrence,
+    Edition,
     MonitoringAction,
     MonitoringHostServicesApp,
     MonitoringPageLinkButton,
     RowAction,
 )
+from cmk.utils import paths
 from cmk.web.utils.urls import makeuri_contextless
 
 _SUPPORTED_ACTIONS: tuple[str, ...] = (
@@ -112,6 +115,8 @@ class MonitorHostServicesPage(Page):
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     host=hostname,
                     site=site_id,
+                    user_id=str(user.id),
+                    edition=Edition(edition(paths.omd_root).short),
                     ai_explain=ai_explain.is_enabled(),
                     actions=self._permitted_actions(),
                     downtime_recurrences=[

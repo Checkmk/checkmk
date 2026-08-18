@@ -14,7 +14,11 @@
     "ai_explain": {
       "type": "boolean",
       "default": false
-    }
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "edition": { "$ref": "monitoring/_base.json#/$defs/edition" }
   },
-  "required": ["host", "site"]
+  "required": ["host", "site", "user_id", "edition"]
 }

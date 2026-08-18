@@ -15,14 +15,10 @@
       "type": "array",
       "items": { "$ref": "#/$defs/site" }
     },
-    "edition": { "$ref": "#/$defs/edition" }
+    "edition": { "$ref": "monitoring/_base.json#/$defs/edition" }
   },
   "required": ["user_id", "site", "sites", "edition"],
   "$defs": {
-    "edition": {
-      "type": "string",
-      "enum": ["community", "pro", "ultimate", "ultimatemt", "cloud"]
-    },
     "site": {
       "type": "object",
       "properties": {

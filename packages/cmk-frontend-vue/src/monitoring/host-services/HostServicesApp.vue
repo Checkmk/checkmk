@@ -28,6 +28,7 @@ import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/resche
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
+import { buildColumnStorageKey } from '../shared/services/MonitoringService'
 import {
   type SlideInUrlDescriptor,
   exactPattern,
@@ -108,6 +109,12 @@ const hostServicesService = new HostServicesService(
   getKeyShortcutServiceInstance(),
   {
     pollIntervalMs: props.poll_interval_ms,
+    columnStorageKey: buildColumnStorageKey({
+      view: 'host-services',
+      site: props.site,
+      userId: props.user_id,
+      edition: props.edition
+    }),
     columns,
     initialFilterState,
     quickFilters: [

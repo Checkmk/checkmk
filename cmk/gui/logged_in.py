@@ -35,9 +35,9 @@ from cmk.gui.utils.security_log_events import PermissionCheckFailureEvent
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.livestatus_client import SiteConfigurations
-from cmk.shared_typing.user_frontend_config import UserFrontendConfig
 from cmk.utils.security_event import log_security_event
 from cmk.web.utils.permission_verification import BasePerm
+from cmk.web.utils.user_frontend_settings_cookie import UserFrontendConfig
 
 _logger = logging.getLogger(__name__)
 _ContactgroupName = str

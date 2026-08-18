@@ -5,19 +5,23 @@
 
 import json
 import urllib.parse
-from dataclasses import asdict
+from collections.abc import Sequence
+from dataclasses import asdict, dataclass
 
 from cmk.ccc.site import url_prefix
-from cmk.gui.http import Request, Response
-from cmk.shared_typing.user_frontend_config import UserFrontendConfig
+from cmk.web.context import RequestProtocol, ResponseProtocol
 
 
-def del_user_frontend_config_cookie(response: Response) -> None:
-    response.delete_cookie("user_frontend_config", path=url_prefix())
+@dataclass(frozen=True, kw_only=True)
+class UserFrontendConfig:
+    # Mirrors the TypeScript UserFrontendConfig the frontend reads the cookie with, which
+    # is generated from packages/cmk-shared-typing/source/user_frontend_config.json.
+    hide_contextual_help_icon: bool | None
+    dismissed_warnings: Sequence[str] | None = None
 
 
 def set_user_frontend_config_cookie(
-    request: Request, response: Response, conf: UserFrontendConfig
+    request: RequestProtocol, response: ResponseProtocol, conf: UserFrontendConfig
 ) -> None:
     # Cookies need to be encoded, things like commas are not allowed etc.
     data = urllib.parse.quote(json.dumps({k: v for k, v in asdict(conf).items() if v is not None}))

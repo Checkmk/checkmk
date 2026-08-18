@@ -28,7 +28,6 @@ py_library(
     srcs = [
         "dataclasses.py",
         "doc_references.py",
-        "language_cookie.py",
         "misc.py",
         "mobile.py",
         "output_funnel.py",
@@ -39,7 +38,6 @@ py_library(
         "timeout_manager.py",
         "transaction_manager.py",
         "user_errors.py",
-        "user_frontend_settings_cookie.py",
     ],
     imports = ["../../.."],
     visibility = [
@@ -54,11 +52,9 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/utils",
         "//cmk/utils:paths",
-        "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
-        "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web",
         "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),

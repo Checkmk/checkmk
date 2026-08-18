@@ -28,7 +28,6 @@ from .api_endpoints import (
     custom_host_attributes,
     host,
     icon,
-    livestatus_query,
     rule,
     site_management,
 )
@@ -95,10 +94,6 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     host.register(
-        versioned_endpoint_registry=versioned_endpoint_registry,
-        endpoint_family_registry=endpoint_family_registry,
-    )
-    livestatus_query.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

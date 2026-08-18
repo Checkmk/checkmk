@@ -212,32 +212,20 @@ function renderGroup(graphs: CmkTimeSeriesGraph[] = [makeGraphDefinition('CPU ut
   })
 }
 
-test('holds the skeletons back for a second, then shows one per graph definition', async () => {
+test('shows one skeleton per graph definition from the first moment', async () => {
   vi.useFakeTimers()
   postSpy.mockReturnValue(new Promise(() => {}))
   renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')])
 
+  // A first load has no curves to leave up, so its wait is skeletonised without the delay a
+  // refetch is held back by.
   await nextTick()
-  expect(skeletons()).toHaveLength(0)
-
-  vi.advanceTimersByTime(1_000)
-  await nextTick()
-
   expect(skeletons()).toHaveLength(2)
+  expect(group()).toHaveAttribute('aria-busy', 'true')
   // No panel has been rendered to measure, so the skeleton keeps its own estimate.
   expect((skeletons()[0] as HTMLElement).style.height).toBe('')
   // The skeletons are aria-hidden; the announcement comes from the group's live region.
   expect(screen.getByRole('status')).toBeInTheDocument()
-})
-
-test('reports the busy state from the first moment, ahead of the skeletons', async () => {
-  vi.useFakeTimers()
-  postSpy.mockReturnValue(new Promise(() => {}))
-  renderGroup()
-
-  await nextTick()
-  expect(skeletons()).toHaveLength(0)
-  expect(group()).toHaveAttribute('aria-busy', 'true')
 })
 
 test('swaps the panels for skeletons once a refetch outlasts the delay', async () => {
@@ -350,7 +338,7 @@ test('an error arriving after the skeletons are up replaces them', async () => {
   expect(group()).toHaveAttribute('aria-busy', 'false')
 })
 
-test('a fast load resolves straight into the panels without a skeleton', async () => {
+test("a load's skeletons give way to the panels as its data arrives", async () => {
   vi.useFakeTimers()
   renderGroup()
 

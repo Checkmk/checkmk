@@ -1272,6 +1272,9 @@ class TestMonitorServiceOverview:
         assert resp.json["legacy_service_status_link"] == (
             f"view.py?view_name=service&site={_SITE_ID}&host={_HOSTNAME}&service=CPU+load"
         )
+        assert resp.json["legacy_service_graphs_link"] == (
+            f"view.py?view_name=service_graphs&site={_SITE_ID}&host={_HOSTNAME}&service=CPU+load"
+        )
 
     @pytest.mark.parametrize(
         "columns, expected_icons",

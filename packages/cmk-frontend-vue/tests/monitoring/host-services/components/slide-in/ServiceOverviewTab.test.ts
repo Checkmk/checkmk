@@ -13,6 +13,8 @@ import type { ServiceOverview } from '@/monitoring/shared/api/types'
 const HOST_LINK = 'view.py?view_name=hoststatus&site=local&host=web-server-01'
 const SERVICE_LINK = 'view.py?view_name=service&site=local&host=web-server-01&service=CPU+load'
 const PARAMETERS_LINK = 'wato.py?mode=object_parameters&host=web-server-01&service=CPU+load'
+const GRAPHS_LINK =
+  'view.py?view_name=service_graphs&site=local&host=web-server-01&service=CPU+load'
 
 function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview {
   return {
@@ -27,6 +29,7 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
     legacy_host_status_link: HOST_LINK,
     legacy_service_status_link: SERVICE_LINK,
     legacy_service_parameters_link: PARAMETERS_LINK,
+    legacy_service_graphs_link: GRAPHS_LINK,
     contact_groups: ['all'],
     summary: 'OK - load average: 0.10, 0.05, 0.01',
     long_output: '',

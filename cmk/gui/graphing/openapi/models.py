@@ -136,6 +136,13 @@ class ApiDiscoveredGraph:
         description="The localized graph title, for the graph header.",
         example="CPU utilization",
     )
+    name: str = api_field(
+        description=(
+            "The graph's own name, as the rendering component identifies it by. Unlike the "
+            "title it is not localized."
+        ),
+        example="cpu_utilization",
+    )
     add_to_specification: dict[str, object] | None = api_field(
         description=(
             "The specification identifying this one graph, to be passed to the add_to_visual and "
@@ -155,6 +162,7 @@ class ApiDiscoveredGraph:
         return cls(
             internal=json.dumps(serialize_graphs([built.graph])),
             title=built.graph.title,
+            name=built.graph.name,
             add_to_specification=(
                 None if built.specification is None else built.specification.model_dump()
             ),

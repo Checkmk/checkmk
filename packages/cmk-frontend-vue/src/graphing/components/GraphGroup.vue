@@ -21,6 +21,7 @@ import { useGlobalRefresh } from '../GlobalRefreshControl/useGlobalRefresh'
 import { useBrushCoordination } from '../composables/useBrushCoordination'
 import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
 import { useGraphNotice } from '../composables/useGraphNotice'
+import { useLocalTimeRange } from '../composables/useLocalTimeRange'
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
 import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
 import GraphNotice from './GraphNotice.vue'
@@ -49,13 +50,19 @@ const props = withDefaults(
     // 'column' stacks the panels vertically (the default)
     // 'wrap' flows the fixed-width panels into as many columns as the container allows
     layout?: 'column' | 'wrap'
+    // 'global' follows the page's global time picker, and publishes the group's own zooms and
+    // pans back to it (the default)
+    // 'local' keeps the range to this group alone, for an embed that must not steer the page
+    // it sits on (a slide-in panel, say)
+    time_range_scope?: 'global' | 'local'
   }>(),
   {
     combination_mode: null,
     figure_height: 300,
     show_consolidation: true,
     show_legend: true,
-    layout: 'column'
+    layout: 'column',
+    time_range_scope: 'global'
   }
 )
 
@@ -92,10 +99,15 @@ const effectiveWidth = computed(() => props.figure_width ?? availableWidth.value
 // Seeded from the backend-provided initial range, then follows the page's global time picker;
 // brush interactions, time zooms and pans on individual panels write to it directly, and that
 // write is published back to the global time picker so other graphs/groups on the page follow.
-const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } = useRequestedTimeRange({
+// Unless the group was told to keep to itself, in which case the same writes stay here.
+const initialTimeRange = {
   start: props.initial_time_range_start,
   end: props.initial_time_range_end
-})
+}
+const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } =
+  props.time_range_scope === 'global'
+    ? useRequestedTimeRange(initialTimeRange)
+    : useLocalTimeRange(initialTimeRange)
 const consolidationFnPerPanel = ref<ConsolidationFn[]>([])
 const consolidationFnOfPanel = (panelIndex: number): ConsolidationFn =>
   consolidationFnPerPanel.value[panelIndex] ?? DEFAULT_CONSOLIDATION_FN
@@ -139,8 +151,10 @@ const overviews = computed(() =>
 )
 
 // A refetch is skeletonised too: the curves still on screen are the previous range's, so leaving
-// them up reads as nothing having happened. A failure is exempt, its notice occupies the area.
-const showSkeletons = useDelayedFlag(
+// them up reads as nothing having happened. Only that case is worth delaying - a slot that has
+// never held a graph has nothing to leave up, so its wait is blank rather than flickering.
+// A failure is exempt either way, its notice occupies the area.
+const delayHasElapsed = useDelayedFlag(
   () => loadingSlots.value.some(Boolean) && error.value === null,
   LOADING_AFFORDANCE_DELAY_MS
 )
@@ -149,12 +163,18 @@ const showSkeletons = useDelayedFlag(
 // a consolidation change refetches that panel alone, and blanking its neighbours would lose
 // data they still hold.
 const slots = computed(() =>
-  Array.from({ length: props.graphs.length }, (_unused, index) => ({
-    index,
-    graph: graphs.value[index] ?? null,
-    isSkeleton: showSkeletons.value && (loadingSlots.value[index] ?? false)
-  }))
+  Array.from({ length: props.graphs.length }, (_unused, index) => {
+    const graph = graphs.value[index] ?? null
+    const isWaiting = (loadingSlots.value[index] ?? false) && error.value === null
+    return {
+      index,
+      graph,
+      isSkeleton: isWaiting && (graph === null || delayHasElapsed.value)
+    }
+  })
 )
+
+const showSkeletons = computed(() => slots.value.some((slot) => slot.isSkeleton))
 
 // Keyed by slot rather than collected in order: skeletons and panels interleave, so a ref array
 // would not line up with the slots the heights are read back against.

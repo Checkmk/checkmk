@@ -80,6 +80,12 @@ class ServiceOverviewResponse:
         ),
         example="wato.py?mode=object_parameters&host=web-server-01&service=CPU+utilization",
     )
+    legacy_service_graphs_link: str = api_field(
+        description="URL to the legacy view holding this service's graphs",
+        example=(
+            "view.py?view_name=service_graphs&site=local&host=web-server-01&service=CPU+utilization"
+        ),
+    )
     contact_groups: list[str] = api_field(
         description="Contact groups responsible for this service",
         example=["all"],
@@ -148,6 +154,7 @@ class ServiceOverviewResponse:
             legacy_service_parameters_link=(
                 service_parameters_link(service) if may_see_parameters else None
             ),
+            legacy_service_graphs_link=service_view_link("service_graphs", service),
             contact_groups=read(service.contact_groups, "contact_groups"),
             summary=service.summary,
             long_output=service.long_output,

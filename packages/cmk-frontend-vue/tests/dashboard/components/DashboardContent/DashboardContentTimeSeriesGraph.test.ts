@@ -151,7 +151,14 @@ describe('graph widget on a shared dashboard', () => {
   test('renders the pre-discovered shell without discovering itself', async () => {
     renderInSharedDashboard({
       w1: {
-        graphs: [{ internal: '{"graphs": []}', title: 'My graph', add_to_specification: null }],
+        graphs: [
+          {
+            internal: '{"graphs": []}',
+            title: 'My graph',
+            name: 'my_graph',
+            add_to_specification: null
+          }
+        ],
         no_data_message: null
       }
     })
@@ -184,7 +191,14 @@ describe('graph widget on a shared dashboard', () => {
   test('hands the figure a fetch function instead of letting it fetch by definition', async () => {
     renderInSharedDashboard({
       w1: {
-        graphs: [{ internal: '{"graphs": []}', title: 'My graph', add_to_specification: null }],
+        graphs: [
+          {
+            internal: '{"graphs": []}',
+            title: 'My graph',
+            name: 'my_graph',
+            add_to_specification: null
+          }
+        ],
         no_data_message: null
       }
     })

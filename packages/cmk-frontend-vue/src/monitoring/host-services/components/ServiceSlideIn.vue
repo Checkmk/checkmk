@@ -10,6 +10,7 @@ import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/Cmk
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw, ref, watch } from 'vue'
 
+import { ServiceGraphsApi } from '@/monitoring/host-services/api/graphs'
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
 import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
 import ActionFeedback, {
@@ -22,6 +23,8 @@ import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActio
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
 
 import ServiceAiExplainButton from './slide-in/ServiceAiExplainButton.vue'
+import ServiceGraphsSkeleton from './slide-in/ServiceGraphsSkeleton.vue'
+import ServiceGraphsTab, { type ServiceGraphs } from './slide-in/ServiceGraphsTab.vue'
 import ServiceOverviewSkeleton from './slide-in/ServiceOverviewSkeleton.vue'
 import ServiceOverviewTab from './slide-in/ServiceOverviewTab.vue'
 import ServiceSlideInHeader from './slide-in/ServiceSlideInHeader.vue'
@@ -59,6 +62,7 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 const servicesApi = new HostServicesApi()
+const graphsApi = new ServiceGraphsApi()
 
 const open = computed(() => props.service !== null)
 
@@ -103,6 +107,20 @@ async function loadOverview(description: string): Promise<ServiceOverview> {
     overview.value = loaded
   }
   return loaded
+}
+
+// The link out lives on the overview, which the first tab loads; a reader landing straight on
+// the graphs tab from a URL has none yet, so it is loaded here rather than assumed.
+async function loadGraphs(description: string): Promise<ServiceGraphs> {
+  const [discovered, loaded] = await Promise.all([
+    graphsApi.discover(props.host, description),
+    overview.value ?? loadOverview(description)
+  ])
+  return {
+    graphs: discovered.graphs,
+    noDataMessage: discovered.noDataMessage,
+    graphsLink: loaded.legacy_service_graphs_link
+  }
 }
 
 // Same shape as the host slide-in: link-only actions rendered as icon buttons in the header.
@@ -151,6 +169,13 @@ const tabs = computed<SlideInTab[]>(() => {
       component: markRaw(ServiceOverviewTab),
       skeleton: markRaw(ServiceOverviewSkeleton),
       load: () => loadOverview(service.name)
+    },
+    {
+      id: 'service_graphs',
+      title: _t('Service graphs'),
+      component: markRaw(ServiceGraphsTab),
+      skeleton: markRaw(ServiceGraphsSkeleton),
+      load: () => loadGraphs(service.name)
     }
   ]
 })

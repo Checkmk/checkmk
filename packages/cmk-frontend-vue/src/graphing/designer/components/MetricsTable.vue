@@ -136,12 +136,10 @@ const selectedIds = computed<ItemId[]>(() => {
 const addSourceSuggestions = computed(() => {
   const suggestions = [
     { name: 'rrd_metric', title: _t('Checkmk RRD') },
-    { name: 'constant', title: _t('Constant line') },
-    { name: 'scalar', title: _t('Service reference line') }
+    ...(metricBackendAvailable ? [{ name: 'metric_backend', title: _t('Metrics backend') }] : []),
+    { name: 'scalar', title: _t('Service reference line') },
+    { name: 'constant', title: _t('Constant line') }
   ]
-  if (metricBackendAvailable) {
-    suggestions.push({ name: 'metric_backend', title: _t('Metrics backend') })
-  }
   return { type: 'fixed' as const, suggestions }
 })
 

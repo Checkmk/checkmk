@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime, UTC
 from typing import NewType
 
-from cmk.gui.oauth.store.backend import Backend
+from cmk.gui.oauth.store.backend import Backend, shared_connection
 
 _MAX_REGISTERED_CLIENTS = 1000
 
@@ -97,6 +97,11 @@ class ClientStore(Backend):
                 [(client_id,) for client_id in unique_ids],
             )
         return cursor.rowcount
+
+
+def get_client_store() -> ClientStore:
+    """Get the registered-client store, backed by the shared per-process connection."""
+    return ClientStore(shared_connection())
 
 
 def _row_to_registration(row: sqlite3.Row) -> ClientRegistration:

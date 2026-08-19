@@ -10,13 +10,12 @@ from typing import override
 from pydantic import ValidationError
 
 from cmk.gui.http import request, response
-from cmk.gui.oauth import client_store
 from cmk.gui.oauth.pages._models import (
     OAuthClientRegistrationErrorResponse,
     OAuthClientRegistrationRequest,
     OAuthClientRegistrationResponse,
 )
-from cmk.gui.oauth.store.client_store import ClientRegistrationLimitExceededError
+from cmk.gui.oauth.store.client_store import ClientRegistrationLimitExceededError, get_client_store
 from cmk.gui.pages import Page, PageContext, PageResult
 
 
@@ -39,7 +38,7 @@ class OAuthClientRegistrationPage(Page):
 
     Validates the shape of the submitted client metadata (see
     OAuthClientRegistrationRequest) and persists it via
-    cmk.gui.oauth.client_store(). redirect_uris is echoed back from
+    cmk.gui.oauth.store.client_store. redirect_uris is echoed back from
     the request body -- see OAuthClientRegistrationResponse's docstring for
     why that's required, not optional polish. Validation failures and a
     reached registration limit are both reported per RFC 7591 section 3.2.2
@@ -68,7 +67,7 @@ class OAuthClientRegistrationPage(Page):
             return None
 
         try:
-            registration = client_store().register(body.redirect_uris, body.client_name)
+            registration = get_client_store().register(body.redirect_uris, body.client_name)
         except ClientRegistrationLimitExceededError:
             response.status_code = http_client.BAD_REQUEST
             response.set_content_type("application/json")

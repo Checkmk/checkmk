@@ -6,10 +6,10 @@
 import pytest
 from flask import Flask
 
-from cmk.gui import oauth
 from cmk.gui.config import Config
 from cmk.gui.http import request, response
 from cmk.gui.oauth.pages._client_registration import OAuthClientRegistrationPage
+from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.pages import PageContext
 
 
@@ -185,11 +185,11 @@ class TestOAuthClientRegistrationPage:
             assert isinstance(response.json, dict)
             client_id = response.json["client_id"]
 
-        assert oauth.client_store().get(client_id) is not None
+        assert get_client_store().get(client_id) is not None
 
     @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_returns_400_when_registration_limit_is_reached(self, flask_app: Flask) -> None:
-        store = oauth.client_store()
+        store = get_client_store()
         store._connection.executemany(
             """
             INSERT INTO clients (client_id, redirect_uris, client_name, registered_at)

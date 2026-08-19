@@ -7,10 +7,10 @@ import pytest
 from flask import Flask
 
 from cmk.ccc.version import Edition
-from cmk.gui import oauth
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody
+from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.wato._registered_clients_mode import ModeRegisteredOAuthClients
 from cmk.gui.pages import PageContext
 from cmk.gui.utils.output_funnel import output_funnel
@@ -29,7 +29,7 @@ def test_page_renders_registered_client_details(
     # user's profile. The anonymous test session is LoggedInNobody, which
     # refuses to save a profile -- same workaround as test_table.py.
     monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda self: None)
-    registered = oauth.client_store().register(
+    registered = get_client_store().register(
         ["https://client.example/callback", "https://client.example/other"],
         "Example Client",
     )
@@ -61,7 +61,7 @@ def test_page_renders_empty_table_without_error(test_edition: Edition) -> None:
 @pytest.mark.usefixtures("request_context")
 class TestModeRegisteredOAuthClientsAction:
     def test_deletes_single_client(self, flask_app: Flask, test_edition: Edition) -> None:
-        registered = oauth.client_store().register(["https://client.example/callback"], "Example")
+        registered = get_client_store().register(["https://client.example/callback"], "Example")
 
         with flask_app.test_request_context(
             method="POST",
@@ -78,14 +78,14 @@ class TestModeRegisteredOAuthClientsAction:
                 test_edition, PageContext(config=Config(), request=request)
             ).action(Config())
 
-        assert oauth.client_store().get(registered.client_id) is None
+        assert get_client_store().get(registered.client_id) is None
 
     @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_bulk_deletes_checked_clients_only(
         self, flask_app: Flask, test_edition: Edition
     ) -> None:
-        checked = oauth.client_store().register(["https://client.example/checked"], "Checked")
-        unchecked = oauth.client_store().register(["https://client.example/unchecked"], "Unchecked")
+        checked = get_client_store().register(["https://client.example/checked"], "Checked")
+        unchecked = get_client_store().register(["https://client.example/unchecked"], "Unchecked")
 
         with flask_app.test_request_context(
             method="POST",
@@ -103,14 +103,14 @@ class TestModeRegisteredOAuthClientsAction:
                 test_edition, PageContext(config=Config(), request=request)
             ).action(Config())
 
-        assert oauth.client_store().get(checked.client_id) is None
-        assert oauth.client_store().get(unchecked.client_id) == unchecked
+        assert get_client_store().get(checked.client_id) is None
+        assert get_client_store().get(unchecked.client_id) == unchecked
 
     @pytest.mark.usefixtures("cleanup_registered_clients")
     def test_does_not_delete_when_transaction_is_invalid(
         self, flask_app: Flask, test_edition: Edition
     ) -> None:
-        registered = oauth.client_store().register(["https://client.example/callback"], "Example")
+        registered = get_client_store().register(["https://client.example/callback"], "Example")
 
         with flask_app.test_request_context(
             method="POST",
@@ -125,4 +125,4 @@ class TestModeRegisteredOAuthClientsAction:
                 test_edition, PageContext(config=Config(), request=request)
             ).action(Config())
 
-        assert oauth.client_store().get(registered.client_id) == registered
+        assert get_client_store().get(registered.client_id) == registered

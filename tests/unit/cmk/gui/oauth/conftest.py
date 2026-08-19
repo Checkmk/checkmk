@@ -8,7 +8,7 @@ from collections.abc import Iterator
 import pytest
 from flask import Flask
 
-from cmk.gui import oauth
+from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.utils.redis import get_redis_client
 
 
@@ -25,5 +25,5 @@ def fixture_cleanup_registered_clients() -> Iterator[None]:
     # registered here would otherwise outlive the test and leak into every test
     # that runs afterwards in the same pytest session.
     yield
-    store = oauth.client_store()
+    store = get_client_store()
     store.delete([registration.client_id for registration in store.list()])

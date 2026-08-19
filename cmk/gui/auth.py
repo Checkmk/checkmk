@@ -24,14 +24,14 @@ from cmk.ccc.user import UserId
 from cmk.crypto import password_hashing
 from cmk.crypto.password import Password
 from cmk.crypto.secrets import Secret
-from cmk.gui import oauth, userdb
+from cmk.gui import userdb
 from cmk.gui.authorization import Authorization
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.oauth.store.token_store import TokenRecord
+from cmk.gui.oauth.store.token_store import get_token_store, looks_like_token, TokenRecord
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.type_defs import AuthType, CustomUserAttrSpec, UserSpec
@@ -350,7 +350,7 @@ def _check_oauth_access_token(token: str) -> TokenRecord | None:
         still exists and isn't locked
         None otherwise
     """
-    record = oauth.token_store().get_by_token(token)
+    record = get_token_store().get_by_token(token)
     if record is None or not record.is_valid():
         return None
 
@@ -370,7 +370,7 @@ def _get_bearer_token() -> str | None:
 
 
 def _is_oauth_shaped(token: str) -> bool:
-    return " " not in token and oauth.looks_like_token(token)
+    return " " not in token and looks_like_token(token)
 
 
 def _check_auth_by_oauth_token(config: Config) -> Credential | None:

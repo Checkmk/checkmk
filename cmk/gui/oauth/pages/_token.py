@@ -15,10 +15,9 @@ from typing import Literal, override
 from cmk.ccc.user import UserId
 from cmk.gui.http import request, response
 from cmk.gui.log import logger
-from cmk.gui.oauth import token_store
 from cmk.gui.oauth.pages._models import OAuthTokenErrorResponse, OAuthTokenResponse
 from cmk.gui.oauth.store._auth_code_store import AuthCodeStore
-from cmk.gui.oauth.store.token_store import UnknownClientError
+from cmk.gui.oauth.store.token_store import get_token_store, UnknownClientError
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.scopes import format_scopes, parse_scopes
 from cmk.gui.utils.security_log_events import OAuthTokenFailureEvent
@@ -86,7 +85,7 @@ class OAuthTokenPage(Page):
     here instead of on its first rejected write.
     Rejections follow the RFC 6749 section 5.2 error format. The returned
     access token is a real, store-backed token issued for the record's user
-    (see cmk.gui.oauth.token_store).
+    (see cmk.gui.oauth.store.token_store).
     """
 
     def __init__(self, enabled: Callable[[], bool]) -> None:
@@ -198,7 +197,7 @@ class OAuthTokenPage(Page):
         granted_scopes = parse_scopes(record.scope)
 
         try:
-            access_token = token_store().issue_token(
+            access_token = get_token_store().issue_token(
                 UserId(record.user_id),
                 expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
                 resource=record.resource,

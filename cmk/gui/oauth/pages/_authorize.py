@@ -16,8 +16,8 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.oauth import client_store
 from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
+from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.scopes import (
     DEFAULT_SCOPE,
@@ -50,7 +50,7 @@ class OAuthAuthorizePage(Page):
 
     Codes minted on approval are persisted PKCE-bound via AuthCodeStore; the
     token endpoint later redeems them single-use. Validates client_id against
-    the registered-client store (see cmk.gui.oauth.client_store()) and requires
+    the registered-client store (see cmk.gui.oauth.store.client_store) and requires
     redirect_uri to exactly match one of that client's registered
     redirect_uris. Rejected requests are logged as security events (see
     OAuthAuthorizationFailureEvent).
@@ -85,7 +85,7 @@ class OAuthAuthorizePage(Page):
             response.status_code = http_client.BAD_REQUEST
             return None
 
-        registration = client_store().get(client_id)
+        registration = get_client_store().get(client_id)
         if registration is None:
             self._log_authorization_failure("unknown client_id")
             response.status_code = http_client.BAD_REQUEST

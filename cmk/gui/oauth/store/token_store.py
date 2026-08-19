@@ -12,7 +12,7 @@ from datetime import datetime, UTC
 
 from cmk.ccc.user import UserId
 from cmk.gui.log import logger
-from cmk.gui.oauth.store.backend import Backend
+from cmk.gui.oauth.store.backend import Backend, shared_connection
 from cmk.gui.scopes import format_scopes, InvalidScopeError, parse_scopes, ScopeId
 
 
@@ -138,6 +138,11 @@ class TokenStore(Backend):
             (user_id,),
         ).fetchall()
         return [record for row in rows if (record := _row_to_record(row)) is not None]
+
+
+def get_token_store() -> TokenStore:
+    """Get the token store, backed by the shared per-process connection."""
+    return TokenStore(shared_connection())
 
 
 def _row_to_record(row: sqlite3.Row) -> TokenRecord | None:

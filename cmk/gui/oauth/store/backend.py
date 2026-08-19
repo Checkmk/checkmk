@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import sqlite3
+import threading
 from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
 from pathlib import Path
@@ -133,9 +134,9 @@ def open_connection(db_path: str | Path, *, timeout_seconds: float = 30.0) -> sq
 class Backend:
     """Shared sqlite plumbing for the OAuth stores.
 
-    A store does not own its connection -- the accessors in cmk.gui.oauth hand
-    out a fresh one per request around the process-wide connection. Hence no
-    close(): it would take OAuth down for the rest of that process's life.
+    A store does not own its connection -- each store's accessor hands out a
+    fresh store per call around shared_connection(). Hence no close(): it would
+    take OAuth down for the rest of that process's life.
     """
 
     def __init__(self, connection: sqlite3.Connection) -> None:
@@ -147,3 +148,22 @@ class Backend:
 
 def oauth_db_path() -> Path:
     return cmk.utils.paths.var_dir / "oauth" / "db.sqlite3"
+
+
+# The OAuth stores share one sqlite connection per worker process: opened on
+# first use, reused for the rest of the process's lifetime, never closed.
+_connection_lock = threading.Lock()
+_connection: sqlite3.Connection | None = None
+
+
+def shared_connection() -> sqlite3.Connection:
+    """The process-wide connection every OAuth store is handed out on."""
+    global _connection
+    if _connection is None:
+        # The lock only guards against a first-use race between threads.
+        with _connection_lock:
+            if _connection is None:
+                db_path = oauth_db_path()
+                initialize_database(db_path)
+                _connection = open_connection(db_path)
+    return _connection

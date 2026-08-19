@@ -21,10 +21,12 @@ import time_machine
 from werkzeug.test import create_environ
 
 from cmk.ccc.user import UserId
-from cmk.gui import auth, http, login, oauth
+from cmk.gui import auth, http, login
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
+from cmk.gui.oauth.store.client_store import get_client_store
+from cmk.gui.oauth.store.token_store import get_token_store
 from cmk.gui.scopes import DEFAULT_SCOPE, ScopeId
 from cmk.gui.session import session
 from cmk.gui.type_defs import (
@@ -193,8 +195,8 @@ def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask
 
 def test_login_with_oauth_token(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:
     username, _ = with_user
-    client_id = oauth.client_store().register(["https://client.example/callback"], None).client_id
-    token = oauth.token_store().issue_token(
+    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
+    token = get_token_store().issue_token(
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
@@ -221,8 +223,8 @@ def test_read_scoped_oauth_token_narrows_what_the_user_may_do(
     was only granted read, so the intersection denies it.
     """
     username, _ = with_user
-    client_id = oauth.client_store().register(["https://client.example/callback"], None).client_id
-    token = oauth.token_store().issue_token(
+    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
+    token = get_token_store().issue_token(
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
@@ -240,8 +242,8 @@ def test_write_scoped_oauth_token_leaves_the_users_permissions_alone(
     with_user: tuple[UserId, str], flask_app: flask.Flask
 ) -> None:
     username, _ = with_user
-    client_id = oauth.client_store().register(["https://client.example/callback"], None).client_id
-    token = oauth.token_store().issue_token(
+    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
+    token = get_token_store().issue_token(
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
@@ -259,8 +261,8 @@ def _legacy_bearer_header(username: UserId, password: str) -> str:
 
 
 def _oauth_bearer_header(username: UserId, password: str) -> str:
-    client_id = oauth.client_store().register(["https://client.example/callback"], None).client_id
-    return "Bearer " + oauth.token_store().issue_token(
+    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
+    return "Bearer " + get_token_store().issue_token(
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
@@ -302,8 +304,8 @@ def test_login_with_expired_oauth_bearer_token(
     with_user: tuple[UserId, str], flask_app: flask.Flask
 ) -> None:
     username, _ = with_user
-    client_id = oauth.client_store().register(["https://client.example/callback"], None).client_id
-    token = oauth.token_store().issue_token(
+    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
+    token = get_token_store().issue_token(
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,

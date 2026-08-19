@@ -56,7 +56,7 @@ test.each<[string, GroupByInputType, GroupByModel, boolean]>([
   ],
   ['the same grouping over everything', 'float', model({ function: 'avg', keys: [] }), true],
   ['"no grouping"', 'float', model({ function: 'none' }), false],
-  ['a histogram function', 'histogram', model({ function: 'percentile' }), false]
+  ['a histogram grouping', 'histogram', model({ function: 'percentile' }), true]
 ])('then steps are allowed for %s: %s', (_scenario, inputType, groupBy, expected) => {
   expect(thenStepsAllowed(inputType, groupBy)).toBe(expected)
 })

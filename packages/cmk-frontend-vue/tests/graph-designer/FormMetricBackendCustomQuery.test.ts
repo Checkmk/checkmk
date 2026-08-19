@@ -70,13 +70,38 @@ const SUM_BY_SERVICE_THEN_AVG_BY_REGION: Aggregator = {
   ]
 }
 
-test('a stored multi-stage aggregator renders the chained then step', async () => {
-  render(FormMetricBackendCustomQuery, {
-    props: {
+type Props = InstanceType<typeof FormMetricBackendCustomQuery>['$props']
+
+test.each<[string, Props]>([
+  [
+    'a float consolidation, from the stage after the group-by',
+    {
       consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 60 },
       aggregator: SUM_BY_SERVICE_THEN_AVG_BY_REGION
     }
-  })
+  ],
+  [
+    'a preserve histograms line, from its first aggregator stage',
+    {
+      consolidation: {
+        type: 'histogram',
+        function: 'histogram_preserve_quantile',
+        lookback_seconds: 120,
+        percentile: 90,
+        group_by: [{ kind: 'resource', key: 'service.name' }]
+      },
+      aggregator: {
+        stages: [
+          {
+            aggregate_by: [{ kind: 'resource', name: 'cloud.region' }],
+            aggregation_fn: { type: 'scalar', name: 'avg' }
+          }
+        ]
+      }
+    }
+  ]
+])('renders the chained "avg by cloud.region" then step for %s', async (_scenario, props) => {
+  render(FormMetricBackendCustomQuery, { props })
 
   const thenChip = await screen.findByRole('button', { name: /Edit then step/ })
   expect(thenChip).toHaveTextContent('avg by')

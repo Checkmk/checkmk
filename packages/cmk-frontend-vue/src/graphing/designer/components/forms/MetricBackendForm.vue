@@ -219,7 +219,7 @@ function storeCurrentWith(overrides: {
       aggregationHistogramUpperThresholdForFractionBetween.value,
     group
   )
-  persist(stored, inputType === 'float' ? aggregatorFromGroupBy(group, thenSteps.value) : undefined)
+  persist(stored, aggregatorFromGroupBy(group, thenSteps.value))
 }
 
 const aggregationLookback = computed<number>({
@@ -272,7 +272,7 @@ const groupByInputType = computed<GroupByInputType>(() =>
 // user has just added but not filled in) is not persisted, so reading the group-by back
 // out of the store would drop it again the moment it appears.
 const groupBy = ref<GroupByModel>(storedGroupBy())
-const thenSteps = ref<AggregationStep[]>(aggregatorToThenSteps(item.aggregator))
+const thenSteps = ref<AggregationStep[]>(aggregatorToThenSteps(item.aggregator, groupBy.value))
 
 const thenStepsShown = computed(() => thenStepsAllowed(groupByInputType.value, groupBy.value))
 // Drop chained steps when the grouping no longer allows them, so they do not resurface later.

@@ -105,6 +105,8 @@ test.each<[string, Aggregator | undefined]>([
   expect(aggregatorToFloatGroupBy(aggregator)).toEqual({ function: 'none', params: {}, keys: [] })
 })
 
+type Stage = Aggregator['stages'][number]
+
 const MAIN = model({
   function: 'avg',
   keys: [
@@ -112,35 +114,65 @@ const MAIN = model({
     { id: 'b', attributeKind: 'resource', attributeKey: 'cloud.region' }
   ]
 })
+const HISTOGRAM = model({
+  function: 'percentile',
+  keys: [{ id: 'a', attributeKind: 'resource', attributeKey: 'service.name' }]
+})
 
-test('a main group-by and its then steps serialize to one stage per step, in order', () => {
-  const aggregator = aggregatorFromGroupBy(MAIN, [
-    step({
-      function: 'sum',
-      keys: [{ id: 'c', attributeKind: 'resource', attributeKey: 'cloud.region' }]
-    }),
-    step({ function: 'count', keys: [] })
-  ])
+const THEN_STEPS = [
+  step({
+    function: 'sum',
+    keys: [{ id: 'c', attributeKind: 'resource', attributeKey: 'cloud.region' }]
+  }),
+  step({ function: 'count', keys: [] })
+]
+const SUM_BY_REGION_STAGE: Stage = {
+  aggregate_by: [{ kind: 'resource', name: 'cloud.region' }],
+  aggregation_fn: { type: 'scalar', name: 'sum' }
+}
+const COUNT_STAGE: Stage = { aggregate_by: [], aggregation_fn: { type: 'scalar', name: 'count' } }
 
-  expect(aggregator).toEqual<Aggregator>({
-    stages: [
+test.each<[string, GroupByModel, Stage[]]>([
+  [
+    'a scalar float grouping leads with its own stage',
+    MAIN,
+    [
       {
         aggregate_by: [
           { kind: 'resource', name: 'service.name' },
           { kind: 'resource', name: 'cloud.region' }
         ],
         aggregation_fn: { type: 'scalar', name: 'avg' }
-      },
-      {
-        aggregate_by: [{ kind: 'resource', name: 'cloud.region' }],
-        aggregation_fn: { type: 'scalar', name: 'sum' }
-      },
-      { aggregate_by: [], aggregation_fn: { type: 'scalar', name: 'count' } }
+      }
     ]
+  ],
+  [
+    'a scalar grouping over everything leads with an empty stage',
+    model({ function: 'avg', keys: [] }),
+    [{ aggregate_by: [], aggregation_fn: { type: 'scalar', name: 'avg' } }]
+  ],
+  [
+    'a histogram grouping omits the leading stage, its group-by riding the consolidation',
+    HISTOGRAM,
+    []
+  ]
+])('serializing then steps: %s', (_scenario, groupBy, leadingStages) => {
+  expect(aggregatorFromGroupBy(groupBy, THEN_STEPS)).toEqual<Aggregator>({
+    stages: [...leadingStages, SUM_BY_REGION_STAGE, COUNT_STAGE]
   })
 })
 
-test('then steps round-trip through the aggregator, minting fresh ids', () => {
+test.each<[string, GroupByModel, AggregationStep[]]>([
+  ['"no grouping" drops any then steps', model({ function: 'none' }), [step({ function: 'sum' })]],
+  ['a histogram grouping has no then steps', HISTOGRAM, []]
+])('%s, so it serializes to no aggregator', (_scenario, groupBy, thenSteps) => {
+  expect(aggregatorFromGroupBy(groupBy, thenSteps)).toBeUndefined()
+})
+
+test.each<[string, GroupByModel]>([
+  ['a scalar float grouping', MAIN],
+  ['a histogram grouping', HISTOGRAM]
+])('then steps round-trip through %s, minting fresh ids', (_scenario, groupBy) => {
   const steps = [
     step({
       function: 'sum',
@@ -148,10 +180,10 @@ test('then steps round-trip through the aggregator, minting fresh ids', () => {
     }),
     step({ function: 'count', keys: [] })
   ]
-  const aggregator = aggregatorFromGroupBy(MAIN, steps)
+  const aggregator = aggregatorFromGroupBy(groupBy, steps)
 
   let next = 0
-  const back = aggregatorToThenSteps(aggregator, () => `id${next++}`)
+  const back = aggregatorToThenSteps(aggregator, groupBy, () => `id${next++}`)
   expect(back).toEqual<AggregationStep[]>([
     {
       id: 'id0',
@@ -162,25 +194,8 @@ test('then steps round-trip through the aggregator, minting fresh ids', () => {
   ])
 })
 
-test('then steps are dropped when the main group-by is "no grouping"', () => {
-  expect(
-    aggregatorFromGroupBy(model({ function: 'none' }), [step({ function: 'sum' })])
-  ).toBeUndefined()
-})
-
-test('a scalar main over everything keeps its then steps, anchored by an empty first stage', () => {
-  expect(
-    aggregatorFromGroupBy(model({ function: 'avg', keys: [] }), [step({ function: 'sum' })])
-  ).toEqual<Aggregator>({
-    stages: [
-      { aggregate_by: [], aggregation_fn: { type: 'scalar', name: 'avg' } },
-      { aggregate_by: [], aggregation_fn: { type: 'scalar', name: 'sum' } }
-    ]
-  })
-})
-
 test('the first stage is the main group-by, so a single-stage aggregator has no then steps', () => {
-  expect(aggregatorToThenSteps(floatGroupByToAggregator(MAIN))).toEqual([])
+  expect(aggregatorToThenSteps(floatGroupByToAggregator(MAIN), MAIN)).toEqual([])
 })
 
 test('a non-scalar stage stops the then-step chain', () => {
@@ -196,7 +211,7 @@ test('a non-scalar stage stops the then-step chain', () => {
     ]
   } as unknown as Aggregator
 
-  const steps = aggregatorToThenSteps(aggregator, () => 'x')
+  const steps = aggregatorToThenSteps(aggregator, MAIN, () => 'x')
   expect(steps).toHaveLength(1)
   expect(steps[0]!.function).toBe('sum')
 })

@@ -48,9 +48,9 @@ export function isScalarFunction(fn: GroupByFunction): fn is ScalarFunction {
   return (SCALAR_FUNCTIONS as readonly string[]).includes(fn)
 }
 
-/** Whether the grouping admits "then" steps: a scalar float grouping, with or without keys. */
+/** Whether the grouping admits "then" steps: any histogram grouping, or a scalar float grouping. */
 export function thenStepsAllowed(inputType: GroupByInputType, groupBy: GroupByModel): boolean {
-  return inputType === 'float' && isScalarFunction(groupBy.function)
+  return inputType === 'histogram' || isScalarFunction(groupBy.function)
 }
 
 /** The grouping functions offered for an input type, in catalog (dropdown) order. */

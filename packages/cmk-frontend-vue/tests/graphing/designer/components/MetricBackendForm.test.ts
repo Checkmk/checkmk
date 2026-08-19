@@ -148,3 +148,37 @@ test('adding a then step persists a second aggregator stage', async () => {
     })
   )
 })
+
+const PRESERVE_QUANTILE_BY_SERVICE: DraftMetricBackendItem['consolidation_function'] = {
+  type: 'histogram_preserve_quantile',
+  lookback_seconds: 300,
+  percentile: 95,
+  group_by: [{ kind: 'resource', key: 'service.name' }]
+}
+
+test('adding a then step to a histogram grouping persists a then-only aggregator', async () => {
+  const store = renderForm({
+    ...newMetricBackendDraft('A'),
+    consolidation_function: PRESERVE_QUANTILE_BY_SERVICE
+  })
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Add then step' }))
+
+  await waitFor(() =>
+    expect(storedItem(store).aggregator).toEqual<Aggregator>({
+      stages: [{ aggregate_by: [], aggregation_fn: { type: 'scalar', name: 'avg' } }]
+    })
+  )
+  expect(storedItem(store).consolidation_function).toEqual(PRESERVE_QUANTILE_BY_SERVICE)
+})
+
+test('a histogram grouping loads its then steps from every aggregator stage', async () => {
+  renderForm({
+    ...newMetricBackendDraft('A'),
+    consolidation_function: PRESERVE_QUANTILE_BY_SERVICE,
+    aggregator: SUM_BY_SERVICE
+  })
+
+  const chip = await screen.findByRole('button', { name: /Edit then step/ })
+  expect(chip).toHaveTextContent('sum by')
+})

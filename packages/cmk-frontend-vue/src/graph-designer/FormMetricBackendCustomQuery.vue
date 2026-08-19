@@ -148,7 +148,7 @@ const aggregationHistogramUpperThresholdForFractionBetween = computed<number>({
 // user has just added but not filled in) is not persisted, so reading the group-by back
 // out of the consolidation would drop it again the moment it appears.
 const groupBy = ref<GroupByModel>(storedGroupBy())
-const thenSteps = ref<AggregationStep[]>(aggregatorToThenSteps(aggregator.value))
+const thenSteps = ref<AggregationStep[]>(aggregatorToThenSteps(aggregator.value, groupBy.value))
 
 function storedGroupBy(): GroupByModel {
   const stored = consolidation.value
@@ -189,8 +189,7 @@ function rebuildConsolidation(consolidationFunction: ConsolidationFunction | nul
     aggregationHistogramUpperThresholdForFractionBetween.value,
     group
   )
-  aggregator.value =
-    inputType === 'float' ? aggregatorFromGroupBy(group, thenSteps.value) : undefined
+  aggregator.value = aggregatorFromGroupBy(group, thenSteps.value)
 }
 
 const consolidationFunction = computed<ConsolidationFunction | null>({

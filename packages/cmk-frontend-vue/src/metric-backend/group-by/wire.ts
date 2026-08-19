@@ -147,32 +147,36 @@ export function aggregatorToFloatGroupBy(
   }
 }
 
-/** Aggregator for a group-by and its then steps; absent when the grouping is "no grouping". */
+/**
+ * The aggregator a grouping and its then steps serialize to, or absent when empty. Only a scalar
+ * float grouping leads with its own stage; a histogram group-by rides the consolidation instead.
+ */
 export function aggregatorFromGroupBy(
   groupBy: GroupByModel,
   thenSteps: readonly AggregationStep[]
 ): Aggregator | undefined {
-  if (!isScalarFunction(groupBy.function)) {
+  if (groupBy.function === 'none') {
     return undefined
   }
-  return {
-    stages: [
-      scalarStage(groupBy.function, groupBy.keys),
-      ...thenSteps.map((step) => scalarStage(step.function, step.keys))
-    ]
-  }
+  const stages = [
+    ...(isScalarFunction(groupBy.function) ? [scalarStage(groupBy.function, groupBy.keys)] : []),
+    ...thenSteps.map((step) => scalarStage(step.function, step.keys))
+  ]
+  return stages.length === 0 ? undefined : { stages }
 }
 
 /**
- * The then steps a stored aggregator describes: its stages after the first, up to the first
- * non-scalar stage. `newId` mints widget-local ids; injectable for deterministic tests.
+ * The then steps a stored aggregator holds: its stages past the main group-by, which owns the first
+ * stage only for a scalar float grouping. `newId` mints widget-local ids, injectable for tests.
  */
 export function aggregatorToThenSteps(
   aggregator: Aggregator | undefined,
+  groupBy: GroupByModel,
   newId: () => string = randomId
 ): AggregationStep[] {
+  const mainGroupByStages = isScalarFunction(groupBy.function) ? 1 : 0
   const steps: AggregationStep[] = []
-  for (const stage of (aggregator?.stages ?? []).slice(1)) {
+  for (const stage of (aggregator?.stages ?? []).slice(mainGroupByStages)) {
     if (stage.aggregation_fn.type !== 'scalar') {
       break
     }

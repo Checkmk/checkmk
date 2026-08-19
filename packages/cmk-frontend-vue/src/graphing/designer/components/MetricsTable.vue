@@ -239,14 +239,18 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
   <div class="graphing-metrics-table">
     <div class="graphing-metrics-table__toolbar">
       <div v-if="selectedIds.length > 0" class="graphing-metrics-table__bulk-actions">
+        <span class="graphing-metrics-table__selection-count" aria-live="polite">
+          {{ _t('Selected rows: %{count}', { count: selectedIds.length }) }}
+        </span>
         <CmkButton
+          size="small"
           :aria-label="_t('Delete selected sources')"
           @click="rowDelete.request(selectedIds)"
         >
           <CmkIcon name="delete" variant="inline" size="small" />
           {{ _t('Delete') }}
         </CmkButton>
-        <CmkButton :aria-label="_t('Clone selected sources')" @click="onBulkClone">
+        <CmkButton size="small" :aria-label="_t('Clone selected sources')" @click="onBulkClone">
           <CmkIcon name="clone" variant="inline" size="small" />
           {{ _t('Clone') }}
         </CmkButton>
@@ -433,15 +437,20 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
   display: flex;
   flex-shrink: 0;
   justify-content: flex-end;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--dimension-4);
   margin-bottom: var(--dimension-5);
 }
 
 .graphing-metrics-table__bulk-actions {
   display: flex;
+  align-items: center;
   gap: var(--dimension-4);
   margin-right: auto;
+}
+
+.graphing-metrics-table__selection-count {
+  font-weight: var(--font-weight-bold);
 }
 
 /* Indent to the title input: the title cell's padding, its chevron, and the gap between them. */

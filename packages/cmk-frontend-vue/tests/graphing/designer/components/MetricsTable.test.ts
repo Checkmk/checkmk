@@ -159,6 +159,7 @@ test('selecting rows reveals the bulk actions; bulk clone copies and clears the 
 
   const [selectA] = screen.getAllByLabelText('Select row')
   await fireEvent.click(selectA!)
+  expect(screen.getByText('Selected rows: 1')).toBeInTheDocument()
 
   await fireEvent.click(screen.getByRole('button', { name: 'Clone selected sources' }))
   expect(store.items.value.map((item) => item.id)).toEqual(['A', 'C', 'B'])

@@ -13,7 +13,7 @@ import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, nextTick, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
 
 import EditableTable from '@/monitoring/shared/components/EditableTable.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
@@ -85,6 +85,13 @@ const rowSelection = ref<RowSelectionState>({})
 const expandedRows = ref<Record<string, boolean>>({})
 
 const table = useTemplateRef<{ scrollToRow: (key: ItemId) => void }>('table')
+const addSource = useTemplateRef<InstanceType<typeof CmkAddDropdown>>('addSource')
+
+onMounted(() => {
+  if (store.items.value.length === 0) {
+    addSource.value?.focus()
+  }
+})
 
 async function scrollToRow(id: ItemId): Promise<void> {
   await nextTick()
@@ -376,6 +383,7 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
             class="graphing-metrics-table__add-source"
           >
             <CmkAddDropdown
+              ref="addSource"
               width="fill"
               floating
               :options="addSourceSuggestions"
@@ -387,10 +395,6 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
             v-if="columns.length - sourceColumnIndex - 1 > 0"
             :colspan="columns.length - sourceColumnIndex - 1"
           />
-        </template>
-
-        <template #empty-state>
-          {{ _t('No data sources yet — add one below.') }}
         </template>
       </EditableTable>
     </CmkScrollContainer>

@@ -182,6 +182,12 @@ test('renders the empty-state slot when there are no rows', () => {
   expect(screen.getByTestId('empty-state')).toBeInTheDocument()
 })
 
+test('renders no row body at all without an empty-state slot', () => {
+  const { container } = mountEditableTable({ rows: [] })
+
+  expect(container.querySelector('tbody')).not.toBeInTheDocument()
+})
+
 test('renders no empty state while rows exist', () => {
   mountEditableTable({ withEmptyState: true })
 

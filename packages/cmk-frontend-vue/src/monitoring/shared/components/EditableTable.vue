@@ -154,7 +154,7 @@ defineExpose({
         />
       </colgroup>
       <MonitoringTableHeader :header-groups="table.getHeaderGroups()" />
-      <tbody v-if="rows.length === 0">
+      <tbody v-if="rows.length === 0 && $slots['empty-state']">
         <tr class="monitoring-editable-table__empty-row">
           <td :colspan="leafColumns.length">
             <slot name="empty-state" />

@@ -47,6 +47,11 @@ const TITLE_MACROS: TitleMacroGroup[] = [
   { source_type: 'rrd_metric', macros: ['$DEFAULT_TITLE$', '$METRIC_NAME$'] }
 ]
 
+/** Whether the add-source dropdown took the focus while the spy was installed. */
+function focusedAddSource(focus: MockInstance): boolean {
+  return focus.mock.contexts.includes(screen.getByRole('combobox', { name: 'Add source' }))
+}
+
 /** Waits for the row group holding `id` to have been scrolled into view. */
 async function expectScrolledToRow(scrollIntoView: MockInstance, id: string): Promise<void> {
   await waitFor(() => {
@@ -78,6 +83,37 @@ function renderTable(
   })
   return { store, ...utils }
 }
+
+test('a table without sources is header and footer only', () => {
+  const { container } = renderTable()
+
+  expect(container.querySelector('thead')).toBeInTheDocument()
+  expect(container.querySelector('tfoot')).toBeInTheDocument()
+  expect(container.querySelector('tbody')).not.toBeInTheDocument()
+})
+
+test('the add-source dropdown takes the focus when the table opens without sources', () => {
+  const focus = vi.spyOn(window.HTMLElement.prototype, 'focus')
+  renderTable()
+
+  expect(focusedAddSource(focus)).toBe(true)
+})
+
+test('the add-source dropdown leaves the focus alone when the table opens with sources', () => {
+  const focus = vi.spyOn(window.HTMLElement.prototype, 'focus')
+  renderTable([rrdMetricItem('A')])
+
+  expect(focusedAddSource(focus)).toBe(false)
+})
+
+test('deleting the last source does not pull the focus to the add-source dropdown', async () => {
+  const focus = vi.spyOn(window.HTMLElement.prototype, 'focus')
+  const { store } = renderTable([rrdMetricItem('A')])
+  await fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+  expect(store.items.value).toHaveLength(0)
+  expect(focusedAddSource(focus)).toBe(false)
+})
 
 test('adding a source appends an auto-expanded draft row', async () => {
   const { store } = renderTable([rrdMetricItem('A')])

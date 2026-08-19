@@ -114,6 +114,6 @@ def test_openapi_parent_scan_background_non_admin(
         },
     )
 
-    assert resp.status_code == 401, (
-        f"Expected status code 401 for non-admin user, got {resp.status_code}"
+    assert resp.status_code == 403, (
+        f"Expected status code 403 for non-admin user, got {resp.status_code}"
     )

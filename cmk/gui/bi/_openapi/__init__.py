@@ -306,6 +306,7 @@ class BIAggregationStateResponseSchema(Schema):
     tag_group="Monitoring",
     skip_locking=True,
     update_config_generation=False,
+    additional_status_codes=[403, 503],
 )
 def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""
@@ -329,6 +330,7 @@ def bi_aggregation_state_post(params: Mapping[str, Any]) -> Response:
     response_schema=BIAggregationStateResponseSchema,
     permissions_required=RO_PERMISSIONS,
     tag_group="Monitoring",
+    additional_status_codes=[403, 503],
 )
 def bi_aggregation_state_get(params: Mapping[str, Any]) -> Response:
     """Get the state of BI aggregations"""

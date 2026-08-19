@@ -7,12 +7,20 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Ref } from 'vue'
 
 import CmkErrorAlert from './CmkErrorAlert.vue'
+import type { CrashReportState } from './JavascriptCrashReportApi'
 
-const props = defineProps<{ error: Ref<Error | null> }>()
+const props = defineProps<{
+  error: Ref<Error | null>
+  crashReport?: Ref<CrashReportState> | undefined
+}>()
 </script>
 
 <template>
-  <CmkErrorAlert v-if="props.error.value !== null" :error="props.error.value" />
+  <CmkErrorAlert
+    v-if="props.error.value !== null"
+    :error="props.error.value"
+    :crash-report="props.crashReport?.value"
+  />
   <template v-else>
     <slot> </slot>
   </template>

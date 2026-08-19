@@ -4,4 +4,5 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+export type { CrashReportState } from './JavascriptCrashReportApi'
 export { useCmkErrorBoundary } from './useCmkErrorBoundary'

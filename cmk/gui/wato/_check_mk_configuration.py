@@ -23,6 +23,7 @@ from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_al
 from cmk.gui.form_specs.generators.host_address import HostAddressValidator
 from cmk.gui.form_specs.generators.log_level import LogLevelChoice
 from cmk.gui.form_specs.unstable import (
+    CACertificate,
     id_validators,
     LegacyValueSpec,
     not_empty,
@@ -60,7 +61,6 @@ from cmk.gui.valuespec import (
     Labels,
     ListChoice,
     ListOf,
-    ListOfCAs,
     ListOfStrings,
     ListOfTimeRanges,
     Migrate,
@@ -2061,23 +2061,22 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
         )
     ),
     ident="trusted_certificate_authorities",
-    # TODO: not ported yet, ListOfCAs has no FormSpec counterpart.
-    valuespec=lambda context: Dictionary(
-        title=_("Trusted certificate authorities for SSL"),
-        help=_(
+    form_spec=lambda context: fs.Dictionary(
+        title=Title("Trusted certificate authorities for SSL"),
+        help_text=Help(
             "Whenever a server component of Checkmk opens an SSL connection, it uses the "
             "certificate authorities configured here for verifying the SSL certificate of "
             "the destination server. This is used for example when performing Setup "
             "replication to remote sites or when special agents are communicating via HTTPS. "
             "The CA certificates configured here will be written to the CA bundle %(ca_bundle)s."
         )
-        % {"ca_bundle": site_neutral_path(ConfigDomainCACertificates.trusted_cas_file)},
-        elements=[
-            (
-                "use_system_wide_cas",
-                Checkbox(
-                    title=_("Use system wide CAs"),
-                    help=_(
+        % {"ca_bundle": str(site_neutral_path(ConfigDomainCACertificates.trusted_cas_file))},
+        elements={
+            "use_system_wide_cas": fs.DictElement(
+                required=True,
+                parameter_form=fs.BooleanChoice(
+                    title=Title("Use system wide CAs"),
+                    help_text=Help(
                         "All supported Linux distributions provide a mechanism of managing "
                         "trusted CAs. Depending on your Linux distributions the paths where "
                         "these CAs are stored and the commands to manage the CAs differ. "
@@ -2091,18 +2090,29 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
                             ConfigDomainCACertificates.system_wide_trusted_ca_search_paths
                         )
                     },
-                    label=_("Trust system wide configured CAs"),
+                    label=Label("Trust system wide configured CAs"),
                 ),
             ),
-            (
-                "trusted_cas",
-                ListOfCAs(
-                    title=_("Manually added"),
-                    allow_empty=True,
+            "trusted_cas": fs.DictElement(
+                required=True,
+                parameter_form=ListExtended(
+                    title=Title("Manually added"),
+                    help_text=Help(
+                        "Only accepting HTTPS connections with a server which certificate "
+                        "is signed with one of the CAs that are listed here. That way it is "
+                        "guaranteed that it is communicating only with the authentic server. "
+                        "If you use self signed certificates for you server then enter that "
+                        "certificate here."
+                    ),
+                    element_template=CACertificate(
+                        title=Title("Certificate chain (root / intermediate certificate)")
+                    ),
+                    prefill=fs.DefaultValue([]),
+                    add_element_label=Label("Add new CA certificate or chain"),
+                    editable_order=False,
                 ),
             ),
-        ],
-        optional_keys=False,
+        },
     ),
 )
 

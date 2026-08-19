@@ -252,6 +252,19 @@ def resolve_case_value(
     return {**default, **value.overrides}
 
 
+# Self signed test CA, valid until 2126.
+CA_PEM = """-----BEGIN CERTIFICATE-----
+MIIBezCCASGgAwIBAgIUDIcyg85XfQmA4RzNHo/JfB+j5AowCgYIKoZIzj0EAwIw
+EjEQMA4GA1UEAwwHVGVzdCBDQTAgFw0yNjA4MTkwODI0MThaGA8yMTI2MDcyNjA4
+MjQxOFowEjEQMA4GA1UEAwwHVGVzdCBDQTBZMBMGByqGSM49AgEGCCqGSM49AwEH
+A0IABI4UJNAiwjKWK6rW3XnWnFdGTyBbDfIaZpXLqDrvEsx+pqhL0ShCE9FB1JjN
+R2FHJXvxUztuLzXEZab8JkABfB2jUzBRMB0GA1UdDgQWBBSyGh6qYtVZJjGg7GSz
+QVGa3DJkpjAfBgNVHSMEGDAWgBSyGh6qYtVZJjGg7GSzQVGa3DJkpjAPBgNVHRMB
+Af8EBTADAQH/MAoGCCqGSM49BAMCA0gAMEUCIFiWceF954tCCPqV2KEJ6LMNl+Zb
+W6UwWFko7ZZvNwLYAiEAyTjDYETA0XhtxzcXKyzGECbeZUHbZpYz2xJpZGuAzKw=
+-----END CERTIFICATE-----
+"""
+
 CHECKBOX_CASES: list[Case] = [
     CasePass("enabled", True),
     CasePass("disabled", False),
@@ -971,10 +984,8 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "True.add_description": True,
     },
     "trusted_certificate_authorities": {
-        "trusted_cas[add]": None,
-        "trusted_cas[add].[choice 0]": None,
-        "trusted_cas[add].[choice 1]": b"",
-        "trusted_cas[add].[choice 2]": None,
+        # An added row starts out empty, which is not a valid certificate.
+        "trusted_cas[add]": NoSaveableDefault(),
     },
     "user_downtime_timeranges": {
         "[add]": {"end": 86400, "title": NoSaveableDefault()},
@@ -2444,6 +2455,7 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "trusted_certificate_authorities": [
         CasePass("configured", {"use_system_wide_cas": True, "trusted_cas": []}),
+        CasePass("with-ca", {"use_system_wide_cas": False, "trusted_cas": [CA_PEM]}),
         CaseFail("missing-required-keys", {"use_system_wide_cas": True}),
         CaseFail("not-a-pem", {"use_system_wide_cas": False, "trusted_cas": ["not a pem"]}),
     ],

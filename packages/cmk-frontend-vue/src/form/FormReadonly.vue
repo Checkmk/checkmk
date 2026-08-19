@@ -9,6 +9,7 @@ import type {
   BinaryConditionChoicesItem,
   BinaryConditionChoicesValue,
   BooleanChoice,
+  CaCertificate,
   CascadingSingleChoice,
   CheckboxListChoice,
   Components,
@@ -155,6 +156,8 @@ function _renderForm(
     case 'multiline_text':
     case 'comment_text_area':
       return renderMultilineText(formSpec as MultilineText, value as string)
+    case 'ca_certificate':
+      return renderCaCertificate(formSpec as CaCertificate, value as string)
     case 'data_size':
       return renderDataSize(value as [string, string])
     case 'catalog':
@@ -439,10 +442,10 @@ function renderDataSize(value: [string, string]): VNode {
   return h('div', [h('span', value[0]), h('span', ' '), h('span', value[1])])
 }
 
-function renderMultilineText(formSpec: MultilineText, value: string): VNode {
+function renderTextLines(label: string | null, value: string, monospaced: boolean): VNode {
   const lines: VNode[] = []
-  if (formSpec.label) {
-    lines.push(h('span', formSpec.label))
+  if (label) {
+    lines.push(h('span', label))
     lines.push(h('br'))
   }
 
@@ -451,8 +454,17 @@ function renderMultilineText(formSpec: MultilineText, value: string): VNode {
     lines.push(h('br'))
   })
 
-  const style = formSpec.monospaced ? 'font-family: monospace, sans-serif' : ''
+  const style = monospaced ? 'font-family: monospace, sans-serif' : ''
   return h('div', { style: style }, lines)
+}
+
+function renderMultilineText(formSpec: MultilineText, value: string): VNode {
+  return renderTextLines(formSpec.label, value, formSpec.monospaced)
+}
+
+function renderCaCertificate(formSpec: CaCertificate, value: string): VNode {
+  // PEM text is always monospaced, the form spec has no flag to opt out of it.
+  return renderTextLines(formSpec.label, value, true)
 }
 
 function renderBooleanChoice(formSpec: BooleanChoice, value: boolean): VNode {

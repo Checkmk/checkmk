@@ -936,6 +936,34 @@
         }
       ]
     },
+    "ca_certificate": {
+      "id": "ca_certificate",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "ca_certificate",
+              "default": "ca_certificate"
+            },
+            "label": {
+              "type": ["string", "null"]
+            },
+            "input_hint": {
+              "type": ["string", "null"]
+            },
+            "allow_fetch": {
+              "type": "boolean"
+            }
+          },
+          "required": ["type", "label", "input_hint", "allow_fetch"]
+        }
+      ]
+    },
     "oauth2_connection_setup": {
       "id": "oauth2_connection_setup",
       "type": "object",
@@ -1872,6 +1900,9 @@
         },
         {
           "$ref": "#/$defs/comment_text_area"
+        },
+        {
+          "$ref": "#/$defs/ca_certificate"
         },
         {
           "$ref": "#/$defs/password"

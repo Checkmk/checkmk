@@ -11,6 +11,7 @@ from cmk.shared_typing.vue_formspec_components import (
 )
 
 from .binary_condition_choices import BinaryConditionChoices
+from .ca_certificate import CACertificate
 from .cascading_single_choice_extended import CascadingSingleChoiceExtended
 from .catalog import Catalog, Topic, TopicElement, TopicGroup
 from .comment_text_area import CommentTextArea
@@ -34,6 +35,7 @@ __all__ = [
     "AutocompleterData",
     "AutocompleterParams",
     "BinaryConditionChoices",
+    "CACertificate",
     "CascadingSingleChoiceExtended",
     "Catalog",
     "CommentTextArea",

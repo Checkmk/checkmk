@@ -2746,7 +2746,7 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"A site is allowed to be used in exactly one OpenTelemetry collector "
+"A site is allowed to be used in exactly one OpenTelemetry Collector "
 "configuration: \n"
 "%s"
 msgstr "Añadir una nueva configuración de usuario"
@@ -5115,15 +5115,15 @@ msgstr "Líneas de cabecera adicionales"
 msgid "Additional host names"
 msgstr "Nombres de host adicionales"
 
-msgid ""
-"Additional hosts are created automatically if they do not yet exist. Adjust "
-"the connection  to modify the folder or properties."
-msgstr ""
-
 #, python-brace-format
 msgid ""
 "Additional hosts are created automatically if they do not yet exist. Adjust "
 "the connection \"{dcd_title}\" to modify the folder or properties."
+msgstr ""
+
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection to modify the folder or properties."
 msgstr ""
 
 msgid "Additional information"
@@ -5852,7 +5852,8 @@ msgstr ""
 msgid "Aggregate"
 msgstr "Agregado"
 
-msgid "Aggregate PGA auto target"
+#, fuzzy
+msgid "Aggregate PGA auto-target"
 msgstr "Objetivo automático de la PGA agregada"
 
 msgid "Aggregate PGA target parameter"
@@ -6386,7 +6387,7 @@ msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
 "which processes status data. <b>Note:</b> in order to get any useful result "
-"for agent based hosts make sure that you have installed the agent plug-in "
+"for agent-based hosts make sure that you have installed the agent plug-in "
 "<tt>mk_inventory</tt> on these hosts."
 msgstr ""
 "Todos los hosts configurados a través de este conjunto de reglas harán un "
@@ -6402,7 +6403,7 @@ msgid ""
 "inventory. For each configured host a new active check will be created. You "
 "should also create a rule for changing the normal interval for that check to "
 "something between a couple of hours and one day. <b>Note:</b> in order to "
-"get any useful result for agent based hosts make sure that you have "
+"get any useful result for agent-based hosts make sure that you have "
 "installed the agent plug-in <tt>mk_inventory</tt> on these hosts."
 msgstr ""
 "Todos los hosts configurados a través de este conjunto de reglas harán un "
@@ -7567,10 +7568,6 @@ msgid "Application Gateway"
 msgstr "Pasarela de aplicaciones"
 
 #, fuzzy
-msgid "Application Type"
-msgstr "Clave de aplicación"
-
-#, fuzzy
 msgid "Application and network load balancing (ELBv2)"
 msgstr "Equilibrio de carga de aplicaciones y redes (ELBv2)"
 
@@ -7620,6 +7617,10 @@ msgstr "Solicitudes pendientes"
 #, fuzzy
 msgid "Application pool name"
 msgstr "Nombre del grupo de aplicaciones"
+
+#, fuzzy
+msgid "Application type"
+msgstr "Clave de aplicación"
 
 msgid "Applications"
 msgstr "Aplicaciones"
@@ -8419,8 +8420,9 @@ msgstr "Autorizaciones por grupo de seguridad de la BD"
 msgid "Authorized user"
 msgstr "Sitios autorizados"
 
-msgid "Auto (DEFAULT)"
-msgstr "Auto (DEFAULT)"
+#, fuzzy
+msgid "Auto (default)"
+msgstr "Autenticación (por defecto)"
 
 #, fuzzy
 msgid "Auto-close off"
@@ -8433,6 +8435,10 @@ msgstr "Cierre automático activado"
 #, fuzzy
 msgid "Auto-detect (default)"
 msgstr "Autenticación (por defecto)"
+
+#, fuzzy
+msgid "Auto-detect instances"
+msgstr "Instancias de autodetección"
 
 #, fuzzy
 msgid "Auto-detect instances, expect HTTPS on the following ports:"
@@ -8463,6 +8469,10 @@ msgid "Auto-extend will be ignored"
 msgstr "La autoextensión será ignorada"
 
 #, fuzzy
+msgid "Auto-extensible"
+msgstr "Autoextensible"
+
+#, fuzzy
 msgid "Auto-restart on crash"
 msgstr "Reinicio automático en caso de colisión"
 
@@ -8475,6 +8485,10 @@ msgid "Auto-shrink on"
 msgstr "Encogimiento automático activado"
 
 #, fuzzy
+msgid "Auto-start"
+msgstr "Arranque automático"
+
+#, fuzzy
 msgid "Auto-start services"
 msgstr "Servicios de arranque automático"
 
@@ -8483,15 +8497,9 @@ msgid ""
 "The metric backend can be enabled in the Global Settings."
 msgstr ""
 
-msgid "Autodetect instances"
-msgstr "Instancias de autodetección"
-
 msgid "Autodetect instances, expect HTTPs on the following ports:"
 msgstr ""
 "Las instancias de autodetección, esperan HTTPs en los siguientes puertos:"
-
-msgid "Autoextensible"
-msgstr "Autoextensible"
 
 #, fuzzy
 msgid "Automated environment setup"
@@ -8663,9 +8671,6 @@ msgstr "Usuario de automatización rechazado"
 #, fuzzy
 msgid "Automation username"
 msgstr "Automatización Nombre de usuario"
-
-msgid "Autostart"
-msgstr "Arranque automático"
 
 #, python-format
 msgid "Aux tag '%s' does not exist"
@@ -10074,24 +10079,8 @@ msgid "Back to view with checkboxes reset"
 msgstr "Volver a la vista con las casillas de verificación restablecidas"
 
 #, fuzzy
-msgid "Back-end IP config"
+msgid "Backend IP config"
 msgstr "Configuración IP backend"
-
-#, fuzzy
-msgid "Back-end pool"
-msgstr "Fondo de reserva"
-
-#, fuzzy
-msgid "Back-end pools"
-msgstr "Grupos de fondo"
-
-#, fuzzy
-msgid "Back-end port"
-msgstr "Puerto Backend"
-
-#, fuzzy
-msgid "Back-ends"
-msgstr "Backends"
 
 #, fuzzy
 msgid "Backend conn. failures"
@@ -10132,6 +10121,22 @@ msgstr "Conector Backend. %s"
 #, fuzzy
 msgid "Backend connection errors"
 msgstr "Errores de conexión del backend"
+
+#, fuzzy
+msgid "Backend pool"
+msgstr "Fondo de reserva"
+
+#, fuzzy
+msgid "Backend pools"
+msgstr "Grupos de fondo"
+
+#, fuzzy
+msgid "Backend port"
+msgstr "Puerto Backend"
+
+#, fuzzy
+msgid "Backends"
+msgstr "Backends"
 
 msgid "Background job acknowledged"
 msgstr "Reconocimiento del trabajo de fondo"
@@ -12716,9 +12721,9 @@ msgstr ""
 msgid "Cannot display graph"
 msgstr "No se puede mostrar el gráfico"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot display inventory tree of host '%s': Found this host on multiple "
+"Cannot display inventory tree of host '%s': found this host on multiple "
 "sites: %s"
 msgstr ""
 "No se puede mostrar el árbol de inventario del host '%s': Encontrado este "
@@ -13071,9 +13076,6 @@ msgstr "OSDs Ceph"
 msgid "Ceph status"
 msgstr "Estado de Ceph"
 
-msgid "Certificate Key File"
-msgstr "Archivo de claves de certificado"
-
 #, fuzzy
 msgid "Certificate age"
 msgstr "Cadena de certificados"
@@ -13106,6 +13108,10 @@ msgstr "Nombre alternativo del asunto del certificado incorrecto"
 
 msgid "Certificate is not signed by trusted authority"
 msgstr "El certificado no está firmado por una autoridad de confianza"
+
+#, fuzzy
+msgid "Certificate key file"
+msgstr "Archivo de claves de certificado"
 
 #, fuzzy
 msgid "Certificate overview"
@@ -15416,9 +15422,6 @@ msgid "Collect information of Checkmk sites for diagnostic analysis."
 msgstr ""
 "Recoger la información de los sitios Checkmk para el análisis de diagnóstico."
 
-msgid "Collection Size"
-msgstr "Tamaño de la colección"
-
 #, fuzzy, python-format
 msgid ""
 "Collection of passwords failed\n"
@@ -15426,6 +15429,10 @@ msgid ""
 msgstr ""
 "Ha fallado la actualización de la configuración\n"
 "%s"
+
+#, fuzzy
+msgid "Collection size"
+msgstr "Tamaño de la colección"
 
 msgid "Collections"
 msgstr "Colecciones"
@@ -18331,9 +18338,6 @@ msgstr "Credenciales"
 msgid "Credentials expiration"
 msgstr "Expiración de credenciales"
 
-msgid "Credentials for Connect (ODBC interface)"
-msgstr "Credenciales para Connect (interfaz ODBC)"
-
 #, fuzzy
 msgid "Credentials for HTTP basic authentication"
 msgstr "Credenciales para la autenticación básica HTTP"
@@ -18349,6 +18353,10 @@ msgstr ""
 msgid ""
 "Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"
 msgstr "Credenciales para SNMPv3 sin autenticación y privacidad (noAuthNoPriv)"
+
+#, fuzzy
+msgid "Credentials for connect (ODBC interface)"
+msgstr "Credenciales para Connect (interfaz ODBC)"
 
 msgid "Credentials for processing SNMP traps"
 msgstr "Credenciales para el procesamiento de traps SNMP"
@@ -20897,11 +20905,11 @@ msgid "Deleted MIB %s"
 msgstr "MIB eliminado %s"
 
 #, fuzzy, python-format
-msgid "Deleted OTel QuickSetup configuration bundle: '%s'"
+msgid "Deleted OTel Quick Setup configuration bundle: '%s'"
 msgstr "Configuración por defecto"
 
 #, fuzzy, python-format
-msgid "Deleted Prometheus QuickSetup configuration bundle: '%s'"
+msgid "Deleted Prometheus Quick Setup configuration bundle: '%s'"
 msgstr "Añadir configuración de estado"
 
 #, python-brace-format
@@ -24608,11 +24616,11 @@ msgid "Edited %d hosts"
 msgstr "Editado %d hosts"
 
 #, fuzzy, python-format
-msgid "Edited OTel QuickSetup configuration bundle: '%s'"
+msgid "Edited OTel Quick Setup configuration bundle: '%s'"
 msgstr "Añadir configuración de estado"
 
 #, fuzzy, python-format
-msgid "Edited Prometheus QuickSetup configuration bundle: '%s'"
+msgid "Edited Prometheus Quick Setup configuration bundle: '%s'"
 msgstr "Añadir configuración de estado"
 
 #, python-format
@@ -25787,10 +25795,6 @@ msgid "Env creation"
 msgstr "Creaciones de eventos"
 
 #, fuzzy
-msgid "Environment Sensors"
-msgstr "Variables de entorno"
-
-#, fuzzy
 msgid "Environment build timeout"
 msgstr "Variables de entorno"
 
@@ -25799,6 +25803,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Environment metrics"
+msgstr "Variables de entorno"
+
+#, fuzzy
+msgid "Environment sensors"
 msgstr "Variables de entorno"
 
 #, fuzzy
@@ -26977,9 +26985,6 @@ msgstr "Exportar CSV"
 msgid "Export JSON"
 msgstr "Exportar JSON"
 
-msgid "Export List of Software packages as CSV file"
-msgstr "Exportar la lista de paquetes de software como archivo CSV"
-
 msgid "Export as JSON"
 msgstr "Exportar como JSON"
 
@@ -26995,6 +27000,10 @@ msgid ""
 msgstr ""
 "Archivo de exportación para crear, que contiene <tt>&lt;HOST&gt;</tt> para "
 "el nombre de host"
+
+#, fuzzy
+msgid "Export list of software packages as CSV file"
+msgstr "Exportar la lista de paquetes de software como archivo CSV"
 
 #, fuzzy, python-format
 msgid "Export this %s for API"
@@ -29557,9 +29566,6 @@ msgstr "CPU"
 msgid "GPU utilization"
 msgstr "Utilización de la GPU"
 
-msgid "GRPC-based OTLP receiver"
-msgstr ""
-
 msgid "GUI design"
 msgstr "Diseño de la interfaz gráfica de usuario"
 
@@ -30737,7 +30743,8 @@ msgstr ""
 "Debe contener un único certificado o un conjunto de certificados de "
 "\"autoridad de certificación\"."
 
-msgid "Has to contain the path to the Cert Key File."
+#, fuzzy
+msgid "Has to contain the path to the cert key file."
 msgstr "Debe contener la ruta al archivo de clave de certificado."
 
 msgid "Hash"
@@ -35419,12 +35426,12 @@ msgid ""
 "into syslog format and forwarded to the Event Console.<br>The Event Console "
 "is optimized for handling critical events, not for processing high-frequency "
 "log data. When forwarding OpenTelemetry logs, carefully consider:"
-"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages you "
-"are sending<br></ol>Unfiltered or high-volume logs can degrade performance "
+"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages are "
+"you sending?<br></ol>Unfiltered or high-volume logs can degrade performance "
 "and reduce the usefulness of the Event Console. We recommend filtering and "
 "preprocessing your logs to only forward meaningful events. For more "
 "information, have a look at the <a href='https://docs.checkmk.com/latest/en/"
-"ec.html#tuning'>Event Console user guide.</a>"
+"ec.html#tuning'>Event Console User Guide.</a>"
 msgstr ""
 
 #, fuzzy
@@ -35736,7 +35743,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "If you activate this option, then the agent plug-in <tt>mk_redis</tt> will "
-"be deployed. You can configure multiple instances or auto detect running "
+"be deployed. You can configure multiple instances or auto-detect running "
 "instances."
 msgstr ""
 "Si activa esta opción, se desplegará el plugin de agente <tt>mk_redis</tt>. "
@@ -41743,7 +41750,7 @@ msgstr ""
 msgid "List of patterns to exclude"
 msgstr "Lista de patrones a excluir"
 
-msgid "List of users and password allowed to use this endpoint"
+msgid "List of users and passwords allowed to use this endpoint"
 msgstr ""
 
 msgid "List unpackaged files"
@@ -44280,7 +44287,8 @@ msgstr "Tamaño máximo"
 msgid "Maximum PGA allocated"
 msgstr "PGA máxima asignada"
 
-msgid "Maximum PGA used for auto workareas"
+#, fuzzy
+msgid "Maximum PGA used for auto-workareas"
 msgstr "PGA máximo utilizado para las áreas de trabajo de los automóviles"
 
 msgid "Maximum PGA used for manual workareas"
@@ -44478,7 +44486,7 @@ msgid ""
 "maximum spike value from the total available memory. For instance, setting "
 "the limit to 60% and the spike limit to 25% on a machine with 1000 MiB total "
 "memory available will result in a 600 MiB hard limit and a 350 MiB soft "
-"limit (the spike limit being equal to 250MiB)"
+"limit (the spike limit being equal to 250MiB)."
 msgstr ""
 
 #, no-python-format
@@ -44899,18 +44907,6 @@ msgstr "Memoria utilizada"
 msgid "Memory (RAM)"
 msgstr "Memoria (RAM)"
 
-msgid "Memory Size"
-msgstr "Tamaño de la memoria"
-
-msgid "Memory Size (50th percentile)"
-msgstr "Tamaño de memoria (percentil 50)"
-
-msgid "Memory Size (95th percentile)"
-msgstr "Tamaño de memoria (percentil 95)"
-
-msgid "Memory Size (99th percentile)"
-msgstr "Tamaño de memoria (percentil 99)"
-
 #, fuzzy
 msgid "Memory allocated to percpu"
 msgstr "Uso de la memoria en porcentaje"
@@ -45007,6 +45003,18 @@ msgstr "Recursos de memoria: StatefulSet"
 #, fuzzy
 msgid "Memory size"
 msgstr "Tamaño de la memoria"
+
+#, fuzzy
+msgid "Memory size (50th percentile)"
+msgstr "Tamaño de memoria (percentil 50)"
+
+#, fuzzy
+msgid "Memory size (95th percentile)"
+msgstr "Tamaño de memoria (percentil 95)"
+
+#, fuzzy
+msgid "Memory size (99th percentile)"
+msgstr "Tamaño de memoria (percentil 99)"
 
 #, fuzzy
 msgid "Memory size in percent"
@@ -47622,10 +47630,6 @@ msgstr "ID de la red"
 msgid "Network IO"
 msgstr "Red IO"
 
-#, fuzzy
-msgid "Network Interfaces"
-msgstr "Interfaces de red"
-
 msgid "Network Load Balancer Listeners"
 msgstr "Equilibrador de carga de la red Escuchas"
 
@@ -47634,10 +47638,6 @@ msgstr "Grupos de destino del equilibrador de carga de red"
 
 msgid "Network Load balancers"
 msgstr "Equilibradores de carga de red"
-
-#, fuzzy
-msgid "Network Ports"
-msgstr "Red fuera"
 
 #, fuzzy
 msgid "Network adapter"
@@ -47733,6 +47733,10 @@ msgstr "Red fuera"
 
 #, fuzzy
 msgid "Network outbound"
+msgstr "Red fuera"
+
+#, fuzzy
+msgid "Network ports"
 msgstr "Red fuera"
 
 #, fuzzy
@@ -51689,6 +51693,10 @@ msgid "Oracle DB time – fleet total"
 msgstr "Estadísticas de tiempo de la base de datos ORACLE"
 
 #, fuzzy
+msgid "Oracle Data Guard statistics"
+msgstr "Estadísticas de Oracle dataguard"
+
+#, fuzzy
 msgid "Oracle Data Guard stats"
 msgstr "Estadísticas de Oracle Data-Guard"
 
@@ -52152,9 +52160,6 @@ msgstr "ORACLE Total de pequeños bytes de escritura"
 msgid "Oracle datafile small writes"
 msgstr "Total de escrituras pequeñas de ORACLE"
 
-msgid "Oracle dataguard statistics"
-msgstr "Estadísticas de Oracle dataguard"
-
 #, fuzzy
 msgid "Oracle external table large read bytes"
 msgstr "ORACLE Total de Bytes de Lectura Grandes"
@@ -52576,10 +52581,6 @@ msgstr "Cerraduras Oracle"
 msgid "Order"
 msgstr "Solicite"
 
-#, fuzzy
-msgid "Organisations"
-msgstr "Organizaciones"
-
 msgid "Organization"
 msgstr "Organización"
 
@@ -52597,6 +52598,10 @@ msgstr "Nombre de la organización"
 
 #, fuzzy
 msgid "Organizational unit (OU)"
+msgstr "Organización"
+
+#, fuzzy
+msgid "Organizations"
 msgstr "Organización"
 
 #, fuzzy
@@ -54043,6 +54048,17 @@ msgstr "Ruta del directorio temporal (se creará)"
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
 "file, relative to the base directory of Robot Framework projects."
+msgstr ""
+
+msgid ""
+"Path to the olr.loc file of Oracle Grid Infrastructure, which covers both "
+"Oracle Clusterware and Oracle Restart. If not specified, /etc/oracle/olr.loc "
+"and /var/opt/oracle/olr.loc are probed in that order. Once the Grid home "
+"named in that file is found, the plug-in connects to this node by its own "
+"name instead of localhost, because a listener under Grid Infrastructure "
+"binds the node address. The Grid home is also used as the last candidate for "
+"ORACLE_HOME, since Grid Infrastructure stops maintaining oratab from version "
+"12.2 on. Set this to a path that does not exist to switch the behavior off."
 msgstr ""
 
 msgid ""
@@ -55675,12 +55691,12 @@ msgstr "Por favor, especifique las extensiones en minúsculas y sin punto."
 msgid "Please specify the name of the status host."
 msgstr "Por favor, especifique el nombre del host de estado."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
 "replaced with the host name the inventory has been done for. If you use a "
-"relative path then that will be relative to Checkmk's directory for variable "
-"data, which is <tt>%s</tt>."
+"relative path then that will be relative to the directory for variable data "
+"of Checkmk, which is <tt>%s</tt>."
 msgstr ""
 "Especifique la ruta del archivo de exportación. El texto <tt>[HOST]</tt> se "
 "sustituirá por el nombre del host para el que se ha realizado el inventario. "
@@ -56067,10 +56083,6 @@ msgstr "PostgreSQL"
 
 msgid "Power"
 msgstr "Potencia"
-
-#, fuzzy
-msgid "Power Supplies"
-msgstr "Fuentes de alimentación"
 
 msgid "Power consumption draw"
 msgstr "Consumo de energía"
@@ -57922,10 +57934,10 @@ msgstr "Correos recibidos"
 msgid "Received messages"
 msgstr "Mensajes recibidos"
 
-msgid "Receiver protocol GRPC"
+msgid "Receiver protocol HTTP"
 msgstr ""
 
-msgid "Receiver protocol HTTP"
+msgid "Receiver protocol gRPC"
 msgstr ""
 
 #, fuzzy
@@ -60899,15 +60911,15 @@ msgstr "Nivel de potencia Rx"
 msgid "S."
 msgstr "S."
 
-#, fuzzy
-msgid "S3 Buckets"
-msgstr "AWS/S3 Buckets"
-
 msgid "S3 backend cache hits"
 msgstr ""
 
 msgid "S3 backend cache missess"
 msgstr ""
+
+#, fuzzy
+msgid "S3 buckets"
+msgstr "AWS/S3 Buckets"
 
 msgid "SAML"
 msgstr "SAML"
@@ -62450,7 +62462,7 @@ msgstr ""
 
 msgid ""
 "Select the NetApp resources you would like to fetch from the API. Note that "
-"some sections depend on others: 'Volume Performance Counters' requires "
+"some sections depend on others: 'Volume performance counters' requires "
 "'Volumes' data. Performance counter sections may consume more resources and "
 "take longer to collect on large systems."
 msgstr ""
@@ -66710,7 +66722,7 @@ msgid "Specify roles of a worker node"
 msgstr "Especificar las funciones de un nodo del plano de control"
 
 #, fuzzy
-msgid "Specify sites this OpenTelemetry collector should run on. "
+msgid "Specify sites this OpenTelemetry Collector should run on. "
 msgstr ""
 "Especifique uno, varios o todos los sitios en los que debe ejecutarse esta "
 "conexión."
@@ -70036,15 +70048,15 @@ msgstr "Temperatura Carril %d"
 msgid "Temperature Lane 9"
 msgstr "Temperatura Carril %d"
 
-#, fuzzy
-msgid "Temperature Sensors"
-msgstr "Alerta de temperatura"
-
 msgid "Temperature Trend Analysis"
 msgstr "Análisis de la tendencia de la temperatura"
 
 msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Temperatura y humedad para los SAIs de Eaton"
+
+#, fuzzy
+msgid "Temperature sensors"
+msgstr "Alerta de temperatura"
 
 #, fuzzy
 msgid "Temperature sensors with built-in levels"
@@ -70105,10 +70117,6 @@ msgstr "es necesario"
 
 msgid "Tenant ID must be a valid UUID."
 msgstr ""
-
-#, fuzzy
-msgid "Tenant Name"
-msgstr "Nombre del ventilador"
 
 #, fuzzy
 msgid "Tenant name"
@@ -72266,7 +72274,7 @@ msgstr ""
 msgid ""
 "The delta-to-cumulative processor converts timezones into cumulative "
 "aggregation temporality. This is necessary for compatibility reasons with "
-"the Checkmk metric backend, which only supports cumulative metrics. If your "
+"the Checkmk metrics backend, which only supports cumulative metrics. If your "
 "Collector receives metrics in delta aggregation temporality, you can "
 "configure this processor to be able to use these metrics in Checkmk. If your "
 "Collector only receives cumulative metrics or if you are unsure about the "
@@ -78480,16 +78488,16 @@ msgstr "Esta comprobación no tiene parámetros."
 
 #, fuzzy
 msgid ""
-"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see werk "
-"15844 for details). Please switch to the new ruleset \"Microsoft SQL server "
-"(Linux, Windows)\".This plug-in can be used to collect information of all "
+"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see Werk "
+"15844 for details). Please switch to the new rule set \"Microsoft SQL server "
+"(Linux, Windows)\". This plug-in can be used to collect information of all "
 "running MSSQL servers on the local system. The current implementation of the "
 "check uses the \"trusted authentication\" where no user/password needs to be "
-"created in the MSSQL server instance by default. Using this method, you "
-"needed to grant the user running the Checkmk windows agent service access to "
-"the MSSQL database. Otherwise you can configure the credentials of a "
-"database user which has the permission to read the needed information from "
-"the server instance."
+"created in the MSSQL server instance by default. Using this method, you need "
+"to grant the user running the Checkmk Windows agent service access to the "
+"MSSQL database. Otherwise you can configure the credentials of a database "
+"user who has the permission to read the needed information from the server "
+"instance."
 msgstr ""
 "Este plugin se puede utilizar para recopilar información de todos los "
 "servidores MSSQL en ejecución en el sistema local. La implementación actual "
@@ -79867,7 +79875,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This rule set selects the NetApp special agent instead of the normal Checkmk "
-"Agent and allows monitoring via the NetApp Ontap REST API."
+"agent and allows monitoring via the NetApp Ontap REST API."
 msgstr ""
 "Este conjunto de reglas selecciona el agente especial para HPE StoreOnce "
 "Applainces en lugar del agente Checkmk normal y permite la supervisión a "
@@ -80575,7 +80583,7 @@ msgstr "Este sitio es %s"
 
 #, fuzzy
 msgid ""
-"This site is already assigned to another OpenTelemetry collector "
+"This site is already assigned to another OpenTelemetry Collector "
 "configuration."
 msgstr "Añadir una nueva configuración de usuario"
 
@@ -82318,7 +82326,8 @@ msgstr "Total de la PGA asignada"
 msgid "Total PGA inuse"
 msgstr "Total de PGA en uso"
 
-msgid "Total PGA used for auto workareas"
+#, fuzzy
+msgid "Total PGA used for auto-workareas"
 msgstr "Total de PGA utilizados para las áreas de trabajo de los automóviles"
 
 msgid "Total PGA used for manual workareas"
@@ -88703,10 +88712,6 @@ msgstr "Contraseña del usuario"
 msgid "User / Group Key"
 msgstr "Clave de usuario/grupo"
 
-#, fuzzy
-msgid "User Asserts"
-msgstr "%s afirma"
-
 msgid "User Base-DN"
 msgstr "Usuario Base-DN"
 
@@ -88738,6 +88743,10 @@ msgstr "Agente del usuario"
 
 msgid "User and password"
 msgstr "Usuario y contraseña"
+
+#, fuzzy
+msgid "User asserts"
+msgstr "%s afirma"
 
 msgid "User base DN"
 msgstr "Base de usuarios DN"
@@ -90143,13 +90152,14 @@ msgstr "Nombre del Vhost"
 msgid "Vhosts"
 msgstr "Vhosts"
 
+#, fuzzy
 msgid ""
 "Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
-"Inventory page of a host the internal tree paths leading to subcategories, "
-"the keys of singles values or table column names become visible. Key columns "
-"of tables are marked with '*'. See <a href=\"https://docs.checkmk.com/latest/"
-"de/inventory.html\">HW/SW Inventory</a>. for more details about the HW/SW "
-"Inventory system."
+"inventory page of a host, the internal tree paths leading to subcategories "
+"as well as the keys of singles values or table column names become visible. "
+"Key columns of tables are marked with '*'. See <a href=\"https://"
+"docs.checkmk.com/latest/de/inventory.html\">HW/SW inventory</a> for more "
+"details about the HW/SW inventory system."
 msgstr ""
 "A través de <tt>Opciones de visualización > Mostrar rutas de árbol internas</"
 "tt> en la página de Inventario HW/SW de un host se hacen visibles las rutas "
@@ -90414,9 +90424,6 @@ msgstr "Sensor de tensión"
 msgid "Volume"
 msgstr "Volumen"
 
-msgid "Volume Performance Counters (requires Volumes)"
-msgstr ""
-
 #, fuzzy
 msgid "Volume group"
 msgstr "Grupo de Volumen"
@@ -90434,6 +90441,10 @@ msgstr "Nombre del volumen"
 
 msgid "Volume parameters"
 msgstr "Parámetros de volumen"
+
+#, fuzzy
+msgid "Volume performance counters (requires volumes)"
+msgstr "Varios contadores de rendimiento"
 
 #, fuzzy
 msgid "VolumeSets: Volume Set Configuration"
@@ -90698,10 +90709,6 @@ msgstr ""
 msgid "Warning"
 msgstr "Advertencia"
 
-#, fuzzy
-msgid "Warning Asserts"
-msgstr "Advertencia en"
-
 msgid "Warning above"
 msgstr "Advertencia anterior"
 
@@ -90713,6 +90720,10 @@ msgstr "Advertencia después de "
 
 msgid "Warning area"
 msgstr "Zona de advertencia"
+
+#, fuzzy
+msgid "Warning asserts"
+msgstr "Advertencia en"
 
 msgid "Warning at"
 msgstr "Advertencia en"
@@ -95410,15 +95421,6 @@ msgstr ""
 "regular (regex). Por ejemplo, tiene que utilizar <tt>\\año</tt> en lugar de "
 "<tt>\\año</tt> si quiere buscar una sola barra invertida."
 
-msgid ""
-"Your search statement is not valid. You need to provide a regular expression "
-"(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "
-"you like to search for a single backslash."
-msgstr ""
-"Su declaración de búsqueda no es válida. Necesita proporcionar una expresión "
-"regular (regex). Por ejemplo, tiene que utilizar <tt>\\año</tt> en lugar de "
-"<tt>\\año</tt> si quiere buscar una sola barra invertida."
-
 #, fuzzy
 msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
@@ -96257,6 +96259,9 @@ msgstr "desde el final"
 
 msgid "from:"
 msgstr "de:"
+
+msgid "gRPC-based OTLP receiver"
+msgstr ""
 
 msgid "global"
 msgstr "global"
@@ -102928,6 +102933,40 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Auto (DEFAULT)"
+#~ msgstr "Auto (DEFAULT)"
+
+#~ msgid "Certificate Key File"
+#~ msgstr "Archivo de claves de certificado"
+
+#~ msgid "Memory Size"
+#~ msgstr "Tamaño de la memoria"
+
+#, fuzzy
+#~ msgid "Network Interfaces"
+#~ msgstr "Interfaces de red"
+
+#, fuzzy
+#~ msgid "Organisations"
+#~ msgstr "Organizaciones"
+
+#, fuzzy
+#~ msgid "Power Supplies"
+#~ msgstr "Fuentes de alimentación"
+
+#, fuzzy
+#~ msgid "Tenant Name"
+#~ msgstr "Nombre del ventilador"
+
+#~ msgid ""
+#~ "Your search statement is not valid. You need to provide a regular "
+#~ "expression (regex). For example you need to use <tt>\\\\</tt> instead of "
+#~ "<tt>\\</tt> if you like to search for a single backslash."
+#~ msgstr ""
+#~ "Su declaración de búsqueda no es válida. Necesita proporcionar una "
+#~ "expresión regular (regex). Por ejemplo, tiene que utilizar <tt>\\año</tt> "
+#~ "en lugar de <tt>\\año</tt> si quiere buscar una sola barra invertida."
+
 #, fuzzy
 #~ msgid "Oldest Message Age"
 #~ msgstr "Edad del mensaje más antiguo"
@@ -104712,10 +104751,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Organization licenses overview"
 #~ msgstr "Licencias de organización"
-
-#, fuzzy
-#~ msgid "Organizations"
-#~ msgstr "Organización"
 
 #, python-format
 #~ msgid "Original %s"

@@ -2762,7 +2762,7 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"A site is allowed to be used in exactly one OpenTelemetry collector "
+"A site is allowed to be used in exactly one OpenTelemetry Collector "
 "configuration: \n"
 "%s"
 msgstr "Adaugp o noua configurație de utilizator"
@@ -5105,15 +5105,15 @@ msgstr "Linii de header adiționale"
 msgid "Additional host names"
 msgstr "Nume de gazde suplimentare"
 
-msgid ""
-"Additional hosts are created automatically if they do not yet exist. Adjust "
-"the connection  to modify the folder or properties."
-msgstr ""
-
 #, python-brace-format
 msgid ""
 "Additional hosts are created automatically if they do not yet exist. Adjust "
 "the connection \"{dcd_title}\" to modify the folder or properties."
+msgstr ""
+
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection to modify the folder or properties."
 msgstr ""
 
 msgid "Additional information"
@@ -5835,7 +5835,8 @@ msgstr ""
 msgid "Aggregate"
 msgstr "Agregate"
 
-msgid "Aggregate PGA auto target"
+#, fuzzy
+msgid "Aggregate PGA auto-target"
 msgstr "Țintă automată PGA agregată"
 
 msgid "Aggregate PGA target parameter"
@@ -6360,7 +6361,7 @@ msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
 "which processes status data. <b>Note:</b> in order to get any useful result "
-"for agent based hosts make sure that you have installed the agent plug-in "
+"for agent-based hosts make sure that you have installed the agent plug-in "
 "<tt>mk_inventory</tt> on these hosts."
 msgstr ""
 "Toate gazdele configurate prin acest set de reguli vor face un inventar "
@@ -6375,7 +6376,7 @@ msgid ""
 "inventory. For each configured host a new active check will be created. You "
 "should also create a rule for changing the normal interval for that check to "
 "something between a couple of hours and one day. <b>Note:</b> in order to "
-"get any useful result for agent based hosts make sure that you have "
+"get any useful result for agent-based hosts make sure that you have "
 "installed the agent plug-in <tt>mk_inventory</tt> on these hosts."
 msgstr ""
 "Toate gazdele configurate prin acest set de reguli vor face un inventar "
@@ -7538,10 +7539,6 @@ msgid "Application Gateway"
 msgstr "Poarta de aplicații"
 
 #, fuzzy
-msgid "Application Type"
-msgstr "Cheie de aplicație"
-
-#, fuzzy
 msgid "Application and network load balancing (ELBv2)"
 msgstr "Echilibrarea încărcării aplicațiilor și a rețelei (ELBv2)"
 
@@ -7586,6 +7583,10 @@ msgstr "Cereri în așteptare"
 #, fuzzy
 msgid "Application pool name"
 msgstr "Numele pool-ului de aplicații"
+
+#, fuzzy
+msgid "Application type"
+msgstr "Cheie de aplicație"
 
 msgid "Applications"
 msgstr "Aplicații"
@@ -8375,8 +8376,9 @@ msgstr "Autorizații per grup de securitate DB"
 msgid "Authorized user"
 msgstr "Site-uri autorizate"
 
-msgid "Auto (DEFAULT)"
-msgstr "Auto (DEFAULT)"
+#, fuzzy
+msgid "Auto (default)"
+msgstr "Autentificare (valori implicite)"
 
 #, fuzzy
 msgid "Auto-close off"
@@ -8389,6 +8391,10 @@ msgstr "Închidere automată pe"
 #, fuzzy
 msgid "Auto-detect (default)"
 msgstr "Autentificare (valori implicite)"
+
+#, fuzzy
+msgid "Auto-detect instances"
+msgstr "Instanțe de autodetecție"
 
 #, fuzzy
 msgid "Auto-detect instances, expect HTTPS on the following ports:"
@@ -8419,6 +8425,10 @@ msgid "Auto-extend will be ignored"
 msgstr "Extinderea automată va fi ignorată"
 
 #, fuzzy
+msgid "Auto-extensible"
+msgstr "Autoextensibil"
+
+#, fuzzy
 msgid "Auto-restart on crash"
 msgstr "Repornire automată la avarie"
 
@@ -8431,6 +8441,10 @@ msgid "Auto-shrink on"
 msgstr "Auto shrink on"
 
 #, fuzzy
+msgid "Auto-start"
+msgstr "Autostart"
+
+#, fuzzy
 msgid "Auto-start services"
 msgstr "Servicii de pornire automată"
 
@@ -8439,14 +8453,8 @@ msgid ""
 "The metric backend can be enabled in the Global Settings."
 msgstr ""
 
-msgid "Autodetect instances"
-msgstr "Instanțe de autodetecție"
-
 msgid "Autodetect instances, expect HTTPs on the following ports:"
 msgstr "Instanțele de autodetecție se așteaptă la HTTP pe următoarele porturi:"
-
-msgid "Autoextensible"
-msgstr "Autoextensibil"
 
 #, fuzzy
 msgid "Automated environment setup"
@@ -8617,9 +8625,6 @@ msgstr "Utilizator de automatizare respins"
 #, fuzzy
 msgid "Automation username"
 msgstr "Nume de utilizator de automatizare"
-
-msgid "Autostart"
-msgstr "Autostart"
 
 #, python-format
 msgid "Aux tag '%s' does not exist"
@@ -10019,24 +10024,8 @@ msgid "Back to view with checkboxes reset"
 msgstr "Înapoi la vizualizarea cu casetele de selectare resetate"
 
 #, fuzzy
-msgid "Back-end IP config"
+msgid "Backend IP config"
 msgstr "Configurație IP backend"
-
-#, fuzzy
-msgid "Back-end pool"
-msgstr "Pool de backend"
-
-#, fuzzy
-msgid "Back-end pools"
-msgstr "Grupuri Backend"
-
-#, fuzzy
-msgid "Back-end port"
-msgstr "Port backend"
-
-#, fuzzy
-msgid "Back-ends"
-msgstr "Backends"
 
 #, fuzzy
 msgid "Backend conn. failures"
@@ -10077,6 +10066,22 @@ msgstr "Backend Conn. %s."
 #, fuzzy
 msgid "Backend connection errors"
 msgstr "Erori de conexiune backend"
+
+#, fuzzy
+msgid "Backend pool"
+msgstr "Pool de backend"
+
+#, fuzzy
+msgid "Backend pools"
+msgstr "Grupuri Backend"
+
+#, fuzzy
+msgid "Backend port"
+msgstr "Port backend"
+
+#, fuzzy
+msgid "Backends"
+msgstr "Backends"
 
 msgid "Background job acknowledged"
 msgstr "Recunoașterea muncii de fond"
@@ -12715,9 +12720,9 @@ msgstr ""
 msgid "Cannot display graph"
 msgstr "Nu se poate afișa graficul"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot display inventory tree of host '%s': Found this host on multiple "
+"Cannot display inventory tree of host '%s': found this host on multiple "
 "sites: %s"
 msgstr ""
 "Nu se poate afișa arborele de inventar al gazdei '%s': Am găsit această "
@@ -13064,9 +13069,6 @@ msgstr "OSD-uri Ceph"
 msgid "Ceph status"
 msgstr "Starea Ceph"
 
-msgid "Certificate Key File"
-msgstr "Fișier cu cheie de certificat"
-
 #, fuzzy
 msgid "Certificate age"
 msgstr "Lanțul de certificate"
@@ -13098,6 +13100,10 @@ msgstr "Denumirea alternativă a subiectului certificatului"
 
 msgid "Certificate is not signed by trusted authority"
 msgstr "Certificatul nu este semnat de o autoritate de încredere"
+
+#, fuzzy
+msgid "Certificate key file"
+msgstr "Fișier de certificat și cheie"
 
 #, fuzzy
 msgid "Certificate overview"
@@ -15390,14 +15396,15 @@ msgstr ""
 "Colectează informații de pe site-urile Checkmk pentru analiza de "
 "diagnosticare."
 
-msgid "Collection Size"
-msgstr "Dimensiunea colecției"
-
 #, fuzzy, python-format
 msgid ""
 "Collection of passwords failed\n"
 "%s"
 msgstr "Decriptarea parolei SNMPv3 a eșuat."
+
+#, fuzzy
+msgid "Collection size"
+msgstr "Dimensiunea colecției"
 
 msgid "Collections"
 msgstr "Colecții"
@@ -18288,9 +18295,6 @@ msgstr "Acreditare"
 msgid "Credentials expiration"
 msgstr "Expirarea acreditărilor"
 
-msgid "Credentials for Connect (ODBC interface)"
-msgstr "Acreditive pentru Connect (interfața ODBC)"
-
 msgid "Credentials for HTTP basic authentication"
 msgstr "Datele de autentificare pentru autentificarea HTTP Basic"
 
@@ -18309,6 +18313,10 @@ msgid ""
 msgstr ""
 "Acreditive pentru SNMPv3 fără autentificare și confidențialitate "
 "(noAuthNoPriv)"
+
+#, fuzzy
+msgid "Credentials for connect (ODBC interface)"
+msgstr "Acreditive pentru Connect (interfața ODBC)"
 
 msgid "Credentials for processing SNMP traps"
 msgstr "Acreditive pentru procesarea capcanelor SNMP"
@@ -20844,11 +20852,11 @@ msgid "Deleted MIB %s"
 msgstr "MIB șters %s"
 
 #, fuzzy, python-format
-msgid "Deleted OTel QuickSetup configuration bundle: '%s'"
+msgid "Deleted OTel Quick Setup configuration bundle: '%s'"
 msgstr "Configurație implicită"
 
 #, fuzzy, python-format
-msgid "Deleted Prometheus QuickSetup configuration bundle: '%s'"
+msgid "Deleted Prometheus Quick Setup configuration bundle: '%s'"
 msgstr "Configurația stilului selectat"
 
 #, python-brace-format
@@ -24538,11 +24546,11 @@ msgid "Edited %d hosts"
 msgstr "Editat %d gazde"
 
 #, fuzzy, python-format
-msgid "Edited OTel QuickSetup configuration bundle: '%s'"
+msgid "Edited OTel Quick Setup configuration bundle: '%s'"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy, python-format
-msgid "Edited Prometheus QuickSetup configuration bundle: '%s'"
+msgid "Edited Prometheus Quick Setup configuration bundle: '%s'"
 msgstr "Configurația stilului selectat"
 
 #, python-format
@@ -25719,10 +25727,6 @@ msgstr "Intrare"
 msgid "Env creation"
 msgstr "Creații de evenimente"
 
-#, fuzzy
-msgid "Environment Sensors"
-msgstr "Variabile de mediu"
-
 msgid "Environment build timeout"
 msgstr "Timeout de construire a mediului"
 
@@ -25731,6 +25735,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Environment metrics"
+msgstr "Variabile de mediu"
+
+#, fuzzy
+msgid "Environment sensors"
 msgstr "Variabile de mediu"
 
 #, fuzzy
@@ -26905,9 +26913,6 @@ msgstr "Export CSV"
 msgid "Export JSON"
 msgstr "Exportați JSON"
 
-msgid "Export List of Software packages as CSV file"
-msgstr "Exportați lista de pachete software ca fișier CSV"
-
 msgid "Export as JSON"
 msgstr "Exportați ca JSON"
 
@@ -26923,6 +26928,10 @@ msgid ""
 msgstr ""
 "Fișier de export care urmează să fie creat, conținând <tt>&lt;HOST&gt;</tt> "
 "pentru numele de gazdă"
+
+#, fuzzy
+msgid "Export list of software packages as CSV file"
+msgstr "Exportați lista de pachete software ca fișier CSV"
 
 #, fuzzy, python-format
 msgid "Export this %s for API"
@@ -29462,9 +29471,6 @@ msgstr "CPU"
 msgid "GPU utilization"
 msgstr "Utilizare GPU"
 
-msgid "GRPC-based OTLP receiver"
-msgstr ""
-
 msgid "GUI design"
 msgstr "Proiectare GUI"
 
@@ -30624,7 +30630,8 @@ msgstr ""
 "Trebuie să conțină un singur certificat sau un pachet de certificate "
 "'autoritate de certificare'."
 
-msgid "Has to contain the path to the Cert Key File."
+#, fuzzy
+msgid "Has to contain the path to the cert key file."
 msgstr "Trebuie să conțină calea către fișierul cu cheia de certificare."
 
 msgid "Hash"
@@ -35296,12 +35303,12 @@ msgid ""
 "into syslog format and forwarded to the Event Console.<br>The Event Console "
 "is optimized for handling critical events, not for processing high-frequency "
 "log data. When forwarding OpenTelemetry logs, carefully consider:"
-"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages you "
-"are sending<br></ol>Unfiltered or high-volume logs can degrade performance "
+"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages are "
+"you sending?<br></ol>Unfiltered or high-volume logs can degrade performance "
 "and reduce the usefulness of the Event Console. We recommend filtering and "
 "preprocessing your logs to only forward meaningful events. For more "
 "information, have a look at the <a href='https://docs.checkmk.com/latest/en/"
-"ec.html#tuning'>Event Console user guide.</a>"
+"ec.html#tuning'>Event Console User Guide.</a>"
 msgstr ""
 
 msgid "If this error persists, please contact the Checkmk support team."
@@ -35610,7 +35617,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "If you activate this option, then the agent plug-in <tt>mk_redis</tt> will "
-"be deployed. You can configure multiple instances or auto detect running "
+"be deployed. You can configure multiple instances or auto-detect running "
 "instances."
 msgstr ""
 "Dacă activați această opțiune, atunci va fi implementat pluginul agent "
@@ -41607,7 +41614,7 @@ msgstr ""
 msgid "List of patterns to exclude"
 msgstr "Lista modelelor care trebuie excluse"
 
-msgid "List of users and password allowed to use this endpoint"
+msgid "List of users and passwords allowed to use this endpoint"
 msgstr ""
 
 msgid "List unpackaged files"
@@ -44110,7 +44117,8 @@ msgstr "Dimensiunea maximă"
 msgid "Maximum PGA allocated"
 msgstr "PGA maxim alocat"
 
-msgid "Maximum PGA used for auto workareas"
+#, fuzzy
+msgid "Maximum PGA used for auto-workareas"
 msgstr "PGA maximă utilizată pentru zonele de lucru auto"
 
 msgid "Maximum PGA used for manual workareas"
@@ -44306,7 +44314,7 @@ msgid ""
 "maximum spike value from the total available memory. For instance, setting "
 "the limit to 60% and the spike limit to 25% on a machine with 1000 MiB total "
 "memory available will result in a 600 MiB hard limit and a 350 MiB soft "
-"limit (the spike limit being equal to 250MiB)"
+"limit (the spike limit being equal to 250MiB)."
 msgstr ""
 
 #, no-python-format
@@ -44721,18 +44729,6 @@ msgstr "Memorie utilizată"
 msgid "Memory (RAM)"
 msgstr "Memorie (RAM)"
 
-msgid "Memory Size"
-msgstr "Dimensiunea memoriei"
-
-msgid "Memory Size (50th percentile)"
-msgstr "Dimensiunea memoriei (percentila 50)"
-
-msgid "Memory Size (95th percentile)"
-msgstr "Dimensiunea memoriei (percentila 95)"
-
-msgid "Memory Size (99th percentile)"
-msgstr "Dimensiunea memoriei (percentila 99)"
-
 #, fuzzy
 msgid "Memory allocated to percpu"
 msgstr "Utilizarea memoriei în procente"
@@ -44827,6 +44823,18 @@ msgstr "Resurse de memorie: StatefulSet"
 
 msgid "Memory size"
 msgstr "Dimensiunea memoriei"
+
+#, fuzzy
+msgid "Memory size (50th percentile)"
+msgstr "Dimensiunea memoriei (percentila 50)"
+
+#, fuzzy
+msgid "Memory size (95th percentile)"
+msgstr "Dimensiunea memoriei (percentila 95)"
+
+#, fuzzy
+msgid "Memory size (99th percentile)"
+msgstr "Dimensiunea memoriei (percentila 99)"
 
 msgid "Memory size in percent"
 msgstr "Dimensiunea memoriei în procente"
@@ -47444,10 +47452,6 @@ msgstr "ID-ul rețelei"
 msgid "Network IO"
 msgstr "Rețea IO"
 
-#, fuzzy
-msgid "Network Interfaces"
-msgstr "Interfețe de rețea"
-
 msgid "Network Load Balancer Listeners"
 msgstr "Ascultatori de echilibrare a încărcării rețelei"
 
@@ -47456,10 +47460,6 @@ msgstr "Grupuri țintă de echilibrare a încărcăturii de rețea"
 
 msgid "Network Load balancers"
 msgstr "Balansatoare de sarcină în rețea"
-
-#, fuzzy
-msgid "Network Ports"
-msgstr "Rețea afară"
 
 #, fuzzy
 msgid "Network adapter"
@@ -47553,6 +47553,10 @@ msgstr "Rețea afară"
 
 #, fuzzy
 msgid "Network outbound"
+msgstr "Rețea afară"
+
+#, fuzzy
+msgid "Network ports"
 msgstr "Rețea afară"
 
 #, fuzzy
@@ -51475,6 +51479,10 @@ msgid "Oracle DB time – fleet total"
 msgstr "Statistici de timp ORACLE DB"
 
 #, fuzzy
+msgid "Oracle Data Guard statistics"
+msgstr "Statistici Oracle Dataguard"
+
+#, fuzzy
 msgid "Oracle Data Guard stats"
 msgstr "Statistici Oracle Data-Guard"
 
@@ -51938,9 +51946,6 @@ msgstr "ORACLE Total de octeți mici de scriere"
 msgid "Oracle datafile small writes"
 msgstr "ORACLE Total scrieri mici"
 
-msgid "Oracle dataguard statistics"
-msgstr "Statistici Oracle Dataguard"
-
 #, fuzzy
 msgid "Oracle external table large read bytes"
 msgstr "ORACLE Total de octeți mari citiți"
@@ -52362,10 +52367,6 @@ msgstr "Blocaje Oracle"
 msgid "Order"
 msgstr "Comandă"
 
-#, fuzzy
-msgid "Organisations"
-msgstr "Organizație"
-
 msgid "Organization"
 msgstr "Organizația"
 
@@ -52382,6 +52383,10 @@ msgstr "Numele organizației"
 
 msgid "Organizational unit (OU)"
 msgstr "Unitate organizațională (OU)"
+
+#, fuzzy
+msgid "Organizations"
+msgstr "Organizația"
 
 #, fuzzy
 msgid "Organizations IDs"
@@ -53819,6 +53824,17 @@ msgstr "Cale de acces la directorul temporar (va fi creat)"
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
 "file, relative to the base directory of Robot Framework projects."
+msgstr ""
+
+msgid ""
+"Path to the olr.loc file of Oracle Grid Infrastructure, which covers both "
+"Oracle Clusterware and Oracle Restart. If not specified, /etc/oracle/olr.loc "
+"and /var/opt/oracle/olr.loc are probed in that order. Once the Grid home "
+"named in that file is found, the plug-in connects to this node by its own "
+"name instead of localhost, because a listener under Grid Infrastructure "
+"binds the node address. The Grid home is also used as the last candidate for "
+"ORACLE_HOME, since Grid Infrastructure stops maintaining oratab from version "
+"12.2 on. Set this to a path that does not exist to switch the behavior off."
 msgstr ""
 
 msgid ""
@@ -55431,12 +55447,12 @@ msgstr "Vă rugăm să specificați extensiile în minuscule și fără punct."
 msgid "Please specify the name of the status host."
 msgstr "Vă rugăm să specificați numele gazdei de stare."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
 "replaced with the host name the inventory has been done for. If you use a "
-"relative path then that will be relative to Checkmk's directory for variable "
-"data, which is <tt>%s</tt>."
+"relative path then that will be relative to the directory for variable data "
+"of Checkmk, which is <tt>%s</tt>."
 msgstr ""
 "Vă rugăm să specificați calea de acces la fișierul de export. Textul "
 "<tt>[HOST]</tt> va fi înlocuit cu numele gazdei pentru care s-a făcut "
@@ -55823,10 +55839,6 @@ msgstr "PostgreSQL"
 
 msgid "Power"
 msgstr "Putere"
-
-#, fuzzy
-msgid "Power Supplies"
-msgstr "Surse de alimentare"
 
 msgid "Power consumption draw"
 msgstr "Consumul de energie electrică"
@@ -57669,10 +57681,10 @@ msgstr "Mailuri primite"
 msgid "Received messages"
 msgstr "Mesaje primite"
 
-msgid "Receiver protocol GRPC"
+msgid "Receiver protocol HTTP"
 msgstr ""
 
-msgid "Receiver protocol HTTP"
+msgid "Receiver protocol gRPC"
 msgstr ""
 
 #, fuzzy
@@ -60603,15 +60615,15 @@ msgstr "Nivelul de putere Rx"
 msgid "S."
 msgstr "S."
 
-#, fuzzy
-msgid "S3 Buckets"
-msgstr "Grămezi AWS/S3"
-
 msgid "S3 backend cache hits"
 msgstr ""
 
 msgid "S3 backend cache missess"
 msgstr ""
+
+#, fuzzy
+msgid "S3 buckets"
+msgstr "Grămezi AWS/S3"
 
 msgid "SAML"
 msgstr "SAML"
@@ -62167,7 +62179,7 @@ msgstr ""
 
 msgid ""
 "Select the NetApp resources you would like to fetch from the API. Note that "
-"some sections depend on others: 'Volume Performance Counters' requires "
+"some sections depend on others: 'Volume performance counters' requires "
 "'Volumes' data. Performance counter sections may consume more resources and "
 "take longer to collect on large systems."
 msgstr ""
@@ -66437,7 +66449,7 @@ msgid "Specify roles of a worker node"
 msgstr "Specificarea rolurilor unui nod de plan de control"
 
 #, fuzzy
-msgid "Specify sites this OpenTelemetry collector should run on. "
+msgid "Specify sites this OpenTelemetry Collector should run on. "
 msgstr ""
 "Precizați unul, mai multe sau toate site-urile pe care trebuie să "
 "funcționeze această conexiune."
@@ -69741,15 +69753,15 @@ msgstr "Culoarul de temperatură %d"
 msgid "Temperature Lane 9"
 msgstr "Culoarul de temperatură %d"
 
-#, fuzzy
-msgid "Temperature Sensors"
-msgstr "Alertă de temperatură"
-
 msgid "Temperature Trend Analysis"
 msgstr "Analiza tendinței temperaturii"
 
 msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Temperatura și umiditatea pentru UPS Eaton"
+
+#, fuzzy
+msgid "Temperature sensors"
+msgstr "Alertă de temperatură"
 
 msgid "Temperature sensors with built-in levels"
 msgstr "Senzori de temperatură cu niveluri încorporate"
@@ -69809,10 +69821,6 @@ msgstr "este necesară"
 
 msgid "Tenant ID must be a valid UUID."
 msgstr ""
-
-#, fuzzy
-msgid "Tenant Name"
-msgstr "Numele ventilatorului"
 
 #, fuzzy
 msgid "Tenant name"
@@ -71962,7 +71970,7 @@ msgstr ""
 msgid ""
 "The delta-to-cumulative processor converts timezones into cumulative "
 "aggregation temporality. This is necessary for compatibility reasons with "
-"the Checkmk metric backend, which only supports cumulative metrics. If your "
+"the Checkmk metrics backend, which only supports cumulative metrics. If your "
 "Collector receives metrics in delta aggregation temporality, you can "
 "configure this processor to be able to use these metrics in Checkmk. If your "
 "Collector only receives cumulative metrics or if you are unsure about the "
@@ -78207,16 +78215,16 @@ msgstr "Această verificare nu are parametri."
 
 #, fuzzy
 msgid ""
-"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see werk "
-"15844 for details). Please switch to the new ruleset \"Microsoft SQL server "
-"(Linux, Windows)\".This plug-in can be used to collect information of all "
+"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see Werk "
+"15844 for details). Please switch to the new rule set \"Microsoft SQL server "
+"(Linux, Windows)\". This plug-in can be used to collect information of all "
 "running MSSQL servers on the local system. The current implementation of the "
 "check uses the \"trusted authentication\" where no user/password needs to be "
-"created in the MSSQL server instance by default. Using this method, you "
-"needed to grant the user running the Checkmk windows agent service access to "
-"the MSSQL database. Otherwise you can configure the credentials of a "
-"database user which has the permission to read the needed information from "
-"the server instance."
+"created in the MSSQL server instance by default. Using this method, you need "
+"to grant the user running the Checkmk Windows agent service access to the "
+"MSSQL database. Otherwise you can configure the credentials of a database "
+"user who has the permission to read the needed information from the server "
+"instance."
 msgstr ""
 "Acest plugin poate fi utilizat pentru a colecta informații despre toate "
 "serverele MSSQL care rulează pe sistemul local. Implementarea actuală a "
@@ -79605,9 +79613,10 @@ msgstr ""
 "monitorizare trebuie să poată intra prin ssh în sistemul de stocare ca "
 "utilizator pe care l-ați dat mai jos, fără parolă."
 
+#, fuzzy
 msgid ""
 "This rule set selects the NetApp special agent instead of the normal Checkmk "
-"Agent and allows monitoring via the NetApp Ontap REST API."
+"agent and allows monitoring via the NetApp Ontap REST API."
 msgstr ""
 "Acest set de reguli selectează agentul special NetApp în locul agentului "
 "Checkmk normal și permite monitorizarea prin intermediul NetApp Ontap REST "
@@ -80332,7 +80341,7 @@ msgstr "Acest site este %s"
 
 #, fuzzy
 msgid ""
-"This site is already assigned to another OpenTelemetry collector "
+"This site is already assigned to another OpenTelemetry Collector "
 "configuration."
 msgstr "Adaugp o noua configurație de utilizator"
 
@@ -82086,7 +82095,8 @@ msgstr "Total PGA alocat"
 msgid "Total PGA inuse"
 msgstr "Total PGA în uz"
 
-msgid "Total PGA used for auto workareas"
+#, fuzzy
+msgid "Total PGA used for auto-workareas"
 msgstr "Total PGA utilizat pentru zonele de lucru auto"
 
 msgid "Total PGA used for manual workareas"
@@ -88360,10 +88370,6 @@ msgstr "Parola utilizatorului"
 msgid "User / Group Key"
 msgstr "Cheie de utilizator / grup"
 
-#, fuzzy
-msgid "User Asserts"
-msgstr "%s Afirmă"
-
 msgid "User Base-DN"
 msgstr "Utilizator Base-DN"
 
@@ -88394,6 +88400,10 @@ msgstr "Agent utilizator"
 
 msgid "User and password"
 msgstr "Utilizator și parolă"
+
+#, fuzzy
+msgid "User asserts"
+msgstr "%s Afirmă"
 
 msgid "User base DN"
 msgstr "Baza de utilizatori DN"
@@ -89797,13 +89807,14 @@ msgstr "Nume Vhost"
 msgid "Vhosts"
 msgstr "Vhosts"
 
+#, fuzzy
 msgid ""
 "Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
-"Inventory page of a host the internal tree paths leading to subcategories, "
-"the keys of singles values or table column names become visible. Key columns "
-"of tables are marked with '*'. See <a href=\"https://docs.checkmk.com/latest/"
-"de/inventory.html\">HW/SW Inventory</a>. for more details about the HW/SW "
-"Inventory system."
+"inventory page of a host, the internal tree paths leading to subcategories "
+"as well as the keys of singles values or table column names become visible. "
+"Key columns of tables are marked with '*'. See <a href=\"https://"
+"docs.checkmk.com/latest/de/inventory.html\">HW/SW inventory</a> for more "
+"details about the HW/SW inventory system."
 msgstr ""
 "Prin intermediul <tt>Opțiuni de afișare > Afișare căi interne de arbore</tt> "
 "pe pagina Inventar HW/SW a unei gazde devin vizibile căile interne de arbore "
@@ -90060,9 +90071,6 @@ msgstr "Senzor de tensiune"
 msgid "Volume"
 msgstr "Volum"
 
-msgid "Volume Performance Counters (requires Volumes)"
-msgstr ""
-
 #, fuzzy
 msgid "Volume group"
 msgstr "Grupul de volum"
@@ -90080,6 +90088,10 @@ msgstr "Numele volumului"
 
 msgid "Volume parameters"
 msgstr "Parametrii de volum"
+
+#, fuzzy
+msgid "Volume performance counters (requires volumes)"
+msgstr "Diverse contoare de performanță"
 
 #, fuzzy
 msgid "VolumeSets: Volume Set Configuration"
@@ -90341,10 +90353,6 @@ msgstr ""
 msgid "Warning"
 msgstr "Avertisment"
 
-#, fuzzy
-msgid "Warning Asserts"
-msgstr "Avertisment la"
-
 msgid "Warning above"
 msgstr "Avertismentul de mai sus"
 
@@ -90356,6 +90364,10 @@ msgstr "Avertisment după "
 
 msgid "Warning area"
 msgstr "Zona de avertizare"
+
+#, fuzzy
+msgid "Warning asserts"
+msgstr "Avertisment la"
 
 msgid "Warning at"
 msgstr "Avertisment la"
@@ -95047,15 +95059,6 @@ msgstr ""
 "(regex). De exemplu, trebuie să folosiți <tt>\\\\</tt> în loc de <tt>\\</tt> "
 "dacă doriți să căutați o singură backslash."
 
-msgid ""
-"Your search statement is not valid. You need to provide a regular expression "
-"(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "
-"you like to search for a single backslash."
-msgstr ""
-"Declarația dvs. de căutare nu este valabilă. Trebuie să furnizați o expresie "
-"regulată (regex). De exemplu, trebuie să utilizați <tt>\\\\</tt> în loc de "
-"<tt>\\</tt> dacă doriți să căutați o singură backslash."
-
 #, fuzzy
 msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
@@ -95887,6 +95890,9 @@ msgstr "de la sfârșit"
 
 msgid "from:"
 msgstr "de la:"
+
+msgid "gRPC-based OTLP receiver"
+msgstr ""
 
 msgid "global"
 msgstr "global"
@@ -102580,6 +102586,40 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Auto (DEFAULT)"
+#~ msgstr "Auto (DEFAULT)"
+
+#~ msgid "Certificate Key File"
+#~ msgstr "Fișier cu cheie de certificat"
+
+#~ msgid "Memory Size"
+#~ msgstr "Dimensiunea memoriei"
+
+#, fuzzy
+#~ msgid "Network Interfaces"
+#~ msgstr "Interfețe de rețea"
+
+#, fuzzy
+#~ msgid "Organisations"
+#~ msgstr "Organizație"
+
+#, fuzzy
+#~ msgid "Power Supplies"
+#~ msgstr "Surse de alimentare"
+
+#, fuzzy
+#~ msgid "Tenant Name"
+#~ msgstr "Numele ventilatorului"
+
+#~ msgid ""
+#~ "Your search statement is not valid. You need to provide a regular "
+#~ "expression (regex). For example you need to use <tt>\\\\</tt> instead of "
+#~ "<tt>\\</tt> if you like to search for a single backslash."
+#~ msgstr ""
+#~ "Declarația dvs. de căutare nu este valabilă. Trebuie să furnizați o "
+#~ "expresie regulată (regex). De exemplu, trebuie să utilizați <tt>\\\\</tt> "
+#~ "în loc de <tt>\\</tt> dacă doriți să căutați o singură backslash."
+
 #, fuzzy
 #~ msgid "Oldest Message Age"
 #~ msgstr "Vârsta celui mai vechi mesaj"
@@ -104364,10 +104404,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Organization licenses overview"
 #~ msgstr "Prezentare generală a licențelor de organizare"
-
-#, fuzzy
-#~ msgid "Organizations"
-#~ msgstr "Organizația"
 
 #, python-format
 #~ msgid "Original %s"

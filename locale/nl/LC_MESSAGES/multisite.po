@@ -2734,7 +2734,7 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"A site is allowed to be used in exactly one OpenTelemetry collector "
+"A site is allowed to be used in exactly one OpenTelemetry Collector "
 "configuration: \n"
 "%s"
 msgstr "Nieuwe gebruikersconfiguratie toevoegen"
@@ -5089,15 +5089,15 @@ msgstr "Extra kopregels"
 msgid "Additional host names"
 msgstr "Extra hostnamen"
 
-msgid ""
-"Additional hosts are created automatically if they do not yet exist. Adjust "
-"the connection  to modify the folder or properties."
-msgstr ""
-
 #, python-brace-format
 msgid ""
 "Additional hosts are created automatically if they do not yet exist. Adjust "
 "the connection \"{dcd_title}\" to modify the folder or properties."
+msgstr ""
+
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection to modify the folder or properties."
 msgstr ""
 
 msgid "Additional information"
@@ -5820,7 +5820,8 @@ msgstr ""
 msgid "Aggregate"
 msgstr "Geaggregeerd"
 
-msgid "Aggregate PGA auto target"
+#, fuzzy
+msgid "Aggregate PGA auto-target"
 msgstr "Geaggregeerde PGA auto-doelstelling"
 
 msgid "Aggregate PGA target parameter"
@@ -6348,7 +6349,7 @@ msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
 "which processes status data. <b>Note:</b> in order to get any useful result "
-"for agent based hosts make sure that you have installed the agent plug-in "
+"for agent-based hosts make sure that you have installed the agent plug-in "
 "<tt>mk_inventory</tt> on these hosts."
 msgstr ""
 "Alle hosts die via deze regelset zijn geconfigureerd zullen een hardware en "
@@ -6364,7 +6365,7 @@ msgid ""
 "inventory. For each configured host a new active check will be created. You "
 "should also create a rule for changing the normal interval for that check to "
 "something between a couple of hours and one day. <b>Note:</b> in order to "
-"get any useful result for agent based hosts make sure that you have "
+"get any useful result for agent-based hosts make sure that you have "
 "installed the agent plug-in <tt>mk_inventory</tt> on these hosts."
 msgstr ""
 "Alle hosts die via deze regelset geconfigureerd zijn zullen een hardware en "
@@ -7518,10 +7519,6 @@ msgid "Application Gateway"
 msgstr "Toepassing Gateway"
 
 #, fuzzy
-msgid "Application Type"
-msgstr "Toepassingssleutel"
-
-#, fuzzy
 msgid "Application and network load balancing (ELBv2)"
 msgstr "Toepassing en netwerkbelasting balancering (ELBv2)"
 
@@ -7571,6 +7568,10 @@ msgstr "Aanvraag in behandeling"
 #, fuzzy
 msgid "Application pool name"
 msgstr "Naam toepassingspool"
+
+#, fuzzy
+msgid "Application type"
+msgstr "Toepassingssleutel"
 
 msgid "Applications"
 msgstr "Toepassingen"
@@ -8365,8 +8366,9 @@ msgstr "Autorisaties per DB-beveiligingsgroep"
 msgid "Authorized user"
 msgstr "Toegestane sites"
 
-msgid "Auto (DEFAULT)"
-msgstr "Auto (DEFAULT)"
+#, fuzzy
+msgid "Auto (default)"
+msgstr "Authenticatie (standaardinstellingen)"
 
 #, fuzzy
 msgid "Auto-close off"
@@ -8379,6 +8381,10 @@ msgstr "Automatisch sluiten aan"
 #, fuzzy
 msgid "Auto-detect (default)"
 msgstr "Authenticatie (standaardinstellingen)"
+
+#, fuzzy
+msgid "Auto-detect instances"
+msgstr "Autodetect instanties"
 
 #, fuzzy
 msgid "Auto-detect instances, expect HTTPS on the following ports:"
@@ -8408,6 +8414,10 @@ msgid "Auto-extend will be ignored"
 msgstr "Autoextend zal worden genegeerd"
 
 #, fuzzy
+msgid "Auto-extensible"
+msgstr "Auto-uitbreidbaar"
+
+#, fuzzy
 msgid "Auto-restart on crash"
 msgstr "Automatische herstart bij crash"
 
@@ -8420,6 +8430,10 @@ msgid "Auto-shrink on"
 msgstr "Automatisch krimpen aan"
 
 #, fuzzy
+msgid "Auto-start"
+msgstr "Autostart"
+
+#, fuzzy
 msgid "Auto-start services"
 msgstr "Autostart diensten"
 
@@ -8428,14 +8442,8 @@ msgid ""
 "The metric backend can be enabled in the Global Settings."
 msgstr ""
 
-msgid "Autodetect instances"
-msgstr "Autodetect instanties"
-
 msgid "Autodetect instances, expect HTTPs on the following ports:"
 msgstr "Autodetect instances, verwacht HTTP's op de volgende poorten:"
-
-msgid "Autoextensible"
-msgstr "Auto-uitbreidbaar"
 
 #, fuzzy
 msgid "Automated environment setup"
@@ -8604,9 +8612,6 @@ msgstr "Automatisering gebruiker afgewezen"
 #, fuzzy
 msgid "Automation username"
 msgstr "Automatisering Gebruikersnaam"
-
-msgid "Autostart"
-msgstr "Autostart"
 
 #, python-format
 msgid "Aux tag '%s' does not exist"
@@ -10012,24 +10017,8 @@ msgid "Back to view with checkboxes reset"
 msgstr "Terug naar overzicht met teruggestelde checkboxes"
 
 #, fuzzy
-msgid "Back-end IP config"
+msgid "Backend IP config"
 msgstr "Backend IP-configuratie"
-
-#, fuzzy
-msgid "Back-end pool"
-msgstr "Backend Pool"
-
-#, fuzzy
-msgid "Back-end pools"
-msgstr "Backend-pools"
-
-#, fuzzy
-msgid "Back-end port"
-msgstr "Achterpoort"
-
-#, fuzzy
-msgid "Back-ends"
-msgstr "Backends"
 
 #, fuzzy
 msgid "Backend conn. failures"
@@ -10070,6 +10059,22 @@ msgstr "Backend Conn. %s"
 #, fuzzy
 msgid "Backend connection errors"
 msgstr "Backend verbindingsfouten"
+
+#, fuzzy
+msgid "Backend pool"
+msgstr "Backend Pool"
+
+#, fuzzy
+msgid "Backend pools"
+msgstr "Backend-pools"
+
+#, fuzzy
+msgid "Backend port"
+msgstr "Achterpoort"
+
+#, fuzzy
+msgid "Backends"
+msgstr "Backends"
 
 msgid "Background job acknowledged"
 msgstr "Achtergrond baan erkend"
@@ -12654,9 +12659,9 @@ msgstr ""
 msgid "Cannot display graph"
 msgstr "Kan grafiek niet weergeven"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot display inventory tree of host '%s': Found this host on multiple "
+"Cannot display inventory tree of host '%s': found this host on multiple "
 "sites: %s"
 msgstr ""
 "Kan de inventarisboom van host '%s' niet weergeven: Deze host op meerdere "
@@ -13000,9 +13005,6 @@ msgstr "Ceph OSD's"
 msgid "Ceph status"
 msgstr "Ceph Status"
 
-msgid "Certificate Key File"
-msgstr "Certificaatsleutelbestand"
-
 #, fuzzy
 msgid "Certificate age"
 msgstr "Certificaatketen"
@@ -13035,6 +13037,10 @@ msgstr "Verkeerd certificaat's onderwerp alt naam"
 
 msgid "Certificate is not signed by trusted authority"
 msgstr "Certificaat is niet ondertekend door vertrouwde autoriteit"
+
+#, fuzzy
+msgid "Certificate key file"
+msgstr "Certificaatsleutelbestand"
 
 #, fuzzy
 msgid "Certificate overview"
@@ -15324,9 +15330,6 @@ msgstr "Verzamel informatie over..."
 msgid "Collect information of Checkmk sites for diagnostic analysis."
 msgstr "Verzamel informatie van Checkmk sites voor diagnostische analyse."
 
-msgid "Collection Size"
-msgstr "Collectie Omvang"
-
 #, fuzzy, python-format
 msgid ""
 "Collection of passwords failed\n"
@@ -15334,6 +15337,10 @@ msgid ""
 msgstr ""
 "Configuratie update mislukt\n"
 "%s"
+
+#, fuzzy
+msgid "Collection size"
+msgstr "Collectie Omvang"
 
 msgid "Collections"
 msgstr "Collecties"
@@ -18225,9 +18232,6 @@ msgstr "Geloofsbrieven"
 msgid "Credentials expiration"
 msgstr "Credentials Vervaldatum"
 
-msgid "Credentials for Connect (ODBC interface)"
-msgstr "Credentials voor Connect (ODBC-interface)"
-
 #, fuzzy
 msgid "Credentials for HTTP basic authentication"
 msgstr "Inloggegevens voor HTTP Basis Authenticatie"
@@ -18243,6 +18247,10 @@ msgstr ""
 msgid ""
 "Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"
 msgstr "Credentials voor SNMPv3 zonder authenticatie en privacy (noAuthNoPriv)"
+
+#, fuzzy
+msgid "Credentials for connect (ODBC interface)"
+msgstr "Credentials voor Connect (ODBC-interface)"
 
 msgid "Credentials for processing SNMP traps"
 msgstr "Credentials voor het verwerken van SNMP traps"
@@ -20775,11 +20783,11 @@ msgid "Deleted MIB %s"
 msgstr "Verwijderde MIB %s"
 
 #, fuzzy, python-format
-msgid "Deleted OTel QuickSetup configuration bundle: '%s'"
+msgid "Deleted OTel Quick Setup configuration bundle: '%s'"
 msgstr "Standaard configuratie"
 
 #, fuzzy, python-format
-msgid "Deleted Prometheus QuickSetup configuration bundle: '%s'"
+msgid "Deleted Prometheus Quick Setup configuration bundle: '%s'"
 msgstr "Configuratie toestand toevoegen"
 
 #, python-brace-format
@@ -24450,11 +24458,11 @@ msgid "Edited %d hosts"
 msgstr "Bewerkte %d hosts"
 
 #, fuzzy, python-format
-msgid "Edited OTel QuickSetup configuration bundle: '%s'"
+msgid "Edited OTel Quick Setup configuration bundle: '%s'"
 msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy, python-format
-msgid "Edited Prometheus QuickSetup configuration bundle: '%s'"
+msgid "Edited Prometheus Quick Setup configuration bundle: '%s'"
 msgstr "Configuratie toestand toevoegen"
 
 #, python-format
@@ -25613,10 +25621,6 @@ msgid "Env creation"
 msgstr "Evenement creaties"
 
 #, fuzzy
-msgid "Environment Sensors"
-msgstr "Omgevingsvariabelen"
-
-#, fuzzy
 msgid "Environment build timeout"
 msgstr "Omgevingsvariabelen"
 
@@ -25625,6 +25629,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Environment metrics"
+msgstr "Omgevingsvariabelen"
+
+#, fuzzy
+msgid "Environment sensors"
 msgstr "Omgevingsvariabelen"
 
 #, fuzzy
@@ -26797,9 +26805,6 @@ msgstr "CSV exporteren"
 msgid "Export JSON"
 msgstr "JSON exporteren"
 
-msgid "Export List of Software packages as CSV file"
-msgstr "Lijst van softwarepakketten exporteren als CSV-bestand"
-
 msgid "Export as JSON"
 msgstr "Exporteren als JSON"
 
@@ -26813,6 +26818,10 @@ msgstr "Gegevens van weergaven exporteren met behulp van de CSV-export"
 msgid ""
 "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the host name"
 msgstr "Exportbestand aan te maken, met <tt>&lt;HOST&gt;</tt> voor de hostnaam"
+
+#, fuzzy
+msgid "Export list of software packages as CSV file"
+msgstr "Lijst van softwarepakketten exporteren als CSV-bestand"
 
 #, fuzzy, python-format
 msgid "Export this %s for API"
@@ -29356,9 +29365,6 @@ msgstr "CPU"
 msgid "GPU utilization"
 msgstr "CPU-gebruik"
 
-msgid "GRPC-based OTLP receiver"
-msgstr ""
-
 msgid "GUI design"
 msgstr "GUI-ontwerp"
 
@@ -30527,7 +30533,8 @@ msgid ""
 msgstr ""
 "Moet een enkel of een bundel 'certification authority' certificaten bevatten."
 
-msgid "Has to contain the path to the Cert Key File."
+#, fuzzy
+msgid "Has to contain the path to the cert key file."
 msgstr "Moet het pad bevatten naar het Cert Key File."
 
 msgid "Hash"
@@ -35180,12 +35187,12 @@ msgid ""
 "into syslog format and forwarded to the Event Console.<br>The Event Console "
 "is optimized for handling critical events, not for processing high-frequency "
 "log data. When forwarding OpenTelemetry logs, carefully consider:"
-"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages you "
-"are sending<br></ol>Unfiltered or high-volume logs can degrade performance "
+"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages are "
+"you sending?<br></ol>Unfiltered or high-volume logs can degrade performance "
 "and reduce the usefulness of the Event Console. We recommend filtering and "
 "preprocessing your logs to only forward meaningful events. For more "
 "information, have a look at the <a href='https://docs.checkmk.com/latest/en/"
-"ec.html#tuning'>Event Console user guide.</a>"
+"ec.html#tuning'>Event Console User Guide.</a>"
 msgstr ""
 
 #, fuzzy
@@ -35496,7 +35503,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "If you activate this option, then the agent plug-in <tt>mk_redis</tt> will "
-"be deployed. You can configure multiple instances or auto detect running "
+"be deployed. You can configure multiple instances or auto-detect running "
 "instances."
 msgstr ""
 "Als u deze optie activeert, dan zal de agent plugin <tt>mk_redis</tt> worden "
@@ -41467,7 +41474,7 @@ msgstr ""
 msgid "List of patterns to exclude"
 msgstr "Lijst van uit te sluiten patronen"
 
-msgid "List of users and password allowed to use this endpoint"
+msgid "List of users and passwords allowed to use this endpoint"
 msgstr ""
 
 msgid "List unpackaged files"
@@ -43973,7 +43980,8 @@ msgstr "Maximale grootte"
 msgid "Maximum PGA allocated"
 msgstr "Maximaal toegewezen PGA"
 
-msgid "Maximum PGA used for auto workareas"
+#, fuzzy
+msgid "Maximum PGA used for auto-workareas"
 msgstr "Maximaal PGA gebruikt voor auto-werkzones"
 
 msgid "Maximum PGA used for manual workareas"
@@ -44171,7 +44179,7 @@ msgid ""
 "maximum spike value from the total available memory. For instance, setting "
 "the limit to 60% and the spike limit to 25% on a machine with 1000 MiB total "
 "memory available will result in a 600 MiB hard limit and a 350 MiB soft "
-"limit (the spike limit being equal to 250MiB)"
+"limit (the spike limit being equal to 250MiB)."
 msgstr ""
 
 #, no-python-format
@@ -44586,18 +44594,6 @@ msgstr "Gebruikt geheugen"
 msgid "Memory (RAM)"
 msgstr "Geheugen (RAM)"
 
-msgid "Memory Size"
-msgstr "Geheugengrootte"
-
-msgid "Memory Size (50th percentile)"
-msgstr "Geheugengrootte (50e percentiel)"
-
-msgid "Memory Size (95th percentile)"
-msgstr "Geheugengrootte (95e percentiel)"
-
-msgid "Memory Size (99th percentile)"
-msgstr "Geheugengrootte (99e percentiel)"
-
 #, fuzzy
 msgid "Memory allocated to percpu"
 msgstr "Geheugengebruik in procenten"
@@ -44693,6 +44689,18 @@ msgstr "Geheugenbronnen: StatefulSet"
 #, fuzzy
 msgid "Memory size"
 msgstr "Geheugengrootte"
+
+#, fuzzy
+msgid "Memory size (50th percentile)"
+msgstr "Geheugengrootte (50e percentiel)"
+
+#, fuzzy
+msgid "Memory size (95th percentile)"
+msgstr "Geheugengrootte (95e percentiel)"
+
+#, fuzzy
+msgid "Memory size (99th percentile)"
+msgstr "Geheugengrootte (99e percentiel)"
 
 #, fuzzy
 msgid "Memory size in percent"
@@ -47285,10 +47293,6 @@ msgstr "Netwerk ID"
 msgid "Network IO"
 msgstr "Netwerk IO"
 
-#, fuzzy
-msgid "Network Interfaces"
-msgstr "Netwerk interfaces"
-
 msgid "Network Load Balancer Listeners"
 msgstr "Netwerk Load Balancer Luisteraars"
 
@@ -47297,10 +47301,6 @@ msgstr "Netwerk Load Balancer Doelgroepen"
 
 msgid "Network Load balancers"
 msgstr "Netwerk Load Balancers"
-
-#, fuzzy
-msgid "Network Ports"
-msgstr "Netwerk uit"
 
 #, fuzzy
 msgid "Network adapter"
@@ -47396,6 +47396,10 @@ msgstr "Netwerk uit"
 
 #, fuzzy
 msgid "Network outbound"
+msgstr "Netwerk uit"
+
+#, fuzzy
+msgid "Network ports"
 msgstr "Netwerk uit"
 
 #, fuzzy
@@ -51318,6 +51322,10 @@ msgid "Oracle DB time – fleet total"
 msgstr "ORACLE DB-tijdstatistieken"
 
 #, fuzzy
+msgid "Oracle Data Guard statistics"
+msgstr "Oracle dataguard statistieken"
+
+#, fuzzy
 msgid "Oracle Data Guard stats"
 msgstr "Oracle Data-Guard Stats"
 
@@ -51781,9 +51789,6 @@ msgstr "ORACLE Totaal kleine schrijf bytes"
 msgid "Oracle datafile small writes"
 msgstr "ORACLE Totaal kleine schrijffouten"
 
-msgid "Oracle dataguard statistics"
-msgstr "Oracle dataguard statistieken"
-
 #, fuzzy
 msgid "Oracle external table large read bytes"
 msgstr "ORACLE Totaal grote gelezen bytes"
@@ -52205,10 +52210,6 @@ msgstr "Oracle Sloten"
 msgid "Order"
 msgstr "Bestel"
 
-#, fuzzy
-msgid "Organisations"
-msgstr "Organisaties"
-
 msgid "Organization"
 msgstr "Organisatie"
 
@@ -52226,6 +52227,10 @@ msgstr "Organisatie Naam"
 
 #, fuzzy
 msgid "Organizational unit (OU)"
+msgstr "Organisatie"
+
+#, fuzzy
+msgid "Organizations"
 msgstr "Organisatie"
 
 #, fuzzy
@@ -53667,6 +53672,17 @@ msgstr "Pad naar tijdelijke directory (zal worden aangemaakt)"
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
 "file, relative to the base directory of Robot Framework projects."
+msgstr ""
+
+msgid ""
+"Path to the olr.loc file of Oracle Grid Infrastructure, which covers both "
+"Oracle Clusterware and Oracle Restart. If not specified, /etc/oracle/olr.loc "
+"and /var/opt/oracle/olr.loc are probed in that order. Once the Grid home "
+"named in that file is found, the plug-in connects to this node by its own "
+"name instead of localhost, because a listener under Grid Infrastructure "
+"binds the node address. The Grid home is also used as the last candidate for "
+"ORACLE_HOME, since Grid Infrastructure stops maintaining oratab from version "
+"12.2 on. Set this to a path that does not exist to switch the behavior off."
 msgstr ""
 
 msgid ""
@@ -55273,12 +55289,12 @@ msgstr "Geef de extensies op in kleine letters en zonder punt."
 msgid "Please specify the name of the status host."
 msgstr "Geef de naam van de status host op."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
 "replaced with the host name the inventory has been done for. If you use a "
-"relative path then that will be relative to Checkmk's directory for variable "
-"data, which is <tt>%s</tt>."
+"relative path then that will be relative to the directory for variable data "
+"of Checkmk, which is <tt>%s</tt>."
 msgstr ""
 "Geef het pad naar het exportbestand op. De tekst <tt>[HOST]</tt> wordt "
 "vervangen door de hostnaam waarvoor de inventarisatie is gedaan. Als u een "
@@ -55665,10 +55681,6 @@ msgstr "PostgreSQL"
 
 msgid "Power"
 msgstr "Vermogen"
-
-#, fuzzy
-msgid "Power Supplies"
-msgstr "Stroomvoorziening"
 
 msgid "Power consumption draw"
 msgstr "Stroomverbruik"
@@ -57509,10 +57521,10 @@ msgstr "Ontvangen mails"
 msgid "Received messages"
 msgstr "Ontvangen berichten"
 
-msgid "Receiver protocol GRPC"
+msgid "Receiver protocol HTTP"
 msgstr ""
 
-msgid "Receiver protocol HTTP"
+msgid "Receiver protocol gRPC"
 msgstr ""
 
 #, fuzzy
@@ -60435,15 +60447,15 @@ msgstr "Rx vermogensniveau"
 msgid "S."
 msgstr "S."
 
-#, fuzzy
-msgid "S3 Buckets"
-msgstr "AWS/S3 emmers"
-
 msgid "S3 backend cache hits"
 msgstr ""
 
 msgid "S3 backend cache missess"
 msgstr ""
+
+#, fuzzy
+msgid "S3 buckets"
+msgstr "AWS/S3 emmers"
 
 msgid "SAML"
 msgstr "SAML"
@@ -61981,7 +61993,7 @@ msgstr ""
 
 msgid ""
 "Select the NetApp resources you would like to fetch from the API. Note that "
-"some sections depend on others: 'Volume Performance Counters' requires "
+"some sections depend on others: 'Volume performance counters' requires "
 "'Volumes' data. Performance counter sections may consume more resources and "
 "take longer to collect on large systems."
 msgstr ""
@@ -66181,7 +66193,7 @@ msgid "Specify roles of a worker node"
 msgstr "De rollen van een knooppunt van het besturingsvlak specificeren"
 
 #, fuzzy
-msgid "Specify sites this OpenTelemetry collector should run on. "
+msgid "Specify sites this OpenTelemetry Collector should run on. "
 msgstr ""
 "Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
 
@@ -69485,15 +69497,15 @@ msgstr "Temperatuur rijstrook %d"
 msgid "Temperature Lane 9"
 msgstr "Temperatuur rijstrook %d"
 
-#, fuzzy
-msgid "Temperature Sensors"
-msgstr "Temperatuur alarm"
-
 msgid "Temperature Trend Analysis"
 msgstr "Trendanalyse temperatuur"
 
 msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Temperatuur en vochtigheid voor Eaton UPS"
+
+#, fuzzy
+msgid "Temperature sensors"
+msgstr "Temperatuur alarm"
 
 #, fuzzy
 msgid "Temperature sensors with built-in levels"
@@ -69554,10 +69566,6 @@ msgstr "is vereist"
 
 msgid "Tenant ID must be a valid UUID."
 msgstr ""
-
-#, fuzzy
-msgid "Tenant Name"
-msgstr "Naam ventilator"
 
 #, fuzzy
 msgid "Tenant name"
@@ -71707,7 +71715,7 @@ msgstr ""
 msgid ""
 "The delta-to-cumulative processor converts timezones into cumulative "
 "aggregation temporality. This is necessary for compatibility reasons with "
-"the Checkmk metric backend, which only supports cumulative metrics. If your "
+"the Checkmk metrics backend, which only supports cumulative metrics. If your "
 "Collector receives metrics in delta aggregation temporality, you can "
 "configure this processor to be able to use these metrics in Checkmk. If your "
 "Collector only receives cumulative metrics or if you are unsure about the "
@@ -77890,16 +77898,16 @@ msgstr "Deze controle heeft geen parameters."
 
 #, fuzzy
 msgid ""
-"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see werk "
-"15844 for details). Please switch to the new ruleset \"Microsoft SQL server "
-"(Linux, Windows)\".This plug-in can be used to collect information of all "
+"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see Werk "
+"15844 for details). Please switch to the new rule set \"Microsoft SQL server "
+"(Linux, Windows)\". This plug-in can be used to collect information of all "
 "running MSSQL servers on the local system. The current implementation of the "
 "check uses the \"trusted authentication\" where no user/password needs to be "
-"created in the MSSQL server instance by default. Using this method, you "
-"needed to grant the user running the Checkmk windows agent service access to "
-"the MSSQL database. Otherwise you can configure the credentials of a "
-"database user which has the permission to read the needed information from "
-"the server instance."
+"created in the MSSQL server instance by default. Using this method, you need "
+"to grant the user running the Checkmk Windows agent service access to the "
+"MSSQL database. Otherwise you can configure the credentials of a database "
+"user who has the permission to read the needed information from the server "
+"instance."
 msgstr ""
 "Deze plugin kan worden gebruikt om informatie te verzamelen van alle "
 "draaiende MSSQL-servers op het lokale systeem. De huidige implementatie van "
@@ -79253,7 +79261,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This rule set selects the NetApp special agent instead of the normal Checkmk "
-"Agent and allows monitoring via the NetApp Ontap REST API."
+"agent and allows monitoring via the NetApp Ontap REST API."
 msgstr ""
 "Deze regelset selecteert de speciale agent voor HPE StoreOnce Applainces in "
 "plaats van de normale Checkmk agent en maakt monitoring via Web API "
@@ -79954,7 +79962,7 @@ msgstr "Deze site is %s"
 
 #, fuzzy
 msgid ""
-"This site is already assigned to another OpenTelemetry collector "
+"This site is already assigned to another OpenTelemetry Collector "
 "configuration."
 msgstr "Nieuwe gebruikersconfiguratie toevoegen"
 
@@ -81697,7 +81705,8 @@ msgstr "Totaal toegewezen PGA"
 msgid "Total PGA inuse"
 msgstr "Totaal PGA in gebruik"
 
-msgid "Total PGA used for auto workareas"
+#, fuzzy
+msgid "Total PGA used for auto-workareas"
 msgstr "Totaal PGA gebruikt voor auto-werkzones"
 
 msgid "Total PGA used for manual workareas"
@@ -88038,10 +88047,6 @@ msgstr "Wachtwoord gebruiker"
 msgid "User / Group Key"
 msgstr "Gebruiker / Groep Sleutel"
 
-#, fuzzy
-msgid "User Asserts"
-msgstr "%s Verklaart"
-
 msgid "User Base-DN"
 msgstr "Gebruiker Base-DN"
 
@@ -88071,6 +88076,10 @@ msgstr "Gebruiker Agent"
 
 msgid "User and password"
 msgstr "Gebruiker en wachtwoord"
+
+#, fuzzy
+msgid "User asserts"
+msgstr "%s Verklaart"
 
 msgid "User base DN"
 msgstr "Gebruikersbasis DN"
@@ -89470,13 +89479,14 @@ msgstr "Vhost naam"
 msgid "Vhosts"
 msgstr "Vhosts"
 
+#, fuzzy
 msgid ""
 "Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
-"Inventory page of a host the internal tree paths leading to subcategories, "
-"the keys of singles values or table column names become visible. Key columns "
-"of tables are marked with '*'. See <a href=\"https://docs.checkmk.com/latest/"
-"de/inventory.html\">HW/SW Inventory</a>. for more details about the HW/SW "
-"Inventory system."
+"inventory page of a host, the internal tree paths leading to subcategories "
+"as well as the keys of singles values or table column names become visible. "
+"Key columns of tables are marked with '*'. See <a href=\"https://"
+"docs.checkmk.com/latest/de/inventory.html\">HW/SW inventory</a> for more "
+"details about the HW/SW inventory system."
 msgstr ""
 "Via <tt>Toon opties > Toon interne boompaden</tt> op de HW/SW Inventarisatie "
 "pagina van een host worden de interne boompaden zichtbaar die leiden naar "
@@ -89739,9 +89749,6 @@ msgstr "Spanningssensor"
 msgid "Volume"
 msgstr "Volume"
 
-msgid "Volume Performance Counters (requires Volumes)"
-msgstr ""
-
 #, fuzzy
 msgid "Volume group"
 msgstr "Volumegroep"
@@ -89759,6 +89766,10 @@ msgstr "Naam van het volume"
 
 msgid "Volume parameters"
 msgstr "Volume parameters"
+
+#, fuzzy
+msgid "Volume performance counters (requires volumes)"
+msgstr "Diverse prestatietellers"
 
 #, fuzzy
 msgid "VolumeSets: Volume Set Configuration"
@@ -90020,10 +90031,6 @@ msgstr ""
 msgid "Warning"
 msgstr "Waarschuwing"
 
-#, fuzzy
-msgid "Warning Asserts"
-msgstr "Waarschuwing bij"
-
 msgid "Warning above"
 msgstr "Waarschuwing boven"
 
@@ -90035,6 +90042,10 @@ msgstr "Waarschuwing na "
 
 msgid "Warning area"
 msgstr "Waarschuwingsgebied"
+
+#, fuzzy
+msgid "Warning asserts"
+msgstr "Waarschuwing bij"
 
 msgid "Warning at"
 msgstr "Waarschuwing bij"
@@ -94711,15 +94722,6 @@ msgstr ""
 "U moet bijvoorbeeld <tt></tt> gebruiken in plaats van <tt></tt> als u naar "
 "een enkele backslash wilt zoeken."
 
-msgid ""
-"Your search statement is not valid. You need to provide a regular expression "
-"(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "
-"you like to search for a single backslash."
-msgstr ""
-"Uw zoekopdracht is ongeldig. U moet een reguliere expressie (regex) opgeven. "
-"U moet bijvoorbeeld <tt></tt> gebruiken in plaats van <tt></tt> als u naar "
-"een enkele backslash wilt zoeken."
-
 #, fuzzy
 msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
@@ -95553,6 +95555,9 @@ msgstr "vanaf het einde"
 
 msgid "from:"
 msgstr "van:"
+
+msgid "gRPC-based OTLP receiver"
+msgstr ""
 
 msgid "global"
 msgstr "wereldwijd"
@@ -102206,6 +102211,40 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Auto (DEFAULT)"
+#~ msgstr "Auto (DEFAULT)"
+
+#~ msgid "Certificate Key File"
+#~ msgstr "Certificaatsleutelbestand"
+
+#~ msgid "Memory Size"
+#~ msgstr "Geheugengrootte"
+
+#, fuzzy
+#~ msgid "Network Interfaces"
+#~ msgstr "Netwerk interfaces"
+
+#, fuzzy
+#~ msgid "Organisations"
+#~ msgstr "Organisaties"
+
+#, fuzzy
+#~ msgid "Power Supplies"
+#~ msgstr "Stroomvoorziening"
+
+#, fuzzy
+#~ msgid "Tenant Name"
+#~ msgstr "Naam ventilator"
+
+#~ msgid ""
+#~ "Your search statement is not valid. You need to provide a regular "
+#~ "expression (regex). For example you need to use <tt>\\\\</tt> instead of "
+#~ "<tt>\\</tt> if you like to search for a single backslash."
+#~ msgstr ""
+#~ "Uw zoekopdracht is ongeldig. U moet een reguliere expressie (regex) "
+#~ "opgeven. U moet bijvoorbeeld <tt></tt> gebruiken in plaats van <tt></tt> "
+#~ "als u naar een enkele backslash wilt zoeken."
+
 #, fuzzy
 #~ msgid "Oldest Message Age"
 #~ msgstr "Leeftijd oudste bericht"
@@ -103970,10 +104009,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Organization licenses overview"
 #~ msgstr "Overzicht organisatievergunningen"
-
-#, fuzzy
-#~ msgid "Organizations"
-#~ msgstr "Organisatie"
 
 #, python-format
 #~ msgid "Original %s"

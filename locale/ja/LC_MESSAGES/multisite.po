@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-08-17 15:01+0000\n"
+"PO-Revision-Date: 2026-08-18 20:01+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -2718,7 +2718,7 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"A site is allowed to be used in exactly one OpenTelemetry collector "
+"A site is allowed to be used in exactly one OpenTelemetry Collector "
 "configuration: \n"
 "%s"
 msgstr ""
@@ -4990,18 +4990,18 @@ msgstr "追加のヘッダー行"
 msgid "Additional host names"
 msgstr "追加のホスト名"
 
-#, fuzzy
-msgid ""
-"Additional hosts are created automatically if they do not yet exist. Adjust "
-"the connection  to modify the folder or properties."
-msgstr ""
-"追加のホストがまだ存在しない場合は、自動的に作成されます。フォルダやプロパ"
-"ティを変更するには、接続\"{dcd_title}\"を調整してください。"
-
 #, python-brace-format
 msgid ""
 "Additional hosts are created automatically if they do not yet exist. Adjust "
 "the connection \"{dcd_title}\" to modify the folder or properties."
+msgstr ""
+"追加のホストがまだ存在しない場合は、自動的に作成されます。フォルダやプロパ"
+"ティを変更するには、接続\"{dcd_title}\"を調整してください。"
+
+#, fuzzy
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection to modify the folder or properties."
 msgstr ""
 "追加のホストがまだ存在しない場合は、自動的に作成されます。フォルダやプロパ"
 "ティを変更するには、接続\"{dcd_title}\"を調整してください。"
@@ -5665,7 +5665,8 @@ msgstr ""
 msgid "Aggregate"
 msgstr "集計"
 
-msgid "Aggregate PGA auto target"
+#, fuzzy
+msgid "Aggregate PGA auto-target"
 msgstr "PGA自動ターゲットを集約する"
 
 msgid "Aggregate PGA target parameter"
@@ -6170,11 +6171,12 @@ msgstr "すべてのホスト"
 msgid "All hosts (experimental)"
 msgstr "Prometheusスクレイピング（実験的機能）"
 
+#, fuzzy
 msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
 "which processes status data. <b>Note:</b> in order to get any useful result "
-"for agent based hosts make sure that you have installed the agent plug-in "
+"for agent-based hosts make sure that you have installed the agent plug-in "
 "<tt>mk_inventory</tt> on these hosts."
 msgstr ""
 "ステータスデータを処理するインベントリプラグインが少なくとも1つある場合、この"
@@ -6183,12 +6185,13 @@ msgstr ""
 "ジェントベースのホストで有用な結果を得るには、これらのホストにエージェントプ"
 "ラグイン<tt>mk_inventory</tt>がインストールされていることを確認してください。"
 
+#, fuzzy
 msgid ""
 "All hosts configured via this rule set will do a hardware and software "
 "inventory. For each configured host a new active check will be created. You "
 "should also create a rule for changing the normal interval for that check to "
 "something between a couple of hours and one day. <b>Note:</b> in order to "
-"get any useful result for agent based hosts make sure that you have "
+"get any useful result for agent-based hosts make sure that you have "
 "installed the agent plug-in <tt>mk_inventory</tt> on these hosts."
 msgstr ""
 "このルールセットを介して構成されたすべてのホストは、ハードウェアとソフトウェ"
@@ -7308,10 +7311,6 @@ msgid "Application Gateway"
 msgstr "アプリケーションゲートウェイ"
 
 #, fuzzy
-msgid "Application Type"
-msgstr "アプリケーションキー"
-
-#, fuzzy
 msgid "Application and network load balancing (ELBv2)"
 msgstr "アプリケーションとネットワークの負荷分散(ELBv2)"
 
@@ -7356,6 +7355,10 @@ msgstr "アプリケーション保留中のリクエスト"
 #, fuzzy
 msgid "Application pool name"
 msgstr "アプリケーションプール名"
+
+#, fuzzy
+msgid "Application type"
+msgstr "アプリケーションキー"
 
 msgid "Applications"
 msgstr "アプリケーション"
@@ -8119,8 +8122,9 @@ msgstr "DBセキュリティグループごとの承認"
 msgid "Authorized user"
 msgstr "認証ユーザー"
 
-msgid "Auto (DEFAULT)"
-msgstr "オート（初期設定）"
+#, fuzzy
+msgid "Auto (default)"
+msgstr "認証(デフォルト)"
 
 #, fuzzy
 msgid "Auto-close off"
@@ -8133,6 +8137,10 @@ msgstr "自動クローズオン"
 #, fuzzy
 msgid "Auto-detect (default)"
 msgstr "認証(デフォルト)"
+
+#, fuzzy
+msgid "Auto-detect instances"
+msgstr "インスタンスの自動検出"
 
 #, fuzzy
 msgid "Auto-detect instances, expect HTTPS on the following ports:"
@@ -8161,6 +8169,10 @@ msgid "Auto-extend will be ignored"
 msgstr "自動拡張は無視されます"
 
 #, fuzzy
+msgid "Auto-extensible"
+msgstr "自動拡張可能"
+
+#, fuzzy
 msgid "Auto-restart on crash"
 msgstr "クラッシュ時に自動再起動"
 
@@ -8173,6 +8185,10 @@ msgid "Auto-shrink on"
 msgstr "自動縮小オン"
 
 #, fuzzy
+msgid "Auto-start"
+msgstr "自動起動"
+
+#, fuzzy
 msgid "Auto-start services"
 msgstr "自動開始サービス"
 
@@ -8183,14 +8199,8 @@ msgstr ""
 "オートコンプリートは、設定済のメトリックバックエンドを持つサイトでのみ利用可"
 "能です。メトリックバックエンドはグローバル設定で有効化できます。"
 
-msgid "Autodetect instances"
-msgstr "インスタンスの自動検出"
-
 msgid "Autodetect instances, expect HTTPs on the following ports:"
 msgstr "インスタンスを自動検出します。次のポートでHTTPを予期します。"
-
-msgid "Autoextensible"
-msgstr "自動拡張可能"
 
 #, fuzzy
 msgid "Automated environment setup"
@@ -8358,9 +8368,6 @@ msgstr "自動化ユーザーが拒否されました"
 #, fuzzy
 msgid "Automation username"
 msgstr "オートメーションユーザー名"
-
-msgid "Autostart"
-msgstr "自動起動"
 
 #, python-format
 msgid "Aux tag '%s' does not exist"
@@ -9613,24 +9620,8 @@ msgid "Back to view with checkboxes reset"
 msgstr "チェックボックスをリセットした画面に戻る"
 
 #, fuzzy
-msgid "Back-end IP config"
+msgid "Backend IP config"
 msgstr "バックエンドIP設定"
-
-#, fuzzy
-msgid "Back-end pool"
-msgstr "バックエンドプール"
-
-#, fuzzy
-msgid "Back-end pools"
-msgstr "バックエンドプール"
-
-#, fuzzy
-msgid "Back-end port"
-msgstr "バックエンドポート"
-
-#, fuzzy
-msgid "Back-ends"
-msgstr "バックエンド"
 
 #, fuzzy
 msgid "Backend conn. failures"
@@ -9671,6 +9662,22 @@ msgstr "バックエンド接続 がクローズ"
 #, fuzzy
 msgid "Backend connection errors"
 msgstr "バックエンド接続エラー"
+
+#, fuzzy
+msgid "Backend pool"
+msgstr "バックエンドプール"
+
+#, fuzzy
+msgid "Backend pools"
+msgstr "バックエンドプール"
+
+#, fuzzy
+msgid "Backend port"
+msgstr "バックエンドポート"
+
+#, fuzzy
+msgid "Backends"
+msgstr "バックエンド"
 
 msgid "Background job acknowledged"
 msgstr "バックグラウンドジョブが承認されました"
@@ -12024,7 +12031,7 @@ msgid "Call with the following parameters:"
 msgstr "次のパラメータを使用して呼び出します。"
 
 msgid "Callback"
-msgstr ""
+msgstr "コールバック"
 
 msgid "Caller ID"
 msgstr "発信者ID"
@@ -12198,9 +12205,9 @@ msgstr "サイト %s がまだ割り当てられているため、この顧客�
 msgid "Cannot display graph"
 msgstr "グラフを表示できません"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Cannot display inventory tree of host '%s': Found this host on multiple "
+"Cannot display inventory tree of host '%s': found this host on multiple "
 "sites: %s"
 msgstr ""
 "ホスト'%s'のインベントリツリーを表示できません: このホストが複数のサイトで見"
@@ -12542,9 +12549,6 @@ msgstr "Ceph OSD"
 msgid "Ceph status"
 msgstr "Cephステータス"
 
-msgid "Certificate Key File"
-msgstr "証明書キーファイル"
-
 msgid "Certificate age"
 msgstr "証明書の経過時間"
 
@@ -12574,6 +12578,10 @@ msgstr "証明書サブジェクトの別名"
 
 msgid "Certificate is not signed by trusted authority"
 msgstr "証明書が信頼できる機関により署名されていない"
+
+#, fuzzy
+msgid "Certificate key file"
+msgstr "証明書とキーファイル"
 
 msgid "Certificate overview"
 msgstr "証明書概要"
@@ -14811,9 +14819,6 @@ msgstr "情報を収集する..."
 msgid "Collect information of Checkmk sites for diagnostic analysis."
 msgstr "診断分析のためにCheckmkサイトの情報を収集します。"
 
-msgid "Collection Size"
-msgstr "コレクションのサイズ"
-
 #, python-format
 msgid ""
 "Collection of passwords failed\n"
@@ -14821,6 +14826,10 @@ msgid ""
 msgstr ""
 "パスワードの収集に失敗\n"
 "%s"
+
+#, fuzzy
+msgid "Collection size"
+msgstr "コレクションのサイズ"
 
 msgid "Collections"
 msgstr "コレクション"
@@ -17649,9 +17658,6 @@ msgstr "資格情報"
 msgid "Credentials expiration"
 msgstr "資格情報の有効期限"
 
-msgid "Credentials for Connect (ODBC interface)"
-msgstr "Connectの資格情報(ODBCインターフェース)"
-
 msgid "Credentials for HTTP basic authentication"
 msgstr "HTTP基本認証の資格情報"
 
@@ -17665,6 +17671,10 @@ msgstr "認証はあるがプライバシーがないSNMPv3の資格情報(authN
 msgid ""
 "Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"
 msgstr "認証とプライバシーのないSNMPv3の資格情報(noAuthNoPriv)"
+
+#, fuzzy
+msgid "Credentials for connect (ODBC interface)"
+msgstr "Connectの資格情報(ODBCインターフェース)"
 
 msgid "Credentials for processing SNMP traps"
 msgstr "SNMPトラップを処理するための資格情報"
@@ -20124,11 +20134,11 @@ msgid "Deleted MIB %s"
 msgstr "削除されたMIB%s"
 
 #, fuzzy, python-format
-msgid "Deleted OTel QuickSetup configuration bundle: '%s'"
+msgid "Deleted OTel Quick Setup configuration bundle: '%s'"
 msgstr "デフォルト設定%s"
 
 #, fuzzy, python-format
-msgid "Deleted Prometheus QuickSetup configuration bundle: '%s'"
+msgid "Deleted Prometheus Quick Setup configuration bundle: '%s'"
 msgstr "Prometheus スクレイプ構成"
 
 #, fuzzy, python-brace-format
@@ -23566,11 +23576,11 @@ msgid "Edited %d hosts"
 msgstr "編集された %d ホスト"
 
 #, fuzzy, python-format
-msgid "Edited OTel QuickSetup configuration bundle: '%s'"
+msgid "Edited OTel Quick Setup configuration bundle: '%s'"
 msgstr "Prometheus スクレイプ構成"
 
 #, fuzzy, python-format
-msgid "Edited Prometheus QuickSetup configuration bundle: '%s'"
+msgid "Edited Prometheus Quick Setup configuration bundle: '%s'"
 msgstr "Prometheus スクレイプ構成"
 
 #, python-format
@@ -24724,9 +24734,6 @@ msgstr "エントリ"
 msgid "Env creation"
 msgstr "イベントの作成"
 
-msgid "Environment Sensors"
-msgstr "Environment Sensors"
-
 msgid "Environment build timeout"
 msgstr "環境変数"
 
@@ -24735,6 +24742,10 @@ msgstr "環境依存性の処理"
 
 #, fuzzy
 msgid "Environment metrics"
+msgstr "Environment Sensors"
+
+#, fuzzy
+msgid "Environment sensors"
 msgstr "Environment Sensors"
 
 #, fuzzy
@@ -25883,9 +25894,6 @@ msgstr "CSVをエクスポート"
 msgid "Export JSON"
 msgstr "JSONをエクスポートする"
 
-msgid "Export List of Software packages as CSV file"
-msgstr "ソフトウェアパッケージのリストをCSVファイルとしてエクスポート"
-
 msgid "Export as JSON"
 msgstr "JSONとしてエクスポート"
 
@@ -25898,6 +25906,10 @@ msgstr "CSVエクスポートでビューのデータをエクスポート"
 msgid ""
 "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the host name"
 msgstr "作成するエクスポートファイル、ホスト名に<tt>&lt;HOST&gt;</tt>を含む"
+
+#, fuzzy
+msgid "Export list of software packages as CSV file"
+msgstr "ソフトウェアパッケージのリストをCSVファイルとしてエクスポート"
 
 #, python-format
 msgid "Export this %s for API"
@@ -26034,7 +26046,7 @@ msgid "F5OS CPU utilization averages"
 msgstr "CPU利用率(平均)"
 
 msgid "F5OS PSU power"
-msgstr ""
+msgstr "F5OS PSU 電源"
 
 #, fuzzy
 msgid "F5OS platform temperature"
@@ -28363,10 +28375,6 @@ msgstr "CPU"
 msgid "GPU utilization"
 msgstr "GPU使用率"
 
-#, fuzzy
-msgid "GRPC-based OTLP receiver"
-msgstr "GRPCベースの受信機"
-
 msgid "GUI design"
 msgstr "GUIデザイン"
 
@@ -29493,7 +29501,8 @@ msgid ""
 "certificates."
 msgstr "単一または複数の「認証局」証明書を含む必要があります。"
 
-msgid "Has to contain the path to the Cert Key File."
+#, fuzzy
+msgid "Has to contain the path to the cert key file."
 msgstr "認証キーファイルへのパスが必要です。"
 
 msgid "Hash"
@@ -33770,17 +33779,18 @@ msgstr ""
 "は、チェックで正しいフォーム要素を識別できるように、ここにフォームの名前を入"
 "力する必要があります。"
 
+#, fuzzy
 msgid ""
 "If this checkbox is activated, log messages received via OTLP are converted "
 "into syslog format and forwarded to the Event Console.<br>The Event Console "
 "is optimized for handling critical events, not for processing high-frequency "
 "log data. When forwarding OpenTelemetry logs, carefully consider:"
-"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages you "
-"are sending<br></ol>Unfiltered or high-volume logs can degrade performance "
+"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages are "
+"you sending?<br></ol>Unfiltered or high-volume logs can degrade performance "
 "and reduce the usefulness of the Event Console. We recommend filtering and "
 "preprocessing your logs to only forward meaningful events. For more "
 "information, have a look at the <a href='https://docs.checkmk.com/latest/en/"
-"ec.html#tuning'>Event Console user guide.</a>"
+"ec.html#tuning'>Event Console User Guide.</a>"
 msgstr ""
 "このチェックボックスが有効になっている場合、OTLP経由で受信したログメッセージ"
 "はsyslog形式に変換され、イベントコンソールに転送されます。<br>イベントコン"
@@ -34079,9 +34089,10 @@ msgstr ""
 "ンスに対して、 現在のクライアントとプロセスの数およびそれらの様々な状態に関す"
 "る 詳細な統計情報を持つ新しいサービスが一つ作成されます。"
 
+#, fuzzy
 msgid ""
 "If you activate this option, then the agent plug-in <tt>mk_redis</tt> will "
-"be deployed. You can configure multiple instances or auto detect running "
+"be deployed. You can configure multiple instances or auto-detect running "
 "instances."
 msgstr ""
 "このオプションを有効にすると、エージェントプラグイン<tt>mk_redis</tt>がデプロ"
@@ -39830,7 +39841,8 @@ msgstr ""
 msgid "List of patterns to exclude"
 msgstr "除外するパターンのリスト"
 
-msgid "List of users and password allowed to use this endpoint"
+#, fuzzy
+msgid "List of users and passwords allowed to use this endpoint"
 msgstr "このエンドポイントを使用できるユーザーとパスワードのリスト"
 
 msgid "List unpackaged files"
@@ -42248,7 +42260,8 @@ msgstr "最大Livestatus応答サイズ"
 msgid "Maximum PGA allocated"
 msgstr "割り当てられた最大PGA"
 
-msgid "Maximum PGA used for auto workareas"
+#, fuzzy
+msgid "Maximum PGA used for auto-workareas"
 msgstr "自動ワークエリアに使用される最大PGA"
 
 msgid "Maximum PGA used for manual workareas"
@@ -42438,14 +42451,14 @@ msgstr "最大ログ経過時間"
 msgid "Maximum long output size"
 msgstr "最長出力サイズ"
 
-#, no-python-format
+#, fuzzy, no-python-format
 msgid ""
 "Maximum memory spike allowed between the measurements of memory usage. The "
 "value must be less than the limit. This option is used to calculate the "
 "maximum spike value from the total available memory. For instance, setting "
 "the limit to 60% and the spike limit to 25% on a machine with 1000 MiB total "
 "memory available will result in a 600 MiB hard limit and a 350 MiB soft "
-"limit (the spike limit being equal to 250MiB)"
+"limit (the spike limit being equal to 250MiB)."
 msgstr ""
 "メモリ使用量の測定間における許容される最大メモリスパイク。この値は制限値未満"
 "でなければなりません。このオプションは、利用可能な総メモリから最大スパイク値"
@@ -42861,18 +42874,6 @@ msgstr "使用メモリ"
 msgid "Memory (RAM)"
 msgstr "メモリ(RAM)"
 
-msgid "Memory Size"
-msgstr "メモリサイズ"
-
-msgid "Memory Size (50th percentile)"
-msgstr "メモリサイズ(50パーセンタイル)"
-
-msgid "Memory Size (95th percentile)"
-msgstr "メモリサイズ(95パーセンタイル)"
-
-msgid "Memory Size (99th percentile)"
-msgstr "メモリサイズ(99パーセンタイル)"
-
 msgid "Memory allocated to percpu"
 msgstr "CPUごとに割り当てられたメモリ"
 
@@ -42960,6 +42961,18 @@ msgstr "メモリリソース :ステートフルセット"
 
 msgid "Memory size"
 msgstr "メモリサイズ"
+
+#, fuzzy
+msgid "Memory size (50th percentile)"
+msgstr "メモリサイズ(50パーセンタイル)"
+
+#, fuzzy
+msgid "Memory size (95th percentile)"
+msgstr "メモリサイズ(95パーセンタイル)"
+
+#, fuzzy
+msgid "Memory size (99th percentile)"
+msgstr "メモリサイズ(99パーセンタイル)"
 
 msgid "Memory size in percent"
 msgstr "パーセントで表すメモリサイズ"
@@ -45448,9 +45461,6 @@ msgstr "ネットワークID"
 msgid "Network IO"
 msgstr "ネットワークIO"
 
-msgid "Network Interfaces"
-msgstr "ネットワークインターフェース"
-
 msgid "Network Load Balancer Listeners"
 msgstr "ネットワークロードバランサーリスナー"
 
@@ -45459,9 +45469,6 @@ msgstr "ネットワークロードバランサーのターゲットグループ
 
 msgid "Network Load balancers"
 msgstr "ネットワークロードバランサー"
-
-msgid "Network Ports"
-msgstr "ネットワークポート"
 
 #, fuzzy
 msgid "Network adapter"
@@ -45553,6 +45560,10 @@ msgstr "ネットワーク out"
 #, fuzzy
 msgid "Network outbound"
 msgstr "ネットワーク out"
+
+#, fuzzy
+msgid "Network ports"
+msgstr "ネットワークポート"
 
 msgid "Network scan"
 msgstr "ネットワークスキャン"
@@ -49336,6 +49347,10 @@ msgid "Oracle DB time – fleet total"
 msgstr "Oracle DBの時間統計"
 
 #, fuzzy
+msgid "Oracle Data Guard statistics"
+msgstr "Oracle dataguardの統計"
+
+#, fuzzy
 msgid "Oracle Data Guard stats"
 msgstr "Oracle Data-Guard Stats"
 
@@ -49731,9 +49746,6 @@ msgstr "Oracle データファイルの小規模書き込みバイト数"
 msgid "Oracle datafile small writes"
 msgstr "Oracle データファイルの小規模書き込み"
 
-msgid "Oracle dataguard statistics"
-msgstr "Oracle dataguardの統計"
-
 msgid "Oracle external table large read bytes"
 msgstr "Oracle外部テーブルの大規模読み取りバイト数"
 
@@ -50064,10 +50076,6 @@ msgstr "Oracle ブロック取得"
 msgid "Order"
 msgstr "注文"
 
-#, fuzzy
-msgid "Organisations"
-msgstr "組織"
-
 msgid "Organization"
 msgstr "組織"
 
@@ -50084,6 +50092,9 @@ msgstr "組織名"
 
 msgid "Organizational unit (OU)"
 msgstr "組織単位（OU）"
+
+msgid "Organizations"
+msgstr "組織"
 
 #, fuzzy
 msgid "Organizations IDs"
@@ -51455,6 +51466,17 @@ msgid ""
 msgstr ""
 "Robot Frameworkプロジェクトのベースディレクトリからの相対パスで、Robot "
 "Frameworkスイートフォルダへのパス、または特定の`.robot`ファイルへのパス。"
+
+msgid ""
+"Path to the olr.loc file of Oracle Grid Infrastructure, which covers both "
+"Oracle Clusterware and Oracle Restart. If not specified, /etc/oracle/olr.loc "
+"and /var/opt/oracle/olr.loc are probed in that order. Once the Grid home "
+"named in that file is found, the plug-in connects to this node by its own "
+"name instead of localhost, because a listener under Grid Infrastructure "
+"binds the node address. The Grid home is also used as the last candidate for "
+"ORACLE_HOME, since Grid Infrastructure stops maintaining oratab from version "
+"12.2 on. Set this to a path that does not exist to switch the behavior off."
+msgstr ""
 
 msgid ""
 "Path to the user certificate. If the path is not exist or empty, the user "
@@ -52957,12 +52979,12 @@ msgstr "拡張子は小文字でドットなしで指定してください。"
 msgid "Please specify the name of the status host."
 msgstr "ステータスホストの名前を指定してください。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Please specify the path to the export file. The text <tt>[HOST]</tt> will be "
 "replaced with the host name the inventory has been done for. If you use a "
-"relative path then that will be relative to Checkmk's directory for variable "
-"data, which is <tt>%s</tt>."
+"relative path then that will be relative to the directory for variable data "
+"of Checkmk, which is <tt>%s</tt>."
 msgstr ""
 "エクスポートファイルのパスを指定してください。テキスト<tt>[HOST]</tt> は、イ"
 "ンベントリが実行されたホスト名に置き換えられます。相対パスを使用する場合、"
@@ -53317,9 +53339,6 @@ msgstr "PostgreSQL"
 
 msgid "Power"
 msgstr "Power"
-
-msgid "Power Supplies"
-msgstr "電源装置"
 
 msgid "Power consumption draw"
 msgstr "消費電力"
@@ -55077,11 +55096,12 @@ msgstr "受信メール"
 msgid "Received messages"
 msgstr "受信したメッセージ"
 
-msgid "Receiver protocol GRPC"
-msgstr "受信プロトコル GRPC"
-
 msgid "Receiver protocol HTTP"
 msgstr "受信プロトコル HTTP"
+
+#, fuzzy
+msgid "Receiver protocol gRPC"
+msgstr "受信プロトコル GRPC"
 
 msgid "Receiving traces is disabled"
 msgstr "トレース受信が無効になっています"
@@ -57903,15 +57923,15 @@ msgstr "Rxパワーレベル"
 msgid "S."
 msgstr "S."
 
-#, fuzzy
-msgid "S3 Buckets"
-msgstr "AWS/S3 バケット"
-
 msgid "S3 backend cache hits"
 msgstr "S3バックエンドキャッシュヒット数"
 
 msgid "S3 backend cache missess"
 msgstr "S3バックエンドキャッシュのミス"
+
+#, fuzzy
+msgid "S3 buckets"
+msgstr "AWS/S3 バケット"
 
 msgid "SAML"
 msgstr "SAML"
@@ -59398,9 +59418,10 @@ msgstr ""
 "LDAPサーバーが提供しているLDAPのバージョンを選択します。最近のサーバーの多く"
 "は、LDAPバージョン3を使用しています。"
 
+#, fuzzy
 msgid ""
 "Select the NetApp resources you would like to fetch from the API. Note that "
-"some sections depend on others: 'Volume Performance Counters' requires "
+"some sections depend on others: 'Volume performance counters' requires "
 "'Volumes' data. Performance counter sections may consume more resources and "
 "take longer to collect on large systems."
 msgstr ""
@@ -63522,7 +63543,8 @@ msgstr "コントロールプレーンノードの役割の指定"
 msgid "Specify roles of a worker node"
 msgstr "コントロールプレーンノードの役割の指定"
 
-msgid "Specify sites this OpenTelemetry collector should run on. "
+#, fuzzy
+msgid "Specify sites this OpenTelemetry Collector should run on. "
 msgstr "OpenTelemetry コレクターを実行するサイトを指定してください "
 
 msgid "Specify storage account names that the rule should apply to"
@@ -66631,14 +66653,15 @@ msgstr "温度レーン 8"
 msgid "Temperature Lane 9"
 msgstr "温度レーン 9"
 
-msgid "Temperature Sensors"
-msgstr "温度センサー"
-
 msgid "Temperature Trend Analysis"
 msgstr "温度傾向分析"
 
 msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Eaton UPSの温度と湿度"
+
+#, fuzzy
+msgid "Temperature sensors"
+msgstr "温度センサー"
 
 msgid "Temperature sensors with built-in levels"
 msgstr "レベルが組み込まれた温度センサー"
@@ -66697,10 +66720,6 @@ msgstr "必須"
 
 msgid "Tenant ID must be a valid UUID."
 msgstr "テナントIDは有効なUUIDである必要があります。"
-
-#, fuzzy
-msgid "Tenant Name"
-msgstr "ファン名"
 
 #, fuzzy
 msgid "Tenant name"
@@ -68803,10 +68822,11 @@ msgstr ""
 "削除されたユーザー '%s' は、%d 件の通知 %s において特定のユーザーとしてのみ使"
 "用されています。影響を受ける %s を調整してください。"
 
+#, fuzzy
 msgid ""
 "The delta-to-cumulative processor converts timezones into cumulative "
 "aggregation temporality. This is necessary for compatibility reasons with "
-"the Checkmk metric backend, which only supports cumulative metrics. If your "
+"the Checkmk metrics backend, which only supports cumulative metrics. If your "
 "Collector receives metrics in delta aggregation temporality, you can "
 "configure this processor to be able to use these metrics in Checkmk. If your "
 "Collector only receives cumulative metrics or if you are unsure about the "
@@ -69744,12 +69764,16 @@ msgid ""
 "The license server did not respond in time. Please try again or check your "
 "network settings."
 msgstr ""
+"ライセンスサーバーが時間内に応答しませんでした。もう一度試すか、ネットワーク"
+"設定をチェックしてください。"
 
 msgid ""
 "The license server's TLS certificate could not be verified. Please check "
 "your network settings, system wide CAs and trusted certificate authorities "
 "in Checkmk."
 msgstr ""
+"ライセンスサーバーのTLS証明書を確認できませんでした。ネットワーク設定、システ"
+"ム全体のCA、およびCheckmk内の信頼済み認証局を確認してください。"
 
 msgid ""
 "The license usage history is older than five days. In order to have a "
@@ -69928,6 +69952,9 @@ msgid ""
 "expressed as a fraction of the total available memory. Allows limiting the "
 "memory usage on low-memory systems."
 msgstr ""
+"メトリックバックエンドが使用できるメモリの最大量。利用可能な総メモリに対する"
+"割合として表されます。メモリ容量の少ないシステムにおいて、メモリ使用状況を制"
+"限することができます。"
 
 #, fuzzy
 msgid ""
@@ -70067,9 +70094,17 @@ msgid ""
 "user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` If "
 "the upgrade fails, please contact Checkmk support."
 msgstr ""
+"メトリックバックエンドのデータベーススキーマが予期しない状態になっています："
+"リビジョン {current_revision_id!r} が適用されていますが、期待されるリビジョン"
+"は {head_revision_id!r} です。 意図しないスキーマのアップグレードを防ぐため、"
+"アクティベーションがブロックされています。これを解決するには、サイトユーザー"
+"として手動でスキーマをアップグレードしてください：`cmk-metric-backend-schema-"
+"manager upgrade --config default HEAD`アップグレードに失敗した場合は、Checkmk"
+"サポートまでご連絡ください。"
 
 msgid "The metric backend snapin shows the number of custom metrics"
 msgstr ""
+"メトリクスバックエンドスナップインには、カスタムメトリクスの数が表示されます"
 
 msgid ""
 "The metric label is displayed alongside the queried value in the status "
@@ -70593,6 +70628,9 @@ msgid ""
 "latency of these hosts. Be aware that each fetcher process consumes "
 "resources, primarily memory."
 msgstr ""
+"Relayフェッチャープロセスの最適な数は、主に監視対象のホストやサービスの数、お"
+"よびそれらのホストの応答速度やレイテンシーによって決まります。各フェッチャー"
+"プロセスは、主にメモリといったリソースを消費することに留意してください。"
 
 msgid ""
 "The option 'Display a summary over all SLA periods' aggregates all results "
@@ -70632,6 +70670,11 @@ msgid ""
 "with the \"Dynamic host management\" to sort the host in organization-"
 "specific folders."
 msgstr ""
+"組織IDはホスト名の接頭辞として使用されます（ハイフン-で区切られます）。このオ"
+"プションを「ピギーバックホストのホスト名変換」と併用することで、Cisco Meraki"
+"クラウドからのホストに組織プレフィックスを追加し、ホスト名の競合を回避できま"
+"す。また、このオプションを「動的ホスト管理」と併用することで、ホストを組織固"
+"有のフォルダに分類することも可能です。"
 
 msgid "The original aspect of the image will be ignored."
 msgstr "画像の元の側面は無視されます。"
@@ -70658,6 +70701,8 @@ msgid ""
 "The package was modified without a version change. Please confirm this "
 "action after clicking 'Save'."
 msgstr ""
+"このパッケージは、バージョン番号を変更せずに修正されました。「保存」をクリッ"
+"クした後、この操作を確認してください。"
 
 msgid "The pager address is optional "
 msgstr "ページャーのアドレスはオプションです "
@@ -74865,17 +74910,18 @@ msgstr ""
 msgid "This plug-in has no parameters."
 msgstr "このプラグインにはパラメータがありません"
 
+#, fuzzy
 msgid ""
-"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see werk "
-"15844 for details). Please switch to the new ruleset \"Microsoft SQL server "
-"(Linux, Windows)\".This plug-in can be used to collect information of all "
+"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see Werk "
+"15844 for details). Please switch to the new rule set \"Microsoft SQL server "
+"(Linux, Windows)\". This plug-in can be used to collect information of all "
 "running MSSQL servers on the local system. The current implementation of the "
 "check uses the \"trusted authentication\" where no user/password needs to be "
-"created in the MSSQL server instance by default. Using this method, you "
-"needed to grant the user running the Checkmk windows agent service access to "
-"the MSSQL database. Otherwise you can configure the credentials of a "
-"database user which has the permission to read the needed information from "
-"the server instance."
+"created in the MSSQL server instance by default. Using this method, you need "
+"to grant the user running the Checkmk Windows agent service access to the "
+"MSSQL database. Otherwise you can configure the credentials of a database "
+"user who has the permission to read the needed information from the server "
+"instance."
 msgstr ""
 "このプラグインは非推奨であり、Checkmk 2.4.0 で削除される予定です (詳細は "
 "werk 15844 を参照)。新しいルールセット「Microsoft SQL server (Linux, "
@@ -76216,9 +76262,10 @@ msgstr ""
 "ザーは、以下に示すユーザーとして、パスワードなしでストレージシステムに ssh で"
 "きる必要があります。"
 
+#, fuzzy
 msgid ""
 "This rule set selects the NetApp special agent instead of the normal Checkmk "
-"Agent and allows monitoring via the NetApp Ontap REST API."
+"agent and allows monitoring via the NetApp Ontap REST API."
 msgstr ""
 "このルールセットは、通常のCheckmkエージェントの代わりにNetAppの特別なエージェ"
 "ントを選択し、NetApp Ontap REST APIによる監視が可能になります。"
@@ -76911,7 +76958,7 @@ msgstr "このサイトは%sです"
 
 #, fuzzy
 msgid ""
-"This site is already assigned to another OpenTelemetry collector "
+"This site is already assigned to another OpenTelemetry Collector "
 "configuration."
 msgstr ""
 "1つのサイトは、ちょうど1つのOpenTelemetryコレクター構成で使用することができま"
@@ -78593,7 +78640,8 @@ msgstr "割り当てられたPGAの合計"
 msgid "Total PGA inuse"
 msgstr "PGAの総使用量"
 
-msgid "Total PGA used for auto workareas"
+#, fuzzy
+msgid "Total PGA used for auto-workareas"
 msgstr "自動作業領域に使用されるPGAの合計"
 
 msgid "Total PGA used for manual workareas"
@@ -84175,9 +84223,6 @@ msgstr "ユーザーパスワード"
 msgid "User / Group Key"
 msgstr "ユーザー/グループキー"
 
-msgid "User Asserts"
-msgstr "ユーザーアサート"
-
 msgid "User Base-DN"
 msgstr "ユーザーベース-DN"
 
@@ -84205,6 +84250,10 @@ msgstr "ユーザーエージェント"
 
 msgid "User and password"
 msgstr "ユーザーとパスワード"
+
+#, fuzzy
+msgid "User asserts"
+msgstr "ユーザーアサート"
 
 msgid "User base DN"
 msgstr "ユーザーベースDN"
@@ -85573,13 +85622,14 @@ msgstr "バーチャルホスト名"
 msgid "Vhosts"
 msgstr "Vhosts"
 
+#, fuzzy
 msgid ""
 "Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
-"Inventory page of a host the internal tree paths leading to subcategories, "
-"the keys of singles values or table column names become visible. Key columns "
-"of tables are marked with '*'. See <a href=\"https://docs.checkmk.com/latest/"
-"de/inventory.html\">HW/SW Inventory</a>. for more details about the HW/SW "
-"Inventory system."
+"inventory page of a host, the internal tree paths leading to subcategories "
+"as well as the keys of singles values or table column names become visible. "
+"Key columns of tables are marked with '*'. See <a href=\"https://"
+"docs.checkmk.com/latest/de/inventory.html\">HW/SW inventory</a> for more "
+"details about the HW/SW inventory system."
 msgstr ""
 "ホストのHW/SWインベントリのサービス詳細ページで<tt>[表示] > [表示オプション] "
 "> [内部ツリーパス表示]</tt>を選択すると、サブカテゴリ、シングル値のキー、また"
@@ -85822,9 +85872,6 @@ msgstr "電圧センサー"
 msgid "Volume"
 msgstr "ボリューム"
 
-msgid "Volume Performance Counters (requires Volumes)"
-msgstr "ボリューム パフォーマンス カウンター（ボリュームが必要です）"
-
 #, fuzzy
 msgid "Volume group"
 msgstr "ボリュームグループ"
@@ -85841,6 +85888,10 @@ msgstr "ボリューム名"
 
 msgid "Volume parameters"
 msgstr "ボリュームパラメータ"
+
+#, fuzzy
+msgid "Volume performance counters (requires volumes)"
+msgstr "ボリューム パフォーマンス カウンター（ボリュームが必要です）"
 
 msgid "VolumeSets: Volume Set Configuration"
 msgstr "ボリュームセット：ボリュームセットの構成"
@@ -86093,9 +86144,6 @@ msgstr ""
 msgid "Warning"
 msgstr "警告"
 
-msgid "Warning Asserts"
-msgstr "警告アサート"
-
 msgid "Warning above"
 msgstr "上記の警告"
 
@@ -86107,6 +86155,10 @@ msgstr "後の警告 "
 
 msgid "Warning area"
 msgstr "警告エリア"
+
+#, fuzzy
+msgid "Warning asserts"
+msgstr "警告アサート"
 
 msgid "Warning at"
 msgstr "警告"
@@ -90602,15 +90654,6 @@ msgstr ""
 "ラッシュを１つだけ検索したい場合は<tt>\\\\</tt>を<tt>\\</tt>の代わりに使用す"
 "る必要があります。"
 
-msgid ""
-"Your search statement is not valid. You need to provide a regular expression "
-"(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "
-"you like to search for a single backslash."
-msgstr ""
-"その検索文は無効です。正規表現（regex）を指定する必要があります。例えば、バッ"
-"クスラッシュを１つだけ検索したい場合は<tt>\\\\</tt>を<tt>\\</tt>の代わりに使"
-"用する必要があります。"
-
 #, fuzzy
 msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
@@ -91413,6 +91456,10 @@ msgstr "最後から"
 
 msgid "from:"
 msgstr "from:"
+
+#, fuzzy
+msgid "gRPC-based OTLP receiver"
+msgstr "GRPCベースのOTLPレシーバー:"
 
 msgid "global"
 msgstr "グローバル"
@@ -97948,6 +97995,42 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Auto (DEFAULT)"
+#~ msgstr "オート（初期設定）"
+
+#~ msgid "Certificate Key File"
+#~ msgstr "証明書キーファイル"
+
+#, fuzzy
+#~ msgid "GRPC-based OTLP receiver"
+#~ msgstr "GRPCベースの受信機"
+
+#~ msgid "Memory Size"
+#~ msgstr "メモリサイズ"
+
+#~ msgid "Network Interfaces"
+#~ msgstr "ネットワークインターフェース"
+
+#, fuzzy
+#~ msgid "Organisations"
+#~ msgstr "組織"
+
+#~ msgid "Power Supplies"
+#~ msgstr "電源装置"
+
+#, fuzzy
+#~ msgid "Tenant Name"
+#~ msgstr "ファン名"
+
+#~ msgid ""
+#~ "Your search statement is not valid. You need to provide a regular "
+#~ "expression (regex). For example you need to use <tt>\\\\</tt> instead of "
+#~ "<tt>\\</tt> if you like to search for a single backslash."
+#~ msgstr ""
+#~ "その検索文は無効です。正規表現（regex）を指定する必要があります。例えば、"
+#~ "バックスラッシュを１つだけ検索したい場合は<tt>\\\\</tt>を<tt>\\</tt>の代わ"
+#~ "りに使用する必要があります。"
+
 #~ msgid "ADMIN"
 #~ msgstr "ADMIN"
 
@@ -99795,9 +99878,6 @@ msgstr ""
 
 #~ msgid "Organization licenses overview"
 #~ msgstr "組織ライセンスの概要"
-
-#~ msgid "Organizations"
-#~ msgstr "組織"
 
 #, python-format
 #~ msgid "Original %s"

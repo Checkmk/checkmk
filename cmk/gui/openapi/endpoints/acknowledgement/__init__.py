@@ -72,7 +72,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     method="post",
     tag_group="Monitoring",
     skip_locking=True,
-    additional_status_codes=[403, 422],
+    additional_status_codes=[422],
     status_descriptions={
         422: "The query yielded no result.",
     },
@@ -168,7 +168,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
     method="post",
     tag_group="Monitoring",
     skip_locking=True,
-    additional_status_codes=[403, 422],
+    additional_status_codes=[422],
     status_descriptions={
         422: "Service was not in a problem state.",
     },
@@ -311,7 +311,6 @@ def _delete_service_acknowledgements_with_query(
     method="post",
     tag_group="Monitoring",
     skip_locking=True,
-    additional_status_codes=[403],
     request_schema=RemoveProblemAcknowledgement,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,

@@ -198,13 +198,12 @@ def _check_host_access_permissions(
     host = Host.load_host(host_name)
     try:
         host.permissions.need_permission(access_type)
-    except MKAuthException as exc:
-        # The request is already authenticated at this point, so a failed permission check
-        # means the user lacks a permission -> forbidden (403), not unauthorized (401). Let this
-        # propagate so the shared MKAuthException -> 403 remap in decorators.py applies.
-        raise MKAuthException(
-            f"You do not have {access_type} access to the host {host_name}"
-        ) from exc
+    except MKAuthException:
+        raise ProblemException(
+            status=401,
+            title="Unauthorized",
+            detail=f"You do not have {access_type} access to the host {host_name}",
+        )
     return host
 
 
@@ -235,9 +234,9 @@ def _link_with_uuid(
     "cmk/link_uuid",
     method="put",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[401],
     status_descriptions={
-        403: "You do not have the permissions to edit this host.",
+        401: "You do not have the permissions to edit this host.",
     },
     path_params=[HOST_NAME],
     request_schema=LinkHostUUID,
@@ -275,9 +274,9 @@ def link_with_uuid(params: Mapping[str, Any]) -> Response:
     "cmk/show",
     method="get",
     tag_group="Checkmk Internal",
-    additional_status_codes=[403],
+    additional_status_codes=[401],
     status_descriptions={
-        403: "You do not have read access to this host.",
+        401: "You do not have read access to this host.",
     },
     path_params=[HOST_NAME],
     response_schema=HostConfigSchemaInternal,

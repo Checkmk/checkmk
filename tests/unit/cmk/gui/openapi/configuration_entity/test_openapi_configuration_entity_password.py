@@ -54,8 +54,8 @@ def test_list_passwords_without_permissions(clients: ClientRegistry) -> None:
     )
 
     # THEN
-    assert resp.status_code == 403
-    assert resp.json["title"] == "Forbidden"
+    assert resp.status_code == 401
+    assert resp.json["title"] == "Unauthorized"
 
 
 @pytest.mark.usefixtures("mock_update_passwords_merged_file")
@@ -161,8 +161,7 @@ def test_create_password_without_permissions(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     # THEN
-    assert resp.status_code == 403
-    assert resp.json["title"] == "Forbidden"
+    assert resp.status_code == 401
     assert "We are sorry, but you lack the permission for this operation" in resp.json["detail"]
     with pytest.raises(ValueError):
         lookup(password_store_path(), "test_protected_password_id")

@@ -43,10 +43,10 @@ def test_list_rule_form_specs_without_perm(set_config: SetConfig, clients: Clien
                 entity_type_specifier="special_agents:elasticsearch",
             )
 
-        assert excinfo.value.response.status_code == 403
+        assert excinfo.value.response.status_code == 401
         assert excinfo.value.response.json == {
-            "title": "Forbidden",
-            "status": 403,
+            "title": "Unauthorized",
+            "status": 401,
             "detail": (
                 "We are sorry, but you lack the permission for this operation."
                 " If you do not like this then please ask your administrator"
@@ -71,10 +71,10 @@ def test_get_rule_form_spec_without_perm(set_config: SetConfig, clients: ClientR
                 entity_type_specifier="special_agents:elasticsearch",
             )
 
-        assert excinfo.value.response.status_code == 403
+        assert excinfo.value.response.status_code == 401
         assert excinfo.value.response.json == {
-            "title": "Forbidden",
-            "status": 403,
+            "title": "Unauthorized",
+            "status": 401,
             "detail": (
                 "We are sorry, but you lack the permission for this operation."
                 " If you do not like this then please ask your administrator"
@@ -242,10 +242,10 @@ def test_create_rule_form_spec_without_perm(
                 }
             )
 
-        assert excinfo.value.response.status_code == 403
+        assert excinfo.value.response.status_code == 401
         assert excinfo.value.response.json == {
-            "title": "Forbidden",
-            "status": 403,
+            "title": "Unauthorized",
+            "status": 401,
             "detail": (
                 "We are sorry, but you lack the permission for this operation."
                 " If you do not like this then please ask your administrator"

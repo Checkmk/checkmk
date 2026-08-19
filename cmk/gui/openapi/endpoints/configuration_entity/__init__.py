@@ -99,7 +99,7 @@ def _serve_entities(data: ConfigurationEntityDescription) -> Response:
     "cmk/create",
     tag_group="Checkmk Internal",
     method="post",
-    additional_status_codes=[403, 422],
+    additional_status_codes=[422],
     request_schema=CreateConfigurationEntity,
     response_schema=EditConfigurationEntityResponse,
 )
@@ -131,7 +131,7 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
     ".../update",
     tag_group="Checkmk Internal",
     method="put",
-    additional_status_codes=[403, 422],
+    additional_status_codes=[422],
     request_schema=UpdateConfigurationEntity,
     response_schema=EditConfigurationEntityResponse,
 )
@@ -166,7 +166,6 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
     path_params=[ENTITY_TYPE],
     query_params=[ENTITY_TYPE_SPECIFIER_FIELD],
     method="get",
-    additional_status_codes=[403],
     response_schema=response_schemas.DomainObject,
 )
 def _get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Response:

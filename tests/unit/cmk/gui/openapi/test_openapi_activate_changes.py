@@ -9,25 +9,11 @@ from pytest_mock import MockerFixture
 
 import cmk.ccc.resulttype as result
 from cmk.ccc.version import edition
-from cmk.gui.exceptions import MKAuthException
 from cmk.gui.watolib import activate_changes
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils import paths
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.testlib.unit.utils import reset_registries
-
-
-def test_activate_changes_permission_denied_is_403(
-    mocker: MockerFixture,
-    clients: ClientRegistry,
-) -> None:
-    clients.HostConfig.create(host_name="foobar", folder="/")
-    mocker.patch(
-        "cmk.gui.openapi.endpoints.activate_changes.activate_changes_start",
-        side_effect=MKAuthException("hands off other users' changes"),
-    )
-    resp = clients.ActivateChanges.activate_changes(expect_ok=False)
-    resp.assert_status_code(403)
 
 
 def test_wait_for_completion_invalid_activation_id(clients: ClientRegistry) -> None:

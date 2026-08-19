@@ -4,9 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-const { _t } = usei18n()
-
-export const METRIC_BACKEND_MACRO_HELP = _t(
-  'Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, <tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, <tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>'
-)
+export function metricBackendMacroHelp(): TranslatedString {
+  const { _t } = usei18n()
+  return _t(
+    'Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, <tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, <tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>'
+  )
+}

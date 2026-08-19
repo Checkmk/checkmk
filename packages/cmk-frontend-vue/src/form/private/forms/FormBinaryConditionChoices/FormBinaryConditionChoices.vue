@@ -63,7 +63,7 @@ function removeGroup(groupIndex: number) {
               v-model="group.operator"
               :options="{
                 type: 'fixed',
-                suggestions: operatorSuggestions
+                suggestions: operatorSuggestions()
               }"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"

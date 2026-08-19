@@ -115,7 +115,7 @@ watch(
         <CmkSpace size="small" direction="vertical" />
         <CmkParagraph>
           <strong>From TS File: </strong>
-          {{ translatedStringFromTS }}
+          {{ translatedStringFromTS() }}
         </CmkParagraph>
       </div>
 

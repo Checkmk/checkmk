@@ -40,7 +40,7 @@ import FormHelp from '@/form/private/FormHelp.vue'
 import FormMetricBackendCustomQuery, {
   type Query
 } from '@/graph-designer/FormMetricBackendCustomQuery.vue'
-import { METRIC_BACKEND_MACRO_HELP } from '@/graph-designer/constants'
+import { metricBackendMacroHelp } from '@/graph-designer/constants'
 import FixedMetricRowRenderer from '@/graph-designer/private/FixedMetricRowRenderer.vue'
 import FormMetricCells, { type Metric } from '@/graph-designer/private/FormMetricCells.vue'
 import FormTitle from '@/graph-designer/private/FormTitle.vue'
@@ -1329,13 +1329,13 @@ const graphDesignerContentAsJson = computed(() => {
             <FormTitle v-model:data="graphLine.custom_title" />
             <CmkHelpText
               v-if="graphLine.type === 'query'"
-              :help="METRIC_BACKEND_MACRO_HELP"
+              :help="metricBackendMacroHelp()"
               :aria-label="_t('Help: Metrics backend (custom query)')"
             />
           </div>
           <FormHelp
             v-if="graphLine.type === 'query'"
-            :help="METRIC_BACKEND_MACRO_HELP"
+            :help="metricBackendMacroHelp()"
             :aria-label="_t('Inline help: Metrics backend (custom query)')"
           />
         </td>

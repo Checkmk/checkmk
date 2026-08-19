@@ -19,7 +19,7 @@ import type { ConsolidationFunction } from '@/metric-backend/consolidation/types
 
 import FormMetricBackendCustomQuery from './FormMetricBackendCustomQuery.vue'
 import { buildConsolidationFunction, consolidationFunctionFromWire } from './consolidation'
-import { METRIC_BACKEND_MACRO_HELP } from './constants'
+import { metricBackendMacroHelp } from './constants'
 
 const { _t } = usei18n()
 
@@ -100,9 +100,9 @@ const consolidation = computed<WireConsolidationFunction>({
               :placeholder="_t('Service name template')"
               :external-errors="serviceNameTemplateErrors"
             />
-            <CmkHelpText :help="METRIC_BACKEND_MACRO_HELP" />
+            <CmkHelpText :help="metricBackendMacroHelp()" />
           </div>
-          <FormHelp :help="METRIC_BACKEND_MACRO_HELP" />
+          <FormHelp :help="metricBackendMacroHelp()" />
         </td>
       </tr>
     </template>

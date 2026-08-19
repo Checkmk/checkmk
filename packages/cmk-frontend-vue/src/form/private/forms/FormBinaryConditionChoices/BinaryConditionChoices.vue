@@ -63,7 +63,7 @@ function addItem() {
               v-model="item.operator"
               :options="{
                 type: 'fixed',
-                suggestions: firstOperatorSuggestions
+                suggestions: firstOperatorSuggestions()
               }"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
@@ -76,7 +76,7 @@ function addItem() {
               v-model="item.operator"
               :options="{
                 type: 'fixed',
-                suggestions: operatorSuggestions
+                suggestions: operatorSuggestions()
               }"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
@@ -108,7 +108,7 @@ function addItem() {
               v-model="defaultOperator"
               :options="{
                 type: 'fixed',
-                suggestions: firstOperatorSuggestions
+                suggestions: firstOperatorSuggestions()
               }"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"
@@ -121,7 +121,7 @@ function addItem() {
               v-model="defaultOperator"
               :options="{
                 type: 'fixed',
-                suggestions: operatorSuggestions
+                suggestions: operatorSuggestions()
               }"
               :input-hint="_t('Select operator')"
               :no-elements-text="_t('Add')"

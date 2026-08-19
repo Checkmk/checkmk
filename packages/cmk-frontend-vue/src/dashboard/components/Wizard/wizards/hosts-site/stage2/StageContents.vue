@@ -120,7 +120,7 @@ const isUnrestricted = props.dashboardFeatures === DashboardFeatures.UNRESTRICTE
   >
     <WidgetTiles
       v-model:selected-widget="selectedWidget as Graph"
-      :available-items="allHostSiteWidgets"
+      :available-items="allHostSiteWidgets()"
       :enabled-widgets="enabledWidgets"
     />
   </SectionBlock>

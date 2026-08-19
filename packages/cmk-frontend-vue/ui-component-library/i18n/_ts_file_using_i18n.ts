@@ -4,7 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-const { _t } = usei18n()
-
-export default _t('This string was translated outside of a vue component.')
+export default function translatedOutsideVue(): TranslatedString {
+  const { _t } = usei18n()
+  return _t('This string was translated outside of a vue component.')
+}

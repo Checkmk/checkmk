@@ -13,7 +13,7 @@ import FieldComponent from '../TableForm/FieldComponent.vue'
 import FieldDescription from '../TableForm/FieldDescription.vue'
 import TableForm from '../TableForm/TableForm.vue'
 import TableFormRow from '../TableForm/TableFormRow.vue'
-import { DATA_RANGE_SYMBOL_SUGGESTIONS } from './suggestions'
+import { dataRangeSymbolSuggestions } from './suggestions'
 
 const { _t } = usei18n()
 const dataRangeSymbol = defineModel<string>('dataRangeSymbol', { required: true })
@@ -36,7 +36,7 @@ const rangeErrors = computed(() =>
       :label="_t('Select option')"
       :options="{
         type: 'fixed',
-        suggestions: DATA_RANGE_SYMBOL_SUGGESTIONS
+        suggestions: dataRangeSymbolSuggestions()
       }"
       @update:model-value="(value) => (dataRangeSymbol = value || dataRangeSymbol)"
     />

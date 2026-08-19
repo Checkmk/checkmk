@@ -23,9 +23,11 @@ import { ref } from 'vue'
 
 import GenerateToken from '@/mode-host/agent-connection-test/components/GenerateToken.vue'
 
-import { finalStepText, tabs } from './FirstHostSlideoutContent'
+import { finalStepText, firstHostTabs } from './FirstHostSlideoutContent'
 
 const { _t } = usei18n()
+
+const tabs = firstHostTabs()
 
 const slideInOpen = defineModel<boolean>({ required: true })
 const openedTab = usePersistentRef<string | number>(
@@ -117,7 +119,7 @@ function goToHostOverview() {
               </template>
 
               <template #content>
-                <CmkParagraph>{{ finalStepText }}</CmkParagraph>
+                <CmkParagraph>{{ finalStepText() }}</CmkParagraph>
                 <CmkSpace></CmkSpace>
               </template>
 

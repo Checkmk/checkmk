@@ -12,8 +12,6 @@ import type { WidgetItemList } from '../../../components/WidgetSelection/types'
 import { ElementSelection } from '../../../types'
 import { Graph } from '../types'
 
-const { _t } = usei18n()
-
 const graphSelector = {
   [ElementSelection.SPECIFIC]: [
     Graph.SITE_OVERVIEW,
@@ -54,9 +52,12 @@ export const getAvailableGraphs = (
   return [...graphSelector[hostSelection]]
 }
 
-export const allHostSiteWidgets: WidgetItemList = [
-  { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
-  { id: Graph.HOST_STATS, label: _t('Host statistics'), icon: 'host-statistics' },
-  { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'host-state' },
-  { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'host-state-summary' }
-]
+export const allHostSiteWidgets = (): WidgetItemList => {
+  const { _t } = usei18n()
+  return [
+    { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
+    { id: Graph.HOST_STATS, label: _t('Host statistics'), icon: 'host-statistics' },
+    { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'host-state' },
+    { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'host-state-summary' }
+  ]
+}

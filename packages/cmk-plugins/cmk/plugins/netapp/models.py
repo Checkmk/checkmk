@@ -663,7 +663,7 @@ class EnvironmentThresholdSensorModel(EnvironmentSensorModel):
 
 
 class EnvironmentDiscreteSensorModel(EnvironmentSensorModel):
-    sensor_type: Literal["discrete"]
+    sensor_type: Literal["discrete", "fru"]
     discrete_value: str | None = None
     discrete_state: SensorState
 

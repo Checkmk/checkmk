@@ -12,13 +12,21 @@ import { measureAxisLabel } from '@/graphing/components/TimeSeriesGraph/axes/lab
 import type { Metric, TimeSeriesGraphProps } from '@/graphing/components/TimeSeriesGraph/types'
 import { CANVAS_MARGIN_LEFT, VALUE_LABEL_GUTTER } from '@/graphing/components/constants'
 
+let drawnPoints: Array<[number, number]> = []
+
 // jsdom implements neither a 2D canvas context nor matchMedia, both of which the graph
 // touches on mount (draw() + the devicePixelRatio watcher). Stub them so the component
 // mounts and runs its real draw path instead of throwing.
 function createCanvasContextStub(): CanvasRenderingContext2D {
   const state: Record<string | symbol, unknown> = {}
+  const recordPoint = (x: number, y: number): void => void drawnPoints.push([x, y])
   return new Proxy(state, {
-    get: (target, prop) => (prop in target ? target[prop] : () => undefined),
+    get: (target, prop) => {
+      if (prop === 'moveTo' || prop === 'lineTo') {
+        return recordPoint
+      }
+      return prop in target ? target[prop] : () => undefined
+    },
     set: (target, prop, value) => {
       target[prop] = value
       return true
@@ -27,6 +35,7 @@ function createCanvasContextStub(): CanvasRenderingContext2D {
 }
 
 beforeEach(() => {
+  drawnPoints = []
   vi.stubGlobal(
     'matchMedia',
     vi.fn().mockReturnValue({
@@ -91,7 +100,7 @@ const DEFAULT_PROPS: TimeSeriesGraphProps = {
     y_axis: null,
     font_size_pt: 10
   },
-  time_range: { start: 1_000, end: 2_000, step: 60 },
+  view_time_range: { start: 1_000, end: 2_000, step: 60 },
   metrics: [LINE_METRIC],
   horizontal_lines: [],
   valueRange: null,
@@ -122,6 +131,14 @@ const MEMORY_METRIC: Metric = {
 const MEMORY_PROPS: Partial<TimeSeriesGraphProps> = {
   metrics: [MEMORY_METRIC],
   options: { ...DEFAULT_PROPS.options, y_axis: { title: '', unit: IEC_UNIT } }
+}
+
+function drawnXs(): number[] {
+  return drawnPoints.map(([x]) => x)
+}
+
+function plotWidthPx(): number {
+  return parseFloat(document.querySelector('canvas')!.style.width)
 }
 
 function valueAxisGroup(container: Element): Element {
@@ -167,6 +184,94 @@ describe('TimeSeriesGraph', () => {
     // (no configured graph title), and that surface must be the data canvas.
     const plotSurface = screen.getByRole('img', { name: 'CPU utilization' })
     expect(plotSurface.tagName).toBe('CANVAS')
+  })
+
+  const VIEW_TIME_RANGE = { start: 1_060, end: 1_180, step: 60 }
+  const DATA_TIME_RANGE_REACHING_PAST_THE_VIEW = { start: 940, end: 1_240, step: 60 }
+  const SAMPLES_REACHING_PAST_THE_VIEW = [1, 2, 3, 4, 5]
+  const COLUMN_WIDTH_PX = 1
+
+  test('draws the curve out past the leading edge when the data reaches beyond it', async () => {
+    const metrics = [{ ...LINE_METRIC, data_points: SAMPLES_REACHING_PAST_THE_VIEW }]
+
+    renderComponent({
+      view_time_range: VIEW_TIME_RANGE,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(Math.min(...drawnXs())).toBeLessThan(0)
+  })
+
+  test('draws the curve out past the trailing edge when the data reaches beyond it', async () => {
+    const metrics = [{ ...LINE_METRIC, data_points: SAMPLES_REACHING_PAST_THE_VIEW }]
+
+    renderComponent({
+      view_time_range: VIEW_TIME_RANGE,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(Math.max(...drawnXs())).toBeGreaterThan(plotWidthPx())
+  })
+
+  test('reaches the right edge when the newest interval has not closed yet', async () => {
+    const dataTimeRangeReachingPastThePresent = { start: 940, end: 1_300, step: 60 }
+    const samplesWithTheTwoNewestIntervalsStillOpen = [1, 2, 3, 4, null, null]
+    const metrics = [{ ...LINE_METRIC, data_points: samplesWithTheTwoNewestIntervalsStillOpen }]
+
+    renderComponent({
+      view_time_range: VIEW_TIME_RANGE,
+      data_time_range: dataTimeRangeReachingPastThePresent,
+      metrics
+    })
+    await waitFor(() => expect(drawnPoints.length).toBeGreaterThan(0))
+
+    expect(Math.max(...drawnXs())).toBeGreaterThanOrEqual(plotWidthPx() - COLUMN_WIDTH_PX)
+  })
+
+  function rightmostDrawnXOnPlot(stack: string | null): number {
+    drawnPoints = []
+    const metrics = [
+      {
+        ...LINE_METRIC,
+        render: { ...LINE_METRIC.render, stack },
+        data_points: SAMPLES_REACHING_PAST_THE_VIEW
+      }
+    ]
+    const { unmount } = renderComponent({
+      view_time_range: VIEW_TIME_RANGE,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    const onPlot = drawnXs().filter((x) => x <= plotWidthPx() + 0.01)
+    unmount()
+    return Math.max(...onPlot)
+  }
+
+  test('ends an area series where the line series ends', () => {
+    const asLine = rightmostDrawnXOnPlot(null)
+
+    const asArea = rightmostDrawnXOnPlot('area')
+
+    expect(asArea).toBeCloseTo(asLine, 5)
+  })
+
+  test('keeps the value axis off a spike that only the off-screen neighbours carry', async () => {
+    const offViewSpike = 1_000
+    const samplesSpikingOnlyOutsideTheView = [offViewSpike, 2, 3, 4, offViewSpike]
+    const metrics = [{ ...LINE_METRIC, data_points: samplesSpikingOnlyOutsideTheView }]
+
+    const { container } = renderComponent({
+      view_time_range: VIEW_TIME_RANGE,
+      data_time_range: DATA_TIME_RANGE_REACHING_PAST_THE_VIEW,
+      metrics
+    })
+    await waitFor(() => expect(valueAxisLabels(container)).not.toHaveLength(0))
+
+    expect(valueAxisLabels(container)).not.toContain(String(offViewSpike))
   })
 
   test('prefers the configured graph title over metric titles for the plot accessible name', () => {

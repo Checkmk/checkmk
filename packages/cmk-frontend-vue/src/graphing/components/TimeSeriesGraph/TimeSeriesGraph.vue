@@ -23,7 +23,7 @@ import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, VALUE_LABEL_GUTTER } from '../
 import { measureAxisLabel } from './axes/labelWidth'
 import { computeTimeAxis } from './axes/timeAxis'
 import { computeYDomain } from './axes/valueAxis'
-import { downsampleToColumns, m4 } from './decimation/decimate'
+import { downsampleToColumns, edgeNeighbours, edgeSample, m4 } from './decimation/decimate'
 import type { M4Cache } from './decimation/types'
 import OverlayLayer from './overlay/OverlayLayer.vue'
 import PinHandle from './overlay/PinHandle.vue'
@@ -99,18 +99,18 @@ const pinVisible = computed(
   () =>
     props.pinEnabled === true &&
     typeof props.pinTime === 'number' &&
-    props.pinTime >= props.time_range.start &&
-    props.pinTime <= props.time_range.end
+    props.pinTime >= props.view_time_range.start &&
+    props.pinTime <= props.view_time_range.end
 )
 const pinX = computed<number | null>(() => {
   if (!pinVisible.value || typeof props.pinTime !== 'number') {
     return null
   }
-  const span = props.time_range.end - props.time_range.start
+  const span = props.view_time_range.end - props.view_time_range.start
   if (span <= 0) {
     return null
   }
-  return ((props.pinTime - props.time_range.start) / span) * plotWidth.value
+  return ((props.pinTime - props.view_time_range.start) / span) * plotWidth.value
 })
 const pinHandleX = computed<number | null>(() =>
   pinX.value === null ? null : pinLineCentreX(pinX.value)
@@ -180,7 +180,7 @@ const {
   onPlotMouseDown: startZoomSelection
 } = useZoomGesture({
   zoomMode: () => props.zoomMode,
-  timeRange: () => props.time_range,
+  timeRange: () => props.view_time_range,
   minTimeRange: () => props.minTimeRange,
   minValueRange: () => props.minValueRange,
   valueRange: () => props.valueRange,
@@ -205,7 +205,7 @@ const {
   panBySteps
 } = usePanGesture({
   panEnabled: () => props.panEnabled,
-  timeRange: () => props.time_range,
+  timeRange: () => props.view_time_range,
   measureLabel,
   plotWidth,
   xScale,
@@ -214,21 +214,21 @@ const {
   onCommit: (timeRange) => emit('pan', { timeRange })
 })
 
-// Rebuilt lazily inside draw() (rather than via its own watch(props.metrics, ...)) so it can
-// never run stale relative to the time_range draw() is about to use: two independent
-// watchers on overlapping-but-different prop sets give no ordering guarantee between them,
-// and a m4Cache built against an old time_range but painted against a new one silently
-// truncates the drawn data partway through the (now wider) axis.
+function withoutOffPlotNeighbours<T>(buckets: T[]): T[] {
+  return buckets.slice(1, -1)
+}
+
 let m4Cache: M4Cache[] = []
 let m4CacheMetrics: TimeSeriesGraphProps['metrics'] | null = null
 let m4CacheTimeRange: TimeRange | null = null
 function ensureM4Cache(): void {
-  if (m4CacheMetrics === props.metrics && m4CacheTimeRange === props.time_range) {
+  const dataTimeRange = props.data_time_range ?? props.view_time_range
+  if (m4CacheMetrics === props.metrics && m4CacheTimeRange === dataTimeRange) {
     return
   }
   m4CacheMetrics = props.metrics
-  m4CacheTimeRange = props.time_range
-  m4Cache = props.metrics.map((metric) => m4(metric.data_points, props.time_range, M4_BUCKETS))
+  m4CacheTimeRange = dataTimeRange
+  m4Cache = props.metrics.map((metric) => m4(metric.data_points, dataTimeRange, M4_BUCKETS))
 }
 
 // HiDPI: bitmap sized in physical pixels (cssSize * dpr), CSS size in logical pixels, the
@@ -246,27 +246,43 @@ function draw(): void {
   ensureM4Cache()
 
   const columnCount = Math.max(1, Math.floor(plotWidth.value))
-  const visibleTimeRange: [number, number] = [props.time_range.start, props.time_range.end]
-  const downsampledMetrics = m4Cache.map((cache) =>
-    downsampleToColumns(cache, visibleTimeRange, columnCount)
-  )
+  const visibleTimeRange: [number, number] = [
+    props.view_time_range.start,
+    props.view_time_range.end
+  ]
+  const bucketsOnPlot = m4Cache.map((cache) => [
+    ...downsampleToColumns(cache, visibleTimeRange, columnCount),
+    edgeSample(cache, visibleTimeRange[1])
+  ])
+
+  const bucketsWithOffPlotNeighbours = m4Cache.map((cache, i) => {
+    const [before, after] = edgeNeighbours(cache, visibleTimeRange)
+    return [before, ...bucketsOnPlot[i]!, after]
+  })
 
   // Inverse mirrors a metric below the baseline; stacking then resolves cumulative bands.
-  const inverted = downsampledMetrics.map((buckets, i) =>
+  const inverted = bucketsWithOffPlotNeighbours.map((buckets, i) =>
     props.metrics[i]!.render.inverse ? buckets.map((bucket) => invertBucket(bucket)) : buckets
   )
   const stacks = computeStackedSeries(props.metrics, inverted, consolidationFn.value)
-  recordDrawnGeometry(downsampledMetrics, stacks)
+
+  recordDrawnGeometry(
+    bucketsOnPlot,
+    stacks.map((series) => ({ ...series, bands: withoutOffPlotNeighbours(series.bands) }))
+  )
 
   xScale
-    .domain([new Date(props.time_range.start * 1000), new Date(props.time_range.end * 1000)])
+    .domain([
+      new Date(props.view_time_range.start * 1000),
+      new Date(props.view_time_range.end * 1000)
+    ])
     .range([0, plotWidth.value])
 
   const xTicks = computeTimeAxis(
-    props.time_range.start,
-    props.time_range.end,
+    props.view_time_range.start,
+    props.view_time_range.end,
     plotWidth.value,
-    props.time_range.step,
+    props.view_time_range.step,
     measureLabel
   )
 
@@ -274,12 +290,12 @@ function draw(): void {
   // extents. Forced symmetric around zero when any metric is inverse.
   const domainBuckets = props.metrics.map((_, i) =>
     stacks[i]!.kind === 'area-stacked'
-      ? stacks[i]!.bands.map((band) => ({
+      ? withoutOffPlotNeighbours(stacks[i]!.bands).map((band) => ({
           gap: band.gap,
           minValue: Math.min(band.lower, band.upper),
           maxValue: Math.max(band.lower, band.upper)
         }))
-      : inverted[i]!
+      : withoutOffPlotNeighbours(inverted[i]!)
   )
   const anyInverse = props.metrics.some((metric) => metric.render.inverse)
   const [autoYMin, autoYMax] = computeYDomain(domainBuckets, { symmetric: anyInverse })
@@ -454,7 +470,7 @@ onBeforeUnmount(() => {
 watch(
   () => [
     props.metrics,
-    props.time_range,
+    props.view_time_range,
     props.valueRange,
     props.size,
     props.consolidationFunction,

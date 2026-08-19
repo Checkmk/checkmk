@@ -5,7 +5,12 @@
  */
 import { describe, expect, test } from 'vitest'
 
-import { downsampleToColumns, m4 } from '@/graphing/components/TimeSeriesGraph/decimation/decimate'
+import {
+  downsampleToColumns,
+  edgeNeighbours,
+  edgeSample,
+  m4
+} from '@/graphing/components/TimeSeriesGraph/decimation/decimate'
 import type { M4Bucket } from '@/graphing/components/TimeSeriesGraph/decimation/types'
 
 function makeBucket(
@@ -149,6 +154,81 @@ describe('downsampleToColumns', () => {
     expect(downsampleToColumns([], [0, 20], 2)).toEqual([])
     expect(downsampleToColumns(cache, [0, 20], 0)).toEqual([])
     expect(downsampleToColumns(cache, [20, 20], 2)).toEqual([])
+  })
+})
+
+describe('edgeSample', () => {
+  const RANGE_OF_THREE_VALUES = { start: 0, end: 300, step: 100 }
+  const VALUE_COUNT = 3
+
+  test('picks out the sample sitting exactly on the range end', () => {
+    const cache = m4([1, 2, 3], RANGE_OF_THREE_VALUES, VALUE_COUNT)
+
+    const bucket = edgeSample(cache, RANGE_OF_THREE_VALUES.end)
+
+    expect(bucket.lastValue).toBe(3)
+  })
+
+  test('reports a gap where the range ends between samples', () => {
+    const cache = m4([1, 2, 3], RANGE_OF_THREE_VALUES, VALUE_COUNT)
+    const betweenTheSecondAndThirdSample = 250
+
+    const bucket = edgeSample(cache, betweenTheSecondAndThirdSample)
+
+    expect(bucket.gap).toBe(true)
+  })
+
+  test('reports a gap where the sample on the end carries no value', () => {
+    const cache = m4([1, 2, null], RANGE_OF_THREE_VALUES, VALUE_COUNT)
+
+    const bucket = edgeSample(cache, RANGE_OF_THREE_VALUES.end)
+
+    expect(bucket.gap).toBe(true)
+  })
+})
+
+describe('edgeNeighbours', () => {
+  const RANGE_OF_FIVE_VALUES = { start: 0, end: 500, step: 100 }
+  const VALUE_COUNT = 5
+  const SAMPLE_TIMES = [100, 200, 300, 400, 500]
+
+  test('picks the sample closest beyond either end of the range', () => {
+    const cache = m4([1, 2, 3, 4, 5], RANGE_OF_FIVE_VALUES, VALUE_COUNT)
+    const spanningTheThirdSampleOnly: [number, number] = [200, 300]
+
+    const [before, after] = edgeNeighbours(cache, spanningTheThirdSampleOnly)
+
+    expect(before.lastValueTime).toBe(SAMPLE_TIMES[0])
+    expect(after.firstValueTime).toBe(SAMPLE_TIMES[3])
+  })
+
+  test('reports no neighbour where the data stops', () => {
+    const cache = m4([1, 2, 3, 4, 5], RANGE_OF_FIVE_VALUES, VALUE_COUNT)
+    const spanningEverySample: [number, number] = [
+      RANGE_OF_FIVE_VALUES.start,
+      RANGE_OF_FIVE_VALUES.end
+    ]
+
+    const [before, after] = edgeNeighbours(cache, spanningEverySample)
+
+    expect(before.gap).toBe(true)
+    expect(after.gap).toBe(true)
+  })
+
+  test('looks past gaps for the nearest sample', () => {
+    const cacheWithTheSecondAndThirdSampleMissing = m4(
+      [1, null, null, 4, 5],
+      RANGE_OF_FIVE_VALUES,
+      VALUE_COUNT
+    )
+    const spanningTheFourthSampleOnly: [number, number] = [300, 400]
+
+    const [before] = edgeNeighbours(
+      cacheWithTheSecondAndThirdSampleMissing,
+      spanningTheFourthSampleOnly
+    )
+
+    expect(before.lastValueTime).toBe(SAMPLE_TIMES[0])
   })
 })
 

@@ -23,7 +23,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
     inheritAttrs: false,
     props: [
       'metrics',
-      'time_range',
+      'view_time_range',
       'inspecting',
       'highlightedMetricName',
       'pinEnabled',
@@ -34,7 +34,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
     emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
     template: `<div data-testid="time-series-graph">
       <span>{{ metrics.map((m) => m.metadata.title).join(",") }}</span>
-      <span data-testid="view-start">{{ time_range.start }}</span>
+      <span data-testid="view-start">{{ view_time_range.start }}</span>
       <span data-testid="inspecting">{{ inspecting }}</span>
       <span data-testid="highlighted">{{ highlightedMetricName }}</span>
       <span data-testid="show-pin">{{ pinEnabled }}</span>
@@ -49,7 +49,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       />
       <span
         data-testid="emit-value-zoom"
-        @click="$emit('zoom', { timeRange: time_range, valueRange: { min: 0, max: 10 } })"
+        @click="$emit('zoom', { timeRange: view_time_range, valueRange: { min: 0, max: 10 } })"
       />
       <span
         data-testid="emit-pan"

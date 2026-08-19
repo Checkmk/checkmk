@@ -213,7 +213,8 @@ onBeforeUnmount(() => {
       </div>
       <div ref="graphAreaDiv" class="graphing-graph-figure__graph">
         <TimeSeriesGraph
-          :time_range="viewTimeRange"
+          :view_time_range="viewTimeRange"
+          :data_time_range="graph.timeRange"
           :metrics="visibleMetrics"
           :horizontal_lines="visibleHorizontalLines"
           :value-range="viewValueRange"

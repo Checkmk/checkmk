@@ -50,7 +50,8 @@ export interface PinPayload {
 }
 
 export interface TimeSeriesGraphProps extends Pick<CmkTimeSeriesGraph, 'size' | 'options'> {
-  time_range: TimeRange
+  view_time_range: TimeRange
+  data_time_range?: TimeRange | undefined
   metrics: Metric[]
   horizontal_lines: HorizontalLine[]
   consolidationFunction?: ConsolidationFn

@@ -95,6 +95,44 @@ export function m4(
   return buckets
 }
 
+function gapBucketAt(time: number): M4Bucket {
+  return assembleBucket(time, time, newBucketAccumulator())
+}
+
+export function edgeNeighbours(cache: M4Cache, range: [number, number]): [M4Bucket, M4Bucket] {
+  const [rangeStart, rangeEnd] = range
+
+  let before = gapBucketAt(rangeStart)
+  let after = gapBucketAt(rangeEnd)
+  for (const bucket of cache) {
+    if (bucket.gap) {
+      continue
+    }
+    if (bucket.lastValueTime < rangeStart) {
+      before = bucket
+    } else if (bucket.firstValueTime > rangeEnd) {
+      after = bucket
+      break
+    }
+  }
+  return [before, after]
+}
+
+export function edgeSample(cache: M4Cache, rangeEnd: number): M4Bucket {
+  for (const bucket of cache) {
+    if (bucket.gap) {
+      continue
+    }
+    if (bucket.firstValueTime === rangeEnd) {
+      return bucket
+    }
+    if (bucket.firstValueTime > rangeEnd) {
+      break
+    }
+  }
+  return gapBucketAt(rangeEnd)
+}
+
 export function downsampleToColumns(
   cache: M4Cache,
   range: [number, number],

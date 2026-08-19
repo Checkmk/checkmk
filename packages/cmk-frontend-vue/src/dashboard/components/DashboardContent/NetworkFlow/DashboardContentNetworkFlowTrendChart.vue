@@ -176,7 +176,8 @@ const graphOptions = computed(
       <template v-else>
         <div ref="graphAreaDiv" class="db-content-network-flow-trend-chart__graph">
           <TimeSeriesGraph
-            :time_range="viewTimeRange"
+            :view_time_range="viewTimeRange"
+            :data_time_range="fetchedTimeRange"
             :metrics="visibleMetrics"
             :horizontal_lines="visibleHorizontalLines"
             :value-range="viewValueRange"

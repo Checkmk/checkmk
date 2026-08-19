@@ -205,7 +205,8 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
           :class="{ 'graphing-graph-panel__plot--inert': !anyMetricShown }"
         >
           <TimeSeriesGraph
-            :time_range="viewTimeRange"
+            :view_time_range="viewTimeRange"
+            :data_time_range="dataTimeRange"
             :metrics="visibleMetrics"
             :horizontal_lines="visibleHorizontalLines"
             :value-range="viewValueRange"

@@ -16,8 +16,7 @@ vi.mock('cmk-ui-library/lib/i18n', () => ({
     _tp: dummyTp,
     _tnp: dummyTnp,
     currentLanguage: ref('en'),
-    translationLoading: ref(false),
-    switchLanguage: vi.fn()
+    translationLoading: ref(false)
   }),
   untranslated: (msg: string) => msg
 }))

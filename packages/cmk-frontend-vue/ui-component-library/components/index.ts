@@ -13,7 +13,6 @@ import UclBreakpoints from '../foundations/Breakpoints/UclBreakpoints.vue'
 import UclColors from '../foundations/Colors/UclColors.vue'
 import UclIcons from '../foundations/Icons/UclIcons.vue'
 import { pages as graphingPages } from '../graphing'
-import { pages as i18nPages } from '../i18n'
 import { pages as metricBackendPages } from '../metric-backend'
 import { pages as monitoringPages } from '../monitoring'
 import { pages as networkFlowPages } from '../network-flow'
@@ -222,7 +221,6 @@ export const roots = [
     new Folder('Filters', filtersPages),
     new Folder('Form Spec Elements', formSpecPages),
     new Folder('Graphing', graphingPages),
-    new Folder('I18n', i18nPages),
     new Folder('Metric backend', metricBackendPages),
     new Folder('Monitoring', monitoringPages),
     new Folder('Network flow', networkFlowPages),

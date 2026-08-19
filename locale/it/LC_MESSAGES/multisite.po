@@ -10342,6 +10342,10 @@ msgid "Base OID"
 msgstr "OID di base"
 
 #, fuzzy
+msgid "Base URL"
+msgstr "URL di base del sito"
+
+#, fuzzy
 msgid "Base URL for Docker API engine"
 msgstr "URL di base per il motore docker API"
 
@@ -14629,6 +14633,14 @@ msgid ""
 "include the agent updater and Agent Controller registrations."
 msgstr ""
 
+msgid ""
+"Choose whether the levels apply to every metric on the matched hosts, or "
+"only to metrics you name individually. Applying one pair of levels to all "
+"metrics is only useful where the metrics share a scale, for example "
+"percentages. In most cases the sensible threshold differs from one metric to "
+"the next, so configure them separately."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
@@ -16194,11 +16206,6 @@ msgstr ""
 "che viene utilizzato per i processi utente e le routine del kernel su tutti "
 "i core disponibili nell'ultimo intervallo di controllo. L'intervallo "
 "possibile è da 0% a 100%"
-
-msgid ""
-"Configure levels for every Azure OTel metric service on this host, or pick "
-"specific metrics to configure individually."
-msgstr ""
 
 msgid "Configure levels on smoke"
 msgstr "Configurare i livelli sul fumo"
@@ -39786,6 +39793,10 @@ msgstr "Riavvio del pod Kubernetes"
 msgid "Kubernetes pod status"
 msgstr "Stato del pod Kubernetes"
 
+#, fuzzy
+msgid "Kubernetes pull mode"
+msgstr "Kubernetes Node"
+
 msgid "Kubernetes replicas"
 msgstr "Repliche Kubernetes"
 
@@ -46136,6 +46147,14 @@ msgstr "Monitorare i WAF di CloudFront"
 msgid "Monitor Route53"
 msgstr "Monitoraggio del percorso53"
 
+msgid ""
+"Monitor a Kubernetes cluster in pull mode. Checkmk connects to an agent that "
+"runs inside the cluster, which gathers the data and returns it on request. "
+"This rule only configures how to reach that agent. What is monitored is "
+"configured in the cluster itself, so there are no Kubernetes-specific "
+"settings here."
+msgstr ""
+
 msgid "Monitor all files in folder"
 msgstr "Controlla tutti i file nella cartella"
 
@@ -50276,6 +50295,13 @@ msgstr ""
 "Numero di secondi di attesa per una risposta dall'API durante una "
 "connessione TCP"
 
+#, fuzzy
+msgid ""
+"Number of seconds to wait for the agent to respond during a TCP connection."
+msgstr ""
+"Numero di secondi di attesa per una risposta dall'API durante una "
+"connessione TCP"
+
 msgid "Number of send packets per report"
 msgstr "Numero di pacchetti di invio per rapporto"
 
@@ -54191,6 +54217,17 @@ msgstr ""
 "Percorso verso la cartella della suite Robot Framework o direttamente verso "
 "uno specifico file `.robot`, relativo alla directory di base dei progetti "
 "Robot Framework."
+
+msgid ""
+"Path to the olr.loc file of Oracle Grid Infrastructure, which covers both "
+"Oracle Clusterware and Oracle Restart. If not specified, /etc/oracle/olr.loc "
+"and /var/opt/oracle/olr.loc are probed in that order. Once the Grid home "
+"named in that file is found, the plug-in connects to this node by its own "
+"name instead of localhost, because a listener under Grid Infrastructure "
+"binds the node address. The Grid home is also used as the last candidate for "
+"ORACLE_HOME, since Grid Infrastructure stops maintaining oratab from version "
+"12.2 on. Set this to a path that does not exist to switch the behavior off."
+msgstr ""
 
 msgid ""
 "Path to the user certificate. If the path is not exist or empty, the user "
@@ -64168,6 +64205,18 @@ msgstr "Impostare i livelli per il numero di host"
 msgid "Set levels for the number of services"
 msgstr "Impostare i livelli per il numero di servizi"
 
+msgid ""
+"Set levels for the services that Checkmk creates from Azure Monitor metrics "
+"ingested through OpenTelemetry. The rule applies only to those Checkmk "
+"services created from OpenTelemetry metrics delivered by the Azure Monitor "
+"receiver and carrying the resource attribute 'cmk.otel.metric_group = "
+"azure'. Each of these services represents one Azure metric and holds one "
+"Checkmk metric per statistic that Azure provides for it: average, minimum, "
+"maximum, total and count. Not all statistics are provided for all metrics. "
+"The levels configured here are applied to each of those statistics. Without "
+"a matching rule, these services report their values but do not evaluate them."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Set limit and levels for %(resource_title)s"
 msgstr "Imposta limite e livelli per %s"
@@ -64784,6 +64833,10 @@ msgstr "Dimensione della piscina condivisa"
 #, fuzzy
 msgid "Shared processor mode"
 msgstr "Modalità processore condiviso"
+
+#, fuzzy
+msgid "Shared secret"
+msgstr "vSphere segreto"
 
 msgid "Shared with"
 msgstr "Condiviso con"
@@ -71083,6 +71136,10 @@ msgstr ""
 msgid "The ID %(connection_id)s is already used by another connection."
 msgstr "Questo id è già utilizzato da un'altra connessione."
 
+#, fuzzy
+msgid "The ID cannot be empty."
+msgstr "Chiave segreta"
+
 msgid "The ID is already used by another role"
 msgstr "L'ID è già usato da un altro ruolo"
 
@@ -71943,6 +72000,13 @@ msgstr ""
 
 msgid "The base OID for the trap content"
 msgstr "L'OID di base per il contenuto della trappola"
+
+msgid ""
+"The base URL of the in-cluster agent, including the protocol (http or "
+"https). Checkmk appends /pull/sections to this URL automatically to reach "
+"the endpoint that exposes the sections. Depending on how you deployed the "
+"agent, this is either its NodePort, its Ingress or its LoadBalancer endpoint."
+msgstr ""
 
 msgid ""
 "The basic function of this check is to log in into an IMAP, POP3 or EWS "
@@ -74192,6 +74256,12 @@ msgstr ""
 msgid "The name of the OMD site to check the status for"
 msgstr "Il nome del sito OMD per cui controllare lo stato"
 
+msgid ""
+"The name of the OpenTelemetry metric, with the statistic suffix stripped "
+"away (for example 'azure_available_memory_bytes'). This matches the item of "
+"the Checkmk service."
+msgstr ""
+
 msgid "The name of the application server"
 msgstr "Il nome del server dell'applicazione"
 
@@ -75661,6 +75731,11 @@ msgid ""
 msgstr ""
 
 msgid "The services matching the filter context have no combined graphs."
+msgstr ""
+
+msgid ""
+"The shared secret that you configured in the in-cluster agent, so that it "
+"only answers to this site."
 msgstr ""
 
 #, fuzzy
@@ -90853,6 +90928,15 @@ msgid "Verify the Livestatus server certificate using the local site CA"
 msgstr ""
 "Verificare il certificato del server Livestatus usando la CA locale del sito"
 
+msgid ""
+"Verify the TLS certificate presented by the in-cluster agent or by the "
+"reverse proxy in front of it. If the certificate is self-signed or signed by "
+"a private CA, add the CA certificate under \"Trusted certificate authorities "
+"for SSL\" in global settings. Only disable verification in exceptional "
+"cases. Without verification, anyone able to intercept the connection can "
+"read the shared secret and all monitoring data from your cluster."
+msgstr ""
+
 msgid "Verify the certificate"
 msgstr "Verificare il certificato"
 
@@ -99382,6 +99466,14 @@ msgid "Not available on shared dashboards"
 msgstr "Non ti è permesso di modificare i dashboard."
 
 #, fuzzy
+msgid "Failed to fetch single metric data:"
+msgstr "Impossibile decodificare i dati del certificato"
+
+#, fuzzy
+msgid "Failed to fetch timeline data:"
+msgstr "Impossibile decodificare i dati del certificato"
+
+#, fuzzy
 msgid "Missing needed host and service parameters."
 msgstr "Manca il parametro host necessario."
 
@@ -100637,7 +100729,7 @@ msgid "The selected HW/SW inventory property is invalid."
 msgstr "Inventario HW/SW"
 
 #, fuzzy
-msgid "Inventory single value"
+msgid "HW/SW inventory single value"
 msgstr "Regole di inventario HW/SW"
 
 #, fuzzy
@@ -101194,11 +101286,11 @@ msgid "Color picker"
 msgstr "Colora"
 
 #, fuzzy
-msgid "Help: Metric backend (Custom query)"
+msgid "Help: Metrics backend (custom query)"
 msgstr "Istanze Oracle"
 
 #, fuzzy
-msgid "Inline Help: Metric backend (Custom query)"
+msgid "Inline help: Metrics backend (custom query)"
 msgstr "Istanze Oracle"
 
 #, fuzzy
@@ -101278,8 +101370,16 @@ msgid "Loading graphs…"
 msgstr "Opzioni di etichettatura"
 
 #, fuzzy
-msgid "Graph controls"
-msgstr "Mostra i controlli"
+msgid "All metrics are hidden"
+msgstr "Tutti i genitori sono a terra"
+
+#, fuzzy
+msgid "resolution:"
+msgstr "Risoluzione DNS"
+
+#, fuzzy
+msgid "Graph values and time information"
+msgstr "Informazioni raccolte sul nodo"
 
 #, fuzzy
 msgid "Graph values"
@@ -101290,8 +101390,8 @@ msgid "for %{date},"
 msgstr "Nessun dato"
 
 #, fuzzy
-msgid "resolution: %{resolution}"
-msgstr "Imposta la risoluzione"
+msgid "Graph zoom controls and action menu"
+msgstr "Icone e azioni personalizzate"
 
 msgid "X-zoom"
 msgstr ""
@@ -101305,10 +101405,6 @@ msgstr "Data e ora"
 
 msgid "Drag to zoom into a value range."
 msgstr ""
-
-#, fuzzy
-msgid "All metrics are hidden"
-msgstr "Tutti i genitori sono a terra"
 
 msgid "%{visible} of %{total} metric is visible"
 msgid_plural "%{visible} of %{total} metrics are visible"
@@ -101331,8 +101427,16 @@ msgid "Hide all metrics"
 msgstr "Mostra tutti gli argomenti"
 
 #, fuzzy
+msgid "Toggle attributes of %{metric}"
+msgstr "Attributi dell'host da impostare"
+
+#, fuzzy
 msgid "Graph metrics"
 msgstr "Dettagli dell'ospite"
+
+#, fuzzy
+msgid "Show details for %{metric}"
+msgstr "Mostra i dettagli di un host."
 
 #, fuzzy
 msgid "Add pin"
@@ -101475,22 +101579,6 @@ msgstr "Informazioni termiche"
 msgid "Select one metric"
 msgstr "Metriche di servizio"
 
-msgid "Unknown metric or formula \"%{id}\"."
-msgstr ""
-
-#, fuzzy
-msgid "The formula cannot reference itself (\"%{id}\")."
-msgstr "Un report non può auto-referenziarsi"
-
-msgid "\"%{id}\" refers back to this formula (circular reference)."
-msgstr ""
-
-msgid "Cannot mix RRD and metrics backend data: \"%{id}\"."
-msgstr ""
-
-msgid "Consolidate \"%{id}\" using avg, min, max or sum."
-msgstr ""
-
 msgid "The formula is empty; add a metric id (e.g. A) or a number."
 msgstr ""
 
@@ -101524,6 +101612,22 @@ msgstr ""
 msgid "Invalid formula: %{detail}"
 msgstr "Formato di data non valido: %(e)s"
 
+msgid "Unknown metric or formula \"%{id}\"."
+msgstr ""
+
+#, fuzzy
+msgid "The formula cannot reference itself (\"%{id}\")."
+msgstr "Un report non può auto-referenziarsi"
+
+msgid "\"%{id}\" refers back to this formula (circular reference)."
+msgstr ""
+
+msgid "Cannot mix RRD and metrics backend data: \"%{id}\"."
+msgstr ""
+
+msgid "Consolidate \"%{id}\" using avg, min, max or sum."
+msgstr ""
+
 #, fuzzy
 msgid "Select the metric to transform."
 msgstr "(selezionare la cartella di destinazione)"
@@ -101543,14 +101647,6 @@ msgstr "Ricerche predefinite"
 #, fuzzy
 msgid "CMK RRD data"
 msgstr "Dati mappati"
-
-#, fuzzy
-msgid "Metrics backend queries"
-msgstr "Istanze Oracle"
-
-#, fuzzy
-msgid "Metrics backend queries are not available yet."
-msgstr "Istanze Oracle"
 
 #, fuzzy
 msgid "This graph has no data sources yet."
@@ -101629,8 +101725,16 @@ msgid "incomplete source"
 msgstr "Rapporto incompleto"
 
 #, fuzzy
-msgid "This formula references no sources."
-msgstr "Tempo per la copertura delle fonti"
+msgid "Preview added to graph"
+msgstr "Ricerche predefinite"
+
+#, fuzzy
+msgid "Preview updated"
+msgstr "In attesa di aggiornamenti"
+
+#, fuzzy
+msgid "Source %{id} details"
+msgstr "Dettagli del servizio BI"
 
 #, fuzzy
 msgid "Single selection"
@@ -101730,6 +101834,35 @@ msgstr "limite inferiore"
 msgid "Upper limit"
 msgstr "limite superiore"
 
+msgid "Could not reach the server. Your changes are still here."
+msgstr ""
+
+msgid "Your session expired. Sign in again in another tab, then retry."
+msgstr ""
+
+#, fuzzy
+msgid "You are no longer allowed to edit this graph."
+msgstr "Non sei autorizzato a modificare questo %(name)s."
+
+#, fuzzy
+msgid "This graph no longer exists."
+msgstr "Questo gruppo non esiste."
+
+msgid "The server rejected the graph definition."
+msgstr ""
+
+#, fuzzy
+msgid "This graph changed since you opened it."
+msgstr "Questo gruppo non esiste."
+
+msgid ""
+"Reload to use the newer graph and discard your unsaved changes, or overwrite "
+"to keep your changes and replace the newer one."
+msgstr ""
+
+msgid "The server could not save the graph. Your changes are still here."
+msgstr ""
+
 #, fuzzy
 msgid "The number of digits for rounding must be a non-negative integer"
 msgstr "La data deve essere un valore numerico"
@@ -101791,10 +101924,38 @@ msgstr "Checkmk: BI"
 msgid "Available title macros:"
 msgstr "Disponibile fino a"
 
+#, fuzzy
+msgid "This field is required."
+msgstr "è necessario"
+
+#, fuzzy
+msgid "Enter a finite number."
+msgstr "Nome del file non valido"
+
+#, fuzzy
+msgid "The lookback must be at least one second."
+msgstr "Il cluster deve avere almeno un nodo"
+
+#, fuzzy
+msgid "The percentile must be between 0 and 100."
+msgstr "Il valore di %s deve essere tra %d e %d"
+
+#, fuzzy
+msgid "The lower threshold must be below the upper threshold."
+msgstr "Il cluster deve avere almeno un nodo"
+
+#, fuzzy
+msgid "\"%{id}\" is not configured yet."
+msgstr "Configurazione dell'host"
+
 msgid "Fix the issues with ID %{ids}, then try saving again."
 msgid_plural "Fix the issues with IDs %{ids}, then try saving again."
 msgstr[0] ""
 msgstr[1] ""
+
+#, fuzzy
+msgid "Overwrite"
+msgstr "Panoramica"
 
 #, fuzzy
 msgid "%{seconds} sec"
@@ -102754,7 +102915,7 @@ msgid "SNMP connection failed"
 msgstr "Modalità di connessione dell'agente Checkmk"
 
 #, fuzzy
-msgid "Please enter a hostname to test SNMP connection"
+msgid "Please enter a host name to test SNMP connection"
 msgstr "Impostare un nome host per la riclassificazione dello stato dell'host"
 
 #, fuzzy
@@ -103916,6 +104077,9 @@ msgstr ""
 msgid "10 days"
 msgstr "giorni"
 
+msgid "A downtime repeating monthly has to start between the 1st and the 28th."
+msgstr ""
+
 #, fuzzy
 msgid "Downtime time range"
 msgstr "Intervallo di tempo attivo"
@@ -104011,9 +104175,20 @@ msgstr "Vista del filtro"
 msgid "Select all"
 msgstr "Rimuovere tutti"
 
+msgid "Clear the filter on %{column} before hiding it"
+msgstr ""
+
 #, fuzzy
 msgid "No matching columns"
 msgstr "Nessun nome host corrispondente"
+
+#, fuzzy
+msgid "Choose the earliest date & time"
+msgstr "Data e ora"
+
+#, fuzzy
+msgid "Choose the latest date & time"
+msgstr "Data e ora"
 
 #, fuzzy
 msgid "Clear"
@@ -104050,7 +104225,7 @@ msgstr ""
 msgid "Check for typing errors, try using wildcards or a broader term."
 msgstr ""
 
-msgid "Remove one or more filters to widen the result."
+msgid "Remove one or more filters to widen the results."
 msgstr ""
 
 #, fuzzy
@@ -104491,7 +104666,7 @@ msgstr "Parametri per questo host"
 msgid "Close & run service discovery"
 msgstr "Salvare & eseguire il rilevamento dei servizi"
 
-msgid "Add snapin ${props.name}"
+msgid "Add snap-in ${props.name}"
 msgstr ""
 
 msgid "Add \"${props.title}\" to sidebar"
@@ -105313,6 +105488,30 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Inventory single value"
+#~ msgstr "Regole di inventario HW/SW"
+
+#, fuzzy
+#~ msgid "Graph controls"
+#~ msgstr "Mostra i controlli"
+
+#, fuzzy
+#~ msgid "resolution: %{resolution}"
+#~ msgstr "Imposta la risoluzione"
+
+#, fuzzy
+#~ msgid "Metrics backend queries"
+#~ msgstr "Istanze Oracle"
+
+#, fuzzy
+#~ msgid "Metrics backend queries are not available yet."
+#~ msgstr "Istanze Oracle"
+
+#, fuzzy
+#~ msgid "This formula references no sources."
+#~ msgstr "Tempo per la copertura delle fonti"
+
 #, python-format
 #~ msgid "%d HTTP proxy servers configured"
 #~ msgstr "%d server proxy HTTP configurati"
@@ -105774,9 +105973,6 @@ msgstr ""
 
 #~ msgid "Gathered container information (piggybacked)"
 #~ msgstr "Informazioni raccolte sul contenitore (piggybacked)"
-
-#~ msgid "Gathered node information"
-#~ msgstr "Informazioni raccolte sul nodo"
 
 #~ msgid "Group<nobr> </nobr>CN"
 #~ msgstr "Gruppo<nobr> </nobr>CN"
@@ -112712,9 +112908,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Section Volumes"
 #~ msgstr "Nome della sezione"
-
-#~ msgid "Site base URL"
-#~ msgstr "URL di base del sito"
 
 #~ msgid ""
 #~ "Use this setting to tell the dynamic configuration to which Checkmk REST "

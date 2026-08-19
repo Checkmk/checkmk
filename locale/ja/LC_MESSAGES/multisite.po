@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-08-17 05:01+0000\n"
+"PO-Revision-Date: 2026-08-18 20:01+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -9892,6 +9892,10 @@ msgstr "ベースDN"
 msgid "Base OID"
 msgstr "ベースOID"
 
+#, fuzzy
+msgid "Base URL"
+msgstr "サイトベースURL"
+
 msgid "Base URL for Docker API engine"
 msgstr "Docker APIエンジンのベースURL"
 
@@ -14006,6 +14010,14 @@ msgstr ""
 "化によるエージェント通信が機能しなくなります。"
 
 msgid ""
+"Choose whether the levels apply to every metric on the matched hosts, or "
+"only to metrics you name individually. Applying one pair of levels to all "
+"metrics is only useful where the metrics share a scale, for example "
+"percentages. In most cases the sensible threshold differs from one metric to "
+"the next, so configure them separately."
+msgstr ""
+
+msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
 "configured in the plug-in's dedicated rules. Please choose \"override\" only "
 "if you know what you're doing, because some plug-ins have minimum cache "
@@ -15489,13 +15501,6 @@ msgstr ""
 "は、直近のチェック間隔において、ユーザープロセスおよびカーネルルーチンに使用"
 "されたCPU時間のパーセンテージを利用可能なすべてのコアで集計したものです。設定"
 "可能な範囲は0%～100%"
-
-msgid ""
-"Configure levels for every Azure OTel metric service on this host, or pick "
-"specific metrics to configure individually."
-msgstr ""
-"このホスト上のすべてのAzure OTelメトリックサービスに対してレベルを設定する"
-"か、特定のメトリックを選択して個別に設定してください。"
 
 msgid "Configure levels on smoke"
 msgstr "煙のレベルを設定する"
@@ -37720,6 +37725,10 @@ msgstr "Kubernetes Pod再起動"
 msgid "Kubernetes pod status"
 msgstr "Kubernetes Podステータス"
 
+#, fuzzy
+msgid "Kubernetes pull mode"
+msgstr "Kubernetesノード"
+
 msgid "Kubernetes replicas"
 msgstr "Kubernetesレプリカ"
 
@@ -43691,6 +43700,14 @@ msgstr "CloudFront WAFを監視する"
 msgid "Monitor Route53"
 msgstr "モニターRoute53"
 
+msgid ""
+"Monitor a Kubernetes cluster in pull mode. Checkmk connects to an agent that "
+"runs inside the cluster, which gathers the data and returns it on request. "
+"This rule only configures how to reach that agent. What is monitored is "
+"configured in the cluster itself, so there are no Kubernetes-specific "
+"settings here."
+msgstr ""
+
 msgid "Monitor all files in folder"
 msgstr "フォルダ内のすべてのファイルを監視します"
 
@@ -47511,6 +47528,11 @@ msgid ""
 "Number of seconds to wait for a response from the API during a TCP connection"
 msgstr "TCP接続時にAPIからの応答を待つ秒数"
 
+#, fuzzy
+msgid ""
+"Number of seconds to wait for the agent to respond during a TCP connection."
+msgstr "TCP接続時にAPIからの応答を待つ秒数"
+
 msgid "Number of send packets per report"
 msgstr "レポートごとの送信パケット数"
 
@@ -51110,6 +51132,17 @@ msgid ""
 msgstr ""
 "Robot Frameworkプロジェクトのベースディレクトリからの相対パスで、Robot "
 "Frameworkスイートフォルダへのパス、または特定の`.robot`ファイルへのパス。"
+
+msgid ""
+"Path to the olr.loc file of Oracle Grid Infrastructure, which covers both "
+"Oracle Clusterware and Oracle Restart. If not specified, /etc/oracle/olr.loc "
+"and /var/opt/oracle/olr.loc are probed in that order. Once the Grid home "
+"named in that file is found, the plug-in connects to this node by its own "
+"name instead of localhost, because a listener under Grid Infrastructure "
+"binds the node address. The Grid home is also used as the last candidate for "
+"ORACLE_HOME, since Grid Infrastructure stops maintaining oratab from version "
+"12.2 on. Set this to a path that does not exist to switch the behavior off."
+msgstr ""
 
 msgid ""
 "Path to the user certificate. If the path is not exist or empty, the user "
@@ -60488,6 +60521,18 @@ msgstr "ホスト数のレベルを設定する"
 msgid "Set levels for the number of services"
 msgstr "サービス数のレベルを設定する"
 
+msgid ""
+"Set levels for the services that Checkmk creates from Azure Monitor metrics "
+"ingested through OpenTelemetry. The rule applies only to those Checkmk "
+"services created from OpenTelemetry metrics delivered by the Azure Monitor "
+"receiver and carrying the resource attribute 'cmk.otel.metric_group = "
+"azure'. Each of these services represents one Azure metric and holds one "
+"Checkmk metric per statistic that Azure provides for it: average, minimum, "
+"maximum, total and count. Not all statistics are provided for all metrics. "
+"The levels configured here are applied to each of those statistics. Without "
+"a matching rule, these services report their values but do not evaluate them."
+msgstr ""
+
 #, fuzzy, python-format
 msgid "Set limit and levels for %(resource_title)s"
 msgstr "%s の制限とレベルを設定する"
@@ -61089,6 +61134,10 @@ msgstr "共有プールサイズ"
 
 msgid "Shared processor mode"
 msgstr "共有プロセッサモード"
+
+#, fuzzy
+msgid "Shared secret"
+msgstr "vSphereシークレット"
 
 msgid "Shared with"
 msgstr "と共有"
@@ -67040,6 +67089,10 @@ msgstr ""
 msgid "The ID %(connection_id)s is already used by another connection."
 msgstr "このID%(connection_id)sはすでに他の接続で使用されています。"
 
+#, fuzzy
+msgid "The ID cannot be empty."
+msgstr "ユーザーIDは空欄にできません"
+
 msgid "The ID is already used by another role"
 msgstr "IDはすでに別の役割で使用されています"
 
@@ -67904,6 +67957,13 @@ msgid "The base OID for the trap content"
 msgstr "トラップコンテンツのベースOID"
 
 msgid ""
+"The base URL of the in-cluster agent, including the protocol (http or "
+"https). Checkmk appends /pull/sections to this URL automatically to reach "
+"the endpoint that exposes the sections. Depending on how you deployed the "
+"agent, this is either its NodePort, its Ingress or its LoadBalancer endpoint."
+msgstr ""
+
+msgid ""
 "The basic function of this check is to log in into an IMAP, POP3 or EWS "
 "mailbox to monitor whether or not the login is possible. An extended feature "
 "is, that the check can fetch all (or just some) from the mailbox and forward "
@@ -68597,6 +68657,8 @@ msgid ""
 "The default critical level of 101 percent cannot be reached, so with the "
 "defaults swap utilization only ever warns."
 msgstr ""
+"デフォルトのクリティカルレベル（101％）には到達できないため、デフォルト設定で"
+"はスワップ利用率は警告のみが表示されます。"
 
 #, fuzzy
 msgid ""
@@ -69131,6 +69193,8 @@ msgid ""
 "The following sites could not be reached, so the shown data is incomplete "
 "and the computed availability might be incorrect: %(sites)s"
 msgstr ""
+"以下のサイトにはアクセスできなかったため、表示されているデータは不完全であ"
+"り、算出された可用性は不正確である可能性があります：%(sites)s"
 
 msgid "The following users"
 msgstr "次のユーザー"
@@ -69248,6 +69312,8 @@ msgid ""
 "The graph to add was created with the new graph designer and cannot be added "
 "to this graph."
 msgstr ""
+"追加しようとしているグラフは、新しいグラフデザイナーで作成されたものであり、"
+"このグラフには追加できません。"
 
 msgid ""
 "The graphical user interface (GUI) URL must begin with <tt>http://</tt> or "
@@ -69378,12 +69444,18 @@ msgid ""
 "start with a letter, digit or underscore. Begin the template with fixed text "
 "or a macro instead."
 msgstr ""
+"ホスト名のテンプレートは「%(leading)s」で始まってはいけません。ホスト名は、英"
+"字、数字、またはアンダースコアで始まる必要があります。代わりに、テンプレート"
+"の先頭に固定テキストまたはマクロを記述してください。"
 
 msgid ""
 "The host name template must reference at least one attribute, for example "
 "$RESOURCE_ATTR.service.name$, $SCOPE_ATTR.scope.name$ or "
 "$DATA_POINT_ATTR.pod$, so the host name can be computed from the data."
 msgstr ""
+"ホスト名のテンプレートには、データからホスト名を算出できるよう、少なくとも1つ"
+"の属性例、$RESOURCE_ATTR.service.name$、$SCOPE_ATTR.scope.name$、または"
+"$DATA_POINT_ATTR.pod$を参照する必要があります。"
 
 msgid "The host or service was in a scheduled downtime"
 msgstr "ホストまたはサービスがスケジュールされたダウンタイムにありました"
@@ -69642,7 +69714,7 @@ msgid "The latest crash dumps of each type as found in var/check_mk/crashes"
 msgstr "var/checkmk/crashes にある各タイプの最新のクラッシュダンプを返す"
 
 msgid "The latest licensed active time series count of the metric backend"
-msgstr ""
+msgstr "メトリックバックエンドの、認可済みアクティブな時系列データ数"
 
 msgid ""
 "The levels are only applied if the used bandwidth, in relation to the "
@@ -69663,12 +69735,16 @@ msgid ""
 "The license server did not respond in time. Please try again or check your "
 "network settings."
 msgstr ""
+"ライセンスサーバーが時間内に応答しませんでした。もう一度試すか、ネットワーク"
+"設定をチェックしてください。"
 
 msgid ""
 "The license server's TLS certificate could not be verified. Please check "
 "your network settings, system wide CAs and trusted certificate authorities "
 "in Checkmk."
 msgstr ""
+"ライセンスサーバーのTLS証明書を確認できませんでした。ネットワーク設定、システ"
+"ム全体のCA、およびCheckmk内の信頼済み認証局を確認してください。"
 
 msgid ""
 "The license usage history is older than five days. In order to have a "
@@ -69845,16 +69921,14 @@ msgid "The maximum allowed value is %(max_value)s."
 msgstr "最大許容値は %sです。"
 
 #. weblate-flags: read-only, domain-specific
-#, fuzzy
 msgid ""
 "The maximum amount of memory that the metric backend is allowed to use, "
 "expressed as a fraction of the total available memory. Allows limiting the "
 "memory usage on low-memory systems."
 msgstr ""
-"メトリックバックエンドが使用を許可されるメモリの最大量。利用可能な総メモリの"
-"割合として表されます。メモリ不足のシステムにおけるメモリ使用量を制限できま"
-"す。RAMとスワップ領域が少ないホストでは、100%を超える値に設定することを推奨し"
-"ます。"
+"メトリックバックエンドが使用できるメモリの最大量。利用可能な総メモリに対する"
+"割合として表されます。メモリ容量の少ないシステムにおいて、メモリ使用状況を制"
+"限することができます。"
 
 msgid ""
 "The maximum average round trip time in ms before this service goes into "
@@ -69985,7 +70059,6 @@ msgid "The message has successfully been sent..."
 msgstr "メッセージの送信に成功しました…"
 
 #. weblate-flags: read-only, domain-specific
-#, fuzzy
 msgid ""
 "The metric backend database schema is in an unexpected state: revision "
 "{current_revision_id!r} is applied, but the expected revision is "
@@ -69999,8 +70072,8 @@ msgstr ""
 "は {head_revision_id!r} です。 意図しないスキーマのアップグレードを防ぐため、"
 "アクティベーションがブロックされています。これを解決するには、サイトユーザー"
 "として手動でスキーマをアップグレードしてください：`cmk-metric-backend-schema-"
-"manager --config default upgrade HEAD` アップグレードに失敗した場合は、"
-"Checkmkサポートまでご連絡ください。"
+"manager upgrade --config default HEAD`アップグレードに失敗した場合は、Checkmk"
+"サポートまでご連絡ください。"
 
 #. weblate-flags: read-only, domain-specific
 msgid "The metric backend snapin shows the number of custom metrics"
@@ -70140,6 +70213,12 @@ msgstr ""
 
 msgid "The name of the OMD site to check the status for"
 msgstr "ステータスを確認するOMDサイトの名前"
+
+msgid ""
+"The name of the OpenTelemetry metric, with the statistic suffix stripped "
+"away (for example 'azure_available_memory_bytes'). This matches the item of "
+"the Checkmk service."
+msgstr ""
 
 msgid "The name of the application server"
 msgstr "アプリケーションサーバーの名前"
@@ -70537,9 +70616,9 @@ msgid ""
 "latency of these hosts. Be aware that each fetcher process consumes "
 "resources, primarily memory."
 msgstr ""
-"最適なリレーフェッチャープロセスの数は、主に監視対象のホストとサービスの数、"
-"およびそれらのホストの応答性と遅延に依存します。各フェッチャープロセスはリ"
-"ソース（主にメモリ）を消費することに留意してください。"
+"Relayフェッチャープロセスの最適な数は、主に監視対象のホストやサービスの数、お"
+"よびそれらのホストの応答速度やレイテンシーによって決まります。各フェッチャー"
+"プロセスは、主にメモリといったリソースを消費することに留意してください。"
 
 msgid ""
 "The option 'Display a summary over all SLA periods' aggregates all results "
@@ -71553,6 +71632,11 @@ msgstr ""
 "ネットワーク通信が発生しない環境を想定しています。"
 
 msgid "The services matching the filter context have no combined graphs."
+msgstr ""
+
+msgid ""
+"The shared secret that you configured in the in-cluster agent, so that it "
+"only answers to this site."
 msgstr ""
 
 msgid ""
@@ -85542,6 +85626,15 @@ msgstr ""
 msgid "Verify the Livestatus server certificate using the local site CA"
 msgstr "ローカルサイトのCAを使用してLivestatusサーバー証明書を確認します"
 
+msgid ""
+"Verify the TLS certificate presented by the in-cluster agent or by the "
+"reverse proxy in front of it. If the certificate is self-signed or signed by "
+"a private CA, add the CA certificate under \"Trusted certificate authorities "
+"for SSL\" in global settings. Only disable verification in exceptional "
+"cases. Without verification, anyone able to intercept the connection can "
+"read the shared secret and all monitoring data from your cluster."
+msgstr ""
+
 msgid "Verify the certificate"
 msgstr "証明書を確認する"
 
@@ -93640,6 +93733,14 @@ msgid "Not available on shared dashboards"
 msgstr "共有ダッシュボードで利用できません"
 
 #, fuzzy
+msgid "Failed to fetch single metric data:"
+msgstr "トップリストのデータ取得に失敗："
+
+#, fuzzy
+msgid "Failed to fetch timeline data:"
+msgstr "トップリストのデータ取得に失敗："
+
+#, fuzzy
 msgid "Missing needed host and service parameters."
 msgstr "必要なホストパラメータがありません。"
 
@@ -94755,8 +94856,9 @@ msgstr "HW/SWインベントリプロパティを選択してください。"
 msgid "The selected HW/SW inventory property is invalid."
 msgstr "選択されたHW/SWインベントリプロパティは無効です。"
 
-msgid "Inventory single value"
-msgstr "インベントリの単一値"
+#, fuzzy
+msgid "HW/SW inventory single value"
+msgstr "HW/SWインベントリのシングル値"
 
 msgid "HW/SW Inventory"
 msgstr "HW/SWインベントリ"
@@ -95285,11 +95387,11 @@ msgid "Color picker"
 msgstr "色付け"
 
 #, fuzzy
-msgid "Help: Metric backend (Custom query)"
+msgid "Help: Metrics backend (custom query)"
 msgstr "Oracleインスタンス"
 
 #, fuzzy
-msgid "Inline Help: Metric backend (Custom query)"
+msgid "Inline help: Metrics backend (custom query)"
 msgstr "Oracleインスタンス"
 
 #, fuzzy
@@ -95363,8 +95465,16 @@ msgid "Loading graphs…"
 msgstr "オプションの読み込み中…"
 
 #, fuzzy
-msgid "Graph controls"
-msgstr "コントロールを表示"
+msgid "All metrics are hidden"
+msgstr "すべての親がダウンしています"
+
+#, fuzzy
+msgid "resolution:"
+msgstr "DNS解決"
+
+#, fuzzy
+msgid "Graph values and time information"
+msgstr "収集されたノード情報"
 
 #, fuzzy
 msgid "Graph values"
@@ -95375,8 +95485,8 @@ msgid "for %{date},"
 msgstr "データなし"
 
 #, fuzzy
-msgid "resolution: %{resolution}"
-msgstr "解像度を設定する"
+msgid "Graph zoom controls and action menu"
+msgstr "カスタムアイコンとアクション"
 
 msgid "X-zoom"
 msgstr ""
@@ -95390,10 +95500,6 @@ msgstr "日付と時刻の範囲"
 
 msgid "Drag to zoom into a value range."
 msgstr ""
-
-#, fuzzy
-msgid "All metrics are hidden"
-msgstr "すべての親がダウンしています"
 
 #, fuzzy
 msgid "%{visible} of %{total} metric is visible"
@@ -95416,8 +95522,16 @@ msgid "Hide all metrics"
 msgstr "全てのトピックを表示"
 
 #, fuzzy
+msgid "Toggle attributes of %{metric}"
+msgstr "設定するホスト属性"
+
+#, fuzzy
 msgid "Graph metrics"
 msgstr "メトリクス"
+
+#, fuzzy
+msgid "Show details for %{metric}"
+msgstr "ホストの詳細を表示します。"
 
 #, fuzzy
 msgid "Add pin"
@@ -95560,22 +95674,6 @@ msgstr "トランスフォーメーション"
 msgid "Select one metric"
 msgstr "サービスメトリックの選択"
 
-msgid "Unknown metric or formula \"%{id}\"."
-msgstr ""
-
-#, fuzzy
-msgid "The formula cannot reference itself (\"%{id}\")."
-msgstr "レポートは自身を参照できません"
-
-msgid "\"%{id}\" refers back to this formula (circular reference)."
-msgstr ""
-
-msgid "Cannot mix RRD and metrics backend data: \"%{id}\"."
-msgstr ""
-
-msgid "Consolidate \"%{id}\" using avg, min, max or sum."
-msgstr ""
-
 msgid "The formula is empty; add a metric id (e.g. A) or a number."
 msgstr ""
 
@@ -95609,6 +95707,22 @@ msgstr ""
 msgid "Invalid formula: %{detail}"
 msgstr "無効な日付形式：%(e)s"
 
+msgid "Unknown metric or formula \"%{id}\"."
+msgstr ""
+
+#, fuzzy
+msgid "The formula cannot reference itself (\"%{id}\")."
+msgstr "レポートは自身を参照できません"
+
+msgid "\"%{id}\" refers back to this formula (circular reference)."
+msgstr ""
+
+msgid "Cannot mix RRD and metrics backend data: \"%{id}\"."
+msgstr ""
+
+msgid "Consolidate \"%{id}\" using avg, min, max or sum."
+msgstr ""
+
 #, fuzzy
 msgid "Select the metric to transform."
 msgstr "親フォルダを選択"
@@ -95628,16 +95742,6 @@ msgstr "定義済みグラフ"
 #, fuzzy
 msgid "CMK RRD data"
 msgstr "マップされたデータ"
-
-#, fuzzy
-msgid "Metrics backend queries"
-msgstr "メトリックバックエンド"
-
-#, fuzzy
-msgid "Metrics backend queries are not available yet."
-msgstr ""
-"メトリックバックエンドは無効化されており、オートコンプリート機能は利用できま"
-"せん。"
 
 #, fuzzy
 msgid "This graph has no data sources yet."
@@ -95716,8 +95820,16 @@ msgid "incomplete source"
 msgstr "不完全なレポート"
 
 #, fuzzy
-msgid "This formula references no sources."
-msgstr "原因をカバーする時間"
+msgid "Preview added to graph"
+msgstr "定義済みグラフ"
+
+#, fuzzy
+msgid "Preview updated"
+msgstr "保留中の更新"
+
+#, fuzzy
+msgid "Source %{id} details"
+msgstr "BIサービスの詳細"
 
 #, fuzzy
 msgid "Single selection"
@@ -95817,6 +95929,35 @@ msgstr "下限"
 msgid "Upper limit"
 msgstr "上限"
 
+msgid "Could not reach the server. Your changes are still here."
+msgstr ""
+
+msgid "Your session expired. Sign in again in another tab, then retry."
+msgstr ""
+
+#, fuzzy
+msgid "You are no longer allowed to edit this graph."
+msgstr "この%(name)sを編集することは許可されていません。"
+
+#, fuzzy
+msgid "This graph no longer exists."
+msgstr "このグループは存在しません。"
+
+msgid "The server rejected the graph definition."
+msgstr ""
+
+#, fuzzy
+msgid "This graph changed since you opened it."
+msgstr "このグループは存在しません。"
+
+msgid ""
+"Reload to use the newer graph and discard your unsaved changes, or overwrite "
+"to keep your changes and replace the newer one."
+msgstr ""
+
+msgid "The server could not save the graph. Your changes are still here."
+msgstr ""
+
 #, fuzzy
 msgid "The number of digits for rounding must be a non-negative integer"
 msgstr "非負の整数でなければなりません。"
@@ -95878,9 +96019,37 @@ msgstr "Checkmk:BI: Requests"
 msgid "Available title macros:"
 msgstr "まで利用可能"
 
+#, fuzzy
+msgid "This field is required."
+msgstr "名前は必須です。"
+
+#, fuzzy
+msgid "Enter a finite number."
+msgstr "整数ではありません"
+
+#, fuzzy
+msgid "The lookback must be at least one second."
+msgstr "タイムアウトは１秒以上でなければなりません。"
+
+#, fuzzy
+msgid "The percentile must be between 0 and 100."
+msgstr "ポートは0から65535の間でなければならない。"
+
+#, fuzzy
+msgid "The lower threshold must be below the upper threshold."
+msgstr "メール転送スレッドの閾値を低く設定する"
+
+#, fuzzy
+msgid "\"%{id}\" is not configured yet."
+msgstr "まだリレーが設定されていません。"
+
 msgid "Fix the issues with ID %{ids}, then try saving again."
 msgid_plural "Fix the issues with IDs %{ids}, then try saving again."
 msgstr[0] ""
+
+#, fuzzy
+msgid "Overwrite"
+msgstr "上書き"
 
 #, fuzzy
 msgid "%{seconds} sec"
@@ -96911,7 +97080,7 @@ msgid "SNMP connection failed"
 msgstr "Checkmkエージェント接続モード"
 
 #, fuzzy
-msgid "Please enter a hostname to test SNMP connection"
+msgid "Please enter a host name to test SNMP connection"
 msgstr "ホスト状態を再分類するためのホスト名を設定してください"
 
 #, fuzzy
@@ -98111,6 +98280,9 @@ msgstr ""
 msgid "10 days"
 msgstr "日"
 
+msgid "A downtime repeating monthly has to start between the 1st and the 28th."
+msgstr ""
+
 #, fuzzy
 msgid "Downtime time range"
 msgstr "アクティブな時間範囲"
@@ -98205,9 +98377,20 @@ msgstr "フィルタビュー"
 msgid "Select all"
 msgstr "すべて見る"
 
+msgid "Clear the filter on %{column} before hiding it"
+msgstr ""
+
 #, fuzzy
 msgid "No matching columns"
 msgstr "一致するホスト名がありません"
+
+#, fuzzy
+msgid "Choose the earliest date & time"
+msgstr "日付と時刻を表示"
+
+#, fuzzy
+msgid "Choose the latest date & time"
+msgstr "日付と時刻を表示"
 
 #, fuzzy
 msgid "Clear"
@@ -98244,7 +98427,7 @@ msgstr ""
 msgid "Check for typing errors, try using wildcards or a broader term."
 msgstr ""
 
-msgid "Remove one or more filters to widen the result."
+msgid "Remove one or more filters to widen the results."
 msgstr ""
 
 msgid "Show:"
@@ -98705,7 +98888,8 @@ msgstr "このホストのパラメーター"
 msgid "Close & run service discovery"
 msgstr "サービスディスカバリの実行と保存"
 
-msgid "Add snapin ${props.name}"
+#, fuzzy
+msgid "Add snap-in ${props.name}"
 msgstr "スナップイン ${props.name} を追加"
 
 msgid "Add \"${props.title}\" to sidebar"
@@ -99636,6 +99820,38 @@ msgid ""
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
 
+#~ msgid ""
+#~ "Configure levels for every Azure OTel metric service on this host, or "
+#~ "pick specific metrics to configure individually."
+#~ msgstr ""
+#~ "このホスト上のすべてのAzure OTelメトリックサービスに対してレベルを設定する"
+#~ "か、特定のメトリックを選択して個別に設定してください。"
+
+#~ msgid "Inventory single value"
+#~ msgstr "インベントリの単一値"
+
+#, fuzzy
+#~ msgid "Graph controls"
+#~ msgstr "コントロールを表示"
+
+#, fuzzy
+#~ msgid "resolution: %{resolution}"
+#~ msgstr "解像度を設定する"
+
+#, fuzzy
+#~ msgid "Metrics backend queries"
+#~ msgstr "メトリックバックエンド"
+
+#, fuzzy
+#~ msgid "Metrics backend queries are not available yet."
+#~ msgstr ""
+#~ "メトリックバックエンドは無効化されており、オートコンプリート機能は利用でき"
+#~ "ません。"
+
+#, fuzzy
+#~ msgid "This formula references no sources."
+#~ msgstr "原因をカバーする時間"
+
 #, python-format
 #~ msgid "%d HTTP proxy servers configured"
 #~ msgstr "構成された%dHTTPプロキシサーバー"
@@ -100205,9 +100421,6 @@ msgstr ""
 
 #~ msgid "Gathered container information (piggybacked)"
 #~ msgstr "収集されたコンテナ情報(ピギーバック)"
-
-#~ msgid "Gathered node information"
-#~ msgstr "収集されたノード情報"
 
 #~ msgid "Group<nobr> </nobr>CN"
 #~ msgstr "グループ<nobr> </nobr> CN"
@@ -107336,9 +107549,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Section Volumes"
 #~ msgstr "セクション名"
-
-#~ msgid "Site base URL"
-#~ msgstr "サイトベースURL"
 
 #~ msgid ""
 #~ "Use this setting to tell the dynamic configuration to which Checkmk REST "

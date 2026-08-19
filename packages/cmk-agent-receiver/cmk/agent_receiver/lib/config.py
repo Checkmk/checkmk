@@ -21,6 +21,7 @@ class Config(BaseModel):
     task_ttl: float = 120.0
     max_pending_tasks_per_relay: int = 10
     socket_timeout: float = 5.0
+    crash_extraction_timeout: float = 30.0
 
     @classmethod
     def load(cls, path: Path | None = None) -> Config:
@@ -89,6 +90,10 @@ class Config(BaseModel):
     @property
     def agent_cert_store_path(self) -> Path:
         return self.omd_root / "etc/ssl/agent_cert_store.pem"
+
+    @property
+    def crashes_dir(self) -> Path:
+        return self.omd_root / "var/check_mk/crashes"
 
     @property
     def helper_config_dir(self) -> Path:

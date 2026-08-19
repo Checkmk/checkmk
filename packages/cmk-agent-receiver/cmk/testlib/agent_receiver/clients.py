@@ -162,6 +162,16 @@ class RelayClient:
             json=monitoring_data.model_dump(mode="json"),
         )
 
+    def submit_crash(self, crash_type: str, crash_id: str, archive: bytes) -> httpx2.Response:
+        return self.fastAPI_client.post(
+            f"/{self.site_name}/relays/{self.relay_id}/crashes/{crash_type}/{crash_id}",
+            headers={
+                INJECTED_UUID_HEADER: self.identity_cn,
+                INJECTED_ISSUER_HEADER: self._relay_issuer_cn,
+            },
+            content=archive,
+        )
+
     def apply_config(self, push: RelayConfig) -> None:
         """Set this client's Serial header. Per-client state; does NOT affect the shared TestClient."""
         self._serial = push.serial

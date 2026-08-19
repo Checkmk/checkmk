@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import uuid
 from typing import Annotated
 
 import fastapi
@@ -12,6 +13,10 @@ from cmk.agent_receiver.lib.mtls_auth_validator import ExpectedCA, mtls_authoriz
 from cmk.agent_receiver.relay.api.routers.relays import dependencies, handlers
 from cmk.agent_receiver.relay.api.routers.relays.handlers.forward_monitoring_data import (
     FailedToSendMonitoringDataError,
+)
+from cmk.agent_receiver.relay.api.routers.relays.handlers.store_crash_report import (
+    CrashExtractionTimeoutError,
+    UndecodableCrashArchiveError,
 )
 from cmk.agent_receiver.relay.lib.relays_repository import (
     CheckmkAPIError,
@@ -163,5 +168,41 @@ async def forward_monitoring_data(
         return fastapi.Response(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
             content=f"Failed to forward monitoring data: {e}",
+        )
+    return fastapi.Response(status_code=fastapi.status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/{relay_id}/crashes/{crash_type}/{crash_id}",
+    status_code=fastapi.status.HTTP_204_NO_CONTENT,
+    dependencies=[
+        mtls_authorization_dependency(
+            "relay_id", fastapi.status.HTTP_403_FORBIDDEN, ExpectedCA.RELAY
+        )
+    ],
+)
+async def store_crash_report(
+    handler: Annotated[
+        handlers.StoreCrashReportHandler,
+        fastapi.Depends(dependencies.get_store_crash_report_handler),
+    ],
+    # The charset keeps ".." out of the path; FastAPI answers a mismatch with 422.
+    crash_type: Annotated[str, fastapi.Path(pattern=r"^[a-z0-9_-]+$", max_length=64)],
+    crash_id: uuid.UUID,
+    request: fastapi.Request,
+) -> fastapi.Response:
+    """Store a crash report a relay forwarded, for the consolidation cron to pick up."""
+    archive = await request.body()
+    try:
+        await handler.process(crash_type=crash_type, crash_id=str(crash_id), archive=archive)
+    except CrashExtractionTimeoutError:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timed out unpacking the crash archive",
+        )
+    except UndecodableCrashArchiveError as e:
+        raise fastapi.HTTPException(
+            status_code=fastapi.status.HTTP_400_BAD_REQUEST,
+            detail=f"Undecodable crash archive: {e}",
         )
     return fastapi.Response(status_code=fastapi.status.HTTP_204_NO_CONTENT)

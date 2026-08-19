@@ -76,6 +76,7 @@ py_library(
         "cmk/agent_receiver/relay/api/routers/relays/handlers/cert_retriever.py",
         "cmk/agent_receiver/relay/api/routers/relays/handlers/forward_monitoring_data.py",
         "cmk/agent_receiver/relay/api/routers/relays/handlers/register_relay.py",
+        "cmk/agent_receiver/relay/api/routers/relays/handlers/store_crash_report.py",
         "cmk/agent_receiver/relay/api/routers/tasks/__init__.py",
         "cmk/agent_receiver/relay/api/routers/tasks/dependencies.py",
         "cmk/agent_receiver/relay/api/routers/tasks/endpoints.py",
@@ -110,6 +111,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//packages/cmk-ccc:tar-archive",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
         "//packages/cmk-licensing/cmk/licensing/basics",

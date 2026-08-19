@@ -5,6 +5,10 @@
  */
 import { vi } from 'vitest'
 
+// setup-tests.ts replaces lib/i18n with dummy translations; these tests drive the
+// real loader registry, so they need the actual module.
+vi.unmock('cmk-ui-library/lib/i18n')
+
 // The registered loader is module state; import a fresh instance per test.
 async function freshInitCmkUi() {
   vi.resetModules()

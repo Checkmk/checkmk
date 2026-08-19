@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { type Ref, computed, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { type Translations, createGettext } from 'vue3-gettext'
 
 import { dummyT, dummyTn, dummyTnp, dummyTp } from './i18nDummy'
@@ -35,6 +35,7 @@ export function setTranslationLoader(loader: TranslationLoader): void {
     )
   }
   translationLoader = loader
+  void loadLanguage(document.documentElement.lang)
 }
 
 // Lazy loaded translation handling
@@ -47,47 +48,39 @@ async function loadTranslations(language: SupportedLanguage): Promise<Translatio
   return translationLoader(language)
 }
 
-type GettextInstance = ReturnType<typeof createGettext>
+const gettext = createGettext({
+  availableLanguages: AVAILABLE_LANGUAGES,
+  defaultLanguage: document.documentElement.lang,
+  translations: {},
+  silent: true
+})
 
-interface I18nState {
-  translationLoading: Ref<boolean>
-  currentLanguage: Ref<SupportedLanguage | null>
-  instance: GettextInstance | null
-}
-
-const globalState: I18nState = {
-  translationLoading: ref<boolean>(false),
-  currentLanguage: ref<SupportedLanguage | null>(null),
-  instance: null
-}
+const translationLoading = ref<boolean>(false)
+const currentLanguage = ref<SupportedLanguage | null>(null)
 
 async function loadLanguage(language: string): Promise<void> {
-  if (!globalState.instance) {
-    throw new Error('Gettext instance is not initialized. Call createi18n() first.')
-  }
-
-  if (language === 'en' || language in globalState.instance.translations) {
+  if (language === 'en' || language in gettext.translations) {
     // No lazy loading required, just switch
-    globalState.translationLoading.value = false
-    globalState.instance.current = language
-    globalState.currentLanguage.value = language
+    translationLoading.value = false
+    gettext.current = language
+    currentLanguage.value = language
     return
   }
 
-  if (globalState.translationLoading.value) {
+  if (translationLoading.value) {
     // Waiting on lazy load, keep current language
     return
   }
-  globalState.translationLoading.value = true
+  translationLoading.value = true
 
   try {
     const data = await loadTranslations(language)
-    globalState.instance.translations = {
-      ...globalState.instance.translations,
+    gettext.translations = {
+      ...gettext.translations,
       ...data
     }
-    globalState.instance.current = language
-    globalState.currentLanguage.value = language
+    gettext.current = language
+    currentLanguage.value = language
   } catch (error) {
     if (language === 'en') {
       // We should never fail to load English, rethrow
@@ -100,7 +93,7 @@ async function loadLanguage(language: string): Promise<void> {
     )
     void loadLanguage('en')
   } finally {
-    globalState.translationLoading.value = false
+    translationLoading.value = false
   }
 }
 
@@ -253,9 +246,9 @@ interface I18nFunctions {
  * Callsites must not be renamed, they are parsed in the build process to extract all strings to be translated.
  */
 export default function usei18n() {
-  const { $gettext, $ngettext, $npgettext, $pgettext } = createi18n()
+  const { $gettext, $ngettext, $npgettext, $pgettext } = gettext
 
-  const showEnglish = computed(() => globalState.currentLanguage.value === 'en')
+  const showEnglish = computed(() => currentLanguage.value === 'en')
 
   function _t(msg: string, interpolation?: InterpolationValues): string {
     if (showEnglish.value) {
@@ -307,23 +300,7 @@ export default function usei18n() {
     _tn: _tn as I18nFunctions['_tn'],
     _tp: _tp as I18nFunctions['_tp'],
     _tnp: _tnp as I18nFunctions['_tnp'],
-    switchLanguage: loadLanguage,
-    translationLoading: globalState.translationLoading,
-    currentLanguage: globalState.currentLanguage
+    translationLoading,
+    currentLanguage
   }
-}
-
-export function createi18n(): GettextInstance {
-  if (!globalState.instance) {
-    globalState.instance = createGettext({
-      availableLanguages: AVAILABLE_LANGUAGES,
-      defaultLanguage: document.documentElement.lang,
-      translations: {},
-      silent: true
-    })
-
-    void loadLanguage(document.documentElement.lang)
-  }
-
-  return globalState.instance
 }

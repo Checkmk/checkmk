@@ -21,8 +21,7 @@ import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import { Api } from 'cmk-ui-library/lib/api-client'
 import { CmkFetchError } from 'cmk-ui-library/lib/cmkFetch'
-import usei18n from 'cmk-ui-library/lib/i18n'
-import { untranslated } from 'cmk-ui-library/lib/i18n/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
 import { computed, onMounted, ref } from 'vue'
 

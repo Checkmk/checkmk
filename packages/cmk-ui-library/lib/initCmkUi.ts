@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type TranslationLoader, setTranslationLoader } from 'cmk-ui-library/lib/i18n/i18n.ts'
+import { type TranslationLoader, setTranslationLoader } from 'cmk-ui-library/lib/i18n'
 import CmkApp, { type CmkAppProps } from 'cmk-ui-library/lib/web-component/CmkApp.vue'
 import { type Component, computed, defineCustomElement, h } from 'vue'
 

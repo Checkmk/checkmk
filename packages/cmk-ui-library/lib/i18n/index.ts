@@ -6,9 +6,9 @@
 import usei18n, {
   type SupportedLanguage,
   type TranslationLoader,
-  createi18n,
+  setTranslationLoader,
   untranslated
 } from './i18n.ts'
 
-export { type SupportedLanguage, type TranslationLoader, untranslated, createi18n }
+export { setTranslationLoader, untranslated, type SupportedLanguage, type TranslationLoader }
 export default usei18n

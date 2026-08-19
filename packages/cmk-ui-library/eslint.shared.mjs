@@ -27,9 +27,18 @@ const NO_MODULE_SCOPE_TRANSLATION = {
     'runs once the app is mounted.'
 }
 
+const NO_DEEP_I18N_IMPORT = {
+  group: ['**/i18n/i18n', '**/i18n/i18n.ts'],
+  message:
+    "Import from 'cmk-ui-library/lib/i18n' instead: a second import route to i18n.ts " +
+    'duplicates the module, splitting the translation loader registration from the ' +
+    'translation state the components read.'
+}
+
 // Flat config replaces a rule's options rather than merging them, so every
-// config object that sets `no-restricted-syntax` has to spread this baseline in.
+// config has to spread this baseline in.
 const RESTRICTED_SYNTAX = [NO_RANDOM_UUID]
+export const RESTRICTED_IMPORT_PATTERNS = [NO_DEEP_I18N_IMPORT]
 
 export function checkmkVueConfig({
   packageDir,
@@ -82,6 +91,7 @@ export function checkmkVueConfig({
       'vue/eqeqeq': 'error',
       'no-var': 'error',
       'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX],
+      'no-restricted-imports': ['error', { patterns: [...RESTRICTED_IMPORT_PATTERNS] }],
       curly: 'error',
       'prefer-template': 'error',
       'vue/prefer-template': 'error',
@@ -174,7 +184,8 @@ export function checkmkVueTestConfig(packageDir) {
                 'Use @testing-library/vue instead of @vue/test-utils. ' +
                 'See https://wiki.lan.checkmk.net/spaces/DEV/pages/149528812/All+things+Vue'
             }
-          ]
+          ],
+          patterns: [...RESTRICTED_IMPORT_PATTERNS]
         }
       ]
     }

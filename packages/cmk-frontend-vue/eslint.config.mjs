@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import {
+  RESTRICTED_IMPORT_PATTERNS,
   checkmkVueConfig,
   checkmkVueModuleScopeTranslationConfig,
   checkmkVueTestConfig
@@ -25,6 +26,7 @@ export default [
         'error',
         {
           patterns: [
+            ...RESTRICTED_IMPORT_PATTERNS,
             {
               group: ['@ucl', '@ucl/*'],
               message: 'Production code must not import from the UI Component Library (@ucl).'

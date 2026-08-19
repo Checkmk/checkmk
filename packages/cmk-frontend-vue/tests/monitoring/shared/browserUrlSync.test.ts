@@ -28,6 +28,34 @@ describe('browserUrlSync', () => {
     Object.defineProperty(window, 'location', { value: original, configurable: true })
   })
 
+  it('reports a hand-edited fragment, which fires hashchange rather than popstate', () => {
+    const listener = vi.fn()
+    const unsubscribe = browserUrlSync.onNavigate(listener)
+
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    unsubscribe()
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports a history walk', () => {
+    const listener = vi.fn()
+    const unsubscribe = browserUrlSync.onNavigate(listener)
+
+    window.dispatchEvent(new PopStateEvent('popstate'))
+
+    expect(listener).toHaveBeenCalledTimes(1)
+
+    unsubscribe()
+    window.dispatchEvent(new PopStateEvent('popstate'))
+
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
   it('writes via history.replaceState, never pushState, forwarding the current history state', () => {
     const replaceState = vi.spyOn(window.history, 'replaceState').mockImplementation(() => {})
     const pushState = vi.spyOn(window.history, 'pushState').mockImplementation(() => {})

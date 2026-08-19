@@ -52,6 +52,8 @@ class UrlStateSync {
   private readonly claimedBy: Map<string, string> = new Map()
   /** Keys actually put in the URL by the last flush, per target. */
   private readonly lastWritten: Map<UrlStateTarget, Set<string>> = new Map()
+  /** The URL the slices were last reconciled with, written or read. */
+  private lastSeenUrl: string | null = null
 
   constructor(
     private readonly writers: readonly UrlStateWriter[],
@@ -120,6 +122,7 @@ class UrlStateSync {
     const query = merged.query === '' ? '' : `?${merged.query}`
     const fragment = merged.hash === '' ? '' : `#${merged.hash}`
     const url = `${pathname}${query}${fragment}`
+    this.lastSeenUrl = url
     if (push) {
       this.urlSync.pushUrl(url)
       return
@@ -127,9 +130,14 @@ class UrlStateSync {
     this.urlSync.replaceUrl(url)
   }
 
-  /** Hands each slice what the URL says now, after the user walked the history. */
+  /** Hands each slice what the URL says now, after the user navigated. */
   applyCurrentUrl(): void {
-    const { search, hash } = this.urlSync.getCurrentUrl()
+    const { pathname, search, hash } = this.urlSync.getCurrentUrl()
+    const url = `${pathname}${search}${hash}`
+    if (url === this.lastSeenUrl) {
+      return
+    }
+    this.lastSeenUrl = url
     const params: Record<UrlStateTarget, Record<string, string>> = {
       query: currentParams(search),
       hash: currentParams(body(hash))

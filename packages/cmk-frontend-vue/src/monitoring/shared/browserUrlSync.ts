@@ -21,7 +21,10 @@ export interface UrlSync {
    * detail panel - rather than an adjustment of the page they are on.
    */
   pushUrl(url: string): void
-  /** Calls back whenever the user navigates the history; returns the unsubscribe. */
+  /**
+   * Calls back whenever the user navigates within this document - walking the
+   * history, or editing the fragment by hand; returns the unsubscribe.
+   */
   onNavigate(listener: () => void): () => void
 }
 
@@ -36,6 +39,10 @@ export const browserUrlSync: UrlSync = {
   pushUrl: (url) => window.history.pushState(window.history.state, '', url),
   onNavigate: (listener) => {
     window.addEventListener('popstate', listener)
-    return () => window.removeEventListener('popstate', listener)
+    window.addEventListener('hashchange', listener)
+    return () => {
+      window.removeEventListener('popstate', listener)
+      window.removeEventListener('hashchange', listener)
+    }
   }
 }

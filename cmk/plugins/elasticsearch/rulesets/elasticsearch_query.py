@@ -105,7 +105,7 @@ def _parameter_form() -> Dictionary:
                         "Here you can define what search pattern should be used. "
                         "You can use the Elasticsearch query string syntax as described "
                         '<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html"'
-                        'target="_blank">here</a>. Note that this is not the Kibana query language (KQL). '
+                        ' target="_blank">here</a>. Note that this is not the Kibana query language (KQL). '
                         "Regular expressions are supported by wrapping them in forward slashes, "
                         "for example <tt>name:/joh?n(ath[oa]n)/</tt>. "
                         "To optimize search speed, use defined indices and fields "
@@ -135,7 +135,7 @@ def _parameter_form() -> Dictionary:
                         "Here you can define fieldnames that should be used "
                         "in the search. Wildcards are allowed as described "
                         '<a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html"'
-                        'target="_blank">here</a>. If you want to speed up your search, '
+                        ' target="_blank">here</a>. If you want to speed up your search, '
                         "use defined indices."
                     ),
                     element_template=String(),

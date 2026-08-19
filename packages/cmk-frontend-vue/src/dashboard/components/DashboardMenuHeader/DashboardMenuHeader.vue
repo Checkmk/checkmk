@@ -8,6 +8,7 @@ import axios from 'axios'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { kioskMode } from 'cmk-ui-library/lib/kiosk'
 import { computed, ref } from 'vue'
 
 import {
@@ -103,16 +104,14 @@ const setStartUrl = async (): Promise<void> => {
   }
 }
 
-const navigationToggleIcon = urlHandler.isOnIndexPage() ? 'toggle-on' : 'toggle-off'
+const isKioskMode = kioskMode.isActive()
+const navigationToggleIcon = isKioskMode ? 'toggle-off' : 'toggle-on'
 const navigationToggleLink = computed(() => {
   if (!props.selectedDashboard) {
     return '' // dropdown is disabled when no dashboard is selected, so this doesn't matter
   }
   const dashboardUrl = urlHandler.getDashboardUrl(props.selectedDashboard, props.runtimeFilters)
-  if (urlHandler.isOnIndexPage()) {
-    return dashboardUrl.toString()
-  }
-  return urlHandler.getIndexUrl(dashboardUrl).toString()
+  return kioskMode.toggled(dashboardUrl).toString()
 })
 
 const isBuiltInDashboard = computed(
@@ -223,7 +222,6 @@ const copyInternalDashboardLink = async (): Promise<void> => {
             {
               label: _t('Show page navigation'),
               url: navigationToggleLink,
-              target: '_top',
               icon: navigationToggleIcon
             }
           ]"

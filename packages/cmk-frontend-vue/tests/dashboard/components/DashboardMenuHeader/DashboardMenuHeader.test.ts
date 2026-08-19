@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { kioskMode } from 'cmk-ui-library/lib/kiosk'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import DashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHeader/types'
@@ -18,9 +19,7 @@ vi.mock('@/dashboard/utils.ts', () => ({
     listDashboardMetadata: vi.fn().mockResolvedValue([])
   },
   urlHandler: {
-    isOnIndexPage: vi.fn().mockReturnValue(false),
-    getDashboardUrl: vi.fn().mockReturnValue(new URL('http://localhost/dashboard.py')),
-    getIndexUrl: vi.fn().mockReturnValue(new URL('http://localhost/index.py'))
+    getDashboardUrl: vi.fn().mockReturnValue(new URL('http://localhost/dashboard.py'))
   }
 }))
 
@@ -118,6 +117,32 @@ describe('DashboardMenuHeader', () => {
       renderHeader()
       expect(screen.getByText('Share')).toBeInTheDocument()
       expect(screen.getByText('Settings')).toBeInTheDocument()
+    })
+  })
+
+  describe('page navigation toggle', () => {
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    async function openNavigationToggle(): Promise<HTMLAnchorElement> {
+      renderHeader()
+      await fireEvent.click(screen.getByText('Settings'))
+      return screen.getByText('Show page navigation').closest('a') as HTMLAnchorElement
+    }
+
+    it('shows the toggle as on and links to kiosk mode when the navigation is visible', async () => {
+      vi.spyOn(kioskMode, 'isActive').mockReturnValue(false)
+      const link = await openNavigationToggle()
+      expect(new URL(link.href).searchParams.get('kiosk')).toBe('true')
+      expect(link.querySelector('img')!.src).toContain('icon_toggle_on.svg')
+    })
+
+    it('shows the toggle as off and links out of kiosk mode when the navigation is hidden', async () => {
+      vi.spyOn(kioskMode, 'isActive').mockReturnValue(true)
+      const link = await openNavigationToggle()
+      expect(new URL(link.href).searchParams.has('kiosk')).toBe(false)
+      expect(link.querySelector('img')!.src).toContain('icon_toggle_off.svg')
     })
   })
 

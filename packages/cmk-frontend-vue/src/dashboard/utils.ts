@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ConfiguredFilters, ConfiguredValues } from 'cmk-ui-library/components/filter'
+import { kioskMode } from 'cmk-ui-library/lib/kiosk'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { copyToClipboard as copyToClipboardUtil } from 'cmk-ui-library/lib/utils'
 
@@ -477,12 +478,13 @@ export const buildWidgetEffectiveFilterContext = (
   }
 }
 
-const FILE_INDEX = '/index.py'
 const FILE_DASHBOARD = '/dashboard.py'
 const FILE_SHARED_DASHBOARD = '/shared_dashboard.py'
 
 export const urlHandler = {
-  /** Construct a dashboard URL with the given name and runtime filters.
+  /** Construct a dashboard URL with the given name and runtime filters. The current
+   * kiosk state is carried over, so navigating between dashboards keeps the main
+   * navigation and sidebar either hidden or in place.
    * @param dashboardKey - The name and owner of the dashboard.
    * @param runtimeFilters - A record of runtime filter key-value pairs.
    * @returns A URL object representing the constructed dashboard URL.
@@ -495,18 +497,7 @@ export const urlHandler = {
     for (const [k, v] of Object.entries(runtimeFilters)) {
       url.searchParams.set(k, v)
     }
-    return url
-  },
-
-  /** Construct an index URL with the given start URL as a query parameter. The index page adds
-   * page navigation and the sidebar.
-   * @param startUrl - The URL to set as the 'start_url' query parameter.
-   * @returns A URL object representing the constructed index URL.
-   */
-  getIndexUrl(startUrl: URL): URL {
-    const url = replaceFileName(window.location.origin + window.location.pathname, FILE_INDEX)
-    url.searchParams.set('start_url', toPathAndSearch(startUrl))
-    return url
+    return kioskMode.withKiosk(url, kioskMode.isActive())
   },
 
   /**
@@ -539,19 +530,10 @@ export const urlHandler = {
   },
 
   /** Update the current URL in the browser's address bar.
-   * If on the index page, updates the `start_url` parameter of the parent window instead.
    * @param url - The new URL to set.
    */
   updateCurrentUrl(url: URL): void {
-    // because most url operations after this work with the current window's URL,
-    // we need to always update this one
     window.history.replaceState({}, '', url.toString())
-    if (urlHandler.isOnIndexPage()) {
-      // updating the parent window's URL is only done so that the user has the correct link
-      const parentUrl = new URL(window.parent.location.href)
-      parentUrl.searchParams.set('start_url', toPathAndSearch(url))
-      window.parent.history.replaceState({}, '', parentUrl.toString())
-    }
   },
 
   pushCurrentUrl(url: URL): void {
@@ -559,17 +541,10 @@ export const urlHandler = {
   },
 
   /** Navigate to a new URL. Adds a proper history entry and loads the page.
-   * If on the index page, navigates the parent window instead.
    * @param url - The dashboard URL to navigate to.
    */
   navigateTo(url: URL): void {
-    if (urlHandler.isOnIndexPage()) {
-      const parentUrl = new URL(window.parent.location.href)
-      parentUrl.searchParams.set('start_url', toPathAndSearch(url))
-      window.parent.location.assign(parentUrl.toString())
-    } else {
-      window.location.assign(url.toString())
-    }
+    window.location.assign(url.toString())
   },
 
   /** Generate a shared dashboard link using the provided public token.
@@ -585,21 +560,9 @@ export const urlHandler = {
     return url.toString()
   },
 
-  /** Check if the dashboard is opened within the index page (has page navigation).
-   * @returns A boolean indicating whether the current page is the index page.
-   */
-  isOnIndexPage(): boolean {
-    const parent = window.parent.location
-    return parent.origin === window.location.origin && parent.pathname.endsWith(FILE_INDEX)
-  },
-
-  /** Reload the page. This will reload the parent page, if it's the index page. */
+  /** Reload the page. */
   reloadPage(): void {
-    if (urlHandler.isOnIndexPage()) {
-      window.parent.location.reload()
-    } else {
-      window.location.reload()
-    }
+    window.location.reload()
   }
 }
 
@@ -610,10 +573,6 @@ function replaceFileName(input: string, newFileName: string): URL {
   const idx = path.lastIndexOf('/')
   url.pathname = idx !== -1 ? path.substring(0, idx) + fileName : fileName
   return url
-}
-
-export function toPathAndSearch(url: URL): string {
-  return url.pathname + url.search
 }
 
 export async function copyToClipboard(text: string): Promise<void> {

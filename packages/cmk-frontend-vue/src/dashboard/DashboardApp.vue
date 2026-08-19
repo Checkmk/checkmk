@@ -12,6 +12,7 @@ import {
   type ConfiguredFilters,
   useProvideFilterDefinitions
 } from 'cmk-ui-library/components/filter'
+import { kioskMode } from 'cmk-ui-library/lib/kiosk'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import {
   computed,
@@ -571,7 +572,7 @@ const updateDashboardSettings = async (
     dashboardFilters.runtimeFiltersSearchParams.value
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
-  if (urlHandler.isOnIndexPage()) {
+  if (!kioskMode.isActive()) {
     urlHandler.reloadPage()
   }
 }

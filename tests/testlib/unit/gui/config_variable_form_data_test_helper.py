@@ -360,8 +360,9 @@ def is_scalar_value_model(value_model: object) -> bool:
 
 @dataclass(frozen=True)
 class NoSaveableDefault:
-    """The revealed sub-form has no saveable default (e.g. an InputHint field):
-    the GUI forces the user to fill it in before saving."""
+    """The (sub-)form has no saveable default (e.g. an InputHint field or a
+    Password): the GUI forces the user to fill it in before saving. Usable as
+    a reveal pin and as a whole-variable DEFAULT_DISK_VALUES pin."""
 
 
 @dataclass(frozen=True)
@@ -879,8 +880,17 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         },
     },
     "ntop_connection": {
-        "admin_password.password": "",
-        "admin_password.store": NoSaveableDefault(),
+        "[enable]": {
+            "is_activated": True,
+            "is_host_filter_activated": True,
+            "hostaddress": "",
+            "port": 3000,
+            "protocol": "https",
+            "no-cert-check": True,
+            "admin_username": "",
+            "admin_password": NoSaveableDefault(),
+            "use_custom_attribute_as_ntop_username": False,
+        },
     },
     "password_policy": {
         "max_age": 31536000,
@@ -1174,17 +1184,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "outgoing": [],
         "concurrency": [],
     },
-    "ntop_connection": {
-        "is_activated": True,
-        "is_host_filter_activated": True,
-        "hostaddress": "",
-        "port": 3000,
-        "protocol": "https",
-        "no-cert-check": True,
-        "admin_username": "",
-        "admin_password": ("password", ""),
-        "use_custom_attribute_as_ntop_username": False,
-    },
+    "ntop_connection": None,
     "password_policy": {},
     "product_usage_analytics": {
         "enabled": "enabled",
@@ -2094,6 +2094,7 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "notification_spooling": choice_cases("both", "everywhere"),
     "ntop_connection": [
+        CasePass("disabled", None),
         CasePass(
             "configured",
             {
@@ -2106,6 +2107,20 @@ CASES: Mapping[str, list[Case]] = {
                 "admin_username": "admin",
                 "admin_password": ("password", "hunter2"),
                 "use_custom_attribute_as_ntop_username": "ntop_alias",
+            },
+        ),
+        CasePass(
+            "configured-with-stored-password",
+            {
+                "is_activated": True,
+                "is_host_filter_activated": True,
+                "hostaddress": "ntop.example.com",
+                "port": 3000,
+                "protocol": "http",
+                "no-cert-check": True,
+                "admin_username": "admin",
+                "admin_password": ("store", "ntop_secret"),
+                "use_custom_attribute_as_ntop_username": False,
             },
         ),
         CaseFail("missing-required-keys", {}),
@@ -2710,6 +2725,10 @@ class ConfigVariableSuite:
         pinned = DEFAULT_DISK_VALUES[ident]
         if isinstance(pinned, EditionDependentDefault):
             pinned = pinned.for_edition(self.EDITION)
+        if isinstance(pinned, NoSaveableDefault):
+            with pytest.raises(MKGeneralException):
+                default_disk_value(config_variable_registry[ident], global_settings_context)
+            return
         assert (
             default_disk_value(config_variable_registry[ident], global_settings_context) == pinned
         )

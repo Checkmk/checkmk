@@ -2948,7 +2948,15 @@ def _process_backup_tar(
                     )
                 tarinfo.linkname = new_linkname
 
-        tar.extract(tarinfo, path=site_home)
+        # TODO: Using "fully_trusted" below is a bit scary, but it was the default until Python 3.14
+        # changed it to "data". The problem with "data" is that it rejects our "version" symlinks
+        # (yes, plural, for some strange reason there are *two* of these in the backup) in the
+        # tarfile. These point outside the destination and are therefore a potential security
+        # problem: Later tarfile entries could write outside the destination via that symlink.
+        # Perhaps using the "tar" filter below is already enough, but to be on the safe side
+        # regarding compatibility, let's use "fully_trusted" for now until somebody had a very close
+        # look at our backup/restore mechanism...
+        tar.extract(tarinfo, path=site_home, filter="fully_trusted")
 
     # Change config files from old to new site (see rename_site())
     if old_site_name != new_site.name:

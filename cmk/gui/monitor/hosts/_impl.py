@@ -11,7 +11,6 @@ when instantiated.
 """
 
 from collections.abc import Callable, Mapping, Sequence, Set
-from pathlib import PurePosixPath
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -26,6 +25,7 @@ from cmk.livestatus_client.tables import Hosts
 from cmk.livestatus_client.types import Column
 
 from ._exceptions import HostNotFoundError
+from ._folder import folder_from_filename
 from ._models import (
     Host,
     HostFilter,
@@ -97,7 +97,7 @@ class LiveStatusHostRepository:
                         folder=(
                             None
                             if (filename := row.get("filename")) is None
-                            else _wato_folder_from_filename(filename)
+                            else folder_from_filename(filename)
                         ),
                         labels=(
                             HostLabelValue.by_label(row["labels"], row["label_sources"])
@@ -164,7 +164,7 @@ class LiveStatusHostRepository:
             last_check=int(row["last_check"]),
             last_state_change=int(row["last_state_change"]),
             customer=row["custom_variables"].get("CUSTOMER"),
-            folder=_wato_folder_from_filename(row["filename"]),
+            folder=folder_from_filename(row["filename"]),
             contact_groups=list(row["contact_groups"]),
             tags=dict(row["tags"]),
             # The overview does not expose contacts, so its query does not read them.
@@ -212,15 +212,6 @@ class LiveStatusHostActions:
                 ),
                 SiteId(target.site_id),
             )
-
-
-def _wato_folder_from_filename(filename: str) -> str:
-    path = PurePosixPath(filename)
-    if path.name != "hosts.mk" or path.parts[:2] != ("/", "wato"):
-        # Not managed via Setup, e.g. added directly to the monitoring core.
-        return ""
-    folder = path.relative_to("/wato").parent
-    return "/" if folder == PurePosixPath(".") else f"/{folder}"
 
 
 def _sanitize_query(q: str) -> str:

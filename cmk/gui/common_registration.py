@@ -51,6 +51,7 @@ from cmk.gui.graphing.openapi import register as register_graphing_openapi_endpo
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.monitor.command import downtime_recurrences, monitor_commands
 from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
+from cmk.gui.monitor.hosts._folder import monitor_folders
 from cmk.gui.monitor.services import registration as monitor_services_registration
 from cmk.gui.nodevis import nodevis
 from cmk.gui.oauth2_connections.registration import register as register_oauth2_connections
@@ -106,7 +107,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicRegistry,
 )
 from cmk.gui.watolib.host_rename import RenameHostHookRegistry
-from cmk.gui.watolib.hosts_and_folders import FolderValidatorsRegistry
+from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderValidatorsRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
@@ -239,6 +240,8 @@ def register(
     )
     monitor_commands.use_legacy_source(command_registry)
     downtime_recurrences.use_legacy_source(command_registry)
+    # The tree is request-scoped, so the factory is injected rather than one of its instances.
+    monitor_folders.use_setup_source(folder_tree)
     monitor_hosts_registration.register(
         endpoint_family_registry,
         versioned_endpoint_registry,

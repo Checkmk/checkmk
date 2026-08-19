@@ -14,6 +14,7 @@ from cmk.gui.monitor.hosts._api._filters import (
     BooleanCondition,
     extract_site_scope,
     FilterNode,
+    FolderCondition,
     NotNode,
     NumericCondition,
     NumericOp,
@@ -83,6 +84,44 @@ def test_query_builder_nested_conditions_and_nodes() -> None:
 def test_query_builder_string_condition(op: StringOp, ls_op: str) -> None:
     condition = StringCondition(type="condition", field="name", op=op, value="heute")
     assert parse_as_livestatus_filter(condition) == f"Filter: name {ls_op} heute"
+
+
+def test_query_builder_folder_condition() -> None:
+    condition = FolderCondition(type="condition", field="folder", op="contains", value="network")
+    assert (
+        parse_as_livestatus_filter(condition)
+        == r"Filter: filename ~~ ^/wato/.*network.*/hosts\.mk$"
+    )
+
+
+def test_query_builder_folder_condition_counts_as_a_single_child() -> None:
+    """A folder condition may need several filters, which must not skew the and/or counts."""
+    nodes = AndNode(
+        type="and",
+        children=[
+            StringCondition(type="condition", field="name", op="contains", value="heute"),
+            # Every Setup folder contains a slash, so a negated "/" selects the hosts that have
+            # no folder at all: the ones not managed via Setup.
+            NotNode(
+                type="not",
+                child=FolderCondition(type="condition", field="folder", op="contains", value="/"),
+            ),
+        ],
+    )
+
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: name ~~ heute",
+            r"Filter: filename ~~ ^/wato/.*/.*/hosts\.mk$",
+            r"Filter: filename ~~ ^/wato/.*/hosts\.mk$",
+            "Filter: filename = /wato/hosts.mk",
+            "Or: 3",
+            "Negate:",
+            "And: 2",
+        ]
+    )
+
+    assert parse_as_livestatus_filter(nodes) == expected
 
 
 @pytest.mark.parametrize(

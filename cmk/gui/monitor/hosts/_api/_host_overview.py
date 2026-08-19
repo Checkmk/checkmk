@@ -76,8 +76,9 @@ class HostOverviewResponse:
     )
     folder: str | None = api_field(
         description=(
-            "The Setup folder path the host is configured in. Null when the host isn't managed "
-            "via Setup, e.g. it was added directly to the monitoring core."
+            "The Setup folder path the host is configured in, '/' for the root folder. Empty "
+            "when the host isn't managed via Setup, e.g. it was added directly to the "
+            "monitoring core."
         ),
         example="/network/switches",
     )

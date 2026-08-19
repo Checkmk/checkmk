@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence, Set
+from functools import partial
 from typing import Annotated, Self
 
 from annotated_types import Interval
@@ -24,6 +25,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.web.utils import permission_verification as permissions
 
+from .._folder import monitor_folders
 from .._impl import LiveStatusHostRepository
 from .._models import (
     Host,
@@ -111,8 +113,9 @@ class HostEntry:
     )
     folder: str | ApiOmitted = api_field(
         description=(
-            "The Setup folder path the host is configured in. Null when the host isn't managed "
-            "via Setup, e.g. it was added directly to the monitoring core."
+            "The Setup folder path the host is configured in, '/' for the root folder. Empty "
+            "when the host isn't managed via Setup, e.g. it was added directly to the "
+            "monitoring core."
         ),
         example="/network/switches",
         default_factory=ApiOmitted,
@@ -330,7 +333,14 @@ def list_hosts(
             limit=limit,
             query="" if isinstance(body.q, ApiOmitted) else body.q,
             sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
-            filters=HostFilter("") if filters is None else parse_as_livestatus_filter(filters),
+            filters=(
+                HostFilter("")
+                if filters is None
+                else parse_as_livestatus_filter(
+                    filters,
+                    setup_folders=partial(monitor_folders.visible_to, api_context.user),
+                )
+            ),
             fields=fields,
             site_ids=site_ids,
         )
@@ -398,6 +408,8 @@ ENDPOINT_LIST_HOSTS = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
+                    # Read when a folder condition is matched against Setup's folder titles.
+                    permissions.OkayToIgnorePerm("wato.see_all_folders"),
                 ]
             )
         )

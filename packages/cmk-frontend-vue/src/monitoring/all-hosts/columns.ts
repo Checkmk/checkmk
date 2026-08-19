@@ -124,6 +124,11 @@ export function buildHostColumns({
     field: 'address'
   }
 
+  const folderFilter: StringInputFilter<'folder'> = {
+    type: 'string-input',
+    field: 'folder'
+  }
+
   const siteFilter: CheckboxListFilter<'site_id'> = {
     type: 'checkbox-list',
     field: 'site_id',
@@ -232,7 +237,7 @@ export function buildHostColumns({
       sortDescFirst: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { filter: folderFilter, hidden: true }
     },
     {
       accessorKey: 'site_id',

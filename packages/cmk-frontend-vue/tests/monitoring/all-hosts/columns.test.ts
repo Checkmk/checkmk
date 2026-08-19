@@ -180,6 +180,13 @@ test('the site column filter offers the configured sites as options', () => {
   })
 })
 
+test('the folder column offers a text filter', () => {
+  const columns = buildHostColumns({ includeActions: true, sites: [] })
+  const folderColumn = columns.find((column) => columnId(column) === 'folder')
+
+  expect(folderColumn?.meta?.filter).toEqual({ type: 'string-input', field: 'folder' })
+})
+
 test.each(['last_check', 'last_state_change'])(
   'the %s column offers a from/to filter on the instant',
   (field) => {

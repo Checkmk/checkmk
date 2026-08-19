@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Sequence
 from typing import Annotated, Literal
 
 from annotated_types import MinLen
@@ -13,6 +14,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.livestatus_client.expressions import LqSafe
 
+from .._folder import folder_contains_filters, TitledFolder
 from .._models import HostFilter, HostState, HostStateLabel
 from ._validators import validate_uniqueness, validate_unix_timestamp
 
@@ -49,6 +51,29 @@ class StringCondition:
     op: StringOp = api_field(description="String match operation", example="contains")
     value: str = api_field(
         description="Value to match against the field", example="web", pattern=_NO_NEWLINES_REGEX
+    )
+
+
+# Only "contains" is offered: the value has to be matched against the folder the user sees,
+# which Livestatus does not store (see ``.._folder``). A substring can be relocated into the
+# stored config path, an arbitrary user regex cannot - its anchors and alternations would escape
+# the part of the path that holds the folder.
+@api_model
+class FolderCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: Literal["folder"] = api_field(description="Setup folder field", example="folder")
+    op: Literal["contains"] = api_field(description="Substring match operation", example="contains")
+    value: str = api_field(
+        description=(
+            "Substring to look for in the folder path as it is shown in the Folder column, or in "
+            "the folder title as it is shown in Setup - either name selects the folder's hosts. "
+            "The root folder's path is '/'; a host that isn't managed via Setup has no folder at "
+            "all, so a negated condition on '/' selects exactly those."
+        ),
+        example="/network",
+        pattern=_NO_NEWLINES_REGEX,
     )
 
 
@@ -127,6 +152,7 @@ class BooleanCondition:
 
 type ConditionNode = (
     StringCondition
+    | FolderCondition
     | StateChoiceCondition
     | SiteChoiceCondition
     | NumericCondition
@@ -257,16 +283,35 @@ def extract_site_scope(
     return residual, site_ids
 
 
-def parse_as_livestatus_filter(node: FilterNode) -> HostFilter:
+def _no_folders() -> Sequence[TitledFolder]:
+    return ()
+
+
+def parse_as_livestatus_filter(
+    node: FilterNode, *, setup_folders: Callable[[], Sequence[TitledFolder]] = _no_folders
+) -> HostFilter:
+    """Render the filter tree as Livestatus filter lines.
+
+    A folder condition may be matched against the title Setup shows for a folder, which Livestatus
+    does not know, so the Setup folders are passed in. They arrive as a callable because reading
+    them is not free: only a tree that actually carries a folder condition asks for them. Without
+    them, folder conditions match paths only.
+    """
     filters: list[str] = []
-    _accumulate_filters(node, filters)
+    _accumulate_filters(node, filters, setup_folders)
     return HostFilter("\n".join(str(LqSafe(f)) for f in filters))
 
 
-def _accumulate_filters(node: FilterNode, filters: list[str]) -> None:
+def _accumulate_filters(
+    node: FilterNode, filters: list[str], setup_folders: Callable[[], Sequence[TitledFolder]]
+) -> None:
     match node:
         case StringCondition():
             filters.append(f"Filter: {node.field} {_STRING_OP_TO_LS[node.op]} {node.value}")
+
+        case FolderCondition():
+            # A folder is not a Livestatus column; it is derived from the host's config file.
+            filters.extend(folder_contains_filters(node.value, folders=setup_folders()))
 
         case NumericCondition():
             filters.append(f"Filter: {node.field} {_NUMERIC_OP_TO_LS[node.op]} {node.value}")
@@ -297,7 +342,7 @@ def _accumulate_filters(node: FilterNode, filters: list[str]) -> None:
 
         case AndNode() | OrNode():
             for child in node.children:
-                _accumulate_filters(child, filters)
+                _accumulate_filters(child, filters, setup_folders)
 
             match node.type:
                 case "and":
@@ -306,7 +351,7 @@ def _accumulate_filters(node: FilterNode, filters: list[str]) -> None:
                     filters.append(f"Or: {len(node.children)}")
 
         case NotNode():
-            _accumulate_filters(node.child, filters)
+            _accumulate_filters(node.child, filters, setup_folders)
             filters.append("Negate:")
 
 

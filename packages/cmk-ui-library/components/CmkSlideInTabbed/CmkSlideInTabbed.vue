@@ -19,9 +19,14 @@ const { _t } = usei18n()
 const props = defineProps<CmkSlideInTabbedProps>()
 const emit = defineEmits<{ close: []; 'update:activeTabId': [id: string] }>()
 
-/** Where an opening starts: what a bound `activeTabId` asks for, else the default. */
+/** Where an opening starts when nothing is bound: the named default, else the first tab. */
+function fallbackTab(): string {
+  return props.defaultTabId ?? props.tabs[0]?.id ?? ''
+}
+
+/** Where an opening starts: what a bound `activeTabId` asks for, else the fallback. */
 function initialTab(): string {
-  return props.activeTabId ?? props.defaultTabId ?? props.tabs[0]?.id ?? ''
+  return props.activeTabId ?? fallbackTab()
 }
 
 const activeTab = ref<string>(initialTab())
@@ -82,9 +87,7 @@ watch(
 watch(
   () => props.activeTabId,
   (id) => {
-    if (id !== undefined) {
-      activeTab.value = id
-    }
+    activeTab.value = id ?? fallbackTab()
   }
 )
 

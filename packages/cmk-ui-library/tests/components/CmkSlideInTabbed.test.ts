@@ -128,6 +128,40 @@ test('opens on the bound tab rather than the first one', async () => {
   expect(loadA).not.toHaveBeenCalled()
 })
 
+test('falls back to the first tab when the bound tab is dropped', async () => {
+  const tabs: SlideInTab[] = [
+    { id: 'a', title: 'A', component: tabBody, load: () => Promise.resolve('a-data') },
+    { id: 'b', title: 'B', component: tabBody, load: () => Promise.resolve('b-data') }
+  ]
+
+  const { rerender } = render(CmkSlideInTabbed, {
+    props: { open: true, tabs, header, activeTabId: 'b' }
+  })
+
+  await screen.findByText('b-data')
+  await rerender({ open: true, tabs, header, activeTabId: undefined })
+
+  await screen.findByText('a-data')
+  expect(screen.getByRole('tab', { name: 'A' })).toHaveAttribute('aria-selected', 'true')
+})
+
+test('falls back to the named default tab when the bound tab is dropped', async () => {
+  const tabs: SlideInTab[] = [
+    { id: 'a', title: 'A', component: tabBody, load: () => Promise.resolve('a-data') },
+    { id: 'b', title: 'B', component: tabBody, load: () => Promise.resolve('b-data') }
+  ]
+
+  const { rerender } = render(CmkSlideInTabbed, {
+    props: { open: true, tabs, header, defaultTabId: 'b', activeTabId: 'a' }
+  })
+
+  await screen.findByText('a-data')
+  await rerender({ open: true, tabs, header, defaultTabId: 'b', activeTabId: undefined })
+
+  await screen.findByText('b-data')
+  expect(screen.getByRole('tab', { name: 'B' })).toHaveAttribute('aria-selected', 'true')
+})
+
 test('follows the bound tab when it changes from outside', async () => {
   const tabs: SlideInTab[] = [
     { id: 'a', title: 'A', component: tabBody, load: () => Promise.resolve('a-data') },

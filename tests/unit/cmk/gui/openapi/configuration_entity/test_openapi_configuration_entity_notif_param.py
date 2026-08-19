@@ -117,8 +117,8 @@ def test_save_configuration_entity_non_admin(
     )
 
     # THEN
-    assert resp.status_code == 401, (
-        f"Expected status code 401 for non-admin user, got {resp.status_code}"
+    assert resp.status_code == 403, (
+        f"Expected status code 403 for non-admin user, got {resp.status_code}"
     )
 
 
@@ -199,8 +199,8 @@ def test_update_configuration_entity_non_admin(
     )
 
     # THEN
-    assert resp.status_code == 401, (
-        f"Expected status code 401 for non-admin user, got {resp.status_code}"
+    assert resp.status_code == 403, (
+        f"Expected status code 403 for non-admin user, got {resp.status_code}"
     )
 
 
@@ -301,8 +301,8 @@ def test_list_configuration_entities_without_permissions(
     )
 
     # THEN
-    resp.assert_status_code(401)
-    assert resp.json["title"] == "Unauthorized"
+    resp.assert_status_code(403)
+    assert resp.json["title"] == "Forbidden"
 
 
 @pytest.mark.usefixtures("with_admin_login")
@@ -374,8 +374,8 @@ def test_get_notif_param_without_permissions(
     )
 
     # THEN
-    resp.assert_status_code(401)
-    assert resp.json["title"] == "Unauthorized"
+    resp.assert_status_code(403)
+    assert resp.json["title"] == "Forbidden"
 
 
 def test_get_notif_param_throws_404(clients: ClientRegistry) -> None:

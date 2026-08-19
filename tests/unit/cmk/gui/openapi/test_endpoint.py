@@ -23,8 +23,10 @@ import pytest
 
 from cmk import fields
 from cmk.gui import hooks
+from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
+from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.utils import ProblemException, RestAPIResponseGeneralException
@@ -377,6 +379,100 @@ def test_permission_exception(clients: ClientRegistry) -> None:
         "Params: {'aux_tag_id': 'ping'}\n"
         "Required: ['wato.hosttags']\nDeclared: {wato.hosttags}\n"
     )
+
+
+@pytest.fixture(name="test_endpoint_raise_auth_exception")
+def install_endpoint_raise_auth_exception(fresh_app_instance):
+    @Endpoint(
+        path="/raise_auth_exception",
+        method="get",
+        link_relation="help",
+        output_empty=True,
+        tag_group="Monitoring",
+        update_config_generation=False,
+        skip_locking=True,
+    )
+    def test(param: Mapping[str, object]) -> Response:
+        """Smth"""
+        raise MKAuthException("We are sorry, but you lack the permission for this operation.")
+
+    endpoint_registry.register(test, ignore_duplicates=False)
+    yield test
+
+    endpoint_registry.unregister(test)
+
+
+def test_openapi_endpoint_permission_denied_is_forbidden(
+    test_endpoint_raise_auth_exception: WrappedEndpoint,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    """A failed permission check of an authenticated user must result in a 403, not a 401."""
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        "/NO_SITE/check_mk/api/1.0/raise_auth_exception",
+        "",
+        {"Accept": "application/json"},
+        status=403,
+    )
+    assert resp.json["title"] == "Forbidden"
+    assert resp.json["detail"] == "We are sorry, but you lack the permission for this operation."
+
+
+@pytest.fixture(name="test_endpoint_raise_unauthenticated_exception")
+def install_endpoint_raise_unauthenticated_exception(fresh_app_instance):
+    @Endpoint(
+        path="/raise_unauthenticated_exception",
+        method="get",
+        link_relation="help",
+        output_empty=True,
+        tag_group="Monitoring",
+        update_config_generation=False,
+        skip_locking=True,
+    )
+    def test(param: Mapping[str, object]) -> Response:
+        """Smth"""
+        raise MKUnauthenticatedException("You are not authenticated.")
+
+    endpoint_registry.register(test, ignore_duplicates=False)
+    yield test
+
+    endpoint_registry.unregister(test)
+
+
+def test_openapi_endpoint_unauthenticated_stays_unauthorized(
+    test_endpoint_raise_unauthenticated_exception: WrappedEndpoint,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    """Missing authentication must not be remapped to a 403."""
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        "/NO_SITE/check_mk/api/1.0/raise_unauthenticated_exception",
+        "",
+        {"Accept": "application/json"},
+        status=401,
+    )
+    assert resp.json["detail"] == "You are not authenticated."
+
+
+# Regression coverage for two endpoints commonly used by read-only automation clients (e.g.
+# monitoring-only service accounts): a client lacking wato.auditlog/wato.activate must be told
+# "forbidden", not "re-authenticate" -- the whole point of this fix.
+def test_audit_log_permission_denied_is_forbidden(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(LoggedInUser, "may", lambda self, permission_name: False)
+    resp = clients.AuditLog.get_all(date="2017-07-21", expect_ok=False)
+    resp.assert_status_code(403)
+    assert "lack the permission" in resp.json["detail"]
+
+
+def test_pending_changes_permission_denied_is_forbidden(
+    clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(LoggedInUser, "may", lambda self, permission_name: False)
+    resp = clients.ActivateChanges.list_pending_changes(expect_ok=False)
+    resp.assert_status_code(403)
+    assert "lack the permission" in resp.json["detail"]
 
 
 # ========= Crash Reporting Tests =========

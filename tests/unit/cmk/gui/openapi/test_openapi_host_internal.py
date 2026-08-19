@@ -40,7 +40,7 @@ def test_openapi_host_link_uuid_400(aut_user_auth_wsgi_app: WebTestAppForCMK) ->
 
 
 @pytest.mark.usefixtures("with_host")
-def test_link_with_uuid_401(
+def test_link_with_uuid_403(
     mocker: MockerFixture,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
@@ -53,7 +53,7 @@ def test_link_with_uuid_401(
             "put",
             _URL_LINK_UUID,
             params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
-            status=401,
+            status=403,
             headers={"Accept": "application/json"},
             content_type="application/json; charset=utf-8",
         ).json_body["detail"]
@@ -128,7 +128,7 @@ def test_openapi_show_host_missing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> 
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_show_host_401(
+def test_openapi_show_host_403(
     mocker: MockerFixture,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
@@ -141,7 +141,7 @@ def test_openapi_show_host_401(
             "get",
             urljoin(_HOST_CONFIG_INTERNAL_BASE, "heute"),
             headers={"Accept": "application/json"},
-            status=401,
+            status=403,
         ).json_body["detail"]
         == "You do not have read access to the host heute"
     )

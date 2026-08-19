@@ -64,6 +64,7 @@ def list_endpoint_decorator(
         tag_group="Checkmk Internal",
         path_params=[ENTITY_TYPE_SPECIFIER_FIELD],
         method="get",
+        additional_status_codes=[403],
         response_schema=response_schema,
     )
 
@@ -107,6 +108,7 @@ def get_endpoint_decorator(entity_type: ConfigEntityType) -> Endpoint:
         tag_group="Checkmk Internal",
         path_params=[ENTITY_ID_FIELD],
         method="get",
+        additional_status_codes=[403],
         response_schema=response_schemas.DomainObject,
     )
 

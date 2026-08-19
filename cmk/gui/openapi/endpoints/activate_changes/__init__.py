@@ -142,6 +142,14 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
             debug=active_config.debug,
         )
 
+    except MKAuthException:
+        # The request is already authenticated at this point, so a failed permission check
+        # (e.g. missing wato.activateforeign) means forbidden (403), not unauthorized (401).
+        # Let this propagate so the shared MKAuthException -> 403 remap in decorators.py applies,
+        # instead of falling into the MKHTTPException clause below (MKAuthException is a subclass
+        # of MKHTTPException, so this must come first).
+        raise
+
     except MKHTTPException as exc:
         raise ProblemException(
             status=exc.status,
@@ -152,13 +160,6 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     except MKUserError as exc:
         raise ProblemException(
             status=400,
-            title="The operation has failed.",
-            detail=str(exc) if not hasattr(exc, "message") else exc.message,
-        ) from exc
-
-    except MKAuthException as exc:
-        raise ProblemException(
-            status=401,
             title="The operation has failed.",
             detail=str(exc) if not hasattr(exc, "message") else exc.message,
         ) from exc

@@ -36,7 +36,7 @@ def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> N
     content = apache_config.read_bytes()
     assert (
         sha256(content).hexdigest()
-        == "a01fa53ad72000c4c700c42cfc722be177214b7127b7b8e6a3dfe16cbb1f02dc"
+        == "e2381cd57d392f94582c70ffd70072e253b7abcb51f96752447b19f7e4147376"
     ), (
         "The content of [site].conf was changed. Have you updated the apache_hook_version()? The "
         "number needs to be increased with every change to inform the user about an additional step "
@@ -161,6 +161,15 @@ def test_create_apache_hook_oauth_authorization_server_endpoints(tmp_path: Path)
     assert "ProxyPass http://127.0.0.1:5000/unit/check_mk/oauth_token.py" in content
     assert "<Location /oauth-unit/register>" in content
     assert "ProxyPass http://127.0.0.1:5000/unit/check_mk/oauth_client_registration.py" in content
+
+
+def test_create_apache_hook_denies_the_introspection_endpoint(tmp_path: Path) -> None:
+    apache_config = tmp_path / "omd/apache/unit.conf"
+    apache_config.parent.mkdir(parents=True)
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", apache_hook_version())
+
+    content = apache_config.read_text()
+    assert "<Location /unit/check_mk/oauth_introspect.py>\n    Require all denied" in content
 
 
 def test_write_apache_listen_conf_ipv4(tmp_path: Path) -> None:

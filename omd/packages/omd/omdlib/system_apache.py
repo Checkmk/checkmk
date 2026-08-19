@@ -134,7 +134,7 @@ def apache_hook_header(version: int) -> str:
 
 
 def apache_hook_version() -> int:
-    return 6
+    return 7
 
 
 def _site_not_started_html(site_name: str) -> str:
@@ -273,6 +273,17 @@ def create_apache_hook(
     # wrong devlivered pages sometimes
     ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name} retry=0 disablereuse=On timeout=120
     ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}
+  </Location>
+
+  # RFC 7662 token introspection (cmk.gui.oauth.pages._introspect) is
+  # deliberately unauthenticated, deviating from RFC 7662 section 2.1's
+  # MUST-protect requirement -- it must never be reachable through this
+  # public proxy. Location sections merge in file order, not by
+  # specificity (that's Directory) -- this block must stay after the
+  # proxy Location above, since that order is what lets this Require
+  # win if the general Location ever gains one of its own.
+  <Location /{site_name}/check_mk/oauth_introspect.py>
+    Require all denied
   </Location>
 
   <Location /.well-known/oauth-authorization-server/oauth-{site_name}>

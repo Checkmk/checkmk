@@ -9,7 +9,7 @@ certificates for testing purposes.
 import ssl
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from ipaddress import IPv4Address
-from multiprocessing import Process
+from multiprocessing import get_context
 from pathlib import Path
 
 from cmk.crypto.certificate import (
@@ -85,7 +85,12 @@ class HTTPSDummy:
         self.httpd.serve_forever()
 
     def run(self) -> int:
-        self.httpp = Process(target=self.start_server)
+        # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
+        # "forkserver", see
+        # https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods
+        # The concrete problem here is that the threading.Lock object contained (transitively) in
+        # the SiteApacheHTTPServer can't be pickled.
+        self.httpp = get_context("fork").Process(target=self.start_server)
         self.httpp.start()
         return self.port
 

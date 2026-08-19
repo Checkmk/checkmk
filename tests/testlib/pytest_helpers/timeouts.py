@@ -47,7 +47,12 @@ class MonitorTimeout:
         self._group_pid = os.getpgrp()
         # interface
         self._timeout = timeout
-        self._process = multiprocessing.Process(target=self._timeout_and_interrupt, args=())
+        # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
+        # "forkserver", see
+        # https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods
+        self._process = multiprocessing.get_context("fork").Process(
+            target=self._timeout_and_interrupt, args=()
+        )
         self._sigint_handler = signal.getsignal(signal.SIGINT)
 
     def _default_timeout_handler(self, signum: int, frame: FrameType | None) -> None:

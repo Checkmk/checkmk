@@ -12,7 +12,7 @@ import socketserver
 import subprocess
 import sys
 from collections.abc import Iterator
-from multiprocessing import Process
+from multiprocessing import get_context
 from pathlib import Path
 from typing import override
 
@@ -54,7 +54,12 @@ def _clear_controller_connections(ctl_path: Path) -> None:
 def _provide_agent_unix_socket() -> Iterator[None]:
     socket_address = Path("/run/check-mk-agent.socket")
     socket_address.unlink(missing_ok=True)
-    proc = Process(
+    # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
+    # "forkserver", see
+    # https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods
+    # The concrete problem here is that the threading.Lock object contained (transitively) in the
+    # UnixStreamServer can't be pickled.
+    proc = get_context("fork").Process(
         target=socketserver.UnixStreamServer(
             server_address=str(socket_address),
             RequestHandlerClass=_CMKAgentSocketHandler,

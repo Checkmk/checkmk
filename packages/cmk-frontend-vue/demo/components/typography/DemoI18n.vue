@@ -70,5 +70,5 @@ const name = ref<string>('Alice')
     }}</CmkParagraph
   >
   <br />
-  <CmkParagraph>{{ translatedStringFromTS }}</CmkParagraph>
+  <CmkParagraph>{{ translatedStringFromTS() }}</CmkParagraph>
 </template>

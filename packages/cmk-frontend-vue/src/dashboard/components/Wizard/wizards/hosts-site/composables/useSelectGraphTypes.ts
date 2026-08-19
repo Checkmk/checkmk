@@ -61,9 +61,11 @@ export const getDisabledTooltip = (dashboardFeatures: DashboardFeatures): Transl
     ? _t('Available in Checkmk Pro or higher.')
     : _t('Only available for a single host.')
 
-export const allHostSiteWidgets: WidgetItemList = [
-  { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
-  { id: Graph.HOST_STATS, label: _t('Host statistics'), icon: 'host-statistics' },
-  { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'host-state' },
-  { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'host-state-summary' }
-]
+export const allHostSiteWidgets = (): WidgetItemList => {
+  return [
+    { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },
+    { id: Graph.HOST_STATS, label: _t('Host statistics'), icon: 'host-statistics' },
+    { id: Graph.HOST_STATE, label: _t('Host state'), icon: 'host-state' },
+    { id: Graph.HOST_STATE_SUMMARY, label: _t('Host state summary'), icon: 'host-state-summary' }
+  ]
+}

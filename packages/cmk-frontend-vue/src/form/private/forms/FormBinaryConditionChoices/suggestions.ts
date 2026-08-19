@@ -5,15 +5,21 @@
  */
 import usei18n from '@/lib/i18n'
 
-const { _t } = usei18n()
+import type { Suggestion } from '@/components/CmkSuggestions'
 
-export const firstOperatorSuggestions = [
-  { name: 'and', title: _t('is') },
-  { name: 'not', title: _t('is not') }
-]
+export function firstOperatorSuggestions(): Suggestion[] {
+  const { _t } = usei18n()
+  return [
+    { name: 'and', title: _t('is') },
+    { name: 'not', title: _t('is not') }
+  ]
+}
 
-export const operatorSuggestions = [
-  { name: 'and', title: _t('and') },
-  { name: 'or', title: _t('or') },
-  { name: 'not', title: _t('and not') }
-]
+export function operatorSuggestions(): Suggestion[] {
+  const { _t } = usei18n()
+  return [
+    { name: 'and', title: _t('and') },
+    { name: 'or', title: _t('or') },
+    { name: 'not', title: _t('and not') }
+  ]
+}

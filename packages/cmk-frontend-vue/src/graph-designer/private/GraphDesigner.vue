@@ -46,7 +46,7 @@ import { type ValidationMessages } from '@/form/private/validation'
 import FormMetricBackendCustomQuery, {
   type Query
 } from '@/graph-designer/FormMetricBackendCustomQuery.vue'
-import { METRIC_BACKEND_MACRO_HELP } from '@/graph-designer/constants'
+import { metricBackendMacroHelp } from '@/graph-designer/constants'
 import FixedMetricRowRenderer from '@/graph-designer/private/FixedMetricRowRenderer.vue'
 import FormMetricCells, { type Metric } from '@/graph-designer/private/FormMetricCells.vue'
 import FormTitle from '@/graph-designer/private/FormTitle.vue'
@@ -1171,9 +1171,9 @@ const graphDesignerContentAsJson = computed(() => {
         <td class="nobr narrow">
           <div style="display: flex; align-items: center; gap: 4px">
             <FormTitle v-model:data="graphLine.custom_title" />
-            <CmkHelpText v-if="graphLine.type === 'query'" :help="METRIC_BACKEND_MACRO_HELP" />
+            <CmkHelpText v-if="graphLine.type === 'query'" :help="metricBackendMacroHelp()" />
           </div>
-          <FormHelp v-if="graphLine.type === 'query'" :help="METRIC_BACKEND_MACRO_HELP" />
+          <FormHelp v-if="graphLine.type === 'query'" :help="metricBackendMacroHelp()" />
         </td>
         <td class="buttons"><CmkSwitch v-model:data="graphLine.visible" /></td>
 

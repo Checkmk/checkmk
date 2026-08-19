@@ -86,7 +86,7 @@ const configuredFiltersByObjectType = computed(() =>
 
   <SectionBlock :title="_t('Available visualization type')">
     <WidgetTiles
-      :available-items="allHostSiteWidgets"
+      :available-items="allHostSiteWidgets()"
       :enabled-widgets="enabledWidgets"
       :disabled-tooltip="getDisabledTooltip(props.dashboardFeatures)"
       @select-widget="(preselectedWidgetType) => gotoNextStage(preselectedWidgetType)"

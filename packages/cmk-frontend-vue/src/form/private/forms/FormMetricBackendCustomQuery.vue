@@ -17,7 +17,7 @@ import FormHelp from '@/form/private/FormHelp.vue'
 import { type ValidationMessages } from '@/form/private/validation'
 
 import FormMetricBackendCustomQuery from '@/graph-designer/FormMetricBackendCustomQuery.vue'
-import { METRIC_BACKEND_MACRO_HELP } from '@/graph-designer/constants'
+import { metricBackendMacroHelp } from '@/graph-designer/constants'
 
 const { _t } = usei18n()
 
@@ -60,9 +60,9 @@ const componentId = useId()
               :placeholder="_t('Service name template')"
               :external-errors="serviceNameTemplateErrors"
             />
-            <CmkHelpText :help="METRIC_BACKEND_MACRO_HELP" />
+            <CmkHelpText :help="metricBackendMacroHelp()" />
           </div>
-          <FormHelp :help="METRIC_BACKEND_MACRO_HELP" />
+          <FormHelp :help="metricBackendMacroHelp()" />
         </td>
       </tr>
     </template>

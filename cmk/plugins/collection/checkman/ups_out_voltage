@@ -10,4 +10,5 @@ item:
  ID of the phase
 
 discovery:
- One service is created for each phase.
+ One service is created for each phase that reports a voltage above zero.
+ Phases that do not report a numeric voltage are ignored.

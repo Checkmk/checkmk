@@ -12,6 +12,7 @@ from cmk.plugins.lib.ups import (
     CHECK_DEFAULT_PARAMETERS,
     check_ups_battery_state,
     check_ups_capacity,
+    parse_ups_voltage,
     UpsParameters,
 )
 
@@ -246,3 +247,12 @@ def test_check_ups_battery_state(
         )
         == results
     )
+
+
+def test_parse_ups_voltage_drops_phases_without_a_numeric_reading() -> None:
+    assert parse_ups_voltage(
+        [["1", "230"], ["2", ""], ["3", "0"], ["4", "N/A"], ["5", "NULL"]]
+    ) == [
+        ["1", "230"],
+        ["3", "0"],
+    ]

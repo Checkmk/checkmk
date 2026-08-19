@@ -55,7 +55,9 @@ _SESSION_USER = UserId("alice")
 
 @pytest.fixture(name="registered_client_id")
 def fixture_registered_client_id() -> str:
-    return get_client_store().register(["https://client.example/callback"], "Test Client").client_id
+    registration = get_client_store().register(["https://client.example/callback"], "Test Client")
+    assert registration.is_ok()
+    return registration.ok.client_id
 
 
 @pytest.mark.usefixtures("request_context", "mock_vue_manifest")
@@ -287,9 +289,11 @@ class TestOAuthAuthorizePage:
 
     @pytest.mark.usefixtures("clean_redis")
     def test_preserves_existing_query_params_on_redirect_uri(self, flask_app: Flask) -> None:
-        client_id = (
-            get_client_store().register(["https://client.example/callback?foo=bar"], None).client_id
+        registration = get_client_store().register(
+            ["https://client.example/callback?foo=bar"], None
         )
+        assert registration.is_ok()
+        client_id = registration.ok.client_id
         with (
             patch.object(TransactionManager, "check_transaction", return_value=True),
             patch("cmk.gui.oauth.pages._authorize.check_csrf_token"),

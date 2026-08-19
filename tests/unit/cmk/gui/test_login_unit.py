@@ -195,16 +195,18 @@ def test_login_with_bearer_token(with_user: tuple[UserId, str], flask_app: flask
 
 def test_login_with_oauth_token(with_user: tuple[UserId, str], flask_app: flask.Flask) -> None:
     username, _ = with_user
-    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
+    registration = get_client_store().register(["https://client.example/callback"], None)
+    assert registration.is_ok()
     token = get_token_store().issue_token(
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
         scope=DEFAULT_SCOPE,
-        client_id=client_id,
+        client_id=registration.ok.client_id,
     )
+    assert token.is_ok()
     with flask_app.test_request_context(
-        "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
     ):
         assert type(session.user) is LoggedInUser
         assert session.user.id == username
@@ -223,16 +225,18 @@ def test_read_scoped_oauth_token_narrows_what_the_user_may_do(
     was only granted read, so the intersection denies it.
     """
     username, _ = with_user
-    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
+    registration = get_client_store().register(["https://client.example/callback"], None)
+    assert registration.is_ok()
     token = get_token_store().issue_token(
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
         scope=DEFAULT_SCOPE,
-        client_id=client_id,
+        client_id=registration.ok.client_id,
     )
+    assert token.is_ok()
     with flask_app.test_request_context(
-        "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
     ):
         assert session.user.may("general.use")
         assert not session.user.may("general.act")
@@ -242,16 +246,18 @@ def test_write_scoped_oauth_token_leaves_the_users_permissions_alone(
     with_user: tuple[UserId, str], flask_app: flask.Flask
 ) -> None:
     username, _ = with_user
-    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
+    registration = get_client_store().register(["https://client.example/callback"], None)
+    assert registration.is_ok()
     token = get_token_store().issue_token(
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
         scope=frozenset({ScopeId.WRITE}),
-        client_id=client_id,
+        client_id=registration.ok.client_id,
     )
+    assert token.is_ok()
     with flask_app.test_request_context(
-        "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+        "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
     ):
         assert session.user.may("general.act")
 
@@ -261,14 +267,17 @@ def _legacy_bearer_header(username: UserId, password: str) -> str:
 
 
 def _oauth_bearer_header(username: UserId, password: str) -> str:
-    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
-    return "Bearer " + get_token_store().issue_token(
+    registration = get_client_store().register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    token = get_token_store().issue_token(
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
         scope=DEFAULT_SCOPE,
-        client_id=client_id,
+        client_id=registration.ok.client_id,
     )
+    assert token.is_ok()
+    return "Bearer " + token.ok
 
 
 @pytest.mark.parametrize("make_header", [_legacy_bearer_header, _oauth_bearer_header])
@@ -304,18 +313,20 @@ def test_login_with_expired_oauth_bearer_token(
     with_user: tuple[UserId, str], flask_app: flask.Flask
 ) -> None:
     username, _ = with_user
-    client_id = get_client_store().register(["https://client.example/callback"], None).client_id
+    registration = get_client_store().register(["https://client.example/callback"], None)
+    assert registration.is_ok()
     token = get_token_store().issue_token(
         username,
         expires_at=datetime.now(UTC) + timedelta(minutes=5),
         resource=None,
         scope=DEFAULT_SCOPE,
-        client_id=client_id,
+        client_id=registration.ok.client_id,
     )
+    assert token.is_ok()
     with (
         time_machine.travel(datetime.now(UTC) + timedelta(minutes=10)),
         flask_app.test_request_context(
-            "/", method="GET", headers={"Authorization": f"Bearer {token}"}
+            "/", method="GET", headers={"Authorization": f"Bearer {token.ok}"}
         ),
     ):
         assert isinstance(session.user, LoggedInNobody)

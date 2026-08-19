@@ -12,12 +12,13 @@ from collections.abc import Callable
 from datetime import datetime, timedelta, UTC
 from typing import Literal, override
 
+from cmk.ccc.resulttype import Error, OK
 from cmk.ccc.user import UserId
 from cmk.gui.http import request, response
 from cmk.gui.log import logger
 from cmk.gui.oauth.pages._models import OAuthTokenErrorResponse, OAuthTokenResponse
 from cmk.gui.oauth.store._auth_code_store import AuthCodeStore
-from cmk.gui.oauth.store.token_store import get_token_store, UnknownClientError
+from cmk.gui.oauth.store.token_store import get_token_store, UnknownClient
 from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.scopes import format_scopes, parse_scopes
 from cmk.gui.utils.security_log_events import OAuthTokenFailureEvent
@@ -196,25 +197,26 @@ class OAuthTokenPage(Page):
         # scopes into the AuthCodeStore ourselves. If it still goes wrong it's not a user error.
         granted_scopes = parse_scopes(record.scope)
 
-        try:
-            access_token = get_token_store().issue_token(
-                UserId(record.user_id),
-                expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
-                resource=record.resource,
-                scope=granted_scopes,
-                client_id=record.client_id,
-            )
-        except UnknownClientError:
-            # The client was deleted after the code was issued. Its grants
-            # died with it (tokens.client_id is ON DELETE CASCADE), so the
-            # code must not become a token either.
-            _error("invalid_grant")
-            return None
-
-        response.set_content_type("application/json")
-        response.set_data(
-            OAuthTokenResponse(
-                access_token=access_token, scope=format_scopes(granted_scopes)
-            ).model_dump_json()
-        )
-        return None
+        match get_token_store().issue_token(
+            UserId(record.user_id),
+            expires_at=datetime.now(UTC) + _ACCESS_TOKEN_TTL,
+            resource=record.resource,
+            scope=granted_scopes,
+            client_id=record.client_id,
+        ):
+            case Error(UnknownClient()):
+                # The client was deleted after the code was issued. Its grants
+                # died with it (tokens.client_id is ON DELETE CASCADE), so the
+                # code must not become a token either.
+                _error("invalid_grant")
+                return None
+            case OK(access_token):
+                response.set_content_type("application/json")
+                response.set_data(
+                    OAuthTokenResponse(
+                        access_token=access_token, scope=format_scopes(granted_scopes)
+                    ).model_dump_json()
+                )
+                return None
+            case _:
+                assert False

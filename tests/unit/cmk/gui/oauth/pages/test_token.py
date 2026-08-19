@@ -126,10 +126,13 @@ class TestOAuthTokenPage:
         # receiving the code and redeeming it; a code issued to a client that
         # no longer exists must not become a token.
         registered = get_client_store().register(["https://client.example/callback"], None)
-        AuthCodeStore().store(_VALID_FORM["code"], _stored_record(client_id=registered.client_id))
-        get_client_store().delete([registered.client_id])
+        assert registered.is_ok()
+        AuthCodeStore().store(
+            _VALID_FORM["code"], _stored_record(client_id=registered.ok.client_id)
+        )
+        get_client_store().delete([registered.ok.client_id])
         with flask_app.test_request_context(
-            method="POST", data={**_VALID_FORM, "client_id": registered.client_id}
+            method="POST", data={**_VALID_FORM, "client_id": registered.ok.client_id}
         ):
             flask_app.preprocess_request()
             OAuthTokenPage(lambda: True).handle_page(PageContext(config=Config(), request=request))

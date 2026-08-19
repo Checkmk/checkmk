@@ -12,15 +12,12 @@ from dataclasses import dataclass
 from datetime import datetime, UTC
 from typing import NewType
 
+from cmk.ccc.resulttype import Error, OK, Result
 from cmk.gui.oauth.store.backend import Backend, shared_connection
 
 _MAX_REGISTERED_CLIENTS = 1000
 
 ClientId = NewType("ClientId", str)
-
-
-class ClientRegistrationLimitExceededError(Exception):
-    pass
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,12 +30,20 @@ class ClientRegistration:
     registered_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class RegistryFull:
+    """The client store already holds the maximum number of registrations."""
+
+
 class ClientStore(Backend):
-    def register(self, redirect_uris: list[str], client_name: str | None) -> ClientRegistration:
+    def register(
+        self, redirect_uris: list[str], client_name: str | None
+    ) -> Result[ClientRegistration, RegistryFull]:
+        """The new registration, or RegistryFull if the store already holds the maximum."""
         with self.write_transaction():
             count = self._connection.execute("SELECT COUNT(*) FROM clients").fetchone()[0]
             if count >= _MAX_REGISTERED_CLIENTS:
-                raise ClientRegistrationLimitExceededError
+                return Error(RegistryFull())
 
             registered_at_timestamp = int(datetime.now(UTC).timestamp())
             registration = ClientRegistration(
@@ -59,7 +64,7 @@ class ClientStore(Backend):
                     registered_at_timestamp,
                 ),
             )
-        return registration
+        return OK(registration)
 
     def get(self, client_id: str) -> ClientRegistration | None:
         row = self._connection.execute(

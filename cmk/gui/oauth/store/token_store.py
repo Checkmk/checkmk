@@ -10,19 +10,11 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, UTC
 
+from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.user import UserId
 from cmk.gui.log import logger
 from cmk.gui.oauth.store.backend import Backend, shared_connection
 from cmk.gui.scopes import format_scopes, InvalidScopeError, parse_scopes, ScopeId
-
-
-class UnknownClientError(LookupError):
-    """The client_id does not (or no longer) reference a registered client.
-
-    Raised by issue_token when the foreign key on tokens.client_id rejects
-    the insert -- e.g. the client was deleted between the authorization
-    request and the code redemption.
-    """
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,6 +52,16 @@ def looks_like_token(token: str) -> bool:
     return bool(dot and secret and prefix == f"{_PREFIX}")
 
 
+@dataclass(frozen=True, slots=True)
+class UnknownClient:
+    """The client_id does not (or no longer) reference a registered client.
+
+    Returned by issue_token when the foreign key on tokens.client_id rejects
+    the insert -- e.g. the client was deleted between the authorization
+    request and the code redemption.
+    """
+
+
 class TokenStore(Backend):
     def issue_token(
         self,
@@ -69,7 +71,13 @@ class TokenStore(Backend):
         resource: str | None,
         scope: frozenset[ScopeId],
         client_id: str,
-    ) -> str:
+    ) -> Result[str, UnknownClient]:
+        """The new access token, or UnknownClient if client_id is not a registered client.
+
+        A client deleted between the authorization request and the code
+        redemption takes its grants with it (tokens.client_id is ON DELETE
+        CASCADE), so there is nothing left to issue against.
+        """
         if not user_id:
             raise ValueError("user_id must not be empty")
         if not client_id:
@@ -101,12 +109,16 @@ class TokenStore(Backend):
                     client_id,
                 ),
             )
-        except sqlite3.IntegrityError as e:
+        except sqlite3.IntegrityError:
             # The client_id foreign key is the only constraint left to trip:
             # the ValueError guards above cover every other CHECK on the
             # table, and token_hash is a fresh sha256 hexdigest.
-            raise UnknownClientError(client_id) from e
-        return token
+            logger.exception(
+                "Refusing to issue an OAuth access token: client %(client_id)s is not registered",
+                {"client_id": client_id},
+            )
+            return Error(UnknownClient())
+        return OK(token)
 
     def get_by_token(self, token: str) -> TokenRecord | None:
         try:

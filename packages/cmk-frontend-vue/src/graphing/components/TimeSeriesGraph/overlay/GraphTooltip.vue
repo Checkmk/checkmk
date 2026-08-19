@@ -13,7 +13,8 @@ import MetricAttributeGroups from '../../MetricAttributeGroups.vue'
 import type { HoverState } from '../interaction/hover'
 import { computeTooltipPosition } from './tooltipPosition'
 
-const CURSOR_OFFSET = 19
+const CURSOR_OFFSET_X = 19
+const CURSOR_OFFSET_Y = 8
 
 const props = defineProps<{
   hoverState: HoverState | null
@@ -60,7 +61,8 @@ const positionStyle = computed(() => {
     tooltipHeight: tooltipSize.value.height,
     viewportWidth: window.innerWidth,
     viewportHeight: window.innerHeight,
-    cursorOffset: CURSOR_OFFSET
+    cursorOffsetX: CURSOR_OFFSET_X,
+    cursorOffsetY: CURSOR_OFFSET_Y
   })
   return { left: `${left}px`, top: `${top}px` }
 })

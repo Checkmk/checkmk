@@ -93,7 +93,7 @@ describe('GraphTooltip', () => {
     // jsdom reports a zero-size element, so the position degrades to cursor + offset;
     // flip and clamp behaviour is covered by the computeTooltipPosition unit tests.
     expect(tooltip!.style.left).toBe('124px')
-    expect(tooltip!.style.top).toBe('205px')
+    expect(tooltip!.style.top).toBe('213px')
   })
 
   test('keeps the scoped-style attribute when teleported to the body', () => {

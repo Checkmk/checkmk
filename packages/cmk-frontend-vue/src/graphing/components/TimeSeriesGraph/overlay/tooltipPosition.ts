@@ -11,7 +11,8 @@ export interface TooltipPlacementInput {
   tooltipHeight: number
   viewportWidth: number
   viewportHeight: number
-  cursorOffset: number
+  cursorOffsetX: number
+  cursorOffsetY: number
 }
 
 const clamp = (value: number, min: number, max: number): number =>
@@ -21,13 +22,17 @@ export function computeTooltipPosition(input: TooltipPlacementInput): {
   left: number
   top: number
 } {
-  let left = input.cursorX + input.cursorOffset
+  let left = input.cursorX + input.cursorOffsetX
   if (left + input.tooltipWidth > input.viewportWidth) {
-    left = input.cursorX - input.cursorOffset - input.tooltipWidth
+    left = input.cursorX - input.cursorOffsetX - input.tooltipWidth
   }
   left = clamp(left, 0, Math.max(0, input.viewportWidth - input.tooltipWidth))
 
-  const top = clamp(input.cursorY, 0, Math.max(0, input.viewportHeight - input.tooltipHeight))
+  const top = clamp(
+    input.cursorY + input.cursorOffsetY,
+    0,
+    Math.max(0, input.viewportHeight - input.tooltipHeight)
+  )
 
   return { left, top }
 }

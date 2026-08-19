@@ -18,20 +18,21 @@ function placementInput(overrides: Partial<TooltipPlacementInput>): TooltipPlace
     tooltipHeight: 100,
     viewportWidth: 1000,
     viewportHeight: 600,
-    cursorOffset: 16,
+    cursorOffsetX: 16,
+    cursorOffsetY: 4,
     ...overrides
   }
 }
 
 describe('computeTooltipPosition', () => {
-  test('places the tooltip right of the cursor, top aligned with it', () => {
-    expect(computeTooltipPosition(placementInput({}))).toEqual({ left: 416, top: 300 })
+  test('places the tooltip right of the cursor, offset below it vertically', () => {
+    expect(computeTooltipPosition(placementInput({}))).toEqual({ left: 416, top: 304 })
   })
 
   test('flips to the left of the cursor when it would cross the right viewport edge', () => {
     expect(computeTooltipPosition(placementInput({ cursorX: 800 }))).toEqual({
       left: 800 - 16 - 300,
-      top: 300
+      top: 304
     })
   })
 
@@ -57,7 +58,13 @@ describe('computeTooltipPosition', () => {
   test('degrades to cursor plus offset for a zero-size tooltip', () => {
     expect(computeTooltipPosition(placementInput({ tooltipWidth: 0, tooltipHeight: 0 }))).toEqual({
       left: 416,
-      top: 300
+      top: 304
     })
+  })
+
+  test('applies the vertical cursor offset independently of the horizontal one', () => {
+    expect(
+      computeTooltipPosition(placementInput({ cursorOffsetX: 16, cursorOffsetY: 40 })).top
+    ).toBe(340)
   })
 })

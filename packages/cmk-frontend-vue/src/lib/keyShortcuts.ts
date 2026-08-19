@@ -3,8 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { Ref } from 'vue'
-
 import usei18n from '@/lib/i18n'
 
 import { randomId } from './randomId'
@@ -80,15 +78,15 @@ export class KeyShortcutService {
   public static getShortCutInfo(shortcut: KeyShortcut): string {
     const keys = []
     if (shortcut.ctrl) {
-      keys.push((_t('Ctrl') as unknown as Ref).value)
+      keys.push(_t('Ctrl'))
     }
 
     if (shortcut.shift) {
-      keys.push((_t('Shift') as unknown as Ref).value)
+      keys.push(_t('Shift'))
     }
 
     if (shortcut.alt) {
-      keys.push((_t('Alt') as unknown as Ref).value)
+      keys.push(_t('Alt'))
     }
 
     keys.push(shortcut.key.map((k) => k.toUpperCase()))

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { type MaybeRefOrGetter, unref } from 'vue'
+import type { MaybeRefOrGetter } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
@@ -39,7 +39,7 @@ const selectedWidget = defineModel<string | null>('selectedWidget', { default: n
       :key="index"
       role="button"
       tabindex="0"
-      :aria-label="unref(item.label)"
+      :aria-label="item.label"
       class="db-widget-tiles__item"
       @click="
         () => {

@@ -57,7 +57,6 @@ const {
   hideSourceMetrics,
   formula,
   transformation,
-  canCommit,
   successAlert,
   isItemDisabled,
   switchMode,
@@ -210,12 +209,7 @@ function itemActionLabel(id: ItemId): TranslatedString {
         :percentile-options="percentileOptions"
         :errors="transformationErrors"
       />
-      <CmkButton
-        variant="optional"
-        class="graphing-rrd-tab__calculate"
-        :disabled="!canCommit"
-        @click="onCalculate"
-      >
+      <CmkButton variant="optional" class="graphing-rrd-tab__calculate" @click="onCalculate">
         <CmkGhostWidth :variants="calculateLabelVariants">
           <span class="graphing-rrd-tab__calculate-label">{{ calculateLabel }}</span>
         </CmkGhostWidth>

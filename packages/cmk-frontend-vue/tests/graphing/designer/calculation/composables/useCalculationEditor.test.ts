@@ -279,15 +279,3 @@ test('shows an added alert with the id the store will assign, an updated alert o
   expect('kind' in update && update.kind).toBe('update')
   expect(editor.successAlert.value).toMatchObject({ id: NEXT_ID, kind: 'updated' })
 })
-
-test('canCommit requires input in the active editor', () => {
-  const { editor } = mountEditor()
-  expect(editor.canCommit.value).toBe(false)
-  editor.formula.text.value = 'A'
-  expect(editor.canCommit.value).toBe(true)
-
-  editor.switchMode('transformation')
-  expect(editor.canCommit.value).toBe(false)
-  editor.transformation.selectedId.value = 'A'
-  expect(editor.canCommit.value).toBe(true)
-})

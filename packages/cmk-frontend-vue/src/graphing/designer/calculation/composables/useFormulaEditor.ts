@@ -6,15 +6,7 @@
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
-import {
-  type ComputedRef,
-  type MaybeRefOrGetter,
-  type Ref,
-  computed,
-  ref,
-  toValue,
-  watch
-} from 'vue'
+import { type MaybeRefOrGetter, type Ref, computed, ref, toValue, watch } from 'vue'
 
 import type { Domain, GraphItem, ItemId } from '../../types'
 import {
@@ -29,14 +21,11 @@ import {
 import type { CommitResult } from '../types'
 import { useFormulaMessages } from './useFormulaMessages'
 
-const DEBOUNCE_MS = 300
+const VALIDATION_DELAY_MS = 1500
 
 export interface FormulaEditor {
   text: Ref<string>
-  /** Debounced validation messages, suitable for display. */
   errors: Ref<string[]>
-  /** True while the text has no committable content. */
-  isEmpty: ComputedRef<boolean>
   appendOperator: (symbol: OperatorSymbol) => void
   wrapFunction: (name: FunctionName) => void
   appendRef: (id: ItemId) => void
@@ -112,10 +101,23 @@ export function useFormulaEditor(
     return { status: 'valid', ast: result.ast, errors: [] }
   })
 
-  const scheduleValidation = useDebounceFn(() => {
-    errors.value = evaluation.value.errors
-  }, DEBOUNCE_MS)
-  watch(() => evaluation.value.errors, scheduleValidation)
+  const showValidation = useDebounceFn(() => {
+    const messages = evaluation.value.errors
+    if (messages.length > 0) {
+      errors.value = messages
+    }
+  }, VALIDATION_DELAY_MS)
+
+  watch(
+    () => evaluation.value.errors,
+    (messages) => {
+      if (messages.length === 0) {
+        errors.value = []
+        return
+      }
+      showValidation()
+    }
+  )
 
   function appendOperator(symbol: OperatorSymbol): void {
     const trimmed = text.value.replace(/\s+$/, '')
@@ -142,8 +144,6 @@ export function useFormulaEditor(
     }
   }
 
-  const isEmpty = computed(() => evaluation.value.status === 'empty')
-
   function commit(): CommitResult {
     const result = evaluation.value
     if (result.status === 'empty') {
@@ -160,7 +160,7 @@ export function useFormulaEditor(
     errors.value = []
   }
 
-  return { text, errors, isEmpty, appendOperator, wrapFunction, appendRef, commit, reset }
+  return { text, errors, appendOperator, wrapFunction, appendRef, commit, reset }
 }
 
 /** The most recent binary operator symbol in the text, or null if there is none. */

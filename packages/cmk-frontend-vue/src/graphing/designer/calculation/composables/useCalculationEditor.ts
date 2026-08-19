@@ -51,8 +51,6 @@ export interface CalculationEditor {
   hideSourceMetrics: Ref<boolean | 'indeterminate'>
   formula: FormulaEditor
   transformation: TransformationEditor
-  /** Whether the active editor has committable input; gates the Calculate action. */
-  canCommit: ComputedRef<boolean>
   successAlert: ComputedRef<SuccessAlert | null>
   /** Rows the building-blocks list must disable in the current mode/edit context. */
   isItemDisabled: (item: GraphItem) => boolean
@@ -103,10 +101,6 @@ export function useCalculationEditor(
 
   const alert = ref<SuccessAlert | null>(null)
   let alertNonce = 0
-
-  const canCommit = computed(() =>
-    mode.value === 'operations' ? !formula.isEmpty.value : !transformation.isEmpty.value
-  )
 
   function clearForm(): void {
     editingId.value = null
@@ -231,7 +225,6 @@ export function useCalculationEditor(
     hideSourceMetrics,
     formula,
     transformation,
-    canCommit,
     successAlert: computed(() => alert.value),
     isItemDisabled,
     switchMode,

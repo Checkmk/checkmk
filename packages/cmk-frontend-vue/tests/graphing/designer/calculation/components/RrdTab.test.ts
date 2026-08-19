@@ -76,11 +76,13 @@ test('an invalid formula shows its error and emits nothing', async () => {
   expect(screen.getByText(/ends unexpectedly/)).toBeInTheDocument()
 })
 
-test('an empty formula disables the calculate button', async () => {
-  renderTab()
-  expect(screen.getByRole('button', { name: 'Calculate & add' })).toBeDisabled()
-  await fireEvent.update(formulaInput(), 'A')
-  expect(screen.getByRole('button', { name: 'Calculate & add' })).not.toBeDisabled()
+test('the calculate button stays enabled and reports an empty formula', async () => {
+  const { emitted } = renderTab()
+  const calculate = screen.getByRole('button', { name: 'Calculate & add' })
+  expect(calculate).toBeEnabled()
+  await fireEvent.click(calculate)
+  expect(emitted('add')).toBeUndefined()
+  expect(screen.getByText(/formula is empty/)).toBeInTheDocument()
 })
 
 test('submitting an empty formula with Enter shows the empty error', async () => {
@@ -104,12 +106,15 @@ test('switching modes discards the formula input', async () => {
   expect(formulaInput().value).toBe('')
 })
 
-test('transformation without a selected metric disables the calculate button', async () => {
-  renderTab()
+test('the calculate button stays enabled and reports an incomplete transformation', async () => {
+  const { emitted } = renderTab()
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle Transformation' }))
-  expect(screen.getByRole('button', { name: 'Calculate & add' })).toBeDisabled()
-  await fireEvent.click(screen.getByRole('button', { name: 'Select A for the transformation' }))
-  expect(screen.getByRole('button', { name: 'Calculate & add' })).not.toBeDisabled()
+  const calculate = screen.getByRole('button', { name: 'Calculate & add' })
+  expect(calculate).toBeEnabled()
+  await fireEvent.click(calculate)
+  expect(emitted('add')).toBeUndefined()
+  expect(screen.getByText('Select the metric to transform.')).toBeInTheDocument()
+  expect(screen.getByText('Enter a percentile between 0 and 100.')).toBeInTheDocument()
 })
 
 test('in transformation mode a badge click selects the metric', async () => {

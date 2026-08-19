@@ -87,15 +87,6 @@ test('commit returns the AST for a valid formula and errors otherwise', () => {
   }
 })
 
-test('isEmpty tracks whether the formula has committable input', () => {
-  const editor = mountEditor()
-  expect(editor.isEmpty.value).toBe(true)
-  editor.text.value = 'A'
-  expect(editor.isEmpty.value).toBe(false)
-  editor.text.value = '   '
-  expect(editor.isEmpty.value).toBe(true)
-})
-
 test('commit reports an error for an empty formula', () => {
   const editor = mountEditor()
   const result = editor.commit()
@@ -126,7 +117,7 @@ test('commit rejects a reference cycle through another formula', () => {
   expect('errors' in result && result.errors[0]).toContain('circular reference')
 })
 
-test('shows debounced errors and clears them when the missing item appears', async () => {
+test('shows errors only after the typing pause, and clears them as soon as they are resolved', async () => {
   vi.useFakeTimers()
   try {
     const editorItems = ref<GraphItem[]>([rrdMetricItem('A')])
@@ -134,14 +125,75 @@ test('shows debounced errors and clears them when the missing item appears', asy
 
     editor.text.value = 'A + Z'
     await nextTick()
-    expect(editor.errors.value).toEqual([]) // debounce still pending
-    vi.advanceTimersByTime(300)
+    vi.advanceTimersByTime(1400)
+    expect(editor.errors.value).toEqual([])
+    vi.advanceTimersByTime(100)
     expect(editor.errors.value).toEqual(['Unknown metric or formula "Z".'])
 
     editorItems.value = [...editorItems.value, rrdMetricItem('Z')]
     await nextTick()
-    vi.advanceTimersByTime(300)
     expect(editor.errors.value).toEqual([])
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+test('typing again restarts the delay instead of showing intermediate errors', async () => {
+  vi.useFakeTimers()
+  try {
+    const editor = mountEditor()
+
+    editor.text.value = 'A +'
+    await nextTick()
+    vi.advanceTimersByTime(1000)
+    editor.text.value = 'A + B'
+    await nextTick()
+    vi.advanceTimersByTime(1500)
+    expect(editor.errors.value).toEqual([])
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+test('commit shows the error immediately and keeps it despite a pending delay', async () => {
+  vi.useFakeTimers()
+  try {
+    const editor = mountEditor()
+
+    editor.text.value = 'A +'
+    await nextTick()
+    expect(editor.errors.value).toEqual([])
+
+    expect('errors' in editor.commit()).toBe(true)
+    expect(editor.errors.value).toEqual([
+      'Invalid formula: The formula ends unexpectedly; add a metric id (e.g. A) or a number.'
+    ])
+
+    vi.advanceTimersByTime(1500)
+    expect(editor.errors.value).toEqual([
+      'Invalid formula: The formula ends unexpectedly; add a metric id (e.g. A) or a number.'
+    ])
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+test('a commit error is not wiped by a validation pending from earlier input', async () => {
+  vi.useFakeTimers()
+  try {
+    const editor = mountEditor()
+    const emptyError = ['The formula is empty; add a metric id (e.g. A) or a number.']
+
+    editor.text.value = 'A +'
+    await nextTick()
+    editor.text.value = ''
+    await nextTick()
+
+    expect('errors' in editor.commit()).toBe(true)
+    expect(editor.errors.value).toEqual(emptyError)
+
+    vi.advanceTimersByTime(1500)
+    expect(editor.errors.value).toEqual(emptyError)
   } finally {
     vi.useRealTimers()
   }

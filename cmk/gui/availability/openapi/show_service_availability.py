@@ -11,8 +11,10 @@ from pydantic import AwareDatetime
 
 from cmk.ccc.site import SiteId
 from cmk.gui.availability.annotations import load_annotations
-from cmk.gui.availability.computation import compute_availability
-from cmk.gui.availability.rawdata import get_availability_rawdata
+from cmk.gui.availability.computation import (
+    compute_availability,
+    get_host_service_availability_rawdata,
+)
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -84,7 +86,7 @@ def show_service_availability_v1(
     avoptions = build_avoptions(time_range_from, time_range_until)
     only_sites = build_only_sites(site_id)
 
-    raw_data, _ = get_availability_rawdata(
+    raw_data, _ = get_host_service_availability_rawdata(
         what="service",
         context={},
         filterheaders=build_service_filterheader(host_name, service_name),

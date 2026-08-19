@@ -20,7 +20,7 @@ def test_show_host_availability_returns_object(
     host_av_entry: AVEntry,
 ) -> None:
     with (
-        patch(f"{_MODULE}.get_availability_rawdata", return_value=({}, False)),
+        patch(f"{_MODULE}.get_host_service_availability_rawdata", return_value=({}, False)),
         patch(f"{_MODULE}.compute_availability", return_value=[host_av_entry]),
     ):
         resp = clients.HostAvailability.get(
@@ -42,7 +42,7 @@ def test_show_host_availability_returns_404_when_not_found(
     clients: ClientRegistry,
 ) -> None:
     with (
-        patch(f"{_MODULE}.get_availability_rawdata", return_value=({}, False)),
+        patch(f"{_MODULE}.get_host_service_availability_rawdata", return_value=({}, False)),
         patch(f"{_MODULE}.compute_availability", return_value=[]),
     ):
         clients.HostAvailability.get(

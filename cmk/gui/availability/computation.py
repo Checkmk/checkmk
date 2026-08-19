@@ -57,9 +57,8 @@ from .type_defs import (
 # Get raw availability data for host/service via livestatus. The result is a
 # list of spans. Each span is a dictionary that describes one span of time where
 # a specific host or service has one specific state.
-# For BI availability use get_bi_availability_rawdata from the bi module,
-# or the top-level get_availability_rawdata from cmk.gui.availability which
-# dispatches automatically.
+# BI availability does not go through this function; it is computed from the
+# compiled aggregations by get_bi_availability in the bi module.
 def get_host_service_availability_rawdata(
     what: AVObjectType,
     context: VisualContext,

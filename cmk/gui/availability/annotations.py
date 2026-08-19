@@ -61,8 +61,6 @@ def update_annotations(
 def find_annotation(
     annotations: AVAnnotations,
     site_host_svc: AVAnnotationKey,
-    host_state: str | None,
-    service_state: str | None,
     fromtime: AVTimeStamp,
     untiltime: AVTimeStamp,
 ) -> AVAnnotationEntry | None:
@@ -78,8 +76,6 @@ def find_annotation(
 def delete_annotation(
     annotations: AVAnnotations,
     site_host_svc: AVAnnotationKey,
-    host_state: str | None,
-    service_state: str | None,
     fromtime: AVTimeStamp,
     untiltime: AVTimeStamp,
 ) -> None:

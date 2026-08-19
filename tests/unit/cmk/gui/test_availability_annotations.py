@@ -452,3 +452,14 @@ def test_get_relevant_annotations(
     assert (
         availability.get_relevant_annotations(annotations, by_host, "service", avoptions) == result
     )
+
+
+def test_find_annotation_matches_on_time_range_only() -> None:
+    key: SiteHostSvc = (SiteId("heute"), HostName("heute"), None)
+    matching: AVAnnotationEntry = {"from": 100.0, "until": 200.0, "text": "match"}
+    annotations: AVAnnotations = {key: [{"from": 0.0, "until": 50.0, "text": "other"}, matching]}
+
+    assert cmk.gui.availability.annotations.find_annotation(annotations, key, 100.0, 200.0) is (
+        matching
+    )
+    assert cmk.gui.availability.annotations.find_annotation(annotations, key, 100.0, 300.0) is None

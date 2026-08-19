@@ -20,7 +20,7 @@ def test_list_service_availability_returns_collection(
     service_av_entry: AVEntry,
 ) -> None:
     with (
-        patch(f"{_MODULE}.get_availability_rawdata", return_value=({}, False)),
+        patch(f"{_MODULE}.get_host_service_availability_rawdata", return_value=({}, False)),
         patch(f"{_MODULE}.compute_availability", return_value=[service_av_entry]),
     ):
         resp = clients.ServiceAvailability.list_all(
@@ -45,7 +45,7 @@ def test_list_service_availability_returns_empty_collection(
     clients: ClientRegistry,
 ) -> None:
     with (
-        patch(f"{_MODULE}.get_availability_rawdata", return_value=({}, False)),
+        patch(f"{_MODULE}.get_host_service_availability_rawdata", return_value=({}, False)),
         patch(f"{_MODULE}.compute_availability", return_value=[]),
     ):
         resp = clients.ServiceAvailability.list_all(

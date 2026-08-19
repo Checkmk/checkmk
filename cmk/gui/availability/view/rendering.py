@@ -17,6 +17,7 @@ from cmk.gui.availability.bi import get_bi_availability
 from cmk.gui.availability.computation import (
     compute_availability,
     compute_availability_groups,
+    get_host_service_availability_rawdata,
     object_title,
 )
 from cmk.gui.availability.layout import layout_availability_table, layout_timeline
@@ -25,7 +26,6 @@ from cmk.gui.availability.options import (
     get_av_display_options,
     get_availability_options_from_request,
 )
-from cmk.gui.availability.rawdata import get_availability_rawdata
 from cmk.gui.availability.type_defs import (
     AVAnnotations,
     AVData,
@@ -291,7 +291,7 @@ def show_availability_page(
         include_long_output = (
             av_mode == "timeline" and "timeline_long_output" in avoptions["labelling"]
         )
-        av_rawdata, has_reached_logrow_limit = get_availability_rawdata(
+        av_rawdata, has_reached_logrow_limit = get_host_service_availability_rawdata(
             what,
             context,
             filterheaders,

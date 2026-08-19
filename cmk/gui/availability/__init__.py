@@ -18,7 +18,12 @@ from .annotations import (
     load_annotations,
 )
 from .bi import get_bi_availability
-from .computation import compute_availability, compute_availability_groups, object_title
+from .computation import (
+    compute_availability,
+    compute_availability_groups,
+    get_host_service_availability_rawdata,
+    object_title,
+)
 from .layout import layout_availability_table, layout_timeline
 from .options import (
     get_av_computation_options,
@@ -26,7 +31,6 @@ from .options import (
     get_availability_options_from_request,
     get_default_avoptions,
 )
-from .rawdata import get_availability_rawdata
 from .type_defs import (
     AVAnnotations,
     AVData,
@@ -59,9 +63,9 @@ __all__ = [
     "get_av_computation_options",
     "get_av_display_options",
     "get_availability_options_from_request",
-    "get_availability_rawdata",
     "get_bi_availability",
     "get_default_avoptions",
+    "get_host_service_availability_rawdata",
     "get_relevant_annotations",
     "layout_availability_table",
     "layout_timeline",

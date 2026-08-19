@@ -161,22 +161,11 @@ def show_annotations(
 
 
 def _edit_annotation(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
-    (
-        site_id,
-        hostname,
-        host_state,
-        service,
-        service_state,
-        fromtime,
-        untiltime,
-        site_host_svc,
-    ) = _handle_anno_request_vars()
+    site_id, hostname, service, fromtime, untiltime, site_host_svc = _handle_anno_request_vars()
 
     # Find existing annotation with this specification
     annotations = load_annotations()
-    annotation = find_annotation(
-        annotations, site_host_svc, host_state, service_state, fromtime, untiltime
-    )
+    annotation = find_annotation(annotations, site_host_svc, fromtime, untiltime)
 
     if annotation:
         value = annotation.copy()
@@ -335,27 +324,16 @@ def _vs_annotation() -> Dictionary:
 # Called at the beginning of every availability page
 def handle_delete_annotations() -> None:
     if request.var("_delete_annotation"):
-        (
-            _site_id,
-            _hostname,
-            _service,
-            host_state,
-            service_state,
-            fromtime,
-            untiltime,
-            site_host_svc,
-        ) = _handle_anno_request_vars()
+        _site_id, _hostname, _service, fromtime, untiltime, site_host_svc = (
+            _handle_anno_request_vars()
+        )
 
         annotations = load_annotations()
-        annotation = find_annotation(
-            annotations, site_host_svc, host_state, service_state, fromtime, untiltime
-        )
+        annotation = find_annotation(annotations, site_host_svc, fromtime, untiltime)
         if not annotation:
             return
 
-        delete_annotation(
-            annotations, site_host_svc, host_state, service_state, fromtime, untiltime
-        )
+        delete_annotation(annotations, site_host_svc, fromtime, untiltime)
         save_annotations(annotations)
 
 
@@ -371,14 +349,10 @@ def _handle_edit_annotations(breadcrumb: Breadcrumb, *, debug: bool) -> bool:
     return finished
 
 
-def _handle_anno_request_vars() -> tuple[
-    str, str, str | None, str | None, str | None, float, float, AVAnnotationKey
-]:
+def _handle_anno_request_vars() -> tuple[str, str, str | None, float, float, AVAnnotationKey]:
     site_id = request.var("anno_site") or ""
     hostname = request.get_str_input_mandatory("anno_host")
-    host_state = request.var("anno_host_state") or None
     service = request.var("anno_service") or None
-    service_state = request.var("anno_service_state") or None
     fromtime = request.get_float_input_mandatory("anno_from")
     untiltime = request.get_float_input_mandatory("anno_until")
 
@@ -388,4 +362,4 @@ def _handle_anno_request_vars() -> tuple[
         ServiceName(service) if service else None,
     )
 
-    return site_id, hostname, host_state, service, service_state, fromtime, untiltime, site_host_svc
+    return site_id, hostname, service, fromtime, untiltime, site_host_svc

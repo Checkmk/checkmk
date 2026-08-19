@@ -27,7 +27,6 @@ from cmk.gui.data_source import query_livestatus
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.type_defs import (
-    FilterHeader,
     Row,
     Rows,
 )
@@ -35,7 +34,6 @@ from cmk.livestatus_client import (
     LivestatusRow,
     lq_logic,
     MKLivestatusPayloadTooLargeError,
-    OnlySites,
     Query,
     QuerySpecification,
 )
@@ -49,7 +47,6 @@ from .type_defs import (
     AVBIPhases,
     AVBITimelineState,
     AVBITimelineStates,
-    AVObjectSpec,
     AVOptions,
     AVRawData,
     AVSpan,
@@ -118,16 +115,6 @@ def get_bi_availability(
     av_rawdata = spans_by_object(spans)
 
     return BIAvailability(timeline_containers, av_rawdata, has_reached_logrow_limit)
-
-
-def get_bi_availability_rawdata(
-    filterheaders: FilterHeader,
-    only_sites: OnlySites,
-    av_object: AVObjectSpec,
-    include_output: bool,
-    avoptions: AVOptions,
-) -> tuple[AVRawData, bool]:
-    raise Exception("Not implemented yet. Sorry.")
 
 
 def get_timeline_containers(

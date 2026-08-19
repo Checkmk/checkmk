@@ -1,0 +1,9 @@
+{
+  "integrity": "sha256-gKoYIUrpy7XVcDCxHSGGy0+tQvTyxCCoaRvNTx8pre4=",
+  "strip_prefix": "clickhouse-common-static-26.3.16.10001.altinitystable",
+  "url": "https://builds.altinity.cloud/tgz-repo/clickhouse-common-static-26.3.16.10001.altinitystable-amd64.tgz",
+  "overlay": {
+    "BUILD.bazel": "sha256-bT63HXfX/E2n2vD8xKEsSKKxfpOalvZjh/bV2OS0Yhs=",
+    "MODULE.bazel": "sha256-mdhH/LkJWIuzxuWjxYSnzql3C4lcEjq8PzmAQTXseZo="
+  }
+}

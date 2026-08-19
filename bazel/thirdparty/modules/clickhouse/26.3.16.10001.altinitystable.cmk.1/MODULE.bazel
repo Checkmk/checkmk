@@ -1,6 +1,6 @@
 module(
     name = "clickhouse",
-    version = "25.8.16.10001.altinitystable.cmk.1",
+    version = "26.3.16.10001.altinitystable.cmk.1",
     compatibility_level = 1,
 )
 

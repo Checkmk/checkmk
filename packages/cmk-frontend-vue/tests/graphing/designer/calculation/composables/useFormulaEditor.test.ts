@@ -166,12 +166,12 @@ test('commit shows the error immediately and keeps it despite a pending delay', 
 
     expect('errors' in editor.commit()).toBe(true)
     expect(editor.errors.value).toEqual([
-      'Invalid formula: The formula ends unexpectedly; add a metric id (e.g. A) or a number.'
+      'Invalid formula: End the formula with a metric ID (e.g. A), or a number.'
     ])
 
     vi.advanceTimersByTime(1500)
     expect(editor.errors.value).toEqual([
-      'Invalid formula: The formula ends unexpectedly; add a metric id (e.g. A) or a number.'
+      'Invalid formula: End the formula with a metric ID (e.g. A), or a number.'
     ])
   } finally {
     vi.useRealTimers()

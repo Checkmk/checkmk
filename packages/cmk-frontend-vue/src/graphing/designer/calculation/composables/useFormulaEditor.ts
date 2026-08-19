@@ -60,7 +60,7 @@ export function useFormulaEditor(
           token: detail.token
         })
       case 'unexpected-end':
-        return _t('The formula ends unexpectedly; add a metric id (e.g. A) or a number.')
+        return _t('End the formula with a metric ID (e.g. A), or a number.')
       case 'unknown-function':
         return _t("Unknown function '%{name}'; available functions: %{available}.", {
           name: detail.name,

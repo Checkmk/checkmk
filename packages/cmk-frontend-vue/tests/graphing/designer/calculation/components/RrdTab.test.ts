@@ -73,7 +73,7 @@ test('an invalid formula shows its error and emits nothing', async () => {
   await fireEvent.update(formulaInput(), 'A +')
   await fireEvent.click(screen.getByRole('button', { name: 'Calculate & add' }))
   expect(emitted('add')).toBeUndefined()
-  expect(screen.getByText(/ends unexpectedly/)).toBeInTheDocument()
+  expect(screen.getByText(/End the formula with a metric ID/)).toBeInTheDocument()
 })
 
 test('the calculate button stays enabled and reports an empty formula', async () => {

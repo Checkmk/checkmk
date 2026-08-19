@@ -24,8 +24,7 @@ py_binary(
     name = "assert_build_artifacts",
     srcs = ["assert_build_artifacts.py"],
     deps = [
-        ":lib",
-        "//tests/testlib",
+        "//packages/cmk-ccc:version",
         requirement("requests"),
     ],
 )

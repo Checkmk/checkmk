@@ -62,6 +62,7 @@ DomainType = Literal[
     "icon_category",
     "icon_emblem",
     "inventory",
+    "javascript_crash_report",
     "ldap_connection",
     "licensing",
     "license_response",

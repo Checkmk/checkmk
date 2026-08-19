@@ -38,6 +38,9 @@ from .api_endpoints import background_job as api_background_job
 from .api_endpoints import (
     comment as api_comment,
 )
+from .api_endpoints import (
+    crash_report as api_crash_report,
+)
 from .api_endpoints import downtime as api_downtime
 from .api_endpoints import folder_config as api_folder_config
 from .api_endpoints import host_config as api_host_config
@@ -160,6 +163,10 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_autocomplete.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    api_crash_report.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

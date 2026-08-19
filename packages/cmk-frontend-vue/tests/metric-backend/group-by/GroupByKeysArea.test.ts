@@ -58,13 +58,13 @@ async function selectKey(value: string): Promise<void> {
   await userEvent.click(await screen.findByRole('option', { name: value }))
 }
 
-test('adding a key replaces the "everything" placeholder and infers the picked key\'s kind', async () => {
+test('adding a key replaces the "combine all series" placeholder and infers the picked key\'s kind', async () => {
   const { keys } = renderArea()
-  expect(screen.getByText('everything')).toBeVisible()
+  expect(screen.getByText('nothing, combine all series into one')).toBeVisible()
 
   await userEvent.click(screen.getByRole('button', { name: 'Add group key' }))
   await waitFor(() => expect(keys.value).toHaveLength(1))
-  expect(screen.queryByText('everything')).toBeNull()
+  expect(screen.queryByText('nothing, combine all series into one')).toBeNull()
 
   await selectKey('http.route')
 

@@ -49,7 +49,11 @@ test.each<[string, GroupByModel, string]>([
 
 test.each<[string, GroupByModel, string]>([
   ['inert', { function: 'none', params: {}, keys: [] }, 'no grouping'],
-  ['active without keys', { function: 'avg', params: {}, keys: [] }, 'avg by everything'],
+  [
+    'active without keys',
+    { function: 'avg', params: {}, keys: [] },
+    'avg by nothing, combine all series into one'
+  ],
   [
     'active with keys',
     {

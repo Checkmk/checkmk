@@ -113,7 +113,7 @@ defineExpose({ tryChangeFocus, focusKey })
 <template>
   <div class="metric-backend-group-by-keys-area" :data-testid="testid">
     <span v-if="keys.length === 0" class="metric-backend-group-by-keys-area__everything">{{
-      _t('everything')
+      _t('nothing, combine all series into one')
     }}</span>
     <GroupByKeyPill
       v-for="key in keys"

@@ -44,13 +44,13 @@ async function openStep(): Promise<void> {
   await userEvent.click(screen.getByRole('button', { name: /Edit then step/ }))
 }
 
-test('the collapsed chip summarises "<function> everything" with no keys', () => {
+test('the collapsed chip summarises "<function> nothing, combine all series into one" with no keys', () => {
   renderStep({ function: 'avg', keys: [] })
   const chip = screen.getByRole('button', { name: /Edit then step/ })
   // The pill no longer carries the "then" word; that lives in the row label beside it.
   expect(chip).not.toHaveTextContent('then')
   expect(chip).toHaveTextContent('avg by')
-  expect(chip).toHaveTextContent('everything')
+  expect(chip).toHaveTextContent('nothing, combine all series into one')
 })
 
 test.each([

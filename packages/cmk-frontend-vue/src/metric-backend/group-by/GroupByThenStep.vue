@@ -142,7 +142,7 @@ function canLeaveEdit(): boolean {
         <span
           v-if="model.keys.length === 0"
           class="metric-backend-group-by-then-step__everything"
-          >{{ _t('everything') }}</span
+          >{{ _t('nothing, combine all series into one') }}</span
         >
         <template v-for="(key, index) in model.keys" :key="key.id">
           <span

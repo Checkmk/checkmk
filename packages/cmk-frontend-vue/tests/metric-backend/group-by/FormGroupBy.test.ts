@@ -172,14 +172,14 @@ test.each([
   expect(screen.getByText(error)).toBeVisible()
 })
 
-test('the "everything" placeholder shows for an active function with no keys and hides once a key is added', async () => {
+test('the "combine all series" placeholder shows for an active function with no keys and hides once a key is added', async () => {
   const { model } = renderWidget({ function: 'avg', keys: [] }, 'float')
   await openPill()
-  expect(screen.getByText('everything')).toBeVisible()
+  expect(screen.getByText('nothing, combine all series into one')).toBeVisible()
 
   await userEvent.click(screen.getByRole('button', { name: 'Add group key' }))
   await waitFor(() => expect(model.value.keys).toHaveLength(1))
-  expect(screen.queryByText('everything')).toBeNull()
+  expect(screen.queryByText('nothing, combine all series into one')).toBeNull()
 })
 
 test('"no grouping" removes the keys area but retains the keys in the model', async () => {

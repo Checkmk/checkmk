@@ -63,7 +63,7 @@ export function compactFunctionLabel(model: GroupByModel): string {
   }
 }
 
-/** Collapsed-chip summary: 'no grouping', '<function> everything', or '<function> [Level] key, ...'. */
+/** Collapsed-chip summary: 'no grouping', '<function> [Kind] key, ...', or a keyless placeholder. */
 export function clauseSummary(model: GroupByModel): string {
   const { _t } = usei18n()
   const fn = compactFunctionLabel(model)
@@ -71,15 +71,18 @@ export function clauseSummary(model: GroupByModel): string {
     return fn
   }
   if (model.keys.length === 0) {
-    return `${fn} ${_t('everything')}`
+    return `${fn} ${_t('nothing, combine all series into one')}`
   }
   return `${fn} ${model.keys.map(keyPillLabel).join(', ')}`
 }
 
-/** Summary of a chained then step: 'then <function> everything' or 'then <function> [Kind] key, ...'. */
+/** Then-step summary: 'then <function> [Kind] key, ...', or a keyless placeholder. */
 export function thenStepSummary(step: AggregationStep): string {
   const { _t } = usei18n()
   const keys = step.keys.filter(isKeyValid)
-  const tail = keys.length === 0 ? _t('everything') : keys.map(keyPillLabel).join(', ')
+  const tail =
+    keys.length === 0
+      ? _t('nothing, combine all series into one')
+      : keys.map(keyPillLabel).join(', ')
   return `${_t('then')} ${functionLabel(step.function)} ${tail}`
 }

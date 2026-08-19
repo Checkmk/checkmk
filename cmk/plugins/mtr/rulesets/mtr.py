@@ -44,16 +44,17 @@ def _address_configuration() -> Dictionary:
                 parameter_form=String(
                     title=Title("Destination address"),
                     help_text=Help(
-                        "This will be used as service name in Checkmk."
-                        " It must be a unique name per host."
+                        "Host name, IPv4 address or IPv6 address that mtr will trace the"
+                        " route to. This value is also used as service name in Checkmk,"
+                        " so it must be unique per host."
                     ),
                     custom_validate=(
                         validators.LengthInRange(min_value=1),
                         validators.MatchRegex(
-                            r"^[A-Za-z0-9\-_. ]+$",
+                            r"^[A-Za-z0-9\-_.: ]+$",
                             Message(
                                 "Valid service names may only contain letters, numbers,"
-                                " dashes, underscores, spaces and dots."
+                                " dashes, underscores, spaces, dots and colons."
                             ),
                         ),
                     ),

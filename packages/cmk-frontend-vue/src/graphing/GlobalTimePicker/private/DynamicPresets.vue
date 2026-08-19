@@ -62,19 +62,20 @@ function durationFor(id: string | null): number {
 
 <template>
   <div ref="rootRef" class="graphing-dynamic-presets">
-    <!-- Off-screen measurement layer driving the overflow fit. -->
-    <div ref="measureRef" class="graphing-dynamic-presets__measure" aria-hidden="true" inert>
-      <TimeRangeChip v-for="preset in presets" :key="preset.id" :selected="false">
-        {{ preset.label }}
-      </TimeRangeChip>
-      <div ref="overflowMeasureRef">
-        <CmkChipSelect
-          :model-value="null"
-          :options="EMPTY_OPTIONS"
-          :label="_t('More time ranges')"
-          :input-hint="_t('More ranges')"
-          static-label
-        />
+    <div class="graphing-dynamic-presets__measure-clip" aria-hidden="true" inert>
+      <div ref="measureRef" class="graphing-dynamic-presets__measure">
+        <TimeRangeChip v-for="preset in presets" :key="preset.id" :selected="false">
+          {{ preset.label }}
+        </TimeRangeChip>
+        <div ref="overflowMeasureRef">
+          <CmkChipSelect
+            :model-value="null"
+            :options="EMPTY_OPTIONS"
+            :label="_t('More time ranges')"
+            :input-hint="_t('More ranges')"
+            static-label
+          />
+        </div>
       </div>
     </div>
 
@@ -119,14 +120,17 @@ function durationFor(id: string | null): number {
   gap: var(--dimension-3);
 }
 
-.graphing-dynamic-presets__measure {
+.graphing-dynamic-presets__measure-clip {
   position: absolute;
-  visibility: hidden;
+  width: 0;
+  height: 0;
+  overflow: clip;
+}
+
+.graphing-dynamic-presets__measure {
   display: flex;
-  flex-wrap: nowrap;
+  width: max-content;
   gap: var(--dimension-3);
-  white-space: nowrap;
-  pointer-events: none;
 }
 
 .graphing-dynamic-presets__overflow {

@@ -12,7 +12,7 @@ import {
   useCustomGraphData
 } from '@/graphing/designer/composables/useCustomGraphData'
 import type { GraphItem } from '@/graphing/designer/types'
-import type { RequestedTimeRange } from '@/graphing/types'
+import type { RequestedTimeRange, TimeInterval } from '@/graphing/types'
 
 import { constantItem, rrdMetricItem, rrdQueryItem } from '../fixtures'
 
@@ -24,6 +24,7 @@ const GRAPH_OPTIONS: ApiGraphOptions = {
 }
 const RANGE: RequestedTimeRange = { start: 0, end: 3600 }
 const REQUEST_REACHING_PAST_THE_DRAWN_WINDOW = { start: -120, end: 3660, step: 60 }
+const OVERVIEW_DOMAIN: TimeInterval = { start: -10_800, end: 14_400 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
@@ -76,23 +77,27 @@ function fetchResponse(
 interface Harness {
   items: ReturnType<typeof ref<GraphItem[]>>
   data: ReturnType<typeof useCustomGraphData>
-  overviewEnabled: ReturnType<typeof ref<boolean>>
+  overviewRange: ReturnType<typeof ref<TimeInterval | null>>
 }
 
-function mount(initialItems: GraphItem[], withOverview = false, fetchHidden = false): Harness {
+function mount(
+  initialItems: GraphItem[],
+  overviewDomain: TimeInterval | null = null,
+  fetchHidden = false
+): Harness {
   const items = ref<GraphItem[]>(initialItems)
-  const overviewEnabled = ref<boolean>(withOverview)
+  const overviewRange = ref<TimeInterval | null>(overviewDomain)
   const data = useCustomGraphData({
     getItems: () => items.value ?? [],
     getGraphOptions: () => GRAPH_OPTIONS,
     getRequestedTimeRange: () => RANGE,
     getConsolidationFn: () => 'max',
     getFigureWidth: () => 860,
-    withOverview: () => overviewEnabled.value ?? false,
+    getOverviewRange: () => overviewRange.value ?? null,
     getFetchHidden: () => fetchHidden,
     debounceMs: 400
   })
-  return { items, data, overviewEnabled }
+  return { items, data, overviewRange }
 }
 
 async function flush(): Promise<void> {
@@ -156,7 +161,7 @@ test('fetches hidden rows as visible so their stats are available', async () => 
     error: undefined,
     response: new Response(null, { status: 200 })
   }))
-  const { data } = mount([rrdMetricItem('A'), rrdMetricItem('B', { visible: false })], false, true)
+  const { data } = mount([rrdMetricItem('A'), rrdMetricItem('B', { visible: false })], null, true)
   await flush()
 
   const sent = postSpy.mock.calls[0]![1].body.content.data_sources
@@ -175,7 +180,7 @@ test('toggling visibility does not refetch when hidden lines are fetched', async
     error: undefined,
     response: new Response(null, { status: 200 })
   }))
-  const { items } = mount([rrdMetricItem('A'), rrdMetricItem('B')], false, true)
+  const { items } = mount([rrdMetricItem('A'), rrdMetricItem('B')], null, true)
   await flush()
   expect(postSpy).toHaveBeenCalledTimes(1)
 
@@ -254,20 +259,35 @@ test('disposing the owning scope cancels a pending debounce', async () => {
   expect(postSpy).toHaveBeenCalledTimes(1)
 })
 
-test('fetches the wider overview domain only when enabled', async () => {
-  const { data, overviewEnabled } = mount([rrdMetricItem('A')], true)
+test('posts the overview domain its caller owns, and drops it when there is none', async () => {
+  const { data, overviewRange } = mount([rrdMetricItem('A')], OVERVIEW_DOMAIN)
   await flush()
 
   expect(postSpy).toHaveBeenCalledTimes(2)
   const overviewBody = postSpy.mock.calls[1]![1].body
-  const span = overviewBody.requested_time_range.end - overviewBody.requested_time_range.start
-  expect(span).toBeGreaterThan(RANGE.end - RANGE.start)
+  expect(overviewBody.requested_time_range).toEqual({ ...OVERVIEW_DOMAIN, step: 60 })
   expect(data.overview.value).toBeDefined()
 
-  overviewEnabled.value = false
+  overviewRange.value = null
   await flush()
   expect(postSpy).toHaveBeenCalledTimes(3)
   expect(data.overview.value).toBeUndefined()
+})
+
+test('refetches the overview once its domain is recalculated', async () => {
+  const { overviewRange } = mount([rrdMetricItem('A')], OVERVIEW_DOMAIN)
+  await flush()
+  expect(postSpy).toHaveBeenCalledTimes(2)
+
+  const recentered: TimeInterval = { start: -14_400, end: 10_800 }
+  overviewRange.value = recentered
+  await flush()
+
+  expect(postSpy).toHaveBeenCalledTimes(4)
+  expect(postSpy.mock.calls[3]![1].body.requested_time_range).toEqual({
+    ...recentered,
+    step: 60
+  })
 })
 
 test('a stale response does not overwrite a newer one', async () => {
@@ -387,4 +407,28 @@ test('clears the diagnostics when the last data source is removed', async () => 
   expect(data.partialErrors.value).toEqual([])
   expect(data.warnings.value).toEqual([])
   expect(data.metrics.value).toEqual([])
+})
+
+test('skips the overview when its request is the one that last completed', async () => {
+  const { data } = mount([rrdMetricItem('A')], OVERVIEW_DOMAIN)
+  await flush()
+  expect(postSpy).toHaveBeenCalledTimes(2)
+
+  data.refetch()
+  await flush()
+
+  // Only the main window is asked for again; the strip's series are already on screen.
+  expect(postSpy).toHaveBeenCalledTimes(3)
+  expect(data.overview.value).toBeDefined()
+})
+
+test('asks for the overview again once the definition changes under it', async () => {
+  const { items } = mount([rrdMetricItem('A')], OVERVIEW_DOMAIN)
+  await flush()
+  expect(postSpy).toHaveBeenCalledTimes(2)
+
+  items.value = [rrdMetricItem('A'), rrdMetricItem('B')]
+  await flush()
+
+  expect(postSpy).toHaveBeenCalledTimes(4)
 })

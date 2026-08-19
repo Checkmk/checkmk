@@ -23,6 +23,7 @@ from urllib.parse import urljoin
 from playwright.sync_api import expect, Locator, Page
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
+from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import TimeSeriesGraph
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -88,6 +89,13 @@ class CustomGraphDesigner(CmkPage):
     def preview(self) -> Locator:
         """The graph the new engine rendered for this graph definition."""
         return self.main_area.locator(_PREVIEW_SELECTOR)
+
+    @property
+    def graph(self) -> TimeSeriesGraph:
+        """The graph the preview draws, with the same canvas and axes as on any other surface."""
+        return TimeSeriesGraph(
+            self.preview.locator(".graphing-time-series-graph"), self.page, self.main_area
+        )
 
     @property
     def legend_rows(self) -> Locator:

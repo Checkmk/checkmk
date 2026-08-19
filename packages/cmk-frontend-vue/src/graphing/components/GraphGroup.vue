@@ -117,20 +117,13 @@ const { setRefreshPaused } = useGlobalRefresh()
 
 const brushCoordination = useBrushCoordination(
   () => Math.floor(Date.now() / 1000),
-  requestedTimeRange.value
+  () => requestedTimeRange.value
 )
 
 function onPanelTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
   brushCoordination.onBrushChange(range, kind)
   setRequestedTimeRange(range)
 }
-
-watch(requestedTimeRange, (range) => {
-  const known = brushCoordination.graphRange.value
-  if (range.start !== known.start || range.end !== known.end) {
-    brushCoordination.onExternalRange(range)
-  }
-})
 
 const { graphs, isLoading, loadingSlots, error, partialErrors, warnings, reload } = useGraphData(
   () => props.graphs,

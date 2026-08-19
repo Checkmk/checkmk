@@ -21,8 +21,10 @@ import GraphNotice from '../../components/GraphNotice.vue'
 import GraphPanel from '../../components/GraphPanel.vue'
 import type { ConsolidationFn } from '../../components/consolidation'
 import GraphLegend from '../../components/legend/GraphLegend.vue'
+import { useBrushCoordination } from '../../composables/useBrushCoordination'
 import { type GraphNoticeDescriptor, useGraphNotice } from '../../composables/useGraphNotice'
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
+import type { RequestedTimeRange, TimeRangeCommitKind } from '../../types'
 import type { CustomGraphOptions } from '../api'
 import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
 import { useCustomGraphData } from '../composables/useCustomGraphData'
@@ -76,6 +78,16 @@ const consolidationFn = ref<ConsolidationFn>('max')
 // The app seeds the global time range from the configured default before we mount.
 const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } = useRequestedTimeRange()
 
+const brushCoordination = useBrushCoordination(
+  () => Math.floor(Date.now() / 1000),
+  () => requestedTimeRange.value
+)
+
+function onPanelTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
+  brushCoordination.onBrushChange(range, kind)
+  setRequestedTimeRange(range)
+}
+
 const hiddenMetricNames = ref<string[]>([])
 const hiddenLineNames = ref<string[]>([])
 const highlightedMetricName = ref<string | null>(null)
@@ -96,7 +108,7 @@ const data = useCustomGraphData({
   getRequestedTimeRange: () => requestedTimeRange.value,
   getConsolidationFn: () => consolidationFn.value,
   getFigureWidth: () => figureWidth.value,
-  withOverview: () => mode === 'view',
+  getOverviewRange: () => (mode === 'view' ? brushCoordination.brushDomain.value : null),
   // Edit mode fetches hidden rows too, so the appearance table can show their stats.
   getFetchHidden: () => mode === 'edit'
 })
@@ -225,12 +237,12 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
           brush: mode === 'view' ? 'enabled' : 'disabled',
           burger: 'disabled',
           hover: 'enabled',
-          panning: 'disabled',
-          zoom: 'disabled',
+          panning: 'enabled',
+          zoom: 'enabled',
           pin: 'enabled'
         }"
         :overview="drawnOverview"
-        @update:requested-time-range="setRequestedTimeRange($event)"
+        @update:requested-time-range="onPanelTimeRange"
         @inspect="setRefreshPaused(true)"
       />
       <GraphNotice

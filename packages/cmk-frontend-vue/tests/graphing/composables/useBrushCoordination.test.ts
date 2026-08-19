@@ -4,15 +4,21 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { describe, expect, test } from 'vitest'
+import { effectScope, nextTick, ref } from 'vue'
 
 import { useBrushCoordination } from '@/graphing/composables/useBrushCoordination'
 
 const DAY = 86_400
 const NOW = 2_000_000
 
-function makeCoordination() {
-  const initial = { start: NOW - DAY, end: NOW }
-  return useBrushCoordination(() => NOW, initial)
+function makeCoordination(requested = ref({ start: NOW - DAY, end: NOW })) {
+  return {
+    ...useBrushCoordination(
+      () => NOW,
+      () => requested.value
+    ),
+    requested
+  }
 }
 
 describe('useBrushCoordination — construction', () => {
@@ -111,5 +117,37 @@ describe('useBrushCoordination — intent handlers', () => {
 
     // 2d span → 5× multiplier → 10d strip centered on the widened window.
     expect(coordination.brushDomain.value).toEqual({ start: NOW - 16 * DAY, end: NOW - 6 * DAY })
+  })
+})
+
+describe('useBrushCoordination — the requested range it watches', () => {
+  test('a range it did not commit reseeds the strip around it', async () => {
+    const scope = effectScope()
+    const coordination = scope.run(() => makeCoordination())!
+
+    coordination.requested.value = { start: NOW - 5.5 * DAY, end: NOW - 4.5 * DAY }
+    await nextTick()
+
+    expect(coordination.graphRange.value).toEqual({ start: NOW - 5.5 * DAY, end: NOW - 4.5 * DAY })
+    // Centred on the new window rather than slid, i.e. it took the outside path.
+    expect(coordination.brushDomain.value).toEqual({
+      start: NOW - 8.5 * DAY,
+      end: NOW - 1.5 * DAY
+    })
+    scope.stop()
+  })
+
+  test('a range it committed itself leaves the strip alone', async () => {
+    const scope = effectScope()
+    const coordination = scope.run(() => makeCoordination())!
+    const moved = { start: NOW - DAY + 3600, end: NOW + 3600 }
+
+    coordination.onBrushChange(moved, 'translated_timerange')
+    const domainAfterCommit = { ...coordination.brushDomain.value }
+    coordination.requested.value = moved
+    await nextTick()
+
+    expect(coordination.brushDomain.value).toEqual(domainAfterCommit)
+    scope.stop()
   })
 })

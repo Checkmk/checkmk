@@ -5,11 +5,11 @@
  */
 import { type Ref, onScopeDispose, readonly, ref, watch } from 'vue'
 
-import { overviewTimeRange } from '../../components/GraphBrush/overviewRange'
+import { overviewStep } from '../../components/GraphBrush/overviewRange'
 import type { HorizontalLine, Metric, TimeRange } from '../../components/TimeSeriesGraph'
 import type { ConsolidationFn } from '../../components/consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../../components/constants'
-import type { RequestedTimeRange } from '../../types'
+import type { RequestedTimeRange, TimeInterval } from '../../types'
 import { drawnTimeRange, withEdgeNeighbours } from '../../utils/timeRange'
 import {
   type CustomGraphMetric,
@@ -27,8 +27,8 @@ export interface UseCustomGraphDataOptions {
   getRequestedTimeRange: () => RequestedTimeRange
   getConsolidationFn: () => ConsolidationFn
   getFigureWidth: () => number
-  /** View mode only: additionally fetch the wider brush-overview domain. */
-  withOverview: () => boolean
+  /** Caller-owned so the strip holds still while the window is translated within it. */
+  getOverviewRange: () => TimeInterval | null
   /**
    * Post every source as visible so hidden rows are evaluated too — their data feeds the
    * appearance table while the caller keeps drawing only the truly visible lines. Toggling a
@@ -117,6 +117,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   const warnings = ref<string[]>([])
 
   let requestCounter = 0
+  // The body of the last overview fetch that completed, so an identical one can be skipped.
+  let lastOverviewKey: string | null = null
   let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
   /** The data sources to post, with visibility forced on when hidden rows should be fetched. */
@@ -134,6 +136,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     dataTimeRange.value = undefined
     horizontalLines.value = []
     overview.value = undefined
+    lastOverviewKey = null
     error.value = null
     partialErrors.value = []
     warnings.value = []
@@ -152,16 +155,27 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     const range = options.getRequestedTimeRange()
     const canvasWidth = Math.max(1, options.getFigureWidth() - CANVAS_MARGIN_HORIZONTAL)
     const step = Math.max(60, Math.ceil((range.end - range.start) / canvasWidth))
-    const overviewRequest = overviewTimeRange(
-      { start: range.start, end: range.end, step },
-      Math.floor(Date.now() / 1000),
-      canvasWidth
-    )
     const content: FetchCustomGraphDataRequest['content'] = {
       graph_options: options.getGraphOptions(),
       data_sources: dataSources
     }
     const consolidationFunction = options.getConsolidationFn()
+    const overviewRange = options.getOverviewRange()
+    const overviewBody: FetchCustomGraphDataRequest | null =
+      overviewRange === null
+        ? null
+        : {
+            content,
+            requested_time_range: {
+              start: overviewRange.start,
+              end: overviewRange.end,
+              step: overviewStep(overviewRange.start, overviewRange.end, canvasWidth)
+            },
+            consolidation_function: consolidationFunction
+          }
+    const overviewKey = overviewBody === null ? null : JSON.stringify(overviewBody)
+    // A translation leaves the strip where it was, so its series are already the current ones.
+    const overviewIsCurrent = overviewKey !== null && overviewKey === lastOverviewKey
 
     isLoading.value = true
     // Cleared on success below, not here, so a retry keeps the failure stated until a result lands.
@@ -172,13 +186,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
           requested_time_range: withEdgeNeighbours({ start: range.start, end: range.end, step }),
           consolidation_function: consolidationFunction
         }),
-        options.withOverview()
-          ? fetchCustomGraphData({
-              content,
-              requested_time_range: overviewRequest,
-              consolidation_function: consolidationFunction
-            })
-          : null
+        overviewBody === null || overviewIsCurrent ? null : fetchCustomGraphData(overviewBody)
       ])
       if (requestId !== requestCounter) {
         return
@@ -192,14 +200,20 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
       resolvedTitles.value = resolveTitles(items, bySource, groupTitles)
       dataTimeRange.value = main.time_range
       horizontalLines.value = main.horizontal_lines
-      overview.value =
-        overviewResponse === null
-          ? undefined
-          : {
-              metrics: [...overviewResponse.metrics],
-              dataTimeRange: overviewResponse.time_range,
-              viewTimeRange: drawnTimeRange(overviewRequest, overviewResponse.time_range)
-            }
+      if (overviewBody === null) {
+        overview.value = undefined
+        lastOverviewKey = null
+      } else if (overviewResponse !== null) {
+        overview.value = {
+          metrics: [...overviewResponse.metrics],
+          dataTimeRange: overviewResponse.time_range,
+          viewTimeRange: drawnTimeRange(
+            overviewBody.requested_time_range,
+            overviewResponse.time_range
+          )
+        }
+        lastOverviewKey = overviewKey
+      }
       // The overview repeats the main fetch's diagnostics, so only the main response is read.
       partialErrors.value = [...main.errors]
       warnings.value = [...main.warnings]
@@ -209,6 +223,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
         return
       }
       error.value = e instanceof Error ? e.message : String(e)
+      // A retry has to ask for the strip again, whichever of the two fetches failed.
+      lastOverviewKey = null
     } finally {
       if (requestId === requestCounter) {
         isLoading.value = false
@@ -252,7 +268,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
         requestedTimeRange: options.getRequestedTimeRange(),
         consolidationFn: options.getConsolidationFn(),
         figureWidth: options.getFigureWidth(),
-        withOverview: options.withOverview()
+        overviewRange: options.getOverviewRange()
       }),
     schedule
   )

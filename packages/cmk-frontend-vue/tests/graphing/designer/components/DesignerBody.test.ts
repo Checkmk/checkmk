@@ -3,11 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CalendarDateTime, toZoned } from '@internationalized/date'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 
+import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
 import type { CustomGraphObject } from '@/graphing/designer/api'
 import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
@@ -27,14 +30,34 @@ vi.mock('cmk-ui-library/components/CmkSlideIn/CmkSlideIn.vue', () => ({
   })
 }))
 
+const PAN_SECONDS = 1800
+const PAN_REFETCH_TIMEOUT_MS = 2000
+const PAST_WINDOW: DateTimeRange = {
+  from: toZoned(new CalendarDateTime(2026, 3, 15, 10, 0), 'Europe/Berlin', 'compatible'),
+  to: toZoned(new CalendarDateTime(2026, 3, 15, 11, 0), 'Europe/Berlin', 'compatible')
+}
+
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
-    props: ['metrics', 'highlightedMetricName'],
+    props: ['metrics', 'highlightedMetricName', 'panEnabled', 'view_time_range'],
+    emits: ['pan'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="drawn">{{ metrics.map((m) => m.metadata.title).join(',') }}</span>
       <span data-testid="highlighted">{{ highlightedMetricName ?? '' }}</span>
-    </div>`
+      <span data-testid="pan-enabled">{{ panEnabled }}</span>
+      <button
+        data-testid="pan-back"
+        @click="$emit('pan', {
+          timeRange: {
+            start: view_time_range.start - PAN_SECONDS,
+            end: view_time_range.end - PAN_SECONDS,
+            step: view_time_range.step
+          }
+        })"
+      />
+    </div>`,
+    setup: () => ({ PAN_SECONDS })
   }
 }))
 
@@ -140,12 +163,31 @@ function fetchDataResponse(): unknown {
 }
 
 beforeEach(() => {
+  useGlobalTimeRange().setActiveTimeRange(null, 'time_picker')
   vi.spyOn(client, 'POST').mockResolvedValue(fetchDataResponse())
 })
 
 afterEach(() => {
   vi.restoreAllMocks()
 })
+
+function echoingPostSpy() {
+  const postSpy = vi.spyOn(client, 'POST')
+  postSpy.mockImplementation(async (_path: unknown, options: unknown) => {
+    const response = fetchDataResponse() as { data: Record<string, unknown> }
+    const { requested_time_range: requested } = (
+      options as { body: { requested_time_range: unknown } }
+    ).body
+    return { ...response, data: { ...response.data, time_range: requested } } as never
+  })
+  return postSpy
+}
+
+function requestedRangeOf(call: unknown[]): { start: number; end: number; step: number } {
+  return (
+    call[1] as { body: { requested_time_range: { start: number; end: number; step: number } } }
+  ).body.requested_time_range
+}
 
 function bodyProps(graph: CustomGraphObject = graphObject()) {
   const store = useGraphItems(PALETTE)
@@ -406,4 +448,54 @@ test('says nothing about emptiness once a source has been added', async () => {
 
   expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
   expect(screen.queryByText('No metrics added')).not.toBeInTheDocument()
+})
+
+test.each(['view', 'edit'] as const)('the %s-mode preview arms the pan gesture', async (mode) => {
+  renderBody(mode)
+
+  expect(await screen.findByTestId('pan-enabled')).toHaveTextContent('true')
+})
+
+test('a pan on the preview refetches the shifted window, keeping its span', async () => {
+  const postSpy = echoingPostSpy()
+  renderBody('edit')
+
+  await waitFor(() => expect(postSpy).toHaveBeenCalled())
+  const before = requestedRangeOf(postSpy.mock.calls[0]!)
+
+  await fireEvent.click(await screen.findByTestId('pan-back'))
+
+  await waitFor(
+    () => {
+      const latest = requestedRangeOf(postSpy.mock.calls.at(-1)!)
+      expect(latest).toEqual({
+        start: before.start - PAN_SECONDS,
+        end: before.end - PAN_SECONDS,
+        step: before.step
+      })
+    },
+    { timeout: PAN_REFETCH_TIMEOUT_MS }
+  )
+})
+
+test('a pan in view mode moves the window but leaves the context view where it was', async () => {
+  useGlobalTimeRange().setActiveTimeRange(PAST_WINDOW, 'time_picker')
+  const postSpy = echoingPostSpy()
+  renderBody('view')
+
+  await waitFor(() => expect(postSpy.mock.calls).toHaveLength(2))
+  const mainBefore = requestedRangeOf(postSpy.mock.calls[0]!)
+
+  await fireEvent.click(await screen.findByTestId('pan-back'))
+
+  await waitFor(() => expect(postSpy.mock.calls).toHaveLength(3), {
+    timeout: PAN_REFETCH_TIMEOUT_MS
+  })
+  expect(requestedRangeOf(postSpy.mock.calls[2]!)).toEqual({
+    start: mainBefore.start - PAN_SECONDS,
+    end: mainBefore.end - PAN_SECONDS,
+    step: mainBefore.step
+  })
+  // Only the main window was asked for again: the strip stayed where it was.
+  expect(postSpy.mock.calls).toHaveLength(3)
 })

@@ -34,6 +34,11 @@ test('dropdown is not visible initially', () => {
   expect(screen.queryByText('Add to dashboard')).not.toBeInTheDocument()
 })
 
+test('dropdown is disabled if no entries are provided', () => {
+  render(GraphBurgerMenu, { props: { groups: [], ariaLabel: ARIA_LABEL } })
+  expect(screen.getByRole('button', { name: ARIA_LABEL })).toBeDisabled()
+})
+
 test('clicking the trigger shows the dropdown with group headings and actions', async () => {
   render(GraphBurgerMenu, { props: { groups: GROUPS, ariaLabel: ARIA_LABEL } })
   await fireEvent.click(screen.getByRole('button', { name: ARIA_LABEL }))

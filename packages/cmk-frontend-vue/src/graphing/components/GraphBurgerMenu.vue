@@ -7,10 +7,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
-import { onUnmounted, ref, watch } from 'vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed, onUnmounted, ref, watch } from 'vue'
 
 import type { BurgerMenuCallable, BurgerMenuGroup } from '../types'
 import { BOTTOM_SCREEN_MARGIN } from './constants'
+
+const { _t } = usei18n()
 
 interface BurgerMenuProps {
   ariaLabel?: string | undefined
@@ -68,6 +71,8 @@ function doAction(onClick: BurgerMenuCallable) {
   emit('doAction', onClick)
   isOpen.value = false
 }
+
+const isEmpty = computed(() => !groups?.length)
 </script>
 
 <template>
@@ -77,6 +82,9 @@ function doAction(onClick: BurgerMenuCallable) {
       :class="{ 'graphing-graph-burger-menu__trigger_open': isOpen }"
       :aria-expanded="isOpen"
       :aria-label="ariaLabel"
+      :disabled="isEmpty"
+      :aria-disabled="isEmpty"
+      :title="isEmpty ? _t('No action available') : ''"
       tabindex="0"
       @click="isOpen = !isOpen"
     >

@@ -2401,9 +2401,9 @@ async def _collect_virtual_machines_resources(
         except KeyError:
             raise ApiErrorMissingData("Virtual machine instance's statuses must be present")
 
-        ip = vm_ip_map.get(vm["id"].lower())
-        if ip is not None:
-            resource.labels["vm_ip"] = ip
+        vm_ip = vm_ip_map.get(vm["id"].lower())
+        if vm_ip is not None:
+            resource.labels["vm_ip"] = vm_ip
 
         resource.info["specific_info"] = {"statuses": statuses}
         # for backward compatibility

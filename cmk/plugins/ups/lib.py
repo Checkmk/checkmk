@@ -22,6 +22,7 @@ from cmk.agent_based.v2 import (
     Service,
     startswith,
     State,
+    StringTable,
 )
 
 DETECT_UPS_GENERIC = any_of(
@@ -97,6 +98,19 @@ def optional_int(value: str, *, factor: int = 1) -> int | None:
 
 def optional_yes_or_no(value: str) -> bool | None:
     return True if value.strip() == "1" else False if value.strip() == "2" else None
+
+
+def _is_integer(value: str) -> bool:
+    try:
+        int(value)
+    except ValueError:
+        return False
+    return True
+
+
+def parse_ups_voltage(string_table: StringTable) -> StringTable:
+    """Drop phases that do not report a numeric voltage."""
+    return [line for line in string_table if _is_integer(line[1])]
 
 
 def check_ups_in_voltage(

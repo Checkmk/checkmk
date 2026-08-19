@@ -13,7 +13,6 @@ from typing import override
 import cmk.utils.paths
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -22,7 +21,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.session import session
 from cmk.utils.encryption import fetch_certificate_details
 from cmk.web.utils.csrf_token import check_csrf_token
-from cmk.web.utils.html import HTML
 
 from .definitions import (
     GroupedListOfMultipleChoices,
@@ -101,24 +99,7 @@ class AjaxFetchCA(AjaxPage):
             except Exception:
                 raise MKUserError(None, _("Failed to decode certificate data"))
 
-            def row(key: str, value: str) -> HTML:
-                return HTMLWriter.render_tr(
-                    HTMLWriter.render_td(key) + HTMLWriter.render_td(value), class_="data"
-                )
-
-            summary = HTMLWriter.render_table(
-                row(_("Issued to"), cert.issued_to)
-                + row(_("Issued by"), cert.issued_by)
-                + row(_("Valid from"), cert.valid_from)
-                + row(_("Valid until"), cert.valid_till)
-                + row(_("Fingerprint"), cert.digest_sha256),
-                class_="data",
-            )
-
             return {
-                # "summary" is the pre-rendered table for the legacy valuespec, the FormSpec
-                # based UI renders "details" itself. Drop "summary" with the valuespec.
-                "summary": summary,
                 "details": {
                     "issued_to": cert.issued_to,
                     "issued_by": cert.issued_by,

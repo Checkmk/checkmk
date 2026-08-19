@@ -1282,35 +1282,6 @@ export function update_unit_selector(selectbox: string, metric_prefix: string) {
   )
 }
 
-export function fetch_ca_from_server(varprefix: string) {
-  const address = document.querySelector<HTMLInputElement>(
-    `input[name='${varprefix + '_address'}']`
-  )!.value
-  const port = document.querySelector<HTMLInputElement>(
-    `input[name='${varprefix + '_port'}']`
-  )!.value
-
-  call_ajax('ajax_fetch_ca.py', {
-    method: 'POST',
-    post_data: 'address=' + encodeURIComponent(address) + '&port=' + encodeURIComponent(port),
-    response_handler: (_data: any, ajax_response: string) => {
-      const response = JSON.parse(ajax_response)
-
-      const status = document.getElementById(varprefix + '_status') as HTMLInputElement
-      const content = document.querySelector<HTMLTextAreaElement>(`textarea[name='${varprefix}']`)!
-      if (response.result_code !== 0) {
-        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
-        status.innerText = response.result
-        content.value = ''
-      } else {
-        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
-        status.innerHTML = response.result.summary
-        content.value = response.result.cert_pem
-      }
-    }
-  })
-}
-
 export function single_label_on_change(select_elem: HTMLSelectElement) {
   if (select_elem.value === '') {
     return

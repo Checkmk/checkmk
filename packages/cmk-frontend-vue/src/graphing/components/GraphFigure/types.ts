@@ -21,6 +21,8 @@ export interface GraphFigureProps {
   showBurgerMenu?: boolean
   showPin?: boolean
   burgerMenuGroups?: BurgerMenuGroup[]
+  showTimeAxis?: boolean
+  showValueAxis?: boolean
   /**
    * Called for every fetch to get the graph's data; defaults to posting the definition to the
    * session-authenticated graph fetch endpoint.

@@ -3,13 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import TimeSeriesGraph from '@/graphing/components/TimeSeriesGraph/TimeSeriesGraph.vue'
 import { measureAxisLabel } from '@/graphing/components/TimeSeriesGraph/axes/labelWidth'
 import type { Metric, TimeSeriesGraphProps } from '@/graphing/components/TimeSeriesGraph/types'
+import { AXIS_CLASSES } from '@/graphing/components/TimeSeriesGraph/useAxes'
 import { CANVAS_MARGIN_LEFT, VALUE_LABEL_GUTTER } from '@/graphing/components/constants'
 
 let drawnPoints: Array<[number, number]> = []
@@ -174,6 +175,20 @@ async function renderMemoryGraph(): Promise<{ margin: number; widestLabel: numbe
   }
 }
 
+function plotCanvasStyle(container: Element): CSSStyleDeclaration {
+  return within(container as HTMLElement).getByRole('img').style
+}
+
+function timeAxisLabels(container: Element): string[] {
+  return Array.from(container.querySelectorAll(`g.${AXIS_CLASSES.timeLabels} text`)).map(
+    (tickLabel) => tickLabel.textContent ?? ''
+  )
+}
+
+function drawnValueAxisLabels(container: Element): string[] {
+  return valueAxisLabels(container).filter((label) => label !== '')
+}
+
 describe('TimeSeriesGraph', () => {
   test('mounts a line graph with a canvas drawing surface', () => {
     const metrics = [LINE_METRIC]
@@ -316,6 +331,64 @@ describe('TimeSeriesGraph', () => {
     window.dispatchEvent(new MouseEvent('mouseup', { clientX: 200, clientY: 50 }))
 
     expect(await screen.findByRole('status')).toHaveTextContent('Maximum zoom reached')
+  })
+
+  test('draws both axes when their visibility is left unspecified', async () => {
+    const { container } = renderComponent()
+
+    expect(timeAxisLabels(container)).not.toHaveLength(0)
+    await waitFor(() => {
+      expect(drawnValueAxisLabels(container)).not.toHaveLength(0)
+    })
+  })
+
+  test('a hidden time axis drops its labels and gives the bottom margin to the plot', async () => {
+    const shown = renderComponent({ showTimeAxis: true })
+    const shownHeight = plotCanvasStyle(shown.container).height
+
+    const hidden = renderComponent({ showTimeAxis: false })
+
+    expect(timeAxisLabels(shown.container)).not.toHaveLength(0)
+    expect(timeAxisLabels(hidden.container)).toHaveLength(0)
+    await waitFor(() => {
+      expect(parseFloat(plotCanvasStyle(hidden.container).height)).toBeGreaterThan(
+        parseFloat(shownHeight)
+      )
+    })
+  })
+
+  test('a hidden value axis drops its labels and gives the left margin to the plot', async () => {
+    const shown = renderComponent({ showValueAxis: true })
+    const shownWidth = plotCanvasStyle(shown.container).width
+
+    const hidden = renderComponent({ showValueAxis: false })
+
+    await waitFor(() => {
+      expect(drawnValueAxisLabels(shown.container)).not.toHaveLength(0)
+    })
+    expect(drawnValueAxisLabels(hidden.container)).toHaveLength(0)
+    await waitFor(() => {
+      const hiddenStyle = plotCanvasStyle(hidden.container)
+      expect(hiddenStyle.left).toBe('0px')
+      expect(parseFloat(hiddenStyle.width)).toBeGreaterThan(parseFloat(shownWidth))
+    })
+  })
+
+  test('a hidden time axis still leaves the shown value axis room for its lowest label', async () => {
+    const { container } = renderComponent({ showTimeAxis: false, showValueAxis: true })
+
+    await waitFor(() => {
+      const style = plotCanvasStyle(container)
+      expect(parseFloat(style.top) + parseFloat(style.height)).toBeLessThan(
+        DEFAULT_PROPS.size.height
+      )
+    })
+  })
+
+  test('a hidden time axis takes the pan affordances with it', () => {
+    renderComponent({ showTimeAxis: false, panEnabled: true })
+
+    expect(screen.queryByRole('button', { name: 'Step back in time' })).not.toBeInTheDocument()
   })
 
   test('labels the y-axis on both sides of zero for a mirrored metric', async () => {

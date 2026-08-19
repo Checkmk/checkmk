@@ -26,12 +26,16 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       'showLegend',
       'showTimestamp',
       'showPin',
+      'showTimeAxis',
+      'showValueAxis',
       'fetchGraph'
     ],
     template: `<div
       data-testid="graph-figure"
       :data-show-pin="showPin"
       :data-has-fetch-graph="fetchGraph !== undefined"
+      :data-show-time-axis="showTimeAxis"
+      :data-show-value-axis="showValueAxis"
     >{{ internal }}</div>`
   }
 }))
@@ -133,6 +137,31 @@ describe('custom graph widget', () => {
     expect(
       await screen.findByText(/Custom graph not found: No custom graph was found\./)
     ).toBeInTheDocument()
+  })
+})
+
+describe('graph render options', () => {
+  test('passes the configured axis visibility on to the figure', async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { show_time_axis: false, show_vertical_axis: false }
+      }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-time-axis')).toBe('false')
+    expect(figure.getAttribute('data-show-value-axis')).toBe('false')
+  })
+
+  test('shows both axes when the widget stores no axis options', async () => {
+    renderWidget({
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: true } }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-time-axis')).toBe('true')
+    expect(figure.getAttribute('data-show-value-axis')).toBe('true')
   })
 })
 

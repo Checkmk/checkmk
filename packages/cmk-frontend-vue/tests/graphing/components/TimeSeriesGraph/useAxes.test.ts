@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { scaleLinear, scaleTime } from 'd3-scale'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { ref } from 'vue'
 
 import type { TimeAxisTick } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
@@ -36,6 +36,12 @@ function setup() {
     yTickFormatter
   )
   return { axes, group: axisGroupRef.value!, xScale, yScale }
+}
+
+function valueAxisTickTexts(group: Element): string[] {
+  return Array.from(group.querySelectorAll(`g.${AXIS_CLASSES.valueAxis} .tick text`)).map(
+    (tickLabel) => tickLabel.textContent ?? ''
+  )
 }
 
 describe('prepareValueDomain', () => {
@@ -86,7 +92,7 @@ describe('drawTimeAxis', () => {
       { position: 64800, text: '18:00', lineWidth: 0 }
     ]
 
-    axes.drawTimeAxis(ticks)
+    axes.drawTimeAxis(ticks, { showLabels: true })
 
     expect(group.querySelectorAll(`g.${AXIS_CLASSES.timeGridLines} line`)).toHaveLength(2)
   })
@@ -99,7 +105,7 @@ describe('drawTimeAxis', () => {
       { position: 64800, text: '18:00', lineWidth: 0 }
     ]
 
-    axes.drawTimeAxis(ticks)
+    axes.drawTimeAxis(ticks, { showLabels: true })
 
     const labels = Array.from(group.querySelectorAll(`g.${AXIS_CLASSES.timeLabels} text`))
     expect(labels.map((label) => label.textContent)).toEqual(['06:00', '18:00'])
@@ -109,7 +115,7 @@ describe('drawTimeAxis', () => {
     const { axes, group, xScale } = setup()
     const tick: TimeAxisTick = { position: 43200, text: '12:00', lineWidth: 2 }
 
-    axes.drawTimeAxis([tick])
+    axes.drawTimeAxis([tick], { showLabels: true })
 
     const line = group.querySelector(`g.${AXIS_CLASSES.timeGridLines} line`)!
     const expectedX = String(xScale(new Date(tick.position * 1000)))
@@ -120,7 +126,7 @@ describe('drawTimeAxis', () => {
   test('draws a single full-width baseline along the plot bottom', () => {
     const { axes, group } = setup()
 
-    axes.drawTimeAxis([{ position: 43200, text: '12:00', lineWidth: 2 }])
+    axes.drawTimeAxis([{ position: 43200, text: '12:00', lineWidth: 2 }], { showLabels: true })
 
     const baselines = group.querySelectorAll(`g.${AXIS_CLASSES.timeBaseline} line`)
     expect(baselines).toHaveLength(1)
@@ -134,14 +140,61 @@ describe('drawTimeAxis', () => {
   test('updates the x-axis in place across redraws instead of appending duplicate groups', () => {
     const { axes, group } = setup()
 
-    axes.drawTimeAxis([{ position: 21600, text: '06:00', lineWidth: 2 }])
-    axes.drawTimeAxis([
-      { position: 21600, text: '06:00', lineWidth: 2 },
-      { position: 43200, text: '12:00', lineWidth: 2 }
-    ])
+    axes.drawTimeAxis([{ position: 21600, text: '06:00', lineWidth: 2 }], { showLabels: true })
+    axes.drawTimeAxis(
+      [
+        { position: 21600, text: '06:00', lineWidth: 2 },
+        { position: 43200, text: '12:00', lineWidth: 2 }
+      ],
+      { showLabels: true }
+    )
 
     expect(group.querySelectorAll(`g.${AXIS_CLASSES.timeGridLines}`)).toHaveLength(1)
     expect(group.querySelectorAll(`g.${AXIS_CLASSES.timeGridLines} line`)).toHaveLength(2)
+  })
+})
+
+describe('hidden axis labels', () => {
+  const TICKS: TimeAxisTick[] = [
+    { position: 21600, text: '06:00', lineWidth: 2 },
+    { position: 43200, text: '12:00', lineWidth: 2 }
+  ]
+
+  test('a hidden time axis drops its labels but keeps its gridlines and baseline', () => {
+    const { axes, group } = setup()
+
+    axes.drawTimeAxis(TICKS, { showLabels: false })
+
+    expect(group.querySelectorAll(`g.${AXIS_CLASSES.timeLabels} text`)).toHaveLength(0)
+    expect(group.querySelectorAll(`g.${AXIS_CLASSES.timeGridLines} line`)).toHaveLength(2)
+    expect(group.querySelectorAll(`g.${AXIS_CLASSES.timeBaseline} line`)).toHaveLength(1)
+  })
+
+  test('a hidden value axis blanks its labels but keeps the value grid', async () => {
+    const { axes, group } = setup()
+
+    axes.prepareValueDomain(0, 100)
+    axes.drawValueGrid()
+    axes.drawValueAxis({ showLabels: false })
+
+    await vi.waitFor(() => {
+      expect(valueAxisTickTexts(group)).not.toHaveLength(0)
+    })
+    expect(valueAxisTickTexts(group).filter((label) => label !== '')).toHaveLength(0)
+    expect(group.querySelectorAll(`g.${AXIS_CLASSES.valueGrid}`)).toHaveLength(1)
+  })
+
+  test('toggling the value axis back on restores its labels', async () => {
+    const { axes, group } = setup()
+
+    axes.prepareValueDomain(0, 100)
+    axes.drawValueAxis({ showLabels: true })
+    axes.drawValueAxis({ showLabels: false })
+    axes.drawValueAxis({ showLabels: true })
+
+    await vi.waitFor(() => {
+      expect(valueAxisTickTexts(group).filter((label) => label !== '')).not.toHaveLength(0)
+    })
   })
 })
 
@@ -151,9 +204,9 @@ describe('drawValueGrid and drawValueAxis', () => {
 
     axes.prepareValueDomain(0, 100)
     axes.drawValueGrid()
-    axes.drawValueAxis()
+    axes.drawValueAxis({ showLabels: true })
     axes.drawValueGrid()
-    axes.drawValueAxis()
+    axes.drawValueAxis({ showLabels: true })
 
     expect(group.querySelectorAll(`g.${AXIS_CLASSES.valueGrid}`)).toHaveLength(1)
     expect(group.querySelectorAll(`g.${AXIS_CLASSES.valueAxis}`)).toHaveLength(1)

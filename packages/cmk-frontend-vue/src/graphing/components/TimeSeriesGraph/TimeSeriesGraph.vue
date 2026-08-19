@@ -20,7 +20,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, VALUE_LABEL_GUTTER } from '../constants'
-import { measureAxisLabel } from './axes/labelWidth'
+import { axisLabelFontSize, measureAxisLabel } from './axes/labelWidth'
 import { computeTimeAxis } from './axes/timeAxis'
 import { computeYDomain } from './axes/valueAxis'
 import { downsampleToColumns, edgeNeighbours, edgeSample, m4 } from './decimation/decimate'
@@ -38,7 +38,10 @@ import { useHover } from './useHover'
 import { usePanGesture } from './usePanGesture'
 import { useZoomGesture } from './useZoomGesture'
 
-const props = defineProps<TimeSeriesGraphProps>()
+const props = withDefaults(defineProps<TimeSeriesGraphProps>(), {
+  showTimeAxis: true,
+  showValueAxis: true
+})
 
 const emit = defineEmits<{
   pan: [{ timeRange: TimeRange }]
@@ -84,7 +87,16 @@ const axesContainer = ref<SVGGElement | null>(null)
 
 const measureLabel = (text: string): number => measureAxisLabel(text, axesContainer.value)
 
+const panAffordancesVisible = computed(() => props.panEnabled && props.showTimeAxis)
+
 const marginLeft = ref(CANVAS_MARGIN_LEFT)
+const halfAValueLabel = computed(() => Math.ceil(axisLabelFontSize(axesContainer.value) / 2))
+const marginBottom = computed(() => {
+  if (props.showTimeAxis) {
+    return MARGIN.bottom
+  }
+  return props.showValueAxis ? halfAValueLabel.value : 0
+})
 
 // size is the outer figure size; the plot (canvas) area is what remains after
 // subtracting the axis/label margins.
@@ -92,7 +104,7 @@ const figureWidth = computed(() => props.size.width)
 const figureHeight = computed(() => props.size.height)
 const plotWidth = computed(() => figureWidth.value - marginLeft.value - MARGIN.right)
 const plotTop = MARGIN.top
-const plotHeight = computed(() => figureHeight.value - plotTop - MARGIN.bottom)
+const plotHeight = computed(() => figureHeight.value - plotTop - marginBottom.value)
 
 const pinVisible = computed(
   () =>
@@ -212,7 +224,7 @@ const {
   onPanMouseDown,
   panBySteps
 } = usePanGesture({
-  panEnabled: () => props.panEnabled,
+  panEnabled: () => panAffordancesVisible.value,
   timeRange: () => props.view_time_range,
   measureLabel,
   plotWidth,
@@ -336,8 +348,8 @@ function draw(): void {
   )
 
   drawValueGrid()
-  drawTimeAxis(xTicks)
-  drawValueAxis()
+  drawTimeAxis(xTicks, { showLabels: props.showTimeAxis })
+  drawValueAxis({ showLabels: props.showValueAxis })
   if (axesContainer.value) {
     drawHorizontalLines(axesContainer.value, props.horizontal_lines, yScale, plotWidth.value)
   }
@@ -354,7 +366,17 @@ let refusedLowMargin: number | null = null
 // the current domain produces. Writing it back grows plotWidth, which redraws once more with
 // the labels the wider plot resolves to; that second pass settles.
 function fitMarginToValueLabels(): void {
-  const widestLabel = valueTickLabels().reduce((w, l) => Math.max(w, measureLabel(l)), 0)
+  if (!props.showValueAxis) {
+    marginLeft.value = 0
+    lastMargin = CANVAS_MARGIN_LEFT
+    refusedLowMargin = null
+    return
+  }
+
+  const widestLabel = valueTickLabels().reduce(
+    (widest, label) => Math.max(widest, measureLabel(label)),
+    0
+  )
   const next = Math.max(CANVAS_MARGIN_LEFT, Math.ceil(widestLabel) + VALUE_LABEL_GUTTER)
 
   // Holding the high end of a detected flip: ignore the low value that keeps recurring.
@@ -494,7 +516,9 @@ watch(
     props.curveInterpolator,
     props.horizontal_lines,
     props.highlightedMetricName,
-    plotWidth.value
+    plotWidth.value,
+    props.showTimeAxis,
+    props.showValueAxis
   ],
   draw,
   { deep: true }
@@ -526,7 +550,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
             :x="marginLeft"
             :y="plotTop + plotHeight"
             :width="plotWidth"
-            :height="MARGIN.bottom"
+            :height="marginBottom"
           />
         </clipPath>
       </defs>
@@ -538,6 +562,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
         :height="plotHeight"
       />
       <rect
+        v-if="showTimeAxis"
         class="graphing-time-series-graph__axis-band"
         :x="marginLeft"
         :y="plotTop + plotHeight"
@@ -545,7 +570,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
         :height="X_AXIS_BAND_HEIGHT"
       />
       <rect
-        v-if="panEnabled && (panHovered || panActive)"
+        v-if="panAffordancesVisible && (panHovered || panActive)"
         class="graphing-time-series-graph__axis-highlight"
         :x="marginLeft"
         :y="plotTop + plotHeight"
@@ -611,20 +636,20 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
     />
     <!-- Transparent grab strip over the x-axis labels; arms the pan drag. -->
     <div
-      v-if="panEnabled"
+      v-if="panAffordancesVisible"
       class="graphing-time-series-graph__pan-zone"
       :style="{
         left: `${marginLeft}px`,
         top: `${plotTop + plotHeight}px`,
         width: `${plotWidth}px`,
-        height: `${MARGIN.bottom}px`,
+        height: `${marginBottom}px`,
         cursor: panCursor
       }"
       @mousedown="onPanMouseDown"
       @mouseenter="panHovered = true"
       @mouseleave="panHovered = false"
     />
-    <template v-if="panEnabled">
+    <template v-if="panAffordancesVisible">
       <CmkButton
         v-for="step in PAN_STEPS"
         :key="step.direction"

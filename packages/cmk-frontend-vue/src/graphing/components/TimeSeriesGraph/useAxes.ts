@@ -41,6 +41,10 @@ export const AXIS_CLASSES = {
 type GroupSelection = Selection<SVGGElement, null, SVGGElement, unknown>
 type GroupTransition = Transition<SVGGElement, null, SVGGElement, unknown>
 
+export interface AxisLabelVisibility {
+  showLabels: boolean
+}
+
 export function useAxes(
   axisGroupRef: Ref<SVGGElement | null>,
   xScale: ScaleTime<number, number>,
@@ -98,7 +102,7 @@ export function useAxes(
     )
   }
 
-  function drawValueAxis(): void {
+  function drawValueAxis({ showLabels }: AxisLabelVisibility): void {
     if (!axisGroupRef.value) {
       return
     }
@@ -114,11 +118,11 @@ export function useAxes(
     applyTransition(yAxis).call(
       axisLeft(yScale)
         .ticks(yTickCount())
-        .tickFormat((value) => formatter(value.valueOf()))
+        .tickFormat(showLabels ? (value) => formatter(value.valueOf()) : () => '')
     )
   }
 
-  function drawTimeAxis(ticks: TimeAxisTick[]): void {
+  function drawTimeAxis(ticks: TimeAxisTick[], { showLabels }: AxisLabelVisibility): void {
     if (!axisGroupRef.value) {
       return
     }
@@ -162,7 +166,7 @@ export function useAxes(
       .classed(AXIS_CLASSES.timeLabels, true)
     timeLabelsGroup
       .selectAll<SVGTextElement, TimeAxisTick>('text')
-      .data(ticks.filter((tick) => tick.text !== null))
+      .data(showLabels ? ticks.filter((tick) => tick.text !== null) : [])
       .join('text')
       .attr('x', positionToX)
       .attr('y', height + TIME_LABEL_BASELINE_OFFSET_PX)

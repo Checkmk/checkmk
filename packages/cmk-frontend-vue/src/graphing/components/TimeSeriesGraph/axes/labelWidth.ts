@@ -48,6 +48,10 @@ function labelFont(reference: Element | null): LabelFont {
   return font
 }
 
+export function axisLabelFontSize(reference: Element | null): number {
+  return labelFont(reference).sizePx
+}
+
 export function measureAxisLabel(text: string, reference: Element | null): number {
   const font = labelFont(reference)
   const key = `${font.spec}|${font.letterSpacingPx}|${text}`

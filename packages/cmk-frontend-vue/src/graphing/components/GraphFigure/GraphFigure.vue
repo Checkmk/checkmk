@@ -40,7 +40,9 @@ const props = withDefaults(defineProps<GraphFigureProps>(), {
   showTimestamp: false,
   showBurgerMenu: false,
   showPin: false,
-  burgerMenuGroups: () => []
+  burgerMenuGroups: () => [],
+  showTimeAxis: true,
+  showValueAxis: true
 })
 
 const graphAreaDiv = ref<HTMLDivElement | null>(null)
@@ -253,6 +255,8 @@ onBeforeUnmount(() => {
           :pin-enabled="showPin"
           :pin-time="pinTime"
           :consolidation-function="DEFAULT_CONSOLIDATION_FN"
+          :show-time-axis="showTimeAxis"
+          :show-value-axis="showValueAxis"
           :options="graphOptions"
           :highlighted-metric-name="highlightedMetricName"
           @zoom="onZoom"

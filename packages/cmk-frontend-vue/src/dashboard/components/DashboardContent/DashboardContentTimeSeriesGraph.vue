@@ -272,6 +272,8 @@ const showTimestamp = computed(() => graphRenderOptions.value?.show_graph_time ?
 const showPin = computed(
   () => props.isPreview !== true && (graphRenderOptions.value?.show_pin ?? true)
 )
+const showTimeAxis = computed(() => graphRenderOptions.value?.show_time_axis ?? true)
+const showValueAxis = computed(() => graphRenderOptions.value?.show_vertical_axis ?? true)
 const combinationMode = computed(() => {
   const content = props.content
   return content.type === 'combined_graph' ? content.presentation : null
@@ -319,6 +321,8 @@ onMounted(() => {
         :show-legend="showLegend"
         :show-timestamp="showTimestamp"
         :show-pin="showPin"
+        :show-time-axis="showTimeAxis"
+        :show-value-axis="showValueAxis"
         :fetch-graph="fetchGraph"
       />
     </div>

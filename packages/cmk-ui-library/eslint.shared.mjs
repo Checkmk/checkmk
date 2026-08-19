@@ -13,6 +13,24 @@
  *     import { checkmkVueConfig } from '../cmk-ui-library/eslint.shared.mjs'
  *     export default [checkmkVueConfig({ packageDir: 'packages/<name>', importMetaDirname: import.meta.dirname }), ...]
  */
+const NO_RANDOM_UUID = {
+  selector: "MemberExpression[property.name='randomUUID']",
+  message:
+    "crypto.randomUUID() is not available in all environments. Use randomId from 'cmk-ui-library/lib/randomId' instead."
+}
+
+const NO_MODULE_SCOPE_TRANSLATION = {
+  selector: 'CallExpression[callee.name=/^_t(n|p|np)?$/]:not(:function *)',
+  message:
+    'Translated text minted at module scope resolves before the translation catalog is ' +
+    'loaded and freezes to English. Move the call into a function or composable so it ' +
+    'runs once the app is mounted.'
+}
+
+// Flat config replaces a rule's options rather than merging them, so every
+// config object that sets `no-restricted-syntax` has to spread this baseline in.
+const RESTRICTED_SYNTAX = [NO_RANDOM_UUID]
+
 export function checkmkVueConfig({
   packageDir,
   importMetaDirname,
@@ -63,14 +81,7 @@ export function checkmkVueConfig({
       eqeqeq: 'error',
       'vue/eqeqeq': 'error',
       'no-var': 'error',
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: "MemberExpression[property.name='randomUUID']",
-          message:
-            "crypto.randomUUID() is not available in all environments. Use randomId from 'cmk-ui-library/lib/randomId' instead."
-        }
-      ],
+      'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX],
       curly: 'error',
       'prefer-template': 'error',
       'vue/prefer-template': 'error',
@@ -126,6 +137,23 @@ export function checkmkVueConfig({
           directives: ['v-text']
         }
       ]
+    }
+  }
+}
+
+/**
+ * Bans `_t()` / `_tn()` / `_tp()` / `_tnp()` calls at module scope of .ts files.
+ *
+ * Module scope evaluates at import time, before the translation catalog is
+ * loaded, so text minted there is a frozen English snapshot. Top level of a
+ * .vue `<script setup>` is per-instance setup code that only runs once CmkApp
+ * has seen the catalog arrive, hence the rule covers .ts files only.
+ */
+export function checkmkVueModuleScopeTranslationConfig(packageDir) {
+  return {
+    files: [`${packageDir}/**/*.{ts,tsx}`],
+    rules: {
+      'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX, NO_MODULE_SCOPE_TRANSLATION]
     }
   }
 }

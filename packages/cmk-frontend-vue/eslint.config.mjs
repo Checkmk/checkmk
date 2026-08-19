@@ -3,7 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { checkmkVueConfig, checkmkVueTestConfig } from '../cmk-ui-library/eslint.shared.mjs'
+import {
+  checkmkVueConfig,
+  checkmkVueModuleScopeTranslationConfig,
+  checkmkVueTestConfig
+} from '../cmk-ui-library/eslint.shared.mjs'
 
 export default [
   checkmkVueConfig({
@@ -11,6 +15,8 @@ export default [
     importMetaDirname: import.meta.dirname,
     project: ['**/tsconfig.test.json', '**/tsconfig.ucl.json', '**/tsconfig.app.json']
   }),
+
+  checkmkVueModuleScopeTranslationConfig('packages/cmk-frontend-vue'),
 
   {
     files: ['packages/cmk-frontend-vue/src/**/*'],

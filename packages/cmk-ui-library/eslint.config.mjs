@@ -5,13 +5,19 @@
  */
 import { globalIgnores } from 'eslint/config'
 
-import { checkmkVueConfig, checkmkVueTestConfig } from './eslint.shared.mjs'
+import {
+  checkmkVueConfig,
+  checkmkVueModuleScopeTranslationConfig,
+  checkmkVueTestConfig
+} from './eslint.shared.mjs'
 
 export default [
   checkmkVueConfig({
     packageDir: 'packages/cmk-ui-library',
     importMetaDirname: import.meta.dirname
   }),
+
+  checkmkVueModuleScopeTranslationConfig('packages/cmk-ui-library'),
 
   globalIgnores(['packages/cmk-ui-library/components/graphics/RnbwCursor.vue']),
 

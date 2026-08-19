@@ -11,6 +11,7 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 
 import type { TimeRangeCommitKind } from '../../types'
 import type { Metric, RequestedTimeRange, TimeRange } from '../TimeSeriesGraph'
+import { timestampAt } from '../TimeSeriesGraph/axes/timeAxis'
 import {
   type BrushMode,
   clampMove,
@@ -72,10 +73,7 @@ const sparklinePaths = computed<{ d: string; color: string }[]>(() => {
   if (sampleCount === 0) {
     return []
   }
-  const sampleTimes = Array.from(
-    { length: sampleCount },
-    (_, i) => props.domain.start + i * props.domain.step
-  )
+  const sampleTimes = Array.from({ length: sampleCount }, (_, i) => timestampAt(props.domain, i))
   const span = yMax - yMin || 1
   // Maps the value domain into the strip (STRIP_TOP..STRIP_BOTTOM); the move-bar sits below it.
   const yPx = (value: number) => STRIP_BOTTOM - ((value - yMin) / span) * STRIP_H

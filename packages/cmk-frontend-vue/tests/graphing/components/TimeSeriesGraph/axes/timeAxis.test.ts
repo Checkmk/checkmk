@@ -6,11 +6,7 @@
 import { fromAbsolute, getDayOfWeek } from '@internationalized/date'
 import { describe, expect, test } from 'vitest'
 
-import {
-  computeTimeAxis,
-  sampleCount,
-  timestampAt
-} from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
+import { computeTimeAxis, timestampAt } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
 
 const BERLIN = 'Europe/Berlin'
 
@@ -21,21 +17,32 @@ const measureLabel = (text: string): number => text.length * CHAR_WIDTH_PX
 const PLOT_WIDTH_PX = 770
 
 describe('timestampAt', () => {
-  test('returns the range start at index 0', () => {
-    const range = { start: 1_700_000_000, end: 1_700_000_100, step: 10 }
-    expect(timestampAt(range, 0)).toBe(1_700_000_000)
+  const RANGE_OF_TEN_VALUES = { start: 1_700_000_000, end: 1_700_000_100, step: 10 }
+  const LAST_VALUE_INDEX = 9
+
+  test('places the first value at the end of the first interval, not on the range start', () => {
+    const firstValueIndex = 0
+
+    const timestamp = timestampAt(RANGE_OF_TEN_VALUES, firstValueIndex)
+
+    expect(timestamp).toBe(1_700_000_010)
   })
 
   test('advances by one step per index', () => {
-    const range = { start: 1_700_000_000, end: 1_700_000_100, step: 10 }
-    expect(timestampAt(range, 5)).toBe(1_700_000_050)
-  })
-})
+    const [earlierIndex, laterIndex] = [4, 5]
 
-describe('sampleCount', () => {
-  test('counts both bounds inclusively', () => {
-    const range = { start: 1_700_000_000, end: 1_700_000_100, step: 10 }
-    expect(sampleCount(range)).toBe(11)
+    const advance =
+      timestampAt(RANGE_OF_TEN_VALUES, laterIndex) - timestampAt(RANGE_OF_TEN_VALUES, earlierIndex)
+
+    expect(advance).toBe(RANGE_OF_TEN_VALUES.step)
+  })
+
+  test("places the last of the range's values on its end", () => {
+    const lastValueIndex = LAST_VALUE_INDEX
+
+    const timestamp = timestampAt(RANGE_OF_TEN_VALUES, lastValueIndex)
+
+    expect(timestamp).toBe(RANGE_OF_TEN_VALUES.end)
   })
 })
 

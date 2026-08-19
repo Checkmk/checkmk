@@ -23,12 +23,8 @@ import { isoDate, pad2, shortWeekday } from '@/graphing/utils/timeFormat'
 
 import type { TimeRange } from '../types'
 
-export function timestampAt(timeRange: TimeRange, i: number): number {
-  return timeRange.start + i * timeRange.step
-}
-
-export function sampleCount(timeRange: TimeRange): number {
-  return Math.round((timeRange.end - timeRange.start) / timeRange.step) + 1
+export function timestampAt(timeRange: TimeRange, valueIndex: number): number {
+  return timeRange.start + (valueIndex + 1) * timeRange.step
 }
 
 const SECONDS_PER_DAY = 86_400

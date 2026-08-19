@@ -36,10 +36,8 @@ function constantPoints(value: number | null): (number | null)[] {
   return Array.from({ length: 11 }, () => value)
 }
 
-// One point per 10s step, valued so that a sample at time t is drawn at pixel (t, 100 - t).
-// Ten 1px columns cover each sample, so a cursor rarely lands on a drawn point.
-function slopedPoints(): (number | null)[] {
-  return Array.from({ length: 11 }, (_, index) => index * 10)
+function pointsValuedAtTheirOwnTimestamp(): (number | null)[] {
+  return Array.from({ length: 10 }, (_, index) => (index + 1) * 10)
 }
 
 const PLOT_CLIENT_LEFT = 200
@@ -201,7 +199,7 @@ describe('useHover — hit-test', () => {
 
 describe('useHover — snapping to drawn points', () => {
   test('a cursor between two samples snaps back to the nearer one', () => {
-    const hover = mountHover([makeLineMetric('sloped', slopedPoints())])
+    const hover = mountHover([makeLineMetric('sloped', pointsValuedAtTheirOwnTimestamp())])
 
     hover.moveHoverTo(pointAt(53, 50))
 
@@ -212,7 +210,7 @@ describe('useHover — snapping to drawn points', () => {
   })
 
   test('a cursor past the midpoint between two samples snaps forward to the next one', () => {
-    const hover = mountHover([makeLineMetric('sloped', slopedPoints())])
+    const hover = mountHover([makeLineMetric('sloped', pointsValuedAtTheirOwnTimestamp())])
 
     hover.moveHoverTo(pointAt(57, 50))
 
@@ -223,8 +221,9 @@ describe('useHover — snapping to drawn points', () => {
   })
 
   test('a cursor over a gap stays n/a instead of snapping to a neighbouring sample', () => {
-    const gappedPoints = slopedPoints()
-    gappedPoints[5] = null
+    const gappedPoints = pointsValuedAtTheirOwnTimestamp()
+    const indexOfSampleAtT50 = 4
+    gappedPoints[indexOfSampleAtT50] = null
     const hover = mountHover([makeLineMetric('gapped', gappedPoints)])
 
     hover.moveHoverTo(pointAt(53, 50))

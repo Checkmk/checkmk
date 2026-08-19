@@ -6,11 +6,30 @@
 import { fireEvent, render } from '@testing-library/vue'
 
 import GraphBrush from '@/graphing/components/GraphBrush/GraphBrush.vue'
+import type { Metric } from '@/graphing/components/TimeSeriesGraph'
 
 const DOMAIN = { start: 1000, end: 2000, step: 10 }
 
+const PLOT_LEFT = 50
+const PLOT_WIDTH = 200
+
+function makeMetric(dataPoints: (number | null)[]): Metric {
+  return {
+    data_points: dataPoints,
+    render: { stack: null, inverse: false, hidden: false },
+    metadata: { color: '#3366cc' }
+  } as unknown as Metric
+}
+
+function waveformXs(container: Element): number[] {
+  const path = container.querySelector('path.graphing-graph-brush__area')!
+  return [...path.getAttribute('d')!.matchAll(/[ML]([\d.]+),/g)].map((match) =>
+    parseFloat(match[1]!)
+  )
+}
+
 // jsdom reports an all-zero bounding rect, so client coordinates are the SVG-local ones.
-function renderBrush() {
+function renderBrush(overrides: Record<string, unknown> = {}) {
   return render(GraphBrush, {
     props: {
       metrics: [],
@@ -18,10 +37,16 @@ function renderBrush() {
       window: { start: 1400, end: 1600 },
       minSpan: null,
       width: 300,
-      plotLeft: 50,
-      plotWidth: 200
+      plotLeft: PLOT_LEFT,
+      plotWidth: PLOT_WIDTH,
+      ...overrides
     }
   })
+}
+
+function samplesFilling(domain: { start: number; end: number; step: number }): number[] {
+  const count = (domain.end - domain.start) / domain.step
+  return Array.from({ length: count }, (_, index) => index + 1)
 }
 
 async function dragFrom(
@@ -57,4 +82,12 @@ test('drag starting below the track is ignored', async () => {
   await dragFrom(container, { x: 150, y: 60 }, 100)
 
   expect(emitted()['update:requestedTimeRange']).toBeUndefined()
+})
+
+test('fills the waveform out to the right edge of the track', () => {
+  const metrics = [makeMetric(samplesFilling(DOMAIN))]
+
+  const { container } = renderBrush({ metrics })
+
+  expect(Math.max(...waveformXs(container))).toBeCloseTo(PLOT_LEFT + PLOT_WIDTH, 5)
 })

@@ -1,0 +1,26 @@
+# WARNING: foo_views_kim1: SQLS_ITEM_SID 'PRODPDB1' is not supported and is not migrated; the item of the oracle_sql section is built from the name of the instance the section runs on, so the name of the service changes and it is rediscovered
+# WARNING: foo_views_kim1: cannot read SQL file 'foo_view_check1.sql': No such file or directory (os error 2)
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# SQLS.foo_views_chk1.SQLS_ITEM_NAME foo_views_kim1
+# SQLS.foo_views_chk1.SQLS_ITEM_SID PRODPDB1
+# SQLS.foo_views_chk1.SQLS_SIDS PRODCDB
+# SQLS.foo_views_chk1.SQLS_SQL foo_view_check1.sql
+# SQLS_SECTIONS foo_views_chk1
+# WARNING: foo_views_kim1: SQLS_ITEM_SID 'PRODPDB1' is not supported and is not migrated; the item of the oracle_sql section is built from the name of the instance the section runs on, so the name of the service changes and it is rediscovered
+# WARNING: foo_views_kim1: cannot read SQL file 'foo_view_check1.sql': No such file or directory (os error 2)
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard
+    instances:
+      - sid: PRODCDB
+        custom_metrics:
+          - foo_views_kim1:
+              path: foo_view_check1.sql

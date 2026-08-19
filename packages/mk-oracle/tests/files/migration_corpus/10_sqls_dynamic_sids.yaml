@@ -1,0 +1,16 @@
+# WARNING: dyn: SQLS_SIDS is built by a shell expression that expanded to no SID, skipping custom SQL section; assign the intended instances manually
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# SQLS.dyn.SQLS_SQL dyn.sql
+# SQLS_SECTIONS dyn
+# WARNING: dyn: SQLS_SIDS is built by a shell expression that expanded to no SID, skipping custom SQL section; assign the intended instances manually
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard

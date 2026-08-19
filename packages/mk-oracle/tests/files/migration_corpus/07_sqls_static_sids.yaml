@@ -1,0 +1,27 @@
+# WARNING: my_table_check: cannot read SQL file '/etc/check_mk/tbl_check.sql': No such file or directory (os error 2)
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# SQLS.tbl_check.SQLS_DIR /etc/check_mk
+# SQLS.tbl_check.SQLS_ITEM_NAME my_table_check
+# SQLS.tbl_check.SQLS_SIDS PROD1
+# SQLS.tbl_check.SQLS_SQL tbl_check.sql
+# SQLS_MAX_CACHE_AGE 300
+# SQLS_SECTIONS tbl_check
+# WARNING: my_table_check: cannot read SQL file '/etc/check_mk/tbl_check.sql': No such file or directory (os error 2)
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard
+    instances:
+      - sid: PROD1
+        custom_metrics:
+          - my_table_check:
+              path: /etc/check_mk/tbl_check.sql
+    custom_metrics_cache_age: 300

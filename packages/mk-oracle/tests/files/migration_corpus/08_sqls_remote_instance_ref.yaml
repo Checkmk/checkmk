@@ -1,0 +1,32 @@
+# WARNING: mat_views: cannot read SQL file 'mat_view_check.sql': No such file or directory (os error 2)
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# REMOTE_INSTANCE_FOO_PROD ***
+# SQLS.mat_views.SQLS_SIDS REMOTE_INSTANCE_FOO_PROD
+# SQLS.mat_views.SQLS_SQL mat_view_check.sql
+# SQLS_SECTIONS mat_views
+# WARNING: mat_views: cannot read SQL file 'mat_view_check.sql': No such file or directory (os error 2)
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard
+    instances:
+      - sid: FOO_PROD
+        alias: FOO_PROD
+        connection:
+          hostname: dbhost07
+          port: 1521
+        authentication:
+          username: "c##checkmk"
+          password: "secret"
+          type: standard
+          role: sysdba
+        custom_metrics:
+          - mat_views:
+              path: mat_view_check.sql

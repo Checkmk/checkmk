@@ -1,0 +1,22 @@
+# --- Known environment variables defined in legacy config ---
+# CACHE_MAXAGE 740
+# DBUSER ***
+# MAX_TASKS 3
+# OLRLOC /etc/oracle/olr.loc
+# TNS_ADMIN /etc/check_mk
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+      tns_admin: /etc/check_mk
+      oracle_local_registry: /etc/oracle/olr.loc
+    authentication:
+      username: "quoted_user"
+      password: "quoted_pw"
+      type: standard
+    options:
+      threads: 3
+    cache_age: 740

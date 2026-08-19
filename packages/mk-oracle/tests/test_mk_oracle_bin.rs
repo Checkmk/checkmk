@@ -1383,6 +1383,161 @@ fn test_migrate_optional_config_threads() {
     );
 }
 
+// The corpus consists of shell-syntax legacy configs, so it only runs on
+// non-Windows targets (the ps1 dialect is covered by the reference tests
+// above).
+#[cfg(not(windows))]
+mod migration_corpus {
+    use super::*;
+    use std::path::{Path, PathBuf};
+
+    /// Resolve `tests/files/migration_corpus` for both Bazel (cwd is the
+    /// runfiles root) and cargo (cwd is the crate).
+    fn corpus_dir() -> PathBuf {
+        let runfiles = std::env::current_dir()
+            .unwrap()
+            .join("packages/mk-oracle/tests/files/migration_corpus");
+        if runfiles.is_dir() {
+            runfiles
+        } else {
+            PathBuf::from("tests/files/migration_corpus")
+        }
+    }
+
+    /// Normalize migrator output for the golden-file comparison: drop the
+    /// timestamped `Converted from` header and sort the extracted-variables
+    /// block, whose order is not deterministic (HashMap iteration).
+    fn normalize_output(stdout: &str) -> String {
+        const ENV_HEADER: &str = "# --- Known environment variables defined in legacy config ---";
+        let mut out: Vec<&str> = Vec::new();
+        let mut env_block: Vec<&str> = Vec::new();
+        let mut in_env = false;
+        for line in stdout.lines() {
+            if line.starts_with("# --- Converted from ") {
+                continue;
+            }
+            if line == ENV_HEADER {
+                in_env = true;
+                out.push(line);
+                continue;
+            }
+            if in_env {
+                if line.starts_with("# ")
+                    && !line.starts_with("# WARNING:")
+                    && !line.starts_with("# ---")
+                {
+                    env_block.push(line);
+                    continue;
+                }
+                env_block.sort_unstable();
+                out.append(&mut env_block);
+                in_env = false;
+            }
+            out.push(line);
+        }
+        out.join("\n") + "\n"
+    }
+
+    /// Runs one corpus case and returns its failures (empty = passed), so
+    /// one broken case does not shadow the results of the others.
+    fn run_corpus_case(
+        name: &str,
+        cfg: &Path,
+        golden: &Path,
+        mk_oracle_d: Option<&Path>,
+    ) -> Vec<String> {
+        let mut cmd = run_bin();
+        // dynamic SQLS_SIDS expressions read variables the legacy plugin
+        // sets at runtime; drop them so the expansion does not depend on
+        // the environment the test runs in
+        cmd.env_remove("ORACLE_SID").env_remove("SIDS");
+        cmd.args(["-M", cfg.to_str().unwrap()]);
+        if let Some(dir) = mk_oracle_d {
+            cmd.args(["--migrate-subdir", dir.to_str().unwrap()]);
+        }
+        let output = match cmd.ok() {
+            Ok(output) => output,
+            Err(e) => return vec![format!("{name}: migration failed: {e}")],
+        };
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        let normalized = normalize_output(&stdout);
+
+        // Regenerate the golden files instead of comparing. Cargo only —
+        // under Bazel the writes end up in the sandbox and are lost:
+        //   MK_ORACLE_UPDATE_CORPUS=1 cargo test --test test_mk_oracle_bin migration_corpus
+        if std::env::var_os("MK_ORACLE_UPDATE_CORPUS").is_some() {
+            fs::write(golden, &normalized).unwrap();
+            return Vec::new();
+        }
+
+        let mut failures = Vec::new();
+        // the migrated config must stay loadable by the plugin itself
+        match mk_oracle::config::OracleConfig::load_str(&stdout) {
+            Ok(config) if config.ora_sql().is_some() => {}
+            Ok(_) => failures.push(format!("{name}: migrated output has no oracle config")),
+            Err(e) => failures.push(format!("{name}: migrated output does not load: {e}")),
+        }
+        let expected = fs::read_to_string(golden).unwrap_or_else(|e| {
+            panic!("{name}: cannot read golden file {}: {e}", golden.display())
+        });
+        if normalized != expected {
+            failures.push(format!(
+                "{name}: migrated output differs from {}",
+                golden.file_name().unwrap().to_str().unwrap()
+            ));
+            eprintln!("--- {name}: expected ---\n{expected}--- {name}: got ---\n{normalized}");
+        }
+        failures
+    }
+
+    /// CMK-38008: input corpus — pairs of a representative legacy config
+    /// and the expected migrator output, one case per migration-bug
+    /// dimension (auth variants, remote instances, SQLS_* combinations,
+    /// formatting quirks, mk_oracle.d multi-file). See
+    /// tests/files/migration_corpus/README.md.
+    #[test]
+    fn test_migrate_input_corpus() {
+        let dir = corpus_dir();
+        let mut entries: Vec<_> = fs::read_dir(&dir)
+            .unwrap()
+            .map(|e| e.unwrap().path())
+            .collect();
+        entries.sort();
+
+        let mut cases = 0;
+        let mut failures = Vec::new();
+        for entry in entries {
+            let name = entry.file_name().unwrap().to_str().unwrap().to_string();
+            if entry.is_dir() {
+                let subdir = entry.join("mk_oracle.d");
+                failures.extend(run_corpus_case(
+                    &name,
+                    &entry.join("main.cfg"),
+                    &entry.join("expected.yaml"),
+                    subdir.is_dir().then_some(subdir.as_path()),
+                ));
+            } else if entry.extension().is_some_and(|ext| ext == "cfg") {
+                failures.extend(run_corpus_case(
+                    &name,
+                    &entry,
+                    &entry.with_extension("yaml"),
+                    None,
+                ));
+            } else {
+                continue; // README.md and the golden .yaml files
+            }
+            cases += 1;
+        }
+        assert!(cases >= 13, "corpus incomplete: only {cases} cases found");
+        assert!(
+            failures.is_empty(),
+            "{} corpus case(s) failed:\n  {}",
+            failures.len(),
+            failures.join("\n  ")
+        );
+    }
+}
+
 #[test]
 fn test_connection_olr_loc_parsing() {
     use mk_oracle::config::connection::Connection;

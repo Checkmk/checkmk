@@ -1,0 +1,26 @@
+# --- Known environment variables defined in legacy config ---
+# ASMUSER ***
+# ASYNC_SECTIONS tablespaces
+# CACHE_MAXAGE 600
+# DBUSER ***
+# SYNC_SECTIONS instance sessions
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+    authentication:
+      username: ""
+      password: ""
+      type: wallet
+      asm_type: wallet
+      asm_role: sysasm
+    sections:
+      - instance:
+          is_async: false
+      - sessions:
+          is_async: false
+      - tablespaces:
+          is_async: true
+    cache_age: 600

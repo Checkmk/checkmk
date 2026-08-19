@@ -1,0 +1,26 @@
+# WARNING: invalid_objects: SQLS_SIDS 'PRODDB' is migrated next to SQLS_TNSALIAS 'PROD_ALIAS', but the instance is resolved by its alias, so the SID no longer restricts the section
+# WARNING: invalid_objects: cannot read SQL file 'invalid_objects.sql': No such file or directory (os error 2)
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# SQLS.invalid_objects.SQLS_SIDS PRODDB
+# SQLS.invalid_objects.SQLS_SQL invalid_objects.sql
+# SQLS.invalid_objects.SQLS_TNSALIAS PROD_ALIAS
+# SQLS_SECTIONS invalid_objects
+# WARNING: invalid_objects: SQLS_SIDS 'PRODDB' is migrated next to SQLS_TNSALIAS 'PROD_ALIAS', but the instance is resolved by its alias, so the SID no longer restricts the section
+# WARNING: invalid_objects: cannot read SQL file 'invalid_objects.sql': No such file or directory (os error 2)
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard
+    instances:
+      - sid: PRODDB
+        alias: PROD_ALIAS
+        custom_metrics:
+          - invalid_objects:
+              path: invalid_objects.sql

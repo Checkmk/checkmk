@@ -1,0 +1,24 @@
+# --- Known environment variables defined in legacy config ---
+# DBUSER ***
+# DBUSER_PROD1 ***
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+    authentication:
+      username: "main_user"
+      password: "main_pw"
+      type: standard
+    instances:
+      - sid: PROD1
+        connection:
+          hostname: dbhost01
+          port: 1522
+        authentication:
+          username: "prod_user"
+          password: "prod_pw"
+          type: standard
+          role: sysdba

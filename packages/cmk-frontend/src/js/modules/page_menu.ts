@@ -299,8 +299,11 @@ export function inpage_search_init(
   }
 }
 
+const truthy_query_values = new Set(['1', 't', 'true', 'y', 'yes', 'on'])
+
 function is_kiosk_url(search: string): boolean {
-  return new URLSearchParams(search).has('kiosk')
+  const kiosk = new URLSearchParams(search).getAll('kiosk').pop()
+  return kiosk !== undefined && truthy_query_values.has(kiosk.trim().toLowerCase())
 }
 
 export function toggle_navigation_page_menu_entry() {

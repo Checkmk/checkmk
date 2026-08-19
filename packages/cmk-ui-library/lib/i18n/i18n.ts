@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { type Ref, computed, getCurrentInstance, ref } from 'vue'
+import { type Ref, computed, ref } from 'vue'
 import { type Translations, createGettext } from 'vue3-gettext'
 
 import { dummyT, dummyTn, dummyTnp, dummyTp } from './i18nDummy'
@@ -302,20 +302,11 @@ export default function usei18n() {
       : $npgettext(context, singular, plural, count, interpolation)
   }
 
-  // To support i18n in .ts files, we need to wrap the translation functions in computed() outside the setup context.
-  const isInSetupContext = getCurrentInstance() !== null
-
-  const wrapInComputed = <T extends (...args: never[]) => string>(fn: T) => {
-    return (...args: Parameters<T>) => {
-      return computed(() => fn(...args))
-    }
-  }
-
   return {
-    _t: (isInSetupContext ? _t : wrapInComputed(_t)) as I18nFunctions['_t'],
-    _tn: (isInSetupContext ? _tn : wrapInComputed(_tn)) as I18nFunctions['_tn'],
-    _tp: (isInSetupContext ? _tp : wrapInComputed(_tp)) as I18nFunctions['_tp'],
-    _tnp: (isInSetupContext ? _tnp : wrapInComputed(_tnp)) as I18nFunctions['_tnp'],
+    _t: _t as I18nFunctions['_t'],
+    _tn: _tn as I18nFunctions['_tn'],
+    _tp: _tp as I18nFunctions['_tp'],
+    _tnp: _tnp as I18nFunctions['_tnp'],
     switchLanguage: loadLanguage,
     translationLoading: globalState.translationLoading,
     currentLanguage: globalState.currentLanguage

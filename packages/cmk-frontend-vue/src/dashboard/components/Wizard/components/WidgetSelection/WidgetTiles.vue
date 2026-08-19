@@ -4,8 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { unref } from 'vue'
-
 import DisabledTooltipWrapper from '@/dashboard/components/WidgetWorkflow/DisabledTooltipWrapper.vue'
 
 import WidgetTile from './WidgetTile.vue'
@@ -36,7 +34,7 @@ const selectedWidget = defineModel<string | null>('selectedWidget', { default: n
       :key="index"
       role="button"
       tabindex="0"
-      :aria-label="unref(item.label)"
+      :aria-label="item.label"
       class="db-widget-tiles__item"
       @click="
         () => {

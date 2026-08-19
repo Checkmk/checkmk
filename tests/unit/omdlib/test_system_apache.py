@@ -35,7 +35,7 @@ def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> N
     content = apache_config.read_bytes()
     assert (
         sha256(content).hexdigest()
-        == "6d7c42b18bc9d11ca3e817b22e338b5533c15b3deff60e07fe314ca5a5894e6e"
+        == "f4ad593b0546c6f9086d52ed930d199a87107fa15d86da3f05a81fc6ccdecf3e"
     ), (
         "The content of [site].conf was changed. Have you updated the apache_hook_version()? The "
         "number needs to be increased with every change to inform the user about an additional step "
@@ -142,3 +142,12 @@ def test_create_apache_hook_world_readable(tmp_path: Path) -> None:
     apache_config.parent.mkdir(parents=True)
     create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", 0)
     assert apache_config.stat().st_mode & stat.S_IROTH
+
+
+def test_create_apache_hook_denies_the_introspection_endpoint(tmp_path: Path) -> None:
+    apache_config = tmp_path / "omd/apache/unit.conf"
+    apache_config.parent.mkdir(parents=True)
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", apache_hook_version())
+
+    content = apache_config.read_text()
+    assert "<Location /unit/check_mk/oauth_introspect.py>\n    Require all denied" in content

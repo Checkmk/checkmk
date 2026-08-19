@@ -15,7 +15,7 @@ import pprint
 import time
 import traceback
 from collections.abc import Iterator, Mapping, Sequence
-from typing import cast, override, Protocol, Self, TypedDict
+from typing import cast, Final, override, Protocol, Self, TypedDict
 
 import cmk.ccc.version as cmk_version
 import cmk.livestatus_client as livestatus
@@ -65,6 +65,9 @@ from .views import CrashReportsRowTable
 
 CrashReportRow = dict[str, str]
 
+USER_SESSION_CRASH_TYPES: Final = frozenset({"gui", "javascript"})
+"""Crash types produced while the user was browsing, so the user is the reporter."""
+
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register(PageEndpoint("crash", PageCrash()))
@@ -73,6 +76,7 @@ def register(page_registry: PageRegistry) -> None:
     report_renderer_registry.register(ReportRendererSection)
     report_renderer_registry.register(ReportRendererCheck)
     report_renderer_registry.register(ReportRendererGUI)
+    report_renderer_registry.register(ReportRendererJavascript)
 
 
 class ReportSubmitDetails(TypedDict):
@@ -223,7 +227,7 @@ class PageCrash(Page):
             )
         )
 
-        if report.info["crash_type"] == "gui":
+        if report.info["crash_type"] in USER_SESSION_CRASH_TYPES:
             html.show_error(
                 HTMLWriter.render_b(HTML.with_escaping(_("Internal error")))
                 + HTML.with_escaping(": " + report.info["exc_value"])
@@ -456,7 +460,7 @@ class PageCrash(Page):
     def _show_report_form(
         self, crash_info: AggregatedCrashInfo, details: ReportSubmitDetails
     ) -> None:
-        if crash_info["crash_type"] == "gui":
+        if crash_info["crash_type"] in USER_SESSION_CRASH_TYPES:
             self._add_gui_user_infos_to_details(details)
 
         with html.form_context("report", method="GET"):
@@ -790,6 +794,38 @@ class ReportRendererGUI(ABCReportRenderer):
         _crash_row(_("Mobile GUI"), details["is_mobile"], odd=False)
         _crash_row(_("SSL"), details["is_ssl_request"])
         _crash_row(_("Language"), details["language"], odd=False)
+
+        html.close_table()
+
+
+class ReportRendererJavascript(ABCReportRenderer):
+    @classmethod
+    @override
+    def type(cls) -> str:
+        return "javascript"
+
+    @override
+    def page_menu_entries_related_monitoring(
+        self, crash_info: AggregatedCrashInfo, site_id: SiteId
+    ) -> Iterator[PageMenuEntry]:
+        """Produces nothing"""
+        yield from ()
+
+    @override
+    def show_details(self, crash_info: AggregatedCrashInfo, row: CrashReportRow) -> None:
+        if not (details := crash_info.get("details")):
+            return
+
+        html.h3(_("Details"), class_="table")
+        html.open_table(class_="data")
+
+        _crash_row(_("URL"), details["url"], odd=False, legend=True)
+        _crash_row(_("Component"), details.get("component") or _("Unknown"))
+        _crash_row(_("Username"), details.get("username") or _("Unknown"), odd=False)
+        _crash_row(_("User agent"), details.get("user_agent") or _("Unknown"))
+        _crash_row(_("Language"), details.get("language") or _("Unknown"), odd=False)
+        if context := details.get("context"):
+            _crash_row(_("Context"), _format_log_output(context.encode()))
 
         html.close_table()
 

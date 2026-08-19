@@ -21,6 +21,7 @@ from cmk.gui.crash_reporting.pages import (
     CrashReport,
     CrashReportRow,
     ReportRendererGUI,
+    ReportRendererJavascript,
     show_automatic_upload_hint_on_view,
 )
 from cmk.gui.exceptions import MKUserError
@@ -134,6 +135,40 @@ def test_report_renderer_gui_show_details_without_request_details(request_contex
 
     with output_funnel.plugged():
         ReportRendererGUI().show_details(crash_info, {"crash_id": "1", "site": "heute"})
+        rendered = "".join(output_funnel.drain())
+
+    assert rendered == ""
+
+
+def test_report_renderer_javascript_show_details(request_context: None) -> None:
+    crash_info = CrashInfoFactory.build(
+        crash_type="javascript",
+        details={
+            "url": "http://localhost/heute/check_mk/dashboard.py",
+            "component": "DashboardApp",
+            "user_agent": "Mozilla/5.0",
+            "username": "cmkadmin",
+            "language": "en",
+            "context": "GET /heute/check_mk/api/internal/foo\nSTATUS 500",
+        },
+    )
+
+    with output_funnel.plugged():
+        ReportRendererJavascript().show_details(crash_info, {"crash_id": "1", "site": "heute"})
+        rendered = "".join(output_funnel.drain())
+
+    assert "http://localhost/heute/check_mk/dashboard.py" in rendered
+    assert "DashboardApp" in rendered
+    assert "Mozilla/5.0" in rendered
+    assert "cmkadmin" in rendered
+    assert "/heute/check_mk/api/internal/foo" in rendered
+
+
+def test_report_renderer_javascript_show_details_without_details(request_context: None) -> None:
+    crash_info = CrashInfoFactory.build(crash_type="javascript", details={})
+
+    with output_funnel.plugged():
+        ReportRendererJavascript().show_details(crash_info, {"crash_id": "1", "site": "heute"})
         rendered = "".join(output_funnel.drain())
 
     assert rendered == ""

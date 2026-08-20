@@ -40,7 +40,7 @@ export const panelConfig = {
     ] satisfies Options<TabId>[],
     initialState: 'tab-1' as TabId
   }
-} satisfies PanelConfigFor<typeof CmkTabs>
+} satisfies PanelConfigFor<typeof CmkTabs, 'unmountOnHide'>
 </script>
 
 <script setup lang="ts">
@@ -60,7 +60,7 @@ import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkTabs>().createRef(panelConfig)
+const propState = new PanelStateCreator<typeof CmkTabs, 'unmountOnHide'>().createRef(panelConfig)
 </script>
 
 <template>

@@ -83,6 +83,7 @@ const props = defineProps<StateCellProps>()
   display: flex;
   flex-direction: row;
   gap: var(--dimension-3);
+  min-height: 21px;
   align-items: center;
   justify-content: center;
 }

@@ -282,9 +282,10 @@ const highlightStyle = computed<CSSProperties>(() =>
   display: flex;
   box-sizing: border-box;
   width: fit-content;
+  min-height: 31px;
   align-items: center;
   gap: var(--dimension-4);
-  margin: var(--dimension-2) var(--dimension-3);
+  margin: 0 var(--dimension-3);
   color: var(--cell-highlight-font-color);
 }
 

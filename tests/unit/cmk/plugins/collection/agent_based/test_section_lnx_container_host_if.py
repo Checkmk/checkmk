@@ -11,6 +11,7 @@ import cmk.plugins.lib.interfaces
 from cmk.agent_based.v2 import Result
 from cmk.plugins.collection.agent_based.lnx_if import check_lnx_if, discover_lnx_if
 from cmk.plugins.collection.agent_based.section_lnx_container_host_if import (
+    parse_lnx_container_host_if,
     parse_lnx_container_host_if_pure,
 )
 from cmk.plugins.lib.interfaces import (
@@ -85,6 +86,16 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_parse_lnx_container_host_if_pure() -> None:
     assert parse_lnx_container_host_if_pure(STRING_TABLE, INTERFACE.timestamp) == ([INTERFACE], {})
+
+
+def test_parse_empty_section_returns_none() -> None:
+    """The agent plug-in writes the section header even if it can not read any interface.
+
+    This section supersedes `lnx_if`, and the check engine drops the superseded section for
+    every parse result that is not `None`. So an empty section must not parse into an empty
+    section, or it would wipe out valid `lnx_if` data.
+    """
+    assert parse_lnx_container_host_if([]) is None
 
 
 def test_discover_lnx_if_default_discovery() -> None:

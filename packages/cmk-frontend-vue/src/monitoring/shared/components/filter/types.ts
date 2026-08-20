@@ -32,6 +32,20 @@ export interface StringInputFilter<F extends FilterField = FilterField> {
   type: 'string-input'
   /** API field this filter targets. Used to produce the correct condition node. */
   field: F
+  /**
+   * Turns the plain text field into a chip autocomplete over this source. A
+   * column that knows what values exist (labels, tags, contact groups) offers
+   * them; one that does not stays a free-text field.
+   */
+  suggest?: (query: string) => Promise<string[]>
+  /** Ask `suggest` with an empty query on focus, to seed the list. */
+  suggestWhenEmpty?: boolean
+  /** Pick `key:value` pairs in two steps: first the key, then that key's values. */
+  keyValue?: boolean
+  /** Offer what was typed with a trailing `*` as the first entry. */
+  wildcardOption?: boolean
+  /** Refuse further picks once this many are selected. Unbounded when unset. */
+  maxSelected?: number
 }
 
 /**

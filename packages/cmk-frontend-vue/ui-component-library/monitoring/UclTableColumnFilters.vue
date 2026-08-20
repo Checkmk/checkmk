@@ -111,6 +111,32 @@ const addressFilter = computed<StringInputFilter>(() => ({
   field: 'address'
 }))
 
+const DEMO_LABELS = [
+  'cmk/check_mk_server:yes',
+  'cmk/docker_object:container',
+  'cmk/docker_object:node',
+  'cmk/os_family:linux',
+  'cmk/os_family:windows',
+  'cmk/site:heute',
+  'criticality:prod',
+  'criticality:test',
+  'networking:core',
+  'networking:edge'
+]
+
+function suggestLabels(query: string): Promise<string[]> {
+  const needle = query.trim().toLowerCase()
+  return Promise.resolve(DEMO_LABELS.filter((label) => label.toLowerCase().includes(needle)))
+}
+
+const labelsFilter = computed<StringInputFilter>(() => ({
+  type: 'string-input',
+  field: 'name',
+  suggest: suggestLabels,
+  keyValue: true,
+  wildcardOption: true
+}))
+
 const servicesFilter = computed<NumericFilter>(() => ({
   type: 'numeric',
   field: 'num_services',
@@ -155,6 +181,14 @@ const columns = computed<ColumnDef<HostEntry>[]>(() => [
     minSize: 80,
     maxSize: 120,
     meta: { filter: servicesFilter.value }
+  },
+  {
+    accessorKey: 'labels',
+    header: 'Labels',
+    enableSorting: false,
+    minSize: 160,
+    maxSize: 320,
+    meta: { filter: labelsFilter.value }
   }
 ])
 
@@ -163,6 +197,9 @@ const filterState = ref<ColumnFiltersState>([])
 function describeNode(node: ColumnFilterNode<FilterField>): string {
   if (node.type === 'and') {
     return node.children.map(describeNode).join(' and ')
+  }
+  if (node.type === 'or') {
+    return node.children.map(describeNode).join(' or ')
   }
   if (node.type === 'condition') {
     const value = Array.isArray(node.value) ? node.value.join(', ') : String(node.value)
@@ -191,6 +228,10 @@ const rows: HostEntry[] = [
     num_services_crit: 1,
     num_services_unknown: 0,
     num_services_pending: 2,
+    labels: {
+      'cmk/os_family': { source: 'discovered', value: 'linux' },
+      criticality: { source: 'explicit', value: 'prod' }
+    },
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-server-01'
   },
   {
@@ -205,6 +246,10 @@ const rows: HostEntry[] = [
     num_services_crit: 7,
     num_services_unknown: 1,
     num_services_pending: 1,
+    labels: {
+      'cmk/os_family': { source: 'discovered', value: 'linux' },
+      criticality: { source: 'explicit', value: 'prod' }
+    },
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=db-primary-02'
   },
   {
@@ -219,6 +264,10 @@ const rows: HostEntry[] = [
     num_services_crit: 0,
     num_services_unknown: 0,
     num_services_pending: 0,
+    labels: {
+      'cmk/os_family': { source: 'discovered', value: 'linux' },
+      criticality: { source: 'explicit', value: 'test' }
+    },
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=cache-node-03'
   }
 ]
@@ -264,7 +313,11 @@ const rows: HostEntry[] = [
           popover and all keyboard handling; the checkbox list only renders the active row. Selected
           values persist in the table's column-filter state, so they survive closing the dropdown
           and drive the (server-side) query. Future filter types — numeric range, IP range — plug in
-          as additional dropdown contents without changing this wiring.
+          as additional dropdown contents without changing this wiring. The Labels column shows the
+          same <code>string-input</code> type with a <code>suggest</code> callback, which swaps its
+          plain text field for a CmkChipAutocomplete: several picks become an <code>or</code> of one
+          <code>contains</code> each. It targets the host name here because the API carries no label
+          condition yet; the column filter itself needs no change once it does.
         </p>
       </div>
 

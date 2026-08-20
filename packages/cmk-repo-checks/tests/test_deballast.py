@@ -24,6 +24,7 @@ from cmk.repo_checks.deballast import (
     load_dep_info,
     load_target_spec,
     main,
+    module_roots,
     ModuleRefs,
     parse_python_source,
     resolve_imports_root,
@@ -61,8 +62,7 @@ def test_candidate_modules_for_path_imports_dot() -> None:
     # Workspace root is always also a candidate.
     modules = candidate_modules_for_path(
         "packages/cmk-ccc/cmk/ccc/store/__init__.py",
-        imports=["."],
-        package="packages/cmk-ccc",
+        module_roots("packages/cmk-ccc", ["."]),
     )
     assert "cmk.ccc.store" in modules
     assert "packages.cmk-ccc.cmk.ccc.store" in modules
@@ -72,8 +72,7 @@ def test_candidate_modules_for_path_imports_up_levels() -> None:
     # `imports = ["../../.."]` is the pattern that the naive path-only approach missed.
     modules = candidate_modules_for_path(
         "packages/cmk-plugins/cmk/plugins/lib/fan.py",
-        imports=["../../.."],
-        package="packages/cmk-plugins/cmk/plugins/lib",
+        module_roots("packages/cmk-plugins/cmk/plugins/lib", ["../../.."]),
     )
     assert "cmk.plugins.lib.fan" in modules
     # Workspace-root resolution always included too.
@@ -86,8 +85,7 @@ def test_candidate_modules_for_path_imports_dot_workspace_fallback() -> None:
     # workspace root. Both must be candidates.
     modules = candidate_modules_for_path(
         "agents/plugins/mk_podman.py",
-        imports=["."],
-        package="agents/plugins",
+        module_roots("agents/plugins", ["."]),
     )
     assert "mk_podman" in modules
     assert "agents.plugins.mk_podman" in modules
@@ -97,8 +95,7 @@ def test_candidate_modules_for_path_no_imports_uses_workspace_root() -> None:
     # With no imports attribute, file path is the module path directly.
     modules = candidate_modules_for_path(
         "cmk/gui/nagvis/__init__.py",
-        imports=[],
-        package="cmk/gui/nagvis",
+        module_roots("cmk/gui/nagvis", []),
     )
     assert modules == {"cmk.gui.nagvis"}
 
@@ -106,15 +103,14 @@ def test_candidate_modules_for_path_no_imports_uses_workspace_root() -> None:
 def test_candidate_modules_for_path_init_drops_init_suffix() -> None:
     modules = candidate_modules_for_path(
         "pkg/foo/__init__.py",
-        imports=["."],
-        package="pkg",
+        module_roots("pkg", ["."]),
     )
     assert "foo" in modules
     assert "foo.__init__" not in modules
 
 
 def test_candidate_modules_for_path_non_py_file_returns_empty() -> None:
-    assert candidate_modules_for_path("pkg/BUILD", imports=["."], package="pkg") == set()
+    assert candidate_modules_for_path("pkg/BUILD", module_roots("pkg", ["."])) == set()
 
 
 def test_parse_python_source_valid_file(tmp_path: Path) -> None:
@@ -484,6 +480,22 @@ def test_flags_a_dep_whose_modules_are_never_imported(tmp_path: Path) -> None:
 def test_does_not_flag_a_dep_whose_module_is_imported(tmp_path: Path) -> None:
     spec = _app_spec(tmp_path, "import dep.lib\n")
     assert analyze_spec(spec, [_dep_lib()]) == []
+
+
+def test_does_not_flag_a_dep_importable_only_under_the_consumer_root(tmp_path: Path) -> None:
+    # `//bazel/rules:console_scripts_gen_test` shape: the dep declares no
+    # `imports`, so under its own roots its src is `pkg.tool`. The consumer's
+    # `imports = ["."]` puts `pkg` on PYTHONPATH, making `tool` the name the
+    # consumer actually imports. That root counts for the dep's srcs too.
+    dep = DepInfo(label="//pkg:tool", package="pkg", imports=[], srcs=["pkg/tool.py"])
+    spec = _app_spec(tmp_path, "from tool import main\n")
+    assert analyze_spec(spec, [dep]) == []
+
+
+def test_flags_a_dep_the_consumer_root_does_not_reach_either(tmp_path: Path) -> None:
+    dep = DepInfo(label="//pkg:tool", package="pkg", imports=[], srcs=["pkg/tool.py"])
+    spec = _app_spec(tmp_path, "import os\n")
+    assert analyze_spec(spec, [dep]) == ["//pkg:tool"]
 
 
 def test_flags_a_dep_only_the_bare_parent_of_a_from_import_reaches(tmp_path: Path) -> None:

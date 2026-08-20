@@ -229,36 +229,42 @@ def _module_under_root(file_path: str, module_root: str) -> str | None:
     return ".".join(parts)
 
 
-def candidate_modules_for_path(short_path: str, imports: Iterable[str], package: str) -> set[str]:
-    """Candidate absolute module paths a src file is exposed as.
+def module_roots(package: str, imports: Iterable[str]) -> set[str]:
+    """PYTHONPATH roots that a rule's srcs are reachable under.
 
-    Each entry in the rule's `imports` attribute yields a module root; the src
-    is mapped to that root. Workspace root is always included too - the
-    `imports` attribute adds to PYTHONPATH but doesn't remove the workspace
-    root, so downstream targets can import srcs via either path. Missing that
-    candidate caused e.g. `//agents/plugins:agent-plugins-python` (with
-    `imports=["."]`, so its files are `mk_podman` under its own root) to be
-    flagged as unused by tests that import them as `agents.plugins.mk_podman`.
+    Each entry in the rule's `imports` attribute yields a module root. The
+    workspace root is always included too - the `imports` attribute adds to
+    PYTHONPATH but doesn't remove the workspace root, so downstream targets can
+    import srcs via either path. Missing that root caused e.g.
+    `//agents/plugins:agent-plugins-python` (with `imports=["."]`, so its files
+    are `mk_podman` under its own root) to be flagged as unused by tests that
+    import them as `agents.plugins.mk_podman`.
     """
+    return {""}.union(resolve_imports_root(package, e) for e in imports)
+
+
+def candidate_modules_for_path(short_path: str, roots: Iterable[str]) -> set[str]:
+    """Candidate absolute module paths a src file is exposed as."""
     if not short_path.endswith(".py"):
         return set()
-    # Always include the workspace-root resolution, then add any shifts
-    # declared in `imports`.
-    roots = {""}
-    roots.update(resolve_imports_root(package, e) for e in imports)
-    out: set[str] = set()
-    for root in roots:
-        mod = _module_under_root(short_path, root)
-        if mod:
-            out.add(mod)
-    return out
+    return {mod for root in roots if (mod := _module_under_root(short_path, root))}
 
 
-def modules_provided_by_dep(dep: DepInfo) -> set[str]:
-    """Absolute Python module paths provided by the dep's direct srcs."""
+def modules_provided_by_dep(dep: DepInfo, consumer_roots: Iterable[str]) -> set[str]:
+    """Absolute Python module paths provided by the dep's direct srcs.
+
+    `consumer_roots` are the roots the *consuming* target puts on PYTHONPATH.
+    They apply to the whole runfiles tree, so a dep's src is importable under
+    them as well as under the dep's own roots. Ignoring them flagged
+    `//bazel/rules:console_scripts_gen` as unused by
+    `//bazel/rules:console_scripts_gen_test`, which declares `imports = ["."]`
+    and does `from console_scripts_gen import ...` - a name that only exists
+    under the consumer's root, not under the dep's.
+    """
+    roots = module_roots(dep.package, dep.imports) | set(consumer_roots)
     out: set[str] = set()
     for short_path in dep.srcs:
-        out |= candidate_modules_for_path(short_path, dep.imports, dep.package)
+        out |= candidate_modules_for_path(short_path, roots)
     return out
 
 
@@ -416,7 +422,7 @@ def _containing_packages_for_path(
     """
     is_init = _basename(short_path) == "__init__.py"
     out: set[str] = set()
-    for mod in candidate_modules_for_path(short_path, imports, package):
+    for mod in candidate_modules_for_path(short_path, module_roots(package, imports)):
         if is_init:
             out.add(mod)
         else:
@@ -482,6 +488,7 @@ def analyze_spec(spec: TargetSpec, deps: Sequence[DepInfo]) -> list[str]:
         # outputs) - no AST evidence to work from.
         return []
     target_src_paths = set(own_paths)
+    spec_roots = module_roots(spec.package, spec.imports)
     keep_deps = set(spec.keep_deps)
     pruneable: list[str] = []
     for dep in deps:
@@ -493,7 +500,7 @@ def analyze_spec(spec: TargetSpec, deps: Sequence[DepInfo]) -> list[str]:
             continue  # auto-discovered by pytest; never imported
         if shares_srcs_with_target(target_src_paths, spec.src_attr_labels, dep.label, dep.srcs):
             continue  # dep's srcs are used directly by target (e.g. py_pytest_main)
-        modules = modules_provided_by_dep(dep)
+        modules = modules_provided_by_dep(dep, spec_roots)
         if not modules:
             continue  # dep provides no Python modules (e.g. data-only target)
         if not dep_is_used(modules, target_imports):

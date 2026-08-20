@@ -730,9 +730,10 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             license_counter,
         )
 
+    # Unlike the fallback above, these services can be disabled by the user.
     if ConfigCache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK:
         if config_cache.default_address_family(hostname) is socket.AF_INET6:
-            if "PING IPv4" not in used_descriptions:
+            if "PING IPv4" not in used_descriptions and not do_omit_service(hostname, "PING IPv4"):
                 _add_ping_service(
                     cfg,
                     config_cache,
@@ -743,7 +744,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
                     host_attrs.get("_NODEIPS_4"),
                     license_counter,
                 )
-        elif "PING IPv6" not in used_descriptions:
+        elif "PING IPv6" not in used_descriptions and not do_omit_service(hostname, "PING IPv6"):
             _add_ping_service(
                 cfg,
                 config_cache,

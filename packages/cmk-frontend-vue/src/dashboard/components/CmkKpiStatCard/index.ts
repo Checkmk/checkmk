@@ -13,5 +13,6 @@ export type {
   KpiState,
   KpiStateSeverity,
   KpiValueRange,
+  SparkHeightMode,
   TimestampedSample
 } from './types'

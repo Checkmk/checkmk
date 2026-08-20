@@ -116,6 +116,7 @@ const { data, error } = useNetworkFlowWidgetData(
         :delta-semantics="presentation.deltaSemantics"
         :series="data.series"
         :color="chartColorCss(content.accent)"
+        spark-height-mode="band"
       />
     </div>
   </DashboardContentContainer>

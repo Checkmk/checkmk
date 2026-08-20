@@ -7,7 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, ListPropDef, NumberPropDef } from '@ucl/_ucl/types/prop-def'
 
-import { type DeltaSemantics, type KpiStateSeverity } from '@/dashboard/components/CmkKpiStatCard'
+import {
+  type DeltaSemantics,
+  type KpiStateSeverity,
+  type SparkHeightMode
+} from '@/dashboard/components/CmkKpiStatCard'
 
 import codeExample from './UclCmkKpiStatCardCodeExample.vue?raw'
 
@@ -62,6 +66,16 @@ export const panelConfig = {
       { title: 'Bad', name: 'bad' }
     ] satisfies Options<DeltaSemantics>[],
     initialState: 'neutral' as const
+  },
+  sparkHeightMode: {
+    type: 'list' as const,
+    title: 'Spark line height',
+    help: 'Band reserves the lower part of the card so the curve and the numbers never overlap. Full runs the curve behind the numbers, behind a card-colored scrim.',
+    options: [
+      { title: 'Band', name: 'band' },
+      { title: 'Full', name: 'full' }
+    ] satisfies Options<SparkHeightMode>[],
+    initialState: 'band' as const
   },
   pointCount: {
     type: 'number' as const,
@@ -131,17 +145,18 @@ export const panelConfig = {
     type: 'number' as const,
     title: 'Card width (px)',
     help: 'The card scales its text to its box, so its size is what the preview varies.',
-    initialState: 280
+    initialState: 560
   },
   containerHeight: {
     type: 'number' as const,
     title: 'Card height (px)',
-    initialState: 130
+    initialState: 260
   }
 } satisfies PanelConfigFor<
   typeof CmkKpiStatCard,
   'series' | 'state' | 'rangeLimits' | 'range' | 'deltaRatio' | 'href'
 > & {
+  sparkHeightMode: ListPropDef<SparkHeightMode>
   showDelta: BoolPropDef
   deltaPercent: NumberPropDef
   pointCount: NumberPropDef
@@ -249,6 +264,7 @@ const range = computed<KpiValueRange | undefined>(() =>
           :state="state"
           :range-limits="rangeLimits"
           :range="range"
+          :spark-height-mode="propState.sparkHeightMode"
           :href="propState.linked ? '#' : undefined"
         />
       </div>

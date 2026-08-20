@@ -7,7 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkBadge, { type Colors as CmkBadgeColor } from 'cmk-ui-library/components/CmkBadge.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed } from 'vue'
+import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import KpiSparkLine from './KpiSparkLine.vue'
 import type { CmkKpiStatCardProps, DeltaSemantics, KpiStateSeverity } from './types'
@@ -20,7 +21,8 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   state: undefined,
   rangeLimits: undefined,
   range: undefined,
-  href: undefined
+  href: undefined,
+  sparkHeightMode: 'full'
 })
 
 const isUp = computed(() => (props.deltaRatio ?? 0) >= 0)
@@ -91,18 +93,51 @@ const tintColor = computed(() => (props.state?.tintBackground ? stateColor.value
 // A single point draws no line, so anything under two is "no plot" and the
 // value takes the card to itself.
 const hasSparkLine = computed(() => props.series.length >= 2)
+
+// Band mode never overlaps the value row, so only full mode needs a scrim.
+const showScrim = computed(() => hasSparkLine.value && props.sparkHeightMode === 'full')
+
+const cardEl = ref<HTMLElement | null>(null)
+const valueRowEl = ref<HTMLElement | null>(null)
+// The value row's live edges - the scrim must stay within the text's own band, not the whole card.
+const scrimRightEdge = ref(0)
+const scrimBottomEdge = ref(0)
+
+function measureScrim(): void {
+  const card = cardEl.value
+  const row = valueRowEl.value
+  if (!card || !row) {
+    return
+  }
+  const cardRect = card.getBoundingClientRect()
+  const rowRect = row.getBoundingClientRect()
+  scrimRightEdge.value = rowRect.right - cardRect.left
+  scrimBottomEdge.value = rowRect.bottom - cardRect.top
+}
+
+const { observe } = useResizeObserver(measureScrim)
+observe(valueRowEl)
+watch(() => [props.value, props.unit, props.deltaRatio], measureScrim, { flush: 'post' })
+onMounted(measureScrim)
 </script>
 
 <template>
   <div
+    ref="cardEl"
     class="db-cmk-kpi-stat-card"
     :class="{
       'db-cmk-kpi-stat-card--tinted': tintColor !== undefined,
-      'db-cmk-kpi-stat-card--value-only': !hasSparkLine
+      'db-cmk-kpi-stat-card--value-only': !hasSparkLine,
+      'db-cmk-kpi-stat-card--band': hasSparkLine && sparkHeightMode === 'band'
     }"
-    :style="{ '--accent-color': color, '--tint-color': tintColor }"
+    :style="{
+      '--accent-color': color,
+      '--tint-color': tintColor,
+      '--scrim-right-edge': `${scrimRightEdge}px`,
+      '--scrim-bottom-edge': `${scrimBottomEdge}px`
+    }"
   >
-    <div class="db-cmk-kpi-stat-card__value-row">
+    <div ref="valueRowEl" class="db-cmk-kpi-stat-card__value-row">
       <component :is="href ? 'a' : 'span'" :href="href" class="db-cmk-kpi-stat-card__value-link">
         <span class="db-cmk-kpi-stat-card__value">{{ value }}</span>
         <span v-if="unit" class="db-cmk-kpi-stat-card__unit">{{ unit }}</span>
@@ -119,6 +154,8 @@ const hasSparkLine = computed(() => props.series.length >= 2)
         {{ deltaPercent }}
       </span>
     </div>
+
+    <div v-if="showScrim" class="db-cmk-kpi-stat-card__scrim" aria-hidden="true" />
 
     <CmkBadge
       v-if="state && stateLabel"
@@ -159,18 +196,41 @@ const hasSparkLine = computed(() => props.series.length >= 2)
   /* Size containment lets the content scale to the widget via container query
      units (cqh/cqw) instead of overflowing and triggering scrollbars. */
   container-type: size;
+
+  /* The card's own background, shared with the full-height scrim below so the two can't drift apart. */
+  --card-effective-bg: var(--db-content-bg-color);
 }
 
 .db-cmk-kpi-stat-card--tinted {
-  /* Kept faint: the spark line's own gradient sits on top of it, and a heavier
-     wash turns the two colors muddy. */
-  background-color: color-mix(in srgb, var(--tint-color) 12%, transparent);
+  /* Opaque (mixed against the real backdrop, not transparent), so the scrim can reuse it to block the curve. */
+  --card-effective-bg: color-mix(in srgb, var(--tint-color) 12%, var(--db-content-bg-color));
+
+  background-color: var(--card-effective-bg);
+}
+
+/* Full-bleed by default; band mode overrides this below. */
+.db-cmk-kpi-stat-card__spark-line {
+  position: absolute;
+  inset: 0;
+}
+
+/* Band mode: a column layout instead of full mode's absolute overlap. */
+.db-cmk-kpi-stat-card--band {
+  display: flex;
+  flex-direction: column;
+}
+
+.db-cmk-kpi-stat-card--band .db-cmk-kpi-stat-card__spark-line {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  inset: auto;
 }
 
 .db-cmk-kpi-stat-card__value-row {
   position: relative;
-  z-index: 1;
-  display: flex;
+  z-index: 2;
+  display: inline-flex;
   gap: clamp(4px, 1.5cqw, 10px);
   align-items: baseline;
   min-width: 0;
@@ -196,7 +256,9 @@ const hasSparkLine = computed(() => props.series.length >= 2)
   font-size: clamp(18px, min(40cqh, 16cqw), 52px);
   font-weight: var(--font-weight-bold);
   line-height: 1;
-  color: var(--accent-color);
+
+  /* Neutral: the accent/data color belongs to the curve, not the number. */
+  color: var(--font-color);
 }
 
 .db-cmk-kpi-stat-card__unit {
@@ -265,11 +327,14 @@ const hasSparkLine = computed(() => props.series.length >= 2)
 
 /* CmkBadge is sized for counts, so it pads to a bubble around a short label
    like "OK". Widen it to read as the state name it is.
-   Beside the value by default, which is where a card with no plot has room for
-   it -- there the value is centered and would collide with a centered badge. */
+   Same top-right corner in every variant, so a dashboard grid can be scanned by corner alone.
+   Positioned against the card, so it must be a child of the card, not of the value row. */
 .db-cmk-kpi-stat-card__state {
-  flex-shrink: 0;
-  align-self: center;
+  position: absolute;
+  top: var(--spacing);
+  right: var(--spacing);
+  z-index: 3;
+  max-width: 40%;
   height: auto;
   padding: clamp(2px, 3cqh, 7px) clamp(8px, 3cqw, 18px);
   margin: 0;
@@ -278,24 +343,27 @@ const hasSparkLine = computed(() => props.series.length >= 2)
   line-height: 1.4;
 }
 
-/* With a plot underneath, it floats over the middle of the card instead: it
-   qualifies the whole widget rather than the number. Positioned against the
-   card, so it must be a child of the card and not of the value row. */
-.db-cmk-kpi-stat-card:not(.db-cmk-kpi-stat-card--value-only) .db-cmk-kpi-stat-card__state {
+/* Fades out in both directions past the text, so a curve peak near it isn't sliced off flat. */
+.db-cmk-kpi-stat-card__scrim {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 2;
-  max-width: 90%;
-  transform: translate(-50%, -50%);
-}
-
-.db-cmk-kpi-stat-card__spark-line {
-  position: absolute;
+  top: 0;
   right: 0;
-  bottom: 0;
   left: 0;
-  height: 55%;
+  height: calc(var(--scrim-bottom-edge) + clamp(8px, 6cqh, 32px));
+  z-index: 1;
+  background: linear-gradient(
+    to right,
+    var(--card-effective-bg) 0,
+    var(--card-effective-bg) var(--scrim-right-edge),
+    transparent calc(var(--scrim-right-edge) + clamp(8px, 6cqw, 32px))
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    black 0,
+    black var(--scrim-bottom-edge),
+    transparent calc(var(--scrim-bottom-edge) + clamp(8px, 6cqh, 32px))
+  );
+  pointer-events: none;
 }
 
 /* Labels for the ends of the plotted range, so they sit against the plot rather

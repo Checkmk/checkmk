@@ -25,6 +25,9 @@ export interface KpiRangeLimits {
   maximum: string
 }
 
+/** 'band' keeps the sparkline strictly below the numbers; 'full' runs it behind them, behind a scrim. */
+export type SparkHeightMode = 'band' | 'full'
+
 /**
  * Fixed vertical scale bounds for the sparkline, as raw numbers (unrelated to
  * KpiRangeLimits, which is display-only formatted labels). Samples outside
@@ -75,4 +78,6 @@ export interface CmkKpiStatCardProps {
   range?: KpiValueRange | undefined
   /** Turns the value into a link; omit to render it as plain text. */
   href?: string | undefined
+  /** How much of the card the sparkline occupies; defaults to 'full'. */
+  sparkHeightMode?: SparkHeightMode | undefined
 }

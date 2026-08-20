@@ -131,17 +131,24 @@ test('draws a broken line for a series with a gap, without crashing', () => {
   expect(pathData.match(/M/g)?.length).toBeGreaterThan(1)
 })
 
-test('centers the state against the card, not against the value row', () => {
+test('positions the state against the card, not against the value row', () => {
   const { container } = renderCard({ state: { severity: 'warn' } })
 
-  // Positioned absolutely against the card, so it has to be the card's child --
-  // the value row is itself positioned and would capture it.
+  // Positioned absolutely against the card (top right, every variant), so it must be the card's child.
   expect(
     container.querySelector('.db-cmk-kpi-stat-card > .db-cmk-kpi-stat-card__state')
   ).not.toBeNull()
   expect(
     container.querySelector('.db-cmk-kpi-stat-card__value-row .db-cmk-kpi-stat-card__state')
   ).toBeNull()
+})
+
+test('keeps the state badge in the same corner even with no spark line', () => {
+  const { container } = renderCard({ series: [], state: { severity: 'warn' } })
+
+  expect(
+    container.querySelector('.db-cmk-kpi-stat-card > .db-cmk-kpi-stat-card__state')
+  ).not.toBeNull()
 })
 
 test('gives the whole card to the value when there is no spark line', () => {
@@ -221,6 +228,31 @@ test('fades the sparkline fill towards the floor when the card is tinted', () =>
 
   const fill = container.querySelector('.db-kpi-spark-line__area')?.getAttribute('fill') ?? ''
   expect(fill).toMatch(/^url\(#/)
+})
+
+test('defaults to full height, with a scrim protecting the numbers', () => {
+  const { container } = renderCard()
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card')).not.toHaveClass(
+    'db-cmk-kpi-stat-card--band'
+  )
+  expect(container.querySelector('.db-cmk-kpi-stat-card__scrim')).not.toBeNull()
+})
+
+test('band mode reserves the sparkline below the numbers, with no scrim', () => {
+  const { container } = renderCard({ sparkHeightMode: 'band' })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card')).toHaveClass('db-cmk-kpi-stat-card--band')
+  expect(container.querySelector('.db-cmk-kpi-stat-card__scrim')).toBeNull()
+})
+
+test('a value-only card is neither banded nor scrimmed - there is nothing to protect', () => {
+  const { container } = renderCard({ series: [], sparkHeightMode: 'band' })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card')).not.toHaveClass(
+    'db-cmk-kpi-stat-card--band'
+  )
+  expect(container.querySelector('.db-cmk-kpi-stat-card__scrim')).toBeNull()
 })
 
 test('omits the range labels unless limits are given', () => {

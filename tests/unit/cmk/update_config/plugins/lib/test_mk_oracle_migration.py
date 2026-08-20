@@ -122,7 +122,6 @@ def test_unmappable_fields_ignored() -> None:
     new_rule = convert(
         {
             "sqlnet_ora_group": "some_group",
-            "validate_permissions": ("enable", {}),
             "xinetd_or_systemd": ("xinetd", None),
             "sqlnet_send_timeout": 30,
             "excluded_sections": [("s", ["x"])],
@@ -132,10 +131,6 @@ def test_unmappable_fields_ignored() -> None:
     )
     assert (
         "'sqlnet.ora permission group' has been skipped because it is not needed anymore by the unified plugin."
-        in new_rule.warnings
-    )
-    assert (
-        "'Oracle binaries permissions check' has been skipped because it is not needed by the unified plugin."
         in new_rule.warnings
     )
     assert (
@@ -156,6 +151,40 @@ def test_unmappable_fields_ignored() -> None:
     assert set(dumped["main"]) == {"auth", "connection", "sections"}
     assert dumped["main"]["auth"] == {"auth_type": ("wallet", None)}
     assert dumped["main"]["connection"] == {}
+
+
+def test_permissions_not_mapped_when_validate_permissions_absent() -> None:
+    assert "options" not in dump(convert({"activated": True}).rule)
+
+
+def test_permissions_disabled_when_validate_permissions_disabled() -> None:
+    assert dump(convert({"validate_permissions": "disable"}).rule)["options"] == {
+        "validate_permissions": ("disabled", None)
+    }
+
+
+def test_permissions_enabled_with_safe_entries_when_white_list_set() -> None:
+    new_rule = convert(
+        {"validate_permissions": ("enable", {"groups_and_users_white_list": ["aaaaaa", "bbbbb"]})}
+    )
+    assert dump(new_rule.rule)["options"] == {
+        "validate_permissions": ("enabled", {"safe_entries": ["aaaaaa", "bbbbb"]})
+    }
+
+
+def test_permissions_enabled_without_safe_entries_when_white_list_empty() -> None:
+    new_rule = convert({"validate_permissions": ("enable", {"groups_and_users_white_list": []})})
+    assert dump(new_rule.rule)["options"] == {"validate_permissions": ("enabled", {})}
+
+
+def test_permissions_enabled_without_safe_entries_when_white_list_absent() -> None:
+    assert dump(convert({"validate_permissions": ("enable", {})}).rule)["options"] == {
+        "validate_permissions": ("enabled", {})
+    }
+
+
+def test_permissions_not_mapped_when_validate_permissions_unknown() -> None:
+    assert "options" not in dump(convert({"validate_permissions": "nonsense"}).rule)
 
 
 def test_discovery_not_mapped_when_nothing_defined() -> None:

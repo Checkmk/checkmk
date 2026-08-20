@@ -11,6 +11,7 @@ from typing import Any, Final, Literal, NamedTuple
 
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset
 from cmk.plugins.oracle.bakery.mk_oracle_unified import (
+    GuiAdditionalOptionsConf,
     GuiAsmAuthConf,
     GuiAuthConf,
     GuiAuthUserPasswordData,
@@ -20,6 +21,7 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     GuiInstanceConf,
     GuiMainConf,
     GuiOracleIdentificationConf,
+    GuiOracleSafeEntries,
     OracleAuthType,
 )
 
@@ -30,6 +32,10 @@ RawSecret = tuple[
     Literal["explicit_password", "stored_password"],
     tuple[str, str],
 ]
+
+GuiValidatePermissions = (
+    tuple[Literal["enabled"], GuiOracleSafeEntries | None] | tuple[Literal["disabled"], None]
+)
 
 
 class MigratedRule(NamedTuple):
@@ -45,7 +51,6 @@ class MigrationResult(NamedTuple):
 
 field_warning_messages: Final[dict[str, str]] = {
     "sqlnet_ora_group": "'sqlnet.ora permission group' has been skipped because it is not needed anymore by the unified plugin.",
-    "validate_permissions": "'Oracle binaries permissions check' has been skipped because it is not needed by the unified plugin.",
     "xinetd_or_systemd": "'Host uses xinetd or systemd' has been skipped because it is not needed by the unified plugin.",
     "sqlnet_send_timeout": "'Sqlnet Send timeout' has been skipped because it is not supported by the unified plugin. Use Connection Timeout instead if this is applicable.",
     "excluded_sections": "'Exclude some sections on certain instances' cannot be mapped. The new rule format only supports disabling sections globally.",
@@ -113,6 +118,13 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
 
     cache_age = legacy.get("async_interval") or None
 
+    validate_permissions = _convert_permissions(legacy.get("validate_permissions"))
+    options = (
+        None
+        if validate_permissions is None
+        else GuiAdditionalOptionsConf(validate_permissions=validate_permissions)
+    )
+
     if legacy_sections := legacy.get("sections"):
         sections = _convert_sections(legacy_sections, warnings)
     else:
@@ -156,9 +168,30 @@ def convert(legacy: Mapping[str, Any]) -> MigratedRule:
     warnings.extend(msg for key, msg in field_warning_messages.items() if key in legacy)
 
     return MigratedRule(
-        rule=GuiConfig[RawSecret](deploy=deploy, instances=instances, main=main),
+        rule=GuiConfig[RawSecret](deploy=deploy, instances=instances, main=main, options=options),
         warnings=warnings,
     )
+
+
+def _convert_permissions(validate_permissions: Any) -> GuiValidatePermissions | None:
+    """Map the legacy 'validate_permissions' value to the unified binaries permissions check.
+
+    The legacy value is either 'disable' or
+    ('enable', {'groups_and_users_white_list': [...]}) with an optional and possibly empty
+    white list. The unified option uses 'disabled'/'enabled' and 'safe_entries'.
+
+    Note that the legacy check ran on Windows only, while the unified plugin checks on every
+    platform. A migrated rule therefore applies the setting everywhere, it's up to bakery
+    """
+    match validate_permissions:
+        case ("enable", {"groups_and_users_white_list": [*safe_entries]}) if safe_entries:
+            return ("enabled", GuiOracleSafeEntries(safe_entries=list(safe_entries)))
+        case ("enable", Mapping()):
+            return ("enabled", GuiOracleSafeEntries())
+        case "disable":
+            return ("disabled", None)
+        case _:
+            return None
 
 
 def _convert_sections(

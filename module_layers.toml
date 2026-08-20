@@ -867,6 +867,7 @@ allows = [
   "cmk.metric_backend.gui",
   "cmk.network_flow.gui",
   "cmk.otel_collector",
+  "cmk.telemetry.gui",
 ]
 
 # allow everything, don't get in the way of migrations.

@@ -78,7 +78,6 @@ function onFunctionUpdate(value: string | null): void {
 
 function removeGrouping(): void {
   applyFunction('none')
-  editing.value = false // the remove button is also reachable while editing
 }
 
 // A new output type may no longer offer the current function; reset to its default.
@@ -176,7 +175,7 @@ function canLeaveEdit(): boolean {
     <InlineEditPill
       :editing="editing"
       :tab-focusable="false"
-      :removable="model.function !== 'none'"
+      :removable="model.function !== 'none' && !editing"
       :can-leave="canLeaveEdit"
       :aria-label="ariaLabel ?? summary"
       :edit-aria-label="editAriaLabel"

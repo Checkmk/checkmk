@@ -198,18 +198,23 @@ test('"no grouping" removes the keys area but retains the keys in the model', as
   ])
 })
 
-test('the remove button resets the grouping to "no grouping" and collapses the pill', async () => {
+test('the remove button on the collapsed pill resets the grouping to "no grouping"', async () => {
   const { model } = renderWidget({ function: 'avg', keys: [] }, 'float')
-  await openPill()
 
   await userEvent.click(screen.getByRole('button', { name: 'Remove grouping' }))
 
   await waitFor(() => expect(model.value.function).toBe('none'))
-  expect(screen.getByRole('button', { name: /Edit group by/ })).toBeVisible()
 })
 
 test('the remove button is hidden once the grouping is already "no grouping"', () => {
   renderWidget({ function: 'none', keys: [] }, 'float')
+  expect(screen.queryByRole('button', { name: 'Remove grouping' })).toBeNull()
+})
+
+test('the remove button is hidden while the pill is being edited', async () => {
+  renderWidget({ function: 'avg', keys: [] }, 'float')
+  await openPill()
+
   expect(screen.queryByRole('button', { name: 'Remove grouping' })).toBeNull()
 })
 

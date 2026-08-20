@@ -123,7 +123,7 @@ function canLeaveEdit(): boolean {
   <InlineEditPill
     :editing="editing"
     :tab-focusable="false"
-    removable
+    :removable="!editing"
     :can-leave="canLeaveEdit"
     :aria-label="summary"
     :edit-aria-label="editAriaLabel"

@@ -62,6 +62,14 @@ test.each([
   expect(screen.queryByRole('button', { name: 'Add group key' }) === null).toBe(!shown)
 })
 
+test('the remove button shows on the collapsed chip but is hidden while editing', async () => {
+  renderStep({ function: 'avg', keys: [] })
+  expect(screen.getByRole('button', { name: 'Remove then step' })).toBeVisible()
+
+  await openStep()
+  expect(screen.queryByRole('button', { name: 'Remove then step' })).toBeNull()
+})
+
 test('the key picker is restricted to the preceding step keys and derives the kind', async () => {
   const { model } = renderStep({ function: 'sum', keys: [] }, ALLOWED)
   await openStep()

@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CalendarDateTime, toZoned } from '@internationalized/date'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
@@ -280,7 +281,7 @@ test('a blocked source marks the metrics tab, from whichever tab is open', async
   renderBody('edit', {
     issuesByRow: new Map([['A', [{ id: 'A', field: 'title', code: 'required' }]]])
   })
-  await fireEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+  await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
 
   const metrics = screen.getByRole('tab', { name: 'Metrics selection' })
 
@@ -348,6 +349,36 @@ test('the metrics tab carries no marker while nothing blocks the save', async ()
   const metrics = await screen.findByRole('tab', { name: 'Metrics selection' })
 
   expect(metrics.querySelector('.cmk-icon')).toBeNull()
+})
+
+test("a tab switch keeps each table's collapse state and the selection", async () => {
+  renderBody('edit', { graph: graphObject([rrdSource('A'), rrdQuerySource('B')]) })
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+
+  // The inactive panel keeps its `hidden` attribute, so role queries only see the open tab.
+  const openPanel = () => screen.getByRole('tabpanel')
+  const toggles = () => within(openPanel()).getAllByRole('button', { name: 'Toggle details' })
+  const openTab = (name: string) => userEvent.click(screen.getByRole('tab', { name }))
+
+  await fireEvent.click(toggles()[0]!)
+  const [selectA] = within(openPanel()).getAllByLabelText('Select row')
+  await fireEvent.click(selectA!)
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'true')
+  expect(toggles()[1]!).toHaveAttribute('aria-expanded', 'false')
+
+  // Only the rrd_query row fans out into lines, and it starts open: collapse it.
+  await openTab('Graph appearance')
+  expect(toggles()).toHaveLength(1)
+  await fireEvent.click(toggles()[0]!)
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'false')
+
+  await openTab('Metrics selection')
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'true')
+  expect(toggles()[1]!).toHaveAttribute('aria-expanded', 'false')
+  expect(within(openPanel()).getByText('Selected rows: 1')).toBeInTheDocument()
+
+  await openTab('Graph appearance')
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'false')
 })
 
 describe('settings slide-out', () => {

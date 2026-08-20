@@ -13,7 +13,7 @@ import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 
 import EditableTable from '@/monitoring/shared/components/EditableTable.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
@@ -28,7 +28,7 @@ import SwitchCell from '@/monitoring/shared/components/cell/SwitchCell.vue'
 import VisibilityCell from '@/monitoring/shared/components/cell/VisibilityCell.vue'
 
 import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
-import type { GraphItemsStore } from '../composables/useGraphItems'
+import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphItems'
 import { useRowLabels } from '../composables/useRowLabels'
 import { useTitleMacroHelp } from '../composables/useTitleMacroHelp'
 import { useValidationMessages } from '../composables/useValidationMessages'
@@ -87,6 +87,14 @@ const expandedRows = ref<Record<string, boolean>>({})
 function isExpanded(row: DesignerItem): boolean {
   return expandedRows.value[row.id] === true
 }
+
+watch(
+  () => store.items.value,
+  (rows) => {
+    rowSelection.value = retainKnownRows(rowSelection.value, rows)
+    expandedRows.value = retainKnownRows(expandedRows.value, rows)
+  }
+)
 
 const table = useTemplateRef<{ scrollToRow: (key: ItemId) => void }>('table')
 const addSource = useTemplateRef<InstanceType<typeof CmkAddDropdown>>('addSource')

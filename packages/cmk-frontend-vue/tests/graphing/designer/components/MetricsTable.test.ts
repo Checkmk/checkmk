@@ -230,6 +230,21 @@ test('a selected row deleted outside the table drops out of the bulk actions', a
   })
 })
 
+test('a row reusing the id of a selected row is not selected itself', async () => {
+  const { store } = renderTable([rrdMetricItem('A'), constantItem('B')])
+  const selects = () => screen.getAllByLabelText('Select row')
+  await fireEvent.click(selects()[1]!)
+  expect(screen.getByText('Selected rows: 1')).toBeInTheDocument()
+
+  store.remove('B')
+  await waitFor(() => expect(selects()).toHaveLength(1))
+  store.addItem((id) => constantItem(id))
+  await waitFor(() => expect(selects()).toHaveLength(2))
+
+  expect(screen.queryByText('Selected rows: 1')).not.toBeInTheDocument()
+  expect(selects()[1]!).not.toBeChecked()
+})
+
 test('title edits patch the row', async () => {
   const { store } = renderTable([rrdMetricItem('A')])
   await fireEvent.update(screen.getByLabelText('Title'), 'My title')

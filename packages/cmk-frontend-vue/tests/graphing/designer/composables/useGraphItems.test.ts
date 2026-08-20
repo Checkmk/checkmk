@@ -3,7 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { type GraphItemsStore, useGraphItems } from '@/graphing/designer/composables/useGraphItems'
+import {
+  type GraphItemsStore,
+  retainKnownRows,
+  useGraphItems
+} from '@/graphing/designer/composables/useGraphItems'
 import {
   type DesignerItem,
   newConstantDraft,
@@ -279,4 +283,16 @@ test('removeMany deletes exactly the given rows', () => {
   store.removeMany(['A', 'C'])
   expect(store.items.value.map((item) => item.id)).toEqual(['B'])
   expect(() => store.removeMany(['Z'])).toThrow()
+})
+
+test('retainKnownRows drops the entries of rows that are gone', () => {
+  expect(retainKnownRows({ A: true, B: true, C: false }, [{ id: 'A' }, { id: 'C' }])).toEqual({
+    A: true,
+    C: false
+  })
+})
+
+test('retainKnownRows returns the record itself while every entry is still known', () => {
+  const record = { A: true, B: false }
+  expect(retainKnownRows(record, [{ id: 'B' }, { id: 'A' }])).toBe(record)
 })

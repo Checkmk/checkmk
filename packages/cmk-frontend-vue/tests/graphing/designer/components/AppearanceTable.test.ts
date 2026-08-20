@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
+import { nextTick } from 'vue'
 
 import type { Metric } from '@/graphing/components/TimeSeriesGraph'
 import AppearanceTable from '@/graphing/designer/components/AppearanceTable.vue'
@@ -60,21 +61,60 @@ function renderTable(
   }
 }
 
+function toggles(): HTMLElement[] {
+  return screen.getAllByRole('button', { name: 'Toggle details' })
+}
+
+/** The [min, avg, max, last] cells that close every row. */
+function statsOf(row: HTMLElement): string[] {
+  return [...row.querySelectorAll('td')].slice(-4).map((cell) => cell.textContent!.trim())
+}
+
+function rowOf(title: string): HTMLElement {
+  return screen.getByText(title).closest('tr')!
+}
+
 test('shows the stats of rows that map to exactly one series', () => {
   renderTable(
-    [rrdMetricItem('A'), rrdQueryItem('B')],
+    [rrdMetricItem('A', { title: 'Single' }), rrdQueryItem('B', { title: 'Fanned' })],
     new Map([
       ['A', [metric('a', [10, 30, 20])]],
       ['B', [metric('b1', [1]), metric('b2', [2])]]
     ])
   )
-  // min, avg, max, last of row A
-  expect(screen.getByText('10')).toBeInTheDocument()
-  expect(screen.getAllByText('20')).not.toHaveLength(0)
-  expect(screen.getByText('30')).toBeInTheDocument()
-  // Row B fans into two series: no row-level stats.
-  expect(screen.queryByText('1')).not.toBeInTheDocument()
-  expect(screen.queryByText('2')).not.toBeInTheDocument()
+  expect(statsOf(rowOf('Single'))).toEqual(['10', '20', '30', '20'])
+  // Row B fans into two series, so its own row attributes none of them.
+  expect(statsOf(rowOf('Fanned'))).toEqual(['', '', '', ''])
+})
+
+test('opens the rows that fan out into lines, leaving single-line rows without a toggle', () => {
+  renderTable(
+    [rrdMetricItem('A', { title: 'Single' }), rrdQueryItem('B', { title: 'Fanned' })],
+    new Map([
+      ['A', [metric('a', [10])]],
+      ['B', [metric('b1', [1]), metric('b2', [2])]]
+    ])
+  )
+
+  expect(toggles()).toHaveLength(1)
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'true')
+})
+
+test('a row reusing the id of a collapsed row starts expanded again', async () => {
+  const { store } = renderTable(
+    [rrdQueryItem('A', { title: 'Query A' })],
+    new Map([['A', [metric('a1', [1]), metric('a2', [2])]]])
+  )
+
+  await fireEvent.click(toggles()[0]!)
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'false')
+
+  store.remove('A')
+  await nextTick()
+  store.addItem((id) => rrdQueryItem(id, { title: 'Query A again' }))
+  await nextTick()
+
+  expect(toggles()[0]!).toHaveAttribute('aria-expanded', 'true')
 })
 
 test('shows the source type and title of every row', () => {
@@ -100,7 +140,7 @@ test('names every row by its resolved title, single-line and group alike', () =>
   expect(screen.queryByText('$DEFAULT_TITLE$')).not.toBeInTheDocument()
 })
 
-test('expands a multi-line row into one legend-styled row per resolved line', async () => {
+test('lists a multi-line row as one legend-styled row per resolved line', () => {
   const { container } = renderTable(
     [rrdQueryItem('B', { title: 'Query B' })],
     new Map([
@@ -109,10 +149,6 @@ test('expands a multi-line row into one legend-styled row per resolved line', as
   )
 
   expect(screen.getByText('Query B')).toBeInTheDocument()
-  expect(screen.queryByText('line one')).not.toBeInTheDocument()
-  expect(screen.queryByText('10')).not.toBeInTheDocument()
-
-  await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
 
   // Legend order, so the last line drawn heads the list.
   const rows = container.querySelectorAll('.graphing-appearance-table__expanded-row')
@@ -140,12 +176,10 @@ test('a resolved metrics-backend series expands into its attribute table', async
     new Map([['B', [backendMetric('line one')]]])
   )
 
-  const toggles = () => screen.getAllByRole('button', { name: 'Toggle details' })
-
-  await fireEvent.click(toggles()[0]!)
   expect(screen.getByText('line one')).toBeInTheDocument()
   expect(screen.queryByText('host.arch')).not.toBeInTheDocument()
 
+  // [0] is the source row, open from the start; [1] is its series.
   await fireEvent.click(toggles()[1]!)
 
   expect(screen.getByText('Attribute name')).toBeInTheDocument()
@@ -167,13 +201,9 @@ test('expanding a series leaves the same-named series of another source row coll
     ])
   )
 
-  const toggles = () => screen.getAllByRole('button', { name: 'Toggle details' })
+  // Both source rows are open from the start; only A's series gets expanded.
+  await fireEvent.click(toggles()[1]!)
 
-  await fireEvent.click(toggles()[0]!) // source row A
-  await fireEvent.click(toggles()[1]!) // A's series
-  expect(screen.getAllByText('host.arch')).toHaveLength(1)
-
-  await fireEvent.click(toggles()[2]!) // source row B, whose series must stay collapsed
   expect(screen.getAllByText('host.arch')).toHaveLength(1)
 })
 
@@ -184,30 +214,29 @@ test('a series that loses its attributes while expanded leaves no table behind',
     metricsBySource
   )
 
-  const toggles = () => screen.getAllByRole('button', { name: 'Toggle details' })
-  await fireEvent.click(toggles()[0]!)
   await fireEvent.click(toggles()[1]!)
   expect(screen.getByText('host.arch')).toBeInTheDocument()
 
   await rerender({
     store,
     metricsBySource: new Map([['B', [metric('line one', [1])]]]),
-    groupTitlesBySource: new Map()
+    resolvedTitles: new Map()
   })
 
   expect(screen.queryByText('Attribute name')).not.toBeInTheDocument()
 })
 
-test('collapsing an expanded multi-line row hides its per-line rows again', async () => {
+test('collapsing a multi-line row hides its per-line rows, reopening brings them back', async () => {
   renderTable(
     [rrdQueryItem('B', { title: 'Query B' })],
     new Map([['B', [metric('line one', [10, 20]), metric('line two', [30, 40])]]])
   )
 
-  await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
-  expect(screen.getByText('line one')).toBeInTheDocument()
-
-  await fireEvent.click(screen.getByRole('button', { name: 'Toggle details' }))
+  await fireEvent.click(toggles()[0]!)
   expect(screen.queryByText('line one')).not.toBeInTheDocument()
   expect(screen.queryByText('line two')).not.toBeInTheDocument()
+
+  await fireEvent.click(toggles()[0]!)
+  expect(screen.getByText('line one')).toBeInTheDocument()
+  expect(screen.getByText('line two')).toBeInTheDocument()
 })

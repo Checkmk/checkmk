@@ -271,6 +271,7 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
         v-else
         class="graphing-designer-body__tabs"
         :model-value="activeTab"
+        :unmount-on-hide="false"
         @update:model-value="onTabChange"
       >
         <template #tabs>

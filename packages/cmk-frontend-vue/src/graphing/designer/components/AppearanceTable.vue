@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { ColumnDef } from '@tanstack/vue-table'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import EditableTable from '@/monitoring/shared/components/EditableTable.vue'
 import BaseCell from '@/monitoring/shared/components/cell/BaseCell.vue'
@@ -26,7 +26,7 @@ import {
   orderMetricsForLegend
 } from '../../components/legend/legendUtils'
 import { attributesOf, hasAttributes } from '../../components/metricAttributes'
-import type { GraphItemsStore } from '../composables/useGraphItems'
+import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphItems'
 import { useRowLabels } from '../composables/useRowLabels'
 import type { DesignerItem } from '../drafts'
 import { type ItemId, isSingleLine, parseLineType } from '../types'
@@ -63,8 +63,15 @@ const colorColumnIndex = columns.findIndex((column) => column.id === 'color')
 const expandedRows = ref<Record<string, boolean>>({})
 
 function isExpanded(row: DesignerItem): boolean {
-  return expandedRows.value[row.id] === true
+  return !isSingleLine(row) && (expandedRows.value[row.id] ?? true)
 }
+
+watch(
+  () => store.items.value,
+  (rows) => {
+    expandedRows.value = retainKnownRows(expandedRows.value, rows)
+  }
+)
 
 /** Second expansion level: the attributes of a single resolved series. */
 const expandedSeries = ref<Record<string, boolean>>({})

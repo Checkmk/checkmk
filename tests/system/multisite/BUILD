@@ -28,7 +28,6 @@ py_library(
         requirement("opentelemetry-instrumentation-requests"),
         "//cmk/gui/job_scheduler",
         "//packages/cmk-wsgi",
-        "//tests:scripts",
         "//tests/system:pkg_marker",
         "//tests/testlib",
         "//tests/testlib/common:utils",

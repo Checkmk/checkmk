@@ -47,7 +47,6 @@ py_library(
         "//cmk/utils:msi_patch",
         "//cmk/utils:redis",
         "//packages/cmk-agent-receiver",
-        "//tests:scripts",
         "//tests/system:pkg_marker",
         "//tests/testlib",
         "//tests/testlib/common:utils",

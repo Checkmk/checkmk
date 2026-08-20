@@ -19,7 +19,6 @@ py_library(
     imports = ["../../.."],
     deps = [
         requirement("pytest"),
-        "//tests:scripts",
         "//tests/system:pkg_marker",
         "//tests/testlib",
         "//tests/testlib/common:utils",

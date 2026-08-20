@@ -26,13 +26,14 @@ py_library(
         requirement("python-dateutil"),
         requirement("requests"),
         requirement("opentelemetry-instrumentation-requests"),
-        "//cmk/gui/job_scheduler",
+        "//cmk/gui:app",
         "//packages/cmk-wsgi",
         "//tests/system:pkg_marker",
         "//tests/testlib",
         "//tests/testlib/common:utils",
     ] + select({
         "//:gpl+nonfree_repo": [
+            "//cmk/gui/job_scheduler",
             "//non-free/packages/cmk-otel-collector:testlib",
             "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
             "//non-free/tests/testlib/system:metric_backend",

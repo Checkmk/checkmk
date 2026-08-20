@@ -56,10 +56,10 @@ This is a src-import-vs-declared-dep check with the following implemented:
       )
 - Generated srcs of the analyzed target contribute no imports (they are not
   action inputs); targets whose srcs are all generated yield no findings.
-- Targets with at least one `conftest.py` src are skipped as analysis roots.
-  This is a deliberately large carve-out: a conftest target is load-bearing
-  through pytest's filesystem discovery, and its sibling srcs commonly are,
-  too.
+- A `conftest.py` among the analyzed target's own srcs is parsed like any
+  other src. It is only as a dep that a conftest is unanalyzable (nobody
+  imports it by name); as an analysis root its own imports are the evidence,
+  and skipping it would exempt most of the test tree.
 - Namespace-shim targets are skipped as analysis roots, too: an umbrella
   target (srcs = `__init__.py`, deps = the subpackage targets) aggregates its
   deps on purpose.
@@ -454,10 +454,6 @@ def _ancestors(module: str) -> list[str]:
 def analyze_spec(spec: TargetSpec, deps: Sequence[DepInfo]) -> list[str]:
     """Return sorted list of pruneable dep labels for the target in `spec`."""
     own_paths = [s.short_path for s in spec.srcs]
-    if is_pytest_conftest(own_paths):
-        # conftest targets are fixture hubs and transitive re-exporters -
-        # direct-import analysis doesn't capture their actual usage pattern.
-        return []
     if is_namespace_shim(own_paths):
         # Umbrella targets (srcs = __init__.py, deps = the subpackages) exist
         # to hand consumers the whole package; their deps are intentional.

@@ -78,8 +78,6 @@ py_library(
     ),
     imports = [".."],
     deps = [
-        "//tests/testlib",
-        "//tests/testlib/common:utils",
         requirement("pytest"),
     ],
 )
@@ -97,8 +95,8 @@ py_library(
     }),
     imports = [".."],
     deps = [
-        "//tests/testlib",
-        "//tests/testlib/unit",
+        "//tests/testlib/common:empty_config",
+        "//tests/testlib/common:repo",
         requirement("pytest"),
     ],
 )

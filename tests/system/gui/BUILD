@@ -32,7 +32,6 @@ py_library(
     ] + select({
         "//:gpl+nonfree_repo": [
             "//non-free/tests/testlib/system:metric_backend",
-            "//non-free/tests/testlib/system:opentelemetry",
             "//non-free/tests/testlib/system/cloud",
             "//non-free/tests/testlib/system/licensing",
         ],

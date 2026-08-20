@@ -454,6 +454,28 @@ def _app_spec(tmp_path: Path, app_src: str) -> TargetSpec:
     )
 
 
+def _test_spec(tmp_path: Path, conftest_src: str, test_src: str) -> TargetSpec:
+    """A py_test target in the shape pytest targets have: conftest.py plus tests."""
+    (tmp_path / "pkg").mkdir(exist_ok=True)
+    conftest = tmp_path / "pkg" / "conftest.py"
+    conftest.write_text(conftest_src)
+    test = tmp_path / "pkg" / "test_app.py"
+    test.write_text(test_src)
+    return TargetSpec(
+        label="//pkg:app_test",
+        package="pkg",
+        imports=["."],
+        src_attr_labels=["//pkg:conftest.py", "//pkg:test_app.py"],
+        srcs=[
+            SrcFile("pkg/conftest.py", str(conftest), True),
+            SrcFile("pkg/test_app.py", str(test), True),
+        ],
+        dep_attr_labels=[],
+        dep_json_paths=[],
+        keep_deps=[],
+    )
+
+
 def test_flags_a_dep_whose_modules_are_never_imported(tmp_path: Path) -> None:
     spec = _app_spec(tmp_path, "import os\n")
     assert analyze_spec(spec, [_dep_lib()]) == ["//dep:lib"]
@@ -524,21 +546,16 @@ def test_reports_nothing_when_the_target_discovers_plugins_at_runtime(tmp_path: 
     assert analyze_spec(spec, [_dep_lib()]) == []
 
 
-def test_reports_nothing_for_a_conftest_target(tmp_path: Path) -> None:
-    (tmp_path / "pkg").mkdir()
-    conftest = tmp_path / "pkg" / "conftest.py"
-    conftest.write_text("import dep.lib\n")
-    spec = TargetSpec(
-        label="//pkg:conftest",
-        package="pkg",
-        imports=["."],
-        src_attr_labels=["//pkg:conftest.py"],
-        srcs=[SrcFile("pkg/conftest.py", str(conftest), True)],
-        dep_attr_labels=[],
-        dep_json_paths=[],
-        keep_deps=[],
-    )
+def test_does_not_flag_a_dep_a_conftest_src_imports(tmp_path: Path) -> None:
+    # A conftest is unanalyzable as a dep, not as an analysis root: pytest
+    # loads it by filename, but its own imports are evidence like any other.
+    spec = _test_spec(tmp_path, conftest_src="import dep.lib\n", test_src="import os\n")
     assert analyze_spec(spec, [_dep_lib()]) == []
+
+
+def test_flags_an_unused_dep_of_a_target_shipping_a_conftest(tmp_path: Path) -> None:
+    spec = _test_spec(tmp_path, conftest_src="import os\n", test_src="import os\n")
+    assert analyze_spec(spec, [_dep_lib()]) == ["//dep:lib"]
 
 
 def test_reports_nothing_when_all_srcs_are_generated() -> None:

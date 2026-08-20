@@ -12,8 +12,10 @@ py_library(
         "__init__.py",
         "conftest.py",
     ],
+    tags = [
+        "deballast-keep=//cmk/plugins",  # rulesets/graphing discovered at runtime, not imported
+    ],
     deps = [
-        "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui/utils:middle",
@@ -24,7 +26,6 @@ py_library(
         "//packages/cmk-livestatus-client:py_livestatus",
         "//tests/testlib:fake_site",
         "//tests/testlib:rest_api_client",
-        "//tests/testlib/common:repo",
         "//tests/testlib/gui",
         requirement("flask"),
         requirement("pytest"),

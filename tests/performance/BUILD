@@ -16,7 +16,6 @@ py_library(
     imports = ["../.."],
     deps = [
         ":sysmon",
-        "//cmk:validate_plugins",
         requirement("pytest"),
         requirement("psycopg"),
         requirement("jira"),

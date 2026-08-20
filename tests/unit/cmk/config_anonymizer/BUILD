@@ -10,7 +10,7 @@ py_library(
     deps = [
         "//cmk/base/config",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
-        "//tests/testlib/unit",
+        "//tests/testlib/gui",
         requirement("flask"),
         requirement("pytest"),
         requirement("pytest-mock"),

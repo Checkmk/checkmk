@@ -137,20 +137,78 @@ class OAuthAuthorizePage(Page):
             return None
 
         # received authorization form OK
-        if request.request_method == "POST":
-            check_csrf_token()
-            if transactions.check_transaction(request):
-                if request.var("_deny") is not None:
-                    self._error_redirect(ctx, redirect_uri, "access_denied")
-                    return None
-                self._issue_code(ctx, redirect_uri, client_id, code_challenge, granted_scopes)
-                return None
-
-        # show concent page
-        self._show_consent_page(ctx, redirect_uri, granted_scopes)
+        match request.request_method:
+            case "POST":
+                self._post(
+                    ctx,
+                    redirect_uri=redirect_uri,
+                    granted_scopes=granted_scopes,
+                    client_id=client_id,
+                    code_challenge=code_challenge,
+                )
+            case "GET" | "HEAD":
+                # Werkzeug adds HEAD to every GET route and strips the body.
+                self._get(ctx, redirect_uri=redirect_uri, granted_scopes=granted_scopes)
+            case _:
+                # RFC 6749 section 3.1 gives this endpoint GET and POST, so
+                # there is nothing else to answer.
+                response.status_code = http_client.METHOD_NOT_ALLOWED
         return None
 
-    def _open_login_frame(self, ctx: PageContext, title: str) -> None:
+    def _get(self, ctx: PageContext, redirect_uri: str, granted_scopes: frozenset[ScopeId]) -> None:
+        client_id = request.var("client_id")
+
+        self._open_center_frame(ctx, _("Authorize access"))
+        html.h1(_("Authorize access"))
+        if client_id is None:
+            html.p(_("An application is requesting access to this Checkmk site."))
+        else:
+            html.p(
+                _('The application "%(client_id)s" is requesting access to this Checkmk site.')
+                % {"client_id": client_id}
+            )
+        descriptions = {
+            ScopeId.READ: _("read data"),
+            ScopeId.WRITE: _("change data and configuration"),
+        }
+        html.p(
+            _("It is requesting permission to: %(grants)s.")
+            # ScopeId order, so a given grant always reads the same way.
+            % {"grants": ", ".join(descriptions[s] for s in ScopeId if s in granted_scopes)}
+        )
+        html.p(_("Your own user permissions still apply."))
+        html.p(_("Redirect target: %(redirect_uri)s") % {"redirect_uri": redirect_uri})
+        # Explicit action: this page is also reachable via the external OAuth
+        # issuer alias (/oauth-<site>/authorize, see system_apache.py), where
+        # the default relative "oauth_authorize.py" action would resolve
+        # against the wrong base path and never reach the backend.
+        with html.form_context("oauth_authorize", method="POST", action=request.path):
+            html.button("_authorize", _("Authorize"), cssclass="hot")
+            html.button("_deny", _("Deny"))
+            html.hidden_fields()
+        self._close_center_frame()
+
+    def _post(
+        self,
+        ctx: PageContext,
+        *,
+        redirect_uri: str,
+        granted_scopes: frozenset[ScopeId],
+        client_id: str,
+        code_challenge: str,
+    ) -> None:
+        check_csrf_token()
+        if not transactions.check_transaction(request):
+            # A replayed or expired transaction id: ask again rather than
+            # answer a submission we cannot attribute to the form we sent.
+            self._get(ctx, redirect_uri=redirect_uri, granted_scopes=granted_scopes)
+            return
+        if request.var("_deny") is not None:
+            self._error_redirect(ctx, redirect_uri, "access_denied")
+            return
+        self._issue_code(ctx, redirect_uri, client_id, code_challenge, granted_scopes)
+
+    def _open_center_frame(self, ctx: PageContext, title: str) -> None:
         # Reuses the login/two-factor page chrome: this page is shown before
         # the user reaches the normal, navigable GUI, just like those.
         html.render_headfoot = False
@@ -174,7 +232,7 @@ class OAuthAuthorizePage(Page):
         html.open_div(id_="login")
         html.open_div(id_="login_window")
 
-    def _close_login_frame(self) -> None:
+    def _close_center_frame(self) -> None:
         html.close_div()
         html.close_div()
         html.footer()
@@ -244,7 +302,7 @@ class OAuthAuthorizePage(Page):
         query = urllib.parse.urlencode(list(qs_map.items()))
         target_url = urllib.parse.urlunsplit(parts._replace(query=query))
 
-        self._open_login_frame(ctx, _("Redirecting..."))
+        self._open_center_frame(ctx, _("Redirecting..."))
         # Not an HTTP redirect: redirect_uri is necessarily cross-origin (the
         # OAuth client's own callback), and Chrome -- unlike Firefox --
         # enforces the site's form-action CSP against redirects resulting
@@ -255,39 +313,4 @@ class OAuthAuthorizePage(Page):
         html.meta(httpequiv="refresh", content=f"0; url={target_url}")
         html.p(_("Redirecting..."))
         html.a(_("Click here if you are not redirected automatically."), href=target_url)
-        self._close_login_frame()
-
-    def _show_consent_page(
-        self, ctx: PageContext, redirect_uri: str, granted_scopes: frozenset[ScopeId]
-    ) -> None:
-        client_id = request.var("client_id")
-
-        self._open_login_frame(ctx, _("Authorize access"))
-        html.h1(_("Authorize access"))
-        if client_id is None:
-            html.p(_("An application is requesting access to this Checkmk site."))
-        else:
-            html.p(
-                _('The application "%(client_id)s" is requesting access to this Checkmk site.')
-                % {"client_id": client_id}
-            )
-        descriptions = {
-            ScopeId.READ: _("read data"),
-            ScopeId.WRITE: _("change data and configuration"),
-        }
-        html.p(
-            _("It is requesting permission to: %(grants)s.")
-            # ScopeId order, so a given grant always reads the same way.
-            % {"grants": ", ".join(descriptions[s] for s in ScopeId if s in granted_scopes)}
-        )
-        html.p(_("Your own user permissions still apply."))
-        html.p(_("Redirect target: %(redirect_uri)s") % {"redirect_uri": redirect_uri})
-        # Explicit action: this page is also reachable via the external OAuth
-        # issuer alias (/oauth-<site>/authorize, see system_apache.py), where
-        # the default relative "oauth_authorize.py" action would resolve
-        # against the wrong base path and never reach the backend.
-        with html.form_context("oauth_authorize", method="POST", action=request.path):
-            html.button("_authorize", _("Authorize"), cssclass="hot")
-            html.button("_deny", _("Deny"))
-            html.hidden_fields()
-        self._close_login_frame()
+        self._close_center_frame()

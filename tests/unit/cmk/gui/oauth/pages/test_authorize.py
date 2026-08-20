@@ -85,6 +85,49 @@ class TestOAuthAuthorizePage:
             assert 'name="_authorize"' in body
             assert 'name="_deny"' in body
 
+    def test_answers_head_like_get(self, flask_app: Flask, registered_client_id: str) -> None:
+        # Werkzeug adds HEAD to every GET route, so turning it away would fail a
+        # request clients are free to make.
+        with flask_app.test_request_context(
+            method="HEAD",
+            query_string={
+                "redirect_uri": "https://client.example/callback",
+                "response_type": "code",
+                "client_id": registered_client_id,
+                "code_challenge": "test-challenge",
+                "code_challenge_method": "S256",
+            },
+        ):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
+            assert response.status_code == 200
+
+    @pytest.mark.parametrize("method", ["PUT", "DELETE"])
+    def test_rejects_the_verbs_the_endpoint_does_not_define(
+        self, flask_app: Flask, registered_client_id: str, method: str
+    ) -> None:
+        # RFC 6749 section 3.1 gives this endpoint GET and POST, and the site
+        # routes the rest here all the same.
+        with flask_app.test_request_context(
+            method=method,
+            query_string={
+                "redirect_uri": "https://client.example/callback",
+                "response_type": "code",
+                "client_id": registered_client_id,
+                "code_challenge": "test-challenge",
+                "code_challenge_method": "S256",
+            },
+        ):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
+            assert response.status_code == 405
+
     @pytest.mark.parametrize(
         "requested_scope, expected_grants",
         [

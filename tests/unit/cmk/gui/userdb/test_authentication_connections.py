@@ -5,9 +5,7 @@
 
 """Unit coverage for per-site ``authentication_connections`` resolution (epic CMK-33267).
 
-Pure resolution helpers the login page and SAML runtime depend on; the
-end-to-end behaviour lives in
-``tests/composition/identity/test_saml_login_distributed.py``.
+Pure resolution helpers the login page and SAML runtime depend on.
 """
 
 from typing import cast

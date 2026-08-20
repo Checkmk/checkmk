@@ -454,14 +454,14 @@ test('a metric without attributes offers nothing to expand', () => {
   expect(screen.queryByRole('button', { name: /toggle attributes/i })).not.toBeInTheDocument()
 })
 
-test('expanding a metrics-backend entry lists its attributes by name, value and type', async () => {
+test('expanding a metrics-backend entry lists its attributes by name, value and kind', async () => {
   render(GraphLegend, { props: { metrics: [REQUESTS] } })
 
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle attributes of Requests' }))
 
   expect(screen.getByText('Attribute name')).toBeInTheDocument()
   expect(screen.getByText('Attribute value')).toBeInTheDocument()
-  expect(screen.getByText('Attribute type')).toBeInTheDocument()
+  expect(screen.getByText('Attribute kind')).toBeInTheDocument()
 
   const archRow = screen.getByText('host.arch').closest('tr')!
   expect(archRow).toHaveTextContent('x64')

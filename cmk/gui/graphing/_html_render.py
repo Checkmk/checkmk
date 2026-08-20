@@ -945,8 +945,8 @@ def _compute_graph_legend_styles(
         yield "margin-left:%dpx" % legend_margin_left
 
 
-def _sort_attributes_by_type(attribute_type: Literal["resource", "scope", "data_point"]) -> int:
-    match attribute_type:
+def _sort_attributes_by_kind(attribute_kind: Literal["resource", "scope", "data_point"]) -> int:
+    match attribute_kind:
         case "resource":
             return 0
         case "scope":
@@ -957,8 +957,8 @@ def _sort_attributes_by_type(attribute_type: Literal["resource", "scope", "data_
             assert_never(other)
 
 
-def _readable_attribute_type(attribute_type: Literal["resource", "scope", "data_point"]) -> str:
-    match attribute_type:
+def _readable_attribute_kind(attribute_kind: Literal["resource", "scope", "data_point"]) -> str:
+    match attribute_kind:
         case "resource":
             return _("Resource")
         case "scope":
@@ -973,7 +973,7 @@ def _readable_attribute_type(attribute_type: Literal["resource", "scope", "data_
 class _Attribute:
     name: str
     value: str
-    type: str
+    kind: str
 
 
 def _render_attributes(
@@ -1002,7 +1002,7 @@ def _render_attributes(
         html.open_tr()
         html.th(_("Attribute name"), style="text-align: left; width: 20%;")
         html.th(_("Attribute value"), style="text-align: left")
-        html.th(_("Attribute type"), style="text-align: left; width: 10%;")
+        html.th(_("Attribute kind"), style="text-align: left; width: 10%;")
         html.close_tr()
         html.close_thead()
 
@@ -1011,7 +1011,7 @@ def _render_attributes(
             html.open_tr()
             html.td(attribute.name)
             html.td(attribute.value)
-            html.td(attribute.type)
+            html.td(attribute.kind)
             html.close_tr()
 
         html.close_tbody()
@@ -1039,9 +1039,9 @@ def _compute_legend_curve_rows(
             curve=curve,
             curve_ann=curve_ann,
             attributes=[
-                _Attribute(name=name, value=value, type=_readable_attribute_type(ty))
-                for ty, attrs in sorted(
-                    curve_ann.attributes.items(), key=lambda t: _sort_attributes_by_type(t[0])
+                _Attribute(name=name, value=value, kind=_readable_attribute_kind(kind))
+                for kind, attrs in sorted(
+                    curve_ann.attributes.items(), key=lambda t: _sort_attributes_by_kind(t[0])
                 )
                 for name, value in attrs.items()
             ],

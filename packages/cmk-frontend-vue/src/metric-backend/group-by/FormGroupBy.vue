@@ -76,6 +76,11 @@ function onFunctionUpdate(value: string | null): void {
   applyFunction(value as GroupByFunction)
 }
 
+function removeGrouping(): void {
+  applyFunction('none')
+  editing.value = false // the remove button is also reachable while editing
+}
+
 // A new output type may no longer offer the current function; reset to its default.
 watch(
   () => props.inputType,
@@ -171,13 +176,16 @@ function canLeaveEdit(): boolean {
     <InlineEditPill
       :editing="editing"
       :tab-focusable="false"
+      :removable="model.function !== 'none'"
       :can-leave="canLeaveEdit"
       :aria-label="ariaLabel ?? summary"
       :edit-aria-label="editAriaLabel"
+      :remove-label="_t('Remove grouping')"
       scope-marker-attr="data-gb-scope"
       item-marker-attr="data-gb-item"
       @edit="onEdit"
       @done="editing = false"
+      @remove="removeGrouping"
     >
       <template #read-only>
         <span class="metric-backend-form-group-by__summary">

@@ -158,6 +158,7 @@ def test_discover_fritz_wan_if(
                 Result(
                     state=State.OK,
                     summary="[WAN]",
+                    details="Index: 0\nDescription: WAN\nAlias: WAN",
                 ),
                 Result(
                     state=State.OK,

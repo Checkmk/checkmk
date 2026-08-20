@@ -658,7 +658,11 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                     "1",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=State.OK, summary="[docker0]"),
+                        Result(
+                            state=State.OK,
+                            summary="[docker0]",
+                            details="Index: 1\nDescription: docker0\nAlias: docker0",
+                        ),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=State.OK, summary="Speed: unknown"),
@@ -673,7 +677,11 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                     "4",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=State.OK, summary="[wlp3s0]"),
+                        Result(
+                            state=State.OK,
+                            summary="[wlp3s0]",
+                            details="Index: 4\nDescription: wlp3s0\nAlias: wlp3s0",
+                        ),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:BB"),
                         Result(state=State.OK, summary="Speed: unknown"),
@@ -821,7 +829,11 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                     "2",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=State.OK, summary="[docker0]"),
+                        Result(
+                            state=State.OK,
+                            summary="[docker0]",
+                            details="Index: 2\nDescription: docker0\nAlias: docker0",
+                        ),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=State.OK, summary="Speed: unknown"),
@@ -836,7 +848,11 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                     "4",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=State.OK, summary="[wlp3s0]"),
+                        Result(
+                            state=State.OK,
+                            summary="[wlp3s0]",
+                            details="Index: 4\nDescription: wlp3s0\nAlias: wlp3s0",
+                        ),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=State.OK, summary="Speed: unknown"),
@@ -984,7 +1000,11 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                     "2",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=State.OK, summary="[docker0]"),
+                        Result(
+                            state=State.OK,
+                            summary="[docker0]",
+                            details="Index: 2\nDescription: docker0\nAlias: docker0",
+                        ),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=State.OK, summary="Speed: unknown"),
@@ -999,7 +1019,11 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                     "4",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=State.OK, summary="[wlp3s0]"),
+                        Result(
+                            state=State.OK,
+                            summary="[wlp3s0]",
+                            details="Index: 4\nDescription: wlp3s0\nAlias: wlp3s0",
+                        ),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="MAC: AA:AA:AA:AA:AA:AA"),
                         Result(state=State.OK, summary="Speed: unknown"),
@@ -1061,7 +1085,11 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                     "1",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 1000000000, "state": ["1"]},
                     [
-                        Result(state=State.OK, summary="[em0]"),
+                        Result(
+                            state=State.OK,
+                            summary="[em0]",
+                            details="Index: 1\nDescription: em0\nAlias: em0",
+                        ),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="MAC: 00:AA:11:BB:22:CC"),
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
@@ -1076,7 +1104,11 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                     "2",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=State.OK, summary="[tun0]"),
+                        Result(
+                            state=State.OK,
+                            summary="[tun0]",
+                            details="Index: 2\nDescription: tun0\nAlias: tun0",
+                        ),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="Speed: unknown"),
                         Metric("outqlen", 0.0),
@@ -1090,7 +1122,11 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
                     "3",
                     {"errors": {"both": ("abs", (10, 20))}, "speed": 0, "state": ["1"]},
                     [
-                        Result(state=State.OK, summary="[tun1]"),
+                        Result(
+                            state=State.OK,
+                            summary="[tun1]",
+                            details="Index: 3\nDescription: tun1\nAlias: tun1",
+                        ),
                         Result(state=State.OK, summary="(up)", details="Operational state: up"),
                         Result(state=State.OK, summary="Speed: unknown"),
                         Metric("outqlen", 0.0),
@@ -1139,25 +1175,25 @@ def test_lnx_if_regression(
 
     node_name = "node"
     for item, par, res in items_params_results:
-        assert (
-            list(
-                lnx_if.cluster_check_lnx_if(
-                    item,
-                    par,
-                    {node_name: section},
-                    {},
-                )
-            )[:-1]
-            == [
-                Result(  # type: ignore[call-overload]
-                    state=res[0].state,
-                    summary=res[0].summary + " on %s" % node_name if res[0].summary else None,
-                    notice=res[0].summary + " on %s" % node_name if not res[0].summary else None,
-                    details=res[0].details + " on %s" % node_name if res[0].details else None,
-                ),
-                *res[1:-1],
-            ]
-        )
+        assert list(
+            lnx_if.cluster_check_lnx_if(
+                item,
+                par,
+                {node_name: section},
+                {},
+            )
+        )[:-1] == [
+            # the node is appended to the summary, but appears as its own line in the
+            # interface identification block which makes up the details
+            Result(
+                state=res[0].state,
+                summary=res[0].summary + " on %s" % node_name
+                if res[0].summary
+                else "On %s" % node_name,
+                details=res[0].details + "\nNode: %s" % node_name,
+            ),
+            *res[1:-1],
+        ]
 
 
 def test_lnx_if_with_bonding(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1280,7 +1316,11 @@ def test_lnx_if_with_bonding(monkeypatch: pytest.MonkeyPatch) -> None:
             section_bonding,
         )
     ) == [
-        Result(state=State.OK, summary="[wlp3s0]"),
+        Result(
+            state=State.OK,
+            summary="[wlp3s0]",
+            details="Index: 4\nDescription: wlp3s0\nAlias: wlp3s0",
+        ),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="MAC: BB:BB:BB:BB:BB:BB"),
         Result(state=State.OK, summary="Speed: unknown"),

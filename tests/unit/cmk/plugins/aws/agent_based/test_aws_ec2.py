@@ -58,7 +58,11 @@ def test_check_aws_ec2_network_io() -> None:
             },
         )
     ) == [
-        Result(state=State.OK, summary="[0]"),
+        Result(
+            state=State.OK,
+            summary="[0]",
+            details="Index: 0\nDescription: Summary\nAlias: Summary",
+        ),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="Speed: unknown"),
         Result(state=State.OK, summary="In: 0.02 B/s"),

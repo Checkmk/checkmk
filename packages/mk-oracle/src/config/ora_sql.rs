@@ -37,6 +37,7 @@ pub struct Config {
     conn: Connection,
     target_id: Option<TargetId>,
     sections: Sections,
+    excluded_sections: Vec<(TargetId, Vec<SectionName>)>,
     discovery: Discovery,
     piggyback_host: Option<String>,
     mode: Mode,
@@ -53,6 +54,7 @@ impl Default for Config {
             conn: Connection::default(),
             target_id: None,
             sections: Sections::default(),
+            excluded_sections: vec![],
             discovery: Discovery::default(),
             piggyback_host: None,
             mode: Mode::Port,
@@ -110,6 +112,8 @@ impl Config {
         let options = Options::from_yaml(main)?.unwrap_or_else(|| default.options().clone());
         let discovery = Discovery::from_yaml(main)?.unwrap_or_else(|| default.discovery().clone());
         let section_info = Sections::from_yaml(main, &default.sections)?;
+        let excluded_sections =
+            parse_excluded_sections(main).unwrap_or_else(|| default.excluded_sections().to_vec());
 
         let mut custom_instances: Vec<CustomInstance> = main
             .get_yaml_vector(keys::INSTANCES)
@@ -156,6 +160,7 @@ impl Config {
             conn,
             target_id: TargetId::from_yaml(main)?,
             sections: section_info,
+            excluded_sections,
             discovery,
             piggyback_host,
             mode,
@@ -188,6 +193,16 @@ impl Config {
     pub fn valid_sections(&self) -> Vec<&Section> {
         self.sections
             .select(&[SectionKind::Sync, SectionKind::Async])
+    }
+
+    /// Sections that must not be queried, per target. Empty when the config does
+    /// not use the `excluded_sections` key.
+    ///
+    /// A small association list, not a map: the lookup compares targets with
+    /// `TargetId::eq_ignore_case`, so an exclusion matches only a target named
+    /// with the same yaml keys, in whatever case.
+    pub fn excluded_sections(&self) -> &[(TargetId, Vec<SectionName>)] {
+        &self.excluded_sections
     }
 
     pub fn cache_age(&self) -> u32 {
@@ -231,6 +246,103 @@ impl Config {
     pub fn params(&self) -> &Vec<SqlBindParam> {
         self.options.params()
     }
+}
+
+/// Parse the global `excluded_sections` key: a list of entries, each naming one
+/// target and the sections that target does not query.
+///
+/// ```yaml
+/// excluded_sections:
+///   - target_id:
+///       service_name: "service"
+///       instance_name: "instance"
+///       sid: "sid"
+///     sections: [jobs]
+///   - target_id:
+///       sid: "sid"
+///     sections: [jobs, instance]
+/// ```
+///
+/// Targets are compared with `TargetId::eq_ignore_case`, so an exclusion applies
+/// to an instance only when both name the target with the same yaml keys, in
+/// whatever case. Two entries that differ only in case name one target and
+/// collapse into one, so the last of them wins rather than an arbitrary one.
+///
+/// Returns `None` when the key is absent, so the caller can fall back on the
+/// default config. A malformed entry is logged and skipped; a target listed
+/// twice keeps its last list.
+fn parse_excluded_sections(yaml: &Yaml) -> Option<Vec<(TargetId, Vec<SectionName>)>> {
+    let value = yaml.get(keys::EXCLUDED_SECTIONS);
+    if value.is_badvalue() {
+        return None;
+    }
+    let Some(entries) = value.as_vec() else {
+        log::error!(
+            "{} must be a list of '{}: {{...}}' / '{}: [...]' entries",
+            keys::EXCLUDED_SECTIONS,
+            keys::TARGET_ID,
+            keys::SECTIONS
+        );
+        return Some(Vec::new());
+    };
+    // Keeping both spellings of one target written in two cases would make the
+    // case-insensitive lookup pick an arbitrary one. Drop the previous spelling
+    // first, so the last entry wins as documented.
+    let mut result: Vec<(TargetId, Vec<SectionName>)> = Vec::new();
+    for (target_id, sections) in entries.iter().filter_map(parse_excluded_sections_entry) {
+        result.retain(|(previous, _)| !previous.eq_ignore_case(&target_id));
+        result.push((target_id, sections));
+    }
+    Some(result)
+}
+
+/// One `excluded_sections` entry: its `target_id` and the `sections` that target
+/// does not query.
+fn parse_excluded_sections_entry(entry: &Yaml) -> Option<(TargetId, Vec<SectionName>)> {
+    let Some(sections) = entry.get(keys::SECTIONS).as_vec().map(|s| section_names(s)) else {
+        log::error!(
+            "{}: entry without a '{}' list, skipped",
+            keys::EXCLUDED_SECTIONS,
+            keys::SECTIONS
+        );
+        return None;
+    };
+    match TargetId::from_yaml(entry.get(keys::TARGET_ID)) {
+        Ok(Some(target_id)) => Some((target_id, sections)),
+        Ok(None) => {
+            log::error!(
+                "{}: entry without a resolvable '{}', skipped",
+                keys::EXCLUDED_SECTIONS,
+                keys::TARGET_ID
+            );
+            None
+        }
+        Err(e) => {
+            log::error!(
+                "{}: bad '{}': {e}, skipped",
+                keys::EXCLUDED_SECTIONS,
+                keys::TARGET_ID
+            );
+            None
+        }
+    }
+}
+
+/// The section names of a yaml list, skipping the entries that are not strings.
+fn section_names(sections: &[Yaml]) -> Vec<SectionName> {
+    sections
+        .iter()
+        .filter_map(|s| match s.as_str() {
+            Some(name) => Some(SectionName::from(name.to_string())),
+            None => {
+                log::error!(
+                    "{}: section name must be a string, got {s:?}",
+                    keys::EXCLUDED_SECTIONS
+                );
+                None
+            }
+        })
+        .collect()
 }
 
 fn get_additional_local_instances(
@@ -735,6 +847,7 @@ piggyback:
                 conn: Connection::default(),
                 target_id: None,
                 sections: Sections::default(),
+                excluded_sections: vec![],
                 discovery: Discovery::default(),
                 piggyback_host: None,
                 mode: Mode::Port,
@@ -883,6 +996,148 @@ oracle:
         );
         // INST_B has no per-instance custom_metrics.
         assert!(instances[1].custom_metrics().is_empty());
+    }
+
+    /// The target a `service_name` (plus optional `instance_name`) resolves to.
+    fn descriptor_target(service_name: &str, instance_name: Option<&str>) -> TargetId {
+        crate::config::target::TargetIdBuilder::new()
+            .service_name(Some(&ServiceName::from(service_name)))
+            .instance_name(instance_name.map(InstanceName::from).as_ref())
+            .build()
+            .expect("a service_name always resolves to a target")
+    }
+
+    #[test]
+    fn test_excluded_sections_parsed_per_target() {
+        const YAML: &str = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    discovery:
+      detect: no
+    excluded_sections:
+      - target_id:
+          service_name: "service"
+          instance_name: "instance_a"
+        sections: [jobs]
+      - target_id:
+          sid: "sid_b"
+        sections: [jobs, instance]
+"#;
+        let c = Config::from_string(YAML).unwrap().unwrap();
+        // The entries keep their yaml order.
+        assert_eq!(
+            c.excluded_sections(),
+            [
+                (
+                    // A service_name plus an instance_name resolves to a descriptor
+                    // holding both: an exclusion must name the target the same way.
+                    descriptor_target("service", Some("INSTANCE_A")),
+                    vec![SectionName::from("jobs".to_string())]
+                ),
+                (
+                    // A bare sid resolves to a sid target, upper-cased on parsing.
+                    TargetId::Sid(Sid::from("SID_B")),
+                    vec![
+                        SectionName::from("jobs".to_string()),
+                        SectionName::from("instance".to_string())
+                    ]
+                ),
+            ]
+        );
+    }
+
+    /// An explicitly empty list is a valid "no exclusions", not a malformed key.
+    #[test]
+    fn test_excluded_sections_empty_when_list_is_empty() {
+        const YAML: &str = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    discovery:
+      detect: no
+    excluded_sections: []
+"#;
+        let c = Config::from_string(YAML).unwrap().unwrap();
+        assert!(c.excluded_sections().is_empty());
+    }
+
+    /// Two entries differing only in case name one target, so they collapse into
+    /// one key and the last list wins - not two keys with an arbitrary winner.
+    #[test]
+    fn test_excluded_sections_case_differing_entries_collapse() {
+        const YAML: &str = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    discovery:
+      detect: no
+    excluded_sections:
+      - target_id:
+          service_name: PROD
+        sections: [jobs]
+      - target_id:
+          service_name: prod
+        sections: [sessions]
+"#;
+        let c = Config::from_string(YAML).unwrap().unwrap();
+        assert_eq!(
+            c.excluded_sections(),
+            [(
+                descriptor_target("prod", None),
+                vec![SectionName::from("sessions".to_string())]
+            )]
+        );
+    }
+
+    #[test]
+    fn test_excluded_sections_empty_when_key_absent() {
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        assert!(c.excluded_sections().is_empty());
+    }
+
+    #[test]
+    fn test_excluded_sections_skips_malformed_entries() {
+        const YAML: &str = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    discovery:
+      detect: no
+    excluded_sections:
+      - target_id:
+          sid: "ok"
+        sections: [jobs]
+      - target_id:
+          sid: "no_sections"
+      - sections: [jobs]
+      - target_id:
+          port: 1521
+        sections: [jobs]
+      - target_id:
+          - sid: "a_list_is_not_a_target"
+        sections: [jobs]
+"#;
+        let c = Config::from_string(YAML).unwrap().unwrap();
+        assert_eq!(
+            c.excluded_sections(),
+            [(
+                TargetId::Sid(Sid::from("OK")),
+                vec![SectionName::from("jobs".to_string())]
+            )]
+        );
     }
 
     #[test]

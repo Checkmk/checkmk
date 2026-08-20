@@ -156,16 +156,17 @@ system:
 
 All Oracle-specific configuration lives under `oracle.main`. It contains the following subsections:
 
-| Subsection       | Required    | Description                                                                    |
-| ---------------- | ----------- | ------------------------------------------------------------------------------ |
-| `authentication` | Yes         | Credentials and authentication method                                          |
-| `connection`     | No          | Hostname, port, timeouts, and TNS configuration                                |
-| `instances`      | Conditional | Explicit list of databases to monitor (required if `discovery` is not enabled) |
-| `discovery`      | No          | Automatic instance detection                                                   |
-| `options`        | No          | Connection pool limits and OCI client behavior                                 |
-| `sections`       | No          | Which monitoring sections to collect and their settings                        |
-| `cache_age`      | No          | Cache lifetime for async sections (default: `600` seconds)                     |
-| `piggyback_host` | No          | Piggyback hostname for forwarding data to another host                         |
+| Subsection          | Required    | Description                                                                    |
+| ------------------- | ----------- | ------------------------------------------------------------------------------ |
+| `authentication`    | Yes         | Credentials and authentication method                                          |
+| `connection`        | No          | Hostname, port, timeouts, and TNS configuration                                |
+| `instances`         | Conditional | Explicit list of databases to monitor (required if `discovery` is not enabled) |
+| `discovery`         | No          | Automatic instance detection                                                   |
+| `options`           | No          | Connection pool limits and OCI client behavior                                 |
+| `sections`          | No          | Which monitoring sections to collect and their settings                        |
+| `excluded_sections` | No          | Sections that individual targets do not collect                                |
+| `cache_age`         | No          | Cache lifetime for async sections (default: `600` seconds)                     |
+| `piggyback_host`    | No          | Piggyback hostname for forwarding data to another host                         |
 
 ### Authentication
 
@@ -532,6 +533,45 @@ sections:
       is_async: yes
 ```
 
+#### Excluding sections for single targets
+
+`sections` enables or disables a section for **all** monitored instances. To skip
+sections for individual instances only, list them under `excluded_sections`, next
+to `sections` in `oracle.main`. Each entry names one target and the sections that
+target does not query:
+
+```yaml
+oracle:
+  main:
+    excluded_sections:
+      - target_id:
+          sid: FREE
+        sections: [instance, recovery_status]
+      - target_id:
+          service_name: prod_service
+          instance_name: PROD
+        sections: [jobs]
+```
+
+- A target is identified by `sid`, `service_name` or `alias`, exactly as in an
+  `instances:` entry. `instance_name` only refines a `service_name` target, it
+  cannot name one on its own.
+- A target matches an instance only when both name it with the **same keys**: an
+  entry with `service_name: SRV` alone does not match an instance that also sets
+  `instance_name`. Copy the identifying keys of the `instances:` entry.
+- The whole target is matched case-insensitively - `sid`, `service_name`,
+  `instance_name` and `alias` alike. A target without an entry keeps every section.
+- A `target_id` that matches no monitored instance is simply never used.
+- The names are **section** names, the same ones used under `sections`. A
+  `custom_metrics` entry is addressed by its section name `sql`, so excluding
+  `sql` skips every custom metric of that target.
+- Exclusion is applied last: a section excluded here is dropped even when the
+  instance defines it under its own `custom_metrics`.
+- Names that match no section are ignored.
+- A target listed twice keeps its last list.
+- Only the queries are skipped. The signalling headers the plugin emits for cached
+  sections are global and stay as they are.
+
 ### Custom SQL Metrics
 
 Use `custom_metrics` to define ad-hoc SQL queries whose output is emitted under the legacy `oracle_sql` agent section. Each entry is keyed by the **item name** that becomes the service item on the Checkmk site (the `<item>` in `[[[SID|item]]]`).
@@ -718,7 +758,7 @@ merges the user file on top:
 | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | Scalars (`cache_age`, `connection.hostname`, `authentication.username`, …) | the user value overrides the bakery value when set                                           |
 | `connection`, `authentication`, `options`, `discovery`, `system.logging`   | merged field by field; unset fields are inherited from the bakery file                       |
-| `instances` (and `configs`)                                                | **not** merged — if present in the user file, the whole list replaces the bakery list        |
+| `instances`, `configs`, `excluded_sections`                                | **not** merged — if present in the user file, the whole list replaces the bakery list        |
 | `custom_metrics`, `sections` (global)                                      | merged by item/section name; the user entry wins on a name collision, new names are appended |
 
 - If the user file is missing or empty, the bakery file is used as-is.
@@ -827,6 +867,11 @@ oracle:
           is_async: yes
       - performance:
       - sessions:
+    excluded_sections:
+      - target_id: # same keys as the ORCL instance above, so it matches
+          service_name: 'ORCL'
+          sid: 'ORCL'
+        sections: [tablespaces]
     cache_age: 600
     custom_metrics_cache_age: 600
     piggyback_host: 'mypiggybackhost'

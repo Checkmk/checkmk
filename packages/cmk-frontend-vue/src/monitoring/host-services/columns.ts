@@ -107,6 +107,11 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
     maxSelected: MAX_FILTER_CHOICES
   }
 
+  const contactsFilter: StringInputFilter<'contacts'> = {
+    type: 'string-input',
+    field: 'contacts'
+  }
+
   const contactGroupsFilter: AutocompleteChoiceFilter<'contact_groups'> = {
     type: 'autocomplete-choice',
     field: 'contact_groups',
@@ -208,7 +213,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableSorting: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: contactsFilter }
     },
     {
       accessorKey: 'contact_groups',

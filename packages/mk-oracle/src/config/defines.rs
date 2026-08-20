@@ -54,6 +54,8 @@ pub mod keys {
     pub const ENGINE: &str = "engine";
 
     pub const SECTIONS: &str = "sections";
+    pub const EXCLUDED_SECTIONS: &str = "excluded_sections";
+    pub const TARGET_ID: &str = "target_id";
     pub const CUSTOM_METRICS: &str = "custom_metrics";
     pub const SQL: &str = "sql";
     pub const SQL_PARAMS: &str = "sql_params";

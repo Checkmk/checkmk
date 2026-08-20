@@ -62,6 +62,13 @@ oracle:
       is_async: yes
     - tablespaces:
       is_async: yes
+    excluded_sections: # optional, sections not to be queried, per target
+      - target_id: # mandatory, identified by alias, service_name or sid, as in an instances entry
+          alias: myservicename # matches the INST1 instance below: its alias wins over sid
+        sections: [tablespaces, recovery_status] # mandatory
+      - target_id:
+          sid: "INST2"
+        sections: [jobs]
     cache_age: 600 # optional, default: 600
     custom_metrics_cache_age: 600 # optional, default: 600
     piggyback_host: "mypiggybackhost" # optional

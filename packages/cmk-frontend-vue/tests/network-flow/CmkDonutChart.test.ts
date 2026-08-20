@@ -67,13 +67,13 @@ test('renders one arc segment and one legend entry per slice', () => {
   expect(container.querySelectorAll('.network-flow-cmk-donut-chart__slice')).toHaveLength(2)
   // The empty-track circle is only rendered when there are no slices.
   expect(container.querySelectorAll('circle')).toHaveLength(0)
-  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__legend-item')).toHaveLength(2)
+  expect(container.querySelectorAll('.network-flow-donut-legend-table__row')).toHaveLength(2)
 })
 
 test('derives percentages from the sum of all slice values', () => {
   const { container } = renderChart()
 
-  const values = [...container.querySelectorAll('.network-flow-cmk-donut-chart__legend-value')].map(
+  const values = [...container.querySelectorAll('.network-flow-donut-legend-table__value')].map(
     (el) => el.textContent
   )
   // 90 / 150 = 60%, 60 / 150 = 40%.
@@ -195,13 +195,13 @@ test('hands the center over to the slice being pointed at', async () => {
 test('raises the highlight from the legend as well as from the ring', async () => {
   const { container } = renderChart()
 
-  const legendRows = [...container.querySelectorAll('.network-flow-cmk-donut-chart__legend-item')]
+  const legendRows = [...container.querySelectorAll('.network-flow-donut-legend-table__row')]
   await fireEvent.mouseEnter(legendRows[1]!)
 
   expect(container.querySelector('.network-flow-cmk-donut-chart__center-label')).toHaveTextContent(
     'Other'
   )
-  expect(legendRows[1]).toHaveClass('network-flow-cmk-donut-chart__legend-item--highlighted')
+  expect(legendRows[1]).toHaveClass('network-flow-donut-legend-table__row--highlighted')
   expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment--dimmed')).toHaveLength(
     1
   )
@@ -231,7 +231,7 @@ test('recomputes the ring, the total and every share when a category is hidden',
   expect(container.querySelector('.network-flow-cmk-donut-chart__center-share')).toHaveTextContent(
     '1 of 2 shown'
   )
-  const values = [...container.querySelectorAll('.network-flow-cmk-donut-chart__legend-value')].map(
+  const values = [...container.querySelectorAll('.network-flow-donut-legend-table__value')].map(
     (el) => el.textContent
   )
   expect(values).toEqual(['100.0%', '–'])
@@ -244,8 +244,8 @@ test('keeps the hidden row reachable so it can be brought back', async () => {
   await fireEvent.click(getByLabelText('Hide Other in the chart'))
   await advanceTween()
 
-  const otherRow = container.querySelectorAll('.network-flow-cmk-donut-chart__legend-item')[1]
-  expect(otherRow).toHaveClass('network-flow-cmk-donut-chart__legend-item--hidden')
+  const otherRow = container.querySelectorAll('.network-flow-donut-legend-table__row')[1]
+  expect(otherRow).toHaveClass('network-flow-donut-legend-table__row--hidden')
 
   await fireEvent.click(getByLabelText('Show Other in the chart'))
   await advanceTween()
@@ -323,7 +323,7 @@ test('does not fade the ring when a hidden category is pointed at', async () => 
   await fireEvent.click(getByLabelText('Hide Other in the chart'))
   await advanceTween()
 
-  const otherRow = container.querySelectorAll('.network-flow-cmk-donut-chart__legend-item')[1]!
+  const otherRow = container.querySelectorAll('.network-flow-donut-legend-table__row')[1]!
   await fireEvent.mouseEnter(otherRow)
 
   expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment--dimmed')).toHaveLength(

@@ -8,10 +8,9 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { type PieArcDatum, arc, pie } from 'd3-shape'
 import { computed, ref, useId } from 'vue'
 
-import GraphLegendEyeButton from '@/graphing/components/legend/GraphLegendEyeButton.vue'
-
 import { chartColorCss } from '../colors'
-import type { CmkDonutChartProps, DonutSlice } from './types'
+import DonutLegendTable from './DonutLegendTable.vue'
+import type { CmkDonutChartProps, DonutLegendRow, DonutSlice } from './types'
 import { type SliceAngles, useDonutTween } from './useDonutTween'
 
 const { _t } = usei18n()
@@ -148,6 +147,21 @@ const center = computed(() => {
         : ''
   }
 })
+
+// The chart decides what the numbers are; the legend only decides how they read.
+const legendRows = computed<DonutLegendRow[]>(() =>
+  props.slices.map((slice) => {
+    const isHidden = hidden.value.has(slice.key)
+    return {
+      key: slice.key,
+      label: slice.label,
+      color: slice.color,
+      hidden: isHidden,
+      // A share of a ring it is not part of would be a fiction.
+      shareText: isHidden ? '\u2013' : percentText(slice.value)
+    }
+  })
+)
 </script>
 
 <template>
@@ -225,37 +239,12 @@ const center = computed(() => {
       </div>
     </div>
 
-    <ul class="network-flow-cmk-donut-chart__legend">
-      <li
-        v-for="slice in slices"
-        :key="slice.key"
-        class="network-flow-cmk-donut-chart__legend-item"
-        :class="{
-          'network-flow-cmk-donut-chart__legend-item--highlighted': highlighted === slice.key,
-          'network-flow-cmk-donut-chart__legend-item--hidden': hidden.has(slice.key)
-        }"
-        @mouseenter="highlight(slice.key)"
-        @mouseleave="highlight(null)"
-      >
-        <GraphLegendEyeButton
-          :hidden="hidden.has(slice.key)"
-          :aria-label="
-            hidden.has(slice.key)
-              ? _t('Show %{category} in the chart', { category: slice.label })
-              : _t('Hide %{category} in the chart', { category: slice.label })
-          "
-          @toggle="toggleHidden(slice.key)"
-        />
-        <span
-          class="network-flow-cmk-donut-chart__swatch"
-          :style="{ backgroundColor: hidden.has(slice.key) ? '' : chartColorCss(slice.color) }"
-        />
-        <span class="network-flow-cmk-donut-chart__legend-label">{{ slice.label }}</span>
-        <span class="network-flow-cmk-donut-chart__legend-value">{{
-          hidden.has(slice.key) ? '–' : percentText(slice.value)
-        }}</span>
-      </li>
-    </ul>
+    <DonutLegendTable
+      :rows="legendRows"
+      :highlighted="highlighted"
+      @toggle="toggleHidden"
+      @highlight="highlight"
+    />
   </div>
 </template>
 
@@ -366,55 +355,5 @@ const center = computed(() => {
   min-height: 1em;
   font-size: 0.85em;
   color: var(--color-mid-grey-50);
-}
-
-.network-flow-cmk-donut-chart__legend {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  margin: 0;
-  overflow: hidden;
-  list-style: none;
-}
-
-.network-flow-cmk-donut-chart__legend-item {
-  display: flex;
-  gap: clamp(4px, 1cqw, 10px);
-  align-items: center;
-  padding: clamp(2px, 1.5cqh, 7px) 0;
-  border-bottom: 1px solid var(--ux-theme-6);
-}
-
-.network-flow-cmk-donut-chart__legend-item--highlighted {
-  background-color: var(--ux-theme-4);
-}
-
-/* A hidden category keeps its row, so it stays reachable. */
-.network-flow-cmk-donut-chart__legend-item--hidden {
-  opacity: 0.45;
-}
-
-.network-flow-cmk-donut-chart__swatch {
-  flex: 0 0 auto;
-  width: 0.75em;
-  height: 0.75em;
-  border-radius: 2px;
-}
-
-.network-flow-cmk-donut-chart__legend-item--hidden .network-flow-cmk-donut-chart__swatch {
-  background-color: var(--color-mid-grey-30);
-}
-
-.network-flow-cmk-donut-chart__legend-label {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.network-flow-cmk-donut-chart__legend-value {
-  font-variant-numeric: tabular-nums;
-  text-align: right;
 }
 </style>

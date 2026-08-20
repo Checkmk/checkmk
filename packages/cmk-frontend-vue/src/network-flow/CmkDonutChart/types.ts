@@ -16,6 +16,16 @@ export interface DonutSlice {
   color: ChartColor
 }
 
+/** One legend row, formatted by the chart so the legend holds no arithmetic. */
+export interface DonutLegendRow {
+  key: string
+  label: string
+  color: ChartColor
+  hidden: boolean
+  /** Share of the ring, or a dash for a category the ring is not drawn over. */
+  shareText: string
+}
+
 export interface CmkDonutChartProps {
   /**
    * Slices in display order. The caller provides them pre-ranked and already

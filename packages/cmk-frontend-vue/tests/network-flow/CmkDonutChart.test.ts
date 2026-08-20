@@ -134,6 +134,36 @@ test('takes the breakdown away from a category the reader hid', async () => {
   expect(queryByLabelText('Show breakdown of Other')).toBeNull()
 })
 
+function renderCompactChart() {
+  return render(CmkDonutChart, {
+    props: { slices: SLICES, formatValue: (value: number) => `${value} B`, legendMode: 'compact' }
+  })
+}
+
+test('drops the table for a row of chips when the legend is compact', () => {
+  const { container } = renderCompactChart()
+
+  expect(container.querySelector('table')).toBeNull()
+  expect(container.querySelectorAll('.network-flow-donut-legend-compact__chip')).toHaveLength(2)
+})
+
+test('hides and highlights from a chip just as from a table row', async () => {
+  const { container, getByLabelText } = renderCompactChart()
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await advanceTween()
+
+  const chips = [...container.querySelectorAll('.network-flow-donut-legend-compact__chip')]
+  expect(chips[1]).toHaveClass('network-flow-donut-legend-compact__chip--hidden')
+  expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(1)
+
+  await fireEvent.mouseEnter(chips[0]!)
+
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-label')).toHaveTextContent(
+    'TLS'
+  )
+})
+
 test('shows the total of the ring in the center, not the top slice', () => {
   const { container } = renderChart()
 

@@ -9,12 +9,13 @@ import { type PieArcDatum, arc, pie } from 'd3-shape'
 import { computed, ref, useId } from 'vue'
 
 import { chartColorCss } from '../colors'
+import DonutLegendCompact from './DonutLegendCompact.vue'
 import DonutLegendTable from './DonutLegendTable.vue'
 import type { CmkDonutChartProps, DonutLegendRow, DonutSlice } from './types'
 import { type SliceAngles, useDonutTween } from './useDonutTween'
 
 const { _t } = usei18n()
-const props = defineProps<CmkDonutChartProps>()
+const props = withDefaults(defineProps<CmkDonutChartProps>(), { legendMode: 'table' })
 const emit = defineEmits<{ sliceActivate: [key: string] }>()
 
 // The viewBox is centered on the origin, where d3 draws its arcs.
@@ -187,7 +188,10 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 </script>
 
 <template>
-  <div class="network-flow-cmk-donut-chart">
+  <div
+    class="network-flow-cmk-donut-chart"
+    :class="{ 'network-flow-cmk-donut-chart--compact': props.legendMode === 'compact' }"
+  >
     <div class="network-flow-cmk-donut-chart__figure">
       <svg
         class="network-flow-cmk-donut-chart__svg"
@@ -261,7 +265,15 @@ const legendRows = computed<DonutLegendRow[]>(() => {
       </div>
     </div>
 
+    <DonutLegendCompact
+      v-if="props.legendMode === 'compact'"
+      :rows="legendRows"
+      :highlighted="highlighted"
+      @toggle="toggleHidden"
+      @highlight="highlight"
+    />
     <DonutLegendTable
+      v-else
       :rows="legendRows"
       :highlighted="highlighted"
       @toggle="toggleHidden"
@@ -277,6 +289,9 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 
 <style scoped>
 .network-flow-cmk-donut-chart {
+  /* Capped at about a third of the width: past that it starves the legend. */
+  --nf-donut-figure-size: min(40cqw, 100cqh);
+
   display: flex;
   gap: clamp(8px, 3cqw, 24px);
   align-items: center;
@@ -289,12 +304,20 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   container: nf-donut / size;
 }
 
-/* Capped at about a third of the width: past that it starves the legend. */
+/* Stacked, the ring is bounded by the height it leaves the chips, so the
+   width cap has nothing left to protect. */
+.network-flow-cmk-donut-chart--compact {
+  --nf-donut-figure-size: min(100cqw, 62cqh);
+
+  flex-direction: column;
+  justify-content: center;
+}
+
 .network-flow-cmk-donut-chart__figure {
   position: relative;
   flex: 0 0 auto;
-  width: min(40cqw, 100cqh);
-  height: min(40cqw, 100cqh);
+  width: var(--nf-donut-figure-size);
+  height: var(--nf-donut-figure-size);
 }
 
 .network-flow-cmk-donut-chart__svg {

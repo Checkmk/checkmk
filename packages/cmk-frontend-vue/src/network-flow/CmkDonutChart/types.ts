@@ -20,6 +20,9 @@ export interface DonutSlice {
   isOther?: boolean
 }
 
+/** Which shape the legend takes; the widget config picks one. */
+export type DonutLegendMode = 'table' | 'compact'
+
 /** One legend row, formatted by the chart so the legend holds no arithmetic. */
 export interface DonutLegendRow {
   key: string
@@ -47,4 +50,10 @@ export interface CmkDonutChartProps {
   formatValue: (value: number) => string
   /** Defaults to "Volume". */
   centerLabel?: string
+  /**
+   * The table states the volume per category; the chips name the categories
+   * and stack under the ring, for widgets with no width for both. Defaults to
+   * the table.
+   */
+  legendMode?: DonutLegendMode
 }

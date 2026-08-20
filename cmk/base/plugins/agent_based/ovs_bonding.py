@@ -19,7 +19,7 @@ def parse_ovs_bonding(string_table: StringTable) -> bonding.Section:
         elif len(line) == 2:
             left = line[0]
             right = line[1].strip()
-            if left.startswith("slave"):
+            if left.startswith(("slave ", "member ")):
                 eth = left.split()[1]
                 bonds_interfaces.setdefault(bond, {})[eth] = {
                     "status": right == "enabled" and "up" or right,
@@ -27,7 +27,7 @@ def parse_ovs_bonding(string_table: StringTable) -> bonding.Section:
                 last_interface = eth
             else:
                 bonds[bond][left] = right
-        elif line[0] == "active slave":
+        elif line[0] in ("active slave", "active member"):
             bonds[bond]["active"] = last_interface
 
     parsed: dict[str, bonding.Bond] = {}

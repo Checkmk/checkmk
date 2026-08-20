@@ -52,8 +52,10 @@ class OAuthAuthorizePage(Page):
     token endpoint later redeems them single-use. Validates client_id against
     the registered-client store (see cmk.gui.oauth.store.client_store) and requires
     redirect_uri to exactly match one of that client's registered
-    redirect_uris. Rejected requests are logged as security events (see
-    OAuthAuthorizationFailureEvent).
+    redirect_uris. A request naming a client, redirect_uri or scope this site
+    does not have is logged as a security event (see
+    OAuthAuthorizationFailureEvent); a merely malformed one is a client bug and
+    is not.
     """
 
     def __init__(self, enabled: Callable[[], bool]) -> None:
@@ -73,7 +75,6 @@ class OAuthAuthorizePage(Page):
             # Rejects javascript:/data: etc. here, once, rather than at each
             # place redirect_uri ends up in a href/content attribute below --
             # HTML-escaping alone doesn't neutralize a dangerous URL scheme.
-            self._log_authorization_failure("invalid or missing redirect_uri")
             response.status_code = http_client.BAD_REQUEST
             return None
 
@@ -81,7 +82,6 @@ class OAuthAuthorizePage(Page):
         if client_id is None:
             # Same MUST-NOT-redirect treatment as redirect_uri (RFC 6749
             # section 4.1.2.1): an unknown client's redirect_uri isn't trustworthy.
-            self._log_authorization_failure("missing client_id")
             response.status_code = http_client.BAD_REQUEST
             return None
 
@@ -100,29 +100,24 @@ class OAuthAuthorizePage(Page):
 
         response_type = request.var("response_type")
         if response_type is None:
-            self._log_authorization_failure("missing response_type")
             self._error_redirect(ctx, redirect_uri, "invalid_request")
             return None
         if response_type != "code":
-            self._log_authorization_failure("unsupported response_type")
             self._error_redirect(ctx, redirect_uri, "unsupported_response_type")
             return None
 
         code_challenge = request.var("code_challenge")
         if code_challenge is None:
-            self._log_authorization_failure("missing code_challenge")
             self._error_redirect(ctx, redirect_uri, "invalid_request")
             return None
 
         if request.var("code_challenge_method") != "S256":
-            self._log_authorization_failure("unsupported code_challenge_method")
             self._error_redirect(ctx, redirect_uri, "invalid_request")
             return None
 
         if len(request.values.getlist("scope")) > 1:
             # RFC 6749 section 3.1 forbids repeating a request parameter, and
             # with duplicates there is no answer to what the user is approving.
-            self._log_authorization_failure("repeated scope parameter")
             self._error_redirect(ctx, redirect_uri, "invalid_request")
             return None
 
@@ -267,10 +262,7 @@ class OAuthAuthorizePage(Page):
             # calls this condition server_error.
             # Deliberately also catches the GUI request timeout (MKTimeout):
             # the client should get the OAuth error redirect.
-            # The security event only carries a static reason, so the cause
-            # goes to the log.
             logger.exception("failed to persist OAuth authorization code")
-            self._log_authorization_failure("failed to persist authorization code")
             self._error_redirect(ctx, redirect_uri, "server_error")
             return
         params = {"code": code}

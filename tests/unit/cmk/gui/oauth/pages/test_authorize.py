@@ -65,7 +65,6 @@ def _extract_redirect_target(body: str) -> str:
 
 
 def _logged_reason(security_log: MagicMock) -> str:
-    """The reason of the one security event the page logged."""
     security_log.assert_called_once()
     reason = security_log.call_args.args[0].details["reason"]
     assert isinstance(reason, str)
@@ -193,7 +192,7 @@ class TestOAuthAuthorizePage:
             assert f"It is requesting permission to: {expected_grants}." in body
 
     def test_redirects_with_invalid_request_when_scope_is_repeated(
-        self, flask_app: Flask, security_log: MagicMock, registered_client_id: str
+        self, flask_app: Flask, registered_client_id: str
     ) -> None:
         # A repeated *parameter*, which RFC 6749 section 3.1 forbids outright:
         # with two of them there is no single answer to what the user is
@@ -217,7 +216,6 @@ class TestOAuthAuthorizePage:
             target_url = _extract_redirect_target(response.get_data(as_text=True))
 
         assert parse_qs(urlsplit(target_url).query)["error"] == ["invalid_request"]
-        assert _logged_reason(security_log) == "repeated scope parameter"
 
     def test_consent_form_posts_back_to_the_request_path(
         self, flask_app: Flask, registered_client_id: str
@@ -374,40 +372,27 @@ class TestOAuthAuthorizePage:
             assert "<form" in response.get_data(as_text=True)
 
     @pytest.mark.parametrize(
-        "overrides, reason",
+        "overrides",
         [
-            pytest.param(
-                {"redirect_uri": None}, "invalid or missing redirect_uri", id="redirect_uri-missing"
-            ),
+            pytest.param({"redirect_uri": None}, id="redirect_uri-missing"),
             # The dangerous scheme is a regression test: redirect_uri ends up
             # in a href/content attribute on the redirect page, and
             # HTML-escaping alone doesn't stop a javascript: URI from executing
             # if that link is followed.
             pytest.param(
                 {"redirect_uri": "javascript:alert(document.cookie)"},
-                "invalid or missing redirect_uri",
                 id="redirect_uri-dangerous-scheme",
             ),
-            pytest.param({"client_id": None}, "missing client_id", id="client_id-missing"),
-            pytest.param(
-                {"client_id": "never-registered-client"},
-                "unknown client_id",
-                id="client_id-unknown",
-            ),
+            pytest.param({"client_id": None}, id="client_id-missing"),
+            pytest.param({"client_id": "never-registered-client"}, id="client_id-unknown"),
             pytest.param(
                 {"redirect_uri": "https://attacker.example/callback"},
-                "redirect_uri not registered for client_id",
                 id="redirect_uri-not-registered",
             ),
         ],
     )
-    def test_answers_400_and_logs_the_reason(
-        self,
-        flask_app: Flask,
-        security_log: MagicMock,
-        registered_client_id: str,
-        overrides: dict[str, str | None],
-        reason: str,
+    def test_answers_400_without_redirecting(
+        self, flask_app: Flask, registered_client_id: str, overrides: dict[str, str | None]
     ) -> None:
         # RFC 6749 section 4.1.2.1: until redirect_uri and client_id are both
         # known good, an unknown client's redirect_uri isn't trustworthy, so
@@ -422,59 +407,37 @@ class TestOAuthAuthorizePage:
 
             assert response.status_code == 400
 
-        assert _logged_reason(security_log) == reason
-
     @pytest.mark.parametrize(
-        "overrides, error, reason",
+        "overrides, error",
         [
-            pytest.param(
-                {"response_type": None},
-                "invalid_request",
-                "missing response_type",
-                id="response_type-missing",
-            ),
+            pytest.param({"response_type": None}, "invalid_request", id="response_type-missing"),
             pytest.param(
                 {"response_type": "token"},
                 "unsupported_response_type",
-                "unsupported response_type",
                 id="response_type-not-code",
             ),
-            pytest.param(
-                {"code_challenge": None},
-                "invalid_request",
-                "missing code_challenge",
-                id="code_challenge-missing",
-            ),
+            pytest.param({"code_challenge": None}, "invalid_request", id="code_challenge-missing"),
             pytest.param(
                 {"code_challenge_method": None},
                 "invalid_request",
-                "unsupported code_challenge_method",
                 id="code_challenge_method-missing",
             ),
             pytest.param(
                 {"code_challenge_method": "plain"},
                 "invalid_request",
-                "unsupported code_challenge_method",
                 id="code_challenge_method-plain",
             ),
-            # Both metadata documents advertise what this server accepts, so an
-            # unknown scope is a client bug. Rejecting it here beats
-            # downscoping and letting the client discover the gap on its first
-            # write, and the reason names the scope that was refused -- a
-            # report about a scope we don't have is only actionable with it.
-            pytest.param(
-                {"scope": "read mcp"}, "invalid_scope", "unknown scope: mcp", id="scope-unknown"
-            ),
+            # Rejected rather than downscoped: that beats letting the client
+            # discover the gap on its first write.
+            pytest.param({"scope": "read mcp"}, "invalid_scope", id="scope-unknown"),
         ],
     )
-    def test_redirects_with_an_error_and_logs_the_reason(
+    def test_redirects_with_an_error(
         self,
         flask_app: Flask,
-        security_log: MagicMock,
         registered_client_id: str,
         overrides: dict[str, str | None],
         error: str,
-        reason: str,
     ) -> None:
         # Once redirect_uri and client_id are known good, the client is told by
         # redirect (RFC 6749 section 4.1.2.1), with state echoed back so it can
@@ -495,6 +458,44 @@ class TestOAuthAuthorizePage:
         query = parse_qs(urlsplit(target_url).query)
         assert query["error"] == [error]
         assert query["state"] == ["xyz"]
+
+    @pytest.mark.parametrize(
+        "overrides, reason",
+        [
+            pytest.param(
+                {"client_id": "never-registered-client"},
+                "unknown client_id",
+                id="client_id-unknown",
+            ),
+            pytest.param(
+                {"redirect_uri": "https://attacker.example/callback"},
+                "redirect_uri not registered for client_id",
+                id="redirect_uri-not-registered",
+            ),
+            # The reason names the scope refused: a report about a scope we
+            # don't have is only actionable with it.
+            pytest.param({"scope": "read mcp"}, "unknown scope: mcp", id="scope-unknown"),
+        ],
+    )
+    def test_logs_a_security_event_for_what_a_broken_client_would_not_send(
+        self,
+        flask_app: Flask,
+        security_log: MagicMock,
+        registered_client_id: str,
+        overrides: dict[str, str | None],
+        reason: str,
+    ) -> None:
+        # A client that read either metadata document cannot name a client_id,
+        # redirect_uri or scope this site does not have, so these are attempts
+        # at something rather than the client bugs the other rejections are.
+        with flask_app.test_request_context(
+            query_string=_authorize_request(**{"client_id": registered_client_id, **overrides})
+        ):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
         assert _logged_reason(security_log) == reason
 
     def test_returns_404_when_disabled(self, flask_app: Flask) -> None:
@@ -606,7 +607,7 @@ class TestOAuthAuthorizePage:
 
     @pytest.mark.usefixtures("clean_redis", "valid_transaction", "valid_csrf_token")
     def test_no_code_is_issued_when_the_store_is_unavailable(
-        self, flask_app: Flask, security_log: MagicMock, registered_client_id: str
+        self, flask_app: Flask, registered_client_id: str
     ) -> None:
         with flask_app.test_request_context(
             method="POST", data=_authorize_request(client_id=registered_client_id, state="xyz")
@@ -626,14 +627,14 @@ class TestOAuthAuthorizePage:
         assert query["error"] == ["server_error"]
         assert query["state"] == ["xyz"]
         assert "code" not in query
-        assert _logged_reason(security_log) == "failed to persist authorization code"
 
     @pytest.mark.usefixtures("clean_redis", "valid_transaction", "valid_csrf_token")
     def test_logs_the_exception_when_the_store_is_unavailable(
         self, flask_app: Flask, caplog: pytest.LogCaptureFixture, registered_client_id: str
     ) -> None:
-        # The security event carries only a static reason; the log entry with
-        # the traceback is the only place the actual cause ends up.
+        # A store outage is nobody's attempt at anything, so it is not a
+        # security event: this log entry, with the traceback, is the only
+        # record of why no code was issued.
         with flask_app.test_request_context(
             method="POST", data=_authorize_request(client_id=registered_client_id)
         ):

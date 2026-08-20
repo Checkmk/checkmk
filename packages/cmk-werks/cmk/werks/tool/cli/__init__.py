@@ -849,7 +849,7 @@ def main_init() -> None:
         return
 
     while True:
-        secret = getpass.getpass("Secret: ")
+        secret = getpass.getpass("Secret (Bitwarden: Werk IDs reservation secret): ")
         write_secret(paths.secret_file, secret)
 
         # Only migrate the legacy file once the secret is confirmed correct. A wrong

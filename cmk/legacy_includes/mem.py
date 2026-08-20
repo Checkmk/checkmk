@@ -54,12 +54,20 @@ def check_memory_element(
         (" %s" % label_total).rstrip(),
     )
 
-    try:
-        mode, (warn, crit) = levels  # type: ignore[misc]
-    except (ValueError, TypeError):  # handle None, "ignore"
-        mode, (warn, crit) = "ignore", (None, None)
+    if levels is None:
+        warn, crit, levels_text = None, None, ""
+    else:
+        try:
+            mode, (warn, crit) = levels
+        except (ValueError, TypeError):
+            # NOTE: The signature of levels parameter doesn't really seem to reflect the reality: We
+            # get weird modes, warn/crit which is not a tuple, etc. At least the unit tests call us
+            # like this, and "thanks" to the lost typing via pytest.mark.parametrize, this doesn't
+            # show up statically. Chaos... :-/
+            warn, crit, levels_text = None, None, ""
+        else:
+            warn, crit, levels_text = normalize_mem_levels(mode, warn, crit, total)
 
-    warn, crit, levels_text = normalize_mem_levels(mode, warn, crit, total)
     state = _compute_state(used, warn, crit)
     if state and levels_text:
         infotext = f"{infotext} ({levels_text})"

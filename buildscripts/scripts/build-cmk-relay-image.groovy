@@ -2,12 +2,18 @@
 
 /// file: build-relay-image.groovy
 
-/// Build Checkmk Relay image
-
+// groovylint-disable MethodSize
 void main() {
     check_job_parameters([
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
+        ["DISTRO", true],
         "PUSH_TO_REGISTRY",
+        ["VERSION", true],
     ])
+
+    check_environment_variables([
+        "DOCKER_REGISTRY",
+    ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy")
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy")
@@ -19,7 +25,12 @@ void main() {
     def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version
     def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, params.VERSION)
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware)
+    def docker_tag = versioning.select_docker_tag(
+        params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
+        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
+    );
 
+    def distro = params.DISTRO;
     def push_to_registry = params.PUSH_TO_REGISTRY == true;
 
     def artifact_directory = "${checkout_dir}/artifacts"
@@ -35,11 +46,14 @@ void main() {
         |branch_version:...... │${branch_version}│
         |cmk_version:......... │${cmk_version}│
         |cmk_version_rc_aware: │${cmk_version_rc_aware}│
+        |distro:.............. │${distro}│
+        |docker_tag:.......... │${docker_tag}│
         |push_to_registry:.... │${push_to_registry}│
         |===================================================
         """.stripMargin())
 
     inside_container(
+        image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
         ulimit_nofile: 1024,
         set_docker_group_id: true,
         privileged: true,

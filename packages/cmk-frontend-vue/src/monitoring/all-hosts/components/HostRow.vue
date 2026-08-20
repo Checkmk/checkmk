@@ -115,14 +115,8 @@ const lastStateChange = computed(() =>
     v-if="hasColumn('num_services')"
     column-id="num_services"
     :value="row.num_services"
-    :tag-properties="
-      !row.num_services
-        ? undefined
-        : {
-            variant: 'fill',
-            color: 'default',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
+    :highlight="
+      !row.num_services ? undefined : { color: 'default', minWidth: SERVICE_COUNT_MIN_WIDTH }
     "
     :linked-to="!row.num_services ? undefined : allServicesLink"
   />
@@ -130,14 +124,8 @@ const lastStateChange = computed(() =>
     v-if="hasColumn('num_services_ok')"
     column-id="num_services_ok"
     :value="row.num_services_ok"
-    :tag-properties="
-      !row.num_services_ok
-        ? undefined
-        : {
-            variant: 'weighted',
-            color: 'success',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
+    :highlight="
+      !row.num_services_ok ? undefined : { color: 'success', minWidth: SERVICE_COUNT_MIN_WIDTH }
     "
     :linked-to="!row.num_services_ok ? undefined : servicesInStateLink('OK')"
   />
@@ -145,14 +133,8 @@ const lastStateChange = computed(() =>
     v-if="hasColumn('num_services_warn')"
     column-id="num_services_warn"
     :value="row.num_services_warn"
-    :tag-properties="
-      !row.num_services_warn
-        ? undefined
-        : {
-            variant: 'weighted',
-            color: 'warning',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
+    :highlight="
+      !row.num_services_warn ? undefined : { color: 'warning', minWidth: SERVICE_COUNT_MIN_WIDTH }
     "
     :linked-to="!row.num_services_warn ? undefined : servicesInStateLink('WARN')"
   />
@@ -160,14 +142,8 @@ const lastStateChange = computed(() =>
     v-if="hasColumn('num_services_crit')"
     column-id="num_services_crit"
     :value="row.num_services_crit"
-    :tag-properties="
-      !row.num_services_crit
-        ? undefined
-        : {
-            variant: 'weighted',
-            color: 'danger',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
+    :highlight="
+      !row.num_services_crit ? undefined : { color: 'danger', minWidth: SERVICE_COUNT_MIN_WIDTH }
     "
     :linked-to="!row.num_services_crit ? undefined : servicesInStateLink('CRIT')"
   />
@@ -175,14 +151,10 @@ const lastStateChange = computed(() =>
     v-if="hasColumn('num_services_unknown')"
     column-id="num_services_unknown"
     :value="row.num_services_unknown"
-    :tag-properties="
+    :highlight="
       !row.num_services_unknown
         ? undefined
-        : {
-            variant: 'weighted',
-            color: 'unknown',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
+        : { color: 'unknown', minWidth: SERVICE_COUNT_MIN_WIDTH }
     "
     :linked-to="!row.num_services_unknown ? undefined : servicesInStateLink('UNKNOWN')"
   />
@@ -190,14 +162,10 @@ const lastStateChange = computed(() =>
     v-if="hasColumn('num_services_pending')"
     column-id="num_services_pending"
     :value="row.num_services_pending"
-    :tag-properties="
+    :highlight="
       !row.num_services_pending
         ? undefined
-        : {
-            variant: 'weighted',
-            color: 'default',
-            minWidth: SERVICE_COUNT_MIN_WIDTH
-          }
+        : { color: 'pending', minWidth: SERVICE_COUNT_MIN_WIDTH }
     "
     :linked-to="
       !row.num_services_pending

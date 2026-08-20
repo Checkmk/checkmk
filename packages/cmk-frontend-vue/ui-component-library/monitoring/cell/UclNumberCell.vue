@@ -50,59 +50,30 @@ export const panelConfig = {
     ],
     initialState: 'inline'
   },
-  tagEnabled: {
+  highlightEnabled: {
     type: 'boolean' as const,
-    title: 'tagProperties',
+    title: 'highlight',
     initialState: false,
-    help: 'Render the value inside a CmkTag instead of as plain text.'
+    help: 'Colour the value and mark it with an accent bar instead of plain text.'
   },
-  tagSize: {
-    type: 'list' as const,
-    title: '↳ size',
-    options: [
-      { title: 'small', name: 'small' },
-      { title: 'medium', name: 'medium' },
-      { title: 'large', name: 'large' }
-    ],
-    initialState: 'medium'
-  },
-  tagColor: {
+  highlightColor: {
     type: 'list' as const,
     title: '↳ color',
     options: [
       { title: 'default', name: 'default' },
       { title: 'success', name: 'success' },
       { title: 'warning', name: 'warning' },
+      { title: 'danger', name: 'danger' },
       { title: 'unknown', name: 'unknown' },
-      { title: 'danger', name: 'danger' }
+      { title: 'pending', name: 'pending' }
     ],
     initialState: 'default'
   },
-  tagVariant: {
-    type: 'list' as const,
-    title: '↳ variant',
-    options: [
-      { title: 'fill', name: 'fill' },
-      { title: 'outline', name: 'outline' },
-      { title: 'weighted', name: 'weighted' }
-    ],
-    initialState: 'outline'
-  },
-  tagMinWidth: {
+  highlightMinWidth: {
     type: 'number' as const,
     title: '↳ minWidth',
     initialState: 0,
-    help: 'Minimum width in px applied to the tag. 0 leaves it unset.'
-  },
-  tagJustify: {
-    type: 'list' as const,
-    title: '↳ justify',
-    options: [
-      { title: 'left', name: 'left' },
-      { title: 'center', name: 'center' },
-      { title: 'right', name: 'right' }
-    ],
-    initialState: 'right'
+    help: 'Minimum width in px applied to the value. 0 leaves it unset.'
   },
   minWidth: {
     type: 'number' as const,
@@ -145,7 +116,8 @@ import { computed, ref } from 'vue'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import type { ColumnJustify } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
-import NumberCell, { type NumberTagProps } from '@/monitoring/shared/components/cell/NumberCell.vue'
+import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
+import type { CellHighlight } from '@/monitoring/shared/components/cell/base/highlight'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -165,14 +137,11 @@ const linkedTo = computed<CellLink | undefined>(() =>
     : undefined
 )
 
-const tagProperties = computed<NumberTagProps | undefined>(() =>
-  propState.value.tagEnabled
+const highlight = computed<CellHighlight | undefined>(() =>
+  propState.value.highlightEnabled
     ? {
-        size: propState.value.tagSize as NumberTagProps['size'],
-        color: propState.value.tagColor as NumberTagProps['color'],
-        variant: propState.value.tagVariant as NumberTagProps['variant'],
-        minWidth: propState.value.tagMinWidth || undefined,
-        justify: (propState.value.tagJustify || 'right') as NumberTagProps['justify']
+        color: propState.value.highlightColor as CellHighlight['color'],
+        minWidth: propState.value.highlightMinWidth || undefined
       }
     : undefined
 )
@@ -180,7 +149,7 @@ const tagProperties = computed<NumberTagProps | undefined>(() =>
 const justify = computed<ColumnJustify>(() => propState.value.justify as ColumnJustify)
 
 const LINK_SUB_KEYS = ['linkHref', 'linkTarget', 'linkVariant'] as const
-const TAG_SUB_KEYS = ['tagSize', 'tagColor', 'tagVariant', 'tagMinWidth', 'tagJustify'] as const
+const HIGHLIGHT_SUB_KEYS = ['highlightColor', 'highlightMinWidth'] as const
 
 const visibleConfig = computed(() =>
   Object.fromEntries(
@@ -188,7 +157,10 @@ const visibleConfig = computed(() =>
       if (!propState.value.linkEnabled && (LINK_SUB_KEYS as readonly string[]).includes(key)) {
         return false
       }
-      if (!propState.value.tagEnabled && (TAG_SUB_KEYS as readonly string[]).includes(key)) {
+      if (
+        !propState.value.highlightEnabled &&
+        (HIGHLIGHT_SUB_KEYS as readonly string[]).includes(key)
+      ) {
         return false
       }
       return true
@@ -234,7 +206,7 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
               column-id="cell"
               :value="propState.value"
               :decimals="propState.decimals"
-              :tag-properties="tagProperties"
+              :highlight="highlight"
               :linked-to="linkedTo"
             />
           </template>
@@ -271,11 +243,8 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
 .ucl-number-cell__panel :deep(div:has(> div > label[for$='-linkHref'])),
 .ucl-number-cell__panel :deep(div:has(> div > label[for$='-linkTarget'])),
 .ucl-number-cell__panel :deep(div:has(> div > label[for$='-linkVariant'])),
-.ucl-number-cell__panel :deep(div:has(> div > label[for$='-tagSize'])),
-.ucl-number-cell__panel :deep(div:has(> div > label[for$='-tagColor'])),
-.ucl-number-cell__panel :deep(div:has(> div > label[for$='-tagVariant'])),
-.ucl-number-cell__panel :deep(div:has(> div > label[for$='-tagMinWidth'])),
-.ucl-number-cell__panel :deep(div:has(> div > label[for$='-tagJustify'])) {
+.ucl-number-cell__panel :deep(div:has(> div > label[for$='-highlightColor'])),
+.ucl-number-cell__panel :deep(div:has(> div > label[for$='-highlightMinWidth'])) {
   padding-left: 16px;
 }
 /* stylelint-enable selector-pseudo-class-no-unknown */

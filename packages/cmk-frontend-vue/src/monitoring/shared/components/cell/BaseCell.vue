@@ -85,19 +85,10 @@ const activeSlot = computed<string>(() => {
 const highlightClasses = computed<string[]>(() => {
   const classes = ['monitoring-base-cell__highlight']
   if (props.highlight) {
-    classes.push(
-      `monitoring-base-cell__highlight--${props.highlight.type}`,
-      `monitoring-base-cell__highlight--color-${props.highlight.color}`
-    )
+    classes.push(`monitoring-base-cell__highlight--color-${props.highlight.color}`)
   }
   return classes
 })
-
-const linkedHighlightClasses = computed<string[]>(() =>
-  props.highlight
-    ? [...highlightClasses.value, 'monitoring-base-cell__highlight--hover']
-    : highlightClasses.value
-)
 
 const highlightStyle = computed<CSSProperties>(() =>
   props.highlight?.minWidth !== undefined ? { minWidth: `${props.highlight.minWidth}px` } : {}
@@ -138,10 +129,11 @@ const highlightStyle = computed<CSSProperties>(() =>
     <a
       v-else-if="linkedTo && linkedTo.variant !== 'icon'"
       class="monitoring-base-cell__link"
+      :class="{ 'monitoring-base-cell__link--highlighted': highlight }"
       :href="linkedTo.href"
       :target="linkedTo.target"
     >
-      <div v-if="highlight" :class="linkedHighlightClasses" :style="highlightStyle">
+      <div v-if="highlight" :class="highlightClasses" :style="highlightStyle">
         <slot :name="activeSlot" />
       </div>
       <div v-else class="monitoring-base-cell__plain">
@@ -284,90 +276,93 @@ const highlightStyle = computed<CSSProperties>(() =>
 }
 
 .monitoring-base-cell__highlight {
-  margin: var(--dimension-2) var(--dimension-3);
-  padding: var(--dimension-2) var(--dimension-4);
-  border-radius: var(--border-radius);
-  border-width: 1px;
-  border-style: solid;
-  box-sizing: border-box;
-  border-color: transparent;
-  width: fit-content;
+  --cell-highlight-bar-width: 2px;
+  --cell-highlight-bar-height: var(--dimension-7);
+
   display: flex;
-  flex-direction: row;
+  box-sizing: border-box;
+  width: fit-content;
   align-items: center;
-  align-content: center;
-  gap: var(--dimension-3);
+  gap: var(--dimension-4);
+  margin: var(--dimension-2) var(--dimension-3);
+  color: var(--cell-highlight-font-color);
+}
 
-  &.monitoring-base-cell__highlight--full {
-    margin: 0;
-    width: 100%;
-    padding: var(--dimension-3) var(--dimension-3);
-    border-radius: 0;
-    justify-content: v-bind(justifyContent);
-  }
+.monitoring-base-cell__highlight::after {
+  content: '';
+  flex: 0 0 auto;
+  width: var(--cell-highlight-bar-width);
+  height: var(--cell-highlight-bar-height);
+  background: var(--cell-highlight-accent-color);
+}
 
-  &.monitoring-base-cell__highlight--color-default {
-    border-color: var(--color-midnight-grey-50);
-    background-color: var(--color-midnight-grey-50);
-    color: var(--white);
-    text-decoration-color: var(--white);
-  }
+.monitoring-base-cell__link--highlighted {
+  text-decoration: none;
 
-  &.monitoring-base-cell__highlight--color-success {
-    border-color: var(--success);
-    background-color: var(--success);
-    color: var(--black);
-    text-decoration-color: var(--black) !important;
-  }
+  &:hover {
+    text-decoration: none;
 
-  &.monitoring-base-cell__highlight--color-warning {
-    border-color: var(--color-warning);
-    background-color: var(--color-warning);
-    color: var(--black);
-    text-decoration-color: var(--black);
-  }
-
-  &.monitoring-base-cell__highlight--color-danger {
-    border-color: var(--color-danger);
-    background-color: var(--color-danger);
-    color: var(--white);
-    text-decoration-color: var(--white);
-  }
-
-  &.monitoring-base-cell__highlight--color-info {
-    border-color: var(--color-dark-blue-50);
-    background-color: var(--color-dark-blue-50);
-    color: var(--white);
-    text-decoration-color: var(--white);
-  }
-
-  &.monitoring-base-cell__highlight--outline {
-    background-color: transparent;
-    color: var(--font-color) !important;
-  }
-
-  &.monitoring-base-cell__highlight--hover {
-    position: relative;
-    overflow: hidden;
-    text-decoration: underline;
-
-    &::after {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      opacity: 0.1;
-      left: 0;
-      top: 0;
+    .monitoring-base-cell__highlight {
+      text-decoration: underline;
+      text-decoration-color: currentcolor;
     }
+  }
+}
 
-    &:hover {
-      text-decoration: none;
+/* The accent bar holds across both themes; only the value adapts to its background. */
+.monitoring-base-cell__highlight--color-default {
+  --cell-highlight-accent-color: var(--color-mid-grey-30);
+  --cell-highlight-font-color: var(--color-mid-grey-100);
+}
 
-      &::after {
-        background: var(--white);
-      }
-    }
+.monitoring-base-cell__highlight--color-success {
+  --cell-highlight-accent-color: var(--color-corporate-green-80);
+  --cell-highlight-font-color: var(--color-corporate-green-80);
+}
+
+.monitoring-base-cell__highlight--color-warning {
+  --cell-highlight-accent-color: var(--color-yellow-60);
+  --cell-highlight-font-color: var(--color-yellow-80);
+}
+
+.monitoring-base-cell__highlight--color-danger {
+  --cell-highlight-accent-color: var(--color-dark-red-60);
+  --cell-highlight-font-color: var(--color-dark-red-70);
+}
+
+.monitoring-base-cell__highlight--color-unknown {
+  --cell-highlight-accent-color: var(--color-orange-70);
+  --cell-highlight-font-color: var(--color-orange-80);
+}
+
+.monitoring-base-cell__highlight--color-pending {
+  --cell-highlight-accent-color: var(--color-mist-grey-80);
+  --cell-highlight-font-color: var(--color-mist-grey-70);
+}
+
+body[data-theme='modern-dark'] {
+  .monitoring-base-cell__highlight--color-default {
+    --cell-highlight-font-color: var(--color-mid-grey-0);
+  }
+
+  .monitoring-base-cell__highlight--color-success {
+    --cell-highlight-font-color: var(--color-corporate-green-60);
+  }
+
+  .monitoring-base-cell__highlight--color-warning {
+    --cell-highlight-font-color: var(--color-yellow-50);
+  }
+
+  .monitoring-base-cell__highlight--color-danger {
+    --cell-highlight-font-color: var(--color-dark-red-30);
+  }
+
+  .monitoring-base-cell__highlight--color-unknown {
+    --cell-highlight-font-color: var(--color-orange-60);
+  }
+
+  .monitoring-base-cell__highlight--color-pending {
+    --cell-highlight-font-color: var(--color-mist-grey-40);
   }
 }
 </style>

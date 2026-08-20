@@ -4,8 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+export type CellHighlightColor =
+  | 'default'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'unknown'
+  | 'pending'
+
 export interface CellHighlight {
-  type: 'inline' | 'outline' | 'full'
-  color: 'default' | 'success' | 'warning' | 'danger' | 'info'
+  color: CellHighlightColor
   minWidth?: number | undefined
 }

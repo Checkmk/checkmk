@@ -5,30 +5,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkTag, {
-  type Colors,
-  type Sizes,
-  type Variants
-} from 'cmk-ui-library/components/CmkTag.vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
-import { type ColumnJustify, justifyToFlex } from '../MonitoringTableContext'
 import BaseCell, { type CellLink } from './BaseCell.vue'
-
-export interface NumberTagProps {
-  size?: Sizes
-  color?: Colors
-  variant?: Variants
-  minWidth?: number | undefined
-  justify?: ColumnJustify | undefined
-}
+import type { CellHighlight } from './base/highlight'
 
 export interface NumberCellProps {
   value: number | undefined
   linkedTo?: CellLink | undefined
   decimals?: number | undefined
-  tagProperties?: NumberTagProps | undefined
+  highlight?: CellHighlight | undefined
   columnId?: string | undefined
 }
 
@@ -43,37 +30,7 @@ const valueString = computed(() => {
 </script>
 
 <template>
-  <BaseCell :column-id="columnId" :linked-to="linkedTo">
-    <template #default>
-      <CmkTag
-        v-if="tagProperties"
-        class="monitoring-number-cell__tag"
-        :class="{ 'monitoring-number-cell--tag-fixed': tagProperties.minWidth }"
-        :variant="tagProperties.variant"
-        :size="tagProperties.size"
-        :color="tagProperties.color"
-        :content="valueString"
-        :style="{
-          'min-width': tagProperties.minWidth ? `${tagProperties.minWidth}px` : undefined,
-          'justify-content': justifyToFlex(tagProperties.justify ?? 'right')
-        }"
-      />
-      <template v-else>
-        {{ valueString }}
-      </template>
-    </template>
+  <BaseCell :column-id="columnId" :linked-to="linkedTo" :highlight="highlight">
+    <template #default>{{ valueString }}</template>
   </BaseCell>
 </template>
-
-<style scoped>
-.monitoring-number-cell__tag {
-  margin: 0;
-}
-
-.monitoring-number-cell--tag-fixed {
-  display: flex;
-  box-sizing: border-box;
-  height: 21px;
-  align-items: center;
-}
-</style>

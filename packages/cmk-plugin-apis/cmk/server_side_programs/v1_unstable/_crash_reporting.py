@@ -10,6 +10,7 @@ import json
 import os
 import pprint
 import sys
+import tempfile
 import time
 import traceback
 import uuid
@@ -173,7 +174,13 @@ class _CrashReport:
 def _store_crash_report(crash: _CrashReport, crash_report_base_path: Path) -> None:
     crash_dir = crash_report_base_path / crash.crash_type / crash.crash_id
     crash_dir.mkdir(parents=True, exist_ok=True)
-    (crash_dir / "crash.info").write_text(crash.dump())
+    # crash.info marks the directory complete, so it must appear atomically. The
+    # replace stays inside the with, so any exception deletes the temp file instead.
+    with tempfile.NamedTemporaryFile("w", dir=crash_dir, delete_on_close=False) as tmp:
+        Path(tmp.name).chmod(0o660)  # tempfile defaults to 0600
+        tmp.write(crash.dump())
+        tmp.close()
+        os.replace(tmp.name, crash_dir / "crash.info")
 
 
 def _follow_exception_chain(exc: BaseException | None) -> list[BaseException]:

@@ -102,7 +102,7 @@ py_library(
         "//cmk/piggyback:hub",
         "//cmk/utils",
         "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-ccc:version",
+        "//packages/cmk-ccc:version-info",
         "//packages/cmk-crash:crash",
     ],
 )

@@ -208,6 +208,7 @@ py_library(
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-ccc:version-info",
         "//packages/cmk-crash:crash",
         "//packages/cmk-licensing",
         "//packages/cmk-livestatus-client",

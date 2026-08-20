@@ -29,6 +29,7 @@ except KeyError:
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.base.app import make_app
 from cmk.base.modes.call import call
@@ -98,7 +99,7 @@ def _generate_crash_report() -> CrashReport:
     """Save a crash report and return the message to print instead of a traceback"""
     return CrashReport.from_exception(
         crash_report_base_path=make_crash_report_base_path(OMD_ROOT),
-        version_info=cmk_version.get_general_version_infos(OMD_ROOT),
+        version_info=cmk_version_info.get_general_version_infos(OMD_ROOT),
     )
 
 

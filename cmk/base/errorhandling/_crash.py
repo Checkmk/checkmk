@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Literal, override, TypedDict
 
 import cmk.ccc.debug
-import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.helper_interface import AgentRawData
@@ -58,7 +58,7 @@ def create_section_crash_dump(
         crash = SectionCrashReport(
             crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
             crash_info=SectionCrashReport.make_crash_info(
-                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+                cmk_version_info.get_general_version_infos(cmk.utils.paths.omd_root),
                 details={
                     "section_name": str(section_name),
                     "section_content": _truncate_section_content(section_content),
@@ -97,7 +97,7 @@ def create_check_crash_dump(
         crash = CheckCrashReport(
             crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
             crash_info=CheckCrashReport.make_crash_info(
-                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+                cmk_version_info.get_general_version_infos(cmk.utils.paths.omd_root),
                 CheckDetails(
                     check_output=text,
                     host=host_name,

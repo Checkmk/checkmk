@@ -6,7 +6,7 @@
 import traceback
 from typing import Literal, override
 
-import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 import cmk.utils.paths
 from cmk.crash import ABCCrashReport, CrashReportStore, make_crash_report_base_path
 
@@ -23,7 +23,7 @@ def create_agent_crash_dump() -> str:
         crash = AgentCrashReport(
             crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
             crash_info=AgentCrashReport.make_crash_info(
-                cmk_version.get_general_version_infos(cmk.utils.paths.omd_root), None
+                cmk_version_info.get_general_version_infos(cmk.utils.paths.omd_root), None
             ),
         )
         CrashReportStore().save(crash)

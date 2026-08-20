@@ -19,6 +19,7 @@ from typing import NamedTuple, Protocol
 from uuid import UUID
 
 import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 import cmk.livestatus_client as livestatus
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
@@ -172,7 +173,7 @@ def create_sample(
         logger,
     )
 
-    general_infos = cmk_version.get_general_version_infos(omd_root)
+    general_infos = cmk_version_info.get_general_version_infos(omd_root)
     extensions = _load_extensions(omd_root=omd_root)
 
     return LicenseUsageSample(

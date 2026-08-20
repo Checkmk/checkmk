@@ -28,6 +28,7 @@ from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.routing import Map, Rule, Submount
 
 import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKException, MKGeneralException
@@ -149,7 +150,7 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
     crash = APICrashReport(
         crash_report_base_path=make_crash_report_base_path(paths.omd_root),
         crash_info=APICrashReport.make_crash_info(
-            cmk_version.get_general_version_infos(paths.omd_root), details
+            cmk_version_info.get_general_version_infos(paths.omd_root), details
         ),
     )
     CrashReportStore().save(crash)

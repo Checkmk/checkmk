@@ -9,7 +9,7 @@ import typing
 from pathlib import Path
 from uuid import UUID, uuid4
 
-import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 from cmk.livestatus_client import LocalConnection
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables import Status
@@ -105,7 +105,7 @@ class CheckmkInfo(typing.NamedTuple):
 
 
 def get_checkmk_info(omd_root: Path) -> CheckmkInfo:
-    general_version_infos = cmk_version.get_general_version_infos(omd_root)
+    general_version_infos = cmk_version_info.get_general_version_infos(omd_root)
     return CheckmkInfo(
         version=general_version_infos["version"], edition=general_version_infos["edition"]
     )

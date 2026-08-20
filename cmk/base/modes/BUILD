@@ -93,6 +93,7 @@ py_library(
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:version-info",
         "//packages/cmk-profiling:backend",
         "//packages/cmk-trace",
     ],

@@ -246,6 +246,7 @@ py_library(
         "//packages/cmk-ccc:tar-archive",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-ccc:version-info",
         "//packages/cmk-crash:crash",
         "//packages/cmk-crypto",
         requirement("psutil"),

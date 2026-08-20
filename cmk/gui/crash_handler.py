@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Final, NotRequired, override, Self, TypedDict
 
-import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 import cmk.utils.paths
 from cmk.ccc.site import omd_site
 from cmk.crash import (
@@ -261,7 +261,7 @@ def create_gui_crash_report(
     details: GUIDetails | None = None,
 ) -> GUICrashReport:
     crash = GUICrashReport.from_exception(
-        version_info=cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+        version_info=cmk_version_info.get_general_version_infos(cmk.utils.paths.omd_root),
         details=details,
         crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
     )

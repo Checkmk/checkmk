@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 import cmk.utils.paths
 from cmk.crash import CrashReportStore, make_crash_report_base_path
 from cmk.gui.crash_handler import JavascriptCrashReport, JavascriptDetails
@@ -36,7 +36,7 @@ def create_javascript_crash_report_v1(
 ) -> ApiResponse[JavascriptCrashReportObjectModel]:
     """Store an error caught in the browser as a crash report."""
     crash = JavascriptCrashReport.from_browser_error(
-        version_info=cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
+        version_info=cmk_version_info.get_general_version_infos(cmk.utils.paths.omd_root),
         error_name=body.error_name,
         error_message=body.error_message,
         stack=body.stack,

@@ -45,7 +45,7 @@ function mountEditableTable(options: {
           {
             rows,
             columns: options.columns ?? COLUMNS,
-            expandedRows: options.expandedRows ?? {},
+            isRowExpanded: (row: Row) => options.expandedRows?.[row.id] === true,
             getRowKey: (row: Row) => row.id,
             ...(options.rowHeight ? { rowHeight: options.rowHeight } : {}),
             ...(options.onReorder ? { onReorder: options.onReorder } : {}),
@@ -241,7 +241,7 @@ test('moves the expansion row with its data row when a reorder is applied', asyn
             {
               rows: rows.value,
               columns: COLUMNS,
-              expandedRows: { 'row-1': true },
+              isRowExpanded: (row: Row) => row.id === 'row-1',
               getRowKey: (row: Row) => row.id,
               onReorder
             },

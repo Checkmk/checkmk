@@ -36,10 +36,10 @@ const props = defineProps<{
   getRowKey: (row: T, index: number) => string | number
   rowHeight?: string
   /**
-   * Expanded state per row key. Each expanded row renders the `#expansion` slot beneath it;
-   * the slot must supply its own `<tr>` element(s).
+   * Whether a row renders the `#expansion` slot beneath it; the slot must supply its own
+   * `<tr>` element(s).
    */
-  expandedRows?: Record<string, boolean>
+  isRowExpanded?: (row: T, index: number) => boolean
   getRowVariant?: (row: T, index: number) => 'error' | null
 }>()
 
@@ -121,10 +121,6 @@ provide(ROW_DRAG_KEY, {
   }
 })
 
-function isRowExpanded(row: T, index: number): boolean {
-  return props.expandedRows?.[String(props.getRowKey(row, index))] === true
-}
-
 const rowGroups = new Map<string, HTMLElement>()
 
 function registerRowGroup(key: string, element: Element | ComponentPublicInstance | null): void {
@@ -178,7 +174,7 @@ defineExpose({
         >
           <slot name="row" :row="row" :table-row="tableRowAt(index)" :index="index" />
         </tr>
-        <template v-if="isRowExpanded(row, index)">
+        <template v-if="isRowExpanded?.(row, index)">
           <slot name="expansion" :row="row" :table-row="tableRowAt(index)" :index="index" />
         </template>
       </tbody>

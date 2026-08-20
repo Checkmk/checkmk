@@ -84,6 +84,10 @@ const titleMacroHelp = renderTitleMacroHelp(titleMacros)
 const rowSelection = ref<RowSelectionState>({})
 const expandedRows = ref<Record<string, boolean>>({})
 
+function isExpanded(row: DesignerItem): boolean {
+  return expandedRows.value[row.id] === true
+}
+
 const table = useTemplateRef<{ scrollToRow: (key: ItemId) => void }>('table')
 const addSource = useTemplateRef<InstanceType<typeof CmkAddDropdown>>('addSource')
 
@@ -278,7 +282,7 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
         :columns="columns"
         :get-row-key="(row: DesignerItem) => row.id"
         :get-row-variant="rowVariant"
-        :expanded-rows="expandedRows"
+        :is-row-expanded="isExpanded"
         @reorder="(from: number, to: number) => store.move(from, to)"
       >
         <template #row="{ row, tableRow }">
@@ -311,7 +315,7 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
           <CollapsibleCell
             column-id="title"
             vertical-align="middle"
-            :expanded="expandedRows[row.id] === true"
+            :expanded="isExpanded(row)"
             @update:expanded="expandedRows = { ...expandedRows, [row.id]: $event }"
           >
             <div class="graphing-metrics-table__title">

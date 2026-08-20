@@ -62,6 +62,10 @@ const colorColumnIndex = columns.findIndex((column) => column.id === 'color')
 
 const expandedRows = ref<Record<string, boolean>>({})
 
+function isExpanded(row: DesignerItem): boolean {
+  return expandedRows.value[row.id] === true
+}
+
 /** Second expansion level: the attributes of a single resolved series. */
 const expandedSeries = ref<Record<string, boolean>>({})
 
@@ -120,7 +124,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
       :rows="[...store.items.value]"
       :columns="columns"
       :get-row-key="(row: DesignerItem) => row.id"
-      :expanded-rows="expandedRows"
+      :is-row-expanded="isExpanded"
       @reorder="(from: number, to: number) => store.move(from, to)"
     >
       <template #row="{ row }">
@@ -150,7 +154,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
           v-else
           column-id="title"
           vertical-align="middle"
-          :expanded="expandedRows[row.id] === true"
+          :expanded="isExpanded(row)"
           @update:expanded="expandedRows = { ...expandedRows, [row.id]: $event }"
           >{{ resolvedTitles.get(row.id) ?? row.title }}</CollapsibleCell
         >

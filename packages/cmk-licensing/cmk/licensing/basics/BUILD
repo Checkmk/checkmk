@@ -5,6 +5,7 @@ py_library(
     srcs = glob(["**/*.py"]),
     imports = ["../../.."],
     visibility = [
+        "//non-free/tests/testlib/system/licensing:__pkg__",
         "//omd/packages/Python:__pkg__",
         "//packages/cmk-agent-receiver:__subpackages__",
         "//packages/cmk-licensing:__subpackages__",

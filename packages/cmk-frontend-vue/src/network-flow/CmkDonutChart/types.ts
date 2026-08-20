@@ -14,6 +14,10 @@ export interface DonutSlice {
   value: number
   /** Named palette color of the slice arc and its legend swatch. */
   color: ChartColor
+  /** Same measure over the preceding period; the legend compares against it. */
+  previousValue?: number
+  /** The aggregated remainder, which has a breakdown behind it. */
+  isOther?: boolean
 }
 
 /** One legend row, formatted by the chart so the legend holds no arithmetic. */
@@ -22,8 +26,14 @@ export interface DonutLegendRow {
   label: string
   color: ChartColor
   hidden: boolean
-  /** Share of the ring, or a dash for a category the ring is not drawn over. */
-  shareText: string
+  /** The aggregated remainder, drawn as drillable. */
+  isOther: boolean
+  /** Formatted volume, or a dash for a category the ring is not drawn over. */
+  currentText: string
+  /** Null while no history reaches the widget at all; a dash per row without it. */
+  previousText: string | null
+  /** Signed percentage against the previous period, null when nothing compares. */
+  deltaText: string | null
 }
 
 export interface CmkDonutChartProps {

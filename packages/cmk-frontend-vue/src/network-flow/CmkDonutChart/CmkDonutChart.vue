@@ -148,20 +148,42 @@ const center = computed(() => {
   }
 })
 
-// The chart decides what the numbers are; the legend only decides how they read.
-const legendRows = computed<DonutLegendRow[]>(() =>
-  props.slices.map((slice) => {
+const DASH = '–'
+
+// Signed, because the sign is the first thing read off a change. Growth out of
+// nothing has no ratio, and it is the most interesting row in the table, so it
+// says so rather than falling back to the dash that means "nothing to compare".
+function deltaText(value: number, previous: number): string {
+  if (previous <= 0) {
+    return value > 0 ? _t('new') : DASH
+  }
+  const ratio = (value - previous) / previous
+  return `${ratio >= 0 ? '+' : '-'}${Math.abs(ratio * 100).toFixed(1)}%`
+}
+
+// The chart decides what the numbers are, down to what an absent one looks
+// like, so the legend is left with no fallbacks of its own.
+const legendRows = computed<DonutLegendRow[]>(() => {
+  // Decided over the whole legend: a row without history in a legend that has
+  // some still needs the two columns, filled with dashes.
+  const anyPrevious = props.slices.some((slice) => slice.previousValue !== undefined)
+  return props.slices.map((slice) => {
     const isHidden = hidden.value.has(slice.key)
+    const previous = slice.previousValue
+    // A number measured over a ring it is not part of would be a fiction.
+    const comparable = previous !== undefined && !isHidden
     return {
       key: slice.key,
       label: slice.label,
       color: slice.color,
       hidden: isHidden,
-      // A share of a ring it is not part of would be a fiction.
-      shareText: isHidden ? '\u2013' : percentText(slice.value)
+      isOther: slice.isOther ?? false,
+      currentText: isHidden ? DASH : props.formatValue(slice.value),
+      previousText: !anyPrevious ? null : comparable ? props.formatValue(previous) : DASH,
+      deltaText: !anyPrevious ? null : comparable ? deltaText(slice.value, previous) : DASH
     }
   })
-)
+})
 </script>
 
 <template>
@@ -244,6 +266,7 @@ const legendRows = computed<DonutLegendRow[]>(() =>
       :highlighted="highlighted"
       @toggle="toggleHidden"
       @highlight="highlight"
+      @drill="emit('sliceActivate', $event)"
     />
   </div>
 </template>
@@ -260,7 +283,10 @@ const legendRows = computed<DonutLegendRow[]>(() =>
   width: 100%;
   height: 100%;
   font-size: clamp(11px, 9cqh, 14px);
-  container-type: size;
+
+  /* Named, so the legend can ask about the widget rather than about whatever
+     container happens to be nearest. */
+  container: nf-donut / size;
 }
 
 /* Capped at about a third of the width: past that it starves the legend. */

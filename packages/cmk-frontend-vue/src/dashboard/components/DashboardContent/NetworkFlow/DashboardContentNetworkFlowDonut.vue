@@ -36,7 +36,7 @@ function buildSlices(
   const shown = computedSlices.reduce((sum, slice) => sum + slice.value, 0)
   const other = total - shown
   if (other > 0) {
-    result.push({ key: 'other', label: _t('Other'), value: other, color: 'grey' })
+    result.push({ key: 'other', label: _t('Other'), value: other, color: 'grey', isOther: true })
   }
   return result
 }

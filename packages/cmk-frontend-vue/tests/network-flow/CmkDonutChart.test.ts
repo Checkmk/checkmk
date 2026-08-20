@@ -70,14 +70,68 @@ test('renders one arc segment and one legend entry per slice', () => {
   expect(container.querySelectorAll('.network-flow-donut-legend-table__row')).toHaveLength(2)
 })
 
-test('derives percentages from the sum of all slice values', () => {
+test('reads the volume of every category off the legend', () => {
   const { container } = renderChart()
 
-  const values = [...container.querySelectorAll('.network-flow-donut-legend-table__value')].map(
-    (el) => el.textContent
+  const values = [...container.querySelectorAll('.network-flow-donut-legend-table__td--value')].map(
+    (el) => el.textContent?.trim()
   )
-  // 90 / 150 = 60%, 60 / 150 = 40%.
-  expect(values).toEqual(['60.0%', '40.0%'])
+  expect(values).toEqual(['90 B', '60 B'])
+})
+
+test('keeps the previous period out of the legend until it is delivered', () => {
+  const { container } = renderChart()
+
+  expect(container).not.toHaveTextContent('Previous')
+  expect(container.querySelectorAll('th')).toHaveLength(3)
+})
+
+test('compares against the previous period once it is delivered', () => {
+  const { container } = renderChart([
+    { ...SLICES[0]!, previousValue: 60 },
+    { ...SLICES[1]!, previousValue: 90 }
+  ])
+
+  expect(container).toHaveTextContent('Previous')
+  // 90 against 60 grew by half; 60 against 90 lost a third.
+  expect(container).toHaveTextContent('+50.0%')
+  expect(container).toHaveTextContent('-33.3%')
+})
+
+test('calls growth out of nothing new instead of dashing it out', () => {
+  const { container } = renderChart([{ ...SLICES[0]!, previousValue: 0 }, SLICES[1]!])
+
+  expect(container).toHaveTextContent('new')
+})
+
+test('drops the comparison of a hidden category without dropping the columns', async () => {
+  const slices = [{ ...SLICES[0]!, previousValue: 60 }, SLICES[1]!]
+  const { container, getByLabelText } = renderChart(slices)
+
+  await fireEvent.click(getByLabelText('Hide TLS in the chart'))
+  await advanceTween()
+
+  expect(container).toHaveTextContent('Previous')
+  expect(container).not.toHaveTextContent('+50.0%')
+})
+
+test('marks the aggregated remainder as drillable', async () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { getByLabelText, emitted } = renderChart(slices)
+
+  await fireEvent.click(getByLabelText('Show breakdown of Other'))
+
+  expect(emitted('sliceActivate')).toEqual([['other']])
+})
+
+test('takes the breakdown away from a category the reader hid', async () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { queryByLabelText, getByLabelText } = renderChart(slices)
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await advanceTween()
+
+  expect(queryByLabelText('Show breakdown of Other')).toBeNull()
 })
 
 test('shows the total of the ring in the center, not the top slice', () => {
@@ -218,23 +272,23 @@ test('activates a slice by click and by keyboard', async () => {
   expect(emitted('sliceActivate')).toEqual([['tls'], ['tls'], ['tls']])
 })
 
-test('recomputes the ring, the total and every share when a category is hidden', async () => {
+test('recomputes the ring and the total when a category is hidden', async () => {
   const { container, getByLabelText } = renderChart()
 
   await fireEvent.click(getByLabelText('Hide Other in the chart'))
   await advanceTween()
 
-  // 90 of 90 is the whole ring now, and the total drops to what is left.
+  // The hidden category leaves the ring, and the total drops to what is left.
   expect(container.querySelector('.network-flow-cmk-donut-chart__center-value')).toHaveTextContent(
     '90 B'
   )
   expect(container.querySelector('.network-flow-cmk-donut-chart__center-share')).toHaveTextContent(
     '1 of 2 shown'
   )
-  const values = [...container.querySelectorAll('.network-flow-donut-legend-table__value')].map(
-    (el) => el.textContent
+  const values = [...container.querySelectorAll('.network-flow-donut-legend-table__td--value')].map(
+    (el) => el.textContent?.trim()
   )
-  expect(values).toEqual(['100.0%', '–'])
+  expect(values).toEqual(['90 B', '–'])
   expect(container.querySelectorAll('.network-flow-cmk-donut-chart__segment')).toHaveLength(1)
 })
 

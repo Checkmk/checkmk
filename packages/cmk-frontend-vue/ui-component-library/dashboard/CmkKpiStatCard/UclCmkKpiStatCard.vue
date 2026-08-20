@@ -69,6 +69,12 @@ export const panelConfig = {
     help: 'Points taken from the sample series. Fewer than two draw no line at all, which is also what omitting the series does.',
     initialState: 30
   },
+  gapEvery: {
+    type: 'number' as const,
+    title: 'Gap every N points',
+    help: '0 disables. Otherwise every Nth sample is nulled out to demonstrate a gap in the spark line.',
+    initialState: 0
+  },
   showState: {
     type: 'boolean' as const,
     title: 'Show state',
@@ -123,6 +129,7 @@ export const panelConfig = {
   showDelta: BoolPropDef
   deltaPercent: NumberPropDef
   pointCount: NumberPropDef
+  gapEvery: NumberPropDef
   showState: BoolPropDef
   stateSeverity: ListPropDef<KpiStateSeverity>
   tintBackground: BoolPropDef
@@ -147,7 +154,8 @@ import { computed } from 'vue'
 
 import CmkKpiStatCard, {
   type KpiRangeLimits,
-  type KpiState
+  type KpiState,
+  type TimestampedSample
 } from '@/dashboard/components/CmkKpiStatCard'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -158,13 +166,26 @@ const propState = new PanelStateCreator<
 >().createRef(panelConfig)
 
 // A window of per-minute values, oldest first (as the compute endpoints
-// deliver them).
-const SERIES = [
+// deliver them), one minute apart.
+const SERIES_VALUES = [
   62, 68, 75, 71, 66, 73, 82, 78, 74, 80, 88, 92, 85, 79, 83, 90, 95, 89, 84, 91, 97, 94, 87, 93,
   99, 96, 90, 95, 101, 98
 ]
+const SERIES: TimestampedSample[] = SERIES_VALUES.map((value, index) => ({
+  timestamp: index * 60,
+  value
+}))
 
-const series = computed(() => SERIES.slice(0, Math.max(0, propState.value.pointCount)))
+const series = computed<TimestampedSample[]>(() => {
+  const sliced = SERIES.slice(0, Math.max(0, propState.value.pointCount))
+  const gapEvery = propState.value.gapEvery
+  if (gapEvery <= 0) {
+    return sliced
+  }
+  return sliced.map((point, index) =>
+    (index + 1) % gapEvery === 0 ? { ...point, value: null } : point
+  )
+})
 
 const state = computed<KpiState | undefined>(() =>
   propState.value.showState

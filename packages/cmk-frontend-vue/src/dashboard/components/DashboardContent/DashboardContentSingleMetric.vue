@@ -10,7 +10,10 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import useTimer from 'cmk-ui-library/lib/useTimer'
 import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import CmkKpiStatCard, { type KpiState } from '@/dashboard/components/CmkKpiStatCard'
+import CmkKpiStatCard, {
+  type KpiState,
+  type TimestampedSample
+} from '@/dashboard/components/CmkKpiStatCard'
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget.ts'
@@ -95,6 +98,15 @@ const state = computed<KpiState | undefined>(() => {
     ? { severity: reported.severity, tintBackground: reported.tint_background }
     : undefined
 })
+
+// The single metric endpoint (cmk/gui/nonfree/pro/dashboard/_single_metric_data.py)
+// drops timestamps and filters out None values before they reach here, so it
+// cannot express gaps or staleness. The index is used as a stand-in timestamp
+// purely to satisfy CmkKpiStatCard's contract - it does not represent real time,
+// and this card never shows a real gap until that endpoint is migrated.
+const series = computed<TimestampedSample[]>(
+  () => data.value?.series.map((value, index) => ({ timestamp: index, value })) ?? []
+)
 </script>
 
 <template>
@@ -112,7 +124,7 @@ const state = computed<KpiState | undefined>(() => {
         v-else
         :value="data.value"
         :unit="data.unit"
-        :series="data.series"
+        :series="series"
         :color="data.color"
         :state="state"
         :range-limits="data.range_limits"

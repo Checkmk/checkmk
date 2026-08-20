@@ -4,13 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { scaleLinear } from 'd3-scale'
+import { scaleLinear, scaleTime } from 'd3-scale'
 import { area, curveCatmullRom, line } from 'd3-shape'
 import { type Ref, computed, useId } from 'vue'
 
+import type { TimestampedSample } from './types'
+
 const props = defineProps<{
-  /** Data points to plot, oldest first. Needs at least two to render a path. */
-  series: number[]
+  /** Data points to plot, oldest first. Needs at least two non-null values to render a path. */
+  series: TimestampedSample[]
   /** Stroke / fill color, e.g. "var(--color-corporate-green-50)". */
   color: string
 }>()
@@ -26,31 +28,39 @@ const gradientId = `db-kpi-spark-line-gradient-${useId()}`
 
 const paths: Ref<{ line: string; area: string }> = computed(() => {
   const data = props.series
-  if (data.length < 2) {
+  const values = data.filter((d) => d.value !== null).map((d) => d.value!)
+  if (data.length < 2 || values.length < 2) {
     return { line: '', area: '' }
   }
 
-  const xScale = scaleLinear()
-    .domain([0, data.length - 1])
+  const xScale = scaleTime()
+    .domain([
+      new Date(data[0]!.timestamp * 1000),
+      new Date(data[data.length - 1]!.timestamp * 1000)
+    ])
     .range([0, VIEW_WIDTH])
 
-  const min = Math.min(...data)
-  const max = Math.max(...data)
+  const min = Math.min(...values)
+  const max = Math.max(...values)
   // Pad the value range so the line never touches the very top/bottom edge.
   const padding = (max - min) * 0.15 || 1
   const yScale = scaleLinear()
     .domain([min - padding, max + padding])
     .range([VIEW_HEIGHT, 0])
 
-  const lineGen = line<number>()
-    .x((_, i) => xScale(i))
-    .y((value) => yScale(value))
+  // .defined() skips null-value samples and auto-splits the path into
+  // separate subpaths at the gap - a plain break, no bridging.
+  const lineGen = line<TimestampedSample>()
+    .defined((d) => d.value !== null)
+    .x((d) => xScale(new Date(d.timestamp * 1000)))
+    .y((d) => yScale(d.value!))
     .curve(curveCatmullRom.alpha(0.5))
 
-  const areaGen = area<number>()
-    .x((_, i) => xScale(i))
+  const areaGen = area<TimestampedSample>()
+    .defined((d) => d.value !== null)
+    .x((d) => xScale(new Date(d.timestamp * 1000)))
     .y0(VIEW_HEIGHT)
-    .y1((value) => yScale(value))
+    .y1((d) => yScale(d.value!))
     .curve(curveCatmullRom.alpha(0.5))
 
   return { line: lineGen(data) ?? '', area: areaGen(data) ?? '' }

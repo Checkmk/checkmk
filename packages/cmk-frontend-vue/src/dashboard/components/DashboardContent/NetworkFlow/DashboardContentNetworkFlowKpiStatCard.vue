@@ -9,7 +9,10 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
-import CmkKpiStatCard, { type DeltaSemantics } from '@/dashboard/components/CmkKpiStatCard'
+import CmkKpiStatCard, {
+  type DeltaSemantics,
+  type TimestampedSample
+} from '@/dashboard/components/CmkKpiStatCard'
 import type { NetworkFlowKpiStatCardContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import { chartColorCss } from '@/network-flow/colors'
@@ -53,12 +56,16 @@ interface CardData {
   value: string
   unit: string | undefined
   deltaRatio: number | undefined
-  series: number[]
+  series: TimestampedSample[]
 }
 
 const presentation = computed(() => METRIC_PRESENTATION[props.content.metric])
 
-function buildCardData(value: number, previousValue: number, series: number[]): CardData {
+function buildCardData(
+  value: number,
+  previousValue: number,
+  series: TimestampedSample[]
+): CardData {
   // The card renders the value and its unit in different sizes, so the
   // formatter's "801.84 GB" is split at the first space; plain counts
   // ("532") have no unit part.

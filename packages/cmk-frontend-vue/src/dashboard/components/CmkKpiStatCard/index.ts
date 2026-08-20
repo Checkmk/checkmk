@@ -11,5 +11,6 @@ export type {
   DeltaSemantics,
   KpiRangeLimits,
   KpiState,
-  KpiStateSeverity
+  KpiStateSeverity,
+  TimestampedSample
 } from './types'

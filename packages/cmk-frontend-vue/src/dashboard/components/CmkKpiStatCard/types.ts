@@ -25,6 +25,16 @@ export interface KpiRangeLimits {
   maximum: string
 }
 
+/**
+ * A single sparkline sample. `value` is null for a bucket with no data - an
+ * explicit gap, not a zero reading.
+ */
+export interface TimestampedSample {
+  /** Unix epoch seconds. */
+  timestamp: number
+  value: number | null
+}
+
 export interface CmkKpiStatCardProps {
   /** Pre-formatted headline value, e.g. "801.84" or "4.3". */
   value: string
@@ -38,7 +48,7 @@ export interface CmkKpiStatCardProps {
   /** What an increase means for this metric; defaults to neutral. */
   deltaSemantics?: DeltaSemantics | undefined
   /** Sparkline data points over the displayed window, oldest first; omit for a plain value. */
-  series?: number[] | undefined
+  series?: TimestampedSample[] | undefined
   /** CSS color of the value and the sparkline. */
   color: string
   /** Monitoring state shown beside the value; omit to show none. */

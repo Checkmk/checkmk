@@ -6,9 +6,16 @@
 import { render } from '@testing-library/vue'
 
 import CmkKpiStatCard from '@/dashboard/components/CmkKpiStatCard/CmkKpiStatCard.vue'
-import type { CmkKpiStatCardProps } from '@/dashboard/components/CmkKpiStatCard/types'
+import type {
+  CmkKpiStatCardProps,
+  TimestampedSample
+} from '@/dashboard/components/CmkKpiStatCard/types'
 
-const SERIES = [10, 20, 15, 30]
+function sample(timestamp: number, value: number | null): TimestampedSample {
+  return { timestamp, value }
+}
+
+const SERIES = [sample(0, 10), sample(60, 20), sample(120, 15), sample(180, 30)]
 
 function renderCard(props: Partial<CmkKpiStatCardProps> = {}) {
   return render(CmkKpiStatCard, {
@@ -103,10 +110,23 @@ test('draws a line and an area path for the series', () => {
   }
 })
 
-test.each([[[]], [[42]]])('draws no spark line for %j, which cannot make one', (series) => {
+test.each([[[]], [[sample(0, 42)]]])(
+  'draws no spark line for %j, which cannot make one',
+  (series) => {
+    const { container } = renderCard({ series })
+
+    expect(container.querySelector('.db-kpi-spark-line')).toBeNull()
+  }
+)
+
+test('draws a broken line for a series with a gap, without crashing', () => {
+  const series = [sample(0, 10), sample(60, null), sample(120, 20)]
   const { container } = renderCard({ series })
 
-  expect(container.querySelector('.db-kpi-spark-line')).toBeNull()
+  const linePath = container.querySelector('.db-kpi-spark-line path[stroke="currentColor"]')
+  const pathData = linePath?.getAttribute('d') ?? ''
+  expect(pathData).toMatch(/^M/)
+  expect(pathData.match(/M/g)?.length).toBeGreaterThan(1)
 })
 
 test('centers the state against the card, not against the value row', () => {

@@ -6,7 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkKpiStatCard from '@/dashboard/components/CmkKpiStatCard'
 
-const series = [62, 68, 75, 71, 66, 73, 82, 78, 74, 80]
+const series = [62, 68, 75, 71, 66, 73, 82, 78, 74, 80].map((value, index) => ({
+  timestamp: index * 60,
+  value
+}))
 </script>
 
 <template>

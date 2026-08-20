@@ -24,7 +24,7 @@ You should find an example configuration file at
 '../cfg_examples/logwatch.cfg' relative to this file.
 """
 
-__version__ = "2.5.0p12"
+__version__ = "2.5.0p13"
 
 import ast
 import binascii

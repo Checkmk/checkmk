@@ -130,6 +130,10 @@ const saveButtonDisabled = computed(() => saveState.value === 'running')
 // finalize button so the user knows why the save did not proceed.
 const overviewValidationFailed = ref(false)
 
+watch(currentMode, () => {
+  overviewValidationFailed.value = false
+})
+
 async function onSaveClick(): Promise<void> {
   // Second click after a successful run navigates back to the Prometheus
   // Overview page and opens the "Activate changes" panel so the user can

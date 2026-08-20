@@ -202,6 +202,11 @@ export function buildHostColumns({
     maxSelected: MAX_FILTER_CHOICES
   }
 
+  const contactsFilter: StringInputFilter<'contacts'> = {
+    type: 'string-input',
+    field: 'contacts'
+  }
+
   const contactGroupsFilter: AutocompleteChoiceFilter<'contact_groups'> = {
     type: 'autocomplete-choice',
     field: 'contact_groups',
@@ -392,7 +397,7 @@ export function buildHostColumns({
       enableSorting: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: contactsFilter }
     },
     {
       accessorKey: 'contact_groups',

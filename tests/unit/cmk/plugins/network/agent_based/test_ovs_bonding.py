@@ -94,3 +94,42 @@ def test_parse_missing_bond_mode() -> None:
     string_table = [["[bond1]"], ["slave eth5", " enabled"], ["active slave"]]
     with pytest.raises(KeyError):
         assert ovs_bonding.parse_ovs_bonding(string_table)
+
+
+# Open vSwitch renamed `slave` to `member`, see https://github.com/openvswitch/ovs/blob/main/NEWS
+DATA_MEMBER = [
+    ["[ovs-bond-uplink]"],
+    ["---- ovs-bond-uplink ----"],
+    ["bond_mode", " balance-tcp"],
+    ["bond may use recirculation", " yes, Recirc-ID ", " 1"],
+    ["bond-hash-basis", " 0"],
+    ["lb_output action", " disabled, bond-id", " -1"],
+    ["updelay", " 0 ms"],
+    ["downdelay", " 0 ms"],
+    ["next rebalance", " 9989 ms"],
+    ["lacp_status", " negotiated"],
+    ["lacp_fallback_ab", " false"],
+    ["active-backup primary", " <none>"],
+    ["active member mac", " 48", "df", "37", "68", "4f", "30(eth2)"],
+    #
+    ["member eth2", " enabled"],
+    ["active member"],
+    ["may_enable", " true"],
+    #
+    ["member eth7", " enabled"],
+    ["may_enable", " true"],
+]
+
+
+def test_parse_member_terminology() -> None:
+    assert ovs_bonding.parse_ovs_bonding(DATA_MEMBER) == {
+        "ovs-bond-uplink": {
+            "active": "eth2",
+            "interfaces": {
+                "eth2": {"status": "up"},
+                "eth7": {"status": "up"},
+            },
+            "mode": "balance-tcp",
+            "status": "up",
+        },
+    }

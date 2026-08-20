@@ -475,6 +475,9 @@ const group = computed<ButtonVariants['group']>(() => {
     position-anchor: --cmk-dropdown-anchor;
     position-area: block-end span-inline-end;
     block-size: fit-content;
+
+    /* fit-content stops clamping once a transformed ancestor becomes the fixed containing block. */
+    max-block-size: calc(100dvh - (2 * var(--cmk-dropdown-viewport-margin)));
     min-width: anchor-size(width);
     margin-block: 0 var(--cmk-dropdown-viewport-margin);
   }

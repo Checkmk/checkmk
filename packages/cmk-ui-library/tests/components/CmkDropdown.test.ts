@@ -6,6 +6,8 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
+// Raw source: jsdom runs no layout and ignores `@supports`, so the anchor path is only checkable here.
+import cmkDropdownSource from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue?raw'
 import { ErrorResponse, Response, WarningResponse } from 'cmk-ui-library/components/CmkSuggestions'
 import { defineComponent, nextTick, ref } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
@@ -1142,4 +1144,10 @@ test('dropdown without a validation error is neither marked nor described', asyn
 
   expect(dropdown).not.toHaveAttribute('aria-invalid')
   expect(dropdown).toHaveAccessibleDescription('')
+})
+
+// Regression (CMK-38164): a refactor dropped this cap, letting the anchor-positioned list grow
+// unbounded and cover the search box. jsdom cannot exercise anchor positioning, so guard the source.
+test('the anchor-positioned suggestion list is capped to the viewport height', () => {
+  expect(cmkDropdownSource).toMatch(/max-block-size:\s*calc\(100dvh/)
 })

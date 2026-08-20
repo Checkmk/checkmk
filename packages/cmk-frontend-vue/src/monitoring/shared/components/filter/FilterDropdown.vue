@@ -29,6 +29,7 @@ import { type Component, computed, inject, nextTick, onBeforeUnmount, ref } from
 import type { FilterField } from '@/monitoring/shared/api/types'
 
 import { MONITORING_SERVICE } from '../MonitoringTableContext'
+import FilterAutocompleteChoice from './FilterAutocompleteChoice.vue'
 import FilterBooleanGroup from './FilterBooleanGroup.vue'
 import FilterCheckboxList from './FilterCheckboxList.vue'
 import FilterColumnVisibility from './FilterColumnVisibility.vue'
@@ -44,6 +45,7 @@ const FILTER_COMPONENTS: Record<ColumnFilterDefinition['type'], Component> = {
   numeric: FilterNumeric,
   'date-time-range': FilterDateTimeRange,
   'boolean-group': FilterBooleanGroup,
+  'autocomplete-choice': FilterAutocompleteChoice,
   'column-visibility': FilterColumnVisibility,
   'visual-filter': FilterVisualFilter
 }

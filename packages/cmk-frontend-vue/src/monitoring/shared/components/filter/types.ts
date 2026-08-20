@@ -101,6 +101,27 @@ export interface BooleanGroupFilter<F extends FilterField = FilterField> {
   groups: BooleanFilterGroup<F>[]
 }
 
+/**
+ * Filter over the values of a field only the server knows, picked as chips
+ * against one of the registered autocompleters. Its value is a single `one_of`
+ * condition, which is what the label, tag and contact-group conditions accept.
+ */
+export interface AutocompleteChoiceFilter<F extends FilterField = FilterField> {
+  type: 'autocomplete-choice'
+  /** API field this filter targets. Used to produce the correct condition node. */
+  field: F
+  /** Suggestions for what has been typed so far. */
+  suggest: (query: string) => Promise<string[]>
+  /** Ask `suggest` with an empty query on focus, to seed the list. */
+  suggestWhenEmpty?: boolean
+  /** Pick `key:value` pairs in two steps: first the key, then that key's values. */
+  keyValue?: boolean
+  /** Offer what was typed with a trailing `*` as the first entry. */
+  wildcardOption?: boolean
+  /** Refuse further picks once this many are selected. Unbounded when unset. */
+  maxSelected?: number
+}
+
 export interface ColumnVisibilityFilter {
   type: 'column-visibility'
 }
@@ -135,6 +156,7 @@ export type ColumnFilterDefinition<F extends FilterField = FilterField> =
   | NumericFilter<F>
   | DateTimeRangeFilter<F>
   | BooleanGroupFilter<F>
+  | AutocompleteChoiceFilter<F>
   | ColumnVisibilityFilter
   | VisualFilterColumnFilter
 

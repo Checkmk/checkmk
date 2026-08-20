@@ -161,8 +161,10 @@ function valueAxisLabels(container: Element): string[] {
   ).map((tickLabel) => tickLabel.textContent ?? '')
 }
 
-async function renderMemoryGraph(): Promise<{ margin: number; widestLabel: number }> {
-  const { container } = renderComponent(MEMORY_PROPS)
+async function renderMemoryGraph(
+  props: Partial<TimeSeriesGraphProps> = {}
+): Promise<{ margin: number; widestLabel: number }> {
+  const { container } = renderComponent({ ...MEMORY_PROPS, ...props })
   await waitFor(() => {
     expect(valueAxisLabels(container).filter((label) => label !== '')).not.toHaveLength(0)
   })
@@ -383,6 +385,20 @@ describe('TimeSeriesGraph', () => {
         DEFAULT_PROPS.size.height
       )
     })
+  })
+
+  test('gives the value axis the width it was configured for', async () => {
+    const { container } = renderComponent({ minValueAxisWidth: 120 })
+
+    await waitFor(() => {
+      expect(plotCanvasStyle(container).left).toBe('120px')
+    })
+  })
+
+  test('widens the configured value axis width for labels that do not fit it', async () => {
+    const { margin, widestLabel } = await renderMemoryGraph({ minValueAxisWidth: 1 })
+
+    expect(margin).toBeGreaterThanOrEqual(widestLabel + VALUE_LABEL_GUTTER)
   })
 
   test('a hidden time axis takes the pan affordances with it', () => {

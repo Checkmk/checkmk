@@ -368,7 +368,7 @@ let refusedLowMargin: number | null = null
 function fitMarginToValueLabels(): void {
   if (!props.showValueAxis) {
     marginLeft.value = 0
-    lastMargin = CANVAS_MARGIN_LEFT
+    lastMargin = props.minValueAxisWidth ?? CANVAS_MARGIN_LEFT
     refusedLowMargin = null
     return
   }
@@ -377,7 +377,10 @@ function fitMarginToValueLabels(): void {
     (widest, label) => Math.max(widest, measureLabel(label)),
     0
   )
-  const next = Math.max(CANVAS_MARGIN_LEFT, Math.ceil(widestLabel) + VALUE_LABEL_GUTTER)
+  const next = Math.max(
+    props.minValueAxisWidth ?? CANVAS_MARGIN_LEFT,
+    Math.ceil(widestLabel) + VALUE_LABEL_GUTTER
+  )
 
   // Holding the high end of a detected flip: ignore the low value that keeps recurring.
   if (next === refusedLowMargin) {
@@ -518,7 +521,8 @@ watch(
     props.highlightedMetricName,
     plotWidth.value,
     props.showTimeAxis,
-    props.showValueAxis
+    props.showValueAxis,
+    props.minValueAxisWidth
   ],
   draw,
   { deep: true }

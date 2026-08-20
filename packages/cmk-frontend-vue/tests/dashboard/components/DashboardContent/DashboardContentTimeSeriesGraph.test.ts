@@ -28,6 +28,7 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       'showPin',
       'showTimeAxis',
       'showValueAxis',
+      'minValueAxisWidth',
       'fetchGraph'
     ],
     template: `<div
@@ -36,6 +37,7 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       :data-has-fetch-graph="fetchGraph !== undefined"
       :data-show-time-axis="showTimeAxis"
       :data-show-value-axis="showValueAxis"
+      :data-min-value-axis-width="minValueAxisWidth"
     >{{ internal }}</div>`
   }
 }))
@@ -152,6 +154,30 @@ describe('graph render options', () => {
     const figure = await screen.findByTestId('graph-figure')
     expect(figure.getAttribute('data-show-time-axis')).toBe('false')
     expect(figure.getAttribute('data-show-value-axis')).toBe('false')
+  })
+
+  test('converts an absolute vertical axis width to pixels', async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { vertical_axis_width: 30 }
+      }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-min-value-axis-width')).toBe('40')
+  })
+
+  test('sizes a fixed vertical axis width from the graph font size', async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { vertical_axis_width: 'fixed', font_size_pt: 12 }
+      }
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-min-value-axis-width')).toBe('96')
   })
 
   test('shows both axes when the widget stores no axis options', async () => {

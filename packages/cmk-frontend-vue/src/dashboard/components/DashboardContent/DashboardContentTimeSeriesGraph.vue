@@ -71,6 +71,10 @@ let requestCounter = 0
 // Mirrors the legacy SingleTimeseriesDashlet._metric_color mapping.
 const DEFAULT_THEME_COLOR = '#008EFF'
 
+const PX_PER_PT = 96 / 72
+const FIXED_VALUE_AXIS_WIDTH_IN_FONT_SIZES = 6
+const DEFAULT_FONT_SIZE_PT = 8
+
 const resolveTimeseriesColor = (color: SingleTimeseriesContent['color']): string | null => {
   if (color === 'default_metric') {
     return null
@@ -274,6 +278,14 @@ const showPin = computed(
 )
 const showTimeAxis = computed(() => graphRenderOptions.value?.show_time_axis ?? true)
 const showValueAxis = computed(() => graphRenderOptions.value?.show_vertical_axis ?? true)
+const valueAxisWidth = computed(() => {
+  const configuredWidth = graphRenderOptions.value?.vertical_axis_width
+  if (typeof configuredWidth === 'number') {
+    return configuredWidth * PX_PER_PT
+  }
+  const fontSizePt = graphRenderOptions.value?.font_size_pt ?? DEFAULT_FONT_SIZE_PT
+  return FIXED_VALUE_AXIS_WIDTH_IN_FONT_SIZES * fontSizePt * PX_PER_PT
+})
 const combinationMode = computed(() => {
   const content = props.content
   return content.type === 'combined_graph' ? content.presentation : null
@@ -323,6 +335,7 @@ onMounted(() => {
         :show-pin="showPin"
         :show-time-axis="showTimeAxis"
         :show-value-axis="showValueAxis"
+        :min-value-axis-width="valueAxisWidth"
         :fetch-graph="fetchGraph"
       />
     </div>

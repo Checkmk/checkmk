@@ -63,6 +63,7 @@ export interface TimeSeriesGraphProps extends Pick<CmkTimeSeriesGraph, 'size' | 
   atMinTimeZoom?: boolean
   showTimeAxis?: boolean
   showValueAxis?: boolean
+  minValueAxisWidth?: number | undefined
   inspecting: boolean
   panEnabled: boolean
   zoomEnabled: boolean

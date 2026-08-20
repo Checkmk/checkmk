@@ -257,6 +257,7 @@ onBeforeUnmount(() => {
           :consolidation-function="DEFAULT_CONSOLIDATION_FN"
           :show-time-axis="showTimeAxis"
           :show-value-axis="showValueAxis"
+          :min-value-axis-width="minValueAxisWidth"
           :options="graphOptions"
           :highlighted-metric-name="highlightedMetricName"
           @zoom="onZoom"

@@ -23,6 +23,7 @@ export interface GraphFigureProps {
   burgerMenuGroups?: BurgerMenuGroup[]
   showTimeAxis?: boolean
   showValueAxis?: boolean
+  minValueAxisWidth?: number | undefined
   /**
    * Called for every fetch to get the graph's data; defaults to posting the definition to the
    * session-authenticated graph fetch endpoint.

@@ -3,20 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from collections.abc import Callable, Sequence
 from typing import Annotated, Literal
 
 from annotated_types import MinLen
-from pydantic import AfterValidator, PlainValidator
+from pydantic import AfterValidator, PlainValidator, StringConstraints
 
 from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
+from cmk.gui.utils.labels import encode_label_for_livestatus, Label
+from cmk.livestatus_client import lqencode, quote_dict
 from cmk.livestatus_client.expressions import LqSafe
 
 from .._folder import folder_contains_filters, TitledFolder
 from .._models import HostFilter, HostState, HostStateLabel
-from ._validators import validate_uniqueness, validate_unix_timestamp
+from ._validators import validate_label_pairs, validate_uniqueness, validate_unix_timestamp
 
 # TODO: look into whether we can utilize generics when generating our shared typing. It's not great
 # that this functionality is tied to the field names or the state choice enum. This information
@@ -24,11 +27,23 @@ from ._validators import validate_uniqueness, validate_unix_timestamp
 
 _NO_NEWLINES_REGEX = r"^[^\n]*$"
 
+_LABEL_SEPARATOR = ":"
+
+_WILDCARD = "*"
+
+# The names of a dict column live in a list column of their own, which is what a
+# key with no value has to be matched against.
+_LABEL_NAME_COLUMNS = {"labels": "label_names", "tags": "tag_names"}
+
 type StringOp = Literal["contains", "matches"]
 
 type NumericOp = Literal["lt", "lte", "eq", "gt", "gte"]
 
 type TimestampOp = Literal["lt", "lte", "gt", "gte"]
+
+type LabelField = Literal["labels", "tags"]
+
+type NameListField = Literal["contacts", "contact_groups"]
 
 type NumericField = Literal[
     "num_services",
@@ -45,7 +60,7 @@ class StringCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal["name", "alias", "address"] = api_field(
+    field: Literal["name", "alias", "address", "contacts"] = api_field(
         description="String host field to filter on", example="name"
     )
     op: StringOp = api_field(description="String match operation", example="contains")
@@ -150,6 +165,51 @@ class BooleanCondition:
     value: bool = api_field(description="Boolean value to compare against", example=False)
 
 
+@api_model
+class LabelChoiceCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: LabelField = api_field(description="Key/value host field to filter on", example="labels")
+    op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
+    value: Annotated[
+        list[str],
+        MinLen(1),
+        AfterValidator(validate_uniqueness),
+        AfterValidator(validate_label_pairs),
+    ] = api_field(
+        description=(
+            "Pairs to match, each written as 'key:value'. A host matches when it carries any "
+            "one of them. The first colon separates the two halves, so a value may contain "
+            "colons. A trailing '*' matches by prefix: 'key:va*' takes every value of that key "
+            "starting with 'va', 'ke*' every key starting with 'ke', whatever its value."
+        ),
+        example=["cmk/os_family:linux"],
+    )
+
+
+@api_model
+class NameChoiceCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: NameListField = api_field(
+        description="List-valued host field to filter on", example="contact_groups"
+    )
+    op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
+    value: Annotated[
+        list[Annotated[str, StringConstraints(pattern=_NO_NEWLINES_REGEX)]],
+        MinLen(1),
+        AfterValidator(validate_uniqueness),
+    ] = api_field(
+        description=(
+            "Names to match. A host matches when the field holds any one of them. A trailing "
+            "'*' matches by prefix."
+        ),
+        example=["all"],
+    )
+
+
 type ConditionNode = (
     StringCondition
     | FolderCondition
@@ -158,6 +218,8 @@ type ConditionNode = (
     | NumericCondition
     | TimestampCondition
     | BooleanCondition
+    | LabelChoiceCondition
+    | NameChoiceCondition
 )
 
 
@@ -302,6 +364,38 @@ def parse_as_livestatus_filter(
     return HostFilter("\n".join(str(LqSafe(f)) for f in filters))
 
 
+def _anchored(prefix: str) -> str:
+    return f"^{re.escape(prefix)}"
+
+
+def _label_choice_filters(field: str, pairs: list[str]) -> list[str]:
+    lines: list[str] = []
+    for pair in pairs:
+        key, separator, value = pair.partition(_LABEL_SEPARATOR)
+        if not separator:
+            column = _LABEL_NAME_COLUMNS[field]
+            lines.append(f"Filter: {column} ~ {lqencode(_anchored(key.removesuffix(_WILDCARD)))}")
+        elif value.endswith(_WILDCARD):
+            lines.append(
+                f"Filter: {lqencode(field)} ~ {lqencode(quote_dict(key))} "
+                f"{lqencode(quote_dict(_anchored(value.removesuffix(_WILDCARD))))}"
+            )
+        else:
+            lines.append(encode_label_for_livestatus(field, Label(key, value, False)))
+    return lines
+
+
+def _name_choice_filters(field: str, names: list[str]) -> list[str]:
+    return [
+        (
+            f"Filter: {field} ~ {lqencode(_anchored(name.removesuffix(_WILDCARD)))}"
+            if name.endswith(_WILDCARD)
+            else f"Filter: {field} >= {lqencode(name)}"
+        )
+        for name in names
+    ]
+
+
 def _accumulate_filters(
     node: FilterNode, filters: list[str], setup_folders: Callable[[], Sequence[TitledFolder]]
 ) -> None:
@@ -336,6 +430,18 @@ def _accumulate_filters(
             match node.op:
                 case "one_of" if len(node.value) > 1:
                     filters.append(f"Or: {len(node.value)}")
+
+        case LabelChoiceCondition():
+            filters.extend(_label_choice_filters(node.field, node.value))
+
+            if len(node.value) > 1:
+                filters.append(f"Or: {len(node.value)}")
+
+        case NameChoiceCondition():
+            filters.extend(_name_choice_filters(node.field, node.value))
+
+            if len(node.value) > 1:
+                filters.append(f"Or: {len(node.value)}")
 
         case SiteChoiceCondition():
             raise AssertionError("Site conditions are not fully supported as filter nodes.")

@@ -10,6 +10,7 @@ import type { HorizontalLine, Metric, TimeRange } from '../../components/TimeSer
 import type { ConsolidationFn } from '../../components/consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../../components/constants'
 import type { RequestedTimeRange } from '../../types'
+import { drawnTimeRange, withEdgeNeighbours } from '../../utils/timeRange'
 import {
   type CustomGraphMetric,
   type FetchCustomGraphDataRequest,
@@ -40,7 +41,8 @@ export interface UseCustomGraphDataOptions {
 
 export interface OverviewData {
   metrics: CustomGraphMetric[]
-  timeRange: TimeRange
+  dataTimeRange: TimeRange
+  viewTimeRange: TimeRange
 }
 
 export interface CustomGraphData {
@@ -150,6 +152,11 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     const range = options.getRequestedTimeRange()
     const canvasWidth = Math.max(1, options.getFigureWidth() - CANVAS_MARGIN_HORIZONTAL)
     const step = Math.max(60, Math.ceil((range.end - range.start) / canvasWidth))
+    const overviewRequest = overviewTimeRange(
+      { start: range.start, end: range.end, step },
+      Math.floor(Date.now() / 1000),
+      canvasWidth
+    )
     const content: FetchCustomGraphDataRequest['content'] = {
       graph_options: options.getGraphOptions(),
       data_sources: dataSources
@@ -162,17 +169,13 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
       const [main, overviewResponse] = await Promise.all([
         fetchCustomGraphData({
           content,
-          requested_time_range: { start: range.start, end: range.end, step },
+          requested_time_range: withEdgeNeighbours({ start: range.start, end: range.end, step }),
           consolidation_function: consolidationFunction
         }),
         options.withOverview()
           ? fetchCustomGraphData({
               content,
-              requested_time_range: overviewTimeRange(
-                { start: range.start, end: range.end, step },
-                Math.floor(Date.now() / 1000),
-                canvasWidth
-              ),
+              requested_time_range: overviewRequest,
               consolidation_function: consolidationFunction
             })
           : null
@@ -192,7 +195,11 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
       overview.value =
         overviewResponse === null
           ? undefined
-          : { metrics: [...overviewResponse.metrics], timeRange: overviewResponse.time_range }
+          : {
+              metrics: [...overviewResponse.metrics],
+              dataTimeRange: overviewResponse.time_range,
+              viewTimeRange: drawnTimeRange(overviewRequest, overviewResponse.time_range)
+            }
       // The overview repeats the main fetch's diagnostics, so only the main response is read.
       partialErrors.value = [...main.errors]
       warnings.value = [...main.warnings]

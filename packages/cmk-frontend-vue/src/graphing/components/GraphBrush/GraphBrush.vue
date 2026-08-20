@@ -27,6 +27,7 @@ import { computeSparklineBands, formatOverviewExtent, formatWindowPreview } from
 const props = defineProps<{
   metrics: Metric[] // coarse overview series
   domain: TimeRange // strip extent
+  dataDomain: TimeRange
   window: { start: number; end: number } // selection = renderer viewTimeRange
   minSpan: number | null
   width: number // figure width (px)
@@ -73,13 +74,18 @@ const sparklinePaths = computed<{ d: string; color: string }[]>(() => {
   if (sampleCount === 0) {
     return []
   }
-  const sampleTimes = Array.from({ length: sampleCount }, (_, i) => timestampAt(props.domain, i))
+  const sampleTimes = Array.from({ length: sampleCount }, (_, i) =>
+    timestampAt(props.dataDomain, i)
+  )
+  const withinStrip = (i: number) =>
+    sampleTimes[i]! >= props.domain.start && sampleTimes[i]! <= props.domain.end
   const span = yMax - yMin || 1
   // Maps the value domain into the strip (STRIP_TOP..STRIP_BOTTOM); the move-bar sits below it.
   const yPx = (value: number) => STRIP_BOTTOM - ((value - yMin) / span) * STRIP_H
 
   return bands.map(({ lower, upper, color }) => {
     const gen = area<number>()
+      .defined((_, i) => withinStrip(i))
       .x((_, i) => toPx(sampleTimes[i]!))
       .y0((_, i) => yPx(lower[i]!))
       .y1((_, i) => yPx(upper[i]!))

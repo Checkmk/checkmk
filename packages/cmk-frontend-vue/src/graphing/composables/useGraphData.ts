@@ -11,6 +11,7 @@ import { type Ref, computed, readonly, ref, watch } from 'vue'
 import type { HorizontalLine, Metric, TimeRange } from '../components/TimeSeriesGraph'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../components/consolidation'
 import type { RequestedTimeRange } from '../types'
+import { withEdgeNeighbours } from '../utils/timeRange'
 
 // The fetch endpoint only needs the self-contained definition (the graph kind is embedded in
 // `internal`); a caller holding a full render shell additionally contributes its header title to
@@ -167,7 +168,9 @@ export function useGraphData(
     const range = getRequestedTimeRange()
     const step = computeStep(range.start, range.end, getCanvasWidth())
     lastRequestedStep = step
-    return { requestedTimeRange: { start: range.start, end: range.end, step } }
+    return {
+      requestedTimeRange: withEdgeNeighbours({ start: range.start, end: range.end, step })
+    }
   }
 
   async function fetchOne(

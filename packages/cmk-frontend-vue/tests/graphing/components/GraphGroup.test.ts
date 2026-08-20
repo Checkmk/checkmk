@@ -114,6 +114,16 @@ const requestedRanges = (): { start: number; end: number; step: number }[] =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postSpy.mock.calls.map((call: any) => call[1].body.requested_time_range)
 
+const LEADING_STEPS_FETCHED_PAST_VIEW = 2
+const TRAILING_STEPS_FETCHED_PAST_VIEW = 1
+
+const drawnRanges = (): { start: number; end: number; step: number }[] =>
+  requestedRanges().map(({ start, end, step }) => ({
+    start: start + LEADING_STEPS_FETCHED_PAST_VIEW * step,
+    end: end - TRAILING_STEPS_FETCHED_PAST_VIEW * step,
+    step
+  }))
+
 const requestedConsolidationsByGraphTitle = (): string[] =>
   postSpy.mock.calls.map(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -282,7 +292,7 @@ test('a fast refetch swaps straight to the new panels without a skeleton', async
   await vi.advanceTimersByTimeAsync(999)
 
   // The assertions below would hold just as well had the pan never fetched at all.
-  expect(requestedRanges()).toContainEqual({ start: 1_500, end: 2_500, step: 60 })
+  expect(drawnRanges()).toContainEqual({ start: 1_500, end: 2_500, step: 60 })
   expect(skeletons()).toHaveLength(0)
   expect(panels()).toHaveLength(1)
   expect(group()).toHaveAttribute('aria-busy', 'false')
@@ -470,7 +480,7 @@ test('fetches the graph with the initial range and the overview with the multipl
   const body = postSpy.mock.calls[0][1].body
   expect(JSON.parse(body.internal).graphs).toEqual([])
   expect(body.consolidation_function).toBe('max')
-  const ranges = requestedRanges()
+  const ranges = drawnRanges()
   expect(ranges).toContainEqual({ start: 1_000, end: 2_000, step: 60 })
   // 1000s active span → 7× multiplier → 7000s overview domain centered on the range.
   expect(ranges).toContainEqual({ start: -2_000, end: 5_000, step: 60 })
@@ -534,7 +544,7 @@ test('refetches graph and overview when the global picker publishes a range', as
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(4))
   const start = epochSeconds(published.from)
   const end = epochSeconds(published.to)
-  const ranges = requestedRanges().slice(2)
+  const ranges = drawnRanges().slice(2)
   expect(ranges).toContainEqual(expect.objectContaining({ start, end }))
   // 24h active span → 7× multiplier → the overview reseeds symmetrically around it.
   expect(ranges).toContainEqual(
@@ -551,7 +561,7 @@ test('a same-span panel commit (move) refetches the graph but keeps the overview
   // Only the main graph refetches; the moved window {1500, 2500} sits well inside
   // the overview domain {-2000, 5000}, so the overview must not be requested again.
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(3))
-  expect(requestedRanges()[2]).toEqual({ start: 1_500, end: 2_500, step: 60 })
+  expect(drawnRanges()[2]).toEqual({ start: 1_500, end: 2_500, step: 60 })
   expect(postSpy).toHaveBeenCalledTimes(3)
 })
 
@@ -562,7 +572,7 @@ test('a span-changing panel commit (resize/zoom) reseeds the overview domain', a
   await fireEvent.click(await screen.findByText('zoom'))
 
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(4))
-  const ranges = requestedRanges().slice(2)
+  const ranges = drawnRanges().slice(2)
   expect(ranges).toContainEqual({ start: 100, end: 200, step: 60 })
   // 100s span → 7× multiplier → 700s overview domain centered on the new range.
   expect(ranges).toContainEqual({ start: -200, end: 500, step: 60 })

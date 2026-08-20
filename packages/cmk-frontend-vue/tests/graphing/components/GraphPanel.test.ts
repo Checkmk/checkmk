@@ -35,6 +35,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
     template: `<div data-testid="time-series-graph">
       <span>{{ metrics.map((m) => m.metadata.title).join(",") }}</span>
       <span data-testid="view-start">{{ view_time_range.start }}</span>
+      <span data-testid="view-end">{{ view_time_range.end }}</span>
       <span data-testid="inspecting">{{ inspecting }}</span>
       <span data-testid="highlighted">{{ highlightedMetricName }}</span>
       <span data-testid="show-pin">{{ pinEnabled }}</span>
@@ -173,6 +174,54 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+const MID_INTERVAL_REQUEST: RequestedTimeRange = { start: 1_781_524_937, end: 1_781_528_237 }
+const GRID_BOUNDARY_AT_OR_BEFORE_REQUEST_START = 1_781_524_800
+const NEWEST_GRID_BOUNDARY_THE_REQUEST_COVERS = 1_781_528_100
+const RESOLUTION_OF_THE_SERVED_STEP = /5 min/
+const ANY_RESOLUTION = /min/
+
+function renderPanelForRequest(overrides: Partial<GraphPanelProps> = {}) {
+  return render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: MID_INTERVAL_REQUEST,
+      timePickerRequests: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE,
+      ...overrides
+    }
+  })
+}
+
+test('starts the drawn window on the sample boundary at or before the one requested', () => {
+  renderPanelForRequest()
+
+  expect(screen.getByTestId('view-start')).toHaveTextContent(
+    String(GRID_BOUNDARY_AT_OR_BEFORE_REQUEST_START)
+  )
+})
+
+test('ends the drawn window on the newest sample boundary the request covers', () => {
+  renderPanelForRequest()
+
+  expect(screen.getByTestId('view-end')).toHaveTextContent(
+    String(NEWEST_GRID_BOUNDARY_THE_REQUEST_COVERS)
+  )
+})
+
+test('states the resolution the fetch resolved once one has landed', async () => {
+  renderPanelForRequest({ showTimestamp: true })
+
+  expect(await screen.findByText(RESOLUTION_OF_THE_SERVED_STEP)).toBeInTheDocument()
+})
+
+test('states no resolution until a fetch has resolved one', () => {
+  renderPanelForRequest({ showTimestamp: true, dataTimeRange: undefined })
+
+  expect(screen.queryByText(ANY_RESOLUTION)).not.toBeInTheDocument()
+})
+
 test('does not render the legend when showLegend is not set', () => {
   render(GraphPanel, {
     props: {
@@ -211,7 +260,7 @@ test('renders the context view when showBrush is set and an overview is supplied
       timePickerRequests: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: { ...INTERACTION_NONE, brush: 'enabled' },
-      overview: { metrics: [CPU], timeRange: TIME_RANGE }
+      overview: { metrics: [CPU], dataTimeRange: TIME_RANGE, viewTimeRange: TIME_RANGE }
     }
   })
   expect(document.querySelector('.graphing-graph-brush')).toBeInTheDocument()
@@ -227,7 +276,7 @@ function renderPanelWithBrush() {
       timePickerRequests: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: { ...INTERACTION_NONE, brush: 'enabled' },
-      overview: { metrics: [CPU], timeRange: TIME_RANGE }
+      overview: { metrics: [CPU], dataTimeRange: TIME_RANGE, viewTimeRange: TIME_RANGE }
     }
   })
 }
@@ -291,7 +340,7 @@ test('does not render the context view when showBrush is not set', () => {
       timePickerRequests: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
-      overview: { metrics: [CPU], timeRange: TIME_RANGE }
+      overview: { metrics: [CPU], dataTimeRange: TIME_RANGE, viewTimeRange: TIME_RANGE }
     }
   })
   expect(document.querySelector('.graphing-graph-brush')).not.toBeInTheDocument()

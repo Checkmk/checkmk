@@ -24,6 +24,7 @@ import { useGraphNotice } from '../composables/useGraphNotice'
 import { useLocalTimeRange } from '../composables/useLocalTimeRange'
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
 import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
+import { drawnTimeRange } from '../utils/timeRange'
 import GraphNotice from './GraphNotice.vue'
 import GraphPanel from './GraphPanel.vue'
 import GraphSkeleton from './GraphSkeleton.vue'
@@ -147,7 +148,11 @@ const { graphs: overviewGraphs, reload: reloadOverview } = useGraphData(
   () => props.combination_mode
 )
 const overviews = computed(() =>
-  overviewGraphs.value.map((graph) => ({ metrics: graph.metrics, timeRange: graph.timeRange }))
+  overviewGraphs.value.map((graph) => ({
+    metrics: graph.metrics,
+    dataTimeRange: graph.timeRange,
+    viewTimeRange: drawnTimeRange(brushCoordination.brushDomain.value, graph.timeRange)
+  }))
 )
 
 // A refetch is skeletonised too: the curves still on screen are the previous range's, so leaving

@@ -47,6 +47,8 @@ const UNIT: components['schemas']['ApiUnitFormat'] = {
 }
 
 const REFRESH_INTERVAL_MS = 60_000
+const LEADING_STEPS_FETCHED_PAST_VIEW = 2
+const TRAILING_STEPS_FETCHED_PAST_VIEW = 1
 
 const FETCHED = {
   title: 'CPU utilization',
@@ -251,8 +253,11 @@ test('a pan fetches the panned window', async () => {
   await fireEvent.click(screen.getByTestId('emit-pan'))
 
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
-  const requestedRange = postSpy.mock.calls[1][1].body.requested_time_range
-  expect(requestedRange).toMatchObject({ start: 500, end: 900 })
+  const { start, end, step } = postSpy.mock.calls[1][1].body.requested_time_range
+  expect({
+    start: start + LEADING_STEPS_FETCHED_PAST_VIEW * step,
+    end: end - TRAILING_STEPS_FETCHED_PAST_VIEW * step
+  }).toEqual({ start: 500, end: 900 })
 })
 
 test('a reset after a pan re-resolves the configured range', async () => {

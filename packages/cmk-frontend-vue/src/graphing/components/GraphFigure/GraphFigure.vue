@@ -16,10 +16,11 @@ import { useGraphInteraction } from '../../composables/useGraphInteraction'
 import { useGraphNotice } from '../../composables/useGraphNotice'
 import { useGraphVisibility } from '../../composables/useGraphVisibility'
 import type { RequestedTimeRange } from '../../types.ts'
+import { drawnTimeRange } from '../../utils/timeRange'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
 import GraphNotice from '../GraphNotice.vue'
 import GraphTimestamp from '../GraphTimestamp.vue'
-import TimeSeriesGraph, { type GraphOptions, type Size } from '../TimeSeriesGraph'
+import TimeSeriesGraph, { type GraphOptions, type Size, type TimeRange } from '../TimeSeriesGraph'
 import { deriveYAxis } from '../TimeSeriesGraph/yAxis'
 import { DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../constants'
@@ -124,6 +125,11 @@ const onCommittedTimeRange = (range: RequestedTimeRange) => {
   timer.stop()
 }
 
+const baselineTimeRange = computed<TimeRange | undefined>(() => {
+  const served = graph.value?.timeRange
+  return served && drawnTimeRange(requestedTimeRange.value, served)
+})
+
 const {
   viewTimeRange,
   viewValueRange,
@@ -133,7 +139,7 @@ const {
   onReset,
   abandonInspection
 } = useGraphInteraction(
-  () => graph.value?.timeRange,
+  () => baselineTimeRange.value,
   () => false,
   () => requestedTimeRange.value,
   onCommittedTimeRange
@@ -203,7 +209,7 @@ onBeforeUnmount(() => {
     />
     <template v-else-if="graph">
       <div v-if="showTimestamp || showBurgerMenu" class="graphing-graph-figure__header">
-        <GraphTimestamp v-if="showTimestamp" :time-range="graph.timeRange" />
+        <GraphTimestamp v-if="showTimestamp && baselineTimeRange" :time-range="baselineTimeRange" />
         <GraphBurgerMenu
           v-if="showBurgerMenu"
           :aria-label="_t('Action menu')"

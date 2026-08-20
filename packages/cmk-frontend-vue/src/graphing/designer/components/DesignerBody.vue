@@ -114,7 +114,8 @@ const drawnOverview = computed(() => {
     ? undefined
     : {
         metrics: overview.metrics.filter((metric) => !hiddenSourceIds.value.has(metric.source_id)),
-        timeRange: overview.timeRange
+        dataTimeRange: overview.dataTimeRange,
+        viewTimeRange: overview.viewTimeRange
       }
 })
 

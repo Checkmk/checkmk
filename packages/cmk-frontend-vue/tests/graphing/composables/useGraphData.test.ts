@@ -9,6 +9,7 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { type Ref, defineComponent, h } from 'vue'
 
+import { timestampAt } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
 import { type GraphDataFetcher, useGraphData } from '@/graphing/composables/useGraphData'
 import type { RequestedTimeRange } from '@/graphing/types'
 
@@ -129,15 +130,31 @@ describe('useGraphData — requested resolution', () => {
     expect(samplesPerColumn).toBeCloseTo(4, 1)
   })
 
-  test('a window reaching past the retained data is asked for verbatim', async () => {
-    // Narrowing here would redraw a different period than the picker states, so only the step
-    // is ever derived.
+  test('a window reaching past the retained data keeps its full span', async () => {
     const fourHundredDays = { start: 0, end: 400 * 86_400 }
 
     fetchFor(fourHundredDays, 750)
 
     const { start, end } = await requestedTimeRange()
-    expect({ start, end }).toEqual(fourHundredDays)
+    expect(start).toBeLessThanOrEqual(fourHundredDays.start)
+    expect(end).toBeGreaterThanOrEqual(fourHundredDays.end)
+  })
+
+  test('asks for a sample past the end of the window it will draw', async () => {
+    const window = { start: 10_000, end: 20_000 }
+
+    fetchFor(window, 750)
+
+    expect((await requestedTimeRange()).end).toBeGreaterThan(window.end)
+  })
+
+  test('asks far enough back that the first sample falls before the window starts', async () => {
+    const window = { start: 10_000, end: 20_000 }
+    const firstValueIndex = 0
+
+    fetchFor(window, 750)
+
+    expect(timestampAt(await requestedTimeRange(), firstValueIndex)).toBeLessThan(window.start)
   })
 })
 

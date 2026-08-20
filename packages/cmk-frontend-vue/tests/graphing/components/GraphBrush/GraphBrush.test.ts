@@ -34,6 +34,7 @@ function renderBrush(overrides: Record<string, unknown> = {}) {
     props: {
       metrics: [],
       domain: DOMAIN,
+      dataDomain: DOMAIN,
       window: { start: 1400, end: 1600 },
       minSpan: null,
       width: 300,
@@ -90,4 +91,19 @@ test('fills the waveform out to the right edge of the track', () => {
   const { container } = renderBrush({ metrics })
 
   expect(Math.max(...waveformXs(container))).toBeCloseTo(PLOT_LEFT + PLOT_WIDTH, 5)
+})
+
+test('leaves the samples the fetch reached past the strip off the waveform', () => {
+  const STEPS_FETCHED_PAST_THE_STRIP = 2
+  const dataDomainReachingPastTheStrip = {
+    ...DOMAIN,
+    end: DOMAIN.end + STEPS_FETCHED_PAST_THE_STRIP * DOMAIN.step
+  }
+  const metrics = [makeMetric(samplesFilling(dataDomainReachingPastTheStrip))]
+
+  const { container } = renderBrush({ metrics, dataDomain: dataDomainReachingPastTheStrip })
+
+  const drawn = waveformXs(container)
+  expect(drawn).not.toHaveLength(0)
+  expect(Math.max(...drawn)).toBeLessThanOrEqual(PLOT_LEFT + PLOT_WIDTH)
 })

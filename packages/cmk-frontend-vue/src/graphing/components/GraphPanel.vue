@@ -21,6 +21,7 @@ import type {
   TimeRange,
   TimeRangeCommitKind
 } from '../types.ts'
+import { drawnTimeRange } from '../utils/timeRange'
 import GraphBrush from './GraphBrush/GraphBrush.vue'
 import TimeSeriesGraph, { type ZoomPayload } from './TimeSeriesGraph'
 import { deriveYAxis } from './TimeSeriesGraph/yAxis'
@@ -43,10 +44,14 @@ const emit = defineEmits<GraphPanelEmits>()
 // curves at all and nothing reads it.
 const NOMINAL_STEP_SECONDS = 60
 
-// The window the frame is drawn over: what the data covers once fetched, and until then what was
-// asked for, so a panel with nothing to plot still draws its axes rather than empty space.
-const frameTimeRange = computed<TimeRange>(
-  () => props.dataTimeRange ?? { ...props.requestedTimeRange, step: NOMINAL_STEP_SECONDS }
+const baselineTimeRange = computed<TimeRange>(() =>
+  props.dataTimeRange
+    ? drawnTimeRange(props.requestedTimeRange, props.dataTimeRange)
+    : { ...props.requestedTimeRange, step: NOMINAL_STEP_SECONDS }
+)
+
+const headerTimeRange = computed<TimeRange | undefined>(() =>
+  props.dataTimeRange ? baselineTimeRange.value : undefined
 )
 
 const {
@@ -63,7 +68,7 @@ const {
   onPinCreate,
   clearPin
 } = useGraphInteraction(
-  () => frameTimeRange.value, // getBaseline
+  () => baselineTimeRange.value, // getBaseline
   () => props.interaction.pin === 'enabled', // getShowPin
   () => props.requestedTimeRange, // getRequestedTimeRange
   updateTimeRange // onTimeRangeCommit
@@ -190,7 +195,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
           :class="{ 'graphing-graph-panel__header--compact': headerIsCompact }"
           :title="title"
           :show-title="showTitle"
-          :time-range="dataTimeRange"
+          :time-range="headerTimeRange"
           :show-timestamp="showTimestamp"
           :show-controls="zoomControlsEnabled"
           :show-consolidation="showConsolidation"
@@ -249,7 +254,8 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
           v-if="interaction.brush === 'enabled' && overview && dataTimeRange"
           class="graphing-graph-panel__brush"
           :metrics="overview.metrics"
-          :domain="overview.timeRange"
+          :domain="overview.viewTimeRange"
+          :data-domain="overview.dataTimeRange"
           :window="viewTimeRange"
           :min-span="null"
           :width="figureWidth"

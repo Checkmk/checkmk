@@ -72,8 +72,7 @@ export interface GraphPanelProps {
   showConsolidation?: boolean
   showLegend?: boolean
   legendPosition?: 'bottom' | 'right'
-  // Coarse, wider, end-anchored dataset for the navigator brush (separate fetch / mock).
-  overview?: { metrics: Metric[]; timeRange: TimeRange } | undefined
+  overview?: { metrics: Metric[]; dataTimeRange: TimeRange; viewTimeRange: TimeRange } | undefined
   addTo?: AddTo | null | undefined
   headerIsCompact?: boolean
 }

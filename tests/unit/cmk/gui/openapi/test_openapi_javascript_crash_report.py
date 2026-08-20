@@ -52,7 +52,7 @@ def test_create_javascript_crash_report(clients: ClientRegistry) -> None:
     assert response.json["domainType"] == "javascript_crash_report"
     assert response.json["extensions"]["crash_type"] == "javascript"
     assert response.json["extensions"]["crash_report_url"] == (
-        f"crash.py?component=javascript&ident={response.json['id']}"
+        f"crash.py?crash_id={response.json['id']}&site=NO_SITE"
     )
 
 

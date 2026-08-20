@@ -17,7 +17,7 @@ class JavascriptCrashReportExtensions:
     )
     crash_report_url: str = api_field(
         description="The site local URL of the page showing the stored crash report.",
-        example="crash.py?component=javascript&ident=dc9e0d0b-1b5b-11f0-8c1f-0242ac110002",
+        example="crash.py?crash_id=dc9e0d0b-1b5b-11f0-8c1f-0242ac110002&site=heute",
     )
 
 

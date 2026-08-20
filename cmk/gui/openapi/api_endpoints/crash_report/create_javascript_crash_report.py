@@ -63,7 +63,7 @@ def create_javascript_crash_report_v1(
             links=[],
             extensions=JavascriptCrashReportExtensions(
                 crash_type=crash.type(),
-                crash_report_url=crash.local_crash_report_url(),
+                crash_report_url=crash.url(),
             ),
         ),
         status_code=201,

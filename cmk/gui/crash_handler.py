@@ -27,7 +27,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.web.utils import escaping
-from cmk.web.utils.urls import makeuri, requested_file_name
+from cmk.web.utils.urls import makeuri, makeuri_contextless, requested_file_name
 
 
 class DashletDetails(TypedDict):
@@ -185,6 +185,16 @@ class JavascriptCrashReport(ABCCrashReport[JavascriptDetails]):
         crash_info["exc_traceback"] = cls.parse_stack(stack)
         crash_info["local_vars"] = ""
         return cls(crash_report_base_path=crash_report_base_path, crash_info=crash_info)
+
+    def url(self) -> str:
+        return makeuri_contextless(
+            request,
+            [
+                ("site", str(omd_site())),
+                ("crash_id", self.ident_to_text()),
+            ],
+            filename="crash.py",
+        )
 
     @classmethod
     def parse_stack(cls, stack: str) -> Sequence[tuple[str, int, str, str]]:

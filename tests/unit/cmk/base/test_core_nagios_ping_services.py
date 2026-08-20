@@ -23,108 +23,76 @@ from cmk.utils import ip_lookup
 from tests.testlib.common.empty_config import EMPTY_CONFIG, EMPTY_NAGIOS_CORE_CONFIG
 
 
+def _nagios_ping_service(*, family: Literal[4, 6], ip: str, description: str) -> str:
+    ipv6_flag = "-6 " if family == 6 else ""
+    return (
+        "define service {\n"
+        f"  check_command                 check-mk-ping!{ipv6_flag}"
+        f"-w 200.00,80.00% -c 500.00,100.00% {ip}\n"
+        "  check_interval                1.0\n"
+        "  host_name                     my_host\n"
+        f"  service_description           {description}\n"
+        "  use                           check_mk_pingonly\n"
+        "}"
+    )
+
+
 def test_fallback_ping_service_for_single_stack_host() -> None:
     service_config = _generated_ping_service_config(
         host_attrs={
-            "alias": "my_host_alias",
             "_ADDRESS_4": "127.0.0.1",
             "address": "127.0.0.1",
             "_ADDRESS_FAMILY": "4",
-            "display_name": "my_host",
         },
         ip_stack_config=ip_lookup.IPStackConfig.IPv4,
         host_ip_family=socket.AddressFamily.AF_INET,
     )
 
-    assert service_config == (
-        "define service {\n"
-        "  check_command                 check-mk-ping!-w 200.00,80.00% -c 500.00,100.00% 127.0.0.1\n"
-        "  check_interval                1.0\n"
-        "  host_name                     my_host\n"
-        "  service_description           PING\n"
-        "  use                           check_mk_pingonly\n"
-        "}\n"
-        "\n"
+    assert (
+        service_config
+        == _nagios_ping_service(family=4, ip="127.0.0.1", description="PING") + "\n\n"
     )
 
 
 def test_secondary_ping_service_is_ipv6_when_the_primary_is_ipv4() -> None:
     service_config = _generated_ping_service_config(
         host_attrs={
-            "alias": "my_host_alias",
             "_ADDRESS_4": "127.0.0.1",
             "_ADDRESS_6": "::1",
             "address": "127.0.0.1",
             "_ADDRESS_FAMILY": "4",
-            "display_name": "my_host",
         },
         ip_stack_config=ip_lookup.IPStackConfig.DUAL_STACK,
         host_ip_family=socket.AddressFamily.AF_INET,
     )
 
-    assert service_config == (
-        "define service {\n"
-        "  check_command                 check-mk-ping!-w 200.00,80.00% -c 500.00,100.00% 127.0.0.1\n"
-        "  check_interval                1.0\n"
-        "  host_name                     my_host\n"
-        "  service_description           PING\n"
-        "  use                           check_mk_pingonly\n"
-        "}\n"
-        "\n"
-        "define service {\n"
-        "  check_command                 check-mk-ping!-6 -w 200.00,80.00% -c 500.00,100.00% ::1\n"
-        "  check_interval                1.0\n"
-        "  host_name                     my_host\n"
-        "  service_description           PING IPv6\n"
-        "  use                           check_mk_pingonly\n"
-        "}\n"
-        "\n"
-    )
+    assert _nagios_ping_service(family=4, ip="127.0.0.1", description="PING") in service_config
+    assert _nagios_ping_service(family=6, ip="::1", description="PING IPv6") in service_config
 
 
 def test_secondary_ping_service_is_ipv4_when_the_primary_is_ipv6() -> None:
     service_config = _generated_ping_service_config(
         host_attrs={
-            "alias": "my_host_alias",
             "_ADDRESS_4": "127.0.0.1",
             "_ADDRESS_6": "::1",
             "address": "::1",
             "_ADDRESS_FAMILY": "6",
-            "display_name": "my_host",
         },
         ip_stack_config=ip_lookup.IPStackConfig.DUAL_STACK,
         host_ip_family=socket.AddressFamily.AF_INET6,
     )
 
-    assert service_config == (
-        "define service {\n"
-        "  check_command                 check-mk-ping!-6 -w 200.00,80.00% -c 500.00,100.00% ::1\n"
-        "  check_interval                1.0\n"
-        "  host_name                     my_host\n"
-        "  service_description           PING\n"
-        "  use                           check_mk_pingonly\n"
-        "}\n"
-        "\n"
-        "define service {\n"
-        "  check_command                 check-mk-ping!-w 200.00,80.00% -c 500.00,100.00% 127.0.0.1\n"
-        "  check_interval                1.0\n"
-        "  host_name                     my_host\n"
-        "  service_description           PING IPv4\n"
-        "  use                           check_mk_pingonly\n"
-        "}\n"
-        "\n"
-    )
+    assert _nagios_ping_service(family=6, ip="::1", description="PING") in service_config
+    assert _nagios_ping_service(family=4, ip="127.0.0.1", description="PING IPv4") in service_config
 
 
-def test_disabled_services_does_not_reach_the_secondary_ping() -> None:
+def test_disabled_services_suppresses_the_secondary_ping() -> None:
     service_config = _generated_ping_service_config(
         host_attrs={
-            "alias": "my_host_alias",
             "_ADDRESS_4": "127.0.0.1",
             "_ADDRESS_6": "::1",
             "address": "127.0.0.1",
             "_ADDRESS_FAMILY": "4",
-            "display_name": "my_host",
         },
         ip_stack_config=ip_lookup.IPStackConfig.DUAL_STACK,
         host_ip_family=socket.AddressFamily.AF_INET,
@@ -137,35 +105,48 @@ def test_disabled_services_does_not_reach_the_secondary_ping() -> None:
         ],
     )
 
-    assert service_config == (
-        "define service {\n"
-        "  check_command                 check-mk-ping!-w 200.00,80.00% -c 500.00,100.00% 127.0.0.1\n"
-        "  check_interval                1.0\n"
-        "  host_name                     my_host\n"
-        "  service_description           PING\n"
-        "  use                           check_mk_pingonly\n"
-        "}\n"
-        "\n"
-        "define service {\n"
-        "  check_command                 check-mk-ping!-6 -w 200.00,80.00% -c 500.00,100.00% ::1\n"
-        "  check_interval                1.0\n"
-        "  host_name                     my_host\n"
-        "  service_description           PING IPv6\n"
-        "  use                           check_mk_pingonly\n"
-        "}\n"
-        "\n"
+    assert (
+        service_config
+        == _nagios_ping_service(family=4, ip="127.0.0.1", description="PING") + "\n\n"
     )
+
+
+def test_disabled_services_leaves_no_ping_service_when_the_host_has_other_services() -> None:
+    service_config = _generated_ping_service_config(
+        host_attrs={
+            "_ADDRESS_4": "127.0.0.1",
+            "_ADDRESS_6": "::1",
+            "address": "127.0.0.1",
+            "_ADDRESS_FAMILY": "4",
+        },
+        ip_stack_config=ip_lookup.IPStackConfig.DUAL_STACK,
+        host_ip_family=socket.AddressFamily.AF_INET,
+        ignored_services=[
+            {
+                "id": "disable-ping-ipv6",
+                "value": True,
+                "condition": {"service_description": [{"$regex": "PING IPv6"}]},
+            }
+        ],
+        custom_checks=[
+            {
+                "id": "my-custom-check",
+                "value": {"service_description": "My custom check", "command_line": "echo hi"},
+                "condition": {},
+            }
+        ],
+    )
+
+    assert "check-mk-ping" not in service_config
 
 
 def test_no_fallback_ping_service_for_host_with_other_services() -> None:
     service_config = _generated_ping_service_config(
         host_attrs={
-            "alias": "my_host_alias",
             "_ADDRESS_4": "127.0.0.1",
             "_ADDRESS_6": "::1",
             "address": "127.0.0.1",
             "_ADDRESS_FAMILY": "4",
-            "display_name": "my_host",
         },
         ip_stack_config=ip_lookup.IPStackConfig.DUAL_STACK,
         host_ip_family=socket.AddressFamily.AF_INET,
@@ -205,12 +186,10 @@ def test_no_fallback_ping_service_for_host_with_other_services() -> None:
 def test_secondary_ping_service_replaced_by_preconfigured_service() -> None:
     service_config = _generated_ping_service_config(
         host_attrs={
-            "alias": "my_host_alias",
             "_ADDRESS_4": "127.0.0.1",
             "_ADDRESS_6": "::1",
             "address": "127.0.0.1",
             "_ADDRESS_FAMILY": "4",
-            "display_name": "my_host",
         },
         ip_stack_config=ip_lookup.IPStackConfig.DUAL_STACK,
         host_ip_family=socket.AddressFamily.AF_INET,

@@ -26,7 +26,7 @@ from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.sites import SitesConfigFile
 from cmk.livestatus_client import SAMLAuthenticationEntry, SiteConfiguration
 from cmk.utils import paths
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 
 DOMAIN_TYPE = "site_connection"
 
@@ -63,6 +63,26 @@ def test_get_site_connections(clients: ClientRegistry) -> None:
     resp = clients.SiteManagement.get_all()
     assert resp.json["domainType"] == DOMAIN_TYPE
     assert resp.json["value"][0]["id"] == "NO_SITE"
+
+
+def test_get_site_connections_expose_authentication_connections(
+    clients: ClientRegistry,
+) -> None:
+    """A listed site carries `authentication_connections` too (werk 18500).
+
+    The werk names the collection endpoint as gaining the key, but
+    `test_get_site_connections` only pins the envelope -- nothing asserted that a
+    listed site actually carries the key.
+    """
+    config, site_id = _default_config_with_site_id()
+    config["configuration_connection"]["authentication_connections"] = {"type": "disabled"}
+    clients.SiteManagement.create(site_config=config)
+
+    listed = {site["id"]: site for site in clients.SiteManagement.get_all().json["value"]}
+    assert site_id in listed, listed.keys()
+    assert listed[site_id]["extensions"]["configuration_connection"][
+        "authentication_connections"
+    ] == {"type": "disabled"}
 
 
 def test_login_replication_enabled(
@@ -291,6 +311,58 @@ def test_create_site_connection_missing_config(
         site_config=config,
         expect_ok=False,
     ).assert_status_code(400)
+
+
+AUTHENTICATION_CONNECTIONS_FIELD = (
+    "body.site_config.configuration_connection.authentication_connections"
+)
+
+
+def _assert_authentication_connections_missing(resp: Response) -> None:
+    fields = resp.json["fields"]
+    assert AUTHENTICATION_CONNECTIONS_FIELD in fields, fields
+    assert fields[AUTHENTICATION_CONNECTIONS_FIELD]["type"] == "missing", fields
+
+
+def test_create_site_connection_requires_authentication_connections(
+    clients: ClientRegistry,
+) -> None:
+    """`authentication_connections` is required with no default (werk 18500).
+
+    The site schema was changed in place rather than behind a new endpoint, so a
+    client written before the werk must be rejected rather than silently given a
+    default for which connections may log in on the site.
+    """
+    config = _default_config()
+    del config["configuration_connection"]["authentication_connections"]
+    _assert_authentication_connections_missing(
+        clients.SiteManagement.create(
+            site_config=config,
+            expect_ok=False,
+        ).assert_status_code(400)
+    )
+
+
+def test_update_site_connection_requires_authentication_connections(
+    clients: ClientRegistry,
+) -> None:
+    """`authentication_connections` is required with no default (werk 18500).
+
+    A PUT replaces the whole site config, so a client written before the werk
+    cannot omit `authentication_connections` and keep the site's stored value --
+    there is no partial-update path.
+    """
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    del config["configuration_connection"]["authentication_connections"]
+    _assert_authentication_connections_missing(
+        clients.SiteManagement.update(
+            site_id=site_id,
+            site_config=config,
+            expect_ok=False,
+        ).assert_status_code(400)
+    )
 
 
 def test_create_then_get_site_connection(clients: ClientRegistry) -> None:
@@ -674,6 +746,27 @@ def test_update_site_connection_authentication_connections(clients: ClientRegist
 
     stored = SitesConfigFile().load_for_reading()[SiteId(site_id)]
     assert stored["authentication_connections"] == [("ldap", "LDAP_1")]
+
+
+def test_create_site_connection_authentication_connections_disabled(
+    clients: ClientRegistry,
+) -> None:
+    """`authentication_connections` can forbid LDAP and SAML login on a site (werk 18500).
+
+    The stored value has to stay the bare `"disabled"` string rather than an empty
+    list -- only that string resolves to no connection at all, which
+    tests/unit/cmk/gui/userdb/test_authentication_connections.py pins.
+    """
+    config, site_id = _default_config_with_site_id()
+    config["configuration_connection"]["authentication_connections"] = {"type": "disabled"}
+    clients.SiteManagement.create(site_config=config)
+
+    extensions = clients.SiteManagement.get(site_id=site_id).json["extensions"]
+    extensions.pop("logged_in", None)
+    assert extensions == config
+
+    stored = SitesConfigFile().load_for_reading()[SiteId(site_id)]
+    assert stored["authentication_connections"] == "disabled"
 
 
 @pytest.mark.parametrize(

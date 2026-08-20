@@ -31,7 +31,7 @@ describe('ServiceSlideInHeader', () => {
     render(ServiceSlideInHeader, { props: { service: makeService() } })
 
     expect(screen.getByText('CPU load')).toBeInTheDocument()
-    expect(screen.getByText('CRIT')).toBeInTheDocument()
+    expect(screen.getByText('CRITICAL')).toBeInTheDocument()
   })
 
   it('shows the name and state before the modes have loaded', () => {

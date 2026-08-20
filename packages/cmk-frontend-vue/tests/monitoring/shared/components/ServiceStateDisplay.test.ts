@@ -10,11 +10,22 @@ import ServiceStateDisplay from '@/monitoring/shared/components/ServiceStateDisp
 
 test.each<[ServiceState, string]>([
   ['OK', 'OK'],
-  ['WARN', 'WARN'],
-  ['CRIT', 'CRIT'],
-  ['UNKNOWN', 'UNKN']
-])('renders the short label for the %s state', (state, label) => {
+  ['WARN', 'WARNING'],
+  ['CRIT', 'CRITICAL'],
+  ['UNKNOWN', 'UNKNOWN']
+])('renders the label for the %s state', (state, label) => {
   render(ServiceStateDisplay, { props: { state } })
+
+  expect(screen.getByText(label)).toBeInTheDocument()
+})
+
+test.each<[ServiceState, string]>([
+  ['OK', 'OK'],
+  ['WARN', 'WA'],
+  ['CRIT', 'CR'],
+  ['UNKNOWN', 'UN']
+])('abbreviates the %s state when inline', (state, label) => {
+  render(ServiceStateDisplay, { props: { state, inline: true } })
 
   expect(screen.getByText(label)).toBeInTheDocument()
 })
@@ -22,6 +33,6 @@ test.each<[ServiceState, string]>([
 test('renders the pending label regardless of the state', () => {
   render(ServiceStateDisplay, { props: { state: 'CRIT', pending: true } })
 
-  expect(screen.getByText('PEND')).toBeInTheDocument()
-  expect(screen.queryByText('CRIT')).not.toBeInTheDocument()
+  expect(screen.getByText('PENDING')).toBeInTheDocument()
+  expect(screen.queryByText('CRITICAL')).not.toBeInTheDocument()
 })

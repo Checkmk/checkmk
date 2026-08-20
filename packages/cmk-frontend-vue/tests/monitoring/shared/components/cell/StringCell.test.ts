@@ -42,7 +42,7 @@ test('leaves a state marker as written unless the cell shows plugin output', () 
 test('renders the state markers of plugin output as badges', () => {
   const { container } = mountCell('load: 3.1(!)', { stateMarkers: true })
 
-  expect(container.querySelector('.cmk-tag--color-warning')).toHaveTextContent('WARN')
+  expect(container.querySelector('.monitoring-state-tag--warning')).toHaveTextContent('WA')
 })
 
 test('renders a button and forwards its click when the button prop is set', async () => {

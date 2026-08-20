@@ -74,8 +74,8 @@ describe('ServiceOverviewTab', () => {
       props: { data: makeOverview({ summary: 'load: 3.1(!), temp: 90(!!)' }) }
     })
 
-    expect(container.querySelector('.cmk-tag--color-warning')).toHaveTextContent('WARN')
-    expect(container.querySelector('.cmk-tag--color-danger')).toHaveTextContent('CRIT')
+    expect(container.querySelector('.monitoring-state-tag--warning')).toHaveTextContent('WA')
+    expect(container.querySelector('.monitoring-state-tag--critical')).toHaveTextContent('CR')
     expect(container.textContent).toContain('load: 3.1')
   })
 

@@ -12,17 +12,17 @@ describe('PluginOutput', () => {
   it('shows a state badge in place of each marker', () => {
     render(PluginOutput, { props: { output: 'load: 3.1(!), temp: 90(!!)' } })
 
-    expect(screen.getByText('WARN')).toBeInTheDocument()
-    expect(screen.getByText('CRIT')).toBeInTheDocument()
+    expect(screen.getByText('WA')).toBeInTheDocument()
+    expect(screen.getByText('CR')).toBeInTheDocument()
   })
 
   it('colors the badges by the state they mark', () => {
     const { container } = render(PluginOutput, { props: { output: 'a(!) b(!!) c(?) d(.)' } })
 
-    expect(container.querySelector('.cmk-tag--color-warning')).toHaveTextContent('WARN')
-    expect(container.querySelector('.cmk-tag--color-danger')).toHaveTextContent('CRIT')
-    expect(container.querySelector('.cmk-tag--color-unknown')).toHaveTextContent('UNKN')
-    expect(container.querySelector('.cmk-tag--color-success')).toHaveTextContent('OK')
+    expect(container.querySelector('.monitoring-state-tag--warning')).toHaveTextContent('WA')
+    expect(container.querySelector('.monitoring-state-tag--critical')).toHaveTextContent('CR')
+    expect(container.querySelector('.monitoring-state-tag--unknown')).toHaveTextContent('UN')
+    expect(container.querySelector('.monitoring-state-tag--ok')).toHaveTextContent('OK')
   })
 
   it('keeps the text around the markers', () => {

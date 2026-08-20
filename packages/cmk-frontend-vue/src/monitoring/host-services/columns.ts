@@ -107,8 +107,8 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       header: _t('State'),
       sortDescFirst: true,
       enableHiding: false,
-      minSize: 74,
-      maxSize: 100,
+      minSize: 86,
+      maxSize: 131,
       meta: { filter: stateFilter }
     },
     {

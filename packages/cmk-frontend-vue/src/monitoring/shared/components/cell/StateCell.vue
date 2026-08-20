@@ -22,26 +22,56 @@ interface BaseStateCellProps {
 export type StateCellProps = BaseStateCellProps &
   ({ kind?: 'host'; state: HostState } | { kind: 'service'; state: ServiceState })
 
+/** The column width from which a spelled-out state label fits beside its icons. */
+const SPELLED_OUT_LABEL_WIDTH = 131
+
 const { _t } = usei18n()
 
 const props = defineProps<StateCellProps>()
 </script>
 
 <template>
-  <BaseCell :column-id="columnId">
+  <BaseCell :column-id="columnId" :breakpoints="{ spelledOut: SPELLED_OUT_LABEL_WIDTH }">
     <template #default>
       <div class="monitoring-state-cell">
         <ServiceStateDisplay
           v-if="props.kind === 'service'"
           :state="props.state"
           :pending="pending"
+          :stale="stale"
+          abbreviated
         />
-        <HostStateDisplay v-else :state="props.state" :pending="pending" />
+        <HostStateDisplay
+          v-else
+          :state="props.state"
+          :pending="pending"
+          :stale="stale"
+          abbreviated
+        />
         <CmkMultitoneIcon
           v-if="stale"
+          class="monitoring-state-cell__mode-icon"
           name="stale"
           primary-color="font"
-          :title="_t('Stale state')"
+          :title="_t('Stale')"
+        />
+      </div>
+    </template>
+    <template #spelledOut>
+      <div class="monitoring-state-cell">
+        <ServiceStateDisplay
+          v-if="props.kind === 'service'"
+          :state="props.state"
+          :pending="pending"
+          :stale="stale"
+        />
+        <HostStateDisplay v-else :state="props.state" :pending="pending" :stale="stale" />
+        <CmkMultitoneIcon
+          v-if="stale"
+          class="monitoring-state-cell__mode-icon"
+          name="stale"
+          primary-color="font"
+          :title="_t('Stale')"
         />
       </div>
     </template>
@@ -52,8 +82,13 @@ const props = defineProps<StateCellProps>()
 .monitoring-state-cell {
   display: flex;
   flex-direction: row;
-  gap: var(--dimension-4);
+  gap: var(--dimension-3);
   align-items: center;
   justify-content: center;
+}
+
+.monitoring-state-cell__mode-icon {
+  width: var(--dimension-6);
+  height: var(--dimension-6);
 }
 </style>

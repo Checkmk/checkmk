@@ -4,68 +4,56 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkTag, { type Colors } from 'cmk-ui-library/components/CmkTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import type { HostState } from '@/monitoring/shared/api/types'
 
-const props = defineProps<{ state: HostState; pending?: boolean | undefined }>()
+import StateTag, { type StateTagSize, type StateTone } from './StateTag.vue'
+
+const props = defineProps<{
+  state: HostState
+  pending?: boolean | undefined
+  stale?: boolean | undefined
+  /** Two-letter labels, for a state column too tight to spell the state out. */
+  abbreviated?: boolean | undefined
+}>()
 
 const { _t } = usei18n()
 
 const stateLabel = computed<TranslatedString>(() => {
   if (props.pending) {
-    return _t('PEND')
+    return props.abbreviated ? _t('PD') : _t('PENDING')
   }
   switch (props.state) {
     case 'UP':
       return _t('UP')
     case 'DOWN':
-      return _t('DOWN')
+      return props.abbreviated ? _t('DO') : _t('DOWN')
     case 'UNREACHABLE':
     default:
-      return _t('UNREACH')
+      return props.abbreviated ? _t('UN') : _t('UNREACH')
   }
 })
 
-const stateColor = computed<Colors>(() => {
+const stateTone = computed<StateTone>(() => {
   if (props.pending) {
-    return 'default'
+    return 'pending'
   }
   switch (props.state) {
     case 'UP':
-      return 'success'
+      return 'ok'
     case 'DOWN':
-      return 'danger'
+      return 'critical'
     default:
       return 'unknown'
   }
 })
+
+const tagSize = computed<StateTagSize>(() => (props.abbreviated ? 'compact' : 'default'))
 </script>
 
 <template>
-  <CmkTag
-    class="monitoring-host-state-display"
-    :color="stateColor"
-    variant="weighted"
-    :content="stateLabel"
-    size="small"
-  />
+  <StateTag kind="host" :label="stateLabel" :tone="stateTone" :size="tagSize" :stale="stale" />
 </template>
-
-<style scoped>
-.monitoring-host-state-display {
-  --host-state-display-height: 21px;
-  --host-state-display-min-width: 60px;
-
-  margin: 0;
-  display: flex;
-  box-sizing: border-box;
-  height: var(--host-state-display-height);
-  min-width: var(--host-state-display-min-width);
-  align-items: center;
-  justify-content: center;
-}
-</style>

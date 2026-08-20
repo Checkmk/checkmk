@@ -1237,11 +1237,9 @@ fn test_migrate_reference_config_discovery() {
     );
     let mut exclude = discovery.exclude().clone();
     exclude.sort();
-    assert_eq!(
-        exclude,
-        &["AAA", "BBB", "XE2"],
-        "exclude must match SKIP_SIDS + EXCLUDE_*=ALL"
-    );
+    // EXCLUDE_AAA / EXCLUDE_BBB name sections, not instances, so they must not
+    // reach the instance-level exclude list.
+    assert_eq!(exclude, &["XE2"], "exclude must match SKIP_SIDS only");
 }
 
 #[test]

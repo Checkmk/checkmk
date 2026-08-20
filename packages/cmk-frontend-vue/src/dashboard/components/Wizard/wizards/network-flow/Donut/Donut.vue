@@ -42,6 +42,14 @@ const dimensionOptions: Suggestions = {
   ]
 }
 
+const legendModeOptions: Suggestions = {
+  type: 'fixed',
+  suggestions: [
+    { name: 'table', title: _t('Table') },
+    { name: 'compact', title: _t('Compact') }
+  ]
+}
+
 function getValidWidgetProps(): WidgetProps | null {
   if (handler.validate()) {
     return handler.widgetProps.value
@@ -84,6 +92,16 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
               type="number"
               :unit="_t('slices (max. %{max_slices})', { max_slices: `${MAX_SLICES}` })"
               :external-errors="handler.limitToValidationErrors.value"
+            />
+          </FieldComponent>
+        </TableFormRow>
+        <TableFormRow>
+          <FieldDescription>{{ _t('Legend style') }}</FieldDescription>
+          <FieldComponent>
+            <CmkDropdown
+              v-model="handler.legendMode.value"
+              :options="legendModeOptions"
+              :label="_t('Legend style')"
             />
           </FieldComponent>
         </TableFormRow>

@@ -21,11 +21,13 @@ const CONTENT_TYPE = 'network_flow_donut'
 export const MAX_SLICES = 20
 
 type Dimension = NetworkFlowDonutContent['dimension']
+type LegendMode = NetworkFlowDonutContent['legend_mode']
 
 export interface UseDonut extends UseWidgetHandler, UseWidgetVisualizationOptions {
   dimension: Ref<Dimension>
   limitTo: Ref<number>
   limitToValidationErrors: Ref<string[]>
+  legendMode: Ref<LegendMode>
 }
 
 export function useDonut(currentSpec: WidgetSpec | null): UseDonut {
@@ -64,6 +66,7 @@ export function useDonut(currentSpec: WidgetSpec | null): UseDonut {
   const dimension = ref<Dimension>(initialDimension)
   const limitTo = ref<number>(currentContent?.limit_to ?? 6)
   const limitToValidationErrors = ref<string[]>([])
+  const legendMode = ref<LegendMode>(currentContent?.legend_mode ?? 'table')
 
   // Unless the user has customized the title, keep it in sync with the
   // dimension's default as the dimension changes.
@@ -85,7 +88,8 @@ export function useDonut(currentSpec: WidgetSpec | null): UseDonut {
     return {
       type: CONTENT_TYPE,
       dimension: dimension.value,
-      limit_to: limitTo.value
+      limit_to: limitTo.value,
+      legend_mode: legendMode.value
     }
   })
 
@@ -127,6 +131,7 @@ export function useDonut(currentSpec: WidgetSpec | null): UseDonut {
     dimension,
     limitTo,
     limitToValidationErrors,
+    legendMode,
 
     widgetProps,
     getSubmitProps: async () => widgetProps.value

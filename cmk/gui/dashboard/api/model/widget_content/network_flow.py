@@ -8,6 +8,7 @@ from cmk.gui.dashboard.type_defs import (
     NetworkFlowAccent,
     NetworkFlowDonutDashletConfig,
     NetworkFlowDonutDimension,
+    NetworkFlowDonutLegendMode,
     NetworkFlowKpiStatCardDashletConfig,
     NetworkFlowKpiStatCardMetric,
     NetworkFlowTopTableDashletConfig,
@@ -68,6 +69,10 @@ class NetworkFlowDonutContent(BaseWidgetContent):
     limit_to: int = api_field(
         description="Maximum number of slices to display before the rest are grouped as 'Other'."
     )
+    legend_mode: NetworkFlowDonutLegendMode = api_field(
+        description="Whether the legend states the volume per category in a table, or names the "
+        "categories as compact chips below the chart."
+    )
 
     @classmethod
     @override
@@ -80,6 +85,8 @@ class NetworkFlowDonutContent(BaseWidgetContent):
             type="network_flow_donut",
             dimension=config["dimension"],
             limit_to=config["limit_to"],
+            # Widgets stored before the legend became configurable listed the shares.
+            legend_mode=config.get("legend_mode", "table"),
         )
 
     @override
@@ -88,6 +95,7 @@ class NetworkFlowDonutContent(BaseWidgetContent):
             type=self.internal_type(),
             dimension=self.dimension,
             limit_to=self.limit_to,
+            legend_mode=self.legend_mode,
         )
 
 

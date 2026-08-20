@@ -154,11 +154,14 @@ class NetworkFlowTopTableDashletConfig(DashletConfig):
 
 
 NetworkFlowDonutDimension = Literal["applications", "protocols"]
+NetworkFlowDonutLegendMode = Literal["table", "compact"]
 
 
 class NetworkFlowDonutDashletConfig(DashletConfig):
     dimension: NetworkFlowDonutDimension
     limit_to: int
+    # Absent from every donut stored before the legend became configurable.
+    legend_mode: NotRequired[NetworkFlowDonutLegendMode]
 
 
 NetworkFlowKpiStatCardMetric = Literal[

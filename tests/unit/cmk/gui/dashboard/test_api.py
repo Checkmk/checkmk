@@ -16,6 +16,8 @@ from cmk.gui.dashboard.api.model.constants import RESPONSIVE_GRID_BREAKPOINTS
 from cmk.gui.dashboard.api.model.widget import WidgetTitle
 from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
+from cmk.gui.dashboard.api.model.widget_content.network_flow import NetworkFlowDonutContent
+from cmk.gui.dashboard.type_defs import NetworkFlowDonutDashletConfig
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
@@ -60,6 +62,16 @@ def test_widget_title_from_internal_sanitizes_title_url(
         assert isinstance(result.url, ApiOmitted)
     else:
         assert result.url == expected_url
+
+
+def test_donut_content_defaults_the_legend_of_a_stored_widget() -> None:
+    """A donut stored before the legend became configurable keeps the table."""
+    config: NetworkFlowDonutDashletConfig = {
+        "type": "network_flow_donut",
+        "dimension": "applications",
+        "limit_to": 6,
+    }
+    assert NetworkFlowDonutContent.from_internal(config).legend_mode == "table"
 
 
 @pytest.mark.parametrize(

@@ -60,7 +60,12 @@ const { data: slices, error } = useNetworkFlowWidgetData(
         <CmkAlertBox :variant="error.variant">{{ error.message }}</CmkAlertBox>
       </div>
       <CmkLoading v-else-if="slices === undefined" />
-      <CmkDonutChart v-else :slices="slices" :format-value="formatBytes" />
+      <CmkDonutChart
+        v-else
+        :slices="slices"
+        :format-value="formatBytes"
+        :legend-mode="content.legend_mode"
+      />
     </div>
   </DashboardContentContainer>
 </template>

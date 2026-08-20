@@ -42,6 +42,7 @@ import UclCmkTabs from './content-organization/CmkTabs/UclCmkTabs.vue'
 import UclCmkWizard from './content-organization/CmkWizard/UclCmkWizard.vue'
 import UclCmkAddDropdown from './form-elements/CmkAddDropdown/UclCmkAddDropdown.vue'
 import UclCmkCheckbox from './form-elements/CmkCheckbox/UclCmkCheckbox.vue'
+import UclCmkChipAutocomplete from './form-elements/CmkChipAutocomplete/UclCmkChipAutocomplete.vue'
 import UclCmkChipSelect from './form-elements/CmkChipSelect/UclCmkChipSelect.vue'
 import UclCmkDeprecatedDateTimePicker from './form-elements/CmkDeprecatedDateTimePicker/UclCmkDeprecatedDateTimePicker.vue'
 import UclCmkDropdown from './form-elements/CmkDropdown/UclCmkDropdown.vue'
@@ -126,6 +127,7 @@ const contentOrganizationPages = [
 const formElementsPages = [
   new Page('CmkAddDropdown', UclCmkAddDropdown),
   new Page('CmkCheckbox', UclCmkCheckbox),
+  new Page('CmkChipAutocomplete', UclCmkChipAutocomplete),
   new Page('CmkChipSelect', UclCmkChipSelect),
   new Page('CmkDeprecatedDateTimePicker', UclCmkDeprecatedDateTimePicker),
   new Page('CmkDropdown', UclCmkDropdown),

@@ -23,6 +23,7 @@ import UclCmkSlideInDialog from '@ucl/components/content-organization/CmkSlideIn
 import UclCmkTabs from '@ucl/components/content-organization/CmkTabs/UclCmkTabs.vue'
 import UclCmkWizard from '@ucl/components/content-organization/CmkWizard/UclCmkWizard.vue'
 import UclCmkCheckbox from '@ucl/components/form-elements/CmkCheckbox/UclCmkCheckbox.vue'
+import UclCmkChipAutocomplete from '@ucl/components/form-elements/CmkChipAutocomplete/UclCmkChipAutocomplete.vue'
 import UclCmkDeprecatedDateTimePicker from '@ucl/components/form-elements/CmkDeprecatedDateTimePicker/UclCmkDeprecatedDateTimePicker.vue'
 import UclCmkDropdown from '@ucl/components/form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from '@ucl/components/form-elements/CmkDualList/UclCmkDualList.vue'
@@ -98,6 +99,11 @@ function expectNoRegistryError() {
 test('CmkCheckbox page renders its component', () => {
   render(UclCmkCheckbox, { props: { screenshotMode: false } })
   within(componentPreview()).getByRole('checkbox', { name: 'Enable notifications' })
+})
+
+test('CmkChipAutocomplete page renders its component', () => {
+  render(UclCmkChipAutocomplete, { props: { screenshotMode: false } })
+  within(componentPreview()).getByRole('textbox')
 })
 
 test('CmkSlideInDropdown page renders its component', async () => {

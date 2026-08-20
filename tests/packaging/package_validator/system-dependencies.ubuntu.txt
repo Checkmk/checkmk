@@ -12,4 +12,3 @@ libsmime3.so
 libssl3.so
 libtcl8.6.so
 libtk8.6.so
-libzstd.so

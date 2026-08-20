@@ -50,6 +50,7 @@ OS_PACKAGES    += libfl2 # needed by heirloom-pkgtools
 OS_PACKAGES    += poppler-utils # needed for preview of PDF in reporting
 OS_PACKAGES    += libffi8ubuntu1 # needed for pyOpenSSL and dependant
 OS_PACKAGES    += libpq5
+OS_PACKAGES    += libzstd1
 USERADD_OPTIONS   =
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s
 APACHE_CONF_DIR   = /etc/apache2/conf.d

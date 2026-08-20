@@ -58,6 +58,7 @@ RUN yum -y makecache \
     libtool-ltdl-devel \
     libuuid-devel \
     libxml2-devel \
+    libzstd-dev \
     mariadb-devel \
     mpfr-devel \
     nc \

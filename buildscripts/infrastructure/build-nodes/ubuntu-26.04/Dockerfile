@@ -78,6 +78,7 @@ RUN apt-get install -y --fix-missing \
     libtool \
     libxml2-dev \
     libxmlsec1-dev \
+    libzstd-dev \
     netcat-openbsd \
     openssh-client \
     patch \

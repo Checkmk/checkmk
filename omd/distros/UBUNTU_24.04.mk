@@ -50,6 +50,7 @@ OS_PACKAGES    += libfl2 # needed by heirloom-pkgtools
 OS_PACKAGES    += poppler-utils # needed for preview of PDF in reporting
 OS_PACKAGES    += libffi8ubuntu1 # needed for pyOpenSSL and dependant
 OS_PACKAGES    += libpq5
+OS_PACKAGES    += libzstd1
 # needed by cmk-network-flow (ntopng); OS libs trimmed from the bundle (Enterprise editions)
 OS_PACKAGES    += libbz2-1.0
 OS_PACKAGES    += libcairo2
@@ -65,7 +66,6 @@ OS_PACKAGES    += libpangocairo-1.0-0
 OS_PACKAGES    += libpng16-16t64
 OS_PACKAGES    += libsqlite3-0
 OS_PACKAGES    += libxcb1
-OS_PACKAGES    += libzstd1
 OS_PACKAGES    += zlib1g
 USERADD_OPTIONS   =
 ADD_USER_TO_GROUP = gpasswd -a %(user)s %(group)s

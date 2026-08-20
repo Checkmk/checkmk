@@ -59,6 +59,7 @@ RUN zypper ref -s && \
         libxml2-devel \
         libxmlsec1-1 \
         libxslt-devel \
+        libzstd-dev \
         make \
         mariadb-client \
         mpfr-devel \

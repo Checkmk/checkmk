@@ -4,17 +4,53 @@
   "title": "global_settings_app",
   "properties": {
     "title": { "type": "string" },
-    "site": {
-      "description": "Site id. Null means the global global settings.",
-      "type": ["string", "null"]
+    "domain": {
+      "description": "event console or global settings?",
+      "$ref": "#/$defs/global_settings_domain"
+    },
+    "scope": {
+      "description": "Whether the shown settings apply to all sites or to one specific site.",
+      "anyOf": [
+        { "$ref": "#/$defs/global_settings_scope_global" },
+        { "$ref": "#/$defs/global_settings_scope_site" }
+      ]
     },
     "topics": {
       "type": "array",
       "items": { "$ref": "#/$defs/global_settings_topic" }
     }
   },
-  "required": ["title", "site", "topics"],
+  "required": ["title", "domain", "scope", "topics"],
   "$defs": {
+    "global_settings_domain": {
+      "type": "string",
+      "enum": ["global_settings", "event_console"]
+    },
+    "global_settings_scope_global": {
+      "type": "object",
+      "title": "global_settings_scope_global",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "global"
+        }
+      },
+      "required": ["type"]
+    },
+    "global_settings_scope_site": {
+      "type": "object",
+      "title": "global_settings_scope_site",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "site"
+        },
+        "site_id": {
+          "type": "string"
+        }
+      },
+      "required": ["type", "site_id"]
+    },
     "global_settings_topic": {
       "type": "object",
       "properties": {

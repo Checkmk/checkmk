@@ -5,7 +5,10 @@
 
 
 import base64
+import contextlib
+import errno
 import json
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -112,3 +115,36 @@ def test_crash_report_masks_secrets(fixed_path: Path) -> None:
     assert (
         local_vars == b"{'_moo': {'foo': 'bar', 'passphrase': 'redacted'}, '_secret': 'redacted'}"
     )
+
+
+def test_an_interrupted_write_leaves_no_crash_info(
+    monkeypatch: pytest.MonkeyPatch, fixed_path: Path
+) -> None:
+    """crash.info marks the directory complete, so a half-written one would pass for whole."""
+    real_named_temp_file = tempfile.NamedTemporaryFile
+    wrote = []
+
+    def fail_half_way(*args: object, **kwargs: object) -> object:
+        handle = real_named_temp_file(*args, **kwargs)  # type: ignore[call-overload]
+        real_write = handle.write
+
+        def half_a_write(data: str) -> int:
+            wrote.append(data)
+            real_write(data[: len(data) // 2])
+            raise OSError(errno.EIO, "Input/output error")
+
+        handle.write = half_a_write
+        return handle
+
+    monkeypatch.setattr(tempfile, "NamedTemporaryFile", fail_half_way)
+
+    @report_agent_crashes("smith", "3.14.15p92")
+    def main() -> int:
+        raise ValueError("test exception")
+
+    with contextlib.suppress(OSError):
+        main()
+
+    assert wrote, "the interrupted-write path was never taken"
+    (crash_dir,) = (fixed_path / "agent").iterdir()
+    assert list(crash_dir.iterdir()) == []

@@ -26,6 +26,16 @@ export interface KpiRangeLimits {
 }
 
 /**
+ * Fixed vertical scale bounds for the sparkline, as raw numbers (unrelated to
+ * KpiRangeLimits, which is display-only formatted labels). Samples outside
+ * this range clamp to the edge and are marked with a tick.
+ */
+export interface KpiValueRange {
+  minimum: number
+  maximum: number
+}
+
+/**
  * A single sparkline sample. `value` is null for a bucket with no data - an
  * explicit gap, not a zero reading.
  */
@@ -58,6 +68,11 @@ export interface CmkKpiStatCardProps {
    * Omit to leave the range implicit.
    */
   rangeLimits?: KpiRangeLimits | undefined
+  /**
+   * Fixed vertical scale bounds for the sparkline. Omit for the default:
+   * automatic, padded to the data.
+   */
+  range?: KpiValueRange | undefined
   /** Turns the value into a link; omit to render it as plain text. */
   href?: string | undefined
 }

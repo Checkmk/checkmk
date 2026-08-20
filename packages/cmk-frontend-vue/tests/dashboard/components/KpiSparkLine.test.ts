@@ -6,21 +6,35 @@
 import { render } from '@testing-library/vue'
 
 import KpiSparkLine from '@/dashboard/components/CmkKpiStatCard/KpiSparkLine.vue'
-import type { TimestampedSample } from '@/dashboard/components/CmkKpiStatCard/types'
+import type { KpiValueRange, TimestampedSample } from '@/dashboard/components/CmkKpiStatCard/types'
 
 function sample(timestamp: number, value: number | null): TimestampedSample {
   return { timestamp, value }
 }
 
-function renderSparkLine(series: TimestampedSample[]) {
-  return render(KpiSparkLine, { props: { series, color: 'var(--color-corporate-green-50)' } })
+function renderSparkLine(
+  series: TimestampedSample[],
+  props: { fadeToFloor?: boolean; range?: KpiValueRange } = {}
+) {
+  return render(KpiSparkLine, {
+    props: { series, color: 'var(--color-corporate-green-50)', ...props }
+  })
 }
 
 function linePathOf(container: Element): string {
-  return (
-    container.querySelector('.db-kpi-spark-line path[stroke="currentColor"]')?.getAttribute('d') ??
-    ''
-  )
+  return container.querySelector('.db-kpi-spark-line__line')?.getAttribute('d') ?? ''
+}
+
+function areaOf(container: Element): SVGPathElement | null {
+  return container.querySelector('.db-kpi-spark-line__area')
+}
+
+function dotOf(container: Element): SVGPathElement | null {
+  return container.querySelector('.db-kpi-spark-line__dot')
+}
+
+function ticksOf(container: Element): SVGPathElement[] {
+  return [...container.querySelectorAll<SVGPathElement>('.db-kpi-spark-line__tick')]
 }
 
 test('positions samples by their timestamp, not by array index', () => {
@@ -41,4 +55,54 @@ test('draws nothing for fewer than two non-null samples', () => {
   const { container } = renderSparkLine([sample(0, 10), sample(60, null)])
 
   expect(linePathOf(container)).toBe('')
+  expect(dotOf(container)).toBeNull()
+})
+
+test('marks the latest non-null sample with a dot', () => {
+  const { container } = renderSparkLine([sample(0, 10), sample(60, 20), sample(120, null)])
+
+  expect(dotOf(container)).not.toBeNull()
+})
+
+test('draws no dot when there is nothing to plot', () => {
+  const { container } = renderSparkLine([])
+
+  expect(dotOf(container)).toBeNull()
+})
+
+test('fades stroke and fill left to right via a shared mask', () => {
+  const { container } = renderSparkLine([sample(0, 10), sample(60, 20)])
+
+  const maskedGroup = container.querySelector('.db-kpi-spark-line g[mask]')
+  expect(maskedGroup?.contains(areaOf(container))).toBe(true)
+  expect(maskedGroup?.contains(container.querySelector('.db-kpi-spark-line__line'))).toBe(true)
+})
+
+test('fills flat by default', () => {
+  const { container } = renderSparkLine([sample(0, 10), sample(60, 20)])
+
+  expect(areaOf(container)).toHaveAttribute('fill', 'currentColor')
+  expect(areaOf(container)).toHaveAttribute('fill-opacity', '0.35')
+})
+
+test('fades the fill towards the floor when asked to', () => {
+  const { container } = renderSparkLine([sample(0, 10), sample(60, 20)], { fadeToFloor: true })
+
+  const fill = areaOf(container)?.getAttribute('fill') ?? ''
+  expect(fill).toMatch(/^url\(#/)
+  expect(areaOf(container)).not.toHaveAttribute('fill-opacity')
+})
+
+test('auto-scales to the data when no range is given', () => {
+  const { container } = renderSparkLine([sample(0, 10), sample(60, 20)])
+
+  expect(ticksOf(container)).toHaveLength(0)
+})
+
+test('clamps samples outside a manual range and marks them with a tick', () => {
+  const { container } = renderSparkLine([sample(0, 5), sample(60, 50), sample(120, 95)], {
+    range: { minimum: 10, maximum: 90 }
+  })
+
+  expect(ticksOf(container)).toHaveLength(2)
 })

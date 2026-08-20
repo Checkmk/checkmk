@@ -103,7 +103,9 @@ test('the value and sparkline take the given accent color', () => {
 test('draws a line and an area path for the series', () => {
   const { container } = renderCard()
 
-  const paths = [...container.querySelectorAll('.db-kpi-spark-line path')]
+  const paths = [
+    ...container.querySelectorAll('.db-kpi-spark-line__line, .db-kpi-spark-line__area')
+  ]
   expect(paths).toHaveLength(2)
   for (const path of paths) {
     expect(path.getAttribute('d')).toMatch(/^M/)
@@ -123,7 +125,7 @@ test('draws a broken line for a series with a gap, without crashing', () => {
   const series = [sample(0, 10), sample(60, null), sample(120, 20)]
   const { container } = renderCard({ series })
 
-  const linePath = container.querySelector('.db-kpi-spark-line path[stroke="currentColor"]')
+  const linePath = container.querySelector('.db-kpi-spark-line__line')
   const pathData = linePath?.getAttribute('d') ?? ''
   expect(pathData).toMatch(/^M/)
   expect(pathData.match(/M/g)?.length).toBeGreaterThan(1)
@@ -196,6 +198,10 @@ test('a state alone does not tint the card', () => {
   expect(container.querySelector('.db-cmk-kpi-stat-card')).not.toHaveClass(
     'db-cmk-kpi-stat-card--tinted'
   )
+  expect(container.querySelector('.db-kpi-spark-line__area')).toHaveAttribute(
+    'fill',
+    'currentColor'
+  )
 })
 
 test('tints the card in the state color when asked to', () => {
@@ -206,6 +212,15 @@ test('tints the card in the state color when asked to', () => {
   const card = container.querySelector<HTMLElement>('.db-cmk-kpi-stat-card')
   expect(card).toHaveClass('db-cmk-kpi-stat-card--tinted')
   expect(card?.style.getPropertyValue('--tint-color')).toBe('var(--color-danger)')
+})
+
+test('fades the sparkline fill towards the floor when the card is tinted', () => {
+  const { container } = renderCard({
+    state: { severity: 'crit', tintBackground: true }
+  })
+
+  const fill = container.querySelector('.db-kpi-spark-line__area')?.getAttribute('fill') ?? ''
+  expect(fill).toMatch(/^url\(#/)
 })
 
 test('omits the range labels unless limits are given', () => {

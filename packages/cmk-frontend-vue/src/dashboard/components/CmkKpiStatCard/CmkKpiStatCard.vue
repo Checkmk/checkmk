@@ -19,6 +19,7 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   deltaSemantics: 'neutral',
   state: undefined,
   rangeLimits: undefined,
+  range: undefined,
   href: undefined
 })
 
@@ -129,7 +130,12 @@ const hasSparkLine = computed(() => props.series.length >= 2)
     </CmkBadge>
 
     <div v-if="hasSparkLine" class="db-cmk-kpi-stat-card__spark-line">
-      <KpiSparkLine :series="series" :color="color" />
+      <KpiSparkLine
+        :series="series"
+        :color="color"
+        :fade-to-floor="tintColor !== undefined"
+        :range="range"
+      />
       <template v-if="rangeLimits">
         <span class="db-cmk-kpi-stat-card__range db-cmk-kpi-stat-card__range--maximum">
           {{ rangeLimits.maximum }}

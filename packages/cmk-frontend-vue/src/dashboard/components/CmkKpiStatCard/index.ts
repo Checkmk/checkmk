@@ -12,5 +12,6 @@ export type {
   KpiRangeLimits,
   KpiState,
   KpiStateSeverity,
+  KpiValueRange,
   TimestampedSample
 } from './types'

@@ -8,14 +8,21 @@ import { scaleLinear, scaleTime } from 'd3-scale'
 import { area, curveCatmullRom, line } from 'd3-shape'
 import { type Ref, computed, useId } from 'vue'
 
-import type { TimestampedSample } from './types'
+import type { KpiValueRange, TimestampedSample } from './types'
 
-const props = defineProps<{
-  /** Data points to plot, oldest first. Needs at least two non-null values to render a path. */
-  series: TimestampedSample[]
-  /** Stroke / fill color, e.g. "var(--color-corporate-green-50)". */
-  color: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    /** Data points to plot, oldest first. Needs at least two non-null values to render a path. */
+    series: TimestampedSample[]
+    /** Stroke / fill color, e.g. "var(--color-corporate-green-50)". */
+    color: string
+    /** Fades the area fill towards the floor instead of the default flat fill. */
+    fadeToFloor?: boolean
+    /** Fixed vertical scale bounds. Omit for the default: automatic, padded to the data. */
+    range?: KpiValueRange | undefined
+  }>(),
+  { fadeToFloor: false, range: undefined }
+)
 
 // The SVG is drawn in an abstract coordinate space and stretched to fit the
 // card via preserveAspectRatio="none". D3 only generates the path strings here
@@ -23,14 +30,33 @@ const props = defineProps<{
 const VIEW_WIDTH = 100
 const VIEW_HEIGHT = 40
 
-// Unique per instance so multiple cards on one dashboard don't share a <defs> id.
-const gradientId = `db-kpi-spark-line-gradient-${useId()}`
+// Unique per instance so multiple cards on one dashboard don't share <defs> ids.
+const instanceId = useId()
+const fadeMaskId = `db-kpi-spark-line-fade-mask-${instanceId}`
+const fadeGradientId = `db-kpi-spark-line-fade-gradient-${instanceId}`
+const floorGradientId = `db-kpi-spark-line-floor-gradient-${instanceId}`
 
-const paths: Ref<{ line: string; area: string }> = computed(() => {
+interface Point {
+  x: number
+  y: number
+}
+
+interface Plot {
+  line: string
+  area: string
+  /** Marks the latest non-null sample; null when there is nothing to plot. */
+  dot: Point | null
+  /** One per sample clamped into a manual range. */
+  ticks: Point[]
+}
+
+const EMPTY_PLOT: Plot = { line: '', area: '', dot: null, ticks: [] }
+
+const plot: Ref<Plot> = computed(() => {
   const data = props.series
   const values = data.filter((d) => d.value !== null).map((d) => d.value!)
   if (data.length < 2 || values.length < 2) {
-    return { line: '', area: '' }
+    return EMPTY_PLOT
   }
 
   const xScale = scaleTime()
@@ -39,31 +65,50 @@ const paths: Ref<{ line: string; area: string }> = computed(() => {
       new Date(data[data.length - 1]!.timestamp * 1000)
     ])
     .range([0, VIEW_WIDTH])
+  const x = (d: TimestampedSample) => xScale(new Date(d.timestamp * 1000))
 
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  // Pad the value range so the line never touches the very top/bottom edge.
-  const padding = (max - min) * 0.15 || 1
-  const yScale = scaleLinear()
-    .domain([min - padding, max + padding])
-    .range([VIEW_HEIGHT, 0])
+  let domainMin: number
+  let domainMax: number
+  if (props.range) {
+    domainMin = props.range.minimum
+    domainMax = props.range.maximum
+  } else {
+    const min = Math.min(...values)
+    const max = Math.max(...values)
+    // Pad the value range so the line never touches the very top/bottom edge.
+    const padding = (max - min) * 0.15 || 1
+    domainMin = min - padding
+    domainMax = max + padding
+  }
+  const yScale = scaleLinear().domain([domainMin, domainMax]).range([VIEW_HEIGHT, 0])
+  const clampToRange = (value: number) => Math.min(domainMax, Math.max(domainMin, value))
+  const y = (d: TimestampedSample) => yScale(clampToRange(d.value!))
 
   // .defined() skips null-value samples and auto-splits the path into
   // separate subpaths at the gap - a plain break, no bridging.
   const lineGen = line<TimestampedSample>()
     .defined((d) => d.value !== null)
-    .x((d) => xScale(new Date(d.timestamp * 1000)))
-    .y((d) => yScale(d.value!))
+    .x(x)
+    .y(y)
     .curve(curveCatmullRom.alpha(0.5))
 
   const areaGen = area<TimestampedSample>()
     .defined((d) => d.value !== null)
-    .x((d) => xScale(new Date(d.timestamp * 1000)))
+    .x(x)
     .y0(VIEW_HEIGHT)
-    .y1((d) => yScale(d.value!))
+    .y1(y)
     .curve(curveCatmullRom.alpha(0.5))
 
-  return { line: lineGen(data) ?? '', area: areaGen(data) ?? '' }
+  const latest = [...data].reverse().find((d) => d.value !== null)
+  const dot = latest ? { x: x(latest), y: y(latest) } : null
+
+  const ticks = props.range
+    ? data
+        .filter((d) => d.value !== null && (d.value! < domainMin || d.value! > domainMax))
+        .map((d) => ({ x: x(d), y: y(d) }))
+    : []
+
+  return { line: lineGen(data) ?? '', area: areaGen(data) ?? '', dot, ticks }
 })
 </script>
 
@@ -76,21 +121,70 @@ const paths: Ref<{ line: string; area: string }> = computed(() => {
     aria-hidden="true"
   >
     <defs>
-      <linearGradient :id="gradientId" x1="0" y1="0" x2="0" y2="1">
+      <!-- Fades stroke and fill together towards the past: 50% opacity at the
+           oldest sample to full at the latest, independent of whichever fill
+           treatment (flat or fade-to-floor) the area below uses. -->
+      <linearGradient :id="fadeGradientId" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="white" stop-opacity="0.5" />
+        <stop offset="100%" stop-color="white" stop-opacity="1" />
+      </linearGradient>
+      <mask :id="fadeMaskId">
+        <rect
+          x="0"
+          y="0"
+          :width="VIEW_WIDTH"
+          :height="VIEW_HEIGHT"
+          :fill="`url(#${fadeGradientId})`"
+        />
+      </mask>
+      <linearGradient v-if="fadeToFloor" :id="floorGradientId" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="currentColor" stop-opacity="0.35" />
         <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
       </linearGradient>
     </defs>
-    <path :d="paths.area" :fill="`url(#${gradientId})`" stroke="none" />
-    <path
-      :d="paths.line"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      vector-effect="non-scaling-stroke"
-    />
+    <g :mask="`url(#${fadeMaskId})`">
+      <path
+        class="db-kpi-spark-line__area"
+        :d="plot.area"
+        :fill="fadeToFloor ? `url(#${floorGradientId})` : 'currentColor'"
+        :fill-opacity="fadeToFloor ? undefined : 0.35"
+        stroke="none"
+      />
+      <path
+        class="db-kpi-spark-line__line"
+        :d="plot.line"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        vector-effect="non-scaling-stroke"
+      />
+      <path
+        v-if="plot.dot"
+        class="db-kpi-spark-line__dot"
+        :d="`M ${plot.dot.x},${plot.dot.y} L ${plot.dot.x},${plot.dot.y}`"
+        stroke="currentColor"
+        stroke-width="6"
+        stroke-linecap="round"
+        vector-effect="non-scaling-stroke"
+        fill="none"
+      />
+      <path
+        v-for="(tick, index) in plot.ticks"
+        :key="index"
+        class="db-kpi-spark-line__tick"
+        :d="
+          tick.y === 0
+            ? `M ${tick.x},0 L ${tick.x},6`
+            : `M ${tick.x},${tick.y - 6} L ${tick.x},${VIEW_HEIGHT}`
+        "
+        stroke="currentColor"
+        stroke-width="1.5"
+        vector-effect="non-scaling-stroke"
+        fill="none"
+      />
+    </g>
   </svg>
 </template>
 
@@ -98,6 +192,11 @@ const paths: Ref<{ line: string; area: string }> = computed(() => {
 .db-kpi-spark-line {
   display: block;
   width: 100%;
-  height: 100%;
+
+  /* Stops short of the bottom edge, so the card keeps a visible floor. A real
+     pixel value, not a viewBox unit: preserveAspectRatio="none" stretches the
+     viewBox non-uniformly, so a fixed number of viewBox units would only ever
+     equal 8px at one specific card height. */
+  height: calc(100% - 8px);
 }
 </style>

@@ -105,6 +105,22 @@ export const panelConfig = {
     help: 'Labels both ends of the displayed value range over the spark line.',
     initialState: false
   },
+  manualRange: {
+    type: 'boolean' as const,
+    title: 'Manual vertical scale',
+    help: 'Fixes the spark line scale to Range min/max instead of auto-padding to the data. Samples outside it clamp to the edge and get a tick.',
+    initialState: false
+  },
+  rangeMin: {
+    type: 'number' as const,
+    title: 'Range min',
+    initialState: 70
+  },
+  rangeMax: {
+    type: 'number' as const,
+    title: 'Range max',
+    initialState: 90
+  },
   linked: {
     type: 'boolean' as const,
     title: 'Linked value',
@@ -124,7 +140,7 @@ export const panelConfig = {
   }
 } satisfies PanelConfigFor<
   typeof CmkKpiStatCard,
-  'series' | 'state' | 'rangeLimits' | 'deltaRatio' | 'href'
+  'series' | 'state' | 'rangeLimits' | 'range' | 'deltaRatio' | 'href'
 > & {
   showDelta: BoolPropDef
   deltaPercent: NumberPropDef
@@ -134,6 +150,9 @@ export const panelConfig = {
   stateSeverity: ListPropDef<KpiStateSeverity>
   tintBackground: BoolPropDef
   showRangeLimits: BoolPropDef
+  manualRange: BoolPropDef
+  rangeMin: NumberPropDef
+  rangeMax: NumberPropDef
   linked: BoolPropDef
   containerWidth: NumberPropDef
   containerHeight: NumberPropDef
@@ -155,6 +174,7 @@ import { computed } from 'vue'
 import CmkKpiStatCard, {
   type KpiRangeLimits,
   type KpiState,
+  type KpiValueRange,
   type TimestampedSample
 } from '@/dashboard/components/CmkKpiStatCard'
 
@@ -162,7 +182,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<
   typeof CmkKpiStatCard,
-  'series' | 'state' | 'rangeLimits' | 'deltaRatio' | 'href'
+  'series' | 'state' | 'rangeLimits' | 'range' | 'deltaRatio' | 'href'
 >().createRef(panelConfig)
 
 // A window of per-minute values, oldest first (as the compute endpoints
@@ -199,6 +219,12 @@ const state = computed<KpiState | undefined>(() =>
 const rangeLimits = computed<KpiRangeLimits | undefined>(() =>
   propState.value.showRangeLimits ? { minimum: '0 B', maximum: '1.00 TB' } : undefined
 )
+
+const range = computed<KpiValueRange | undefined>(() =>
+  propState.value.manualRange
+    ? { minimum: propState.value.rangeMin, maximum: propState.value.rangeMax }
+    : undefined
+)
 </script>
 
 <template>
@@ -222,6 +248,7 @@ const rangeLimits = computed<KpiRangeLimits | undefined>(() =>
           :color="propState.color"
           :state="state"
           :range-limits="rangeLimits"
+          :range="range"
           :href="propState.linked ? '#' : undefined"
         />
       </div>

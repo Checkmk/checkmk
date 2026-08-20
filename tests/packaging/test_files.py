@@ -14,6 +14,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import tarfile
 from collections.abc import Mapping, Sequence
 from functools import cache
@@ -1012,6 +1013,9 @@ def _verify_signature(file_path: Path, file_name: str) -> None | str:
     return None
 
 
+_SITE_PACKAGES = f"lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
+
+
 @pytest.mark.parametrize(
     "is_no_source,path_prefix_agents,non_msi_files",
     [
@@ -1020,7 +1024,7 @@ def _verify_signature(file_path: Path, file_name: str) -> None | str:
             "share/check_mk/agents/windows",
             [
                 "share/check_mk/agents/windows/mk-sql.exe",
-                "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.exe",
+                f"{_SITE_PACKAGES}/cmk/plugins/oracle/agents/mk-oracle.exe",
             ],
         ),
         (
@@ -1237,7 +1241,7 @@ EXECUTABLE_DIRS = [
     "share/check_mk/alert_handlers",
 ]
 EXECUTABLE_EXCEPTIONS = {
-    "cpython-313.pyc",
+    f"{sys.implementation.cache_tag}.pyc",
     "README",
     "mkeventd_open514",
     ".html.jinja",

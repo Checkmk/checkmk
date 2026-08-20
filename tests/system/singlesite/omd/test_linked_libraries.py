@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import re
 import shlex
+import sys
 from collections.abc import Collection, Iterator
 from pathlib import Path
 from typing import NamedTuple
@@ -123,11 +124,15 @@ def test_linked_libraries(site: Site) -> None:
 
     files = _run_find_dynamically_linked(site, site.root)
 
+    lib_python = f"lib/python{sys.version_info.major}.{sys.version_info.minor}"
+    site_packages = f"{lib_python}/site-packages"
+    so_suffix = f".{sys.implementation.cache_tag}-{sys.implementation._multiarch}.so"
+
     exclude_entirely = [
         # These are platform specific binaries.
-        "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris",
-        "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.aix",
-        "lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.exe",
+        f"{site_packages}/cmk/plugins/oracle/agents/mk-oracle.solaris",
+        f"{site_packages}/cmk/plugins/oracle/agents/mk-oracle.aix",
+        f"{site_packages}/cmk/plugins/oracle/agents/mk-oracle.exe",
     ]
 
     exclude_from_forbidden_links_check = [
@@ -139,28 +144,26 @@ def test_linked_libraries(site: Site) -> None:
         "lib/nagios/plugins/check_pgsql",
         # To be investigated
         "bin/heirloom-mailx",
-        "lib/python3.13/site-packages.13/site-packages/netsnmp/client_intf.cpython-313-x86_64-linux-gnu.so",
+        f"{site_packages}/netsnmp/client_intf{so_suffix}",
         "var/tmp/xinetd",
         # Actually fixed, but not here
         "lib/nagios/plugins/check_nrpe",
         # system kerberos links on certain distros to openssl 1, see CMK-15651
-        "lib/python3.13/site-packages/activedirectory/protocol/krb5.cpython-313-x86_64-linux-gnu.so",
+        f"{site_packages}/activedirectory/protocol/krb5{so_suffix}",
         # ToDo: Pymsql links on certain distros to openssl 1, see CMK-21906
-        "lib/python3.13/site-packages/pymssql/_mssql.cpython-313-x86_64-linux-gnu.so",
-        "lib/python3.13/site-packages/pymssql/_pymssql.cpython-313-x86_64-linux-gnu.so",
+        f"{site_packages}/pymssql/_mssql{so_suffix}",
+        f"{site_packages}/pymssql/_pymssql{so_suffix}",
         # ToDo: _ldap links on certain distros to openssl 1, see CMK-21908
-        "lib/python3.13/site-packages/_ldap.cpython-313-x86_64-linux-gnu.so",
+        f"{site_packages}/_ldap{so_suffix}",
         # ToDo: SSLeay links on certain distros to openssl 1, see CMK-21910
         "lib/perl5/lib/perl5/x86_64-linux-thread-multi/auto/Crypt/SSLeay/SSLeay.so",
         # ToDo: Psycog 2 links on certain distros to openssl 1, see CMK-21909
-        "lib/python3.13/site-packages/psycopg2/_psycopg.cpython-313-x86_64-linux-gnu.so",
+        f"{site_packages}/psycopg2/_psycopg{so_suffix}",
     ]
 
     if os.environ["DISTRO"] == "almalinux-8":
         # ToDo: dbm links on almalinux-8 to /lib64/libcrypto.so.1.1, see CMK-22718
-        exclude_from_forbidden_links_check.append(
-            "lib/python3.13/lib-dynload/_dbm.cpython-313-x86_64-linux-gnu.so"
-        )
+        exclude_from_forbidden_links_check.append(f"{lib_python}/lib-dynload/_dbm{so_suffix}")
 
     for file in files:
         if _is_in_exclude_list(file, exclude_entirely):

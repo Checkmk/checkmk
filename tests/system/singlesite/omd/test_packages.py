@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -342,11 +343,12 @@ def test_mk_oracle_exotic_distros(
     # Use `file -k` (keep-going) so all matching magic rules are reported, not just the
     # highest-scored one. Older libmagic (e.g. file 5.41 on Ubuntu 22.04) mis-scores the AIX
     # XCOFF64 binary as "JPEG 2000 image" and would otherwise hide the correct XCOFF match.
+    site_packages = f"lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages"
     process = site.run(
         [
             "file",
             "-k",
-            f"lib/python3.13/site-packages/cmk/plugins/oracle/agents/mk-oracle.{distro}",
+            f"{site_packages}/cmk/plugins/oracle/agents/mk-oracle.{distro}",
         ],
         check=False,
     )

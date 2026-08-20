@@ -129,7 +129,7 @@ def _get_free_used_dynamic_form_spec(
                     elements=[
                         Integer(
                             title=Title("Warning if %s") % course,
-                            unit_symbol="MB",
+                            unit_symbol="MiB",
                             custom_validate=[
                                 validators.NumberInRange(
                                     min_value=0 if level_perspective == "used" else 1,
@@ -139,7 +139,7 @@ def _get_free_used_dynamic_form_spec(
                         ),
                         Integer(
                             title=Title("Critical if %s") % course,
-                            unit_symbol="MB",
+                            unit_symbol="MiB",
                             custom_validate=[
                                 validators.NumberInRange(
                                     min_value=0 if level_perspective == "used" else 1,
@@ -446,7 +446,7 @@ def _filesystem_magic_elements() -> Mapping[str, DictElement]:
             parameter_form=Integer(
                 title=Title("Reference size for magic factor"),
                 prefill=DefaultValue(20),
-                unit_symbol="GB",
+                unit_symbol="GiB",
                 custom_validate=[
                     validators.NumberInRange(
                         min_value=1, error_msg=Message("Integer field cannot be empty")
@@ -531,7 +531,7 @@ def size_trend_elements() -> Mapping[str, DictElement]:
         ),
         "trend_shrinking_bytes": DictElement(
             parameter_form=TupleLevels(
-                title=Title("Levels on decreasing trends in MB per time range"),
+                title=Title("Levels on decreasing trends in MiB per time range"),
                 elements=[
                     DataSize(
                         title=Title("Warning at"),

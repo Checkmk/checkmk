@@ -1974,6 +1974,44 @@ def check_single_interface(  # type: ignore[misc]
         )
 
 
+_APPEARANCE_DESCRIPTIONS: Final[Mapping[str, str]] = {
+    "index": "index (ifIndex)",
+    "descr": "description (ifDescr)",
+    "alias": "alias (ifAlias)",
+    "name": "name (ifName)",
+}
+
+_NOT_SET: Final = "not set"
+
+
+def _interface_identification(
+    *,
+    params: Mapping[str, Any],
+    attributes: Attributes,
+) -> str:
+    """Spell out which device field holds which value, for the details view.
+
+    The summary only shows a bare value such as "[tun0]", from which users cannot tell
+    whether that is the description or the alias, nor whether the device populates the
+    other fields at all. Without that they cannot write a targeted discovery rule to
+    switch the item naming.
+    """
+    lines = [
+        f"Index: {attributes.index or _NOT_SET}",
+        f"Description: {attributes.descr or _NOT_SET}",
+        f"Alias: {attributes.alias or _NOT_SET}",
+    ]
+    if attributes.name:
+        lines.append(f"Name: {attributes.name}")
+    if appearance := params.get("item_appearance"):
+        lines.append(
+            f"Service item based on: {_APPEARANCE_DESCRIPTIONS.get(appearance, appearance)}"
+        )
+    if attributes.node is not None:
+        lines.append(f"Node: {attributes.node}")
+    return "\n".join(lines)
+
+
 def _interface_name(
     *,
     group_name: str | None,
@@ -2025,10 +2063,19 @@ def _interface_name(
         else:
             info_interface = "On %s" % attributes.node
 
+    identification = _interface_identification(params=params, attributes=attributes)
+
     if info_interface:
         yield Result(
             state=State.OK,
             summary=info_interface,
+            details=identification,
+        )
+    else:
+        # nothing worth showing in the summary, but the details view still benefits
+        yield Result(
+            state=State.OK,
+            notice=identification,
         )
 
 

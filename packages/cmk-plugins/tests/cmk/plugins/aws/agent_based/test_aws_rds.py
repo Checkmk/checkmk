@@ -3078,7 +3078,11 @@ def test_check_aws_rds_network_io() -> None:
             SECTION,
         )
     ) == [
-        Result(state=State.OK, summary="[database-1]"),
+        Result(
+            state=State.OK,
+            summary="[database-1]",
+            details="Index: 0\nDescription: database-1 [eu-central-1]\nAlias: database-1",
+        ),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="Speed: unknown"),
         Result(state=State.OK, summary="In: 417 B/s"),

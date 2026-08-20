@@ -119,7 +119,11 @@ def test_discovery_prism_host_networks(
                 "discovered_oper_status": ["1"],
             },
             [
-                Result(state=State.OK, summary="[eth2]"),
+                Result(
+                    state=State.OK,
+                    summary="[eth2]",
+                    details="Index: 1\nDescription: eth2\nAlias: eth2",
+                ),
                 Result(state=State.OK, summary="(up)", details="Operational state: up"),
                 Result(state=State.OK, summary="MAC: 0A:0B:0C:0D:0E:11"),
                 Result(state=State.OK, summary="Speed: 10 GBit/s"),
@@ -162,7 +166,11 @@ def test_discovery_prism_host_networks(
                 "discovered_oper_status": ["1"],
             },
             [
-                Result(state=State.OK, summary="[eth2]"),
+                Result(
+                    state=State.OK,
+                    summary="[eth2]",
+                    details="Index: 1\nDescription: eth2\nAlias: eth2",
+                ),
                 Result(state=State.OK, summary="(up)", details="Operational state: up"),
                 Result(state=State.OK, summary="MAC: 0A:0B:0C:0D:0E:11"),
                 Result(state=State.WARN, summary="Speed: 10 GBit/s (expected: 1 GBit/s)"),

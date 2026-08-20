@@ -53,7 +53,11 @@ def test_network_check(empty_value_store: None) -> None:
     item = "nic0"
     results = list(check_network(item, params, section))
     assert results == [
-        Result(state=State.OK, summary="[0]"),
+        Result(
+            state=State.OK,
+            summary="[0]",
+            details="Index: 0\nDescription: nic0\nAlias: nic0",
+        ),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="Speed: unknown"),
         Result(state=State.OK, summary="In: 385 B/s"),

@@ -171,12 +171,13 @@ def _add_node_name_to_results(
 ) -> CheckResults:
     res = results[0]
     assert isinstance(res, Result)
+    # mirrors _interface_name: the node is appended to the summary, but appears as its own
+    # line in the interface identification block which makes up the details
     return [
-        Result(  # type: ignore[call-overload]
+        Result(
             state=res.state,
-            summary=f"{res.summary} on {node_name}" if res.summary else None,
-            notice=f"{res.details} on {node_name}" if not res.summary else None,
-            details=f"{res.details} on {node_name}" if res.details else None,
+            summary=f"{res.summary} on {node_name}" if res.summary else f"On {node_name}",
+            details=f"{res.details}\nNode: {node_name}",
         ),
         *results[1:],
     ]
@@ -916,7 +917,11 @@ ITEM_PARAMS_RESULTS = (
             "state": ["1"],
         },
         [
-            Result(state=State.OK, summary="[vboxnet0]"),
+            Result(
+                state=State.OK,
+                summary="[vboxnet0]",
+                details="Index: 5\nDescription: vboxnet0\nAlias: vboxnet0",
+            ),
             Result(state=State.OK, summary="(up)", details="Operational state: up"),
             Result(state=State.OK, summary="MAC: 0A:00:27:00:00:00"),
             Result(state=State.OK, summary="Speed: 10 MBit/s"),
@@ -939,7 +944,11 @@ ITEM_PARAMS_RESULTS = (
             "state": ["1"],
         },
         [
-            Result(state=State.OK, summary="[wlp2s0]"),
+            Result(
+                state=State.OK,
+                summary="[wlp2s0]",
+                details="Index: 6\nDescription: wlp2s0\nAlias: wlp2s0",
+            ),
             Result(state=State.OK, summary="(up)", details="Operational state: up"),
             Result(state=State.OK, summary="MAC: 64:5D:86:E4:50:2F"),
             Result(state=State.OK, summary="Speed: 100 MBit/s (assumed)"),
@@ -992,7 +1001,11 @@ ITEM_PARAMS_RESULTS = (
             "discards": {"both": ("abs", (1, 2))},
         },
         [
-            Result(state=State.OK, summary="[wlp2s0]"),
+            Result(
+                state=State.OK,
+                summary="[wlp2s0]",
+                details="Index: 6\nDescription: wlp2s0\nAlias: wlp2s0",
+            ),
             Result(state=State.OK, summary="(up)", details="Operational state: up"),
             Result(state=State.OK, summary="MAC: 64:5D:86:E4:50:2F"),
             Result(state=State.OK, summary="Speed: 100 MBit/s (assumed)"),
@@ -1059,24 +1072,152 @@ def test_check_single_interface(  # type: ignore[misc]
 
 def test_check_single_interface_same_index_descr_alias() -> None:
     item = "07"
-    result = next(
-        iter(
-            interfaces.check_single_interface(
-                item,
-                {},
-                _create_interfaces_with_rates(
-                    index=item,
-                    descr=item,
-                    alias=item,
-                )[0],
-            )
+    results = list(
+        interfaces.check_single_interface(
+            item,
+            {},
+            _create_interfaces_with_rates(
+                index=item,
+                descr=item,
+                alias=item,
+            )[0],
         )
     )
-    assert result == Result(
-        state=State.OK,
-        summary="(up)",
-        details="Operational state: up",
+    # the interface identification does not contribute to the summary here, since index,
+    # description and alias are all identical to the item
+    assert results[:2] == [
+        Result(
+            state=State.OK,
+            notice="Index: 07\nDescription: 07\nAlias: 07",
+        ),
+        Result(
+            state=State.OK,
+            summary="(up)",
+            details="Operational state: up",
+        ),
+    ]
+    assert results[0].summary == ""  # type: ignore[union-attr]
+
+
+@pytest.mark.parametrize(
+    ["item", "params", "attributes", "expected"],
+    [
+        pytest.param(
+            "eth0",
+            {"item_appearance": "descr"},
+            interfaces.Attributes(index="3", descr="eth0", alias="uplink to core", type="6"),
+            [
+                Result(
+                    state=State.OK,
+                    summary="[uplink to core]",
+                    details="Index: 3\n"
+                    "Description: eth0\n"
+                    "Alias: uplink to core\n"
+                    "Service item based on: description (ifDescr)",
+                ),
+            ],
+            id="item is the description",
+        ),
+        pytest.param(
+            "uplink to core",
+            {"item_appearance": "alias"},
+            interfaces.Attributes(index="3", descr="eth0", alias="uplink to core", type="6"),
+            [
+                Result(
+                    state=State.OK,
+                    summary="[eth0]",
+                    details="Index: 3\n"
+                    "Description: eth0\n"
+                    "Alias: uplink to core\n"
+                    "Service item based on: alias (ifAlias)",
+                ),
+            ],
+            id="item is the alias",
+        ),
+        pytest.param(
+            "3",
+            {"item_appearance": "index"},
+            interfaces.Attributes(index="3", descr="", alias="", type="6"),
+            [
+                Result(
+                    state=State.OK,
+                    notice="Index: 3\n"
+                    "Description: not set\n"
+                    "Alias: not set\n"
+                    "Service item based on: index (ifIndex)",
+                ),
+            ],
+            id="device populates neither description nor alias",
+        ),
+        pytest.param(
+            "Ethernet1",
+            {"item_appearance": "name"},
+            interfaces.Attributes(
+                index="3", descr="eth0", alias="uplink", name="Ethernet1", type="6"
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="[uplink]",
+                    details="Index: 3\n"
+                    "Description: eth0\n"
+                    "Alias: uplink\n"
+                    "Name: Ethernet1\n"
+                    "Service item based on: name (ifName)",
+                ),
+            ],
+            id="item is the name",
+        ),
+        pytest.param(
+            "eth0",
+            {},
+            interfaces.Attributes(index="3", descr="eth0", alias="uplink", type="6"),
+            [
+                Result(
+                    state=State.OK,
+                    summary="[uplink]",
+                    details="Index: 3\nDescription: eth0\nAlias: uplink",
+                ),
+            ],
+            id="no discovered item appearance available",
+        ),
+    ],
+)
+def test_interface_name_identification(
+    item: str,
+    params: Mapping[str, object],
+    attributes: interfaces.Attributes,
+    expected: CheckResults,
+) -> None:
+    assert (
+        list(
+            interfaces._interface_name(  # noqa: SLF001
+                group_name=None,
+                item=item,
+                params=params,
+                attributes=attributes,
+            )
+        )
+        == expected
     )
+
+
+def test_interface_name_identification_omitted_for_groups() -> None:
+    # for groups, index/descr/alias of the accumulated attributes carry no device
+    # information, so no identification block must be rendered
+    assert list(
+        interfaces._interface_name(  # noqa: SLF001
+            group_name="Interface group",
+            item="my-group",
+            params={},
+            attributes=interfaces.Attributes(
+                index="my-group",
+                descr="my-group",
+                alias="type: 6, 2 grouped interfaces",
+                type="6",
+            ),
+        )
+    ) == [Result(state=State.OK, summary="Interface group")]
 
 
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
@@ -1387,7 +1528,11 @@ def test_check_single_interface_bm_averaging() -> None:
             )[int(item) - 1],
         )
     ) == [
-        Result(state=State.OK, summary="[wlp2s0]"),
+        Result(
+            state=State.OK,
+            summary="[wlp2s0]",
+            details="Index: 6\nDescription: wlp2s0\nAlias: wlp2s0",
+        ),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="MAC: 64:5D:86:E4:50:2F"),
         Result(state=State.OK, summary="Speed: unknown"),
@@ -1597,6 +1742,7 @@ def test_check_single_interface_packet_levels() -> None:
         Result(
             state=State.OK,
             summary="[lo]",
+            details="Index: 1\nDescription: lo\nAlias: lo",
         ),
         Result(
             state=State.OK,
@@ -1995,6 +2141,7 @@ def test_check_multiple_interfaces_duplicate_descr(  # type: ignore[misc]
     result: CheckResults,
 ) -> None:
     description = "description"
+    index = item
     item = f"{description} {item}"
     ifaces = _create_interfaces_with_counters(0, descr=description)
     list(
@@ -2005,16 +2152,21 @@ def test_check_multiple_interfaces_duplicate_descr(  # type: ignore[misc]
         )
     )
     ifaces = _create_interfaces_with_counters(4000000, 5.0, descr=description)
-    assert (
-        list(
-            interfaces.check_multiple_interfaces(
-                item,
-                params,
-                ifaces,
-            )
+    alias = ifaces[int(index) - 1].attributes.alias
+    assert list(
+        interfaces.check_multiple_interfaces(
+            item,
+            params,
+            ifaces,
         )
-        == result
-    )
+    ) == [
+        Result(
+            state=State.OK,
+            summary=f"[{alias}]",
+            details=f"Index: {index}\nDescription: {description}\nAlias: {alias}",
+        ),
+        *result[1:],
+    ]
 
 
 @pytest.mark.usefixtures("initialised_item_state")
@@ -2046,6 +2198,9 @@ def test_check_multiple_interfaces_duplicate_alias(  # type: ignore[misc]
         Result(
             state=State.OK,
             summary=f"[{alias}/{ifaces[int(index) - 1].attributes.descr}]",
+            details=f"Index: {index}\n"
+            f"Description: {ifaces[int(index) - 1].attributes.descr}\n"
+            f"Alias: {alias}",
         ),
         *result[1:],
     ]
@@ -2447,6 +2602,7 @@ def test_cluster_check_ignore_discovered_params() -> None:
         Result(
             state=State.OK,
             summary="[alias] on node",
+            details="Index: 1\nDescription: descr\nAlias: alias\nNode: node",
         ),
         # TODO: Fix the following two results
         Result(
@@ -3021,7 +3177,11 @@ def test_non_unicast_packets_handling() -> None:
     )
 
     assert list(interfaces.check_single_interface("1", {}, iface_with_rates_and_averages)) == [
-        Result(state=State.OK, summary="[lo]"),
+        Result(
+            state=State.OK,
+            summary="[lo]",
+            details="Index: 1\nDescription: lo\nAlias: lo",
+        ),
         Result(state=State.OK, summary="(up)", details="Operational state: up"),
         Result(state=State.OK, summary="MAC: 00:00:00:00:00:00"),
         Result(state=State.OK, summary="Speed: unknown"),

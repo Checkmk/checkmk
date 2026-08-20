@@ -5,7 +5,7 @@
 
 from uuid import uuid4
 
-import httpx
+import httpx2
 import pytest
 from pydantic import SecretStr
 
@@ -25,7 +25,7 @@ from cmk.testlib.agent_receiver.relay import site_has_relay
 def test_process_adds_new_relay_id_to_registry(
     register_relay_handler: RegisterRelayHandler,
     test_user: SecretAuth,
-    site_api_client: httpx.Client,
+    site_api_client: httpx2.Client,
 ) -> None:
     relay_id = RelayID(str(uuid4()))
     response = register_relay_handler.process(
@@ -43,7 +43,7 @@ def test_process_adds_new_relay_id_to_registry(
 def test_process_creates_multiple_relays(
     register_relay_handler: RegisterRelayHandler,
     test_user: SecretAuth,
-    site_api_client: httpx.Client,
+    site_api_client: httpx2.Client,
 ) -> None:
     aliases = ["relay1", "relay2", "relay3"]
     relay_ids = []

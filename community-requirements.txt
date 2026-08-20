@@ -169,6 +169,7 @@ anyio==4.14.2 \
     # via
     #   -c requirements.txt
     #   httpx
+    #   httpx2
     #   starlette
 apipkg==3.0.2 \
     --hash=sha256:a16984c39de280701f3f6406ed3af658f2a1965011fe7bb5be34fbb48423b411 \
@@ -1770,6 +1771,7 @@ h11==0.16.0 \
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
     #   httpcore
+    #   httpcore2
     #   uvicorn
 httpcore==1.0.9 \
     --hash=sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55 \
@@ -1777,6 +1779,12 @@ httpcore==1.0.9 \
     # via
     #   -c requirements.txt
     #   httpx
+httpcore2==2.12.0 \
+    --hash=sha256:7e04258ce01013d7d615e5b910a3b27fac937d7a95038227e79652b4ba3b4ceb \
+    --hash=sha256:9293522bba0aa7c4c8e9e3f040c16575bd8868e155a77fa30c7a9085a5eae648
+    # via
+    #   -c requirements.txt
+    #   httpx2
 httplib2==0.32.0 \
     --hash=sha256:48a0ef30a42db65d8f3399045e1d09ab0ba66e3b9efc360d07f80ea55d286025 \
     --hash=sha256:dc6705cacdf3fb0a2aba7629fa33c90fd93e30035db0c157325826be177e4816
@@ -1789,8 +1797,13 @@ httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
     #   -c requirements.txt
-    #   -r packages/cmk-agent-receiver/requirements.in
     #   meraki
+httpx2==2.12.0 \
+    --hash=sha256:7631fe9887a8a2275f4a2540e053aa670fcc50742864a9ae7c66e609fdcf12cf \
+    --hash=sha256:cc8b6eecb8661c146b8f89a60e97456ee086e91a784ed31ac450c3a9e613dd36
+    # via
+    #   -c requirements.txt
+    #   -r packages/cmk-agent-receiver/requirements.in
 hypothesis==6.165.10 \
     --hash=sha256:00de0abdcf8c05c9d0eab735a3c49a276376b55151e6fcb903c2b39a90e5e5c3 \
     --hash=sha256:057d0232f1224dcd0b7698902551a4341a7399f90670b036db6c4376715fe889 \
@@ -1903,6 +1916,7 @@ idna==3.19 \
     #   -c requirements.txt
     #   anyio
     #   httpx
+    #   httpx2
     #   requests
     #   yarl
 imagesize==2.0.1 \
@@ -5764,6 +5778,13 @@ trickkiste==0.3.7 \
     #   -c requirements.txt
     #   checkmk-dev-tools
     #   cmk-werk-zeug
+truststore==0.10.4 \
+    --hash=sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301 \
+    --hash=sha256:adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981
+    # via
+    #   -c requirements.txt
+    #   httpcore2
+    #   httpx2
 twine==7.0.0 \
     --hash=sha256:85cdb29c518efef867360ae4acd4b0dfd61c8654a22fca08e6f8539f05022177 \
     --hash=sha256:b854164df26db268af05f49aa5c0344b10e27a494343ff05b1e0bad3b135f5a7

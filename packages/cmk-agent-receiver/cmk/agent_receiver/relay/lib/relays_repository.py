@@ -7,7 +7,7 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import final
 
-import httpx
+import httpx2
 
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
 from cmk.agent_receiver.relay.lib.site_auth import SiteAuth
@@ -38,8 +38,8 @@ class RelaysRepository:
     def __init__(
         self,
         *,
-        client: httpx.Client,
-        internal_client: httpx.Client,
+        client: httpx2.Client,
+        internal_client: httpx2.Client,
         siteid: str,
         helper_config_dir: Path,
     ) -> None:
@@ -65,8 +65,10 @@ class RelaysRepository:
         }
         # FIXME: increased timeout due to flacky test test_tasks.py::test_max_tasks_per_relay
         timeout = 20
-        client = httpx.Client(base_url=site_url, headers=headers, timeout=timeout)
-        internal_client = httpx.Client(base_url=internal_site_url, headers=headers, timeout=timeout)
+        client = httpx2.Client(base_url=site_url, headers=headers, timeout=timeout)
+        internal_client = httpx2.Client(
+            base_url=internal_site_url, headers=headers, timeout=timeout
+        )
         return cls(
             client=client,
             internal_client=internal_client,

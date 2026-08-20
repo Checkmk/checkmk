@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import final, Self
 
-import httpx
+import httpx2
 from tenacity import RetryError, Retrying, stop_after_delay, wait_fixed
 
 from cmk.crypto.certificate import CertificateWithPrivateKey
@@ -49,13 +49,13 @@ class AgentReceiverRunner:
     def _default_ssl_context(self) -> ssl.SSLContext:
         return ssl.create_default_context(cafile=str(self._site.config.agent_cert_store_path))
 
-    def http_client(self) -> httpx.Client:
-        """Return an httpx.Client that trusts the site's CA bundle."""
-        return httpx.Client(base_url=self.base_url, verify=self._default_ssl_context())
+    def http_client(self) -> httpx2.Client:
+        """Return an httpx2.Client that trusts the site's CA bundle."""
+        return httpx2.Client(base_url=self.base_url, verify=self._default_ssl_context())
 
     @contextmanager
-    def mtls_client(self, cert: CertificateWithPrivateKey) -> Generator[httpx.Client]:
-        """Return an httpx.Client performing mTLS with the given certificate and key."""
+    def mtls_client(self, cert: CertificateWithPrivateKey) -> Generator[httpx2.Client]:
+        """Return an httpx2.Client performing mTLS with the given certificate and key."""
         ctx = self._default_ssl_context()
         with (
             tempfile.NamedTemporaryFile(suffix=".pem") as cert_file,
@@ -66,7 +66,7 @@ class AgentReceiverRunner:
             key_file.write(cert.private_key.dump_pem(None).bytes)
             key_file.flush()
             ctx.load_cert_chain(certfile=cert_file.name, keyfile=key_file.name)
-            with httpx.Client(base_url=self.base_url, verify=ctx) as client:
+            with httpx2.Client(base_url=self.base_url, verify=ctx) as client:
                 yield client
 
     def start(self) -> None:
@@ -139,8 +139,8 @@ class AgentReceiverRunner:
         # connections, but the SSL handshake hangs until the worker is ready. A 2s
         # connect timeout lets us retry quickly instead of blocking the full budget.
         last_exc: BaseException | None = None
-        with httpx.Client(
-            verify=self._default_ssl_context(), timeout=httpx.Timeout(5.0, connect=2.0)
+        with httpx2.Client(
+            verify=self._default_ssl_context(), timeout=httpx2.Timeout(5.0, connect=2.0)
         ) as client:
             try:
                 for attempt in Retrying(

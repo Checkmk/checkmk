@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from http import HTTPMethod, HTTPStatus
 from typing import Literal
 
-import httpx
+import httpx2
 from pydantic import BaseModel, Field
 
 PatternType = Literal["matchesJsonSchema", "equalTo", "matches", "equalToJson"]
@@ -53,16 +53,16 @@ class Wiremock(BaseModel):
         return f"{self.base_url}/__admin"
 
     def reset(self) -> None:
-        resp = httpx.delete(f"{self.admin_url}/mappings")
+        resp = httpx2.delete(f"{self.admin_url}/mappings")
         assert resp.status_code == HTTPStatus.OK
-        resp = httpx.delete(f"{self.admin_url}/requests")
+        resp = httpx2.delete(f"{self.admin_url}/requests")
         assert resp.status_code == HTTPStatus.OK
 
     def setup_mapping(
         self,
         mapping: WMapping,
     ) -> None:
-        response = httpx.post(
+        response = httpx2.post(
             f"{self.admin_url}/mappings",
             json=mapping.model_dump(exclude_none=True),
             timeout=1,
@@ -75,7 +75,7 @@ class Wiremock(BaseModel):
             "method": method,
         }
 
-        response = httpx.post(
+        response = httpx2.post(
             f"{self.admin_url}/requests/find",
             json=query,
             timeout=1,

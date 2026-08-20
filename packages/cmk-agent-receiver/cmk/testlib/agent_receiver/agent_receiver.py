@@ -8,7 +8,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager, suppress
 from typing import final
 
-import httpx
+import httpx2
 from starlette.types import Receive, Scope, Send
 
 from cmk.agent_receiver.lib.certs import serialize_to_pem
@@ -33,7 +33,7 @@ class AgentReceiverClient:
     """
 
     def __init__(
-        self, client: httpx.Client, site_name: str, user: User, serial: Serial | None = None
+        self, client: httpx2.Client, site_name: str, user: User, serial: Serial | None = None
     ) -> None:
         self.client = client
         self.site_name = site_name
@@ -93,7 +93,7 @@ class AgentReceiverClient:
             with suppress(KeyError):
                 del self.client.headers[HEADERS.SERIAL]
 
-    def register_relay(self, relay_id: str, name: str) -> tuple[PrivateKey, httpx.Response]:
+    def register_relay(self, relay_id: str, name: str) -> tuple[PrivateKey, httpx2.Response]:
         priv_key, csr = generate_csr_pair(cn=relay_id)
         return priv_key, self.client.post(
             f"/{self.site_name}/relays/",
@@ -104,7 +104,7 @@ class AgentReceiverClient:
             },
         )
 
-    def register_relay_with_token(self, relay_id: str, name: str, token: str) -> httpx.Response:
+    def register_relay_with_token(self, relay_id: str, name: str, token: str) -> httpx2.Response:
         csr_pair = generate_csr_pair(cn=relay_id)
         return self.client.post(
             f"/{self.site_name}/relays/",
@@ -116,7 +116,7 @@ class AgentReceiverClient:
             },
         )
 
-    def refresh_cert(self, relay_id: str) -> httpx.Response:
+    def refresh_cert(self, relay_id: str) -> httpx2.Response:
         """Refresh the certificate for a relay.
 
         This endpoint allows a relay to request a new certificate by submitting
@@ -127,7 +127,7 @@ class AgentReceiverClient:
             relay_id: The UUID of the relay requesting certificate refresh
 
         Returns:
-            httpx.Response containing RelayRefreshCertResponse with:
+            httpx2.Response containing RelayRefreshCertResponse with:
                 - root_cert: The root CA certificate in PEM format
                 - client_cert: The newly signed client certificate in PEM format
 
@@ -147,7 +147,7 @@ class AgentReceiverClient:
             },
         )
 
-    def get_relay_status(self, relay_id: str) -> httpx.Response:
+    def get_relay_status(self, relay_id: str) -> httpx2.Response:
         """Get relay status.
 
         This endpoint returns the relay state by comparing local config and CMK API.
@@ -157,7 +157,7 @@ class AgentReceiverClient:
             relay_id: The UUID of the relay to get status for
 
         Returns:
-            httpx.Response containing RelayStatusResponse with:
+            httpx2.Response containing RelayStatusResponse with:
                 - relay_id: The relay's unique identifier
                 - state: The relay's state (CONFIGURED, PENDING_ACTIVATION, PENDING_DELETION)
 
@@ -176,7 +176,7 @@ class AgentReceiverClient:
 
     def push_task(
         self, *, relay_id: str, spec: TaskCreateRequestSpec, site_cn: str
-    ) -> httpx.Response:
+    ) -> httpx2.Response:
         headers = {
             INJECTED_UUID_HEADER: site_cn,
         }
@@ -188,7 +188,7 @@ class AgentReceiverClient:
             ).model_dump(),
         )
 
-    def get_relay_tasks(self, relay_id: str, status: str | None = None) -> httpx.Response:
+    def get_relay_tasks(self, relay_id: str, status: str | None = None) -> httpx2.Response:
         params: dict[str, str] = {}
         if status:
             params = {"status": status}
@@ -203,7 +203,7 @@ class AgentReceiverClient:
 
     def update_task(
         self, *, relay_id: str, task_id: str, result_type: str, result_payload: str
-    ) -> httpx.Response:
+    ) -> httpx2.Response:
         return self.client.patch(
             f"/{self.site_name}/relays/{relay_id}/tasks/{task_id}",
             headers={
@@ -216,13 +216,13 @@ class AgentReceiverClient:
             },
         )
 
-    def get_task(self, *, relay_id: str, task_id: str, site_cn: str) -> httpx.Response:
+    def get_task(self, *, relay_id: str, task_id: str, site_cn: str) -> httpx2.Response:
         return self.client.get(
             f"/{self.site_name}/relays/{relay_id}/tasks/{task_id}",
             headers={INJECTED_UUID_HEADER: site_cn},
         )
 
-    def activate_config(self, site_cn: str) -> httpx.Response:
+    def activate_config(self, site_cn: str) -> httpx2.Response:
         headers = {
             INJECTED_UUID_HEADER: site_cn,
         }
@@ -233,7 +233,7 @@ class AgentReceiverClient:
 
     def forward_monitoring_data(
         self, *, relay_id: str, monitoring_data: MonitoringData
-    ) -> httpx.Response:
+    ) -> httpx2.Response:
         return self.client.post(
             f"/{self.site_name}/relays/{relay_id}/monitoring",
             headers={

@@ -25,7 +25,7 @@ py_cmk_test(
         requirement("pytest-random-order"),
         requirement("fastapi"),
         requirement("starlette"),
-        requirement("httpx"),
+        requirement("httpx2"),
         requirement("python-dateutil"),
     ],
 )

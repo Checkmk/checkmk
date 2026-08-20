@@ -1803,13 +1803,13 @@ httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
     #   -r non-free/packages/cmk-relay-engine/requirements.in
-    #   -r packages/cmk-agent-receiver/requirements.in
     #   meraki
 httpx2==2.12.0 \
     --hash=sha256:7631fe9887a8a2275f4a2540e053aa670fcc50742864a9ae7c66e609fdcf12cf \
     --hash=sha256:cc8b6eecb8661c146b8f89a60e97456ee086e91a784ed31ac450c3a9e613dd36
     # via
     #   -r non-free/packages/cmk-mcp/requirements.in
+    #   -r packages/cmk-agent-receiver/requirements.in
     #   mcp
 hypothesis==6.165.10 \
     --hash=sha256:00de0abdcf8c05c9d0eab735a3c49a276376b55151e6fcb903c2b39a90e5e5c3 \

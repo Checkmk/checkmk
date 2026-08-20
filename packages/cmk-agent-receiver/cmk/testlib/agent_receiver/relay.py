@@ -6,7 +6,7 @@ import logging
 import uuid
 from http import HTTPStatus
 
-import httpx
+import httpx2
 
 from cmk.agent_receiver.relay.lib.relays_repository import CheckmkAPIError
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
@@ -20,7 +20,7 @@ def random_relay_id() -> RelayID:
     return RelayID(str(uuid.uuid4()))
 
 
-def site_has_relay(client: httpx.Client, relay_id: RelayID, auth: SiteAuth) -> bool:
+def site_has_relay(client: httpx2.Client, relay_id: RelayID, auth: SiteAuth) -> bool:
     resp = client.get(url=f"/objects/relay/{relay_id}", auth=auth)
     if resp.status_code == HTTPStatus.NOT_FOUND:
         return False

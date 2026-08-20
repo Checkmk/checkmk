@@ -11,7 +11,7 @@ from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch
 
-import httpx
+import httpx2
 import pytest
 from fastapi.testclient import TestClient
 
@@ -334,7 +334,7 @@ def _post_raw_monitoring_data(
     serial: Serial,
     service: str,
     payload: bytes = b"monitoring payload",
-) -> httpx.Response:
+) -> httpx2.Response:
     """Post monitoring data as raw JSON, bypassing client-side Pydantic validation."""
     return raw_post(
         test_client,
@@ -381,10 +381,10 @@ def raw_post(
     json: object,
     identity_cn: str,
     issuer_cn: str,
-) -> httpx.Response:
+) -> httpx2.Response:
     """Escape hatch for tests that must send raw JSON (bypass Pydantic client-side validation).
     Sets INJECTED_UUID_HEADER and INJECTED_ISSUER_HEADER for you."""
-    return http.post(  # type: ignore[no-any-return]
+    return http.post(
         path,
         headers={INJECTED_UUID_HEADER: identity_cn, INJECTED_ISSUER_HEADER: issuer_cn},
         json=json,

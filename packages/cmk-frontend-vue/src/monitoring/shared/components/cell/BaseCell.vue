@@ -175,6 +175,14 @@ const highlightStyle = computed<CSSProperties>(() =>
     }
   }
 
+  a.monitoring-base-cell__link--highlighted {
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
   .monitoring-base-cell__link {
     display: flex;
     align-items: flex-start;
@@ -289,25 +297,19 @@ const highlightStyle = computed<CSSProperties>(() =>
   color: var(--cell-highlight-font-color);
 }
 
+.monitoring-base-cell
+  a.monitoring-base-cell__link--highlighted:hover
+  .monitoring-base-cell__highlight {
+  text-decoration: underline;
+  text-decoration-color: currentcolor;
+}
+
 .monitoring-base-cell__highlight::after {
   content: '';
   flex: 0 0 auto;
   width: var(--cell-highlight-bar-width);
   height: var(--cell-highlight-bar-height);
   background: var(--cell-highlight-accent-color);
-}
-
-.monitoring-base-cell__link--highlighted {
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: none;
-
-    .monitoring-base-cell__highlight {
-      text-decoration: underline;
-      text-decoration-color: currentcolor;
-    }
-  }
 }
 
 /* The accent bar holds across both themes; only the value adapts to its background. */

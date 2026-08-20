@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::defines::values;
+use crate::config::defines::{keys, values};
 use anyhow::{bail, Context, Result};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -784,12 +784,13 @@ pub fn convert(
         .get("MAX_TASKS")
         .and_then(|v| v.parse::<u32>().ok());
 
+    let excluded_sections = find_excluded_sections(variables);
     let only_sids = parse_sid_list(variables, "ONLY_SIDS");
-    let mut skip_sids = parse_sid_list(variables, "SKIP_SIDS");
-    skip_sids.extend(find_excluded_instances(variables));
+    let skip_sids = parse_sid_list(variables, "SKIP_SIDS");
 
     out.extend(format_options(max_tasks));
     out.extend(format_instances(&dbuser, &dbuser_extras, &custom_sqls));
+    out.extend(format_excluded_sections(&excluded_sections));
     out.extend(format_sections(&all, &asyncs, &normals, &asms));
     out.extend(format_custom_metrics(&custom_sqls));
     out.extend(format_cache_age(cache_maxage));
@@ -854,7 +855,6 @@ fn format_instances(
                 &alias
             ));
         };
-
         // The main DBUSER (sid == None) inherits connection and authentication
         // from `main:`; emitting them again here would duplicate the credentials
         // and pair a self-resolving TNS alias with an explicit host/port. Only
@@ -1019,6 +1019,26 @@ fn format_sections(
     lines
 }
 
+fn format_excluded_sections(excluded_sections: &HashMap<String, Vec<String>>) -> Vec<String> {
+    if excluded_sections.is_empty() {
+        return Vec::new();
+    }
+    let mut lines = vec![format!("    {}:\n", keys::EXCLUDED_SECTIONS)];
+    // Sort by SID: `HashMap` iteration order is unspecified, but the generated
+    // config must be stable across runs.
+    let mut sids: Vec<&String> = excluded_sections.keys().collect();
+    sids.sort();
+    for sid in sids {
+        lines.push(format!("      - {}:\n", keys::TARGET_ID));
+        lines.push(format!("          sid: {sid}\n"));
+        lines.push(format!(
+            "        sections: [{}]\n",
+            format_yaml_list(&excluded_sections[sid])
+        ));
+    }
+    lines
+}
+
 /// Sections without a SID or TNS alias restriction apply to all instances → global level
 fn format_custom_metrics(custom_sqls: &[LegacyCustomSql]) -> Vec<String> {
     let global: Vec<&LegacyCustomSql> = custom_sqls
@@ -1061,12 +1081,26 @@ fn format_custom_metrics_cache_age(sqls_max_cache_age: Option<u32>) -> Vec<Strin
     vec![format!("    custom_metrics_cache_age: {age}\n")]
 }
 
-fn find_excluded_instances(variables: &HashMap<String, String>) -> Vec<String> {
+/// Sections excluded per SID, as declared by the legacy `EXCLUDE_<SID>='<section> ...'`
+/// variables: the key is the SID, the value that variable's section list.
+///
+/// The legacy plugin removes those sections only while processing that one SID;
+/// every other discovered instance keeps running the globally configured
+/// sections.
+///
+/// A variable with an empty SID or an empty section list is dropped, matching
+/// the legacy plugin, which treats both as no exclusion at all. `EXCLUDE_<SID>=ALL`
+/// is dropped too: it names no section but the whole instance, which is not
+/// supported yet.
+fn find_excluded_sections(variables: &HashMap<String, String>) -> HashMap<String, Vec<String>> {
     variables
         .iter()
         .filter_map(|(name, value)| {
-            let sid = name.strip_prefix("EXCLUDE_")?;
-            (value == "ALL").then(|| sid.to_string())
+            let sid = name
+                .strip_prefix("EXCLUDE_")
+                .filter(|sid| !sid.is_empty())?;
+            let sections: Vec<String> = value.split_whitespace().map(String::from).collect();
+            (!sections.is_empty() && sections != ["ALL"]).then(|| (sid.to_string(), sections))
         })
         .collect()
 }
@@ -1475,6 +1509,113 @@ mod tests {
             inst.alias().as_ref().map(|a| a.to_string()),
             Some("prod_alias".to_string()),
             "explicit field-9 TNS alias must reach the instance, distinct from the SID"
+        );
+    }
+
+    #[test]
+    fn test_find_excluded_sections_maps_sid_to_its_section_list() {
+        let vars = HashMap::from([
+            (
+                "EXCLUDE_proddb".into(),
+                "performance processes sessions".into(),
+            ),
+            ("EXCLUDE_AAA".into(), "jobs".into()),
+        ]);
+
+        assert_eq!(
+            find_excluded_sections(&vars),
+            HashMap::from([
+                (
+                    "proddb".to_string(),
+                    vec![
+                        "performance".to_string(),
+                        "processes".to_string(),
+                        "sessions".to_string()
+                    ]
+                ),
+                ("AAA".to_string(), vec!["jobs".to_string()]),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_find_excluded_sections_drops_empty_sid_and_value() {
+        let vars = HashMap::from([
+            ("EXCLUDE_".into(), "sessions".into()),
+            ("EXCLUDE_XE".into(), "   ".into()),
+            ("EXCLUDE_PROD".into(), String::new()),
+        ]);
+
+        assert!(find_excluded_sections(&vars).is_empty());
+    }
+
+    /// `ALL` excludes the whole instance instead of naming sections, which is
+    /// not supported yet, so the pair is not processed at all.
+    #[test]
+    fn test_find_excluded_sections_drops_a_bare_all() {
+        let vars = HashMap::from([
+            ("EXCLUDE_AAA".into(), "ALL".into()),
+            ("EXCLUDE_BBB".into(), " ALL ".into()),
+            // A list that merely mentions ALL is still a section list.
+            ("EXCLUDE_CCC".into(), "ALL jobs".into()),
+        ]);
+
+        assert_eq!(
+            find_excluded_sections(&vars),
+            HashMap::from([(
+                "CCC".to_string(),
+                vec!["ALL".to_string(), "jobs".to_string()]
+            )])
+        );
+    }
+
+    #[test]
+    fn test_format_excluded_sections_emits_target_block() {
+        let excluded = HashMap::from([(
+            "prodpdb".to_string(),
+            vec!["performance".to_string(), "sessions".to_string()],
+        )]);
+
+        let out: String = format_excluded_sections(&excluded).join("");
+
+        assert_eq!(
+            out,
+            concat!(
+                "    excluded_sections:\n",
+                "      - target_id:\n",
+                "          sid: prodpdb\n",
+                "        sections: [performance, sessions]\n",
+            )
+        );
+    }
+
+    #[test]
+    fn test_format_excluded_sections_empty_map_emits_nothing() {
+        assert!(format_excluded_sections(&HashMap::new()).is_empty());
+    }
+
+    /// Blocks are emitted one per SID, sorted by SID so the config is stable
+    /// regardless of `HashMap` order (XE2 inserted first, XE1 must come first).
+    #[test]
+    fn test_format_excluded_sections_sorts_blocks_by_sid() {
+        let excluded = HashMap::from([
+            ("XE2".to_string(), vec!["jobs".to_string()]),
+            ("XE1".to_string(), vec!["performance".to_string()]),
+        ]);
+
+        let out: String = format_excluded_sections(&excluded).join("");
+
+        assert_eq!(
+            out,
+            concat!(
+                "    excluded_sections:\n",
+                "      - target_id:\n",
+                "          sid: XE1\n",
+                "        sections: [performance]\n",
+                "      - target_id:\n",
+                "          sid: XE2\n",
+                "        sections: [jobs]\n",
+            )
         );
     }
 

@@ -31,26 +31,14 @@ TNS_ADMIN='/opt/oracle/tns #v2'
 
 ---
 
-#### EXCLUDE\_\*=<section> (non-ALL) silently dropped
+#### EXCLUDE\_\* fully supported during migration
 
-Only EXCLUDE\_\*=ALL (full instance exclusion) is migrated. Per-section exclusions are lost without any warning.
-
-```
-EXCLUDE_CCC=ALL    # ✓ migrated → discovery.exclude: [CCC]
-EXCLUDE_CCC=jobs   # ✗ silently dropped — jobs still runs on CCC after migration
-```
-
----
-
-#### ONLY*SIDS and EXCLUDE*\*=ALL conflict
-
-If the same SID appears in both, the output contains it in both include: and exclude: simultaneously.
+EXCLUDE\_<SID> names the sections to skip for that one SID; every other instance keeps
+running the globally configured sections. Nothing of that reaches the YAML - the values
+are parsed and dropped, surviving only in the emitted comments.
 
 ```
-ONLY_SIDS='AAA BBB'
-EXCLUDE_AAA=ALL
-# → include: [AAA, BBB]
-#   exclude: [AAA]        ← AAA in both; conflict unresolved
+EXCLUDE_CCC=jobs   # jobs should migrate as excluded for CCC
 ```
 
 ---

@@ -33,7 +33,6 @@ from cmk.repo_checks.deballast import (
     SrcFile,
     stale_keeps,
     TargetSpec,
-    uses_plugin_discovery_api,
 )
 
 
@@ -202,28 +201,6 @@ def test_module_refs_or_merges_both_tiers() -> None:
 def test_module_refs_empty_is_the_identity_of_or() -> None:
     refs = imports_in_tree(ast.parse("from cmk.gui import foo"))
     assert refs | ModuleRefs.empty() == refs
-
-
-def test_uses_plugin_discovery_api_name_call() -> None:
-    assert uses_plugin_discovery_api(ast.parse("load_plugins()"))
-
-
-def test_uses_plugin_discovery_api_attribute_call() -> None:
-    assert uses_plugin_discovery_api(ast.parse("import pkgutil\npkgutil.iter_modules(paths)"))
-
-
-def test_uses_plugin_discovery_api_import_alias() -> None:
-    assert uses_plugin_discovery_api(ast.parse("from importlib.metadata import entry_points"))
-
-
-def test_uses_plugin_discovery_api_string_literal_does_not_match() -> None:
-    # The names must appear as code, not as data — otherwise this checker
-    # would exempt its own sources, which hold the name list as strings.
-    assert not uses_plugin_discovery_api(ast.parse('NAMES = {"load_plugins", "iter_modules"}'))
-
-
-def test_uses_plugin_discovery_api_plain_code_does_not_match() -> None:
-    assert not uses_plugin_discovery_api(ast.parse("import os\n\nos.getcwd()"))
 
 
 def test_dep_is_used_exact_module_match() -> None:
@@ -549,13 +526,6 @@ def test_does_not_flag_a_dep_whose_generated_src_the_target_lists(tmp_path: Path
     )
     gen = DepInfo(label="//pkg:gen", package="pkg", imports=["."], srcs=["pkg/__test__.py"])
     assert analyze_spec(spec, [gen]) == []
-
-
-def test_reports_nothing_when_the_target_discovers_plugins_at_runtime(tmp_path: Path) -> None:
-    # The target loads plugins dynamically, so its real deps are invisible to
-    # import analysis; flagging any of them would be wrong.
-    spec = _app_spec(tmp_path, "import os\n\nload_plugins()\n")
-    assert analyze_spec(spec, [_dep_lib()]) == []
 
 
 def test_does_not_flag_a_dep_a_conftest_src_imports(tmp_path: Path) -> None:

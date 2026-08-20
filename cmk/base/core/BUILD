@@ -29,6 +29,8 @@ py_library(
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-events",
+        "//packages/cmk-licensing",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-trace",

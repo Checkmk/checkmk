@@ -24,6 +24,7 @@ py_library(
     ],
     deps = [
         "//cmk/utils",
+        "//packages/cmk-events",
         requirement("jinja2"),
         requirement("opsgenie-sdk"),
         requirement("requests"),

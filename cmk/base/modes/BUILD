@@ -14,7 +14,6 @@ py_library(
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-plugin-apis:discover_plugins",
-        "//packages/cmk-trace",
     ],
 )
 
@@ -42,6 +41,7 @@ py_library(
         "//cmk/piggyback:backend",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
+        "//cmk/utils:man_pages",
         "//packages/cmk-ccc:cleanup",
         "//packages/cmk-ccc:config-path",
         "//packages/cmk-ccc:cpu-tracking",
@@ -69,6 +69,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-inventory:inventory",
+        "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:discover_plugins",

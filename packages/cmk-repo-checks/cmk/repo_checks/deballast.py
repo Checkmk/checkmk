@@ -66,10 +66,6 @@ This is a src-import-vs-declared-dep check with the following implemented:
 - Targets with an own src that fails to parse (e.g. Python-2-only agent
   plugins) are skipped as analysis roots: with incomplete import evidence,
   any finding could be a false positive.
-- Targets whose srcs reference a known plugin-discovery API (`load_plugins`,
-  `discover_plugins_from_modules`, `discover_submodules`, `iter_modules`,
-  `iter_namespace`, `entry_points`, `iter_entry_points`) are skipped as
-  analysis roots.
 
 Usage (interactive, prints findings to the terminal):
     bazel lint //cmk/gui/wato:wato
@@ -284,43 +280,6 @@ def is_namespace_shim(src_paths: Sequence[str]) -> bool:
     return all(_basename(p) in _NAMESPACE_SCAFFOLDING_BASENAMES for p in src_paths)
 
 
-# The repo's plugin-discovery entry points. Generic dynamic-import primitives
-# (importlib.import_module, __import__) are deliberately NOT listed: they
-# appear in plenty of infrastructure code with statically-known module names,
-# and matching them would exempt large parts of the tree from analysis.
-_PLUGIN_DISCOVERY_API_NAMES: frozenset[str] = frozenset(
-    {
-        "load_plugins",
-        "discover_plugins_from_modules",
-        "discover_submodules",
-        "iter_modules",
-        "iter_namespace",
-        "entry_points",
-        "iter_entry_points",
-    }
-)
-
-
-def uses_plugin_discovery_api(tree: ast.Module) -> bool:
-    """True if the module references a known runtime plugin-discovery API.
-
-    Plugin contribution deps (filesystem / entry-point discovered) never appear
-    as static imports in the consuming target. When the target's srcs call into
-    such APIs, dropping a plugin dep silently empties the discovered set -
-    something the import-vs-dep check can't see.
-    """
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Attribute) and node.attr in _PLUGIN_DISCOVERY_API_NAMES:
-            return True
-        if isinstance(node, ast.Name) and node.id in _PLUGIN_DISCOVERY_API_NAMES:
-            return True
-        if isinstance(node, ast.ImportFrom):
-            for alias in node.names:
-                if alias.name in _PLUGIN_DISCOVERY_API_NAMES:
-                    return True
-    return False
-
-
 def is_pytest_conftest(src_paths: Sequence[str]) -> bool:
     """True if any of the rule's Python srcs is a `conftest.py`.
 
@@ -479,8 +438,6 @@ def analyze_spec(spec: TargetSpec, deps: Sequence[DepInfo]) -> list[str]:
             # positive. Skip the whole target.
             return []
         parsed_any = True
-        if uses_plugin_discovery_api(tree):
-            return []  # runtime plugin discovery; deps invisible to AST
         pkgs = _containing_packages_for_path(src.short_path, spec.imports, spec.package)
         target_imports |= imports_in_tree(tree, pkgs)
     if not parsed_any:

@@ -7,6 +7,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//omd:__subpackages__",
+        "//tests/unit:__subpackages__",
     ],
     deps = [
         "//packages/cmk-ccc:store",

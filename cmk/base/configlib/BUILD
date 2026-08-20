@@ -25,6 +25,7 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/checking",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-events",
         "//packages/cmk-logwatch:config",
         "//packages/cmk-plugin-apis:agent_based",
     ],

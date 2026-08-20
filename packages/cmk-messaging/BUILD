@@ -26,7 +26,10 @@ py_library(
     ],
     data = ["cmk/messaging/py.typed"],
     imports = ["."],
-    visibility = ["//cmk:__subpackages__"],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests/unit:__subpackages__",
+    ],
     deps = [
         requirement("pika"),
         requirement("pydantic"),

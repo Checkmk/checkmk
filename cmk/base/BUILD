@@ -122,6 +122,7 @@ py_library(
         "//packages/cmk-check-engine:fetchers",
         "//packages/cmk-check-engine:snmplib",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-licensing",
     ],
 )
 
@@ -152,7 +153,6 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-events",
         "//packages/cmk-livestatus-client",
-        "//packages/cmk-profiling:backend",
     ],
 )
 
@@ -226,6 +226,7 @@ py_library(
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine:fetchers",
+        "//packages/cmk-licensing",
     ],
 )
 

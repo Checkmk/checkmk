@@ -189,27 +189,18 @@ watch(
     <UclDetailPageHeader>FormGroupBy</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <table class="ucl-form-group-by__table">
-        <tbody>
-          <tr>
-            <td class="ucl-form-group-by__label">Group by</td>
-            <td>
-              <FormGroupBy
-                v-model="model"
-                :input-type="propState.inputType"
-                :query-suggestions="querySuggestions"
-                :resolve-attribute-kind="resolveAttributeKind"
-              />
-            </td>
-          </tr>
-          <GroupByThenSteps
-            v-if="thenStepsShown"
-            v-model="thenSteps"
-            :group-by-keys="model.keys"
-            label-class="ucl-form-group-by__label"
+      <div class="ucl-form-group-by">
+        <div class="ucl-form-group-by__section">
+          <span class="ucl-form-group-by__label">Group by</span>
+          <FormGroupBy
+            v-model="model"
+            :input-type="propState.inputType"
+            :query-suggestions="querySuggestions"
+            :resolve-attribute-kind="resolveAttributeKind"
           />
-        </tbody>
-      </table>
+        </div>
+        <GroupByThenSteps v-if="thenStepsShown" v-model="thenSteps" :group-by-keys="model.keys" />
+      </div>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />
@@ -221,15 +212,20 @@ watch(
 </template>
 
 <style scoped>
-.ucl-form-group-by__table {
-  border-collapse: separate;
-  border-spacing: 5px;
+.ucl-form-group-by {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-6);
 }
 
-/* Align the row label with the top of a multi-line pill area. */
+.ucl-form-group-by__section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--dimension-4);
+}
+
 .ucl-form-group-by__label {
-  vertical-align: top;
-  padding-top: var(--dimension-3);
-  white-space: nowrap;
+  font-style: italic;
 }
 </style>

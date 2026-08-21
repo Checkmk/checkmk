@@ -9,10 +9,8 @@ import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import { type ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/graph_designer'
 import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
-import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
-import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { immediateWatch } from 'cmk-ui-library/lib/watch'
 import { computed, ref, watch } from 'vue'
 
@@ -26,6 +24,9 @@ import {
   buildConsolidationFunction,
   consolidationFunctionFromWire
 } from '@/graph-designer/consolidation'
+import SourceFormField from '@/graphing/designer/components/forms/SourceFormField.vue'
+import SourceFormStack from '@/graphing/designer/components/forms/SourceFormStack.vue'
+import SourceFormText from '@/graphing/designer/components/forms/SourceFormText.vue'
 import FormMetricBackendAttributes from '@/metric-backend/FormMetricBackendAttributes.vue'
 import FormMetricBackendConsolidation from '@/metric-backend/FormMetricBackendConsolidation.vue'
 import FormMetricNameAutocompleter from '@/metric-backend/FormMetricNameAutocompleter.vue'
@@ -64,7 +65,7 @@ const props = defineProps<{
 }>()
 
 // Only the metric name is validated here; the rest moved to FormMetricBackendConsolidation.
-const metricNameValidation = ref<string[]>([])
+const metricNameValidation = ref<TranslatedString[]>([])
 
 immediateWatch(
   () => props.backendValidation,
@@ -74,7 +75,7 @@ immediateWatch(
       if (message.location[0] !== 'metric_name') {
         return
       }
-      metricNameValidation.value.push(message.message)
+      metricNameValidation.value.push(untranslated(message.message))
       metricName.value = (message.replacement_value as MetricBackendCustomQuery).metric_name
     })
   }
@@ -220,86 +221,68 @@ const {
 </script>
 
 <template>
-  <table>
-    <tbody>
-      <tr>
-        <td>
-          <CmkLabel>{{ _t('Metric') }}</CmkLabel
-          ><CmkLabelRequired />
-        </td>
-        <td>
-          <CmkInlineValidation :validation="metricNameValidation"></CmkInlineValidation>
-          <FormMetricNameAutocompleter
-            v-model:metric-name="metricName"
-            v-model:metric-types="metricTypes"
-            :label="_t('Metric name')"
-            :placeholder="_t('Metric name')"
-            :has-error="metricNameValidation.length > 0"
-            @update:metric-name="metricNameValidation = []"
-          />
-        </td>
-      </tr>
-      <tr>
-        <td class="gd-form-metric-backend-custom-query__label-cell">{{ _t('Attributes') }}</td>
-        <td>
-          <FormMetricBackendAttributes
-            v-model:attribute-filter="attributeFilter"
-            :label="_t('Attributes')"
-            :metric-name="metricName"
-          />
-        </td>
-      </tr>
-      <tr>
-        <td class="gd-form-metric-backend-custom-query__label-cell">{{ _t('Consolidation') }}</td>
-        <td>
-          <FormMetricBackendConsolidation
-            v-model:aggregation-lookback="aggregationLookback"
-            v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
-            v-model:aggregation-histogram-threshold-for-fraction-below="
-              aggregationHistogramThresholdForFractionBelow
-            "
-            v-model:aggregation-histogram-lower-threshold-for-fraction-between="
-              aggregationHistogramLowerThresholdForFractionBetween
-            "
-            v-model:aggregation-histogram-upper-threshold-for-fraction-between="
-              aggregationHistogramUpperThresholdForFractionBetween
-            "
-            v-model:consolidation-function="consolidationFunction"
-            :label="_t('Consolidation')"
-            :metric-types="metricTypes"
-          />
-        </td>
-      </tr>
-      <tr>
-        <td>{{ _t('Group by') }}</td>
-        <td>
-          <FormGroupBy
-            v-model="groupBy"
-            :input-type="groupByInputType"
-            :query-suggestions="groupByQuerySuggestions"
-            :suggestion-revision="groupBySuggestionRevision"
-            :resolve-attribute-kind="groupByResolveAttributeKind"
-          />
-        </td>
-      </tr>
+  <SourceFormStack spacing="field">
+    <SourceFormField
+      v-slot="{ controlId, describedBy, invalid }"
+      :label="_t('Metric')"
+      label-variant="name"
+      required
+      :errors="metricNameValidation"
+    >
+      <FormMetricNameAutocompleter
+        v-model:metric-name="metricName"
+        v-model:metric-types="metricTypes"
+        :component-id="controlId"
+        :label="_t('Metric name')"
+        :placeholder="_t('Metric name')"
+        :has-error="invalid"
+        :described-by="describedBy"
+        @update:metric-name="metricNameValidation = []"
+      />
+    </SourceFormField>
+
+    <SourceFormStack spacing="label">
+      <SourceFormText variant="description">{{ _t('Attributes') }}</SourceFormText>
+      <FormMetricBackendAttributes
+        v-model:attribute-filter="attributeFilter"
+        :label="_t('Attributes')"
+        :metric-name="metricName"
+      />
+    </SourceFormStack>
+
+    <SourceFormStack spacing="label">
+      <SourceFormText variant="description">{{ _t('Consolidation') }}</SourceFormText>
+      <FormMetricBackendConsolidation
+        v-model:aggregation-lookback="aggregationLookback"
+        v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
+        v-model:aggregation-histogram-threshold-for-fraction-below="
+          aggregationHistogramThresholdForFractionBelow
+        "
+        v-model:aggregation-histogram-lower-threshold-for-fraction-between="
+          aggregationHistogramLowerThresholdForFractionBetween
+        "
+        v-model:aggregation-histogram-upper-threshold-for-fraction-between="
+          aggregationHistogramUpperThresholdForFractionBetween
+        "
+        v-model:consolidation-function="consolidationFunction"
+        :label="_t('Consolidation')"
+        :metric-types="metricTypes"
+      />
+    </SourceFormStack>
+
+    <SourceFormStack spacing="label">
+      <SourceFormText variant="description">{{ _t('Group by') }}</SourceFormText>
+      <FormGroupBy
+        v-model="groupBy"
+        :input-type="groupByInputType"
+        :query-suggestions="groupByQuerySuggestions"
+        :suggestion-revision="groupBySuggestionRevision"
+        :resolve-attribute-kind="groupByResolveAttributeKind"
+        :aria-label="_t('Group by: grouping function and keys')"
+      />
       <GroupByThenSteps v-if="thenStepsShown" v-model="thenSteps" :group-by-keys="groupBy.keys" />
-      <slot name="additional-rows"></slot>
-    </tbody>
-  </table>
+    </SourceFormStack>
+
+    <slot name="additional-fields"></slot>
+  </SourceFormStack>
 </template>
-
-<style scoped>
-table {
-  border-collapse: separate;
-  border-spacing: 5px;
-}
-
-/* Make sure the titles stay aligned with the top of the row for multiline rows */
-table td {
-  vertical-align: baseline;
-}
-
-.gd-form-metric-backend-custom-query__label-cell {
-  vertical-align: top;
-}
-</style>

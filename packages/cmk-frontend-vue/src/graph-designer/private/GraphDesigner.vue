@@ -1466,7 +1466,7 @@ const graphDesignerContentAsJson = computed(() => {
 
   <TopicsRenderer :topics="topics">
     <template #query>
-      <div>
+      <div class="gd__query">
         <FormMetricBackendCustomQuery
           :key="queryFormKey"
           v-model:metric-name="dataQuery.metricName"
@@ -1475,7 +1475,7 @@ const graphDesignerContentAsJson = computed(() => {
           v-model:aggregator="dataQuery.aggregator"
           :backend-validation="validateFormMetricBackendCustomQuery(dataQuery)"
         />
-        <CmkButton :aria-label="_t('Add query')" @click="addQuery">
+        <CmkButton class="gd__add-query" :aria-label="_t('Add query')" @click="addQuery">
           {{ _t('Add') }}
         </CmkButton>
       </div>
@@ -1629,6 +1629,16 @@ const graphDesignerContentAsJson = computed(() => {
 </template>
 
 <style scoped>
+.gd__query {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-6);
+}
+
+.gd__add-query {
+  align-self: flex-start;
+}
+
 .gd__metrics-table {
   position: relative;
   z-index: 1;

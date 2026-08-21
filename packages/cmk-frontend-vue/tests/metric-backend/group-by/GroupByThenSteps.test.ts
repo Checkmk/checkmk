@@ -22,14 +22,7 @@ function renderSteps(initial: AggregationStep[] = [], groupByKeys: GroupKey[] = 
     setup() {
       return { thenSteps, groupByKeys }
     },
-    // GroupByThenSteps emits <tr> rows, so host it in a table.
-    template: `
-      <table>
-        <tbody>
-          <GroupByThenSteps v-model="thenSteps" :group-by-keys="groupByKeys" />
-        </tbody>
-      </table>
-    `
+    template: `<GroupByThenSteps v-model="thenSteps" :group-by-keys="groupByKeys" />`
   })
   render(wrapper)
   return { thenSteps }
@@ -46,14 +39,14 @@ test('the add button appends an "avg by everything" step, opened for editing', a
   expect(screen.queryByRole('button', { name: /Edit then step/ })).toBeNull()
 })
 
-test('each added step becomes its own row, atop a persistent "then +" add row', async () => {
+test('each added step gets its own "then" block, atop a persistent "then +" add block', async () => {
   renderSteps()
   await userEvent.click(screen.getByRole('button', { name: 'Add then step' }))
   await userEvent.click(await screen.findByRole('button', { name: 'Add then step' }))
 
-  // Two step rows plus the always-present add row: three "then" rows in total.
-  expect(screen.getAllByRole('row')).toHaveLength(3)
+  // Two step blocks plus the always-present add block.
   expect(screen.getAllByText('then')).toHaveLength(3)
+  expect(screen.queryByRole('row')).toBeNull()
 })
 
 test('removing a step drops it from the model', async () => {

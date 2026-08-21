@@ -18,6 +18,9 @@ import { computed, ref, watch } from 'vue'
 import { type ValidationMessages } from '@/form'
 import FormHelp from '@/form/private/FormHelp.vue'
 
+import SourceFormStack from '@/graphing/designer/components/forms/SourceFormStack.vue'
+import SourceFormText from '@/graphing/designer/components/forms/SourceFormText.vue'
+
 import FormMetricBackendCustomQuery from './FormMetricBackendCustomQuery.vue'
 import { metricBackendMacroHelp } from './constants'
 
@@ -166,23 +169,21 @@ const aggregator = computed<Aggregator | undefined>({
     v-model:aggregator="aggregator"
     :backend-validation="props.backendValidation"
   >
-    <template #additional-rows>
-      <tr>
-        <td>{{ _t('Service name template') }}</td>
-        <td>
-          <div class="gd-form-spec-metric-backend-custom-query__service-name-template">
-            <CmkInput
-              v-model="serviceNameTemplate"
-              type="text"
-              field-size="large"
-              :placeholder="_t('Service name template')"
-              :external-errors="serviceNameTemplateErrors"
-            />
-            <CmkHelpText :help="metricBackendMacroHelp()" />
-          </div>
-          <FormHelp :help="metricBackendMacroHelp()" />
-        </td>
-      </tr>
+    <template #additional-fields>
+      <SourceFormStack spacing="label">
+        <SourceFormText variant="description">{{ _t('Service name template') }}</SourceFormText>
+        <div class="gd-form-spec-metric-backend-custom-query__service-name-template">
+          <CmkInput
+            v-model="serviceNameTemplate"
+            type="text"
+            field-size="large"
+            :placeholder="_t('Service name template')"
+            :external-errors="serviceNameTemplateErrors"
+          />
+          <CmkHelpText :help="metricBackendMacroHelp()" />
+        </div>
+        <FormHelp :help="metricBackendMacroHelp()" />
+      </SourceFormStack>
     </template>
   </FormMetricBackendCustomQuery>
 </template>

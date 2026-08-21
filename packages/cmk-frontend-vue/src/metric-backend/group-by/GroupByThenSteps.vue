@@ -16,14 +16,9 @@ import type { AggregationStep, GroupKey } from './types'
 
 const { _t } = usei18n()
 
-const props = withDefaults(
-  defineProps<{
-    groupByKeys: GroupKey[]
-    // The host table's label-cell class, so "then" aligns with the host's labels.
-    labelClass?: string
-  }>(),
-  { labelClass: '' }
-)
+const props = defineProps<{
+  groupByKeys: GroupKey[]
+}>()
 
 const thenSteps = defineModel<AggregationStep[]>({ required: true })
 
@@ -50,9 +45,13 @@ function updateThenStep(targetIndex: number, updated: AggregationStep): void {
 </script>
 
 <template>
-  <tr v-for="(step, index) in thenSteps" :key="step.id">
-    <td :class="labelClass">{{ _t('then') }}</td>
-    <td>
+  <div class="metric-backend-group-by-then-steps">
+    <div
+      v-for="(step, index) in thenSteps"
+      :key="step.id"
+      class="metric-backend-group-by-then-steps__step"
+    >
+      <span class="metric-backend-group-by-then-steps__label">{{ _t('then') }}</span>
       <GroupByThenStep
         :model-value="step"
         :allowed-keys="allowedKeysForStep(index)"
@@ -60,11 +59,9 @@ function updateThenStep(targetIndex: number, updated: AggregationStep): void {
         @update:model-value="(value) => updateThenStep(index, value)"
         @remove="removeThenStep(index)"
       />
-    </td>
-  </tr>
-  <tr>
-    <td :class="labelClass">{{ _t('then') }}</td>
-    <td>
+    </div>
+    <div class="metric-backend-group-by-then-steps__step">
+      <span class="metric-backend-group-by-then-steps__label">{{ _t('then') }}</span>
       <CmkIconButton
         class="metric-backend-group-by-then-steps__add"
         name="add"
@@ -73,11 +70,29 @@ function updateThenStep(targetIndex: number, updated: AggregationStep): void {
         :aria-label="_t('Add then step')"
         @click="addThenStep"
       />
-    </td>
-  </tr>
+    </div>
+  </div>
 </template>
 
 <style scoped>
+/* Styled locally so this shared component needs no dependency on graphing/designer. */
+.metric-backend-group-by-then-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
+}
+
+.metric-backend-group-by-then-steps__step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--dimension-4);
+}
+
+.metric-backend-group-by-then-steps__label {
+  font-style: italic;
+}
+
 .metric-backend-group-by-then-steps__add:hover {
   background-color: var(--input-hover-bg-color);
 }

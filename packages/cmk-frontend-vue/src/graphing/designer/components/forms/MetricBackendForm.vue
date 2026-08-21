@@ -369,12 +369,7 @@ const {
           :resolve-attribute-kind="groupByResolveAttributeKind"
           :aria-label="_t('And group by: grouping function and keys')"
         />
-        <!-- GroupByThenSteps emits <tr> rows, so it needs a table of its own here. -->
-        <table v-if="thenStepsShown">
-          <tbody>
-            <GroupByThenSteps v-model="thenSteps" :group-by-keys="groupBy.keys" />
-          </tbody>
-        </table>
+        <GroupByThenSteps v-if="thenStepsShown" v-model="thenSteps" :group-by-keys="groupBy.keys" />
       </SourceFormStack>
     </SourceFormStack>
   </SourceFormStack>

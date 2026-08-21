@@ -447,6 +447,66 @@ def test_evaluate_graph_fanned_curves_share_their_source_id() -> None:
     assert len(set(ids)) == len(ids)
 
 
+# --- omitting zero curves -----------------------------------------------------------------------
+
+
+def test_evaluate_graph_keeps_zero_curves_by_default() -> None:
+    flat = _metric("flat")
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        lines=[Line(curve=_curve(flat, "flat"), inverse=False)],
+    )
+    result = _evaluate_graph(
+        graph, _context({flat: _data(value=0.0)}, {flat: _time_series(0.0, 0.0, 0.0)})
+    )
+    assert [line.curve.attributes.title for line in result.lines] == ["flat"]
+
+
+def test_evaluate_graph_omits_zero_and_dataless_curves() -> None:
+    flat, dataless, live = _metric("flat"), _metric("dataless"), _metric("live")
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        omit_zero_curves=True,
+        stacks=[Stack(members=[_curve(flat, "flat")], inverse=False)],
+        lines=[
+            Line(curve=_curve(dataless, "dataless"), inverse=False),
+            Line(curve=_curve(live, "live"), inverse=False),
+        ],
+    )
+    result = _evaluate_graph(
+        graph,
+        _context(
+            {flat: _data(value=0.0), live: _data(value=4.0)},
+            {
+                flat: _time_series(0.0, 0.0, 0.0),
+                dataless: _time_series(None, None, None),
+                live: _time_series(0.0, 0.0, 4.0),
+            },
+        ),
+    )
+    # A curve flat at zero and one without a single data point are both dropped; a curve holding
+    # one non-zero point stays. The stack left without members goes with them.
+    assert result.stacks == []
+    assert [line.curve.attributes.title for line in result.lines] == ["live"]
+
+
+def test_evaluate_graph_omits_only_the_zero_series_of_a_fanned_curve() -> None:
+    fan = _FannedQuantity(series=[("flat", 0.0), ("live", 2.0)])
+    graph = Graph(
+        name="g",
+        title="g",
+        kind="test",
+        omit_zero_curves=True,
+        lines=[Line(curve=_curve(fan, "$SERIES_ID$"), inverse=False)],
+    )
+    result = _evaluate_graph(graph, _context({}, {}))
+    assert [line.curve.attributes.title for line in result.lines] == ["live"]
+
+
 # --- per-series title macros --------------------------------------------------------------------
 
 

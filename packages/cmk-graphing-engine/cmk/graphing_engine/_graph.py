@@ -52,6 +52,8 @@ class Graph:
     title: str
     kind: str
     vertical_range: VerticalRange | None = None
+    # Drop the curves with nothing to see - all zero, or no data at all - instead of drawing them.
+    omit_zero_curves: bool = False
     stacks: Sequence[Stack] = ()
     lines: Sequence[Line] = ()
     rules: Sequence[Rule] = ()

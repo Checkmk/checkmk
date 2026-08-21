@@ -116,6 +116,7 @@ def _add_predictive_lines(
             title=graph.title,
             kind=graph.kind,
             vertical_range=graph.vertical_range,
+            omit_zero_curves=graph.omit_zero_curves,
             stacks=graph.stacks,
             lines=[*graph.lines, *added],
             rules=graph.rules,

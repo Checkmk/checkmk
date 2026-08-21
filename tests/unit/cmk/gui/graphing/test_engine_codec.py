@@ -193,6 +193,15 @@ def test_rrd_metric_site_id_round_trips() -> None:
     assert line.curve.quantity == metric
 
 
+def test_omit_zero_curves_round_trips() -> None:
+    # The option rides on the graph, not on the request, so losing it here would silently drop it
+    # for every graph rendered from the posted wire form.
+    graph = Graph(name="g", title="G", kind="custom", omit_zero_curves=True)
+    codec = community_graph_codec()
+    [restored] = codec.deserialize_graphs(codec.serialize_graphs([graph]))
+    assert restored.omit_zero_curves is True
+
+
 def test_template_round_trip_is_lossless() -> None:
     codec = community_graph_codec()
     graphs = _rich_graphs()

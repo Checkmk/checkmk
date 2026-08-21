@@ -399,6 +399,7 @@ class GraphCodec:
             "vertical_range": (
                 None if graph.vertical_range is None else self._range_to_json(graph.vertical_range)
             ),
+            "omit_zero_curves": graph.omit_zero_curves,
             "stacks": [self._stack_to_json(stack) for stack in graph.stacks],
             "lines": [self._line_to_json(line) for line in graph.lines],
             "rules": [self._rule_to_json(rule) for rule in graph.rules],
@@ -414,6 +415,7 @@ class GraphCodec:
             vertical_range=(
                 None if vertical_range is None else self._range_from_json(vertical_range)
             ),
+            omit_zero_curves=ensure_type(data["omit_zero_curves"], bool),
             stacks=[self._stack_from_json(stack) for stack in _as_list(data["stacks"])],
             lines=[self._line_from_json(line) for line in _as_list(data["lines"])],
             rules=[self._rule_from_json(rule) for rule in _as_list(data["rules"])],

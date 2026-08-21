@@ -159,6 +159,12 @@ def _evaluate_curve(
     ]
 
 
+def _drawn_curves(curves: Sequence[EvaluatedCurve], *, omit_zero: bool) -> Sequence[EvaluatedCurve]:
+    if not omit_zero:
+        return curves
+    return [curve for curve in curves if any(curve.time_series.values)]
+
+
 def _evaluate_rule(rule: Rule, rule_id: str, context: EvaluationContext) -> EvaluatedRule | None:
     value = first_value(rule.curve.quantity.evaluate(context))
     if value is None:
@@ -175,13 +181,16 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
     seen: Counter[str] = Counter()
     stacks = []
     for group in graph.stacks:
-        members = [
-            member_curve
-            for member in group.members
-            for member_curve in _evaluate_curve(
-                member, inverse=group.inverse, seen=seen, context=context
-            )
-        ]
+        members = _drawn_curves(
+            [
+                member_curve
+                for member in group.members
+                for member_curve in _evaluate_curve(
+                    member, inverse=group.inverse, seen=seen, context=context
+                )
+            ],
+            omit_zero=graph.omit_zero_curves,
+        )
         reference = None
         if group.reference is not None:
             references = _evaluate_curve(
@@ -195,8 +204,9 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
     lines = [
         EvaluatedLine(curve=line_curve, inverse=line.inverse)
         for line in graph.lines
-        for line_curve in _evaluate_curve(
-            line.curve, inverse=line.inverse, seen=seen, context=context
+        for line_curve in _drawn_curves(
+            _evaluate_curve(line.curve, inverse=line.inverse, seen=seen, context=context),
+            omit_zero=graph.omit_zero_curves,
         )
     ]
     rules = []

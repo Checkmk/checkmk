@@ -5,17 +5,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { type MaybeRefOrGetter, toValue } from 'vue'
 
 interface DisabledTooltipWrapperProps {
   disabled: boolean
-  tooltip?: TranslatedString | undefined
+  tooltip?: MaybeRefOrGetter<TranslatedString> | undefined
 }
 
 const props = defineProps<DisabledTooltipWrapperProps>()
 </script>
 
 <template>
-  <span v-if="props.disabled" class="db-disabled-tooltip-wrapper" :title="props.tooltip">
+  <span v-if="props.disabled" class="db-disabled-tooltip-wrapper" :title="toValue(props.tooltip)">
     <slot />
   </span>
   <slot v-else />

@@ -921,6 +921,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         # so it must not depend on either of them.
         "cmk.ccc.store",
         "cmk.ccc.version",
+        "cmk.ccc.version_info",
         "cmk.livestatus_client",
         "cmk.utils.http_proxy_config",
     ),

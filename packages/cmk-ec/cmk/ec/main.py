@@ -45,7 +45,7 @@ from cmk.ccc.exceptions import MKException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.translations import translate
-from cmk.ccc.version import get_general_version_infos
+from cmk.ccc.version_info import get_general_version_infos
 from cmk.livestatus_client import LocalConnection
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened

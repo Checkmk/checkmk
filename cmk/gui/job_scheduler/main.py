@@ -19,6 +19,7 @@ from typing import override
 from setproctitle import setproctitle
 
 import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.ccc import crash_reporting
 from cmk.ccc.crash_reporting import make_crash_report_base_path
@@ -54,7 +55,7 @@ def default_crash_report_callback(_exc: Exception) -> str:
     crash = JobSchedulerCrashReport(
         crash_report_base_path=make_crash_report_base_path(paths.omd_root),
         crash_info=JobSchedulerCrashReport.make_crash_info(
-            cmk_version.get_general_version_infos(paths.omd_root), None
+            cmk_version_info.get_general_version_infos(paths.omd_root), None
         ),
     )
     crash_reporting.CrashReportStore().save(crash)

@@ -57,6 +57,7 @@ py_library(
         "//packages/cmk-ccc:translations",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-ccc:version-info",
         "//packages/cmk-events",
         "//packages/cmk-mkp-tool",
         requirement("pyasn1"),

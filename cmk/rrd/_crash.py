@@ -14,7 +14,7 @@ from cmk.ccc.crash_reporting import (
     make_crash_report_base_path,
     VersionInfo,
 )
-from cmk.ccc.version import get_general_version_infos
+from cmk.ccc.version_info import get_general_version_infos
 from cmk.utils import paths
 
 

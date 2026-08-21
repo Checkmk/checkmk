@@ -201,15 +201,36 @@ py_library(
 py_library(
     name = "version",
     srcs = [
-        "cmk/ccc/general_version_infos.py",
         "cmk/ccc/version.py",
     ],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
         "_init",
+    ],
+)
+
+py_library(
+    name = "version-info",
+    srcs = ["cmk/ccc/version_info.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
         "crash-reporting",
         "site",
+        "version",
+    ],
+)
+
+py_library(
+    name = "general-version-infos",
+    srcs = ["cmk/ccc/general_version_infos.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        "_init",
+        "version-info",
     ],
 )
 
@@ -255,6 +276,8 @@ _ALL = [
     "tty",
     "user",
     "version",
+    "version-info",
+    "general-version-infos",
 ]
 
 py_doc_test(

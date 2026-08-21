@@ -20,6 +20,7 @@ from uuid import UUID
 import livestatus
 
 import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 from cmk.ccc import store
 from cmk.ccc.site import omd_site
 from cmk.ccc.version import Edition
@@ -175,7 +176,7 @@ def create_sample(now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSa
     synthetic_monitoring_counter = _get_synthetic_monitoring_counter()
     num_active_metric_series = get_average_active_metric_series() or 0
 
-    general_infos = cmk_version.get_general_version_infos(omd_root)
+    general_infos = cmk_version_info.get_general_version_infos(omd_root)
     extensions = _load_extensions()
 
     return LicenseUsageSample(

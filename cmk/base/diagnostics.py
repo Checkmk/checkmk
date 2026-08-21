@@ -37,6 +37,7 @@ import requests
 import livestatus
 
 import cmk.ccc.version as cmk_version
+import cmk.ccc.version_info as cmk_version_info
 import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult
 from cmk.base.automations.automations import Automation, AutomationContext, load_config
@@ -875,7 +876,7 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        version_infos = cmk_version.get_general_version_infos(omd_root)
+        version_infos = cmk_version_info.get_general_version_infos(omd_root)
         time_obj = datetime.fromtimestamp(version_infos.get("time", 0.0))
         return {
             "arch": platform.machine(),

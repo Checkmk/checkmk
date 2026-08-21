@@ -13,7 +13,7 @@ import cmk.ccc.resulttype as result
 from cmk.ccc import debug
 from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.exceptions import MKTimeout
-from cmk.ccc.version import general_version_infos_from_env
+from cmk.ccc.version_info import general_version_infos_from_env
 from cmk.helper_interface import create_fetcher_crash_dump, FetcherError
 
 from ._abstract import Fetcher, Mode

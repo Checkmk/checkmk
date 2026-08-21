@@ -218,6 +218,7 @@ CMK_PACKAGES = [
     "//packages/cmk-ccc:user",
     "//packages/cmk-ccc:archive",
     "//packages/cmk-ccc:version",
+    "//packages/cmk-ccc:version-info",
     "//packages/cmk-check-engine:fetchers",
     "//packages/cmk-check-engine:helper-interface",
     "//packages/cmk-check-engine:snmplib",

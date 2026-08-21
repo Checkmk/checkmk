@@ -12,7 +12,7 @@ UVENV="$SCRIPTS/run-uvenv"
 EDITION="${EDITION:-pro}"
 MAX_CHARS=1500000
 
-AGENT_PLUGIN_PYTHON_VERSIONS="3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11 3.12"
+AGENT_PLUGIN_PYTHON_VERSIONS=$(grep -oP '^\s*AGENT_PLUGIN_PYTHON_VERSIONS\s*:=\s*\K.*' "${REPO_PATH}"/defines.make)
 
 # Re-evaluate TEST_FILTER as shell tokens so that shell-quoted expressions like
 # e.g. '-m "foo and bar"' split into proper arguments matching

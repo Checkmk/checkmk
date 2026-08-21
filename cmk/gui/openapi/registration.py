@@ -6,7 +6,6 @@
 from cmk.gui.openapi.endpoints import (
     acknowledgement,
     activate_changes,
-    audit_log,
     aux_tags,
     broker_connection,
     cert,
@@ -30,6 +29,9 @@ from .api_endpoints import (
     icon,
     rule,
     site_management,
+)
+from .api_endpoints import (
+    audit_log as api_audit_log,
 )
 from .api_endpoints import (
     autocomplete as api_autocomplete,
@@ -73,7 +75,6 @@ def register(
 
     acknowledgement.register(endpoint_registry)
     activate_changes.register(endpoint_registry)
-    audit_log.register(endpoint_registry)
     aux_tags.register(endpoint_registry)
     cert.register(endpoint_registry)
     contact_group_config.register(endpoint_registry)
@@ -168,6 +169,10 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_autocomplete.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    api_audit_log.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

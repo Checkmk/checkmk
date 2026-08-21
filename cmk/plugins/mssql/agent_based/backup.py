@@ -20,6 +20,7 @@ from cmk.agent_based.v2 import (
     render,
     Result,
     Service,
+    ServiceLabel,
     State,
     StringTable,
 )
@@ -62,7 +63,8 @@ class Backup(NamedTuple):
     state: str
 
 
-Section = Mapping[str, Sequence[Backup]]
+SectionBackup = Mapping[str, Sequence[Backup]]
+SectionDatabases = dict[str, dict[str, str]]
 
 
 _MAP_BACKUP_TYPES = {
@@ -103,7 +105,7 @@ def _get_word(line: Sequence[str], idx: int) -> str | None:
         return None
 
 
-def parse_mssql_backup(string_table: StringTable) -> Section:
+def parse_mssql_backup(string_table: StringTable) -> SectionBackup:
     parsed: dict[str, list[Backup]] = {}
 
     line: Sequence[str | None]
@@ -133,15 +135,37 @@ agent_section_mssql_backup = AgentSection(
 )
 
 
-def discover_mssql_backup(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
+def discover_mssql_backup(
+    params: Mapping[str, Any],
+    section_mssql_backup: SectionBackup | None,
+    section_mssql_databases: SectionDatabases | None,
+) -> DiscoveryResult:
     if params["mode"] != "summary":
         return
-    for db_name in section:
-        yield Service(item=db_name)
+    for db_name in section_mssql_backup:
+        try:
+            yield Service(
+                item=db_name,
+                labels=[
+                    ServiceLabel(
+                        name="cmk/mssql_recovery_type",
+                        value=section_mssql_databases.get(db_name.split("MSSQL_")[1]).get(
+                            "Recovery"
+                        ),
+                    )
+                ],
+            )
+        except Exception:
+            yield Service(item=db_name)
 
 
-def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    data = section.get(item)
+def check_mssql_backup(
+    item: str,
+    params: Mapping[str, Any],
+    section_mssql_backup: SectionBackup | None,
+    section_mssql_databases: SectionDatabases | None,
+) -> CheckResult:
+    data = section_mssql_backup.get(item)
     if data is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
@@ -186,6 +210,7 @@ def check_mssql_backup(item: str, params: Mapping[str, Any], section: Section) -
 
 check_plugin_mssql_backup = CheckPlugin(
     name="mssql_backup",
+    sections=["mssql_backup", "mssql_databases"],
     service_name="MSSQL %s Backup",
     discovery_function=discover_mssql_backup,
     discovery_ruleset_name="discovery_mssql_backup",
@@ -222,7 +247,7 @@ def _mssql_backup_per_type_item(db_name: str, backup: Backup) -> str:
     return f"{db_name} {backup.type.title()}"
 
 
-def discover_mssql_backup_per_type(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
+def discover_mssql_backup_per_type(params: Mapping[str, Any], section: SectionBackup) -> DiscoveryResult:
     if params["mode"] != "per_type":
         return
     for db_name, attrs in section.items():
@@ -231,7 +256,7 @@ def discover_mssql_backup_per_type(params: Mapping[str, Any], section: Section) 
 
 
 def check_mssql_backup_per_type(
-    item: str, params: Mapping[str, Any], section: Section
+    item: str, params: Mapping[str, Any], section: SectionBackup
 ) -> CheckResult:
     for db_name, attrs in section.items():
         for backup in attrs:

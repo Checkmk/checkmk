@@ -126,7 +126,8 @@ def _write_ec_rule(site: Site, rule: list | None) -> None:
 
 def _activate_ec_changes(site: Site) -> None:
     replication_changes_path = site.path(f"var/check_mk/wato/replication_changes_{site.id}.mk")
-    site.write_file(str(replication_changes_path), str(_get_replication_change()))
+    # ABCAppendStore entries are "\0"-terminated; without it the next append concatenates onto ours.
+    site.write_file(str(replication_changes_path), f"{_get_replication_change()}\0")
     site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 

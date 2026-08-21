@@ -4669,6 +4669,29 @@ class MetricBackendClient(RestApiClient):
         )
 
 
+class CustomServiceClient(RestApiClient):
+    domain: DomainType = "custom_service"
+    default_version = APIVersion.UNSTABLE
+
+    def create(
+        self,
+        configuration_name: str,
+        host_assignment: Mapping[str, Any],
+        configuration: Mapping[str, Any],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body={
+                "configuration_name": configuration_name,
+                "host_assignment": dict(host_assignment),
+                "configuration": dict(configuration),
+            },
+            expect_ok=expect_ok,
+        )
+
+
 class PagetypeTopicClient(RestApiClient):
     domain: DomainType = "pagetype_topic"
     default_version = APIVersion.INTERNAL
@@ -5117,6 +5140,7 @@ class ClientRegistry:
     ServiceAvailability: ServiceAvailabilityClient
     DisabledEndpointStub: DisabledEndpointStubClient
     MonitorHosts: MonitorHostsClient
+    CustomService: CustomServiceClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -5185,4 +5209,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         ServiceAvailability=ServiceAvailabilityClient(request_handler, url_prefix),
         DisabledEndpointStub=DisabledEndpointStubClient(request_handler, url_prefix),
         MonitorHosts=MonitorHostsClient(request_handler, url_prefix),
+        CustomService=CustomServiceClient(request_handler, url_prefix),
     )

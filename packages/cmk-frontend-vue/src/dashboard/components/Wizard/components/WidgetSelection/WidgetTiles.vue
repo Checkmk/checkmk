@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { unref } from 'vue'
+import { type MaybeRefOrGetter, unref } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
@@ -16,7 +16,7 @@ import type { WidgetItemList } from './types'
 interface WidgetTilesProps {
   availableItems: WidgetItemList
   enabledWidgets: string[]
-  disabledTooltip?: TranslatedString | undefined
+  disabledTooltip?: MaybeRefOrGetter<TranslatedString> | undefined
   compact?: boolean
 }
 

@@ -4,18 +4,20 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { type MaybeRefOrGetter, toValue } from 'vue'
+
 import type { TranslatedString } from '@/lib/i18nString'
 
 interface DisabledTooltipWrapperProps {
   disabled: boolean
-  tooltip?: TranslatedString | undefined
+  tooltip?: MaybeRefOrGetter<TranslatedString> | undefined
 }
 
 const props = defineProps<DisabledTooltipWrapperProps>()
 </script>
 
 <template>
-  <span v-if="props.disabled" class="db-disabled-tooltip-wrapper" :title="props.tooltip">
+  <span v-if="props.disabled" class="db-disabled-tooltip-wrapper" :title="toValue(props.tooltip)">
     <slot />
   </span>
   <slot v-else />

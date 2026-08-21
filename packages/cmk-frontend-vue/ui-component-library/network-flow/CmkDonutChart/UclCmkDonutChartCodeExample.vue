@@ -10,10 +10,12 @@ import { formatBytes } from '@/network-flow/format'
 const slices: DonutSlice[] = [
   { key: 'tls', label: 'TLS', value: 4_720_000_000, color: 'blue' },
   { key: 'pops', label: 'POPS', value: 1_700_000_000, color: 'purple' },
-  { key: 'other', label: 'Other', value: 3_580_000_000, color: 'grey' }
+  // The remainder is the one slice with a breakdown behind it.
+  { key: 'other', label: 'Other', value: 3_580_000_000, color: 'grey', isOther: true }
 ]
 </script>
 
 <template>
-  <CmkDonutChart :slices="slices" :format-value="formatBytes" />
+  <!-- legendMode defaults to the table; "compact" names the categories as chips. -->
+  <CmkDonutChart :slices="slices" :format-value="formatBytes" legend-mode="table" />
 </template>

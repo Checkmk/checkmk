@@ -108,15 +108,7 @@ fn renew_all_certificates(
         return Ok(());
     }
     for (site_id, connection) in registry.get_standard_connections_as_mut() {
-        if let Err(error) =
-            conditionally_renew_connection_cert(site_id, connection, renew_certificate_api)
-        {
-            warn!(
-                "Failed to renew certificate for {}. ({})",
-                site_id,
-                misc::anyhow_error_to_human_readable(&error)
-            );
-        }
+        conditionally_renew_connection_cert(site_id, connection, renew_certificate_api)?;
     }
     registry.save()?;
     Ok(())
@@ -190,24 +182,6 @@ mod test_renew_certificate {
             connection: &config::TrustedConnection,
             _csr: String,
         ) -> AnyhowResult<agent_receiver_api::RenewCertificateResponse> {
-            Ok(agent_receiver_api::RenewCertificateResponse {
-                agent_cert: format!("new_cert_for_{}", connection.uuid),
-            })
-        }
-    }
-
-    struct ApiFailingForOneSite {}
-
-    impl agent_receiver_api::RenewCertificate for ApiFailingForOneSite {
-        fn renew_certificate(
-            &self,
-            base_url: &reqwest::Url,
-            connection: &config::TrustedConnection,
-            _csr: String,
-        ) -> AnyhowResult<agent_receiver_api::RenewCertificateResponse> {
-            if base_url.host_str() == Some("unreachable-server") {
-                bail!("Connection refused");
-            }
             Ok(agent_receiver_api::RenewCertificateResponse {
                 agent_cert: format!("new_cert_for_{}", connection.uuid),
             })
@@ -373,31 +347,6 @@ mod test_renew_certificate {
 
         let conn = &registry.get_imported_pull_connections().next().unwrap();
         assert!(conn.certificate == a.cert_too_short);
-        Ok(())
-    }
-
-    #[test]
-    fn test_renew_all_certificates_persists_renewals_despite_unreachable_site() -> AnyhowResult<()>
-    {
-        let cert = mk_ca_cert(10)?;
-        let mut fixture = TestRegistry::new()
-            .add_connection(
-                &config::ConnectionMode::Pull,
-                "unreachable-server/site",
-                new_trusted_connection_with_remote(cert.clone()),
-            )
-            .add_connection(
-                &config::ConnectionMode::Pull,
-                "server/site",
-                new_trusted_connection_with_remote(cert),
-            );
-        let registry = &mut fixture.registry;
-
-        renew_all_certificates(registry, &ApiFailingForOneSite {})?;
-
-        let saved_registry = Registry::from_file(registry.path())?;
-        let connection = get_connection(&saved_registry, "server/site");
-        assert!(connection.certificate == format!("new_cert_for_{}", connection.uuid));
         Ok(())
     }
 

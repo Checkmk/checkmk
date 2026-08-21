@@ -10,6 +10,9 @@ import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/Cmk
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw, ref, watch } from 'vue'
 
+import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
+import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
+import { fetchEvents } from '@/monitoring/events/api'
 import { ServiceGraphsApi } from '@/monitoring/host-services/api/graphs'
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
 import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
@@ -169,6 +172,14 @@ const tabs = computed<SlideInTab[]>(() => {
       component: markRaw(ServiceOverviewTab),
       skeleton: markRaw(ServiceOverviewSkeleton),
       load: () => loadOverview(service.name)
+    },
+    {
+      id: 'history',
+      title: _t('History'),
+      component: markRaw(EventHistoryApp),
+      skeleton: markRaw(TableSkeleton),
+      props: { subject: 'service' },
+      load: () => fetchEvents(props.host, service.name)
     },
     {
       id: 'service_graphs',

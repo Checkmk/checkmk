@@ -387,6 +387,52 @@ describe('ServiceSlideIn', () => {
     )
   })
 
+  it('offers a History tab next to Overview, with Overview still shown first', async () => {
+    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    await screen.findByText('Service details')
+
+    const tabs = screen.getAllByRole('tab').map((tab) => tab.textContent?.trim())
+
+    expect(tabs).toEqual(['Overview', 'History', 'Service graphs'])
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('loads the history of that one service when its tab is activated', async () => {
+    vi.spyOn(client, 'GET').mockImplementation(((url: string) =>
+      Promise.resolve(
+        url === '/monitor/hosts/{hostname}/events'
+          ? {
+              data: {
+                events: [],
+                meta: {
+                  limit: 500,
+                  truncated: false,
+                  since: Math.floor(Date.now() / 1000) - 8 * 24 * 60 * 60,
+                  legacy_events_link:
+                    'view.py?view_name=svcevents&site=local&host=web-server-01&service=CPU+load'
+                }
+              },
+              error: undefined,
+              response: new Response()
+            }
+          : { data: makeOverview(), error: undefined, response: new Response() }
+      )) as never)
+    render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
+    await screen.findByText('Service details')
+
+    await userEvent.click(screen.getByRole('tab', { name: 'History' }))
+
+    expect(client.GET).toHaveBeenCalledWith('/monitor/hosts/{hostname}/events', {
+      params: {
+        path: { hostname: 'web-server-01' },
+        query: { site_id: 'local', service_name: 'CPU load' }
+      }
+    })
+    expect(
+      await screen.findByText('This service has no events in the last 8 days.')
+    ).toBeInTheDocument()
+  })
+
   it('emits close when the close button is used', async () => {
     const { emitted } = render(ServiceSlideIn, { props: { service: makeService(), host: HOST } })
     await screen.findByText('Service details')

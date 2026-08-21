@@ -117,7 +117,7 @@ export class OverlayConfig {
   }
 }
 
-export class ComputationOptions {
+class ComputationOptions {
   merge_nodes: boolean
   show_services: 'all' | 'none' | 'only_problems'
   hierarchy: string
@@ -194,7 +194,7 @@ export interface TopologyBackendResponse extends BackendResponse {
   frontend_configuration: TopologyFrontendConfig
 }
 
-export interface GrowthSettings {
+interface GrowthSettings {
   // Growth stuff for topology
   growth_root: boolean
   growth_forbidden: boolean
@@ -264,7 +264,7 @@ export interface CoreInfo {
   in_downtime?: boolean
 }
 
-export interface LineConfig {
+interface LineConfig {
   thickness?: number
   color?: string
   tooltip?: string
@@ -284,14 +284,14 @@ export interface Tooltip {
   quickinfo?: Quickinfo
 }
 
-export interface LinkConfig {
+interface LinkConfig {
   type: 'default'
   line_config?: LineConfig
   tooltip?: Tooltip
   topology_classes?: [string, boolean][]
 }
 
-export interface SerializedNodevisLink {
+interface SerializedNodevisLink {
   source: string
   target: string
   config: LinkConfig
@@ -315,7 +315,7 @@ export interface ContextMenuElement {
   children?: ContextMenuElement[]
 }
 
-export interface NodeVisHierarchyNode<Datum> extends HierarchyNode<Datum> {
+interface NodeVisHierarchyNode<Datum> extends HierarchyNode<Datum> {
   _children?: this[] | undefined | null
   x: number // can also be undefined in original type definition
   y: number // can also be undefined in original type definition

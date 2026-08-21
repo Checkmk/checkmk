@@ -275,11 +275,11 @@ function unfold_sidebar() {
 //
 
 // The refresh snapins do reload after a defined amount of time
-let refresh_snapins: string[][] = []
+const refresh_snapins: string[][] = []
 // The restart snapins are notified about the restart of the nagios instance(s)
-let restart_snapins: string[] = []
+const restart_snapins: string[] = []
 // Snapins that only have to be reloaded on demand
-let static_snapins: string[] = []
+const static_snapins: string[] = []
 
 export function add_snapin(name: string) {
   call_ajax('sidebar_ajax_add_snapin.py?name=' + name, {
@@ -441,7 +441,7 @@ export function refresh_single_snapin(name: string) {
 
 // FIXME: Make this somehow configurable - use the start url?
 let g_last_view = 'dashboard.py?name=main'
-let g_last_folder = ''
+const g_last_folder = ''
 
 // highlight the followed link (when both needed snapins are available)
 function highlight_link(link_obj: HTMLElement, container_id: string) {

@@ -413,7 +413,7 @@ export class BarPlot extends SubPlot<BarPlotPlotDefinition> {
 
 // Renders a single value
 // Per default, the latest timestamp of the given timeline is used
-export class SingleValuePlot extends SubPlot<SingleValuePlotDefinition> {
+class SingleValuePlot extends SubPlot<SingleValuePlotDefinition> {
   override ident() {
     return 'single_value'
   }

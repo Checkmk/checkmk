@@ -272,7 +272,7 @@ export function toggle_folder(_event: Event | undefined, oDiv: HTMLElement, on: 
   // to prevent pointer events on other folders. They would close the current
   // dropdown.
   const popup_menu = obj.querySelector('#popup_menu')
-  let all_folder_divs = document.querySelectorAll("div[id^='folder_']")
+  const all_folder_divs = document.querySelectorAll("div[id^='folder_']")
   all_folder_divs.forEach((div) => {
     if (div.id.endsWith(id)) return
 

@@ -10,7 +10,7 @@ import { select } from 'd3'
 import { FigureBase, figure_registry } from './cmk_figures'
 import type { FigureData } from './figure_types'
 
-export interface Cell<Config = PieChartData | NtopTalkerData> {
+interface Cell<Config = PieChartData | NtopTalkerData> {
   id?: string
   text: string
   html: string
@@ -64,7 +64,7 @@ interface PieChartDataData {
   value: string | number
 }
 
-export interface Row<Config = PieChartData | NtopTalkerData> {
+interface Row<Config = PieChartData | NtopTalkerData> {
   classes: string[]
   cells: Cell<Config>[]
 }

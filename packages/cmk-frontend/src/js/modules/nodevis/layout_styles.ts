@@ -28,7 +28,7 @@ import { get_bounding_rect_of_rotated_vertices, log } from './utils'
 //#   |                                                   |___/            |
 //#   +--------------------------------------------------------------------+
 
-export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
+class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
   unrotated_vertices: Coords[] = []
   // TODO: split info
   drag_start_info = {

@@ -82,7 +82,7 @@ function _render_host_tooltip_html(
   return tooltip
 }
 
-export interface HostGeometry {
+interface HostGeometry {
   radius: number
   box_height: number
   hexagon_height: number
@@ -91,7 +91,7 @@ export interface HostGeometry {
   box_area: BoxArea
 }
 
-export interface SiteGeometry {
+interface SiteGeometry {
   hexagon_center_top: number
   hexagon_center_left: number
   num_columns: number

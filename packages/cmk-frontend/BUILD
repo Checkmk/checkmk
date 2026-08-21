@@ -1,4 +1,6 @@
+load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file")
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
+load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_ts//ts:defs.bzl", "ts_project")
 load("@aspect_rules_webpack//webpack:defs.bzl", "webpack_bundle")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
@@ -13,6 +15,34 @@ load("//bazel/rules:dependency_info.bzl", "dependency_info")
 exports_files(["package.json"])
 
 npm_link_all_packages(name = "node_modules")
+
+# The import resolver needs the path aliases, but ts_project already writes
+# tsconfig.json to this package's bin directory, so lint gets it under its own
+# name rather than a second copy of the same output.
+copy_file(
+    name = "eslint_tsconfig",
+    src = "tsconfig.json",
+    out = "tsconfig.eslint.json",
+)
+
+js_library(
+    name = "eslintrc",
+    srcs = [
+        # import-x/no-unused-modules enumerates the sources itself and insists on
+        # an eslintrc next to them, see eslint.config.mjs.
+        ".eslintrc.json",
+        "eslint.config.mjs",
+        "package.json",
+        ":eslint_tsconfig",
+    ],
+    tags = ["no-lint"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/eslint-import-resolver-typescript",
+        ":node_modules/eslint-plugin-import-x",
+        ":node_modules/eslint-plugin-no-unsanitized",
+    ],
+)
 
 dependency_info(
     name = "redoc_dependency_info",

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import 'core-js/stable'
-/* eslint-disable import/no-namespace -- Needed for exports */
+/* eslint-disable import-x/no-namespace -- Needed for exports */
 import crossfilter from 'crossfilter2'
 import * as d3 from 'd3'
 import * as d3Sankey from 'd3-sankey'

@@ -117,7 +117,7 @@ export function toggle_assumption(link: HTMLElement, site: string, host: string,
   const img = link.getElementsByTagName('cmk-dynamic-icon')[0]
 
   // get current state
-  let data = JSON.parse(img.getAttribute('data')?.replace(/'/g, '"') || '{}')
+  const data = JSON.parse(img.getAttribute('data')?.replace(/'/g, '"') || '{}')
   let current = data.spec.id.replace('assume-', '')
 
   if (current == 'none')

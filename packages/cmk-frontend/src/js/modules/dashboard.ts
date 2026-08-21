@@ -403,10 +403,10 @@ function calculate_dashlets() {
   return size_info
 }
 
-let g_dashboard_top: number | null = null
-let g_dashboard_left: number | null = null
-let g_dashboard_width: number | null = null
-let g_dashboard_height: number | null = null
+const g_dashboard_top: number | null = null
+const g_dashboard_left: number | null = null
+const g_dashboard_width: number | null = null
+const g_dashboard_height: number | null = null
 
 export function execute_dashboard_scheduler(initial: number) {
   // Stop reload of the dashlets in case the browser window / tab is not visible
@@ -461,7 +461,7 @@ function dashboard_update_contents(id: string, response_text: string) {
 // DASHBOARD EDITING
 //
 
-let g_editing = false
+const g_editing = false
 
 // The resize controls are transparent areas at the border of the
 // snapin which give the user the option to dragresize the dashlets

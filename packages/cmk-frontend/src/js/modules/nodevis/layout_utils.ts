@@ -598,7 +598,7 @@ export class LayoutStyleFactory {
   }
 }
 
-export type StyleOptionValue = boolean | number
+type StyleOptionValue = boolean | number
 export type StyleOptionValues = Record<string, StyleOptionValue>
 
 export interface StyleOptionSpec {

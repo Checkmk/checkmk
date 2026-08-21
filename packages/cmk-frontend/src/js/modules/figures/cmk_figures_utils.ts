@@ -303,7 +303,7 @@ export function getIn(object: any, ...args: any[]) {
   return args.reduce((obj, level) => obj && obj[level], object)
 }
 
-export function get_function(render_string: string) {
+function get_function(render_string: string) {
   return new Function(`"use strict"; return ${render_string}`)()
 }
 
@@ -355,7 +355,7 @@ export function renderable_value(value: any, _domain: Domain, plot: any) {
 }
 
 // Once we migrate metric system to the frontend drop this
-export function split_unit(formatted_value?: string) {
+function split_unit(formatted_value?: string) {
   if (!formatted_value) return {}
   // Separated by space, most rendered quantities
   const splitted_text = formatted_value.split(' ')

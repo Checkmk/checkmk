@@ -52,13 +52,13 @@ export interface IconElement extends ABCElement {
   css_class: string
 }
 
-export interface Part {
+interface Part {
   title: string
   css_class: string
   count: number
 }
 
-export interface SingleMetricDataData {
+interface SingleMetricDataData {
   tag: string
   last_value: boolean
   timestamp: number

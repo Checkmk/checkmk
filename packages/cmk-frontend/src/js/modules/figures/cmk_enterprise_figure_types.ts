@@ -7,7 +7,7 @@ import type { HSLColor, RGBColor } from 'd3'
 
 import type { FigureData } from '@/modules/figures/figure_types'
 
-export interface TimeseriesFigureDataPlotDefinition {
+interface TimeseriesFigureDataPlotDefinition {
   id: string
   color: string
   plot_type: string

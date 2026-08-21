@@ -76,7 +76,7 @@ export class SearchNodes {
     this._search_result_panel.feed_data(data)
   }
 }
-export class SearchResultPanel {
+class SearchResultPanel {
   _world: NodevisWorld
   _search_result_selection: d3SelectionDiv
   _content_selection: d3SelectionDiv

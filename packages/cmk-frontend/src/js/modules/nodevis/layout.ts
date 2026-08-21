@@ -467,7 +467,7 @@ export class LayoutManagerLayer extends FixLayer {
 
 layer_class_registry.register(LayoutManagerLayer)
 
-export class LayoutStyleConfiguration {
+class LayoutStyleConfiguration {
   _world: NodevisWorld
   _style_config_selection: d3SelectionDiv
   _style_options_selection: d3SelectionDiv
@@ -639,7 +639,7 @@ function show_viewport_information(viewport: Viewport) {
   viewport_div.select('option#current_zoom').text((zoom.k * 100).toFixed(0) + '%')
 }
 
-export class LayoutingToolbar {
+class LayoutingToolbar {
   layout_style_configuration: LayoutStyleConfiguration
   _filter_mutation_observer: MutationObserver | null = null
   _selection: d3SelectionDiv

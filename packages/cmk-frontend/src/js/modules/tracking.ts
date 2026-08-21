@@ -15,7 +15,7 @@ import {
   repeatUrlsTable
 } from './tracking_database'
 
-export const currentUrl = window.location.pathname + window.location.search
+const currentUrl = window.location.pathname + window.location.search
 
 export async function activate_tracking(url: string, startTime: number, backendDuration: number) {
   // Expected to be called once all resources have been loaded.

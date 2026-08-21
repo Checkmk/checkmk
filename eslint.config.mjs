@@ -57,9 +57,7 @@ export default [
       '**/coverage/**',
       'packages/cmk-frontend-vue/ui-component-library/public/mockServiceWorker.js',
       '.stylelintrc.js',
-      'packages/cmk-frontend-vue/scripts/stylelint-vue-bem-naming-convention.js',
-      // TODO(CMK-32715): Remove once cmk-frontend eslint issues are fixed by the responsible team
-      'packages/cmk-frontend/**'
+      'packages/cmk-frontend-vue/scripts/stylelint-vue-bem-naming-convention.js'
     ]
   },
 

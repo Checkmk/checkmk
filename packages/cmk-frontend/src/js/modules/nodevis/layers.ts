@@ -27,7 +27,7 @@ import type {
 } from './type_defs'
 import { DefaultTransition } from './utils'
 
-export class ParentChildOverlay extends ToggleableLayer {
+class ParentChildOverlay extends ToggleableLayer {
   override class_name(): string {
     return 'parent_child'
   }

@@ -418,7 +418,7 @@ export function confirm_dialog(
     customClass: custom_class_args
   }
 
-  if (!!post_confirm_waiting_text) {
+  if (post_confirm_waiting_text) {
     const current_confirm_handler = confirm_handler ?? (() => {})
     confirm_handler = () => {
       waiting_flash_message('page_menu_popups', post_confirm_waiting_text)

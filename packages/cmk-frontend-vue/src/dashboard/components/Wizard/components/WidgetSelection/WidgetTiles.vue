@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+
 import DisabledTooltipWrapper from '@/dashboard/components/WidgetWorkflow/DisabledTooltipWrapper.vue'
 
 import WidgetTile from './WidgetTile.vue'
@@ -12,6 +14,7 @@ import type { WidgetItemList } from './types'
 interface WidgetTilesProps {
   availableItems: WidgetItemList
   enabledWidgets: string[]
+  disabledTooltip?: TranslatedString | undefined
   compact?: boolean
 }
 
@@ -45,7 +48,10 @@ const selectedWidget = defineModel<string | null>('selectedWidget', { default: n
         }
       "
     >
-      <DisabledTooltipWrapper :disabled="!enabledWidgets.includes(item.id)">
+      <DisabledTooltipWrapper
+        :disabled="!enabledWidgets.includes(item.id)"
+        :tooltip="props.disabledTooltip"
+      >
         <WidgetTile
           :label="item.label"
           :icon="item.icon"

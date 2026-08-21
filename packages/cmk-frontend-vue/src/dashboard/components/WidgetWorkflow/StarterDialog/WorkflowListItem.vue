@@ -8,6 +8,7 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkIconEmblem from 'cmk-ui-library/components/CmkIcon/CmkIconEmblem.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 
 import DisabledTooltipWrapper from '../DisabledTooltipWrapper.vue'
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
@@ -17,11 +18,16 @@ interface WorkflowListItemProps extends WorkflowItem {
 }
 
 defineProps<WorkflowListItemProps>()
+const { _t } = usei18n()
+
 const emit = defineEmits(['select'])
 </script>
 
 <template>
-  <DisabledTooltipWrapper :disabled="!!disabled">
+  <DisabledTooltipWrapper
+    :disabled="!!disabled"
+    :tooltip="_t('Available in Checkmk Pro or higher.')"
+  >
     <button
       class="db-workflow-list-item"
       :class="{ 'db-workflow-list-item__disabled': disabled }"

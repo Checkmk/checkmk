@@ -163,6 +163,7 @@ if (props.metricType === MetricSelection.SINGLE_METRIC) {
         v-model:selected-widget="selectedWidget as Graph"
         :available-items="availableWidgets"
         :enabled-widgets="enabledWidgets"
+        :disabled-tooltip="_t('Not available for the current host, service and metric selection.')"
       />
     </SectionBlock>
   </div>

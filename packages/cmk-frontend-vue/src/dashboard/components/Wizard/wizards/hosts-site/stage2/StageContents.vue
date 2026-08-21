@@ -20,7 +20,11 @@ import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage2Header from '../../../components/Stage2Header.vue'
 import WidgetTiles from '../../../components/WidgetSelection/WidgetTiles.vue'
 import type { ElementSelection, UseWidgetHandler } from '../../../types'
-import { allHostSiteWidgets, getAvailableGraphs } from '../composables/useSelectGraphTypes'
+import {
+  allHostSiteWidgets,
+  getAvailableGraphs,
+  getDisabledTooltip
+} from '../composables/useSelectGraphTypes'
 import { Graph } from '../types'
 import HostState from './HostState/HostState.vue'
 import { type UseHostState, useHostState } from './HostState/composables/useHostState'
@@ -122,6 +126,7 @@ const isUnrestricted = props.dashboardFeatures === DashboardFeatures.UNRESTRICTE
       v-model:selected-widget="selectedWidget as Graph"
       :available-items="allHostSiteWidgets()"
       :enabled-widgets="enabledWidgets"
+      :disabled-tooltip="getDisabledTooltip(props.dashboardFeatures)"
     />
   </SectionBlock>
 

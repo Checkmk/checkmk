@@ -8,6 +8,7 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkIconEmblem from 'cmk-ui-library/components/CmkIcon/CmkIconEmblem.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
 
 import DisabledTooltipWrapper from '../DisabledTooltipWrapper.vue'
 import type { WorkflowItem } from '../WidgetWorkflowTypes'
@@ -17,6 +18,8 @@ interface WorkflowCardProps extends WorkflowItem {
 }
 
 const props = defineProps<WorkflowCardProps>()
+
+const { _t } = usei18n()
 
 const emit = defineEmits(['select'])
 
@@ -28,7 +31,10 @@ const doSelect = () => {
 </script>
 
 <template>
-  <DisabledTooltipWrapper :disabled="!!disabled">
+  <DisabledTooltipWrapper
+    :disabled="!!disabled"
+    :tooltip="_t('Available in Checkmk Pro or higher.')"
+  >
     <a
       href="#"
       class="db-workflow-card"

@@ -127,6 +127,7 @@ const handler: Partial<Record<Graph, UseWidgetHandler>> = {
       v-model:selected-widget="selectedWidget as Graph"
       :available-items="availableWidgets"
       :enabled-widgets="enabledWidgets"
+      :disabled-tooltip="_t('Not available with the selected log filters.')"
     />
   </SectionBlock>
 

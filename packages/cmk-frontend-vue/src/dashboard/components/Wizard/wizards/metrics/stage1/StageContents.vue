@@ -161,6 +161,7 @@ if (!availableMetricTypes.value.includes(metricType.value)) {
     <WidgetTiles
       :available-items="availableWidgets"
       :enabled-widgets="enabledWidgets"
+      :disabled-tooltip="_t('Not available for the current host, service and metric selection.')"
       @select-widget="(preselectedWidgetType) => gotoNextStage(preselectedWidgetType)"
     />
   </SectionBlock>

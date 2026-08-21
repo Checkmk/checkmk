@@ -75,7 +75,6 @@ const X_AXIS_BAND_HEIGHT = 20
 // starts below it rather than covering it.
 const X_AXIS_TOP_RULE_HEIGHT = 1
 const PAN_STEP_SIZE = X_AXIS_BAND_HEIGHT - X_AXIS_TOP_RULE_HEIGHT
-const PIN_HANDLE_HEADROOM = 24
 // Bucket count for the M4 cache built on receive (4000 is the default, consider changing
 // if necessary).
 const M4_BUCKETS = 4000
@@ -92,8 +91,8 @@ const marginLeft = ref(CANVAS_MARGIN_LEFT)
 const figureWidth = computed(() => props.size.width)
 const figureHeight = computed(() => props.size.height)
 const plotWidth = computed(() => figureWidth.value - marginLeft.value - MARGIN.right)
-const plotTop = computed(() => MARGIN.top + (props.pinEnabled ? PIN_HANDLE_HEADROOM : 0))
-const plotHeight = computed(() => figureHeight.value - plotTop.value - MARGIN.bottom)
+const plotTop = MARGIN.top
+const plotHeight = computed(() => figureHeight.value - plotTop - MARGIN.bottom)
 
 const pinVisible = computed(
   () =>
@@ -122,7 +121,7 @@ const maxZoomHintStyle = computed(() => {
     return {}
   }
   return {
-    top: `${plotTop.value + point.y + MAX_ZOOM_HINT_CURSOR_OFFSET}px`,
+    top: `${plotTop + point.y + MAX_ZOOM_HINT_CURSOR_OFFSET}px`,
     left: `${marginLeft.value + point.x}px`
   }
 })
@@ -174,6 +173,14 @@ const {
   yScale
 })
 
+// Stacked on the pinned sample, the add marker would swallow the remove marker's click.
+const hoverAtPin = computed(
+  () =>
+    pinX.value !== null &&
+    hoverState.value !== null &&
+    Math.round(hoverState.value.snapX) === Math.round(pinX.value)
+)
+
 const {
   selectionBand,
   plotCursor,
@@ -191,7 +198,8 @@ const {
   yScale,
   plotCoords,
   onZoom: (payload) => emit('zoom', payload),
-  onZoomRefused: showMaxZoomHint
+  onZoomRefused: showMaxZoomHint,
+  onPlotClick: setPinAtCursor
 })
 
 const {
@@ -401,6 +409,15 @@ function onPinAddClick(): void {
   if (typeof snapTime === 'number') {
     emit('pinCreate', { time: snapTime })
   }
+}
+// The press cleared the hover to keep the crosshair out of a zoom drag, so it is recomputed
+// here for the time to pin.
+function setPinAtCursor(ev: MouseEvent): void {
+  if (props.pinEnabled !== true) {
+    return
+  }
+  onMouseMove(ev)
+  onPinAddClick()
 }
 function onPinActionClick(): void {
   if (typeof props.pinTime === 'number') {
@@ -674,7 +691,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
       @action="onPinActionClick"
     />
     <PinHandle
-      v-if="pinEnabled && hoverState"
+      v-if="pinEnabled && hoverState && !hoverAtPin"
       variant="add"
       :style="{
         left: `${marginLeft + crosshairCentreX(hoverState.snapX)}px`,

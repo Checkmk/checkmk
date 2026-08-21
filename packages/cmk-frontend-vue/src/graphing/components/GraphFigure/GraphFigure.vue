@@ -39,6 +39,7 @@ const props = withDefaults(defineProps<GraphFigureProps>(), {
   showLegend: false,
   showTimestamp: false,
   showBurgerMenu: false,
+  showPin: false,
   burgerMenuGroups: () => []
 })
 
@@ -134,13 +135,16 @@ const {
   viewTimeRange,
   viewValueRange,
   inspectionActive,
+  pinTime,
   onZoom,
   onPan,
   onReset,
+  onPinCreate,
+  clearPin,
   abandonInspection
 } = useGraphInteraction(
   () => baselineTimeRange.value,
-  () => false,
+  () => props.showPin,
   () => requestedTimeRange.value,
   onCommittedTimeRange
 )
@@ -188,6 +192,10 @@ const graphOptions = computed(
   })
 )
 
+// The marker stands above the plot, in the gap below the header, which is widened to fit it.
+// With no header there is no gap and the frame clips it, so the figure reserves the room.
+const hasHeader = computed(() => props.showTimestamp || props.showBurgerMenu)
+
 onMounted(() => {
   timer.start()
 })
@@ -198,7 +206,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="graphing-graph-figure">
+  <div
+    class="graphing-graph-figure"
+    :class="{ 'graphing-graph-figure--pin-overhang': showPin && !hasHeader }"
+  >
     <!-- Initial load only: while a refetch is pending the held data stays rendered
          (the transient zoom bridges it). -->
     <CmkIcon
@@ -208,7 +219,11 @@ onBeforeUnmount(() => {
       class="graphing-graph-figure__loading-icon"
     />
     <template v-else-if="graph">
-      <div v-if="showTimestamp || showBurgerMenu" class="graphing-graph-figure__header">
+      <div
+        v-if="hasHeader"
+        class="graphing-graph-figure__header"
+        :class="{ 'graphing-graph-figure__header--pin-gap': showPin }"
+      >
         <GraphTimestamp v-if="showTimestamp && baselineTimeRange" :time-range="baselineTimeRange" />
         <GraphBurgerMenu
           v-if="showBurgerMenu"
@@ -217,7 +232,11 @@ onBeforeUnmount(() => {
           :groups="burgerMenuGroups"
         />
       </div>
-      <div ref="graphAreaDiv" class="graphing-graph-figure__graph">
+      <div
+        ref="graphAreaDiv"
+        class="graphing-graph-figure__graph"
+        :class="{ 'graphing-graph-figure__graph--pinnable': showPin }"
+      >
         <TimeSeriesGraph
           :view_time_range="viewTimeRange"
           :data_time_range="graph.timeRange"
@@ -231,12 +250,16 @@ onBeforeUnmount(() => {
           :inspecting="inspectionActive"
           :pan-enabled="true"
           :zoom-enabled="true"
+          :pin-enabled="showPin"
+          :pin-time="pinTime"
           :consolidation-function="DEFAULT_CONSOLIDATION_FN"
           :options="graphOptions"
           :highlighted-metric-name="highlightedMetricName"
           @zoom="onZoom"
           @pan="onPan"
           @reset="onResetIntent"
+          @pin-create="onPinCreate"
+          @pin-action="clearPin"
         />
       </div>
       <GraphLegendCompact
@@ -290,6 +313,10 @@ onBeforeUnmount(() => {
   margin-bottom: var(--dimension-4);
 }
 
+.graphing-graph-figure__header--pin-gap {
+  margin-bottom: var(--dimension-5);
+}
+
 .graphing-graph-figure__burger-menu {
   margin-left: auto;
 }
@@ -298,5 +325,13 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+}
+
+.graphing-graph-figure__graph--pinnable {
+  overflow: visible;
+}
+
+.graphing-graph-figure--pin-overhang {
+  padding-top: var(--dimension-5);
 }
 </style>

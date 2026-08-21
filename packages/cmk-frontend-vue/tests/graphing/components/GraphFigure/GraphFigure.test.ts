@@ -10,17 +10,20 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { nextTick } from 'vue'
 
 import GraphFigure from '@/graphing/components/GraphFigure/GraphFigure.vue'
+import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
 
-// The mock stands in for the view-only renderer: the buttons replay its zoom/pan/reset
+// The mock stands in for the view-only renderer: the buttons replay its zoom/pan/reset/pin
 // intent emits so the tests can drive the figure's interaction wiring.
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
-    props: ['panEnabled', 'time_range', 'valueRange'],
-    emits: ['zoom', 'pan', 'reset'],
+    props: ['panEnabled', 'time_range', 'valueRange', 'pinEnabled', 'pinTime'],
+    emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="pan-enabled">{{ panEnabled }}</span>
       <span data-testid="value-range">{{ valueRange === null ? 'none' : valueRange.max }}</span>
+      <span data-testid="pin-enabled">{{ pinEnabled }}</span>
+      <span data-testid="pin-time">{{ pinTime }}</span>
       <button
         data-testid="emit-pan"
         @click="$emit('pan', { timeRange: { start: 500, end: 900, step: 60 } })"
@@ -30,9 +33,28 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
         @click="$emit('zoom', { timeRange: time_range, valueRange: { min: 0, max: 10 } })"
       />
       <button data-testid="emit-reset" @click="$emit('reset')" />
+      <button data-testid="emit-pin-create" @click="$emit('pinCreate', { time: 1234 })" />
+      <button data-testid="emit-pin-action" @click="$emit('pinAction', { time: 1234 })" />
     </div>`
   }
 }))
+
+// A figure that arms the pin loads and persists it; stubbed to keep these tests off the network.
+vi.mock('@/graphing/composables/useGlobalPin', async () => {
+  const { computed, ref } = await import('vue')
+  const pinTimeState = ref<number | null>(null)
+  const globalPin = {
+    pinTime: computed(() => pinTimeState.value),
+    ensurePinLoaded: vi.fn(),
+    setPin: vi.fn((time: number) => {
+      pinTimeState.value = time
+    }),
+    clearPin: vi.fn(() => {
+      pinTimeState.value = null
+    })
+  }
+  return { useGlobalPin: () => globalPin }
+})
 
 vi.mock('@internationalized/date', async (importOriginal) => {
   const actual = await importOriginal<typeof intl>()
@@ -69,6 +91,9 @@ const FETCHED = {
 let postSpy: any
 
 beforeEach(() => {
+  // The mocked pin is a module-level singleton, so it has to be cleared between tests.
+  useGlobalPin().clearPin()
+  vi.clearAllMocks()
   postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue({
     data: FETCHED,
@@ -340,4 +365,72 @@ test('shows the burger menu only when requested', async () => {
   renderFigure()
   await screen.findByTestId('time-series-graph')
   expect(document.querySelector('.graphing-graph-burger-menu')).not.toBeInTheDocument()
+})
+
+test('a figure without the pin never arms it', async () => {
+  renderFigure()
+
+  await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+  expect(screen.getByTestId('pin-enabled')).toHaveTextContent('false')
+  expect(useGlobalPin().ensurePinLoaded).not.toHaveBeenCalled()
+})
+
+test('a pin-enabled figure arms the renderer and loads the persisted pin', async () => {
+  renderFigure({ showPin: true })
+
+  await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+  expect(screen.getByTestId('pin-enabled')).toHaveTextContent('true')
+  expect(useGlobalPin().ensurePinLoaded).toHaveBeenCalled()
+})
+
+test('a pin placed in the renderer is persisted and handed back to it', async () => {
+  renderFigure({ showPin: true })
+
+  await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+  await fireEvent.click(screen.getByTestId('emit-pin-create'))
+
+  expect(useGlobalPin().setPin).toHaveBeenCalledWith(1234)
+  expect(screen.getByTestId('pin-time')).toHaveTextContent('1234')
+})
+
+test('acting on the placed pin clears it', async () => {
+  renderFigure({ showPin: true })
+
+  await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+  await fireEvent.click(screen.getByTestId('emit-pin-create'))
+  await fireEvent.click(screen.getByTestId('emit-pin-action'))
+
+  expect(useGlobalPin().clearPin).toHaveBeenCalled()
+  expect(screen.getByTestId('pin-time')).toBeEmptyDOMElement()
+})
+
+// The marker stands above the graph area. jsdom lays nothing out, so these assert the rules
+// that make the room for it rather than the geometry, which needs a browser.
+describe('room for the pin marker', () => {
+  const header = (): Element | null => document.querySelector('.graphing-graph-figure__header')
+  const figure = (): Element | null => document.querySelector('.graphing-graph-figure')
+
+  test('a header widens its gap so the marker clears it', async () => {
+    renderFigure({ showPin: true, showTimestamp: true })
+
+    await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+    expect(header()).toHaveClass('graphing-graph-figure__header--pin-gap')
+    expect(figure()).not.toHaveClass('graphing-graph-figure--pin-overhang')
+  })
+
+  test('with no header the figure reserves the overhang itself', async () => {
+    renderFigure({ showPin: true })
+
+    await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+    expect(header()).not.toBeInTheDocument()
+    expect(figure()).toHaveClass('graphing-graph-figure--pin-overhang')
+  })
+
+  test('a figure without the pin reserves nothing', async () => {
+    renderFigure({ showTimestamp: true })
+
+    await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
+    expect(header()).not.toHaveClass('graphing-graph-figure__header--pin-gap')
+    expect(figure()).not.toHaveClass('graphing-graph-figure--pin-overhang')
+  })
 })

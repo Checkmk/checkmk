@@ -39,9 +39,9 @@ describe('crosshairCentreX', () => {
 })
 
 describe('pinLineCentreX', () => {
-  test('snaps a fractional x to the column boundary the pin line is symmetric about', () => {
-    expect(pinLineCentreX(382.33)).toBe(382)
-    expect(pinLineCentreX(381.6)).toBe(382)
+  test('snaps a fractional x to the centre of the pixel column the pin line fills', () => {
+    expect(pinLineCentreX(382.33)).toBe(382.5)
+    expect(pinLineCentreX(381.6)).toBe(382.5)
   })
 })
 
@@ -57,13 +57,29 @@ describe('drawCrosshair', () => {
 })
 
 describe('drawPinLine', () => {
-  test('draws the tapered line symmetrically about the x that pinLineCentreX reports', () => {
+  test('draws a hairline at the x that pinLineCentreX reports', () => {
     const ctx = makeSpyCtx()
 
-    drawPinLine(ctx as unknown as CanvasRenderingContext2D, 382.33, 100)
+    drawPinLine(ctx as unknown as CanvasRenderingContext2D, 382.33, 100, '#15d1a0')
 
-    const paintedXs = [...ctx.moveTo.mock.calls, ...ctx.lineTo.mock.calls].map(([x]) => x as number)
-    const centre = pinLineCentreX(382.33)
-    expect(Math.min(...paintedXs) - centre).toBe(centre - Math.max(...paintedXs))
+    expect(ctx.moveTo).toHaveBeenCalledWith(pinLineCentreX(382.33), 0)
+    expect(ctx.lineTo).toHaveBeenCalledWith(pinLineCentreX(382.33), 100)
+    expect(ctx.lineWidth).toBe(1)
+  })
+
+  test('strokes in the colour it is given, so the line matches the pin marker', () => {
+    const ctx = makeSpyCtx()
+
+    drawPinLine(ctx as unknown as CanvasRenderingContext2D, 382.33, 100, '#0f9472')
+
+    expect(ctx.strokeStyle).toBe('#0f9472')
+  })
+
+  test('never inherits the crosshair dashes', () => {
+    const ctx = makeSpyCtx()
+
+    drawPinLine(ctx as unknown as CanvasRenderingContext2D, 382.33, 100, '#15d1a0')
+
+    expect(ctx.setLineDash).toHaveBeenCalledWith([])
   })
 })

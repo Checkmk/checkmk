@@ -25,10 +25,12 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       'combinationMode',
       'showLegend',
       'showTimestamp',
+      'showPin',
       'fetchGraph'
     ],
     template: `<div
       data-testid="graph-figure"
+      :data-show-pin="showPin"
       :data-has-fetch-graph="fetchGraph !== undefined"
     >{{ internal }}</div>`
   }
@@ -245,5 +247,23 @@ describe('createSharedGraphFetcher', () => {
       })
     )
     expect(fetched.timeRange).toEqual({ start: 1_000, end: 2_000, step: 60 })
+  })
+})
+
+describe('the widget pin', () => {
+  const pinOf = async (): Promise<string | null> =>
+    (await screen.findByTestId('graph-figure')).getAttribute('data-show-pin')
+
+  test('is armed by default, matching the wizard default', async () => {
+    renderWidget()
+
+    expect(await pinOf()).toBe('true')
+  })
+
+  // A preview is a thumbnail, not something to interact with.
+  test('is never armed in the widget preview', async () => {
+    renderWidget({ isPreview: true })
+
+    expect(await pinOf()).toBe('false')
   })
 })

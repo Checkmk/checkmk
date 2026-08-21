@@ -312,6 +312,8 @@ describe('TimeSeriesGraph', () => {
       clientX: 100,
       clientY: 50
     })
+    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 200, clientY: 50 }))
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 200, clientY: 50 }))
 
     expect(await screen.findByRole('status')).toHaveTextContent('Maximum zoom reached')
   })
@@ -346,5 +348,107 @@ describe('TimeSeriesGraph', () => {
 
     expect(spaced.margin).toBeGreaterThan(unspaced.margin)
     expect(spaced.margin).toBeGreaterThanOrEqual(spaced.widestLabel + VALUE_LABEL_GUTTER)
+  })
+})
+
+describe('TimeSeriesGraph — the pin and the plot size', () => {
+  // The handle stands above the plot rather than inside it, so arming the pin must not cost
+  // plot height: GraphFigure floors a widget at 50px, which leaves nothing to give away.
+  const SHORT_FIGURE = { width: 400, height: 50, mode: 'fixed' } as const
+  const MARGIN_TOP = 4
+
+  function plotHeightPx(): number {
+    return parseFloat(document.querySelector('canvas')!.style.height)
+  }
+
+  test('arming the pin leaves a figure at the dashboard floor untouched', () => {
+    renderComponent({ size: SHORT_FIGURE, pinEnabled: false })
+    const withoutPin = plotHeightPx()
+    document.body.innerHTML = ''
+    renderComponent({ size: SHORT_FIGURE, pinEnabled: true })
+
+    expect(plotHeightPx()).toBeGreaterThan(0)
+    expect(plotHeightPx()).toBe(withoutPin)
+  })
+
+  // Drawn upwards from the edge it is anchored on, so its top is what keeps it clear.
+  test('the pin handle is anchored on the plot top edge, not inside the plot', () => {
+    renderComponent({ size: SHORT_FIGURE, pinEnabled: true, pinTime: 1_500 })
+
+    const handle = document.querySelector('.graphing-pin-handle')
+    expect(handle).toBeInTheDocument()
+    expect((handle as HTMLElement).style.top).toBe(`${MARGIN_TOP}px`)
+  })
+
+  test('a tall figure is sized the same with and without the pin', () => {
+    const tall = { width: 400, height: 300, mode: 'fixed' } as const
+    renderComponent({ size: tall, pinEnabled: false })
+    const withoutPin = plotHeightPx()
+    document.body.innerHTML = ''
+    renderComponent({ size: tall, pinEnabled: true })
+
+    expect(plotHeightPx()).toBe(withoutPin)
+  })
+})
+
+describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
+  // jsdom reports a zero-origin rect, so client coordinates are plot coordinates.
+  function pressPlot(from: { x: number; y: number }, travelPx: number): void {
+    const canvas = document.querySelector('canvas')!
+    void fireEvent.mouseDown(canvas, { button: 0, clientX: from.x, clientY: from.y })
+    if (travelPx !== 0) {
+      window.dispatchEvent(
+        new MouseEvent('mousemove', { clientX: from.x + travelPx, clientY: from.y })
+      )
+    }
+    window.dispatchEvent(new MouseEvent('mouseup', { clientX: from.x + travelPx, clientY: from.y }))
+  }
+
+  const clickPlot = (at: { x: number; y: number }): void => pressPlot(at, 0)
+
+  test('a click in the plot pins the sample under the cursor', async () => {
+    const { emitted } = renderComponent({ pinEnabled: true })
+
+    clickPlot({ x: 200, y: 100 })
+
+    await waitFor(() => expect(emitted()).toHaveProperty('pinCreate'))
+    const [payload] = (emitted()['pinCreate'] as Array<[{ time: number }]>)[0]!
+    expect(payload.time).toBeGreaterThanOrEqual(DEFAULT_PROPS.view_time_range.start)
+    expect(payload.time).toBeLessThanOrEqual(DEFAULT_PROPS.view_time_range.end)
+  })
+
+  test('a drag past the threshold zooms instead of pinning', () => {
+    const { emitted } = renderComponent({ pinEnabled: true })
+
+    pressPlot({ x: 200, y: 100 }, 80)
+
+    expect(emitted()).not.toHaveProperty('pinCreate')
+    expect(emitted()).toHaveProperty('zoom')
+  })
+
+  // The hint answers an attempted zoom, which a click at the floor is not.
+  test('a click at maximum zoom pins without reporting a refused zoom', async () => {
+    const { emitted } = renderComponent({ pinEnabled: true, atMinTimeZoom: true })
+
+    clickPlot({ x: 200, y: 100 })
+
+    await waitFor(() => expect(emitted()).toHaveProperty('pinCreate'))
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  test('a drag at maximum zoom still reports the refused zoom', async () => {
+    renderComponent({ pinEnabled: true, atMinTimeZoom: true })
+
+    pressPlot({ x: 200, y: 100 }, 80)
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Maximum zoom reached')
+  })
+
+  test('a graph whose pin is disabled ignores the click', () => {
+    const { emitted } = renderComponent({ pinEnabled: false })
+
+    clickPlot({ x: 200, y: 100 })
+
+    expect(emitted()).not.toHaveProperty('pinCreate')
   })
 })

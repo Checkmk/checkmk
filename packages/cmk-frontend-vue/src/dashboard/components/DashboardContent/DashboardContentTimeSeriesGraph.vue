@@ -269,6 +269,9 @@ const timerange = computed(() => {
 })
 const showLegend = computed(() => graphRenderOptions.value?.show_legend ?? false)
 const showTimestamp = computed(() => graphRenderOptions.value?.show_graph_time ?? false)
+const showPin = computed(
+  () => props.isPreview !== true && (graphRenderOptions.value?.show_pin ?? true)
+)
 const combinationMode = computed(() => {
   const content = props.content
   return content.type === 'combined_graph' ? content.presentation : null
@@ -315,6 +318,7 @@ onMounted(() => {
         :combination-mode="combinationMode"
         :show-legend="showLegend"
         :show-timestamp="showTimestamp"
+        :show-pin="showPin"
         :fetch-graph="fetchGraph"
       />
     </div>

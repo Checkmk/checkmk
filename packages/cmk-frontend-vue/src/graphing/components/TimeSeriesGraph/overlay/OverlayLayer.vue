@@ -24,14 +24,15 @@ const overlayCanvas = ref<HTMLCanvasElement | null>(null)
 // Canvas takes colours as strings, so theme-dependent ones are resolved off the element
 // rather than referenced. Read per draw: the value is only correct once mounted and styled.
 const FOCUS_DOT_STROKE_FALLBACK = '#ffffff'
+const PIN_LINE_STROKE_FALLBACK = '#15d1a0'
 
-function focusDotStroke(): string {
+function resolvedColor(property: string, fallback: string): string {
   const root = overlayRoot.value
   if (!root) {
-    return FOCUS_DOT_STROKE_FALLBACK
+    return fallback
   }
-  const resolved = getComputedStyle(root).getPropertyValue('--graphing-focus-dot-stroke').trim()
-  return resolved === '' ? FOCUS_DOT_STROKE_FALLBACK : resolved
+  const resolved = getComputedStyle(root).getPropertyValue(property).trim()
+  return resolved === '' ? fallback : resolved
 }
 
 function sizeCanvasToDevicePixelRatio(): void {
@@ -62,7 +63,12 @@ function redraw(): void {
   }
   ctx.clearRect(0, 0, props.plotWidth, props.plotHeight)
   if (props.pinX !== null) {
-    drawPinLine(ctx, props.pinX, props.plotHeight)
+    drawPinLine(
+      ctx,
+      props.pinX,
+      props.plotHeight,
+      resolvedColor('--graphing-pin-line-stroke', PIN_LINE_STROKE_FALLBACK)
+    )
   }
   if (props.hoverState) {
     drawCrosshair(ctx, props.hoverState.snapX, props.plotHeight)
@@ -77,7 +83,11 @@ function redraw(): void {
         })
       }
     }
-    drawFocusDots(ctx, dots, focusDotStroke())
+    drawFocusDots(
+      ctx,
+      dots,
+      resolvedColor('--graphing-focus-dot-stroke', FOCUS_DOT_STROKE_FALLBACK)
+    )
   }
 }
 
@@ -145,9 +155,11 @@ watch(() => props.pinX, redraw)
 
 body[data-theme='facelift'] .graphing-overlay-layer {
   --graphing-focus-dot-stroke: var(--color-conference-grey-100);
+  --graphing-pin-line-stroke: var(--color-corporate-green-70);
 }
 
 body[data-theme='modern-dark'] .graphing-overlay-layer {
   --graphing-focus-dot-stroke: var(--color-white-100);
+  --graphing-pin-line-stroke: var(--color-corporate-green-50);
 }
 </style>

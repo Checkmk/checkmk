@@ -19,6 +19,7 @@ export interface GraphFigureProps {
   showLegend?: boolean
   showTimestamp?: boolean
   showBurgerMenu?: boolean
+  showPin?: boolean
   burgerMenuGroups?: BurgerMenuGroup[]
   /**
    * Called for every fetch to get the graph's data; defaults to posting the definition to the

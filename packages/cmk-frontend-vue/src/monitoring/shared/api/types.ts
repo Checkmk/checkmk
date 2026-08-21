@@ -36,6 +36,15 @@ export type HostMode = components['schemas']['ModeInfo']
 
 export type ServiceMode = components['schemas']['ServiceModeInfo']
 
+export type EventIcon = components['schemas']['EventIcon']
+
+/** An icon rendered with its title as tooltip, hyperlinked only when it carries a link. */
+export interface MonitoringIcon {
+  icon_name: string
+  title: string
+  link?: string | undefined
+}
+
 export type Perfometer = components['schemas']['ServicePerfometer']
 
 export type HostLabelValue = components['schemas']['HostLabelValue']

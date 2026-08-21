@@ -6,20 +6,26 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import codeExample from './UclModesCellCodeExample.vue?raw'
+import codeExample from './UclIconCellCodeExample.vue?raw'
 
 export const panelConfig = {
   downtime: {
     type: 'boolean' as const,
     title: 'downtime',
     initialState: true,
-    help: 'Show the scheduled-downtime mode icon.'
+    help: 'Show the scheduled-downtime mode icon, which links to the legacy downtimes view.'
   },
   acknowledged: {
     type: 'boolean' as const,
     title: 'acknowledged',
     initialState: true,
-    help: 'Show the acknowledgement mode icon.'
+    help: 'Show the acknowledgement mode icon, which links to the legacy host view.'
+  },
+  eventIcon: {
+    type: 'boolean' as const,
+    title: 'eventIcon',
+    initialState: false,
+    help: 'Show an event icon of the History tab, which carries no link and stays read-only.'
   },
   minWidth: {
     type: 'number' as const,
@@ -59,12 +65,29 @@ import {
 import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { computed, ref } from 'vue'
 
-import type { HostMode } from '@/monitoring/shared/api/types'
+import type { EventIcon, HostMode, MonitoringIcon } from '@/monitoring/shared/api/types'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import type { ColumnJustify } from '@/monitoring/shared/components/MonitoringTableContext'
-import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
+import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
 
 defineProps<{ screenshotMode: boolean }>()
+
+const DOWNTIME_MODE: HostMode = {
+  icon_name: 'downtime',
+  link: 'view.py?view_name=downtimes_of_host&host=web-server-01',
+  title: 'In scheduled downtime'
+}
+
+const ACKNOWLEDGED_MODE: HostMode = {
+  icon_name: 'ack',
+  link: 'view.py?view_name=host&host=web-server-01',
+  title: 'Problem acknowledged'
+}
+
+const SERVICE_ALERT_EVENT: EventIcon = {
+  icon_name: 'alert-crit',
+  title: 'Service alert'
+}
 
 const propState = ref(
   Object.fromEntries(
@@ -72,21 +95,16 @@ const propState = ref(
   ) as InferPanelState<typeof panelConfig>
 )
 
-const modes = computed<HostMode[]>(() => {
-  const result: HostMode[] = []
+const icons = computed<MonitoringIcon[]>(() => {
+  const result: MonitoringIcon[] = []
   if (propState.value.downtime) {
-    result.push({
-      icon_name: 'downtime',
-      link: 'view.py?view_name=downtimes_of_host&host=web-server-01',
-      title: 'In scheduled downtime'
-    })
+    result.push(DOWNTIME_MODE)
   }
   if (propState.value.acknowledged) {
-    result.push({
-      icon_name: 'ack',
-      link: 'view.py?view_name=host&host=web-server-01',
-      title: 'Problem acknowledged'
-    })
+    result.push(ACKNOWLEDGED_MODE)
+  }
+  if (propState.value.eventIcon) {
+    result.push(SERVICE_ALERT_EVENT)
   }
   return result
 })
@@ -102,7 +120,8 @@ const filterState = ref<ColumnFiltersState>([])
 const columns = computed<ColumnDef<DemoRow>[]>(() => [
   {
     id: 'cell',
-    header: 'Mode',
+    header: 'Icons',
+    enableSorting: false,
     minSize: propState.value.minWidth,
     maxSize: propState.value.maxWidth,
     meta: { justify: justify.value }
@@ -112,10 +131,10 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
 
 <template>
   <UclDetailPageLayout>
-    <UclDetailPageHeader>ModesCell</UclDetailPageHeader>
+    <UclDetailPageHeader>IconCell</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <div class="ucl-modes-cell__table-wrap">
+      <div class="ucl-icon-cell__table-wrap">
         <MonitoringTable
           :rows="rows"
           :fetch-state="'idle'"
@@ -127,7 +146,7 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
           @update:filter-state="filterState = $event"
         >
           <template #row>
-            <ModesCell column-id="cell" :modes="modes" />
+            <IconCell column-id="cell" :icons="icons" />
           </template>
         </MonitoringTable>
       </div>
@@ -142,7 +161,7 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
 </template>
 
 <style scoped>
-.ucl-modes-cell__table-wrap {
+.ucl-icon-cell__table-wrap {
   width: 320px;
 }
 </style>

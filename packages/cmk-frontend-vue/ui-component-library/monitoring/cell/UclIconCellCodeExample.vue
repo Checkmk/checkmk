@@ -4,15 +4,15 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
+import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
 </script>
 
 <template>
   <table>
     <tbody>
       <tr>
-        <ModesCell
-          :modes="[
+        <IconCell
+          :icons="[
             {
               icon_name: 'downtime',
               link: 'view.py?view_name=downtimes_of_host&host=web-server-01',
@@ -25,6 +25,9 @@ import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
             }
           ]"
         />
+      </tr>
+      <tr>
+        <IconCell :icons="[{ icon_name: 'alert-crit', title: 'Service alert' }]" />
       </tr>
     </tbody>
   </table>

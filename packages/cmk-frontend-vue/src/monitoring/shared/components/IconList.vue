@@ -8,37 +8,38 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 
-import type { HostMode, ServiceMode } from '@/monitoring/shared/api/types'
+import type { MonitoringIcon } from '@/monitoring/shared/api/types'
 
 defineProps<{
-  modes: (HostMode | ServiceMode)[]
+  icons: MonitoringIcon[]
 }>()
 </script>
 
 <template>
-  <div class="monitoring-mode-icons">
-    <a
-      v-for="mode in modes"
-      :key="mode.icon_name"
-      class="monitoring-mode-icons__link"
-      :href="mode.link"
-      :title="mode.title"
-      target="_top"
+  <div class="monitoring-icon-list">
+    <component
+      :is="icon.link ? 'a' : 'span'"
+      v-for="icon in icons"
+      :key="icon.icon_name"
+      class="monitoring-icon-list__item"
+      :href="icon.link"
+      :target="icon.link ? '_top' : undefined"
+      :title="icon.title"
     >
-      <CmkIcon :name="mode.icon_name as SimpleIcons" :title="mode.title" size="medium" />
-    </a>
+      <CmkIcon :name="icon.icon_name as SimpleIcons" :title="icon.title" size="medium" />
+    </component>
   </div>
 </template>
 
 <style scoped>
-.monitoring-mode-icons {
+.monitoring-icon-list {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: var(--dimension-2);
 }
 
-.monitoring-mode-icons__link {
+.monitoring-icon-list__item {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;

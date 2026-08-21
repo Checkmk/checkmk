@@ -13,8 +13,8 @@ import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTabl
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
+import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
 import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
-import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
@@ -99,7 +99,7 @@ const lastStateChange = computed(() =>
     @update:model-value="toggleSelected"
   />
   <StateCell v-if="hasColumn('state')" column-id="state" :state="row.state" />
-  <ModesCell v-if="hasColumn('modes')" column-id="modes" :modes="row.modes ?? []" />
+  <IconCell v-if="hasColumn('modes')" column-id="modes" :icons="row.modes ?? []" />
   <StringCell
     v-if="hasColumn('name')"
     column-id="name"

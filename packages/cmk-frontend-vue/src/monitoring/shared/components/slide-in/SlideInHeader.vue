@@ -7,7 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 
 import type { HostMode, ServiceMode } from '@/monitoring/shared/api/types'
-import ModeIcons from '@/monitoring/shared/components/ModeIcons.vue'
+import IconList from '@/monitoring/shared/components/IconList.vue'
 import ActionButtons, {
   type CellAction
 } from '@/monitoring/shared/components/cell/ActionButtons.vue'
@@ -30,7 +30,7 @@ const emit = defineEmits<{
 <template>
   <div class="monitoring-slide-in-header">
     <slot name="state" />
-    <ModeIcons v-if="modes.length" :modes="modes" />
+    <IconList v-if="modes.length" :icons="modes" />
     <CmkHeading type="h2" class="monitoring-slide-in-header__title">
       {{ title }}
     </CmkHeading>

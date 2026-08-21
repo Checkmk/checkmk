@@ -12,8 +12,8 @@ import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
+import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
 import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
-import ModesCell from '@/monitoring/shared/components/cell/ModesCell.vue'
 import PerfometerCell from '@/monitoring/shared/components/cell/PerfometerCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
@@ -84,7 +84,7 @@ const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? [])
     @update:model-value="toggleSelected"
   />
   <StateCell v-if="hasColumn('state')" column-id="state" kind="service" :state="row.state" />
-  <ModesCell v-if="hasColumn('modes')" column-id="modes" :modes="row.modes ?? []" />
+  <IconCell v-if="hasColumn('modes')" column-id="modes" :icons="row.modes ?? []" />
   <StringCell
     v-if="hasColumn('name')"
     column-id="name"

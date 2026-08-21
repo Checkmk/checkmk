@@ -12,7 +12,7 @@ import { computed } from 'vue'
 
 import type { ServiceOverview } from '@/monitoring/shared/api/types'
 import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vue'
-import ModeIcons from '@/monitoring/shared/components/ModeIcons.vue'
+import IconList from '@/monitoring/shared/components/IconList.vue'
 import PluginOutput from '@/monitoring/shared/components/PluginOutput.vue'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
@@ -49,7 +49,7 @@ const nextCheck = computed(() =>
       <dt>{{ _t('Host:') }}</dt>
       <dd class="monitoring-service-overview-tab__host">
         <HostStateDisplay :state="data.host_state" />
-        <ModeIcons v-if="data.host_modes.length" :modes="data.host_modes" />
+        <IconList v-if="data.host_modes.length" :icons="data.host_modes" />
         <span>{{ data.host_name }}</span>
         <a
           class="monitoring-service-overview-tab__host-link"

@@ -10,7 +10,10 @@ import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/Cmk
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw } from 'vue'
 
+import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
 import { HostApi } from '@/monitoring/all-hosts/api/hosts'
+import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
+import { fetchEvents } from '@/monitoring/events/api'
 import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
 import ActionFeedback, {
   type ActionFeedback as ActionFeedbackResult
@@ -119,6 +122,14 @@ const tabs = computed<SlideInTab[]>(() => {
       component: markRaw(HostOverviewTab),
       skeleton: markRaw(HostOverviewSkeleton),
       load: () => hostApi.fetchHostOverview({ site_id: host.site_id, name: host.name })
+    },
+    {
+      id: 'history',
+      title: _t('History'),
+      component: markRaw(EventHistoryApp),
+      skeleton: markRaw(TableSkeleton),
+      props: { subject: 'host' },
+      load: () => fetchEvents({ site_id: host.site_id, name: host.name })
     }
   ]
 })
@@ -129,7 +140,13 @@ async function onCommand(payload: { id: string; host: HostRef }): Promise<void> 
 </script>
 
 <template>
+  <!--
+    Keyed on the host so picking another row while the panel is open remounts the tabs.
+    CmkSlideInTabbed only drops its cached tab data when `open` flips, which never happens
+    here: AllHostsApp reassigns the host without closing the panel first.
+  -->
   <CmkSlideInTabbed
+    :key="host ? `${host.site_id}/${host.name}` : ''"
     :open="open"
     :tabs="tabs"
     :active-tab-id="activeTabId"

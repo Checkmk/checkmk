@@ -18,6 +18,7 @@ import {
   hitTestMode,
   pxToTime,
   recenter,
+  resizeHandleRects,
   resizeLeft,
   resizeRight,
   timeToPx
@@ -40,7 +41,6 @@ const emit = defineEmits<{
 }>()
 
 const DRAG_THRESHOLD_PX = 4
-const HANDLE_PX = 7 // hit-test half-width for the edge resize handles
 
 const STRIP_TOP = 9
 const STRIP_H = 32
@@ -100,10 +100,14 @@ const winRange = computed(() => preview.value ?? props.window)
 const winLeftPx = computed(() => toPx(winRange.value.start))
 const winRightPx = computed(() => toPx(winRange.value.end))
 
+const resizeHandleBounds = computed(() =>
+  resizeHandleRects(winLeftPx.value, winRightPx.value, HANDLE_W)
+)
+
 const edgeHandles = computed(() =>
   [
-    { edgeX: winLeftPx.value, rectX: winLeftPx.value - HANDLE_W },
-    { edgeX: winRightPx.value, rectX: winRightPx.value }
+    { edgeX: winLeftPx.value, rectX: resizeHandleBounds.value.leftX },
+    { edgeX: winRightPx.value, rectX: resizeHandleBounds.value.rightX }
   ].map(({ edgeX, rectX }) => ({
     edgeX,
     rectX,
@@ -124,7 +128,7 @@ let grabOffset = 0 // seconds between cursor and window.start (move)
 const localX = (ev: MouseEvent) => ev.clientX - (svgRef.value?.getBoundingClientRect().left ?? 0)
 const localY = (ev: MouseEvent) => ev.clientY - (svgRef.value?.getBoundingClientRect().top ?? 0)
 
-// The svg spans the whole figure; only the track itself is interactive.
+// The svg spans the whole figure; only the track and its handles are interactive.
 function onTrack(x: number, y: number): boolean {
   return (
     x >= props.plotLeft &&
@@ -134,14 +138,23 @@ function onTrack(x: number, y: number): boolean {
   )
 }
 
+function onResizeHandle(x: number, y: number): boolean {
+  if (y < HANDLE_TOP || y > HANDLE_TOP + HANDLE_H) {
+    return false
+  }
+  const { leftX, rightX, width } = resizeHandleBounds.value
+  return (x >= leftX && x <= leftX + width) || (x >= rightX && x <= rightX + width)
+}
+
 function onMouseDown(ev: MouseEvent): void {
   const x = localX(ev)
-  if (ev.button !== 0 || !onTrack(x, localY(ev))) {
+  const y = localY(ev)
+  if (ev.button !== 0 || !(onTrack(x, y) || onResizeHandle(x, y))) {
     return
   }
   ev.preventDefault()
   const span = props.window.end - props.window.start
-  mode = hitTestMode(x, toPx(props.window.start), toPx(props.window.end), HANDLE_PX)
+  mode = hitTestMode(x, toPx(props.window.start), toPx(props.window.end), resizeHandleBounds.value)
   if (mode === 'recenter') {
     const [s, e] = recenter(toTime(x), span, props.domain.start, props.domain.end)
     preview.value = { start: s, end: e }

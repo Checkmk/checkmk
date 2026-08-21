@@ -13,6 +13,8 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceAndNode,
     ServiceBooleanCondition,
     ServiceFilterNode,
+    ServiceLabelChoiceCondition,
+    ServiceNameChoiceCondition,
     ServiceNotNode,
     ServiceOrNode,
     ServiceStateChoiceCondition,
@@ -107,6 +109,105 @@ def test_query_builder_state_choice_multiple_with_or() -> None:
     )
 
     assert value == expected
+
+
+def test_query_builder_label_choice_single_no_or() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="labels", op="one_of", value=["cmk/os_family:linux"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: labels = 'cmk/os_family' 'linux'"
+
+
+def test_query_builder_label_choice_multiple_with_or() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition",
+        field="tags",
+        op="one_of",
+        value=["criticality:prod", "networking:core"],
+    )
+
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: tags = 'criticality' 'prod'",
+            "Filter: tags = 'networking' 'core'",
+            "Or: 2",
+        ]
+    )
+
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+def test_query_builder_label_choice_splits_on_the_first_colon_only() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="labels", op="one_of", value=["url:https://example.com"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: labels = 'url' 'https://example.com'"
+
+
+def test_query_builder_label_choice_value_prefix_matches_by_regex() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="labels", op="one_of", value=["cmk/os_family:lin*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: labels ~ 'cmk/os_family' '^lin'"
+
+
+def test_query_builder_label_choice_key_prefix_matches_the_names_column() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="labels", op="one_of", value=["cmk/os*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: label_names ~ ^cmk/os"
+
+
+def test_query_builder_tag_key_prefix_matches_its_own_names_column() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="tags", op="one_of", value=["crit*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: tag_names ~ ^crit"
+
+
+def test_query_builder_label_choice_prefix_is_a_literal_not_a_pattern() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="labels", op="one_of", value=["cmk/os_family:a.b*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: labels ~ 'cmk/os_family' '^a\\.b'"
+
+
+def test_query_builder_name_choice_single_no_or() -> None:
+    condition = ServiceNameChoiceCondition(
+        type="condition", field="contact_groups", op="one_of", value=["all"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: contact_groups >= all"
+
+
+def test_query_builder_name_choice_multiple_with_or() -> None:
+    condition = ServiceNameChoiceCondition(
+        type="condition", field="contacts", op="one_of", value=["alice", "bob"]
+    )
+
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: contacts >= alice",
+            "Filter: contacts >= bob",
+            "Or: 2",
+        ]
+    )
+
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+def test_query_builder_name_choice_prefix_matches_by_regex() -> None:
+    condition = ServiceNameChoiceCondition(
+        type="condition", field="contact_groups", op="one_of", value=["ops*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: contact_groups ~ ^ops"
 
 
 def test_query_builder_nested_conditions() -> None:

@@ -134,23 +134,22 @@ fn conditionally_renew_connection_cert(
         return Ok(());
     };
 
-    let reason = if validity < Duration::from_secs(constants::CERT_VALIDITY_LOWER_LIMIT) {
-        "is about to expire (validity < 45 days)"
+    if validity < Duration::from_secs(constants::CERT_VALIDITY_LOWER_LIMIT) {
+        info!(
+            "Certificate for {} is about to expire (validity < 45 days), renewing...",
+            site_id
+        );
     } else if validity > Duration::from_secs(constants::CERT_VALIDITY_UPPER_LIMIT) {
-        "has too long validity (> 500 years)"
-    } else if !certs::has_authority_key_identifier(&cert) {
-        // Strict X509 verification, which a monitoring site performs since Checkmk
-        // 3.0.0, rejects a certificate without this extension (OpenSSL: "Missing
-        // Authority Key Identifier").
-        "lacks the authority key identifier extension"
+        info!(
+            "Certificate for {} has too long validity (> 500 years), renewing...",
+            site_id
+        );
     } else {
         return Ok(());
-    };
-    info!("Certificate for {} {}, renewing...", site_id, reason);
+    }
 
     renew_connection_cert(site_id, connection, renew_certificate_api)
 }
-
 #[cfg(test)]
 mod test_renew_certificate {
 
@@ -160,17 +159,6 @@ mod test_renew_certificate {
     use std::convert::From;
 
     fn mk_ca_cert(days_valid: u32) -> AnyhowResult<String> {
-        mk_ca_cert_with_optional_authority_key_identifier(days_valid, true)
-    }
-
-    fn mk_ca_cert_without_authority_key_identifier(days_valid: u32) -> AnyhowResult<String> {
-        mk_ca_cert_with_optional_authority_key_identifier(days_valid, false)
-    }
-
-    fn mk_ca_cert_with_optional_authority_key_identifier(
-        days_valid: u32,
-        authority_key_identifier: bool,
-    ) -> AnyhowResult<String> {
         let key_pair = rcgen::KeyPair::generate_for(&rcgen::PKCS_ECDSA_P256_SHA256)?;
         let mut params = rcgen::CertificateParams::default();
         params.distinguished_name = rcgen::DistinguishedName::new();
@@ -178,7 +166,6 @@ mod test_renew_certificate {
             .distinguished_name
             .push(rcgen::DnType::CommonName, "test");
         params.is_ca = rcgen::IsCa::Ca(rcgen::BasicConstraints::Unconstrained);
-        params.use_authority_key_identifier_extension = authority_key_identifier;
         params.key_usages = vec![
             rcgen::KeyUsagePurpose::KeyCertSign,
             rcgen::KeyUsagePurpose::CrlSign,
@@ -327,8 +314,6 @@ mod test_renew_certificate {
             let cert_too_short = mk_ca_cert(10).unwrap();
             let cert_too_long = mk_ca_cert(365 * 600).unwrap();
             let cert_ok = mk_ca_cert(100).unwrap();
-            let cert_without_authority_key_identifier =
-                mk_ca_cert_without_authority_key_identifier(100).unwrap();
 
             let test_registry = TestRegistry::new()
                 .add_connection(
@@ -350,11 +335,6 @@ mod test_renew_certificate {
                     &config::ConnectionMode::Pull,
                     "server/pull-site_2",
                     new_trusted_connection_with_remote(cert_ok.clone()),
-                )
-                .add_connection(
-                    &config::ConnectionMode::Pull,
-                    "server/pull-site_3",
-                    new_trusted_connection_with_remote(cert_without_authority_key_identifier),
                 )
                 .add_imported_connection(new_trusted_connection(cert_too_short.clone()));
             Self {
@@ -390,9 +370,6 @@ mod test_renew_certificate {
 
         let conn = get_connection(registry, "server/pull-site_2");
         assert!(conn.certificate == a.cert_ok);
-
-        let conn = get_connection(registry, "server/pull-site_3");
-        assert!(conn.certificate == format!("new_cert_for_{}", conn.uuid));
 
         let conn = &registry.get_imported_pull_connections().next().unwrap();
         assert!(conn.certificate == a.cert_too_short);

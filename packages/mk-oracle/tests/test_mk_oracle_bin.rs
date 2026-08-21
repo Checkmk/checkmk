@@ -71,7 +71,6 @@ fn test_help() {
     for expected in [
         "-v, --verbose",
         "-l, --display-log",
-        "--print-info",
         "--log-dir",
         "--temp-dir",
         "--state-dir",
@@ -185,13 +184,14 @@ fn test_generate_plugins() {
     );
 }
 
+/// The environment report needs no flag of its own, only debug verbosity.
 #[test]
-fn test_print_info() {
+fn test_environment_info_is_logged_at_debug() {
     let env = setup_test_env();
     let output = run_bin()
         .args(["-c", env.config.to_str().unwrap()])
-        .args(["--print-info", "-l"])
-        .output() // exit code varies: no Oracle runtime on Linux → exit 1
+        .args(["-l", "-v"])
+        .output() // exit code varies: no Oracle runtime on Linux -> exit 1
         .unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
     for expected in [
@@ -203,7 +203,7 @@ fn test_print_info() {
     ] {
         assert!(
             stderr.contains(expected),
-            "Missing in --print-info output: {expected}"
+            "Missing in environment info: {expected}"
         );
     }
 }

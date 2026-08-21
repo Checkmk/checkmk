@@ -202,20 +202,22 @@ fn init_logging(args: &Args, environment: &Env, logging: Option<Logging>) -> Res
     };
 
     let s = apply_logging_parameters(level, environment.log_dir(), send_to, l).map(|_| ());
-    log_info_optional(args, level, environment, s.is_ok());
+    log_info(level, environment, s.is_ok());
     s
 }
 
-fn log_info_optional(args: &Args, level: log::Level, environment: &Env, log_available: bool) {
-    if args.print_info {
-        let info = create_info_text(&level, environment);
-        if log_available {
-            log::info!("{}", info);
-        } else {
-            println!("{}", info);
-        }
+/// Report the paths and the log level every run starts with: the first thing a
+/// support case asks for. Logged at debug, so a default-level log stays clean.
+/// Goes to stdout when there is no log to write to.
+fn log_info(level: log::Level, environment: &Env, log_available: bool) {
+    let info = create_info_text(&level, environment);
+    if log_available {
+        log::debug!("{}", info);
+    } else {
+        println!("{}", info);
     }
 }
+
 fn create_info_text(level: &log::Level, environment: &Env) -> String {
     format!(
         "\n  - Log level: {}\n  - Log dir: {}\n  - Temp dir: {}\n  - MK_CONFDIR: {}\n  - MK_LIBDIR: {}",

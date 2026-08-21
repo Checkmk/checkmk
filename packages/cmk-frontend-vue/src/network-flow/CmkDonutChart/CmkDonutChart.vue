@@ -318,6 +318,10 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   flex: 0 0 auto;
   width: var(--nf-donut-figure-size);
   height: var(--nf-donut-figure-size);
+
+  /* A container of its own, so what is written in the hole is measured against
+     the ring rather than against the widget. */
+  container-type: size;
 }
 
 .network-flow-cmk-donut-chart__svg {
@@ -378,14 +382,24 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   flex-direction: column;
   gap: 2px;
   align-items: center;
+
+  /* The hole is 73% of the figure across; the text stops short of its edge
+     rather than reaching into the ring. */
   justify-content: center;
+  width: 70%;
+  margin: 0 auto;
+  font-size: clamp(7px, 8cqw, 16px);
   text-align: center;
 }
 
 .network-flow-cmk-donut-chart__center-value {
+  max-width: 100%;
+  overflow: hidden;
   font-size: 1.6em;
   font-weight: var(--font-weight-bold);
   line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .network-flow-cmk-donut-chart__center-label {

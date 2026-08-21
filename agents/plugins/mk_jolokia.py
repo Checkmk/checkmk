@@ -11,7 +11,7 @@ import socket
 import sys
 import urllib.parse
 
-__version__ = "2.4.0p36"
+__version__ = "2.4.0p37"
 
 USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
 

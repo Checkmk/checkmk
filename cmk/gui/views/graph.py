@@ -79,6 +79,14 @@ from cmk.shared_typing.cmk_time_series_graph import Size
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
 
+# Options only the legacy renderer honoured; the graph engine ignores them.
+_LEGACY_ONLY_RENDER_OPTIONS = (
+    "font_size",
+    "title_format",
+    "show_time_range_previews",
+    "fixed_timerange",
+)
+
 
 def register(
     painter_option_registry: PainterOptionRegistry,
@@ -358,6 +366,10 @@ def _render_engine_graph_group(
     )
 
 
+def _vs_graph_render_options_for_views() -> MigrateNotUpdated:
+    return vs_graph_render_options(exclude=_LEGACY_ONLY_RENDER_OPTIONS, with_inline_title=False)
+
+
 def cmk_time_graph_params() -> MigrateNotUpdated:
     elements = [
         (
@@ -369,7 +381,7 @@ def cmk_time_graph_params() -> MigrateNotUpdated:
                 ],
             ),
         ),
-        ("graph_render_options", vs_graph_render_options()),
+        ("graph_render_options", _vs_graph_render_options_for_views()),
     ]
 
     return MigrateNotUpdated(
@@ -538,7 +550,9 @@ class PainterHostGraphs(Painter):
 
 class PainterOptionGraphRenderOptions(PainterOption):
     def __init__(self) -> None:
-        super().__init__(ident="graph_render_options", valuespec=vs_graph_render_options())
+        super().__init__(
+            ident="graph_render_options", valuespec=_vs_graph_render_options_for_views()
+        )
 
 
 class PainterOptionPNPTimerange(PainterOption):

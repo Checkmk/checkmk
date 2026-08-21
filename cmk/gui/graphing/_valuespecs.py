@@ -125,10 +125,14 @@ def migrate_graph_render_options(value):
     return value
 
 
-def vs_graph_render_options(default_values=None, exclude=None):
+def vs_graph_render_options(
+    default_values=None, exclude=None, *, with_inline_title=True
+) -> MigrateNotUpdated:
     return MigrateNotUpdated(
         valuespec=Dictionary(
-            elements=vs_graph_render_option_elements(default_values, exclude),
+            elements=vs_graph_render_option_elements(
+                default_values, exclude, with_inline_title=with_inline_title
+            ),
             optional_keys=[],
             title=_("Graph rendering options"),
         ),
@@ -146,7 +150,28 @@ def _vs_title_infos() -> ListChoice:
     return ListChoice(title=_("Title format"), choices=choices, default_value=["plain"])
 
 
-def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[DictionaryEntry]:
+def _vs_show_title(
+    default_value: bool | Literal["inline"], with_inline_title: bool
+) -> DropdownChoice:
+    choices: list[tuple[bool | Literal["inline"], str]] = [
+        (False, _("Don't show graph title")),
+        (True, _("Show graph title")),
+    ]
+    if with_inline_title:
+        choices.append(("inline", _("Show graph title on graph area")))
+    return DropdownChoice(
+        title=_("Title"),
+        choices=choices,
+        default_value=default_value,
+        # Configs written before the choice was dropped still hold "inline". Complaining about it
+        # would make the dialog unsaveable until the user touches this very dropdown.
+        invalid_choice="complain" if with_inline_title else "replace",
+    )
+
+
+def vs_graph_render_option_elements(
+    default_values=None, exclude=None, *, with_inline_title: bool = True
+) -> list[DictionaryEntry]:
     # Allow custom default values to be specified by the caller. This is, for example,
     # needed by the dashlets which should add the host/service by default.
     default_values = GraphDisplayConfigHTML.model_validate(default_values or {})
@@ -160,15 +185,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[D
         ),
         (
             "show_title",
-            DropdownChoice(
-                title=_("Title"),
-                choices=[
-                    (False, _("Don't show graph title")),
-                    (True, _("Show graph title")),
-                    ("inline", _("Show graph title on graph area")),
-                ],
-                default_value=default_values.show_title,
-            ),
+            _vs_show_title(default_values.show_title, with_inline_title),
         ),
         (
             "title_format",
@@ -235,8 +252,8 @@ def vs_graph_render_option_elements(default_values=None, exclude=None) -> list[D
         (
             "show_controls",
             Checkbox(
-                title=_("Show controls"),
-                label=_("Show the graph controls"),
+                title=_("Show burger menu"),
+                label=_("Show the graph burger menu"),
                 default_value=default_values.show_controls,
             ),
         ),

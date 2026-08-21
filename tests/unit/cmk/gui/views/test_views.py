@@ -14,6 +14,7 @@ from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.display_options import display_options
+from cmk.gui.graphing import vs_graph_render_option_elements
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import (
@@ -36,6 +37,7 @@ from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.command import group as group_module
 from cmk.gui.views.command import registry as registry_module
 from cmk.gui.views.exporter import exporter_registry
+from cmk.gui.views.graph import _LEGACY_ONLY_RENDER_OPTIONS
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.store import multisite_builtin_views
@@ -67,6 +69,13 @@ def test_registered_painter_options(request_context: None) -> None:
     for cls in painter_option_registry.values():
         vs = cls.valuespec
         assert isinstance(vs, ValueSpec)
+
+
+def test_legacy_only_render_options_name_existing_options() -> None:
+    # A stale key would silently stop excluding anything from the graph views' display options.
+    assert set(_LEGACY_ONLY_RENDER_OPTIONS) <= {
+        key for key, _vs in vs_graph_render_option_elements()
+    }
 
 
 def test_registered_layouts() -> None:

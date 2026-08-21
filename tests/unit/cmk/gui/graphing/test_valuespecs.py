@@ -11,9 +11,13 @@ from typing import Literal
 import pytest
 
 from cmk.gui.graphing._valuespecs import (
+    _vs_show_title,
     migrate_graph_render_options,
     migrate_graph_render_options_title_format,
+    vs_graph_render_option_elements,
 )
+from cmk.gui.http import request
+from cmk.gui.valuespec import DropdownChoice, ValueSpec
 
 
 @pytest.mark.parametrize(
@@ -79,3 +83,31 @@ def test_migrate_graph_render_options(
     entry: Mapping[str, object], result: Mapping[str, Sequence[str]]
 ) -> None:
     assert migrate_graph_render_options(entry) == result
+
+
+def test_graph_render_options_offer_the_legacy_renderer_options_by_default() -> None:
+    # Other callers still render all of these, so they may only be dropped where one asks for it.
+    elements = dict(vs_graph_render_option_elements())
+    assert {"font_size", "title_format", "show_time_range_previews", "fixed_timerange"} <= set(
+        elements
+    )
+    assert "inline" in _show_title_choice_ids(elements)
+
+
+def test_graph_render_options_can_drop_the_inline_title() -> None:
+    elements = dict(vs_graph_render_option_elements(with_inline_title=False))
+    assert _show_title_choice_ids(elements) == [False, True]
+
+
+def test_graph_title_without_the_inline_choice_tolerates_a_stored_inline_title(
+    request_context: None,
+) -> None:
+    show_title = _vs_show_title(True, with_inline_title=False)
+    request.set_var("title", "inline")
+    assert show_title.from_html_vars("title") is True
+
+
+def _show_title_choice_ids(elements: Mapping[str, ValueSpec[object]]) -> list[object]:
+    show_title = elements["show_title"]
+    assert isinstance(show_title, DropdownChoice)
+    return [choice_id for choice_id, _title in show_title.choices()]

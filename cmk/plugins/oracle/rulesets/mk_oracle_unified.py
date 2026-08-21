@@ -695,14 +695,6 @@ def _options(is_default_options: bool = True) -> Dictionary:
         | DictElement[_NamedOption]
         | DictElement[_AuthOptions],
     ] = {
-        "max_connections": DictElement(
-            parameter_form=Integer(
-                title=Title("Maximum connections"),
-                help_text=Help("Maximum number of database connections to open."),
-                prefill=DefaultValue(5),
-            ),
-            required=False,
-        ),
         "max_queries": DictElement(
             parameter_form=Integer(
                 title=Title("Maximum queries"),

@@ -5,10 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import NetworkFlowAutonomousSystemSlideIn from './AutonomousSystemSlideIn/NetworkFlowAutonomousSystemSlideIn.vue'
+import NetworkFlowDonutOtherBreakdownSlideIn from './DonutOtherBreakdownSlideIn/NetworkFlowDonutOtherBreakdownSlideIn.vue'
 import NetworkFlowHostSlideIn from './HostSlideIn/NetworkFlowHostSlideIn.vue'
 import type { NetworkFlowSlideIns } from './useNetworkFlowSlideIns'
 
-/** Renders both network flow detail panels for a `useNetworkFlowSlideIns()` state. */
+/** Renders the network flow detail panels for a `useNetworkFlowSlideIns()` state. */
 const props = defineProps<{ slideIns: NetworkFlowSlideIns }>()
 </script>
 
@@ -22,5 +23,10 @@ const props = defineProps<{ slideIns: NetworkFlowSlideIns }>()
     :open="props.slideIns.autonomousSystemOpen.value"
     :asn="props.slideIns.autonomousSystemAsn.value"
     @close="props.slideIns.closeAutonomousSystem()"
+  />
+  <NetworkFlowDonutOtherBreakdownSlideIn
+    :open="props.slideIns.donutOtherOpen.value"
+    :target="props.slideIns.donutOtherTarget.value"
+    @close="props.slideIns.closeDonutOther()"
   />
 </template>

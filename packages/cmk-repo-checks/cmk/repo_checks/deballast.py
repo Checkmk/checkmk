@@ -22,18 +22,19 @@ This is a src-import-vs-declared-dep check with the following implemented:
   runtime rules.
 - Relative imports (`from . import X`, `from .._utils import Y`) are resolved
   against the containing package of each src file.
-- Imports are recorded in two tiers. Every path named by an import statement is
-  `referenced`. The subset that also matches modules below it is `namespaces`:
-  `import X.Y`, each name bound by `from X import Y`, and the `X` of
-  `from X import *`. The bare `X` of `from X import Y` is left out on purpose.
-  Otherwise `from cmk import trace` would be satisfied by any dep that provides
-  something under `cmk.`.
-- The descendant match is unsound by design. It exists for implicit namespace
-  packages, where the parent path is all a consumer can name (for example
-  `//cmk/gui/plugins/views:views`, whose srcs all live under `icons/`). There is
-  no depth limit, so a shallow `import cmk.utils` is satisfied by any dep under
-  `cmk.utils.` too. The statement form does not tell us which of the two cases
-  we are in.
+- Every module path an import statement names is recorded, and a dep counts as
+  used when it provides one of those paths, or provides a package one of them
+  lives under (`import X.Y.Z` cannot resolve without loading `X.Y`). Both
+  follow from the statement alone.
+- Reachability beyond that is not inferred. Whether naming a package reaches a
+  particular module inside it depends on what that package's `__init__.py`
+  imports - a dep's file content, which the aspect does not ship. Deps
+  reachable only that way, or only at runtime, are declared with
+  `deballast-keep`. `//cmk/gui/plugins/views:views` is one: it ships a single
+  empty `icons/utils.py`, so the only thing it contributes is the existence of
+  the `cmk.gui.plugins.views[.icons]` import paths, which
+  `cmk/gui/views/__init__.py` imports and fills by name injection for pre-2.1
+  plug-ins.
 - Namespace-shim deps (whose Python srcs are all `__init__.py` or generated
   `_namespace.py` files) are treated as implicitly used. They provide runtime
   package structure rather than anything AST-visible. (e.g.
@@ -116,25 +117,6 @@ class TargetSpec(NamedTuple):
     dep_attr_labels: list[str]
     dep_json_paths: list[str]
     keep_deps: list[str]
-
-
-class ModuleRefs(NamedTuple):
-    """Module paths a target's srcs import, in the two tiers described above."""
-
-    referenced: frozenset[str]
-    namespaces: frozenset[str]
-
-    @classmethod
-    def empty(cls) -> ModuleRefs:
-        return cls(referenced=frozenset(), namespaces=frozenset())
-
-    def __or__(self, other: object) -> ModuleRefs:
-        if not isinstance(other, ModuleRefs):
-            return NotImplemented
-        return ModuleRefs(
-            referenced=self.referenced | other.referenced,
-            namespaces=self.namespaces | other.namespaces,
-        )
 
 
 class DepInfo(NamedTuple):
@@ -313,19 +295,18 @@ def shares_srcs_with_target(
     return any(s in target_src_paths for s in dep_srcs)
 
 
-def imports_in_tree(tree: ast.Module, containing_packages: Iterable[str] = ()) -> ModuleRefs:
+def imports_in_tree(tree: ast.Module, containing_packages: Iterable[str] = ()) -> frozenset[str]:
     """Return the module paths imported by a parsed Python module.
 
     `containing_packages` is the set of candidate packages the module belongs
     to (derived from its rule's imports attribute). Relative `from . import X`
     statements are resolved against each candidate — the union is returned.
     """
-    refs = ModuleRefs.empty()
+    refs: set[str] = set()
     pkgs = list(containing_packages)
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
-            for alias in node.names:
-                refs |= _plain_import_refs(alias.name)
+            refs.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
             names = [alias.name for alias in node.names]
             if node.level == 0:
@@ -343,31 +324,16 @@ def imports_in_tree(tree: ast.Module, containing_packages: Iterable[str] = ()) -
                     base.extend(node.module.split("."))
                 if base:
                     refs |= _from_import_refs(".".join(base), names)
-    return refs
+    return frozenset(refs)
 
 
-def _plain_import_refs(module: str) -> ModuleRefs:
-    return ModuleRefs(referenced=frozenset({module}), namespaces=frozenset({module}))
+def _from_import_refs(module: str, names: Iterable[str]) -> set[str]:
+    """`from <module> import <names>`: the module itself and each named child.
 
-
-def _from_import_refs(module: str, names: Iterable[str]) -> ModuleRefs:
-    """`from <module> import <names>`: `module` is referenced, each child also a namespace.
-
-    `module` itself is not a namespace, because the statement names the children
-    it wants and each of them is recorded on its own. A star import is the
-    exception: it binds whatever the package re-exports, so there is no child to
-    record and `module` becomes the namespace.
+    A `*` names no child - it binds whatever the package re-exports - so it
+    contributes only `module`.
     """
-    referenced = {module}
-    namespaces: set[str] = set()
-    for name in names:
-        if name == "*":
-            namespaces.add(module)
-            continue
-        child = f"{module}.{name}"
-        referenced.add(child)
-        namespaces.add(child)
-    return ModuleRefs(referenced=frozenset(referenced), namespaces=frozenset(namespaces))
+    return {module} | {f"{module}.{name}" for name in names if name != "*"}
 
 
 def _containing_packages_for_path(
@@ -391,29 +357,25 @@ def _containing_packages_for_path(
     return out
 
 
-def dep_is_used(dep_modules: set[str], target_imports: ModuleRefs) -> bool:
-    """True if any module from the dep is referenced by the target's imports.
+def dep_is_used(dep_modules: set[str], target_imports: frozenset[str]) -> bool:
+    """True if any module from the dep is reached by the target's imports.
 
-    Three ways a dep module M can be reached:
-    - Exact: M appears verbatim in the references.
-    - Ancestor: the target references something below M, as `import X.Y.Z` does
-      for a dep providing `X.Y`.
-    - Descendant: the target references a namespace M lives under. Only
-      namespaces match here, see `_from_import_refs`.
+    Two ways a dep module M can be reached, both implied by the import
+    statement on its own:
+    - Exact: M is imported verbatim.
+    - Ancestor: something below M is imported, as `import X.Y.Z` does for a dep
+      providing `X.Y` - Python cannot resolve `X.Y.Z` without loading `X.Y`.
+
+    Naming a package does not reach the modules inside it; that depends on what
+    the package's `__init__.py` imports, which is content of a dep and not
+    available here. Deps used only that way carry a `deballast-keep` tag.
     """
     for mod in dep_modules:
-        if mod in target_imports.referenced:
+        if mod in target_imports:
             return True
-        if any(imp.startswith(mod + ".") for imp in target_imports.referenced):
-            return True
-        if any(anc in target_imports.namespaces for anc in _ancestors(mod)):
+        if any(imp.startswith(mod + ".") for imp in target_imports):
             return True
     return False
-
-
-def _ancestors(module: str) -> list[str]:
-    parts = module.split(".")
-    return [".".join(parts[:i]) for i in range(len(parts) - 1, 0, -1)]
 
 
 def analyze_spec(spec: TargetSpec, deps: Sequence[DepInfo]) -> list[str]:
@@ -423,7 +385,7 @@ def analyze_spec(spec: TargetSpec, deps: Sequence[DepInfo]) -> list[str]:
         # Umbrella targets (srcs = __init__.py, deps = the subpackages) exist
         # to hand consumers the whole package; their deps are intentional.
         return []
-    target_imports = ModuleRefs.empty()
+    target_imports: frozenset[str] = frozenset()
     parsed_any = False
     for src in spec.srcs:
         if not src.is_source or not src.short_path.endswith(".py"):

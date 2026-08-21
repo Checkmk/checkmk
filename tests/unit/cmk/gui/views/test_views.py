@@ -9,7 +9,6 @@
 
 import pytest
 
-import cmk.gui.plugins.views
 import cmk.gui.views
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config

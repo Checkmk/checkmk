@@ -83,6 +83,12 @@ py_library(
         "visual_type.py",
     ] + glob(include = ["inventory/**/*.py"]),
     imports = ["../../.."],
+    tags = [
+        # ships only an empty icons/utils.py: it exists to materialize the
+        # cmk.gui.plugins.views[.icons] import paths that __init__.py populates
+        # by name injection for pre-1.6 icon plug-ins
+        "deballast-keep=//cmk/gui/plugins/views:views",
+    ],
     visibility = [
         "//cmk:__subpackages__",
         "//tests:__subpackages__",

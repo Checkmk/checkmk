@@ -314,7 +314,6 @@ py_cmk_test(
         "//cmk/gui/inventory",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/painter:v0_base",
-        "//cmk/gui/plugins/views",
         "//cmk/gui/search:quicksearch",
         "//cmk/gui/sidebar",
         "//cmk/gui/token_auth",

@@ -18,6 +18,7 @@ from cmk.plugins.oracle.bakery.mk_oracle_unified import (
     GuiConfig,
     GuiConnectionConf,
     GuiDiscoveryConf,
+    GuiExcludedSectionConf,
     GuiInstanceConf,
     GuiMainConf,
     GuiOracleClientLibOptions,
@@ -977,3 +978,142 @@ def test_additional_options_ignores_legacy_permissions_check_key() -> None:
         {"permissions_check": ("enabled", {"safe_entries": ["x"]})}
     )
     assert options.validate_permissions is None
+
+
+# --- excluded_sections tests ---
+
+SID: Literal["sid"] = "sid"
+DESCRIPTOR: Literal["descriptor"] = "descriptor"
+ALIAS: Literal["alias"] = "alias"
+
+
+def _config_with_excluded_sections(
+    excluded_sections: list[GuiExcludedSectionConf] | None,
+) -> GuiConfig:
+    return GuiConfig(
+        deploy=(DEPLOY, None),
+        main=GuiMainConf(
+            auth=GuiAuthConf(
+                auth_type=(
+                    OracleAuthType.STANDARD,
+                    GuiAuthUserPasswordData(username="cmk", password=Secret("pw", "", "")),
+                ),
+                role=None,
+            ),
+            connection=GuiConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+            excluded_sections=excluded_sections,
+        ),
+        instances=None,
+    )
+
+
+def _yaml_lines(config: GuiConfig) -> Sequence[str]:
+    entries = [entry for entry in _process(config) if isinstance(entry, PluginConfig)]
+    assert entries, "no plugin config emitted"
+    return list(entries[0].lines)
+
+
+def test_excluded_sections_emits_the_target_fields_and_the_sections() -> None:
+    # The ruleset value is a tagged tuple; the tag is dropped and the identifying
+    # fields are written next to `sections`, without a `target_id` level.
+    config = _config_with_excluded_sections(
+        [
+            GuiExcludedSectionConf(
+                target_id=(SID, GuiOracleIdentificationConf(sid="XE")),
+                sections=["jobs", "tablespaces"],
+            )
+        ]
+    )
+
+    lines = _yaml_lines(config)
+
+    assert "    excluded_sections:" in lines
+    assert "    - sections:" in lines
+    assert "      - jobs" in lines
+    assert "      - tablespaces" in lines
+    assert "      sid: XE" in lines
+    # The cascading tag itself is never emitted.
+    assert not any("descriptor" in line for line in lines)
+
+
+def test_excluded_sections_emits_every_identifying_field_of_a_descriptor() -> None:
+    config = _config_with_excluded_sections(
+        [
+            GuiExcludedSectionConf(
+                target_id=(
+                    DESCRIPTOR,
+                    GuiOracleIdentificationConf(service_name="srv", instance_name="inst", sid="XE"),
+                ),
+                sections=["jobs"],
+            )
+        ]
+    )
+
+    lines = _yaml_lines(config)
+
+    # The dumper sorts the keys, so `instance_name` opens the entry.
+    assert "    - instance_name: inst" in lines
+    assert "      service_name: srv" in lines
+    assert "      sid: XE" in lines
+
+
+def test_excluded_sections_emits_an_alias_target() -> None:
+    config = _config_with_excluded_sections(
+        [
+            GuiExcludedSectionConf(
+                target_id=(ALIAS, GuiOracleIdentificationConf(alias="my_alias")),
+                sections=["locks"],
+            )
+        ]
+    )
+
+    assert "    - alias: my_alias" in _yaml_lines(config)
+
+
+def test_excluded_sections_emits_one_entry_per_rule() -> None:
+    config = _config_with_excluded_sections(
+        [
+            GuiExcludedSectionConf(
+                target_id=(SID, GuiOracleIdentificationConf(sid="A")), sections=["jobs"]
+            ),
+            GuiExcludedSectionConf(
+                target_id=(SID, GuiOracleIdentificationConf(sid="B")), sections=["locks"]
+            ),
+        ]
+    )
+
+    lines = _yaml_lines(config)
+
+    assert lines.count("    - sections:") == 2
+    assert "      sid: A" in lines
+    assert "      sid: B" in lines
+
+
+@pytest.mark.parametrize("excluded_sections", [None, []])
+def test_excluded_sections_absent_when_no_rules(
+    excluded_sections: list[GuiExcludedSectionConf] | None,
+) -> None:
+    lines = _yaml_lines(_config_with_excluded_sections(excluded_sections))
+    assert not any("excluded_sections" in line for line in lines)
+
+
+def test_excluded_sections_skips_a_rule_without_any_identifying_field() -> None:
+    # A target that names nothing can never be matched, so the rule is dropped.
+    # The key itself still appears, as an empty list.
+    config = _config_with_excluded_sections(
+        [GuiExcludedSectionConf(target_id=(SID, GuiOracleIdentificationConf()), sections=["jobs"])]
+    )
+
+    assert "    excluded_sections: []" in _yaml_lines(config)
+
+
+def test_excluded_sections_keeps_a_target_without_sections() -> None:
+    # `sections` is optional in the ruleset, so the target survives with no list.
+    config = _config_with_excluded_sections(
+        [GuiExcludedSectionConf(target_id=(SID, GuiOracleIdentificationConf(sid="XE")))]
+    )
+
+    lines = _yaml_lines(config)
+
+    assert "    - sid: XE" in lines
+    assert not any(line.strip() == "sections:" for line in lines)

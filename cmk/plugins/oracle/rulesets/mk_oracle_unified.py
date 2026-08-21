@@ -20,6 +20,8 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     Integer,
     List,
+    MultipleChoice,
+    MultipleChoiceElement,
     Password,
     SingleChoice,
     SingleChoiceElement,
@@ -791,7 +793,64 @@ def _main() -> Dictionary:
                 parameter_form=_sections(),
                 required=False,
             ),
+            "excluded_sections": DictElement(
+                parameter_form=_excluded_sections(),
+                required=False,
+            ),
         },
+    )
+
+
+# identical tp the legacy list
+def _oracle_sections_to_exclude() -> Sequence[tuple[str, Title]]:
+    return [
+        ("performance", Title("Performance")),
+        ("iostats", Title("Performance: I/O stats")),
+        ("processes", Title("Current number of processes")),
+        ("sessions", Title("Current number of sessions")),
+        ("longactivesessions", Title("Long active sessions")),
+        ("logswitches", Title("Logswitches")),
+        ("undostat", Title("Undo statistics")),
+        ("recovery_area", Title("Recovery area")),
+        ("recovery_status", Title("Recovery status")),
+        ("dataguard_stats", Title("Data Guard statistics")),
+        ("tablespaces", Title("Tablespaces")),
+        ("ts_quotas", Title("TS quotas (not used)")),
+        ("rman", Title("RMAN backups")),
+        ("jobs", Title("Scheduled jobs")),
+        ("resumable", Title("Resumables")),
+        ("locks", Title("Locks")),
+        ("systemparameter", Title("System parameters")),
+    ]
+
+
+def _excluded_sections() -> List[_NamedOption]:
+    return List(
+        title=Title("Exclude some sections on certain instances"),
+        help_text=Help("Define sections to be excluded from monitoring for certain instances"),
+        add_element_label=Label("Add exclusion rule"),
+        element_template=Dictionary(
+            title=Title("Excluded sections"),
+            elements={
+                "target_id": DictElement(
+                    parameter_form=_oracle_id(),
+                    required=True,
+                ),
+                "sections": DictElement(
+                    required=False,
+                    parameter_form=MultipleChoice(
+                        title=Title("Sections to exclude"),
+                        elements=[
+                            MultipleChoiceElement(
+                                name=name,
+                                title=title,  # astrein: disable=localization-checker
+                            )
+                            for name, title in _oracle_sections_to_exclude()
+                        ],
+                    ),
+                ),
+            },
+        ),
     )
 
 

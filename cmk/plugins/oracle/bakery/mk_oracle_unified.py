@@ -214,6 +214,11 @@ class GuiAdditionalOptionsConf(BaseModel):
     ) = None
 
 
+class GuiExcludedSectionConf(BaseModel):
+    target_id: tuple[Literal["alias", "descriptor", "sid"], GuiOracleIdentificationConf]
+    sections: list[str] | None = None
+
+
 class GuiMainConf(BaseModel, Generic[SecretT]):
     auth: GuiAuthConf[SecretT]
     connection: GuiConnectionConf
@@ -221,6 +226,7 @@ class GuiMainConf(BaseModel, Generic[SecretT]):
     custom_metrics_cache_age: int | None = None
     discovery: GuiDiscoveryConf | None = None
     sections: GuiSectionOptions | None = None
+    excluded_sections: list[GuiExcludedSectionConf] | None = None
 
     def get_active_cache_age(self) -> int:
         """Return cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
@@ -312,6 +318,14 @@ class OracleInstance(BaseModel):
     piggyback: OraclePiggyback | None = None
 
 
+class OracleExcludedSection(BaseModel):
+    service_name: str | None = None
+    instance_name: str | None = None
+    sid: str | None = None
+    alias: str | None = None
+    sections: list[str] | None = None
+
+
 class OracleMain(BaseModel):
     authentication: OracleAuth
     connection: OracleConnection | None
@@ -321,6 +335,7 @@ class OracleMain(BaseModel):
     discovery: OracleDiscovery | None = None
     sections: Sequence[Mapping[str, OracleSection]] | None = None
     instances: list[OracleInstance] | None = None
+    excluded_sections: list[OracleExcludedSection] | None = None
 
 
 class OracleConfig(BaseModel):
@@ -383,6 +398,7 @@ def _get_oracle_dict(config: GuiConfig) -> OracleMain:
         instances=_get_oracle_instances(instances_config),
         cache_age=main_config.get_active_cache_age(),
         custom_metrics_cache_age=main_config.get_active_custom_metrics_cache_age(),
+        excluded_sections=_get_oracle_excluded_sections(main_config.excluded_sections),
     )
 
 
@@ -542,6 +558,33 @@ def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[Oracl
             else None,
         )
         result.append(oracle_instance)
+    return result
+
+
+def _get_oracle_excluded_sections(
+    rules: list[GuiExcludedSectionConf] | None,
+) -> list[OracleExcludedSection] | None:
+    if not rules:
+        return None
+
+    result: list[OracleExcludedSection] = []
+    for rule in rules:
+        (_name, target_id) = rule.target_id
+        if (
+            target_id.service_name is None
+            and target_id.instance_name is None
+            and target_id.sid is None
+            and target_id.alias is None
+        ):
+            continue
+        excluded = OracleExcludedSection(
+            service_name=target_id.service_name,
+            instance_name=target_id.instance_name,
+            sid=target_id.sid,
+            alias=target_id.alias,
+            sections=rule.sections,
+        )
+        result.append(excluded)
     return result
 
 

@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -260,88 +261,93 @@ function onActionPerformed(result: ActionFeedbackResult): void {
     hostService.refresh(ACTION_REFRESH_DELAY_MS)
   }
 }
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
 
 <template>
-  <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/815511?lang=en" />
-  <MonitoringLegacyViewButton
-    v-if="legacy_view_button"
-    :title="legacy_view_button.title"
-    :url="legacy_view_button.url"
-  />
-  <div class="monitoring-all-hosts-app">
-    <div class="monitoring-all-hosts-app__header">
-      <div class="monitoring-all-hosts-app__toolbar">
-        <CmkSearchInput
-          ref="searchInput"
-          v-model="hostService.searchQuery.value"
-          class="monitoring-all-hosts-app__search"
-          :placeholder="_t('Search hosts…')"
-          @search="hostService.updateSearch($event)"
-          @focusin="hostService.beginAutoPause()"
-          @focusout="hostService.endAutoPause()"
-        />
-        <div class="monitoring-all-hosts-app__quick-filters">
-          <QuickFilterChip
-            v-for="chip in hostService.filters.quickFilters"
-            :key="chip.label"
-            :label="chip.label"
-            :tooltip="chip.tooltip"
-            :active="chip.isActive.value"
-            @activate="hostService.activateQuickFilter(chip)"
-            @deactivate="hostService.deactivateQuickFilter(chip)"
+  <CmkErrorBoundary>
+    <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/815511?lang=en" />
+    <MonitoringLegacyViewButton
+      v-if="legacy_view_button"
+      :title="legacy_view_button.title"
+      :url="legacy_view_button.url"
+    />
+    <div class="monitoring-all-hosts-app">
+      <div class="monitoring-all-hosts-app__header">
+        <div class="monitoring-all-hosts-app__toolbar">
+          <CmkSearchInput
+            ref="searchInput"
+            v-model="hostService.searchQuery.value"
+            class="monitoring-all-hosts-app__search"
+            :placeholder="_t('Search hosts…')"
+            @search="hostService.updateSearch($event)"
+            @focusin="hostService.beginAutoPause()"
+            @focusout="hostService.endAutoPause()"
+          />
+          <div class="monitoring-all-hosts-app__quick-filters">
+            <QuickFilterChip
+              v-for="chip in hostService.filters.quickFilters"
+              :key="chip.label"
+              :label="chip.label"
+              :tooltip="chip.tooltip"
+              :active="chip.isActive.value"
+              @activate="hostService.activateQuickFilter(chip)"
+              @deactivate="hostService.deactivateQuickFilter(chip)"
+            />
+          </div>
+          <CmkButton variant="text" size="small" @click="hostService.clearAllFilters()">
+            {{ _t('Reset all filters') }}
+          </CmkButton>
+        </div>
+        <div class="monitoring-all-hosts-app__header-end">
+          <RefreshCountdown
+            :remaining="hostService.secondsRemaining.value"
+            :interval="hostService.pollIntervalSeconds"
+            :paused="hostService.paused.value"
+            :manual-paused="hostService.manualPaused.value"
+            size="small"
+            @toggle="hostService.togglePause()"
           />
         </div>
-        <CmkButton variant="text" size="small" @click="hostService.clearAllFilters()">
-          {{ _t('Reset all filters') }}
-        </CmkButton>
       </div>
-      <div class="monitoring-all-hosts-app__header-end">
-        <RefreshCountdown
-          :remaining="hostService.secondsRemaining.value"
-          :interval="hostService.pollIntervalSeconds"
-          :paused="hostService.paused.value"
-          :manual-paused="hostService.manualPaused.value"
-          size="small"
-          @toggle="hostService.togglePause()"
-        />
-      </div>
+      <MonitoringSplitPane
+        :service="hostService"
+        :actions="actionRegistry"
+        :bulk-actions="hostActions"
+        :columns="columns"
+        :column-pinning="columnPinning"
+        :get-row-key="rowKey"
+        :get-action-target="hostRef"
+        :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
+        :selection-label="hostSelectionLabel"
+        :actions-label="_t('Actions for selected hosts')"
+        @performed="onActionPerformed"
+      >
+        <template #row="{ row, tableRow, onCommand }">
+          <HostRow
+            :row="row"
+            :table-row="tableRow"
+            :row-actions="rowActionButtons"
+            :load-action-menu="loadActionMenu"
+            @open="openSlideIn"
+            @command="onCommand"
+          />
+        </template>
+      </MonitoringSplitPane>
+      <HostSlideIn
+        v-model:active-tab-id="slideInTabId"
+        :host="slideInHost"
+        :actions="actionRegistry"
+        :row-actions="rowActionButtons"
+        :permitted-actions="hostActions"
+        :load-action-menu="loadActionMenu"
+        @close="closeSlideIn"
+        @performed="onActionPerformed"
+      />
     </div>
-    <MonitoringSplitPane
-      :service="hostService"
-      :actions="actionRegistry"
-      :bulk-actions="hostActions"
-      :columns="columns"
-      :column-pinning="columnPinning"
-      :get-row-key="rowKey"
-      :get-action-target="hostRef"
-      :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
-      :selection-label="hostSelectionLabel"
-      :actions-label="_t('Actions for selected hosts')"
-      @performed="onActionPerformed"
-    >
-      <template #row="{ row, tableRow, onCommand }">
-        <HostRow
-          :row="row"
-          :table-row="tableRow"
-          :row-actions="rowActionButtons"
-          :load-action-menu="loadActionMenu"
-          @open="openSlideIn"
-          @command="onCommand"
-        />
-      </template>
-    </MonitoringSplitPane>
-    <HostSlideIn
-      v-model:active-tab-id="slideInTabId"
-      :host="slideInHost"
-      :actions="actionRegistry"
-      :row-actions="rowActionButtons"
-      :permitted-actions="hostActions"
-      :load-action-menu="loadActionMenu"
-      @close="closeSlideIn"
-      @performed="onActionPerformed"
-    />
-  </div>
+  </CmkErrorBoundary>
 </template>
 
 <style scoped>

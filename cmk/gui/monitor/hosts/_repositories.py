@@ -13,10 +13,22 @@ they will return. This allows us to pass stubs when testing our applications.
 from collections.abc import Sequence, Set
 from typing import Protocol
 
-from ._models import Host, HostFilter, HostOptionalField, HostOverview, HostSort
+from ._models import (
+    Event,
+    Host,
+    HostFilter,
+    HostOptionalField,
+    HostOverview,
+    HostSort,
+    UnixTimestamp,
+)
 
 
 class HostRepository(Protocol):
+    def host_exists(self, hostname: str) -> bool:
+        """Check whether the host exists in your environment."""
+        ...
+
     def fetch(
         self,
         *,
@@ -41,4 +53,21 @@ class HostRepository(Protocol):
         self, *, query: str, filters: HostFilter, fields: Set[HostOptionalField]
     ) -> int:
         """Count the hosts matching the given criteria, searching `fields` alongside the name."""
+        ...
+
+
+class EventRepository(Protocol):
+    def fetch(
+        self,
+        *,
+        hostname: str,
+        service_name: str | None,
+        since: UnixTimestamp,
+        limit: int,
+    ) -> Sequence[Event]:
+        """Fetch the events of a host, newest first, reading at most `limit` rows.
+
+        Passing a `service_name` narrows the result to that service's events; omitting it returns
+        the host's own events alongside those of all its services.
+        """
         ...

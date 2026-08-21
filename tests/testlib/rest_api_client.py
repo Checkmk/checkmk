@@ -4879,6 +4879,31 @@ class MonitorHostsClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def get_events(
+        self,
+        hostname: str,
+        site_id: str,
+        service_name: str | None = None,
+        time_window_days: int | None = None,
+        limit: int | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/monitor/hosts/{hostname}/events",
+            query_params={
+                "site_id": site_id,
+                **_only_set_keys(
+                    {
+                        "service_name": service_name,
+                        "time_window_days": time_window_days,
+                        "limit": limit,
+                    }
+                ),
+            },
+            expect_ok=expect_ok,
+        )
+
     def list_all(
         self,
         limit: int | None,

@@ -15,3 +15,26 @@ def host_view_link(view_name: str, host: Host) -> str:
             ("host", host.name),
         ]
     )
+
+
+def host_view_link_by_id(view_name: str, *, site_id: str, hostname: str) -> str:
+    return "view.py?" + urlencode(
+        [
+            ("view_name", view_name),
+            ("site", site_id),
+            ("host", hostname),
+        ]
+    )
+
+
+def service_view_link_by_id(
+    view_name: str, *, site_id: str, hostname: str, service_name: str
+) -> str:
+    return "view.py?" + urlencode(
+        [
+            ("view_name", view_name),
+            ("site", site_id),
+            ("host", hostname),
+            ("service", service_name),
+        ]
+    )

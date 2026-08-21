@@ -240,6 +240,7 @@ CmkEndpointName = Literal[
     "cmk/list_filter_groups",
     "cmk/host_action_menu",
     "cmk/service_action_menu",
+    "cmk/list_host_events",
 ]
 
 RestfulEndpointName = Literal[

@@ -19,14 +19,16 @@ from cmk.livestatus_client import (
     MultiSiteConnection,
     ScheduleForcedHostCheck,
 )
-from cmk.livestatus_client.expressions import NothingExpression, Or, QueryExpression
+from cmk.livestatus_client.expressions import And, NothingExpression, Or, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query
-from cmk.livestatus_client.tables import Hosts
+from cmk.livestatus_client.tables import Hosts, Log
 from cmk.livestatus_client.types import Column
 
 from ._exceptions import HostNotFoundError
 from ._folder import folder_from_filename
 from ._models import (
+    Event,
+    EventClass,
     Host,
     HostFilter,
     HostLabelValue,
@@ -45,6 +47,10 @@ from ._sorting import host_sorter
 class LiveStatusHostRepository:
     def __init__(self, *, connection: MultiSiteConnection) -> None:
         self._connection = connection
+
+    def host_exists(self, hostname: str) -> bool:
+        q = Query([Hosts.name], Hosts.name == hostname, extra_headers=["Limit: 1"])
+        return q.first(self._connection) is not None
 
     def fetch(
         self,
@@ -198,6 +204,53 @@ class LiveStatusHostRepository:
         return sum(int(row[-1]) for row in self._connection.query(stats_query))
 
 
+class LiveStatusEventRepository:
+    def __init__(self, *, connection: MultiSiteConnection) -> None:
+        self._connection = connection
+
+    def fetch(
+        self,
+        *,
+        hostname: str,
+        service_name: str | None,
+        since: UnixTimestamp,
+        limit: int,
+    ) -> Sequence[Event]:
+        q = Query(
+            [
+                Log.time,
+                Log.lineno,
+                Log.type,
+                Log.state,
+                Log.state_type,
+                Log.state_info,
+                Log.command_name,
+                Log.plugin_output,
+                Log.service_description,
+            ],
+            _build_event_filter(hostname=hostname, service_name=service_name, since=since),
+            extra_headers=["OrderBy: time desc", f"Limit: {limit}"],
+        )
+        return sorted(
+            [
+                Event(
+                    time=int(row["time"]),
+                    lineno=int(row["lineno"]),
+                    type=row["type"],
+                    state=int(row["state"]),
+                    state_type=row["state_type"],
+                    state_info=row["state_info"],
+                    command_name=row["command_name"],
+                    plugin_output=row["plugin_output"],
+                    service_name=row["service_description"] or None,
+                )
+                for row in q.iterate(self._connection)
+            ],
+            key=lambda event: event.recency,
+            reverse=True,
+        )
+
+
 class LiveStatusHostActions:
     def __init__(self, *, connection: MultiSiteConnection) -> None:
         self._connection = connection
@@ -326,3 +379,16 @@ def _build_primary_sort(sorters: Sequence[HostSort]) -> str:
     natural_sort_flag = " natural" if primary.column.natural_sort else ""
 
     return f"OrderBy: {column} {primary.direction}{natural_sort_flag}"
+
+
+def _build_event_filter(
+    *, hostname: str, service_name: str | None, since: UnixTimestamp
+) -> QueryExpression:
+    conditions = [
+        Log.time >= since,
+        Log.host_name == hostname,
+        Or(*(Log.class_ == event_class.value for event_class in EventClass)),
+    ]
+    if service_name is not None:
+        conditions.append(Log.service_description == service_name)
+    return And(*conditions)

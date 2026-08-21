@@ -9,13 +9,15 @@ from polyfactory.factories import DataclassFactory
 
 from cmk.gui.monitor.hosts._exceptions import HostNotFoundError
 from cmk.gui.monitor.hosts._models import (
+    Event,
     Host,
     HostFilter,
     HostOptionalField,
     HostOverview,
     HostSort,
+    UnixTimestamp,
 )
-from cmk.gui.monitor.hosts._repositories import HostRepository
+from cmk.gui.monitor.hosts._repositories import EventRepository, HostRepository
 
 
 class HostFactory(DataclassFactory[Host]):
@@ -30,14 +32,20 @@ class HostOverviewFactory(DataclassFactory[HostOverview]):
     __allow_none_optionals__ = False
 
 
-def get_fake_host_repository(*, n_hosts: int) -> HostRepository:
+def get_fake_host_repository(*, n_hosts: int = 0, hostnames: Sequence[str] = ()) -> HostRepository:
     class HostFakeRepository:
         def __init__(self) -> None:
-            self._hosts = [HostFactory.build() for _ in range(n_hosts)]
+            self._hosts = [
+                *(HostFactory.build(name=name) for name in hostnames),
+                *(HostFactory.build() for _ in range(n_hosts)),
+            ]
             self._host_overviews = {
                 (h.site_id, h.name): HostOverviewFactory.build(site_id=h.site_id, name=h.name)
                 for h in self._hosts
             }
+
+        def host_exists(self, hostname: str) -> bool:
+            return any(host.name == hostname for host in self._hosts)
 
         def fetch(
             self,
@@ -66,3 +74,29 @@ def get_fake_host_repository(*, n_hosts: int) -> HostRepository:
             return self.count_total()
 
     return HostFakeRepository()
+
+
+class EventFactory(DataclassFactory[Event]):
+    __check_model__ = False
+    __allow_none_optionals__ = False
+
+
+def get_fake_event_repository(events: Sequence[Event]) -> EventRepository:
+    class EventFakeRepository:
+        def fetch(
+            self,
+            *,
+            hostname: str,
+            service_name: str | None,
+            since: UnixTimestamp,
+            limit: int,
+        ) -> Sequence[Event]:
+            matching = [
+                event
+                for event in events
+                if event.time >= since
+                and (service_name is None or event.service_name == service_name)
+            ]
+            return sorted(matching, key=lambda event: event.recency, reverse=True)[:limit]
+
+    return EventFakeRepository()

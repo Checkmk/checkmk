@@ -183,6 +183,37 @@ class RescheduleTarget:
     check_time: dt.datetime
 
 
+class EventClass(enum.IntEnum):
+    """The monitoring log classes making up the event history of a host and its services."""
+
+    STATE = 1
+    NOTIFICATION = 3
+    ALERT_HANDLER = 8
+
+
+@dataclasses.dataclass(frozen=True)
+class Event:
+    """One monitoring log entry, belonging either to a host or to one of its services."""
+
+    time: UnixTimestamp
+    lineno: int
+    type: str
+    state: int
+    state_type: str
+    state_info: str
+    command_name: str
+    plugin_output: str
+    service_name: str | None
+
+    @property
+    def state_information(self) -> str:
+        return self.state_info or self.state_type
+
+    @property
+    def recency(self) -> tuple[UnixTimestamp, int]:
+        return self.time, self.lineno
+
+
 # NOTE: this is intended to indicate that a stringified filter has been properly parsed into a
 # specific query implementation. For now, we are only supporting Livestatus queries, but this would
 # allow us to easily swap out for an alternative filter parser, e.g. SQL.

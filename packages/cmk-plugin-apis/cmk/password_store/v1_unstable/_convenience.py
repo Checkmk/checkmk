@@ -89,7 +89,8 @@ def resolve_secret_option(args: argparse.Namespace, option_name: str) -> Secret[
         args: The parsed arguments namespace as created by an argparse parser that used
             :func:`parser_add_secret_option`.
         option_name: The name of the option as passed to :func:`parser_add_secret_option`,
-            without the leading dashes.
+            without the leading dashes. Hyphens are allowed; they are replaced by
+            underscores, just like argparse does when deriving the attribute name.
 
     Raises:
         TypeError: If neither of the two options where specified.
@@ -105,10 +106,11 @@ def resolve_secret_option(args: argparse.Namespace, option_name: str) -> Secret[
 
 
     """
-    if (secret_id := getattr(args, f"{option_name}_id", None)) is not None:
+    attribute_name = option_name.replace("-", "_")
+    if (secret_id := getattr(args, f"{attribute_name}_id", None)) is not None:
         return dereference_secret(secret_id)
 
-    if isinstance(secret := getattr(args, option_name, None), Secret):
+    if isinstance(secret := getattr(args, attribute_name, None), Secret):
         return secret
 
     raise TypeError(f"{option_name} is not of type Secret: {secret}")

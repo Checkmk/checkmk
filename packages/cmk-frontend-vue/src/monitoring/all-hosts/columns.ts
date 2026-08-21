@@ -7,8 +7,14 @@ import type { ColumnDef, ColumnPinningState, VisibilityState } from '@tanstack/v
 import type { Site } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import {
+  autocompleter,
+  labelAutocompleter,
+  tagAutocompleter
+} from '@/monitoring/shared/api/autocomplete'
 import type { HostEntry, HostOptionalField, HostState } from '@/monitoring/shared/api/types'
 import type {
+  AutocompleteChoiceFilter,
   BooleanGroupFilter,
   CheckboxListFilter,
   DateTimeRangeFilter,
@@ -51,6 +57,9 @@ const OPTIONAL_FIELD_COLUMNS = [
  * response (not declared optional) and therefore never need to be requested.
  */
 const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id'] as const
+
+/** Picks a column filter offers before it refuses more, per the views-table design. */
+const MAX_FILTER_CHOICES = 8
 
 const HIDEABLE_COLUMN_IDS: ReadonlySet<string> = new Set([
   ...OPTIONAL_FIELD_COLUMNS,
@@ -173,6 +182,37 @@ export function buildHostColumns({
   const lastStateChangeFilter: DateTimeRangeFilter<'last_state_change'> = {
     type: 'date-time-range',
     field: 'last_state_change'
+  }
+
+  const labelsFilter: AutocompleteChoiceFilter<'labels'> = {
+    type: 'autocomplete-choice',
+    field: 'labels',
+    suggest: labelAutocompleter('host'),
+    keyValue: true,
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const tagsFilter: AutocompleteChoiceFilter<'tags'> = {
+    type: 'autocomplete-choice',
+    field: 'tags',
+    suggest: tagAutocompleter(),
+    keyValue: true,
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const contactsFilter: StringInputFilter<'contacts'> = {
+    type: 'string-input',
+    field: 'contacts'
+  }
+
+  const contactGroupsFilter: AutocompleteChoiceFilter<'contact_groups'> = {
+    type: 'autocomplete-choice',
+    field: 'contact_groups',
+    suggest: autocompleter('allgroups', { group_type: 'contact' }),
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
   }
 
   const modesFilter: BooleanGroupFilter<'in_downtime' | 'acknowledged'> = {
@@ -341,7 +381,7 @@ export function buildHostColumns({
       enableSorting: false,
       minSize: 100,
       maxSize: 400,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: labelsFilter }
     },
     {
       accessorKey: 'tags',
@@ -349,7 +389,7 @@ export function buildHostColumns({
       enableSorting: false,
       minSize: 100,
       maxSize: 400,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: tagsFilter }
     },
     {
       accessorKey: 'contacts',
@@ -357,7 +397,7 @@ export function buildHostColumns({
       enableSorting: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: contactsFilter }
     },
     {
       accessorKey: 'contact_groups',
@@ -365,7 +405,7 @@ export function buildHostColumns({
       enableSorting: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: contactGroupsFilter }
     },
     ...(includeActions
       ? [

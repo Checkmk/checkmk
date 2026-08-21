@@ -102,17 +102,17 @@ withDefaults(
 /* Pinned to the palette rather than to theme variables: a state reads the same in both themes. */
 .monitoring-state-tag--ok {
   --state-tag-background: var(--color-corporate-green-80);
-  --state-tag-font-color: var(--white);
+  --state-tag-font-color: var(--color-corporate-green-10);
 }
 
 .monitoring-state-tag--warning {
   --state-tag-background: var(--color-yellow-60);
-  --state-tag-font-color: var(--black);
+  --state-tag-font-color: var(--color-yellow-100);
 }
 
 .monitoring-state-tag--critical {
   --state-tag-background: var(--color-dark-red-60);
-  --state-tag-font-color: var(--white);
+  --state-tag-font-color: var(--color-dark-red-0);
 }
 
 .monitoring-state-tag--unknown {
@@ -122,6 +122,6 @@ withDefaults(
 
 .monitoring-state-tag--pending {
   --state-tag-background: var(--color-mist-grey-80);
-  --state-tag-font-color: var(--white);
+  --state-tag-font-color: var(--color-mist-grey-0);
 }
 </style>

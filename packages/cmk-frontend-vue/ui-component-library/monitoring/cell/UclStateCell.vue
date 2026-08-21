@@ -106,6 +106,19 @@ const hostState = computed<HostState>(() => propState.value.hostState)
 const serviceState = computed<ServiceState>(() => propState.value.serviceState)
 const justify = computed<ColumnJustify>(() => propState.value.justify as ColumnJustify)
 
+const STATE_KEY_OF_UNSELECTED_KIND: Record<Kind, string> = {
+  host: 'serviceState',
+  service: 'hostState'
+}
+
+const visibleConfig = computed(() =>
+  Object.fromEntries(
+    Object.entries(panelConfig).filter(
+      ([key]) => key !== STATE_KEY_OF_UNSELECTED_KIND[propState.value.kind]
+    )
+  )
+)
+
 const SLIDER_MIN = 50
 const SLIDER_MAX = 250
 
@@ -206,7 +219,7 @@ const currentWidth = computed(() => `${effectiveWidth.value} px`)
       </div>
 
       <template #properties>
-        <UclPropertiesPanel v-model="propState" :config="panelConfig" />
+        <UclPropertiesPanel v-model="propState" :config="visibleConfig" />
       </template>
     </UclDetailPageComponent>
 

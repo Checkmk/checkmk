@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -228,89 +229,94 @@ function onActionPerformed(result: ActionFeedbackResult): void {
     hostServicesService.refresh(ACTION_REFRESH_DELAY_MS)
   }
 }
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const { CmkErrorBoundary } = useCmkErrorBoundary()
 </script>
 
 <template>
-  <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/852195?lang=en" />
-  <MonitoringLegacyViewButton
-    v-if="legacy_view_button"
-    :title="legacy_view_button.title"
-    :url="legacy_view_button.url"
-  />
-  <div class="monitoring-host-services-app">
-    <div class="monitoring-host-services-app__header">
-      <div class="monitoring-host-services-app__toolbar">
-        <CmkSearchInput
-          ref="searchInput"
-          v-model="hostServicesService.searchQuery.value"
-          class="monitoring-host-services-app__search"
-          :placeholder="_t('Search services…')"
-          @search="hostServicesService.updateSearch($event)"
-          @focusin="hostServicesService.beginAutoPause()"
-          @focusout="hostServicesService.endAutoPause()"
-        />
-        <div class="monitoring-host-services-app__quick-filters">
-          <QuickFilterChip
-            v-for="chip in hostServicesService.filters.quickFilters"
-            :key="chip.label"
-            :label="chip.label"
-            :tooltip="chip.tooltip"
-            :active="chip.isActive.value"
-            @activate="hostServicesService.activateQuickFilter(chip)"
-            @deactivate="hostServicesService.deactivateQuickFilter(chip)"
+  <CmkErrorBoundary>
+    <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/852195?lang=en" />
+    <MonitoringLegacyViewButton
+      v-if="legacy_view_button"
+      :title="legacy_view_button.title"
+      :url="legacy_view_button.url"
+    />
+    <div class="monitoring-host-services-app">
+      <div class="monitoring-host-services-app__header">
+        <div class="monitoring-host-services-app__toolbar">
+          <CmkSearchInput
+            ref="searchInput"
+            v-model="hostServicesService.searchQuery.value"
+            class="monitoring-host-services-app__search"
+            :placeholder="_t('Search services…')"
+            @search="hostServicesService.updateSearch($event)"
+            @focusin="hostServicesService.beginAutoPause()"
+            @focusout="hostServicesService.endAutoPause()"
+          />
+          <div class="monitoring-host-services-app__quick-filters">
+            <QuickFilterChip
+              v-for="chip in hostServicesService.filters.quickFilters"
+              :key="chip.label"
+              :label="chip.label"
+              :tooltip="chip.tooltip"
+              :active="chip.isActive.value"
+              @activate="hostServicesService.activateQuickFilter(chip)"
+              @deactivate="hostServicesService.deactivateQuickFilter(chip)"
+            />
+          </div>
+          <CmkButton variant="text" size="small" @click="hostServicesService.clearAllFilters()">
+            {{ _t('Reset all filters') }}
+          </CmkButton>
+        </div>
+        <div class="monitoring-host-services-app__header-end">
+          <RefreshCountdown
+            :remaining="hostServicesService.secondsRemaining.value"
+            :interval="hostServicesService.pollIntervalSeconds"
+            :paused="hostServicesService.paused.value"
+            :manual-paused="hostServicesService.manualPaused.value"
+            size="small"
+            @toggle="hostServicesService.togglePause()"
           />
         </div>
-        <CmkButton variant="text" size="small" @click="hostServicesService.clearAllFilters()">
-          {{ _t('Reset all filters') }}
-        </CmkButton>
       </div>
-      <div class="monitoring-host-services-app__header-end">
-        <RefreshCountdown
-          :remaining="hostServicesService.secondsRemaining.value"
-          :interval="hostServicesService.pollIntervalSeconds"
-          :paused="hostServicesService.paused.value"
-          :manual-paused="hostServicesService.manualPaused.value"
-          size="small"
-          @toggle="hostServicesService.togglePause()"
-        />
-      </div>
+      <MonitoringSplitPane
+        :service="hostServicesService"
+        :actions="actionRegistry"
+        :bulk-actions="serviceActions"
+        :columns="columns"
+        :column-pinning="columnPinning"
+        :get-row-key="rowKey"
+        :get-action-target="serviceRef"
+        :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
+        :selection-label="serviceSelectionLabel"
+        :actions-label="_t('Actions for selected services')"
+        @performed="onActionPerformed"
+      >
+        <template #row="{ row, tableRow, onCommand }">
+          <HostServicesRow
+            :row="row"
+            :table-row="tableRow"
+            :row-actions="rowActionButtons"
+            :load-action-menu="loadActionMenu"
+            @open="openSlideIn"
+            @command="onCommand"
+          />
+        </template>
+      </MonitoringSplitPane>
+      <ServiceSlideIn
+        v-model:active-tab-id="slideInTabId"
+        :service="slideInService"
+        :host="host"
+        :ai-explain="props.ai_explain ?? false"
+        :actions="actionRegistry"
+        :permitted-actions="serviceActions"
+        :load-action-menu="loadActionMenu"
+        @close="closeSlideIn"
+        @performed="onActionPerformed"
+      />
     </div>
-    <MonitoringSplitPane
-      :service="hostServicesService"
-      :actions="actionRegistry"
-      :bulk-actions="serviceActions"
-      :columns="columns"
-      :column-pinning="columnPinning"
-      :get-row-key="rowKey"
-      :get-action-target="serviceRef"
-      :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
-      :selection-label="serviceSelectionLabel"
-      :actions-label="_t('Actions for selected services')"
-      @performed="onActionPerformed"
-    >
-      <template #row="{ row, tableRow, onCommand }">
-        <HostServicesRow
-          :row="row"
-          :table-row="tableRow"
-          :row-actions="rowActionButtons"
-          :load-action-menu="loadActionMenu"
-          @open="openSlideIn"
-          @command="onCommand"
-        />
-      </template>
-    </MonitoringSplitPane>
-    <ServiceSlideIn
-      v-model:active-tab-id="slideInTabId"
-      :service="slideInService"
-      :host="host"
-      :ai-explain="props.ai_explain ?? false"
-      :actions="actionRegistry"
-      :permitted-actions="serviceActions"
-      :load-action-menu="loadActionMenu"
-      @close="closeSlideIn"
-      @performed="onActionPerformed"
-    />
-  </div>
+  </CmkErrorBoundary>
 </template>
 
 <style scoped>

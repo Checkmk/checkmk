@@ -17,6 +17,7 @@ from itertools import cycle
 from logging import getLogger
 from logging.handlers import WatchedFileHandler
 from multiprocessing import Event as make_event
+from multiprocessing import set_start_method
 from multiprocessing.synchronize import Event
 from pathlib import Path
 
@@ -178,6 +179,13 @@ def main(
     crash_report_callback: Callable[[], str] = lambda: "No crash report created",
     invalid_hostname_callback: Callable[[HostNameValidationError], None] = lambda e: None,
 ) -> int:
+    # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
+    # "forkserver", see
+    # https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods
+    # The concrete problem here is that the local function _on_message within
+    # save_payload_on_message can't be pickled.
+    set_start_method("fork")
+
     args = _parse_arguments(argv)
     logger = _setup_logging(args)
     omd_root = Path(args.omd_root)

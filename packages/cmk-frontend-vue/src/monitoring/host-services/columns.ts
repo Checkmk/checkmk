@@ -6,12 +6,18 @@
 import type { ColumnDef, ColumnPinningState, VisibilityState } from '@tanstack/vue-table'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
+import {
+  autocompleter,
+  labelAutocompleter,
+  tagAutocompleter
+} from '@/monitoring/shared/api/autocomplete'
 import type {
   HostServiceEntry,
   ServiceOptionalField,
   ServiceState
 } from '@/monitoring/shared/api/types'
 import type {
+  AutocompleteChoiceFilter,
   BooleanGroupFilter,
   CheckboxListFilter,
   DateTimeRangeFilter,
@@ -46,6 +52,9 @@ export function buildHostServicesColumnPinning(): ColumnPinningState {
   return { left: ['select', 'state', 'modes', 'name'], right: ['actions'] }
 }
 
+/** Picks a column filter offers before it refuses more, per the views-table design. */
+const MAX_FILTER_CHOICES = 8
+
 export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
   const { _t } = usei18n()
 
@@ -78,6 +87,37 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
   const lastStateChangeFilter: DateTimeRangeFilter<'last_state_change'> = {
     type: 'date-time-range',
     field: 'last_state_change'
+  }
+
+  const labelsFilter: AutocompleteChoiceFilter<'labels'> = {
+    type: 'autocomplete-choice',
+    field: 'labels',
+    suggest: labelAutocompleter('service'),
+    keyValue: true,
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const tagsFilter: AutocompleteChoiceFilter<'tags'> = {
+    type: 'autocomplete-choice',
+    field: 'tags',
+    suggest: tagAutocompleter(),
+    keyValue: true,
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
+  }
+
+  const contactsFilter: StringInputFilter<'contacts'> = {
+    type: 'string-input',
+    field: 'contacts'
+  }
+
+  const contactGroupsFilter: AutocompleteChoiceFilter<'contact_groups'> = {
+    type: 'autocomplete-choice',
+    field: 'contact_groups',
+    suggest: autocompleter('allgroups', { group_type: 'contact' }),
+    wildcardOption: true,
+    maxSelected: MAX_FILTER_CHOICES
   }
 
   const modesFilter: BooleanGroupFilter<
@@ -157,7 +197,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableSorting: false,
       minSize: 100,
       maxSize: 400,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: labelsFilter }
     },
     {
       accessorKey: 'tags',
@@ -165,7 +205,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableSorting: false,
       minSize: 100,
       maxSize: 400,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: tagsFilter }
     },
     {
       accessorKey: 'contacts',
@@ -173,7 +213,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableSorting: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: contactsFilter }
     },
     {
       accessorKey: 'contact_groups',
@@ -181,7 +221,7 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
       enableSorting: false,
       minSize: 100,
       maxSize: 300,
-      meta: { hidden: true }
+      meta: { hidden: true, filter: contactGroupsFilter }
     },
     {
       accessorKey: 'perfometer',

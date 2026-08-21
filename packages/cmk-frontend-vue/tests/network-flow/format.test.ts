@@ -5,7 +5,7 @@
  */
 import { expect, test } from 'vitest'
 
-import { formatTimeOfDay } from '@/network-flow/format'
+import { formatDelta, formatTimeOfDay } from '@/network-flow/format'
 
 function atLocalTime(hour: number, minute: number, second: number): number {
   // Built from local parts, since the formatter renders in the site's zone.
@@ -30,4 +30,11 @@ test('renders midnight as 00, not 12', () => {
 
 test('carries no date, since a listing covers one range', () => {
   expect(formatTimeOfDay(atLocalTime(13, 45, 9))).toBe('13:45:09')
+})
+
+test('signs a change and calls growth out of nothing new', () => {
+  expect(formatDelta(90, 60)).toBe('+50.0%')
+  expect(formatDelta(60, 90)).toBe('-33.3%')
+  expect(formatDelta(90, 0)).toBe('new')
+  expect(formatDelta(0, 0)).toBe('–')
 })

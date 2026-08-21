@@ -9,6 +9,7 @@ import { type PieArcDatum, arc, pie } from 'd3-shape'
 import { computed, ref, useId } from 'vue'
 
 import { chartColorCss } from '../colors'
+import { DASH, formatDelta } from '../format'
 import DonutLegendCompact from './DonutLegendCompact.vue'
 import DonutLegendTable from './DonutLegendTable.vue'
 import type { CmkDonutChartProps, DonutLegendRow, DonutSlice } from './types'
@@ -149,19 +150,6 @@ const center = computed(() => {
   }
 })
 
-const DASH = '–'
-
-// Signed, because the sign is the first thing read off a change. Growth out of
-// nothing has no ratio, and it is the most interesting row in the table, so it
-// says so rather than falling back to the dash that means "nothing to compare".
-function deltaText(value: number, previous: number): string {
-  if (previous <= 0) {
-    return value > 0 ? _t('new') : DASH
-  }
-  const ratio = (value - previous) / previous
-  return `${ratio >= 0 ? '+' : '-'}${Math.abs(ratio * 100).toFixed(1)}%`
-}
-
 // The chart decides what the numbers are, down to what an absent one looks
 // like, so the legend is left with no fallbacks of its own.
 const legendRows = computed<DonutLegendRow[]>(() => {
@@ -181,7 +169,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
       isOther: slice.isOther ?? false,
       currentText: isHidden ? DASH : props.formatValue(slice.value),
       previousText: !anyPrevious ? null : comparable ? props.formatValue(previous) : DASH,
-      deltaText: !anyPrevious ? null : comparable ? deltaText(slice.value, previous) : DASH
+      deltaText: !anyPrevious ? null : comparable ? formatDelta(slice.value, previous) : DASH
     }
   })
 })

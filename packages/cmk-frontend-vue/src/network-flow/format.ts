@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 
 // Canonical SI formatters (base 1000), matching the backend and the network flow
@@ -10,12 +11,30 @@ import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 const BYTES = new SIFormatter('B', { type: 'strict', digits: 2 })
 const COUNT = new SIFormatter('', { type: 'strict', digits: 1 })
 
+const { _t } = usei18n()
+
 export function formatBytes(value: number): string {
   return BYTES.render(value)
 }
 
 export function formatCount(value: number): string {
   return COUNT.render(value)
+}
+
+export const DASH = '–'
+
+/**
+ * A signed change against a previous period.
+ *
+ * Growth out of nothing has no ratio, so it says "new" rather than falling back
+ * to the dash that means "nothing to compare".
+ */
+export function formatDelta(value: number, previous: number): string {
+  if (previous <= 0) {
+    return value > 0 ? _t('new') : DASH
+  }
+  const ratio = (value - previous) / previous
+  return `${ratio >= 0 ? '+' : '-'}${Math.abs(ratio * 100).toFixed(1)}%`
 }
 
 function pad(value: number): string {

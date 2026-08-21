@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from '@/lib/i18n'
+
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
@@ -17,11 +19,16 @@ interface WorkflowListItemProps extends WorkflowItem {
 }
 
 defineProps<WorkflowListItemProps>()
+const { _t } = usei18n()
+
 const emit = defineEmits(['select'])
 </script>
 
 <template>
-  <DisabledTooltipWrapper :disabled="!!disabled">
+  <DisabledTooltipWrapper
+    :disabled="!!disabled"
+    :tooltip="_t('Available in Checkmk Pro or higher.')"
+  >
     <button
       class="db-workflow-list-item"
       :class="{ 'db-workflow-list-item__disabled': disabled }"

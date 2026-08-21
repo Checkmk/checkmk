@@ -21,7 +21,7 @@ import SectionBlock from '../../../components/SectionBlock.vue'
 import Stage1Header from '../../../components/Stage1Header.vue'
 import WidgetTiles from '../../../components/WidgetSelection/WidgetTiles.vue'
 import type { WidgetItemList } from '../../../components/WidgetSelection/types'
-import { Graph, useSelectGraphTypes } from '../composables/useSelectGraphTypes'
+import { Graph, getDisabledTooltip, useSelectGraphTypes } from '../composables/useSelectGraphTypes'
 
 const { _t } = usei18n()
 
@@ -113,6 +113,7 @@ const configuredFiltersByObjectType = computed(() =>
     <WidgetTiles
       :available-items="availableWidgets"
       :enabled-widgets="enabledWidgets"
+      :disabled-tooltip="getDisabledTooltip(props.dashboardFeatures)"
       @select-widget="(preselectedWidgetType) => gotoNextStage(preselectedWidgetType)"
     />
   </SectionBlock>

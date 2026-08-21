@@ -5,8 +5,13 @@
  */
 import { type Ref, ref, watch } from 'vue'
 
+import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
+
 import { ElementSelection } from '@/dashboard/components/Wizard/types'
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
+
+const { _t } = usei18n()
 
 export enum Graph {
   SERVICE_STATE = 'service_state',
@@ -68,3 +73,8 @@ export const getAvailableGraphs = (
   }
   return [...graphSelector[hostSelection][serviceSelection]]
 }
+
+export const getDisabledTooltip = (dashboardFeatures: DashboardFeatures): TranslatedString =>
+  dashboardFeatures === DashboardFeatures.RESTRICTED
+    ? _t('Available in Checkmk Pro or higher.')
+    : _t('Only available for a single host and a single service.')

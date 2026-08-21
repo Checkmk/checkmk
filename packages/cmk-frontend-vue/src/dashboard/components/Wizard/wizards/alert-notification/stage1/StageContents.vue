@@ -138,6 +138,7 @@ const configuredFiltersByObjectType = computed(() =>
     <WidgetTiles
       :available-items="availableWidgets"
       :enabled-widgets="enabledWidgets"
+      :disabled-tooltip="_t('Not available with the selected log filters.')"
       @select-widget="(preselectedWidgetType) => gotoNextStage(preselectedWidgetType)"
     />
   </SectionBlock>

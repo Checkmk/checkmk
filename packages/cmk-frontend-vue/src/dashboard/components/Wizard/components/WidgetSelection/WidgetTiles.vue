@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { unref } from 'vue'
 
+import type { TranslatedString } from '@/lib/i18nString'
+
 import DisabledTooltipWrapper from '@/dashboard/components/WidgetWorkflow/DisabledTooltipWrapper.vue'
 
 import WidgetTile from './WidgetTile.vue'
@@ -14,6 +16,7 @@ import type { WidgetItemList } from './types'
 interface WidgetTilesProps {
   availableItems: WidgetItemList
   enabledWidgets: string[]
+  disabledTooltip?: TranslatedString | undefined
   compact?: boolean
 }
 
@@ -47,7 +50,10 @@ const selectedWidget = defineModel<string | null>('selectedWidget', { default: n
         }
       "
     >
-      <DisabledTooltipWrapper :disabled="!enabledWidgets.includes(item.id)">
+      <DisabledTooltipWrapper
+        :disabled="!enabledWidgets.includes(item.id)"
+        :tooltip="props.disabledTooltip"
+      >
         <WidgetTile
           :label="item.label"
           :icon="item.icon"

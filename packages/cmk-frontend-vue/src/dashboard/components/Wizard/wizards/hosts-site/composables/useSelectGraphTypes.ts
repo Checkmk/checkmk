@@ -6,6 +6,7 @@
 import { type Ref, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
 
@@ -54,6 +55,11 @@ export const getAvailableGraphs = (
 
   return [...graphSelector[hostSelection]]
 }
+
+export const getDisabledTooltip = (dashboardFeatures: DashboardFeatures): TranslatedString =>
+  dashboardFeatures === DashboardFeatures.RESTRICTED
+    ? _t('Available in Checkmk Pro or higher.')
+    : _t('Only available for a single host.')
 
 export const allHostSiteWidgets: WidgetItemList = [
   { id: Graph.SITE_OVERVIEW, label: _t('Site overview'), icon: 'site-overview' },

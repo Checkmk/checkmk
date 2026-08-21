@@ -291,15 +291,38 @@ test('raises the highlight from the legend as well as from the ring', async () =
   )
 })
 
-test('activates a slice by click and by keyboard', async () => {
-  const { container, emitted } = renderChart()
+test('activates a drillable slice by click and by keyboard', async () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { container, emitted } = renderChart(slices)
 
-  const tls = container.querySelector('.network-flow-cmk-donut-chart__segment')!
-  await fireEvent.click(tls)
-  await fireEvent.keyDown(tls, { key: 'Enter' })
-  await fireEvent.keyDown(tls, { key: ' ' })
+  const other = container.querySelectorAll('.network-flow-cmk-donut-chart__segment')[1]!
+  await fireEvent.click(other)
+  await fireEvent.keyDown(other, { key: 'Enter' })
+  await fireEvent.keyDown(other, { key: ' ' })
 
-  expect(emitted('sliceActivate')).toEqual([['tls'], ['tls'], ['tls']])
+  expect(emitted('sliceActivate')).toEqual([['other'], ['other'], ['other']])
+})
+
+test('focuses the arc it activates', async () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { container } = renderChart(slices)
+
+  const other = container.querySelectorAll('.network-flow-cmk-donut-chart__segment')[1]!
+  await fireEvent.click(other)
+
+  // Whatever the activation opens has to know where to hand the keyboard back.
+  expect(document.activeElement).toBe(other)
+})
+
+test('leaves a slice that opens nothing out of the tab order', () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { container } = renderChart(slices)
+
+  const [tls, other] = [...container.querySelectorAll('.network-flow-cmk-donut-chart__segment')]
+
+  expect(tls).not.toHaveAttribute('tabindex')
+  expect(tls).not.toHaveAttribute('role')
+  expect(other).toHaveAttribute('role', 'button')
 })
 
 test('recomputes the ring and the total when a category is hidden', async () => {
@@ -354,7 +377,10 @@ test('lets a leaving slice collapse before it is dropped', async () => {
 })
 
 test('keeps a collapsing slice out of reach while it is drawn', async () => {
-  const { container, getByLabelText, emitted } = renderChart()
+  const { container, getByLabelText, emitted } = renderChart([
+    SLICES[0]!,
+    { ...SLICES[1]!, isOther: true }
+  ])
 
   await fireEvent.click(getByLabelText('Hide Other in the chart'))
   await nextTick()

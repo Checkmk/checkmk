@@ -7,12 +7,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed, inject } from 'vue'
 
 import type { NetworkFlowDonutContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import CmkDonutChart, { type DonutSlice } from '@/network-flow/CmkDonutChart'
 import { CATEGORICAL_PALETTE } from '@/network-flow/colors'
 import { formatBytes } from '@/network-flow/format'
+import { donutOtherBreakdownSlideInKey } from '@/network-flow/slide-ins/injectionKeys'
 
 import DashboardContentContainer from '../DashboardContentContainer.vue'
 import type { ContentProps } from '../types.ts'
@@ -20,6 +22,9 @@ import { useNetworkFlowWidgetData } from './useNetworkFlowWidgetData.ts'
 
 const { _t } = usei18n()
 const props = defineProps<ContentProps<NetworkFlowDonutContent>>()
+
+/** The key of the aggregated remainder, which is the one slice with a breakdown. */
+const OTHER_SLICE_KEY = 'other'
 
 function buildSlices(
   computedSlices: { label: string; value: number }[],
@@ -36,17 +41,46 @@ function buildSlices(
   const shown = computedSlices.reduce((sum, slice) => sum + slice.value, 0)
   const other = total - shown
   if (other > 0) {
-    result.push({ key: 'other', label: _t('Other'), value: other, color: 'grey', isOther: true })
+    result.push({
+      key: OTHER_SLICE_KEY,
+      label: _t('Other'),
+      value: other,
+      color: 'grey',
+      isOther: true
+    })
   }
   return result
 }
 
-const { data: slices, error } = useNetworkFlowWidgetData(
+// null when the dashboard does not wire the panels up.
+const openOtherBreakdown = inject(donutOtherBreakdownSlideInKey, null)
+
+// The window travels with the slices rather than beside them, so the breakdown
+// can only ever be asked about the window the ring on screen was drawn from.
+const { data, error } = useNetworkFlowWidgetData(
   () =>
     dashboardAPI.computeNetworkFlowDonutData(props.content, props.effective_filter_context.filters),
-  (response) => buildSlices(response.value.slices, response.value.total),
+  (response) => ({
+    slices: buildSlices(response.value.slices, response.value.total),
+    window: { start: response.value.window_from, end: response.value.window_until }
+  }),
   () => ({ filters: props.effective_filter_context.filters, content: props.content })
 )
+
+const slices = computed(() => data.value?.slices)
+
+// The chart reports every slice; only the remainder has something behind it.
+function onSliceActivate(key: string): void {
+  const loaded = data.value
+  if (key !== OTHER_SLICE_KEY || openOtherBreakdown === null || loaded === undefined) {
+    return
+  }
+  openOtherBreakdown({
+    content: props.content,
+    context: props.effective_filter_context.filters,
+    window: loaded.window
+  })
+}
 </script>
 
 <template>
@@ -65,6 +99,7 @@ const { data: slices, error } = useNetworkFlowWidgetData(
         :slices="slices"
         :format-value="formatBytes"
         :legend-mode="content.legend_mode"
+        @slice-activate="onSliceActivate"
       />
     </div>
   </DashboardContentContainer>

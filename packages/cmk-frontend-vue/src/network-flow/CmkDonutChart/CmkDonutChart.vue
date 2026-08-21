@@ -80,6 +80,8 @@ interface Segment {
   ariaLabel: string
   dividerOpacity: number
   leaving: boolean
+  /** Whether activating it opens anything; only the remainder does. */
+  drillable: boolean
 }
 
 // Driven by the tweened angles, because a leaving slice still has to be drawn.
@@ -91,16 +93,23 @@ const segments = computed<Segment[]>(() => {
     path: sliceArc(datum) ?? '',
     ariaLabel: `${datum.data.label}, ${props.formatValue(datum.value)}, ${percentText(datum.value)}`,
     dividerOpacity: Math.min(1, (datum.endAngle - datum.startAngle) / DIVIDER_FADE_RADIANS),
-    leaving: leaving.value.has(datum.data.key)
+    leaving: leaving.value.has(datum.data.key),
+    drillable: datum.data.isOther ?? false
   }))
 })
 
 // A collapsing slice is on its way out of the ring: activating it would open
-// the very category the reader just hid.
-function activate(segment: Segment): void {
-  if (!segment.leaving) {
-    emit('sliceActivate', segment.key)
+// the very category the reader just hid. Focused first, because a click does not
+// focus an SVG group everywhere, and whatever this opens has to be able to hand
+// the keyboard back.
+function activate(segment: Segment, target: EventTarget | null): void {
+  if (segment.leaving || !segment.drillable) {
+    return
   }
+  if (target instanceof SVGElement) {
+    target.focus()
+  }
+  emit('sliceActivate', segment.key)
 }
 
 function percent(value: number): number {
@@ -220,17 +229,17 @@ const legendRows = computed<DonutLegendRow[]>(() => {
             'network-flow-cmk-donut-chart__segment--dimmed': isDimmed(segment.key),
             'network-flow-cmk-donut-chart__segment--leaving': segment.leaving
           }"
-          role="button"
-          :tabindex="segment.leaving ? -1 : 0"
+          :role="segment.drillable ? 'button' : undefined"
+          :tabindex="segment.drillable ? (segment.leaving ? -1 : 0) : undefined"
           :aria-hidden="segment.leaving ? 'true' : undefined"
           :aria-label="segment.ariaLabel"
           @mouseenter="highlight(segment.key)"
           @mouseleave="highlight(null)"
           @focus="highlight(segment.key)"
           @blur="highlight(null)"
-          @click="activate(segment)"
-          @keydown.enter.prevent="activate(segment)"
-          @keydown.space.prevent="activate(segment)"
+          @click="activate(segment, $event.currentTarget)"
+          @keydown.enter.prevent="activate(segment, $event.currentTarget)"
+          @keydown.space.prevent="activate(segment, $event.currentTarget)"
         >
           <path
             class="network-flow-cmk-donut-chart__slice"

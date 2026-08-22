@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-08-20 18:12+0000\n"
+"PO-Revision-Date: 2026-08-21 18:13+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -33410,6 +33410,12 @@ msgstr ""
 "Nome do anfitrião, endereço IP ou pseudónimo do anfitrião, o evento é "
 "relevante para"
 
+msgid ""
+"Host name, IPv4 address or IPv6 address that mtr will trace the route to. "
+"This value is also used as service description in Checkmk, so it must be "
+"unique per host."
+msgstr ""
+
 #, fuzzy
 msgid "Host name, marked red if down (deprecated)"
 msgstr "Nome do anfitrião, marcado a vermelho se estiver em baixo (Depreciado)"
@@ -51426,6 +51432,14 @@ msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "ORACLE Wait Class (As linhas FG estão em desvantagem)"
 
 #, fuzzy
+msgid "Oracle active sessions (single metric)"
+msgstr "Sessões Oracle Longas Ativas"
+
+#, fuzzy
+msgid "Oracle active undo blocks (single metric)"
+msgstr "ORACLE Total Grandes Escritas"
+
+#, fuzzy
 msgid "Oracle administrative wait class"
 msgstr "ORACLE %s classe de espera"
 
@@ -51929,6 +51943,10 @@ msgstr "ORACLE Total Pequenas Escritas"
 
 #, fuzzy
 msgid "Oracle long active sessions"
+msgstr "Sessões Oracle Longas Ativas"
+
+#, fuzzy
+msgid "Oracle long active sessions (single metric)"
 msgstr "Sessões Oracle Longas Ativas"
 
 #, fuzzy
@@ -80178,14 +80196,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This will be used as service name in Checkmk. It must be a unique name per "
-"host."
-msgstr ""
-"Este nome será utilizado como descrição do serviço no Checkmk. Deve ser um "
-"nome único por anfitrião."
-
-#, fuzzy
-msgid ""
 "This will be used as service name within Checkmk. It must be a unique name "
 "per host."
 msgstr ""
@@ -89066,7 +89076,7 @@ msgstr "Válido desde"
 #, fuzzy
 msgid ""
 "Valid service names may only contain letters, numbers, dashes, underscores, "
-"spaces and dots."
+"spaces, dots and colons."
 msgstr ""
 "As descrições de serviço válidas podem conter apenas letras, números, "
 "travessões, sublinhados, espaços e pontos."
@@ -102134,6 +102144,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "This will be used as service name in Checkmk. It must be a unique name "
+#~ "per host."
+#~ msgstr ""
+#~ "Este nome será utilizado como descrição do serviço no Checkmk. Deve ser "
+#~ "um nome único por anfitrião."
 
 #~ msgid "Auto (DEFAULT)"
 #~ msgstr "Auto (DEFAULT)"

@@ -33688,6 +33688,12 @@ msgid "Host name, IP address or host alias the event is relevant for"
 msgstr ""
 "Nom d'hôte, adresse IP ou alias d'hôte pour lequel l'événement est pertinent"
 
+msgid ""
+"Host name, IPv4 address or IPv6 address that mtr will trace the route to. "
+"This value is also used as service description in Checkmk, so it must be "
+"unique per host."
+msgstr ""
+
 #, fuzzy
 msgid "Host name, marked red if down (deprecated)"
 msgstr "Nom d'hôte, marqué en rouge s'il est hors service (Déclassé)"
@@ -51842,6 +51848,14 @@ msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "Classe d'attente ORACLE (les lignes FG sont en baisse)"
 
 #, fuzzy
+msgid "Oracle active sessions (single metric)"
+msgstr "Oracle Longues sessions actives"
+
+#, fuzzy
+msgid "Oracle active undo blocks (single metric)"
+msgstr "ORACLE Total des écritures importantes"
+
+#, fuzzy
 msgid "Oracle administrative wait class"
 msgstr "ORACLE %s wait class"
 
@@ -52345,6 +52359,10 @@ msgstr "ORACLE Total des petites écritures"
 
 #, fuzzy
 msgid "Oracle long active sessions"
+msgstr "Oracle Longues sessions actives"
+
+#, fuzzy
+msgid "Oracle long active sessions (single metric)"
 msgstr "Oracle Longues sessions actives"
 
 #, fuzzy
@@ -80942,14 +80960,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This will be used as service name in Checkmk. It must be a unique name per "
-"host."
-msgstr ""
-"Ce nom sera utilisé comme description du service dans Check_MK. Il doit "
-"s'agir d'un nom unique par hôte."
-
-#, fuzzy
-msgid ""
 "This will be used as service name within Checkmk. It must be a unique name "
 "per host."
 msgstr ""
@@ -89919,7 +89929,7 @@ msgstr "Valable à partir de"
 #, fuzzy
 msgid ""
 "Valid service names may only contain letters, numbers, dashes, underscores, "
-"spaces and dots."
+"spaces, dots and colons."
 msgstr ""
 "Les descriptions de service valides ne peuvent contenir que des lettres, des "
 "chiffres, des tirets, des traits de soulignement, des espaces et des points."
@@ -103132,6 +103142,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "This will be used as service name in Checkmk. It must be a unique name "
+#~ "per host."
+#~ msgstr ""
+#~ "Ce nom sera utilisé comme description du service dans Check_MK. Il doit "
+#~ "s'agir d'un nom unique par hôte."
 
 #~ msgid "Auto (DEFAULT)"
 #~ msgstr "Auto (par défaut)"

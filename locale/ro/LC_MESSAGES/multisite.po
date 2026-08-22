@@ -33498,6 +33498,12 @@ msgstr ""
 "Numele de gazdă, adresa IP sau aliasul de gazdă pentru care este relevant "
 "evenimentul"
 
+msgid ""
+"Host name, IPv4 address or IPv6 address that mtr will trace the route to. "
+"This value is also used as service description in Checkmk, so it must be "
+"unique per host."
+msgstr ""
+
 #, fuzzy
 msgid "Host name, marked red if down (deprecated)"
 msgstr "Numele de gazdă, marcat cu roșu dacă nu este disponibil (Depreciat)"
@@ -51587,6 +51593,14 @@ msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "ORACLE Clasa de așteptare (liniile FG sunt în jos)"
 
 #, fuzzy
+msgid "Oracle active sessions (single metric)"
+msgstr "Sesiuni active lungi Oracle"
+
+#, fuzzy
+msgid "Oracle active undo blocks (single metric)"
+msgstr "ORACLE Total scrieri mari"
+
+#, fuzzy
 msgid "Oracle administrative wait class"
 msgstr "ORACLE %s wait class"
 
@@ -52090,6 +52104,10 @@ msgstr "ORACLE Total scrieri mici"
 
 #, fuzzy
 msgid "Oracle long active sessions"
+msgstr "Sesiuni active lungi Oracle"
+
+#, fuzzy
+msgid "Oracle long active sessions (single metric)"
 msgstr "Sesiuni active lungi Oracle"
 
 #, fuzzy
@@ -80585,14 +80603,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This will be used as service name in Checkmk. It must be a unique name per "
-"host."
-msgstr ""
-"Aceasta va fi utilizată ca descriere a serviciului în Checkmk. Trebuie să "
-"fie un nume unic pentru fiecare gazdă."
-
-#, fuzzy
-msgid ""
 "This will be used as service name within Checkmk. It must be a unique name "
 "per host."
 msgstr ""
@@ -89435,7 +89445,7 @@ msgstr "Valabil de la"
 #, fuzzy
 msgid ""
 "Valid service names may only contain letters, numbers, dashes, underscores, "
-"spaces and dots."
+"spaces, dots and colons."
 msgstr ""
 "Descrierile valabile ale serviciilor pot conține numai litere, cifre, "
 "liniuțe, liniuțe de subsol, spații și puncte."
@@ -102589,6 +102599,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "This will be used as service name in Checkmk. It must be a unique name "
+#~ "per host."
+#~ msgstr ""
+#~ "Aceasta va fi utilizată ca descriere a serviciului în Checkmk. Trebuie să "
+#~ "fie un nume unic pentru fiecare gazdă."
 
 #~ msgid "Auto (DEFAULT)"
 #~ msgstr "Auto (DEFAULT)"

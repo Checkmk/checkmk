@@ -32064,6 +32064,12 @@ msgid "Host name, IP address or host alias the event is relevant for"
 msgstr ""
 "Host-Name, IP-Adresse oder Host-Alias, für die das Ereignis relevant ist"
 
+msgid ""
+"Host name, IPv4 address or IPv6 address that mtr will trace the route to. "
+"This value is also used as service description in Checkmk, so it must be "
+"unique per host."
+msgstr ""
+
 msgid "Host name, marked red if down (deprecated)"
 msgstr "Host-Name, rot markiert, wenn DOWN (veraltet)"
 
@@ -49392,6 +49398,14 @@ msgstr "Oracle-SID der Remote-Datenbank"
 msgid "Oracle Wait Class (FG lines are downside)"
 msgstr "Oracle Warteklasse (FG Zeilen sind von Nachteil)"
 
+#, fuzzy
+msgid "Oracle active sessions (single metric)"
+msgstr "Oracle langlaufende Sitzungen"
+
+#, fuzzy
+msgid "Oracle active undo blocks (single metric)"
+msgstr "Oracle Archiv-Log-Sicherung Large Writes"
+
 msgid "Oracle administrative wait class"
 msgstr "Oracle administrative Warteklasse"
 
@@ -49806,6 +49820,10 @@ msgid "Oracle log file small writes"
 msgstr "Oracle Log-Datei Small Writes"
 
 msgid "Oracle long active sessions"
+msgstr "Oracle langlaufende Sitzungen"
+
+#, fuzzy
+msgid "Oracle long active sessions (single metric)"
 msgstr "Oracle langlaufende Sitzungen"
 
 msgid "Oracle maximum SGA size"
@@ -77668,13 +77686,6 @@ msgstr ""
 "abgelehnt. Diese Option funktioniert nur mit OpenSSH Version >= 7.6."
 
 msgid ""
-"This will be used as service name in Checkmk. It must be a unique name per "
-"host."
-msgstr ""
-"Dies wird als Service-Name in Checkmk benutzt. Es muss ein eindeutiger Name "
-"pro Host sein."
-
-msgid ""
 "This will be used as service name within Checkmk. It must be a unique name "
 "per host."
 msgstr ""
@@ -85773,9 +85784,10 @@ msgstr "Gültiges Automationspasswort für den Automationsbenutzer"
 msgid "Valid from"
 msgstr "Gültig ab"
 
+#, fuzzy
 msgid ""
 "Valid service names may only contain letters, numbers, dashes, underscores, "
-"spaces and dots."
+"spaces, dots and colons."
 msgstr ""
 "Gültige Service-Namen können nur Buchstaben, Ziffern, Minuszeichen, "
 "Unterstriche, Leerzeichen und Punkte enthalten."
@@ -98579,6 +98591,13 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid ""
+#~ "This will be used as service name in Checkmk. It must be a unique name "
+#~ "per host."
+#~ msgstr ""
+#~ "Dies wird als Service-Name in Checkmk benutzt. Es muss ein eindeutiger "
+#~ "Name pro Host sein."
 
 #~ msgid "Auto (DEFAULT)"
 #~ msgstr "Auto (Standard)"

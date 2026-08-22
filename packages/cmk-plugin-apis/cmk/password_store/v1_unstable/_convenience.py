@@ -105,6 +105,7 @@ def resolve_secret_option(args: argparse.Namespace, option_name: str) -> Secret[
 
 
     """
+    option_name = option_name.replace("-", "_")
     if (secret_id := getattr(args, f"{option_name}_id", None)) is not None:
         return dereference_secret(secret_id)
 

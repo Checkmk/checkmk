@@ -22,6 +22,7 @@ import Dashboard from './dashboard/DashboardApp.vue'
 import SharedDashboard from './dashboard/DashboardSharedApp.vue'
 import DateTimePickerApp from './date-time-picker/CmkDateTimePickerApp.vue'
 import DialogApp from './dialog/DialogApp.vue'
+import GlobalSettingsApp from './global-settings/GlobalSettingsApp.vue'
 import { GlobalTimePickerApp } from './graphing/GlobalTimePicker'
 import GraphGroup from './graphing/components/GraphGroup.vue'
 import CustomGraphDesignerApp from './graphing/designer/CustomGraphDesignerApp.vue'
@@ -81,6 +82,7 @@ defineCmkComponent('cmk-network-flow-explorer', FlowExplorerApp)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)
+defineCmkComponent('cmk-global-settings', GlobalSettingsApp)
 defineCmkComponent('cmk-rnbw', RnbwApp, { pure: true })
 defineCmkComponent('cmk-ai-explain-button', AiExplainThisIssueApp)
 defineCmkComponent('cmk-dialog', DialogApp)

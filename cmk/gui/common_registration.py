@@ -16,6 +16,7 @@ from cmk.gui import (
     crash_reporting,
     default_permissions,
     deprecations,
+    global_settings,
     help_menu,
     hooks,
     inventory,
@@ -419,6 +420,7 @@ def register(
         agent_bakery_enabled,
     )
     welcome.register(page_registry, snapin_registry)
+    global_settings.register(page_registry)
     search_registration.register(
         page_registry,
         job_registry,

@@ -12,6 +12,7 @@ import { pages as formSpecPages } from '../form'
 import UclBreakpoints from '../foundations/Breakpoints/UclBreakpoints.vue'
 import UclColors from '../foundations/Colors/UclColors.vue'
 import UclIcons from '../foundations/Icons/UclIcons.vue'
+import { pages as globalSettingsPages } from '../global-settings'
 import { pages as graphingPages } from '../graphing'
 import { pages as metricBackendPages } from '../metric-backend'
 import { pages as monitoringPages } from '../monitoring'
@@ -226,6 +227,7 @@ export const roots = [
     new Folder('Dashboards', dashboardPages),
     new Folder('Filters', filtersPages),
     new Folder('Form Spec Elements', formSpecPages),
+    new Folder('Global settings', globalSettingsPages),
     new Folder('Graphing', graphingPages),
     new Folder('Metric backend', metricBackendPages),
     new Folder('Monitoring', monitoringPages),

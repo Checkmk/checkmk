@@ -738,6 +738,7 @@ py_library(
         "//cmk/gui/dashboard",
         "//cmk/gui/data_source",
         "//cmk/gui/form_specs",
+        "//cmk/gui/global_settings",
         "//cmk/gui/graphing",
         "//cmk/gui/graphing:openapi",
         "//cmk/gui/inventory",

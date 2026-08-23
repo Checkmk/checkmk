@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-08-21 18:12+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
@@ -3874,10 +3874,10 @@ msgid ""
 "set of monitored logs, see log name for that."
 msgstr ""
 "Vistaで導入された最新のイベントログAPIをアクティブ化します。 Pro:Vistaで導入"
-"された新しいログをサポートします。Contra:Vista(Server2008)以降でのみ利用可能"
-"、テストが不十分で、動作が遅くなる可能性があります。注意:これを設定しても、監"
-"視対象ログのデフォルトセットは変更されません。デフォルトセットについてはログ"
-"名を参照してください。"
+"された新しいログをサポートします。Contra:Vista(Server2008)以降でのみ利用可"
+"能、テストが不十分で、動作が遅くなる可能性があります。注意:これを設定しても、"
+"監視対象ログのデフォルトセットは変更されません。デフォルトセットについてはロ"
+"グ名を参照してください。"
 
 msgid "Activate monitoring of host via a HTTP connect to the HiveManager"
 msgstr "HiveManagerへのHTTP接続を介してホストの監視をアクティブ化する"
@@ -4377,6 +4377,10 @@ msgid "Add exception"
 msgstr "例外を追加"
 
 msgid "Add exclusion"
+msgstr "除外を追加"
+
+#, fuzzy
+msgid "Add exclusion rule"
 msgstr "除外を追加"
 
 msgid "Add expression"
@@ -8131,6 +8135,14 @@ msgid "Auto-close on"
 msgstr "自動クローズオン"
 
 #, fuzzy
+msgid ""
+"Auto-completion is only available on sites with a configured metrics "
+"backend. The metrics backend can be enabled in the global settings."
+msgstr ""
+"オートコンプリートは、設定済のメトリックバックエンドを持つサイトでのみ利用可"
+"能です。メトリックバックエンドはグローバル設定で有効化できます。"
+
+#, fuzzy
 msgid "Auto-detect (default)"
 msgstr "認証(デフォルト)"
 
@@ -8187,13 +8199,6 @@ msgstr "自動起動"
 #, fuzzy
 msgid "Auto-start services"
 msgstr "自動開始サービス"
-
-msgid ""
-"Autocompletion is only available on sites with a configured metric backend. "
-"The metric backend can be enabled in the Global Settings."
-msgstr ""
-"オートコンプリートは、設定済のメトリックバックエンドを持つサイトでのみ利用可"
-"能です。メトリックバックエンドはグローバル設定で有効化できます。"
 
 msgid "Autodetect instances, expect HTTPs on the following ports:"
 msgstr "インスタンスを自動検出します。次のポートでHTTPを予期します。"
@@ -16217,7 +16222,7 @@ msgid "Connector: Adding host changes to queue"
 msgstr "コネクター：ホストの変更をキューに追加する"
 
 #, fuzzy, python-format
-msgid "Connector: Collecting metric backend hosts on site  \"%s\""
+msgid "Connector: Collecting metrics backend hosts on site \"%s\""
 msgstr "コネクター：サイト \"%s\"でピギーバックホストを習得しています"
 
 #, fuzzy, python-format
@@ -19537,6 +19542,10 @@ msgid ""
 "inventory."
 msgstr ""
 "カーネル構成パラメーターをインベントリに含めるためのパターンを定義します。"
+
+#, fuzzy
+msgid "Define sections to be excluded from monitoring for certain instances"
+msgstr "特定のインスタンスの一部のセクションを除外する"
 
 msgid ""
 "Define the Oracle databases you want to monitor. Each entry must include an "
@@ -25462,6 +25471,10 @@ msgstr "サービス名からボリュームを除外する"
 msgid "Excluded hosts"
 msgstr "除外されたホスト"
 
+#, fuzzy
+msgid "Excluded sections"
+msgstr "有効なセクション"
+
 msgid "Excluded services"
 msgstr "除外されたサービス"
 
@@ -26376,7 +26389,7 @@ msgstr ""
 "ルールを再度保存することで、これを修正してみることができます。"
 
 #, fuzzy
-msgid "Failed to query hosts from metric backend"
+msgid "Failed to query hosts from metrics backend"
 msgstr "行 %dからホストを作成できませんでした: %s"
 
 #, fuzzy, python-format
@@ -28225,9 +28238,6 @@ msgstr "フルテキスト検索"
 
 msgid "Function"
 msgstr "機能"
-
-msgid "GB"
-msgstr "GB"
 
 msgid "GByte/s"
 msgstr "ギガバイト/秒"
@@ -34346,11 +34356,12 @@ msgstr ""
 "す。これは高レイテンシの状況下で大きなスピードアップをもたらしますが、ター"
 "ゲットサイトのLivestatusモジュールで多くのスレッドをロックします。"
 
+#, fuzzy
 msgid ""
 "If you enable the OpenTelemetry data, the data collected from the "
 "OpenTelemetry Collector or the Prometheus scraper will be used for this host "
-"if they match the resource attribute key. You must also enable the metric "
-"backend under Global Settings > Site Management."
+"if they match the resource attribute key. You must also enable the metrics "
+"backend under Global settings > Site management."
 msgstr ""
 "OpenTelemetryデータを有効化すると、OpenTelemetryコレクターまたはPrometheusス"
 "クレイパーから収集されたデータのうち、リソース属性キーと一致するものがこのホ"
@@ -39168,7 +39179,8 @@ msgstr "可用性のレベル(パーセント)"
 msgid "Levels on average usage"
 msgstr "平均使用量のレベル"
 
-msgid "Levels on decreasing trends in MB per time range"
+#, fuzzy
+msgid "Levels on decreasing trends in MiB per time range"
 msgstr "時間範囲ごとのMBの減少傾向に関するレベル"
 
 #, fuzzy
@@ -43229,9 +43241,6 @@ msgstr "メトリックバックエンド（カスタムクエリ）"
 msgid "Metric backend configuration"
 msgstr "メトリック設定"
 
-msgid "Metric backend filter criteria"
-msgstr "メトリックバックエンドのフィルタ条件"
-
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr ""
 "メトリックバックエンドは無効化されており、オートコンプリート機能は利用できま"
@@ -43292,6 +43301,10 @@ msgstr "メトリクス：%s"
 
 msgid "Metrics"
 msgstr "メトリクス"
+
+#, fuzzy
+msgid "Metrics backend filter criteria"
+msgstr "メトリックバックエンドのフィルタ条件"
 
 #, fuzzy
 msgid "Metrics error state"
@@ -43619,9 +43632,10 @@ msgstr ""
 msgid "Missing host name"
 msgstr "ホスト名がありません"
 
+#, fuzzy
 msgid ""
-"Missing hostname attribute. Please configure a resource attribute (e.g., "
-"host.name) so the system can determine the hostname."
+"Missing host name attribute. Please configure a resource attribute (e.g., "
+"host.name) so the system can determine the host name."
 msgstr ""
 "ホスト名属性が不足しています。システムがホスト名を判別できるよう、リソース属"
 "性（例： host.name）を設定してください。"
@@ -48973,7 +48987,7 @@ msgid "OpenTelemetry data"
 msgstr "OpenTelemetryメトリック名"
 
 #, fuzzy
-msgid "OpenTelemetry data - Metric backend"
+msgid "OpenTelemetry data - metrics backend"
 msgstr "OpenTelemetryメトリック名"
 
 #, fuzzy
@@ -56901,9 +56915,6 @@ msgstr "リソース名"
 #, fuzzy
 msgid "Resource attribute for host name lookup"
 msgstr "ホスト案件の解決メモ"
-
-msgid "Resource attribute for hostname lookup"
-msgstr "ホスト名検索用のリソース属性"
 
 #, fuzzy
 msgid "Resource attributes"
@@ -69635,7 +69646,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The interval the connection will be executed to check the available "
+"The interval in which the connection will be executed to check the available "
 "OpenTelemetry data and update the configuration."
 msgstr ""
 "使用可能なOpen telemetryデータを確認し、構成を更新するために接続が実行される"
@@ -73479,9 +73490,9 @@ msgid ""
 msgstr ""
 "これは、Windows タイム サービス内の 8 ビット「Reachability」レジスタを監視す"
 "ることで、直近 8 回の試行における連続した同期失敗をチェックします。 <b>失敗し"
-"た試行の総数</b> が定義された閾値を超えた場合、警告または重大なアラートが"
-"トリガーされます。たとえば、閾値を 4 に設定すると、直近 8 回の試行のうち <b>"
-"いずれか</b> 4 回が失敗した場合に、Checkmk がアラートを発します。"
+"た試行の総数</b> が定義された閾値を超えた場合、警告または重大なアラートがトリ"
+"ガーされます。たとえば、閾値を 4 に設定すると、直近 8 回の試行のうち <b>いず"
+"れか</b> 4 回が失敗した場合に、Checkmk がアラートを発します。"
 
 msgid "This collection"
 msgstr "このコレクション"
@@ -73521,8 +73532,8 @@ msgid ""
 "This configuration option sets the timeout used when downloading SNMP walks "
 "via the user interface."
 msgstr ""
-"この設定オプションは、ユーザーインターフェース経由でSNMPウォークを"
-"ダウンロードする際のタイムアウト時間を設定します。"
+"この設定オプションは、ユーザーインターフェース経由でSNMPウォークをダウンロー"
+"ドする際のタイムアウト時間を設定します。"
 
 msgid "This connection"
 msgstr "この接続"
@@ -74738,10 +74749,10 @@ msgid ""
 "sufficient for registering the Agent Updater. This requires the additional "
 "permission <i>Enable agent updates on hosts & download monitoring agents</i>."
 msgstr ""
-"この権限により、ユーザーが連絡先のフォルダ内の新規ホストに対して"
-"エージェントコントローラーを登録できます。<br>注意：この権限だけでは"
-"エージェントアップデーターの登録には不十分です。これには追加の権限<i>ホストで"
-"のエージェント更新の有効化と監視エージェントのダウンロード</i>が必要です。"
+"この権限により、ユーザーが連絡先のフォルダ内の新規ホストに対してエージェント"
+"コントローラーを登録できます。<br>注意：この権限だけではエージェントアップ"
+"データーの登録には不十分です。これには追加の権限<i>ホストでのエージェント更新"
+"の有効化と監視エージェントのダウンロード</i>が必要です。"
 
 msgid ""
 "This permission allows to register the Agent Controller for any new host."
@@ -74749,10 +74760,10 @@ msgid ""
 "Updater. This requires the additional permission <i>Enable agent updates on "
 "all hosts & download all monitoring agents</i>."
 msgstr ""
-"この権限により、新しいホストに対してエージェントコントローラーを登録できます"
-"。<br>注記：この権限だけではエージェントアップデーターの登録には不十分です。"
-"これには追加の権限<i>すべてのホストでエージェント更新を有効化し、すべての監視"
-"エージェントをダウンロードする</i>が必要です。"
+"この権限により、新しいホストに対してエージェントコントローラーを登録できま"
+"す。<br>注記：この権限だけではエージェントアップデーターの登録には不十分で"
+"す。これには追加の権限<i>すべてのホストでエージェント更新を有効化し、すべての"
+"監視エージェントをダウンロードする</i>が必要です。"
 
 msgid ""
 "This permission allows to revert pending changes. Beware that this holds "
@@ -86772,9 +86783,9 @@ msgid ""
 "the Podman host."
 msgstr ""
 "この機能が有効になっている場合（デフォルト）、終了コードが 0 以外の値で終了し"
-"たコンテナは、引き続き個別に監視されます。無効になっている場合、それらの"
-"コンテナは個別監視から除外されます。注意：終了コード 0 で終了したコンテナは、"
-"この設定に関係なく常に個別監視から除外されます。終了したすべてのコンテナは、"
+"たコンテナは、引き続き個別に監視されます。無効になっている場合、それらのコン"
+"テナは個別監視から除外されます。注意：終了コード 0 で終了したコンテナは、この"
+"設定に関係なく常に個別監視から除外されます。終了したすべてのコンテナは、"
 "Podman ホスト上のコンテナカウントサービスでは引き続きカウントされます。"
 
 msgid ""
@@ -87931,13 +87942,14 @@ msgstr ""
 "認証タイプを「OAuth2」に設定した場合、オプション「%s」を指定する必要がありま"
 "す。"
 
+#, fuzzy
 msgid ""
-"With the <b>OpenTelemetry data - metric backend</b> connector type, hosts "
+"With the <b>OpenTelemetry data - metrics backend</b> connector type, hosts "
 "will be dynamically created using the data collected from the "
 "<b>OpenTelemetry Collector</b> or the <b>Prometheus scraper</b>. You must "
-"also enable the metric backend under <a href='wato.py?"
-"folder=&mode=edit_configvar&site=&varname=metric_backend'>Global Settings > "
-"Site Management.</a>"
+"also enable the metrics backend under <a href='wato.py?"
+"folder=&mode=edit_configvar&site=&varname=metric_backend'>Global settings > "
+"Site management.</a>"
 msgstr ""
 "<b>OpenTelemetry データ - メトリックバックエンド</b>コネクタタイプを使用する"
 "と、<b>OpenTelemetry Collector</b> または <b>Prometheus scraper</b>から収集さ"
@@ -88822,10 +88834,10 @@ msgstr ""
 "この通知が届いているのは、あなたが影響を受けるホストの連絡先として登録されて"
 "いるためです。<br><br>一部のホストのエージェント更新プログラムは、有効期限が"
 "切れている、またはまもなく切れるエージェント署名鍵で署名されています。鍵の有"
-"効期限が切れると、影響を受けるホストはその鍵で署名されたエージェント更新"
-"プログラムを拒否するため、これらのホスト上のCheckmkエージェントは自動更新でき"
-"なくなります。エージェント署名鍵を更新するには、Checkmk管理者にお問い合わせく"
-"ださい。"
+"効期限が切れると、影響を受けるホストはその鍵で署名されたエージェント更新プロ"
+"グラムを拒否するため、これらのホスト上のCheckmkエージェントは自動更新できなく"
+"なります。エージェント署名鍵を更新するには、Checkmk管理者にお問い合わせくださ"
+"い。"
 
 msgid "You are trying to edit a rule which does not exist anymore."
 msgstr "存在しないルールを編集しようとしています。"
@@ -89210,7 +89222,8 @@ msgid "You can only archive the current audit log"
 msgstr "現在の監査ログのみアーカイブできます"
 
 msgid "You can only assign ownership to contact groups you are a member of."
-msgstr "所有権を割り当てられるのは、自分がメンバーである連絡先グループのみです。"
+msgstr ""
+"所有権を割り当てられるのは、自分がメンバーである連絡先グループのみです。"
 
 #, python-format
 msgid ""
@@ -93304,8 +93317,8 @@ msgid ""
 "Daily AI usage limit reached. Your quota refills over time. Try again in a "
 "little while."
 msgstr ""
-"AIの1日あたりの使用状況制限に達しました。利用枠は時間の経過とともに回復します"
-"。しばらくしてから再度お試しください。"
+"AIの1日あたりの使用状況制限に達しました。利用枠は時間の経過とともに回復しま"
+"す。しばらくしてから再度お試しください。"
 
 #, fuzzy
 msgid "Close"
@@ -93547,8 +93560,8 @@ msgstr ""
 "Checkmkが内部でメトリクスを処理する方法の制限により、結果に矛盾するメトリクス"
 "が含まれており、このトップリストは不正確または不完全である可能性があります。"
 "n\n"
-"    これは、以下の表に示す例示ホストおよびサービスを含む"
-"サービスチェックコマンドによって引き起こされます。n\n"
+"    これは、以下の表に示す例示ホストおよびサービスを含むサービスチェックコマ"
+"ンドによって引き起こされます。n\n"
 "    これらの例を使用して、問題を解決するためにトップリスト設定で除外する必要"
 "があるホストとサービスを特定できます。"
 
@@ -94510,6 +94523,10 @@ msgid "Available visualization types"
 msgstr "利用可能なオプション"
 
 #, fuzzy
+msgid "Not available with the selected log filters."
+msgstr "選択したSetupフォルダにはありません。"
+
+#, fuzzy
 msgid "Data settings"
 msgstr "設定を編集する"
 
@@ -94753,6 +94770,9 @@ msgstr "サービスフィルター"
 msgid "Event selection"
 msgstr "ファイル選択"
 
+msgid "Only available for a single host."
+msgstr ""
+
 #, fuzzy
 msgid "Available visualization type"
 msgstr "利用可能な容量"
@@ -94874,6 +94894,12 @@ msgstr "平均散布図"
 #, fuzzy
 msgid "Metric selection"
 msgstr "ファイル選択"
+
+#, fuzzy
+msgid "Not available for the current host, service and metric selection."
+msgstr ""
+"利用可能なほぼすべてのフィルター、サービスの検索やアクションの実行に使用され"
+"ます"
 
 msgid "Data range"
 msgstr "データ範囲"
@@ -95011,6 +95037,9 @@ msgstr "新しい要素を追加する"
 #, fuzzy
 msgid "Enter text"
 msgstr "入る"
+
+msgid "Only available for a single host and a single service."
+msgstr ""
 
 #, fuzzy
 msgid "Colorize not OK states"
@@ -98133,6 +98162,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "GB"
+#~ msgstr "GB"
+
+#~ msgid "Resource attribute for hostname lookup"
+#~ msgstr "ホスト名検索用のリソース属性"
 
 #~ msgid ""
 #~ "This will be used as service name in Checkmk. It must be a unique name "

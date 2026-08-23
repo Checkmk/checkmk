@@ -4482,6 +4482,10 @@ msgstr "Adaugă Excepție"
 msgid "Add exclusion"
 msgstr "Adăugați excluderea"
 
+#, fuzzy
+msgid "Add exclusion rule"
+msgstr "Adăugați excluderea"
+
 msgid "Add expression"
 msgstr "Adăugați expresia"
 
@@ -8388,6 +8392,11 @@ msgstr "Închidere automată"
 msgid "Auto-close on"
 msgstr "Închidere automată pe"
 
+msgid ""
+"Auto-completion is only available on sites with a configured metrics "
+"backend. The metrics backend can be enabled in the global settings."
+msgstr ""
+
 #, fuzzy
 msgid "Auto-detect (default)"
 msgstr "Autentificare (valori implicite)"
@@ -8447,11 +8456,6 @@ msgstr "Autostart"
 #, fuzzy
 msgid "Auto-start services"
 msgstr "Servicii de pornire automată"
-
-msgid ""
-"Autocompletion is only available on sites with a configured metric backend. "
-"The metric backend can be enabled in the Global Settings."
-msgstr ""
 
 msgid "Autodetect instances, expect HTTPs on the following ports:"
 msgstr "Instanțele de autodetecție se așteaptă la HTTP pe următoarele porturi:"
@@ -16845,7 +16849,7 @@ msgid "Connector: Adding host changes to queue"
 msgstr ""
 
 #, fuzzy, python-format
-msgid "Connector: Collecting metric backend hosts on site  \"%s\""
+msgid "Connector: Collecting metrics backend hosts on site \"%s\""
 msgstr "Faza 1.1: Preluarea de pe site-ul \"%s\""
 
 #, fuzzy, python-format
@@ -20253,6 +20257,10 @@ msgid ""
 msgstr ""
 "Definiți modelele de includere a parametrilor de configurare a kernelului în "
 "inventar."
+
+#, fuzzy
+msgid "Define sections to be excluded from monitoring for certain instances"
+msgstr "Excluderea unor secțiuni în anumite cazuri"
 
 msgid ""
 "Define the Oracle databases you want to monitor. Each entry must include an "
@@ -26472,6 +26480,10 @@ msgstr "Excludeți volumul din numele serviciului"
 msgid "Excluded hosts"
 msgstr "Gazde excluse"
 
+#, fuzzy
+msgid "Excluded sections"
+msgstr "Secțiuni activate"
+
 # georgem ##############
 msgid "Excluded services"
 msgstr "Servicii excluse"
@@ -27435,7 +27447,7 @@ msgstr ""
 "editare și salvând din nou regula fără modificări."
 
 #, fuzzy
-msgid "Failed to query hosts from metric backend"
+msgid "Failed to query hosts from metrics backend"
 msgstr "Nu s-a reușit crearea unei gazde de la linia %d: %s."
 
 #, fuzzy, python-format
@@ -29325,9 +29337,6 @@ msgstr "Căutare în text complet"
 
 msgid "Function"
 msgstr "Funcția"
-
-msgid "GB"
-msgstr "GB"
 
 msgid "GByte/s"
 msgstr "GByte/s"
@@ -35889,8 +35898,8 @@ msgstr ""
 msgid ""
 "If you enable the OpenTelemetry data, the data collected from the "
 "OpenTelemetry Collector or the Prometheus scraper will be used for this host "
-"if they match the resource attribute key. You must also enable the metric "
-"backend under Global Settings > Site Management."
+"if they match the resource attribute key. You must also enable the metrics "
+"backend under Global settings > Site management."
 msgstr ""
 
 #, fuzzy
@@ -40922,7 +40931,8 @@ msgstr "Niveluri de disponibilitate în procente"
 msgid "Levels on average usage"
 msgstr "Niveluri de utilizare medie"
 
-msgid "Levels on decreasing trends in MB per time range"
+#, fuzzy
+msgid "Levels on decreasing trends in MiB per time range"
 msgstr "Niveluri privind tendințele descrescătoare în MB pe interval de timp"
 
 #, fuzzy
@@ -45109,9 +45119,6 @@ msgstr ""
 msgid "Metric backend configuration"
 msgstr "Configurație gazdă"
 
-msgid "Metric backend filter criteria"
-msgstr ""
-
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr ""
 
@@ -45171,6 +45178,10 @@ msgstr "Metrici"
 
 msgid "Metrics"
 msgstr "Metrici"
+
+#, fuzzy
+msgid "Metrics backend filter criteria"
+msgstr "Conexiuni Varnish Backend"
 
 #, fuzzy
 msgid "Metrics error state"
@@ -45513,8 +45524,8 @@ msgid "Missing host name"
 msgstr "Nume gazdă lipsă"
 
 msgid ""
-"Missing hostname attribute. Please configure a resource attribute (e.g., "
-"host.name) so the system can determine the hostname."
+"Missing host name attribute. Please configure a resource attribute (e.g., "
+"host.name) so the system can determine the host name."
 msgstr ""
 
 msgid "Missing identity provider information in metadata"
@@ -51129,8 +51140,9 @@ msgstr "Adaugp o noua configurație de utilizator"
 msgid "OpenTelemetry data"
 msgstr "Intervalul de colectare a datelor"
 
-msgid "OpenTelemetry data - Metric backend"
-msgstr ""
+#, fuzzy
+msgid "OpenTelemetry data - metrics backend"
+msgstr "Intervalul de colectare a datelor"
 
 #, fuzzy
 msgid "OpenTelemetry hosts creation options"
@@ -59536,9 +59548,6 @@ msgstr "Numele resursei"
 #, fuzzy
 msgid "Resource attribute for host name lookup"
 msgstr "Note de rezoluție pentru cazurile gazdă"
-
-msgid "Resource attribute for hostname lookup"
-msgstr ""
 
 #, fuzzy
 msgid "Resource attributes"
@@ -72774,7 +72783,7 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The interval the connection will be executed to check the available "
+"The interval in which the connection will be executed to check the available "
 "OpenTelemetry data and update the configuration."
 msgstr ""
 "Intervalul la care va fi executată conexiunea pentru a verifica piggyback-ul "
@@ -92132,12 +92141,12 @@ msgid ""
 msgstr ""
 
 msgid ""
-"With the <b>OpenTelemetry data - metric backend</b> connector type, hosts "
+"With the <b>OpenTelemetry data - metrics backend</b> connector type, hosts "
 "will be dynamically created using the data collected from the "
 "<b>OpenTelemetry Collector</b> or the <b>Prometheus scraper</b>. You must "
-"also enable the metric backend under <a href='wato.py?"
-"folder=&mode=edit_configvar&site=&varname=metric_backend'>Global Settings > "
-"Site Management.</a>"
+"also enable the metrics backend under <a href='wato.py?"
+"folder=&mode=edit_configvar&site=&varname=metric_backend'>Global settings > "
+"Site management.</a>"
 msgstr ""
 
 #, fuzzy
@@ -98907,6 +98916,10 @@ msgid "Available visualization types"
 msgstr "Opțiuni disponibile"
 
 #, fuzzy
+msgid "Not available with the selected log filters."
+msgstr "%s nu se află în dosarele de configurare selectate."
+
+#, fuzzy
 msgid "Data settings"
 msgstr "Editați setările"
 
@@ -99157,6 +99170,9 @@ msgstr "Filtre de service"
 msgid "Event selection"
 msgstr "Selecția fișierelor"
 
+msgid "Only available for a single host."
+msgstr ""
+
 #, fuzzy
 msgid "Available visualization type"
 msgstr "Capacitate disponibilă"
@@ -99284,6 +99300,12 @@ msgstr "Graficul de dispersie mediu"
 #, fuzzy
 msgid "Metric selection"
 msgstr "Selecția fișierelor"
+
+#, fuzzy
+msgid "Not available for the current host, service and metric selection."
+msgstr ""
+"Aproape toate filtrele disponibile, utilizate pentru căutarea de servicii "
+"și, eventual, pentru efectuarea de acțiuni"
 
 msgid "Data range"
 msgstr "Intervalul de date"
@@ -99422,6 +99444,9 @@ msgstr "Adaungă un nou element"
 #, fuzzy
 msgid "Enter text"
 msgstr "Introduceți"
+
+msgid "Only available for a single host and a single service."
+msgstr ""
 
 #, fuzzy
 msgid "Colorize not OK states"
@@ -102599,6 +102624,9 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "GB"
+#~ msgstr "GB"
 
 #, fuzzy
 #~ msgid ""

@@ -49,8 +49,8 @@ export interface TimestampedSample {
 }
 
 export interface CmkKpiStatCardProps {
-  /** Pre-formatted headline value, e.g. "801.84" or "4.3". */
-  value: string
+  /** Pre-formatted headline value, e.g. "801.84" or "4.3". Omit for "no data". */
+  value?: string | undefined
   /** Unit rendered after the value, e.g. "GB" or "K"; omit for plain counts. */
   unit?: string | undefined
   /**

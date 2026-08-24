@@ -94,7 +94,11 @@ const stateLabel = computed<TranslatedString | undefined>(() => {
 
 const stateColor = computed(() => (props.state ? STATE_CSS_COLOR[props.state.severity] : undefined))
 
-const tintColor = computed(() => (props.state?.tintBackground ? stateColor.value : undefined))
+// No state to color when there's no data at all - card colorization doesn't apply.
+const hasData = computed(() => props.value !== undefined)
+const tintColor = computed(() =>
+  hasData.value && props.state?.tintBackground ? stateColor.value : undefined
+)
 
 const lastRealSample = computed<TimestampedSample | undefined>(() =>
   [...props.series].reverse().find((d) => d.value !== null)
@@ -117,8 +121,12 @@ const lastSampleTimeLabel = computed<string | undefined>(() => {
 })
 
 // A single point draws no line, so anything under two is "no plot" and the
-// value takes the card to itself.
-const hasSparkLine = computed(() => props.series.length >= 2)
+// value takes the card to itself. No data at all means no curve either.
+const hasSparkLine = computed(() => hasData.value && props.series.length >= 2)
+
+// Curve-less metrics center the value to fill the card. No-data is
+// different - it would normally plot a curve, so it stays top-left.
+const isValueOnly = computed(() => hasData.value && props.series.length < 2)
 
 // Band mode never overlaps the value row, so only full mode needs a scrim.
 const showScrim = computed(() => hasSparkLine.value && props.sparkHeightMode === 'full')
@@ -153,7 +161,7 @@ onMounted(measureScrim)
     class="db-cmk-kpi-stat-card"
     :class="{
       'db-cmk-kpi-stat-card--tinted': tintColor !== undefined,
-      'db-cmk-kpi-stat-card--value-only': !hasSparkLine,
+      'db-cmk-kpi-stat-card--value-only': isValueOnly,
       'db-cmk-kpi-stat-card--band': hasSparkLine && sparkHeightMode === 'band'
     }"
     :style="{
@@ -165,10 +173,13 @@ onMounted(measureScrim)
   >
     <div ref="valueRowEl" class="db-cmk-kpi-stat-card__value-row">
       <component :is="href ? 'a' : 'span'" :href="href" class="db-cmk-kpi-stat-card__value-link">
-        <span class="db-cmk-kpi-stat-card__value">{{ value }}</span>
+        <span class="db-cmk-kpi-stat-card__value">{{ hasData ? value : '—' }}</span>
         <span v-if="unit" class="db-cmk-kpi-stat-card__unit">{{ unit }}</span>
       </component>
-      <div v-if="isStale || deltaRatio !== undefined" class="db-cmk-kpi-stat-card__info-slot">
+      <div
+        v-if="hasData && (isStale || deltaRatio !== undefined)"
+        class="db-cmk-kpi-stat-card__info-slot"
+      >
         <span v-if="isStale" class="db-cmk-kpi-stat-card__stale-note">
           <CmkIcon name="clock" size="small" :colored="false" />
           {{ _t('No recent data — last sample %{time}', { time: lastSampleTimeLabel ?? '' }) }}
@@ -187,10 +198,14 @@ onMounted(measureScrim)
       </div>
     </div>
 
+    <p v-if="!hasData" class="db-cmk-kpi-stat-card__no-data-note">
+      {{ _t('No data in this timeframe.') }}
+    </p>
+
     <div v-if="showScrim" class="db-cmk-kpi-stat-card__scrim" aria-hidden="true" />
 
     <CmkBadge
-      v-if="state && stateLabel"
+      v-if="hasData && state && stateLabel"
       class="db-cmk-kpi-stat-card__state"
       :color="STATE_BADGE_COLOR[state.severity]"
       size="medium"
@@ -307,6 +322,7 @@ onMounted(measureScrim)
    left it. */
 .db-cmk-kpi-stat-card--value-only {
   display: flex;
+  flex-direction: column;
   gap: clamp(4px, 1.5cqw, 10px);
   align-items: center;
   justify-content: center;
@@ -379,6 +395,15 @@ onMounted(measureScrim)
   color: var(--font-color-dimmed);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.db-cmk-kpi-stat-card__no-data-note {
+  margin: 0;
+
+  /* Left-aligned under the value, not centered - this isn't a value-only card. */
+  padding: 0 calc(var(--spacing) * 2);
+  font-size: clamp(10px, 14cqh, 16px);
+  color: var(--font-color-dimmed);
 }
 
 /* CmkBadge is sized for counts, so it pads to a bubble around a short label

@@ -240,6 +240,41 @@ test.each([
   expect(badge).toHaveClass(colorClass)
 })
 
+test('renders an em dash and a body note instead of a value when there is no data', () => {
+  const { container } = renderCard({ value: undefined, unit: 'GB', deltaRatio: 0.12 })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('—')
+  expect(container.querySelector('.db-cmk-kpi-stat-card__unit')).toHaveTextContent('GB')
+  expect(deltaOf(container)).toBeNull()
+  expect(container.querySelector('.db-cmk-kpi-stat-card__no-data-note')).not.toBeNull()
+})
+
+test('draws no curve and no state badge when there is no data', () => {
+  const { container } = renderCard({ value: undefined, state: { severity: 'crit' } })
+
+  expect(container.querySelector('.db-kpi-spark-line')).toBeNull()
+  expect(container.querySelector('.db-cmk-kpi-stat-card__state')).toBeNull()
+})
+
+test('a no-data card keeps its normal top-left layout, unlike a curve-less metric', () => {
+  const { container } = renderCard({ value: undefined, series: [] })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card')).not.toHaveClass(
+    'db-cmk-kpi-stat-card--value-only'
+  )
+})
+
+test('a state alone does not tint a no-data card', () => {
+  const { container } = renderCard({
+    value: undefined,
+    state: { severity: 'crit', tintBackground: true }
+  })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card')).not.toHaveClass(
+    'db-cmk-kpi-stat-card--tinted'
+  )
+})
+
 test('a state alone does not tint the card', () => {
   const { container } = renderCard({ state: { severity: 'crit' } })
 

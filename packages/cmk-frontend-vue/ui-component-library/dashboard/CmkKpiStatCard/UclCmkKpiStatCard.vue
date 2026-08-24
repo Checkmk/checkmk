@@ -16,7 +16,7 @@ import {
 import codeExample from './UclCmkKpiStatCardCodeExample.vue?raw'
 
 /** Demo-only: which missing-data scenario the series generator produces. */
-type DataState = 'complete' | 'gap' | 'stale'
+type DataState = 'complete' | 'gap' | 'stale' | 'no-data'
 
 export const panelConfig = {
   value: {
@@ -89,11 +89,12 @@ export const panelConfig = {
   dataState: {
     type: 'list' as const,
     title: 'Data state',
-    help: 'Gap: a single contiguous outage window mid-series. Stale: the series ends in missing samples, so the bridge runs flat to the right edge and the delta is replaced by a "last sample" note.',
+    help: 'Gap: a single contiguous outage window mid-series. Stale: the series ends in missing samples, so the bridge runs flat to the right edge and the delta is replaced by a "last sample" note. No data: no value, curve, delta, or state badge at all.',
     options: [
       { title: 'Complete', name: 'complete' },
       { title: 'Gap', name: 'gap' },
-      { title: 'Stale', name: 'stale' }
+      { title: 'Stale', name: 'stale' },
+      { title: 'No data', name: 'no-data' }
     ] satisfies Options<DataState>[],
     initialState: 'complete' as const
   },
@@ -271,7 +272,7 @@ const range = computed<KpiValueRange | undefined>(() =>
         }"
       >
         <CmkKpiStatCard
-          :value="propState.value"
+          :value="propState.dataState === 'no-data' ? undefined : propState.value"
           :unit="propState.unit || undefined"
           :delta-ratio="propState.showDelta ? propState.deltaPercent / 100 : undefined"
           :delta-semantics="propState.deltaSemantics"

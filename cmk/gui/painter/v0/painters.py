@@ -856,7 +856,7 @@ class PainterSvcMetrics(Painter):
                     html.render_popup_trigger(
                         html.render_static_icon(
                             StaticIcon(IconNames.menu),
-                            title=_("Add this metric to dedicated graph"),
+                            title=_("Use this metric for a forecast graph"),
                             css_classes=["iconbutton"],
                         ),
                         ident="add_metric_to_graph_" + host_name + ";" + str(service_description),

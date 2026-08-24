@@ -13,7 +13,9 @@ constant to find every skeleton blocked on the same dependency):
 
 - ``SKIP_PENDING_GRAPH_BACKEND`` - integration tests needing the ``<cmk-graph>`` embedding;
   enablable first.
-- ``SKIP_PENDING_GRAPH_ENGINE`` - GUI E2E tests needing the engine to render on a surface.
+- ``SKIP_PENDING_GRAPH_ENGINE`` - GUI E2E tests pending the accessibility behaviour they assert.
+- ``SKIP_PENDING_ENGINE_CUSTOM_GRAPH_DESIGNER`` - cases written against the former custom
+  graph designer, blocked on the new designer growing the flows they drive.
 
 `injected_ping_rrds` is the cheapest way to get one: a no-agent host has exactly one service
 with an RRD (PING), and the core holds its RRDs open, so it takes every host it needs in one go
@@ -59,7 +61,13 @@ SKIP_PENDING_GRAPH_BACKEND: Final = (
     "<cmk-graph> embedding); enable once the backend lands."
 )
 SKIP_PENDING_GRAPH_ENGINE: Final = (
-    "CMK-35973 skeleton: pending the new graph engine rendering on this surface."
+    "CMK-35973 skeleton: the engine now renders on every surface, so these are pending the "
+    "accessibility behaviour they assert rather than the engine itself."
+)
+SKIP_PENDING_ENGINE_CUSTOM_GRAPH_DESIGNER: Final = (
+    "CMK-38108 skeleton: 'custom_graph_design.py' now serves the Vue designer, but these cases "
+    "drive the former designer's form POST and legend DOM. Port them once the new designer "
+    "covers the metric backend source flow they need."
 )
 
 # Default RRD geometry: one sample per minute over roughly a day.

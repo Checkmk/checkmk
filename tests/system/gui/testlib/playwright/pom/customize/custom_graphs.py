@@ -80,6 +80,13 @@ class CreateCustomGraph(CmkPage):
 
 
 class BaseGraph(CmkPage):
+    """Value cells of the former custom graph designer's legend.
+
+    ``custom_graph_design.py`` now serves the Vue designer, so these selectors match nothing;
+    the cases using them are skipped on `SKIP_PENDING_ENGINE_CUSTOM_GRAPH_DESIGNER` until they
+    are ported to `CustomGraphDesigner`.
+    """
+
     @override
     def navigate(self) -> None:
         raise NotImplementedError("'navigate' method should be overridden")

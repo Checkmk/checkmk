@@ -6,13 +6,11 @@
 """Navigation page-object for the custom graph designer (Pro+).
 
 ``custom_graph_designer.py`` serves both modes of the same Vue app: viewing a saved graph
-and editing its definition. It is the surface that renders custom graphs through the new
-engine - the legacy ``custom_graph.py`` / ``custom_graph_design.py`` pages still use the
-old renderer.
+and editing its definition. The ``custom_graph.py`` and ``custom_graph_design.py`` pages
+render the same app, addressing it through the pagetype instead.
 
-The page is not linked from the Custom graphs list, so it is reached by URL, and it takes
-the graph to show as a mandatory parameter: even the "build a graph from scratch" cases
-need a saved graph to open.
+This page takes the graph to show as a mandatory parameter, so it is reached by URL: even
+the "build a graph from scratch" cases need a saved graph to open.
 """
 
 import logging

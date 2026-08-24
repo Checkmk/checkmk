@@ -13,7 +13,10 @@ from cmk.rulesets.v1.form_specs import (
     Integer,
     LevelDirection,
     LevelsType,
+    ServiceState,
     SimpleLevels,
+    TimeMagnitude,
+    TimeSpan,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, HostCondition, Topic
 
@@ -75,6 +78,46 @@ def _make_form(summary_form: bool) -> Callable[[], Dictionary]:
                             "example, setting a threshold of 4 means that Checkmk will alert if "
                             "<b>any</b> 4 of the last 8 attempts have failed."
                         ),
+                    ),
+                ),
+                # The not-yet-synced case happens fairly regularly (e.g. after a
+                # w32time restart), so we default to OK and only count the peer
+                # as a failure after the levels below trip.
+                "peer_never_synced_state": DictElement(
+                    required=False,
+                    parameter_form=ServiceState(
+                        title=Title("State when peer has never synchronized"),
+                        help_text=Help(
+                            "The state to report when the peer has not yet synchronized (for "
+                            "example, immediately after the w32time service has been restarted). "
+                            "If the peer stays in this state for too long (configurable "
+                            "using the levels below), an alert may be triggered. This time window "
+                            "allows for restarting w32time and letting peers attempt to sync "
+                            "rather than immediately alerting that they have not yet done so."
+                        ),
+                        prefill=DefaultValue(ServiceState.OK),
+                    ),
+                ),
+                "peer_never_synced_levels": DictElement(
+                    required=False,
+                    parameter_form=SimpleLevels(
+                        title=Title("Elapsed time never having synchronized"),
+                        level_direction=LevelDirection.UPPER,
+                        form_spec_template=TimeSpan(
+                            displayed_magnitudes=[
+                                TimeMagnitude.DAY,
+                                TimeMagnitude.HOUR,
+                                TimeMagnitude.MINUTE,
+                                TimeMagnitude.SECOND,
+                            ]
+                        ),
+                        help_text=Help(
+                            "Determines how long a peer may remain in the never-synchronized "
+                            "state before an alert is triggered. "
+                            "This allows for, for example, restarting the Windows Time Service and "
+                            "giving the configured peers a chance to synchronize before alerting."
+                        ),
+                        prefill_fixed_levels=DefaultValue(value=(10 * 60.0, 30 * 60.0)),
                     ),
                 ),
                 "stratum": DictElement(

@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import replace
+
 import pytest
 
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
+    LevelsT,
     Result,
     Service,
     State,
@@ -1095,7 +1098,7 @@ def test_check_w32time_peers(
     string_table: StringTable, item: str, params: w32time_peers.Params, expected: CheckResult
 ) -> None:
     parsed = w32time_peers.parse_w32time_peers(string_table)
-    result = list(w32time_peers.check_w32time_peers(item, params, parsed))
+    result = list(w32time_peers._check_w32time_peers(item, params, parsed, now=0.0, value_store={}))
     assert result == expected
 
 
@@ -1109,9 +1112,10 @@ def test_check_w32time_peers(
                 Service(item="time.google.com"),
                 Service(item="de.pool.ntp.org"),
                 Service(item="time.cloudflare.com"),
+                Service(item="example.com"),
             ],
         ),
-        (DE_PEERS_EXAMPLE_COM, []),
+        (DE_PEERS_EXAMPLE_COM, [Service(item="example.com")]),
         (DE_MISSING_PEER_NAME, [Service(item="(unnamed peer 1)")]),
         (
             DE_MULTIPLE_MISSING_PEER_NAMES,
@@ -1356,9 +1360,13 @@ def test_check_w32time_peers_summary(
         "reachability_consecutive_failures": ("no_levels", None),
         "reachability_total_failures": ("no_levels", None),
         "stratum": ("fixed", stratum_levels),
+        "peer_never_synced_state": int(State.OK),
+        "peer_never_synced_levels": ("no_levels", None),
         "universal": universal,
     }
-    result = list(w32time_peers.check_w32time_peers_summary(params, parsed))
+    result = list(
+        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})
+    )
     assert result == expected
 
 
@@ -1380,7 +1388,10 @@ def test_check_w32time_peers_summary(
                 ),
                 Result(state=State.OK, notice="Next poll in: 1 minute 40 seconds"),
                 Result(state=State.OK, notice="\nPeer: reachability-bad.example.com"),
-                Result(state=State.OK, notice="Last successful sync time: (null)"),
+                Result(
+                    state=State.OK,
+                    notice="Peer has not synced yet, time in this state: 0 seconds",
+                ),
                 Result(state=State.OK, notice="Total failures (last 8 attempts): 5"),
                 Result(
                     state=State.OK,
@@ -1418,7 +1429,10 @@ def test_check_w32time_peers_summary(
                 ),
                 Result(state=State.OK, notice="Next poll in: 1 minute 40 seconds"),
                 Result(state=State.OK, notice="\nPeer: reachability-bad.example.com"),
-                Result(state=State.OK, notice="Last successful sync time: (null)"),
+                Result(
+                    state=State.OK,
+                    notice="Peer has not synced yet, time in this state: 0 seconds",
+                ),
                 Result(state=State.OK, notice="Total failures (last 8 attempts): 5"),
                 Result(
                     state=State.CRIT,
@@ -1452,9 +1466,13 @@ def test_check_w32time_peers_summary_mixed_failures(
         "reachability_consecutive_failures": ("fixed", (2, 3)),
         "reachability_total_failures": ("no_levels", None),
         "stratum": ("fixed", (3, 5)),
+        "peer_never_synced_state": int(State.OK),
+        "peer_never_synced_levels": ("no_levels", None),
         "universal": universal,
     }
-    result = list(w32time_peers.check_w32time_peers_summary(params, parsed))
+    result = list(
+        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})
+    )
     assert result == expected
 
 
@@ -1496,9 +1514,13 @@ def test_check_w32time_peers_summary_edge_cases(
         "reachability_consecutive_failures": ("no_levels", None),
         "reachability_total_failures": ("no_levels", None),
         "stratum": ("no_levels", None),
+        "peer_never_synced_state": int(State.OK),
+        "peer_never_synced_levels": ("no_levels", None),
         "universal": False,
     }
-    result = list(w32time_peers.check_w32time_peers_summary(params, parsed))
+    result = list(
+        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})
+    )
     assert result == expected
 
 
@@ -1548,9 +1570,13 @@ def test_check_w32time_peers_summary_missing_peer_name(
         "reachability_consecutive_failures": ("no_levels", None),
         "reachability_total_failures": ("no_levels", None),
         "stratum": ("no_levels", None),
+        "peer_never_synced_state": int(State.OK),
+        "peer_never_synced_levels": ("no_levels", None),
         "universal": False,
     }
-    result = list(w32time_peers.check_w32time_peers_summary(params, parsed))
+    result = list(
+        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})
+    )
     assert result == expected
 
 
@@ -1571,3 +1597,254 @@ def test_compute_failures(
     assert reachability.total_failures == exp_total
     assert reachability.consecutive_failures == exp_consecutive
     assert reachability.total_attempts == exp_attempts
+
+
+NULL_PEER = w32time_peers.QueryPeers(
+    peer="example.com",
+    time_remaining=1.0,
+    stratum=0,
+    last_successful_sync_time="(null)",
+    last_sync_error_str="Succeeded",
+    last_sync_error_msg=None,
+    raw_reachability=0,
+    reachability=w32time_peers.Reachability(
+        total_failures=0, consecutive_failures=0, total_attempts=0
+    ),
+)
+
+NULL_PEER_LEVELS: LevelsT[float] = ("fixed", (600.0, 1800.0))
+
+
+def test_last_successful_sync_time_null_lifecycle() -> None:
+    """
+    A peer reporting "(null)" should report the configured base state until it
+    has been "(null)" for longer than the configured levels, at which point it
+    escalates. Once it syncs, the stored timer is cleared again.
+    """
+    value_store: dict[str, object] = {}
+
+    # First time we see it, we have not hit levels, so report default (UNKN)
+    result = list(
+        w32time_peers._last_successful_sync_time(
+            NULL_PEER, State.UNKNOWN, NULL_PEER_LEVELS, now=0.0, value_store=value_store
+        )
+    )
+    assert result == [
+        Result(
+            state=State.UNKNOWN,
+            summary="Peer has not synced yet, time in this state: 0 seconds",
+        )
+    ]
+
+    # Still "(null)" 11 minutes later: past the warn level (10 min).
+    result = list(
+        w32time_peers._last_successful_sync_time(
+            NULL_PEER, State.UNKNOWN, NULL_PEER_LEVELS, now=660.0, value_store=value_store
+        )
+    )
+    assert result == [
+        Result(
+            state=State.WARN,
+            summary=(
+                "Peer has not synced yet, time in this state: 11 minutes 0 seconds "
+                "(warn/crit at 10 minutes 0 seconds/30 minutes 0 seconds)"
+            ),
+        )
+    ]
+
+    # Still "(null)" 31 minutes later: past the crit level (30 min).
+    result = list(
+        w32time_peers._last_successful_sync_time(
+            NULL_PEER, State.UNKNOWN, NULL_PEER_LEVELS, now=1860.0, value_store=value_store
+        )
+    )
+    assert result[0].state is State.CRIT
+
+    # Once the peer syncs, the stored timestamp is cleared and we go back to
+    # reporting the (now meaningful) last successful sync time.
+    synced = replace(NULL_PEER, last_successful_sync_time="9/18/2025 6:41:48 PM")
+    result = list(
+        w32time_peers._last_successful_sync_time(
+            synced, State.UNKNOWN, NULL_PEER_LEVELS, now=2000.0, value_store=value_store
+        )
+    )
+    assert result == [
+        Result(state=State.OK, summary="Last successful sync time: 9/18/2025 6:41:48 PM")
+    ]
+    assert value_store == {}
+
+
+def test_last_successful_sync_time_null_timer_does_not_reset() -> None:
+    """
+    The first-seen timestamp must only be written once; otherwise the elapsed
+    time would reset on every check and the levels could never fire.
+    """
+    value_store: dict[str, object] = {}
+    for now in (0.0, 100.0, 200.0, 300.0):
+        list(
+            w32time_peers._last_successful_sync_time(
+                NULL_PEER, State.OK, None, now=now, value_store=value_store
+            )
+        )
+    assert value_store == {"example.com:last_successful_sync_time_null": 0.0}
+
+
+@pytest.mark.parametrize(
+    "configured_state, expected_state",
+    [
+        pytest.param(0, State.OK, id="OK"),
+        pytest.param(1, State.WARN, id="WARN"),
+        pytest.param(3, State.UNKNOWN, id="UNKNOWN"),
+    ],
+)
+def test_check_w32time_peers_null_state_from_int_param(
+    configured_state: int, expected_state: State
+) -> None:
+    """
+    The ruleset stores the configured state as a plain int. The check must wrap
+    it back into a State, otherwise Result(state=<int>) raises a TypeError.
+    """
+    parsed = w32time_peers.parse_w32time_peers(EN_PEERS)
+    params: w32time_peers.Params = {
+        **w32time_peers.DEFAULT_PARAMS,
+        "peer_never_synced_state": configured_state,
+    }
+    result = list(
+        w32time_peers._check_w32time_peers("example.com", params, parsed, now=0.0, value_store={})
+    )
+    assert (
+        Result(
+            state=expected_state,
+            summary="Peer has not synced yet, time in this state: 0 seconds",
+        )
+        in result
+    )
+
+
+@pytest.mark.parametrize(
+    "universal, expected_failed_summary, expect_suppressed",
+    [
+        # Only 1 of 3 peers is failing (on the never-synced check). In
+        # existential mode that one peer surfaces as CRIT. In universal mode,
+        # because not *all* peers are failing, the alert is suppressed.
+        pytest.param(False, "Failed: 1", False, id="existential mode => crit"),
+        pytest.param(
+            True, "Failed: 1 (alerts suppressed)", True, id="universal mode => suppressed"
+        ),
+    ],
+)
+def test_check_w32time_peers_summary_never_synced_alert(
+    universal: bool,
+    expected_failed_summary: str,
+    expect_suppressed: bool,
+) -> None:
+    """
+    In the summary service a peer that has stayed "(null)" past the configured
+    levels is counted as failed. Universal/existential mode works accordingly.
+    """
+    parsed = w32time_peers.parse_w32time_peers(EN_MIXED_FAILURES)
+    params: w32time_peers.Params = {
+        "reachability_consecutive_failures": ("no_levels", None),
+        "reachability_total_failures": ("no_levels", None),
+        "stratum": ("no_levels", None),
+        "peer_never_synced_state": int(State.OK),
+        "peer_never_synced_levels": ("fixed", (10.0, 20.0)),
+        "universal": universal,
+    }
+    # Pretend we first saw the "(null)" peer at t=0; now it is 100s old (> crit).
+    value_store: dict[str, object] = {
+        "reachability-bad.example.com:last_successful_sync_time_null": 0.0
+    }
+    result = list(
+        w32time_peers._check_w32time_peers_summary(
+            params, parsed, now=100.0, value_store=value_store
+        )
+    )
+    # The peer is always counted as failed, regardless of suppression.
+    assert Result(state=State.OK, summary=expected_failed_summary) in result
+
+    never_synced_results = [
+        r
+        for r in result
+        if isinstance(r, Result) and "Peer has not synced yet" in (r.details or "")
+    ]
+    assert never_synced_results, "expected a never-synced result for the (null) peer"
+
+    if expect_suppressed:
+        assert all(r.state is State.OK for r in never_synced_results)
+        assert any("(alerts suppressed)" in (r.details or "") for r in never_synced_results)
+    else:
+        assert any(
+            r.state is State.CRIT and "reachability-bad.example.com" in (r.summary or "")
+            for r in never_synced_results
+        )
+
+
+@pytest.mark.parametrize(
+    "configured_state, expected_state, expected_failed",
+    [
+        # By default the summary treats a "freshly"-unsynced peer as OK
+        pytest.param(None, State.OK, "Failed: 0", id="default => OK, not counted"),
+        # Overridden so the summary reflects an unsynced peer immediately.
+        pytest.param(int(State.WARN), State.WARN, "Failed: 1", id="override => WARN, counted"),
+    ],
+)
+def test_check_w32time_peers_summary_never_synced_state_override(
+    configured_state: int | None,
+    expected_state: State,
+    expected_failed: str,
+) -> None:
+    """
+    The summary base state for a never-synced peer defaults to OK but can be
+    overridden.
+    """
+    parsed = w32time_peers.parse_w32time_peers(EN_MIXED_FAILURES)
+    params: w32time_peers.Params = {
+        "reachability_consecutive_failures": ("no_levels", None),
+        "reachability_total_failures": ("no_levels", None),
+        "stratum": ("no_levels", None),
+        "peer_never_synced_state": int(State.OK),
+        "peer_never_synced_levels": ("no_levels", None),
+        "universal": False,
+    }
+    if configured_state is not None:
+        params["peer_never_synced_state"] = configured_state
+
+    result = list(
+        w32time_peers._check_w32time_peers_summary(params, parsed, now=0.0, value_store={})
+    )
+    assert Result(state=State.OK, summary=expected_failed) in result
+    never_synced_results = [
+        r
+        for r in result
+        if isinstance(r, Result) and "Peer has not synced yet" in (r.details or "")
+    ]
+    assert never_synced_results, "expected a never-synced result for the (null) peer"
+    assert any(r.state is expected_state for r in never_synced_results)
+
+
+def test_check_w32time_peers_summary_clears_stale_never_synced_keys() -> None:
+    """
+    Never-synced timestamps of peers that disappeared from the agent output
+    must be removed from the value store; entries of current peers stay.
+    """
+    parsed = w32time_peers.parse_w32time_peers(EN_MIXED_FAILURES)
+    params: w32time_peers.Params = {
+        "reachability_consecutive_failures": ("no_levels", None),
+        "reachability_total_failures": ("no_levels", None),
+        "stratum": ("no_levels", None),
+        "peer_never_synced_state": int(State.OK),
+        "peer_never_synced_levels": ("no_levels", None),
+        "universal": False,
+    }
+    value_store: dict[str, object] = {
+        "gone.example.com:last_successful_sync_time_null": 0.0,
+        "reachability-bad.example.com:last_successful_sync_time_null": 0.0,
+    }
+    list(
+        w32time_peers._check_w32time_peers_summary(
+            params, parsed, now=100.0, value_store=value_store
+        )
+    )
+    assert "gone.example.com:last_successful_sync_time_null" not in value_store
+    assert "reachability-bad.example.com:last_successful_sync_time_null" in value_store

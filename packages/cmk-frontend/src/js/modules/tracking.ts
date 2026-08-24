@@ -123,8 +123,8 @@ function isMouseoverMutation(mutationRecords: MutationRecord[]): boolean {
   for (const mutation of mutationRecords) {
     if (mutation.target instanceof HTMLElement) {
       const className = mutation.target.className
-      // Ignore mouseovers over the graph in index.py
-      if (className == 'graph' || className == 'hover_menu') {
+      // Ignore mouseovers over the hover menu in index.py
+      if (className == 'hover_menu') {
         return true
       }
     }

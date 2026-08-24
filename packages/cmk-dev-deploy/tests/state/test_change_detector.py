@@ -229,7 +229,7 @@ class TestCategorizeFile:
             # Frontend (legacy)
             ("packages/cmk-frontend/scss/main.scss", ChangeCategory.FRONTEND),
             ("packages/cmk-frontend/src/main.js", ChangeCategory.FRONTEND),
-            ("packages/cmk-frontend/src/js/modules/graphs.ts", ChangeCategory.FRONTEND),
+            ("packages/cmk-frontend/src/js/modules/popup_menu.ts", ChangeCategory.FRONTEND),
             # Config
             ("agents/plugins/my_agent", ChangeCategory.CONFIG),
             ("notifications/slack", ChangeCategory.CONFIG),
@@ -570,7 +570,7 @@ class TestCategorizationRegression:
             # Frontend (includes .ts -- the motivating bug fix)
             ("packages/cmk-frontend/scss/main.scss", ChangeCategory.FRONTEND),
             ("packages/cmk-frontend/src/main.js", ChangeCategory.FRONTEND),
-            ("packages/cmk-frontend/src/js/modules/graphs.ts", ChangeCategory.FRONTEND),
+            ("packages/cmk-frontend/src/js/modules/popup_menu.ts", ChangeCategory.FRONTEND),
             # Python packages (specific and catch-all)
             ("packages/cmk-ccc/cmk/ccc/version.py", ChangeCategory.PYTHON),
             ("non-free/packages/cmk-bakery/cmk/bakery/foo.py", ChangeCategory.PYTHON),

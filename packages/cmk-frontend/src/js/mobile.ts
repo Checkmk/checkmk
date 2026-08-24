@@ -5,7 +5,6 @@
  */
 /* eslint-disable import-x/no-namespace -- Needed for exports */
 import * as forms from './modules/forms'
-import * as graphs from './modules/graphs'
 
 // NOTE: We use an up-to-date version of jQuery from the package-lock.json together
 // with a patched version of jQuery mobile to make it compatible with jQuery:
@@ -44,7 +43,6 @@ $(document).ready(function () {
 
 export const cmk_export = {
   cmk: {
-    forms: forms,
-    graphs: graphs
+    forms: forms
   }
 }

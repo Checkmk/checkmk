@@ -9,38 +9,6 @@ table.graph_collection td.controls {
   width: 24px;
 }
 
-/* Graph designer */
-ul.metric_operation {
-  padding-left: 10px;
-  margin-top: 0;
-  -webkit-padding-start: 20px;
-  -webkit-margin-before: 0;
-  -webkit-margin-after: 0;
-  /* stylelint-disable-next-line property-no-unknown */
-  padding-start: 10px;
-
-  li {
-    padding-left: 0;
-    margin-left: 10px;
-  }
-}
-
-div.metricchoice {
-  display: inline-block;
-}
-
-table.graph_designer_metrics {
-  &.data {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
-
-  a.onoff img.iconbutton {
-    width: 60px;
-    height: 16px;
-  }
-}
-
 /* metrics table in painter svc_metrics */
 table.metricstable {
   td.value {

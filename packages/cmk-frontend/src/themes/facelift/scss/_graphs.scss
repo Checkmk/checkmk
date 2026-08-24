@@ -6,22 +6,8 @@
 
 /* Stylesheets for graphs */
 
-div.graph_hover_popup {
-  width: max-content;
-  padding: 10px;
-  border-radius: 5px;
-}
-
-/* stylelint-disable-next-line selector-id-pattern */
-div#hover_menu div.graph {
-  float: left;
-  margin-right: 2px;
-  margin-bottom: 2px;
-  border: none;
-}
-
-/* The engine-rendered (Vue) hover graph is transparent; give it the graph surface
-   background the legacy popup carried on div.graph. */
+/* The engine-rendered (Vue) hover graph is transparent; give it a graph surface
+   background of its own. */
 /* stylelint-disable-next-line selector-id-pattern */
 div#hover_menu div.cmk_graph_hover {
   /* CSS variables defined here for consumption within the Vue graphing components. In case of the
@@ -33,258 +19,28 @@ div#hover_menu div.cmk_graph_hover {
   max-width: 90vw;
 }
 
-div.graph_container {
-  --graph-bg: #{$bg-color-secondary};
-}
-
-tr.data > td > div.graph_container {
-  vertical-align: top;
-}
-
-/* stylelint-disable-next-line no-descending-specificity */
-div.graph {
+/* The error placeholder from render_graph_error_html is the only server-rendered
+   "graph" box left; it used to take its frame from the legacy div.graph rule. */
+div.graph.brokengraph {
   position: relative;
   display: inline-block;
-  padding: 0;
   margin-bottom: 5px;
   border: 1px solid $ux-theme-5;
+  box-shadow: none;
 
-  /* stylelint-disable-next-line rule-empty-line-before */
-  &.with_margin {
-    padding: 1ex;
+  div.title {
+    padding: 8px;
   }
 
-  /* stylelint-disable-next-line rule-empty-line-before */
-  a {
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
-  div.graph_header {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 4px;
-    box-sizing: border-box;
-
-    div.title {
-      flex: 1;
-      min-width: 0;
-      font-weight: $font-weight-bold;
-      text-align: center;
-      white-space: normal;
-      overflow-wrap: break-word;
-    }
-
-    div.time {
-      flex-shrink: 0;
-      padding-left: 8px;
-      white-space: nowrap;
-    }
-
-    &.inline {
-      position: absolute;
-      top: 10px;
-      left: 0;
-      right: 18px;
-      z-index: 10;
-      margin-bottom: 0;
-    }
-  }
-
-  img.loading {
-    display: block;
-    margin: 20px auto;
-  }
-
-  div.v_axis_label {
-    position: absolute;
-    top: 10px;
-    left: 18px;
-    text-align: left;
-  }
-
-  img.resize {
-    position: absolute;
-    right: 3px;
-    bottom: 3px;
-    z-index: 10;
-    width: 12px;
-    height: 12px;
-    cursor: se-resize;
-  }
-
-  img.iconbutton {
-    /* sync graphs currently only */
-    position: absolute;
-    bottom: 33px;
-    left: 9px;
-  }
-
-  canvas {
-    display: block;
+  pre {
+    padding: 0 8px 8px;
     margin: 0;
-    cursor: crosshair;
-  }
-
-  div.legend_container {
-    margin-top: 8px;
-    max-height: 600px;
-    overflow-y: auto;
-  }
-
-  table.legend {
-    border-collapse: collapse;
-
-    .scalar {
-      width: 80px;
-    }
-
-    th {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      padding: 3px 8px;
-      font-weight: $font-weight-bold;
-      text-align: right;
-      background-color: var(--graph-bg);
-      border-bottom: 1px solid $font-color;
-    }
-
-    th.scalar.inactive {
-      cursor: pointer;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-
-    td {
-      text-align: left;
-
-      &.scalar {
-        padding: 1px 10px;
-        text-align: right;
-      }
-    }
-
-    > tbody > tr.scalar.first {
-      border-top: 1px solid $font-color;
-    }
-
-    div {
-      display: inline-block;
-
-      &.entry {
-        margin-right: 20px;
-        margin-left: 5px;
-      }
-    }
-
-    td.with_attributes:hover {
-      cursor: pointer;
-      text-decoration: underline;
-    }
-  }
-
-  div.popup_trigger {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-  }
-
-  a.popup_trigger {
-    display: block;
-    width: 20px;
-    height: 20px;
-
-    &:hover {
-      cursor: pointer;
-    }
-  }
-
-  div.indicator {
-    position: absolute;
-    width: 1px;
-    height: 30px;
-  }
-
-  /* Small preview graphs */
-  &.preview {
-    padding: 0;
-    margin: 0;
-
-    > .graph_header {
-      position: absolute;
-      top: 5px;
-      z-index: 10;
-      margin-bottom: 0;
-
-      div.title {
-        font-size: $font-size-large;
-        font-weight: $font-weight-default;
-      }
-    }
   }
 }
 
-/* CMK-35215: Make the dashboard graph widget a flex column so the legend scrolls in the
-   space left below the fixed canvas (browser-sized, not a server pixel estimate). Scoped
-   to .db-content-graph so View/report/graph-collection rendering is unaffected. */
-/* stylelint-disable no-descending-specificity */
-.db-content-graph {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-height: 0;
-  height: 100%;
-
-  div.graph_container {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    min-height: 0;
-    height: 100%;
-  }
-
-  div.graph {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    width: max-content; /* shrink-wrap to canvas width */
-    max-width: 100%;
-    min-height: 0;
-  }
-
-  div.graph_header,
-  canvas {
-    flex: none; /* fixed graph: don't shrink/scroll */
-  }
-
-  div.legend_container {
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: none; /* override the global 600px cap */
-    overflow: hidden auto; /* vertical scroll only (avoid x-scroll from the wide legend) */
-  }
-}
-/* stylelint-enable no-descending-specificity */
-
-/* stylelint-disable-next-line no-descending-specificity */
 table.prediction td {
   padding: 0;
 }
-
-/* stylelint-disable no-descending-specificity */
-div.graph table.legend th,
-div.graph table,
-legend td {
-  padding: 2px 8px 2.5px 2px;
-  white-space: nowrap;
-}
-/* stylelint-enable no-descending-specificity */
 
 div.color {
   position: relative;
@@ -296,72 +52,4 @@ div.color {
   vertical-align: top;
   border: 1px solid;
   border-radius: 0;
-}
-
-/* Graphs with timerange selection */
-div.graph_with_timeranges {
-  display: block;
-  margin: 4px;
-  white-space: nowrap;
-
-  /* stylelint-disable-next-line no-descending-specificity */
-  div.graph {
-    box-shadow: none;
-
-    &.preview .graph_header {
-      top: 12px;
-      width: calc(100% - 16px);
-      padding: 8px 0;
-      box-sizing: border-box;
-
-      div.title {
-        font-weight: $font-weight-default;
-        color: $font-color;
-        text-shadow: none;
-      }
-    }
-
-    table.legend td {
-      background: transparent;
-    }
-  }
-
-  /* stylelint-disable-next-line no-descending-specificity */
-  > div.graph_container {
-    display: inline-block;
-
-    div.popup_menu {
-      max-height: 35vh;
-      overflow: auto;
-    }
-  }
-
-  tr.data > td > div.timerange {
-    display: block;
-  }
-
-  table.timeranges {
-    display: inline-block;
-    vertical-align: top;
-    border-spacing: 0;
-
-    /* stylelint-disable-next-line no-descending-specificity */
-    div.graph:hover {
-      cursor: pointer;
-      opacity: 0.75;
-    }
-
-    /* stylelint-disable-next-line no-descending-specificity */
-    > tbody > tr > td {
-      padding: 0 8px 4px;
-    }
-  }
-
-  table.data td > div:first-child & {
-    margin-top: 8px;
-  }
-
-  table.data td > div:last-child & {
-    margin-bottom: 8px;
-  }
 }

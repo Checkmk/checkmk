@@ -147,7 +147,10 @@ const hostServicesService = new HostServicesService(
 )
 
 const actionRegistry = createActionRegistry<string>([
-  useAcknowledgeServicesAction(host),
+  useAcknowledgeServicesAction(host, {
+    presetsUrl: props.acknowledge_presets_url ?? null,
+    notificationRulesUrl: props.notification_rules_url ?? null
+  }),
   useRescheduleServicesAction(host),
   useScheduleServiceDowntimeAction(
     host,

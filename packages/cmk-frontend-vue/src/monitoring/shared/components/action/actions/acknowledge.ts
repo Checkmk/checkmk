@@ -16,8 +16,15 @@ import AcknowledgeForm, { type AcknowledgeValues } from './AcknowledgeForm.vue'
 
 export const ACK_ACTION_ID = 'acknowledge'
 
+/** The setup pages the form links to; the server omits what the user may not edit. */
+export interface AcknowledgeLinks {
+  presetsUrl: string | null
+  notificationRulesUrl: string | null
+}
+
 export interface AcknowledgeKindConfig<Target> {
   targetKind: ActionTargetKind
+  links: AcknowledgeLinks
   /** Perform the API call for the selected targets and return the count actually acted on. */
   acknowledge(api: AcknowledgeApi, targets: Target[], options: AcknowledgeOptions): Promise<number>
   successMessage(count: number): TranslatedString
@@ -35,7 +42,11 @@ export function createAcknowledgeAction<Target>(
     title: _t('Acknowledge problems'),
     submitLabel: _t('Acknowledge'),
     form: AcknowledgeForm,
-    formProps: { targetKind: config.targetKind },
+    formProps: {
+      targetKind: config.targetKind,
+      presetsUrl: config.links.presetsUrl,
+      notificationRulesUrl: config.links.notificationRulesUrl
+    },
     defaultValues: () => ({
       comment: '',
       expireOnEnabled: false,

@@ -13,7 +13,8 @@ import AcknowledgeForm, {
 
 function mountForm(
   overrides: Partial<AcknowledgeValues> = {},
-  targetKind: 'host' | 'service' = 'host'
+  targetKind: 'host' | 'service' = 'host',
+  links: { presetsUrl?: string | null; notificationRulesUrl?: string | null } = {}
 ) {
   const modelValue: AcknowledgeValues = {
     comment: '',
@@ -24,7 +25,7 @@ function mountForm(
     notify: true,
     ...overrides
   }
-  return render(AcknowledgeForm, { props: { modelValue, targetKind } })
+  return render(AcknowledgeForm, { props: { modelValue, targetKind, ...links } })
 }
 
 test('reports invalid while the comment is empty and valid once it is filled', async () => {
@@ -46,11 +47,64 @@ test('whitespace-only comments stay invalid', async () => {
 test('notify is on by default and the option checkboxes are rendered', () => {
   mountForm()
 
-  expect(screen.getByRole('checkbox', { name: 'Notify affected users' })).toBeChecked()
+  expect(
+    screen.getByRole('checkbox', {
+      name: 'Notify affected users if notification rules are in place (send notifications)'
+    })
+  ).toBeChecked()
   expect(
     screen.getByRole('checkbox', { name: 'Ignore status changes until the host recovers (OK/UP)' })
   ).not.toBeChecked()
-  expect(screen.getByRole('checkbox', { name: 'Persistent comment' })).not.toBeChecked()
+  expect(
+    screen.getByRole('checkbox', { name: 'Keep comment after acknowledgment expires' })
+  ).not.toBeChecked()
+})
+
+test('the sticky option carries the example from the classic form', () => {
+  mountForm()
+
+  expect(
+    screen.getByText("Service was WARN and goes CRIT - acknowledgment doesn't expire.")
+  ).toBeInTheDocument()
+})
+
+test('links the options header to the presets only when the server offers the page', () => {
+  const { unmount } = mountForm({}, 'host', { presetsUrl: 'wato.py?mode=edit_configvar' })
+
+  expect(screen.getByText('Options')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: '(edit presets)' })).toHaveAttribute(
+    'href',
+    'wato.py?mode=edit_configvar'
+  )
+  unmount()
+
+  mountForm()
+  expect(screen.getByText('Options')).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: '(edit presets)' })).not.toBeInTheDocument()
+})
+
+test('the notify option links the notification rules when the server names them', () => {
+  mountForm({}, 'host', { notificationRulesUrl: 'wato.py?mode=notifications' })
+
+  expect(screen.getByRole('link', { name: 'notification rules' })).toHaveAttribute(
+    'href',
+    'wato.py?mode=notifications'
+  )
+})
+
+test('both setup links open in a new tab, so a half-filled form survives the detour', () => {
+  mountForm({}, 'host', {
+    presetsUrl: 'wato.py?mode=edit_configvar',
+    notificationRulesUrl: 'wato.py?mode=notifications'
+  })
+
+  // The notify link travels inside a translated label, so its target has to survive
+  // the sanitizer CmkCheckbox pipes the label through.
+  expect(screen.getByRole('link', { name: 'notification rules' })).toHaveAttribute(
+    'target',
+    '_blank'
+  )
+  expect(screen.getByRole('link', { name: '(edit presets)' })).toHaveAttribute('target', '_blank')
 })
 
 test('the sticky option names the service on the service page', () => {

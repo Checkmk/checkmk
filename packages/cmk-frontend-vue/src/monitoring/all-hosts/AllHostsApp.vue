@@ -176,7 +176,10 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 
 const actionRegistry = createActionRegistry([
-  useAcknowledgeHostsAction(),
+  useAcknowledgeHostsAction({
+    presetsUrl: props.acknowledge_presets_url ?? null,
+    notificationRulesUrl: props.notification_rules_url ?? null
+  }),
   useRescheduleHostsAction(),
   useScheduleHostDowntimeAction(
     props.downtime_recurrences ?? [],

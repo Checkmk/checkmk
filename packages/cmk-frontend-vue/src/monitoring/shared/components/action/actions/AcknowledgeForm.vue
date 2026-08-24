@@ -23,6 +23,7 @@ export function isAcknowledgeValid(values: AcknowledgeValues): boolean {
 </script>
 
 <script setup lang="ts">
+import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkDateTimePicker from 'cmk-ui-library/components/date-time/CmkDateTimePicker.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -32,9 +33,15 @@ import { computed, watch } from 'vue'
 
 import type { ActionTargetKind } from '../types'
 
-const props = withDefaults(defineProps<{ targetKind?: ActionTargetKind }>(), {
-  targetKind: 'host'
-})
+const props = withDefaults(
+  defineProps<{
+    targetKind?: ActionTargetKind
+    /** Where the option defaults are edited; absent for users who may not edit them. */
+    presetsUrl?: string | null
+    notificationRulesUrl?: string | null
+  }>(),
+  { targetKind: 'host', presetsUrl: null, notificationRulesUrl: null }
+)
 
 const model = defineModel<AcknowledgeValues>({ required: true })
 
@@ -62,6 +69,16 @@ const stickyLabel = computed(() =>
     : _t('Ignore status changes until the host recovers (OK/UP)')
 )
 
+// The label passes through CmkCheckbox into CmkHtml, whose sanitizer keeps the anchor.
+const notifyLabel = computed(() =>
+  props.notificationRulesUrl
+    ? _t(
+        'Notify affected users if <a href="%{url}" target="_blank">notification rules</a> are in place (send notifications)',
+        { url: props.notificationRulesUrl }
+      )
+    : _t('Notify affected users if notification rules are in place (send notifications)')
+)
+
 watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
   immediate: true,
   deep: true
@@ -84,7 +101,20 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
     </div>
 
     <div class="monitoring-acknowledge-form__section">
-      <div class="monitoring-acknowledge-form__field">
+      <div class="monitoring-acknowledge-form__options-header">
+        <span class="monitoring-acknowledge-form__label">{{ _t('Options') }}</span>
+        <CmkLink
+          v-if="presetsUrl"
+          class="monitoring-acknowledge-form__presets-link"
+          :href="presetsUrl"
+          target="_blank"
+          rel="noopener"
+        >
+          {{ _t('(edit presets)') }}
+        </CmkLink>
+      </div>
+
+      <div class="monitoring-acknowledge-form__expire-row">
         <CmkCheckbox
           v-model="model.expireOnEnabled"
           :label="_t('Expire on')"
@@ -98,9 +128,18 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
         />
       </div>
 
-      <CmkCheckbox v-model="model.sticky" :label="stickyLabel" />
-      <CmkCheckbox v-model="model.persistent" :label="_t('Persistent comment')" />
-      <CmkCheckbox v-model="model.notify" :label="_t('Notify affected users')" />
+      <div class="monitoring-acknowledge-form__field">
+        <CmkCheckbox v-model="model.sticky" :label="stickyLabel" />
+        <p class="monitoring-acknowledge-form__hint">
+          <b>{{ _t('Example:') }}</b>
+          {{ _t("Service was WARN and goes CRIT - acknowledgment doesn't expire.") }}
+        </p>
+      </div>
+      <CmkCheckbox
+        v-model="model.persistent"
+        :label="_t('Keep comment after acknowledgment expires')"
+      />
+      <CmkCheckbox v-model="model.notify" :label="notifyLabel" />
     </div>
   </div>
 </template>
@@ -132,5 +171,28 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
   align-items: center;
   gap: var(--dimension-2);
   font-weight: var(--font-weight-bold);
+}
+
+.monitoring-acknowledge-form__options-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--dimension-3);
+}
+
+.monitoring-acknowledge-form__presets-link {
+  /* `.cmk-link` is `display: flex; width: 100%`, which would stretch the header row. */
+  width: auto;
+}
+
+.monitoring-acknowledge-form__expire-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dimension-3);
+}
+
+.monitoring-acknowledge-form__hint {
+  margin: 0;
+  color: var(--font-color-dimmed);
 }
 </style>

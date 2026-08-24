@@ -204,16 +204,19 @@ def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) 
     return missing_context_filters(set(get_single_info_keys(single_infos)), context)
 
 
-def missing_context_filters(
-    require_filters: set[FilterName], context: VisualContext
-) -> set[FilterName]:
-    set_filters = (
+def filled_context_filters(context: VisualContext) -> set[FilterName]:
+    """The filters of the context that hold a value."""
+    return {
         filter_name
         for filter_name, filter_context in context.items()
         if isinstance(filter_context, dict) and any(filter_context.values())
-    )
+    }
 
-    return require_filters.difference(set_filters)
+
+def missing_context_filters(
+    require_filters: set[FilterName], context: VisualContext
+) -> set[FilterName]:
+    return require_filters.difference(filled_context_filters(context))
 
 
 def get_missing_single_infos_group_aware(

@@ -69,12 +69,9 @@ from ._graph_templates import (
 )
 from ._graph_title import render_plain_graph_title
 from ._html_render import (
-    compute_html_graph_ranges,
     GraphDestinations,
     GraphExportRequest,
-    GraphRenderState,
     host_service_graph_popup_cmk,
-    render_deferred_graphs_html,
 )
 from ._legacy import check_metrics, CheckMetricEntry
 from ._metric_backend_registry import (
@@ -134,7 +131,6 @@ __all__ = [
     "GraphArtwork",
     "GraphArtworkAnnotations",
     "GraphConsolidationFunction",
-    "GraphRenderState",
     "GraphRanges",
     "GraphDestinations",
     "GraphMetric",
@@ -192,7 +188,6 @@ __all__ = [
     "host_service_graph_popup_cmk",
     "id_from_unit_spec",
     "lookup_metric_translations_for_check_command",
-    "compute_html_graph_ranges",
     "METRIC_BACKEND_KEY",
     "metric_backend_registry",
     "metrics_from_api",
@@ -205,7 +200,6 @@ __all__ = [
     "registered_metric_ids_and_titles",
     "render_graph_pdf",
     "render_png",
-    "render_deferred_graphs_html",
     "render_engine_graph_group",
     "render_plain_graph_title",
     "resolve_graph_id_from_index",

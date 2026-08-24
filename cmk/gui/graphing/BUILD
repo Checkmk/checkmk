@@ -31,7 +31,6 @@ py_library(
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-graphing-engine",
         "//packages/cmk-livestatus-client",

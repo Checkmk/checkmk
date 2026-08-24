@@ -5,7 +5,7 @@
 
 """One consistent way to reach a graph regardless of which surface hosts it.
 
-Resolves the container scoping a graph, absorbing surface-specific concerns
+Resolves the element scoping a graph, absorbing surface-specific concerns
 (dashboard-widget scoping, designer-preview container, iframe boundaries).
 """
 
@@ -17,12 +17,6 @@ from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import Grap
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
-
-# Container of the legacy graph rendering. Uses the always-present ``div.graph`` rather
-# than the ``div.graph_with_timeranges`` wrapper, which is absent on the forecast and
-# dashboard-widget surfaces (show_time_range_previews defaults to False there).
-_GRAPH_CONTAINER_SELECTOR = "div.graph:not(.preview)"
-_DESIGNER_PREVIEW_SELECTOR = "#graph_0"
 
 # The engine mounts one graph group per painter, holding a panel per graph it resolved.
 ENGINE_GRAPH_GROUP_SELECTOR = ".graphing-graph-group"
@@ -45,34 +39,6 @@ class GraphAccessor:
     def __init__(self, owner: CmkPage) -> None:
         self._owner = owner
         self.page = owner.page
-
-    def container(
-        self,
-        containment: GraphContainment,
-        *,
-        widget: Locator | None = None,
-        iframed: bool = False,
-    ) -> Locator:
-        """Return the locator scoping the graph for the given containment context.
-
-        ``widget`` is required for `DASHBOARD_WIDGET` (from e.g.
-        ``BaseDashboard.get_widget``); ``iframed`` descends through the widget's iframe.
-        """
-        match containment:
-            case GraphContainment.PAGE_DIRECT:
-                return self._owner.main_area.locator(_GRAPH_CONTAINER_SELECTOR)
-            case GraphContainment.DESIGNER_PREVIEW:
-                return self._owner.main_area.locator(_DESIGNER_PREVIEW_SELECTOR)
-            case GraphContainment.DASHBOARD_WIDGET:
-                if widget is None:
-                    raise ValueError(
-                        "A widget locator is required for DASHBOARD_WIDGET containment."
-                    )
-                if iframed:
-                    return widget.frame_locator("iframe").locator(_GRAPH_CONTAINER_SELECTOR)
-                return widget.locator(_GRAPH_CONTAINER_SELECTOR)
-            case _:
-                raise ValueError(f"Unknown graph containment: {containment!r}")
 
     def engine_graph_group(
         self,

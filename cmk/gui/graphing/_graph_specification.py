@@ -264,9 +264,8 @@ class GraphRecipeWithOverrides:
     """Bundles a GraphRecipe with its per-recipe settings.
 
     Keeps the core GraphRecipe (the serializable graph definition) separate
-    from per-recipe settings (specification, ranges, render_options,
-    additional_html) that mirror the sibling fields in GraphRenderState without
-    polluting the recipe itself.
+    from its per-recipe settings (specification, ranges, render_options,
+    additional_html) without polluting the recipe itself.
     """
 
     recipe: GraphRecipe

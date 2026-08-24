@@ -6,9 +6,8 @@
 """The global time picker on the service detail page.
 
 E2E rather than Vitest for all three: one interaction has to reach every graph on a real page,
-the non-effect only shows across a real navigation, and the legacy time-range wrapper never
-appears in the Vue tree at all - it is emitted by `cmk/gui/graphing/_html_render.py` and by the
-legacy JS.
+the non-effect only shows across a real navigation, and the picker is mounted by the page
+rather than by any single Vue component.
 """
 
 import logging
@@ -109,28 +108,16 @@ def test_selected_range_is_not_restored_after_navigating_away(
     assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"
 
 
-def test_page_carries_only_the_global_picker_and_no_legacy_time_ranges(
+def test_page_carries_exactly_one_global_picker(
     service_graphs: ServiceGraphs, javascript_errors: list[str]
 ) -> None:
-    """The legacy per-graph time controls are gone from this page.
-
-    Scoped to the service detail page on purpose: the host graph views and the custom-graph page
-    still render legacy graphs with `show_time_range_previews`, so a site-wide assertion would
-    fail on pages that are correctly still legacy.
-
-    `test_service_page_embeds_cmk_graph_without_legacy_markup`
-    (`tests/system/singlesite/cmk/gui/graphing/test_graph_component_embedding.py`) makes the same
-    negative claim, pairing it with the `<cmk-graph-group>` embedding rather than with the picker.
+    """One picker drives every graph on the page, so a second one would desynchronise them.
 
     Do: open the service detail page.
-    Assert: exactly one global picker, and no legacy time-range wrapper.
+    Assert: exactly one global picker.
     """
     expect(
         service_graphs.time_picker.root,
         "The page did not render exactly one global time picker",
     ).to_have_count(1)
-    expect(
-        service_graphs.owner.main_area.locator("div.graph_with_timeranges"),
-        "The page still renders the legacy per-graph time range controls",
-    ).to_have_count(0)
     assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"

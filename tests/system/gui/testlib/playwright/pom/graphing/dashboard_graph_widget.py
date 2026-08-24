@@ -43,15 +43,9 @@ class DashboardGraphWidget:
     def widget(self) -> Locator:
         return self._dashboard.get_widget(self.widget_title)
 
-    def graph_container(self) -> Locator:
-        """Return the container scoping the graph within the widget."""
-        return self._accessor.container(
-            GraphContainment.DASHBOARD_WIDGET, widget=self.widget, iframed=self._iframed
-        )
-
     @property
     def figure(self) -> Locator:
-        """The engine's figure inside the widget; absent while the legacy renderer serves it."""
+        """The engine's figure inside the widget."""
         return self._accessor.engine_graph_figure(
             GraphContainment.DASHBOARD_WIDGET, widget=self.widget, iframed=self._iframed
         )

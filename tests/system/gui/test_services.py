@@ -24,10 +24,6 @@ from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
 
 logger = logging.getLogger(__name__)
 
-# Serves the legacy renderer's first load and every update alike, so any use of it at all
-# shows up here.
-_LEGACY_GRAPH_ENDPOINT = "ajax_render_graph.py"
-
 # A graph that rendered must have asked this: the page ships no series data of its own.
 _ENGINE_GRAPH_ENDPOINT = "domain-types/graph/actions/fetch_data/invoke"
 
@@ -87,8 +83,8 @@ def test_reschedule_active_checks(dashboard_page: MainDashboard, created_host: H
     )
 
 
-# Substrings: the engine renders the graph plug-in's own title, which - unlike the legacy
-# combined renderer - carries neither the unique host/service nor the presentation.
+# Substrings: the engine renders the graph plug-in's own title, which carries neither the
+# unique host/service nor the presentation.
 @pytest.mark.parametrize(
     "service_filter, expected_graphs",
     [
@@ -160,32 +156,15 @@ def test_service_graphs_render_through_the_engine(
     javascript_errors: list[str],
     requested_urls: list[str],
 ) -> None:
-    """The service detail page renders its graphs through the engine.
-
-    The legacy renderer is still live and still serves the host surfaces, so showing that
-    the engine renders here says nothing on its own: the legacy path has to be shown unused
-    as well.
-
-    Hovering a graph icon on the way in would defeat the endpoint check, as the legacy hover
-    preview asks that same endpoint. The fixture arrives by clicking the service's name.
-    """
+    """The service detail page renders its graphs through the engine."""
     expect(
         service_graphs.panels, "The engine rendered no graph at all on the service detail page"
     ).not_to_have_count(0)
-    expect(
-        GraphAccessor(service_graphs.owner).container(GraphContainment.PAGE_DIRECT),
-        "The legacy graph container is still on the page beside the engine's",
-    ).to_have_count(0)
-
-    # Without this, a listener that collected nothing would pass the check below as quietly
-    # as a page that really had stopped using the legacy renderer.
+    # A drawn frame proves nothing on its own; the series have to have been fetched too.
     assert any(_ENGINE_GRAPH_ENDPOINT in url for url in requested_urls), (
         f"No graph data was fetched at all, so nothing here observed a graph being "
         f"rendered: {requested_urls}"
     )
-    legacy_requests = [url for url in requested_urls if _LEGACY_GRAPH_ENDPOINT in url]
-
-    assert not legacy_requests, f"The page asked the legacy renderer for a graph: {legacy_requests}"
     assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
 
 
@@ -224,10 +203,6 @@ def test_combined_graphs_render_through_the_engine(
 ) -> None:
     """Every card of the combined-graphs page is rendered by the engine.
 
-    The legacy renderer is still live and still serves other surfaces, so showing that the
-    engine renders here says nothing on its own: the legacy path has to be shown unused as
-    well.
-
     Each card is checked for its own plot rather than for an engine element of its own: the
     page mounts a single component holding all of them, so only the per-card plot separates
     "the engine drew every card" from "it drew the first one".
@@ -241,20 +216,11 @@ def test_combined_graphs_render_through_the_engine(
     ).to_have_count(1)
     for index, panel in enumerate(combined_graphs_page.all_panels()):
         expect(panel.graph.canvas, f"Graph card {index} rendered no plot").to_be_visible()
-    expect(
-        GraphAccessor(combined_graphs_page).container(GraphContainment.PAGE_DIRECT),
-        "The legacy graph container is still on the page beside the engine's",
-    ).to_have_count(0)
-
-    # Without this, a listener that collected nothing would pass the check below as quietly
-    # as a page that really had stopped using the legacy renderer.
+    # A drawn frame proves nothing on its own; the series have to have been fetched too.
     assert any(_ENGINE_GRAPH_ENDPOINT in url for url in requested_urls), (
         f"No graph data was fetched at all, so nothing here observed a card being "
         f"rendered: {requested_urls}"
     )
-    legacy_requests = [url for url in requested_urls if _LEGACY_GRAPH_ENDPOINT in url]
-
-    assert not legacy_requests, f"The page asked the legacy renderer for a graph: {legacy_requests}"
     assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
 
 

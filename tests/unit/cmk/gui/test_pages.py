@@ -156,8 +156,6 @@ def test_registered_pages() -> None:
         "wato_ajax_fetch_site_status",
         "welcome",
         "werk",
-        "ajax_graph_values_at_time",
-        "ajax_render_graph",
         "ajax_initial_view_filters",
         "ajax_initial_topology_filters",
         "ajax_graph_images",

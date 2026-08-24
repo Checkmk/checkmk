@@ -23,12 +23,11 @@ from tests.testlib.site import Site
 
 
 @pytest.mark.skip(reason=SKIP_PENDING_GRAPH_BACKEND)
-def test_service_page_embeds_cmk_graph_without_legacy_markup(site: Site) -> None:
-    """CE-01 (R1.2 Area 1): the page embeds <cmk-graph> and drops legacy markup.
+def test_service_page_embeds_cmk_graph(site: Site) -> None:
+    """CE-01 (R1.2 Area 1): the page embeds <cmk-graph>.
 
     Do: create a host with a known check (e.g. PING), discover+check; fetch the page HTML.
-    Assert: HTTP 200; >=1 <cmk-graph>; no legacy container (div.graph_container/
-    graph_with_timeranges) for the same graph.
+    Assert: HTTP 200; >=1 <cmk-graph>.
     """
     pytest.fail("CMK-35973 skeleton: body not implemented")
 

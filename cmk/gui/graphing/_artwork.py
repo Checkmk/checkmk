@@ -441,31 +441,6 @@ def _compute_scalars(
     )
 
 
-def compute_curves_at_timestamp(
-    augmented_time_series_of_graph_metrics: Sequence[AugmentedTimeSeriesOfGraphMetric],
-    unit_renderer: Callable[[float], str],
-    hover_time: int,
-) -> Sequence[Curve]:
-    return [
-        Curve(
-            title=augmented_time_series.title,
-            line_type=augmented_time_series.line_type,
-            color=augmented_time_series.color,
-            rendered_value=_render_scalar_value(
-                _get_value_at_timestamp(hover_time, augmented_time_series.time_series),
-                unit_renderer,
-            ),
-        )
-        for augmented_time_series_of_graph_metric in augmented_time_series_of_graph_metrics
-        for augmented_time_series in augmented_time_series_of_graph_metric.time_series
-        if (
-            augmented_time_series.line_type is not None
-            and augmented_time_series.color is not None
-            and augmented_time_series.title is not None
-        )
-    ]
-
-
 def _render_scalar_value(
     value: float | None,
     unit_renderer: Callable[[float], str],

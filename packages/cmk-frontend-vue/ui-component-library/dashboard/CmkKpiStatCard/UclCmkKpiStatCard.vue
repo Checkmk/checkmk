@@ -16,7 +16,7 @@ import {
 import codeExample from './UclCmkKpiStatCardCodeExample.vue?raw'
 
 /** Demo-only: which missing-data scenario the series generator produces. */
-type DataState = 'complete' | 'gap'
+type DataState = 'complete' | 'gap' | 'stale'
 
 export const panelConfig = {
   value: {
@@ -89,10 +89,11 @@ export const panelConfig = {
   dataState: {
     type: 'list' as const,
     title: 'Data state',
-    help: 'Gap: a single contiguous outage window mid-series, bridged with a dashed, hatched line.',
+    help: 'Gap: a single contiguous outage window mid-series. Stale: the series ends in missing samples, so the bridge runs flat to the right edge and the delta is replaced by a "last sample" note.',
     options: [
       { title: 'Complete', name: 'complete' },
-      { title: 'Gap', name: 'gap' }
+      { title: 'Gap', name: 'gap' },
+      { title: 'Stale', name: 'stale' }
     ] satisfies Options<DataState>[],
     initialState: 'complete' as const
   },
@@ -220,15 +221,21 @@ const SERIES: TimestampedSample[] = SERIES_VALUES.map((value, index) => ({
 
 const series = computed<TimestampedSample[]>(() => {
   const sliced = SERIES.slice(0, Math.max(0, propState.value.pointCount))
-  if (propState.value.dataState !== 'gap') {
-    return sliced
+  const dataState = propState.value.dataState
+  if (dataState === 'gap') {
+    // One contiguous outage window, roughly a third in - a single real gap to bridge.
+    const gapStart = Math.floor(sliced.length * 0.33)
+    const gapLength = Math.max(2, Math.floor(sliced.length * 0.15))
+    return sliced.map((point, index) =>
+      index >= gapStart && index < gapStart + gapLength ? { ...point, value: null } : point
+    )
   }
-  // One contiguous outage window, roughly a third in - a single real gap to bridge.
-  const gapStart = Math.floor(sliced.length * 0.33)
-  const gapLength = Math.max(2, Math.floor(sliced.length * 0.15))
-  return sliced.map((point, index) =>
-    index >= gapStart && index < gapStart + gapLength ? { ...point, value: null } : point
-  )
+  if (dataState === 'stale') {
+    // A trailing run of missing samples, not a gap bounded by real data on both sides.
+    const staleFrom = Math.max(0, sliced.length - Math.max(2, Math.floor(sliced.length * 0.15)))
+    return sliced.map((point, index) => (index >= staleFrom ? { ...point, value: null } : point))
+  }
+  return sliced
 })
 
 const state = computed<KpiState | undefined>(() =>

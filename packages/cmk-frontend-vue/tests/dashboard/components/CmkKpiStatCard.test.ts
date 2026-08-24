@@ -147,6 +147,31 @@ test('draws no bridge for a series without gaps', () => {
   expect(container.querySelector('.db-kpi-spark-line__bridge-line')).toBeNull()
 })
 
+test('replaces the delta with a stale note when the series ends in missing samples', () => {
+  const series = [sample(0, 10), sample(60, 20), sample(120, null)]
+  const { container } = renderCard({ series, deltaRatio: 0.12 })
+
+  expect(deltaOf(container)).toBeNull()
+  expect(container.querySelector('.db-cmk-kpi-stat-card__stale-note')).toHaveTextContent(
+    'No recent data'
+  )
+})
+
+test('shows the delta, not a stale note, for a series that ends with real data', () => {
+  const { container } = renderCard({ deltaRatio: 0.12 })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card__stale-note')).toBeNull()
+  expect(deltaOf(container)).not.toBeNull()
+})
+
+test('an interior gap does not make the reading stale', () => {
+  const series = [sample(0, 10), sample(60, null), sample(120, 20)]
+  const { container } = renderCard({ series, deltaRatio: 0.12 })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card__stale-note')).toBeNull()
+  expect(deltaOf(container)).not.toBeNull()
+})
+
 test('positions the state against the card, not against the value row', () => {
   const { container } = renderCard({ state: { severity: 'warn' } })
 

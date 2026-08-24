@@ -55,7 +55,7 @@ interface Plot {
   dot: Point | null
   /** One per sample clamped into a manual range. */
   ticks: Point[]
-  /** One bridge per gap - a run of missing samples bounded by real ones on both sides. */
+  /** One bridge per gap, plus a flat trailing bridge if the series ends in missing samples (stale). */
   bridges: Bridge[]
 }
 
@@ -93,10 +93,8 @@ const plot: Ref<Plot> = computed(() => {
   const clampToRange = (value: number) => Math.min(domainMax, Math.max(domainMin, value))
   const y = (d: TimestampedSample) => yScale(clampToRange(d.value!))
 
-  // .defined() skips null-value samples and auto-splits the path into
-  // separate subpaths at the gap - the solid curve/fill. A dashed, hatched
-  // bridge is drawn across each gap separately below, so it stays legible
-  // as a gap while the trend still connects.
+  // .defined() splits the solid curve at each missing run; a dashed, hatched
+  // bridge (gap, or a stale tail at the end) is drawn across it below.
   const lineGen = line<TimestampedSample>()
     .defined((d) => d.value !== null)
     .x(x)
@@ -134,6 +132,17 @@ const plot: Ref<Plot> = computed(() => {
     }
     lastRealIndex = i
   }
+  // A trailing run has no "after" point, so the bridge runs flat to the right
+  // edge instead: a synthetic sample at the series' own last timestamp (which
+  // x() maps to VIEW_WIDTH) carries the last real value forward.
+  if (lastRealIndex !== -1 && lastRealIndex < data.length - 1) {
+    const flatEnd: TimestampedSample = {
+      timestamp: data[data.length - 1]!.timestamp,
+      value: data[lastRealIndex]!.value
+    }
+    const pair = [data[lastRealIndex]!, flatEnd]
+    bridges.push({ line: bridgeLineGen(pair) ?? '', area: bridgeAreaGen(pair) ?? '' })
+  }
 
   return { line: lineGen(data) ?? '', area: areaGen(data) ?? '', dot, ticks, bridges }
 })
@@ -168,8 +177,8 @@ const plot: Ref<Plot> = computed(() => {
         <stop offset="0%" stop-color="currentColor" stop-opacity="0.35" />
         <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
       </linearGradient>
-      <!-- Diagonal stripes for the area under a gap bridge, so a missing run reads as
-           "no data here" rather than a plain (and easily missed) blank patch. -->
+      <!-- Diagonal stripes for the area under a gap or stale-tail bridge, so a missing run
+           reads as "no data here" rather than a plain (and easily missed) blank patch. -->
       <pattern
         :id="hatchPatternId"
         width="1.5"

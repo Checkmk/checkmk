@@ -5,13 +5,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkBadge, { type Colors as CmkBadgeColor } from 'cmk-ui-library/components/CmkBadge.vue'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import KpiSparkLine from './KpiSparkLine.vue'
-import type { CmkKpiStatCardProps, DeltaSemantics, KpiStateSeverity } from './types'
+import type {
+  CmkKpiStatCardProps,
+  DeltaSemantics,
+  KpiStateSeverity,
+  TimestampedSample
+} from './types'
 
 const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   unit: undefined,
@@ -90,6 +96,26 @@ const stateColor = computed(() => (props.state ? STATE_CSS_COLOR[props.state.sev
 
 const tintColor = computed(() => (props.state?.tintBackground ? stateColor.value : undefined))
 
+const lastRealSample = computed<TimestampedSample | undefined>(() =>
+  [...props.series].reverse().find((d) => d.value !== null)
+)
+
+// A trailing null run means nothing has arrived since - stale. A null run
+// bounded by real samples on both sides is just a gap, not stale.
+const isStale = computed(
+  () => lastRealSample.value !== undefined && props.series[props.series.length - 1]?.value === null
+)
+
+const lastSampleTimeLabel = computed<string | undefined>(() => {
+  const sample = lastRealSample.value
+  if (!sample) {
+    return undefined
+  }
+  return new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' }).format(
+    sample.timestamp * 1000
+  )
+})
+
 // A single point draws no line, so anything under two is "no plot" and the
 // value takes the card to itself.
 const hasSparkLine = computed(() => props.series.length >= 2)
@@ -142,17 +168,23 @@ onMounted(measureScrim)
         <span class="db-cmk-kpi-stat-card__value">{{ value }}</span>
         <span v-if="unit" class="db-cmk-kpi-stat-card__unit">{{ unit }}</span>
       </component>
-      <span
-        v-if="deltaRatio !== undefined"
-        class="db-cmk-kpi-stat-card__pill db-cmk-kpi-stat-card__delta"
-        :class="{ 'db-cmk-kpi-stat-card__delta--down': !isUp }"
-        :style="{ '--pill-color': deltaColor }"
-      >
-        <svg class="db-cmk-kpi-stat-card__delta-arrow" viewBox="0 0 8 6" aria-hidden="true">
-          <path d="m0 6 4-6 4 6z" fill="currentColor" />
-        </svg>
-        {{ deltaPercent }}
-      </span>
+      <div v-if="isStale || deltaRatio !== undefined" class="db-cmk-kpi-stat-card__info-slot">
+        <span v-if="isStale" class="db-cmk-kpi-stat-card__stale-note">
+          <CmkIcon name="clock" size="small" :colored="false" />
+          {{ _t('No recent data — last sample %{time}', { time: lastSampleTimeLabel ?? '' }) }}
+        </span>
+        <span
+          v-else-if="deltaRatio !== undefined"
+          class="db-cmk-kpi-stat-card__pill db-cmk-kpi-stat-card__delta"
+          :class="{ 'db-cmk-kpi-stat-card__delta--down': !isUp }"
+          :style="{ '--pill-color': deltaColor }"
+        >
+          <svg class="db-cmk-kpi-stat-card__delta-arrow" viewBox="0 0 8 6" aria-hidden="true">
+            <path d="m0 6 4-6 4 6z" fill="currentColor" />
+          </svg>
+          {{ deltaPercent }}
+        </span>
+      </div>
     </div>
 
     <div v-if="showScrim" class="db-cmk-kpi-stat-card__scrim" aria-hidden="true" />
@@ -230,9 +262,12 @@ onMounted(measureScrim)
 .db-cmk-kpi-stat-card__value-row {
   position: relative;
   z-index: 2;
+
+  /* Stacked, not inline: the stale note can run long, so it gets its own row. */
   display: inline-flex;
-  gap: clamp(4px, 1.5cqw, 10px);
-  align-items: baseline;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(2px, 1cqh, 6px);
   min-width: 0;
 
   /* The card itself is full-bleed, so that a tinted background and the spark
@@ -323,6 +358,27 @@ onMounted(measureScrim)
 
 .db-cmk-kpi-stat-card__delta--down .db-cmk-kpi-stat-card__delta-arrow {
   transform: rotate(180deg);
+}
+
+/* Delta and stale note share this slot; reserving height keeps the card from jumping when they swap. */
+.db-cmk-kpi-stat-card__info-slot {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  min-height: clamp(16px, 20cqh, 28px);
+}
+
+.db-cmk-kpi-stat-card__stale-note {
+  display: inline-flex;
+  gap: clamp(2px, 1cqw, 5px);
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  font-size: clamp(9px, 14cqh, 16px);
+  color: var(--font-color-dimmed);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* CmkBadge is sized for counts, so it pads to a bubble around a short label

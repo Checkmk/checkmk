@@ -10,9 +10,10 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref } from 'vue'
 
 import type { GraphItemsStore } from '../../composables/useGraphItems'
+import { useItemValidation } from '../../composables/useItemValidation'
 import { useValidationMessages } from '../../composables/useValidationMessages'
 import type { DesignerItem } from '../../drafts'
-import { type RowField, type RowIssue, isValid } from '../../validation'
+import type { RowField, RowIssue } from '../../validation'
 import ConstantLineForm from './ConstantLineForm.vue'
 import FormulaForm from './FormulaForm.vue'
 import MetricBackendForm from './MetricBackendForm.vue'
@@ -27,6 +28,8 @@ const { row, store, thresholds, issues } = defineProps<{
 }>()
 
 const { _t } = usei18n()
+
+const { isValid } = useItemValidation(store.items)
 const { issueMessage } = useValidationMessages()
 
 type PreviewAlert = 'added' | 'updated'
@@ -99,6 +102,8 @@ function messagesFor(field: RowField): TranslatedString[] {
         :host-name-errors="messagesFor('host_name')"
         :service-name-errors="messagesFor('service_name')"
         :metric-name-errors="messagesFor('metric_name')"
+        :host-filter-errors="messagesFor('host_filter')"
+        :service-filter-errors="messagesFor('service_filter')"
       />
       <ConstantLineForm
         v-else-if="row.type === 'constant'"

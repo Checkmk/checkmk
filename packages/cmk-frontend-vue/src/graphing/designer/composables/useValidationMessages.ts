@@ -21,6 +21,8 @@ export function useValidationMessages(): ValidationMessages {
     switch (issue.code) {
       case 'required':
         return _t('This field is required.')
+      case 'filter-required':
+        return _t('Add at least one filter.')
       case 'not-finite':
         return _t('Enter a finite number.')
       case 'lookback-too-small':

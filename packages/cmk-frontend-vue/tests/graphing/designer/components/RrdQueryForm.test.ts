@@ -6,6 +6,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/vue'
 import { Response } from 'cmk-ui-library/components/CmkSuggestions'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
@@ -27,7 +29,10 @@ vi.mock(
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
-function renderQueryForm(seed: DraftRRDQueryItem) {
+function renderQueryForm(
+  seed: DraftRRDQueryItem,
+  filterErrors: { host?: TranslatedString[]; service?: TranslatedString[] } = {}
+) {
   const store = useGraphItems(PALETTE)
   store.replaceAll([seed])
   const harness = defineComponent({
@@ -36,7 +41,13 @@ function renderQueryForm(seed: DraftRRDQueryItem) {
       return () => {
         const item = store.items.value.find((candidate) => candidate.id === seed.id)
         return item?.type === 'rrd_query'
-          ? h(RrdQueryForm, { item, store, metricNameErrors: [] })
+          ? h(RrdQueryForm, {
+              item,
+              store,
+              metricNameErrors: [],
+              hostFilterErrors: filterErrors.host ?? [],
+              serviceFilterErrors: filterErrors.service ?? []
+            })
           : null
       }
     }
@@ -140,4 +151,24 @@ test('changing the consolidation updates the row', async () => {
   await fireEvent.click(await screen.findByRole('option', { name: 'Max' }))
 
   expect(store.items.value[0]).toMatchObject({ consolidation: 'max' })
+})
+
+test('both filter sections ask for a filter', () => {
+  renderQueryForm(newRrdQueryDraft('A'))
+
+  for (const title of ['Host filter', 'Service filter']) {
+    const label = screen.getByText(title).closest('label')
+    expect(label).not.toBeNull()
+    expect(within(label!).getByText('(required)')).toBeInTheDocument()
+  }
+})
+
+test('a filter section shows the errors it was given', () => {
+  renderQueryForm(newRrdQueryDraft('A'), {
+    host: [untranslated('Add at least one filter.')]
+  })
+
+  const alerts = screen.getAllByRole('alert')
+  expect(alerts).toHaveLength(1)
+  expect(alerts[0]).toHaveTextContent('Add at least one filter.')
 })

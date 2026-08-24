@@ -11,6 +11,7 @@ import {
   UclDetailPageLayout
 } from '@ucl/_ucl/components/detail-page'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import type { FilterDefinitions } from 'cmk-ui-library/components/filter'
 import { computed, ref } from 'vue'
 
 import { MetricsCalculationSlideout, type RefVisibility } from '@/graphing/designer/calculation'
@@ -77,7 +78,7 @@ const seed: GraphItem[] = [
     line_type: 'line',
     mirrored: false,
     visible: true,
-    context: { host: { host: 'my-host' } },
+    context: { host: { host: 'my-host' }, service: { service: 'HTTP' } },
     metric_name: 'http_requests',
     consolidation: 'avg'
   },
@@ -114,9 +115,16 @@ const seed: GraphItem[] = [
   }
 ]
 
+const filterDefinitions = {
+  host: { extensions: { info: 'host' } },
+  service: { extensions: { info: 'service' } }
+} as unknown as FilterDefinitions
+
 const store = useGraphItems(PALETTE)
 store.replaceAll(seed)
-const completeItems = computed(() => store.items.value.filter(isValid))
+const completeItems = computed(() =>
+  store.items.value.filter((item): item is GraphItem => isValid(item, filterDefinitions))
+)
 const open = ref(false)
 
 function applyRefVisibility(refVisibility: RefVisibility): void {

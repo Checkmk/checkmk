@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { FilterDefinitions } from 'cmk-ui-library/components/filter'
 import { computed, ref } from 'vue'
 
 import { MetricsCalculationSlideout, type RefVisibility } from '@/graphing/designer/calculation'
@@ -29,9 +30,16 @@ const seed: GraphItem[] = [
   }
 ]
 
+const filterDefinitions = {
+  host: { extensions: { info: 'host' } },
+  service: { extensions: { info: 'service' } }
+} as unknown as FilterDefinitions
+
 const store = useGraphItems(PALETTE)
 store.replaceAll(seed)
-const completeItems = computed(() => store.items.value.filter(isValid))
+const completeItems = computed(() =>
+  store.items.value.filter((item): item is GraphItem => isValid(item, filterDefinitions))
+)
 const open = ref(true)
 
 function applyRefVisibility(refVisibility: RefVisibility): void {

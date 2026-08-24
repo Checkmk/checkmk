@@ -5,6 +5,7 @@
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { Response } from 'cmk-ui-library/components/CmkSuggestions'
+import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
@@ -13,7 +14,7 @@ import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { type DesignerItem, newConstantDraft } from '@/graphing/designer/drafts'
 import { isValid } from '@/graphing/designer/validation'
 
-import { constantItem, metricBackendItem } from '../fixtures'
+import { constantItem, filterDefinitions, metricBackendItem } from '../fixtures'
 
 const mocks = vi.hoisted(() => ({ fetchSuggestions: vi.fn(), fetchRestAPIDeprecated: vi.fn() }))
 
@@ -51,6 +52,7 @@ function renderEditor(seed: DesignerItem) {
   store.replaceAll([seed])
   const harness = defineComponent({
     setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
       return () => {
         const row = store.items.value.find((candidate) => candidate.id === seed.id)
         return row === undefined
@@ -120,7 +122,7 @@ test('a filled-in source the rules still reject confirms nothing', async () => {
   await enterQuantile('5')
 
   await waitFor(() => expect(percentile(store)).toBe(500))
-  expect(isValid(store.items.value[0]!)).toBe(false)
+  expect(isValid(store.items.value[0]!, filterDefinitions)).toBe(false)
   expect(screen.queryByText(/^Preview/)).not.toBeInTheDocument()
 })
 

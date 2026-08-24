@@ -30,8 +30,9 @@ import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
 import { useCustomGraphData } from '../composables/useCustomGraphData'
 import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
 import type { GraphItemsStore } from '../composables/useGraphItems'
+import { useItemValidation } from '../composables/useItemValidation'
 import type { FormulaDraft, ItemId } from '../types'
-import { type RowIssue, isValid } from '../validation'
+import type { RowIssue } from '../validation'
 import AppearanceTable from './AppearanceTable.vue'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
 import DesignerSettings from './DesignerSettings.vue'
@@ -72,7 +73,7 @@ const displaySettings = defineModel<boolean>('displaySettings', { default: false
 
 const { _t } = usei18n()
 
-const validItems = computed(() => store.items.value.filter(isValid))
+const { validItems } = useItemValidation(store.items)
 
 const consolidationFn = ref<ConsolidationFn>('max')
 // The app seeds the global time range from the configured default before we mount.

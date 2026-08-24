@@ -4,13 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render, screen } from '@testing-library/vue'
+import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { expect, test } from 'vitest'
+import { defineComponent, h } from 'vue'
 
 import FormulaForm from '@/graphing/designer/components/forms/FormulaForm.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import type { DesignerItem } from '@/graphing/designer/drafts'
 
-import { formulaItem, parseOrThrow, rrdMetricItem } from '../fixtures'
+import { filterDefinitions, formulaItem, parseOrThrow, rrdMetricItem } from '../fixtures'
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
@@ -22,7 +24,13 @@ function renderFormulaForm(seed: DesignerItem[]) {
   if (item?.type !== 'rrd_formula') {
     throw new Error(`expected an rrd_formula row, got ${item?.type}`)
   }
-  return render(FormulaForm, { props: { item, store, astErrors: [] } })
+  const harness = defineComponent({
+    setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
+      return () => h(FormulaForm, { item, store, astErrors: [] })
+    }
+  })
+  return render(harness)
 }
 
 test('lists the direct refs as id + description under the formula', () => {

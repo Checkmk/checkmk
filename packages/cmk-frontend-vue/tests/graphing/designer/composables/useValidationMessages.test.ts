@@ -28,6 +28,10 @@ const CASES: Record<RowIssue['code'], { issue: RowIssue; message: string }> = {
     issue: { id: 'A', field: 'metric_name', code: 'required' },
     message: 'This field is required.'
   },
+  'filter-required': {
+    issue: { id: 'A', field: 'host_filter', code: 'filter-required' },
+    message: 'Add at least one filter.'
+  },
   'not-finite': {
     issue: { id: 'A', field: 'value', code: 'not-finite' },
     message: 'Enter a finite number.'

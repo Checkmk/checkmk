@@ -5,8 +5,9 @@
  */
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { TitleMacroGroup } from 'cmk-shared-typing/typescript/custom_graph_designer'
+import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { type MockInstance, vi } from 'vitest'
-import { defineComponent } from 'vue'
+import { defineComponent, h } from 'vue'
 
 import MetricsTable from '@/graphing/designer/components/MetricsTable.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
@@ -16,12 +17,19 @@ import {
   newConstantDraft,
   newMetricBackendDraft,
   newRrdMetricDraft,
+  newRrdQueryDraft,
   newScalarDraft
 } from '@/graphing/designer/drafts'
 import type { ItemId } from '@/graphing/designer/types'
 import { type RowField, type RowIssue, validateDesign } from '@/graphing/designer/validation'
 
-import { constantItem, formulaItem, metricBackendItem, rrdMetricItem } from '../fixtures'
+import {
+  constantItem,
+  filterDefinitions,
+  formulaItem,
+  metricBackendItem,
+  rrdMetricItem
+} from '../fixtures'
 
 vi.mock('@/graphing/designer/components/MetricBackendRuleSlideIn.vue', () => ({
   default: {
@@ -69,18 +77,23 @@ function renderTable(
 ) {
   const store = useGraphItems(PALETTE)
   store.replaceAll(seed)
-  const utils = render(MetricsTable, {
-    props: {
-      store,
-      thresholds: THRESHOLDS,
-      metricBackendAvailable,
-      createServicesAvailable,
-      metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
-      titleMacros: TITLE_MACROS,
-      issuesByRow,
-      resolvedTitles
+  const harness = defineComponent({
+    setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
+      return () =>
+        h(MetricsTable, {
+          store,
+          thresholds: THRESHOLDS,
+          metricBackendAvailable,
+          createServicesAvailable,
+          metricBackendDefaultTitle: '$METRIC_NAME$ - $SERIES_ID$',
+          titleMacros: TITLE_MACROS,
+          issuesByRow,
+          resolvedTitles
+        })
     }
   })
+  const utils = render(harness)
   return { store, ...utils }
 }
 
@@ -347,7 +360,8 @@ describe('a blocked row', () => {
       title: '',
       consolidation_function: { type: 'gauge_last', lookback_seconds: 0 }
     },
-    'Calculated metric': formulaItem('A', { title: '', ast: { op: 'ref', id: 'Z' } })
+    'Calculated metric': formulaItem('A', { title: '', ast: { op: 'ref', id: 'Z' } }),
+    'Checkmk RRD query': { ...newRrdQueryDraft('A'), title: '' }
   }
 
   function messagesOf(issues: readonly RowIssue[]): string[] {
@@ -375,7 +389,7 @@ describe('a blocked row', () => {
   test.each(Object.entries(BLOCKED_ROWS))(
     '%s states each blocker on the field it belongs to',
     async (_kind, row) => {
-      const issues = validateDesign([row])
+      const issues = validateDesign([row], filterDefinitions)
       const expected = tally(messagesOf(issues))
       renderTable([row], true, true, { issuesByRow: new Map([[row.id, issues]]) })
 
@@ -390,7 +404,7 @@ describe('a blocked row', () => {
 
   test('is marked beside its title, not in the id column', () => {
     const row = newRrdMetricDraft('A', '#28a2f3')
-    const issues = validateDesign([row])
+    const issues = validateDesign([row], filterDefinitions)
     renderTable([row], true, true, { issuesByRow: new Map([[row.id, issues]]) })
 
     const marker = screen.getByLabelText('Source A prevents saving')
@@ -399,12 +413,16 @@ describe('a blocked row', () => {
   })
 
   test('the rows above block on every field there is', () => {
-    const issues = Object.values(BLOCKED_ROWS).flatMap((row) => validateDesign([row]))
+    const issues = Object.values(BLOCKED_ROWS).flatMap((row) =>
+      validateDesign([row], filterDefinitions)
+    )
     const allFields: Record<RowField, true> = {
       title: true,
       host_name: true,
       service_name: true,
       metric_name: true,
+      host_filter: true,
+      service_filter: true,
       value: true,
       consolidation_function: true,
       ast: true

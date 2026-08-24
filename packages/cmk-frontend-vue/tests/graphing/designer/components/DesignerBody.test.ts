@@ -7,6 +7,7 @@ import { CalendarDateTime, toZoned } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
+import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
@@ -19,7 +20,7 @@ import { fromApiDataSource } from '@/graphing/designer/drafts'
 import type { ApiDataSourceInput, ItemId } from '@/graphing/designer/types'
 import type { RowIssue } from '@/graphing/designer/validation'
 
-import { metricBackendItem } from '../fixtures'
+import { filterDefinitions, metricBackendItem } from '../fixtures'
 
 vi.mock('cmk-ui-library/components/CmkSlideIn/CmkSlideIn.vue', () => ({
   default: defineComponent({
@@ -93,7 +94,10 @@ function rrdQuerySource(id: string): unknown {
     line_type: 'line',
     mirrored: false,
     visible: true,
-    context: { host: { host: 'my-host' } },
+    context: {
+      hostregex: { host_regex: 'my-host' },
+      serviceregex: { service_regex: 'CPU utilization' }
+    },
     metric_name: 'util',
     consolidation: 'avg'
   }
@@ -216,7 +220,18 @@ function renderBody(
   } = {}
 ) {
   const { graph, ...rest } = overrides
-  return render(DesignerBody, { props: { ...bodyProps(graph), mode, ...rest } })
+  const props = { ...bodyProps(graph), mode, ...rest }
+  const events = {
+    'onUpdate:displaySettings': vi.fn(),
+    onUpdateGraphOptions: vi.fn()
+  }
+  const harness = defineComponent({
+    setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
+      return () => h(DesignerBody, { ...props, ...events })
+    }
+  })
+  return { ...render(harness), props, events }
 }
 
 test('hiding a metric in the detached view-mode legend removes it from the preview', async () => {
@@ -322,8 +337,9 @@ test('a row keeps the name of the last fetch until the one its edit triggers lan
       group_titles: [{ source_id: 'Q', title: 'util - <HOST_NAME>/<SERVICE_DESCRIPTION>' }]
     }
   } as never)
-  const props = bodyProps(graphObject([rrdSource('A'), rrdQuerySource('Q')]))
-  render(DesignerBody, { props: { ...props, mode: 'edit' as const } })
+  const { props } = renderBody('edit', {
+    graph: graphObject([rrdSource('A'), rrdQuerySource('Q')])
+  })
 
   const metricsTab = await screen.findByRole('tabpanel')
   await waitFor(() =>
@@ -398,26 +414,26 @@ describe('settings slide-out', () => {
   })
 
   test('accepting a change closes the panel and hands the edited options up', async () => {
-    const { emitted } = renderBody('edit', { displaySettings: true })
+    const { events } = renderBody('edit', { displaySettings: true })
 
     await fireEvent.click(await screen.findByRole('checkbox', { name: 'Show zero values' }))
     await fireEvent.click(screen.getByRole('button', { name: 'Accept' }))
 
     // DesignerBody's onSettingsUpdate closes the panel via the displaySettings v-model.
-    expect(emitted()['update:displaySettings']).toEqual([[false]])
-    expect(emitted()['update-graph-options']).toEqual([
+    expect(events['onUpdate:displaySettings'].mock.calls).toEqual([[false]])
+    expect(events.onUpdateGraphOptions.mock.calls).toEqual([
       [expect.objectContaining({ omit_zero_metrics: true })]
     ])
   })
 
   test('cancelling discards the change instead of handing it up', async () => {
-    const { emitted } = renderBody('edit', { displaySettings: true })
+    const { events } = renderBody('edit', { displaySettings: true })
 
     await fireEvent.click(await screen.findByRole('checkbox', { name: 'Show zero values' }))
     await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
-    expect(emitted()['update:displaySettings']).toEqual([[false]])
-    expect(emitted()['update-graph-options']).toBeUndefined()
+    expect(events['onUpdate:displaySettings'].mock.calls).toEqual([[false]])
+    expect(events.onUpdateGraphOptions).not.toHaveBeenCalled()
   })
 })
 

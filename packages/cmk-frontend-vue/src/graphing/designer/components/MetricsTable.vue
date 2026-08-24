@@ -29,6 +29,7 @@ import VisibilityCell from '@/monitoring/shared/components/cell/VisibilityCell.v
 
 import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
 import { type GraphItemsStore, retainKnownRows } from '../composables/useGraphItems'
+import { useItemValidation } from '../composables/useItemValidation'
 import { useRowLabels } from '../composables/useRowLabels'
 import { useTitleMacroHelp } from '../composables/useTitleMacroHelp'
 import { useValidationMessages } from '../composables/useValidationMessages'
@@ -41,7 +42,7 @@ import {
   scalarColor
 } from '../drafts'
 import { type ItemId, type MetricBackendItem, isSingleLine, parseLineType } from '../types'
-import { type RowIssue, isValid } from '../validation'
+import type { RowIssue } from '../validation'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
 import MetricBackendRuleSlideIn from './MetricBackendRuleSlideIn.vue'
 import RowEditor from './forms/RowEditor.vue'
@@ -76,6 +77,7 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 const { sourceTypeLabel, lineStyleSuggestions, lineStyleLabel } = useRowLabels()
+const { isValid } = useItemValidation(store.items)
 const { renderTitleMacroHelp } = useTitleMacroHelp()
 const { issueMessage } = useValidationMessages()
 

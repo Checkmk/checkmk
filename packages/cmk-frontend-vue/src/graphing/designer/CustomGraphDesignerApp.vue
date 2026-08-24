@@ -35,7 +35,7 @@ import type { SelectableGraph } from './components/GraphSelector.vue'
 import { type SaveAction, type SaveFailure, useSaveFailures } from './composables/saveFailure'
 import { useGraphItems } from './composables/useGraphItems'
 import { fromApiDataSource, toApiDataSources } from './drafts'
-import type { ItemId } from './types'
+import type { GraphItem, ItemId } from './types'
 import { pushUrlState, replaceUrlState } from './urlState'
 import { type RowIssue, isValid, validateDesign } from './validation'
 
@@ -69,7 +69,7 @@ const loadError = ref<string | null>(null)
 const store = useGraphItems(props.palette)
 const graphOptions = ref<CustomGraphOptions | null>(null)
 
-const { loadFilterDefinitions } = useProvideFilterDefinitions()
+const { filterDefinitions, loadFilterDefinitions } = useProvideFilterDefinitions()
 const filtersReady = ref(false)
 const filtersError = ref<string | null>(null)
 const displaySettings = ref<boolean>(false)
@@ -109,7 +109,7 @@ const isSaving = ref(false)
 const hasAttemptedSave = ref(false)
 const issuesAlert = ref<HTMLElement | null>(null)
 
-const blockingIssues = computed(() => validateDesign(store.items.value))
+const blockingIssues = computed(() => validateDesign(store.items.value, filterDefinitions.value))
 
 const issuesByRow = computed(() => {
   const byRow = new Map<ItemId, RowIssue[]>()
@@ -283,7 +283,11 @@ async function saveAgainst(version: 'loaded' | 'any'): Promise<void> {
         metadata: edited.graph.extensions.metadata,
         content: {
           graph_options: editedOptions,
-          data_sources: toApiDataSources(store.items.value.filter(isValid))
+          data_sources: toApiDataSources(
+            store.items.value.filter((item): item is GraphItem =>
+              isValid(item, filterDefinitions.value)
+            )
+          )
         }
       },
       ownerParam.value

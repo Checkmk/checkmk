@@ -35,7 +35,9 @@ function renderForm(seed: DraftRRDMetricItem | DraftRRDQueryItem) {
               store,
               hostNameErrors: [],
               serviceNameErrors: [],
-              metricNameErrors: []
+              metricNameErrors: [],
+              hostFilterErrors: [],
+              serviceFilterErrors: []
             })
           : null
       }

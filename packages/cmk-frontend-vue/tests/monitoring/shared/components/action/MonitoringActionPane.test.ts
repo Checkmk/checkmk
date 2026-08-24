@@ -40,10 +40,26 @@ const ackAction: MonitoringAction = {
 
 const REGISTRY = { acknowledge: ackAction }
 
-function mountPane(actionId: string, targets: HostRef[] = TWO_HOSTS, total = 12) {
+function hostCounts(selected: number, total: number): TranslatedString {
+  const noun = selected === 1 ? 'host' : 'hosts'
+  return `Selected ${noun}: ${selected} | Total hosts: ${total}` as unknown as TranslatedString
+}
+
+/** `null` mounts the pane without a counts label, the way a consumer that omits it would. */
+function mountPane(
+  actionId: string,
+  targets: HostRef[] = TWO_HOSTS,
+  total = 12,
+  countsLabel: ((selected: number, total: number) => TranslatedString) | null = hostCounts
+) {
   const service = { total: ref(total) } as unknown as MonitoringService<unknown>
   return render(MonitoringActionPane, {
-    props: { actionId, actions: REGISTRY, targets },
+    props: {
+      actionId,
+      actions: REGISTRY,
+      targets,
+      ...(countsLabel ? { countsLabel } : {})
+    },
     global: { provide: { [MONITORING_SERVICE as symbol]: service } }
   })
 }
@@ -82,6 +98,24 @@ test('relates the selection to the loaded rows, in singular and plural', () => {
 
   mountPane('acknowledge', TWO_HOSTS.slice(0, 1))
   expect(screen.getByText('Selected host: 1 | Total hosts: 12')).toBeInTheDocument()
+})
+
+test('lets the page name the counted rows, so a services page counts services', () => {
+  mountPane(
+    'acknowledge',
+    TWO_HOSTS,
+    12,
+    (selected, total) =>
+      `Selected services: ${selected} | Total services: ${total}` as unknown as TranslatedString
+  )
+
+  expect(screen.getByText('Selected services: 2 | Total services: 12')).toBeInTheDocument()
+})
+
+test('counts nothing when the page named no label, rather than guessing a noun', () => {
+  mountPane('acknowledge', TWO_HOSTS, 12, null)
+
+  expect(screen.queryByText(/Total/)).not.toBeInTheDocument()
 })
 
 test('renders nothing for an unknown action id', () => {

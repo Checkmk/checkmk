@@ -35,6 +35,8 @@ const props = withDefaults(
     selectionLabel: (count: number) => TranslatedString
     /** Names the action bar for screen readers, e.g. "Actions for selected hosts". */
     actionsLabel: TranslatedString
+    /** Relates the selection to the loaded rows in the action pane's subtitle. */
+    countsLabel: (selected: number, total: number) => TranslatedString
     columns: ColumnDef<T>[]
     columnPinning: ColumnPinningState
     getRowKey: (row: T) => string
@@ -191,6 +193,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
         :actions="actions"
         :targets="selectedTargets"
         :show-close="true"
+        :counts-label="countsLabel"
         @feedback="onFeedback"
         @cancel="closeAction"
       />

@@ -188,6 +188,15 @@ function hostSelectionLabel(count: number): TranslatedString {
   return _tn('%{count} host selected', '%{count} hosts selected', count, { count })
 }
 
+function hostCountsLabel(selected: number, total: number): TranslatedString {
+  return _tn(
+    'Selected host: %{selected} | Total hosts: %{total}',
+    'Selected hosts: %{selected} | Total hosts: %{total}',
+    selected,
+    { selected, total }
+  )
+}
+
 const slideInHost = ref<HostEntry | null>(null)
 const slideInTabId = ref<string | undefined>(undefined)
 
@@ -323,6 +332,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
         :selection-label="hostSelectionLabel"
         :actions-label="_t('Actions for selected hosts')"
+        :counts-label="hostCountsLabel"
         @performed="onActionPerformed"
       >
         <template #row="{ row, tableRow, onCommand }">

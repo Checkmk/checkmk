@@ -224,6 +224,15 @@ function serviceSelectionLabel(count: number): TranslatedString {
   return _tn('%{count} service selected', '%{count} services selected', count, { count })
 }
 
+function serviceCountsLabel(selected: number, total: number): TranslatedString {
+  return _tn(
+    'Selected service: %{selected} | Total services: %{total}',
+    'Selected services: %{selected} | Total services: %{total}',
+    selected,
+    { selected, total }
+  )
+}
+
 function onActionPerformed(result: ActionFeedbackResult): void {
   if (result.variant === 'success') {
     hostServicesService.refresh(ACTION_REFRESH_DELAY_MS)
@@ -291,6 +300,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
         :selection-label="serviceSelectionLabel"
         :actions-label="_t('Actions for selected services')"
+        :counts-label="serviceCountsLabel"
         @performed="onActionPerformed"
       >
         <template #row="{ row, tableRow, onCommand }">

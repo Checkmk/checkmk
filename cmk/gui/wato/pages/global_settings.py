@@ -105,7 +105,7 @@ from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.livestatus_client import SiteConfigurations
-from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.paths import log_dir, var_dir
 from cmk.web.utils import escaping
@@ -352,6 +352,11 @@ class ABCGlobalSettingsMode(WatoMode):
                     modified_cls = []
                     value_title = None
 
+                if isinstance(value_model, BooleanChoice):
+                    forms.section(title, simple=True)
+                    _show_toggle_switch(varname, bool(value), modified_cls, value_title)
+                    continue
+
                 if isinstance(value_model, FormSpec):
                     forms.section(title, simple=True)
                     html.open_a(href=edit_url, class_=modified_cls, title=value_title)
@@ -380,23 +385,7 @@ class ABCGlobalSettingsMode(WatoMode):
                 forms.section(title, simple=simple)
 
                 if is_a_checkbox(value_model):
-                    html.open_div(
-                        class_=["toggle_switch_container"]
-                        + modified_cls
-                        + (["on"] if value else [])
-                    )
-                    html.toggle_switch(
-                        enabled=value,
-                        help_txt=(value_title + " " if value_title else "")
-                        + _("Click to toggle this setting"),
-                        href=makeactionuri(
-                            request,
-                            transactions.get(),
-                            [("_action", "toggle"), ("_varname", varname)],
-                        ),
-                        class_=[*modified_cls, "large"],
-                    )
-                    html.close_div()
+                    _show_toggle_switch(varname, value, modified_cls, value_title)
 
                 else:
                     html.a(to_text, href=edit_url, class_=modified_cls, title=value_title)
@@ -861,6 +850,23 @@ class DefaultModeEditGlobalSetting(ModeEditGlobalSetting):
     @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return DefaultModeEditGlobals
+
+
+def _show_toggle_switch(
+    varname: str, value: bool, modified_cls: list[str], value_title: str | None
+) -> None:
+    html.open_div(class_=["toggle_switch_container"] + modified_cls + (["on"] if value else []))
+    html.toggle_switch(
+        enabled=value,
+        help_txt=(value_title + " " if value_title else "") + _("Click to toggle this setting"),
+        href=makeactionuri(
+            request,
+            transactions.get(),
+            [("_action", "toggle"), ("_varname", varname)],
+        ),
+        class_=[*modified_cls, "large"],
+    )
+    html.close_div()
 
 
 def is_a_checkbox(vs: ValueSpec) -> bool:

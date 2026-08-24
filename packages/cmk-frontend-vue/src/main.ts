@@ -12,7 +12,6 @@ import { FormApp } from '@/form'
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
 import '@/assets/variables.css'
-import GraphDesignerApp from '@/graph-designer/GraphDesignerApp.vue'
 import { registerGraphDesignerFormComponents } from '@/graph-designer/registerFormComponents'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
@@ -67,7 +66,6 @@ defineCmkComponent('cmk-shared-dashboard', SharedDashboard)
 defineCmkComponent('cmk-notification-overview', NotificationOverview)
 defineCmkComponent('cmk-agent-download', AgentDownload)
 defineCmkComponent('cmk-notification-parameters-overview', NotificationParametersOverviewApp)
-defineCmkComponent('cmk-graph-designer', GraphDesignerApp)
 defineCmkComponent('cmk-mode-host', ModeHostApp)
 defineCmkComponent('cmk-mode-create-otel-conf', ModeCreateOTelConfApp)
 defineCmkComponent('cmk-mode-create-prometheus-conf', ModeCreatePrometheusConfApp)

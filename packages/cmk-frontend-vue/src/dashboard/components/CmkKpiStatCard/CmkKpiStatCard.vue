@@ -8,16 +8,26 @@ import CmkBadge, { type Colors as CmkBadgeColor } from 'cmk-ui-library/component
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import KpiSparkLine from './KpiSparkLine.vue'
-import type { CmkKpiStatCardProps, KpiStateSeverity, TimestampedSample } from './types'
+import type {
+  CmkKpiStatCardProps,
+  ComparisonBasis,
+  KpiDelta,
+  KpiStateSeverity,
+  TimestampedSample
+} from './types'
 
 const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   unit: undefined,
   series: () => [],
-  deltaRatio: undefined,
+  showDelta: true,
+  comparisonBasis: 'average',
+  delta: undefined,
+  formatValue: (value: number) => value.toFixed(1),
   state: undefined,
   rangeLimits: undefined,
   range: undefined,
@@ -25,10 +35,94 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   sparkHeightMode: 'full'
 })
 
-const isUp = computed(() => (props.deltaRatio ?? 0) >= 0)
-const deltaPercent = computed(() => `${Math.abs((props.deltaRatio ?? 0) * 100).toFixed(1)}%`)
-
 const { _t } = usei18n()
+
+// Reuses the shared adaptive-unit formatter (the same one profiling's own
+// formatDuration() wraps) rather than hand-rolling seconds -> "6h" maths.
+const { formatter: durationFormatter } = userSpecificUnit(
+  { notation: 'time', symbol: 's', precision: { type: 'auto', digits: 0 } },
+  'celsius'
+)
+
+const BASIS_LABEL: Record<ComparisonBasis, () => TranslatedString> = {
+  average: () => _t('avg.'),
+  last: () => _t('prev. sample'),
+  minimum: () => _t('min.'),
+  maximum: () => _t('max.'),
+  median: () => _t('median')
+}
+
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 0 ? (sorted[mid - 1]! + sorted[mid]!) / 2 : sorted[mid]!
+}
+
+function computeBasisValue(basis: ComparisonBasis, values: number[]): number {
+  switch (basis) {
+    case 'average':
+      return values.reduce((sum, value) => sum + value, 0) / values.length
+    case 'last':
+      return values[values.length - 1]!
+    case 'minimum':
+      return Math.min(...values)
+    case 'maximum':
+      return Math.max(...values)
+    case 'median':
+      return median(values)
+  }
+}
+
+// The basis excludes the current sample itself - it is a comparison, not a
+// self-inclusive average. Hidden below two real samples: one alone has
+// nothing to compare against, and a zero basis has no meaningful ratio.
+// Superseded by `props.delta` when given - see the `delta` computed below.
+const seriesDelta = computed<KpiDelta | undefined>(() => {
+  if (!props.showDelta) {
+    return undefined
+  }
+  const realSamples = props.series.filter(
+    (sample): sample is TimestampedSample & { value: number } => sample.value !== null
+  )
+  if (realSamples.length < 2) {
+    return undefined
+  }
+  const currentSample = realSamples[realSamples.length - 1]!
+  const basisSamples = realSamples.slice(0, -1)
+  const basisValue = computeBasisValue(
+    props.comparisonBasis,
+    basisSamples.map((sample) => sample.value)
+  )
+  if (basisValue === 0) {
+    return undefined
+  }
+  const ratio = (currentSample.value - basisValue) / basisValue
+  // "prev. sample" is a single adjacent point, not a range - a window duration
+  // describes a span being averaged/scanned, which doesn't apply to it.
+  const comparisonText =
+    props.comparisonBasis === 'last'
+      ? _t('vs. %{basisValue} %{basisLabel}', {
+          basisValue: props.formatValue(basisValue),
+          basisLabel: BASIS_LABEL[props.comparisonBasis]()
+        })
+      : _t('vs. %{basisValue} %{basisLabel} (%{window})', {
+          basisValue: props.formatValue(basisValue),
+          basisLabel: BASIS_LABEL[props.comparisonBasis](),
+          window: durationFormatter.render(currentSample.timestamp - basisSamples[0]!.timestamp)
+        })
+  return {
+    percent: `${Math.abs(ratio * 100).toFixed(1)}%`,
+    up: ratio >= 0,
+    comparisonText
+  }
+})
+
+// A caller-supplied delta (e.g. network-flow's window-aggregate metrics, where
+// `value` isn't `series`'s own last sample) takes priority over deriving one
+// from `series` - the two would otherwise disagree about what "the delta" is.
+const delta = computed<KpiDelta | undefined>(() =>
+  props.showDelta ? (props.delta ?? seriesDelta.value) : undefined
+)
 
 // Checkmk's monitoring state colors, UNKNOWN among them -- orange, rather than
 // the grey a generic "default" would give it.
@@ -125,7 +219,7 @@ function measureScrim(): void {
 
 const { observe } = useResizeObserver(measureScrim)
 observe(valueRowEl)
-watch(() => [props.value, props.unit, props.deltaRatio], measureScrim, { flush: 'post' })
+watch(() => [props.value, props.unit, delta.value], measureScrim, { flush: 'post' })
 onMounted(measureScrim)
 </script>
 
@@ -151,7 +245,7 @@ onMounted(measureScrim)
         <span v-if="unit" class="db-cmk-kpi-stat-card__unit">{{ unit }}</span>
       </component>
       <div
-        v-if="hasData && (isStale || deltaRatio !== undefined)"
+        v-if="hasData && (isStale || delta !== undefined)"
         class="db-cmk-kpi-stat-card__info-slot"
       >
         <span v-if="isStale" class="db-cmk-kpi-stat-card__stale-note">
@@ -159,14 +253,15 @@ onMounted(measureScrim)
           {{ _t('No recent data — last sample %{time}', { time: lastSampleTimeLabel ?? '' }) }}
         </span>
         <span
-          v-else-if="deltaRatio !== undefined"
+          v-else-if="delta"
           class="db-cmk-kpi-stat-card__delta"
-          :class="{ 'db-cmk-kpi-stat-card__delta--down': !isUp }"
+          :class="{ 'db-cmk-kpi-stat-card__delta--down': !delta.up }"
         >
           <svg class="db-cmk-kpi-stat-card__delta-arrow" viewBox="0 0 8 6" aria-hidden="true">
             <path d="m0 6 4-6 4 6z" fill="currentColor" />
           </svg>
-          {{ deltaPercent }}
+          <span class="db-cmk-kpi-stat-card__delta-percent">{{ delta.percent }}</span>
+          <span class="db-cmk-kpi-stat-card__delta-comparison">{{ delta.comparisonText }}</span>
         </span>
       </div>
     </div>
@@ -325,10 +420,20 @@ onMounted(measureScrim)
   min-width: 0;
   overflow: hidden;
   font-size: clamp(9px, 14cqh, 16px);
-  font-weight: var(--font-weight-bold);
   color: var(--font-color-dimmed);
-  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.db-cmk-kpi-stat-card__delta-percent {
+  flex-shrink: 0;
+  font-weight: var(--font-weight-bold);
+}
+
+/* The comparison text ("vs. 47.1% avg. (6h)") is the part most likely to be
+   clipped in a narrow card - the percent and direction matter more. */
+.db-cmk-kpi-stat-card__delta-comparison {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .db-cmk-kpi-stat-card__delta-arrow {

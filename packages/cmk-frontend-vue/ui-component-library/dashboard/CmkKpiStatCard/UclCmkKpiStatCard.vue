@@ -7,7 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, ListPropDef, NumberPropDef } from '@ucl/_ucl/types/prop-def'
 
-import { type KpiStateSeverity, type SparkHeightMode } from '@/dashboard/components/CmkKpiStatCard'
+import {
+  type ComparisonBasis,
+  type KpiStateSeverity,
+  type SparkHeightMode
+} from '@/dashboard/components/CmkKpiStatCard'
 
 import codeExample from './UclCmkKpiStatCardCodeExample.vue?raw'
 
@@ -46,14 +50,21 @@ export const panelConfig = {
   showDelta: {
     type: 'boolean' as const,
     title: 'Show delta',
-    help: 'Renders the change versus the previous period. Without it the indicator is omitted entirely.',
+    help: 'Renders the change versus the comparison basis. Without it the indicator is omitted entirely.',
     initialState: true
   },
-  deltaPercent: {
-    type: 'number' as const,
-    title: 'Delta (%)',
-    help: 'Signed change versus the previous period. Negative values point the arrow down.',
-    initialState: 6.2
+  comparisonBasis: {
+    type: 'list' as const,
+    title: 'Comparison basis',
+    help: 'What the delta compares the current value against, computed over the real samples before it.',
+    options: [
+      { title: 'Average', name: 'average' },
+      { title: 'Last sample', name: 'last' },
+      { title: 'Minimum', name: 'minimum' },
+      { title: 'Maximum', name: 'maximum' },
+      { title: 'Median', name: 'median' }
+    ] satisfies Options<ComparisonBasis>[],
+    initialState: 'average' as const
   },
   sparkHeightMode: {
     type: 'list' as const,
@@ -148,11 +159,11 @@ export const panelConfig = {
   }
 } satisfies PanelConfigFor<
   typeof CmkKpiStatCard,
-  'series' | 'state' | 'rangeLimits' | 'range' | 'deltaRatio' | 'href'
+  'series' | 'state' | 'rangeLimits' | 'range' | 'href' | 'formatValue' | 'delta'
 > & {
   sparkHeightMode: ListPropDef<SparkHeightMode>
   showDelta: BoolPropDef
-  deltaPercent: NumberPropDef
+  comparisonBasis: ListPropDef<ComparisonBasis>
   pointCount: NumberPropDef
   dataState: ListPropDef<DataState>
   showState: BoolPropDef
@@ -191,7 +202,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<
   typeof CmkKpiStatCard,
-  'series' | 'state' | 'rangeLimits' | 'range' | 'deltaRatio' | 'href'
+  'series' | 'state' | 'rangeLimits' | 'range' | 'href' | 'formatValue' | 'delta'
 >().createRef(panelConfig)
 
 // A window of per-minute values, oldest first (as the compute endpoints
@@ -242,6 +253,13 @@ const range = computed<KpiValueRange | undefined>(() =>
     ? { minimum: propState.value.rangeMin, maximum: propState.value.rangeMax }
     : undefined
 )
+
+// Series values are unitless demo numbers, so the comparison basis text just
+// appends whatever unit is currently configured for the headline value.
+function formatValue(value: number): string {
+  const unit = propState.value.unit
+  return unit ? `${value.toFixed(1)} ${unit}` : value.toFixed(1)
+}
 </script>
 
 <template>
@@ -259,7 +277,9 @@ const range = computed<KpiValueRange | undefined>(() =>
         <CmkKpiStatCard
           :value="propState.dataState === 'no-data' ? undefined : propState.value"
           :unit="propState.unit || undefined"
-          :delta-ratio="propState.showDelta ? propState.deltaPercent / 100 : undefined"
+          :show-delta="propState.showDelta"
+          :comparison-basis="propState.comparisonBasis"
+          :format-value="formatValue"
           :series="series"
           :color="propState.color"
           :state="state"

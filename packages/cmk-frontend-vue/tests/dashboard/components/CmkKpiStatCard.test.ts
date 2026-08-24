@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render } from '@testing-library/vue'
+import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 
 import CmkKpiStatCard from '@/dashboard/components/CmkKpiStatCard/CmkKpiStatCard.vue'
 import type {
@@ -17,6 +18,10 @@ function sample(timestamp: number, value: number | null): TimestampedSample {
 
 const SERIES = [sample(0, 10), sample(60, 20), sample(120, 15), sample(180, 30)]
 
+function formatValue(value: number): string {
+  return value.toFixed(1)
+}
+
 function renderCard(props: Partial<CmkKpiStatCardProps> = {}) {
   return render(CmkKpiStatCard, {
     props: {
@@ -24,6 +29,7 @@ function renderCard(props: Partial<CmkKpiStatCardProps> = {}) {
       unit: 'GB',
       series: SERIES,
       color: 'var(--color-corporate-green-50)',
+      formatValue,
       ...props
     }
   })
@@ -32,6 +38,19 @@ function renderCard(props: Partial<CmkKpiStatCardProps> = {}) {
 function deltaOf(container: Element): HTMLElement | null {
   return container.querySelector('.db-cmk-kpi-stat-card__delta')
 }
+
+function deltaPercentOf(container: Element): string | undefined {
+  return container.querySelector('.db-cmk-kpi-stat-card__delta-percent')?.textContent
+}
+
+function deltaComparisonOf(container: Element): string | undefined {
+  return container.querySelector('.db-cmk-kpi-stat-card__delta-comparison')?.textContent
+}
+
+const { formatter: durationFormatter } = userSpecificUnit(
+  { notation: 'time', symbol: 's', precision: { type: 'auto', digits: 0 } },
+  'celsius'
+)
 
 test('renders the headline value with its unit', () => {
   const { container } = renderCard()
@@ -46,24 +65,68 @@ test('omits the unit element for plain counts', () => {
   expect(container.querySelector('.db-cmk-kpi-stat-card__unit')).toBeNull()
 })
 
-test('hides the delta indicator when no ratio is given', () => {
-  const { container } = renderCard()
+test('hides the delta indicator when fewer than two real samples exist', () => {
+  const { container } = renderCard({ series: [sample(0, 42)] })
 
   expect(deltaOf(container)).toBeNull()
 })
 
-test('shows the delta as an absolute percentage with its direction', () => {
-  const { container } = renderCard({ deltaRatio: -0.062 })
+test('hides the delta indicator when showDelta is false', () => {
+  const { container } = renderCard({ showDelta: false })
 
-  const delta = deltaOf(container)
-  expect(delta).toHaveTextContent('6.2%')
-  expect(delta).toHaveClass('db-cmk-kpi-stat-card__delta--down')
+  expect(deltaOf(container)).toBeNull()
 })
 
-test('an upward delta carries no direction modifier', () => {
-  const { container } = renderCard({ deltaRatio: 0.12 })
+test('compares the current value against the average of the samples before it by default', () => {
+  // Basis (average of 10, 20, 15) = 15; current = 30 -> up 100.0%.
+  const { container } = renderCard()
 
-  expect(deltaOf(container)).not.toHaveClass('db-cmk-kpi-stat-card__delta--down')
+  const delta = deltaOf(container)
+  expect(delta).not.toHaveClass('db-cmk-kpi-stat-card__delta--down')
+  expect(deltaPercentOf(container)).toBe('100.0%')
+  expect(deltaComparisonOf(container)).toBe(`vs. 15.0 avg. (${durationFormatter.render(180)})`)
+})
+
+test('shows a downward delta when the current value is below the basis', () => {
+  // Basis (average of 10, 30) = 20; current = 5 -> down 75.0%.
+  const series = [sample(0, 10), sample(60, 30), sample(120, 5)]
+  const { container } = renderCard({ series })
+
+  expect(deltaOf(container)).toHaveClass('db-cmk-kpi-stat-card__delta--down')
+  expect(deltaPercentOf(container)).toBe('75.0%')
+})
+
+test.each([
+  ['average', '15.0'],
+  ['last', '15.0'],
+  ['minimum', '10.0'],
+  ['maximum', '20.0'],
+  ['median', '15.0']
+] as const)(
+  'compares against the %s of the real samples before the current one',
+  (basis, expected) => {
+    const { container } = renderCard({ comparisonBasis: basis })
+
+    expect(deltaComparisonOf(container)).toContain(`vs. ${expected}`)
+  }
+)
+
+test('the "last" basis reads as "prev. sample" with no window suffix', () => {
+  // Series is [10, 20, 15, 30]; current is 30, so the basis is the sample
+  // immediately before it (15), not the whole basis window's own average.
+  const { container } = renderCard({ comparisonBasis: 'last' })
+
+  expect(deltaComparisonOf(container)).toBe('vs. 15.0 prev. sample')
+})
+
+test('the comparison basis and window come from real samples only, excluding the current one', () => {
+  const series = [sample(0, 10), sample(60, null), sample(120, 20), sample(180, 30)]
+  const { container } = renderCard({ series })
+
+  // Real basis samples are 10 (t=0) and 20 (t=120); current is 30 (t=180).
+  // The null at t=60 is skipped, and the window runs to the current sample's
+  // own timestamp, not the gap's.
+  expect(deltaComparisonOf(container)).toBe(`vs. 15.0 avg. (${durationFormatter.render(180)})`)
 })
 
 test('the value and sparkline take the given accent color', () => {
@@ -125,7 +188,7 @@ test('draws no bridge for a series without gaps', () => {
 
 test('replaces the delta with a stale note when the series ends in missing samples', () => {
   const series = [sample(0, 10), sample(60, 20), sample(120, null)]
-  const { container } = renderCard({ series, deltaRatio: 0.12 })
+  const { container } = renderCard({ series })
 
   expect(deltaOf(container)).toBeNull()
   expect(container.querySelector('.db-cmk-kpi-stat-card__stale-note')).toHaveTextContent(
@@ -134,7 +197,7 @@ test('replaces the delta with a stale note when the series ends in missing sampl
 })
 
 test('shows the delta, not a stale note, for a series that ends with real data', () => {
-  const { container } = renderCard({ deltaRatio: 0.12 })
+  const { container } = renderCard()
 
   expect(container.querySelector('.db-cmk-kpi-stat-card__stale-note')).toBeNull()
   expect(deltaOf(container)).not.toBeNull()
@@ -142,7 +205,7 @@ test('shows the delta, not a stale note, for a series that ends with real data',
 
 test('an interior gap does not make the reading stale', () => {
   const series = [sample(0, 10), sample(60, null), sample(120, 20)]
-  const { container } = renderCard({ series, deltaRatio: 0.12 })
+  const { container } = renderCard({ series })
 
   expect(container.querySelector('.db-cmk-kpi-stat-card__stale-note')).toBeNull()
   expect(deltaOf(container)).not.toBeNull()
@@ -217,7 +280,7 @@ test.each([
 })
 
 test('renders an em dash and a body note instead of a value when there is no data', () => {
-  const { container } = renderCard({ value: undefined, unit: 'GB', deltaRatio: 0.12 })
+  const { container } = renderCard({ value: undefined, unit: 'GB' })
 
   expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('—')
   expect(container.querySelector('.db-cmk-kpi-stat-card__unit')).toHaveTextContent('GB')

@@ -10,13 +10,18 @@ const series = [62, 68, 75, 71, 66, 73, 82, 78, 74, 80].map((value, index) => ({
   timestamp: index * 60,
   value
 }))
+
+function formatValue(value: number): string {
+  return `${value.toFixed(1)} GB`
+}
 </script>
 
 <template>
   <CmkKpiStatCard
     value="801.84"
     unit="GB"
-    :delta-ratio="0.062"
+    comparison-basis="average"
+    :format-value="formatValue"
     :series="series"
     color="var(--color-corporate-green-50)"
     :state="{ severity: 'warn' }"

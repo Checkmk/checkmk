@@ -14,6 +14,7 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
+        "//cmk/gui/valuespec",
         "//cmk/gui/wato:base",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",

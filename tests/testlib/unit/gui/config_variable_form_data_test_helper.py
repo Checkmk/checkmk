@@ -858,14 +858,12 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     },
     "product_usage_analytics": {
         "proxy_setting.environment": "environment",
-        "proxy_setting.global": NoSaveableDefault(),
+        "proxy_setting.global": None,
         "proxy_setting.no_proxy": None,
-        "proxy_setting.url": {
-            "port": NoSaveableDefault(),
-            "proxy_server_name": NoSaveableDefault(),
-            "scheme": "http",
-        },
+        "proxy_setting.url": {"port": 0, "proxy_server_name": "", "scheme": "http"},
         "proxy_setting.url.auth": UnstableDefault(),
+        "proxy_setting.url.auth.password.password": "",
+        "proxy_setting.url.auth.password.store": NoSaveableDefault(),
     },
     "profiling_options": {
         "max_age_days": 1,
@@ -2101,15 +2099,6 @@ CASES: Mapping[str, list[Case]] = {
         CasePass(
             "configured",
             {"enabled": "enabled", "proxy_setting": ("environment", "environment")},
-        ),
-        CasePass(
-            "no-proxy",
-            {"enabled": "disabled", "proxy_setting": ("no_proxy", None)},
-        ),
-        CaseDirty(
-            "global-proxy-missing-in-test-environment",
-            {"enabled": "enabled", "proxy_setting": ("global", "corp_proxy")},
-            MKUserError,
         ),
         CasePass(
             "manual-proxy",

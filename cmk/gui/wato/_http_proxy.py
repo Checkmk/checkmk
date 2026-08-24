@@ -8,10 +8,6 @@
 from collections.abc import Iterable
 from typing import get_args, Literal
 
-from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended
-from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
-    CascadingSingleChoiceElementExtended,
-)
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -25,9 +21,8 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.password_store import postprocessable_ios_password
-from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.rulesets.v1 import form_specs as fs
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Title
 
 _Schemes = Literal["http", "https", "socks4", "socks4a", "socks5", "socks5h"]
 _allowed_schemes = frozenset(get_args(_Schemes))
@@ -85,67 +80,6 @@ def HTTPProxyReference(allowed_schemes: Iterable[_Schemes] = _allowed_schemes) -
             ("url", _("Manual proxy configuration"), HTTPProxyInput(allowed_schemes)),
         ],
         sorted=False,
-    )
-
-
-def http_proxy_reference_form_spec() -> CascadingSingleChoiceExtended:
-    def _global_proxy_elements() -> list[SingleChoiceElementExtended[str]]:
-        settings = ConfigDomainCore().load()
-        return [
-            SingleChoiceElementExtended[str](
-                name=str(proxy["ident"]),
-                title=Title(str(proxy["title"])),  # astrein: disable=localization-checker
-            )
-            for proxy in sorted(
-                settings.get("http_proxies", {}).values(), key=lambda proxy: str(proxy["title"])
-            )
-        ]
-
-    return CascadingSingleChoiceExtended(
-        title=Title("HTTP proxy"),
-        prefill=fs.DefaultValue("environment"),
-        elements=[
-            fs.CascadingSingleChoiceElement(
-                name="environment",
-                title=Title("Auto-detect proxy settings for this network"),
-                parameter_form=fs.FixedValue(
-                    value="environment",
-                    label=Label(
-                        "Use proxy settings from the process environment. This is the default."
-                    ),
-                    help_text=Help(
-                        "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
-                        "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
-                        "Have a look at the python requests module documentation for further information. Note "
-                        "that these variables must be defined as a site-user in ~/etc/environment and that "
-                        "this might affect other notification methods which also use the requests module."
-                    ),
-                ),
-            ),
-            fs.CascadingSingleChoiceElement(
-                name="no_proxy",
-                title=Title("No proxy"),
-                parameter_form=fs.FixedValue(
-                    value=None,
-                    label=Label("Connect directly to the destination instead of using a proxy."),
-                ),
-            ),
-            CascadingSingleChoiceElementExtended(
-                name="global",
-                title=Title("Globally configured proxy"),
-                parameter_form=SingleChoiceExtended[str](
-                    elements=_global_proxy_elements,
-                    invalid_element_validation=fs.InvalidElementValidator(
-                        mode=fs.InvalidElementMode.KEEP
-                    ),
-                ),
-            ),
-            fs.CascadingSingleChoiceElement(
-                name="url",
-                title=Title("Manual proxy configuration"),
-                parameter_form=http_proxy_input_form_spec(),
-            ),
-        ],
     )
 
 

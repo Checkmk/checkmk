@@ -10,7 +10,11 @@ from typing import Final, override
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.wato._http_proxy import http_proxy_reference_form_spec
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+)
+from cmk.gui.wato._http_proxy import HTTPProxyReference
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigDomainName,
@@ -18,8 +22,6 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
     SerializedSettings,
 )
-from cmk.rulesets.v1 import form_specs as fs
-from cmk.rulesets.v1 import Help, Title
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.paths import default_config_dir, omd_root
 from cmk.web.utils.html import HTML
@@ -95,43 +97,37 @@ def make_product_usage_analytics_config_variable(
             }
         ),
         hint=hint,
-        form_spec=lambda context: fs.Dictionary(
-            title=Title("Product usage analytics"),
-            elements={
-                "enabled": fs.DictElement(
-                    required=True,
-                    parameter_form=fs.SingleChoice(
-                        title=Title("Enable product usage analytics"),
-                        help_text=Help(
+        valuespec=lambda context: Dictionary(
+            title=_("Product usage analytics"),
+            elements=[
+                (
+                    "enabled",
+                    DropdownChoice(
+                        title=_("Enable product usage analytics"),
+                        help=_(
                             "Consent to product usage analytics data collection. "
                             "By default, this is disabled, the user will be asked for consent via pop-up. "
                             "Run <tt>cmk-product-usage --dry-run</tt> in the command line to see a preview of the data."
                         ),
-                        elements=[
-                            fs.SingleChoiceElement(
-                                name="enabled",
-                                title=Title(
-                                    "Allow collection and transmission of product usage data"
-                                ),
+                        choices=[
+                            (
+                                "enabled",
+                                _("Allow collection and transmission of product usage data"),
                             ),
-                            fs.SingleChoiceElement(
-                                name="disabled",
-                                title=Title("Do not collect product usage data"),
-                            ),
-                            fs.SingleChoiceElement(
-                                name="not_decided",
-                                title=Title("Disabled. Reminder scheduled"),
-                            ),
+                            ("disabled", _("Do not collect product usage data")),
+                            ("not_decided", _("Disabled. Reminder scheduled")),
                         ],
-                        prefill=fs.DefaultValue("enabled"),
+                        html_attrs={"width": "fit-content"},
                     ),
                 ),
-                "proxy_setting": fs.DictElement(
-                    required=True,
-                    parameter_form=http_proxy_reference_form_spec(),
+                (
+                    "proxy_setting",
+                    HTTPProxyReference(),
                 ),
-            },
-            help_text=Help(
+            ],
+            optional_keys=[],
+            default_keys=["enabled", "proxy_setting"],
+            help=_(
                 "<p><b>Network configuration: </b>"
                 "To transmit analytics data, ensure your firewall permits outbound traffic to "
                 "<tt>https://analytics.checkmk.com/upload</tt> on port <tt>443</tt>. "

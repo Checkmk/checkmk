@@ -58,7 +58,9 @@ from ._graph_templates import TemplateGraphSpecification
 
 # A view carrying one of these is driven by the global time picker rather than the
 # pnp_timerange painter option, and must not auto-reload.
-ENGINE_GRAPH_PAINTER_IDENTS: Final = frozenset({"svc_pnpgraph", "service_graphs"})
+ENGINE_GRAPH_PAINTER_IDENTS: Final = frozenset(
+    {"svc_pnpgraph", "service_graphs", "host_pnpgraph", "host_graphs"}
+)
 
 
 def renders_engine_graphs(painter_idents: Iterable[str]) -> bool:
@@ -122,6 +124,16 @@ _DEFAULT_INTERACTION = Interaction(
     hover="enabled",
     brush="enabled",
     pin="enabled",
+)
+
+# Mobile has no room for the controls and no pointer to drive them with.
+STATIC_INTERACTION = Interaction(
+    burger="disabled",
+    zoom="disabled",
+    panning="disabled",
+    hover="disabled",
+    brush="disabled",
+    pin="disabled",
 )
 
 

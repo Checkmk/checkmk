@@ -8,41 +8,31 @@
 
 import copy
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import replace
 from typing import Literal, override
-from uuid import uuid4
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
-    compute_html_graph_ranges,
-    FetchTimeSeriesProtocol,
-    get_temperature_unit,
     get_template_graph_specification,
     GraphDisplayConfigHTML,
-    GraphEnvironment,
-    GraphFromAPI,
     GraphRenderOptions,
-    graphs_from_api,
-    METRIC_BACKEND_KEY,
-    metric_backend_registry,
-    metrics_from_api,
-    RegisteredMetric,
-    render_deferred_graphs_html,
     render_engine_graph_group,
-    render_graphs_html,
     resolve_user_size,
     TemplateGraphSpecification,
     vs_graph_render_options,
 )
-from cmk.gui.graphing._frontend import _DEFAULT_INTERACTION, default_time_range_seconds
+from cmk.gui.graphing._frontend import (
+    _DEFAULT_INTERACTION,
+    default_time_range_seconds,
+    STATIC_INTERACTION,
+)
 from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0 import Cell, Painter
 from cmk.gui.painter_options import (
-    get_graph_timerange_from_painter_options,
     PainterOption,
     PainterOptionRegistry,
     PainterOptions,
@@ -52,7 +42,6 @@ from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
     DynamicIconName,
-    GraphTimerange,
     PainterParameters,
     Row,
     ViewName,
@@ -60,8 +49,6 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
 )
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
@@ -93,6 +80,9 @@ def register(
     multisite_builtin_views: dict[ViewName, ViewSpec],
 ) -> None:
     painter_option_registry.register(PainterOptionGraphRenderOptions())
+    # No graph painter declares "pnp_timerange" any more - the engine takes its time range
+    # from the global time picker. The option stays registered because the reporting instant
+    # view still reads its valuespec (nonfree/pro/reporting/_page_instant_view.py).
     painter_option_registry.register(PainterOptionPNPTimerange())
 
     multisite_builtin_views.update(_GRAPH_VIEWS)
@@ -195,21 +185,14 @@ _GRAPH_VIEWS = {
 def _paint_time_graph_cmk(
     row: Row,
     cell: Cell,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, GraphFromAPI],
-    user_permissions: UserPermissions,
     *,
     debug: bool,
-    graph_timeranges: Sequence[GraphTimerange],
-    temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeriesProtocol | None,
     user: LoggedInUser,
     request: Request,
     response: Response,
     painter_options: PainterOptions,
     show_time_range_previews: bool | None = None,
     require_historic_metrics: bool = True,
-    render_with_engine: bool = False,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
     # a) the painter parameters configured in the view
@@ -242,26 +225,14 @@ def _paint_time_graph_cmk(
     else:
         raw_time_range = (now - default_time_range_seconds(), now)
 
-    # Load timerange from painter option (overrides the defaults, if set by the user)
-    painter_option_pnp_timerange = painter_options.get_without_default("pnp_timerange")
-    if painter_option_pnp_timerange is not None:
-        raw_time_range = get_graph_timerange_from_painter_options()
-
-    ranges = compute_html_graph_ranges(
-        start=raw_time_range[0],
-        end=raw_time_range[1],
-        factor=1,
-        height_in_ex=graph_size[1],
-    )
-
-    if is_mobile(request, response):
+    # The engine takes its interactions as an explicit argument rather than off the display
+    # config, so a mobile render has to hand it the static one.
+    mobile = is_mobile(request, response)
+    if mobile:
         graph_size = (27.0, 18.0)
         display_config = display_config.model_copy(
             update={
-                "interaction": False,
-                "show_controls": False,
                 "show_pin": False,
-                "show_graph_time": False,
                 "show_time_range_previews": False,
                 "show_legend": False,
             }
@@ -286,52 +257,14 @@ def _paint_time_graph_cmk(
         service_name=row.get("service_description", "_HOST_"),
     )
 
-    if render_with_engine:
-        return "", _render_engine_graph_group(
-            row,
-            graph_specification,
-            display_config,
-            graph_size=graph_size,
-            raw_time_range=raw_time_range,
-            debug=debug,
-        )
-
-    # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
-    # Unfortunately, we have no access to this information here. Regarding the rows, we could
-    # use (site, host, service) as identifier, but for the columns, there does not seem to be
-    # any unique information. The view rendering is designed st. individuals cells are rendered
-    # completely independently of each other, based solely on the livestatus data and on the
-    # painter settings (which makes sense). The caching in graph.ts breaks this assumption. So
-    # for now, we randomize. See also CMK-13840.
-    display_id = str(uuid4())
-
-    env = GraphEnvironment(
-        registered_metrics=registered_metrics,
-        registered_graphs=registered_graphs,
-        user_permissions=user_permissions,
-        temperature_unit=temperature_unit,
-        backend_time_series_fetcher=backend_time_series_fetcher,
-        debug=debug,
-        show_graph_ids=bool(painter_options.get("show_internal_graph_and_metric_ids")),
-    )
-
-    if request.has_var("cmk-token"):
-        return "", render_graphs_html(
-            graph_specification,
-            ranges,
-            display_config,
-            env,
-            size=graph_size,
-            graph_timeranges=graph_timeranges,
-            display_id=display_id,
-        )
-    return "", render_deferred_graphs_html(
+    return "", _render_engine_graph_group(
+        row,
         graph_specification,
-        ranges,
         display_config,
-        env,
-        size=graph_size,
-        display_id=display_id,
+        graph_size=graph_size,
+        raw_time_range=raw_time_range,
+        debug=debug,
+        mobile=mobile,
     )
 
 
@@ -343,9 +276,9 @@ def _render_engine_graph_group(
     graph_size: tuple[float, float],
     raw_time_range: tuple[int, int],
     debug: bool,
+    mobile: bool,
 ) -> HTML:
     """Render the graph-engine (Vue) graph group for a row's template graphs."""
-    # TODO: Handle the case of shared dashboards (request.has_var("cmk-token"))
     return render_engine_graph_group(
         graph_specification,
         host_name=row["host_name"],
@@ -356,8 +289,12 @@ def _render_engine_graph_group(
             mode="resizable" if display_config.resizable else "fixed",
         ),
         time_range=raw_time_range,
-        interaction=replace(
-            _DEFAULT_INTERACTION, pin="enabled" if display_config.show_pin else "disabled"
+        interaction=(
+            STATIC_INTERACTION
+            if mobile
+            else replace(
+                _DEFAULT_INTERACTION, pin="enabled" if display_config.show_pin else "disabled"
+            )
         ),
         show_graph_time=display_config.show_time_range_previews,
         show_legend=display_config.show_legend,
@@ -450,21 +387,12 @@ class PainterServiceGraphs(Painter):
         return _paint_time_graph_cmk(
             row,
             cell,
-            metrics_from_api,
-            graphs_from_api,
             user=user,
             request=self.request,
             response=response,
             painter_options=self._painter_options,
-            user_permissions=self._user_permissions,
             debug=self.config.debug,
-            graph_timeranges=self.config.graph_timeranges,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-            backend_time_series_fetcher=metric_backend_registry[
-                METRIC_BACKEND_KEY
-            ].get_time_series_fetcher(),
             show_time_range_previews=True,
-            render_with_engine=True,
         )
 
     @override
@@ -516,19 +444,11 @@ class PainterHostGraphs(Painter):
         return _paint_time_graph_cmk(
             row,
             cell,
-            metrics_from_api,
-            graphs_from_api,
             user=user,
             request=self.request,
             response=response,
             painter_options=self._painter_options,
-            user_permissions=self._user_permissions,
             debug=self.config.debug,
-            graph_timeranges=self.config.graph_timeranges,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-            backend_time_series_fetcher=metric_backend_registry[
-                METRIC_BACKEND_KEY
-            ].get_time_series_fetcher(),
             show_time_range_previews=True,
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
             # also render the graphs if there are no historic metrics available (but perf data is)
@@ -597,7 +517,7 @@ class PainterSvcPnpgraph(Painter):
     @override
     def painter_options(self) -> list[str]:
         # No pnp_timerange: the engine takes its time range from the global time picker.
-        return ["show_internal_graph_and_metric_ids"]
+        return []
 
     @property
     @override
@@ -609,20 +529,11 @@ class PainterSvcPnpgraph(Painter):
         return _paint_time_graph_cmk(
             row,
             cell,
-            metrics_from_api,
-            graphs_from_api,
             user=user,
             request=self.request,
             response=response,
             painter_options=self._painter_options,
-            user_permissions=self._user_permissions,
             debug=self.config.debug,
-            graph_timeranges=self.config.graph_timeranges,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-            backend_time_series_fetcher=metric_backend_registry[
-                METRIC_BACKEND_KEY
-            ].get_time_series_fetcher(),
-            render_with_engine=True,
         )
 
     @override
@@ -678,19 +589,11 @@ class PainterHostPnpgraph(Painter):
         return _paint_time_graph_cmk(
             row,
             cell,
-            metrics_from_api,
-            graphs_from_api,
             user=user,
             request=self.request,
             response=response,
             painter_options=self._painter_options,
-            user_permissions=self._user_permissions,
             debug=self.config.debug,
-            graph_timeranges=self.config.graph_timeranges,
-            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
-            backend_time_series_fetcher=metric_backend_registry[
-                METRIC_BACKEND_KEY
-            ].get_time_series_fetcher(),
         )
 
     @override

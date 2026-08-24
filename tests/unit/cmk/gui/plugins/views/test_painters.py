@@ -1307,9 +1307,10 @@ def _set_expected_queries(painter_ident, live):
             "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16"
         )
         return
-    if painter_ident in ("service_graphs", "svc_pnpgraph"):
-        # The engine resolves the metric names during the render; the legacy renderer
-        # deferred its fetch to a follow-up AJAX call and so issued no query here.
+    if painter_ident in ("service_graphs", "svc_pnpgraph", "host_graphs", "host_pnpgraph"):
+        # Every graph painter renders through the engine, which resolves the metric names
+        # during the render. The row carries a service_description, so the host painters
+        # address the same service as the service ones.
         live.expect_query(
             "GET services\nColumns: host_name description perf_data metrics check_command\n"
             "Filter: host_name = abc\nFilter: description = Interface 3\nAnd: 2"

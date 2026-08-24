@@ -1,5 +1,5 @@
 {
-  "checksum": "0b04be17b625f317a9a067e5099d69f71a8218282aa2148b2ffd63037ae256e8",
+  "checksum": "4bab5d5638d1a16e786d73e55925fb53c13f58716ee89bdaf63e2fa1717d005c",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -1828,14 +1828,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "bytes 1.10.1": {
+    "bytes 1.12.0": {
       "name": "bytes",
-      "version": "1.10.1",
+      "version": "1.12.0",
       "package_url": "https://github.com/tokio-rs/bytes",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/bytes/1.10.1/download",
-          "sha256": "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
+          "url": "https://static.crates.io/crates/bytes/1.12.0/download",
+          "sha256": "8ae3f5d315924270530207e2a68396c3cc547f6dca3fbdca317cfb1a51edb593"
         }
       },
       "targets": [
@@ -1864,8 +1864,8 @@
           ],
           "selects": {}
         },
-        "edition": "2018",
-        "version": "1.10.1"
+        "edition": "2021",
+        "version": "1.12.0"
       },
       "license": "MIT",
       "license_ids": [
@@ -2114,7 +2114,7 @@
               "target": "anyhow"
             },
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -4835,7 +4835,7 @@
               "target": "atomic_waker"
             },
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -5051,7 +5051,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -5107,7 +5107,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -5158,7 +5158,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -5344,7 +5344,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -5464,7 +5464,7 @@
               "target": "hyper_util"
             },
             {
-              "id": "rustls 0.23.23",
+              "id": "rustls 0.23.31",
               "target": "rustls"
             },
             {
@@ -5472,7 +5472,7 @@
               "target": "rustls_native_certs"
             },
             {
-              "id": "rustls-pki-types 1.11.0",
+              "id": "rustls-pki-types 1.15.1",
               "target": "rustls_pki_types",
               "alias": "pki_types"
             },
@@ -5544,7 +5544,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -5631,7 +5631,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -9290,7 +9290,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -9372,7 +9372,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -9411,7 +9411,7 @@
                 "target": "ring"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10019,7 +10019,7 @@
               "target": "base64"
             },
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -10083,7 +10083,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10095,7 +10095,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10142,7 +10142,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10154,7 +10154,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10197,7 +10197,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10209,7 +10209,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10252,7 +10252,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10264,7 +10264,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10307,7 +10307,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10319,7 +10319,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10362,7 +10362,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10374,7 +10374,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10417,7 +10417,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10429,7 +10429,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10472,7 +10472,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10484,7 +10484,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10527,7 +10527,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10539,7 +10539,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10582,7 +10582,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10594,7 +10594,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10637,7 +10637,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10649,7 +10649,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10692,7 +10692,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10704,7 +10704,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10821,7 +10821,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10833,7 +10833,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10880,7 +10880,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10892,7 +10892,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10935,7 +10935,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -10947,7 +10947,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -10990,7 +10990,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11002,7 +11002,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11045,7 +11045,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11057,7 +11057,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11100,7 +11100,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11112,7 +11112,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11155,7 +11155,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11167,7 +11167,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11210,7 +11210,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11222,7 +11222,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11265,7 +11265,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11277,7 +11277,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11320,7 +11320,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11332,7 +11332,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11375,7 +11375,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11387,7 +11387,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11430,7 +11430,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11442,7 +11442,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11489,7 +11489,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11501,7 +11501,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11544,7 +11544,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11556,7 +11556,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11599,7 +11599,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11611,7 +11611,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11654,7 +11654,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11666,7 +11666,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11709,7 +11709,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11721,7 +11721,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11764,7 +11764,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11776,7 +11776,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11819,7 +11819,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11831,7 +11831,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -11874,7 +11874,7 @@
                 "alias": "native_tls_crate"
               },
               {
-                "id": "rustls 0.23.23",
+                "id": "rustls 0.23.31",
                 "target": "rustls"
               },
               {
@@ -11886,7 +11886,7 @@
                 "target": "rustls_pemfile"
               },
               {
-                "id": "rustls-pki-types 1.11.0",
+                "id": "rustls-pki-types 1.15.1",
                 "target": "rustls_pki_types"
               },
               {
@@ -12486,14 +12486,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rustls 0.23.23": {
+    "rustls 0.23.31": {
       "name": "rustls",
-      "version": "0.23.23",
+      "version": "0.23.31",
       "package_url": "https://github.com/rustls/rustls",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustls/0.23.23/download",
-          "sha256": "47796c98c480fce5406ef69d1c76378375492c3b0a0de587be0c1d9feb12f395"
+          "url": "https://static.crates.io/crates/rustls/0.23.31/download",
+          "sha256": "c0ebcbd2f03de0fc1122ad9bb24b127a5a6cd51d72604a3f3c50ac459762b6cc"
         }
       },
       "targets": [
@@ -12546,16 +12546,16 @@
               "target": "ring"
             },
             {
-              "id": "rustls 0.23.23",
+              "id": "rustls 0.23.31",
               "target": "build_script_build"
             },
             {
-              "id": "rustls-pki-types 1.11.0",
+              "id": "rustls-pki-types 1.15.1",
               "target": "rustls_pki_types",
               "alias": "pki_types"
             },
             {
-              "id": "rustls-webpki 0.102.8",
+              "id": "rustls-webpki 0.103.15",
               "target": "webpki"
             },
             {
@@ -12570,7 +12570,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.23.23"
+        "version": "0.23.31"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -12629,7 +12629,7 @@
         "deps": {
           "common": [
             {
-              "id": "rustls-pki-types 1.11.0",
+              "id": "rustls-pki-types 1.15.1",
               "target": "rustls_pki_types",
               "alias": "pki_types"
             }
@@ -12705,7 +12705,7 @@
         "deps": {
           "common": [
             {
-              "id": "rustls-pki-types 1.11.0",
+              "id": "rustls-pki-types 1.15.1",
               "target": "rustls_pki_types",
               "alias": "pki_types"
             }
@@ -12723,14 +12723,14 @@
       ],
       "license_file": "LICENSE"
     },
-    "rustls-pki-types 1.11.0": {
+    "rustls-pki-types 1.15.1": {
       "name": "rustls-pki-types",
-      "version": "1.11.0",
+      "version": "1.15.1",
       "package_url": "https://github.com/rustls/pki-types",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustls-pki-types/1.11.0/download",
-          "sha256": "917ce264624a4b4db1c364dcc35bfca9ded014d0a958cd47ad3e960e988ea51c"
+          "url": "https://static.crates.io/crates/rustls-pki-types/1.15.1/download",
+          "sha256": "2f4925028c7eb5d1fcdaf196971378ed9d2c1c4efc7dc5d011256f76c99c0a96"
         }
       },
       "targets": [
@@ -12760,8 +12760,17 @@
           ],
           "selects": {}
         },
+        "deps": {
+          "common": [
+            {
+              "id": "zeroize 1.8.1",
+              "target": "zeroize"
+            }
+          ],
+          "selects": {}
+        },
         "edition": "2021",
-        "version": "1.11.0"
+        "version": "1.15.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -12770,14 +12779,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rustls-webpki 0.102.8": {
+    "rustls-webpki 0.103.15": {
       "name": "rustls-webpki",
-      "version": "0.102.8",
+      "version": "0.103.15",
       "package_url": "https://github.com/rustls/webpki",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustls-webpki/0.102.8/download",
-          "sha256": "64ca1bc8749bd4cf37b5ce386cc146580777b4e8572c7b97baf22c83f444bee9"
+          "url": "https://static.crates.io/crates/rustls-webpki/0.103.15/download",
+          "sha256": "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
         }
       },
       "targets": [
@@ -12814,7 +12823,7 @@
               "target": "ring"
             },
             {
-              "id": "rustls-pki-types 1.11.0",
+              "id": "rustls-pki-types 1.15.1",
               "target": "rustls_pki_types",
               "alias": "pki_types"
             },
@@ -12826,7 +12835,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.102.8"
+        "version": "0.103.15"
       },
       "license": "ISC",
       "license_ids": [
@@ -15955,7 +15964,7 @@
           "selects": {
             "aarch64-apple-darwin": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -15973,7 +15982,7 @@
             ],
             "aarch64-apple-ios": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -15991,7 +16000,7 @@
             ],
             "aarch64-apple-ios-sim": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16009,7 +16018,7 @@
             ],
             "aarch64-linux-android": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16027,7 +16036,7 @@
             ],
             "aarch64-pc-windows-msvc": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16045,7 +16054,7 @@
             ],
             "aarch64-unknown-fuchsia": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16063,7 +16072,7 @@
             ],
             "aarch64-unknown-linux-gnu": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16081,7 +16090,7 @@
             ],
             "aarch64-unknown-nixos-gnu": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16099,7 +16108,7 @@
             ],
             "aarch64-unknown-nto-qnx710": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16117,7 +16126,7 @@
             ],
             "arm-unknown-linux-gnueabi": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16135,7 +16144,7 @@
             ],
             "armv7-linux-androideabi": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16153,7 +16162,7 @@
             ],
             "armv7-unknown-linux-gnueabi": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16177,7 +16186,7 @@
             ],
             "i686-apple-darwin": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16195,7 +16204,7 @@
             ],
             "i686-linux-android": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16213,7 +16222,7 @@
             ],
             "i686-pc-windows-msvc": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16231,7 +16240,7 @@
             ],
             "i686-unknown-freebsd": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16249,7 +16258,7 @@
             ],
             "i686-unknown-linux-gnu": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16267,7 +16276,7 @@
             ],
             "powerpc-unknown-linux-gnu": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16285,7 +16294,7 @@
             ],
             "riscv32imc-unknown-none-elf": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16299,7 +16308,7 @@
             ],
             "riscv64gc-unknown-none-elf": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16313,7 +16322,7 @@
             ],
             "s390x-unknown-linux-gnu": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16331,7 +16340,7 @@
             ],
             "thumbv7em-none-eabi": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16345,7 +16354,7 @@
             ],
             "thumbv8m.main-none-eabi": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16359,7 +16368,7 @@
             ],
             "x86_64-apple-darwin": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16377,7 +16386,7 @@
             ],
             "x86_64-apple-ios": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16395,7 +16404,7 @@
             ],
             "x86_64-linux-android": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16413,7 +16422,7 @@
             ],
             "x86_64-pc-windows-msvc": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16431,7 +16440,7 @@
             ],
             "x86_64-unknown-freebsd": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16449,7 +16458,7 @@
             ],
             "x86_64-unknown-fuchsia": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16467,7 +16476,7 @@
             ],
             "x86_64-unknown-linux-gnu": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16485,7 +16494,7 @@
             ],
             "x86_64-unknown-nixos-gnu": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16503,7 +16512,7 @@
             ],
             "x86_64-unknown-none": [
               {
-                "id": "bytes 1.10.1",
+                "id": "bytes 1.12.0",
                 "target": "bytes"
               },
               {
@@ -16680,7 +16689,7 @@
         "deps": {
           "common": [
             {
-              "id": "rustls 0.23.23",
+              "id": "rustls 0.23.31",
               "target": "rustls"
             },
             {
@@ -16806,7 +16815,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.12.0",
               "target": "bytes"
             },
             {
@@ -18832,7 +18841,7 @@
         "deps": {
           "common": [
             {
-              "id": "rustls-pki-types 1.11.0",
+              "id": "rustls-pki-types 1.15.1",
               "target": "rustls_pki_types",
               "alias": "pki_types"
             }
@@ -21185,7 +21194,7 @@
   "direct_deps": [
     "aes-gcm 0.10.3",
     "anyhow 1.0.97",
-    "bytes 1.10.1",
+    "bytes 1.12.0",
     "clap 4.5.32",
     "encoding_rs 0.8.35",
     "httpdate 1.0.3",

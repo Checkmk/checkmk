@@ -536,9 +536,9 @@ def test_builtin_dashboard_runtime_filter(
     )
 
     for widget_title in graphic_widgets:
-        # The migrated widgets render the empty state through the new graph engine
-        # (div.db-content-time-series-graph__no-data); widgets still on the legacy graph
-        # dashlet render the same message in div.success. Accept either container.
+        # The graph widget renders the empty state through the graph engine
+        # (div.db-content-time-series-graph__no-data); the figure widgets render the same
+        # message in div.success. Accept either container.
         no_data_message = dashboard_page.get_widget(widget_title).locator(
             "div.db-content-time-series-graph__no-data, div.success"
         )

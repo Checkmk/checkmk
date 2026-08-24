@@ -73,7 +73,6 @@ from ._html_render import (
     GraphDestinations,
     GraphExportRequest,
     GraphRenderState,
-    host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
     render_deferred_graphs_html,
     render_graphs_html,
@@ -116,8 +115,6 @@ from ._unit import (
 )
 from ._utils import (
     MKCombinedGraphLimitExceededError,
-    MKGraphRecipeNotFoundError,
-    MKGraphWidgetTooSmallError,
 )
 from ._valuespecs import (
     id_from_unit_spec,
@@ -159,8 +156,6 @@ __all__ = [
     "GraphSpecification",
     "LineType",
     "MKCombinedGraphLimitExceededError",
-    "MKGraphRecipeNotFoundError",
-    "MKGraphWidgetTooSmallError",
     "GraphFromAPI",
     "MetricName",
     "MetricSpec",
@@ -195,7 +190,6 @@ __all__ = [
     "graph_spec_from_request",
     "GraphExportRequest",
     "graphs_from_api",
-    "host_service_graph_dashlet_cmk",
     "host_service_graph_popup_cmk",
     "id_from_unit_spec",
     "lookup_metric_translations_for_check_command",

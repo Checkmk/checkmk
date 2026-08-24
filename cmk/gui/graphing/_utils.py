@@ -15,14 +15,6 @@ class MKCombinedGraphLimitExceededError(MKHTTPException):
     status = http.HTTPStatus.BAD_REQUEST  # type: ignore[mutable-override]
 
 
-class MKGraphRecipeNotFoundError(MKHTTPException):
-    status = http.HTTPStatus.NOT_FOUND  # type: ignore[mutable-override]
-
-
-class MKGraphWidgetTooSmallError(MKHTTPException):
-    status = http.HTTPStatus.BAD_REQUEST  # type: ignore[mutable-override]
-
-
 SizeEx = NewType("SizeEx", float)
 
 

@@ -38,7 +38,6 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.gui.valuespec import Timerange, TimerangeValue
 from cmk.livestatus_client import MKLivestatusNotFoundError
 from cmk.shared_typing.cmk_time_series_graph import Interaction, Size
 from cmk.utils.jsontype import JsonSerializable
@@ -85,10 +84,6 @@ from ._metric_backend_registry import (
     metric_backend_registry,
 )
 from ._unit import get_temperature_unit, user_specific_unit
-from ._utils import (
-    MKGraphRecipeNotFoundError,
-    MKGraphWidgetTooSmallError,
-)
 
 tracer = trace.get_tracer()
 
@@ -1650,135 +1645,3 @@ class GraphDestinations:
             (GraphDestinations.report, _("Report")),
             (GraphDestinations.notification, _("Notification")),
         ]
-
-
-def _legend_height_ex(usable_height_ex: float, curve_count: int, horizontal_rule_count: int) -> int:
-    """Ex to reserve below the graph for the scrollable legend.
-
-    Legend gets at most a third (graph keeps >= _MIN_WIDGET_HEIGHT_EX) but never less than
-    _MIN_LEGEND_HEIGHT_EX. Raises MKGraphWidgetTooSmallError when neither fits.
-    """
-    if usable_height_ex <= _MIN_WIDGET_HEIGHT_EX + _MIN_LEGEND_HEIGHT_EX:
-        raise MKGraphWidgetTooSmallError(
-            _("Either increase the widget height or disable the graph legend.")
-        )
-
-    # Rough estimate; inaccurate because HTML_SIZE_PER_EX is hard coded, not font-derived.
-    estimated_legend_height_ex = int(3.0 + (curve_count + horizontal_rule_count) * 1.5)
-    budget_ex = min(usable_height_ex // 3, max(usable_height_ex - _MIN_WIDGET_HEIGHT_EX, 0))
-    legend_height_ex = min(estimated_legend_height_ex, budget_ex)
-    if legend_height_ex < estimated_legend_height_ex:
-        # Legend will scroll: keep it usable (the size guard above protects the graph).
-        legend_height_ex = max(legend_height_ex, _MIN_LEGEND_HEIGHT_EX)
-    return int(legend_height_ex)
-
-
-@tracer.instrument("graphing.host_service_graph_dashlet_cmk")
-def host_service_graph_dashlet_cmk(
-    request: Request,
-    recipes: Sequence[GraphRecipeWithOverrides],
-    display_config: GraphDisplayConfigHTML,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    *,
-    debug: bool,
-    graph_timeranges: Sequence[GraphTimerange],
-    temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeriesProtocol | None,
-    display_id: str = "",
-    time_range: TimerangeValue = None,
-) -> HTML:
-    width_var = request.get_float_input_mandatory("width", 0.0)
-    width = width_var / HTML_SIZE_PER_EX
-
-    height_var = request.get_float_input_mandatory("height", 0.0)
-    height = height_var / HTML_SIZE_PER_EX
-
-    bounds = _graph_margin_ex(display_config.show_margin)
-    if display_config.show_title not in [False, "inline"]:
-        height -= 1
-    height -= bounds.top + bounds.bottom
-    width -= bounds.left + bounds.right
-
-    if recipes:
-        recipe_with_overrides = recipes[0]
-    else:
-        raise MKGraphRecipeNotFoundError(_("Failed to calculate a graph recipe."))
-
-    time_range = (
-        json.loads(request.get_str_input_mandatory("timerange"))
-        if time_range is None
-        else time_range
-    )
-
-    end_time: float
-    start_time: float
-    # Age and Range like ["age", 300] and ['date', [1661896800, 1661896800]]
-    if isinstance(time_range, list):
-        # compute_range needs tuple for computation
-        timerange_tuple: TimerangeValue = (time_range[0], time_range[1])
-        start_time, end_time = Timerange.compute_range(timerange_tuple).range
-    # Age like 14400 and y1, d1,...
-    else:
-        start_time, end_time = Timerange.compute_range(time_range).range
-
-    try:
-        graph_ranges = compute_html_graph_ranges(
-            start=start_time,
-            end=end_time,
-            factor=1,
-            height_in_ex=height,
-        )
-    except ZeroDivisionError:
-        return HTML("", escape=False)
-
-    artwork_or_errors = compute_graph_artwork(
-        recipe_with_overrides.recipe,
-        graph_ranges,
-        (width, height),
-        registered_metrics,
-        consolidation_function=recipe_with_overrides.consolidation_function,
-        temperature_unit=temperature_unit,
-        backend_time_series_fetcher=backend_time_series_fetcher,
-        pin_time=_load_graph_pin(),
-        mark_requested_end_time=recipe_with_overrides.mark_requested_end_time,
-    )
-
-    # Shrink the fixed canvas so the legend fits below it; the browser then sizes the
-    # legend's scroll area via flex (see _graphs.scss), not a pixel max-height (CMK-35215).
-    # Preview mode handles overflow via the Vue scroll container, so skip the reduction.
-    is_preview = display_id.endswith("-preview")
-    if display_config.show_legend and artwork_or_errors.artwork.curves and not is_preview:
-        height -= _legend_height_ex(
-            height,
-            len(list(artwork_or_errors.artwork.curves)),
-            len(artwork_or_errors.artwork.horizontal_rules),
-        )
-
-    effective_ranges = recipe_with_overrides.ranges or graph_ranges
-    interaction = GraphInteractionState(
-        consolidation_function=recipe_with_overrides.consolidation_function,
-        time_start=effective_ranges.time_range[0],
-        time_end=effective_ranges.time_range[1],
-        step=effective_ranges.step,
-        value_min=(effective_ranges.vertical_range[0] if effective_ranges.vertical_range else None),
-        value_max=(effective_ranges.vertical_range[1] if effective_ranges.vertical_range else None),
-        size_x=width,
-        size_y=height,
-    )
-    return _render_graph_content_html(
-        request,
-        GraphRenderState(
-            interaction=interaction,
-            recipe=recipe_with_overrides.recipe,
-            specification=recipe_with_overrides.specification,
-            display_config=display_config.update_from_options(recipe_with_overrides.render_options),
-            display_id=display_id,
-        ),
-        artwork_or_errors,
-        debug=debug,
-        graph_timeranges=graph_timeranges,
-        temperature_unit=temperature_unit,
-        backend_time_series_fetcher=backend_time_series_fetcher,
-        expandable_legend_appearance=ExpandableLegendAppearance.POP_UP,
-        show_limits_if_reached=True,
-    )

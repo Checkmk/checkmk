@@ -25,8 +25,6 @@ from .page_check_token_validity import CheckTokenValidityPage
 from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
 from .page_figure_widget import FigureWidgetPage, FigureWidgetTokenAuthPage
-from .page_graph_hover import GraphHoverTokenAuthPage
-from .page_graph_widget import GraphWidgetPage, GraphWidgetTokenAuthPage
 from .page_show_dashboard import page_dashboard_app
 from .page_show_shared_dashboard import SharedDashboardPage
 from .page_view_widget import (
@@ -52,7 +50,6 @@ def register(
     permission_section_registry.register(PERMISSION_SECTION_DASHBOARD)
 
     page_registry.register(PageEndpoint(FigureWidgetPage.ident(), FigureWidgetPage()))
-    page_registry.register(PageEndpoint("widget_graph", GraphWidgetPage()))
     page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage()))
     page_registry.register(PageEndpoint("widget_edit_view", ViewWidgetEditPage()))
     page_registry.register(PageEndpoint("dashboard", page_dashboard_app))
@@ -66,13 +63,7 @@ def register(
         TokenAuthenticatedEndpoint(FigureWidgetTokenAuthPage.ident(), FigureWidgetTokenAuthPage())
     )
     token_authenticated_page_registry.register(
-        TokenAuthenticatedEndpoint(GraphWidgetTokenAuthPage.ident(), GraphWidgetTokenAuthPage())
-    )
-    token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint("widget_iframe_view_token_auth", ViewWidgetIFrameTokenPage())
-    )
-    token_authenticated_page_registry.register(
-        TokenAuthenticatedEndpoint(GraphHoverTokenAuthPage.ident(), GraphHoverTokenAuthPage())
     )
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint("check_token_validity", CheckTokenValidityPage())

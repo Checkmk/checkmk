@@ -8,7 +8,6 @@ import { type Component } from 'vue'
 
 import DashboardContentEmbeddedView from './DashboardContentEmbeddedView.vue'
 import DashboardContentFigure from './DashboardContentFigure.vue'
-import DashboardContentGraph from './DashboardContentGraph.vue'
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import DashboardContentLinkedView from './DashboardContentLinkedView.vue'
 import DashboardContentNtop from './DashboardContentNtop.vue'
@@ -23,7 +22,7 @@ import DashboardContentNetworkFlowDonut from './NetworkFlow/DashboardContentNetw
 import DashboardContentNetworkFlowKpiStatCard from './NetworkFlow/DashboardContentNetworkFlowKpiStatCard.vue'
 import DashboardContentNetworkFlowTopTable from './NetworkFlow/DashboardContentNetworkFlowTopTable.vue'
 import DashboardContentNetworkFlowTrendChart from './NetworkFlow/DashboardContentNetworkFlowTrendChart.vue'
-import { CONTENT_FIGURE_TYPES, GRAPH_TYPES, NTOP_TYPES } from './types.ts'
+import { CONTENT_FIGURE_TYPES, NTOP_TYPES } from './types.ts'
 </script>
 
 <script setup lang="ts">
@@ -70,8 +69,7 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentUserMessages
     case contentType === 'sidebar_element':
       return DashboardContentSidebarElement
-    // These graph widgets render client-side on the new graphing engine. The remaining
-    // GRAPH_TYPES still fall through to their legacy components below.
+    // Every graph widget renders client-side on the new graphing engine.
     case [
       'performance_graph',
       'single_timeseries',
@@ -83,8 +81,6 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentTimeSeriesGraph
     case CONTENT_FIGURE_TYPES.includes(contentType):
       return DashboardContentFigure
-    case GRAPH_TYPES.includes(contentType):
-      return DashboardContentGraph
     case NTOP_TYPES.includes(contentType):
       return DashboardContentNtop
     default:

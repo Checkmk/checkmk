@@ -98,13 +98,6 @@ export interface DrawSubplotStyles {
   'stroke-width'?: number
 }
 
-export interface Shift {
-  shifted_id: string
-  seconds: number
-  color: string
-  label_suffix: string
-}
-
 export interface Domain {
   x: [number, number]
   y: [number, number]

@@ -9,7 +9,6 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.config import Config
-from cmk.gui.graphing import MKGraphWidgetTooSmallError
 from cmk.gui.graphing._artwork import (
     ActualTimeRange,
     Axis,
@@ -27,9 +26,6 @@ from cmk.gui.graphing._artwork import (
 from cmk.gui.graphing._graph_display_config import GraphDisplayConfigHTML
 from cmk.gui.graphing._graph_specification import GraphEnvironment
 from cmk.gui.graphing._html_render import (
-    _legend_height_ex,
-    _MIN_LEGEND_HEIGHT_EX,
-    _MIN_WIDGET_HEIGHT_EX,
     _order_graph_curves_for_legend_and_mouse_hover,
     _show_graph_legend,
     ExpandableLegendAppearance,
@@ -334,36 +330,6 @@ def test__show_graph_legend_keeps_inline_max_height_when_set(request_context: No
 
     assert "max-height: 120px" in rendered
     assert "overflow-y: auto" in rendered
-
-
-@pytest.mark.parametrize("usable_height_ex", [11.0, 15.0, 16.0])
-def test__legend_height_ex_raises_when_widget_too_small(usable_height_ex: float) -> None:
-    # The widget must fit the graph floor plus a useful legend, else the caller surfaces
-    # the "increase height or disable legend" error.
-    with pytest.raises(MKGraphWidgetTooSmallError):
-        _legend_height_ex(usable_height_ex, curve_count=10, horizontal_rule_count=0)
-
-
-def test__legend_height_ex_enforces_minimum_when_legend_scrolls() -> None:
-    # Many curves on a near-minimum widget: the legend is clipped and would collapse, so
-    # it is kept at the useful minimum while the graph still keeps its floor.
-    height = 17.0
-    legend = _legend_height_ex(height, curve_count=20, horizontal_rule_count=0)
-    assert legend == _MIN_LEGEND_HEIGHT_EX
-    assert height - legend >= _MIN_WIDGET_HEIGHT_EX
-
-
-def test__legend_height_ex_uses_estimate_when_it_fits() -> None:
-    # Few curves: reserve only what the legend needs, without forcing the minimum or
-    # wasting graph space.
-    assert _legend_height_ex(60.0, curve_count=1, horizontal_rule_count=0) == int(3.0 + 1.5)
-
-
-def test__legend_height_ex_never_exceeds_a_third_or_the_graph() -> None:
-    height = 60.0
-    legend = _legend_height_ex(height, curve_count=50, horizontal_rule_count=0)
-    assert legend <= height // 3
-    assert legend < height - legend  # legend never larger than the graph
 
 
 # The engine resolves the metric names during the render with a single services query; the legacy

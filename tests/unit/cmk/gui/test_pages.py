@@ -145,7 +145,6 @@ def test_registered_pages() -> None:
         "view",
         "widget_edit_view",
         "widget_figure",
-        "widget_graph",
         "widget_iframe_sidebar",
         "widget_iframe_view",
         "wato",

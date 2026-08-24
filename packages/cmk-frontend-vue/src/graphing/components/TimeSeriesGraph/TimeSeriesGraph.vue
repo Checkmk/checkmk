@@ -14,6 +14,7 @@ import CmkTooltip, {
 } from 'cmk-ui-library/components/CmkTooltip'
 import ArrowDown from 'cmk-ui-library/components/graphics/ArrowDown.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { NotationFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { scaleLinear, scaleTime } from 'd3-scale'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -147,13 +148,11 @@ const maxZoomHintSide = computed(() =>
 const yStepping = computed((): 'binary' | 'decimal' =>
   props.options.y_axis?.unit.notation === 'iec' ? 'binary' : 'decimal'
 )
-const yTickFormatter = computed((): ((value: number) => string) => {
+// The axis unit places the labels, not just their text: renderYLabels steps in the unit's own
+// atoms, so an IEC axis lands on 2 MiB rather than on a decimally round 2 * 10^6 bytes.
+const yFormatter = computed((): NotationFormatter | null => {
   const unit = props.options.y_axis?.unit
-  if (!unit) {
-    return (value: number) => String(value)
-  }
-  const { formatter } = userSpecificUnit(unit, 'celsius')
-  return (value: number) => formatter.render(value)
+  return unit ? userSpecificUnit(unit, 'celsius').formatter : null
 })
 
 const xScale = scaleTime()
@@ -166,7 +165,7 @@ const { prepareValueDomain, valueTickLabels, drawValueGrid, drawValueAxis, drawT
   plotWidth,
   plotHeight,
   yStepping,
-  yTickFormatter
+  yFormatter
 )
 
 const {

@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { Label, NotationFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { axisLeft } from 'd3-axis'
 import type { ScaleLinear, ScaleTime } from 'd3-scale'
 import type { Selection } from 'd3-selection'
@@ -45,6 +46,59 @@ export interface AxisLabelVisibility {
   showLabels: boolean
 }
 
+interface ValueLabel {
+  position: number
+  text: string
+}
+
+function asValueLabels(labels: Label[]): ValueLabel[] {
+  return labels.map((label) => ({ position: label.value, text: label.text }))
+}
+
+// Labels must land where the unit considers round, which d3's decimal-only ticks cannot do: an IEC
+// axis steps in powers of two, so a 2 * 10^6 byte step reads as "1.91 MiB" and contradicts the
+// legend. renderYLabels takes one sign at a time, hence the split below.
+function computeValueLabels(
+  formatter: NotationFormatter,
+  domainMin: number,
+  domainMax: number,
+  targetCount: number
+): ValueLabel[] {
+  if (targetCount <= 0) {
+    return []
+  }
+  if (domainMin >= 0) {
+    return asValueLabels(
+      formatter.renderYLabels({ kind: 'positive', start: domainMin, end: domainMax }, targetCount)
+    )
+  }
+  if (domainMax <= 0) {
+    return asValueLabels(
+      formatter.renderYLabels({ kind: 'negative', start: domainMin, end: domainMax }, targetCount)
+    )
+  }
+  // Split as _compute_labels_from_api does in cmk/gui/graphing/_artwork.py: each side sized by its
+  // share of the domain, and the negative half's zero dropped because the positive half carries one.
+  const negativeShare = -domainMin / (domainMax - domainMin)
+  const negative = formatter.renderYLabels(
+    { kind: 'negative', start: domainMin, end: 0 },
+    Math.max(1, Math.round(targetCount * negativeShare))
+  )
+  const positive = formatter.renderYLabels(
+    { kind: 'positive', start: 0, end: domainMax },
+    Math.max(1, Math.round(targetCount * (1 - negativeShare)))
+  )
+  return [...asValueLabels(negative.slice(1)), ...asValueLabels(positive)]
+}
+
+/** Halve the gap between neighbouring labels, for the grid's unlabelled intermediate lines. */
+function withMidpoints(positions: number[]): number[] {
+  const ascending = [...positions].sort((first, second) => first - second)
+  return ascending.flatMap((position, index) =>
+    index === 0 ? [position] : [(ascending[index - 1]! + position) / 2, position]
+  )
+}
+
 export function useAxes(
   axisGroupRef: Ref<SVGGElement | null>,
   xScale: ScaleTime<number, number>,
@@ -52,7 +106,7 @@ export function useAxes(
   plotWidth: Ref<number>,
   plotHeight: Ref<number>,
   yStepping: Ref<'binary' | 'decimal'>,
-  yTickFormatter: Ref<(value: number) => string>
+  yFormatter: Ref<NotationFormatter | null>
 ) {
   const yStep = ref<number>(1)
 
@@ -77,9 +131,21 @@ export function useAxes(
     yStep.value = step
   }
 
+  function valueLabels(): ValueLabel[] {
+    const [domainMin, domainMax] = yScale.domain() as [number, number]
+    const tickCount = yTickCount()
+    const formatter = yFormatter.value
+    const unitLabels = formatter
+      ? computeValueLabels(formatter, domainMin, domainMax, tickCount)
+      : []
+    if (unitLabels.length > 0) {
+      return unitLabels
+    }
+    return yScale.ticks(tickCount).map((value) => ({ position: value, text: String(value) }))
+  }
+
   function valueTickLabels(): string[] {
-    const formatter = yTickFormatter.value
-    return yScale.ticks(yTickCount()).map((value) => formatter(value.valueOf()))
+    return valueLabels().map((label) => label.text)
   }
 
   function drawValueGrid(): void {
@@ -96,7 +162,7 @@ export function useAxes(
       .classed(AXIS_CLASSES.valueGrid, true)
     applyTransition(gridY).call(
       axisLeft(yScale)
-        .ticks(yTickCount() * 2)
+        .tickValues(withMidpoints(valueLabels().map((label) => label.position)))
         .tickSize(-plotWidth.value)
         .tickFormat(() => '')
     )
@@ -114,11 +180,12 @@ export function useAxes(
       .data([null])
       .join('g')
       .classed(AXIS_CLASSES.valueAxis, true)
-    const formatter = yTickFormatter.value
+    const labels = valueLabels()
+    const textByPosition = new Map(labels.map((label) => [label.position, label.text]))
     applyTransition(yAxis).call(
       axisLeft(yScale)
-        .ticks(yTickCount())
-        .tickFormat(showLabels ? (value) => formatter(value.valueOf()) : () => '')
+        .tickValues(labels.map((label) => label.position))
+        .tickFormat(showLabels ? (value) => textByPosition.get(value.valueOf()) ?? '' : () => '')
     )
   }
 

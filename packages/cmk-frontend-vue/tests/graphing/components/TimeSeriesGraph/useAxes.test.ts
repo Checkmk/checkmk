@@ -3,38 +3,57 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import {
+  IECFormatter,
+  type NotationFormatter
+} from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { scaleLinear, scaleTime } from 'd3-scale'
+import { select } from 'd3-selection'
 import { describe, expect, test, vi } from 'vitest'
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 
 import type { TimeAxisTick } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
 import { AXIS_CLASSES, useAxes } from '@/graphing/components/TimeSeriesGraph/useAxes'
 
 const SVG_NS = 'http://www.w3.org/2000/svg'
+const ONE_MIB = 1024 * 1024
 const PLOT_WIDTH = 400
 const PLOT_HEIGHT = 200
 const DAY_SECONDS = 86400
 
-function setup() {
+// d3 records each tick's domain value as its own datum; reading it back is how a caller sees
+// where the axis actually put its ticks.
+function drawnTickPositions(group: Element, axisClass: string): number[] {
+  return Array.from(group.querySelectorAll(`g.${axisClass} .tick`))
+    .map((tick) => select(tick).datum() as number)
+    .sort((first, second) => first - second)
+}
+
+// An IEC axis must step by a power of two, and every label must be a whole multiple of that step;
+// a decimal step such as 10^6 bytes is what renders as "1.91 MiB" instead of "2 MiB".
+function expectBinaryAlignment(positions: number[]): void {
+  expect(positions.length).toBeGreaterThan(1)
+  const spacing = positions[1]! - positions[0]!
+  expect(Math.log2(spacing) % 1).toBe(0)
+  positions.forEach((position) => expect(Math.abs(position % spacing)).toBe(0))
+}
+
+function setup(
+  stepping: 'binary' | 'decimal' = 'decimal',
+  formatter: NotationFormatter | null = null
+) {
   const axisGroupRef = ref<SVGGElement | null>(document.createElementNS(SVG_NS, 'g') as SVGGElement)
   const plotWidth = ref(PLOT_WIDTH)
   const plotHeight = ref(PLOT_HEIGHT)
-  const yStepping = ref<'binary' | 'decimal'>('decimal')
-  const yTickFormatter = ref<(value: number) => string>((value) => String(value))
+  const yStepping = ref<'binary' | 'decimal'>(stepping)
+  // shallowRef: ref's deep unwrapping drops the protected members of the formatter class.
+  const yFormatter = shallowRef<NotationFormatter | null>(formatter)
   const xScale = scaleTime()
     .domain([new Date(0), new Date(DAY_SECONDS * 1000)])
     .range([0, PLOT_WIDTH])
   const yScale = scaleLinear().domain([0, 1]).range([PLOT_HEIGHT, 0])
 
-  const axes = useAxes(
-    axisGroupRef,
-    xScale,
-    yScale,
-    plotWidth,
-    plotHeight,
-    yStepping,
-    yTickFormatter
-  )
+  const axes = useAxes(axisGroupRef, xScale, yScale, plotWidth, plotHeight, yStepping, yFormatter)
   return { axes, group: axisGroupRef.value!, xScale, yScale }
 }
 
@@ -42,6 +61,10 @@ function valueAxisTickTexts(group: Element): string[] {
   return Array.from(group.querySelectorAll(`g.${AXIS_CLASSES.valueAxis} .tick text`)).map(
     (tickLabel) => tickLabel.textContent ?? ''
   )
+}
+
+function setupIec() {
+  return setup('binary', new IECFormatter('B', { type: 'auto', digits: 2 }))
 }
 
 describe('prepareValueDomain', () => {
@@ -210,5 +233,45 @@ describe('drawValueGrid and drawValueAxis', () => {
 
     expect(group.querySelectorAll(`g.${AXIS_CLASSES.valueGrid}`)).toHaveLength(1)
     expect(group.querySelectorAll(`g.${AXIS_CLASSES.valueAxis}`)).toHaveLength(1)
+  })
+
+  test('places the labels of an IEC axis on binary values, not on decimally round ones', () => {
+    const { axes, group } = setupIec()
+
+    axes.prepareValueDomain(0, 4 * ONE_MIB)
+    axes.drawValueAxis({ showLabels: true })
+
+    expectBinaryAlignment(drawnTickPositions(group, AXIS_CLASSES.valueAxis))
+  })
+
+  test('places the grid lines of an IEC axis on binary values too', () => {
+    const { axes, group } = setupIec()
+
+    axes.prepareValueDomain(0, 4 * ONE_MIB)
+    axes.drawValueGrid()
+
+    expectBinaryAlignment(drawnTickPositions(group, AXIS_CLASSES.valueGrid))
+  })
+
+  test('labels both sides of a mirrored IEC axis on binary values', () => {
+    const { axes, group } = setupIec()
+
+    axes.prepareValueDomain(-4 * ONE_MIB, 4 * ONE_MIB)
+    axes.drawValueAxis({ showLabels: true })
+
+    const positions = drawnTickPositions(group, AXIS_CLASSES.valueAxis)
+    expect(positions.some((position) => position < 0)).toBe(true)
+    expect(positions.some((position) => position > 0)).toBe(true)
+    expectBinaryAlignment(positions)
+  })
+})
+
+describe('valueTickLabels', () => {
+  test('reports the labels an IEC axis draws, for sizing the margin that holds them', () => {
+    const { axes } = setupIec()
+
+    axes.prepareValueDomain(0, 4 * ONE_MIB)
+
+    expect(axes.valueTickLabels()).toContain('4 MiB')
   })
 })

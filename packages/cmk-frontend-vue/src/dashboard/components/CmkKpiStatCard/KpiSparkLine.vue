@@ -35,10 +35,17 @@ const instanceId = useId()
 const fadeMaskId = `db-kpi-spark-line-fade-mask-${instanceId}`
 const fadeGradientId = `db-kpi-spark-line-fade-gradient-${instanceId}`
 const floorGradientId = `db-kpi-spark-line-floor-gradient-${instanceId}`
+const hatchPatternId = `db-kpi-spark-line-hatch-${instanceId}`
 
 interface Point {
   x: number
   y: number
+}
+
+/** A dashed bridge across a run of missing samples, with a hatched fill beneath it. */
+interface Bridge {
+  line: string
+  area: string
 }
 
 interface Plot {
@@ -48,9 +55,11 @@ interface Plot {
   dot: Point | null
   /** One per sample clamped into a manual range. */
   ticks: Point[]
+  /** One bridge per gap - a run of missing samples bounded by real ones on both sides. */
+  bridges: Bridge[]
 }
 
-const EMPTY_PLOT: Plot = { line: '', area: '', dot: null, ticks: [] }
+const EMPTY_PLOT: Plot = { line: '', area: '', dot: null, ticks: [], bridges: [] }
 
 const plot: Ref<Plot> = computed(() => {
   const data = props.series
@@ -85,7 +94,9 @@ const plot: Ref<Plot> = computed(() => {
   const y = (d: TimestampedSample) => yScale(clampToRange(d.value!))
 
   // .defined() skips null-value samples and auto-splits the path into
-  // separate subpaths at the gap - a plain break, no bridging.
+  // separate subpaths at the gap - the solid curve/fill. A dashed, hatched
+  // bridge is drawn across each gap separately below, so it stays legible
+  // as a gap while the trend still connects.
   const lineGen = line<TimestampedSample>()
     .defined((d) => d.value !== null)
     .x(x)
@@ -108,7 +119,23 @@ const plot: Ref<Plot> = computed(() => {
         .map((d) => ({ x: x(d), y: y(d) }))
     : []
 
-  return { line: lineGen(data) ?? '', area: areaGen(data) ?? '', dot, ticks }
+  const bridgeLineGen = line<TimestampedSample>().x(x).y(y)
+  const bridgeAreaGen = area<TimestampedSample>().x(x).y0(VIEW_HEIGHT).y1(y)
+
+  const bridges: Bridge[] = []
+  let lastRealIndex = -1
+  for (let i = 0; i < data.length; i++) {
+    if (data[i]!.value === null) {
+      continue
+    }
+    if (lastRealIndex !== -1 && i > lastRealIndex + 1) {
+      const pair = [data[lastRealIndex]!, data[i]!]
+      bridges.push({ line: bridgeLineGen(pair) ?? '', area: bridgeAreaGen(pair) ?? '' })
+    }
+    lastRealIndex = i
+  }
+
+  return { line: lineGen(data) ?? '', area: areaGen(data) ?? '', dot, ticks, bridges }
 })
 </script>
 
@@ -141,14 +168,45 @@ const plot: Ref<Plot> = computed(() => {
         <stop offset="0%" stop-color="currentColor" stop-opacity="0.35" />
         <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
       </linearGradient>
+      <!-- Diagonal stripes for the area under a gap bridge, so a missing run reads as
+           "no data here" rather than a plain (and easily missed) blank patch. -->
+      <pattern
+        :id="hatchPatternId"
+        width="1.5"
+        height="1.5"
+        patternUnits="userSpaceOnUse"
+        patternTransform="rotate(45)"
+      >
+        <line x1="0" y1="0" x2="0" y2="1.5" stroke="currentColor" stroke-opacity="0.45" />
+      </pattern>
     </defs>
     <g :mask="`url(#${fadeMaskId})`">
+      <path
+        v-for="(bridge, index) in plot.bridges"
+        :key="`bridge-area-${index}`"
+        class="db-kpi-spark-line__bridge-area"
+        :d="bridge.area"
+        :fill="`url(#${hatchPatternId})`"
+        stroke="none"
+      />
       <path
         class="db-kpi-spark-line__area"
         :d="plot.area"
         :fill="fadeToFloor ? `url(#${floorGradientId})` : 'currentColor'"
         :fill-opacity="fadeToFloor ? undefined : 0.35"
         stroke="none"
+      />
+      <path
+        v-for="(bridge, index) in plot.bridges"
+        :key="`bridge-line-${index}`"
+        class="db-kpi-spark-line__bridge-line"
+        :d="bridge.line"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-dasharray="1 2.5"
+        vector-effect="non-scaling-stroke"
       />
       <path
         class="db-kpi-spark-line__line"

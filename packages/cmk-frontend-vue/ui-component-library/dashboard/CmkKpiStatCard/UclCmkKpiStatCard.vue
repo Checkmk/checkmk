@@ -15,6 +15,9 @@ import {
 
 import codeExample from './UclCmkKpiStatCardCodeExample.vue?raw'
 
+/** Demo-only: which missing-data scenario the series generator produces. */
+type DataState = 'complete' | 'gap'
+
 export const panelConfig = {
   value: {
     type: 'string' as const,
@@ -83,11 +86,15 @@ export const panelConfig = {
     help: 'Points taken from the sample series. Fewer than two draw no line at all, which is also what omitting the series does.',
     initialState: 30
   },
-  gapEvery: {
-    type: 'number' as const,
-    title: 'Gap every N points',
-    help: '0 disables. Otherwise every Nth sample is nulled out to demonstrate a gap in the spark line.',
-    initialState: 0
+  dataState: {
+    type: 'list' as const,
+    title: 'Data state',
+    help: 'Gap: a single contiguous outage window mid-series, bridged with a dashed, hatched line.',
+    options: [
+      { title: 'Complete', name: 'complete' },
+      { title: 'Gap', name: 'gap' }
+    ] satisfies Options<DataState>[],
+    initialState: 'complete' as const
   },
   showState: {
     type: 'boolean' as const,
@@ -160,7 +167,7 @@ export const panelConfig = {
   showDelta: BoolPropDef
   deltaPercent: NumberPropDef
   pointCount: NumberPropDef
-  gapEvery: NumberPropDef
+  dataState: ListPropDef<DataState>
   showState: BoolPropDef
   stateSeverity: ListPropDef<KpiStateSeverity>
   tintBackground: BoolPropDef
@@ -213,12 +220,14 @@ const SERIES: TimestampedSample[] = SERIES_VALUES.map((value, index) => ({
 
 const series = computed<TimestampedSample[]>(() => {
   const sliced = SERIES.slice(0, Math.max(0, propState.value.pointCount))
-  const gapEvery = propState.value.gapEvery
-  if (gapEvery <= 0) {
+  if (propState.value.dataState !== 'gap') {
     return sliced
   }
+  // One contiguous outage window, roughly a third in - a single real gap to bridge.
+  const gapStart = Math.floor(sliced.length * 0.33)
+  const gapLength = Math.max(2, Math.floor(sliced.length * 0.15))
   return sliced.map((point, index) =>
-    (index + 1) % gapEvery === 0 ? { ...point, value: null } : point
+    index >= gapStart && index < gapStart + gapLength ? { ...point, value: null } : point
   )
 })
 

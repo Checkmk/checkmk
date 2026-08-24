@@ -131,6 +131,22 @@ test('draws a broken line for a series with a gap, without crashing', () => {
   expect(pathData.match(/M/g)?.length).toBeGreaterThan(1)
 })
 
+test('bridges a gap bounded by real samples with a dashed, hatched fill', () => {
+  const series = [sample(0, 10), sample(60, null), sample(120, 20)]
+  const { container } = renderCard({ series })
+
+  const bridgeLine = container.querySelector('.db-kpi-spark-line__bridge-line')
+  const bridgeArea = container.querySelector('.db-kpi-spark-line__bridge-area')
+  expect(bridgeLine).toHaveAttribute('stroke-dasharray')
+  expect(bridgeArea?.getAttribute('fill')).toMatch(/^url\(#/)
+})
+
+test('draws no bridge for a series without gaps', () => {
+  const { container } = renderCard()
+
+  expect(container.querySelector('.db-kpi-spark-line__bridge-line')).toBeNull()
+})
+
 test('positions the state against the card, not against the value row', () => {
   const { container } = renderCard({ state: { severity: 'warn' } })
 

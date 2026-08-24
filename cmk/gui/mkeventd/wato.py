@@ -3362,9 +3362,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         except KeyError:
             raise MKUserError("_varname", _("The requested global setting does not exist."))
 
-        def_value = config_variable.valuespec(
-            self.make_global_settings_context(config),
-        ).default_value()
+        def_value = self._default_values[varname]
 
         if not transactions.check_transaction(request):
             return None

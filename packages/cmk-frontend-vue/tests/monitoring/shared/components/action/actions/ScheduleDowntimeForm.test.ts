@@ -19,13 +19,17 @@ import ScheduleDowntimeForm, {
 
 function mountForm(
   overrides: Partial<ScheduleDowntimeFormValues> = {},
-  recurrences: DowntimeRecurrenceOption[] = []
+  recurrences: DowntimeRecurrenceOption[] = [],
+  presetsUrl: string | null = null
 ) {
   const modelValue: ScheduleDowntimeFormValues = {
     ...defaultScheduleDowntimeValues(),
     ...overrides
   }
-  return { ...render(ScheduleDowntimeForm, { props: { modelValue, recurrences } }), modelValue }
+  return {
+    ...render(ScheduleDowntimeForm, { props: { modelValue, recurrences, presetsUrl } }),
+    modelValue
+  }
 }
 
 test('is invalid until a comment is provided', async () => {
@@ -45,6 +49,26 @@ test('reveals the advanced options when the section is expanded', async () => {
 
   await userEvent.click(screen.getByRole('button', { name: /Advanced option/ }))
   expect(childHosts).toBeVisible()
+})
+
+test("the immediate duration chip is named 'Now'", () => {
+  mountForm({ comment: 'maintenance' })
+
+  expect(screen.getByRole('button', { name: 'Now' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Ad hoc' })).not.toBeInTheDocument()
+})
+
+test('links the duration presets only when the server offers the page', () => {
+  const { unmount } = mountForm({ comment: 'maintenance' }, [], 'wato.py?mode=edit_configvar')
+
+  const link = screen.getByRole('link', { name: '(edit presets)' })
+  expect(link).toHaveAttribute('href', 'wato.py?mode=edit_configvar')
+  // A new tab, so the comment and duration the user already picked survive the detour.
+  expect(link).toHaveAttribute('target', '_blank')
+  unmount()
+
+  mountForm({ comment: 'maintenance' })
+  expect(screen.queryByRole('link', { name: '(edit presets)' })).not.toBeInTheDocument()
 })
 
 test('a duration preset explains itself as a duration', () => {

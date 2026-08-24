@@ -36,6 +36,8 @@ export interface ScheduleDowntimeKindConfig<Target> {
   errorMessage: TranslatedString
   /** The intervals the site offers to repeat the downtime on. */
   recurrences: DowntimeRecurrenceOption[]
+  /** Where the duration presets are edited. */
+  presetsUrl: string | null
 }
 
 /** Shared downtime-scheduling flow for hosts and services: only the API call and wording differ. */
@@ -51,7 +53,11 @@ export function createScheduleDowntimeAction<Target>(
     submitLabel: config.submitLabel,
     description: config.description,
     form: ScheduleDowntimeForm,
-    formProps: { targetKind: config.targetKind, recurrences: config.recurrences },
+    formProps: {
+      targetKind: config.targetKind,
+      recurrences: config.recurrences,
+      presetsUrl: config.presetsUrl
+    },
     defaultValues: defaultScheduleDowntimeValues,
     perform: async (targets: Target[], values: ScheduleDowntimeFormValues) => {
       const window = downtimeWindow(values)

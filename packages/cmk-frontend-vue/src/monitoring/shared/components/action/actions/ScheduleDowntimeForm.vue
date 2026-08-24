@@ -137,6 +137,7 @@ import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkCollapsible from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsible.vue'
 import CmkCollapsibleTitle from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsibleTitle.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
+import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkTimeRangePicker from 'cmk-ui-library/components/date-time/CmkTimeRangePicker.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -151,10 +152,13 @@ const props = withDefaults(
   defineProps<{
     targetKind?: ActionTargetKind
     recurrences?: DowntimeRecurrenceOption[]
+    /** Where the duration presets are edited. */
+    presetsUrl?: string | null
   }>(),
   {
     targetKind: 'host',
-    recurrences: () => []
+    recurrences: () => [],
+    presetsUrl: null
   }
 )
 
@@ -178,7 +182,7 @@ const durationChips: {
   duration?: TranslatedString
 }[] = [
   { id: 'custom', label: _t('Custom time range') },
-  { id: 'adhoc', label: _t('Ad hoc') },
+  { id: 'adhoc', label: _t('Now') },
   { id: '4h', label: _t('4 h'), duration: _t('4 hours') },
   { id: '24h', label: _t('24 h'), duration: _t('24 hours') },
   { id: '10d', label: _t('10 d'), duration: _t('10 days') },
@@ -274,6 +278,15 @@ function selectDuration(id: DurationSelection): void {
             >
               {{ chip.label }}
             </CmkButton>
+            <CmkLink
+              v-if="presetsUrl"
+              class="monitoring-schedule-downtime-form__presets-link"
+              :href="presetsUrl"
+              target="_blank"
+              rel="noopener"
+            >
+              {{ _t('(edit presets)') }}
+            </CmkLink>
           </div>
 
           <CmkTimeRangePicker
@@ -394,6 +407,11 @@ function selectDuration(id: DurationSelection): void {
   display: flex;
   flex-wrap: wrap;
   gap: var(--dimension-3);
+}
+
+.monitoring-schedule-downtime-form__presets-link {
+  align-self: center;
+  width: auto;
 }
 
 .monitoring-schedule-downtime-form__adhoc {

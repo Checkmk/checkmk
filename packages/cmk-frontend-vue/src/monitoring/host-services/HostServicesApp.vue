@@ -145,7 +145,11 @@ const hostServicesService = new HostServicesService(
 const actionRegistry = createActionRegistry<string>([
   useAcknowledgeServicesAction(host),
   useRescheduleServicesAction(host),
-  useScheduleServiceDowntimeAction(host, props.downtime_recurrences ?? [])
+  useScheduleServiceDowntimeAction(
+    host,
+    props.downtime_recurrences ?? [],
+    props.downtime_presets_url ?? null
+  )
 ])
 
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')

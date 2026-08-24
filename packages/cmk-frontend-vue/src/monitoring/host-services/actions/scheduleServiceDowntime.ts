@@ -16,7 +16,8 @@ import type { MonitoringAction } from '@/monitoring/shared/components/action/typ
 /** Target is the service description; the host is fixed to the page's host. */
 export function useScheduleServiceDowntimeAction(
   host: HostRef,
-  recurrences: DowntimeRecurrenceOption[]
+  recurrences: DowntimeRecurrenceOption[],
+  presetsUrl: string | null
 ): MonitoringAction<ScheduleDowntimeFormValues, string> {
   const { _t, _tn } = usei18n()
 
@@ -28,6 +29,7 @@ export function useScheduleServiceDowntimeAction(
     ],
     targetKind: 'service',
     recurrences,
+    presetsUrl,
     async schedule(api, targets, _values, options) {
       await api.scheduleServiceDowntime(host.name, targets, options)
       return targets.length

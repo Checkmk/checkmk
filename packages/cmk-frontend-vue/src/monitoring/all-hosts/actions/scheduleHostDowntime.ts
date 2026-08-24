@@ -14,7 +14,8 @@ import { createScheduleDowntimeAction } from '@/monitoring/shared/components/act
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
 export function useScheduleHostDowntimeAction(
-  recurrences: DowntimeRecurrenceOption[]
+  recurrences: DowntimeRecurrenceOption[],
+  presetsUrl: string | null
 ): MonitoringAction<ScheduleDowntimeFormValues, HostRef> {
   const { _t, _tn } = usei18n()
 
@@ -26,6 +27,7 @@ export function useScheduleHostDowntimeAction(
     ],
     targetKind: 'host',
     recurrences,
+    presetsUrl,
     async schedule(api, targets, values, options) {
       const hostNames = targets.map((target) => target.name)
       if (values.includeChildHosts) {

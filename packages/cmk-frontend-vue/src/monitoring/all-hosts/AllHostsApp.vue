@@ -170,7 +170,10 @@ const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 const actionRegistry = createActionRegistry([
   useAcknowledgeHostsAction(),
   useRescheduleHostsAction(),
-  useScheduleHostDowntimeAction(props.downtime_recurrences ?? [])
+  useScheduleHostDowntimeAction(
+    props.downtime_recurrences ?? [],
+    props.downtime_presets_url ?? null
+  )
 ])
 
 onMounted(() => {

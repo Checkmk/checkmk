@@ -67,7 +67,7 @@ const propState = ref(
 const actions: Record<Exclude<FormKind, 'none'>, MonitoringAction> = {
   comment: useCommentAction(),
   reschedule: useRescheduleHostsAction(),
-  'schedule-downtime': useScheduleHostDowntimeAction(DOWNTIME_RECURRENCES)
+  'schedule-downtime': useScheduleHostDowntimeAction(DOWNTIME_RECURRENCES, '#')
 }
 
 const activeAction = computed<MonitoringAction | undefined>(() =>

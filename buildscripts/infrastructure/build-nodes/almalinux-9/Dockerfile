@@ -76,7 +76,7 @@ RUN yum -y makecache \
     libuuid-devel \
     libxml2-devel \
     libxcrypt-compat \
-    libzstd-dev \
+    libzstd-devel \
     mariadb-devel \
     mpfr-devel \
     nc \

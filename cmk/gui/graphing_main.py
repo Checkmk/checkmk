@@ -31,23 +31,16 @@ from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.gui.graphing import (
     check_metrics,
     CheckMetricEntry,
-    get_temperature_unit,
-    GraphEnvironment,
     GraphFromAPI,
     graphs_from_api,
     host_service_graph_popup_cmk,
-    METRIC_BACKEND_KEY,
-    metric_backend_registry,
     metrics_from_api,
     parse_metric_from_api,
     PerfometerFromAPI,
     perfometers_from_api,
 )
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
-from cmk.gui.permissions import permission_registry
-from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
@@ -182,16 +175,6 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             SiteId(raw_site_id) if (raw_site_id := ctx.request.var("site")) else None,
             ctx.request.get_validated_type_input_mandatory(HostName, "host_name"),
             ServiceName(ctx.request.get_str_input_mandatory("service")),
-            GraphEnvironment(
-                registered_metrics=metrics_from_api,
-                registered_graphs=graphs_from_api,
-                user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
-                temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-                backend_time_series_fetcher=metric_backend_registry[
-                    METRIC_BACKEND_KEY
-                ].get_time_series_fetcher(),
-                debug=ctx.config.debug,
-            ),
-            graph_timeranges=ctx.config.graph_timeranges,
+            debug=ctx.config.debug,
         )
         return None  # for mypy

@@ -75,7 +75,6 @@ from ._html_render import (
     GraphRenderState,
     host_service_graph_popup_cmk,
     render_deferred_graphs_html,
-    render_graphs_html,
 )
 from ._legacy import check_metrics, CheckMetricEntry
 from ._metric_backend_registry import (
@@ -208,7 +207,6 @@ __all__ = [
     "render_png",
     "render_deferred_graphs_html",
     "render_engine_graph_group",
-    "render_graphs_html",
     "render_plain_graph_title",
     "resolve_graph_id_from_index",
     "translate_and_merge_rrd_columns",

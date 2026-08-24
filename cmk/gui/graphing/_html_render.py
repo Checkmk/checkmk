@@ -23,7 +23,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.color import render_color_icon
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import (
     load_user_file,
@@ -736,70 +736,6 @@ def _compute_recipes(
         )
 
 
-@tracer.instrument("graphing.render_graphs_html")
-def render_graphs_html(
-    graph_specification: GraphSpecification,
-    ranges: GraphRanges,
-    display_config: GraphDisplayConfigHTML,
-    env: GraphEnvironment,
-    *,
-    size: tuple[float, float],
-    graph_timeranges: Sequence[GraphTimerange],
-    display_id: str = "",
-) -> HTML:
-    """Render graph content synchronously without AJAX."""
-    if isinstance(recipes := _compute_recipes(graph_specification, env), HTML):
-        return recipes
-
-    output = HTML.empty()
-    for recipe_with_overrides in recipes:
-        effective_ranges = recipe_with_overrides.ranges or ranges
-        interaction = GraphInteractionState(
-            consolidation_function=recipe_with_overrides.consolidation_function,
-            time_start=effective_ranges.time_range[0],
-            time_end=effective_ranges.time_range[1],
-            step=effective_ranges.step,
-            value_min=(
-                effective_ranges.vertical_range[0] if effective_ranges.vertical_range else None
-            ),
-            value_max=(
-                effective_ranges.vertical_range[1] if effective_ranges.vertical_range else None
-            ),
-            size_x=size[0],
-            size_y=size[1],
-        )
-        render_state = GraphRenderState(
-            interaction=interaction,
-            recipe=recipe_with_overrides.recipe,
-            specification=recipe_with_overrides.specification,
-            display_config=display_config.update_from_options(recipe_with_overrides.render_options),
-            display_id=display_id,
-        )
-        output += _render_graph_content_html(
-            request,
-            render_state,
-            compute_graph_artwork(
-                render_state.recipe,
-                effective_ranges,
-                (interaction.size_x, interaction.size_y),
-                metrics_from_api,
-                consolidation_function=interaction.consolidation_function,
-                temperature_unit=env.temperature_unit,
-                backend_time_series_fetcher=env.backend_time_series_fetcher,
-                pin_time=_load_graph_pin(),
-                mark_requested_end_time=recipe_with_overrides.mark_requested_end_time,
-            ),
-            debug=env.debug,
-            graph_timeranges=graph_timeranges,
-            temperature_unit=env.temperature_unit,
-            backend_time_series_fetcher=env.backend_time_series_fetcher,
-            expandable_legend_appearance=ExpandableLegendAppearance.FOLDABLE,
-            show_limits_if_reached=False,
-            additional_html=recipe_with_overrides.additional_html,
-        )
-    return output
-
-
 # The hover graphs (on hovering a service graph icon) are all static - no interaction.
 _HOVER_INTERACTION = Interaction(
     burger="disabled",
@@ -816,9 +752,8 @@ def host_service_graph_popup_cmk(
     site: SiteId | None,
     host_name: HostName,
     service_description: ServiceName,
-    env: GraphEnvironment,
     *,
-    graph_timeranges: Sequence[GraphTimerange],
+    debug: bool,
 ) -> None:
     end_time = int(time.time())
     start_time = end_time - 8 * 3600
@@ -841,7 +776,7 @@ def host_service_graph_popup_cmk(
             show_consolidation=False,
             show_legend=False,
             multi_column=True,
-            debug=env.debug,
+            debug=debug,
         )
     )
     html.close_div()

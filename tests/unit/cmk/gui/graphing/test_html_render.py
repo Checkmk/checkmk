@@ -24,7 +24,6 @@ from cmk.gui.graphing._artwork import (
     Scalars,
 )
 from cmk.gui.graphing._graph_display_config import GraphDisplayConfigHTML
-from cmk.gui.graphing._graph_specification import GraphEnvironment
 from cmk.gui.graphing._html_render import (
     _order_graph_curves_for_legend_and_mouse_hover,
     _show_graph_legend,
@@ -32,8 +31,6 @@ from cmk.gui.graphing._html_render import (
     host_service_graph_popup_cmk,
 )
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.servicename import ServiceName
 
@@ -347,17 +344,6 @@ _POPUP_ENGINE_QUERY = (
 )
 
 
-def _graph_environment() -> GraphEnvironment:
-    # The popup reads only `debug` off the environment; the engine plugins provide the rest.
-    return GraphEnvironment(
-        registered_metrics={},
-        registered_graphs={},
-        user_permissions=UserPermissions({}, {}, {}, []),
-        temperature_unit=TemperatureUnit.CELSIUS,
-        backend_time_series_fetcher=None,
-    )
-
-
 def _render_popup(mock_livestatus: MockLiveStatusConnection) -> str:
     mock_livestatus.set_sites(["NO_SITE"])
     mock_livestatus.add_table("services", [_POPUP_SERVICE_ROW])
@@ -367,8 +353,7 @@ def _render_popup(mock_livestatus: MockLiveStatusConnection) -> str:
             None,
             HostName("h"),
             ServiceName("svc"),
-            _graph_environment(),
-            graph_timeranges=[],
+            debug=False,
         )
         return output_funnel.drain()
 

@@ -38,6 +38,12 @@ export const panelConfig = {
     help: 'Appends the "Other" slice. It is the one row drawn as drillable, with a chevron.',
     initialState: true
   },
+  previousLabel: {
+    type: 'string' as const,
+    title: 'Comparison column',
+    help: 'Heads the comparison column. The widget names the window it compares against, e.g. "Prev 4 h"; empty falls back to "Previous".',
+    initialState: 'Prev 4 h'
+  },
   previousPeriod: {
     type: 'boolean' as const,
     title: 'Previous period',
@@ -145,6 +151,7 @@ const slices = computed<DonutSlice[]>(() => {
           :format-value="formatBytes"
           :center-label="propState.centerLabel"
           :legend-mode="propState.legendMode"
+          :previous-label="propState.previousLabel || undefined"
         />
       </div>
 

@@ -56,4 +56,9 @@ export interface CmkDonutChartProps {
    * the table.
    */
   legendMode?: DonutLegendMode
+  /**
+   * Heads the comparison column, e.g. "Prev 4 h". The chart has no notion of
+   * time, so the caller names the window. Defaults to "Previous".
+   */
+  previousLabel?: string | undefined
 }

@@ -10,6 +10,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw } from 'vue'
 
 import type { NetworkFlowDonutContent } from '@/dashboard/types/widget'
+import { previousWindowLabel } from '@/network-flow/format'
 
 import { networkFlowContextApi } from '../api/context'
 import type { DonutOtherBreakdownTarget } from '../injectionKeys'
@@ -48,7 +49,9 @@ const tabs = computed<SlideInTab[]>(() => {
       title: _t('Breakdown'),
       component: markRaw(DonutOtherBreakdownOverview),
       load: () =>
-        networkFlowContextApi.donutOtherBreakdown(target.content, target.context, target.window)
+        networkFlowContextApi.donutOtherBreakdown(target.content, target.context, target.window),
+      // The panel's own table heads its comparison the way the legend does.
+      props: { previousLabel: previousWindowLabel(target.window) }
     }
   ]
 })

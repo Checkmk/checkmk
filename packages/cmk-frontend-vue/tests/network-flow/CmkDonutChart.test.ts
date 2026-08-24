@@ -86,6 +86,19 @@ test('keeps the previous period out of the legend until it is delivered', () => 
   expect(container.querySelectorAll('th')).toHaveLength(3)
 })
 
+test('heads the comparison with the label the caller supplies', () => {
+  const { container } = render(CmkDonutChart, {
+    props: {
+      slices: [{ ...SLICES[0]!, previousValue: 60 }, SLICES[1]!],
+      formatValue: (value: number) => `${value} B`,
+      previousLabel: 'Prev 4 h'
+    }
+  })
+
+  expect(container).toHaveTextContent('Prev 4 h')
+  expect(container).not.toHaveTextContent('Previous')
+})
+
 test('compares against the previous period once it is delivered', () => {
   const { container } = renderChart([
     { ...SLICES[0]!, previousValue: 60 },

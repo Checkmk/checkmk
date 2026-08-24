@@ -5,7 +5,12 @@
  */
 import { expect, test } from 'vitest'
 
-import { formatDelta, formatTimeOfDay } from '@/network-flow/format'
+import {
+  formatDelta,
+  formatDuration,
+  formatTimeOfDay,
+  previousWindowLabel
+} from '@/network-flow/format'
 
 function atLocalTime(hour: number, minute: number, second: number): number {
   // Built from local parts, since the formatter renders in the site's zone.
@@ -37,4 +42,16 @@ test('signs a change and calls growth out of nothing new', () => {
   expect(formatDelta(60, 90)).toBe('-33.3%')
   expect(formatDelta(90, 0)).toBe('new')
   expect(formatDelta(0, 0)).toBe('–')
+})
+
+test('writes a window length the way Checkmk does', () => {
+  expect(formatDuration(45)).toBe('45 s')
+  expect(formatDuration(14_400)).toBe('4 h')
+  // A time frame nobody rounded still reads as one.
+  expect(formatDuration(5_400)).toBe('1 h 30 min')
+  expect(formatDuration(90_000)).toBe('1 d 1 h')
+})
+
+test('heads a comparison column with the window it compares against', () => {
+  expect(previousWindowLabel({ start: 1_000, end: 15_400 })).toBe('Prev 4 h')
 })

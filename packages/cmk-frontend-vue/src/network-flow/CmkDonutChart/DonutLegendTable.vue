@@ -19,6 +19,8 @@ const { _t } = usei18n()
 const props = defineProps<{
   rows: DonutLegendRow[]
   highlighted: string | null
+  /** Names the window the comparison is against; falls back to a bare label. */
+  previousLabel?: string | undefined
 }>()
 
 defineEmits<{
@@ -59,7 +61,7 @@ const hasPrevious = computed(() => props.rows.some((row) => row.previousText !==
             <th
               class="network-flow-donut-legend-table__th network-flow-donut-legend-table__th--value network-flow-donut-legend-table__th--comparison"
             >
-              {{ _t('Previous') }}
+              {{ previousLabel ?? _t('Previous') }}
             </th>
             <th
               class="network-flow-donut-legend-table__th network-flow-donut-legend-table__th--value network-flow-donut-legend-table__th--comparison"

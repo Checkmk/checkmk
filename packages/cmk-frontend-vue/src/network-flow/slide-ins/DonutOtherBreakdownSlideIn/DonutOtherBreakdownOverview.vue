@@ -18,7 +18,10 @@ import type { ComputedNetworkFlowDonutOtherBreakdown } from '../api/context'
 
 const { _t, _tn } = usei18n()
 
-const props = defineProps<{ data: ComputedNetworkFlowDonutOtherBreakdown }>()
+const props = defineProps<{
+  data: ComputedNetworkFlowDonutOtherBreakdown
+  previousLabel?: string | undefined
+}>()
 
 const breakdown = computed(() => props.data)
 
@@ -76,7 +79,12 @@ const columns = computed<RankedTableColumn[]>(() => {
     dimensionColumn,
     shareColumn,
     current,
-    { key: 'previous_value', title: _t('Previous'), render: 'bytes', bar: false },
+    {
+      key: 'previous_value',
+      title: props.previousLabel ?? _t('Previous'),
+      render: 'bytes',
+      bar: false
+    },
     { key: 'delta', title: _t('Change'), render: 'count', bar: false }
   ]
 })

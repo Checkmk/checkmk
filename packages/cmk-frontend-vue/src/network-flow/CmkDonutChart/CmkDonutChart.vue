@@ -272,6 +272,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
     <DonutLegendTable
       v-else
       :rows="legendRows"
+      :previous-label="props.previousLabel"
       :highlighted="highlighted"
       @toggle="toggleHidden"
       @highlight="highlight"

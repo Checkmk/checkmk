@@ -16,7 +16,7 @@ import type {
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import CmkDonutChart, { type DonutSlice } from '@/network-flow/CmkDonutChart'
 import { CATEGORICAL_PALETTE } from '@/network-flow/colors'
-import { formatBytes } from '@/network-flow/format'
+import { formatBytes, previousWindowLabel } from '@/network-flow/format'
 import { donutOtherBreakdownSlideInKey } from '@/network-flow/slide-ins/injectionKeys'
 
 import DashboardContentContainer from '../DashboardContentContainer.vue'
@@ -72,6 +72,12 @@ const { data, error } = useNetworkFlowWidgetData(
 
 const slices = computed(() => data.value?.slices)
 
+// The comparison is against a window of the same length, so the column says how
+// long that is rather than leaving the reader to guess at the time filter.
+const previousLabel = computed(() =>
+  data.value === undefined ? undefined : previousWindowLabel(data.value.window)
+)
+
 // The chart reports every slice; only the remainder has something behind it.
 function onSliceActivate(key: string): void {
   const loaded = data.value
@@ -102,6 +108,7 @@ function onSliceActivate(key: string): void {
         :slices="slices"
         :format-value="formatBytes"
         :legend-mode="content.legend_mode"
+        :previous-label="previousLabel"
         @slice-activate="onSliceActivate"
       />
     </div>

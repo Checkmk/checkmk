@@ -266,17 +266,26 @@ test('shows no state badge by default', () => {
 })
 
 test.each([
-  ['ok', 'OK', 'cmk-badge--success'],
-  ['warn', 'WARN', 'cmk-badge--warning'],
-  ['crit', 'CRIT', 'cmk-badge--danger'],
-  ['unknown', 'UNKN', 'cmk-badge--unknown'],
-  ['pending', 'PEND', 'cmk-badge--default']
-] as const)('labels the %s state %s in its own color', (severity, label, colorClass) => {
+  ['ok', 'OK', 'cmk-state-tag--ok'],
+  ['warn', 'WARN', 'cmk-state-tag--warning'],
+  ['crit', 'CRIT', 'cmk-state-tag--critical'],
+  ['unknown', 'UNKN', 'cmk-state-tag--unknown'],
+  ['pending', 'PEND', 'cmk-state-tag--pending']
+] as const)('labels the %s state %s in its own tone', (severity, label, toneClass) => {
   const { container } = renderCard({ state: { severity } })
 
   const badge = container.querySelector('.db-cmk-kpi-stat-card__state')
   expect(badge).toHaveTextContent(label)
-  expect(badge).toHaveClass(colorClass)
+  expect(badge).toHaveClass(toneClass)
+})
+
+test('keeps the badge on the last known state, marked stale, when the reading is stale', () => {
+  const series = [sample(0, 10), sample(60, 20), sample(120, null)]
+  const { container } = renderCard({ series, state: { severity: 'warn' } })
+
+  const badge = container.querySelector('.db-cmk-kpi-stat-card__state')
+  expect(badge).toHaveTextContent('WARN')
+  expect(badge).toHaveClass('cmk-state-tag--stale')
 })
 
 test('renders an em dash and a body note instead of a value when there is no data', () => {

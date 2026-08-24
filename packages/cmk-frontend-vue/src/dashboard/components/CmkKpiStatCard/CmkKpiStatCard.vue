@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkBadge, { type Colors as CmkBadgeColor } from 'cmk-ui-library/components/CmkBadge.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import StateTag, { type StateTone } from 'cmk-ui-library/components/StateTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
@@ -124,14 +124,12 @@ const delta = computed<KpiDelta | undefined>(() =>
   props.showDelta ? (props.delta ?? seriesDelta.value) : undefined
 )
 
-// Checkmk's monitoring state colors, UNKNOWN among them -- orange, rather than
-// the grey a generic "default" would give it.
-const STATE_BADGE_COLOR: Record<KpiStateSeverity, CmkBadgeColor> = {
-  ok: 'success',
+const STATE_TAG_TONE: Record<KpiStateSeverity, StateTone> = {
+  ok: 'ok',
   warn: 'warning',
-  crit: 'danger',
+  crit: 'critical',
   unknown: 'unknown',
-  pending: 'default'
+  pending: 'pending'
 }
 
 // The raw color behind the badge, for the card's optional tint.
@@ -272,14 +270,14 @@ onMounted(measureScrim)
 
     <div v-if="showScrim" class="db-cmk-kpi-stat-card__scrim" aria-hidden="true" />
 
-    <CmkBadge
+    <StateTag
       v-if="hasData && state && stateLabel"
       class="db-cmk-kpi-stat-card__state"
-      :color="STATE_BADGE_COLOR[state.severity]"
-      size="medium"
-    >
-      {{ stateLabel }}
-    </CmkBadge>
+      :label="stateLabel"
+      :tone="STATE_TAG_TONE[state.severity]"
+      kind="service"
+      :stale="isStale"
+    />
 
     <div v-if="hasSparkLine" class="db-cmk-kpi-stat-card__spark-line">
       <KpiSparkLine
@@ -476,22 +474,16 @@ onMounted(measureScrim)
   color: var(--font-color-dimmed);
 }
 
-/* CmkBadge is sized for counts, so it pads to a bubble around a short label
-   like "OK". Widen it to read as the state name it is.
-   Same top-right corner in every variant, so a dashboard grid can be scanned by corner alone.
-   Positioned against the card, so it must be a child of the card, not of the value row. */
+/* Same top-right corner in every variant, so a dashboard grid can be scanned by corner alone.
+   Positioned against the card, so it must be a child of the card, not of the value row.
+   Sizing is StateTag's own (the Views 3.0 state label): fixed, not scaled with card height
+   like the old CmkBadge - StateTag exposes no scaling hook, so this is deliberate. */
 .db-cmk-kpi-stat-card__state {
   position: absolute;
   top: var(--spacing);
   right: var(--spacing);
   z-index: 3;
   max-width: 40%;
-  height: auto;
-  padding: clamp(2px, 3cqh, 7px) clamp(8px, 3cqw, 18px);
-  margin: 0;
-  font-size: clamp(11px, 18cqh, 24px);
-  font-weight: var(--font-weight-bold);
-  line-height: 1.4;
 }
 
 /* Fades out in both directions past the text, so a curve peak near it isn't sliced off flat. */

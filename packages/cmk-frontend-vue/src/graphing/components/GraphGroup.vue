@@ -167,6 +167,7 @@ const slots = computed(() =>
     return {
       index,
       graph,
+      isAwaitingData: loadingSlots.value[index] ?? false,
       isSkeleton: isWaiting && (graph === null || delayHasElapsed.value)
     }
   })
@@ -249,6 +250,7 @@ function onRetry(): void {
           :metrics="panelSlot.graph.metrics"
           :data-time-range="panelSlot.graph.timeRange"
           :requested-time-range="requestedTimeRange"
+          :awaiting-data="panelSlot.isAwaitingData"
           :time-picker-requests="timePickerRequests"
           :title="panelSlot.graph.title"
           :show-title="true"

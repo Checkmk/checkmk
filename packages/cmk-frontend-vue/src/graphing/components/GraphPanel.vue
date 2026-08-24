@@ -44,11 +44,14 @@ const emit = defineEmits<GraphPanelEmits>()
 // curves at all and nothing reads it.
 const NOMINAL_STEP_SECONDS = 60
 
-const baselineTimeRange = computed<TimeRange>(() =>
-  props.dataTimeRange
-    ? drawnTimeRange(props.requestedTimeRange, props.dataTimeRange)
-    : { ...props.requestedTimeRange, step: NOMINAL_STEP_SECONDS }
-)
+const baselineTimeRange = computed<TimeRange>(() => {
+  if (!props.dataTimeRange) {
+    return { ...props.requestedTimeRange, step: NOMINAL_STEP_SECONDS }
+  }
+  return props.awaitingData
+    ? props.dataTimeRange
+    : drawnTimeRange(props.requestedTimeRange, props.dataTimeRange)
+})
 
 const headerTimeRange = computed<TimeRange | undefined>(() =>
   props.dataTimeRange ? baselineTimeRange.value : undefined

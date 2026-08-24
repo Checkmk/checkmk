@@ -19,7 +19,7 @@ from cmk.gui.graphing import (
     GraphDisplayConfigHTML,
     GraphRenderOptions,
     render_engine_graph_group,
-    resolve_user_size,
+    resolve_size,
     TemplateGraphSpecification,
     vs_graph_render_options,
 )
@@ -210,10 +210,9 @@ def _paint_time_graph_cmk(
         graph_render_options.update(options)
 
     view_options = GraphRenderOptions.from_graph_render_options_vs(graph_render_options)
-    graph_size = resolve_user_size(view_options, user)
+    graph_size = resolve_size(view_options)
 
-    display_config = GraphDisplayConfigHTML.from_user_context_and_options(
-        user,
+    display_config = GraphDisplayConfigHTML.from_options(
         theme.get(),
         view_options,
     )

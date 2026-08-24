@@ -112,8 +112,7 @@ def _answer_graph_image_request(
     end_time = int(time.time())
     start_time = end_time - (25 * 3600)
 
-    display_config = GraphDisplayConfigImage.from_user_context_and_options(
-        user,
+    display_config = GraphDisplayConfigImage.from_options(
         graph_image_render_options(),
     )
 

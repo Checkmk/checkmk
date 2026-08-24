@@ -30,7 +30,7 @@ from ._graph_display_config import (
     GraphDisplayConfigHTML,
     GraphDisplayConfigImage,
     GraphRenderOptions,
-    resolve_user_size,
+    resolve_size,
 )
 from ._graph_images import (
     graph_spec_from_request,
@@ -146,7 +146,7 @@ __all__ = [
     "GraphDisplayConfigHTML",
     "GraphDisplayConfigImage",
     "GraphRenderOptions",
-    "resolve_user_size",
+    "resolve_size",
     "GraphSpec",
     "GraphSpecification",
     "LineType",

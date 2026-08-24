@@ -8,7 +8,6 @@ from typing import Literal, Self
 
 from pydantic import BaseModel
 
-from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.type_defs import (
     GraphRenderOptionsVS,
     GraphTitleFormatVS,
@@ -48,7 +47,6 @@ class GraphRenderOptions(BaseModel):
     # deliberately disabled (linearGradient increased PDF size ~23×) and the field is no
     # longer consumed by any rendering path.
     color_gradient: float | None = None
-    editing: bool | None = None
     fixed_timerange: bool | None = None
     font_size: SizePT | None = None
     interaction: bool | None = None
@@ -109,12 +107,8 @@ class _GraphDisplayConfigBase(BaseModel):
 
 
 class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
-    editing: bool = False
-    explicit_title: str | None = None
     fixed_timerange: bool = False
     foreground_color: str = "#000000"
-    interaction: bool = True
-    legend_max_height_px: int | None = None
     preview: bool = False
     resizable: bool = True
     show_controls: bool = True
@@ -123,14 +117,13 @@ class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
     show_title: bool | Literal["inline"] = True
 
     @classmethod
-    def from_user_context_and_options(
+    def from_options(
         cls,
-        user: LoggedInUser,
         theme_id: str,
         options: GraphRenderOptions,
     ) -> Self:
         return cls.model_validate(
-            _set_user_specific_size(options, user).dump_set_fields()
+            options.dump_set_fields()
             | {"foreground_color": "#ffffff" if theme_id == "modern-dark" else "#000000"},
         )
 
@@ -144,40 +137,19 @@ class GraphDisplayConfigImage(_GraphDisplayConfigBase):
     foreground_color: str = "#000000"
 
     @classmethod
-    def from_user_context_and_options(
-        cls,
-        user: LoggedInUser,
-        options: GraphRenderOptions,
-    ) -> Self:
-        return cls.model_validate(_set_user_specific_size(options, user).dump_set_fields())
+    def from_options(cls, options: GraphRenderOptions) -> Self:
+        return cls.model_validate(options.dump_set_fields())
 
 
 _DEFAULT_GRAPH_SIZE: tuple[float, float] = (70.0, 16.0)
 
 
-def resolve_user_size(
-    options: GraphRenderOptions,
-    user: LoggedInUser,
-) -> tuple[float, float]:
+def resolve_size(options: GraphRenderOptions) -> tuple[float, float]:
     """Determine the initial canvas size for a new interaction state.
 
-    Priority: GraphRenderOptions.size → user profile → (70, 16) default.
+    Priority: GraphRenderOptions.size → (70, 16) default. The per-user "graph_size"
+    profile entry is gone with the renderer that was its only writer.
     """
     if options.size:
         return (float(options.size[0]), float(options.size[1]))
-    if user_specific_size := user.load_file("graph_size", None):
-        return (float(user_specific_size[0]), float(user_specific_size[1]))
     return _DEFAULT_GRAPH_SIZE
-
-
-def _set_user_specific_size(
-    options: GraphRenderOptions,
-    user: LoggedInUser,
-) -> GraphRenderOptions:
-    if options.size:
-        return options
-    if user_specific_size := user.load_file("graph_size", None):
-        options_with_updated_size = options.model_copy()
-        options_with_updated_size.size = user_specific_size
-        return options_with_updated_size
-    return options

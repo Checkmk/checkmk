@@ -64,14 +64,16 @@ def test_widget_title_from_internal_sanitizes_title_url(
         assert result.url == expected_url
 
 
-def test_donut_content_defaults_the_legend_of_a_stored_widget() -> None:
-    """A donut stored before the legend became configurable keeps the table."""
+def test_donut_content_defaults_of_a_stored_widget() -> None:
+    """A donut stored before these options existed keeps the table and no comparison."""
     config: NetworkFlowDonutDashletConfig = {
         "type": "network_flow_donut",
         "dimension": "applications",
         "limit_to": 6,
     }
-    assert NetworkFlowDonutContent.from_internal(config).legend_mode == "table"
+    content = NetworkFlowDonutContent.from_internal(config)
+    assert content.legend_mode == "table"
+    assert content.show_delta is False
 
 
 @pytest.mark.parametrize(

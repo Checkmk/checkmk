@@ -9,7 +9,10 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, inject } from 'vue'
 
-import type { NetworkFlowDonutContent } from '@/dashboard/types/widget.ts'
+import type {
+  ComputedNetworkFlowDonutSlice,
+  NetworkFlowDonutContent
+} from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import CmkDonutChart, { type DonutSlice } from '@/network-flow/CmkDonutChart'
 import { CATEGORICAL_PALETTE } from '@/network-flow/colors'
@@ -26,18 +29,18 @@ const props = defineProps<ContentProps<NetworkFlowDonutContent>>()
 /** The key of the aggregated remainder, which is the one slice with a breakdown. */
 const OTHER_SLICE_KEY = 'other'
 
-function buildSlices(
-  computedSlices: { label: string; value: number }[],
-  total: number
-): DonutSlice[] {
+function buildSlices(computedSlices: ComputedNetworkFlowDonutSlice[], total: number): DonutSlice[] {
   const result: DonutSlice[] = computedSlices.map((slice, index) => ({
     key: `slice-${index}`,
     label: slice.label,
     value: slice.value,
-    color: CATEGORICAL_PALETTE[index % CATEGORICAL_PALETTE.length]!
+    color: CATEGORICAL_PALETTE[index % CATEGORICAL_PALETTE.length]!,
+    previousValue: slice.previous_value
   }))
   // The backend returns the grand total across all entities, so the tail beyond
-  // the ranked slices becomes an aggregated "Other" slice.
+  // the ranked slices becomes an aggregated "Other" slice. It carries no
+  // comparison: the previous grand total is the whole preceding window, and what
+  // is left of it after these slices is not the remainder as it stood then.
   const shown = computedSlices.reduce((sum, slice) => sum + slice.value, 0)
   const other = total - shown
   if (other > 0) {

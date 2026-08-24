@@ -41,8 +41,11 @@ const summary = computed(() =>
   CATEGORY_COUNT[breakdown.value.dimension](breakdown.value.category_count)
 )
 
-// A collector started minutes ago would otherwise report every category as new.
-const hasHistory = computed(() => breakdown.value.previous_total > 0)
+// Absent when no comparison was asked for; zero when the widget asked and the
+// preceding window held nothing, which would report every category as new.
+const hasHistory = computed(
+  () => breakdown.value.previous_total !== undefined && breakdown.value.previous_total > 0
+)
 
 const columns = computed<RankedTableColumn[]>(() => {
   const dimensionColumn: RankedTableColumn = {
@@ -83,8 +86,10 @@ const rows = computed<RankedTableRow[]>(() =>
     label: category.label,
     share: { value: category.share, formatted: `${category.share.toFixed(1)}%` },
     value: category.value,
-    previous_value: category.previous_value,
-    delta: formatDelta(category.value, category.previous_value)
+    // Both are read only while the comparison columns are shown, which is
+    // exactly when the payload carries them.
+    previous_value: category.previous_value ?? 0,
+    delta: formatDelta(category.value, category.previous_value ?? 0)
   }))
 )
 // Derived rather than reported, so it cannot disagree with the list beside it.

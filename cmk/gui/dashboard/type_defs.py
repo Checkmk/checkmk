@@ -162,6 +162,8 @@ class NetworkFlowDonutDashletConfig(DashletConfig):
     limit_to: int
     # Absent from every donut stored before the legend became configurable.
     legend_mode: NotRequired[NetworkFlowDonutLegendMode]
+    # Absent from every donut stored before the comparison existed.
+    show_delta: NotRequired[bool]
 
 
 NetworkFlowKpiStatCardMetric = Literal[

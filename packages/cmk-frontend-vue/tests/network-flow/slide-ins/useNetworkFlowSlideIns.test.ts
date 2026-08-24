@@ -32,7 +32,8 @@ const triggerComponent = defineComponent({
                 type: 'network_flow_donut',
                 dimension: 'applications',
                 limit_to: 6,
-                legend_mode: 'table'
+                legend_mode: 'table',
+                show_delta: false
               },
               context: {},
               window: { start: 1_000, end: 1_900 }

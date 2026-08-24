@@ -73,6 +73,10 @@ class NetworkFlowDonutContent(BaseWidgetContent):
         description="Whether the legend states the volume per category in a table, or names the "
         "categories as compact chips below the chart."
     )
+    show_delta: bool = api_field(
+        description="Whether to compare each category against the preceding window of equal "
+        "length. Off means the preceding window is not read at all."
+    )
 
     @classmethod
     @override
@@ -87,6 +91,8 @@ class NetworkFlowDonutContent(BaseWidgetContent):
             limit_to=config["limit_to"],
             # Widgets stored before the legend became configurable listed the shares.
             legend_mode=config.get("legend_mode", "table"),
+            # Widgets stored before the comparison existed showed no comparison.
+            show_delta=config.get("show_delta", False),
         )
 
     @override
@@ -96,6 +102,7 @@ class NetworkFlowDonutContent(BaseWidgetContent):
             dimension=self.dimension,
             limit_to=self.limit_to,
             legend_mode=self.legend_mode,
+            show_delta=self.show_delta,
         )
 
 

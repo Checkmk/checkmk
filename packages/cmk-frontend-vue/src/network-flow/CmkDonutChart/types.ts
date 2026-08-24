@@ -15,7 +15,7 @@ export interface DonutSlice {
   /** Named palette color of the slice arc and its legend swatch. */
   color: ChartColor
   /** Same measure over the preceding period; the legend compares against it. */
-  previousValue?: number
+  previousValue?: number | undefined
   /** The aggregated remainder, which has a breakdown behind it. */
   isOther?: boolean
 }

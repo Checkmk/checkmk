@@ -185,9 +185,15 @@ pkg_mkdirs(
     tags = ["manual"],
 )
 
+py_library(
+    name = "compile_mibs_lib",
+    srcs = ["compile_mibs.py"],
+    deps = [requirement("pysmi")],
+)
+
 py_binary(
     name = "compile_mibs",
-    srcs = ["compile_mibs.py"],
+    srcs = [":compile_mibs_lib"],
     tags = ["manual"],
     deps = [
         requirement("pysmi"),

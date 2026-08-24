@@ -272,9 +272,15 @@ py_library(
     ],
 )
 
+py_library(
+    name = "werks_bin_lib",
+    srcs = ["werks/__main__.py"],
+    deps = [":werks"],
+)
+
 py_binary(
     name = "werks_bin",
-    srcs = ["werks/__main__.py"],
+    srcs = [":werks_bin_lib"],
     tags = ["manual"],
     visibility = ["//visibility:public"],
     deps = [":werks"],

@@ -83,10 +83,15 @@ set_runpath(
     tags = ["manual"],
 )
 
+py_library(
+    name = "merge-nagios-config_lib",
+    srcs = ["merge-nagios-config.py"],
+)
+
 pkg_files(
     name = "nagios_bin",
     srcs = [
-        ":merge-nagios-config",
+        ":merge-nagios-config_lib",
         ":nagios_bin_runpath",
         ":nagios_bins_runpath",
     ],
@@ -94,6 +99,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "bin",
+    renames = {":merge-nagios-config_lib": "merge-nagios-config"},
     tags = ["manual"],
 )
 

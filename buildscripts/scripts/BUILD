@@ -74,17 +74,25 @@ py_binary(
     deps = [requirement("pyyaml")],
 )
 
+py_library(
+    name = "collect_mypy_lib",
+    srcs = ["collect_mypy.py"],
+)
+
 py_binary(
     name = "collect_mypy",
-    srcs = ["collect_mypy.py"],
-    main = "collect_mypy.py",
+    srcs = [":collect_mypy_lib"],
     tags = ["manual"],
+)
+
+py_library(
+    name = "collect_rust_tests_lib",
+    srcs = ["collect_rust_tests.py"],
 )
 
 py_binary(
     name = "collect_rust_tests",
-    srcs = ["collect_rust_tests.py"],
-    main = "collect_rust_tests.py",
+    srcs = [":collect_rust_tests_lib"],
     tags = ["manual"],
 )
 

@@ -29,7 +29,7 @@ pkg_files(
 pkg_files(
     name = "webconf_snapin",
     srcs = [
-        "webconf_snapin.py",
+        ":omd_appliance_py",
     ],
     attributes = pkg_attributes(
         mode = "0644",

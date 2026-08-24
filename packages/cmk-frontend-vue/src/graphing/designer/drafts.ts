@@ -114,36 +114,23 @@ export function newMetricBackendDraft(id: ItemId): DraftMetricBackendItem {
   }
 }
 
-/** Switches a single-metric draft to a dynamic query, keeping the metric and consolidation. */
-export function rrdMetricToQueryDraft(item: DraftRRDMetricItem): DraftRRDQueryItem {
+function appearanceOf(
+  item: DraftRRDMetricItem | DraftRRDQueryItem
+): Pick<DraftRRDMetricItem, 'title' | 'line_type' | 'mirrored' | 'visible'> {
   return {
-    id: item.id,
-    type: 'rrd_query',
     title: item.title,
     line_type: item.line_type,
     mirrored: item.mirrored,
-    visible: item.visible,
-    context: {},
-    metric_name: item.metric_name,
-    consolidation: item.consolidation
+    visible: item.visible
   }
 }
 
-/** Switches a dynamic query back to a single metric; the query filters cannot be mapped over. */
+export function rrdMetricToQueryDraft(item: DraftRRDMetricItem): DraftRRDQueryItem {
+  return { ...newRrdQueryDraft(item.id), ...appearanceOf(item) }
+}
+
 export function rrdQueryToMetricDraft(item: DraftRRDQueryItem, color: string): DraftRRDMetricItem {
-  return {
-    id: item.id,
-    type: 'rrd_metric',
-    title: item.title,
-    line_type: item.line_type,
-    mirrored: item.mirrored,
-    visible: item.visible,
-    color,
-    host_name: null,
-    service_name: null,
-    metric_name: item.metric_name,
-    consolidation: item.consolidation
-  }
+  return { ...newRrdMetricDraft(item.id, color), ...appearanceOf(item) }
 }
 
 export function newConstantDraft(id: ItemId, color: string): DraftConstantItem {

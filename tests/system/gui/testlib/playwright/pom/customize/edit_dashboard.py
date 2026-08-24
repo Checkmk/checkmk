@@ -108,7 +108,10 @@ class EditDashboards(CmkPage):
         delete_link = self.main_area.locator().get_by_role("link", name="Delete")
         deletable_rows = self.main_area.locator("tr", has=dashboard_link).filter(has=delete_link)
         deletable_rows.first.get_by_role("link", name="Delete").click()
-        self.main_area.get_confirmation_popup_button("Delete").click()
+        self.click_and_wait_for_navigation(
+            self.main_area.get_confirmation_popup_button("Delete"),
+            re.compile(r"edit_dashboards\.py"),
+        )
 
         expect(
             deletable_rows,

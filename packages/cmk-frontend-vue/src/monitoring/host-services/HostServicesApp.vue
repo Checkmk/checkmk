@@ -120,7 +120,7 @@ const hostServicesService = new HostServicesService(
     initialFilterState,
     quickFilters: [
       {
-        label: _t('Unhandled problems'),
+        label: _t('Unhandled service problems'),
         tooltip: _t(
           'Show only services in a problem state (WARN or CRIT) that are neither acknowledged nor in a scheduled downtime'
         ),

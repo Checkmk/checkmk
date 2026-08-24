@@ -306,7 +306,7 @@ test('activating the unhandled-problems quick filter requests the WARN/CRIT, una
   mockServices([makeApiEntry()])
   renderApp()
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Unhandled problems' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Unhandled service problems' }))
 
   expect(postSpy).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
@@ -331,7 +331,7 @@ test('clicking the unhandled-problems chip again turns it back off', async () =>
   mockServices([makeApiEntry()])
   renderApp()
 
-  const chip = await screen.findByRole('button', { name: 'Unhandled problems' })
+  const chip = await screen.findByRole('button', { name: 'Unhandled service problems' })
   await userEvent.click(chip)
   await userEvent.click(chip)
 
@@ -347,7 +347,7 @@ test('resetting all filters also turns off the unhandled-problems chip', async (
   mockServices([makeApiEntry()])
   renderApp()
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Unhandled problems' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Unhandled service problems' }))
   await userEvent.click(screen.getByRole('button', { name: 'Reset all filters' }))
 
   expect(postSpy).toHaveBeenLastCalledWith(
@@ -362,7 +362,7 @@ test('shows a tooltip on the unhandled-problems chip', async () => {
   mockServices([makeApiEntry()])
   renderApp()
 
-  expect(await screen.findByRole('button', { name: 'Unhandled problems' })).toHaveAttribute(
+  expect(await screen.findByRole('button', { name: 'Unhandled service problems' })).toHaveAttribute(
     'title',
     'Show only services in a problem state (WARN or CRIT) that are neither acknowledged nor in a scheduled downtime'
   )

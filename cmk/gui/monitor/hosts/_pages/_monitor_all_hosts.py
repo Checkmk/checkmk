@@ -16,7 +16,13 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
-from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
+from cmk.gui.monitor.command import (
+    acknowledge_presets_url,
+    downtime_presets_url,
+    DowntimeRecurrences,
+    MonitorCommands,
+    notification_rules_url,
+)
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -156,6 +162,9 @@ class MonitorAllHostsPage(Page):
                     ],
                     row_actions=_row_actions(ctx.config),
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
+                    acknowledge_presets_url=acknowledge_presets_url(ctx.config),
+                    notification_rules_url=notification_rules_url(ctx.config),
+                    downtime_presets_url=downtime_presets_url(ctx.config),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,

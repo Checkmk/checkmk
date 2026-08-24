@@ -26,7 +26,16 @@
       "items": { "$ref": "#/$defs/downtime_recurrence" },
       "default": []
     },
-    "legacy_view_button": { "$ref": "page_link_button.json" }
+    "legacy_view_button": { "$ref": "page_link_button.json" },
+    "acknowledge_presets_url": {
+      "type": ["string", "null"]
+    },
+    "notification_rules_url": {
+      "type": ["string", "null"]
+    },
+    "downtime_presets_url": {
+      "type": ["string", "null"]
+    }
   },
   "$defs": {
     "monitoring_action": {

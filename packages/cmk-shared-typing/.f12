@@ -13,7 +13,10 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 test -d "${ROOT}" || exit 1
 
-bazel build ":wheel"
+# Force the wheel to be materialized locally: a `--remote_download_outputs=minimal`
+# setting (common in ~/.bazelrc) otherwise leaves the path pip installs below
+# stale or absent, silently deploying an outdated package to the site.
+bazel build --remote_download_outputs=toplevel ":wheel"
 
 # pip installs the package in the user directory in case of missing permissions
 # this might be surprising and hard to spot, so we force the global installation

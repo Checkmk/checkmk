@@ -16,7 +16,13 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
-from cmk.gui.monitor.command import DowntimeRecurrences, MonitorCommands
+from cmk.gui.monitor.command import (
+    acknowledge_presets_url,
+    downtime_presets_url,
+    DowntimeRecurrences,
+    MonitorCommands,
+    notification_rules_url,
+)
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
@@ -136,6 +142,9 @@ class MonitorHostServicesPage(Page):
                         for recurrence in self._recurrences.offered()
                     ],
                     row_actions=_row_actions(ctx.config, hostname),
+                    acknowledge_presets_url=acknowledge_presets_url(ctx.config),
+                    notification_rules_url=notification_rules_url(ctx.config),
+                    downtime_presets_url=downtime_presets_url(ctx.config),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,

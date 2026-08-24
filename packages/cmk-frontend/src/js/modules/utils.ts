@@ -537,13 +537,107 @@ export function stop_reload_timer() {
   }
 }
 
+// Update the content container in place, right now, leaving the rest of the page - and the state
+// of anything mounted outside the container - alone. For callers that run a refresh interval of
+// their own (the graphing refresh control) and so want the update without the reload timer that
+// schedule_reload drives.
+//
+// on_content_ready fires while the outgoing content is still mounted, immediately before it is
+// replaced; on_settled once the new content is in place. Both run on every path, so a caller
+// holding state until the swap happens always hears back.
+export function reload_content_now(on_content_ready?: () => void, on_settled?: () => void) {
+  refresh_content_container(on_content_ready, on_settled)
+}
+
+// Fetch the current page with the content-only display options and swap the result into the
+// content container. Nothing else on the page is touched, so a caller relying on the surrounding
+// page surviving is better off doing nothing than falling back to a full page reload the way
+// do_reload does.
+function refresh_content_container(on_content_ready?: () => void, on_settled?: () => void) {
+  const container = document.getElementById('data_container')
+  if (!container) {
+    on_content_ready?.()
+    on_settled?.()
+    return
+  }
+
+  // Enforce specific display_options to get only the content data.
+  // All options in "opts" will be forced. Existing upper-case options will be switched.
+  let display_options = get_url_param('display_options')
+  // Removed "w" to reflect original rendering mechanism during reload
+  // For example show the "Your query produced more than 1000 results." message
+  // in views even during reload.
+  const opts = ['h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r', 'u']
+  let i
+  for (i = 0; i < opts.length; i++) {
+    if (display_options.indexOf(opts[i].toUpperCase()) > -1)
+      display_options = display_options.replace(opts[i].toUpperCase(), opts[i])
+    else display_options += opts[i]
+  }
+
+  const params = { _display_options: display_options } as any
+  const real_display_options = get_url_param('display_options')
+  if (real_display_options !== '') params['display_options'] = real_display_options
+
+  params['_do_actions'] = get_url_param('_do_actions')
+
+  if (is_selection_enabled()) params['selection'] = get_selection_id()
+
+  call_ajax(makeuri(params), {
+    response_handler: (_unused: any, code: string) => {
+      g_reload_error = false
+      on_content_ready?.()
+      /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
+      container.innerHTML = code
+      execute_javascript_by_object(container)
+
+      // Update the header time
+      update_header_timer()
+
+      on_settled?.()
+    },
+    error_handler: (_unused: any, status_code: number | string) => {
+      // The message is prepended to the container, which remounts its content just as a
+      // successful update does, so a caller hears about the swap either way.
+      on_content_ready?.()
+      if (!g_reload_error) {
+        /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
+        container.innerHTML =
+          '<div class=error>Update failed (' +
+          status_code +
+          '). The shown data might be outdated</div>' +
+          container.innerHTML
+        g_reload_error = true
+      }
+
+      on_settled?.()
+    },
+    method: 'GET'
+  })
+}
+
+// A content refresh waiting for the window to become visible again. Only ever one: a caller
+// running its own interval (the graphing refresh control) keeps ticking while the tab is hidden,
+// and without this each tick would leave a retry chain of its own behind.
+let g_content_reload_retry_timer: number | null = null
+
 function do_reload(url: string) {
   // Reschedule the reload in case the browser window / tab is not visible
   // for the user. Retry after short time.
   if (!is_window_active()) {
-    setTimeout(function () {
-      do_reload(url)
-    }, 250)
+    if (url !== '') {
+      // A navigation carries its own target, so it cannot be folded into a pending retry.
+      setTimeout(function () {
+        do_reload(url)
+      }, 250)
+      return
+    }
+    if (g_content_reload_retry_timer === null) {
+      g_content_reload_retry_timer = window.setTimeout(function () {
+        g_content_reload_retry_timer = null
+        do_reload(url)
+      }, 250)
+    }
     return
   }
 
@@ -553,64 +647,11 @@ function do_reload(url: string) {
   if (!document.getElementById('data_container') || url !== '') {
     if (url === '') window.location.reload()
     else window.location.href = url
-  } else {
-    // Enforce specific display_options to get only the content data.
-    // All options in "opts" will be forced. Existing upper-case options will be switched.
-    let display_options = get_url_param('display_options')
-    // Removed "w" to reflect original rendering mechanism during reload
-    // For example show the "Your query produced more than 1000 results." message
-    // in views even during reload.
-    const opts = ['h', 't', 'b', 'f', 'c', 'o', 'd', 'e', 'r', 'u']
-    let i
-    for (i = 0; i < opts.length; i++) {
-      if (display_options.indexOf(opts[i].toUpperCase()) > -1)
-        display_options = display_options.replace(opts[i].toUpperCase(), opts[i])
-      else display_options += opts[i]
-    }
-
-    const params = { _display_options: display_options } as any
-    const real_display_options = get_url_param('display_options')
-    if (real_display_options !== '') params['display_options'] = real_display_options
-
-    params['_do_actions'] = get_url_param('_do_actions')
-
-    if (is_selection_enabled()) params['selection'] = get_selection_id()
-
-    call_ajax(makeuri(params), {
-      response_handler: handle_content_reload,
-      error_handler: handle_content_reload_error,
-      method: 'GET'
-    })
-  }
-}
-
-function handle_content_reload(_unused: any, code: string) {
-  g_reload_error = false
-  const o = document.getElementById('data_container')!
-  /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
-  o.innerHTML = code
-  execute_javascript_by_object(o)
-
-  // Update the header time
-  update_header_timer()
-
-  schedule_reload()
-}
-
-function handle_content_reload_error(_unused: any, status_code: number | string) {
-  if (!g_reload_error) {
-    const o = document.getElementById('data_container')!
-    /* eslint-disable-next-line no-unsanitized/property -- Highlight existing violations CMK-17846 */
-    o.innerHTML =
-      '<div class=error>Update failed (' +
-      status_code +
-      '). The shown data might be outdated</div>' +
-      o.innerHTML
-    g_reload_error = true
+    return
   }
 
-  // Continue update after the error
-  schedule_reload()
+  // The page's own timer drives this one, so keep the countdown running once the swap is done.
+  refresh_content_container(undefined, schedule_reload)
 }
 
 export function set_reload_interval(secs: number) {

@@ -22,6 +22,7 @@ const props = withDefaults(
     targets: Target[]
     indent?: boolean | undefined
     showCount?: boolean | undefined
+    showClose?: boolean | undefined
   }>(),
   { showCount: true }
 )
@@ -74,6 +75,7 @@ async function onSubmit(values: unknown): Promise<void> {
     :form-props="action.formProps"
     :initial-values="initialValues"
     :indent="indent"
+    :show-close="showClose"
     @submit="onSubmit"
     @cancel="emit('cancel')"
   />

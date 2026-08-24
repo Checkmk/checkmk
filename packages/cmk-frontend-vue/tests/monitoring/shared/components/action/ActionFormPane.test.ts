@@ -60,6 +60,18 @@ test('renders no inputs and is immediately submittable without a form', async ()
   expect(emitted('submit')).toEqual([[{}]])
 })
 
+test('offers a close button only when asked to, and it cancels', async () => {
+  const { emitted, rerender } = render(ActionFormPane, {
+    props: { title: 'Acknowledge problems' as TranslatedString, initialValues: {} }
+  })
+
+  expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument()
+
+  await rerender({ showClose: true })
+  await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+  expect(emitted('cancel')).toHaveLength(1)
+})
+
 test('honors a custom submit label and emits cancel', async () => {
   const { emitted } = render(ActionFormPane, {
     props: {

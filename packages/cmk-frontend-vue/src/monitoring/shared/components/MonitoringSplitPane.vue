@@ -190,6 +190,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
         :action-id="activeAction"
         :actions="actions"
         :targets="selectedTargets"
+        :show-close="true"
         @feedback="onFeedback"
         @cancel="closeAction"
       />

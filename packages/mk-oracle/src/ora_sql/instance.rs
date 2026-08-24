@@ -201,7 +201,7 @@ fn process_spot_works(works: Vec<OpenedSpotWorks>) -> Vec<ClosedSpotResults> {
     works
         .into_iter()
         .map(|(spot, instance_works)| {
-            log::info!("Spot: {:?}", spot.target());
+            log::debug!("Spot: {:?}", spot.target());
             let results = instance_works
                 .iter()
                 .flat_map(|(instance, query_blocks)| {
@@ -244,7 +244,7 @@ fn process_spot_works_para(works: Vec<ClosedSpotWorks>, threads: usize) -> Vec<C
     works
         .into_iter()
         .flat_map(|(closed, instance_works)| {
-            log::info!("Spot: {:?}", closed.target());
+            log::debug!("Spot: {:?}", closed.target());
 
             instance_works
                 .iter()
@@ -403,7 +403,6 @@ fn _exec_queries(
     post_processing: &PostProcessing,
     title: &str,
 ) -> Vec<String> {
-    log::info!("Connected to : {}", service_name);
     let section_timer = PerfTimer::start("section", Label::Block(title));
     let results = queries
         .iter()
@@ -494,7 +493,10 @@ fn calc_all_spots(
     all.into_iter()
         .filter(|spot| {
             if !spot.target.is_defined() {
-                log::info!("Spot is not defined, it may happen: {:?}", spot.target());
+                log::debug!(
+                    "Endpoint has no sid, service_name or alias, skipping it: {:?}",
+                    spot.target()
+                );
                 return false;
             }
             true
@@ -556,7 +558,7 @@ fn filter_spots(spots: Vec<ClosedSpot>, discovery: &config::ora_sql::Discovery) 
 }
 
 fn calc_main_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<ClosedSpot> {
-    log::info!("ENDPOINTS: {:?}", endpoints);
+    log::debug!("ENDPOINTS: {:?}", endpoints);
     endpoints
         .into_iter()
         .filter_map(|ep| {
@@ -572,7 +574,7 @@ fn calc_main_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<ClosedSpot>
 }
 
 fn calc_custom_spots(instances: &[CustomInstance]) -> Vec<ClosedSpot> {
-    log::info!("CUSTOM INSTANCES: {:?}", instances);
+    log::debug!("CUSTOM INSTANCES: {:?}", instances);
     instances
         .iter()
         .filter_map(|instance| {

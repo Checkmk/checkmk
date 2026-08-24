@@ -216,9 +216,10 @@ fn _make_work_result_ok(
                 .iter()
                 .filter_map(|section| {
                     if !service.is_suitable_affinity(section.affinity()) {
-                        log::info!(
-                            "Skip section with not suitable affinity: {:?} instance {}",
-                            section,
+                        log::debug!(
+                            "Skipping section {}: affinity {:?} does not match instance {}",
+                            section.name(),
+                            section.affinity(),
                             service
                         );
                         return None;

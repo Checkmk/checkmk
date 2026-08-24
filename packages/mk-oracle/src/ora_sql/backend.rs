@@ -66,7 +66,7 @@ impl OraDbEngine for StdEngine {
             .context("Target is not defined")?;
         // An ASM instance is reached with the `asm_*` credentials from the config.
         let auth = target.connection_auth();
-        log::info!(
+        log::debug!(
             "Connection string: {}, asm {}, auth type {:?}",
             connection_string,
             target.is_asm(),
@@ -282,7 +282,12 @@ impl Clone for Spot<Closed> {
 
 impl Spot<Closed> {
     pub fn connect(mut self, use_instance: Option<&InstanceName>) -> Result<Spot<Opened>> {
-        log::info!("Connecting to {:?}", self.target);
+        log::info!(
+            "Connecting to {} at {}:{}",
+            self.target.display_name(),
+            self.target.host,
+            self.target.port.0
+        );
         let connect_timer = PerfTimer::start("connection", Label::Inline);
         self.engine.connect(&self.target, use_instance)?;
 

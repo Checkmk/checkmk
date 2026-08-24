@@ -26,7 +26,7 @@ use std::collections::HashSet;
 /// Group 2: the SID name (e.g. `TEST19`)
 const SID_MASK: &str = r"^(asm_pmon_|ora_pmon_|xe_pmon_|db_pmon_)(.+)";
 
-/// Retrieves local Oracle SIDs.
+/// Retrieves local Oracle SIDs, sorted in ascending order.
 /// On Windows: the instance registry (SOFTWARE\Oracle), which lists installed
 /// instances rather than running ones.
 /// On Unix: only SIDs with a running PMON process.
@@ -35,7 +35,7 @@ const SID_MASK: &str = r"^(asm_pmon_|ora_pmon_|xe_pmon_|db_pmon_)(.+)";
 /// `dump_detected_sids` below, which therefore names other instances than this
 /// function returns.
 pub fn get_local_sid_names() -> Vec<String> {
-    if cfg!(windows) {
+    let mut names: Vec<String> = if cfg!(windows) {
         get_instances(None)
             .unwrap_or_default()
             .into_iter()
@@ -47,7 +47,10 @@ pub fn get_local_sid_names() -> Vec<String> {
             .into_iter()
             .map(|i| i.to_uppercase())
             .collect()
-    }
+    };
+
+    names.sort();
+    names
 }
 
 /// Extracts the SID (regex group 2) from a single process parameter.

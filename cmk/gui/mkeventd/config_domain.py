@@ -26,6 +26,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     in_global_settings = False
+    global_settings_permission = "mkeventd.config"
 
     @classmethod
     @override

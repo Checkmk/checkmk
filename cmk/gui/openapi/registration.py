@@ -43,6 +43,7 @@ from .api_endpoints import (
 )
 from .api_endpoints import downtime as api_downtime
 from .api_endpoints import folder_config as api_folder_config
+from .api_endpoints import global_settings as api_global_settings
 from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
 from .api_endpoints import host_group_config as api_host_group_config
@@ -131,6 +132,10 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_password.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
+    api_global_settings.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

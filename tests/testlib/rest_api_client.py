@@ -4704,6 +4704,59 @@ class PagetypeTopicClient(RestApiClient):
         )
 
 
+class GlobalSettingClient(RestApiClient):
+    """Client for the global settings endpoints, which also serve Event Console settings."""
+
+    domain: DomainType = "global_setting"
+    default_version = APIVersion.INTERNAL
+
+    def get(self, varname: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{varname}",
+            expect_ok=expect_ok,
+        )
+
+    def update(self, varname: str, value: Any, expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{varname}",
+            body={"value": value},
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, varname: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{varname}",
+            expect_ok=expect_ok,
+        )
+
+    def get_site(self, site_id: str, varname: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/site_connection/{site_id}/{self.domain}/{varname}",
+            expect_ok=expect_ok,
+        )
+
+    def update_site(
+        self, site_id: str, varname: str, value: Any, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/site_connection/{site_id}/{self.domain}/{varname}",
+            body={"value": value},
+            expect_ok=expect_ok,
+        )
+
+    def delete_site(self, site_id: str, varname: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/site_connection/{site_id}/{self.domain}/{varname}",
+            expect_ok=expect_ok,
+        )
+
+
 class JavascriptCrashReportClient(RestApiClient):
     domain: DomainType = "javascript_crash_report"
     default_version = APIVersion.INTERNAL
@@ -5134,6 +5187,7 @@ class ClientRegistry:
     MetricBackendClient: MetricBackendClient
     PagetypeTopicClient: PagetypeTopicClient
     IconClient: IconClient
+    GlobalSetting: GlobalSettingClient
     JavascriptCrashReport: JavascriptCrashReportClient
     HistoricalEventConsole: HistoricalEventConsole
     HostAvailability: HostAvailabilityClient
@@ -5203,6 +5257,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         MetricBackendClient=MetricBackendClient(request_handler, url_prefix),
         PagetypeTopicClient=PagetypeTopicClient(request_handler, url_prefix),
         IconClient=IconClient(request_handler, url_prefix),
+        GlobalSetting=GlobalSettingClient(request_handler, url_prefix),
         JavascriptCrashReport=JavascriptCrashReportClient(request_handler, url_prefix),
         HistoricalEventConsole=HistoricalEventConsole(request_handler, url_prefix),
         HostAvailability=HostAvailabilityClient(request_handler, url_prefix),

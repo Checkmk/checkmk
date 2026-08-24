@@ -27,6 +27,7 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
     GlobalSettings,
     GraphTimerange,
+    PermissionName,
 )
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import ValueSpec
@@ -79,12 +80,18 @@ class ABCConfigDomain(abc.ABC):
         activated regardless of the change type.
         Pass ``domains=[]`` to :meth:`PendingChanges.add` to have more granular
         control.
+
+    global_settings_permission:
+        the permission needed to see or change this domain's configuration variables
+        centrally. The GUI derives it from the settings page the user is on; callers
+        holding only a variable name cannot, so the domain states it here.
     """
 
     needs_sync = True
     needs_activation = True
     always_activate = False
     in_global_settings = True
+    global_settings_permission: PermissionName = "wato.global"
 
     @classmethod
     @abc.abstractmethod

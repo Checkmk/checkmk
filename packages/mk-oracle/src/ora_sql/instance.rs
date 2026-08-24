@@ -248,16 +248,22 @@ fn process_spot_works_para(works: Vec<ClosedSpotWorks>, threads: usize) -> Vec<C
                 .iter()
                 .flat_map(|(instance, query_blocks)| {
                     log::info!("Instance: {}", instance);
+                    // no more threads than blocks to run
+                    let work_threads = threads.min(query_blocks.len());
+                    if work_threads == 0 {
+                        log::warn!("No queries for instance {instance}, nothing to run");
+                        return vec![];
+                    }
                     let session_timer =
                         PerfTimer::start("session", Label::Block(&instance.to_string()));
-                    let opened_spots = open_spots(&closed, instance, threads);
+                    let opened_spots = open_spots(&closed, instance, work_threads);
                     if opened_spots.is_empty() {
                         log::error!("Failed to connect to instance {}", instance);
                         session_timer.stop();
                         return vec![];
                     }
                     let job_data: Vec<JobData> = make_job_data(opened_spots, query_blocks);
-                    let thread_pool = build_thread_pool(threads);
+                    let thread_pool = build_thread_pool(work_threads);
                     let global_output = Mutex::new(Vec::new());
                     thread_pool.scope(|scope| {
                         for job in job_data {

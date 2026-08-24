@@ -808,7 +808,11 @@ def load_section_data(redfishobj: RedfishData) -> RedfishData:
         except FileNotFoundError:
             pass
         else:
-            store_data = json.loads(raw)
+            try:
+                store_data = json.loads(raw)
+            except json.JSONDecodeError:
+                store_path.unlink(missing_ok=True)
+                continue
             current_time = int(time.time())
             if store_data["timestamp"] + value < current_time:
                 continue

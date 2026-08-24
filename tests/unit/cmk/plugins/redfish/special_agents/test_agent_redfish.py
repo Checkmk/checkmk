@@ -9,12 +9,16 @@ reach stdout as soon as it's gathered, and one failing endpoint must not abort
 the rest of the run."""
 
 import io
+import json
 import sys
 import time
+from pathlib import Path
 from typing import Any
 from unittest import mock
 
 import pytest
+
+from cmk.utils import paths
 
 from cmk.plugins.redfish.special_agents import agent_redfish
 from cmk.special_agents.v0_unstable.agent_common import CannotRecover
@@ -319,3 +323,41 @@ def test_fetch_systems_mixed_members_not_aborted(monkeypatch: pytest.MonkeyPatch
 
     assert any(isinstance(s, dict) and "Id" in s for s in result)
     assert sleep.call_count == 0
+
+
+def _cached_obj(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> tuple[Path, agent_redfish.RedfishData]:
+    monkeypatch.setattr(paths, "tmp_dir", tmp_path)
+    redfishobj = _make_redfishobj()
+    redfishobj.sections = {"Memory"}
+    redfishobj.cache_per_section = {"Memory": 300}
+    store_path = agent_redfish._make_cached_section_path(redfishobj.hostname, "Memory")
+    store_path.parent.mkdir(parents=True, exist_ok=True)
+    return store_path, redfishobj
+
+
+@pytest.mark.parametrize("content", ["", '{"timestamp": 176'], ids=["empty", "half_written"])
+def test_load_section_data_tolerates_truncated_cache(
+    content: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store_path, redfishobj = _cached_obj(tmp_path, monkeypatch)
+    store_path.write_text(content)
+
+    result = agent_redfish.load_section_data(redfishobj)
+
+    assert "Memory" in result.sections
+    assert "Memory" not in result.section_data
+    assert not store_path.exists()
+
+
+def test_load_section_data_uses_intact_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store_path, redfishobj = _cached_obj(tmp_path, monkeypatch)
+    store_path.write_text(json.dumps({"timestamp": int(time.time()), "data": [{"Id": "DIMM.A1"}]}))
+
+    result = agent_redfish.load_section_data(redfishobj)
+
+    assert "Memory" not in result.sections
+    assert result.section_data["Memory"] == [{"Id": "DIMM.A1"}]

@@ -779,7 +779,11 @@ def load_section_data(storage: Storage, redfishobj: RedfishData) -> RedfishData:
     for key, value in redfishobj.cache_per_section.items():
         if (raw := storage.read(key, None)) is None:
             continue
-        store_data = json.loads(raw)
+        try:
+            store_data = json.loads(raw)
+        except json.JSONDecodeError:
+            storage.unset(key)
+            continue
         current_time = int(time.time())
         if store_data["timestamp"] + value < current_time:
             continue

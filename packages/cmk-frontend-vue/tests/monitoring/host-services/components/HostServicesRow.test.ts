@@ -69,8 +69,8 @@ test('renders one cell per column', () => {
 test('renders the state markers of the summary as badges', () => {
   const { container } = mountRow(makeService({ summary: 'load: 3.1(!), temp: 90(!!)' }))
 
-  expect(container.querySelector('.monitoring-state-tag--warning')).toHaveTextContent('WA')
-  expect(container.querySelector('.monitoring-state-tag--critical')).toHaveTextContent('CR')
+  expect(container.querySelector('.cmk-state-tag--warning')).toHaveTextContent('WA')
+  expect(container.querySelector('.cmk-state-tag--critical')).toHaveTextContent('CR')
 })
 
 test('keeps the whole summary readable on hover, markers and all', () => {
@@ -243,7 +243,7 @@ test('dashes out the last check of a service that has never been checked', () =>
 test('renders the state badge with success color for state OK', () => {
   const { container } = mountRow(makeService({ state: 'OK' }))
 
-  const stateTag = container.querySelector('.monitoring-state-tag--ok')
+  const stateTag = container.querySelector('.cmk-state-tag--ok')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('OK')
 })
@@ -251,7 +251,7 @@ test('renders the state badge with success color for state OK', () => {
 test('renders the state badge with warning color for state WARN', () => {
   const { container } = mountRow(makeService({ state: 'WARN' }))
 
-  const stateTag = container.querySelector('.monitoring-state-tag--warning')
+  const stateTag = container.querySelector('.cmk-state-tag--warning')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('WARNING')
 })
@@ -259,7 +259,7 @@ test('renders the state badge with warning color for state WARN', () => {
 test('renders the state badge with danger color for state CRIT', () => {
   const { container } = mountRow(makeService({ state: 'CRIT' }))
 
-  const stateTag = container.querySelector('.monitoring-state-tag--critical')
+  const stateTag = container.querySelector('.cmk-state-tag--critical')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('CRITICAL')
 })
@@ -267,7 +267,7 @@ test('renders the state badge with danger color for state CRIT', () => {
 test('renders the state badge with unknown color for state UNKNOWN', () => {
   const { container } = mountRow(makeService({ state: 'UNKNOWN' }))
 
-  const stateTag = container.querySelector('.monitoring-state-tag--unknown')
+  const stateTag = container.querySelector('.cmk-state-tag--unknown')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UNKNOWN')
 })

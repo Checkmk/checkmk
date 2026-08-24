@@ -91,7 +91,7 @@ test('emits open with the host when the name cell button is clicked', async () =
 test('renders state badge with success color for state UP', () => {
   const { container } = mountRow(makeHost({ state: 'UP' }))
 
-  const stateTag = container.querySelector('.monitoring-state-tag--ok')
+  const stateTag = container.querySelector('.cmk-state-tag--ok')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UP')
 })
@@ -99,7 +99,7 @@ test('renders state badge with success color for state UP', () => {
 test('renders state badge with danger color for state DOWN', () => {
   const { container } = mountRow(makeHost({ state: 'DOWN' }))
 
-  const stateTag = container.querySelector('.monitoring-state-tag--critical')
+  const stateTag = container.querySelector('.cmk-state-tag--critical')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('DOWN')
 })
@@ -107,7 +107,7 @@ test('renders state badge with danger color for state DOWN', () => {
 test('renders state badge with unknown color for state UNREACHABLE', () => {
   const { container } = mountRow(makeHost({ state: 'UNREACHABLE' }))
 
-  const stateTag = container.querySelector('.monitoring-state-tag--unknown')
+  const stateTag = container.querySelector('.cmk-state-tag--unknown')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UNREACH')
 })

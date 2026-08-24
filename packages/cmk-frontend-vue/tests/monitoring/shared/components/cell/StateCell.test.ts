@@ -87,7 +87,7 @@ test('renders the stale indicator when stale', () => {
 test('marks the state badge itself as stale', () => {
   const { container } = mountCell({ kind: 'service', state: 'OK', stale: true })
 
-  expect(container.querySelector('.monitoring-state-tag--stale')).toHaveTextContent('OK')
+  expect(container.querySelector('.cmk-state-tag--stale')).toHaveTextContent('OK')
 })
 
 test.each<[StateCellProps, string]>([

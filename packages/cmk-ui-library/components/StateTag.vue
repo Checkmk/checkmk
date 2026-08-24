@@ -32,19 +32,19 @@ withDefaults(
 
 <template>
   <span
-    class="monitoring-state-tag"
+    class="cmk-state-tag"
     :class="[
-      `monitoring-state-tag--${tone}`,
-      `monitoring-state-tag--${kind}`,
-      `monitoring-state-tag--size-${size}`,
-      { 'monitoring-state-tag--stale': stale }
+      `cmk-state-tag--${tone}`,
+      `cmk-state-tag--${kind}`,
+      `cmk-state-tag--size-${size}`,
+      { 'cmk-state-tag--stale': stale }
     ]"
     >{{ label }}</span
   >
 </template>
 
 <style scoped>
-.monitoring-state-tag {
+.cmk-state-tag {
   --state-tag-height: var(--dimension-7);
 
   display: inline-flex;
@@ -65,15 +65,15 @@ withDefaults(
   white-space: nowrap;
 }
 
-.monitoring-state-tag--size-default.monitoring-state-tag--host {
+.cmk-state-tag--size-default.cmk-state-tag--host {
   --state-tag-width: 75px;
 }
 
-.monitoring-state-tag--size-default.monitoring-state-tag--service {
+.cmk-state-tag--size-default.cmk-state-tag--service {
   --state-tag-width: 81px;
 }
 
-.monitoring-state-tag--size-compact {
+.cmk-state-tag--size-compact {
   --state-tag-width: 34px;
 
   padding: 0 var(--dimension-3);
@@ -84,7 +84,7 @@ withDefaults(
  * height for the row, and a flex badge inheriting that grows well past the small
  * tag it is supposed to be.
  */
-.monitoring-state-tag--size-inline {
+.cmk-state-tag--size-inline {
   --state-tag-height: var(--dimension-5);
   --state-tag-width: 34px;
 
@@ -92,7 +92,7 @@ withDefaults(
   font-size: 9px;
 }
 
-.monitoring-state-tag--stale {
+.cmk-state-tag--stale {
   opacity: 0.7;
   background:
     repeating-linear-gradient(-25deg, transparent 0 3px, rgb(0 0 0 / 25%) 4px 7px, transparent 8px),
@@ -100,27 +100,27 @@ withDefaults(
 }
 
 /* Pinned to the palette rather than to theme variables: a state reads the same in both themes. */
-.monitoring-state-tag--ok {
+.cmk-state-tag--ok {
   --state-tag-background: var(--color-corporate-green-80);
   --state-tag-font-color: var(--color-corporate-green-10);
 }
 
-.monitoring-state-tag--warning {
+.cmk-state-tag--warning {
   --state-tag-background: var(--color-yellow-60);
   --state-tag-font-color: var(--color-yellow-100);
 }
 
-.monitoring-state-tag--critical {
+.cmk-state-tag--critical {
   --state-tag-background: var(--color-dark-red-60);
   --state-tag-font-color: var(--color-dark-red-0);
 }
 
-.monitoring-state-tag--unknown {
+.cmk-state-tag--unknown {
   --state-tag-background: var(--color-orange-70);
   --state-tag-font-color: var(--white);
 }
 
-.monitoring-state-tag--pending {
+.cmk-state-tag--pending {
   --state-tag-background: var(--color-mist-grey-80);
   --state-tag-font-color: var(--color-mist-grey-0);
 }

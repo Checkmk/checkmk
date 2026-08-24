@@ -1912,12 +1912,17 @@ class Site:
                 continue
             crash_type = crash.get("exc_type", "")
             crash_detail = crash.get("exc_value", "")
-            if (
-                re.search("ConnectionError", crash_type)
-                and re.search("redis", crash_detail)
-                or (
-                    re.search("TimeoutError", crash_type)
-                    and re.search("reading from socket", crash_detail)
+            # Most redis-py messages do not name redis ("max number of clients
+            # reached.", "Error 32 while writing to socket. Broken pipe.", "Timeout
+            # reading from socket"), so the exception is attributed via its traceback
+            # instead. Every ignored crash still has to point at redis one way or the
+            # other, so unrelated connection errors keep failing their test.
+            if re.search("ConnectionError|TimeoutError", crash_type) and (
+                re.search("redis", crash_detail)
+                or any(
+                    re.search("site-packages/redis/", str(frame[0]))
+                    for frame in crash.get("exc_traceback") or ()
+                    if frame
                 )
             ):
                 logger.warning("Ignored crash report. See CMK-38006")

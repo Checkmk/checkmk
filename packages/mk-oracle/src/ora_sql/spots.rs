@@ -58,7 +58,7 @@ pub fn make_spot_work_results(
     sections: Vec<Section>,
     custom_instances: &[CustomInstance],
     excluded_sections: &[(TargetId, Vec<SectionName>)],
-    global_cache_age: u32,
+    global_cache_age: Option<u32>,
     params: &[SqlBindParam],
     options: &Options,
 ) -> (Vec<OpenedSpotWorks>, Vec<SpotErrors>) {
@@ -109,7 +109,7 @@ fn merge_per_instance_sections(
     spot: &OpenedSpot,
     custom_instances: &[CustomInstance],
     excluded_sections: &[(TargetId, Vec<SectionName>)],
-    global_cache_age: u32,
+    global_cache_age: Option<u32>,
     options: &Options,
 ) -> Vec<Section> {
     let spot_target_id = spot.target().target_id();
@@ -300,7 +300,7 @@ oracle:
             .sections()
             .iter()
             .filter(|s| s.is_custom_metric())
-            .map(|s| Section::new(s, 0, config.options()))
+            .map(|s| Section::new(s, Some(0), config.options()))
             .collect()
     }
 
@@ -324,7 +324,7 @@ oracle:
         let spot = open_spot(MiniOra::single("ORCL2"), Some(&instances[0]));
 
         let merged =
-            merge_per_instance_sections(&global, &spot, &instances, &[], 0, config.options());
+            merge_per_instance_sections(&global, &spot, &instances, &[], Some(0), config.options());
 
         // global_only (kept) + shared (folded, not duplicated) + instance_only (added)
         assert_eq!(
@@ -350,7 +350,8 @@ oracle:
         // No custom instance is passed, so nothing matches the spot's target.
         let spot = open_spot(MiniOra::single("ORCLX"), None);
 
-        let merged = merge_per_instance_sections(&global, &spot, &[], &[], 0, config.options());
+        let merged =
+            merge_per_instance_sections(&global, &spot, &[], &[], Some(0), config.options());
 
         assert_eq!(custom_item_names(&merged), custom_item_names(&global));
     }
@@ -371,7 +372,11 @@ oracle:
     }
 
     fn predefined(name: &str) -> Section {
-        Section::new(&SectionBuilder::new(name).build(), 0, &Options::default())
+        Section::new(
+            &SectionBuilder::new(name).build(),
+            Some(0),
+            &Options::default(),
+        )
     }
 
     fn custom_metric(item: &str) -> Section {
@@ -379,7 +384,7 @@ oracle:
             &SectionBuilder::new(item)
                 .set_item_value(ItemValue::from(item.to_string()))
                 .build(),
-            0,
+            Some(0),
             &Options::default(),
         )
     }
@@ -429,7 +434,7 @@ oracle:
             .product()
             .sections()
             .iter()
-            .map(|s| Section::new(s, 0, config.options()))
+            .map(|s| Section::new(s, Some(0), config.options()))
             .collect();
         let instances = config.instances().clone();
         let spot = open_spot(MiniOra::single("PROD"), Some(&instances[0]));
@@ -439,7 +444,7 @@ oracle:
             &spot,
             &instances,
             config.excluded_sections(),
-            0,
+            Some(0),
             config.options(),
         );
 
@@ -471,7 +476,7 @@ oracle:
             .product()
             .sections()
             .iter()
-            .map(|s| Section::new(s, 0, config.options()))
+            .map(|s| Section::new(s, Some(0), config.options()))
             .collect();
         let instances = config.instances().clone();
         let merge = |instance| {
@@ -480,7 +485,7 @@ oracle:
                 &open_spot(MiniOra::single("ANY"), Some(instance)),
                 &instances,
                 config.excluded_sections(),
-                0,
+                Some(0),
                 config.options(),
             )
         };
@@ -517,7 +522,7 @@ oracle:
             .product()
             .sections()
             .iter()
-            .map(|s| Section::new(s, 0, config.options()))
+            .map(|s| Section::new(s, Some(0), config.options()))
             .collect();
         let instances = config.instances().clone();
         let spot = open_spot(MiniOra::single("XE"), Some(&instances[0]));
@@ -527,7 +532,7 @@ oracle:
             &spot,
             &instances,
             config.excluded_sections(),
-            0,
+            Some(0),
             config.options(),
         );
 

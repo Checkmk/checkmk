@@ -109,17 +109,18 @@ pub async fn generate_data(
             }
         }
 
+        let global = if environment.disable_caching() {
+            None
+        } else {
+            Some(ora_sql.product().cache_age())
+        };
         let sections = ora_sql
             .product()
             .sections()
             .iter()
             .filter_map(|s| {
                 if s.is_allowed(filter) {
-                    Some(Section::new(
-                        s,
-                        ora_sql.product().cache_age(),
-                        ora_sql.options(),
-                    ))
+                    Some(Section::new(s, global, ora_sql.options()))
                 } else {
                     log::info!("Skip section: {:?} not allowed in {:?}", s, filter);
                     None
@@ -137,7 +138,7 @@ pub async fn generate_data(
             sections,
             ora_sql.instances(),
             ora_sql.excluded_sections(),
-            ora_sql.product().cache_age(),
+            Some(ora_sql.product().cache_age()),
             ora_sql.params(),
             ora_sql.options(),
         );
@@ -836,7 +837,7 @@ mod yaml_to_output_tests {
             .sections()
             .iter()
             .filter(|s| s.is_custom_metric())
-            .map(|s| Section::new(s, cache_age, config.options()))
+            .map(|s| Section::new(s, Some(cache_age), config.options()))
             .collect()
     }
 
@@ -848,7 +849,7 @@ mod yaml_to_output_tests {
             .sections()
             .iter()
             .filter(|s| !s.is_custom_metric())
-            .map(|s| Section::new(s, 0, config.options()))
+            .map(|s| Section::new(s, Some(0), config.options()))
             .collect()
     }
 
@@ -884,7 +885,7 @@ oracle:
             builtin_sections(&config),
             &[],
             &[],
-            0,
+            Some(0),
             config.params(),
             config.options(),
         );
@@ -917,7 +918,7 @@ oracle:
             sections,
             instances,
             &[],
-            cache_age,
+            Some(cache_age),
             &[],
             &Options::default(),
         );

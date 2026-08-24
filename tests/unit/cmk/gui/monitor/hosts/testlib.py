@@ -13,7 +13,6 @@ from cmk.gui.monitor.hosts._models import (
     Host,
     HostFilter,
     HostOptionalField,
-    HostOverview,
     HostSort,
     UnixTimestamp,
 )
@@ -27,11 +26,6 @@ class HostFactory(DataclassFactory[Host]):
     __allow_none_optionals__ = False
 
 
-class HostOverviewFactory(DataclassFactory[HostOverview]):
-    __check_model__ = False
-    __allow_none_optionals__ = False
-
-
 def get_fake_host_repository(*, n_hosts: int = 0, hostnames: Sequence[str] = ()) -> HostRepository:
     class HostFakeRepository:
         def __init__(self) -> None:
@@ -40,7 +34,7 @@ def get_fake_host_repository(*, n_hosts: int = 0, hostnames: Sequence[str] = ())
                 *(HostFactory.build() for _ in range(n_hosts)),
             ]
             self._host_overviews = {
-                (h.site_id, h.name): HostOverviewFactory.build(site_id=h.site_id, name=h.name)
+                (h.site_id, h.name): HostFactory.build(site_id=h.site_id, name=h.name)
                 for h in self._hosts
             }
 
@@ -58,7 +52,7 @@ def get_fake_host_repository(*, n_hosts: int = 0, hostnames: Sequence[str] = ())
         ) -> Sequence[Host]:
             return self._hosts[:limit]
 
-        def get_overview(self, *, hostname: str, site_id: str) -> HostOverview:
+        def get_overview(self, *, hostname: str, site_id: str) -> Host:
             try:
                 return self._host_overviews[(site_id, hostname)]
             except KeyError:

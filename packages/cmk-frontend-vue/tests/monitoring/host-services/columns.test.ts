@@ -76,7 +76,13 @@ test('the state column reads as the one in the hosts listing', () => {
   }
 
   expect(stateOf(useHostServicesColumns() as ColumnDef<never>[])).toEqual(
-    stateOf(buildHostColumns({ includeActions: true, sites: [] }) as ColumnDef<never>[])
+    stateOf(
+      buildHostColumns({
+        includeActions: true,
+        showCustomer: false,
+        sites: []
+      }) as ColumnDef<never>[]
+    )
   )
 })
 

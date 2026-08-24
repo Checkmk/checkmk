@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence, Set
+from collections.abc import Callable, Sequence, Set
 from functools import partial
 from typing import Annotated, Self
 
@@ -25,6 +25,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.web.utils import permission_verification as permissions
 
+from .._customer import customer_resolver
 from .._folder import monitor_folders
 from .._impl import LiveStatusHostRepository
 from .._models import (
@@ -150,6 +151,15 @@ class HostEntry:
         example=["all"],
         default_factory=ApiOmitted,
     )
+    customer: str | ApiOmitted = api_field(
+        description=(
+            "Name of the customer the host belongs to, which is the customer of the site "
+            "monitoring it. Only editions with multi-tenancy support assign customers, so this "
+            "is omitted everywhere else."
+        ),
+        example="Customer A",
+        default_factory=ApiOmitted,
+    )
     modes: list[ModeInfo] | ApiOmitted = api_field(
         description=(
             "Active host modes (e.g. scheduled downtime, acknowledgement) rendered as linked "
@@ -164,7 +174,7 @@ class HostEntry:
     )
 
     @classmethod
-    def from_domain(cls, host: Host, fields: Set[HostOptionalField]) -> Self:
+    def from_domain(cls, host: Host, fields: Set[HostOptionalField], customer: str | None) -> Self:
         def included[T](field: HostOptionalField, value: T | None) -> T | ApiOmitted:
             """Return the value only if it was asked for and therefore actually read."""
             return value if field in fields and value is not None else ApiOmitted()
@@ -201,6 +211,7 @@ class HostEntry:
             tags=included(HostOptionalField.TAGS, host.tags),
             contacts=included(HostOptionalField.CONTACTS, host.contacts),
             contact_groups=included(HostOptionalField.CONTACT_GROUPS, host.contact_groups),
+            customer=ApiOmitted() if customer is None else customer,
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
         )
@@ -343,6 +354,7 @@ def list_hosts(
             ),
             fields=fields,
             site_ids=site_ids,
+            customer_of=customer_resolver(sites=api_context.config.sites),
         )
 
 
@@ -356,6 +368,7 @@ def _handle_list_hosts(
     filters: HostFilter = HostFilter(""),
     fields: Set[HostOptionalField] = _DEFAULT_FIELDS,
     site_ids: Sequence[SiteId] | None = None,
+    customer_of: Callable[[str], str | None] = lambda _site_id: None,
 ) -> HostsResponse:
     # Derived from the same `site_ids` the caller scoped the connection with via `only_sites`,
     # rather than taken as a separately-passed flag, so the two can't drift apart.
@@ -382,7 +395,7 @@ def _handle_list_hosts(
         matched_host_count = total_host_count
 
     return HostsResponse(
-        hosts=[HostEntry.from_domain(host, fields) for host in hosts],
+        hosts=[HostEntry.from_domain(host, fields, customer_of(host.site_id)) for host in hosts],
         meta=HostsPageMeta(
             limit=limit,
             matched=matched_host_count,

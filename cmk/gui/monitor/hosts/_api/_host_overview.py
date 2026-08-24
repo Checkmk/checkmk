@@ -25,11 +25,12 @@ from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlai
 from cmk.gui.openapi.utils import ProblemException
 from cmk.web.utils import permission_verification as permissions
 
+from .._customer import customer_resolver
 from .._exceptions import HostNotFoundError
 from .._impl import LiveStatusHostRepository
 from .._models import (
+    Host,
     HostLabelValue,
-    HostOverview,
     HostStateLabel,
     ServiceCounts,
     UnixTimestamp,
@@ -69,10 +70,11 @@ class HostOverviewResponse:
     )
     customer: str | None = api_field(
         description=(
-            "Customer ID the host belongs to. Null on editions without multi-tenancy support "
-            "or when the host isn't assigned to a customer."
+            "Name of the customer the host belongs to, which is the customer of the site "
+            "monitoring it. Null on editions without multi-tenancy support, which assign no "
+            "customers."
         ),
-        example="customer1",
+        example="Customer A",
     )
     folder: str | None = api_field(
         description=(
@@ -100,7 +102,7 @@ class HostOverviewResponse:
     )
 
     @classmethod
-    def from_domain(cls, host: HostOverview, *, site_alias: str) -> Self:
+    def from_domain(cls, host: Host, *, site_alias: str, customer: str | None) -> Self:
         def read[T](value: T | None, name: str) -> T:
             """The overview reads every column, so a missing one is a bug, not an omission."""
             if value is None:
@@ -118,7 +120,7 @@ class HostOverviewResponse:
             modes=build_host_modes(host),
             last_check=read(host.last_check, "last_check"),
             last_state_change=read(host.last_state_change, "last_state_change"),
-            customer=host.customer,
+            customer=customer,
             folder=read(host.folder, "folder"),
             contact_groups=read(host.contact_groups, "contact_groups"),
             tags=read(host.tags, "tags"),
@@ -143,7 +145,11 @@ def get_host_overview(
     site_alias = api_context.config.sites[site_id]["alias"]
 
     return _handle_get_host_overview(
-        host_repo, hostname=hostname, site_id=site_id, site_alias=site_alias
+        host_repo,
+        hostname=hostname,
+        site_id=site_id,
+        site_alias=site_alias,
+        customer=customer_resolver(sites=api_context.config.sites)(site_id),
     )
 
 
@@ -153,6 +159,7 @@ def _handle_get_host_overview(
     hostname: str,
     site_id: str,
     site_alias: str,
+    customer: str | None = None,
 ) -> HostOverviewResponse:
     try:
         host = host_repo.get_overview(hostname=hostname, site_id=site_id)
@@ -163,7 +170,7 @@ def _handle_get_host_overview(
             detail=f"The host {hostname!r} was not found on site {site_id!r}",
         ) from None
 
-    return HostOverviewResponse.from_domain(host, site_alias=site_alias)
+    return HostOverviewResponse.from_domain(host, site_alias=site_alias, customer=customer)
 
 
 ENDPOINT_GET_HOST_OVERVIEW = VersionedEndpoint(

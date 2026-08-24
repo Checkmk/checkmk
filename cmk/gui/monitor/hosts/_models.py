@@ -90,11 +90,6 @@ class Host:
                 assert_never(self.state)
 
 
-@dataclasses.dataclass(frozen=True)
-class HostOverview(Host):
-    customer: str | None
-
-
 class HostOptionalField(enum.StrEnum):
     ADDRESS = "address"
     ALIAS = "alias"

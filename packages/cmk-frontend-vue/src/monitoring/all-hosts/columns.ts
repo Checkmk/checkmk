@@ -26,6 +26,11 @@ import { columnId } from '@/monitoring/shared/tableState/schema'
 export interface HostColumnOptions {
   /** Whether to render the row-action column, which needs permitted actions. */
   includeActions: boolean
+  /**
+   * Whether to offer the customer column. Only hosts monitored by an edition with multi-tenancy
+   * support belong to a customer, so everywhere else the column does not exist at all.
+   */
+  showCustomer: boolean
   /** Configured sites the user is authorized to see, for the site column's filter options. */
   sites: readonly Site[]
 }
@@ -55,8 +60,11 @@ const OPTIONAL_FIELD_COLUMNS = [
 /**
  * Columns the user may hide whose fields are always included in every API
  * response (not declared optional) and therefore never need to be requested.
+ *
+ * The customer is one of them because the API derives it from the site, which every host
+ * carries anyway.
  */
-const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id'] as const
+const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id', 'customer'] as const
 
 /** Picks a column filter offers before it refuses more, per the views-table design. */
 const MAX_FILTER_CHOICES = 8
@@ -104,6 +112,7 @@ export function buildHostColumnPinning({
  */
 export function buildHostColumns({
   includeActions,
+  showCustomer,
   sites
 }: HostColumnOptions): ColumnDef<HostEntry>[] {
   const { _t } = usei18n()
@@ -407,6 +416,18 @@ export function buildHostColumns({
       maxSize: 300,
       meta: { hidden: true, filter: contactGroupsFilter }
     },
+    ...(showCustomer
+      ? [
+          {
+            accessorKey: 'customer',
+            header: _t('Customer'),
+            enableSorting: false,
+            minSize: 100,
+            maxSize: 300,
+            meta: { hidden: true }
+          } satisfies ColumnDef<HostEntry>
+        ]
+      : []),
     ...(includeActions
       ? [
           {

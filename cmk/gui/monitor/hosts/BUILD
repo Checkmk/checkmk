@@ -9,6 +9,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui:config",
+        "//cmk/gui:customer",
         "//cmk/gui/monitor/command",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/restful_objects",

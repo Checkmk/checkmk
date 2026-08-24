@@ -18,7 +18,6 @@ from ._models import (
     Host,
     HostFilter,
     HostOptionalField,
-    HostOverview,
     HostSort,
     UnixTimestamp,
 )
@@ -41,8 +40,8 @@ class HostRepository(Protocol):
         """Fetch hosts, reading only the columns `fields` and `sorters` need."""
         ...
 
-    def get_overview(self, *, hostname: str, site_id: str) -> HostOverview:
-        """Get host overview by identifiers."""
+    def get_overview(self, *, hostname: str, site_id: str) -> Host:
+        """Get host overview by identifiers, reading every column."""
         ...
 
     def count_total(self) -> int:

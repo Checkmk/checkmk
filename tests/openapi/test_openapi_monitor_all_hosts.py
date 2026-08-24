@@ -1014,7 +1014,6 @@ class TestMonitorHostOverview:
                     "tags": {"criticality": "prod"},
                     "labels": {"cmk/os_family": "linux"},
                     "label_sources": {"cmk/os_family": "discovered"},
-                    "custom_variables": {"CUSTOMER": "customer1"},
                     "contact_groups": ["all"],
                     "filename": "/wato/network/switches/hosts.mk",
                 }
@@ -1050,7 +1049,7 @@ class TestMonitorHostOverview:
             "modes": [],
             "last_check": 1783942710,
             "last_state_change": 1783942740,
-            "customer": "customer1",
+            "customer": None,
             "folder": "/network/switches",
             "contact_groups": ["all"],
             "tags": {"criticality": "prod"},
@@ -1059,7 +1058,7 @@ class TestMonitorHostOverview:
         }
 
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
-    def test_get_host_overview_no_customer(
+    def test_get_host_overview_without_multi_tenancy_has_no_customer(
         self,
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
@@ -1086,7 +1085,6 @@ class TestMonitorHostOverview:
                     "tags": {},
                     "labels": {},
                     "label_sources": {},
-                    "custom_variables": {},
                     "filename": "",
                 }
             ],
@@ -1310,4 +1308,4 @@ def _host_columns(*fields: str) -> str:
 
 
 _HOST_TABLE_COLUMNS = _host_columns()
-_HOST_OVERVIEW_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth last_check last_state_change contact_groups tags labels label_sources custom_variables filename"
+_HOST_OVERVIEW_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth last_check last_state_change contact_groups tags labels label_sources filename"

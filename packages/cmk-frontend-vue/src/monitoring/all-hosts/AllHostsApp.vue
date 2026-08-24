@@ -108,7 +108,14 @@ async function loadActionMenu(host: HostRef): Promise<CellAction[]> {
   ]
 }
 
-const columns = buildHostColumns({ includeActions: hasRowActions, sites: props.sites })
+// Only hosts monitored by an edition with multi-tenancy support belong to a customer.
+const showCustomer = props.edition === 'ultimatemt'
+
+const columns = buildHostColumns({
+  includeActions: hasRowActions,
+  showCustomer,
+  sites: props.sites
+})
 const columnPinning = buildHostColumnPinning({ includeActions: hasRowActions })
 
 const schema = buildTableStateSchema({

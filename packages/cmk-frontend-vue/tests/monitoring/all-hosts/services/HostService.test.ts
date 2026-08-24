@@ -91,7 +91,12 @@ describe('HostService', () => {
     await vi.advanceTimersByTimeAsync(0)
 
     expect(fetchHosts).toHaveBeenLastCalledWith(
-      { limit: DEFAULT_BATCH_SIZE, sort: [], searchQuery: 'web01', fields: visibleHostFields({}) },
+      {
+        limit: DEFAULT_BATCH_SIZE,
+        sort: [],
+        searchQuery: 'web01',
+        fields: visibleHostFields({})
+      },
       expect.any(AbortSignal)
     )
   })
@@ -111,7 +116,12 @@ describe('HostService', () => {
     await vi.advanceTimersByTimeAsync(0)
 
     expect(fetchHosts).toHaveBeenLastCalledWith(
-      { limit: DEFAULT_BATCH_SIZE, sort: [], searchQuery: 'web01', fields: visibleHostFields({}) },
+      {
+        limit: DEFAULT_BATCH_SIZE,
+        sort: [],
+        searchQuery: 'web01',
+        fields: visibleHostFields({})
+      },
       expect.any(AbortSignal)
     )
   })

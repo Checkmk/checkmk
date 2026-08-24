@@ -33,7 +33,6 @@ from ._models import (
     HostFilter,
     HostLabelValue,
     HostOptionalField,
-    HostOverview,
     HostSort,
     HostSortColumn,
     HostState,
@@ -121,7 +120,7 @@ class LiveStatusHostRepository:
                 key=host_sorter(sorters),
             )
 
-    def get_overview(self, *, hostname: str, site_id: str) -> HostOverview:
+    def get_overview(self, *, hostname: str, site_id: str) -> Host:
         q = Query(
             [
                 Hosts.name,
@@ -142,7 +141,6 @@ class LiveStatusHostRepository:
                 Hosts.tags,
                 Hosts.labels,
                 Hosts.label_sources,
-                Hosts.custom_variables,
                 Hosts.filename,
             ],
             Hosts.name == hostname,
@@ -151,7 +149,7 @@ class LiveStatusHostRepository:
             row = q.fetchone(self._connection, True, only_site=SiteId(site_id))
         except ValueError:
             raise HostNotFoundError(f"Host {hostname!r} not found on site {site_id!r}") from None
-        return HostOverview(
+        return Host(
             name=row["name"],
             alias=row["alias"],
             address=row["address"],
@@ -169,7 +167,6 @@ class LiveStatusHostRepository:
             in_downtime=row["scheduled_downtime_depth"] > 0,
             last_check=int(row["last_check"]),
             last_state_change=int(row["last_state_change"]),
-            customer=row["custom_variables"].get("CUSTOMER"),
             folder=folder_from_filename(row["filename"]),
             contact_groups=list(row["contact_groups"]),
             tags=dict(row["tags"]),

@@ -200,6 +200,7 @@ const lastStateChange = computed(() =>
     :items="contactGroups"
     size="small"
   />
+  <StringCell v-if="hasColumn('customer')" column-id="customer" :value="row.customer" />
 
   <ActionsCell
     v-if="(loadActionMenu || actionButtons.length > 0) && hasColumn('actions')"

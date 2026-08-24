@@ -126,8 +126,8 @@ test('renders one cell per service state with its count', () => {
 
   const tds = Array.from(container.querySelectorAll('td'))
   // select, state, modes, name, alias, address, folder, site_id, total, ok, warn, crit, unknown,
-  // pending, last_check, last_state_change, labels, tags, contacts, contact_groups
-  expect(tds).toHaveLength(20)
+  // pending, last_check, last_state_change, labels, tags, contacts, contact_groups, customer
+  expect(tds).toHaveLength(21)
   expect(tds[8]).toHaveTextContent('15')
   expect(tds[9]).toHaveTextContent('1')
   expect(tds[10]).toHaveTextContent('2')
@@ -279,4 +279,11 @@ test('renders the contact groups of a host, sorted alphabetically', () => {
 
   const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['all', 'linux'])
+})
+
+test('renders the customer of a host', () => {
+  mountRow(makeHost({ customer: 'Customer A' }))
+
+  // Asserted through the title: the cell breaks long values with zero-width spaces.
+  expect(screen.getByTitle('Customer A')).toBeInTheDocument()
 })

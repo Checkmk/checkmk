@@ -16,6 +16,8 @@ import {
   newRrdMetricDraft
 } from '@/graphing/designer/drafts'
 
+import { filterDefinitions } from '../fixtures'
+
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
 /** Renders the wrapper off the live store row so a type switch re-renders the right sub-form. */
@@ -24,7 +26,7 @@ function renderForm(seed: DraftRRDMetricItem | DraftRRDQueryItem) {
   store.replaceAll([seed])
   const harness = defineComponent({
     setup() {
-      useProvideFilterDefinitions({ definitions: {}, groups: {} })
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
       return () => {
         const item = store.items.value.find((candidate) => candidate.id === seed.id)
         return item && (item.type === 'rrd_metric' || item.type === 'rrd_query')

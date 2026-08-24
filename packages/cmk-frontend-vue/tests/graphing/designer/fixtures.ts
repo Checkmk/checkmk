@@ -3,6 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type {
+  ComponentConfig,
+  FilterDefinition,
+  FilterDefinitions
+} from 'cmk-ui-library/components/filter'
+
 import { type ArithmeticNode, parseFormula } from '@/graphing/designer/calculation/formula'
 import {
   type ConstantItem,
@@ -14,6 +20,31 @@ import {
   type RRDQueryItem,
   type ScalarItem
 } from '@/graphing/designer/types'
+
+function filterDefinition(
+  id: string,
+  title: string,
+  info: 'host' | 'service',
+  components: ComponentConfig[] = []
+): FilterDefinition {
+  return {
+    id,
+    title,
+    domainType: 'visual_filter',
+    links: [],
+    extensions: { info, group: null, is_show_more: false, components }
+  }
+}
+
+/** The filters the designer tests know about. */
+export const filterDefinitions: FilterDefinitions = {
+  hostregex: filterDefinition('hostregex', 'Host name (regex)', 'host', [
+    { component_type: 'text_input', id: 'host_regex', label: 'Host name (regex)' }
+  ]),
+  serviceregex: filterDefinition('serviceregex', 'Service name (regex)', 'service', [
+    { component_type: 'text_input', id: 'service_regex', label: 'Service name (regex)' }
+  ])
+}
 
 /** Parse a known-good source, throwing (instead of returning an error) on failure. */
 export function parseOrThrow(source: string): ArithmeticNode {
@@ -49,7 +80,10 @@ export function rrdQueryItem(id: string, overrides: Partial<RRDQueryItem> = {}):
     line_type: 'line',
     mirrored: false,
     visible: true,
-    context: { host: { host: 'my-host' } },
+    context: {
+      hostregex: { host_regex: 'my-host' },
+      serviceregex: { service_regex: 'CPU utilization' }
+    },
     metric_name: 'util',
     consolidation: 'avg',
     ...overrides

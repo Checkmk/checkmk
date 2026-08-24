@@ -17,6 +17,8 @@ import { durationSeconds, rollingRange } from '@/graphing/GlobalTimePicker/priva
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
 import CustomGraphDesignerApp from '@/graphing/designer/CustomGraphDesignerApp.vue'
 
+import { filterDefinitions } from './fixtures'
+
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
@@ -118,6 +120,12 @@ function isFilterPath(path: string): boolean {
   return path === FILTER_DEFINITIONS_PATH || path === FILTER_GROUPS_PATH
 }
 
+function filterResponse(path: string): unknown {
+  return okResponse({
+    value: path === FILTER_DEFINITIONS_PATH ? Object.values(filterDefinitions) : []
+  })
+}
+
 function okResponse(data: unknown, etag = '"etag-1"'): unknown {
   return {
     data,
@@ -178,7 +186,7 @@ let putSpy: any
 function mockGraphGet(graph: unknown = graphObject()): void {
   getSpy.mockImplementation((path: string) => {
     if (isFilterPath(path)) {
-      return Promise.resolve(okResponse({ value: [] }))
+      return Promise.resolve(filterResponse(path))
     }
     return Promise.resolve(
       path === METADATA_COLLECTION_PATH ? okResponse(metadataCollection()) : okResponse(graph)
@@ -286,7 +294,7 @@ test('a stale graph load does not overwrite a newer selection', async () => {
   let resolveFirst: (value: unknown) => void = () => {}
   getSpy.mockImplementation((path: string, options?: { params?: { path?: { name?: string } } }) => {
     if (isFilterPath(path)) {
-      return Promise.resolve(okResponse({ value: [] }))
+      return Promise.resolve(filterResponse(path))
     }
     if (path === METADATA_COLLECTION_PATH) {
       return Promise.resolve(
@@ -340,7 +348,7 @@ test('a graph served without an ETag fails the load, so no edit can start', asyn
   getSpy.mockImplementation((path: string) =>
     Promise.resolve(
       isFilterPath(path)
-        ? okResponse({ value: [] })
+        ? filterResponse(path)
         : path === METADATA_COLLECTION_PATH
           ? okResponse(metadataCollection())
           : { data: graphObject(), error: undefined, response: new Response(null, { status: 200 }) }
@@ -632,7 +640,7 @@ test('resuming the refresh reverts a zoomed range to the configured default', as
 test('a failed graph load offers a retry that reloads the definition', async () => {
   getSpy.mockImplementation((path: string) => {
     if (isFilterPath(path)) {
-      return Promise.resolve(okResponse({ value: [] }))
+      return Promise.resolve(filterResponse(path))
     }
     if (path === METADATA_COLLECTION_PATH) {
       return Promise.resolve(okResponse(metadataCollection()))
@@ -657,7 +665,7 @@ test('a failed filter load offers a retry that reloads only the definitions', as
     if (isFilterPath(path)) {
       return filtersFail
         ? Promise.reject(new Error('filters are gone'))
-        : Promise.resolve(okResponse({ value: [] }))
+        : Promise.resolve(filterResponse(path))
     }
     return Promise.resolve(
       path === METADATA_COLLECTION_PATH
@@ -694,7 +702,7 @@ test('a retry after a failed load still honours an edit deep link', async () => 
   let graphFails = true
   getSpy.mockImplementation((path: string) => {
     if (isFilterPath(path)) {
-      return Promise.resolve(okResponse({ value: [] }))
+      return Promise.resolve(filterResponse(path))
     }
     if (path === METADATA_COLLECTION_PATH) {
       return Promise.resolve(okResponse(metadataCollection()))

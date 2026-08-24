@@ -107,21 +107,24 @@ class BaseDashboard(CmkPage):
             message=f"'{button_name}' button of the dashboard top menu is not present",
         ).to_be_visible()
 
-    def clone_dashboard(self, automatic_unique_id: bool = True) -> None:
-        """Clone a dashboard creating a customized copy"""
+    def clone_dashboard(self, title: str, unique_id: str) -> None:
+        """Clone a dashboard into a customized copy named `title` with ID `unique_id`.
+
+        The ID is set explicitly because a generated one gets a numeric suffix once the
+        ID is taken, leaving the caller unable to tell which dashboard it got.
+
+        Args:
+            title: the title of the clone.
+            unique_id: the ID of the clone. Must be snake case.
+        """
         self.get_menu_button("Clone").click()
         clone_dashboard_sidebar = CloneDashboardSidebar(self.page)
-
-        if automatic_unique_id:
-            unique_id = self.page_title.lower().replace(" ", "_")
-            clone_dashboard_sidebar.automatic_unique_id_checkbox.check()
-            clone_dashboard_sidebar.expect_auto_generated_unique_id_to_be_populated(unique_id)
-        else:
-            raise NotImplementedError("Custom unique id is not yet implemented")
+        clone_dashboard_sidebar.name_input.fill(title)
+        clone_dashboard_sidebar.fill_unique_id(unique_id)
 
         self.click_and_wait_for_navigation(
             clone_dashboard_sidebar.clone_button,
-            re.compile(rf"dashboard\.py\?name={unique_id}(?:&|$)"),
+            re.compile(rf"dashboard\.py\?name={re.escape(unique_id)}(?:&|$)"),
         )
 
     def get_widget(self, widget_title: str) -> Locator:

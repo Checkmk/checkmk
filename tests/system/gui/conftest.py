@@ -60,6 +60,9 @@ from tests.testlib.site import (
 
 logger = logging.getLogger(__name__)
 
+# `unique` only dedupes within its own Faker, so the whole session has to share one.
+_unique_faker = Faker().unique
+
 
 # Importing the fixtures into this conftest is what registers them with pytest;
 # these lists only keep the imports from being flagged as unused.
@@ -157,17 +160,17 @@ def fixture_cloned_linux_hosts_dashboard(
     A built-in dashboard takes no widgets of its own, so any test adding one works on a clone.
     """
     linux_hosts_dashboard = LinuxHostsDashboard(dashboard_page.page)
-    linux_hosts_dashboard.clone_dashboard()
+    # Clones sharing the source's title compete for one ID and shadow the built-in.
+    clone_title = f"{linux_hosts_dashboard.page_title} {_unique_faker.first_name()}"
+    linux_hosts_dashboard.clone_dashboard(clone_title, clone_title.lower().replace(" ", "_"))
 
     try:
-        yield CustomDashboard(
-            linux_hosts_dashboard.page, linux_hosts_dashboard.page_title, navigate_to_page=False
-        )
+        yield CustomDashboard(linux_hosts_dashboard.page, clone_title, navigate_to_page=False)
     finally:
         if is_cleanup_enabled():
             dashboard_page.go("edit_dashboards.py", wait_until="load")
             edit_dashboards = EditDashboards(dashboard_page.page, navigate_to_page=False)
-            edit_dashboards.delete_dashboard(linux_hosts_dashboard.page_title)
+            edit_dashboards.delete_dashboard(clone_title)
 
 
 @pytest.fixture(name="dashboard_page_mobile")

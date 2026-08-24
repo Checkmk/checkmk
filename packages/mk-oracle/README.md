@@ -471,7 +471,6 @@ Fine-tunes plugin runtime behavior.
 
 ```yaml
 options:
-  max_connections: 6 # optional, default: 6, max parallel database connections
   max_queries: 16 # optional, reserved for future use
   use_host_client: never # optional, default: "auto"
   IGNORE_DB_NAME: 0 # optional, default: 0
@@ -862,7 +861,6 @@ system:
 oracle:
   main:
     options:
-      max_connections: 6
       use_host_client: never
       IGNORE_DB_NAME: 0
     connection:

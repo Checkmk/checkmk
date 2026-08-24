@@ -225,9 +225,12 @@ fn parse_dbuser_raw(name: &str, value: &str) -> Result<LegacyDbUser> {
         bail!("DBUSER must have at least username:password, got: {value}");
     }
     let field = |i: usize| fields.get(i).copied().unwrap_or("");
+    // Upper-cased like every other SID in the config - `REMOTE_INSTANCE_*`, the
+    // `sid:` key and the discovery lists - so entries naming one database in
+    // different cases do not end up as two instances.
     let sid = name
         .strip_prefix("DBUSER_")
-        .map(|suffix| suffix.to_string());
+        .map(|suffix| suffix.to_uppercase());
     let raw_username = field(0);
     // Legacy "/" means external authentication: emit an empty username and flag
     // the entry so the migrated config declares `type: wallet`. We always map to
@@ -2872,6 +2875,25 @@ sec3 () {
         assert_eq!(db.sid.as_deref(), Some("XE1"));
         assert!(db.username.is_empty(), "'/' replaced with empty");
         assert_eq!(db.tns_alias, Some("oooo".to_owned()));
+    }
+
+    /// A `DBUSER_<sid>` SID is upper-cased, like the SID of a `REMOTE_INSTANCE_*`,
+    /// so the two never name one database as two instances.
+    #[test]
+    fn test_parse_dbuser_sid_suffix_is_upper_cased() {
+        assert_eq!(
+            parse_dbuser("DBUSER_xe", "user:pass")
+                .unwrap()
+                .sid
+                .as_deref(),
+            Some("XE")
+        );
+        let remote = parse_remote_instance(
+            "REMOTE_INSTANCE_1",
+            "user:pass::remotehost:1521:piggyhost:xe:11.2",
+        )
+        .expect("valid remote instance");
+        assert_eq!(remote.sid.as_deref(), Some("XE"));
     }
 
     #[test]

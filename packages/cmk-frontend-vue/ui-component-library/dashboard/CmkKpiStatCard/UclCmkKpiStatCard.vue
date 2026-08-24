@@ -7,11 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 import type { BoolPropDef, ListPropDef, NumberPropDef } from '@ucl/_ucl/types/prop-def'
 
-import {
-  type DeltaSemantics,
-  type KpiStateSeverity,
-  type SparkHeightMode
-} from '@/dashboard/components/CmkKpiStatCard'
+import { type KpiStateSeverity, type SparkHeightMode } from '@/dashboard/components/CmkKpiStatCard'
 
 import codeExample from './UclCmkKpiStatCardCodeExample.vue?raw'
 
@@ -58,17 +54,6 @@ export const panelConfig = {
     title: 'Delta (%)',
     help: 'Signed change versus the previous period. Negative values point the arrow down.',
     initialState: 6.2
-  },
-  deltaSemantics: {
-    type: 'list' as const,
-    title: 'Delta semantics',
-    help: 'What an increase means. Neutral stays grey; on a "bad" metric an increase renders red, on a "good" one green.',
-    options: [
-      { title: 'Neutral', name: 'neutral' },
-      { title: 'Good', name: 'good' },
-      { title: 'Bad', name: 'bad' }
-    ] satisfies Options<DeltaSemantics>[],
-    initialState: 'neutral' as const
   },
   sparkHeightMode: {
     type: 'list' as const,
@@ -275,7 +260,6 @@ const range = computed<KpiValueRange | undefined>(() =>
           :value="propState.dataState === 'no-data' ? undefined : propState.value"
           :unit="propState.unit || undefined"
           :delta-ratio="propState.showDelta ? propState.deltaPercent / 100 : undefined"
-          :delta-semantics="propState.deltaSemantics"
           :series="series"
           :color="propState.color"
           :state="state"

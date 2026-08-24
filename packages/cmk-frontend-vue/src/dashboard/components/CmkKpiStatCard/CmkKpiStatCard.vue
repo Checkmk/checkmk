@@ -12,18 +12,12 @@ import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import KpiSparkLine from './KpiSparkLine.vue'
-import type {
-  CmkKpiStatCardProps,
-  DeltaSemantics,
-  KpiStateSeverity,
-  TimestampedSample
-} from './types'
+import type { CmkKpiStatCardProps, KpiStateSeverity, TimestampedSample } from './types'
 
 const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   unit: undefined,
   series: () => [],
   deltaRatio: undefined,
-  deltaSemantics: 'neutral',
   state: undefined,
   rangeLimits: undefined,
   range: undefined,
@@ -33,26 +27,6 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
 
 const isUp = computed(() => (props.deltaRatio ?? 0) >= 0)
 const deltaPercent = computed(() => `${Math.abs((props.deltaRatio ?? 0) * 100).toFixed(1)}%`)
-
-const DELTA_NEUTRAL = 'var(--color-mid-grey-50)'
-const DELTA_IMPROVED = 'var(--color-corporate-green-50)'
-const DELTA_WORSENED = 'var(--color-light-red-50)'
-
-// Neutral metrics make no judgment about direction; for good/bad metrics the
-// direction is judged against what an increase means (up on an "up is bad"
-// metric renders red).
-function resolveDeltaColor(semantics: DeltaSemantics, up: boolean): string {
-  switch (semantics) {
-    case 'neutral':
-      return DELTA_NEUTRAL
-    case 'good':
-      return up ? DELTA_IMPROVED : DELTA_WORSENED
-    case 'bad':
-      return up ? DELTA_WORSENED : DELTA_IMPROVED
-  }
-}
-
-const deltaColor = computed(() => resolveDeltaColor(props.deltaSemantics, isUp.value))
 
 const { _t } = usei18n()
 
@@ -186,9 +160,8 @@ onMounted(measureScrim)
         </span>
         <span
           v-else-if="deltaRatio !== undefined"
-          class="db-cmk-kpi-stat-card__pill db-cmk-kpi-stat-card__delta"
+          class="db-cmk-kpi-stat-card__delta"
           :class="{ 'db-cmk-kpi-stat-card__delta--down': !isUp }"
-          :style="{ '--pill-color': deltaColor }"
         >
           <svg class="db-cmk-kpi-stat-card__delta-arrow" viewBox="0 0 8 6" aria-hidden="true">
             <path d="m0 6 4-6 4 6z" fill="currentColor" />
@@ -342,28 +315,20 @@ onMounted(measureScrim)
   font-size: clamp(10px, min(18cqh, 7cqw), 38px);
 }
 
-/* Delta and state read as siblings: same shape, same weight, tinted in whatever
-   each one is saying. */
-.db-cmk-kpi-stat-card__pill {
+/* Neutral: the delta makes no judgment about direction, only reports it, so it
+   reads in the same dimmed color as the stale note it swaps places with. */
+.db-cmk-kpi-stat-card__delta {
   display: inline-flex;
+  flex-shrink: 0;
   gap: clamp(2px, 1cqw, 5px);
   align-items: center;
-  align-self: center;
   min-width: 0;
-  padding: clamp(1px, 2cqh, 4px) clamp(4px, 1.5cqw, 10px);
   overflow: hidden;
   font-size: clamp(9px, 14cqh, 16px);
   font-weight: var(--font-weight-bold);
-  line-height: 1.4;
-  color: var(--pill-color);
+  color: var(--font-color-dimmed);
   text-overflow: ellipsis;
   white-space: nowrap;
-  background-color: color-mix(in srgb, var(--pill-color) 15%, transparent);
-  border-radius: 99999px;
-}
-
-.db-cmk-kpi-stat-card__delta {
-  flex-shrink: 0;
 }
 
 .db-cmk-kpi-stat-card__delta-arrow {

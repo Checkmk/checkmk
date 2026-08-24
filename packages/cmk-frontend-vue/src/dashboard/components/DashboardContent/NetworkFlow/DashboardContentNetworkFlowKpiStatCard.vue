@@ -9,10 +9,7 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import { SIFormatter } from 'cmk-ui-library/lib/unit-format/notationFormatter'
 import { computed } from 'vue'
 
-import CmkKpiStatCard, {
-  type DeltaSemantics,
-  type TimestampedSample
-} from '@/dashboard/components/CmkKpiStatCard'
+import CmkKpiStatCard, { type TimestampedSample } from '@/dashboard/components/CmkKpiStatCard'
 import type { NetworkFlowKpiStatCardContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
 import { chartColorCss } from '@/network-flow/colors'
@@ -24,13 +21,9 @@ import { useNetworkFlowWidgetData } from './useNetworkFlowWidgetData.ts'
 const props = defineProps<ContentProps<NetworkFlowKpiStatCardContent>>()
 
 // How each metric presents itself: the unit formatting follows the metric
-// (bytes scale to KB/MB/GB..., counts to K/M/...) and the delta coloring
-// follows what an increase of the metric MEANS, not its direction alone.
-// Everything the widget launches with is neutral; a future "up is bad"
-// metric (e.g. engaged alerts) declares itself here.
+// (bytes scale to KB/MB/GB..., counts to K/M/...).
 interface MetricPresentation {
   formatter: SIFormatter
-  deltaSemantics: DeltaSemantics
 }
 
 // Canonical SI byte formatter (base 1000), matching CmkRankedTable: 801_840_000_000 → "801.84 GB".
@@ -41,15 +34,15 @@ const COUNT = new SIFormatter('', { type: 'strict', digits: 1 })
 const THROUGHPUT = new SIFormatter('bps', { type: 'strict', digits: 2 })
 
 const METRIC_PRESENTATION: Record<NetworkFlowKpiStatCardContent['metric'], MetricPresentation> = {
-  total_bytes: { formatter: BYTES, deltaSemantics: 'neutral' },
-  ingress_bytes: { formatter: BYTES, deltaSemantics: 'neutral' },
-  egress_bytes: { formatter: BYTES, deltaSemantics: 'neutral' },
-  active_hosts: { formatter: COUNT, deltaSemantics: 'neutral' },
-  total_flows: { formatter: COUNT, deltaSemantics: 'neutral' },
-  active_asn: { formatter: COUNT, deltaSemantics: 'neutral' },
-  peak_throughput: { formatter: THROUGHPUT, deltaSemantics: 'neutral' },
-  avg_throughput: { formatter: THROUGHPUT, deltaSemantics: 'neutral' },
-  tracked_hosts: { formatter: COUNT, deltaSemantics: 'neutral' }
+  total_bytes: { formatter: BYTES },
+  ingress_bytes: { formatter: BYTES },
+  egress_bytes: { formatter: BYTES },
+  active_hosts: { formatter: COUNT },
+  total_flows: { formatter: COUNT },
+  active_asn: { formatter: COUNT },
+  peak_throughput: { formatter: THROUGHPUT },
+  avg_throughput: { formatter: THROUGHPUT },
+  tracked_hosts: { formatter: COUNT }
 }
 
 interface CardData {
@@ -113,7 +106,6 @@ const { data, error } = useNetworkFlowWidgetData(
         :value="data.value"
         :unit="data.unit"
         :delta-ratio="data.deltaRatio"
-        :delta-semantics="presentation.deltaSemantics"
         :series="data.series"
         :color="chartColorCss(content.accent)"
         spark-height-mode="band"

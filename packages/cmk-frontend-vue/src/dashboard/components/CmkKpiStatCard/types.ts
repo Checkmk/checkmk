@@ -3,13 +3,6 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-/**
- * What an increase of the metric means, driving the delta indicator's color.
- * Neutral metrics (e.g. traffic volume) render the delta in a plain foreground
- * color; for good/bad metrics the direction is judged against the semantics.
- */
-export type DeltaSemantics = 'neutral' | 'good' | 'bad'
-
 /** Monitoring state of whatever the value was measured on. */
 export type KpiStateSeverity = 'ok' | 'warn' | 'crit' | 'unknown' | 'pending'
 
@@ -58,8 +51,6 @@ export interface CmkKpiStatCardProps {
    * Omit to hide the delta indicator entirely.
    */
   deltaRatio?: number | undefined
-  /** What an increase means for this metric; defaults to neutral. */
-  deltaSemantics?: DeltaSemantics | undefined
   /** Sparkline data points over the displayed window, oldest first; omit for a plain value. */
   series?: TimestampedSample[] | undefined
   /** CSS color of the value and the sparkline. */

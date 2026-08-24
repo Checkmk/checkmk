@@ -66,30 +66,6 @@ test('an upward delta carries no direction modifier', () => {
   expect(deltaOf(container)).not.toHaveClass('db-cmk-kpi-stat-card__delta--down')
 })
 
-test('a neutral metric renders the delta in the plain foreground color', () => {
-  const { container } = renderCard({ deltaRatio: 0.12 })
-
-  expect(deltaOf(container)?.style.getPropertyValue('--pill-color')).toBe(
-    'var(--color-mid-grey-50)'
-  )
-})
-
-test('an increase on an "up is bad" metric renders red', () => {
-  const { container } = renderCard({ deltaRatio: 0.12, deltaSemantics: 'bad' })
-
-  expect(deltaOf(container)?.style.getPropertyValue('--pill-color')).toBe(
-    'var(--color-light-red-50)'
-  )
-})
-
-test('a decrease on an "up is bad" metric renders green', () => {
-  const { container } = renderCard({ deltaRatio: -0.12, deltaSemantics: 'bad' })
-
-  expect(deltaOf(container)?.style.getPropertyValue('--pill-color')).toBe(
-    'var(--color-corporate-green-50)'
-  )
-})
-
 test('the value and sparkline take the given accent color', () => {
   const { container } = renderCard({ color: 'var(--color-light-red-50)' })
 

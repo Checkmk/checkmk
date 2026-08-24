@@ -1,5 +1,5 @@
 {
-  "checksum": "17cc346c04e2f474f78654882732483debaec6922641f637d8dcf392496d873e",
+  "checksum": "e84d919e73e5b8c3deee332fac21860cde98d240629edca0c33b99e48799f3be",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -19432,7 +19432,7 @@
               "alias": "pki_types"
             },
             {
-              "id": "rustls-webpki 0.103.15",
+              "id": "rustls-webpki 0.103.4",
               "target": "webpki"
             },
             {
@@ -19659,14 +19659,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rustls-webpki 0.103.15": {
+    "rustls-webpki 0.103.4": {
       "name": "rustls-webpki",
-      "version": "0.103.15",
+      "version": "0.103.4",
       "package_url": "https://github.com/rustls/webpki",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustls-webpki/0.103.15/download",
-          "sha256": "f3c3cf1d8b1e7d4927e2d154c3fcb02979afb9939629c62cd9048d4f07b60ac2"
+          "url": "https://static.crates.io/crates/rustls-webpki/0.103.4/download",
+          "sha256": "0a17884ae0c1b773f1ccd2bd4a8c72f16da897310a98b0e84bf349ad5ead92fc"
         }
       },
       "targets": [
@@ -19715,7 +19715,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.103.15"
+        "version": "0.103.4"
       },
       "license": "ISC",
       "license_ids": [

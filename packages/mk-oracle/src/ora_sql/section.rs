@@ -106,6 +106,15 @@ impl Section {
         &self.pdb_patterns
     }
 
+    /// Name for the execution log. Custom metrics are named by their item: they
+    /// all share the section `sql`, so the section name cannot tell them apart.
+    pub fn log_label(&self) -> String {
+        match &self.item_value {
+            Some(item) => format!("metric {}", item.as_str()),
+            None => format!("section {}", self.name),
+        }
+    }
+
     pub fn to_work_header(&self) -> String {
         // A `header_name:` replaces the whole header. It comes without the
         // `[[[<instance>|<item>]]]` subsection the default `oracle_sql` header
@@ -685,6 +694,24 @@ mod tests {
         // cached(...) marker lives on the subsection header per tech design.
         let async_ = make_custom_metric_section("last_sessions", true, Some(600));
         assert_eq!(async_.to_work_header(), "<<<oracle_sql:sep(58)>>>");
+    }
+
+    #[test]
+    fn test_log_label_names_the_custom_metric_item() {
+        // Every custom metric is named `sql`, so the item has to disambiguate.
+        assert_eq!(
+            make_custom_metric_section("product_price", false, Some(600)).log_label(),
+            "metric product_price"
+        );
+        assert_eq!(
+            Section::new(
+                &section::SectionBuilder::new(names::TABLESPACES).build(),
+                None,
+                &Options::default()
+            )
+            .log_label(),
+            format!("section {}", names::TABLESPACES)
+        );
     }
 
     // TC-ORA-101 (Param: subsection header carries the item_name -> [[[<SID>|<item>]]])

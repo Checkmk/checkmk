@@ -195,10 +195,10 @@ def translation_form_spec_elements() -> tuple[
                     elements=[
                         RegularExpression(
                             title=Title("Regular expression"),
-                            predefined_help_text=MatchingScope.PREFIX,
+                            predefined_help_text=MatchingScope.FULL,
                             help_text=make_help(
                                 Help("Must contain at least one subgroup <tt>(...)</tt>"),
-                                case_sensitive=False,
+                                case_sensitive=True,
                             ),
                             custom_validate=[not_empty()],
                         ),

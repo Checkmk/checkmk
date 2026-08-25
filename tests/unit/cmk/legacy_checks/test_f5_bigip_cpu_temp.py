@@ -3,48 +3,71 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.legacy_checks import f5_bigip_cpu_temp
 from cmk.legacy_checks.f5_bigip_cpu_temp import (
     check_f5_bigip_cpu_temp,
     discover_f5_bigip_cpu_temp,
     parse_f5_bigip_cpu_temp,
 )
+from cmk.plugins.lib.temperature import TempParamDict
+
+
+@pytest.fixture(autouse=True)
+def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(f5_bigip_cpu_temp, "get_value_store", dict)
 
 
 @pytest.mark.parametrize(
     "string_table, expected_discoveries",
     [
-        ([["1", "40"]], [("1", {})]),
+        ([["1", "40"]], [Service(item="1")]),
     ],
 )
 def test_discover_f5_bigip_cpu_temp(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for f5_bigip_cpu_temp check."""
-    parsed = parse_f5_bigip_cpu_temp(string_table)
-    result = list(discover_f5_bigip_cpu_temp(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    section = parse_f5_bigip_cpu_temp(string_table)
+    assert list(discover_f5_bigip_cpu_temp(section)) == expected_discoveries
 
 
 @pytest.mark.parametrize(
     "item, params, string_table, expected_results",
     [
-        ("1", {"levels": (60, 80)}, [["1", "40"]], (0, "40 °C", [("temp", 40, 60, 80)])),
+        pytest.param(
+            "1",
+            {"levels": (60.0, 80.0)},
+            [["1", "40"]],
+            [
+                Metric("temp", 40.0, levels=(60.0, 80.0)),
+                Result(state=State.OK, summary="Temperature: 40 °C"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used user levels)",
+                ),
+            ],
+            id="ok",
+        ),
+        pytest.param(
+            "2",
+            {"levels": (60.0, 80.0)},
+            [["1", "40"]],
+            [],
+            id="unknown item",
+        ),
     ],
 )
 def test_check_f5_bigip_cpu_temp(
     item: str,
-    params: Mapping[str, object],
+    params: TempParamDict,
     string_table: StringTable,
-    expected_results: Sequence[object],
+    expected_results: Sequence[Result | Metric],
 ) -> None:
     """Test check function for f5_bigip_cpu_temp check."""
-    parsed = parse_f5_bigip_cpu_temp(string_table)
-    result = check_f5_bigip_cpu_temp(item, params, parsed)
-    assert result == expected_results
+    section = parse_f5_bigip_cpu_temp(string_table)
+    assert list(check_f5_bigip_cpu_temp(item, params, section)) == expected_results

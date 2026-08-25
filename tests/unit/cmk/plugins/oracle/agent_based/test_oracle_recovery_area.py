@@ -21,6 +21,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.oracle.agent_based.oracle_recovery_area import (
     check_plugin_oracle_recovery_area,
     inventorize_oracle_recovery_area,
+    parse_oracle_recovery_area,
 )
 
 _AGENT_OUTPUT = [
@@ -31,9 +32,11 @@ _AGENT_OUTPUT = [
 def test_discover_oracle_recovery_area_skips_failure_row() -> None:
     assert not list(
         check_plugin_oracle_recovery_area.discovery_function(
-            [
-                ["AIMDWHD1", "FAILURE", "ORA-00942: table or view does not exist"],
-            ]
+            parse_oracle_recovery_area(
+                [
+                    ["AIMDWHD1", "FAILURE", "ORA-00942: table or view does not exist"],
+                ]
+            )
         )
     )
 
@@ -43,9 +46,11 @@ def test_check_oracle_recovery_area_surfaces_failure() -> None:
         check_plugin_oracle_recovery_area.check_function(
             item="AIMDWHD1",
             params={"levels": (70.0, 90.0)},
-            section=[
-                ["AIMDWHD1", "FAILURE", "ORA-00942: table or view does not exist"],
-            ],
+            section=parse_oracle_recovery_area(
+                [
+                    ["AIMDWHD1", "FAILURE", "ORA-00942: table or view does not exist"],
+                ]
+            ),
         )
     ) == [Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")]
 
@@ -53,9 +58,11 @@ def test_check_oracle_recovery_area_surfaces_failure() -> None:
 def test_inventorize_oracle_recovery_area_skips_failure_row() -> None:
     assert not list(
         inventorize_oracle_recovery_area(
-            [
-                ["AIMDWHD1", "FAILURE", "ORA-00942: table or view does not exist"],
-            ]
+            parse_oracle_recovery_area(
+                [
+                    ["AIMDWHD1", "FAILURE", "ORA-00942: table or view does not exist"],
+                ]
+            )
         )
     )
 
@@ -76,7 +83,11 @@ def test_discover_oracle_recovery_area(
     expected_result: Sequence[Service],
 ) -> None:
     assert (
-        sorted(check_plugin_oracle_recovery_area.discovery_function(string_table))
+        sorted(
+            check_plugin_oracle_recovery_area.discovery_function(
+                parse_oracle_recovery_area(string_table)
+            )
+        )
         == expected_result
     )
 
@@ -110,7 +121,7 @@ def test_check_oracle_recovery_area(
                 params={
                     "levels": (70.0, 90.0),
                 },
-                section=string_table,
+                section=parse_oracle_recovery_area(string_table),
             )
         )
         == expected_result
@@ -141,14 +152,21 @@ def test_check_oracle_recovery_area(
 def test_inventorize_oracle_recovery_area(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
-    assert list(inventorize_oracle_recovery_area(string_table)) == expected_result
+    assert (
+        list(inventorize_oracle_recovery_area(parse_oracle_recovery_area(string_table)))
+        == expected_result
+    )
 
 
 _LEGACY_ERROR_ROW = ["AIMDWHD1", "ORA-01017:", "invalid username/password"]
 
 
 def test_discover_oracle_recovery_area_skips_legacy_error_row() -> None:
-    assert not list(check_plugin_oracle_recovery_area.discovery_function([_LEGACY_ERROR_ROW]))
+    assert not list(
+        check_plugin_oracle_recovery_area.discovery_function(
+            parse_oracle_recovery_area([_LEGACY_ERROR_ROW])
+        )
+    )
 
 
 def test_check_oracle_recovery_area_surfaces_legacy_error() -> None:
@@ -156,7 +174,7 @@ def test_check_oracle_recovery_area_surfaces_legacy_error() -> None:
         check_plugin_oracle_recovery_area.check_function(
             item="AIMDWHD1",
             params={"levels": (70.0, 90.0)},
-            section=[_LEGACY_ERROR_ROW],
+            section=parse_oracle_recovery_area([_LEGACY_ERROR_ROW]),
         )
     ) == [
         Result(
@@ -167,4 +185,6 @@ def test_check_oracle_recovery_area_surfaces_legacy_error() -> None:
 
 
 def test_inventorize_oracle_recovery_area_skips_legacy_error_row() -> None:
-    assert not list(inventorize_oracle_recovery_area([_LEGACY_ERROR_ROW]))
+    assert not list(
+        inventorize_oracle_recovery_area(parse_oracle_recovery_area([_LEGACY_ERROR_ROW]))
+    )

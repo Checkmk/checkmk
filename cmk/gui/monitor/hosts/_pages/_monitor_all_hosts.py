@@ -42,7 +42,7 @@ from cmk.shared_typing.monitoring.all_hosts import (
 from cmk.utils import paths
 from cmk.web.utils.urls import makeuri_contextless
 
-_PAGE_TITLE = _("All hosts (experimental)")
+_PAGE_TITLE = _("All hosts")
 
 _LEGACY_VIEW_NAME = "allhosts"
 _LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
@@ -89,7 +89,7 @@ def monitor_all_hosts_visual_spec() -> Visual:
         "topic": "overview",
         "title": _PAGE_TITLE,
         "name": "monitor_all_hosts",
-        "sort_index": 21,
+        "sort_index": 20,
         "is_show_more": False,
         "icon": DynamicIconName("folder"),
         "hidden": False,

@@ -140,10 +140,8 @@ def view_menu_items(user_permissions: UserPermissions) -> list[VisualMenuItem]:
         network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
         pages_to_show.append((network_topology_visual_spec["name"], network_topology_visual_spec))
     if user.may("view.allhosts"):
-        all_hosts_experimental_visual_spec = monitor_all_hosts_visual_spec()
-        pages_to_show.append(
-            (all_hosts_experimental_visual_spec["name"], all_hosts_experimental_visual_spec)
-        )
+        all_hosts_visual_spec = monitor_all_hosts_visual_spec()
+        pages_to_show.append((all_hosts_visual_spec["name"], all_hosts_visual_spec))
     # Pages a feature plugin registered, rather than hardcoded above: this module is
     # edition-independent and must not import the non-free plugins themselves.
     for main_menu_page in main_menu_page_registry.values():

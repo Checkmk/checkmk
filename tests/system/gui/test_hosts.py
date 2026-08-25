@@ -62,8 +62,11 @@ def test_create_and_delete_a_host(dashboard_page: MainDashboard, test_site: Site
         host=HostDetails(name=f"test_host_{Faker().first_name()}", ip=LOCALHOST_IPV4),
     )
     # validate
-    host.main_menu.monitor_all_hosts.click()
-    host.page.wait_for_url(url=re.compile(re.escape("view_name=allhost")), wait_until="load")
+    # The Monitor menu's "All hosts" entry now opens the Vue "All hosts" page instead
+    # (see CMK-37778), so this navigates by URL directly to the classic view, which
+    # stays reachable even though it is hidden from menu listings.
+    # To be adapted when the new "All hosts" page tests are implemented in CMK-38167.
+    host.go("view.py?view_name=allhosts")
     host.select_host(host.details.name)
     # Cleanup: delete host
     host.navigate()
@@ -72,7 +75,7 @@ def test_create_and_delete_a_host(dashboard_page: MainDashboard, test_site: Site
 
 def test_reschedule(host: HostProperties) -> None:
     """reschedules a check"""
-    host.main_menu.monitor_all_hosts.click()
+    host.go("view.py?view_name=allhosts")
     host.select_host(host.details.name)
 
     # Use the Check_MK Service. It is always there and the first.

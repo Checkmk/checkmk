@@ -103,7 +103,7 @@ def test_breadcrumb_names_the_host_between_all_hosts_and_this_page(
     with_user_login: UserId,
 ) -> None:
     assert [item.title for item in _breadcrumb_of()][-3:] == [
-        "All hosts (experimental)",
+        "All hosts",
         "web-1",
         "Services of host",
     ]
@@ -119,7 +119,7 @@ def test_breadcrumb_keeps_this_page_reachable_from_its_own_item(with_user_login:
 def test_breadcrumb_drops_all_hosts_without_permission_for_it(
     user_without_permissions: UserId,
 ) -> None:
-    assert "All hosts (experimental)" not in [item.title for item in _breadcrumb_of()]
+    assert "All hosts" not in [item.title for item in _breadcrumb_of()]
 
 
 def test_row_actions_link_the_parameters_of_the_service_in_the_row(with_user_login: UserId) -> None:

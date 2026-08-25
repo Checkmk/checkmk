@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import re
 from typing import override
+from urllib.parse import urljoin
 
 from playwright.sync_api import expect, Locator
 
@@ -16,7 +16,12 @@ logger = logging.getLogger(__name__)
 
 
 class AllHosts(CmkPage):
-    """Represents page `Monitor -> Overview -> All hosts`"""
+    """Represents page `Monitor -> Overview -> All hosts` (the classic table view).
+
+    The Monitor menu's "All hosts" entry now opens the Vue "All hosts" page instead
+    (see CMK-37778), so this navigates by URL directly to the classic view, which
+    stays reachable even though it is hidden from menu listings.
+    """
 
     page_title: str = "All hosts"
 
@@ -24,8 +29,9 @@ class AllHosts(CmkPage):
     def navigate(self) -> None:
         """Instructions to navigate to `Monitor -> Overview -> All hosts` page."""
         logger.info("Navigate to '%s' page", self.page_title)
-        self.main_menu.monitor_all_hosts.click()
-        self.page.wait_for_url(url=re.compile(re.escape("view_name=allhost")), wait_until="load")
+        # `self.go()` isn't available yet: it relies on `self._url`, which `CmkPage.__init__`
+        # only sets after `navigate()` returns.
+        self.page.goto(urljoin(self.page.url, "view.py?view_name=allhosts"), wait_until="load")
         self.validate_page()
 
     @override

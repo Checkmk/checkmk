@@ -94,7 +94,10 @@ builtin_views.update(
                 "Overall state of all hosts, with counts of services in the various states."
             ),
             "group_painters": [ColumnSpec(name="sitealias")],
-            "hidden": False,
+            # Superseded by the "All hosts" Vue page (monitor_all_hosts.py) in the menu.
+            # Kept reachable (not removed) for existing links, e.g. breadcrumbs, WATO
+            # folder/tag-tree drill-downs, and the "return to classic view" button.
+            "hidden": True,
             "hidebutton": False,
             "layout": "table",
             "mustsearch": False,

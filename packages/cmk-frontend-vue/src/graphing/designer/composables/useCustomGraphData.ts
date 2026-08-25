@@ -5,6 +5,7 @@
  */
 import { type Ref, onScopeDispose, readonly, ref, watch } from 'vue'
 
+import { useGlobalRefresh } from '../../GlobalTimePicker/globalTimeState'
 import { overviewStep } from '../../components/GraphBrush/overviewRange'
 import type { HorizontalLine, Metric, TimeRange } from '../../components/TimeSeriesGraph'
 import type { ConsolidationFn } from '../../components/consolidation'
@@ -261,6 +262,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     }
   }, true)
 
+  const { refreshTick } = useGlobalRefresh()
+
   // Serialize the request-relevant state into one key: a visibility toggle (visibility is
   // forced when fetching hidden) leaves the key unchanged, so it does not trigger a refetch,
   // while any other change re-fetches. A `deep` watch cannot be used here — it fires on every
@@ -273,7 +276,9 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
         requestedTimeRange: options.getRequestedTimeRange(),
         consolidationFn: options.getConsolidationFn(),
         figureWidth: options.getFigureWidth(),
-        overviewRange: options.getOverviewRange()
+        overviewRange: options.getOverviewRange(),
+        // The tick re-fetches even when the window did not move (keeps Today, This week live).
+        refreshTick: refreshTick.value
       }),
     schedule
   )

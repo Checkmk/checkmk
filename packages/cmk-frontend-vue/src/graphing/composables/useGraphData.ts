@@ -8,6 +8,7 @@ import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, computed, readonly, ref, watch } from 'vue'
 
+import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import type { HorizontalLine, Metric, TimeRange } from '../components/TimeSeriesGraph'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../components/consolidation'
 import type { RequestedTimeRange } from '../types'
@@ -284,7 +285,11 @@ export function useGraphData(
     }
   }
 
-  watch([getGraphs, getRequestedTimeRange], () => void loadAllGraphs(), {
+  const { refreshTick } = useGlobalRefresh()
+
+  // The tick re-fetches even when the window did not move, keeping a calendar range (Today, This
+  // week) live.
+  watch([getGraphs, getRequestedTimeRange, refreshTick], () => void loadAllGraphs(), {
     immediate: true,
     deep: true
   })

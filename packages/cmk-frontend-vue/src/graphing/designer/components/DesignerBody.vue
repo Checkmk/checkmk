@@ -173,8 +173,7 @@ const emptyStateNotice = computed<GraphNoticeDescriptor | null>(() =>
 // to fail - but which wins should be stated rather than left to that coincidence.
 const previewNotice = computed(() => fetchNotice.value ?? emptyStateNotice.value)
 
-const { refreshTick, pauseRefresh } = useGlobalRefresh()
-watch(refreshTick, () => data.refetch())
+const { pauseRefresh } = useGlobalRefresh()
 watch(
   () => mode,
   (newMode) => {

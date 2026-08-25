@@ -9,6 +9,7 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
+import { resetGlobalTimeState, useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState'
 import { timestampAt } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
 import {
   type GraphDataFetcher,
@@ -43,6 +44,7 @@ const FETCHED = {
 let postSpy: any
 
 beforeEach(() => {
+  resetGlobalTimeState()
   postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue({
     data: FETCHED,
@@ -52,6 +54,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  resetGlobalTimeState()
   vi.restoreAllMocks()
 })
 
@@ -244,4 +247,21 @@ test("exposes a fetch's warnings apart from its errors", async () => {
   expect(warnings.value).toEqual(['The query for CPU matched more than 100 time series.'])
   // Apart, so a caller can state a truncation as advisory rather than as a failure.
   expect(partialErrors.value).toHaveLength(0)
+})
+
+describe('the page refresh', () => {
+  const A_RANGE = { start: 0, end: 3_600 }
+  const A_CANVAS_WIDTH = 800
+
+  const loadsSoFar = (): number => postSpy.mock.calls.length
+
+  test('a refresh re-fetches, even though the window has not moved', async () => {
+    fetchFor(A_RANGE, A_CANVAS_WIDTH)
+    await waitFor(() => expect(loadsSoFar()).toBe(1))
+    const loadsBefore = loadsSoFar()
+
+    useGlobalRefresh().resumeRefresh()
+
+    await waitFor(() => expect(loadsSoFar()).toBe(loadsBefore + 1))
+  })
 })

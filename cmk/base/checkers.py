@@ -7,8 +7,6 @@
 
 """Concrete implementation of checkers functionality."""
 
-from __future__ import annotations
-
 import functools
 import logging
 import socket

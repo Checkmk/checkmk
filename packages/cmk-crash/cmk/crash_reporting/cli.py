@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """CLI entrypoint `cmk-upload-crashes`: batch-upload pending crash reports."""
 
-from __future__ import annotations
-
 import os
 import sys
 import time

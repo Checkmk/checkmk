@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import enum
 from collections.abc import Callable, Iterable, Mapping, Sequence

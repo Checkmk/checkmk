@@ -5,8 +5,6 @@
 
 """Checker for localization function calls."""
 
-from __future__ import annotations
-
 import ast
 import re
 from typing import override

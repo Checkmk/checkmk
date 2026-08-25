@@ -43,7 +43,7 @@ class Phase:
         value_store: MutableMapping[str, Any],
         value_store_key_prefix: str,
         now: float,
-    ) -> "Phase | None":
+    ) -> Phase | None:
         try:
             rate_input: float | None = get_rate(
                 value_store,
@@ -83,7 +83,7 @@ class VPNTunnel:
         self,
         value_store: MutableMapping[str, Any],
         now: float,
-    ) -> "VPNTunnel":
+    ) -> VPNTunnel:
         rates_phase_1 = self.phase_1.rates(
             value_store,
             "phase_1",

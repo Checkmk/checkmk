@@ -9,8 +9,6 @@
 
 """WATO's awesome rule editor: Lets the user edit rule based parameters"""
 
-from __future__ import annotations
-
 import abc
 import contextlib
 import json
@@ -1232,7 +1230,7 @@ class ModeEditRuleset(WatoMode):
             # rule number relative to folder
             rule_id = request.get_ascii_input_mandatory("_rule_id")
             rule = ruleset.get_rule_by_id(rule_id)
-        except (IndexError, TypeError, ValueError, KeyError):
+        except IndexError, TypeError, ValueError, KeyError:
             raise MKUserError(
                 "_rule_id", _("You are trying to edit a rule which does not exist anymore.")
             )
@@ -2292,7 +2290,7 @@ class ABCEditRuleMode(WatoMode):
             try:
                 rule_id = request.get_ascii_input_mandatory(self.VAR_RULE_ID)
                 self._rule = self._ruleset.get_rule_by_id(rule_id)
-            except (KeyError, TypeError, ValueError, IndexError):
+            except KeyError, TypeError, ValueError, IndexError:
                 raise MKUserError(
                     self.VAR_RULE_ID,
                     _("You are trying to edit a rule which does not exist anymore."),

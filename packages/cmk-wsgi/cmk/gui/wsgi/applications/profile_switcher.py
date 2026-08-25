@@ -26,8 +26,6 @@ This module has two usable profiling middlewares:
 #      and not cmk.gui.wsgi, in order to prevent the import of cmk
 #      before the debugger has a chance to run.
 
-from __future__ import annotations
-
 import abc
 import cProfile
 import dataclasses

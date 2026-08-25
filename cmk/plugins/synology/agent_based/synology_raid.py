@@ -50,7 +50,7 @@ class Raid:
     status: int
 
     @classmethod
-    def from_row(cls, row: Sequence[str]) -> "Raid":
+    def from_row(cls, row: Sequence[str]) -> Raid:
         return cls(name=row[0], status=int(row[1]))
 
 

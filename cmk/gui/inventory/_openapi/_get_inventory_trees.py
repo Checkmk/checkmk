@@ -33,9 +33,9 @@ class Table:
 
 @api_model
 class Tree:
-    attributes: "Attributes" = api_field(description="A collection of key-value pairs")
-    table: "Table" = api_field(description="A collection of rows")
-    nodes: Mapping[str, "Tree"] = api_field(description="Sub trees identified by node names")
+    attributes: Attributes = api_field(description="A collection of key-value pairs")
+    table: Table = api_field(description="A collection of rows")
+    nodes: Mapping[str, Tree] = api_field(description="Sub trees identified by node names")
 
 
 def _transform_inventory_tree(tree: ImmutableTree) -> Tree:

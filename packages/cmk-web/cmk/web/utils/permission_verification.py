@@ -18,8 +18,6 @@ With this, we can ensure we always have some understanding of the required and u
 
 """
 
-from __future__ import annotations
-
 import abc
 import itertools
 from collections.abc import Iterable, Sequence

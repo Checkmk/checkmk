@@ -74,8 +74,8 @@ def groupdel(groupname: str) -> None:
 
 # TODO: Cleanup: Change uid/gid to int
 def useradd(
-    version_info: "VersionInfo",
-    site: "SiteContext",
+    version_info: VersionInfo,
+    site: SiteContext,
     uid: str | None = None,
     gid: str | None = None,
 ) -> None:
@@ -111,7 +111,7 @@ def _groupadd(groupname: str, gid: str | None = None) -> None:
         raise MKTerminate("Cannot create group for site user.")
 
 
-def _add_user_to_group(version_info: "VersionInfo", user: str, group: str) -> bool:
+def _add_user_to_group(version_info: VersionInfo, user: str, group: str) -> bool:
     cmd = version_info.ADD_USER_TO_GROUP % {"user": user, "group": group}
     return subprocess.call(shlex.split(cmd), stdout=subprocess.DEVNULL) == 0
 
@@ -170,7 +170,7 @@ def group_id(name: str) -> int:
 
 
 def user_verify(
-    version_info: "VersionInfo", site: "SiteContext", allow_populated: bool = False
+    version_info: VersionInfo, site: SiteContext, allow_populated: bool = False
 ) -> bool:
     name = site.name
     site_home = SitePaths.from_site_name(site.name).home

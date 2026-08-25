@@ -222,7 +222,7 @@ class CouchbaseClient:
         try:
             response = self._session.get(uri, timeout=self._timeout)
             response.raise_for_status()
-        except (requests.ConnectionError, requests.HTTPError):
+        except requests.ConnectionError, requests.HTTPError:
             LOGGER.warning("%(uri)r could not be reached", {"uri": uri})
             raise
 
@@ -336,7 +336,7 @@ def fetch_bucket_data(
     for bucket in buckets:
         try:
             response = client.get_bucket(bucket)
-        except (ValueError, KeyError, requests.ConnectionError, requests.HTTPError):
+        except ValueError, KeyError, requests.ConnectionError, requests.HTTPError:
             if debug:
                 raise
             continue
@@ -400,7 +400,7 @@ def couchbase_main(args: argparse.Namespace) -> int:
 
     try:
         sections_node(client)
-    except (ValueError, requests.ConnectionError, requests.HTTPError):
+    except ValueError, requests.ConnectionError, requests.HTTPError:
         if args.debug:
             raise
         return 1

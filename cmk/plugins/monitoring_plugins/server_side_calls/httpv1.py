@@ -134,7 +134,7 @@ class HostSettings:
     host_config: HostConfig
 
     @classmethod
-    def from_params(cls, params: HttpHostParams, host_config: HostConfig) -> "HostSettings":
+    def from_params(cls, params: HttpHostParams, host_config: HostConfig) -> HostSettings:
         return cls(
             port=params.port,
             family=_parse_family(params, host_config),
@@ -166,7 +166,7 @@ class ProxySettings:
     auth: UserAuth | None
 
     @classmethod
-    def from_params(cls, params: HttpHostAddressProxyParams) -> "ProxySettings":
+    def from_params(cls, params: HttpHostAddressProxyParams) -> ProxySettings:
         return cls(
             address=params.address,
             port=params.port,

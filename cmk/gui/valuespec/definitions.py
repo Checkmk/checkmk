@@ -2399,7 +2399,7 @@ class ListOf[T](ValueSpec[ListOfModel[T]]):
         del_label: str | None = None,
         movable: bool = True,
         # https://github.com/python/cpython/issues/90015
-        style: "ListOf.Style | None" = None,
+        style: ListOf.Style | None = None,
         totext: str | None = None,
         text_if_empty: str | None = None,
         allow_empty: bool = True,
@@ -3816,7 +3816,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         sorted: bool = True,
         orientation: Literal["vertical", "horizontal"] = "vertical",
         # https://github.com/python/cpython/issues/90015
-        render: "CascadingDropdown.Render | None" = None,
+        render: CascadingDropdown.Render | None = None,
         no_elements_text: str | None = None,
         no_preselect_title: str | None = None,
         render_sub_vs_page_name: str | None = None,
@@ -6169,7 +6169,7 @@ class Tuple[TT: tuple[Any, ...]](ValueSpec[TT]):
         for no, element in enumerate(self._elements):
             try:
                 val = value[no]
-            except (TypeError, IndexError):
+            except TypeError, IndexError:
                 val = element.default_value()
             vp = varprefix + "_" + str(no)
             if self._orientation == "vertical":
@@ -7755,9 +7755,9 @@ class Labels(ValueSpec[LabelsModel]):
 
     def __init__(
         self,
-        world: "Labels.World",
+        world: Labels.World,
         # https://github.com/python/cpython/issues/90015
-        label_source: "Labels.Source | None" = None,
+        label_source: Labels.Source | None = None,
         max_labels: int | None = None,
         object_type: Literal["host", "service"] | None = None,
         # ValueSpec
@@ -7867,7 +7867,7 @@ class Labels(ValueSpec[LabelsModel]):
     @classmethod
     def get_labels(
         cls,
-        world: "Labels.World",
+        world: Labels.World,
         search_label: str,
         object_type: Literal["host", "service"] | None = None,
     ) -> Sequence[tuple[str, str]]:

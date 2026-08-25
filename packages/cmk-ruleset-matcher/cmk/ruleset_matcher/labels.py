@@ -5,8 +5,6 @@
 
 """Helper functions for dealing with Checkmk labels of all kind"""
 
-from __future__ import annotations
-
 import contextlib
 import json
 from abc import ABC, abstractmethod

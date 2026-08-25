@@ -28,7 +28,7 @@ class APIVersion(enum.Enum):
     INTERNAL = "internal"
 
     @staticmethod
-    def from_string(api_version_string: str) -> "APIVersion":
+    def from_string(api_version_string: str) -> APIVersion:
         return APIVersion(api_version_string)
 
     @property

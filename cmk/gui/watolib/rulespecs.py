@@ -80,7 +80,7 @@ class RulespecAllowList:
     visible_rulespecs: set[str] = field(default_factory=set)
 
     @classmethod
-    def from_config(cls) -> "RulespecAllowList":
+    def from_config(cls) -> RulespecAllowList:
         global_config = get_global_config()
         model = global_config.rulespec_allow_list
         visible_rulespecs = set()
@@ -841,7 +841,7 @@ def _get_manual_check_parameter_rulespec_instance(
     is_optional: bool = False,
     is_deprecated: bool = False,
     form_spec_definition: FormSpecDefinition | None = None,
-) -> "ManualCheckParameterRulespec":
+) -> ManualCheckParameterRulespec:
     # There may be no RulespecGroup declaration for the static checks.
     # Create some based on the regular check groups (which should have a definition)
     try:

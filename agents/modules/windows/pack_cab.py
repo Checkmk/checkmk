@@ -26,8 +26,6 @@ Usage::
     pack_cab.py --root path/to/tree --out path/to/output.cab
 """
 
-from __future__ import annotations
-
 import argparse
 import datetime
 import sys

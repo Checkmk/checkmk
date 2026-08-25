@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.deploy_state (state I/O, git helpers, hashing)."""
 
-from __future__ import annotations
-
 import hashlib
 import json
 import subprocess

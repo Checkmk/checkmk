@@ -13,8 +13,6 @@ reinstall itself takes a few seconds, so there is no per-package
 selection.
 """
 
-from __future__ import annotations
-
 import os
 import time
 from pathlib import Path

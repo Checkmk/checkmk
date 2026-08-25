@@ -127,7 +127,7 @@ class CrashReportsRowTable(RowTableLivestatus):
 
             try:
                 occurrences = read_occurrences(crash_info_raw)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 continue  # skip crash infos with an unreadable time
 
             row = {

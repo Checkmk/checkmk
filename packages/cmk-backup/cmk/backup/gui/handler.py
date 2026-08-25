@@ -10,8 +10,6 @@ This module implements generic functionality of the Checkmk backup
 system. It is used to configure the site and system backup.
 """
 
-from __future__ import annotations
-
 import abc
 import contextlib
 import errno
@@ -2428,7 +2426,7 @@ class ModeBackupRestore(WatoMode[object]):
                     # Validate the passphrase
                     try:
                         key.to_certificate_with_private_key(passphrase)
-                    except (PEMDecodingError, ValueError):
+                    except PEMDecodingError, ValueError:
                         raise MKUserError("_key_p_passphrase", _("Invalid passphrase"))
 
                     transactions.check_transaction(request)  # invalidate transid

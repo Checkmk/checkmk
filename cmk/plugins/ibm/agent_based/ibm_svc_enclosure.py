@@ -107,7 +107,7 @@ def parse_ibm_svc_enclosure(
 def _try_int(value: str | None) -> int | None:
     try:
         return int(value)  # type: ignore[arg-type]
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 

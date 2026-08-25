@@ -27,7 +27,7 @@ class Section:
     os: str
 
     @classmethod
-    def from_row(cls, row: Sequence[str]) -> "Section":
+    def from_row(cls, row: Sequence[str]) -> Section:
         return cls(model=row[0], serialnumber=row[1], os=row[2])
 
 

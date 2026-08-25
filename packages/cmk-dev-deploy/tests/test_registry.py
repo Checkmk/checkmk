@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.manifest.registry (uncovered_changed_files)."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock
 
 import pytest

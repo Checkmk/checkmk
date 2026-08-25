@@ -46,7 +46,7 @@ def load_precompiled_werks_file(path: Path) -> dict[int, WerkV3]:
 
 
 def get_sort_key_by_version_and_component(
-    translator: "WerkTranslator",
+    translator: WerkTranslator,
     rtc: RuntimeConfiguration | None,
     werk: WerkV3,
 ) -> tuple[str | int, ...]:

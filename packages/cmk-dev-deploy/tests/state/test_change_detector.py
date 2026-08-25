@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.change_detector (git diff, file categorization)."""
 
-from __future__ import annotations
-
 import subprocess
 from pathlib import Path
 

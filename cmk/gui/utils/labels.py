@@ -6,7 +6,6 @@
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import enum
 import json

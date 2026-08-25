@@ -17,8 +17,6 @@ Resources and resourcegroups are all treated lowercase because of:
 https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
 """
 
-from __future__ import annotations
-
 import argparse
 import contextlib
 import datetime
@@ -546,7 +544,7 @@ class BaseApiClient:
     def _update_ratelimit(self, response: requests.Response) -> None:
         try:
             new_value = int(response.headers["x-ms-ratelimit-remaining-subscription-reads"])
-        except (KeyError, ValueError, TypeError):
+        except KeyError, ValueError, TypeError:
             return
         self._ratelimit = min(self._ratelimit, new_value)
 

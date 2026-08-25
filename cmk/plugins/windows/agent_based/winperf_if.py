@@ -624,7 +624,7 @@ def _check_dhcp(
     for dhcp_data in section_dhcp:
         try:
             match = int(dhcp_data["index"]) == int(item)
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             match = (
                 _normalize_name(
                     dhcp_data["Description"],

@@ -411,7 +411,7 @@ def _root_aggregate_ids(connection: HostConnection, args: argparse.Namespace) ->
             timeout=args.timeout,
         )
         records = response.json().get("records", [])
-    except (NetAppRestError, OSError, ValueError):
+    except NetAppRestError, OSError, ValueError:
         # ASA r2 systems do not support
         # the "uuid" field on this passthrough (the request fails)
         return set()

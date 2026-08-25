@@ -9,8 +9,6 @@ into HTML, while other consumers - the action menu, for instance - read them as 
 Keeping them apart lets a consumer take the entries without pulling in the painters.
 """
 
-from __future__ import annotations
-
 import contextlib
 import traceback
 from collections.abc import Container, Iterator

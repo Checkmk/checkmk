@@ -46,7 +46,7 @@ class CPUInfo(_CPUInfo):
     guest_nice: time spent in niced guest OK, also counted in 1 (nice)
     """
 
-    def __new__(cls, name: str, *values: float | int | str | None) -> "CPUInfo":
+    def __new__(cls, name: str, *values: float | int | str | None) -> CPUInfo:
         # we can assume we have at least one value
         caster = int if values and isinstance(values[0], int) else float
         fillup = (caster(0) for _ in range(10 - len(values)))

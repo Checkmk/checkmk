@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import asyncio
 import logging
@@ -282,7 +281,7 @@ def _is_listening(process_def: ProcessDef) -> bool:
                 var_binds[0][1].prettyPrint()
                 == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
             )
-        except (AssertionError, IndexError):
+        except AssertionError, IndexError:
             return False
         return True
 

@@ -114,7 +114,7 @@ def site_user_processes(username: str) -> set[psutil.Process]:
     for process in psutil.process_iter():
         try:
             process_owner = process.username()
-        except (psutil.NoSuchProcess, psutil.ZombieProcess):
+        except psutil.NoSuchProcess, psutil.ZombieProcess:
             continue
         if process_owner == username:
             processes_of_site_user.add(process)

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import contextlib
 import gettext as gettext_module

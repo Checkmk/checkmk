@@ -9,7 +9,6 @@
 # SYSTEM 1
 # TCPIP$FTP - - - 1
 
-from __future__ import annotations
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -33,7 +32,7 @@ def saveint(i: str) -> int:
     you can not know whether it is really 0 or something went wrong."""
     try:
         return int(i)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 

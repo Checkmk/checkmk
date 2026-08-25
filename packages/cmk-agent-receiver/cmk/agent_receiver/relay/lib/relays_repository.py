@@ -56,7 +56,7 @@ class RelaysRepository:
         internal_site_url: str,
         site_name: str,
         helper_config_dir: Path,
-    ) -> "RelaysRepository":
+    ) -> RelaysRepository:
         """Create RelaysRepository from site configuration."""
         # FIXME async client
         headers = {

@@ -82,7 +82,7 @@ _DATE_MACRO_PATTERN = re.compile(r"\$(DATE|YESTERDAY):((?:%\w.?){1,})\$")
 def _cast_value(value: Any, data_type: type) -> Any:
     try:
         return data_type(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 

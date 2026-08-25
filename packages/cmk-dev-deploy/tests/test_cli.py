@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.cli (argument parsing) and main() guards."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest

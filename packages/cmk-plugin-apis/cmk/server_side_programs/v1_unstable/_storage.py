@@ -97,5 +97,5 @@ class Storage:
         path = self._get_path(key)
         try:
             return path.read_text()
-        except (OSError, ValueError):
+        except OSError, ValueError:
             return default

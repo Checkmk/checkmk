@@ -62,7 +62,7 @@ def is_two_factor_backup_code_valid(user_id: UserId, code: Password) -> bool:
             password_hashing.verify(code, stored_code)
             matched_code = stored_code
             break
-        except (password_hashing.PasswordInvalidError, ValueError):
+        except password_hashing.PasswordInvalidError, ValueError:
             continue
 
     if matched_code is None:

@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.output: combined mode prefixing, timing display, and output buffering."""
 
-from __future__ import annotations
-
 import sys
 import threading
 from collections.abc import Iterator

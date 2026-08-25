@@ -66,7 +66,7 @@ class Asset:
 
     # TODO(rs): replace static with normal: def serialize(self) -> str:
     @staticmethod
-    def serialize(obj: "Asset") -> str:
+    def serialize(obj: Asset) -> str:
         return json.dumps(asset_v1.Asset.to_dict(obj.asset))
 
     @classmethod
@@ -281,7 +281,7 @@ class Result:
 
     # TODO(rs): replace static with normal: def serialize(self) -> str:
     @staticmethod
-    def serialize(obj: "Result") -> str:
+    def serialize(obj: Result) -> str:
         aggregation = {
             "alignment_period": {"seconds": int(obj.aggregation.alignment_period.seconds)},
             "group_by_fields": list(obj.aggregation.group_by_fields),
@@ -291,7 +291,7 @@ class Result:
         return json.dumps({"ts": TimeSeries.to_dict(obj.ts), "aggregation": aggregation})
 
     @classmethod
-    def deserialize(cls, data: str) -> "Result":
+    def deserialize(cls, data: str) -> Result:
         deserialized = json.loads(data)
         ts = TimeSeries.from_json(json.dumps(deserialized["ts"]))
         raw_aggregation = deserialized["aggregation"]
@@ -335,7 +335,7 @@ class CostRow:
     currency: str
 
     @staticmethod
-    def serialize(row: "CostRow") -> str:
+    def serialize(row: CostRow) -> str:
         return json.dumps(
             {
                 "project": row.project,
@@ -644,7 +644,7 @@ def run(
             client, [s.name for s in services] + [s.name for s in piggy_back_services]
         )
         serializer([assets])
-    except (PermissionDenied, Unauthenticated, ResourceExhausted, InternalServerError):
+    except PermissionDenied, Unauthenticated, ResourceExhausted, InternalServerError:
         exc_type, exception, traceback = sys.exc_info()
         serializer([ExceptionSection(exc_type, exception, traceback, source="Cloud Asset")])
         return
@@ -652,7 +652,7 @@ def run(
     try:
         serializer(run_metrics(client, services))
         serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
-    except (PermissionDenied, Unauthenticated):
+    except PermissionDenied, Unauthenticated:
         exc_type, exception, traceback = sys.exc_info()
         serializer([ExceptionSection(exc_type, exception, traceback, source="Monitoring")])
         return

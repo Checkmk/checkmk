@@ -202,7 +202,7 @@ class _FakeAggregate:
         self._uuid = uuid
 
     @classmethod
-    def get_collection(cls, *, connection: object, fields: str) -> "Iterator[_FakeAggregate]":  # noqa: ARG003 (unused class method arg)
+    def get_collection(cls, *, connection: object, fields: str) -> Iterator[_FakeAggregate]:  # noqa: ARG003 (unused class method arg)
         return (cls(uuid) for uuid in cls._collection_uuids)
 
     def get(self, fields: str) -> None:

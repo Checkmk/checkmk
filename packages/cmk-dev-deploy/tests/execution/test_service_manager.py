@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.service_manager (resolve_services)."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 import pytest

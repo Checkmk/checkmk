@@ -23,8 +23,6 @@ rapid editor saves settle), then invokes the deploy pipeline.
   compiled ``.mo`` files) settle within one extra cycle.
 """
 
-from __future__ import annotations
-
 import hashlib
 import subprocess
 import time
@@ -99,7 +97,7 @@ def _get_content_hash(build_commit: str | None, repo_root: Path) -> str:
             cwd=str(repo_root),
             timeout=5,
         )
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         return ""
 
     # Deduplicate and sort for deterministic hashing (Pitfall 1).

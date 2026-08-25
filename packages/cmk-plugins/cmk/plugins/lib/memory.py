@@ -185,7 +185,7 @@ def check_element(
     else:
         try:
             mode, (warn, crit) = levels
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # NOTE: The signature of levels parameter doesn't really seem to reflect the reality: We
             # get weird modes, warn/crit which is not a tuple, etc. At least the unit tests call us
             # like this, and "thanks" to the lost typing via pytest.mark.parametrize, this doesn't

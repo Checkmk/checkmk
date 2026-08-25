@@ -17,8 +17,6 @@ Usage (from repo root)::
     PYTHONPATH=packages/cmk-dev-deploy python -m cmk.dev_deploy.manifest.update
 """
 
-from __future__ import annotations
-
 import json
 import logging
 import os

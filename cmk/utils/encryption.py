@@ -5,8 +5,6 @@
 """This module provides commonly used functions for the handling of encrypted
 data within the Checkmk ecosystem."""
 
-from __future__ import annotations
-
 import contextlib
 import re
 import socket

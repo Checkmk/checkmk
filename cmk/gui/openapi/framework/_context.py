@@ -126,7 +126,7 @@ class ApiConfig:
             user_connections=config.user_connections,
         )
 
-    def user_permissions(self) -> "UserPermissions":
+    def user_permissions(self) -> UserPermissions:
         return UserPermissions(
             roles=self.roles,
             permissions=permission_registry,

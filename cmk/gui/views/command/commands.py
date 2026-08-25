@@ -2171,7 +2171,7 @@ def _local_time_if_representable(timestamp: float | None) -> time.struct_time | 
         return None
     try:
         return time.localtime(timestamp)
-    except (OverflowError, OSError, ValueError):
+    except OverflowError, OSError, ValueError:
         return None
 
 

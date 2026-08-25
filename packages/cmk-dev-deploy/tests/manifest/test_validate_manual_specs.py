@@ -4,8 +4,6 @@
 
 """Unit tests for _validate_manual_specs."""
 
-from __future__ import annotations
-
 import os
 from pathlib import Path
 

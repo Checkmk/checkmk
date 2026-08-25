@@ -9,8 +9,6 @@
 """Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved."""
 
-from __future__ import annotations
-
 import dataclasses
 import enum
 import json

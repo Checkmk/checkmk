@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Tests for the ``user_attribute_sync_connections`` resolution."""
 
-from __future__ import annotations
-
 from typing import Literal, TYPE_CHECKING
 
 import pytest

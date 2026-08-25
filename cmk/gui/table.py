@@ -7,7 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import contextlib
 import json

@@ -7,8 +7,6 @@
 
 """Managing in-memory caches through the execution time of cmk"""
 
-from __future__ import annotations
-
 import collections
 import itertools
 import sys

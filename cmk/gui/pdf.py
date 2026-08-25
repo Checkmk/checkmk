@@ -18,7 +18,6 @@
 # internal-style. In a later version we could have the user himself decide
 # about the unit he wants to use.
 
-from __future__ import annotations
 
 import io
 import os

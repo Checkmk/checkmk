@@ -242,7 +242,7 @@ class StageActionResult(BaseModel, frozen=False):
     background_job_exception: BackgroundJobException | None = None
 
     @classmethod
-    def load_from_job_result(cls, job_id: str) -> "StageActionResult":
+    def load_from_job_result(cls, job_id: str) -> StageActionResult:
         work_dir = Path(BackgroundJobDefines.base_dir) / job_id
         if not os.path.exists(work_dir):
             raise MKJobNotFoundException(None, _("Stage action result not found"))

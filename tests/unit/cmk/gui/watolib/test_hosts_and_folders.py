@@ -778,7 +778,7 @@ def test_match_item_generator_hosts() -> None:
 class _TreeStructure:
     path: str
     attributes: HostAttributes
-    subfolders: list["_TreeStructure"]
+    subfolders: list[_TreeStructure]
     num_hosts: int = 0
 
 

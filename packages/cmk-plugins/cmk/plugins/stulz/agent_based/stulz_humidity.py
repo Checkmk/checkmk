@@ -25,7 +25,7 @@ from cmk.plugins.stulz.lib import DETECT_STULZ
 def _savefloat(f: str) -> float:
     try:
         return float(f)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0.0
 
 

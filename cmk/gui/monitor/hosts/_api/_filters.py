@@ -228,7 +228,7 @@ class AndNode:
     type: Literal["and"] = api_field(
         description="Logical AND: all children must match", example="and"
     )
-    children: Annotated[list["FilterNode"], MinLen(2)] = api_field(
+    children: Annotated[list[FilterNode], MinLen(2)] = api_field(
         description="Child filter nodes",
         example=[
             StringCondition(type="condition", field="name", op="matches", value="heute"),
@@ -242,7 +242,7 @@ class OrNode:
     type: Literal["or"] = api_field(
         description="Logical OR: at least one child must match", example="or"
     )
-    children: Annotated[list["FilterNode"], MinLen(2)] = api_field(
+    children: Annotated[list[FilterNode], MinLen(2)] = api_field(
         description="Child filter nodes",
         example=[
             StringCondition(type="condition", field="name", op="matches", value="heute"),
@@ -256,7 +256,7 @@ class NotNode:
     type: Literal["not"] = api_field(
         description="Logical NOT: the child must not match", example="not"
     )
-    child: "FilterNode" = api_field(description="Child filter node")
+    child: FilterNode = api_field(description="Child filter node")
 
 
 type FilterNode = AndNode | OrNode | NotNode | ConditionNode

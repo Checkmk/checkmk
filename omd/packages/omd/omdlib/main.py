@@ -5,8 +5,6 @@
 
 """The command line tool specific implementations of the omd command and main entry point"""
 
-from __future__ import annotations
-
 import contextlib
 import errno
 import fcntl

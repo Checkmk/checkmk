@@ -60,6 +60,6 @@ def _read_update_requests() -> _UpdateRequests:
             rebuild=bool(data["rebuild"]),
             change_actions=[str(action) for action in data["change_actions"]],
         )
-    except (json.JSONDecodeError, FileNotFoundError, KeyError):
+    except json.JSONDecodeError, FileNotFoundError, KeyError:
         # missing (unlikely, b/c it's locked), empty, or somehow corrupted: start from scratch
         return _UpdateRequests(rebuild=False, change_actions=[])

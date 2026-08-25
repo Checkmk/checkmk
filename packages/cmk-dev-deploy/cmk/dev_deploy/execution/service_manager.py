@@ -4,8 +4,6 @@
 
 """Service restart/reload engine for OMD sites."""
 
-from __future__ import annotations
-
 import subprocess
 import time
 from types import MappingProxyType

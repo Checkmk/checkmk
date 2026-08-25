@@ -41,7 +41,7 @@ def parse_citrix_licenses(string_table: StringTable) -> Section:
         try:
             have = int(line[1])
             used = int(line[2])
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             continue
         license_type = line[0]
         licenses = parsed.setdefault(license_type, (0, 0))

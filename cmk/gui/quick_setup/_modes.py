@@ -761,7 +761,7 @@ class ModeConfigurationBundle(WatoMode):
 
     @classmethod
     @override
-    def parent_mode(cls) -> type["WatoMode"]:
+    def parent_mode(cls) -> type[WatoMode]:
         return ModeEditConfigurationBundles
 
     @staticmethod

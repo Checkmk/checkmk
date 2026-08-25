@@ -4,8 +4,6 @@
 
 """Unit tests for the pip-based wheel deployer."""
 
-from __future__ import annotations
-
 import sys
 from pathlib import Path
 from subprocess import CompletedProcess

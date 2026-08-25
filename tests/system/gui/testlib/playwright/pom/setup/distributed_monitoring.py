@@ -118,13 +118,13 @@ class DistributedMonitoring(CmkPage):
         add_site_connection_page.fill_site_connection_form(remote_site)
         add_site_connection_page.save_button.click()
 
-    def open_add_connection_form(self) -> "AddSiteConnection":
+    def open_add_connection_form(self) -> AddSiteConnection:
         """Open the 'Add site connection' form and return its page object."""
         logger.info("Open the 'Add site connection' form")
         self.add_connection_button.click()
         return AddSiteConnection(self.page, navigate_to_page=False)
 
-    def open_edit_connection(self, site_id: str) -> "AddSiteConnection":
+    def open_edit_connection(self, site_id: str) -> AddSiteConnection:
         """Open the edit form of an existing site connection.
 
         The site ID cell links to `wato.py?mode=edit_site&site=<id>`.

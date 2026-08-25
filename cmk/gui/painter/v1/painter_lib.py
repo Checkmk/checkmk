@@ -25,7 +25,7 @@ class PainterConfiguration:
     staleness_threshold: float
     painter_options: PainterOptions | None = None
     time_range: tuple[int, int] | None = None  # provided from external view/dashlet
-    dynamic_columns: Callable[["PainterConfiguration"], Sequence[ColumnName]] | None = None
+    dynamic_columns: Callable[[PainterConfiguration], Sequence[ColumnName]] | None = None
 
 
 def strip_css_from_cell_spec[T](

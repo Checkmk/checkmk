@@ -572,7 +572,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
     def _run_discovery_tasks(
         self,
-        queue: "mp.Queue[_DiscoveryTaskResult | None]",
+        queue: mp.Queue[_DiscoveryTaskResult | None],
         site_tasks: list[DiscoveryTask],
         mode: DiscoverySettings,
         do_scan: DoFullScan,
@@ -640,7 +640,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
     def _process_discovery_results(
         self,
-        results: "mp.Queue[_DiscoveryTaskResult | None]",
+        results: mp.Queue[_DiscoveryTaskResult | None],
         n_task_threads: int,
         job_interface: BackgroundProcessInterface,
         pprint_value: bool,

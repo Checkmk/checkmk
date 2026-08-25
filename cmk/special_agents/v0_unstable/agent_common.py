@@ -36,7 +36,7 @@ class SectionManager:
     def __init__(self) -> None:
         self._data: list[str] = []
 
-    def __enter__(self) -> "SectionManager":
+    def __enter__(self) -> SectionManager:
         return self
 
     def __exit__(self, *exc_info: object) -> None:

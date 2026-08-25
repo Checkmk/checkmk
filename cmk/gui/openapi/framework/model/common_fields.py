@@ -87,7 +87,7 @@ class BinaryBase64(bytes):
         }
 
     @classmethod
-    def _validate(cls, v: object) -> "BinaryBase64":
+    def _validate(cls, v: object) -> BinaryBase64:
         if isinstance(v, bytes):
             return cls(v)
         if (
@@ -99,7 +99,7 @@ class BinaryBase64(bytes):
         raise ValueError(f"Expected bytes or binary_base64 dict, got {v!r}")
 
     @classmethod
-    def _serialize(cls, v: "BinaryBase64") -> dict[str, str]:
+    def _serialize(cls, v: BinaryBase64) -> dict[str, str]:
         return {
             "value_type": "binary_base64",
             "value": base64.encodebytes(bytes(v)).decode("ascii"),
@@ -347,7 +347,7 @@ class _TimerangeAge(_BaseTimerangeValue):
         return "age", age
 
     @classmethod
-    def from_seconds(cls, duration: int) -> "_TimerangeAge":
+    def from_seconds(cls, duration: int) -> _TimerangeAge:
         return cls(
             timerange_type="age",
             days=duration // 86400,

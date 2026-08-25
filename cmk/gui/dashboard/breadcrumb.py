@@ -27,7 +27,7 @@ class EvaluatedBreadcrumbItem:
     id: str | None
 
     @classmethod
-    def from_breadcrumb_item(cls, item: BreadcrumbItem) -> "EvaluatedBreadcrumbItem":
+    def from_breadcrumb_item(cls, item: BreadcrumbItem) -> EvaluatedBreadcrumbItem:
         return cls(title=str(item.title), link=item.url, id=item.id)
 
 

@@ -689,10 +689,10 @@ class ResultDistributor:
     def __init__(self) -> None:
         self._colleagues: dict[str, list[AWSSection]] = defaultdict(list)
 
-    def add(self, sender_name: str, colleague: "AWSSection") -> None:
+    def add(self, sender_name: str, colleague: AWSSection) -> None:
         self._colleagues[sender_name].append(colleague)
 
-    def distribute(self, sender: "AWSSection", result: "AWSComputedContent") -> None:
+    def distribute(self, sender: AWSSection, result: AWSComputedContent) -> None:
         for colleague in self._colleagues[sender.name]:
             if colleague.name != sender.name:
                 colleague.receive(sender, result)
@@ -711,13 +711,13 @@ class ResultDistributorS3Limits(ResultDistributor):
         self._received_results: dict[str, tuple[AWSSection, AWSComputedContent]] = {}
 
     @override
-    def add(self, sender_name: str, colleague: "AWSSection") -> None:
+    def add(self, sender_name: str, colleague: AWSSection) -> None:
         super().add(sender_name, colleague)
         for sender, content in self._received_results.values():
             colleague.receive(sender, content)
 
     @override
-    def distribute(self, sender: "AWSSection", result: "AWSComputedContent") -> None:
+    def distribute(self, sender: AWSSection, result: AWSComputedContent) -> None:
         self._received_results.setdefault(sender.name, (sender, result))
         super().distribute(sender, result)
 
@@ -859,7 +859,7 @@ class AWSSection(DataCache):
     def _send(self, content: AWSComputedContent) -> None:
         self._distributor.distribute(self, content)
 
-    def receive(self, sender: "AWSSection", content: "AWSComputedContent") -> None:
+    def receive(self, sender: AWSSection, content: AWSComputedContent) -> None:
         self._received_results.setdefault(sender.name, content)
 
     def run(self, use_cache: bool = False) -> AWSSectionResults:
@@ -5599,7 +5599,7 @@ class LambdaCloudwatchInsights(AWSSection):
     @staticmethod
     def query_results(
         *,
-        client: "CloudWatchLogsClient",
+        client: CloudWatchLogsClient,
         query_id: str,
         timeout_seconds: float,
         sleep_duration: float = 0.5,
@@ -5934,7 +5934,7 @@ class SNSTopic:
     topic_name: str
 
     @classmethod
-    def from_arn(cls: type["SNSTopic"], arn_str: str) -> "SNSTopic":
+    def from_arn(cls: type[SNSTopic], arn_str: str) -> SNSTopic:
         """Example topic ARN: 'arn:aws:sns:eu-central-1:710145618630:TestTopicGiordano'"""
         splitted_arn = arn_str.split(":")
         return cls(region=splitted_arn[3], account_id=splitted_arn[4], topic_name=splitted_arn[5])

@@ -18,7 +18,7 @@ def parse_fortigate_memory_base(string_table):
     try:
         total = int(string_table[0][1]) * 1024  # value from device is in kb, we need bytes
         used = float(string_table[0][0]) / 100.0 * total
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return ()
     return used, total
 

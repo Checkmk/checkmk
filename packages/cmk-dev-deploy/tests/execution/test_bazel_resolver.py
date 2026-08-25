@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.bazel_resolver (file-to-target mapping)."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 import pytest

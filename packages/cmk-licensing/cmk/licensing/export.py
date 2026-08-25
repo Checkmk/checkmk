@@ -8,8 +8,6 @@
 
 """This file is synced from the check_mk repo to the cmk-license repo."""
 
-from __future__ import annotations
-
 import abc
 from collections import Counter
 from collections.abc import Mapping, Sequence

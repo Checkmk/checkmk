@@ -4,8 +4,6 @@
 
 """Persistent deploy state tracking for incremental deployment."""
 
-from __future__ import annotations
-
 import contextlib
 import hashlib
 import json
@@ -88,7 +86,7 @@ def load_state(site_root: Path, base_dir: Path = STATE_BASE) -> DeployState | No
             backend=raw.get("backend", ""),
             uncovered_files=raw.get("uncovered_files", {}),
         )
-    except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+    except json.JSONDecodeError, KeyError, TypeError, ValueError:
         return None
 
 
@@ -189,7 +187,7 @@ def _git_stdout(args: list[str], repo_root: Path) -> str | None:
             cwd=str(repo_root),
             timeout=GIT_QUICK,
         )
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         return None
     return result.stdout.strip() if result.returncode == 0 else None
 

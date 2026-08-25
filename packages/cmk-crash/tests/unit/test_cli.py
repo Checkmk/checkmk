@@ -7,8 +7,6 @@
 Network calls are intercepted with `responses`; no real OMD site is needed.
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from logging import getLogger
 from pathlib import Path

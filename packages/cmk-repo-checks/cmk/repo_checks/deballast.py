@@ -91,8 +91,6 @@ Output:
     exits 1 on findings (aspect_rules_lint fail-on-violation mode).
 """
 
-from __future__ import annotations
-
 import argparse
 import ast
 import json
@@ -166,7 +164,7 @@ def load_dep_info(path: Path) -> DepInfo:
 def parse_python_source(path: Path) -> ast.Module | None:
     try:
         return ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    except (OSError, SyntaxError, UnicodeDecodeError, ValueError):
+    except OSError, SyntaxError, UnicodeDecodeError, ValueError:
         return None
 
 

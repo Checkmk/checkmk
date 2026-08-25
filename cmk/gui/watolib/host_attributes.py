@@ -10,8 +10,6 @@
 """A host attribute is something that is inherited from folders to
 hosts. Examples are the IP address and the host tags."""
 
-from __future__ import annotations
-
 import abc
 import functools
 import re

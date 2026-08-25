@@ -10,8 +10,6 @@
 
 """Provides the view editor dialog"""
 
-from __future__ import annotations
-
 import ast
 import datetime as dt
 import string

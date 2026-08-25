@@ -115,7 +115,7 @@ def _select_prediction(
             iter(available_predictions_sorted)
         )
         selected_prediction_infos = available_predictions_sorted[selected_title]
-    except (StopIteration, KeyError):
+    except StopIteration, KeyError:
         raise MKGeneralException(
             _("There is currently no prediction information available for this service.")
         )

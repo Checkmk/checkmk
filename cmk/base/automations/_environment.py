@@ -19,8 +19,6 @@ an explicit keyword argument on a small builder method:
 Both enums are required at every call site so handler intent stays visible.
 """
 
-from __future__ import annotations
-
 import enum
 import logging
 from collections.abc import Callable

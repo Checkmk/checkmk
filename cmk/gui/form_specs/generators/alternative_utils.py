@@ -128,7 +128,7 @@ def enable_deprecated_alternative(
 
             try:
                 mapping[_derive_type(example_value, element.parameter_form)] = element.name
-            except (_DeriveTypeError, _UnconvertableTypeError):
+            except _DeriveTypeError, _UnconvertableTypeError:
                 # This is the last resort. If we can not derive the type from the form spec
                 # we use transform[Any] as fallback. When reading from disk and no other data matches,
                 # this will be used. If the data can't be parsed by the chosen element, it will

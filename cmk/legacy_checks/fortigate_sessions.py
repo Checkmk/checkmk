@@ -18,7 +18,7 @@ def discover_fortigate_sessions(info):
 def check_fortigate_sessions(item, params, info):
     try:
         sessions = int(info[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return
 
     yield check_levels(

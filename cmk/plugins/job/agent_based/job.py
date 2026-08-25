@@ -86,7 +86,7 @@ def _as[T](_type: Callable[[str], T], value: str | None) -> T | None:
         return None
     try:
         return _type(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 

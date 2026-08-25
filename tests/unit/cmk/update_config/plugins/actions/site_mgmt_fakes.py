@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Shared fakes for update-config actions that rewrite the sites config."""
 
-from __future__ import annotations
-
 from cmk.ccc.site import SiteId
 
 

@@ -14,8 +14,6 @@ like the Setup main menu. The second and third level are being rendered like
 the global settings.
 """
 
-from __future__ import annotations
-
 import re
 from collections.abc import Collection, Mapping, Sequence
 from typing import Any, overload, override, TypedDict, Union

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 
-from __future__ import annotations
 
 import enum
 import ipaddress
@@ -111,7 +110,7 @@ def make_lookup_mgmt_board_ip_address(
                 if mgmt_address is None
                 else HostAddress(str(ipaddress.ip_address(mgmt_address)))
             )
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             mgmt_ipa = None
 
         try:
@@ -361,7 +360,7 @@ def _actual_dns_lookup(
         if isinstance(socket_address, int):
             raise Exception("Your Python has been compiled with --disable-ipv6, sorry...")
         return HostAddress(socket_address)
-    except (MKTerminate, MKTimeout):
+    except MKTerminate, MKTimeout:
         # We should be more specific with the exception handler below, then we
         # could drop this special handling here
         raise
@@ -446,7 +445,7 @@ class IPLookupCache:
     def load_persisted(self) -> None:
         try:
             self._cache.update(self._store.read_obj(default={}))
-        except (MKTerminate, MKTimeout):
+        except MKTerminate, MKTimeout:
             # We should be more specific with the exception handler below, then we
             # could drop this special handling here
             raise
@@ -528,7 +527,7 @@ def update_dns_cache(
                     {"host_name": host_name, "family": family, "ip": ip},
                 )
 
-            except (MKTerminate, MKTimeout):
+            except MKTerminate, MKTimeout:
                 # We should be more specific with the exception handler below, then we
                 # could drop this special handling here
                 raise

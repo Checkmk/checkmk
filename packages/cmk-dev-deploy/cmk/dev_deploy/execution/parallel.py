@@ -4,8 +4,6 @@
 
 """DAG-based parallel deployment engine using topological sorting."""
 
-from __future__ import annotations
-
 import time
 from collections.abc import Callable
 from concurrent.futures import as_completed, Future, ThreadPoolExecutor

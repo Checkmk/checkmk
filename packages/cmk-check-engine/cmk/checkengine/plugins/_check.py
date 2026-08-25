@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
 from typing import Final, NamedTuple

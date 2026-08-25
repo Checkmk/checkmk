@@ -163,7 +163,7 @@ class SafeStreamedTarFile:
                 return _payload(self._tar, member)
         return None
 
-    def __enter__(self) -> "SafeStreamedTarFile":
+    def __enter__(self) -> SafeStreamedTarFile:
         return self
 
     def __exit__(
@@ -212,7 +212,7 @@ class SafeIndexedTarFile:
         """
         _extract_to_disk(self._tar, member, Path(path), tar_filter)
 
-    def __enter__(self) -> "SafeIndexedTarFile":
+    def __enter__(self) -> SafeIndexedTarFile:
         return self
 
     def __exit__(

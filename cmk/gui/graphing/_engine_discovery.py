@@ -8,7 +8,6 @@
 # REST discovery endpoints and the dashboard graph widgets go through them, so the interactive and
 # the shared (token-authenticated) dashboard resolve the same graphs.
 
-from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass

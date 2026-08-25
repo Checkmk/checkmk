@@ -65,7 +65,7 @@ class GCPResult:
     aggregation: GCPAggregation
 
     @classmethod
-    def deserialize(cls, data: str) -> "GCPResult":
+    def deserialize(cls, data: str) -> GCPResult:
         parsed = json.loads(data)
         return cls(
             _ts=parsed["ts"],
@@ -94,7 +94,7 @@ class GCPAsset:
     _asset: Mapping[str, Any]
 
     @classmethod
-    def deserialize(cls, data: str) -> "GCPAsset":
+    def deserialize(cls, data: str) -> GCPAsset:
         return cls(_asset=json.loads(data))
 
     @property

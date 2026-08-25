@@ -25,7 +25,7 @@ check_info = {}
 def parse_netextreme_psu(string_table: StringTable) -> dict[str, dict[str, float]]:
     try:
         return {"1": {"power": float(string_table[0][0]) * pow(10, int(string_table[0][1]))}}
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return {}
 
 

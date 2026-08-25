@@ -315,5 +315,5 @@ class AnonInterface:
 
             assert isinstance(rule_default_values, dict)
             return rule_default_values[name][0]["value"]
-        except (IndexError, KeyError):
+        except IndexError, KeyError:
             raise AnonymizationError(f"No default value for rule {ruleset_name} found")

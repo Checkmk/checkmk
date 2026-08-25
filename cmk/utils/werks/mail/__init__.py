@@ -51,7 +51,7 @@ class Args(NamedTuple):
     do_add_notes: bool
 
     @classmethod
-    def new(cls, args: argparse.Namespace) -> "Args":
+    def new(cls, args: argparse.Namespace) -> Args:
         return Args(
             repo_path=args.repo_path.absolute(),
             branch=args.branch,
@@ -133,7 +133,7 @@ class File(NamedTuple):
     content: str
 
     @classmethod
-    def new(cls, path: str | None, blob: IndexObject | None) -> "File":
+    def new(cls, path: str | None, blob: IndexObject | None) -> File:
         # TODO: Fix None handling at call sites
         assert path is not None
         assert blob is not None

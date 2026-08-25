@@ -67,7 +67,7 @@ class SyncRemoteSitesResult:
         return json.dumps((audit_logs, site_changes))
 
     @classmethod
-    def from_json(cls, serialized_result: str) -> "SyncRemoteSitesResult":
+    def from_json(cls, serialized_result: str) -> SyncRemoteSitesResult:
         audit_logs_raw, site_changes_raw = json.loads(serialized_result)
 
         audit_logs = AuditLogStore.from_json(audit_logs_raw)

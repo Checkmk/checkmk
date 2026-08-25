@@ -5,8 +5,6 @@
 
 """LSP (Language Server Protocol) server for astrein."""
 
-from __future__ import annotations
-
 import argparse
 import logging
 import signal

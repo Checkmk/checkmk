@@ -8,8 +8,6 @@ The action strips the deprecated ``owned_by_site`` attribute from SAML
 connections so the on-disk config matches the new schema.
 """
 
-from __future__ import annotations
-
 import logging
 from types import SimpleNamespace
 from typing import cast

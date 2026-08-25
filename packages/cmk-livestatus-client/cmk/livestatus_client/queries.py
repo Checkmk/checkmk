@@ -247,7 +247,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
         # never be recognised by name, as the runtime arguments are part of it.
         return all(column.type != "blob" for column in self.columns)
 
-    def filter(self, filter_expr: QueryExpression) -> "Query":
+    def filter(self, filter_expr: QueryExpression) -> Query:
         """Apply additional filters to an existing query.
 
         This will return a new `Query` instance. The original one is left untouched."""
@@ -558,7 +558,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: \\nAnd: 3'
     def from_string(
         cls,
         string_query: str,
-    ) -> "Query":
+    ) -> Query:
         """Constructs a Query instance from a string based LiveStatus-Query
 
         Args:

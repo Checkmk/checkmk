@@ -46,7 +46,7 @@ class ManPage:
     cluster: str | None
 
     @classmethod
-    def fallback(cls, path: Path, name: str, msg: str, content: str) -> "ManPage":
+    def fallback(cls, path: Path, name: str, msg: str, content: str) -> ManPage:
         return cls(
             name=name,
             path=path,

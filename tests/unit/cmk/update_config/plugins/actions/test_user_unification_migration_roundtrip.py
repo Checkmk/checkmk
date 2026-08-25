@@ -12,8 +12,6 @@ operate only on the sites config and the connection config; user records are
 never read or written, so user accounts/contact groups/roles are untouched by
 construction (the meaningful losslessness here is config-level)."""
 
-from __future__ import annotations
-
 import copy
 import logging
 from types import SimpleNamespace

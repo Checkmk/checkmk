@@ -83,7 +83,7 @@ class SensorReadings:
     temperature: Temperature | None = None
 
     @classmethod
-    def parse(cls, row: Mapping[str, object]) -> "SensorReadings":
+    def parse(cls, row: Mapping[str, object]) -> SensorReadings:
         if not isinstance(raw_readings := row.get("readings"), list):
             return cls()
 

@@ -18,7 +18,7 @@ def parse_response(data: str) -> Mapping[str, str]:
         parsed = dict([x.split("=") for x in data.split(";")][:-1])
         if parsed["type"] == "1":
             bail_out(3, f"Invalid response: {data!r}")
-    except (ValueError, KeyError):
+    except ValueError, KeyError:
         bail_out(3, f"Invalid data: {data!r}")
 
     return parsed
@@ -89,7 +89,7 @@ def parse_arguments(sys_args):
             street_nr = sys_args[5]
             city = sys_args[6]
             regex = sys_args[7]
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         bail_out(
             3,
             (

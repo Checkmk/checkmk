@@ -110,14 +110,14 @@ def _long_output(section: Section) -> str:
 def _bytes_human_readable(data: Mapping[str, Any], key: str) -> str:
     try:
         return render.bytes(int(data.get(key)))  # type: ignore[arg-type]
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return "n/a"
 
 
 def _timestamp_human_readable(data: Mapping[str, Any], key: str) -> str:
     try:
         return render.datetime(int(data.get(key)))  # type: ignore[arg-type]
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return "n/a"
 
 
@@ -131,7 +131,7 @@ def _calc_time_diff(value1: int | None, value2: int | None) -> str:
 def _get_as_int(data: Mapping[str, Any], key: str) -> int:
     try:
         return int(data.get(key))  # type: ignore[arg-type]
-    except (KeyError, ValueError, TypeError):
+    except KeyError, ValueError, TypeError:
         return 0
 
 

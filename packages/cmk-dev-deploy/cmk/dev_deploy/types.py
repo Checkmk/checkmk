@@ -4,8 +4,6 @@
 
 """Core data types for cmk-dev-deploy."""
 
-from __future__ import annotations
-
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from enum import StrEnum

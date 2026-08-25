@@ -7,8 +7,6 @@ Module which contains functions to parse and write out the performance data coll
 Cluster Collector for the Kubernetes Monitoring solution
 """
 
-from __future__ import annotations
-
 import enum
 import json
 import time
@@ -207,7 +205,7 @@ def _load_containers_store(storage: Storage, container_store_key: str) -> Contai
 
     try:
         return ContainersStore.model_validate_json(content)
-    except (ValidationError, json.decoder.JSONDecodeError):
+    except ValidationError, json.decoder.JSONDecodeError:
         common.LOGGER.exception("Found metrics file, but could not parse it.")
         return ContainersStore(cpu=[])
 

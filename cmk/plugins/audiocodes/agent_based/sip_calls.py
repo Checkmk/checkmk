@@ -109,7 +109,7 @@ def parse_audiocodes_sip_calls(string_table: Sequence[StringTable]) -> SIPCalls 
             fax_success_calls=int(tel2ip_data[0][8]),
             total_duration=int(tel2ip_data[0][9]),
         )
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         tel2ip = None
 
     try:
@@ -126,7 +126,7 @@ def parse_audiocodes_sip_calls(string_table: Sequence[StringTable]) -> SIPCalls 
             fax_success_calls=int(ip2tel_data[0][8]),
             total_duration=int(ip2tel_data[0][9]),
         )
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         ip2tel = None
 
     return SIPCalls(tel2ip=tel2ip, ip2tel=ip2tel)

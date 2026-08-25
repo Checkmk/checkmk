@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from __future__ import annotations
 
 import dataclasses
 import itertools

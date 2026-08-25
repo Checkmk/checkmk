@@ -61,7 +61,7 @@ class TypeCMKEdition:
         self._edition_data: type[Edition] | Edition
         self._edition_data = edition if edition else Edition
 
-    def __call__(self, edition: Edition) -> "TypeCMKEdition":
+    def __call__(self, edition: Edition) -> TypeCMKEdition:
         """Return a new instance, which is initialized with an 'Edition' value."""
         return TypeCMKEdition(edition)
 
@@ -130,7 +130,7 @@ class TypeCMKEdition:
     def is_cloud_edition(self) -> bool:
         return self.edition_data is self.CLOUD
 
-    def edition_from_text(self, value: str) -> "TypeCMKEdition":
+    def edition_from_text(self, value: str) -> TypeCMKEdition:
         """Parse Checkmk edition from short or long form of Checkmk edition texts.
 
         Wraps the method `Edition::from_long_edition`.
@@ -160,7 +160,7 @@ class TypeCMKEdition:
                 raise excp
         return TypeCMKEdition(edition)
 
-    def edition_from_path(self, omd_root: Path) -> "TypeCMKEdition":
+    def edition_from_path(self, omd_root: Path) -> TypeCMKEdition:
         """Parse Checkmk edition using the path of a site's home directory.
 
         Args:
@@ -180,7 +180,7 @@ class TypeCMKEdition:
         """
         return self._edition_data.from_long_edition(text)
 
-    def from_version_string(self, text: str) -> "TypeCMKEdition":
+    def from_version_string(self, text: str) -> TypeCMKEdition:
         """Parse edition from a Checkmk version string.
 
         Args:
@@ -322,7 +322,7 @@ class CMKVersion:
         return self.version_data.__le__(other.version_data)
 
     def is_update_compatible(
-        self, target_version: "CMKVersion"
+        self, target_version: CMKVersion
     ) -> VersionsCompatible | VersionsIncompatible:
         """Validate whether present version can be updated to target version.
 

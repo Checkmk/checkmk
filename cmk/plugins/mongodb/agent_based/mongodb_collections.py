@@ -68,7 +68,7 @@ def check_mongodb_collections(
 
         try:
             value = int(collection_stats.get(key))
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             continue
 
         levels = params.get("levels_%s" % key)
@@ -209,14 +209,14 @@ def _mongodb_collections_bytes_human_readable(data: Mapping[str, Any], key: str)
         if value is None:
             return "n/a"
         return render.bytes(int(value))
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return "n/a"
 
 
 def _mongodb_collections_timestamp_human_readable(value: float) -> str:
     try:
         return render.datetime(int(value))
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return "n/a"
 
 
@@ -226,7 +226,7 @@ def _mongodb_collections_get_as_int(data: Mapping[str, Any], key: str) -> int | 
         if value is None:
             return "n/a"
         return int(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return "n/a"
 
 

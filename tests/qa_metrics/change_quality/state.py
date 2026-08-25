@@ -9,8 +9,6 @@ Currently just the watermark used by incremental runs to bound the git
 walk to commits not yet recorded in `cmk_change_tested`.
 """
 
-from __future__ import annotations
-
 from datetime import date, datetime
 
 from tests.qa_metrics.change_quality.rows import CHANGE_TESTED

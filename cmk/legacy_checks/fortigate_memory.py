@@ -21,7 +21,7 @@ check_info = {}
 def parse_fortigate_memory(string_table: StringTable) -> int | None:
     try:
         return int(string_table[0][0])
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return None
 
 

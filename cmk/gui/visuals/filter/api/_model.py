@@ -55,7 +55,7 @@ class HorizontalGroupComponentModel:
     component_type: Literal["horizontal_group"] = api_field(
         description="A horizontal group of components."
     )
-    components: list["FilterComponentModel"] = api_field(
+    components: list[FilterComponentModel] = api_field(
         description="The components within this horizontal group."
     )
 

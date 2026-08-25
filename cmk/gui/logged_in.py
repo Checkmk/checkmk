@@ -9,8 +9,6 @@
 
 """Manage the currently logged in user"""
 
-from __future__ import annotations
-
 import contextlib
 import logging
 import os
@@ -627,7 +625,7 @@ def load_user_file(
     # failing at some random places.
     try:
         return store.load_object_from_file(path, default=deflt, lock=lock)
-    except (ValueError, SyntaxError):
+    except ValueError, SyntaxError:
         return deflt
 
 

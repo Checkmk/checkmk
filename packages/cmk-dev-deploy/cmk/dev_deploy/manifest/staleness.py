@@ -7,8 +7,6 @@
 Separated from ``reader.py`` to break the circular import with ``output``.
 """
 
-from __future__ import annotations
-
 import hashlib
 import json
 import os
@@ -61,7 +59,7 @@ def _discover_build_files_git(repo_root: Path) -> list[str] | None:
             cwd=str(repo_root),
             timeout=5,
         )
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         return None
 
     if proc.returncode != 0:
@@ -124,7 +122,7 @@ def _load_stored_hashes() -> dict[str, str] | None:
         if isinstance(data, dict) and "files" in data:
             files: dict[str, str] = data["files"]
             return files
-    except (json.JSONDecodeError, KeyError):
+    except json.JSONDecodeError, KeyError:
         pass
     return None
 
@@ -154,7 +152,7 @@ def _manifest_version_matches() -> bool:
     """Return True when the manifest on disk has the expected format version."""
     try:
         data = json.loads(manifest_path().read_text())
-    except (OSError, json.JSONDecodeError):
+    except OSError, json.JSONDecodeError:
         return False
     return isinstance(data, dict) and data.get("_version") == MANIFEST_VERSION
 

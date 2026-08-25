@@ -58,7 +58,7 @@ TypeCMKEditions = TypeCMKEdition
 
 class ABCPackageManager(abc.ABC):
     @classmethod
-    def factory(cls, distro_name: str | None = None) -> "ABCPackageManager":
+    def factory(cls, distro_name: str | None = None) -> ABCPackageManager:
         if not distro_name:
             distro_name = _get_omd_distro_name()
         logger.info("Distro: %s", distro_name)
@@ -75,7 +75,7 @@ class ABCPackageManager(abc.ABC):
         return PackageManagerDEB(distro_name)
 
     @classmethod
-    def from_package(cls, package_path: Path) -> "ABCPackageManager":
+    def from_package(cls, package_path: Path) -> ABCPackageManager:
         """Create a package manager instance from a package file path.
 
         Determines the appropriate subclass based on the package file extension
@@ -261,7 +261,7 @@ class ABCPackageManager(abc.ABC):
 
 class PackageManagerDEB(ABCPackageManager):
     @classmethod
-    def from_package_file(cls, package_path: Path) -> "PackageManagerDEB":
+    def from_package_file(cls, package_path: Path) -> PackageManagerDEB:
         package_name = package_path.name
         # Extract distro name from DEB package filename
         # Format: check-mk-{edition}-{version}_0.{distro}_amd64.deb
@@ -314,7 +314,7 @@ class PackageManagerDEB(ABCPackageManager):
 
 class ABCPackageManagerRPM(ABCPackageManager):
     @classmethod
-    def from_package_file(cls, package_path: Path) -> "ABCPackageManagerRPM":
+    def from_package_file(cls, package_path: Path) -> ABCPackageManagerRPM:
         package_name = package_path.name
         # Extract distro name from RPM package filename
         # Format: check-mk-{edition}-{version}-{distro}-38.x86_64.rpm
@@ -383,7 +383,7 @@ class PackageManagerRHEL(ABCPackageManagerRPM):
 class PackageManagerCMA(PackageManagerDEB):
     @classmethod
     @override
-    def from_package_file(cls, package_path: Path) -> "PackageManagerCMA":
+    def from_package_file(cls, package_path: Path) -> PackageManagerCMA:
         package_name = package_path.name
         # Extract CMA version from package filename
         # Format: check-mk-{edition}-{version}-{cma_version}-x86_64.cma

@@ -55,7 +55,7 @@ def parse_elasticsearch_nodes(string_table: StringTable) -> Section:
             value: int | float = float(value_str) if desc == "cpu_percent" else int(value_str)
             parsed.setdefault(name, {}).setdefault(desc, (value, nodes_info[desc]))
 
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             pass
 
     return parsed

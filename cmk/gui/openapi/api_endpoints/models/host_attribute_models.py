@@ -351,7 +351,7 @@ class HostAttributeResponseModel(
     @staticmethod
     def from_internal(
         value: HostAttributes, static_attributes: set[str]
-    ) -> "HostAttributeResponseModel":
+    ) -> HostAttributeResponseModel:
         return HostAttributeResponseModel(
             alias=value.get("alias", ApiOmitted()),
             site=value.get("site", ApiOmitted()),

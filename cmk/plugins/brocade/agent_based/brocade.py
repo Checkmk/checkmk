@@ -40,7 +40,7 @@ from cmk.plugins.lib.temperature import check_temperature, TempParamType
 def _saveint(i: str) -> int:
     try:
         return int(i)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 

@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import functools
 import http.client as http_client

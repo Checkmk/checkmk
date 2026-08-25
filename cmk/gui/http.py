@@ -65,7 +65,7 @@ class ContentSecurityPolicy:
     def serialize(self) -> str:
         return "; ".join(f"{name} {value}" for name, value in self.directives.items())
 
-    def with_extra_source(self, directive: CSPDirective, source: str) -> "ContentSecurityPolicy":
+    def with_extra_source(self, directive: CSPDirective, source: str) -> ContentSecurityPolicy:
         """Return a copy with ``source`` appended to ``directive``.
 
         ``source`` must be a single source expression; whitespace/``;``/``,``
@@ -148,7 +148,7 @@ FILE_EXTENSIONS = {
 class ValidatedClass(Protocol):
     """Classes like int, UserId, etc..."""
 
-    def __new__(cls, value: str) -> "ValidatedClass":
+    def __new__(cls, value: str) -> ValidatedClass:
         # must raise ValueErrors if value is not valid
         ...
 
@@ -715,7 +715,7 @@ class Response(flask.Response):
 
     default_mimetype = "text/html"  # type: ignore[mutable-override]
 
-    _content_security_policy: "ContentSecurityPolicy | None" = None
+    _content_security_policy: ContentSecurityPolicy | None = None
 
     def set_http_cookie(
         self, key: str, value: str, *, secure: bool, max_age: int | None = None

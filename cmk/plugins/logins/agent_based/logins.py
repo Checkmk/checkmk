@@ -28,7 +28,7 @@ Section = int
 def parse_logins(string_table: StringTable) -> Section | None:
     try:
         return int(string_table[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
 
 

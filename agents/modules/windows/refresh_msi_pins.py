@@ -11,8 +11,6 @@ Usage:
     python3 agents/modules/windows/refresh_msi_pins.py 3.13.13
 """
 
-from __future__ import annotations
-
 import argparse
 import hashlib
 import sys

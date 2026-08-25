@@ -53,7 +53,7 @@ class Command:
         tables: Sequence[str],
         render: Callable[[str], None],
         action: Callable[
-            ["Command", Literal["HOST", "SVC"], str, Row, int, Rows], CommandActionResult
+            [Command, Literal["HOST", "SVC"], str, Row, int, Rows], CommandActionResult
         ],
         group: type[CommandGroup],
         confirm_button: LazyString | Callable[[], LazyString],

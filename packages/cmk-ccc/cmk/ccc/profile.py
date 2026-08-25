@@ -40,7 +40,7 @@ class Profile:
         self._builtins = builtins
         self._profile: cProfile.Profile | None = None
 
-    def __enter__(self) -> "Profile":
+    def __enter__(self) -> Profile:
         if self._enabled:
             logger.info("Recording profile")
             # cProfile.Profile has a slightly interesting API: None is not allowed as a timer argument. o_O

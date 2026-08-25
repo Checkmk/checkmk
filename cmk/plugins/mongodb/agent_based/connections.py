@@ -85,7 +85,7 @@ def _is_int(key_list: Sequence[str], info_dict: Mapping[str, object]) -> bool:
     for key in key_list:
         try:
             int(info_dict[key])  # type: ignore[call-overload]
-        except (KeyError, ValueError, TypeError):
+        except KeyError, ValueError, TypeError:
             return False
     return True
 

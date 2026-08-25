@@ -9,8 +9,6 @@
 Does NOT import ``cmk.dev_deploy.output`` to avoid circular dependencies.
 """
 
-from __future__ import annotations
-
 import functools
 import json
 import logging

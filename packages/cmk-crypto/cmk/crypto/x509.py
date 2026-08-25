@@ -5,8 +5,6 @@
 
 """Helpers for x.509 certificates."""
 
-from __future__ import annotations
-
 import re
 from dataclasses import dataclass
 from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network

@@ -9,7 +9,7 @@ skips = [
 
 [tool.ruff]
 extend-exclude = ["doc/**/*.py"]
-target-version = "py313"
+target-version = "py314"
 line-length = 100
 
 [pytest]

@@ -116,7 +116,7 @@ def parse_oracle_rman(
                 int(backupage_str),
                 0,
             )
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             backupage = None
 
         # Backups can occur multiple times for the same item. The lines are

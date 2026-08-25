@@ -38,7 +38,7 @@ class RemoveUnreadablePredictions(UpdateAction):
             try:
                 _ = PredictionInfo.model_validate_json(info_file.read_text())
                 _ = PredictionData.model_validate_json(data_file.read_text())
-            except (ValueError, FileNotFoundError):
+            except ValueError, FileNotFoundError:
                 info_file.unlink(missing_ok=True)
                 data_file.unlink(missing_ok=True)
 

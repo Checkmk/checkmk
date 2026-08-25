@@ -67,7 +67,7 @@ class LinkModel:
         # these might have to be changed to a dataclass but let's see
         parameters: dict[str, str] | None = None,
         body_params: dict[str, str | None] | None = None,
-    ) -> "LinkModel":
+    ) -> LinkModel:
         link_obj = link_rel(
             rel=rel,
             href=href,

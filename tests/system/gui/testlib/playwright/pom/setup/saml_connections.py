@@ -57,7 +57,7 @@ class SamlConnections(CmkPage):
         """The button to add a new SAML connection."""
         return self.main_area.page_menu_bar.get_by_role("link", name="Add connection")
 
-    def open_add_connection_form(self) -> "AddSamlConnection":
+    def open_add_connection_form(self) -> AddSamlConnection:
         """Open the 'Add SAML connection' form and return its page object."""
         logger.info("Open the 'Add SAML connection' form")
         self.add_connection_button.click()

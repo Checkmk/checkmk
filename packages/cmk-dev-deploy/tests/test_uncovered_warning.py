@@ -4,8 +4,6 @@
 
 """Unit tests for the persistent 'not covered by any deploy spec' warning."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from pathlib import Path
 from unittest.mock import patch

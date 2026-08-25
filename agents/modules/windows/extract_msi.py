@@ -22,8 +22,6 @@ the MSI's File-table keys) to their final on-disk paths derived from the
 Component → Directory chain.
 """
 
-from __future__ import annotations
-
 import argparse
 import os
 import shutil

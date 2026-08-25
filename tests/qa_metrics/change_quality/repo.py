@@ -5,8 +5,6 @@
 
 """Helpers that read repo-level metadata (defines.make, etc.)."""
 
-from __future__ import annotations
-
 import re
 from pathlib import Path
 

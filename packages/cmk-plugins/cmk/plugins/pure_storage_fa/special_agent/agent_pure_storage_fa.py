@@ -12,8 +12,6 @@
 Checkmk special agent for monitoring Pure Storage FlashArray via REST API.
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import logging

@@ -397,7 +397,7 @@ def translate_to_openapi_keys(
     schema_string_format: PropertyFormat | None = None,
     schema_num_minimum: int | None = None,
     schema_num_maximum: int | None = None,
-) -> "OpenAPIParameter":
+) -> OpenAPIParameter:
     """
     Args:
         name:

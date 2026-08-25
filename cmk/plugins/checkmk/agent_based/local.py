@@ -181,7 +181,7 @@ def _parse_perftxt(string: str) -> tuple[Iterable[Perfdata], str]:
     for entry in string.split("|"):
         try:
             perfdata.append(_parse_perfentry(entry))
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             msg.append(entry)
     if msg:
         return perfdata, "Invalid performance data: %r. " % "|".join(msg)

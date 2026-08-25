@@ -9,7 +9,6 @@
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import json
 import operator

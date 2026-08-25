@@ -85,7 +85,7 @@ class KubeConfig(Config):
     branch_regex = r"^(main$|\d+\.\d+\.\d+)"
 
 
-def config_from_flavor(flavor: Literal["cma", "cmk", "checkmk_kube_agent", "cloudmk"]) -> "Config":
+def config_from_flavor(flavor: Literal["cma", "cmk", "checkmk_kube_agent", "cloudmk"]) -> Config:
     if flavor == "cma":
         return CmaConfig(flavor)
     if flavor == "checkmk_kube_agent":

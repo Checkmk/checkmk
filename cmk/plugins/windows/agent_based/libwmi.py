@@ -260,7 +260,7 @@ def parse_wmi_table(
             while not line[0].startswith("["):
                 current_table.add_row(line + ["OK"] * bool(missing_wmi_status))
                 line = next(info_iter)
-    except (StopIteration, ValueError):
+    except StopIteration, ValueError:
         # regular end of block
         pass
 

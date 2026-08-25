@@ -59,7 +59,7 @@ class DashboardMetadata:
     display: DashboardDisplay = api_field(description="Display and presentation preferences.")
 
     @classmethod
-    def from_dashboard_metadata_object(cls, obj: DashboardMetadataObject) -> "DashboardMetadata":
+    def from_dashboard_metadata_object(cls, obj: DashboardMetadataObject) -> DashboardMetadata:
         return cls(
             name=obj.name,
             owner=obj.owner,

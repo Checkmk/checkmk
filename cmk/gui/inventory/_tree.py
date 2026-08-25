@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 
-from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass

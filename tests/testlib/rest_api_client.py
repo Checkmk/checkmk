@@ -11,8 +11,6 @@ It includes clients for different API domains, providing methods to perform crea
 delete operations and other actions.
 """
 
-from __future__ import annotations
-
 import abc
 import dataclasses
 import datetime
@@ -153,7 +151,7 @@ class RestApiException(Exception):
     def __str__(self) -> str:
         try:
             formatted_body = json.loads(cast(bytes, self.response.body))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             formatted_body = self.response.body
 
         return pprint.pformat(

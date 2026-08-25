@@ -10,8 +10,6 @@ shutdown, iBazel spawning, [frontend] stdout prefix, startup banner, crash
 reporting, v1.4 code removal verification, and CLI help text.
 """
 
-from __future__ import annotations
-
 import contextlib
 import inspect
 import io

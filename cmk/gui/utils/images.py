@@ -5,8 +5,6 @@
 
 """This is a capsule for python pillow aka PIL"""
 
-from __future__ import annotations
-
 import enum
 from collections.abc import Iterable
 from io import BytesIO

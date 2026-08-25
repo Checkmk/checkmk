@@ -790,7 +790,7 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             pid_file = cmk.utils.paths.omd_root / "tmp/apache/run/apache.pid"
             with pid_file.open(encoding="utf-8") as f:
                 ppid = int(f.read())
-        except (OSError, ValueError):
+        except OSError, ValueError:
             raise MKGeneralException(_("Failed to read the Apache process ID"))
 
         sizes = []

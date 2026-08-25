@@ -33,7 +33,7 @@ def parse_windows_multipath(string_table: StringTable) -> StringTable:
 def discover_windows_multipath(section: StringTable) -> DiscoveryResult:
     try:
         num_active = int(section[0][0])
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return
 
     if num_active > 0:

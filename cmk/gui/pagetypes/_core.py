@@ -20,7 +20,6 @@
 #   per type to the page_types dictionary. Or add some management object
 #   for this
 
-from __future__ import annotations
 
 import abc
 import copy

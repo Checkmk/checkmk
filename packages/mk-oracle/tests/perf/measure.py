@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """measure.py — Single-run Oracle plugin performance measurement. See README.md."""
 
-from __future__ import annotations
-
 import argparse
 import csv
 import os

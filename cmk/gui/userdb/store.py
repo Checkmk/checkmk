@@ -8,7 +8,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import ast
 import copy
@@ -89,7 +88,7 @@ def load_custom_attr[T](
         try:
             with open(attr_path) as file_object:
                 result = file_object.read()
-        except (FileNotFoundError, OSError):
+        except FileNotFoundError, OSError:
             return None
     return None if result == "" else parser(result.strip())
 

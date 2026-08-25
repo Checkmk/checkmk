@@ -11,8 +11,6 @@ which can optionally be deployed within a cluster.
 Moreover, read access to the Kubernetes API endpoints monitored by Checkmk must be provided.
 """
 
-from __future__ import annotations
-
 import argparse
 import cProfile
 import enum

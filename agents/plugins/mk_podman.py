@@ -195,7 +195,7 @@ def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
 def get_socket_owner(socket_path: Path) -> Union[str, None]:
     try:
         return pwd.getpwuid(os.stat(socket_path).st_uid).pw_name
-    except (OSError, KeyError):
+    except (OSError, KeyError):  # fmt: skip
         return None
 
 
@@ -241,7 +241,7 @@ def find_podman_users_from_conmon() -> Sequence[Union[str, None]]:
                     if uid != 0:
                         pw_entry = pwd.getpwuid(uid)
                         users.add(pw_entry.pw_name)
-                except (ValueError, KeyError):
+                except (ValueError, KeyError):  # fmt: skip
                     # Skip if UID is invalid or user not found
                     continue
     except Exception as e:
@@ -736,7 +736,7 @@ def extract_nodename_from_engine(engine_section: Union[JSONSection, Error]) -> U
     try:
         data = json.loads(engine_section.content)
         return str(data["host"]["hostname"])
-    except (json.JSONDecodeError, KeyError, TypeError):
+    except (json.JSONDecodeError, KeyError, TypeError):  # fmt: skip
         return None
 
 

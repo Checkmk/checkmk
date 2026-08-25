@@ -6,7 +6,6 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from typing import NamedTuple, override

@@ -106,7 +106,7 @@ def _parse_checkpoint_ages(checkpoints: Sequence[CheckpointInfo]) -> list[tuple[
                 checkpoint_data.append((checkpoint["name"], age_seconds))
                 parsed_successfully = True
                 break
-            except (ValueError, OverflowError):
+            except ValueError, OverflowError:
                 continue
 
         if not parsed_successfully:

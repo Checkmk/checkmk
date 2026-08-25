@@ -4,8 +4,6 @@
 
 """CLI argument parsing for cmk-dev-deploy."""
 
-from __future__ import annotations
-
 import argparse
 
 

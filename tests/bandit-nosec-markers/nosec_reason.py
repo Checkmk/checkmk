@@ -12,8 +12,6 @@ It also helps throwing the dice for new Bandit nosec IDs to use in said doc.
 Call with --help for usage.
 """
 
-from __future__ import annotations
-
 import argparse
 import logging
 import random
@@ -45,7 +43,7 @@ def _load_bandit_exclude_dirs(src_root: Path) -> list[str]:
     try:
         with open(pyproject, "rb") as f:
             data = tomllib.load(f)
-    except (OSError, tomllib.TOMLDecodeError):
+    except OSError, tomllib.TOMLDecodeError:
         return []
     excl = data.get("tool", {}).get("bandit", {}).get("exclude_dirs", [])
     return [str(e) for e in excl] if isinstance(excl, list) else []

@@ -395,7 +395,7 @@ class CheckmkApp:
                 c.remove(force=True)
                 self._remove_volumes()
                 raise docker.errors.NotFound(self.name)
-        except (docker.errors.NotFound, docker.errors.NullResource):
+        except docker.errors.NotFound, docker.errors.NullResource:
 
             class RunContainersKwargs(TypedDict, total=False):
                 name: str

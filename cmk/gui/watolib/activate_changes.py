@@ -12,8 +12,6 @@
 
 """Manage configuration activation of Checkmk"""
 
-from __future__ import annotations
-
 import ast
 import functools
 import hashlib

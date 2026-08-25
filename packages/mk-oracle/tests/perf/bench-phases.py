@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """bench-phases.py — Full three-phase Oracle benchmark. See README.md."""
 
-from __future__ import annotations
-
 import argparse
 import os
 import signal

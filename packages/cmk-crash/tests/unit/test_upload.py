@@ -7,8 +7,6 @@
 Network calls are intercepted with the `responses` library — no OMD env, no real network.
 """
 
-from __future__ import annotations
-
 import base64
 import io
 import json

@@ -73,7 +73,7 @@ def parse_pod_name(labels: dict[str, str], prepend_namespace: bool = False) -> s
 
 
 class CAdvisorExporter:
-    def __init__(self, api_client: "PrometheusAPI", options: Mapping[str, Any]) -> None:
+    def __init__(self, api_client: PrometheusAPI, options: Mapping[str, Any]) -> None:
         self.api_client = api_client
         self.container_name_option = options.get("container_id", "short")
         self.pod_containers: dict[str, list[str]] = {}
@@ -486,7 +486,7 @@ class PrometheusServer:
     its own status and the connected scrape targets
     """
 
-    def __init__(self, api_client: "PrometheusAPI") -> None:
+    def __init__(self, api_client: PrometheusAPI) -> None:
         self.api_client = api_client
 
     def build_info(self) -> dict[str, Any]:
@@ -712,7 +712,7 @@ class PiggybackGroup:
             self._elements[element_name] = PiggybackHost()
         return self._elements[element_name]
 
-    def join(self, section_name: str, pairs: Mapping[str, dict[str, Any]]) -> "PiggybackGroup":
+    def join(self, section_name: str, pairs: Mapping[str, dict[str, Any]]) -> PiggybackGroup:
         for element_name, data in pairs.items():
             section = self.get(element_name).get(section_name)
             section.insert(data)
@@ -733,7 +733,7 @@ class ApiData:
     Server & the Prometheus Exporters
     """
 
-    def __init__(self, api_client: "PrometheusAPI", exporter_options: dict) -> None:
+    def __init__(self, api_client: PrometheusAPI, exporter_options: dict) -> None:
         self.api_client = api_client
         self.prometheus_server = PrometheusServer(api_client)
         if "cadvisor" in exporter_options:

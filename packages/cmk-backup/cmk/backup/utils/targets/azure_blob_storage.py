@@ -7,7 +7,7 @@
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import assert_never, Final, Literal, override, TYPE_CHECKING, TypedDict, Union
+from typing import assert_never, Final, Literal, override, TYPE_CHECKING, TypedDict
 
 from cmk.backup.utils.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.ccc.exceptions import MKGeneralException
@@ -96,7 +96,7 @@ class BlobStorage:
     @staticmethod
     def _credentials(
         configured_credentials: BlobStorageCredentials,
-    ) -> Union[str, "ClientSecretCredential"]:
+    ) -> str | ClientSecretCredential:
         # Conditional import to only consume the necessary memory when the feature is used
         from azure.identity import ClientSecretCredential
 

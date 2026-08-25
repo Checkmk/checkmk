@@ -61,7 +61,7 @@ def _parse_date_and_time(datetime_string: str) -> datetime.datetime | None:
             second=int(components[6], 16),
             microsecond=int(components[7], 16) * 100000,
         )
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         try:
             byte_data = datetime_string.encode("latin-1")
             return datetime.datetime(
@@ -73,7 +73,7 @@ def _parse_date_and_time(datetime_string: str) -> datetime.datetime | None:
                 second=byte_data[6],
                 microsecond=byte_data[7] * 100000,
             )
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             return None
 
 

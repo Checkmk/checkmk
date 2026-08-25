@@ -1283,7 +1283,7 @@ def _execute_autodiscovery(
                         discovery_results[host_name] = autodiscovery_result.discovery_result
                         activation_required |= autodiscovery_result.activate
 
-    except (MKTimeout, TimeoutError):
+    except MKTimeout, TimeoutError:
         remaining_hosts = list(autodiscovery_queue)
         logger.warning(
             "Autodiscovery: timed out after %(elapsed).1fs (limit: %(limit)ds). "

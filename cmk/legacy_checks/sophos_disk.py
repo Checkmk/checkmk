@@ -15,7 +15,7 @@ check_info = {}
 def parse_sophos_disk(string_table):
     try:
         return int(string_table[0][0])
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return None
 
 

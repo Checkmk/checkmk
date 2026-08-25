@@ -44,7 +44,7 @@ class GitChanges:
     @classmethod
     def from_git_changes_file(
         cls, file_path_or_local: Path | str, test_all_files: bool = False
-    ) -> "GitChanges":
+    ) -> GitChanges:
         """Parse a git diff-tree --name-status output file and create GitChanges instance.
 
         Args:

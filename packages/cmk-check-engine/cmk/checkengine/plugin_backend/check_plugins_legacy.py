@@ -202,7 +202,7 @@ def convert_legacy_check_plugins(
                     validate_creation_kwargs=validate_creation_kwargs,
                 )
             )
-        except (NotImplementedError, KeyError, AssertionError, ValueError):
+        except NotImplementedError, KeyError, AssertionError, ValueError:
             # NOTE: as a result of a missing check plug-in, the corresponding services
             #       will be silently droppend on most (all?) occasions.
             if raise_errors:

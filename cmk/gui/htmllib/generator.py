@@ -25,7 +25,6 @@
 #
 # - Unify CSS classes attribute to "class_"
 
-from __future__ import annotations
 
 import json
 import typing

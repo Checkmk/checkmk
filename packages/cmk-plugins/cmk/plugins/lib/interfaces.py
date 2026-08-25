@@ -163,7 +163,7 @@ class AugmentedIPInterface:
         )
 
     @staticmethod
-    def from_ip_address(address: str) -> "AugmentedIPv4Interface | AugmentedIPv6Interface":
+    def from_ip_address(address: str) -> AugmentedIPv4Interface | AugmentedIPv6Interface:
         """Same as `ipaddress.ip_address()
         >>> AugmentedIPInterface.from_ip_address("12.13.14.15/16")
         AugmentedIPv4Interface('12.13.14.15/16')
@@ -177,7 +177,7 @@ class AugmentedIPInterface:
                 assert_never(unexpected)
 
     @property
-    def is_broadcast(self: "AugmentedIPInterface.IPInterfaceLike") -> bool:
+    def is_broadcast(self: AugmentedIPInterface.IPInterfaceLike) -> bool:
         """
         >>> AugmentedIPv4Interface("1.2.3.255/24").is_broadcast
         True
@@ -190,7 +190,7 @@ class AugmentedIPInterface:
         ) and (self.ip.compressed == self.network.broadcast_address.compressed)
 
     @property
-    def is_ula(self: "AugmentedIPInterface.IPInterfaceLike") -> bool:
+    def is_ula(self: AugmentedIPInterface.IPInterfaceLike) -> bool:
         """Returns whether address is inside the unique local address (ULA) network
         >>> AugmentedIPv6Interface("fddf:d584:190e:49b5:0:ff:fe00:fc10/64").is_ula
         True
@@ -206,7 +206,7 @@ class AugmentedIPv4Interface(AugmentedIPInterface, IPv4Interface):
         IPv4Interface.__init__(self, interface)
 
     @staticmethod
-    def from_ip_addr_line(line: Sequence[str]) -> "AugmentedIPv4Interface":
+    def from_ip_addr_line(line: Sequence[str]) -> AugmentedIPv4Interface:
         return AugmentedIPv4Interface(line[0])
 
 
@@ -216,7 +216,7 @@ class AugmentedIPv6Interface(AugmentedIPInterface, IPv6Interface):
         IPv6Interface.__init__(self, interface)
 
     @staticmethod
-    def from_ip_addr_line(line: Sequence[str]) -> "AugmentedIPv6Interface":
+    def from_ip_addr_line(line: Sequence[str]) -> AugmentedIPv6Interface:
         return AugmentedIPv6Interface(
             line[0], is_temporary="temporary" in line and "dynamic" in line
         )
@@ -381,7 +381,7 @@ class InterfaceWithRates:
         iface_counters: InterfaceWithCounters,
         *,
         value_store: MutableMapping[str, object],
-    ) -> "InterfaceWithRates":
+    ) -> InterfaceWithRates:
         return cls(
             iface_counters.attributes,
             *cls._compute_rates(
@@ -534,7 +534,7 @@ class Average:
     value: float
     backlog: int
 
-    def __add__(self, other: "Average") -> "Average":
+    def __add__(self, other: Average) -> Average:
         if self.backlog == other.backlog:
             return Average(
                 value=self.value + other.value,
@@ -548,7 +548,7 @@ class RateWithAverage:
     rate: float
     average: Average | None
 
-    def __add__(self, other: "RateWithAverage") -> "RateWithAverage":
+    def __add__(self, other: RateWithAverage) -> RateWithAverage:
         return RateWithAverage(
             rate=self.rate + other.rate,
             average=(
@@ -577,7 +577,7 @@ class RatesWithAverages:
     out_err: RateWithAverage | None = None
     total_octets: RateWithAverage | None = None
 
-    def __add__(self, other: "RatesWithAverages") -> "RatesWithAverages":
+    def __add__(self, other: RatesWithAverages) -> RatesWithAverages:
         return RatesWithAverages(
             **{
                 field.name: (
@@ -612,7 +612,7 @@ class InterfaceWithRatesAndAverages:
         *,
         value_store: MutableMapping[str, object],
         params: Mapping[str, Any],
-    ) -> "InterfaceWithRatesAndAverages":
+    ) -> InterfaceWithRatesAndAverages:
         iface_rates = (
             iface
             if isinstance(iface, InterfaceWithRates)
@@ -819,7 +819,7 @@ type Section[TInterfaceType: (InterfaceWithCounters, InterfaceWithRates)] = Sequ
 def saveint(i: Any) -> int:
     try:
         return int(i)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 
@@ -853,7 +853,7 @@ def cleanup_if_strings(s: str) -> str:
 def tryint(x: Any) -> Any:
     try:
         return int(x)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return x
 
 
@@ -1390,7 +1390,7 @@ def discover_interfaces[TInterfaceType: (InterfaceWithCounters, InterfaceWithRat
 
             try:
                 index_as_item = int(item) == int(interface.attributes.index)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 index_as_item = False
 
             labels = {}

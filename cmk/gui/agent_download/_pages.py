@@ -449,7 +449,7 @@ class PageDownloadAgentPlugin(Page):
 
         try:
             requested = Path(ctx.request.get_str_input_mandatory("path")).resolve(strict=True)
-        except (MKUserError, OSError):
+        except MKUserError, OSError:
             raise MKUserError("path", _("The requested file does not exist."))
 
         if not (

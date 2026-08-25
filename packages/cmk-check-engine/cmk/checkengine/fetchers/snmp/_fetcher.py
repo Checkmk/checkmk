@@ -80,7 +80,7 @@ class SNMPSectionMeta:
         return dataclasses.asdict(self)
 
     @classmethod
-    def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPSectionMeta":
+    def deserialize(cls, serialized: Mapping[str, Any]) -> SNMPSectionMeta:
         return cls(**serialized)
 
 

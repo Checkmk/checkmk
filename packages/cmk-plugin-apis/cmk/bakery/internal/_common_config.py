@@ -68,7 +68,7 @@ class SingleDirectoryConfig(BaseModel, frozen=True):
     def get_tmpdir(self) -> str | None:
         return self.tmpdir
 
-    def get_keeper(self) -> "UnixSingleDirectoryKeeper":
+    def get_keeper(self) -> UnixSingleDirectoryKeeper:
         return UnixSingleDirectoryKeeper(self.installation_directory, _DEFAULT_AGENT)
 
 
@@ -98,7 +98,7 @@ class AgentPathsConfig(BaseModel, frozen=True):
     def get_tmpdir(self) -> str | None:
         return self.tmp
 
-    def get_keeper(self) -> "UnixMultipleDirectoryKeeper":
+    def get_keeper(self) -> UnixMultipleDirectoryKeeper:
         return UnixMultipleDirectoryKeeper(self)
 
 
@@ -107,7 +107,7 @@ class DirectoryConfig(Protocol):
 
     def get_tmpdir(self) -> str | None: ...
 
-    def get_keeper(self) -> "UnixAgentPathsKeeper": ...
+    def get_keeper(self) -> UnixAgentPathsKeeper: ...
 
 
 class UnixAgentPathsKeeper(Protocol):

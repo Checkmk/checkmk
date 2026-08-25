@@ -52,7 +52,7 @@ class DashboardMetadataObject:
     @classmethod
     def from_dashboard_config(
         cls, dashboard: DashboardConfig, user_permissions: UserPermissions
-    ) -> "DashboardMetadataObject":
+    ) -> DashboardMetadataObject:
         layout_type: DashboardLayoutType = (
             "relative_grid" if dashboard_uses_relative_grid(dashboard) else "responsive_grid"
         )

@@ -51,7 +51,7 @@ class Section:
     status: int
 
     @classmethod
-    def from_row(cls, row: Sequence[str]) -> "Section":
+    def from_row(cls, row: Sequence[str]) -> Section:
         return cls(version=row[0], status=int(row[1]))
 
 

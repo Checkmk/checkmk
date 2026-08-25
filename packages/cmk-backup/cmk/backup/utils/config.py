@@ -12,8 +12,6 @@ the GUI, we must render, even if there are invalid configurations. The same hold
 line: mkbackup should not completely stop working due to eg. one invalid target configuration.
 """
 
-from __future__ import annotations
-
 import ast
 from collections.abc import Mapping, MutableMapping
 from os import getuid
@@ -72,7 +70,7 @@ class CMASystemConfig(BaseModel, frozen=True):
                             _("/etc/cma/backup.conf has wrong permissions. Refusing to read file")
                         )
                 return cls.model_construct(**ast.literal_eval(path.read_text()))
-        except (ValueError, SyntaxError, OSError, PermissionError, UnicodeDecodeError):
+        except ValueError, SyntaxError, OSError, PermissionError, UnicodeDecodeError:
             # Note: MKGeneralException is explicitly not caught
             pass
 

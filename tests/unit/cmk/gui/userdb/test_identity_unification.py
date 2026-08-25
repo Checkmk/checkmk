@@ -15,8 +15,6 @@ the user is resolved by their own connector and the second connector never
 claims them.
 """
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from datetime import datetime
 

@@ -70,7 +70,7 @@ class UserDataDiff:
     credentials_changed: bool
 
     @classmethod
-    def between(cls, old: "UserData", new: "UserData") -> "UserDataDiff":
+    def between(cls, old: UserData, new: UserData) -> UserDataDiff:
         """Diff two userdata objects."""
         return cls(
             attribute_changes=make_diff(cls._diff_dict(old), cls._diff_dict(new)),
@@ -80,7 +80,7 @@ class UserDataDiff:
         )
 
     @classmethod
-    def _diff_dict(cls, user: "UserData") -> dict[str, object]:
+    def _diff_dict(cls, user: UserData) -> dict[str, object]:
         """Flat representation of the user data to diff on.
 
         - omits MISSING sentinel fields

@@ -182,7 +182,7 @@ def load_state_file():
                 raise ValueError("unexpected value in state file: %r" % (value,))
             states[key] = value
         return states
-    except (OSError, ValueError, TypeError, SyntaxError, AttributeError):
+    except (OSError, ValueError, TypeError, SyntaxError, AttributeError):  # fmt: skip
         return {}
 
 

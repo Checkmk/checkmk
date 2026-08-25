@@ -84,7 +84,7 @@ def parse_kernel(string_table: StringTable) -> Section:
     """
     try:
         timestamp: int | None = int(string_table[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         timestamp = None
 
     parsed: dict[str, list] = {}
@@ -92,13 +92,13 @@ def parse_kernel(string_table: StringTable) -> Section:
         if line[0] in KERNEL_COUNTER_NAMES:
             try:
                 parsed.setdefault(KERNEL_COUNTER_NAMES[line[0]], []).append((line[0], int(line[1])))
-            except (IndexError, ValueError):
+            except IndexError, ValueError:
                 continue
 
         if line[0].startswith("cpu"):
             try:
                 parsed.setdefault("Cpu Utilization", []).append((line[0], line[1:]))
-            except (IndexError, ValueError):
+            except IndexError, ValueError:
                 continue
     return timestamp, parsed
 

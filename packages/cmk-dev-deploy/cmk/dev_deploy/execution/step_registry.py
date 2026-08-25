@@ -4,8 +4,6 @@
 
 """Deployment step registry — single source of truth for step/deployer/display name mappings."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 

@@ -10,8 +10,6 @@
 
 """Status sidebar rendering"""
 
-from __future__ import annotations
-
 import contextlib
 import copy
 import json

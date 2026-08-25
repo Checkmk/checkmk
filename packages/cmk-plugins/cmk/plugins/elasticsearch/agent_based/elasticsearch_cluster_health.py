@@ -94,7 +94,7 @@ def parse_elasticsearch_cluster_health(string_table: StringTable) -> dict[str, A
                 inst[line[0]] = line[1], tasks_info[line[0]]
                 continue
 
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             pass
 
     return parsed

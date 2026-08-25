@@ -219,7 +219,7 @@ def _validate_rule_values(
                     add_info = _additional_info(ruleset, rule.value, contact_groups)
                     logger.warning("\n".join(error_messages + add_info.messages))
 
-                except (MKUserError, AssertionError, ValueError, TypeError):
+                except MKUserError, AssertionError, ValueError, TypeError:
                     error_messages = [
                         "WARNING: Invalid rule configuration detected",
                         f"Ruleset: {ruleset.name}",

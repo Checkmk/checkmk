@@ -647,7 +647,7 @@ class ModeBulkImport(WatoMode):
                 index += len(batch)
                 # First column is host_name. Add all of them.
                 imported_hosts.extend(map(operator.itemgetter(0), batch))
-            except (MKAuthException, MKUserError, MKGeneralException):
+            except MKAuthException, MKUserError, MKGeneralException:
                 # We fall back to individual imports to determine the precise location of the error
                 for entry in batch:
                     try:

@@ -23,7 +23,7 @@ class WerkImpact(StrEnum):
     ALL = "all"
 
     @staticmethod
-    def werk_level_to_impact(level: int) -> "WerkImpact":
+    def werk_level_to_impact(level: int) -> WerkImpact:
         mapping = {1: WerkImpact.LOW, 2: WerkImpact.NORMAL, 3: WerkImpact.HIGH}
         try:
             return mapping[level]

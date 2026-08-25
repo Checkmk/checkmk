@@ -51,7 +51,7 @@ def saveint(i: str | int) -> int:
     you can not know whether it is really 0 or something went wrong."""
     try:
         return int(i)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 

@@ -22,8 +22,6 @@ and one scoping issue:
    deploy cycle, so it cannot leak from one test into the next.
 """
 
-from __future__ import annotations
-
 import functools
 import sys
 import types

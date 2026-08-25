@@ -5,8 +5,6 @@
 
 """Token-auth graph hover endpoint for shared dashboards."""
 
-from __future__ import annotations
-
 from typing import cast, override
 
 from cmk.gui.dashboard.api import GraphDashletConfig

@@ -5,8 +5,6 @@
 
 """WATO pages for viewing stored performance profiles and flamegraphs."""
 
-from __future__ import annotations
-
 import json
 import pstats
 import tempfile

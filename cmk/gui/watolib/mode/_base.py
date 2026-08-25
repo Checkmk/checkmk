@@ -66,7 +66,7 @@ class WatoMode[RequestOK](abc.ABC):
         return makeuri_contextless(request, get_vars, filename="wato.py")
 
     @classmethod
-    def parent_mode(cls) -> None | type["WatoMode"]:
+    def parent_mode(cls) -> None | type[WatoMode]:
         """Reference from a mode to it's parent mode to make the breadcrumb be able to render the
         hierarchy of modes"""
         return None

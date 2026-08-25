@@ -72,7 +72,7 @@ class RestSessionException(Exception):
 
 class UnexpectedResponse(RestSessionException):
     @classmethod
-    def from_response(cls, response: requests.Response) -> "UnexpectedResponse":
+    def from_response(cls, response: requests.Response) -> UnexpectedResponse:
         if 300 <= response.status_code < 400:
             text = f"Redirect to {response.headers['Location']}"
         else:
@@ -414,7 +414,7 @@ class ChangesAPI(BaseAPI):
             try:
                 path_parts = urllib.parse.urlparse(response.headers["Location"]).path.split("/")
                 return path_parts[path_parts.index("activation_run") + 1]
-            except (ValueError, IndexError):
+            except ValueError, IndexError:
                 raise ValueError(f"Failed to parse activation id from URL: {url}")
 
         response = self.session.post(

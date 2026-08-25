@@ -33,7 +33,7 @@ class UserPermissionSerializableConfig:
     @classmethod
     def from_global_config(
         cls, config: SupportsUserPermissionConfig
-    ) -> "UserPermissionSerializableConfig":
+    ) -> UserPermissionSerializableConfig:
         return cls(
             roles=config.roles,
             user_roles={user_id: user["roles"] for user_id, user in config.multisite_users.items()},
@@ -59,7 +59,7 @@ class UserPermissions:
     @classmethod
     def from_config(
         cls, config: SupportsUserPermissionConfig, permissions: Mapping[str, Permission]
-    ) -> "UserPermissions":
+    ) -> UserPermissions:
         return cls(
             roles=config.roles,
             permissions=permissions,
@@ -74,7 +74,7 @@ class UserPermissions:
         cls,
         serializable_config: UserPermissionSerializableConfig,
         permissions: Mapping[str, Permission],
-    ) -> "UserPermissions":
+    ) -> UserPermissions:
         return cls(
             roles=serializable_config.roles,
             permissions=permissions,

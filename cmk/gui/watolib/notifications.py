@@ -25,8 +25,6 @@ obj = NotificationRule.from_api_request(APINotificationRule)
 
 """
 
-from __future__ import annotations
-
 import pprint
 import uuid
 from collections.abc import Mapping

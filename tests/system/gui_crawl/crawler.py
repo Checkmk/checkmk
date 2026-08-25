@@ -49,7 +49,7 @@ class Progress:
         self.report_interval = report_interval
         self.next_report = 0.0
 
-    def __enter__(self) -> "Progress":
+    def __enter__(self) -> Progress:
         self.started = time.time()
         self.next_report = self.started + self.report_interval
         self.done_total = 0

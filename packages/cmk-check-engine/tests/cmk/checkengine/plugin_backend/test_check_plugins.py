@@ -81,7 +81,7 @@ def dummy_function_jj(section_jim, section_jill):
         ("", ValueError),
     ],
 )
-def test_invalid_service_name(string: str, exc_ty: type["TypeError"] | type["ValueError"]) -> None:
+def test_invalid_service_name(string: str, exc_ty: type[TypeError] | type[ValueError]) -> None:
     with pytest.raises(exc_ty):
         check_plugins._validate_service_name(CheckPluginName("test"), string)
 
@@ -168,7 +168,7 @@ def test_validate_function_args(  # type: ignore[misc]
     has_item: bool,
     has_params: bool,
     sections: list[ParsedSectionName],
-    raises: None | type["TypeError"],
+    raises: None | type[TypeError],
 ) -> None:
     if raises is None:
         validate_function_arguments(

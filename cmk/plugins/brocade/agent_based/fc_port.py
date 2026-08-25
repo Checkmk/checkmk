@@ -165,7 +165,7 @@ def check_fc_port(item: str, params: Mapping[str, Any], section: StringTable) ->
 
     try:
         wirespeed = float(portinfo[0][4]) * 1000.0  # speed in Bytes/sec
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         # let user specify assumed speed via check parameter, default is 16.0 Gbit/sec
         gbit = params.get("assumed_speed", 16.0)
         wirespeed = gbit * 1000.0 * 1000.0 * 1000.0 / 8.0  # in Bytes/sec

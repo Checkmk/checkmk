@@ -4,8 +4,6 @@
 
 """Shared helpers: URI reading, label/filename conversion, XML writing."""
 
-from __future__ import annotations
-
 import re
 import sys
 import xml.etree.ElementTree as ET

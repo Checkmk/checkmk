@@ -18,8 +18,6 @@ Resources and resourcegroups are all treated lowercase because of:
 https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
 """
 
-from __future__ import annotations
-
 import argparse
 import asyncio
 import contextlib
@@ -1577,7 +1575,7 @@ class AzureAsyncCache(DataCache):
                 LOGGER.debug(
                     "Cache file is empty, getting live data from cache: %(key)s", {"key": self._key}
                 )
-            except (OSError, ValueError):
+            except OSError, ValueError:
                 LOGGER.exception("Getting live data (failed to read from cache).")
                 if self.debug:
                     raise
@@ -1585,7 +1583,7 @@ class AzureAsyncCache(DataCache):
         live_data = await self.get_live_data(*args)
         try:
             await self._write_to_cache(live_data)
-        except (OSError, TypeError):
+        except OSError, TypeError:
             LOGGER.exception("Failed to write data to cache file")
             if self.debug:
                 raise

@@ -6,7 +6,6 @@
 # mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 import ast
 import dataclasses
@@ -1356,7 +1355,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                     SerializedResult(self._preview_store.read_obj(default=""))
                 ),
             )
-        except (FileNotFoundError, ValueError):
+        except FileNotFoundError, ValueError:
             return None
         finally:
             self._preview_store.path.unlink(missing_ok=True)

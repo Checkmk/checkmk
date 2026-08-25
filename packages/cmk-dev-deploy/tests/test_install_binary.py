@@ -4,8 +4,6 @@
 
 """Unit tests for bazel_builder helpers (binary install, bazel commands)."""
 
-from __future__ import annotations
-
 import os
 from pathlib import Path
 from unittest.mock import patch

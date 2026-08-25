@@ -234,14 +234,14 @@ def check_aws_elb_healthy_hosts(params: Mapping[str, Any], section: Section) -> 
     try:
         healthy_hosts = int(section["HealthyHostCount"])
         go_stale = False
-    except (KeyError, ValueError):
+    except KeyError, ValueError:
         healthy_hosts = None
 
     unhealthy_hosts: int | None
     try:
         unhealthy_hosts = int(section["UnHealthyHostCount"])
         go_stale = False
-    except (KeyError, ValueError):
+    except KeyError, ValueError:
         unhealthy_hosts = None
 
     if go_stale:

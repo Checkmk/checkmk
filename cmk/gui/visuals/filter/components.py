@@ -30,7 +30,7 @@ class BaseComponent(ABC):
 @dataclass(kw_only=True, slots=True)
 class HorizontalGroup(BaseComponent):
     component_type: Literal["horizontal_group"] = "horizontal_group"
-    components: list["FilterComponent"]
+    components: list[FilterComponent]
 
     def __post_init__(self) -> None:
         if not self.components:

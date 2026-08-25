@@ -41,7 +41,7 @@ _BROCADE_MLX_STATES: dict[int, tuple[State, str]] = {
 def _saveint(i: str) -> int:
     try:
         return int(i)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 

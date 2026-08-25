@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.source_paths (per-deployer path resolution)."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 from cmk.dev_deploy.execution.source_paths import resolve_source_paths

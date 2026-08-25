@@ -165,7 +165,7 @@ class ServiceAndNode:
     type: Literal["and"] = api_field(
         description="Logical AND: all children must match", example="and"
     )
-    children: Annotated[list["ServiceFilterNode"], MinLen(2)] = api_field(
+    children: Annotated[list[ServiceFilterNode], MinLen(2)] = api_field(
         description="Child filter nodes",
         example=[
             ServiceStringCondition(type="condition", field="name", op="contains", value="CPU"),
@@ -179,7 +179,7 @@ class ServiceOrNode:
     type: Literal["or"] = api_field(
         description="Logical OR: at least one child must match", example="or"
     )
-    children: Annotated[list["ServiceFilterNode"], MinLen(2)] = api_field(
+    children: Annotated[list[ServiceFilterNode], MinLen(2)] = api_field(
         description="Child filter nodes",
         example=[
             ServiceStringCondition(type="condition", field="name", op="contains", value="CPU"),
@@ -193,7 +193,7 @@ class ServiceNotNode:
     type: Literal["not"] = api_field(
         description="Logical NOT: the child must not match", example="not"
     )
-    child: "ServiceFilterNode" = api_field(description="Child filter node")
+    child: ServiceFilterNode = api_field(description="Child filter node")
 
 
 type ServiceFilterNode = ServiceAndNode | ServiceOrNode | ServiceNotNode | ServiceConditionNode

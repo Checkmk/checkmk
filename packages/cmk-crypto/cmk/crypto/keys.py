@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Public and private key types for asymmetric cryptography"""
 
-from __future__ import annotations
-
 from typing import assert_never, get_args, NewType, overload, override, TypeGuard
 
 import cryptography.exceptions

@@ -12,8 +12,6 @@
 Checkmk special agent for monitoring MobileIron devices.
 """
 
-from __future__ import annotations
-
 import argparse
 import enum
 import itertools

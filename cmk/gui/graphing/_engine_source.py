@@ -8,7 +8,6 @@
 # ingredients live beside it - perf-data parsing in _engine_perfdata, translation resolution in
 # _engine_translations, series alignment in _engine_series.
 
-from __future__ import annotations
 
 import contextlib
 from collections.abc import Iterator, Mapping, Sequence

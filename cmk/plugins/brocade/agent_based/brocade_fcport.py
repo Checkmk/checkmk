@@ -170,7 +170,7 @@ def parse_brocade_fcport(string_table: Sequence[StringTable]) -> Section | None:
 
     try:
         offset = int(if_info[0][0])
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return None
 
     isl_ports = dict(link_info)

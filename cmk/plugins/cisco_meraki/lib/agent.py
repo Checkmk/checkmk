@@ -8,8 +8,6 @@ Checkmk special agent for monitoring Cisco Meraki.
 """
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
-
 import argparse
 import json
 import sys

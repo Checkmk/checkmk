@@ -80,7 +80,7 @@ class PsInfo:
     )
 
     @classmethod
-    def from_raw(cls, raw: str) -> "PsInfo":
+    def from_raw(cls, raw: str) -> PsInfo:
         match = re.match(r"^\((.*)\)$", raw)
         if match is None:
             raise ValueError(raw)

@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from typing import override, TypedDict

@@ -9,8 +9,6 @@ Provides the abstract result type, the serialization wrapper, and the global
 registry that all concrete result modules register into.
 """
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from dataclasses import astuple, dataclass

@@ -93,7 +93,7 @@ def parse_ucd_mem(string_table: StringTable) -> Section | None:
     try:
         mem_total = _info_str_to_bytes(row[0])
         mem_avail = _info_str_to_bytes(row[1])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
 
     parsed = Section(

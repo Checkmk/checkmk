@@ -36,7 +36,7 @@ def juniper_bgp_state_create_item(peering_entry: str) -> str:
             return clean_v4_address(peering_entry)
         if len(peering_entry) == 16:
             return clean_v6_address(peering_entry)
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         pass
     return " ".join("%02X" % int(i) for i in peering_entry)  # that's what has been in the data
 

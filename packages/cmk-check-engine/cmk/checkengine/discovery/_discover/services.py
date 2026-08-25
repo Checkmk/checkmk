@@ -143,7 +143,7 @@ def discover_services(
                     )
                 }
             )
-        except (KeyboardInterrupt, MKTimeout):
+        except KeyboardInterrupt, MKTimeout:
             raise
         except Exception:
             if on_error is OnError.RAISE:

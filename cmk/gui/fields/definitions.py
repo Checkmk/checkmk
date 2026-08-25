@@ -231,7 +231,7 @@ class FolderField(base.String):
         try:
             return self.load_folder(x)
         # I added MKGeneralException during a refactoring, but I did not check if it is needed.
-        except (MKException, MKGeneralException):
+        except MKException, MKGeneralException:
             if x:
                 raise self.make_error("not_found", folder_id=x)
         return None
@@ -449,7 +449,7 @@ def column_field(
     required: bool = False,
     mandatory: list[ColumnTypes] | None = None,
     default: list[Column] | None = None,
-) -> "_ListOfColumns":
+) -> _ListOfColumns:
     column_names: list[str] = []
     if mandatory is not None:
         for col in mandatory:

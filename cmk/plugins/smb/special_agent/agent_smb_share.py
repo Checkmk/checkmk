@@ -250,7 +250,7 @@ def connect(
     try:
         LOGGER.debug("Connecting to %(ip_address)s on port 445", {"ip_address": ip_address})
         success = conn.connect(ip_address, 445)
-    except (OSError, NotConnectedError):
+    except OSError, NotConnectedError:
         raise SMBShareAgentError(
             "Could not connect to the remote host. Check your ip address and remote name."
         )

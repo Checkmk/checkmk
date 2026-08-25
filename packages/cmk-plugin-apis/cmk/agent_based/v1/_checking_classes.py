@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for check plug-ins"""
 
-from __future__ import annotations
-
 import enum
 import sys
 from collections.abc import Iterable, Mapping, Sequence

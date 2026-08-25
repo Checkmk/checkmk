@@ -51,18 +51,18 @@ def parse_wmi_cpuload(string_table: StringTable) -> Section | None:
         load = wmi_tables["system_perf"].get(0, "ProcessorQueueLength")
         timestamp = get_wmi_time(wmi_tables["system_perf"], 0, raise_on_timeout=True)
         computer_system = wmi_tables["computer_system"]
-    except (KeyError, WMIQueryTimeoutError):
+    except KeyError, WMIQueryTimeoutError:
         return None
     assert load
 
     try:
         n_cores = computer_system.get(0, "NumberOfLogicalProcessors", raise_on_timeout=True)
         processor_type = ProcessorType.logical
-    except (KeyError, WMIQueryTimeoutError):
+    except KeyError, WMIQueryTimeoutError:
         try:
             n_cores = computer_system.get(0, "NumberOfProcessors", raise_on_timeout=True)
             processor_type = ProcessorType.physical
-        except (KeyError, WMIQueryTimeoutError):
+        except KeyError, WMIQueryTimeoutError:
             return None
 
     # NumberOfLogicalProcessors can be an empty string, not sure why

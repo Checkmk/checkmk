@@ -18,8 +18,6 @@ See Also:
 
 """
 
-from __future__ import annotations
-
 import abc
 from collections.abc import Callable, Iterable
 from typing import Final, final, Generic, NoReturn, override, TypeVar

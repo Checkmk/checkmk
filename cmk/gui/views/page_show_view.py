@@ -8,8 +8,6 @@
 
 """Display a table view"""
 
-from __future__ import annotations
-
 import contextlib
 import functools
 from collections.abc import Callable, Iterable, Mapping, Sequence

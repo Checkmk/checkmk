@@ -128,7 +128,7 @@ def get_dashboard_auth_token(
     try:
         with edit_dashboard_auth_token(dashboard, token_store) as (token, _details):
             return token
-    except (DashboardTokenNotFound, InvalidDashboardTokenReference):
+    except DashboardTokenNotFound, InvalidDashboardTokenReference:
         return None
 
 

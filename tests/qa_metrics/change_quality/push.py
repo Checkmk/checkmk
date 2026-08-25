@@ -16,8 +16,6 @@ Run as a module to keep absolute imports working::
     python -m tests.qa_metrics.change_quality.push --repo <path> --branch <name>
 """
 
-from __future__ import annotations
-
 import argparse
 import csv
 import dataclasses

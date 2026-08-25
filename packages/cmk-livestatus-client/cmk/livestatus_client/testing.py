@@ -14,8 +14,6 @@ have any friction during testing with these helpers themselves.
 
 """
 
-from __future__ import annotations
-
 import collections
 import datetime as dt
 import io

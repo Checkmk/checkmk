@@ -36,7 +36,7 @@ class ReadyCount:
         control_plane_roles: Sequence[str],
         worker_node_roles: Sequence[str],
         section: NodeCount,
-    ) -> tuple["ReadyCount", "ReadyCount"]:
+    ) -> tuple[ReadyCount, ReadyCount]:
         w_nodes = []
         cp_nodes = []
         for node in section.nodes:

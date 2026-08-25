@@ -102,7 +102,7 @@ def parse_splunk_health(string_table: StringTable) -> HealthSection:
                 case (raw_name, feature_name, health):
                     name = format_service_name(raw_name)
                     registry[name].add_feature_health(feature_name, HealthStatus(health))
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             continue
 
     return list(registry.values())

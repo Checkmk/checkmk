@@ -66,7 +66,7 @@ def netrc_credentials() -> tuple[str, str]:
     """
     try:
         authenticators = netrc.netrc().authenticators(GERRIT_HOST)
-    except (FileNotFoundError, netrc.NetrcParseError):
+    except FileNotFoundError, netrc.NetrcParseError:
         return "", ""
     if authenticators is None:
         return "", ""

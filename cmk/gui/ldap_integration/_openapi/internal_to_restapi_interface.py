@@ -7,7 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, cast, get_args, Literal, TypedDict

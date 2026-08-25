@@ -14,8 +14,6 @@ Storage: ``$XDG_CACHE_HOME/cmk-dev-deploy/diagnostics/`` (defaults to
 deploy data so bundles survive ``--purge`` and ``--full`` operations.
 """
 
-from __future__ import annotations
-
 import contextlib
 import json
 import os
@@ -122,7 +120,7 @@ def _get_tool_version() -> str:
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         pass
     return "unknown"
 
@@ -146,7 +144,7 @@ def _collect_environment(repo_root: Path | None) -> dict[str, object]:
         )
         if result.returncode == 0:
             env["bazel_version"] = result.stdout.strip()
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         env["bazel_version"] = "unavailable"
 
     # Git info
@@ -186,7 +184,7 @@ def _collect_environment(repo_root: Path | None) -> dict[str, object]:
                 env["git_dirty_count"] = len(
                     [line for line in dirty.stdout.strip().splitlines() if line]
                 )
-        except (subprocess.TimeoutExpired, OSError):
+        except subprocess.TimeoutExpired, OSError:
             pass
 
     return env
@@ -214,7 +212,7 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
             ob = result.stdout.strip()
             state["output_base"] = ob
             state["output_base_exists"] = Path(ob).is_dir()
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         state["output_base"] = "unavailable (bazel info timed out)"
 
     # Get execution root
@@ -229,7 +227,7 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
         )
         if result.returncode == 0:
             state["execution_root_exists"] = Path(result.stdout.strip()).is_dir()
-    except (subprocess.TimeoutExpired, OSError):
+    except subprocess.TimeoutExpired, OSError:
         pass
 
     # Check bazel-bin exists
@@ -257,9 +255,9 @@ def _collect_bazel_state(repo_root: Path | None) -> dict[str, object]:
                         if line.startswith("VmRSS:"):
                             state["server_memory_kb"] = int(line.split()[1])
                             break
-            except (OSError, ValueError, IndexError):
+            except OSError, ValueError, IndexError:
                 pass
-    except (subprocess.TimeoutExpired, OSError, ValueError):
+    except subprocess.TimeoutExpired, OSError, ValueError:
         pass
 
     return state
@@ -296,7 +294,7 @@ def _collect_manifest_state() -> dict[str, object]:
                 state["manifest_spec_count"] = {
                     k: len(v) for k, v in data.items() if isinstance(v, list)
                 }
-        except (OSError, json.JSONDecodeError):
+        except OSError, json.JSONDecodeError:
             pass
     return state
 

@@ -53,7 +53,7 @@ def check_mongodb_flushing(params: Mapping[str, Any], section: StringTable) -> C
         last_ms = float(info_dict["last_ms"])
         avg_flush_time = float(info_dict["average_ms"]) / 1000.0
         flushed = int(info_dict["flushed"])
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         yield Result(
             state=State.UNKNOWN,
             summary="Invalid data: last_ms: {}, average_ms: {}, flushed:{}".format(

@@ -9,8 +9,6 @@ Groups all types that revolve around discovering services/host-labels and
 managing autochecks, including the shared DiscoveryReport serialization helpers.
 """
 
-from __future__ import annotations
-
 import json
 from ast import literal_eval
 from collections.abc import Container, Mapping, Sequence

@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-from __future__ import annotations
 
 import abc
 import random

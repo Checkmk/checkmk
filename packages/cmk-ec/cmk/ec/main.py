@@ -12,7 +12,6 @@
 # creating objects. Or at least update the documentation. It is not clear
 # which fields are mandatory for the events.
 
-from __future__ import annotations
 
 import abc
 import ast
@@ -552,7 +551,7 @@ class EventServer(ECServerThread):
                     try:
                         self._logger.info("Trying to enable ipv6 dualstack for syslog-udp...")
                         self._syslog_udp.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
-                    except (AttributeError, OSError):
+                    except AttributeError, OSError:
                         self._logger.info(
                             "ipv6 dualstack failed. Continuing in ipv6-only mode for syslog-udp"
                         )
@@ -596,7 +595,7 @@ class EventServer(ECServerThread):
                     try:
                         self._logger.info("Trying to enable ipv6 dualstack for syslog-tcp...")
                         self._syslog_tcp.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
-                    except (AttributeError, OSError):
+                    except AttributeError, OSError:
                         self._logger.info(
                             "ipv6 dualstack failed. Continuing in ipv6-only mode for syslog-tcp"
                         )
@@ -643,7 +642,7 @@ class EventServer(ECServerThread):
                         self._snmp_trap_socket.setsockopt(
                             socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0
                         )
-                    except (AttributeError, OSError):
+                    except AttributeError, OSError:
                         self._logger.info(
                             "ipv6 dualstack failed. Continuing in ipv6-only mode for snmptrap"
                         )
@@ -2111,7 +2110,7 @@ class StatusServer(ECServerThread):
                     try:
                         self._logger.info("Trying to enable ipv6 dualstack for tcp socket...")
                         self._tcp_socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
-                    except (AttributeError, OSError):
+                    except AttributeError, OSError:
                         self._logger.info(
                             "ipv6 dualstack failed. Continuing in ipv6-only mode for tcp socket"
                         )

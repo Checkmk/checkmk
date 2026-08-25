@@ -61,7 +61,7 @@ def _uuid_crash_dirs(type_dir: Path) -> Iterator[Path]:
     for p in type_dir.iterdir():
         try:
             uuid.UUID(str(p.name))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             continue
         if p.is_dir():
             yield p

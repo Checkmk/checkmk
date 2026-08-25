@@ -26,7 +26,7 @@ class Section:
     power: int
 
     @classmethod
-    def from_row(cls, row: Sequence[str]) -> "Section":
+    def from_row(cls, row: Sequence[str]) -> Section:
         return cls(system=int(row[0]), power=int(row[1]))
 
 

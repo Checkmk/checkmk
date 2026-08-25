@@ -15,8 +15,6 @@ leftover overlay mount or deploy state from an older cmk-dev-deploy is
 detected and refused with manual recovery instructions.
 """
 
-from __future__ import annotations
-
 import dataclasses
 from pathlib import Path
 from typing import ClassVar, Protocol

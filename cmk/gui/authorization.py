@@ -5,8 +5,6 @@
 
 """Scope-derived narrowing of what an authenticated request may do."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import ClassVar, Final
@@ -81,7 +79,7 @@ def request_authorization() -> Authorization:
     try:
         # flask types this as its own session class; `authorization` is on ours.
         authorization = flask.session.authorization  # type: ignore[attr-defined]
-    except (RuntimeError, AttributeError):
+    except RuntimeError, AttributeError:
         # Expected for background jobs, cron, CLI, ...
         return Authorization.UNRESTRICTED
     assert isinstance(authorization, Authorization)

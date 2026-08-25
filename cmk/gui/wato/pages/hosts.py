@@ -1044,7 +1044,7 @@ class CreateHostMode(ABCHostMode):
                 request.get_ascii_input_mandatory(self.VAR_HOST)
             )
             hostname = HostName(hostname)
-        except (MKUserError, ValueError):
+        except MKUserError, ValueError:
             hostname = HostName("")
 
         Hostname().validate_value(request.get_ascii_input_mandatory(self.VAR_HOST), self.VAR_HOST)
@@ -1137,7 +1137,7 @@ class ModeCreateHost(CreateHostMode):
                 request.get_ascii_input_mandatory(cls.VAR_HOST)
             )
             host_name = HostName(host_name)
-        except (MKUserError, ValueError):
+        except MKUserError, ValueError:
             host_name = HostName("")
         tree = folder_tree()
         if prefill := request.get_ascii_input("prefill"):

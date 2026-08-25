@@ -9,7 +9,6 @@
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import contextlib
 import copy
@@ -955,7 +954,7 @@ class ServiceDependsOn:
                         try:
                             item = matchobject.groups()[-1]
                             deps.append(depname % item)
-                        except (IndexError, TypeError):
+                        except IndexError, TypeError:
                             deps.append(depname)
         return deps
 

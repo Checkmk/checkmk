@@ -37,7 +37,7 @@ def parse(string_table: StringTable) -> Section:
 
             parsed.append(SplunkMessage(name, severity, server, timeCreated_iso, message))
 
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             pass
     return parsed
 

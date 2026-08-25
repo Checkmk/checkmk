@@ -2452,7 +2452,7 @@ def _lookup_plugin[PluginName: (CheckPluginName, InventoryPluginName)](
 
 
 def _extract_plugin_selection[PluginName: (CheckPluginName, InventoryPluginName)](
-    options: "_CheckingOptions | _DiscoveryOptions | _InventoryOptions",
+    options: _CheckingOptions | _DiscoveryOptions | _InventoryOptions,
     plugins: Mapping[PluginName, CheckPlugin | InventoryPlugin],
     sections: Iterable[AgentSectionPlugin | SNMPSectionPlugin],
     type_: type[PluginName],
@@ -3634,7 +3634,7 @@ def _mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, ob
         process_hosts: Container[HostName] = {
             HostName(name) for name, state in response if state == 0
         }
-    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
+    except livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError:
         process_hosts = EVERYTHING
 
     section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})

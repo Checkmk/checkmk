@@ -693,7 +693,7 @@ class PrometheusResult(BaseModel):
     details: str | None = None
 
     @classmethod
-    def from_response(cls, response: query.HTTPResponse) -> "PrometheusResult":
+    def from_response(cls, response: query.HTTPResponse) -> PrometheusResult:
         query_, result = response
         type_, details = cls._from_result(result)
         return cls(query_=query_, type_=type_, details=details)

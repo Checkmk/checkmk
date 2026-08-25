@@ -34,7 +34,7 @@ from cmk.gui.watolib.audit_log import log_audit
 var_dir = str(cmk.utils.paths.var_dir) + "/wato/"
 snapshot_dir = var_dir + "snapshots/"
 
-backup_domains: dict[str, "DomainSpec"] = {}
+backup_domains: dict[str, DomainSpec] = {}
 
 
 class DomainSpec(TypedDict):
@@ -495,7 +495,7 @@ def _file_exists_in_tar(the_tarfile: bytes, filename: str) -> bool:
     try:
         with tar_archive.open_bytes_streaming(the_tarfile, compression="*") as tar:
             return any(member.name == filename for member in tar)
-    except (tarfile.TarError, OSError, EOFError):
+    except tarfile.TarError, OSError, EOFError:
         return False
 
 

@@ -5,8 +5,6 @@
 
 """SARIF (Static Analysis Results Interchange Format) output for astrein."""
 
-from __future__ import annotations
-
 import json
 from collections.abc import Sequence
 

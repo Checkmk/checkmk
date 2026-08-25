@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
 def _saveint(value: str) -> int:
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 

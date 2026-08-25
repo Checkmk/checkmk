@@ -38,7 +38,7 @@ class ApiOmitted:
     """
 
     __slots__ = ()
-    _instance: ClassVar["ApiOmitted | None"] = None
+    _instance: ClassVar[ApiOmitted | None] = None
 
     @classmethod
     def __get_pydantic_core_schema__(
@@ -52,7 +52,7 @@ class ApiOmitted:
     ) -> NoReturn:
         raise PydanticOmit
 
-    def __new__(cls, *args: object, **kwargs: object) -> "ApiOmitted":
+    def __new__(cls, *args: object, **kwargs: object) -> ApiOmitted:
         # Singleton pattern to ensure only one instance of ApiOmitted exists
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -66,7 +66,7 @@ class ApiOmitted:
         return False
 
     @staticmethod
-    def to_optional[T](value: "T | ApiOmitted") -> T | None:
+    def to_optional[T](value: T | ApiOmitted) -> T | None:
         """Convert a value to None if it is ApiOmitted, otherwise return the value."""
         if isinstance(value, ApiOmitted):
             return None

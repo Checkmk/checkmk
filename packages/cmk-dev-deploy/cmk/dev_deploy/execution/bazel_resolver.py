@@ -14,8 +14,6 @@ are resolved. Python fast-path files are excluded -- they are handled by
 :mod:`cmk.dev_deploy.deployers.wheel_deployer` without Bazel.
 """
 
-from __future__ import annotations
-
 import time
 
 from cmk.dev_deploy.manifest.reader import (

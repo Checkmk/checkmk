@@ -888,9 +888,9 @@ class PerftestPlot:
         try:
             with open(json_path, encoding="utf-8") as statistics_file:
                 return json.load(statistics_file)
-        except (FileNotFoundError, PermissionError):
+        except FileNotFoundError, PermissionError:
             logger.exception('File "%s" not found!', json_path)
-        except (json.JSONDecodeError, OSError):
+        except json.JSONDecodeError, OSError:
             logger.exception('Can not parse JSON file "%s"!', json_path)
         return None
 
@@ -923,7 +923,7 @@ class PerftestPlot:
                 getenv(self.args.jira_token_var)
                 or Path(self.args.jira_token_path).read_text().split("\n")[0]
             )
-        except (OSError, TypeError):
+        except OSError, TypeError:
             jira_token = None
         return jira_token
 

@@ -94,7 +94,7 @@ def parse_f5_bigip_vserver(string_table):
         ]:
             try:
                 value = int(line[index]) * factor
-            except (IndexError, ValueError):
+            except IndexError, ValueError:
                 continue
             instance.setdefault(key, []).append(value)
     return vservers

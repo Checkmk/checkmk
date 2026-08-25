@@ -10,7 +10,6 @@
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field

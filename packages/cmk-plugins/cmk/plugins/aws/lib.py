@@ -286,7 +286,7 @@ def extract_metric_value(row_values: list, convert_sum_stats_to_rate: bool) -> A
         if convert_sum_stats_to_rate and time_period is not None:
             return value / time_period
         return value
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
 
 
@@ -600,7 +600,7 @@ class LambdaInsightMetrics:
     max_init_duration_seconds: float | None = None
 
     @staticmethod
-    def from_metrics(query_stats: LambdaQueryStats) -> "LambdaInsightMetrics":
+    def from_metrics(query_stats: LambdaQueryStats) -> LambdaInsightMetrics:
         max_memory_used_bytes: float
         count_cold_starts: int
         count_invocations: int

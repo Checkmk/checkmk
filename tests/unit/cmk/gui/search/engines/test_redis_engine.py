@@ -211,7 +211,7 @@ def fixture_match_item_generator_registry() -> MatchItemGeneratorRegistry:
 
 
 @pytest.fixture(name="clean_redis_client")
-def fixture_clean_redis_client() -> "Redis":
+def fixture_clean_redis_client() -> Redis:
     client = FakeRedis(decode_responses=True)
     client.flushall()
     return client
@@ -220,7 +220,7 @@ def fixture_clean_redis_client() -> "Redis":
 @pytest.fixture(name="index_builder")
 def fixture_index_builder(
     match_item_generator_registry: MatchItemGeneratorRegistry,
-    clean_redis_client: "Redis",
+    clean_redis_client: Redis,
 ) -> IndexBuilder:
     return IndexBuilder(match_item_generator_registry, clean_redis_client)
 
@@ -238,7 +238,7 @@ def fixture_permissions_handler() -> SearchPermissionsHandler:
 @pytest.fixture(name="index_searcher")
 def fixture_index_searcher(
     config: Config,
-    clean_redis_client: "Redis",
+    clean_redis_client: Redis,
     permissions_handler: SearchPermissionsHandler,
 ) -> IndexSearcher:
     return IndexSearcher(config, clean_redis_client, permissions_handler)
@@ -248,7 +248,7 @@ class TestIndexBuilder:
     @pytest.mark.usefixtures("with_admin_login")
     def test_update_only_not_built(
         self,
-        clean_redis_client: "Redis",
+        clean_redis_client: Redis,
         index_builder: IndexBuilder,
     ) -> None:
         index_builder.build_changed_sub_indices(["something"], UserPermissions({}, {}, {}, []))
@@ -367,7 +367,7 @@ class TestIndexSearcher:
     def test_search_no_index(
         self,
         config: Config,
-        clean_redis_client: "Redis",
+        clean_redis_client: Redis,
         permissions_handler: SearchPermissionsHandler,
         mocker: MockerFixture,
     ) -> None:
@@ -479,7 +479,7 @@ class TestRealisticSearch:
         )
 
     @pytest.fixture()
-    def real_index_builder(self, clean_redis_client: "Redis") -> IndexBuilder:
+    def real_index_builder(self, clean_redis_client: Redis) -> IndexBuilder:
         from cmk.gui.search.matchers import match_item_generator_registry
 
         return IndexBuilder(match_item_generator_registry, clean_redis_client)
@@ -495,7 +495,7 @@ class TestRealisticSearch:
     def test_real_search_without_exception(
         self,
         real_index_builder: IndexBuilder,
-        clean_redis_client: "Redis",
+        clean_redis_client: Redis,
         index_searcher: IndexSearcher,
     ) -> None:
         real_index_builder.build_full_index(UserPermissions({}, {}, {}, []))
@@ -625,7 +625,7 @@ def fixture_patched_registry(
 
 class TestIndexSearcherConstruction:
     def test_an_unreachable_redis_server_is_reported(
-        self, config: Config, clean_redis_client: "Redis", monkeypatch: MonkeyPatch
+        self, config: Config, clean_redis_client: Redis, monkeypatch: MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
             cmk.gui.search._engines._redis, "redis_server_reachable", lambda _client: False
@@ -651,7 +651,7 @@ class TestSearchCategoryFiltering:
 
     @pytest.mark.usefixtures("with_admin_login", "built_index")
     def test_a_category_the_user_may_not_see_is_not_searched(
-        self, config: Config, clean_redis_client: "Redis", index_searcher: IndexSearcher
+        self, config: Config, clean_redis_client: Redis, index_searcher: IndexSearcher
     ) -> None:
         assert list(index_searcher.search("**")) != []
         searcher = IndexSearcher(config, clean_redis_client, _DenyAllPermissionsHandler())
@@ -666,7 +666,7 @@ class TestProcessUpdateRequests:
 
     @pytest.mark.usefixtures("with_admin_login", "patched_registry")
     def test_a_rebuild_request_builds_the_whole_index(
-        self, job_interface: _JobInterface, clean_redis_client: "Redis"
+        self, job_interface: _JobInterface, clean_redis_client: Redis
     ) -> None:
         _process_update_requests(
             self._requests(rebuild=True),
@@ -680,7 +680,7 @@ class TestProcessUpdateRequests:
 
     @pytest.mark.usefixtures("with_admin_login", "patched_registry")
     def test_a_missing_index_is_built_from_scratch(
-        self, job_interface: _JobInterface, clean_redis_client: "Redis"
+        self, job_interface: _JobInterface, clean_redis_client: Redis
     ) -> None:
         # An update request can only be answered against an existing index, so the job
         # falls back to a full build instead of silently doing nothing.
@@ -699,7 +699,7 @@ class TestProcessUpdateRequests:
         self,
         job_interface: _JobInterface,
         index_builder: IndexBuilder,
-        clean_redis_client: "Redis",
+        clean_redis_client: Redis,
     ) -> None:
         index_builder.build_full_index(UserPermissions({}, {}, {}, []))
 
@@ -719,7 +719,7 @@ class TestRedisSearchEngine:
     @staticmethod
     def fixture_engine(
         config: Config,
-        clean_redis_client: "Redis",
+        clean_redis_client: Redis,
         permissions_handler: SearchPermissionsHandler,
     ) -> RedisSearchEngine:
         return RedisSearchEngine(

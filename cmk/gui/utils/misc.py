@@ -14,7 +14,7 @@ from typing import Any
 def savefloat(f: Any) -> float:
     try:
         return float(f)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0.0
 
 
@@ -23,7 +23,7 @@ def savefloat(f: Any) -> float:
 def saveint(x: Any) -> int:
     try:
         return int(x)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 

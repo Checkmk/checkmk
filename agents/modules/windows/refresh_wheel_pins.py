@@ -23,8 +23,6 @@ matches the one the build action installs with:
 ``--check`` exits non-zero if the on-disk lock is stale (for CI).
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import os

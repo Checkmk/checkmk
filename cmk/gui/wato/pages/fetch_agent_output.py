@@ -99,7 +99,7 @@ class FetchAgentOutputRequest:
         *,
         default_debug: bool,
         default_snmp_walk_download_timeout: int,
-    ) -> "FetchAgentOutputRequest":
+    ) -> FetchAgentOutputRequest:
         host_name = serialized["host_name"]
         assert isinstance(host_name, str)
         host = folder_tree().host(HostName(host_name))
@@ -402,7 +402,7 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
     @classmethod
     def from_api_request(
         cls, api_request: FetchAgentOutputRequest
-    ) -> "FetchAgentOutputBackgroundJob":
+    ) -> FetchAgentOutputBackgroundJob:
         return cls(api_request.host.site_id(), api_request.host.name(), api_request.agent_type)
 
     @classmethod

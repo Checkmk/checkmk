@@ -14,8 +14,6 @@ Callers pass site identity and config; this module has no knowledge of global.mk
 ConfigDomain settings, or OMD paths. Those are wired by the CLI.
 """
 
-from __future__ import annotations
-
 import enum
 import logging
 from collections import defaultdict

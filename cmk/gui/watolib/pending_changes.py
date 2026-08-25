@@ -72,15 +72,15 @@ class ChangeScope:
     explicit_sites: frozenset[SiteId] = frozenset()
 
     @classmethod
-    def all_activation_sites(cls) -> "ChangeScope":
+    def all_activation_sites(cls) -> ChangeScope:
         return cls(kind=_ScopeKind.ALL_ACTIVATION_SITES)
 
     @classmethod
-    def sites(cls, site_ids: Iterable[SiteId]) -> "ChangeScope":
+    def sites(cls, site_ids: Iterable[SiteId]) -> ChangeScope:
         return cls(kind=_ScopeKind.EXPLICIT_SITES, explicit_sites=frozenset(site_ids))
 
     @classmethod
-    def local_site(cls) -> "ChangeScope":
+    def local_site(cls) -> ChangeScope:
         return cls(kind=_ScopeKind.LOCAL_SITE)
 
 

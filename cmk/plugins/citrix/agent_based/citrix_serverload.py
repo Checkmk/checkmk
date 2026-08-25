@@ -37,7 +37,7 @@ def discover_citrix_serverload(section: StringTable) -> DiscoveryResult:
 def check_citrix_serverload(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     try:
         load = int(section[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return
 
     if load == 20000:

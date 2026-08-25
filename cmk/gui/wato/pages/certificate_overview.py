@@ -80,7 +80,7 @@ class CertificateView:
         }
 
     @classmethod
-    def load(cls, path: Path, purpose: str | None = None) -> "CertificateView":
+    def load(cls, path: Path, purpose: str | None = None) -> CertificateView:
         cert = Certificate.load_pem(CertificatePEM(path.read_bytes()))
         return cls(
             subject=cert.subject,

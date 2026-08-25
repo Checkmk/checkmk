@@ -199,7 +199,7 @@ def _get_query_responses(connection: FritzConnection, debug: bool) -> Iterator[U
         except requests.exceptions.ConnectionError as exc:
             sys.stderr.write(f"{exc}\n")
             raise
-        except (ValueError, requests.exceptions.HTTPError):
+        except ValueError, requests.exceptions.HTTPError:
             if debug:
                 raise
             continue

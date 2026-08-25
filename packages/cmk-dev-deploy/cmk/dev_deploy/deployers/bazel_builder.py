@@ -8,8 +8,6 @@ Invokes ``bazel build``, locates output artifacts, installs them to the OMD
 site with correct permissions, and applies post-install fixups.
 """
 
-from __future__ import annotations
-
 import contextlib
 import os
 import shutil

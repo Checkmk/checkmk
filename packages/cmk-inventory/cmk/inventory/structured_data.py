@@ -10,8 +10,6 @@ This module handles tree structures for HW/SW Inventory system and
 structured monitoring data of Check_MK.
 """
 
-from __future__ import annotations
-
 import ast
 import contextlib
 import gzip
@@ -1890,7 +1888,7 @@ class InventoryStore:
                 self.inv_paths.archive_host(host_name).iterdir(),
                 key=lambda fp: int(fp.with_suffix("").name),
             )
-        except (FileNotFoundError, ValueError):
+        except FileNotFoundError, ValueError:
             return ImmutableTree()
 
         return _load_tree_from_tree_path(

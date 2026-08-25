@@ -126,7 +126,7 @@ def _parse_site_data(
         _, version = _get_varname_value(data[starting_index + 1][0])
         _, value = _get_varname_value(data[starting_index + 2][0])
         updated = int(value.split()[0])
-    except (NoLineToParse, IndexError):
+    except NoLineToParse, IndexError:
         # spooler in error
         version = updated = None
 
@@ -170,7 +170,7 @@ def _get_spool(index: int, data: list[list[str]]) -> tuple[int, Spool]:
     def _split_parse_date(value: str) -> int | None:
         try:
             return int(value.split(maxsplit=1)[0])
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             return None
 
     keys = ["Count", "Oldest", "Youngest"]
@@ -193,7 +193,7 @@ def parse_mknotifyd(
 ) -> MkNotifySection:
     try:
         timestamp, data = float(string_table[0][0]), string_table[1:]
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         timestamp, data = time.time(), string_table
 
     sites: dict[str, Site] = {}

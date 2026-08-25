@@ -10,8 +10,6 @@
 
 """Mode for managing sites"""
 
-from __future__ import annotations
-
 import socket
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping
@@ -1872,7 +1870,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             connection_status = check_remote_connection(
                 omd_root, remote_host, remote_port, remote_site_id
             )
-        except (MKTerminate, MKTimeout):
+        except MKTerminate, MKTimeout:
             raise
         except Exception as e:
             return StaticIcon(IconNames.alert), _("Unknown error: %(e)s") % {"e": e}

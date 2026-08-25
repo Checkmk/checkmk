@@ -159,7 +159,7 @@ class HPMSAConnection:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self._login(username, password)
 
-    def __enter__(self) -> "HPMSAConnection":
+    def __enter__(self) -> HPMSAConnection:
         return self
 
     def __exit__(self, *args: object) -> None:
@@ -168,7 +168,7 @@ class HPMSAConnection:
     def _login(self, username: str, password: str) -> None:
         try:
             session_key = self._get_session_key(hashlib.sha256, username, password)
-        except (requests.exceptions.ConnectionError, AuthError):
+        except requests.exceptions.ConnectionError, AuthError:
             LOGGER.warning("Could not connect via /api/, retry with /v3/api.")
             self._base_url = f"https://{self._host}/v3/api/"
             session_key = self._get_session_key(hashlib.md5, username, password)

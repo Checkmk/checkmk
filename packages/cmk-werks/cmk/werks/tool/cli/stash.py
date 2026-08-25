@@ -23,7 +23,7 @@ class Stash(BaseModel):
         """
         return len(self.ids)
 
-    def pick_id(self) -> "WerkId":
+    def pick_id(self) -> WerkId:
         """
         the id will still be in the stash, but it could be freed next.
         """
@@ -32,7 +32,7 @@ class Stash(BaseModel):
         except (KeyError, IndexError) as e:
             raise RuntimeError("You have no Werk IDs in your stash.") from e
 
-    def free_id(self, werk_id: "WerkId") -> None:
+    def free_id(self, werk_id: WerkId) -> None:
         """
         remove id from stash
         """
@@ -50,7 +50,7 @@ class Stash(BaseModel):
         if not removed:
             raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")
 
-    def add_ids(self, werk_ids: Sequence["WerkId"]) -> None:
+    def add_ids(self, werk_ids: Sequence[WerkId]) -> None:
         """
         put a id into the stash
         """
@@ -67,7 +67,7 @@ class LegacyStash(BaseModel):
         """
         return sum(len(ids) for ids in self.ids_by_project.values())
 
-    def pick_id(self, *, project: str) -> "WerkId":
+    def pick_id(self, *, project: str) -> WerkId:
         """
         the id will still be in the stash, but it could be freed next.
         """
@@ -79,7 +79,7 @@ class LegacyStash(BaseModel):
                 "mechanism, which reserves werk IDs on the fly during 'werk new'."
             ) from e
 
-    def free_id(self, werk_id: "WerkId") -> None:
+    def free_id(self, werk_id: WerkId) -> None:
         """
         remove id from stash
         """
@@ -98,7 +98,7 @@ class LegacyStash(BaseModel):
         if not removed:
             raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")
 
-    def add_id(self, werk_id: "WerkId", *, project: str) -> None:
+    def add_id(self, werk_id: WerkId, *, project: str) -> None:
         """
         put a id into the stash
         """

@@ -1324,7 +1324,7 @@ def fetch_extra_interface_counters(connection: ESXConnection, opt: argparse.Name
         bandwidth = get_pattern("</driver><linkSpeed><speedMb>(.*?)</speedMb>", bandwidth_block)
         try:
             net_extra_info.append(f"net.bandwidth|{device}|{int(bandwidth[0]) * 1000000}|bytes")
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             net_extra_info.append("net.state|%s|2|state" % device)
         else:
             net_extra_info.append("net.state|%s|1|state" % device)
@@ -1746,7 +1746,7 @@ def get_systemtime(connection: ESXConnection, debug: bool) -> float | None:
     try:
         response = connection.query_server("systemtime")
         raw_systime = get_pattern("<returnval>(.*)</returnval>", response)[0]
-    except (IndexError, Exception):
+    except IndexError, Exception:
         if debug:
             raise
         return None

@@ -9,8 +9,6 @@ Both tables are declared in the shared ``schema.sql``; the two ``Table`` binding
 point at the same file, so applying either one's schema creates both.
 """
 
-from __future__ import annotations
-
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path

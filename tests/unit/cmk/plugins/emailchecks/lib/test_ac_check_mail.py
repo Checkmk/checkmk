@@ -154,7 +154,7 @@ def test_cleanup_not_called_on_empty_mailbox() -> None:
     """
 
     class StubConnection:
-        def __enter__(self) -> "StubConnection":
+        def __enter__(self) -> StubConnection:
             return self
 
         def __exit__(self, *args: object) -> None:

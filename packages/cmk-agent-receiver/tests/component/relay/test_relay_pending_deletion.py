@@ -5,8 +5,6 @@
 
 """Component tests for relay behavior during PENDING_DELETION state."""
 
-from __future__ import annotations
-
 import base64
 import logging
 import secrets

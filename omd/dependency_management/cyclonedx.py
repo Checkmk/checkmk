@@ -103,7 +103,7 @@ class LicenseInfo:
     id_: SPDXId
     text: str | None
 
-    def merge(self, other: Self) -> "LicenseInfo":
+    def merge(self, other: Self) -> LicenseInfo:
         if self.id_ != other.id_:
             raise ValueError(f"Conflicting license ids: {self.id_!r} != {other.id_!r}")
         return LicenseInfo(

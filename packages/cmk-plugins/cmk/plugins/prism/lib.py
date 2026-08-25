@@ -33,5 +33,5 @@ PRISM_POWER_STATES = {
 def load_json(string_table: StringTable) -> PrismAPIData:
     try:
         return json.loads(string_table[0][0])
-    except (IndexError, json.decoder.JSONDecodeError):
+    except IndexError, json.decoder.JSONDecodeError:
         return {}

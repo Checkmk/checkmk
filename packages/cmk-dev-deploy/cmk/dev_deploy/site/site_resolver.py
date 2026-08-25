@@ -4,8 +4,6 @@
 
 """Site detection and validation for cmk-dev-deploy."""
 
-from __future__ import annotations
-
 import os
 import pwd
 import subprocess

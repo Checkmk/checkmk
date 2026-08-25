@@ -91,7 +91,7 @@ def discover_plugins_from_modules[PluginType: _PluginProtocol](
 def _ls_defensive(path: str) -> Sequence[str]:
     try:
         return list(os.listdir(path))
-    except (FileNotFoundError, NotADirectoryError):
+    except FileNotFoundError, NotADirectoryError:
         return []
 
 

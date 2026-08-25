@@ -46,7 +46,7 @@ def current_package_version(root: Path) -> str | None:
     pkg = root / VSCODE_DIR_REL / "package.json"
     try:
         version = json.loads(pkg.read_text()).get("version")
-    except (OSError, json.JSONDecodeError):
+    except OSError, json.JSONDecodeError:
         return None
     return version if isinstance(version, str) else None
 

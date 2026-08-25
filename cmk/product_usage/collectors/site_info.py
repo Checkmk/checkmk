@@ -59,7 +59,7 @@ def get_product_usage_site_id(file_path: Path) -> ProductUsageSiteId | None:
     try:
         with file_path.open("r", encoding="utf-8") as fp:
             return ProductUsageSiteId(UUID(fp.read()))
-    except (FileNotFoundError, ValueError):
+    except FileNotFoundError, ValueError:
         return None
 
 

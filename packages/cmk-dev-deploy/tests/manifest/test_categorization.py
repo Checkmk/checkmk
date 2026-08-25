@@ -6,8 +6,6 @@
 
 """Unit tests for manifest-derived categorization rule computation."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import pytest

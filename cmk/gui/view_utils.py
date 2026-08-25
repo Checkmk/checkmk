@@ -261,7 +261,7 @@ def query_limit_exceeded_warn(limit: int | None, user_config: LoggedInUser) -> N
     html.show_warning(text)
 
 
-def get_labels(row: "Row", what: str) -> Labels:
+def get_labels(row: Row, what: str) -> Labels:
     # Sites with old versions that don't have the labels column return
     # None for this field. Convert this to the default value
     labels = row.get("%s_labels" % what, {}) or {}

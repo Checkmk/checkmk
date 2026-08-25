@@ -9,8 +9,6 @@
 
 This must not be imported from anywhere outside of the background job process."""
 
-from __future__ import annotations
-
 import logging
 import os
 import threading
@@ -204,7 +202,7 @@ def _execute_function(
         target.callable(job_interface, target.args)
     except MKTerminate:
         raise
-    except (BackgroundJobTimedOut, BackgroundJobFailure):
+    except BackgroundJobTimedOut, BackgroundJobFailure:
         raise
     except Exception as e:
         crash = create_gui_crash_report()

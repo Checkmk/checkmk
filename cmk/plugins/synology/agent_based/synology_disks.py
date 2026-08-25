@@ -36,7 +36,7 @@ class Disk:
     health: int | None
 
     @classmethod
-    def from_row(cls, row: Sequence[str]) -> "Disk":
+    def from_row(cls, row: Sequence[str]) -> Disk:
         health = int(health_raw) if (health_raw := row[5]) != "" else None
         role = row[4]
         return cls(

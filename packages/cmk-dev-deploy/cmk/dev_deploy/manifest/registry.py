@@ -9,8 +9,6 @@ Provides:
   files that have changes but no registry entry (for pipeline warnings).
 """
 
-from __future__ import annotations
-
 from cmk.dev_deploy.manifest.reader import (
     get_config_specs,
     get_install_specs,

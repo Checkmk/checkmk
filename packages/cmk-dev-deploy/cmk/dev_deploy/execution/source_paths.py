@@ -12,8 +12,6 @@ Public API:
     resolve_source_paths(deployer_name) -> tuple[str, ...] | None
 """
 
-from __future__ import annotations
-
 
 def resolve_source_paths(deployer_name: str) -> tuple[str, ...] | None:
     """Resolve repo-relative source path prefixes for a deployer.

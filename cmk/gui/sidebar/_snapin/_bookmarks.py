@@ -7,7 +7,6 @@
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 import urllib.parse
 from collections.abc import Callable, Mapping

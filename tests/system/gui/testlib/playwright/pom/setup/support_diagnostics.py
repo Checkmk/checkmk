@@ -54,7 +54,7 @@ class SupportDiagnosticsSelectSite(CmkPage):
     def _select_site_combobox(self) -> Locator:
         return self.main_area.locator().get_by_role("combobox", name="site")
 
-    def select_site(self, site_name: str | None = None) -> "SupportDiagnostics":
+    def select_site(self, site_name: str | None = None) -> SupportDiagnostics:
         if site_name:
             self._select_site_combobox.click()
             self.main_area.locator().get_by_role("option", name=site_name).click()

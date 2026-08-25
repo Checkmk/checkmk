@@ -157,7 +157,7 @@ class BaseAsyncApiClient:
     def _update_ratelimit(self, response: aiohttp.ClientResponse) -> None:
         try:
             new_value = int(response.headers["x-ms-ratelimit-remaining-subscription-reads"])
-        except (KeyError, ValueError, TypeError):
+        except KeyError, ValueError, TypeError:
             return
         self._ratelimit = min(self._ratelimit, new_value)
 

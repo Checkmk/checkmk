@@ -734,11 +734,11 @@ class PainterEventHost(Painter):
         return "event_host"
 
     @override
-    def title(self, cell: "Cell") -> str:
+    def title(self, cell: Cell) -> str:
         return _("Host name")
 
     @override
-    def short_title(self, cell: "Cell") -> str:
+    def short_title(self, cell: Cell) -> str:
         return _("Host")
 
     @property
@@ -752,7 +752,7 @@ class PainterEventHost(Painter):
         return False
 
     @override
-    def render(self, row: Row, cell: "Cell", user: LoggedInUser) -> CellSpec:
+    def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         event_host: HostAddress = row["event_host"]
         host_name = row.get("host_name", event_host)
 
@@ -761,7 +761,7 @@ class PainterEventHost(Painter):
         )
 
 
-def _get_event_host_link(host_name: HostName, row: Row, cell: "Cell", *, request: Request) -> str:
+def _get_event_host_link(host_name: HostName, row: Row, cell: Cell, *, request: Request) -> str:
     """
     Needed to support links to views and dashboards. If no link is configured,
     always use ec_events_of_host as target view.

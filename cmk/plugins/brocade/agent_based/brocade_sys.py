@@ -35,7 +35,7 @@ def parse_brocade_sys(string_table: StringTable) -> Section | None:
             "cpu_util": int(string_table[0][0]),
             "mem_used_percent": int(string_table[0][1]),
         }
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
 
 

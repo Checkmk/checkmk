@@ -727,7 +727,7 @@ class Sidebar(LocatorHelper):
     def close_add_snapin_sidebar(self) -> None:
         self.page.get_by_role("button", name="Close").click()
 
-    def add_snapin(self, snapin_id: str) -> "Snapin":
+    def add_snapin(self, snapin_id: str) -> Snapin:
         self.open_add_snapin_sidebar()
 
         self.page.get_by_label(f"Add snap-in {snapin_id}").click()
@@ -736,7 +736,7 @@ class Sidebar(LocatorHelper):
 
         return self.snapin(snapin_id)
 
-    def snapin(self, snapin_id: str) -> "Snapin":
+    def snapin(self, snapin_id: str) -> Snapin:
         return self.Snapin(self.locator(f"#snapin_{snapin_id}"))
 
 

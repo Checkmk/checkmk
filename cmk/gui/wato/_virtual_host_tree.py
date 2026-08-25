@@ -33,7 +33,7 @@ from cmk.web.utils.urls import makeuri_contextless
 
 
 class Tree(TypedDict, total=False):
-    _children: dict[tuple[str, str | None], "Tree"]
+    _children: dict[tuple[str, str | None], Tree]
     _num_hosts: int
     _state: int
     _svc_problems: bool

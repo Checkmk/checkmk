@@ -27,7 +27,7 @@ class TChangeStatus(StrEnum):
     ABANDONED = "ABANDONED"
 
     @staticmethod
-    def cli_args() -> set["TChangeStatus"]:
+    def cli_args() -> set[TChangeStatus]:
         return {TChangeStatus.ALL, TChangeStatus.NEW, TChangeStatus.MERGED}
 
 
@@ -115,7 +115,7 @@ class GerritClient:
         raise ValueError(f"No content in the response! Response lines:\n{response.text}")
 
     @property
-    def changes_api(self) -> "ChangesAPI":
+    def changes_api(self) -> ChangesAPI:
         """Perform REST-API calls related to gerrit changes."""
         return self._changes_api
 

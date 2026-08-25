@@ -40,7 +40,7 @@ class Severity(StrEnum):
 
     @classmethod
     @override
-    def _missing_(cls, value: object) -> "Severity":
+    def _missing_(cls, value: object) -> Severity:
         return Severity.NA
 
 

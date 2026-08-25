@@ -294,7 +294,7 @@ class UnitStatus:
     number_of_tasks: int | None = None
 
     @classmethod
-    def from_entry(cls, entry: Sequence[Sequence[str]]) -> "UnitStatus":
+    def from_entry(cls, entry: Sequence[Sequence[str]]) -> UnitStatus:
         # A unit name may itself contain dots (e.g. "hapee-3.2-lb.service"), so strip
         # only the trailing type suffix. Splitting on the first dot would mangle the
         # name and break the match with the `[all]` section (see UnitEntry.try_parse).
@@ -369,7 +369,7 @@ class UnitEntry:
         row: Sequence[str],
         enabled_status: Mapping[str, str],
         status_details: Mapping[str, UnitStatus],
-    ) -> tuple[UnitTypes, "UnitEntry"] | None:
+    ) -> tuple[UnitTypes, UnitEntry] | None:
         if not (name_unit := cls._parse_name_and_unit_type(row[0])):
             return None
         name, unit_type = name_unit
@@ -413,7 +413,7 @@ class UnitEntry:
     @classmethod
     def parse(
         cls, block: Mapping[str, str], uptime_seconds: float
-    ) -> tuple[UnitTypes, "UnitEntry"] | None:
+    ) -> tuple[UnitTypes, UnitEntry] | None:
         unit_id = block.get("Id")
         if not unit_id:
             return None

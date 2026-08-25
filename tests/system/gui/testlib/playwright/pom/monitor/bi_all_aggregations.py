@@ -59,7 +59,7 @@ class AllAggregations(CmkPage):
     def hosts_aggregation_group(self) -> Locator:
         return self._aggregation_group(group_name="Hosts")
 
-    def hosts_aggregation_row(self, index: int) -> "_HostsAggregationRow":
+    def hosts_aggregation_row(self, index: int) -> _HostsAggregationRow:
         """Return a locator corresponding to a row of aggregations.
 
         The aggregation / row is specific to the aggregation group: 'Hosts'.

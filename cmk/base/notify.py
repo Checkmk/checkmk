@@ -426,7 +426,7 @@ def _do_notify_via_automation(options: dict, args: list[str]) -> int | None:
 
     try:
         data = ast.literal_eval(result.output)
-    except (SyntaxError, ValueError, TypeError):
+    except SyntaxError, ValueError, TypeError:
         logger.exception("Could not parse automation result %(output)r", {"output": result.output})
         return 2
 
@@ -526,7 +526,7 @@ def do_notify(
         elif notify_mode == "replay":
             try:
                 replay_nr = int(args[1])
-            except (IndexError, ValueError):
+            except IndexError, ValueError:
                 replay_nr = 0
             _notify_notify(
                 raw_context_from_backlog(replay_nr),

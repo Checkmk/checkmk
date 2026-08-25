@@ -35,7 +35,7 @@ def load_instance_id(file_path: Path) -> UUID | None:
     try:
         with file_path.open("r", encoding="utf-8") as fp:
             return UUID(fp.read())
-    except (FileNotFoundError, ValueError):
+    except FileNotFoundError, ValueError:
         return None
 
 

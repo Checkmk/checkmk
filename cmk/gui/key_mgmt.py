@@ -512,7 +512,7 @@ class ModeDownloadKey(WatoMode[object]):
 
             try:
                 keys[key_id].to_certificate_with_private_key(PasswordType(value["passphrase"]))
-            except (PEMDecodingError, ValueError):
+            except PEMDecodingError, ValueError:
                 raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))
 
             self._send_download(keys, key_id)

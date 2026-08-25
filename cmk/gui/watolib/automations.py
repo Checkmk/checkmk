@@ -8,8 +8,6 @@ and similar things."""
 
 # mypy: disable-error-code="no-any-return"
 
-from __future__ import annotations
-
 import ast
 import functools
 import json

@@ -418,7 +418,7 @@ class State:
         # type: (str) -> dict[str, Any]
         try:
             return ast.literal_eval(line)
-        except (NameError, SyntaxError, ValueError):
+        except (NameError, SyntaxError, ValueError):  # fmt: skip
             # Support status files with the following structure:
             # /var/log/messages|7767698|32455445
             # These were used prior to to 1.7.0i1
@@ -981,7 +981,7 @@ def _compile_continuation_pattern(raw_pattern):
     # type: (str) -> int | re.Pattern
     try:
         return int(raw_pattern)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError):  # fmt: skip
         return re.compile(_search_optimize_raw_pattern(raw_pattern), re.UNICODE)
 
 

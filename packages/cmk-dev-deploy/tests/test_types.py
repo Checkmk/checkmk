@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.types (Edition enum and SiteInfo dataclass)."""
 
-from __future__ import annotations
-
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 

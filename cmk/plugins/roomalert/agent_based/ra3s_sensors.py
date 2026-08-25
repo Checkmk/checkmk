@@ -38,7 +38,7 @@ def parse_ra3s_internal_section_temperature(string_table: StringTable) -> Intern
             temp_fahrenheit=float(tempf) / 100.0 if tempf else None,
             temp_celsius=float(tempc) / 100.0 if tempc else None,
         )
-    except (ValueError, IndexError):
+    except ValueError, IndexError:
         return None
 
 

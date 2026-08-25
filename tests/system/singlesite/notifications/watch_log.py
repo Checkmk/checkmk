@@ -25,7 +25,7 @@ class WatchLog:
 
         self._tail_process: subprocess.Popen[str] | None = None
 
-    def __enter__(self) -> "WatchLog":
+    def __enter__(self) -> WatchLog:
         if not self._site.file_exists(self._log_path):
             self._site.write_file(self._log_path, "")
 

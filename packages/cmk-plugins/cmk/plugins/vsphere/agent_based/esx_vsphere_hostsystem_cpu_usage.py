@@ -44,7 +44,7 @@ def extract_esx_vsphere_hostsystem_cpu_usage(
             used_mhz=float(section["summary.quickStats.overallCpuUsage"][0]),
             mhz_per_core=float(section["hardware.cpuInfo.hz"][0]),
         )
-    except (KeyError, ValueError):
+    except KeyError, ValueError:
         return None
 
 

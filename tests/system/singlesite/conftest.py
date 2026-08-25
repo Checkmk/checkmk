@@ -43,7 +43,7 @@ def get_site(site_factory: SiteFactory, request: pytest.FixtureRequest) -> Itera
         )
 
 
-def _cloud_lifecycle_wrapper(site: Site) -> "AbstractContextManager[None]":
+def _cloud_lifecycle_wrapper(site: Site) -> AbstractContextManager[None]:
     from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
         cloud_environment,
     )

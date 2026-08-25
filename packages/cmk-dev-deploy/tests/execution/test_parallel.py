@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.parallel: parallel execution engine and output ordering."""
 
-from __future__ import annotations
-
 import time
 from collections.abc import Callable, Iterator
 from unittest.mock import patch

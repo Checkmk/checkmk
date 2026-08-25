@@ -5,8 +5,6 @@
 
 """Checker to prevent disallowed imports of modules."""
 
-from __future__ import annotations
-
 import ast
 import contextlib
 from pathlib import Path

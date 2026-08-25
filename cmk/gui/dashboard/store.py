@@ -46,7 +46,7 @@ from .type_defs import (
 class DashboardStore:
     @classmethod
     @request_memoize()
-    def get_instance(cls) -> "DashboardStore":
+    def get_instance(cls) -> DashboardStore:
         """Load dashboards only once for each request"""
         return cls()
 

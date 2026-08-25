@@ -238,7 +238,7 @@ PROCESSES = [
     ],
 )
 def test_format_process_list(
-    processes: "ps.ProcessAggregator", formatted_list: str, html_flag: bool
+    processes: ps.ProcessAggregator, formatted_list: str, html_flag: bool
 ) -> None:
     assert ps.format_process_list(processes, html_flag) == formatted_list
 

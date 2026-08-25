@@ -8,8 +8,6 @@
 
 """Synchronize discovered host labels from remote site to central site"""
 
-from __future__ import annotations
-
 import ast
 import os
 import time

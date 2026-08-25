@@ -8,8 +8,6 @@
 
 """Helper functions for dealing with Check_MK tags"""
 
-from __future__ import annotations
-
 import contextlib
 import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence

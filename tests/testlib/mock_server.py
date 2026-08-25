@@ -183,7 +183,7 @@ class MockServer:
             self.key_file,
         )
 
-    def __enter__(self) -> "MockServer":
+    def __enter__(self) -> MockServer:
         if self.https and self.cert_file and self.key_file:
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             ssl_context.load_cert_chain(keyfile=self.key_file, certfile=self.cert_file)

@@ -17,8 +17,6 @@ This module provides classes and functions for managing Checkmk test sites. The 
         provides a helper for running Python scripts within a Checkmk test site.
 """
 
-from __future__ import annotations
-
 import ast
 import glob
 import inspect

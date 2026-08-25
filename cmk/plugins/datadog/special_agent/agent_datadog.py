@@ -56,7 +56,7 @@ class LogMessageElement:
     key: str
 
     @classmethod
-    def from_arg(cls, arg: str) -> "LogMessageElement":
+    def from_arg(cls, arg: str) -> LogMessageElement:
         name, key = arg.split(":", maxsplit=1)
         return cls(name, key)
 

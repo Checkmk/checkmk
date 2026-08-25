@@ -11,8 +11,6 @@ It handles the preparation of the Docker environment, executing specified test c
 the container, and collecting and storing the test results.
 """
 
-from __future__ import annotations
-
 import logging
 import os
 import re

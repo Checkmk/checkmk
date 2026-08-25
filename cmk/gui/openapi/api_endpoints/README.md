@@ -172,8 +172,7 @@ def handler(
     path_param: Annotated[str, PathParam(description="...", example="example")],
     query_param: Annotated[int, QueryParam(description="...", example="123")],
     header_param: Annotated[
-        str | ApiOmitted,
-        HeaderParam(description="...", example="...")
+        str | ApiOmitted, HeaderParam(description="...", example="...")
     ] = ApiOmitted(),
 ) -> None:
     return
@@ -330,10 +329,12 @@ from cmk.web.utils import permission_verification as permissions
 from cmk.gui.openapi.framework import EndpointPermissions
 
 permissions = EndpointPermissions(
-    required=permissions.AnyPerm([
-        permissions.Perm("wato.edit"),
-        permissions.Perm("wato.access"),
-    ]),
+    required=permissions.AnyPerm(
+        [
+            permissions.Perm("wato.edit"),
+            permissions.Perm("wato.access"),
+        ]
+    ),
     # Optional descriptions for documentation
     descriptions={"wato.supermode": "Override description"},
 )
@@ -416,7 +417,6 @@ def handler(body: MyModel) -> MyModel:
         id=internal_out["id"],
         name=internal_out.get("name", ApiOmitted()),
     )
-
 ```
 
 ### Validators
@@ -484,9 +484,7 @@ like a "flat" object. The only difference would be that the custom attributes
 don't show up in the schema.
 
 ```python
-from cmk.gui.openapi.framework.model import (
-    api_field, api_model, json_dump_without_omitted
-)
+from cmk.gui.openapi.framework.model import api_field, api_model, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.dynamic_fields import WithDynamicFields
 
 
@@ -533,6 +531,7 @@ from marshmallow import Schema, fields, validate
 
 class LinkSchema(Schema):
     """Schema for link resources."""
+
     href = fields.String(required=True)
     rel = fields.String(required=True)
 
@@ -541,49 +540,31 @@ class UserSchema(Schema):
     """Schema representing a user."""
 
     # Required field
-    id = fields.String(
-        required=True,
-        description="Unique identifier."
-    )
+    id = fields.String(required=True, description="Unique identifier.")
 
     # Required field with validation
     username = fields.String(
-        required=True,
-        validate=validate.Length(min=3, max=50),
-        description="User's login name."
+        required=True, validate=validate.Length(min=3, max=50), description="User's login name."
     )
 
     # Field with custom validation
     active_users = fields.List(
         fields.Username(),  # class validating if the username is valid
         required=True,
-        description="List of active users."
+        description="List of active users.",
     )
 
     # Optional field
-    display_name = fields.String(
-        required=False,
-        description="User's display name."
-    )
+    display_name = fields.String(required=False, description="User's display name.")
 
     # Nullable field
-    bio = fields.String(
-        allow_none=True,
-        description="User's biography."
-    )
+    bio = fields.String(allow_none=True, description="User's biography.")
 
     # Optional and nullable field
-    location = fields.String(
-        required=False,
-        allow_none=True,
-        description="User's location."
-    )
+    location = fields.String(required=False, allow_none=True, description="User's location.")
 
     # Field with custom JSON key name
-    email_address = fields.String(
-        data_key="emailAddress",
-        description="User's email."
-    )
+    email_address = fields.String(data_key="emailAddress", description="User's email.")
 
     # Field with enum
     status = fields.String(
@@ -593,37 +574,19 @@ class UserSchema(Schema):
     )
 
     # Constant field
-    type = fields.Constant(
-        "user",
-        description="Resource type."
-    )
+    type = fields.Constant("user", description="Resource type.")
 
     # Boolean field
-    is_verified = fields.Boolean(
-        description="Whether user is verified.",
-        load_default=False
-    )
+    is_verified = fields.Boolean(description="Whether user is verified.", load_default=False)
 
     # List field
-    roles = fields.List(
-        fields.String(),
-        required=True,
-        description="User roles."
-    )
+    roles = fields.List(fields.String(), required=True, description="User roles.")
 
     # Dict field
-    preferences = fields.Dict(
-        description="User preferences.",
-        allow_none=True
-    )
+    preferences = fields.Dict(description="User preferences.", allow_none=True)
 
     # Nested object field
-    links = fields.List(
-        fields.Nested(LinkSchema),
-        required=False,
-        description="Related links."
-    )
-
+    links = fields.List(fields.Nested(LinkSchema), required=False, description="Related links.")
 ```
 
 #### Equivalent API Model
@@ -646,6 +609,7 @@ def active_user_check(value: str) -> str:
 @api_model
 class LinkModel:
     """Model for link resources."""
+
     href: str
     rel: str
 
@@ -655,9 +619,7 @@ class UserModel:
     """Model representing a user."""
 
     # Required field
-    id: str = api_field(
-        description="Unique identifier."
-    )
+    id: str = api_field(description="Unique identifier.")
 
     # Required field with validation
     username: Annotated[str, Interval(ge=3, le=50)] = api_field(
@@ -665,14 +627,13 @@ class UserModel:
     )
 
     # Field with custom validation
-    active_users: list[
-        Annotated[str, AfterValidator(active_user_check)]
-    ] = api_field(description="List of active users.")
+    active_users: list[Annotated[str, AfterValidator(active_user_check)]] = api_field(
+        description="List of active users."
+    )
 
     # Optional field
     display_name: str | ApiOmitted = api_field(
-        description="User's display name.",
-        default_factory=ApiOmitted
+        description="User's display name.", default_factory=ApiOmitted
     )
 
     # Nullable field
@@ -682,35 +643,25 @@ class UserModel:
 
     # Optional and nullable field
     location: str | None | ApiOmitted = api_field(
-        description="User's location.",
-        default_factory=ApiOmitted
+        description="User's location.", default_factory=ApiOmitted
     )
 
     # Field with custom JSON key name
-    email_address: str = api_field(
-        description="User's email.",
-        serialization_alias="emailAddress"
-    )
+    email_address: str = api_field(description="User's email.", serialization_alias="emailAddress")
 
     # Field with default value
     status: Literal["active", "suspended", "inactive"] = api_field(
-        description="Account status.",
-        default="active"
+        description="Account status.", default="active"
     )
 
     # Constant field
     type: Literal["user"] = "user"
 
     # Boolean field
-    is_verified: bool = api_field(
-        description="Whether user is verified.",
-        default=False
-    )
+    is_verified: bool = api_field(description="Whether user is verified.", default=False)
 
     # List field
-    roles: list[str] = api_field(
-        description="User roles."
-    )
+    roles: list[str] = api_field(description="User roles.")
 
     # Dict field
     preferences: dict[str, Any] | None = api_field(

@@ -422,7 +422,7 @@ class ResponseMatcher(ABC):
     @abstractmethod
     def matches(self, response: requests.Response, body: JsonOrText) -> bool: ...
 
-    def and_(self, other: "ResponseMatcher") -> "CombinedMatcher":
+    def and_(self, other: ResponseMatcher) -> CombinedMatcher:
         return CombinedMatcher(matchers=[self, other])
 
 
@@ -435,7 +435,7 @@ class CombinedMatcher(ResponseMatcher):
         return all(matcher.matches(response, body) for matcher in self.matchers)
 
     @override
-    def and_(self, other: "ResponseMatcher") -> "CombinedMatcher":
+    def and_(self, other: ResponseMatcher) -> CombinedMatcher:
         return CombinedMatcher(matchers=[*self.matchers, other])
 
 

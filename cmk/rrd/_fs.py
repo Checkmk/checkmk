@@ -53,7 +53,7 @@ class RRDPaths:
     _max_filename_length: int
 
     @classmethod
-    def from_omd_root(cls, omd_root: Path) -> "RRDPaths":
+    def from_omd_root(cls, omd_root: Path) -> RRDPaths:
         opt_root = "/opt" / omd_root.relative_to(omd_root.root)
         return cls(
             rrd_multiple_dir=opt_root / "var/pnp4nagios/perfdata",

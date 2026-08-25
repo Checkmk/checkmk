@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="possibly-undefined"
 
-from __future__ import annotations
 
 import contextlib
 import http.client

@@ -5,8 +5,6 @@
 
 """Native WireMock process manager - replaces Docker-based WireMock."""
 
-from __future__ import annotations
-
 import contextlib
 import os
 import socket
@@ -60,7 +58,7 @@ def _wait_for_wiremock(base_url: str, timeout: int = 30) -> None:
             response = httpx.get(f"{base_url}/__admin/health", timeout=1)
             if response.status_code == 200:
                 return
-        except (httpx.RequestError, httpx.TimeoutException):
+        except httpx.RequestError, httpx.TimeoutException:
             pass
 
         if time.monotonic() - start_time > timeout:

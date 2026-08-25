@@ -10,8 +10,6 @@ binaries (:func:`try_setcap`).  Commands that run as the **site user**
 go through :func:`cmk.dev_deploy.site.sudoers.run_as_site_user` instead.
 """
 
-from __future__ import annotations
-
 import getpass
 import os
 import subprocess

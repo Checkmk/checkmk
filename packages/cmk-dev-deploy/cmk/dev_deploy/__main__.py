@@ -4,8 +4,6 @@
 
 """Entry point for ``python3 -m cmk.dev_deploy``."""
 
-from __future__ import annotations
-
 import argparse
 import atexit
 import os
@@ -781,7 +779,7 @@ def _guard_terminal_settings() -> None:
     try:
         fd = sys.stderr.fileno()
         saved = termios.tcgetattr(fd)
-    except (termios.error, OSError, ValueError):
+    except termios.error, OSError, ValueError:
         return
 
     def _restore() -> None:

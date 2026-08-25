@@ -64,9 +64,9 @@ tracer = trace.get_tracer()
 with tracer.span("handle-request", attributes={"request.id": req_id}):
     do_work()
 
+
 @tracer.instrument()
-def do_work() -> None:
-    ...
+def do_work() -> None: ...
 ```
 
 Propagate context to a child process:

@@ -26,7 +26,7 @@ def parse_splunk_alerts(string_table: StringTable) -> AlertCount | None:
     """Parse splunk alerts from agent output."""
     try:
         count = int(string_table[0][0])
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
 
     return AlertCount(count)

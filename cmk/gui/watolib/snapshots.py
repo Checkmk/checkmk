@@ -5,8 +5,6 @@
 
 """Coordinates the collection and packing of snapshots"""
 
-from __future__ import annotations
-
 import logging
 import multiprocessing.pool
 import os

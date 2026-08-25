@@ -45,8 +45,6 @@ Checkmk special agent for monitoring Tinkerforge.
 #  Currently the bricklets included in the Starter Kit: Server Room Monitoring are
 #  implemented
 
-from __future__ import annotations
-
 import os
 import sys
 import time

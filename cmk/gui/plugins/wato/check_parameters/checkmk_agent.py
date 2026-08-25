@@ -34,7 +34,7 @@ from cmk.gui.valuespec import (
 def _validate_version(value: str, varprefix: str) -> None:
     try:
         parse_check_mk_version(value)
-    except (ValueError, TypeError, KeyError):
+    except ValueError, TypeError, KeyError:
         raise MKUserError(varprefix, _("Can't parse version %(value)r") % {"value": value})
 
 

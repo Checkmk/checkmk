@@ -366,7 +366,7 @@ def _mongodb_cluster_split_namespace(namespace: str) -> tuple[str, str]:
             return names[0], names[1]
         if len(names) > 0:
             return names[0], ""
-    except (ValueError, AttributeError):
+    except ValueError, AttributeError:
         pass
     raise ValueError(f"error parsing namespace {namespace}")
 

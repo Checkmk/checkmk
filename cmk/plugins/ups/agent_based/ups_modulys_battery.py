@@ -43,7 +43,7 @@ def parse_ups_modulys_battery(string_table: Sequence[StringTable]) -> UPSBattery
         raw_health, raw_uptime, raw_remaining_time, raw_capacity, raw_temperature = string_table[0][
             0
         ]
-    except (IndexError, ValueError):
+    except IndexError, ValueError:
         return None
 
     if not raw_uptime or int(raw_uptime) == 0:

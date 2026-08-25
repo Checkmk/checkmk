@@ -27,8 +27,6 @@ looks for two kinds of signal:
   (e.g. ``mod test_cn_no_uuid`` in cmk-agent-ctl, not ``mod tests``).
 """
 
-from __future__ import annotations
-
 import re
 import subprocess
 from collections.abc import Sequence

@@ -45,7 +45,7 @@ def parse_aws_costs_and_usage(string_table: StringTable) -> Section:
                 try:
                     costs = float(metrics["Amount"])
                     unit = metrics["Unit"]
-                except (KeyError, ValueError):
+                except KeyError, ValueError:
                     continue
                 else:
                     parsed.setdefault((timeperiod, service_name), {}).setdefault(

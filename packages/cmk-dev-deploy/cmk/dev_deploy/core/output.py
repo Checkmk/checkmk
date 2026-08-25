@@ -13,8 +13,6 @@ Verbosity levels:
   VERBOSE (1, -v): Change summaries, target lists, build details.
 """
 
-from __future__ import annotations
-
 import dataclasses
 import functools
 import io
@@ -346,7 +344,7 @@ class Spinner:
                         cols = os.get_terminal_size(sys.stderr.fileno()).columns
                         if len(text) > cols:
                             text = text[: cols - 1]
-                    except (OSError, ValueError):
+                    except OSError, ValueError:
                         pass
                     # Hold output lock and re-check paused under lock to
                     # prevent writing after pause() has cleared the line.

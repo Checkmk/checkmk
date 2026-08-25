@@ -163,7 +163,7 @@ class ABCQuicksearchConductor(abc.ABC):
         shortname = list(self._used_filters.keys())[0]
         return self._get_plugin_with_shortname(shortname).get_match_topic()
 
-    def _get_plugin_with_shortname(self, name: str) -> "ABCMatchPlugin":
+    def _get_plugin_with_shortname(self, name: str) -> ABCMatchPlugin:
         try:
             return match_plugin_registry[name]
         except KeyError:
@@ -331,7 +331,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         command_with_limit = "Cache: reload\nLimit: %d\nColumnHeaders: off" % (self._row_limit + 1)
         self._livestatus_command += command_with_limit
 
-    def _get_used_search_plugins(self) -> list["ABCLivestatusMatchPlugin"]:
+    def _get_used_search_plugins(self) -> list[ABCLivestatusMatchPlugin]:
         return [
             plugin
             for plugin in match_plugin_registry.values()

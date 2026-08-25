@@ -7,8 +7,6 @@
 Each deployer is only redeployed when its own source files have changed.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from cmk.dev_deploy.core.subprocess_utils import run_checked

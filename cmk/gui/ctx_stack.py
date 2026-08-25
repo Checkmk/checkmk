@@ -8,7 +8,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="unreachable"
 
-from __future__ import annotations
 
 from functools import partial
 from typing import Any, Literal

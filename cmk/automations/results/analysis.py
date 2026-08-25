@@ -10,8 +10,6 @@
 Groups all "tell me about this host, service, or rule" query automations
 """
 
-from __future__ import annotations
-
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import override, TypedDict

@@ -9,8 +9,6 @@ Extracts hotspot data, call trees, and summary statistics from cProfile
 .profile files for rendering as interactive flamegraphs in the browser.
 """
 
-from __future__ import annotations
-
 import pstats
 from collections.abc import Callable
 from dataclasses import replace

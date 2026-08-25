@@ -5,8 +5,6 @@
 
 """Smoke tests for the flamegraph tree builder on hand-crafted stats dicts."""
 
-from __future__ import annotations
-
 import marshal
 from pathlib import Path
 

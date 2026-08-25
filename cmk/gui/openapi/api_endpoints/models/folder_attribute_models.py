@@ -202,7 +202,7 @@ class FolderViewAttributeModel(
     )
 
     @staticmethod
-    def from_internal(value: HostAttributes) -> "FolderViewAttributeModel":
+    def from_internal(value: HostAttributes) -> FolderViewAttributeModel:
         return FolderViewAttributeModel(
             site=value.get("site", ApiOmitted()),
             parents=[str(parent) for parent in value["parents"]]

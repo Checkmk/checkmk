@@ -4,8 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.diagnostics (crash bundle capture)."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch

@@ -13,8 +13,6 @@ Currently available:
 
 """
 
-from __future__ import annotations
-
 import functools
 import hashlib
 import marshal
@@ -80,7 +78,7 @@ def ttl_memoize[**P, R](ttl: int, connection_factory: RedisFactory) -> CacheDeco
                     # marshal.dumps accepts broader types than its type hints suggest
                     conn.set(cache_key, encode(result), ex=ttl)  # type: ignore[arg-type]
                     return result
-                except (RuntimeError, RedisError):
+                except RuntimeError, RedisError:
                     pass
 
             return func(*args, **kwargs)

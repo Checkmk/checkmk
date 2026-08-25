@@ -78,7 +78,7 @@ def parse_ibm_svc_mdisk(string_table: StringTable) -> Section:
         try:
             data = rows[0]
             parsed.setdefault(data["name"], Mdisk(status=data["status"], mode=data["mode"]))
-        except (KeyError, IndexError):
+        except KeyError, IndexError:
             continue
     return parsed
 

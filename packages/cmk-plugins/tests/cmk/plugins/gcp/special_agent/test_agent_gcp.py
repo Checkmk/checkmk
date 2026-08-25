@@ -110,7 +110,7 @@ class FakeMonitoringClient:
         yield SERIES1
         yield SERIES2
 
-    def __call__(self) -> "FakeMonitoringClient":
+    def __call__(self) -> FakeMonitoringClient:
         return self
 
 
@@ -133,7 +133,7 @@ class FakeAssetClient:
             raise self._exception
         return (agent_gcp.Asset.deserialize(a).asset for a in self._assets)
 
-    def __call__(self) -> "FakeAssetClient":
+    def __call__(self) -> FakeAssetClient:
         return self
 
 

@@ -34,7 +34,6 @@
 #   | Some basic declarations and module loading etc.                      |
 #   '----------------------------------------------------------------------'
 
-from __future__ import annotations
 
 import contextlib
 import copy
@@ -995,7 +994,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 )
             else:
                 self._bind("", ("password", ""), catch=False, conn=conn)  # anonymous bind
-        except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH):
+        except INVALID_CREDENTIALS, INAPPROPRIATE_AUTH:
             raise MKLDAPException(
                 _(
                     "Unable to connect to LDAP server with the configured bind credentials. "
@@ -1018,7 +1017,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         try:
             conn.simple_bind_s(user_dn, password_store.extract(password_id))
             self._logger.info("  SUCCESS")
-        except (INVALID_CREDENTIALS, INAPPROPRIATE_AUTH):
+        except INVALID_CREDENTIALS, INAPPROPRIATE_AUTH:
             raise
         except LDAPError as e:
             self._logger.info(

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 from datetime import datetime
 from typing import TYPE_CHECKING

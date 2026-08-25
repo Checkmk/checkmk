@@ -34,6 +34,7 @@ DomainType = Literal[
     "custom_graph",
     "custom_graph_metadata",
     "custom_host_attribute",
+    "custom_service",
     "customer",
     "dashboard",
     "dashboard_metadata",

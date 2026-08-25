@@ -37,8 +37,15 @@ void main() {
             "this is currently not supported. During a release, we will build the cloud images when a package rc was " +
             "tested to be OK.");
     }
+
+    def build_cloud_images = params.BUILD_CLOUD_IMAGES;
+    def publish_cloud_images = params.PUBLISH_IN_MARKETPLACE;
+
     def ami_image_name = build_cloud_images_names(cmk_version)[0];
     def azure_image_name = build_cloud_images_names(cmk_version)[1];
+    def cloud_targets = ["amazon-ebs", "azure-arm"];
+    def env_secret_map = build_env_secret_map(cmk_version, ami_image_name, azure_image_name);
+    def packer_envvars = ['CHECKPOINT_DISABLE=1', "PACKER_CONFIG_DIR=${checkout_dir}/packer/.packer"];
 
     print(
         """
@@ -48,17 +55,6 @@ void main() {
         |cmk_version:..... │${cmk_version}│
         |====================
         """.stripMargin());
-
-    def env_secret_map = build_env_secret_map(cmk_version, ami_image_name, azure_image_name);
-    def cloud_targets = ["amazon-ebs", "azure-arm"];
-    def build_cloud_images = params.BUILD_CLOUD_IMAGES;
-    def publish_cloud_images = params.PUBLISH_IN_MARKETPLACE;
-    def packer_envvars = ['CHECKPOINT_DISABLE=1', "PACKER_CONFIG_DIR=${checkout_dir}/packer/.packer"];
-
-    currentBuild.description += (
-        """
-        |Building the Cloud images
-        |""".stripMargin());
 
     stage('Cleanup') {
         dir("${checkout_dir}") {

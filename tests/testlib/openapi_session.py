@@ -2305,7 +2305,7 @@ class CustomGraphAPI(BaseAPI):
         "is_show_more": False,
         "public": {"type": "private"},
     }
-    _DEFAULT_GRAPH_OPTIONS: Final[Mapping[str, Any]] = {
+    DEFAULT_GRAPH_OPTIONS: Final[Mapping[str, Any]] = {
         "unit": {"type": "first_entry_with_unit"},
         "explicit_vertical_range": {"type": "auto"},
         "omit_zero_metrics": False,
@@ -2347,7 +2347,7 @@ class CustomGraphAPI(BaseAPI):
                 "title": title,
                 "metadata": self._DEFAULT_METADATA,
                 "content": {
-                    "graph_options": self._DEFAULT_GRAPH_OPTIONS,
+                    "graph_options": self.DEFAULT_GRAPH_OPTIONS,
                     "data_sources": data_sources,
                 },
             },

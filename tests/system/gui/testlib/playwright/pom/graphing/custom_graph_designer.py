@@ -132,6 +132,15 @@ class CustomGraphDesigner(CmkPage):
         self._fill_autocompleter(form, "Service", service_name)
         self._fill_autocompleter(form, "Service metric", metric_title)
 
+    def save(self) -> None:
+        """Commit the edited definition; the designer returns to view mode."""
+        logger.info("Save the custom graph definition")
+        self.main_area.locator().get_by_role("button", name="Save", exact=True).click()
+        expect(
+            self.main_area.locator().get_by_role("button", name="Edit custom graph", exact=True),
+            "The designer stayed in edit mode after saving",
+        ).to_be_visible()
+
     def _fill_autocompleter(self, form: Locator, field_name: str, value: str) -> None:
         # Exact matching: "Service" is otherwise also the metric field's name.
         button = form.get_by_role("combobox", name=field_name, exact=True)

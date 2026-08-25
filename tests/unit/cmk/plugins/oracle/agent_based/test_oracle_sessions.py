@@ -42,3 +42,17 @@ def test_check_oracle_sessions_surfaces_failure():
     assert list(
         check_oracle_sessions("orcl", {"sessions_abs": (150, 300)}, parse_oracle_sessions(_FAILURE))
     ) == [Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")]
+
+
+def test_check_oracle_sessions_surfaces_non_ora_failure():
+    failure = [
+        ["orcl", "FAILURE", "IO Error: The Network Adapter could not establish the connection"]
+    ]
+    assert list(
+        check_oracle_sessions("orcl", {"sessions_abs": (150, 300)}, parse_oracle_sessions(failure))
+    ) == [
+        Result(
+            state=State.UNKNOWN,
+            summary="IO Error: The Network Adapter could not establish the connection",
+        )
+    ]

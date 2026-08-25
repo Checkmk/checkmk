@@ -17,7 +17,7 @@
 use crate::config::options::Options;
 use crate::config::ora_sql::CustomInstance;
 use crate::config::target::TargetId;
-use crate::ora_sql::backend::{ClosedSpot, OpenedSpot};
+use crate::ora_sql::backend::{sanitize_failure_message, ClosedSpot, OpenedSpot};
 use crate::ora_sql::pdbs::{resolve_pdb_patterns, Pdbs};
 use crate::ora_sql::section::Section;
 use crate::ora_sql::system::WorkInstances;
@@ -185,7 +185,7 @@ fn _make_work_result_error(opened: OpenedSpot, e: &anyhow::Error) -> OpenedSpotW
         Err(anyhow::anyhow!(
             "{}|FAILURE|WARNING: {} ",
             target.display_name(),
-            e.to_string().replace("OCI Error: ", "")
+            sanitize_failure_message(&e.to_string())
         )),
     )
 }

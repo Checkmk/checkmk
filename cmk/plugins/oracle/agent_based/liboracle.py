@@ -4,9 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import State
+
+
+@dataclass(frozen=True)
+class Ok[T]:
+    """The parsed data of one instance."""
+
+    value: T
+
+
+@dataclass(frozen=True)
+class Error:
+    """The error an instance reported instead of data."""
+
+    message: str
+
+
+type Parsed[T] = Ok[T] | Error
 
 
 class OraErrors:

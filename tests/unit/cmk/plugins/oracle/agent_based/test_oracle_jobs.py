@@ -322,3 +322,32 @@ def test_oracle_jobs_check_legacy_error_row_surfaces_error() -> None:
             summary='Found error in agent output "ORA-01017: invalid username/password"',
         ),
     ]
+
+
+def test_oracle_jobs_check_old_format_without_owner() -> None:
+    # old format without job_owner; extra fields due to the missing separator
+    info = [
+        [
+            "IODBSZ1",
+            "SYS",
+            "SM$CLEAN_AUTO_SPLIT_MERGE",
+            "SCHEDULED",
+            "0",
+            "763",
+            "TRUE",
+            "24.04.13",
+            "00:00:00,600000",
+            "EUROPE/VIENNA",
+            "-",
+            "SUCCEEDED",
+        ]
+    ]
+    results = list(
+        check_oracle_jobs(
+            "IODBSZ1.SM$CLEAN_AUTO_SPLIT_MERGE",
+            {"consider_job_status": "ignore"},
+            parse_oracle_jobs(info),
+        )
+    )
+    assert results
+    assert not any(isinstance(r, Result) and "Job is missing" in (r.summary or "") for r in results)

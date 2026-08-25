@@ -304,7 +304,7 @@ test('raises the highlight from the legend as well as from the ring', async () =
   )
 })
 
-test('activates a drillable slice by click and by keyboard', async () => {
+test('activates the slice with a breakdown by click and by keyboard', async () => {
   const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
   const { container, emitted } = renderChart(slices)
 
@@ -327,15 +327,25 @@ test('focuses the arc it activates', async () => {
   expect(document.activeElement).toBe(other)
 })
 
-test('leaves a slice that opens nothing out of the tab order', () => {
+test('puts every slice in the tab order, not just the one with a breakdown', () => {
   const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
   const { container } = renderChart(slices)
 
-  const [tls, other] = [...container.querySelectorAll('.network-flow-cmk-donut-chart__segment')]
+  for (const segment of container.querySelectorAll('.network-flow-cmk-donut-chart__segment')) {
+    expect(segment).toHaveAttribute('role', 'button')
+    expect(segment).toHaveAttribute('tabindex', '0')
+  }
+})
 
-  expect(tls).not.toHaveAttribute('tabindex')
-  expect(tls).not.toHaveAttribute('role')
-  expect(other).toHaveAttribute('role', 'button')
+test('reports the activation of a slice with nothing behind it too', async () => {
+  // What an activation opens is the caller's to decide; the ring only says
+  // which slice was picked.
+  const { container, emitted } = renderChart()
+
+  const tls = container.querySelector('.network-flow-cmk-donut-chart__segment')!
+  await fireEvent.keyDown(tls, { key: 'Enter' })
+
+  expect(emitted('sliceActivate')).toEqual([['tls']])
 })
 
 test('recomputes the ring and the total when a category is hidden', async () => {

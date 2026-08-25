@@ -156,6 +156,22 @@ describe('useBrushSnapshot — a window that fits gets in ahead of its data', ()
   })
 })
 
+describe('useBrushSnapshot — an extent that cannot be drawn in', () => {
+  test('a strip collapsed by the grid its data sits on falls back to the one asked for', () => {
+    // A strip snapped onto a step wider than itself; every mark would be placed by a
+    // division by zero.
+    const { brush } = mount()
+    const requestedDomain = brush.requestedDomain.value
+    const collapsed = { start: requestedDomain.start, end: requestedDomain.start }
+
+    brush.onOverviewFetched({ requestedDomain, drawnDomain: collapsed, data: 'overview' })
+
+    const { drawnDomain } = brush.snapshot.value!
+    expect(drawnDomain.end).toBeGreaterThan(drawnDomain.start)
+    expect(drawnDomain).toEqual(requestedDomain)
+  })
+})
+
 describe('useBrushSnapshot — superseded answers', () => {
   test('an answer to a strip the brush has since left is dropped', async () => {
     const requested = ref<TimeInterval>({ start: NOW - HOUR, end: NOW })

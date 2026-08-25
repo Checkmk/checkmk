@@ -42,6 +42,12 @@ function fitsWithin(window: TimeInterval, domain: TimeInterval): boolean {
   return window.start >= domain.start && window.end <= domain.end
 }
 
+// Snapping both ends onto a step wider than the extent itself collapses it, and every mark would
+// then be placed by a division by zero.
+function drawableExtent(drawn: TimeInterval, fallback: TimeInterval): TimeInterval {
+  return drawn.end > drawn.start ? drawn : fallback
+}
+
 /**
  * What the user asks for is known at once; the strip's waveform arrives a fetch later. Drawing a
  * window from one and an extent from the other is what makes the bar jump, so the two are kept
@@ -66,7 +72,7 @@ export function useBrushSnapshot<TData>(options: {
     answered.value = {
       requestedDomain: overview.requestedDomain,
       snapshot: {
-        drawnDomain: overview.drawnDomain,
+        drawnDomain: drawableExtent(overview.drawnDomain, overview.requestedDomain),
         window: pendingWindow.value,
         data: overview.data
       }

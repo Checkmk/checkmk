@@ -40,28 +40,36 @@ afterEach(() => {
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400']
 
-/** Renders the form off the live store row, unmounting it when the row is gone. */
-function renderForm(seed: DraftRRDMetricItem) {
+/** Renders one form per seeded row, dropping a form when its row is gone. */
+function renderForms(seeds: DraftRRDMetricItem[]) {
   const store = useGraphItems(PALETTE)
-  store.replaceAll([seed])
+  store.replaceAll(seeds)
   const harness = defineComponent({
     setup() {
-      return () => {
-        const item = store.items.value.find((candidate) => candidate.id === seed.id)
-        return item?.type === 'rrd_metric'
-          ? h(RrdMetricForm, {
-              item,
-              store,
-              hostNameErrors: [],
-              serviceNameErrors: [],
-              metricNameErrors: []
-            })
-          : null
-      }
+      return () =>
+        h(
+          'div',
+          store.items.value
+            .filter((item) => item.type === 'rrd_metric')
+            .map((item) =>
+              h(RrdMetricForm, {
+                key: item.id,
+                item,
+                store,
+                hostNameErrors: [],
+                serviceNameErrors: [],
+                metricNameErrors: []
+              })
+            )
+        )
     }
   })
   render(harness)
   return store
+}
+
+function renderForm(seed: DraftRRDMetricItem) {
+  return renderForms([seed])
 }
 
 function metriclessDraft(): DraftRRDMetricItem {
@@ -165,4 +173,19 @@ test('a color resolving after the row was deleted is dropped', async () => {
   resolveColor('#ff0000')
   await new Promise((resolve) => setTimeout(resolve, 0))
   expect(store.items.value).toHaveLength(0)
+})
+
+test('every entry carries its own consolidation function, defaulting to max', async () => {
+  const store = renderForms([newRrdMetricDraft('A', '#28a2f3'), newRrdMetricDraft('B', '#ff8400')])
+
+  const selectors = screen.getAllByRole('combobox', { name: 'Consolidation function' })
+  expect(selectors).toHaveLength(2)
+  expect(store.items.value[0]).toMatchObject({ consolidation: 'max' })
+  expect(store.items.value[1]).toMatchObject({ consolidation: 'max' })
+
+  await fireEvent.click(selectors[0]!)
+  await fireEvent.click(await screen.findByRole('option', { name: 'Min' }))
+
+  expect(store.items.value[0]).toMatchObject({ consolidation: 'min' })
+  expect(store.items.value[1]).toMatchObject({ consolidation: 'max' })
 })

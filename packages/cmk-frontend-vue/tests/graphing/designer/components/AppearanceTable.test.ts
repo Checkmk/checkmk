@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, within } from '@testing-library/vue'
 import { nextTick } from 'vue'
 
 import type { Metric } from '@/graphing/components/TimeSeriesGraph'
@@ -239,4 +239,31 @@ test('collapsing a multi-line row hides its per-line rows, reopening brings them
   await fireEvent.click(toggles()[0]!)
   expect(screen.getByText('line one')).toBeInTheDocument()
   expect(screen.getByText('line two')).toBeInTheDocument()
+})
+
+test('a row states its source, telling RRD and metrics backend rows apart', () => {
+  renderTable(
+    [rrdMetricItem('A', { title: 'From RRD' }), metricBackendItem('B', { title: 'From backend' })],
+    new Map()
+  )
+
+  expect(screen.getByText('Checkmk RRD')).toBeInTheDocument()
+  expect(screen.getByText('Metrics backend')).toBeInTheDocument()
+})
+
+test('per-row colour and visibility changes leave the other row untouched', async () => {
+  const { store } = renderTable(
+    [
+      rrdMetricItem('A', { title: 'First', color: '#111111' }),
+      rrdMetricItem('B', { title: 'Second', color: '#222222' })
+    ],
+    new Map()
+  )
+
+  const colorInput = rowOf('First').querySelector<HTMLInputElement>('input[type=color]')!
+  await fireEvent.update(colorInput, '#ff0000')
+  await fireEvent.click(within(rowOf('Second')).getByRole('button', { name: 'Toggle visibility' }))
+
+  expect(store.items.value[0]).toMatchObject({ color: '#ff0000', visible: true })
+  expect(store.items.value[1]).toMatchObject({ color: '#222222', visible: false })
 })

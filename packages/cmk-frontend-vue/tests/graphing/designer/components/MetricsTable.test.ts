@@ -430,3 +430,18 @@ describe('a blocked row', () => {
     expect(new Set(issues.map((issue) => issue.field))).toEqual(new Set(Object.keys(allFields)))
   })
 })
+
+test('three metrics are three rows, and deleting one drops only that row', async () => {
+  const { store } = renderTable([
+    rrdMetricItem('A', { title: 'First' }),
+    rrdMetricItem('B', { title: 'Second' }),
+    rrdMetricItem('C', { title: 'Third' })
+  ])
+  expect(screen.getAllByLabelText('Select row')).toHaveLength(3)
+
+  const [, deleteSecond] = screen.getAllByRole('button', { name: 'Delete' })
+  await fireEvent.click(deleteSecond!)
+
+  expect(store.items.value.map((item) => item.id)).toEqual(['A', 'C'])
+  expect(screen.getAllByLabelText('Select row')).toHaveLength(2)
+})

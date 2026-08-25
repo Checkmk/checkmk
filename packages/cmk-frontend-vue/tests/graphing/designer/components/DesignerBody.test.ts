@@ -17,7 +17,7 @@ import type { CustomGraphObject } from '@/graphing/designer/api'
 import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { fromApiDataSource } from '@/graphing/designer/drafts'
-import type { ApiDataSourceInput, ItemId } from '@/graphing/designer/types'
+import type { ApiDataSource, ApiDataSourceInput, ItemId } from '@/graphing/designer/types'
 import type { RowIssue } from '@/graphing/designer/validation'
 
 import { filterDefinitions, metricBackendItem } from '../fixtures'
@@ -217,6 +217,7 @@ function renderBody(
     displaySettings?: boolean
     graph?: CustomGraphObject
     issuesByRow?: ReadonlyMap<ItemId, RowIssue[]>
+    metricBackendAvailable?: boolean
   } = {}
 ) {
   const { graph, ...rest } = overrides
@@ -545,4 +546,114 @@ test('a pan in view mode moves the window but leaves the context view where it w
   })
   // Only the main window was asked for again: the strip stayed where it was.
   expect(postSpy.mock.calls).toHaveLength(3)
+})
+
+/** A fetch response in which `sourceId` fanned out into one series per entry of `titles`. */
+function fanOutResponse(sourceId: string, titles: string[]): unknown {
+  return {
+    data: {
+      time_range: { start: 0, end: 3600, step: 60 },
+      metrics: titles.map((title, index) => metric(sourceId, `metric-${index}`, title)),
+      group_titles: [],
+      horizontal_lines: [],
+      warnings: [],
+      errors: []
+    },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  }
+}
+
+function drawnTitles(): string {
+  return screen.getByTestId('drawn').textContent!
+}
+
+function lastPostedSources(postSpy: ReturnType<typeof vi.spyOn>): ApiDataSource[] {
+  const calls = postSpy.mock.calls
+  const options = calls[calls.length - 1]![1] as {
+    body: { content: { data_sources: ApiDataSource[] } }
+  }
+  return options.body.content.data_sources
+}
+
+test('toggling visibility in the appearance table drops the metric from the preview and back', async () => {
+  renderBody('edit')
+  await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+  const chart = screen.getByTestId('time-series-graph')
+  await waitFor(() => expect(chart).toHaveTextContent('CPU'))
+
+  const [hideA] = within(screen.getByRole('tabpanel')).getAllByRole('button', {
+    name: 'Toggle visibility'
+  })
+  await fireEvent.click(hideA!)
+
+  await waitFor(() => expect(chart).not.toHaveTextContent('CPU'))
+  expect(chart).toHaveTextContent('Memory')
+
+  await fireEvent.click(hideA!)
+  await waitFor(() => expect(chart).toHaveTextContent('CPU'))
+})
+
+test.each([
+  { kind: 'an RRD query', source: () => rrdQuerySource('Q'), metricBackendAvailable: false },
+  {
+    kind: 'a metrics backend query',
+    source: () => ({ ...metricBackendItem('Q'), title: 'Q' }),
+    metricBackendAvailable: true
+  }
+])(
+  'hiding the parent of $kind takes every nested line off the preview at once',
+  async ({ source, metricBackendAvailable }) => {
+    vi.spyOn(client, 'POST').mockResolvedValue(
+      fanOutResponse('Q', ['host-1', 'host-2', 'host-3']) as never
+    )
+    renderBody('edit', {
+      graph: graphObject([source()]),
+      metricBackendAvailable
+    })
+    await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+    await waitFor(() => expect(drawnTitles()).toBe('host-1,host-2,host-3'))
+
+    // Nested lines carry no toggle of their own.
+    const panel = screen.getByRole('tabpanel')
+    const parentToggles = within(panel).getAllByRole('button', { name: 'Toggle visibility' })
+    expect(parentToggles).toHaveLength(1)
+
+    await fireEvent.click(parentToggles[0]!)
+
+    await waitFor(() => expect(drawnTitles()).toBe(''))
+  }
+)
+
+test('changing a line style sends the new representation with the next preview fetch', async () => {
+  const postSpy = vi.spyOn(client, 'POST').mockResolvedValue(fetchDataResponse() as never)
+  renderBody('edit', { graph: graphObject([rrdSource('A')]) })
+  await userEvent.click(await screen.findByRole('tab', { name: 'Graph appearance' }))
+  await waitFor(() => expect(postSpy).toHaveBeenCalled())
+  expect(lastPostedSources(postSpy)[0]!.line_type).toBe('line')
+
+  for (const { label, lineType } of [
+    { label: 'Area', lineType: 'area' },
+    { label: 'Stack', lineType: 'stack' }
+  ]) {
+    await fireEvent.click(screen.getByRole('combobox', { name: 'Line style' }))
+    await fireEvent.click(await screen.findByRole('option', { name: label }))
+
+    await waitFor(() => expect(lastPostedSources(postSpy)[0]!.line_type).toBe(lineType), {
+      timeout: PAN_REFETCH_TIMEOUT_MS
+    })
+  }
+})
+
+test('a multi-selection query is one row to configure and one line per matching series', async () => {
+  vi.spyOn(client, 'POST').mockResolvedValue(
+    fanOutResponse('Q', ['host-1', 'host-2', 'host-3']) as never
+  )
+  renderBody('edit', { graph: graphObject([rrdQuerySource('Q')]) })
+  await screen.findByRole('tab', { name: 'Metrics selection' })
+
+  expect(within(screen.getByRole('tabpanel')).getAllByLabelText('Select row')).toHaveLength(1)
+
+  await userEvent.click(screen.getByRole('tab', { name: 'Graph appearance' }))
+  await waitFor(() => expect(drawnTitles()).toBe('host-1,host-2,host-3'))
 })

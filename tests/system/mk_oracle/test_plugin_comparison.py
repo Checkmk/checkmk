@@ -23,10 +23,22 @@ from tests.system.mk_oracle.conftest import OracleDatabase
 # 23ai Free (SID FREE) with the restricted ``c##checkmk`` test user. Each entry has
 # a rationale; anything not listed is treated as a regression and fails the test.
 KNOWN_DEVIATIONS: dict[str, set[str]] = {
-    # both plugins collect the rulesets' default sections (SECTION_LINES); the async ones
-    # are cached, hence ignored, on both sides
+    # both plugins collect the rulesets' default sections (SECTION_LINES)
     "only_in_old": set(),
-    "only_in_new": set(),
+    # The async sections, present only in the new plugin's output because the tests
+    # run it with `--no-spool`: that emits every section inline in one run and
+    # without a `cached(...)` marker, so `ComparisonResult` no longer skips them
+    # (it skips by looking for `:cached` in the header). The old plugin collects
+    # them in its own asynchronous run, so a single legacy run has no counterpart.
+    #
+    # `asm_diskgroup` is async too but never appears: the test database has no ASM.
+    "only_in_new": {
+        "oracle_jobs:sep(124)",
+        "oracle_locks:sep(124)",
+        "oracle_resumable:sep(124)",
+        "oracle_rman:sep(124)",
+        "oracle_tablespaces:sep(124)",
+    },
     "different": {
         # oracle_performance: two independent, accepted differences —
         #  * the OLD plugin emits a noise/debug row for the PDB

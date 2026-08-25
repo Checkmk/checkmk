@@ -873,7 +873,7 @@ mod custom_path_tests {
                     || s.name().as_str() == item_or_name
             })
             .expect("section not found in config");
-        Section::new(cfg, 0, config.options())
+        Section::new(cfg, Some(0), config.options())
     }
 
     /// First resolved query body for `section` at `version`, using `search_dirs`

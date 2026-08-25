@@ -3,30 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Result, State
 from cmk.plugins.oracle.agent_based.liboracle import oracle_handle_ora_errors
 
 
 def test_failure_row_with_an_ora_message() -> None:
     line = ["orcl", "FAILURE", "ORA-00942: table or view does not exist"]
-    assert oracle_handle_ora_errors(line) == Result(
-        state=State.UNKNOWN, summary="ORA-00942: table or view does not exist"
-    )
+    assert oracle_handle_ora_errors(line) == "ORA-00942: table or view does not exist"
 
 
 def test_failure_row_with_a_non_ora_message() -> None:
     line = ["orcl", "FAILURE", "IO Error: The Network Adapter could not establish the connection"]
-    assert oracle_handle_ora_errors(line) == Result(
-        state=State.UNKNOWN,
-        summary="IO Error: The Network Adapter could not establish the connection",
+    assert (
+        oracle_handle_ora_errors(line)
+        == "IO Error: The Network Adapter could not establish the connection"
     )
 
 
 def test_legacy_failure_row_whose_message_contains_the_separator() -> None:
     line = ["orcl", "FAILURE", "ORA-00600: internal error [x", "y]"]
-    assert oracle_handle_ora_errors(line) == Result(
-        state=State.UNKNOWN, summary="ORA-00600: internal error [x y]"
-    )
+    assert oracle_handle_ora_errors(line) == "ORA-00600: internal error [x y]"
 
 
 def test_failure_row_with_an_empty_message() -> None:
@@ -63,25 +58,25 @@ def test_oracle_jobs_data_row_for_a_pdb_named_failure() -> None:
 
 def test_legacy_error_row_starting_with_ora() -> None:
     line = ["ORA-01017:", "invalid", "username/password"]
-    assert oracle_handle_ora_errors(line) == Result(
-        state=State.UNKNOWN,
-        summary='Found error in agent output "ORA-01017: invalid username/password"',
+    assert (
+        oracle_handle_ora_errors(line)
+        == 'Found error in agent output "ORA-01017: invalid username/password"'
     )
 
 
 def test_legacy_error_row_with_ora_in_the_second_field() -> None:
     line = ["orcl", "ORA-01017:", "invalid username/password"]
-    assert oracle_handle_ora_errors(line) == Result(
-        state=State.UNKNOWN,
-        summary='Found error in agent output "ORA-01017: invalid username/password"',
+    assert (
+        oracle_handle_ora_errors(line)
+        == 'Found error in agent output "ORA-01017: invalid username/password"'
     )
 
 
 def test_error_row_from_the_1_6_solaris_agent_sup_9521() -> None:
     line = ["Error", "ORA-01017: invalid username/password"]
-    assert oracle_handle_ora_errors(line) == Result(
-        state=State.UNKNOWN,
-        summary='Found error in agent output "ORA-01017: invalid username/password"',
+    assert (
+        oracle_handle_ora_errors(line)
+        == 'Found error in agent output "ORA-01017: invalid username/password"'
     )
 
 

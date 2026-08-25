@@ -49,8 +49,8 @@ def parse_oracle_sessions(string_table: StringTable) -> SectionOracleSessions:
         error = oracle_handle_ora_errors(line)
         if error is False:
             continue
-        if isinstance(error, Result):
-            parsed.setdefault(line[0], OracleSession()).error = error.summary
+        if isinstance(error, str):
+            parsed.setdefault(line[0], OracleSession()).error = error
             continue
         for key, entry in zip(header, line[1:]):
             with contextlib.suppress(ValueError):

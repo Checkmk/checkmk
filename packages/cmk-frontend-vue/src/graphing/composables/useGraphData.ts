@@ -27,6 +27,9 @@ export interface ResolvedGraph {
   title: string
   metrics: Metric[]
   timeRange: TimeRange
+  // Not recoverable from `timeRange`: the fetch widens the window by its edge neighbours and the
+  // backend answers on its own storage grid.
+  requestedTimeRange: RequestedTimeRange
   horizontalLines: HorizontalLine[]
   // The add-to type the context menu is assembled for and the specification its actions replay;
   // absent for graphs that offer no add-to action.
@@ -36,9 +39,14 @@ export interface ResolvedGraph {
 
 /** What a data source is asked to fetch, beyond the graph definition itself. */
 export interface GraphFetchParams {
-  requestedTimeRange: { start: number; end: number; step: number }
+  fetchWindow: { start: number; end: number; step: number }
   consolidationFunction: ConsolidationFn
   combinationMode: GraphCombinationMode | null
+}
+
+interface CurrentRequest {
+  fetchWindow: GraphFetchParams['fetchWindow']
+  requestedTimeRange: RequestedTimeRange
 }
 
 export interface FetchedGraph {
@@ -73,7 +81,7 @@ export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, p
       params: { header: { 'Content-Type': 'application/json' } },
       body: {
         internal: definition.internal,
-        requested_time_range: params.requestedTimeRange,
+        requested_time_range: params.fetchWindow,
         consolidation_function: params.consolidationFunction,
         combination_mode: params.combinationMode
       }
@@ -164,22 +172,24 @@ export function useGraphData(
     return Number.isFinite(canvasWidth) && canvasWidth > 0
   }
 
-  function currentRequest(): { requestedTimeRange: GraphFetchParams['requestedTimeRange'] } {
+  function currentRequest(): CurrentRequest {
     const range = getRequestedTimeRange()
     const step = computeStep(range.start, range.end, getCanvasWidth())
     lastRequestedStep = step
+    const requestedTimeRange = { start: range.start, end: range.end }
     return {
-      requestedTimeRange: withEdgeNeighbours({ start: range.start, end: range.end, step })
+      fetchWindow: withEdgeNeighbours({ ...requestedTimeRange, step }),
+      requestedTimeRange
     }
   }
 
   async function fetchOne(
     definition: GraphDataDefinition,
     index: number,
-    requestedTimeRange: GraphFetchParams['requestedTimeRange']
+    request: CurrentRequest
   ): Promise<ResolvedEntry> {
     const fetched = await fetchGraph(definition, {
-      requestedTimeRange,
+      fetchWindow: request.fetchWindow,
       consolidationFunction: getConsolidationFnPerGraph()[index] ?? DEFAULT_CONSOLIDATION_FN,
       combinationMode: getCombinationMode()
     })
@@ -188,6 +198,7 @@ export function useGraphData(
         title: fetched.title || (definition.options?.header.title ?? ''),
         metrics: fetched.metrics,
         timeRange: fetched.timeRange,
+        requestedTimeRange: request.requestedTimeRange,
         horizontalLines: fetched.horizontalLines,
         addTo: definition.add_to,
         internal: definition.internal
@@ -211,9 +222,9 @@ export function useGraphData(
     loadsInFlight.value += 1
 
     try {
-      const { requestedTimeRange } = currentRequest()
+      const request = currentRequest()
       const resolved = await Promise.all(
-        definitions.map((definition, index) => fetchOne(definition, index, requestedTimeRange))
+        definitions.map((definition, index) => fetchOne(definition, index, request))
       )
       if (tokenOwningAllSlots !== token) {
         return
@@ -255,8 +266,7 @@ export function useGraphData(
     loadsInFlight.value += 1
 
     try {
-      const { requestedTimeRange } = currentRequest()
-      const entry = await fetchOne(definition, index, requestedTimeRange)
+      const entry = await fetchOne(definition, index, currentRequest())
       if (tokenOwningSlot[index] !== token) {
         return
       }

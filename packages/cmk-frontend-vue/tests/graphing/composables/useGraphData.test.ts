@@ -7,10 +7,14 @@ import { render, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { type Ref, defineComponent, h } from 'vue'
+import { defineComponent, h } from 'vue'
 
 import { timestampAt } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
-import { type GraphDataFetcher, useGraphData } from '@/graphing/composables/useGraphData'
+import {
+  type GraphDataFetcher,
+  type GraphFetchParams,
+  useGraphData
+} from '@/graphing/composables/useGraphData'
 import type { RequestedTimeRange } from '@/graphing/types'
 
 const UNIT: components['schemas']['ApiUnitFormat'] = {
@@ -158,18 +162,16 @@ describe('useGraphData — requested resolution', () => {
   })
 })
 
-/** Mounts the composable on the given fetcher and hands back the diagnostics it exposes. */
-function renderWithFetcher(fetchGraph: GraphDataFetcher): {
-  graphs: Readonly<Ref<unknown[]>>
-  partialErrors: Readonly<Ref<readonly string[]>>
-  warnings: Readonly<Ref<readonly string[]>>
-} {
+function renderWithFetcher(
+  fetchGraph: GraphDataFetcher,
+  range: RequestedTimeRange = { start: 0, end: 3_600 }
+): ReturnType<typeof useGraphData> {
   let exposed!: ReturnType<typeof useGraphData>
   const harness = defineComponent({
     setup() {
       exposed = useGraphData(
         () => [{ internal: '{"graphs": []}', add_to: null } as never],
-        () => ({ start: 0, end: 3_600 }),
+        () => range,
         () => 800,
         () => ['max'],
         () => null,
@@ -181,6 +183,33 @@ function renderWithFetcher(fetchGraph: GraphDataFetcher): {
   render(harness)
   return exposed
 }
+
+// The brush pairs its overview data with the strip extent that data covers, and neither end of
+// that pairing survives the round trip on its own.
+test('a resolved graph reports the range it was asked for, not the window it was fetched with', async () => {
+  const asked = { start: 10_000, end: 20_000 }
+  const fetchWindows: GraphFetchParams['fetchWindow'][] = []
+
+  const { graphs } = renderWithFetcher(async (_definition, params) => {
+    fetchWindows.push(params.fetchWindow)
+    return {
+      title: 'CPU',
+      metrics: [],
+      // Deliberately unlike `asked`: the backend answers on its own storage grid.
+      timeRange: { start: 9_000, end: 21_000, step: 300 },
+      horizontalLines: [],
+      errors: [],
+      warnings: []
+    }
+  }, asked)
+
+  await waitFor(() => expect(graphs.value).toHaveLength(1))
+  expect(graphs.value[0]!.requestedTimeRange).toEqual(asked)
+  // Unrecoverable from either side of the round trip: the request is widened by its edge
+  // neighbours, and the response above lands somewhere else again.
+  expect(fetchWindows[0]!.start).toBeLessThan(asked.start)
+  expect(fetchWindows[0]!.end).toBeGreaterThan(asked.end)
+})
 
 test('a fetcher that reports no diagnostics fields leaves them empty', async () => {
   // `GraphDataFetcher` is a public extension point, and one supplied from untyped code can omit the

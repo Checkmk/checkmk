@@ -283,7 +283,7 @@ describe('createSharedGraphFetcher', () => {
     const fetched = await createSharedGraphFetcher('w1', CMK_TOKEN)(
       { internal: '{"graphs": []}' },
       {
-        requestedTimeRange: { start: 1_000, end: 2_000, step: 60 },
+        fetchWindow: { start: 1_000, end: 2_000, step: 60 },
         consolidationFunction: 'max',
         combinationMode: null
       }

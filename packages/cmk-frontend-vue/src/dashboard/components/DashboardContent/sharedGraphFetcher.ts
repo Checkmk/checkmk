@@ -22,7 +22,7 @@ export function createSharedGraphFetcher(widgetId: string, cmkToken: string): Gr
         headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
         body: {
           widget_id: widgetId,
-          requested_time_range: params.requestedTimeRange,
+          requested_time_range: params.fetchWindow,
           consolidation_function: params.consolidationFunction
         }
       })

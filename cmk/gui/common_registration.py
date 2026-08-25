@@ -48,10 +48,11 @@ from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.form_specs import registration as vue_registration
 from cmk.gui.graphing.openapi import register as register_graphing_openapi_endpoints
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.monitor.command import downtime_recurrences, monitor_commands
 from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
-from cmk.gui.monitor.hosts._folder import monitor_folders
+from cmk.gui.monitor.hosts._folder import monitor_folders, SetupFolders
 from cmk.gui.monitor.services import registration as monitor_services_registration
 from cmk.gui.monitor.services._page_menu import host_menus
 from cmk.gui.nodevis import nodevis
@@ -109,7 +110,12 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicRegistry,
 )
 from cmk.gui.watolib.host_rename import RenameHostHookRegistry
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderValidatorsRegistry
+from cmk.gui.watolib.hosts_and_folders import (
+    all_folder_title_paths,
+    folder_title_path,
+    folder_tree,
+    FolderValidatorsRegistry,
+)
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
@@ -243,8 +249,14 @@ def register(
     monitor_commands.use_legacy_source(command_registry)
     downtime_recurrences.use_legacy_source(command_registry)
     host_menus.use_legacy_source(LegacyHostMenus())
-    # The tree is request-scoped, so the factory is injected rather than one of its instances.
-    monitor_folders.use_setup_source(folder_tree)
+    # Setup answers about the folders of whoever is asking, so both the tree and the user are read
+    # per call - `user` is the request's, not this wiring's.
+    monitor_folders.use_setup_source(
+        SetupFolders(
+            title_of=lambda path: folder_title_path(folder_tree(), path, user),
+            all_titles=lambda: all_folder_title_paths(folder_tree(), user),
+        )
+    )
     monitor_hosts_registration.register(
         endpoint_family_registry,
         versioned_endpoint_registry,

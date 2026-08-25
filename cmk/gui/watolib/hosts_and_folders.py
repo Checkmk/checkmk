@@ -4333,6 +4333,53 @@ def get_folder_title_path_with_links(tree: FolderTree, path: PathWithoutSlash) -
     return tree.folder(path).title_path_with_links()
 
 
+@request_memoize()
+def folder_title_path(
+    tree: FolderTree, path: PathWithoutSlash, acting_user: LoggedInUser
+) -> str | None:
+    """The titles down to this folder, for a reader outside Setup that names it to a user.
+
+    None when this user has no such folder: one the local Setup does not know, which is the
+    ordinary case for a host of a remote site keeping a hierarchy of its own, or one kept from
+    them. Answering by path lets a caller holding one - a monitoring page reading the config file
+    a host is defined in, say - know nothing about how folders are stored or titled.
+    """
+    if tree.config.wato_hide_folders_without_read_permissions:
+        # Which folders a user may know of takes the whole tree to answer, since one they may not
+        # read is still theirs to see while a folder below it is. Memoized, so however many rows
+        # ask, the walk happens once.
+        return all_folder_title_paths(tree, acting_user).get(path)
+    try:
+        return tree.folder(path).alias_path(show_main=False)
+    except MKGeneralException:
+        return None
+
+
+@request_memoize()
+def all_folder_title_paths(
+    tree: FolderTree, acting_user: LoggedInUser
+) -> Mapping[PathWithoutSlash, str]:
+    """Every folder this user may know of, titled the way `folder_title_path` titles one.
+
+    Kept apart from asking for a single title because the two do not cost the same: one title
+    instantiates that folder's own chain, all of them walk the tree. Both are memoized for the
+    request, which is what makes either safe to ask per table row.
+
+    Which folders a user may know of is `recursive_subfolder_choices`' answer rather than a second
+    reading of the same rule: it is the one that keeps a folder whose subfolder is visible, and the
+    one Setup's own folder choices go by. Only an installation that hides the folders a user may
+    not read has to ask it, and only that installation pays for the permission check per folder.
+    """
+    if not tree.config.wato_hide_folders_without_read_permissions:
+        return {
+            path: folder.alias_path(show_main=False) for path, folder in tree.all_folders().items()
+        }
+    return {
+        path: tree.folder(path).alias_path(show_main=False)
+        for path, _indented_title in tree.folder_choices_fulltitle(acting_user)
+    }
+
+
 def _ensure_trailing_slash(path: str) -> PathWithSlash:
     """Ensure one single trailing slash on a pathname.
 

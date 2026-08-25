@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Sequence, Set
-from functools import partial
 from typing import Annotated, Self
 
 from annotated_types import Interval
@@ -114,11 +113,11 @@ class HostEntry:
     )
     folder: str | ApiOmitted = api_field(
         description=(
-            "The Setup folder path the host is configured in, '/' for the root folder. Empty "
-            "when the host isn't managed via Setup, e.g. it was added directly to the "
-            "monitoring core."
+            "The title Setup gives the folder the host is configured in: the titles down to it, "
+            "'Main' for the root folder. Empty when Setup knows no such folder, e.g. the host "
+            "isn't managed via Setup or a remote site owns it."
         ),
-        example="/network/switches",
+        example="Data center Munich / Rack 1",
         default_factory=ApiOmitted,
     )
     last_check: UnixTimestamp | ApiOmitted = api_field(
@@ -317,7 +316,7 @@ def list_hosts(
                 status=400, title="Invalid filter", detail=str(exc)
             ) from exc
 
-    host_repo = LiveStatusHostRepository(connection=sites.live())
+    host_repo = LiveStatusHostRepository(connection=sites.live(), folders=monitor_folders)
 
     # NOTE: we never want this value scoped by the selected sites. It should always get full count.
     # As a temporary solution, we are querying count here and passing the result to the handler.
@@ -347,10 +346,7 @@ def list_hosts(
             filters=(
                 HostFilter("")
                 if filters is None
-                else parse_as_livestatus_filter(
-                    filters,
-                    setup_folders=partial(monitor_folders.visible_to, api_context.user),
-                )
+                else parse_as_livestatus_filter(filters, setup_folders=monitor_folders.titles)
             ),
             fields=fields,
             site_ids=site_ids,
@@ -421,7 +417,8 @@ ENDPOINT_LIST_HOSTS = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
-                    # Read when a folder condition is matched against Setup's folder titles.
+                    # Read while titling a folder, on an installation that keeps the folders a
+                    # user may not read out of sight.
                     permissions.OkayToIgnorePerm("wato.see_all_folders"),
                 ]
             )

@@ -2,144 +2,138 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import re
 from collections.abc import Sequence
-from typing import cast
 
 import pytest
 
-from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.monitor.hosts._folder import (
-    folder_contains_filters,
-    folder_from_filename,
+    folder_matching_filters,
+    folder_path_from_filename,
+    folder_title,
     MonitorFolders,
-    TitledFolder,
+    SetupFolders,
 )
 
 
-class _AnyUser:
-    """Stands in for the asking user, whom the source below never consults."""
+def _wired_to(titles: dict[str, str]) -> MonitorFolders:
+    """A `MonitorFolders` reading these titles, the way Setup's functions are wired in."""
+    folders = MonitorFolders()
+    folders.use_setup_source(
+        SetupFolders(title_of=titles.get, all_titles=lambda: titles),
+    )
+    return folders
 
 
-class _SetupFolders:
-    """Stands in for Setup's folder tree, which is injected, not copied."""
-
-    def __init__(self, folders: list[TitledFolder]) -> None:
-        self._folders = folders
-
-    def add(self, folder: TitledFolder) -> None:
-        self._folders.append(folder)
-
-    def folder_choices_fulltitle(self, acting_user: LoggedInUser) -> Sequence[TitledFolder]:
-        return self._folders
+# How Setup titles the folders of the filenames below: the root, a title that shares nothing with
+# its path, and a child whose title path carries its parent's. Folders the filenames name but Setup
+# does not know are left out on purpose - a monitoring core reports files Setup never wrote.
+_TITLES = {
+    "": "Main",
+    "network": "Netzwerk",
+    "network/dc1": "Netzwerk / Rechenzentrum 1",
+    "dc_muc": "Data center Munich",
+}
 
 
 @pytest.mark.parametrize(
     "filename, expected",
     [
-        ("/wato/hosts.mk", "/"),
-        ("/wato/network/switches/hosts.mk", "/network/switches"),
-        ("/wato/network/hosts.mk", "/network"),
-        ("/omd/sites/heute/etc/nagios/conf.d/hosts.mk", ""),
-        ("/wato/network/switches/other.mk", ""),
+        ("/wato/hosts.mk", ""),
+        ("/wato/network/hosts.mk", "network"),
+        ("/wato/network/switches/hosts.mk", "network/switches"),
+        ("/omd/sites/heute/etc/nagios/conf.d/hosts.mk", None),
+        ("/wato/network/switches/other.mk", None),
+        ("/watoo/network/hosts.mk", None),
     ],
 )
-def test_folder_from_filename(filename: str, expected: str) -> None:
-    assert folder_from_filename(filename) == expected
+def test_folder_path_from_filename(filename: str, expected: str | None) -> None:
+    assert folder_path_from_filename(filename) == expected
+
+
+@pytest.mark.parametrize(
+    "filename, expected",
+    [
+        pytest.param("/wato/hosts.mk", "Main", id="the root folder is titled Main"),
+        pytest.param("/wato/dc_muc/hosts.mk", "Data center Munich", id="a title unlike its path"),
+        pytest.param(
+            "/wato/network/dc1/hosts.mk",
+            "Netzwerk / Rechenzentrum 1",
+            id="the titles down to the folder",
+        ),
+        pytest.param("/wato/nowhere/hosts.mk", "", id="a folder Setup does not know"),
+        pytest.param("/omd/sites/heute/hosts.mk", "", id="not managed via Setup"),
+    ],
+)
+def test_folder_title(filename: str, expected: str) -> None:
+    assert folder_title(filename, _TITLES.get) == expected
+
+
+def test_folder_title_is_empty_while_no_setup_source_is_wired() -> None:
+    assert folder_title("/wato/dc_muc/hosts.mk", MonitorFolders().title_of) == ""
 
 
 @pytest.mark.parametrize(
     "value, expected",
     [
         pytest.param(
-            "network",
-            [r"Filter: filename ~~ ^/wato/.*network.*/hosts\.mk$"],
-            id="folder name",
+            "Munich",
+            ["Filter: filename = /wato/dc_muc/hosts.mk"],
+            id="one folder carries the title",
         ),
         pytest.param(
-            "/network",
+            "Netzwerk",
             [
-                r"Filter: filename ~~ ^/wato/.*/network.*/hosts\.mk$",
-                r"Filter: filename ~~ ^/wato/network.*/hosts\.mk$",
+                "Filter: filename = /wato/network/hosts.mk",
+                "Filter: filename = /wato/network/dc1/hosts.mk",
                 "Or: 2",
             ],
-            id="folder path, which may also be a prefix of the whole path",
+            id="a parent's title reaches its subfolders",
         ),
         pytest.param(
-            "/",
-            [
-                r"Filter: filename ~~ ^/wato/.*/.*/hosts\.mk$",
-                r"Filter: filename ~~ ^/wato/.*/hosts\.mk$",
-                "Filter: filename = /wato/hosts.mk",
-                "Or: 3",
-            ],
-            id="every Setup folder, the root folder included",
+            "Main",
+            ["Filter: filename = /wato/hosts.mk"],
+            id="the root folder by its title",
         ),
         pytest.param(
-            "",
-            [
-                r"Filter: filename ~~ ^/wato/.*.*/hosts\.mk$",
-                "Filter: filename = /wato/hosts.mk",
-                r"Filter: filename ~~ ^/wato/(.*/)?hosts\.mk$",
-                "Negate:",
-                "Or: 3",
-            ],
-            id="every host, those without a folder included",
+            "dc_muc",
+            ["Filter: state >= 0", "Negate:"],
+            id="the path is no longer a name to filter by",
         ),
         pytest.param(
-            "net.*",
-            [r"Filter: filename ~~ ^/wato/.*net\.\*.*/hosts\.mk$"],
-            id="value is a literal, not a pattern",
+            "no such folder",
+            ["Filter: state >= 0", "Negate:"],
+            id="no folder carries it, so no host does",
         ),
     ],
 )
-def test_folder_contains_filters(value: str, expected: list[str]) -> None:
-    assert folder_contains_filters(value) == expected
+def test_folder_matching_filters(value: str, expected: list[str]) -> None:
+    assert folder_matching_filters(value, _TITLES) == expected
 
 
-def test_folder_contains_filters_matches_the_title_setup_shows() -> None:
-    """A title needs a file of its own: it may resemble the path in no way at all."""
-    assert folder_contains_filters("Munich", folders=[("dc_muc", "Data center Munich")]) == [
-        r"Filter: filename ~~ ^/wato/.*Munich.*/hosts\.mk$",
-        "Filter: filename = /wato/dc_muc/hosts.mk",
-        "Or: 2",
-    ]
-
-
-def test_folder_contains_filters_matches_the_root_folder_by_its_title() -> None:
-    assert folder_contains_filters("Main", folders=[("", "Main"), ("network", "Netzwerk")]) == [
-        r"Filter: filename ~~ ^/wato/.*Main.*/hosts\.mk$",
-        "Filter: filename = /wato/hosts.mk",
-        "Or: 2",
-    ]
-
-
-def test_folder_contains_filters_leaves_out_folders_the_path_already_matches() -> None:
-    """Every folder path carries a slash, so titles would only repeat what the paths select."""
-    folders: list[TitledFolder] = [("", "Main"), ("network", "Netzwerk"), ("muc", "Netzwerk/Muc")]
-
-    assert folder_contains_filters("/", folders=folders) == folder_contains_filters("/")
+def test_folder_matching_filters_selects_nothing_while_no_titles_are_known() -> None:
+    """The one failure mode that would pass unseen: no lines at all selects every host."""
+    assert folder_matching_filters("Munich", {}) == ["Filter: state >= 0", "Negate:"]
 
 
 def test_folders_stay_unknown_until_a_setup_source_is_wired() -> None:
-    assert MonitorFolders().visible_to(cast(LoggedInUser, _AnyUser())) == ()
-
-
-def test_the_setup_source_is_read_per_call_so_a_new_folder_is_seen() -> None:
-    setup = _SetupFolders([("network", "Netzwerk")])
     folders = MonitorFolders()
-    folders.use_setup_source(lambda: setup)
 
-    setup.add(("dc_muc", "Data center Munich"))
-
-    assert list(folders.visible_to(cast(LoggedInUser, _AnyUser()))) == [
-        ("network", "Netzwerk"),
-        ("dc_muc", "Data center Munich"),
-    ]
+    assert folders.titles() == {}
+    assert folders.title_of("dc_muc") is None
 
 
-# Filenames as the monitoring core emits them, plus the ones that look Setup-managed without
-# being it. The first three are the fixtures the endpoint tests use, see
+def test_the_setup_source_is_asked_per_call_so_a_new_folder_is_seen() -> None:
+    titles = {"network": "Netzwerk"}
+    folders = _wired_to(titles)
+
+    titles["dc_muc"] = "Data center Munich"
+
+    assert folders.title_of("dc_muc") == "Data center Munich"
+    assert dict(folders.titles()) == {"network": "Netzwerk", "dc_muc": "Data center Munich"}
+
+
+# Filenames as a monitoring core reports them: files Setup wrote, files it did not, and files that
+# only look like its own. The first three are the fixtures the endpoint tests use, see
 # tests/openapi/test_openapi_monitor_all_hosts.py.
 _FILENAMES = (
     "/wato/hosts.mk",
@@ -147,87 +141,55 @@ _FILENAMES = (
     "/omd/sites/heute/etc/nagios/conf.d/hosts.mk",
     "/wato/network/dc1/hosts.mk",
     "/wato/dc_muc/hosts.mk",
-    "/wato/Network/hosts.mk",
-    "/wato/wato/hosts.mk",
-    "/wato/hosts.mk/hosts.mk",
+    "/wato/nowhere/hosts.mk",
     "/wato/network/hosts.mk.bak",
     "/watoo/network/hosts.mk",
     "/omd/sites/heute/etc/check_mk/conf.d/wato/hosts.mk",
 )
 _VALUES = (
     "",
-    "/",
-    "network",
-    "NETWORK",
-    "/network",
-    "/network/dc1",
-    "dc",
-    "wato",
-    "hosts.mk",
-    ".",
-    "a|b",
-    "net.*",
-    # Titles of the folders below, whole and in part, in either case, and one crossing the
-    # separator of a title path.
     "Netzwerk",
     "netzwerk",
+    "Rechenzentrum",
+    "Netzwerk / Rechenzentrum 1",
     "Munich",
     "Data center",
     "Main",
-    "/Rechenzentrum",
+    # Names that are not titles: the folder paths, and the fixed parts of a filename.
+    "dc_muc",
+    "network",
+    "/network",
+    "wato",
+    "hosts.mk",
 )
-# How Setup titles the folders above: a title that shares nothing with its path, a title path
-# carrying its parent's, and the root. Folders the paths of `_FILENAMES` do not name are left out
-# on purpose - Setup does not know every file a monitoring core reports.
-_FOLDERS: tuple[TitledFolder, ...] = (
-    ("", "Main"),
-    ("network", "Netzwerk"),
-    ("network/dc1", "Netzwerk/Rechenzentrum 1"),
-    ("dc_muc", "Data center Munich"),
-)
-
-
-def _title_path_of(filename: str) -> str:
-    """What Setup titles the folder of this file, empty when Setup knows no such folder."""
-    shown_folder = folder_from_filename(filename)
-    for path, title_path in _FOLDERS:
-        if shown_folder == ("/" if not path else f"/{path}"):
-            return title_path
-    return ""
 
 
 @pytest.mark.parametrize("filename", _FILENAMES)
 @pytest.mark.parametrize("value", _VALUES)
-def test_folder_filters_match_exactly_the_folders_shown(value: str, filename: str) -> None:
-    """Filtering by folder has to select the hosts whose folder carries the value.
+def test_folder_filters_select_exactly_the_folders_shown(value: str, filename: str) -> None:
+    """Filtering by folder has to select the hosts whose shown folder carries the value.
 
-    A folder carries it under either of its names: the path shown in the Folder column, or the
-    title Setup shows. Both directions of the `filename` mapping are exercised at once - the
-    folder is read from a filename the way the API returns it, and the filters produced for a
-    value are evaluated against that same filename the way Livestatus would.
+    Both directions are exercised at once: the folder is titled from a filename the way the API
+    returns it, and the filters produced for a value are evaluated against that same filename the
+    way Livestatus would. A host whose folder Setup does not know shows no title, and is therefore
+    never selected - not even by the empty value.
     """
-    carries_value = (
-        value.lower() in folder_from_filename(filename).lower()
-        or value.lower() in _title_path_of(filename).lower()
-    )
+    shown_title = folder_title(filename, _TITLES.get)
+    carries_value = bool(shown_title) and value.lower() in shown_title.lower()
 
-    assert _matches(folder_contains_filters(value, folders=_FOLDERS), filename) == carries_value
+    assert _matches(folder_matching_filters(value, _TITLES), filename) == carries_value
 
 
 def _matches(filter_lines: Sequence[str], filename: str) -> bool:
-    """Evaluate filter lines on a single `filename` the way Livestatus' filter stack does.
-
-    Only what `folder_contains_filters` produces is understood; `~~` is a case-insensitive
-    regex match, as in Livestatus (whose mock in `cmk.livestatus_client.testing` treats it as a
-    plain substring, so it cannot stand in here).
-    """
+    """Evaluate filter lines on a single `filename` the way Livestatus' filter stack does."""
     stack: list[bool] = []
     for line in filter_lines:
         match line.split(" ", 3):
-            case ["Filter:", "filename", "~~", pattern]:
-                stack.append(re.search(pattern, filename, re.IGNORECASE) is not None)
             case ["Filter:", "filename", "=", value]:
                 stack.append(filename == value)
+            case ["Filter:", "state", ">=", "0"]:
+                # Every host has a state, so this holds for the host at hand, whichever it is.
+                stack.append(True)
             case ["Negate:"]:
                 stack.append(not stack.pop())
             case ["Or:", count]:

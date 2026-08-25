@@ -339,11 +339,12 @@ class TestMonitorHostsQuery:
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
+        # The folder is searched by its Setup title; no folder of the test site carries this
+        # query, so the search reaches name and alias only.
         search_filter = [
             "Filter: name ~~ no-such-host",
             "Filter: alias ~~ no-such-host",
-            r"Filter: filename ~~ ^/wato.*no-such-host.*/hosts\.mk$",
-            "Or: 3",
+            "Or: 2",
         ]
         mock_livestatus.add_table("hosts", _HOSTS)
         mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
@@ -438,55 +439,10 @@ class TestMonitorHostsFilters:
         clients: ClientRegistry,
         mock_livestatus: MockLiveStatusConnection,
     ) -> None:
-        # Livestatus stores the host's config file, not the folder the user sees, so a folder
-        # condition becomes filters on `filename` - no matter whether the folder is read at
-        # all. Which hosts that selects is covered by
-        # tests/unit/cmk/gui/monitor/hosts/test_folder.py: the mock reads `~~` as a plain
-        # substring instead of a regex, so it cannot answer that here.
-        mock_livestatus.add_table("hosts", _HOSTS)
-        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
-        mock_livestatus.expect_query(
-            [
-                "GET hosts",
-                f"Columns: {_HOST_TABLE_COLUMNS}",
-                "Filter: filename ~~ ^/wato/.*/network.*/hosts\\.mk$",
-                "Filter: filename ~~ ^/wato/network.*/hosts\\.mk$",
-                "Or: 2",
-                "OrderBy: name asc natural",
-                f"Limit: {_LIMIT}",
-            ]
-        )
-        mock_livestatus.expect_query(
-            [
-                "GET hosts",
-                "Stats: state >= 0",
-                "Filter: filename ~~ ^/wato/.*/network.*/hosts\\.mk$",
-                "Filter: filename ~~ ^/wato/network.*/hosts\\.mk$",
-                "Or: 2",
-            ]
-        )
-        filters = {
-            "type": "condition",
-            "field": "folder",
-            "op": "contains",
-            "value": "/network",
-        }
-        with mock_livestatus():
-            clients.MonitorHosts.list_all(limit=_LIMIT, filters=filters)
-
-    def test_hosts_filtered_by_folder_title(
-        self,
-        clients: ClientRegistry,
-        mock_livestatus: MockLiveStatusConnection,
-    ) -> None:
-        # A folder is also filterable by the title Setup shows for it, which Livestatus knows
-        # nothing about: it is resolved to the folder's file here. The test site has the root
-        # folder only, whose fallback title is "Main".
-        folder_lines = [
-            "Filter: filename ~~ ^/wato/.*Main.*/hosts\\.mk$",
-            "Filter: filename = /wato/hosts.mk",
-            "Or: 2",
-        ]
+        # A folder is filtered by the title Setup shows for it, which Livestatus knows nothing
+        # about: the folders carrying the value are resolved here and asked for by file. The test
+        # site has the root folder only, whose fallback title is "Main".
+        folder_lines = ["Filter: filename = /wato/hosts.mk"]
         mock_livestatus.add_table("hosts", _HOSTS)
         mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
         mock_livestatus.expect_query(
@@ -500,6 +456,32 @@ class TestMonitorHostsFilters:
         )
         mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0", *folder_lines])
         filters = {"type": "condition", "field": "folder", "op": "contains", "value": "Main"}
+        with mock_livestatus():
+            clients.MonitorHosts.list_all(limit=_LIMIT, filters=filters)
+
+    def test_hosts_filtered_by_a_folder_name_that_is_no_title(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        # The folder's path used to be filterable and is not any more. No title carries it, so no
+        # host does - said out loud, since sending no filter at all would select every host. That
+        # the query selects nothing is covered by tests/unit/cmk/gui/monitor/hosts/test_folder.py:
+        # the mock evaluates no `Negate:`, so it cannot answer that here.
+        folder_lines = ["Filter: state >= 0", "Negate:"]
+        mock_livestatus.add_table("hosts", _HOSTS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                *folder_lines,
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0", *folder_lines])
+        filters = {"type": "condition", "field": "folder", "op": "contains", "value": "/network"}
         with mock_livestatus():
             clients.MonitorHosts.list_all(limit=_LIMIT, filters=filters)
 
@@ -1050,7 +1032,7 @@ class TestMonitorHostOverview:
             "last_check": 1783942710,
             "last_state_change": 1783942740,
             "customer": None,
-            "folder": "/network/switches",
+            "folder": "",
             "contact_groups": ["all"],
             "tags": {"criticality": "prod"},
             "labels": {"cmk/os_family": {"value": "linux", "source": "discovered"}},

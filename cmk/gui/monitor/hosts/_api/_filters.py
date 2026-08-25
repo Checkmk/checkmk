@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping
 from typing import Annotated, Literal
 
 from annotated_types import MinLen
@@ -17,7 +17,7 @@ from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.livestatus_client import lqencode, quote_dict
 from cmk.livestatus_client.expressions import LqSafe
 
-from .._folder import folder_contains_filters, TitledFolder
+from .._folder import folder_matching_filters
 from .._models import HostFilter, HostState, HostStateLabel
 from ._validators import validate_label_pairs, validate_uniqueness, validate_unix_timestamp
 
@@ -69,10 +69,8 @@ class StringCondition:
     )
 
 
-# Only "contains" is offered: the value has to be matched against the folder the user sees,
-# which Livestatus does not store (see ``.._folder``). A substring can be relocated into the
-# stored config path, an arbitrary user regex cannot - its anchors and alternations would escape
-# the part of the path that holds the folder.
+# Only "contains" is offered: it is what the funnel in the Folder column produces, and the value
+# is matched against Setup's folder titles here rather than by Livestatus (see ``.._folder``).
 @api_model
 class FolderCondition:
     type: Literal["condition"] = api_field(
@@ -82,12 +80,12 @@ class FolderCondition:
     op: Literal["contains"] = api_field(description="Substring match operation", example="contains")
     value: str = api_field(
         description=(
-            "Substring to look for in the folder path as it is shown in the Folder column, or in "
-            "the folder title as it is shown in Setup - either name selects the folder's hosts. "
-            "The root folder's path is '/'; a host that isn't managed via Setup has no folder at "
-            "all, so a negated condition on '/' selects exactly those."
+            "Substring to look for in the folder title, as the Folder column shows it: the titles "
+            "down to the folder, e.g. 'Data center Munich / Rack 1', and 'Main' for the root "
+            "folder. A host whose folder Setup does not know - one not managed via Setup, or one "
+            "a remote site owns - has no title and is never selected."
         ),
-        example="/network",
+        example="Data center Munich",
         pattern=_NO_NEWLINES_REGEX,
     )
 
@@ -345,19 +343,19 @@ def extract_site_scope(
     return residual, site_ids
 
 
-def _no_folders() -> Sequence[TitledFolder]:
-    return ()
+def _no_folders() -> Mapping[str, str]:
+    return {}
 
 
 def parse_as_livestatus_filter(
-    node: FilterNode, *, setup_folders: Callable[[], Sequence[TitledFolder]] = _no_folders
+    node: FilterNode, *, setup_folders: Callable[[], Mapping[str, str]] = _no_folders
 ) -> HostFilter:
     """Render the filter tree as Livestatus filter lines.
 
-    A folder condition may be matched against the title Setup shows for a folder, which Livestatus
-    does not know, so the Setup folders are passed in. They arrive as a callable because reading
-    them is not free: only a tree that actually carries a folder condition asks for them. Without
-    them, folder conditions match paths only.
+    A folder condition is matched against the titles Setup gives its folders, which Livestatus does
+    not know, so those are passed in. They arrive as a callable because reading them is not free:
+    only a tree that actually carries a folder condition asks for them. Without them no folder has
+    a title, and a folder condition selects nothing.
     """
     filters: list[str] = []
     _accumulate_filters(node, filters, setup_folders)
@@ -397,15 +395,15 @@ def _name_choice_filters(field: str, names: list[str]) -> list[str]:
 
 
 def _accumulate_filters(
-    node: FilterNode, filters: list[str], setup_folders: Callable[[], Sequence[TitledFolder]]
+    node: FilterNode, filters: list[str], setup_folders: Callable[[], Mapping[str, str]]
 ) -> None:
     match node:
         case StringCondition():
             filters.append(f"Filter: {node.field} {_STRING_OP_TO_LS[node.op]} {node.value}")
 
         case FolderCondition():
-            # A folder is not a Livestatus column; it is derived from the host's config file.
-            filters.extend(folder_contains_filters(node.value, folders=setup_folders()))
+            # A folder is not a Livestatus column; it is named by the host's config file.
+            filters.extend(folder_matching_filters(node.value, setup_folders()))
 
         case NumericCondition():
             filters.append(f"Filter: {node.field} {_NUMERIC_OP_TO_LS[node.op]} {node.value}")

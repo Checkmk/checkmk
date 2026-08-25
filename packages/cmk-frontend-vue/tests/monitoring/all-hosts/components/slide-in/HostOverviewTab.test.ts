@@ -16,7 +16,7 @@ function makeData(overrides: Partial<HostOverview> = {}): HostOverview {
     state: 'UP',
     site_id: 'local',
     site_alias: 'Local site',
-    folder: '/network',
+    folder: 'Netzwerk',
     customer: null,
     contact_groups: ['all'],
     tags: { 'cmk/os_family': 'linux' },

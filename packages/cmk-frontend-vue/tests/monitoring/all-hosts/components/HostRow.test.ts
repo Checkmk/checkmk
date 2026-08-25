@@ -17,7 +17,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     state: 'UP',
     address: '10.0.0.1',
     alias: 'web server 1',
-    folder: '/network',
+    folder: 'Netzwerk / Rechenzentrum 1',
     site_id: 'local',
     num_services: 6,
     num_services_ok: 5,
@@ -63,7 +63,7 @@ test('renders alias, folder and formatted timestamps in their cells', () => {
   mountRow(host)
 
   expect(screen.getByTitle('web server 1')).toBeInTheDocument()
-  expect(screen.getByTitle('/network')).toBeInTheDocument()
+  expect(screen.getByTitle('Netzwerk / Rechenzentrum 1')).toBeInTheDocument()
   expect(screen.getByTitle(formatTimestamp(host.last_check!))).toBeInTheDocument()
   expect(screen.getByTitle(formatTimestamp(host.last_state_change!))).toBeInTheDocument()
 })

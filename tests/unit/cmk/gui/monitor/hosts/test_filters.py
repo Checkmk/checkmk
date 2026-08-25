@@ -88,11 +88,28 @@ def test_query_builder_string_condition(op: StringOp, ls_op: str) -> None:
     assert parse_as_livestatus_filter(condition) == f"Filter: name {ls_op} heute"
 
 
+_TITLES = {"": "Main", "dc_muc": "Data center Munich", "network": "Netzwerk"}
+
+
 def test_query_builder_folder_condition() -> None:
-    condition = FolderCondition(type="condition", field="folder", op="contains", value="network")
+    condition = FolderCondition(
+        type="condition", field="folder", op="contains", value="Data center"
+    )
     assert (
-        parse_as_livestatus_filter(condition)
-        == r"Filter: filename ~~ ^/wato/.*network.*/hosts\.mk$"
+        parse_as_livestatus_filter(condition, setup_folders=lambda: _TITLES)
+        == "Filter: filename = /wato/dc_muc/hosts.mk"
+    )
+
+
+def test_query_builder_folder_condition_selects_nothing_without_a_matching_title() -> None:
+    """Emitting no filter at all would select every host, so it says "no host" out loud."""
+    condition = FolderCondition(type="condition", field="folder", op="contains", value="dc_muc")
+
+    assert parse_as_livestatus_filter(condition, setup_folders=lambda: _TITLES) == "\n".join(  # noqa: FLY002
+        [
+            "Filter: state >= 0",
+            "Negate:",
+        ]
     )
 
 
@@ -102,11 +119,11 @@ def test_query_builder_folder_condition_counts_as_a_single_child() -> None:
         type="and",
         children=[
             StringCondition(type="condition", field="name", op="contains", value="heute"),
-            # Every Setup folder contains a slash, so a negated "/" selects the hosts that have
-            # no folder at all: the ones not managed via Setup.
+            # All three titles carry an "n", so negating it selects the hosts left over: those
+            # in no folder Setup knows a title for.
             NotNode(
                 type="not",
-                child=FolderCondition(type="condition", field="folder", op="contains", value="/"),
+                child=FolderCondition(type="condition", field="folder", op="contains", value="n"),
             ),
         ],
     )
@@ -114,16 +131,16 @@ def test_query_builder_folder_condition_counts_as_a_single_child() -> None:
     expected = "\n".join(  # noqa: FLY002
         [
             "Filter: name ~~ heute",
-            r"Filter: filename ~~ ^/wato/.*/.*/hosts\.mk$",
-            r"Filter: filename ~~ ^/wato/.*/hosts\.mk$",
             "Filter: filename = /wato/hosts.mk",
+            "Filter: filename = /wato/dc_muc/hosts.mk",
+            "Filter: filename = /wato/network/hosts.mk",
             "Or: 3",
             "Negate:",
             "And: 2",
         ]
     )
 
-    assert parse_as_livestatus_filter(nodes) == expected
+    assert parse_as_livestatus_filter(nodes, setup_folders=lambda: _TITLES) == expected
 
 
 @pytest.mark.parametrize(

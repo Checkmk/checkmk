@@ -47,8 +47,10 @@ from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
 from cmk.gui.watolib.hosts_and_folders import (
+    all_folder_title_paths,
     EffectiveAttributes,
     Folder,
+    folder_title_path,
     FolderTree,
     make_folder_tree,
 )
@@ -730,6 +732,86 @@ def test_recursive_subfolder_choices_function_calls(mocker: MagicMock, tree: Fol
     with hide_folders_without_permission(tree, True):
         main.recursive_subfolder_choices(pretty=True, acting_user=_SUPERUSER)
     assert spy.call_count == 7
+
+
+def _make_unreadable(tree: FolderTree, *paths: str) -> None:
+    """Mark folders unreadable, on the objects the tree itself hands out.
+
+    `three_levels_leaf_permissions` flags the folders it creates, but a lookup through the tree may
+    answer with freshly loaded ones, and the functions under test look up by path. So the flags go
+    on afterwards, where `patch_may` will read them.
+    """
+    for path in paths:
+        tree.folder(path).permissions._may_see = False  # type: ignore[attr-defined]
+
+
+# Only "a/d" and "b/e/f" stay readable, the shape `three_levels_leaf_permissions` builds.
+_UNREADABLE = ("", "a", "a/c", "b", "b/e")
+
+
+def test_folder_title_path_gives_the_titles_down_to_the_folder(tree: FolderTree) -> None:
+    three_levels(tree)
+
+    assert folder_title_path(tree, "", _SUPERUSER) == "Main"
+    assert folder_title_path(tree, "a", _SUPERUSER) == "A"
+    assert folder_title_path(tree, "b/e/f", _SUPERUSER) == "B / E / F"
+
+
+def test_folder_title_path_of_a_folder_this_setup_does_not_know(tree: FolderTree) -> None:
+    """A host of a remote site keeping a hierarchy of its own names a folder there is none of."""
+    three_levels(tree)
+
+    assert folder_title_path(tree, "nowhere", _SUPERUSER) is None
+
+
+@pytest.mark.usefixtures("patch_may")
+def test_folder_title_paths_are_titled_whoever_may_read_them(tree: FolderTree) -> None:
+    """Read permissions are Setup's business until an installation asks for them to be ours."""
+    three_levels(tree)
+    _make_unreadable(tree, *_UNREADABLE)
+
+    assert folder_title_path(tree, "a/c", _SUPERUSER) == "A / C"
+    assert set(all_folder_title_paths(tree, _SUPERUSER)) == {
+        "",
+        "a",
+        "a/c",
+        "a/d",
+        "b",
+        "b/e",
+        "b/e/f",
+    }
+
+
+@pytest.mark.usefixtures("patch_may")
+def test_a_folder_no_one_may_read_is_not_titled_where_folders_are_hidden(tree: FolderTree) -> None:
+    three_levels(tree)
+    _make_unreadable(tree, *_UNREADABLE)
+
+    with hide_folders_without_permission(tree, True):
+        assert folder_title_path(tree, "a/c", _SUPERUSER) is None
+        assert "a/c" not in all_folder_title_paths(tree, _SUPERUSER)
+
+
+@pytest.mark.usefixtures("patch_may")
+def test_a_folder_is_titled_while_a_readable_one_sits_below_it(tree: FolderTree) -> None:
+    """The rule `_walk_tree` goes by, which Setup's own folder choices go by as well."""
+    three_levels(tree)
+    _make_unreadable(tree, *_UNREADABLE)
+
+    with hide_folders_without_permission(tree, True):
+        # Neither is readable, and both are titled: "a/d" below the one, "b/e/f" below the other.
+        assert folder_title_path(tree, "a", _SUPERUSER) == "A"
+        assert folder_title_path(tree, "b/e", _SUPERUSER) == "B / E"
+
+
+@pytest.mark.usefixtures("patch_may")
+def test_the_root_folder_is_titled_whatever_its_permissions_say(tree: FolderTree) -> None:
+    three_levels(tree)
+    _make_unreadable(tree, *_UNREADABLE)
+
+    with hide_folders_without_permission(tree, True):
+        assert folder_title_path(tree, "", _SUPERUSER) == "Main"
+        assert all_folder_title_paths(tree, _SUPERUSER)[""] == "Main"
 
 
 def test_subfolder_creation(tree: FolderTree) -> None:

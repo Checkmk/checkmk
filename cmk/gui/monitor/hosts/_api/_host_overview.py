@@ -27,6 +27,7 @@ from cmk.web.utils import permission_verification as permissions
 
 from .._customer import customer_resolver
 from .._exceptions import HostNotFoundError
+from .._folder import monitor_folders
 from .._impl import LiveStatusHostRepository
 from .._models import (
     Host,
@@ -78,11 +79,11 @@ class HostOverviewResponse:
     )
     folder: str | None = api_field(
         description=(
-            "The Setup folder path the host is configured in, '/' for the root folder. Empty "
-            "when the host isn't managed via Setup, e.g. it was added directly to the "
-            "monitoring core."
+            "The title Setup gives the folder the host is configured in: the titles down to it, "
+            "'Main' for the root folder. Empty when Setup knows no such folder, e.g. the host "
+            "isn't managed via Setup or a remote site owns it."
         ),
-        example="/network/switches",
+        example="Data center Munich / Rack 1",
     )
     contact_groups: list[str] = api_field(
         description="Contact groups assigned to the host",
@@ -141,7 +142,7 @@ def get_host_overview(
     api_context: ApiContext,
 ) -> HostOverviewResponse:
     """Show the overview for a single host."""
-    host_repo = LiveStatusHostRepository(connection=sites.live())
+    host_repo = LiveStatusHostRepository(connection=sites.live(), folders=monitor_folders)
     site_alias = api_context.config.sites[site_id]["alias"]
 
     return _handle_get_host_overview(
@@ -188,6 +189,9 @@ ENDPOINT_GET_HOST_OVERVIEW = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("general.see_all"),
                     permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.OkayToIgnorePerm("mkeventd.seeall"),
+                    # Read while titling a folder, on an installation that keeps the folders a
+                    # user may not read out of sight.
+                    permissions.OkayToIgnorePerm("wato.see_all_folders"),
                 ]
             )
         )

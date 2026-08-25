@@ -25,7 +25,7 @@ from cmk.livestatus_client.tables import Hosts, Log
 from cmk.livestatus_client.types import Column
 
 from ._exceptions import HostNotFoundError
-from ._folder import folder_from_filename
+from ._folder import folder_files_matching, folder_title, MonitorFolders
 from ._models import (
     Event,
     EventClass,
@@ -44,8 +44,16 @@ from ._sorting import host_sorter
 
 
 class LiveStatusHostRepository:
-    def __init__(self, *, connection: MultiSiteConnection) -> None:
+    def __init__(
+        self,
+        *,
+        connection: MultiSiteConnection,
+        folders: MonitorFolders | None = None,
+    ) -> None:
         self._connection = connection
+        # A folder is shown and searched by its Setup title, which Livestatus does not have. A
+        # caller reading no folder needs none, hence the default that knows no titles.
+        self._folders = folders if folders is not None else MonitorFolders()
 
     def host_exists(self, hostname: str) -> bool:
         q = Query([Hosts.name], Hosts.name == hostname, extra_headers=["Limit: 1"])
@@ -81,7 +89,7 @@ class LiveStatusHostRepository:
                     for column in columns
                 ),
             ],
-            _build_query_filter(query_, fields),
+            _build_query_filter(query_, fields, self._folders),
             extra_headers=extra_headers,
         )
 
@@ -102,7 +110,7 @@ class LiveStatusHostRepository:
                         folder=(
                             None
                             if (filename := row.get("filename")) is None
-                            else folder_from_filename(filename)
+                            else folder_title(filename, self._folders.title_of)
                         ),
                         labels=(
                             HostLabelValue.by_label(row["labels"], row["label_sources"])
@@ -167,7 +175,7 @@ class LiveStatusHostRepository:
             in_downtime=row["scheduled_downtime_depth"] > 0,
             last_check=int(row["last_check"]),
             last_state_change=int(row["last_state_change"]),
-            folder=folder_from_filename(row["filename"]),
+            folder=folder_title(row["filename"], self._folders.title_of),
             contact_groups=list(row["contact_groups"]),
             tags=dict(row["tags"]),
             # The overview does not expose contacts, so its query does not read them.
@@ -188,7 +196,8 @@ class LiveStatusHostRepository:
         # server-side via ``Stats`` instead of transferring and counting every matching row. The
         # ``Query`` class can't emit ``Stats`` headers yet, so the filter is assembled by hand.
         query_filter = (
-            ": ".join(line) for line in _build_query_filter(_sanitize_query(query), fields).render()
+            ": ".join(line)
+            for line in _build_query_filter(_sanitize_query(query), fields, self._folders).render()
         )
         return self._count_hosts(extra_lines=[*query_filter, *filters.splitlines()])
 
@@ -270,29 +279,35 @@ def _sanitize_query(q: str) -> str:
     return q.replace("*", ".*")
 
 
-def _folder_pattern(query: str) -> str:
-    return rf"^/wato.*{query}.*/hosts\.mk$"
-
-
 _SEARCHED_FIELDS: Mapping[HostOptionalField, Callable[[str], QueryExpression]] = {
     HostOptionalField.ALIAS: lambda query: Hosts.alias.contains(query, ignore_case=True),
     HostOptionalField.ADDRESS: lambda query: Hosts.address.contains(query, ignore_case=True),
-    HostOptionalField.FOLDER: lambda query: Hosts.filename.contains(
-        _folder_pattern(query), ignore_case=True
-    ),
 }
 
 
-def _build_query_filter(query: str, fields: Set[HostOptionalField]) -> QueryExpression:
+def _build_query_filter(
+    query: str, fields: Set[HostOptionalField], folders: MonitorFolders
+) -> QueryExpression:
     if not query:
         return NothingExpression()
 
-    return Or(
-        Hosts.name.contains(query, ignore_case=True),
-        *(build(query) for field, build in _SEARCHED_FIELDS.items() if field in fields),
-    )
+    searched = [build(query) for field, build in _SEARCHED_FIELDS.items() if field in fields]
+    if HostOptionalField.FOLDER in fields:
+        # The folder is searched by the title Setup shows, which Livestatus has never heard of, so
+        # the folders carrying the query are resolved first and asked for by file.
+        searched.extend(
+            Hosts.filename.equals(file) for file in folder_files_matching(query, folders.titles())
+        )
+
+    return Or(Hosts.name.contains(query, ignore_case=True), *searched)
 
 
+# Sorting by folder means sorting by the title Setup gives it, which Livestatus cannot do: it only
+# has the file. So the header below merely bounds which rows a ``Limit:`` keeps, and the order the
+# user sees is the natural sort ``host_sorter()`` applies afterwards. Ordering by file is no longer
+# even close to ordering by title - "Data center Munich" lives in ``dc_muc`` - so a listing longer
+# than the limit, sorted by folder, shows the right rows in the right order only within the window
+# the limit kept.
 _LIVESTATUS_COLUMN_OVERRIDES: Mapping[HostSortColumn, str] = {
     HostSortColumn.FOLDER: "filename",
 }

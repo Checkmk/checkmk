@@ -14,8 +14,6 @@ Splitting happens per module, never inside one, because tests in a module share
 module scoped fixtures and the order in which they change the site.
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Sequence
 from typing import NamedTuple, Protocol, TypedDict
 

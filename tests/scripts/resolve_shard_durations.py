@@ -21,8 +21,6 @@ that have.
 Credentials come from JENKINS_URL, JENKINS_USERNAME and JENKINS_PASSWORD.
 """
 
-from __future__ import annotations
-
 import argparse
 import logging
 import sys

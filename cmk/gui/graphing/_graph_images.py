@@ -187,7 +187,6 @@ def graph_image_render_options(
             add_host_alias=False,
             add_service_description=True,
         ),
-        interaction=False,
         size=(80, 30),  # ex
         # Specific for PDF rendering.
         color_gradient=20.0,

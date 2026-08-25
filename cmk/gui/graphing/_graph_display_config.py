@@ -49,7 +49,6 @@ class GraphRenderOptions(BaseModel):
     color_gradient: float | None = None
     fixed_timerange: bool | None = None
     font_size: SizePT | None = None
-    interaction: bool | None = None
     preview: bool | None = None
     resizable: bool | None = None
     show_controls: bool | None = None

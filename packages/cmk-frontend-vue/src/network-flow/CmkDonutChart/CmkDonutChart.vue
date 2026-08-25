@@ -119,6 +119,9 @@ function percentText(value: number): string {
   return `${percent(value).toFixed(1)}%`
 }
 
+// The reading that belongs to no slice. Prefixed, so a slice key cannot be it.
+const TOTAL_CENTER_KEY = '__total__'
+
 // One piece of state for ring, legend and center, so the highlight can be
 // raised from either end.
 const highlighted = ref<string | null>(null)
@@ -140,12 +143,16 @@ const center = computed(() => {
   const slice = highlightedSlice.value
   if (slice) {
     return {
+      // What the reading is about, so a handover can be told from a refresh
+      // that leaves it saying the same thing.
+      key: slice.key,
       label: slice.label,
       value: props.formatValue(slice.value),
       share: _t('%{share} of shown', { share: percentText(slice.value) })
     }
   }
   return {
+    key: TOTAL_CENTER_KEY,
     label: props.centerLabel ?? _t('Volume'),
     value: props.formatValue(total.value),
     share:
@@ -255,9 +262,15 @@ const legendRows = computed<DonutLegendRow[]>(() => {
         </g>
       </svg>
       <div v-if="segments.length" class="network-flow-cmk-donut-chart__center">
-        <span class="network-flow-cmk-donut-chart__center-label">{{ center.label }}</span>
-        <span class="network-flow-cmk-donut-chart__center-value">{{ center.value }}</span>
-        <span class="network-flow-cmk-donut-chart__center-share">{{ center.share }}</span>
+        <!-- Both readings are on screen while one takes over from the other,
+             so they are stacked rather than played one after the next. -->
+        <Transition name="network-flow-cmk-donut-chart__center-reading">
+          <div :key="center.key" class="network-flow-cmk-donut-chart__center-reading">
+            <span class="network-flow-cmk-donut-chart__center-label">{{ center.label }}</span>
+            <span class="network-flow-cmk-donut-chart__center-value">{{ center.value }}</span>
+            <span class="network-flow-cmk-donut-chart__center-share">{{ center.share }}</span>
+          </div>
+        </Transition>
       </div>
     </div>
 
@@ -375,18 +388,44 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  align-items: center;
 
   /* The hole is 73% of the figure across; the text stops short of its edge
      rather than reaching into the ring. */
-  justify-content: center;
   width: 70%;
   margin: 0 auto;
   font-size: clamp(7px, 8cqw, 16px);
   text-align: center;
+}
+
+/* Filling its box rather than flowing in it, so the outgoing reading is out of
+   the layout and the incoming one does not start beneath it. */
+.network-flow-cmk-donut-chart__center-reading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+}
+
+.network-flow-cmk-donut-chart__center-reading-enter-active,
+.network-flow-cmk-donut-chart__center-reading-leave-active {
+  transition: opacity 180ms ease-out;
+}
+
+.network-flow-cmk-donut-chart__center-reading-enter-from,
+.network-flow-cmk-donut-chart__center-reading-leave-to {
+  opacity: 0;
+}
+
+/* Long enough for the transition to still be one, short enough to read as the
+   snap the reader asked for. */
+@media (prefers-reduced-motion: reduce) {
+  .network-flow-cmk-donut-chart__center-reading-enter-active,
+  .network-flow-cmk-donut-chart__center-reading-leave-active {
+    transition-duration: 1ms;
+  }
 }
 
 .network-flow-cmk-donut-chart__center-value {

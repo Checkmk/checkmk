@@ -289,6 +289,29 @@ test('hands the center over to the slice being pointed at', async () => {
   )
 })
 
+test('hands the center over as a new reading, so the two can fade across', async () => {
+  // jsdom has no CSS, so the fade itself is not observable here. What is: the
+  // reading is keyed on what it is about, which is what makes Vue build a
+  // second one alongside the first rather than rewrite the text in place.
+  const { container } = renderChart()
+
+  const before = container.querySelector('.network-flow-cmk-donut-chart__center-reading')
+  await fireEvent.mouseEnter(container.querySelector('.network-flow-cmk-donut-chart__segment')!)
+
+  const after = container.querySelector('.network-flow-cmk-donut-chart__center-reading')
+  expect(after).not.toBe(before)
+  expect(after).toHaveTextContent('TLS')
+})
+
+test('leaves the center reading alone when a refresh does not change what it is about', async () => {
+  const { container, rerender } = renderChart()
+
+  const before = container.querySelector('.network-flow-cmk-donut-chart__center-reading')
+  await rerender({ slices: SLICES, formatValue: (value: number) => `${value} B` })
+
+  expect(container.querySelector('.network-flow-cmk-donut-chart__center-reading')).toBe(before)
+})
+
 test('raises the highlight from the legend as well as from the ring', async () => {
   const { container } = renderChart()
 

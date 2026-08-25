@@ -212,7 +212,7 @@ fn process_spot_works(works: Vec<OpenedSpotWorks>) -> Vec<ClosedSpotResults> {
                     let output = query_blocks
                         .iter()
                         .filter_map(|query_block| {
-                            log::info!("Output section: {}", query_block.title);
+                            log::info!("Executing {}", query_block.label);
                             with_container(&spot, query_block.container.as_ref(), || {
                                 let mut results = vec![query_block.title.clone()];
                                 results.extend(_exec_queries(
@@ -271,34 +271,32 @@ fn process_spot_works_para(works: Vec<ClosedSpotWorks>, threads: usize) -> Vec<C
                         for job in job_data {
                             let thread_output = &global_output;
                             scope.spawn(move |_| {
-                                let results = job
-                                    .query_blocks
-                                    .iter()
-                                    .flat_map(|query_block| {
-                                        log::debug!("Executing queries for instance: {}", instance);
-                                        with_container(
-                                            &job.spot,
-                                            query_block.container.as_ref(),
-                                            || {
-                                                _exec_queries_on_spot(
-                                                    &job.spot,
-                                                    instance,
-                                                    &query_block.queries,
-                                                    query_block.title.as_str(),
-                                                    &query_block.post_processing,
-                                                )
-                                            },
-                                        )
-                                        .unwrap_or_else(
-                                            |e| {
+                                let results =
+                                    job.query_blocks
+                                        .iter()
+                                        .flat_map(|query_block| {
+                                            log::info!("Executing {}", query_block.label);
+                                            with_container(
+                                                &job.spot,
+                                                query_block.container.as_ref(),
+                                                || {
+                                                    _exec_queries_on_spot(
+                                                        &job.spot,
+                                                        instance,
+                                                        &query_block.queries,
+                                                        query_block.title.as_str(),
+                                                        &query_block.post_processing,
+                                                    )
+                                                },
+                                            )
+                                            .unwrap_or_else(|e| {
                                                 log::warn!(
                                                     "Cannot switch container: {e}, skipping"
                                                 );
                                                 vec![]
-                                            },
-                                        )
-                                    })
-                                    .collect::<Vec<String>>();
+                                            })
+                                        })
+                                        .collect::<Vec<String>>();
                                 let results = wrap_for_piggyback(job.spot.piggyback(), results);
 
                                 thread_output

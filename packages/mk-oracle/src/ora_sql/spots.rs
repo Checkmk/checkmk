@@ -40,6 +40,9 @@ pub enum PostProcessing {
 /// header(s) that precede the rows and a flag controlling output formatting.
 #[derive(Debug, Clone)]
 pub struct QueryBlock {
+    /// Section name for the execution log, with the custom-metric item and the
+    /// PDB appended where they apply.
+    pub label: String,
     pub queries: Vec<SqlQuery>,
     pub title: String,
     pub post_processing: PostProcessing,
@@ -231,8 +234,10 @@ fn _make_work_result_ok(
                     } else {
                         PostProcessing::Standard
                     };
+                    let label = section.log_label();
                     if section.pdb_patterns().is_empty() {
                         vec![QueryBlock {
+                            label,
                             queries: q,
                             title: section.to_work_header_for(service),
                             post_processing: post,
@@ -242,6 +247,7 @@ fn _make_work_result_ok(
                         resolve_pdb_patterns(section.pdb_patterns(), pdbs, &service.to_string())
                             .into_iter()
                             .map(|pdb| QueryBlock {
+                                label: format!("{label} in PDB {pdb}"),
                                 queries: q.clone(),
                                 title: section.to_work_header_for_pdb(service, &pdb),
                                 post_processing: post,

@@ -9,7 +9,8 @@ import { effectScope, nextTick, ref } from 'vue'
 import { useBrushCoordination } from '@/graphing/composables/useBrushCoordination'
 
 const DAY = 86_400
-const NOW = 2_000_000
+// A realistic epoch: the strip is bounded at the start of 2008, which 1970 sits before.
+const NOW = 1_700_000_000
 
 function makeCoordination(requested = ref({ start: NOW - DAY, end: NOW })) {
   return {

@@ -10,6 +10,7 @@ import {
   overviewDomain,
   recenterOverviewDomain
 } from '../components/GraphBrush/overviewRange'
+import { EARLIEST_NAVIGABLE_SECONDS } from '../components/TimeSeriesGraph/interaction/timeBounds'
 import type { TimeRange } from '../components/TimeSeriesGraph/types'
 import type { RequestedTimeRange, TimeInterval, TimeRangeCommitKind } from '../types'
 
@@ -23,7 +24,11 @@ export function useBrushCoordination(
   const initialRange = getRequestedRange()
   const graphRange: Ref<RequestedTimeRange> = ref({ ...initialRange })
   const brushWindow: Ref<TimeInterval> = ref({ start: initialRange.start, end: initialRange.end })
-  const brushDomain: Ref<TimeInterval> = ref(overviewDomain(initialRange, getNow()))
+  // The strip is bounded like the pan gesture, so a window dragged to its left edge cannot
+  // reach a time no data can exist for.
+  const brushDomain: Ref<TimeInterval> = ref(
+    overviewDomain(initialRange, getNow(), EARLIEST_NAVIGABLE_SECONDS)
+  )
 
   function setGraphRange(range: RequestedTimeRange): void {
     graphRange.value = { start: range.start, end: range.end }
@@ -32,10 +37,16 @@ export function useBrushCoordination(
     brushWindow.value = { start: window.start, end: window.end }
   }
   function reseedBrushDomain(range: RequestedTimeRange): void {
-    brushDomain.value = overviewDomain(range, getNow())
+    brushDomain.value = overviewDomain(range, getNow(), EARLIEST_NAVIGABLE_SECONDS)
   }
   function syncBrushDomain(window: TimeInterval): void {
-    brushDomain.value = recenterOverviewDomain(brushDomain.value, window, getNow(), edgeFraction)
+    brushDomain.value = recenterOverviewDomain(
+      brushDomain.value,
+      window,
+      getNow(),
+      edgeFraction,
+      EARLIEST_NAVIGABLE_SECONDS
+    )
   }
 
   function onExternalRange(range: RequestedTimeRange): void {

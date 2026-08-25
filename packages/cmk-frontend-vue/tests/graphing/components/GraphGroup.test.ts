@@ -18,6 +18,20 @@ import {
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
 import GraphGroup from '@/graphing/components/GraphGroup.vue'
 
+// Hoisted so the panel stub below can bake the ranges its buttons report into its template.
+const { RANGE_START, RANGE_END, PAN_TARGET, ZOOM_TARGET } = vi.hoisted(() => {
+  // Inside the navigable time axis, which starts in 2008: a range before it would hold the
+  // brush strip against its near end rather than centring it on the window.
+  const start = 1_700_000_000
+  const end = start + 1_000
+  return {
+    RANGE_START: start,
+    RANGE_END: end,
+    PAN_TARGET: { start: start + 500, end: end + 500 },
+    ZOOM_TARGET: { start: start + 100, end: start + 200 }
+  }
+})
+
 // Stub keeps the test independent of the panel's rendering; the buttons simulate local
 // time range interactions reported back to the group: "pan" keeps the span,
 // "zoom" changes it.
@@ -36,10 +50,10 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
       <span>{{ title }}</span>
       <span data-testid="panel-consolidation">{{ consolidationFn }}</span>
       <button @click="$emit('update:consolidationFn', 'min')">consolidate by min</button>
-      <button @click="$emit('update:requestedTimeRange', { start: 1500, end: 2500 }, 'translated_timerange')">
+      <button @click="$emit('update:requestedTimeRange', { start: ${PAN_TARGET.start}, end: ${PAN_TARGET.end} }, 'translated_timerange')">
         pan
       </button>
-      <button @click="$emit('update:requestedTimeRange', { start: 100, end: 200 }, 'changed_timerange_span')">
+      <button @click="$emit('update:requestedTimeRange', { start: ${ZOOM_TARGET.start}, end: ${ZOOM_TARGET.end} }, 'changed_timerange_span')">
         zoom
       </button>
       <button @click="$emit('inspect')">inspect</button>
@@ -93,7 +107,7 @@ const FETCHED = {
       data_points: [1, 2, 3]
     }
   ],
-  time_range: { start: 1_000, end: 2_000, step: 60 },
+  time_range: { start: RANGE_START, end: RANGE_END, step: 60 },
   horizontal_lines: [],
   warnings: [],
   errors: []
@@ -215,8 +229,8 @@ const notices = (): NodeListOf<Element> => document.querySelectorAll('.graphing-
 function renderGroup(graphs: CmkTimeSeriesGraph[] = [makeGraphDefinition('CPU utilization')]) {
   return render(GraphGroup, {
     props: {
-      initial_time_range_start: 1_000,
-      initial_time_range_end: 2_000,
+      initial_time_range_start: RANGE_START,
+      initial_time_range_end: RANGE_END,
       graphs
     }
   })
@@ -292,7 +306,7 @@ test('a fast refetch swaps straight to the new panels without a skeleton', async
   await vi.advanceTimersByTimeAsync(999)
 
   // The assertions below would hold just as well had the pan never fetched at all.
-  expect(drawnRanges()).toContainEqual({ start: 1_500, end: 2_500, step: 60 })
+  expect(drawnRanges()).toContainEqual({ ...PAN_TARGET, step: 60 })
   expect(skeletons()).toHaveLength(0)
   expect(panels()).toHaveLength(1)
   expect(group()).toHaveAttribute('aria-busy', 'false')
@@ -481,9 +495,9 @@ test('fetches the graph with the initial range and the overview with the multipl
   expect(JSON.parse(body.internal).graphs).toEqual([])
   expect(body.consolidation_function).toBe('max')
   const ranges = drawnRanges()
-  expect(ranges).toContainEqual({ start: 1_000, end: 2_000, step: 60 })
+  expect(ranges).toContainEqual({ start: RANGE_START, end: RANGE_END, step: 60 })
   // 1000s active span → 7× multiplier → 7000s overview domain centered on the range.
-  expect(ranges).toContainEqual({ start: -2_000, end: 5_000, step: 60 })
+  expect(ranges).toContainEqual({ start: RANGE_START - 3_000, end: RANGE_END + 3_000, step: 60 })
 })
 
 test('asks only the panel whose consolidation function was selected for data again', async () => {
@@ -522,8 +536,8 @@ test('keeps a panel it did not refetch showing the data it already holds', async
 test('fetches graph and overview with the combination mode from props', async () => {
   render(GraphGroup, {
     props: {
-      initial_time_range_start: 1_000,
-      initial_time_range_end: 2_000,
+      initial_time_range_start: RANGE_START,
+      initial_time_range_end: RANGE_END,
       graphs: [makeGraphDefinition('CPU utilization')],
       combination_mode: 'stacked' as const
     }
@@ -558,10 +572,10 @@ test('a same-span panel commit (move) refetches the graph but keeps the overview
 
   await fireEvent.click(await screen.findByText('pan'))
 
-  // Only the main graph refetches; the moved window {1500, 2500} sits well inside
-  // the overview domain {-2000, 5000}, so the overview must not be requested again.
+  // Only the main graph refetches; the moved window sits well inside the overview domain
+  // (one span either side of it), so the overview must not be requested again.
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(3))
-  expect(drawnRanges()[2]).toEqual({ start: 1_500, end: 2_500, step: 60 })
+  expect(drawnRanges()[2]).toEqual({ ...PAN_TARGET, step: 60 })
   expect(postSpy).toHaveBeenCalledTimes(3)
 })
 
@@ -573,9 +587,9 @@ test('a span-changing panel commit (resize/zoom) reseeds the overview domain', a
 
   await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(4))
   const ranges = drawnRanges().slice(2)
-  expect(ranges).toContainEqual({ start: 100, end: 200, step: 60 })
+  expect(ranges).toContainEqual({ ...ZOOM_TARGET, step: 60 })
   // 100s span → 7× multiplier → 700s overview domain centered on the new range.
-  expect(ranges).toContainEqual({ start: -200, end: 500, step: 60 })
+  expect(ranges).toContainEqual({ start: RANGE_START - 200, end: RANGE_START + 500, step: 60 })
 })
 
 test('a panel reporting inspection pauses the live refresh', async () => {
@@ -631,8 +645,8 @@ test('uses the supplied figure_width and never measures the page', async () => {
   const getElementById = vi.spyOn(document, 'getElementById')
   render(GraphGroup, {
     props: {
-      initial_time_range_start: 1_000,
-      initial_time_range_end: 2_000,
+      initial_time_range_start: RANGE_START,
+      initial_time_range_end: RANGE_END,
       graphs: [makeGraphDefinition('CPU utilization')],
       figure_width: 640
     }

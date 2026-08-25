@@ -3,115 +3,119 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.f5_bigip_fans import (
     check_f5_bigip_fans,
     discover_f5_bigip_fans,
+    FanParams,
     parse_f5_bigip_fans,
 )
+
+_STRING_TABLE = [
+    [
+        ["1", "1", "15574"],
+        ["2", "1", "16266"],
+        ["3", "1", "15913"],
+        ["4", "1", "16266"],
+        ["5", "0", "0"],
+        ["6", "1", "0"],
+    ],
+    [
+        ["1/cpu1", "4715"],
+    ],
+]
 
 
 @pytest.mark.parametrize(
     "string_table, expected_discoveries",
     [
         (
+            _STRING_TABLE,
             [
-                [
-                    ["1", "1", "15574"],
-                    ["2", "1", "16266"],
-                    ["3", "1", "15913"],
-                    ["4", "1", "16266"],
-                    ["5", "0", "0"],
-                    ["6", "1", "0"],
-                ],
-                [],
-            ],
-            [
-                ("Chassis 1", {}),
-                ("Chassis 2", {}),
-                ("Chassis 3", {}),
-                ("Chassis 4", {}),
-                ("Chassis 5", {}),
-                ("Chassis 6", {}),
+                Service(item="Chassis 1"),
+                Service(item="Chassis 2"),
+                Service(item="Chassis 3"),
+                Service(item="Chassis 4"),
+                Service(item="Chassis 5"),
+                Service(item="Chassis 6"),
+                Service(item="Processor 1/cpu1"),
             ],
         ),
     ],
 )
 def test_discover_f5_bigip_fans(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
+    string_table: Sequence[StringTable], expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for f5_bigip_fans check."""
-    parsed = parse_f5_bigip_fans(string_table)
-    result = list(discover_f5_bigip_fans(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    section = parse_f5_bigip_fans(string_table)
+    assert list(discover_f5_bigip_fans(section)) == expected_discoveries
 
 
 @pytest.mark.parametrize(
     "item, params, string_table, expected_results",
     [
-        (
+        pytest.param(
             "Chassis 1",
-            {"lower": (2000, 500)},
-            [
-                [
-                    ["1", "1", "15574"],
-                    ["2", "1", "16266"],
-                    ["3", "1", "15913"],
-                    ["4", "1", "16266"],
-                    ["5", "0", "0"],
-                    ["6", "1", "0"],
-                ],
-                [],
-            ],
-            [(0, "Speed: 15574 RPM", [])],
+            FanParams(lower=(2000, 500)),
+            _STRING_TABLE,
+            [Result(state=State.OK, summary="Speed: 15574 RPM")],
+            id="chassis fan spinning",
         ),
-        (
+        pytest.param(
             "Chassis 5",
-            {"lower": (2000, 500)},
+            FanParams(lower=(2000, 500)),
+            _STRING_TABLE,
             [
-                [
-                    ["1", "1", "15574"],
-                    ["2", "1", "16266"],
-                    ["3", "1", "15913"],
-                    ["4", "1", "16266"],
-                    ["5", "0", "0"],
-                    ["6", "1", "0"],
-                ],
-                [],
+                Result(
+                    state=State.CRIT,
+                    summary="Speed: 0 RPM (warn/crit below 2000 RPM/500 RPM)",
+                )
             ],
-            [(2, "Speed: 0 RPM (warn/crit below 2000 RPM/500 RPM)", [])],
+            id="chassis fan stopped and reporting bad status",
         ),
-        (
+        pytest.param(
             "Chassis 6",
-            {"lower": (2000, 500)},
+            FanParams(lower=(2000, 500)),
+            _STRING_TABLE,
+            [Result(state=State.OK, summary="Fan Status: OK")],
+            id="chassis fan without speed but with good status",
+        ),
+        pytest.param(
+            "Processor 1/cpu1",
+            FanParams(lower=(2000, 500)),
+            _STRING_TABLE,
+            [Result(state=State.OK, summary="Speed: 4715 RPM")],
+            id="cpu fan",
+        ),
+        pytest.param(
+            "Chassis 1",
+            FanParams(lower=(2000, 500), output_metrics=True),
+            _STRING_TABLE,
             [
-                [
-                    ["1", "1", "15574"],
-                    ["2", "1", "16266"],
-                    ["3", "1", "15913"],
-                    ["4", "1", "16266"],
-                    ["5", "0", "0"],
-                    ["6", "1", "0"],
-                ],
-                [],
+                Result(state=State.OK, summary="Speed: 15574 RPM"),
+                Metric("fan", 15574.0, levels=(None, None)),
             ],
-            [(0, "Fan Status: OK")],
+            id="metrics enabled",
+        ),
+        pytest.param(
+            "Chassis 7",
+            FanParams(lower=(2000, 500)),
+            _STRING_TABLE,
+            [],
+            id="unknown item",
         ),
     ],
 )
 def test_check_f5_bigip_fans(
     item: str,
-    params: Mapping[str, object],
-    string_table: StringTable,
-    expected_results: Sequence[object],
+    params: FanParams,
+    string_table: Sequence[StringTable],
+    expected_results: Sequence[Result | Metric],
 ) -> None:
     """Test check function for f5_bigip_fans check."""
-    parsed = parse_f5_bigip_fans(string_table)
-    result = list(check_f5_bigip_fans(item, params, parsed))
-    assert result == expected_results
+    section = parse_f5_bigip_fans(string_table)
+    assert list(check_f5_bigip_fans(item, params, section)) == expected_results

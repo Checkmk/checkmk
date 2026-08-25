@@ -142,3 +142,29 @@ def test_inventory_oracle_recovery_area(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert list(inventory_oracle_recovery_area(string_table)) == expected_result
+
+
+_LEGACY_ERROR_ROW = ["AIMDWHD1", "ORA-01017:", "invalid username/password"]
+
+
+def test_discover_oracle_recovery_area_skips_legacy_error_row() -> None:
+    assert not list(check_plugin_oracle_recovery_area.discovery_function([_LEGACY_ERROR_ROW]))
+
+
+def test_check_oracle_recovery_area_surfaces_legacy_error() -> None:
+    assert list(
+        check_plugin_oracle_recovery_area.check_function(
+            item="AIMDWHD1",
+            params={"levels": (70.0, 90.0)},
+            section=[_LEGACY_ERROR_ROW],
+        )
+    ) == [
+        Result(
+            state=State.UNKNOWN,
+            summary='Found error in agent output "ORA-01017: invalid username/password"',
+        )
+    ]
+
+
+def test_inventory_oracle_recovery_area_skips_legacy_error_row() -> None:
+    assert not list(inventory_oracle_recovery_area([_LEGACY_ERROR_ROW]))

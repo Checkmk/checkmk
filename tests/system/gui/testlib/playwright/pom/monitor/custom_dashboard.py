@@ -96,6 +96,13 @@ class CustomDashboard(BaseDashboard):
         """Activate the mode to edit widgets of the dashboard"""
         self.edit_widgets_button.click()
 
+    def save_widgets(self) -> None:
+        """Save the edited dashboard and wait for the write to reach the site."""
+        self.save_button.click()
+        expect(
+            self.save_button, "The dashboard stayed in edit mode, so its save never landed"
+        ).to_have_count(0)
+
     @overload
     def open_edit_widget_sidebar(
         self, widget_type: Literal[WidgetType.METRICS_AND_GRAPHS], widget_title: str

@@ -220,7 +220,7 @@ def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[s
         widget_wizard.select_service_metric(ServiceMetricDropdownOptions(widget_metric))
         widget_wizard.select_visualization_type(VisualizationType.TOP_LIST)
         widget_wizard.add_and_place_widget_button.click()
-        custom_dashboard.save_button.click()
+        custom_dashboard.save_widgets()
 
         custom_dashboard = CustomDashboard(
             custom_dashboard.page, custom_dashboard.page_title, navigate_to_page=False
@@ -344,7 +344,7 @@ def test_widget_filters(
     )
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.navigate()
 
     widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
@@ -367,7 +367,7 @@ def test_widget_filters(
     )
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.navigate()
 
     widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
@@ -388,7 +388,7 @@ def test_widget_filters(
     ).not_to_be_visible()
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.navigate()
 
     widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
@@ -409,7 +409,7 @@ def test_widget_filters(
     ).not_to_be_visible()
     widget_wizard.next_step_visualization_button.click()
     widget_wizard.save_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.navigate()
 
     widget_rows = cloned_linux_hosts_dashboard.get_widget_table_rows(widget_title)
@@ -452,7 +452,7 @@ def test_add_top_list_widget(
 
     widget_wizard.add_and_place_widget_button.click()
 
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.validate_page()
 
     cloned_linux_hosts_dashboard.check_widget_is_present(widget_title)
@@ -640,7 +640,7 @@ def test_graph_widget_renders_through_the_engine(
     widget_wizard.select_service_metric(metric)
     widget_wizard.select_visualization_type(VisualizationType.GRAPH)
     widget_wizard.add_and_place_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.validate_page()
 
     graph_widget = DashboardGraphWidget(cloned_linux_hosts_dashboard, widget_title)
@@ -668,7 +668,7 @@ def test_problem_percentage_widget_renders_through_the_engine(
     )
     widget_wizard.select_visualization_type(AlertsVisualizationType.PERCENTAGE_OF_SERVICE_PROBLEMS)
     widget_wizard.add_and_place_widget_button.click()
-    cloned_linux_hosts_dashboard.save_button.click()
+    cloned_linux_hosts_dashboard.save_widgets()
     cloned_linux_hosts_dashboard.validate_page()
 
     problem_widget = DashboardGraphWidget(

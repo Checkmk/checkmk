@@ -62,9 +62,9 @@ def default_config(
             # would be handled concurrently via a thread pool. However, `cmk.base` is currently not
             # thread-safe, at least due to two reasons:
             # * Global states. See also the `clear_caches_before_each_call` argument to `make_application`.
-            # * Forking. The CMC config creation can use a process pool for parallelism, see also
-            #   `_reset_global_multiprocessing_start_method_to_platform_default`. Combining forking
-            #   and multithreading is a no-go.
+            # * Forking. The CMC config creation can use a process pool for parallelism, see the
+            #   explicit `get_context("fork")` in `cmk.base.nonfree.cmc.helper_config`. Combining
+            #   forking and multithreading is a no-go.
             # Note that our async endpoints are effectively blocking, so we currently have no concurrency.
             # In the case where the automation helper is continously bombarded with requests, it is
             # possible that the reloader task is never executed. This is not a problem, since the

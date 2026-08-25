@@ -6,7 +6,6 @@
 
 """Launches automation helper application for processing automation commands."""
 
-import multiprocessing
 import os
 import signal
 import sys
@@ -104,10 +103,6 @@ def _application() -> FastAPI:
         # uvicorn will spawn subprocesses in this case, so we need to re-initialize
         setproctitle("cmk-automation-helper[worker]")
         os.unsetenv("LANG")
-        # When running in a uvicorn worker launched via multiprocessing (n_workers > 1), the global
-        # multiprocessing start method is set to "spawn" by the uvicorn multiprocessing code (could be
-        # unintentional). We have automation calls that rely on "fork" as the start method.
-        _reset_global_multiprocessing_start_method_to_platform_default()
         configure_tracer(omd_root)
 
     return make_application(
@@ -118,11 +113,6 @@ def _application() -> FastAPI:
         reload_config=_reload_automation_config,
         clear_caches_before_each_call=_clear_caches_before_each_call,
     )
-
-
-def _reset_global_multiprocessing_start_method_to_platform_default() -> None:
-    multiprocessing.set_start_method(None, force=True)
-    multiprocessing.get_start_method(allow_none=False)
 
 
 def _reload_automation_config() -> config.LoadingResult:

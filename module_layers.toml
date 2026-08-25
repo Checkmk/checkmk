@@ -742,6 +742,8 @@ allows = [
   "cmk.discover_plugins",
   # metric_backend.license_usage provides a license usage counter plug-in
   "cmk.licensing.usage_counters",
+  # schema_manager gates per-feature provisioning on the feature's license option
+  "cmk.licensing.basics.options",
 ]
 
 [components."cmk.metric_backend.adapters"]

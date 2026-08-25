@@ -316,7 +316,7 @@
   "pkg:cargo/rustls-native-certs@0.8.3": "Apache-2.0 OR ISC OR MIT",
   "pkg:cargo/rustls-pemfile@2.2.0": "Apache-2.0 OR ISC OR MIT",
   "pkg:cargo/rustls-pki-types@1.12.0": "MIT OR Apache-2.0",
-  "pkg:cargo/rustls-webpki@0.103.4": "ISC",
+  "pkg:cargo/rustls-webpki@0.103.15": "ISC",
   "pkg:cargo/rustls@0.23.31": "Apache-2.0 OR ISC OR MIT",
   "pkg:cargo/rustversion@1.0.22": "MIT OR Apache-2.0",
   "pkg:cargo/ryu@1.0.20": "Apache-2.0 OR BSL-1.0",

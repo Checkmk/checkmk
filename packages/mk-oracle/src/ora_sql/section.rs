@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::config::{self, options::Options, section, section::names};
-use crate::emit::{header, signaling_header};
+use crate::config::{self, options::Options, section, section::names, section::CustomHeader};
+use crate::emit::{custom_section_header, header, signaling_header};
 use crate::ora_sql::custom;
 use crate::ora_sql::sqls;
 use crate::setup::validate_permissions;
@@ -41,6 +41,7 @@ pub struct Section {
     sep: char,
     cache_age: Option<u32>,
     header_name: String,
+    custom_header: Option<CustomHeader>,
     section_affinity: SectionAffinity,
     item_value: Option<ItemValue>,
     inline_sql: Option<String>,
@@ -70,6 +71,7 @@ impl Section {
             sep: section.sep(),
             cache_age,
             header_name: section.name().clone().into(),
+            custom_header: section.custom_header().cloned(),
             section_affinity: section.affinity().clone(),
             item_value: section.item_value().cloned(),
             inline_sql: section.sql().map(str::to_owned),
@@ -91,6 +93,9 @@ impl Section {
     }
 
     pub fn to_signaling_header(&self) -> Option<String> {
+        if let Some(custom) = &self.custom_header {
+            return Some(custom_section_header(custom.name(), custom.sep()));
+        }
         if self.header_name.as_str() == section::names::ASM_INSTANCE {
             return None;
         }
@@ -102,6 +107,15 @@ impl Section {
     }
 
     pub fn to_work_header(&self) -> String {
+        // A `header_name:` replaces the whole header. It comes without the
+        // `[[[<instance>|<item>]]]` subsection the default `oracle_sql` header
+        // gets, so the cached marker has to live here.
+        if let Some(custom) = &self.custom_header {
+            return custom_section_header(
+                &(custom.name().to_owned() + &self.cached_header()),
+                custom.sep(),
+            );
+        }
         let real_name = match self.header_name.as_str() {
             names::IO_STATS => names::PERFORMANCE, // IO_STATS is a performance section
             names::ASM_INSTANCE => names::INSTANCE, // ASM_INSTANCE is an instance section
@@ -125,7 +139,7 @@ impl Section {
     /// appended when the metric is async.
     pub fn to_work_header_for(&self, instance: &InstanceName) -> String {
         let section_header = self.to_work_header();
-        match self.item_value.as_ref() {
+        match self.subsection_item() {
             None => section_header,
             Some(item) => {
                 let cached = self.cached_subsection_suffix();
@@ -136,7 +150,7 @@ impl Section {
 
     pub fn to_work_header_for_pdb(&self, instance: &InstanceName, pdb: &PdbName) -> String {
         let section_header = self.to_work_header();
-        match self.item_value.as_ref() {
+        match self.subsection_item() {
             None => section_header,
             Some(item) => {
                 let cached = self.cached_subsection_suffix();
@@ -146,6 +160,19 @@ impl Section {
                 )
             }
         }
+    }
+
+    /// The item of the `[[[<instance>|<item>]]]` subsection line, if the
+    /// section emits one.
+    ///
+    /// The line is part of the `oracle_sql` format and is left out once the
+    /// section is emitted under a `header_name:` of its own - the data then
+    /// goes to a check plugin of the user, which has its own format.
+    fn subsection_item(&self) -> Option<&ItemValue> {
+        if self.custom_header.is_some() {
+            return None;
+        }
+        self.item_value.as_ref()
     }
 
     fn cached_header(&self) -> String {
@@ -703,6 +730,119 @@ mod tests {
             "subsection header missing cached marker: {header}"
         );
         assert!(header.ends_with(",600)]]]"), "unexpected tail: {header}");
+    }
+
+    fn make_custom_metric_section_with_header(
+        name: &str,
+        header: CustomHeader,
+        async_: bool,
+        cache_age: Option<u32>,
+    ) -> Section {
+        let builder = section::SectionBuilder::new(name)
+            .sql("select 'details:hi' from dual")
+            .set_item_value(ItemValue::from(name.to_string()))
+            .set_async(async_)
+            .set_custom_header(header);
+        Section::new(&builder.build(), cache_age, &Options::default())
+    }
+
+    #[test]
+    fn test_custom_metric_header_name_replaces_whole_header() {
+        let section = make_custom_metric_section_with_header(
+            "product_price",
+            CustomHeader::new("my_section", Some(b'|')),
+            false,
+            Some(600),
+        );
+        // Verbatim, without the `oracle_` prefix the built-in sections carry.
+        assert_eq!(section.to_work_header(), "<<<my_section:sep(124)>>>");
+        assert_eq!(
+            section.to_signaling_header().unwrap(),
+            "<<<my_section:sep(124)>>>"
+        );
+    }
+
+    #[test]
+    fn test_custom_metric_header_name_without_sep_omits_sep_option() {
+        let section = make_custom_metric_section_with_header(
+            "product_price",
+            CustomHeader::new("my_section", None),
+            false,
+            Some(600),
+        );
+        assert_eq!(section.to_work_header(), "<<<my_section>>>");
+        assert_eq!(section.to_signaling_header().unwrap(), "<<<my_section>>>");
+    }
+
+    #[test]
+    fn test_custom_metric_header_name_drops_item_subsection() {
+        let section = make_custom_metric_section_with_header(
+            "product_price",
+            CustomHeader::new("my_section", Some(b'|')),
+            false,
+            Some(600),
+        );
+        assert_eq!(
+            section.to_work_header_for(&InstanceName::from("ORCL")),
+            "<<<my_section:sep(124)>>>"
+        );
+        assert_eq!(
+            section.to_work_header_for_pdb(&InstanceName::from("ORCL"), &PdbName::from("MYPDB")),
+            "<<<my_section:sep(124)>>>"
+        );
+    }
+
+    #[test]
+    fn test_yaml_header_name_reaches_the_emitted_header() {
+        // Whole chain: config parsing -> runtime section -> emitted header.
+        let config = config::ora_sql::Config::from_string(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+    custom_metrics:
+      - myscn:
+          sql: "select 'a|b' from dual"
+          header_name: my_section
+          header_sep: 124
+"#,
+        )
+        .expect("yaml parses")
+        .expect("oracle config present");
+        let section_config = config
+            .all_sections()
+            .iter()
+            .find(|s| s.is_custom_metric())
+            .expect("custom metric parsed from yaml")
+            .clone();
+        let section = Section::new(&section_config, Some(0), &Options::default());
+        assert_eq!(
+            section.to_work_header_for(&InstanceName::from("ORCL")),
+            "<<<my_section:sep(124)>>>"
+        );
+    }
+
+    #[test]
+    fn test_async_custom_metric_header_name_carries_cached_marker() {
+        let section = make_custom_metric_section_with_header(
+            "last_sessions",
+            CustomHeader::new("my_section", Some(b'|')),
+            true,
+            Some(600),
+        );
+        // Without a subsection line the cached marker belongs on the section
+        // header, as the legacy plugin's run_cached put it.
+        let header = section.to_work_header_for(&InstanceName::from("ORCL"));
+        assert!(
+            header.starts_with("<<<my_section:cached("),
+            "unexpected header: {header}"
+        );
+        assert!(
+            header.ends_with(",600):sep(124)>>>"),
+            "unexpected header: {header}"
+        );
     }
 
     #[test]

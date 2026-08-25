@@ -143,7 +143,9 @@ struct LegacyCustomSql {
     dynamic_sids: bool,
     tns_alias: Option<String>,
     header_name: Option<String>,
-    header_sep: Option<char>,
+    /// `SQLS_SECTION_SEP`: the ASCII code of the separator, as `header_sep:`
+    /// takes it too.
+    header_sep: Option<u8>,
     /// `SQLS_ITEM_SID`: the SID the legacy plugin puts into the output item.
     /// Not supported by the new plugin, only used to warn about it.
     item_sid: Option<String>,
@@ -347,16 +349,12 @@ fn parse_custom_sqls(legacy: &str, variables: &HashMap<String, String>) -> Vec<L
         .collect()
 }
 
-/// Convert a legacy SQLS_SECTION_SEP (an ASCII code, e.g. "124") to the
-/// separator character used by the `header_sep:` field.
-fn parse_header_sep(section: &str, value: &str) -> Option<char> {
-    let sep = value
-        .parse::<u8>()
-        .ok()
-        .map(char::from)
-        .filter(|c| (' '..='~').contains(c) && *c != '"' && *c != '\\');
+/// Convert a legacy SQLS_SECTION_SEP to the `header_sep:` field, which is the
+/// same thing: the ASCII code of the separator (e.g. "124" for '|').
+fn parse_header_sep(section: &str, value: &str) -> Option<u8> {
+    let sep = value.parse::<u8>().ok().filter(u8::is_ascii);
     if sep.is_none() {
-        log::warn!("{section}: SQLS_SECTION_SEP '{value}' is not a printable ASCII code, ignoring");
+        log::warn!("{section}: SQLS_SECTION_SEP '{value}' is not an ASCII code, ignoring");
     }
     sep
 }
@@ -1063,7 +1061,7 @@ fn format_custom_metric_entries(metrics: &[&LegacyCustomSql], indent: &str) -> V
             lines.push(format!("{indent}      header_name: {header_name}\n"));
             // the legacy plugin uses the separator only together with a custom section name
             if let Some(sep) = custom.header_sep {
-                lines.push(format!("{indent}      header_sep: \"{sep}\"\n"));
+                lines.push(format!("{indent}      header_sep: {sep}\n"));
             }
         }
     }
@@ -2165,10 +2163,10 @@ sec2 () {
             ("SQLS.sec3.SQLS_SECTION_SEP".into(), "not-a-number".into()),
         ]);
         let result = parse_custom_sqls("", &vars);
-        assert_eq!(result[0].header_sep, Some('|'));
+        assert_eq!(result[0].header_sep, Some(b'|'));
         assert_eq!(
             result[1].header_sep,
-            Some(';'),
+            Some(b';'),
             "top-level SQLS_SECTION_SEP is a global fallback"
         );
         assert!(
@@ -2312,10 +2310,10 @@ sec3 () {
     fn test_format_custom_metrics_section_sep() {
         let mut custom = make_custom_sql("sec1", None, "query.sql", &[]);
         custom.header_name = Some("my_section".into());
-        custom.header_sep = Some('|');
+        custom.header_sep = Some(b'|');
         let out: String = format_custom_metrics(&[custom]).join("");
         assert!(
-            out.contains("          header_name: my_section\n          header_sep: \"|\"\n"),
+            out.contains("          header_name: my_section\n          header_sep: 124\n"),
             "got: {out}"
         );
     }
@@ -2323,7 +2321,7 @@ sec3 () {
     #[test]
     fn test_format_custom_metrics_section_sep_needs_section_name() {
         let mut custom = make_custom_sql("sec1", None, "query.sql", &[]);
-        custom.header_sep = Some('|');
+        custom.header_sep = Some(b'|');
         let out: String = format_custom_metrics(&[custom]).join("");
         assert!(
             !out.contains("header_sep:"),
@@ -2531,14 +2529,24 @@ sec3 () {
         let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
         assert!(
             result.contains(
-                "    custom_metrics:\n      - myscn:\n          path: c.sql\n          header_name: my_section\n          header_sep: \"|\"\n"
+                "    custom_metrics:\n      - myscn:\n          path: c.sql\n          header_name: my_section\n          header_sep: 124\n"
             ),
             "got: {result}"
         );
-        // the loader must tolerate the header_name/sep keys (support comes later)
+        // the migrated keys must reach the runtime: the metric is emitted under
+        // the legacy section header instead of the default `oracle_sql` one
         let config =
             super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
-        assert!(config.ora_sql().is_some());
+        let ms = config.ora_sql().expect("ora_sql must be present");
+        let metric = ms
+            .all_sections()
+            .iter()
+            .find(|s| s.is_custom_metric())
+            .expect("migrated custom metric must be loaded")
+            .clone();
+        let header = metric.custom_header().expect("header_name must be loaded");
+        assert_eq!(header.name(), "my_section");
+        assert_eq!(header.sep(), Some(b'|'));
     }
 
     #[test]

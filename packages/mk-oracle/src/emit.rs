@@ -27,6 +27,20 @@ pub fn signaling_header(name: &str) -> String {
     format!("<<<{PREFIX}_{name}>>>")
 }
 
+/// Header of a section whose name the user defines with `header_name:`.
+///
+/// Unlike [`header`] the name is emitted verbatim, without the `oracle_`
+/// prefix, and `:sep(NN)` is added only when a separator is configured.
+///
+/// The separator is already the ASCII code the header announces (see
+/// `header_sep:`), so it is emitted as it is.
+pub fn custom_section_header(name: &str, separator: Option<u8>) -> String {
+    match separator {
+        Some(sep) => format!("<<<{name}:sep({sep:0>2})>>>"),
+        None => format!("<<<{name}>>>"),
+    }
+}
+
 pub fn piggyback_header(piggyback_host_name: &PiggybackHostName) -> String {
     format!("<<<<{piggyback_host_name}>>>>")
 }

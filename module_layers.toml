@@ -1800,7 +1800,6 @@ allows = [
   "cmk.web.utils",
   "@livestatus_client",
   "@plugin_apis",
-  "cmk.ccc.version",
   "cmk.fields",
   "cmk.gui",
   "cmk.metric_backend.gui",

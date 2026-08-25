@@ -114,6 +114,9 @@ LinkedHashMap<String, List> build_env_secret_map(cmk_version, ami, azure) {
                 credentialsId: 'cmk-credentials',
                 passwordVariable: 'PKR_VAR_cmk_download_pass',
                 usernameVariable: 'PKR_VAR_cmk_download_user'),
+        ],
+        // keep the key of the map in sync with the values of "cloud_targets"
+        "secrets_amazon-ebs": [
             // ~~~ AWS ~~~
             string(
                 credentialsId: 'aws_secret_key',
@@ -121,6 +124,9 @@ LinkedHashMap<String, List> build_env_secret_map(cmk_version, ami, azure) {
             string(
                 credentialsId: 'aws_access_key',
                 variable: 'PKR_VAR_aws_access_key'),
+        ],
+        // keep the key of the map in sync with the values of "cloud_targets"
+        "secrets_azure-arm": [
             // ~~~ AZURE ~~~
             usernamePassword(
                 credentialsId: 'azure_client',
@@ -137,26 +143,55 @@ LinkedHashMap<String, List> build_env_secret_map(cmk_version, ami, azure) {
 }
 
 LinkedHashMap<String, List> create_build_stages(cloud_targets, env_secret_map, build_images, packer_envvars) {
-    return cloud_targets.collectEntries { target ->
-        [("Building target ${target}"): {
+    return cloud_targets.collectEntries { target -> [
+        ("Building target ${target}"): {
             smart_stage(
                 name: "Building target ${target}",
                 condition: build_images,
                 raiseOnError: true,
             ) {
                 withCredentials(env_secret_map["secrets"]) {
-                    withEnv(env_secret_map["env"] + packer_envvars) {
-                        dir("${checkout_dir}/packer") {
-                            sh("""
-                               packer build -only="checkmk-ansible.${target}.builder" .;
-                            """);
+                    withCredentials(env_secret_map["secrets_${target}"]) {
+                        withEnv(env_secret_map["env"] + packer_envvars) {
+                            dir("${checkout_dir}/packer") {
+                                sh("""
+                                   packer build -only="checkmk-ansible.${target}.builder" .;
+                                """);
+                            }
                         }
                     }
                 }
             }
         }
-        ]
-    }
+    ]}
+}
+
+LinkedHashMap<String, List> publish_env_secret_map() {
+    return [
+        // keep the key of the map in sync with the values of "targets_names"
+        "secrets_aws": [
+            // ~~~ AWS ~~~
+            string(
+                credentialsId: 'aws_publisher_secret_key',
+                variable: 'AWS_SECRET_ACCESS_KEY'),
+            string(
+                credentialsId: 'aws_publisher_access_key',
+                variable: 'AWS_ACCESS_KEY_ID'),
+        ],
+        "secrets_azure": [
+            // ~~~ AZURE ~~~
+            usernamePassword(
+                credentialsId: 'azure_client',
+                passwordVariable: 'AZURE_CLIENT_SECRET',
+                usernameVariable: 'AZURE_CLIENT_ID'),
+            string(
+                credentialsId: 'azure_subscription_id',
+                variable: 'SUBSCRIPTION_ID'),
+            string(
+                credentialsId: 'azure_tenant_id',
+                variable: 'AZURE_TENANT_ID'),
+        ],
+    ];
 }
 
 LinkedHashMap<String, List> create_publish_stages(targets_names, version, publish) {
@@ -168,34 +203,24 @@ LinkedHashMap<String, List> create_publish_stages(targets_names, version, publis
                 raiseOnError: true
             ) {
                 withEnv(["AWS_DEFAULT_REGION=us-east-1", "PYTHONUNBUFFERED=1", "AZURE_RESOURCE_GROUP=rg-packer-dev-weu"]) {
-                    withCredentials([
-                        string(
-                            credentialsId: 'aws_publisher_secret_key',
-                            variable: 'AWS_SECRET_ACCESS_KEY'),
-                        string(
-                            credentialsId: 'aws_publisher_access_key',
-                            variable: 'AWS_ACCESS_KEY_ID'),
-                        usernamePassword(
-                            credentialsId: 'azure_client',
-                            passwordVariable: 'AZURE_CLIENT_SECRET',
-                            usernameVariable: 'AZURE_CLIENT_ID'),
-                        string(
-                            credentialsId: 'azure_subscription_id',
-                            variable: 'SUBSCRIPTION_ID'),
-                        string(
-                            credentialsId: 'azure_tenant_id',
-                            variable: 'AZURE_TENANT_ID'),
-                    ]) {
+                    withCredentials(publish_env_secret_map()["secrets_${target}"]) {
+                        def cli_args = (""
+                            + " --cloud-type ${target}"
+                            + " --new-version ${version}"
+                            + " --build-tag '${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}'"
+                            + " --image-name ${name}"
+                        );
+                        if (target == "aws") {
+                            cli_args += " --marketplace-scanner-arn '${AWS_MARKETPLACE_SCANNER_ARN}'"
+                            cli_args += " --product-id '${AWS_AMI_IMAGE_PRODUCT_ID}'"
+                        } else if (target == "azure") {
+                            cli_args += " --azure-subscription-id '${SUBSCRIPTION_ID}'"
+                            cli_args += " --azure-resource-group '${AZURE_RESOURCE_GROUP}'"
+                        }
                         // Used global env variable from jenkins:
                         // AWS_MARKETPLACE_SCANNER_ARN and AWS_AMI_IMAGE_PRODUCT_ID
                         sh("""
-                           scripts/run-uvenv buildscripts/scripts/publish_cloud_images.py \
-                            --cloud-type ${target} --new-version ${version} \
-                            --build-tag '${env.JOB_BASE_NAME}-${env.BUILD_NUMBER}' --image-name ${name} \
-                            --marketplace-scanner-arn '${AWS_MARKETPLACE_SCANNER_ARN}' \
-                            --product-id '${AWS_AMI_IMAGE_PRODUCT_ID}' \
-                            --azure-subscription-id '${SUBSCRIPTION_ID}' \
-                            --azure-resource-group '${AZURE_RESOURCE_GROUP}';
+                           scripts/run-uvenv buildscripts/scripts/publish_cloud_images.py ${cli_args}
                         """);
                     }
                 }

@@ -171,7 +171,7 @@ const PROPS: CustomGraphDesigner = {
     default_time_range: 14400,
     server_time_zone: 'UTC',
     first_day_of_week: null,
-    default_refresh_time: null
+    refresh: { interval_seconds: null, starts_live: true, reloads_page_content: false }
   }
 }
 
@@ -615,7 +615,12 @@ describe('a failed save', () => {
 })
 
 test('a preferred refresh time is preselected and used by the auto-started refresh', async () => {
-  await renderApp({ time_picker: { ...PROPS.time_picker, default_refresh_time: 90 } })
+  await renderApp({
+    time_picker: {
+      ...PROPS.time_picker,
+      refresh: { ...PROPS.time_picker.refresh, interval_seconds: 90 }
+    }
+  })
 
   expect(useGlobalRefresh().refreshPaused.value).toBe(false)
   expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(90)

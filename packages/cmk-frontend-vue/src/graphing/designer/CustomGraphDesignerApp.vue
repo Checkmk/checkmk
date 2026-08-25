@@ -47,7 +47,7 @@ if (activeTimeRange.value === null) {
   setActiveTimeRange(rollingRange(props.time_picker.default_time_range), 'time_picker')
 }
 
-initGlobalRefresh({ intervalSeconds: props.time_picker.default_refresh_time, live: true })
+initGlobalRefresh({ intervalSeconds: props.time_picker.refresh.interval_seconds, live: true })
 
 function returnToLiveMonitoring(): void {
   setActiveTimeRange(rollingRange(props.time_picker.default_time_range), 'time_picker')

@@ -22,8 +22,8 @@ from ._from_api import (
 from ._frontend import (
     default_time_range_seconds,
     global_time_picker_props,
+    global_time_picker_refresh,
     render_engine_graph_group,
-    user_default_refresh_time,
     user_first_day_of_week,
 )
 from ._graph_display_config import (
@@ -168,7 +168,7 @@ __all__ = [
     "compute_graph_artwork",
     "default_time_range_seconds",
     "global_time_picker_props",
-    "user_default_refresh_time",
+    "global_time_picker_refresh",
     "user_first_day_of_week",
     "iter_graph_artworks",
     "compute_pdf_graph_ranges",

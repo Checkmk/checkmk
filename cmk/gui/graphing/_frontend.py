@@ -45,6 +45,7 @@ from cmk.shared_typing.global_time_picker import (
     CustomGraphTimeRange,
     FirstDayOfWeek,
     GlobalTimePickerProps,
+    GlobalTimePickerRefresh,
 )
 from cmk.web.utils.html import HTML
 
@@ -235,15 +236,26 @@ def to_cmk_time_series_graph(
     )
 
 
+def global_time_picker_refresh(
+    *,
+    interval_seconds: int | None = None,
+    starts_live: bool = False,
+    reloads_page_content: bool = False,
+) -> GlobalTimePickerRefresh:
+    return GlobalTimePickerRefresh(
+        interval_seconds=interval_seconds or user_default_refresh_time(),
+        starts_live=starts_live,
+        reloads_page_content=reloads_page_content,
+    )
+
+
 def global_time_picker_props(
     graph_timeranges: Sequence[GraphTimerange],
     default_time_range_seconds: int,
     *,
     first_day_of_week: FirstDayOfWeek | None,
-    default_refresh_time: int | None,
+    refresh: GlobalTimePickerRefresh,
 ) -> GlobalTimePickerProps:
-    """Assemble the global time picker props from the configured graph time ranges and the user's
-    time picker preferences."""
     return GlobalTimePickerProps(
         custom_time_ranges=[
             CustomGraphTimeRange(title=timerange["title"], total_seconds=timerange["duration"])
@@ -252,20 +264,22 @@ def global_time_picker_props(
         default_time_range=default_time_range_seconds,
         server_time_zone=get_localzone_name(),
         first_day_of_week=first_day_of_week,
-        default_refresh_time=default_refresh_time,
+        refresh=refresh,
     )
 
 
 def render_global_time_picker(
     graph_timeranges: Sequence[GraphTimerange],
     default_time_range_seconds: int,
+    *,
+    refresh: GlobalTimePickerRefresh,
 ) -> None:
     """Render the global time picker frontend component."""
     props = global_time_picker_props(
         graph_timeranges,
         default_time_range_seconds,
         first_day_of_week=user_first_day_of_week(),
-        default_refresh_time=user_default_refresh_time(),
+        refresh=refresh,
     )
     html.vue_component("cmk-global-time-picker", data=asdict(props))
 

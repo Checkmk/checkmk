@@ -22,7 +22,11 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._frontend import default_time_range_seconds, render_global_time_picker
+from cmk.gui.graphing._frontend import (
+    default_time_range_seconds,
+    global_time_picker_refresh,
+    render_global_time_picker,
+)
 from cmk.gui.hooks import call as call_hooks
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -818,6 +822,7 @@ class GUIViewRenderer(ABCViewRenderer):
         render_global_time_picker(
             active_config.graph_timeranges,
             default_time_range_seconds=default_time_range_seconds(),
+            refresh=global_time_picker_refresh(),
         )
 
     def _extend_help_dropdown(self, menu: PageMenu) -> None:

@@ -5,7 +5,7 @@
  */
 import { fireEvent, render, screen } from '@testing-library/vue'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import GlobalTimePickerApp from '@/graphing/GlobalTimePicker/GlobalTimePickerApp.vue'
 import {
@@ -25,7 +25,7 @@ const PROPS: GlobalTimePickerProps = {
   default_time_range: 4 * HOUR,
   server_time_zone: 'Europe/Berlin',
   first_day_of_week: null,
-  default_refresh_time: null
+  refresh: { interval_seconds: null, starts_live: false, reloads_page_content: false }
 }
 
 const activeDurationSeconds = (): number => {
@@ -35,14 +35,14 @@ const activeDurationSeconds = (): number => {
 }
 
 describe('GlobalTimePickerApp', () => {
-  // The stores are module-level singletons; reset them so each test starts from a known state.
+  // Module-level singleton: reset it so each test starts from a known state.
   beforeEach(() => {
-    useGlobalTimeRange().setActiveTimeRange(null, 'time_picker')
     resetGlobalTimeState()
   })
 
   afterEach(() => {
     resetGlobalTimeState()
+    vi.unstubAllGlobals()
   })
 
   test('seeds the shared store with the default duration when empty', () => {
@@ -67,22 +67,35 @@ describe('GlobalTimePickerApp', () => {
     expect(screen.getByText('Refresh off')).toBeInTheDocument()
   })
 
-  test('a preferred refresh time preselects the interval but stays paused', () => {
-    render(GlobalTimePickerApp, { props: { ...PROPS, default_refresh_time: 60 } })
-    expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(60)
-    expect(useGlobalRefresh().refreshPaused.value).toBe(true)
+  test('the refresh the server described is the one the page runs', () => {
+    const fromTheServer = { interval_seconds: 60, starts_live: true, reloads_page_content: false }
+
+    render(GlobalTimePickerApp, { props: { ...PROPS, refresh: fromTheServer } })
+
+    expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(fromTheServer.interval_seconds)
+    expect(useGlobalRefresh().refreshPaused.value).toBe(false)
   })
 
-  test('no refresh preference keeps the default interval', () => {
+  test('a page whose rows the server rendered has its content re-fetched on a refresh', () => {
+    const reloadContent = vi.fn()
+    vi.stubGlobal('cmk', { utils: { reload_content_now: reloadContent } })
+    render(GlobalTimePickerApp, {
+      props: { ...PROPS, refresh: { ...PROPS.refresh, reloads_page_content: true } }
+    })
+
+    useGlobalRefresh().resumeRefresh()
+
+    expect(reloadContent).toHaveBeenCalledOnce()
+  })
+
+  test('a page of graphs alone leaves the surrounding page alone', () => {
+    const reloadContent = vi.fn()
+    vi.stubGlobal('cmk', { utils: { reload_content_now: reloadContent } })
     render(GlobalTimePickerApp, { props: { ...PROPS } })
-    expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(30)
-  })
 
-  test('a second app does not clobber an interval the user chose in the meantime', () => {
-    render(GlobalTimePickerApp, { props: { ...PROPS, default_refresh_time: 60 } })
-    useGlobalRefresh().setRefreshIntervalSeconds(90)
-    render(GlobalTimePickerApp, { props: { ...PROPS, default_refresh_time: 60 } })
-    expect(useGlobalRefresh().refreshIntervalSeconds.value).toBe(90)
+    useGlobalRefresh().resumeRefresh()
+
+    expect(reloadContent).not.toHaveBeenCalled()
   })
 
   test('a fresh page shows the configured default active, with no interaction', () => {

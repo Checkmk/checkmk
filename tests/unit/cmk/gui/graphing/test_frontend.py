@@ -5,6 +5,8 @@
 
 import json
 
+import pytest
+
 from cmk.graphing_engine import (
     AutoPrecision,
     Curve,
@@ -33,6 +35,7 @@ from cmk.gui.graphing._engine_dispatch import serialize_graphs
 from cmk.gui.graphing._frontend import (
     derive_y_axis,
     global_time_picker_props,
+    global_time_picker_refresh,
     resolve_default_time_range_seconds,
     to_cmk_time_series_graph,
     unit_to_unit_format,
@@ -49,7 +52,11 @@ from cmk.shared_typing.cmk_time_series_graph import (
     UnitFormat,
     YAxis,
 )
-from cmk.shared_typing.global_time_picker import CustomGraphTimeRange, FirstDayOfWeek
+from cmk.shared_typing.global_time_picker import (
+    CustomGraphTimeRange,
+    FirstDayOfWeek,
+    GlobalTimePickerRefresh,
+)
 
 _Notation = (
     DecimalNotation
@@ -137,27 +144,67 @@ def test_resolve_default_time_range_seconds_stale_preference_falls_back() -> Non
 
 
 def test_global_time_picker_props() -> None:
-    props = global_time_picker_props(
-        _GRAPH_TIMERANGES,
-        14400,
-        first_day_of_week=FirstDayOfWeek.monday,
-        default_refresh_time=60,
+    refresh = GlobalTimePickerRefresh(
+        interval_seconds=60, starts_live=True, reloads_page_content=True
     )
+
+    props = global_time_picker_props(
+        _GRAPH_TIMERANGES, 14400, first_day_of_week=FirstDayOfWeek.monday, refresh=refresh
+    )
+
     assert props.custom_time_ranges == [
         CustomGraphTimeRange(title="Last 1 h", total_seconds=3600),
         CustomGraphTimeRange(title="Last 4 h", total_seconds=14400),
     ]
     assert props.default_time_range == 14400
     assert props.first_day_of_week is FirstDayOfWeek.monday
-    assert props.default_refresh_time == 60
+    assert props.refresh is refresh
 
 
 def test_global_time_picker_props_without_preferences() -> None:
     props = global_time_picker_props(
-        _GRAPH_TIMERANGES, 3600, first_day_of_week=None, default_refresh_time=None
+        _GRAPH_TIMERANGES,
+        3600,
+        first_day_of_week=None,
+        refresh=GlobalTimePickerRefresh(
+            interval_seconds=None, starts_live=False, reloads_page_content=False
+        ),
     )
+
     assert props.first_day_of_week is None
-    assert props.default_refresh_time is None
+
+
+def test_global_time_picker_refresh_leaves_a_page_paused_and_self_contained(
+    request_context: None,
+) -> None:
+    refresh = global_time_picker_refresh()
+
+    assert refresh.starts_live is False
+    assert refresh.reloads_page_content is False
+
+
+def test_global_time_picker_refresh_falls_back_to_the_user_preference(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    preferred_interval = 90
+    monkeypatch.setattr(
+        "cmk.gui.graphing._frontend.user_default_refresh_time", lambda: preferred_interval
+    )
+
+    refresh = global_time_picker_refresh()
+
+    assert refresh.interval_seconds == preferred_interval
+
+
+def test_global_time_picker_refresh_prefers_the_interval_of_the_page(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("cmk.gui.graphing._frontend.user_default_refresh_time", lambda: 90)
+    interval_of_the_page = 60
+
+    refresh = global_time_picker_refresh(interval_seconds=interval_of_the_page)
+
+    assert refresh.interval_seconds == interval_of_the_page
 
 
 def test_start_of_week_choices_match_first_day_of_week() -> None:

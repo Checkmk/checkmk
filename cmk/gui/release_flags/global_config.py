@@ -23,9 +23,8 @@ from pydantic.fields import FieldInfo
 from cmk.ccc import store
 from cmk.flags import CONFIG_FILENAME as RELEASE_FLAGS_CONFIG_FILENAME
 from cmk.flags import ReleaseFlagConfig
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _l
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.valuespec import Checkbox
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigDomainName,
@@ -33,6 +32,8 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroup,
     SerializedSettings,
 )
+from cmk.rulesets.v1 import form_specs as fs
+from cmk.rulesets.v1 import Help, Label, Title
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.paths import default_config_dir, omd_root
 
@@ -117,7 +118,7 @@ def _make_flag_config_variable(name: str, field_info: FieldInfo) -> ConfigVariab
     assert isinstance(extra, dict)
     description = str(extra.get("description", ""))
     remove_after = str(extra.get("remove_after", ""))
-    help_text = _(
+    help_text = Help(
         "%(description)s<br><br>This is a temporary release flag. It is scheduled for removal "
         "in version %(remove_after)s and must not be relied on for permanent configuration."
     ) % {"description": description, "remove_after": remove_after}
@@ -125,11 +126,10 @@ def _make_flag_config_variable(name: str, field_info: FieldInfo) -> ConfigVariab
         group=ConfigVariableGroupReleaseFlags,
         primary_domain=ConfigDomainReleaseFlags,
         ident=name,
-        valuespec=lambda context: Checkbox(
-            title=name,
-            label=_("Enabled"),
-            help=help_text,
-            default_value=False,
+        form_spec=lambda context: fs.BooleanChoice(
+            title=Title(name),  # astrein: disable=localization-checker
+            label=Label("Enabled"),
+            help_text=help_text,
         ),
     )
 

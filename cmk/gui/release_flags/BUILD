@@ -12,7 +12,6 @@ py_library(
     deps = [
         requirement("pydantic"),
         "//cmk/gui:core_toolkit",
-        "//cmk/gui/valuespec",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/utils",

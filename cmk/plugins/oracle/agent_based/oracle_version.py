@@ -34,8 +34,8 @@ def check_oracle_version(item: str, section: StringTable) -> CheckResult:
             err = oracle_handle_ora_errors(line)
             if err is False:
                 continue
-            if isinstance(err, Result):
-                yield err
+            if isinstance(err, str):
+                yield Result(state=State.UNKNOWN, summary=err)
                 return
             yield Result(state=State.OK, summary="Version: " + " ".join(line[1:]))
             return

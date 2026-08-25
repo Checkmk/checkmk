@@ -47,9 +47,9 @@ def check_oracle_recovery_area(
         error = oracle_handle_ora_errors(line)
         if error is False:
             continue
-        if isinstance(error, Result):
+        if isinstance(error, str):
             if line[0] == item:
-                yield error
+                yield Result(state=State.UNKNOWN, summary=error)
                 return
             continue
         if len(line) < 5:

@@ -48,8 +48,8 @@ def check_oracle_longactivesessions(
         error = oracle_handle_ora_errors(line)
         if error is False:
             continue
-        if isinstance(error, Result):
-            yield error
+        if isinstance(error, str):
+            yield Result(state=State.UNKNOWN, summary=error)
             return
 
         itemfound = True

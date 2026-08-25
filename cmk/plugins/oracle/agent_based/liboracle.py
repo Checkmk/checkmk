@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal, NamedTuple, TypedDict
 
-from cmk.agent_based.v2 import Result, State
+from cmk.agent_based.v2 import State
 
 
 class OraErrors:
@@ -247,23 +247,14 @@ def datafiles_online_stats(
     )
 
 
-# This function must be executed for each agent line which has been
-# found for the current item. It must deal with the ORA-* error
-# messages. It has to skip over the lines which show the SQL statement
-# and the SQL error message which comes before the ORA-* message.
-#
-# The check must completely skip the lines before the ORA-* messages
-# and return UNKNOWN on the first found ORA-* message.
-# line[0] is the item (db instance)
-#
-# This function returns a tuple when an ORA-* message has been found.
-# It returns False if this line should be skipped by the check.
-def oracle_handle_ora_errors(line: Sequence[str]) -> Result | Literal[False] | None:
+# Classify one agent line: the error message for an error row, False for noise
+# the check should skip, None for data. The check decides the monitoring state.
+def oracle_handle_ora_errors(line: Sequence[str]) -> str | Literal[False] | None:
     if len(line) == 1:
         return None
 
     legacy_error = _oracle_handle_legacy_ora_errors(line)
-    if legacy_error:
+    if legacy_error is not None:
         return legacy_error
 
     # mk-oracle collapses "|" and line breaks, so its errors are exactly three
@@ -274,9 +265,9 @@ def oracle_handle_ora_errors(line: Sequence[str]) -> Result | Literal[False] | N
         if len(line) == 3:
             if not line[2].strip():
                 return False
-            return Result(state=State.UNKNOWN, summary=line[2])
+            return line[2]
         if len(line) > 3 and line[2].startswith("ORA-"):
-            return Result(state=State.UNKNOWN, summary="%s" % " ".join(line[2:]))
+            return " ".join(line[2:])
         if len(line) == 2:
             return False
         return None
@@ -285,25 +276,19 @@ def oracle_handle_ora_errors(line: Sequence[str]) -> Result | Literal[False] | N
     if line[1] in ["select", "*", "ERROR"]:
         return False
     if line[1].startswith("ORA-"):
-        return Result(
-            state=State.UNKNOWN, summary='Found error in agent output "%s"' % " ".join(line[1:])
-        )
+        return 'Found error in agent output "%s"' % " ".join(line[1:])
     return None
 
 
-def _oracle_handle_legacy_ora_errors(line: Sequence[str]) -> Result | Literal[False] | None:
+def _oracle_handle_legacy_ora_errors(line: Sequence[str]) -> str | Literal[False] | None:
     # Skip over line before ORA- errors (e.g. sent by AIX agent from 2014)
     if line == ["ERROR:"]:
         return False
 
     if line[0].startswith("ORA-"):
-        return Result(
-            state=State.UNKNOWN, summary='Found error in agent output "%s"' % " ".join(line)
-        )
+        return 'Found error in agent output "%s"' % " ".join(line)
 
     # Handle error output from 1.6 solaris agent, see SUP-9521
     if line[0] == "Error":
-        return Result(
-            state=State.UNKNOWN, summary='Found error in agent output "%s"' % " ".join(line[1:])
-        )
+        return 'Found error in agent output "%s"' % " ".join(line[1:])
     return None

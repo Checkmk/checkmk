@@ -42,8 +42,8 @@ def check_oracle_locks(item: str, params: Mapping[str, Any], section: StringTabl
             err = oracle_handle_ora_errors(line)
             if err is False:
                 continue
-            elif isinstance(err, Result):
-                yield err
+            elif isinstance(err, str):
+                yield Result(state=State.UNKNOWN, summary=err)
             elif err is None:
                 pass
             else:

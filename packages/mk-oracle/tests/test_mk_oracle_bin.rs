@@ -739,20 +739,21 @@ fn test_migrate_reference_config_connection_and_auth() {
         "must have at least 2 instances from DBUSER_XE1 + DBUSER_XE2"
     );
 
-    // DBUSER_XE1: sid=XE1, alias=oooo, inherits main connection; its "/" username
-    // migrates to external/wallet auth (empty username), not the main credentials.
+    // DBUSER_XE1 inherits the main connection, and its "/" username migrates to
+    // external/wallet auth (empty username), not the main credentials.
+    //
+    // Both references name the instance by an alias, but not the same one: the
+    // .cfg carries an explicit TNSALIAS (`/:::::oooo`), while the .ps1 array has
+    // no sixth field, so the SID stands in as the alias - wallet auth resolves
+    // its SEPS credential through the alias, not through host and port.
     #[cfg(not(windows))]
+    let alias_of_xe1 = "oooo";
+    #[cfg(windows)]
+    let alias_of_xe1 = "XE1";
     let xe1_inst = instances
         .iter()
-        .find(|i| i.alias().as_ref().map(|a| a.to_string()).as_deref() == Some("oooo"))
-        .expect("DBUSER_XE1 instance with alias oooo");
-    #[cfg(windows)]
-    let xe1_inst = instances
-        .iter()
-        .find(|i| i.standalone_sid().map(|s| s.to_string()).as_deref() == Some("XE1"))
-        .expect("DBUSER_XE1 instance with sid XE1");
-    #[cfg(windows)]
-    assert!(xe1_inst.alias().is_none());
+        .find(|i| i.alias().as_ref().map(|a| a.to_string()).as_deref() == Some(alias_of_xe1))
+        .unwrap_or_else(|| panic!("DBUSER_XE1 instance with alias {alias_of_xe1}"));
 
     assert_eq!(
         xe1_inst.conn().hostname().to_string(),

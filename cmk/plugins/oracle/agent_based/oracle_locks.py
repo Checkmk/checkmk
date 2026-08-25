@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
-from typing import Any, assert_never
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -20,35 +20,63 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import oracle_handle_ora_errors
+from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
 
 # <<<oracle_locks>>>
 # TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL
 # newdb|25|15231|ol6131|sqlplus@ol6131 (TNS V1-V3)|13275|oracle|SYS|3782|VALID|1|407|1463|ol6131|sqlplus@ol6131 (TNS V1-V3)|13018|oracle|SYS
 
+type _LockRows = list[Sequence[str]]
+type Section = Mapping[str, Parsed[_LockRows]]
 
-def discover_oracle_locks(section: StringTable) -> DiscoveryResult:
-    yield from [Service(item=line[0]) for line in section if len(line) >= 10]
+
+def parse_oracle_locks(string_table: StringTable) -> Section:
+    rows_by_sid: dict[str, _LockRows] = {}
+    errors: dict[str, str] = {}
+    for line in string_table:
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+            case False:
+                continue
+            case None:
+                rows_by_sid.setdefault(line[0], []).append(line)
+
+    parsed: dict[str, Parsed[_LockRows]] = {
+        sid: Ok(rows) for sid, rows in rows_by_sid.items() if sid not in errors
+    }
+    for sid, message in errors.items():
+        parsed[sid] = Error(message)
+    return parsed
 
 
-def check_oracle_locks(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
+def discover_oracle_locks(section: Section) -> DiscoveryResult:
+    for sid, result in section.items():
+        if isinstance(result, Ok):
+            yield from (Service(item=sid) for line in result.value if len(line) >= 10)
+
+
+def check_oracle_locks(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    match section.get(item):
+        case None:
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise IgnoreResultsError("Login into database failed")
+        case Error(message):
+            yield Result(state=State.UNKNOWN, summary=message)
+        case Ok(rows):
+            yield from _check_locks(params, rows)
+
+
+def _check_locks(params: Mapping[str, Any], rows: _LockRows) -> CheckResult:
     lockcount = 0
     state: State | None = None
     infotext = ""
+    warn, crit = params["levels"]
 
-    for line in section:
-        warn, crit = params["levels"]
-        if line[0] == item and line[1] != "":
-            err = oracle_handle_ora_errors(line)
-            if err is False:
-                continue
-            elif isinstance(err, str):
-                yield Result(state=State.UNKNOWN, summary=err)
-            elif err is None:
-                pass
-            else:
-                assert_never(err)
-
+    for line in rows:
+        if line[1] != "":
             if len(line) == 10:
                 # old format from locks_old in current plugin
                 (
@@ -106,7 +134,7 @@ def check_oracle_locks(item: str, params: Mapping[str, Any], section: StringTabl
                 lockcount += 1
                 infotext += f"locktime {render.time_offset(ctime)} (!) Session (sid,serial, proc) {sidnr},{serial},{process} machine {machine} osuser {osuser} object: {object_owner}.{object_name} ; "
 
-        if line[0] == item and line[1] == "":
+        if line[1] == "":
             state = state or State.OK
 
     if infotext == "":
@@ -122,10 +150,6 @@ def check_oracle_locks(item: str, params: Mapping[str, Any], section: StringTabl
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
     raise IgnoreResultsError("Login into database failed")
-
-
-def parse_oracle_locks(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 agent_section_oracle_locks = AgentSection(

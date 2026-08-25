@@ -10,7 +10,7 @@
 # ORACLE_SID serial# machine process osuser program last_call_el sql_id
 
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -27,43 +27,64 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .liboracle import oracle_handle_ora_errors
+from .liboracle import Error, Ok, oracle_handle_ora_errors, Parsed
+
+type _SessionRows = list[Sequence[str]]
+type Section = Mapping[str, Parsed[_SessionRows]]
 
 
-def discover_oracle_longactivesessions(section: StringTable) -> DiscoveryResult:
-    yield from (Service(item=line[0]) for line in section if oracle_handle_ora_errors(line) is None)
+def parse_oracle_longactivesessions(string_table: StringTable) -> Section:
+    rows_by_sid: dict[str, _SessionRows] = {}
+    errors: dict[str, str] = {}
+    for line in string_table:
+        match oracle_handle_ora_errors(line):
+            case str() as message:
+                errors.setdefault(line[0], message)
+            case False:
+                continue
+            case None:
+                if len(line) > 1:
+                    rows_by_sid.setdefault(line[0], []).append(line)
+
+    parsed: dict[str, Parsed[_SessionRows]] = {
+        sid: Ok(rows) for sid, rows in rows_by_sid.items() if sid not in errors
+    }
+    for sid, message in errors.items():
+        parsed[sid] = Error(message)
+    return parsed
+
+
+def discover_oracle_longactivesessions(section: Section) -> DiscoveryResult:
+    for sid, result in section.items():
+        if isinstance(result, Ok):
+            yield from (Service(item=sid) for _line in result.value)
 
 
 def check_oracle_longactivesessions(
-    item: str, params: Mapping[str, Any], section: StringTable
+    item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
+    match section.get(item):
+        case None:
+            # In case of missing information we assume that the login into
+            # the database has failed and we simply skip this check. It won't
+            # switch to UNKNOWN, but will get stale.
+            raise IgnoreResultsError("no info from database. Check ORA %s Instance" % item)
+        case Error(message):
+            yield Result(state=State.UNKNOWN, summary=message)
+        case Ok(rows):
+            yield from _check_longactivesessions(params, rows)
+
+
+def _check_longactivesessions(params: Mapping[str, Any], rows: _SessionRows) -> CheckResult:
     sessioncount = 0
-    itemfound = False
     longoutput: None | str = None
 
-    for line in section:
-        if len(line) <= 1 or line[0] != item:
-            continue
-
-        error = oracle_handle_ora_errors(line)
-        if error is False:
-            continue
-        if isinstance(error, str):
-            yield Result(state=State.UNKNOWN, summary=error)
-            return
-
-        itemfound = True
+    for line in rows:
         if line[1] != "":
             sessioncount += 1
             _sid, sidnr, serial, machine, process, osuser, program, last_call_el, sql_id = line
 
             longoutput = f"Session (sid,serial,proc) {sidnr} {serial} {process} active for {render.timespan(int(last_call_el))} from {machine} osuser {osuser} program {program} sql_id {sql_id} "
-
-    if not itemfound:
-        # In case of missing information we assume that the login into
-        # the database has failed and we simply skip this check. It won't
-        # switch to UNKNOWN, but will get stale.
-        raise IgnoreResultsError("no info from database. Check ORA %s Instance" % item)
 
     yield from check_levels(
         sessioncount,
@@ -73,10 +94,6 @@ def check_oracle_longactivesessions(
     )
     if longoutput:
         yield Result(state=State.OK, notice=longoutput)
-
-
-def parse_oracle_longactivesessions(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 agent_section_oracle_longactivesessions = AgentSection(

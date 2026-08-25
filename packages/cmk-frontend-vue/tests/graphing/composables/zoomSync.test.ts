@@ -13,7 +13,7 @@ import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { nextTick, ref, watch } from 'vue'
 
-import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
+import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/globalTimeState'
 import type { TimeRange } from '@/graphing/components/TimeSeriesGraph'
 import { useGraphInteraction } from '@/graphing/composables/useGraphInteraction'
 import { useRequestedTimeRange } from '@/graphing/composables/useRequestedTimeRange'

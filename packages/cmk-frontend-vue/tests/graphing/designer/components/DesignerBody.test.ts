@@ -12,7 +12,7 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 
-import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
+import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/globalTimeState'
 import type { CustomGraphObject } from '@/graphing/designer/api'
 import DesignerBody from '@/graphing/designer/components/DesignerBody.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'

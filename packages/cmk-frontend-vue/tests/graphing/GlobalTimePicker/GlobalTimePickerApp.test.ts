@@ -7,13 +7,13 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 
-import {
-  resetGlobalRefresh,
-  useGlobalRefresh
-} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
 import GlobalTimePickerApp from '@/graphing/GlobalTimePicker/GlobalTimePickerApp.vue'
+import {
+  resetGlobalTimeState,
+  useGlobalRefresh,
+  useGlobalTimeRange
+} from '@/graphing/GlobalTimePicker/globalTimeState'
 import { durationSeconds, rollingRange } from '@/graphing/GlobalTimePicker/private/timeRange'
-import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
 
 const HOUR = 3600
 
@@ -38,11 +38,11 @@ describe('GlobalTimePickerApp', () => {
   // The stores are module-level singletons; reset them so each test starts from a known state.
   beforeEach(() => {
     useGlobalTimeRange().setActiveTimeRange(null, 'time_picker')
-    resetGlobalRefresh()
+    resetGlobalTimeState()
   })
 
   afterEach(() => {
-    resetGlobalRefresh()
+    resetGlobalTimeState()
   })
 
   test('seeds the shared store with the default duration when empty', () => {

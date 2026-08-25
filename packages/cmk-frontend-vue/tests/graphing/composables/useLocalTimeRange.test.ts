@@ -7,7 +7,7 @@ import { CalendarDateTime, type ZonedDateTime, toZoned } from '@internationalize
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { nextTick } from 'vue'
 
-import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
+import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/globalTimeState'
 import { useLocalTimeRange } from '@/graphing/composables/useLocalTimeRange'
 
 const TZ = 'Europe/Berlin'

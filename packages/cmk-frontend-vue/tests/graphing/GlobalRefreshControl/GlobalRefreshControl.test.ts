@@ -9,17 +9,14 @@ import { afterEach, beforeEach, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import GlobalRefreshControl from '@/graphing/GlobalRefreshControl/GlobalRefreshControl.vue'
-import {
-  resetGlobalRefresh,
-  useGlobalRefresh
-} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
+import { resetGlobalTimeState, useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState'
 
 beforeEach(() => {
-  resetGlobalRefresh()
+  resetGlobalTimeState()
 })
 
 afterEach(() => {
-  resetGlobalRefresh()
+  resetGlobalTimeState()
   vi.useRealTimers()
 })
 

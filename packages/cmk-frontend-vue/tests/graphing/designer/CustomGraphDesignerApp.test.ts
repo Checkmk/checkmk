@@ -10,11 +10,11 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
-  resetGlobalRefresh,
-  useGlobalRefresh
-} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
+  resetGlobalTimeState,
+  useGlobalRefresh,
+  useGlobalTimeRange
+} from '@/graphing/GlobalTimePicker/globalTimeState'
 import { durationSeconds, rollingRange } from '@/graphing/GlobalTimePicker/private/timeRange'
-import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
 import CustomGraphDesignerApp from '@/graphing/designer/CustomGraphDesignerApp.vue'
 
 import { filterDefinitions } from './fixtures'
@@ -196,7 +196,7 @@ function mockGraphGet(graph: unknown = graphObject()): void {
 
 beforeEach(() => {
   // Module-level singleton: without this the designer's auto-unpause leaks into later tests.
-  resetGlobalRefresh()
+  resetGlobalTimeState()
   getSpy = vi.spyOn(client, 'GET')
   mockGraphGet()
   postSpy = vi.spyOn(client, 'POST')
@@ -217,7 +217,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  resetGlobalRefresh()
+  resetGlobalTimeState()
   vi.restoreAllMocks()
 })
 

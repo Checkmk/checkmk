@@ -12,10 +12,10 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { nextTick } from 'vue'
 
 import {
-  resetGlobalRefresh,
-  useGlobalRefresh
-} from '@/graphing/GlobalRefreshControl/useGlobalRefresh'
-import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
+  resetGlobalTimeState,
+  useGlobalRefresh,
+  useGlobalTimeRange
+} from '@/graphing/GlobalTimePicker/globalTimeState'
 import GraphGroup from '@/graphing/components/GraphGroup.vue'
 
 // Hoisted so the panel stub below can bake the ranges its buttons report into its template.
@@ -215,7 +215,7 @@ beforeEach(() => {
 
 afterEach(() => {
   document.getElementById(MAIN_PAGE_CONTENT_ID)?.remove()
-  resetGlobalRefresh()
+  resetGlobalTimeState()
   vi.restoreAllMocks()
   vi.useRealTimers()
 })
@@ -598,7 +598,7 @@ test('a span-changing panel commit (resize/zoom) reseeds the overview domain', a
 })
 
 test('a panel reporting inspection pauses the live refresh', async () => {
-  resetGlobalRefresh()
+  resetGlobalTimeState()
   useGlobalRefresh().setRefreshPaused(false)
   renderGroup()
 

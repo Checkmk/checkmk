@@ -9,10 +9,9 @@ import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { computed } from 'vue'
 
 import GlobalRefreshControl from '../GlobalRefreshControl/GlobalRefreshControl.vue'
-import { seedRefreshIntervalSeconds } from '../GlobalRefreshControl/useGlobalRefresh.ts'
 import GlobalTimePicker from './GlobalTimePicker.vue'
+import { seedRefreshIntervalSeconds, useGlobalTimeRange } from './globalTimeState.ts'
 import { rollingRange } from './private/timeRange.ts'
-import { useGlobalTimeRange } from './useGlobalTimeRange.ts'
 
 const props = defineProps<GlobalTimePickerProps>()
 

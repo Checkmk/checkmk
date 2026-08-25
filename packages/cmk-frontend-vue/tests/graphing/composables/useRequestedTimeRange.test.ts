@@ -12,7 +12,7 @@ import {
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { nextTick } from 'vue'
 
-import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/useGlobalTimeRange'
+import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/globalTimeState'
 import { useRequestedTimeRange } from '@/graphing/composables/useRequestedTimeRange'
 
 const TZ = 'Europe/Berlin'

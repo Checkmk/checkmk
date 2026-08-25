@@ -12,8 +12,8 @@ import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
+import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import { pad2 } from '../utils/timeFormat'
-import { useGlobalRefresh } from './useGlobalRefresh'
 
 const {
   refreshIntervalSeconds,

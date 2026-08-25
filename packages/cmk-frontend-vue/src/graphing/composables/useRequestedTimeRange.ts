@@ -7,7 +7,7 @@ import { fromDate, getLocalTimeZone } from '@internationalized/date'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { type ComputedRef, computed, ref, watch } from 'vue'
 
-import { useGlobalTimeRange } from '../GlobalTimePicker/useGlobalTimeRange'
+import { useGlobalTimeRange } from '../GlobalTimePicker/globalTimeState'
 import type { RequestedTimeRange } from '../types'
 import { sameRequestedTimeRange } from '../utils/timeRange'
 

@@ -16,12 +16,13 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 
+import { GlobalRefreshControl } from '../GlobalRefreshControl'
 import {
-  GlobalRefreshControl,
+  rollingRange,
   seedRefreshIntervalSeconds,
-  useGlobalRefresh
-} from '../GlobalRefreshControl'
-import { rollingRange, useGlobalTimeRange } from '../GlobalTimePicker'
+  useGlobalRefresh,
+  useGlobalTimeRange
+} from '../GlobalTimePicker'
 import {
   type CustomGraphObject,
   type CustomGraphOptions,

@@ -17,7 +17,7 @@ import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComponentPublicInstance, computed, onMounted, ref, watch } from 'vue'
 
-import { useGlobalRefresh } from '../GlobalRefreshControl/useGlobalRefresh'
+import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import { useBrushSnapshot } from '../composables/useBrushSnapshot'
 import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
 import { useGraphNotice } from '../composables/useGraphNotice'

@@ -16,7 +16,7 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { computed, ref, watch } from 'vue'
 
-import { useGlobalRefresh } from '../../GlobalRefreshControl/useGlobalRefresh'
+import { useGlobalRefresh } from '../../GlobalTimePicker/globalTimeState'
 import GraphNotice from '../../components/GraphNotice.vue'
 import GraphPanel from '../../components/GraphPanel.vue'
 import type { ConsolidationFn } from '../../components/consolidation'

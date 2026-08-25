@@ -22,7 +22,6 @@ from cmk.agent_based.v2 import (
 
 from .liboracle import (
     oracle_handle_ora_errors,
-    oracle_handle_ora_errors_discovery,
 )
 
 # <<<oracle_logswitches>>>
@@ -31,8 +30,11 @@ from .liboracle import (
 
 
 def discover_oracle_logswitches(section: StringTable) -> DiscoveryResult:
-    oracle_handle_ora_errors_discovery(section)
-    yield from [Service(item=line[0]) for line in section if len(line) == 2]
+    yield from [
+        Service(item=line[0])
+        for line in section
+        if len(line) == 2 and oracle_handle_ora_errors(line) is None
+    ]
 
 
 def check_oracle_logswitches(

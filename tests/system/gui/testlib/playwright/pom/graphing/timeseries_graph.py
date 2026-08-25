@@ -7,7 +7,7 @@
 
 import logging
 
-from playwright.sync_api import FloatRect, Locator, Page
+from playwright.sync_api import expect, FloatRect, Locator, Page
 
 from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import GlobalTimePicker
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
@@ -18,7 +18,8 @@ from tests.system.gui.testlib.playwright.pom.page import MainArea
 logger = logging.getLogger(__name__)
 
 # The gestures listen on window mousemove, so a single jump from press to release never
-# updates the preview.
+# updates the preview. They address viewport coordinates too, so a target below the fold is
+# scrolled in before its box is read.
 _DRAG_STEPS = 12
 
 
@@ -122,16 +123,28 @@ class TimeSeriesGraph:
 
     @property
     def value_axis_labels(self) -> Locator:
-        """The y-axis tick labels; they change whenever the value domain moves."""
+        """The y-axis tick labels."""
         return self.root.locator(".graphing-time-series-graph__y-axis text")
+
+    def value_axis_ticks(self) -> list[list[str]]:
+        """Each value tick as [label, offset]: what it reads and where d3 put it.
+
+        Either half alone can stay equal across a narrowing - round labels stay round, and
+        the offsets are a grid of n intervals that stays at n. One call, because d3 drops
+        the exiting ticks and a per-element read waits out the timeout on a vanished one.
+        """
+        ticks = self.root.locator(".graphing-time-series-graph__y-axis .tick")
+        state: list[list[str]] = ticks.evaluate_all(
+            "ticks => ticks.map((tick) => "
+            "[tick.textContent ?? '', tick.getAttribute('transform') ?? ''])"
+        )
+        return state
 
     def time_axis_label_texts(self) -> list[str]:
         return _axis_label_texts(self.time_axis_labels)
 
-    def value_axis_label_texts(self) -> list[str]:
-        return _axis_label_texts(self.value_axis_labels)
-
     def _canvas_box(self) -> FloatRect:
+        self.canvas.scroll_into_view_if_needed()
         box = self.canvas.bounding_box()
         assert box is not None, "The graph canvas has no layout box; is the graph rendered?"
         return box
@@ -150,6 +163,7 @@ class TimeSeriesGraph:
 
     def drag_axis_strip(self, from_fraction: float, to_fraction: float) -> None:
         """Grab the x-axis strip and pull it sideways, panning the window."""
+        self.axis_grab_strip.scroll_into_view_if_needed()
         box = self.axis_grab_strip.bounding_box()
         assert box is not None, "The x-axis grab strip has no layout box; is panning enabled?"
         logger.info("Panning the axis strip from %s to %s", from_fraction, to_fraction)
@@ -239,6 +253,7 @@ class GraphPanel:
 
     def drag_context_view(self, offset_fraction: float) -> None:
         """Drag the context view's bar sideways by a fraction of the strip's width."""
+        self.context_view_bar.scroll_into_view_if_needed()
         bar_box = self.context_view_bar.bounding_box()
         strip_box = self.context_view.bounding_box()
         assert bar_box is not None and strip_box is not None, (
@@ -273,6 +288,20 @@ class ServiceGraphs:
     def panels(self) -> Locator:
         """Every graph the engine rendered, matched through the shared accessor."""
         return self._accessor.graph_root(GraphContainment.PAGE_DIRECT)
+
+    @property
+    def group(self) -> Locator:
+        return self._accessor.engine_graph_group(GraphContainment.PAGE_DIRECT)
+
+    def wait_until_settled(self) -> None:
+        """Wait for the panels to be back on the range they were asked for.
+
+        A refetching panel is drawn against the range its data covers, a step wider, so
+        geometry read across the switch is not comparable.
+        """
+        expect(self.group, "The graphs never stopped fetching").to_have_attribute(
+            "aria-busy", "false"
+        )
 
     def panel(self, index: int = 0) -> GraphPanel:
         return GraphPanel(self.panels.nth(index), self.page, self._main_area)

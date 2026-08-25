@@ -91,3 +91,25 @@ def test_check() -> None:
             notice="Session (sid,serial,proc) TUX12C1 Yet Another Serial Number 0 active for 8 minutes 20 seconds from another machine osuser yet another osuser program 5800 sql_id 0 ",
         ),
     ]
+
+
+_LEGACY_ERROR_INFO = [["orcl", "ORA-01017:", "invalid username/password"]]
+
+
+def test_discovery_skips_legacy_error_row() -> None:
+    assert not list(
+        discover_oracle_longactivesessions(parse_oracle_longactivesessions(_LEGACY_ERROR_INFO))
+    )
+
+
+def test_check_legacy_error_row_surfaces_error() -> None:
+    assert list(
+        check_oracle_longactivesessions(
+            "orcl", {"levels": (500, 1000)}, parse_oracle_longactivesessions(_LEGACY_ERROR_INFO)
+        )
+    ) == [
+        Result(
+            state=State.UNKNOWN,
+            summary='Found error in agent output "ORA-01017: invalid username/password"',
+        ),
+    ]

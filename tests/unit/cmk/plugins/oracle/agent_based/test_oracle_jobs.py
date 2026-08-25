@@ -306,3 +306,19 @@ def test_oracle_jobs_check_failure_row_after_other_instances_rows() -> None:
     assert list(check_oracle_jobs("DB19.SYS.JOB1", {}, parse_oracle_jobs(info))) == [
         Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist"),
     ]
+
+
+_legacy_error_info = [["DB19", "ORA-01017:", "invalid username/password"]]
+
+
+def test_oracle_jobs_discovery_skips_legacy_error_row() -> None:
+    assert not list(discover_oracle_jobs(parse_oracle_jobs(_legacy_error_info)))
+
+
+def test_oracle_jobs_check_legacy_error_row_surfaces_error() -> None:
+    assert list(check_oracle_jobs("DB19.SYS.JOB1", {}, parse_oracle_jobs(_legacy_error_info))) == [
+        Result(
+            state=State.UNKNOWN,
+            summary='Found error in agent output "ORA-01017: invalid username/password"',
+        ),
+    ]

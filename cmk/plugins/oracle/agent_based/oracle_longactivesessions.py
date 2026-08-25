@@ -33,9 +33,7 @@ from .liboracle import oracle_handle_ora_errors
 
 
 def discover_oracle_longactivesessions(section: StringTable) -> DiscoveryResult:
-    yield from (
-        Service(item=line[0]) for line in section if not (len(line) == 3 and line[1] == "FAILURE")
-    )
+    yield from (Service(item=line[0]) for line in section if oracle_handle_ora_errors(line) is None)
 
 
 def check_oracle_longactivesessions(
@@ -49,12 +47,12 @@ def check_oracle_longactivesessions(
         if len(line) <= 1 or line[0] != item:
             continue
 
-        if len(line) == 3 and line[1] == "FAILURE":
-            error = oracle_handle_ora_errors(line)
-            if isinstance(error, Result):
-                yield error
-                return
+        error = oracle_handle_ora_errors(line)
+        if error is False:
             continue
+        if isinstance(error, Result):
+            yield error
+            return
 
         itemfound = True
         if line[1] != "":

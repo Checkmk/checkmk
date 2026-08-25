@@ -46,10 +46,11 @@ def parse_oracle_sessions(string_table: StringTable) -> SectionOracleSessions:
     header = ["cursess", "maxsess", "curmax"]
     parsed: dict[str, OracleSession] = {}
     for line in string_table:
-        if len(line) == 3 and line[1] == "FAILURE":
-            error = oracle_handle_ora_errors(line)
-            if isinstance(error, Result):
-                parsed.setdefault(line[0], OracleSession()).error = error.summary
+        error = oracle_handle_ora_errors(line)
+        if error is False:
+            continue
+        if isinstance(error, Result):
+            parsed.setdefault(line[0], OracleSession()).error = error.summary
             continue
         for key, entry in zip(header, line[1:]):
             with contextlib.suppress(ValueError):

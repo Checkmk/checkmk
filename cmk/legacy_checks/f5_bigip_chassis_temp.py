@@ -3,46 +3,60 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
+from collections.abc import Mapping
 
-from collections.abc import Iterator
-from typing import Any
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.temperature import check_temperature
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.f5_bigip.lib import F5_BIGIP
-from cmk.plugins.lib.temperature import TempParamDict
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
-check_info = {}
-
-
-def discover_f5_bigip_chassis_temp(info: StringTable) -> Iterator[tuple[str, dict[str, object]]]:
-    for line in info:
-        yield line[0], {}
+Section = Mapping[str, int]
 
 
-def check_f5_bigip_chassis_temp(
-    item: str, params: TempParamDict, info: StringTable
-) -> tuple[int, str, list[Any]] | None:
-    for name, temp in info:
-        if name == item:
-            return check_temperature(int(temp), params, "f5_bigip_chassis_temp_%s" % item)
-    return None
+def parse_f5_bigip_chassis_temp(string_table: StringTable) -> Section:
+    return {name: int(temp) for name, temp in string_table}
 
 
-def parse_f5_bigip_chassis_temp(string_table: StringTable) -> StringTable:
-    return string_table
+def discover_f5_bigip_chassis_temp(section: Section) -> DiscoveryResult:
+    yield from (Service(item=name) for name in section)
 
 
-check_info["f5_bigip_chassis_temp"] = LegacyCheckDefinition(
+def check_f5_bigip_chassis_temp(item: str, params: TempParamDict, section: Section) -> CheckResult:
+    if (temp := section.get(item)) is None:
+        return
+
+    yield from check_temperature(
+        temp,
+        params,
+        unique_name=f"f5_bigip_chassis_temp_{item}",
+        value_store=get_value_store(),
+    )
+
+
+snmp_section_f5_bigip_chassis_temp = SimpleSNMPSection(
     name="f5_bigip_chassis_temp",
-    parse_function=parse_f5_bigip_chassis_temp,
     detect=F5_BIGIP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.3.2.3.2.1",
-        oids=["1", "2"],
+        oids=[
+            "1",  # F5-BIGIP-SYSTEM-MIB::sysChassisTempIndex
+            "2",  # F5-BIGIP-SYSTEM-MIB::sysChassisTempTemperature
+        ],
     ),
+    parse_function=parse_f5_bigip_chassis_temp,
+)
+
+
+check_plugin_f5_bigip_chassis_temp = CheckPlugin(
+    name="f5_bigip_chassis_temp",
     service_name="Temperature Chassis %s",
     discovery_function=discover_f5_bigip_chassis_temp,
     check_function=check_f5_bigip_chassis_temp,

@@ -246,7 +246,7 @@ class GUIViewRenderer(ABCViewRenderer):
                 user_role_ids=user.role_ids,
             )
             if self.view.renders_engine_graphs:
-                self._render_global_time_picker()
+                self._render_time_picker()
             html.begin_page_content()
 
         has_done_actions = False
@@ -816,13 +816,21 @@ class GUIViewRenderer(ABCViewRenderer):
 
             return HTML.without_escaping(output_funnel.drain())
 
-    def _render_global_time_picker(self) -> None:
+    def _render_time_picker(self) -> None:
         if not PainterOptions.get_instance().painter_options_permitted():
             return
+        # The view's own setting, not the `refresh` painter option: that control is not offered
+        # on such a view (see View.painter_options), so a value saved under it is unreachable.
+        # Missing, or 0 for the setting's "off": either way no interval of its own.
+        browser_reload = self.view.spec.get("browser_reload") or None
         render_global_time_picker(
             active_config.graph_timeranges,
             default_time_range_seconds=default_time_range_seconds(),
-            refresh=global_time_picker_refresh(),
+            refresh=global_time_picker_refresh(
+                interval_seconds=browser_reload,
+                starts_live=browser_reload is not None,
+                reloads_page_content=True,
+            ),
         )
 
     def _extend_help_dropdown(self, menu: PageMenu) -> None:

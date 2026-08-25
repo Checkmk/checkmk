@@ -397,7 +397,8 @@ def _show_view(
     if (
         browser_reload
         and display_options.enabled(display_options.R)
-        # A reload would re-mount the Vue apps and discard the global time picker state.
+        # A reload would re-mount the Vue apps and discard the time picker state; such a view
+        # refreshes through the picker's control instead (see GUIViewRenderer._render_time_picker).
         and not view.renders_engine_graphs
     ):
         html.browser_reload = browser_reload

@@ -272,7 +272,8 @@ class View:
             if (
                 display_options.enabled(display_options.R)
                 and user.may("general.view_option_refresh")
-                # Such a view does not auto-reload, so a refresh interval is pointless.
+                # The global time picker's refresh control offers the interval on such a view; a
+                # second control for the same setting would only disagree with it.
                 and not self.renders_engine_graphs
             ):
                 options.add("refresh")

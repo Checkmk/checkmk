@@ -350,7 +350,7 @@ oracle:
             .iter()
             .find(|s| s.is_custom_metric())
             .expect("custom metric must be parsed");
-        let runtime = section::Section::new(custom, Some(0), config.options());
+        let runtime = section::Section::new(custom, 0, config.options());
         let queries = runtime
             .find_queries_with_search_dirs(InstanceNumVersion::from(0), Tenant::All, &[], &[])
             .expect("custom metric sql must yield queries");

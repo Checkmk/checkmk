@@ -21,9 +21,25 @@ export interface TimeInterval {
 export type RequestedTimeRange = TimeInterval
 
 // Whether a committed range was translated (same span, shifted in time) or changed its
-// span. The brush coordination keeps the overview strip fixed under translation and
+// span. The brush snapshot keeps the overview strip fixed under translation and
 // re-derives it (multiplier × span) once the span changed.
 export type TimeRangeCommitKind = 'translated_timerange' | 'changed_timerange_span'
+
+/**
+ * The bar's geometry is `window` projected through `drawnDomain`, so a window measured against a
+ * strip it was never derived from lands anywhere. Only `useBrushSnapshot` assembles one, and it
+ * writes both in a single assignment for that reason.
+ */
+export interface BrushSnapshot<TData> {
+  drawnDomain: TimeInterval
+  window: TimeInterval
+  data: TData
+}
+
+export interface BrushOverview {
+  metrics: Metric[]
+  dataTimeRange: TimeRange
+}
 
 // The graph a burger-menu action acts on: the add-to backends store the specification and replay
 // it, the export builds the request the legacy popup builds - out of the specification and the

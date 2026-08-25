@@ -296,13 +296,13 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--shard-durations-build",
         action="store",
-        default=os.environ.get("SHARD_DURATIONS_BUILD"),
+        default=os.environ.get("SHARD_BUILD_BASED_ON"),
         type=str,
         help=(
             "Finished build to take the balancing runtimes from, as '<job>#<number>' "
             "with the full job path, e.g. "
             "'checkmk/master/heavy/test-system-singlesite-ultimatemt#1234'. Defaults to "
-            "the SHARD_DURATIONS_BUILD environment variable, which is how the job "
+            "the SHARD_BUILD_BASED_ON environment variable, which is how the job "
             "parameter of that name reaches pytest."
         ),
     )
@@ -452,7 +452,7 @@ def _apply_sharding(items: list[pytest.Function], config: pytest.Config) -> None
     """Keep only the items belonging to this shard, if sharding is requested."""
     shard_index = config.getoption("--shard-index")
     shard_count = config.getoption("--shard-count")
-    # An empty SHARD_DURATIONS_BUILD counts as unset, not as a value.
+    # An empty SHARD_BUILD_BASED_ON counts as unset, not as a value.
     shard_durations_build = config.getoption("--shard-durations-build") or None
     if all(v is None for v in [shard_index, shard_count, shard_durations_build]):
         return

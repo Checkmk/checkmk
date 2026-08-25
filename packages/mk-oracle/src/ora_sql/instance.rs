@@ -18,7 +18,8 @@ use crate::config::ora_sql::Piggyback;
 use crate::config::{self, OracleConfig};
 use crate::emit::{header, piggyback_footer, piggyback_header};
 use crate::ora_sql::backend::{
-    make_custom_spot, make_spot, with_container, ClosedSpot, Opened, OpenedSpot, Spot,
+    make_custom_spot, make_spot, sanitize_failure_message, with_container, ClosedSpot, Opened,
+    OpenedSpot, Spot,
 };
 use crate::ora_sql::perf::{Label, PerfTimer};
 use crate::ora_sql::section::Section;
@@ -437,7 +438,11 @@ fn run_query(
     };
     outcome.unwrap_or_else(|e| {
         log::error!("Failed to execute query for instance {}: {}", instance, e);
-        vec![e.to_string()]
+        vec![format!(
+            "{}|FAILURE|{}",
+            instance,
+            sanitize_failure_message(&e.to_string())
+        )]
     })
 }
 
@@ -596,6 +601,37 @@ mod tests {
     #[test]
     fn test_make_job_data_no_query_blocks() {
         assert!(make_job_data(vec![], &[]).is_empty());
+    }
+
+    #[test]
+    fn test_run_query_error_becomes_failure_row() {
+        let result = crate::ora_sql::backend::QueryResult(Err(anyhow::anyhow!(
+            "OCI Error: ORA-00942: table or view does not exist"
+        )));
+        assert_eq!(
+            run_query(
+                result,
+                &PostProcessing::Standard,
+                &InstanceName::from("free")
+            ),
+            vec!["FREE|FAILURE|ORA-00942: table or view does not exist".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_run_query_error_stays_a_single_failure_row() {
+        // if the row splits, the server drops it and the error is hidden
+        let result = crate::ora_sql::backend::QueryResult(Err(anyhow::anyhow!(
+            "OCI Error: ORA-00600: [foo|bar]\nORA-12514: continued"
+        )));
+        assert_eq!(
+            run_query(
+                result,
+                &PostProcessing::Standard,
+                &InstanceName::from("free")
+            ),
+            vec!["FREE|FAILURE|ORA-00600: [foo bar] ORA-12514: continued".to_string()]
+        );
     }
 
     #[test]

@@ -27,9 +27,13 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
+from .liboracle import oracle_handle_ora_errors
+
 
 def discover_oracle_longactivesessions(section: StringTable) -> DiscoveryResult:
-    yield from (Service(item=line[0]) for line in section)
+    yield from (
+        Service(item=line[0]) for line in section if not (len(line) == 3 and line[1] == "FAILURE")
+    )
 
 
 def check_oracle_longactivesessions(
@@ -41,6 +45,13 @@ def check_oracle_longactivesessions(
 
     for line in section:
         if len(line) <= 1 or line[0] != item:
+            continue
+
+        if len(line) == 3 and line[1] == "FAILURE":
+            error = oracle_handle_ora_errors(line)
+            if isinstance(error, Result):
+                yield error
+                return
             continue
 
         itemfound = True

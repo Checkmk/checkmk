@@ -11,7 +11,7 @@
 # ORACLE_SID used_pct size used reclaimable
 
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -31,17 +31,29 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 
+from .liboracle import oracle_handle_ora_errors
+
 type Section = StringTable
 
 
+def _is_failure_row(line: Sequence[str]) -> bool:
+    return len(line) == 3 and line[1] == "FAILURE"
+
+
 def discover_oracle_recovery_area(section: Section) -> DiscoveryResult:
-    yield from (Service(item=line[0]) for line in section)
+    yield from (Service(item=line[0]) for line in section if not _is_failure_row(line))
 
 
 def check_oracle_recovery_area(
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
     for line in section:
+        if line[0] == item and _is_failure_row(line):
+            error = oracle_handle_ora_errors(line)
+            if isinstance(error, Result):
+                yield error
+                return
+            raise IgnoreResultsError("Login into database failed")
         if len(line) < 5:
             continue
         if line[0] == item:
@@ -109,6 +121,8 @@ check_plugin_oracle_recovery_area = CheckPlugin(
 
 def inventory_oracle_recovery_area(section: Section) -> InventoryResult:
     for line in section:
+        if _is_failure_row(line):
+            continue
         yield TableRow(
             path=["software", "applications", "oracle", "recovery_area"],
             key_columns={

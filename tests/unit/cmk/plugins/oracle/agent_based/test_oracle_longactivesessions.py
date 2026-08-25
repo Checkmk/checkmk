@@ -45,6 +45,25 @@ def test_discovery() -> None:
     ]
 
 
+_FAILURE_INFO = [["orcl", "FAILURE", "ORA-00942: table or view does not exist"]]
+
+
+def test_discovery_skips_failure_row() -> None:
+    assert not list(
+        discover_oracle_longactivesessions(parse_oracle_longactivesessions(_FAILURE_INFO))
+    )
+
+
+def test_check_failure_row_surfaces_error() -> None:
+    assert list(
+        check_oracle_longactivesessions(
+            "orcl", {"levels": (500, 1000)}, parse_oracle_longactivesessions(_FAILURE_INFO)
+        )
+    ) == [
+        Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist"),
+    ]
+
+
 def test_check() -> None:
     assert list(
         check_oracle_longactivesessions(

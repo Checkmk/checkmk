@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::{CustomInstance, Piggyback};
 use crate::config::{
     authentication::{AuthType, Authentication, Role},
@@ -328,6 +329,17 @@ impl QueryResult {
         let result: Vec<String> = self.0?.into_iter().flatten().collect();
         Ok(result)
     }
+}
+
+/// Collapse `|` (`SECTION_SEPARATOR`) and line breaks to spaces and drop the
+/// driver's "OCI Error: " marker, so the message survives transport as one
+/// `<sid>|FAILURE|<message>` row.
+pub(crate) fn sanitize_failure_message(message: &str) -> String {
+    message
+        .replace("OCI Error: ", "")
+        .replace(['\r', '\n', SECTION_SEPARATOR], " ")
+        .trim()
+        .to_string()
 }
 
 impl Spot<Opened> {

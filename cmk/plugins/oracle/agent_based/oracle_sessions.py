@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="unreachable"
 
 # <<<oracle_sessions>>>
@@ -12,9 +12,9 @@
 # newdb  47 772 65
 
 
-# mypy: disable-error-code="var-annotated"
-
+import contextlib
 from collections.abc import Mapping
+from dataclasses import dataclass, field
 from typing import Any
 
 from cmk.agent_based.v2 import (
@@ -28,38 +28,64 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
 
+from .liboracle import oracle_handle_ora_errors
 
-def parse_oracle_sessions(string_table):
+
+@dataclass
+class OracleSession:
+    metrics: dict[str, int] = field(default_factory=dict)
+    error: str | None = None
+
+
+type SectionOracleSessions = Mapping[str, OracleSession]
+
+
+def parse_oracle_sessions(string_table: StringTable) -> SectionOracleSessions:
     header = ["cursess", "maxsess", "curmax"]
-    parsed = {}
+    parsed: dict[str, OracleSession] = {}
     for line in string_table:
+        if len(line) == 3 and line[1] == "FAILURE":
+            error = oracle_handle_ora_errors(line)
+            if isinstance(error, Result):
+                parsed.setdefault(line[0], OracleSession()).error = error.summary
+            continue
         for key, entry in zip(header, line[1:]):
-            try:
-                parsed.setdefault(line[0], {})[key] = int(entry)
-            except ValueError:
-                pass
+            with contextlib.suppress(ValueError):
+                parsed.setdefault(line[0], OracleSession()).metrics[key] = int(entry)
     return parsed
 
 
-def discover_oracle_sessions(section: Any) -> DiscoveryResult:
-    for sid in section:
-        yield Service(item=sid)
+def discover_oracle_sessions(section: SectionOracleSessions) -> DiscoveryResult:
+    for sid, data in section.items():
+        if data.metrics:
+            yield Service(item=sid)
 
 
-def check_oracle_sessions(item: str, params: Mapping[str, Any], section: Any) -> CheckResult:
+def check_oracle_sessions(
+    item: str, params: Mapping[str, Any], section: SectionOracleSessions
+) -> CheckResult:
     if isinstance(params, tuple):
         params = {"sessions_abs": params}
 
-    if (data := section.get(item)) is None or "cursess" not in data:
+    data = section.get(item)
+    if data is None:
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
         raise IgnoreResultsError("Login into database failed")
 
-    sessions = data["cursess"]
-    sessions_max = data.get("maxsess")
+    if data.error is not None:
+        yield Result(state=State.UNKNOWN, summary=data.error)
+        return
+
+    if "cursess" not in data.metrics:
+        raise IgnoreResultsError("Login into database failed")
+
+    sessions = data.metrics["cursess"]
+    sessions_max = data.metrics.get("maxsess")
 
     yield from check_levels(
         sessions,

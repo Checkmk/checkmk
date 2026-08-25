@@ -50,10 +50,14 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
+from .liboracle import oracle_handle_ora_errors
+
 
 def discover_oracle_jobs(section: StringTable) -> DiscoveryResult:
     for line in section:
         if len(line) <= 2:
+            continue
+        if len(line) == 3 and line[1] == "FAILURE":
             continue
         # old format < RDBMS 12.1
         if 3 <= len(line) <= 10:
@@ -66,6 +70,7 @@ def discover_oracle_jobs(section: StringTable) -> DiscoveryResult:
 def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
     # only extract the sid from item.
     sid = item[0 : item.index(".", 0)]
+    item_sid = sid  # the row unpacking below rebinds `sid`
 
     data_found = False
 
@@ -78,6 +83,13 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
 
         if line[1].startswith(" Debug "):
             # Skip invalid lines from Agent
+            continue
+
+        if line[0] == item_sid and len(line) == 3 and line[1] == "FAILURE":
+            error = oracle_handle_ora_errors(line)
+            if isinstance(error, Result):
+                yield error
+                return
             continue
 
         # we need to check against valid lines before the following comparisonq

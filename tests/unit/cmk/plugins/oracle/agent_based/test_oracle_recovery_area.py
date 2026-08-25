@@ -28,6 +28,38 @@ _AGENT_OUTPUT = [
 ]
 
 
+def test_discover_oracle_recovery_area_skips_failure_row() -> None:
+    assert not list(
+        check_plugin_oracle_recovery_area.discovery_function(
+            [
+                ["AIMDWHD1", "FAILURE", "ORA-00942: table or view does not exist"],
+            ]
+        )
+    )
+
+
+def test_check_oracle_recovery_area_surfaces_failure() -> None:
+    assert list(
+        check_plugin_oracle_recovery_area.check_function(
+            item="AIMDWHD1",
+            params={"levels": (70.0, 90.0)},
+            section=[
+                ["AIMDWHD1", "FAILURE", "ORA-00942: table or view does not exist"],
+            ],
+        )
+    ) == [Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")]
+
+
+def test_inventory_oracle_recovery_area_skips_failure_row() -> None:
+    assert not list(
+        inventory_oracle_recovery_area(
+            [
+                ["AIMDWHD1", "FAILURE", "ORA-00942: table or view does not exist"],
+            ]
+        )
+    )
+
+
 @pytest.mark.parametrize(
     "string_table, expected_result",
     [

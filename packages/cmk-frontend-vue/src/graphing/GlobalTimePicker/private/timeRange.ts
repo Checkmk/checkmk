@@ -28,3 +28,11 @@ export function endsNow(range: DateTimeRange, toleranceSeconds = 60): boolean {
 export function endsInThePast(range: DateTimeRange, toleranceSeconds = 60): boolean {
   return range.to.toDate().getTime() < Date.now() - toleranceSeconds * 1000
 }
+
+/** Whether a refresh should carry the range forward. Not `endsNow`: a window that fell behind
+ * while unrefreshed is caught up on resume. A calendar quick range (Today, This week) reaches into
+ * the future and is left alone - re-rolling it would turn an absolute window into a relative one.
+ */
+export function isRolling(range: DateTimeRange): boolean {
+  return range.to.toDate().getTime() <= Date.now()
+}

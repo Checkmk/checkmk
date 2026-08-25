@@ -14,7 +14,11 @@ import {
   useGlobalRefresh,
   useGlobalTimeRange
 } from '@/graphing/GlobalTimePicker/globalTimeState'
-import { rollingRange } from '@/graphing/GlobalTimePicker/private/timeRange'
+import {
+  durationSeconds,
+  endsNow,
+  rollingRange
+} from '@/graphing/GlobalTimePicker/private/timeRange'
 
 const TZ = 'Europe/Berlin'
 const zoned = (day: number): ZonedDateTime =>
@@ -30,6 +34,11 @@ const NOON_ON_THE_TENTH = zoned(10).add({ hours: 12 }).toDate()
 /** In ms, read back from the state instead of hardcoding the default. */
 const oneIntervalMs = (): number => useGlobalRefresh().refreshIntervalSeconds.value * 1000
 
+function hideTab(hidden: boolean): void {
+  Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden })
+  document.dispatchEvent(new Event('visibilitychange'))
+}
+
 // Module-level singleton: reset it so each test starts from a known state.
 beforeEach(() => {
   vi.useFakeTimers()
@@ -38,6 +47,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  hideTab(false)
   resetGlobalTimeState()
   vi.useRealTimers()
 })
@@ -228,5 +238,91 @@ describe('wiring the page', () => {
 
     expect(refreshIntervalSeconds.value).toBe(FROM_THE_SERVER)
     expect(refreshPaused.value).toBe(true)
+  })
+})
+
+describe('carrying the window forward', () => {
+  test('a trailing window follows the clock, keeping its length', () => {
+    const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
+    setActiveTimeRange(rollingRange(4 * 3600), 'time_picker')
+    useGlobalRefresh().resumeRefresh()
+    const before = activeTimeRange.value!
+
+    vi.advanceTimersByTime(oneIntervalMs())
+
+    const after = activeTimeRange.value!
+    expect(after.to.toDate().getTime() - before.to.toDate().getTime()).toBe(oneIntervalMs())
+    expect(durationSeconds(after)).toBe(durationSeconds(before))
+  })
+
+  test('a window reaching into the future is left where it is', () => {
+    // Re-rolling a calendar range (Today, This week) would quietly turn it into a relative one.
+    const today = range(10, 11)
+    const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
+    setActiveTimeRange(today, 'time_picker')
+    useGlobalRefresh().resumeRefresh()
+
+    vi.advanceTimersByTime(oneIntervalMs())
+
+    expect(activeTimeRange.value).toEqual(today)
+  })
+
+  test('resuming catches up a window that fell behind while the refresh was off', () => {
+    const staleWindow = range(9, 10)
+    const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
+    setActiveTimeRange(staleWindow, 'time_picker')
+
+    useGlobalRefresh().resumeRefresh()
+
+    const caughtUp = activeTimeRange.value!
+    expect(endsNow(caughtUp, 0)).toBe(true)
+    expect(durationSeconds(caughtUp)).toBe(durationSeconds(staleWindow))
+  })
+})
+
+describe('a hidden tab', () => {
+  test('stops the clock rather than piling up fetches nobody reads', () => {
+    const { resumeRefresh, refreshTick } = useGlobalRefresh()
+    resumeRefresh()
+    const ticksWhenHidden = refreshTick.value
+
+    hideTab(true)
+    vi.advanceTimersByTime(3 * oneIntervalMs())
+
+    expect(refreshTick.value).toBe(ticksWhenHidden)
+  })
+
+  test('catches up on return when it was away for longer than an interval', () => {
+    const { resumeRefresh, refreshTick } = useGlobalRefresh()
+    resumeRefresh()
+    const ticksWhenHidden = refreshTick.value
+    hideTab(true)
+    vi.advanceTimersByTime(3 * oneIntervalMs())
+
+    hideTab(false)
+
+    expect(refreshTick.value).toBe(ticksWhenHidden + 1)
+  })
+
+  test('leaves the data alone on return when it is still current', () => {
+    const { resumeRefresh, refreshTick } = useGlobalRefresh()
+    resumeRefresh()
+    const ticksWhenHidden = refreshTick.value
+    hideTab(true)
+    vi.advanceTimersByTime(oneIntervalMs() / 10)
+
+    hideTab(false)
+
+    expect(refreshTick.value).toBe(ticksWhenHidden)
+  })
+
+  test('stays off on return when the refresh is paused', () => {
+    const { refreshTick } = useGlobalRefresh()
+    hideTab(true)
+    vi.advanceTimersByTime(3 * oneIntervalMs())
+
+    hideTab(false)
+
+    expect(refreshTick.value).toBe(0)
   })
 })

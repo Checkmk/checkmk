@@ -14,7 +14,7 @@ import queue
 import re
 import time
 from collections.abc import Collection, Mapping, Sequence
-from multiprocessing import JoinableQueue, Process
+from multiprocessing import get_context, JoinableQueue
 from typing import Any, cast, NamedTuple, override, Protocol
 
 from flask import has_request_context
@@ -1201,12 +1201,19 @@ class ReplicationStatusFetcher:
         )
         results_by_site: dict[SiteId, ReplicationStatus] = {}
 
+        # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
+        # "forkserver", see
+        # https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods
+        # The concrete problem here is that the licensing handler registry is filled at runtime, so
+        # a non-forked child cannot determine the license state for the automation request headers.
+        ctx = get_context("fork")
+
         # Results are fetched simultaneously from the remote sites
-        result_queue: JoinableQueue[ReplicationStatus] = JoinableQueue()
+        result_queue: JoinableQueue[ReplicationStatus] = ctx.JoinableQueue()
 
         processes = []
         for site_id, automation_config in sites:
-            process = Process(
+            process = ctx.Process(
                 target=self._fetch_for_site, args=(site_id, automation_config, result_queue, debug)
             )
             process.start()

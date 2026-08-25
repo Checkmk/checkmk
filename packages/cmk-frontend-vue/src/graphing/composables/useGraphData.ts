@@ -285,14 +285,24 @@ export function useGraphData(
     }
   }
 
-  const { refreshTick } = useGlobalRefresh()
+  const { refreshTick, contentReloadPending } = useGlobalRefresh()
+
+  // Outside the watch: a graph mounting during a content reload - a hover preview, say - still
+  // has to render something.
+  void loadAllGraphs()
 
   // The tick re-fetches even when the window did not move, keeping a calendar range (Today, This
-  // week) live.
-  watch([getGraphs, getRequestedTimeRange, refreshTick], () => void loadAllGraphs(), {
-    immediate: true,
-    deep: true
-  })
+  // week) live. A content reload is about to unmount this owner, so nobody would draw its fetch.
+  watch(
+    [getGraphs, getRequestedTimeRange, refreshTick],
+    () => {
+      if (contentReloadPending()) {
+        return
+      }
+      void loadAllGraphs()
+    },
+    { deep: true }
+  )
 
   const snapshotConsolidationFnPerGraph = (): ConsolidationFn[] => [...getConsolidationFnPerGraph()]
   watch(snapshotConsolidationFnPerGraph, (current, previous) => {

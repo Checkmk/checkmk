@@ -616,28 +616,14 @@ function refresh_content_container(on_content_ready?: () => void, on_settled?: (
   })
 }
 
-// A content refresh waiting for the window to become visible again. Only ever one: a caller
-// running its own interval (the graphing refresh control) keeps ticking while the tab is hidden,
-// and without this each tick would leave a retry chain of its own behind.
-let g_content_reload_retry_timer: number | null = null
-
 function do_reload(url: string) {
   // Reschedule the reload in case the browser window / tab is not visible
-  // for the user. Retry after short time.
+  // for the user. Retry after short time. Only ever one retry pending: the page's own reload timer
+  // does not fire again while a reload is in flight.
   if (!is_window_active()) {
-    if (url !== '') {
-      // A navigation carries its own target, so it cannot be folded into a pending retry.
-      setTimeout(function () {
-        do_reload(url)
-      }, 250)
-      return
-    }
-    if (g_content_reload_retry_timer === null) {
-      g_content_reload_retry_timer = window.setTimeout(function () {
-        g_content_reload_retry_timer = null
-        do_reload(url)
-      }, 250)
-    }
+    setTimeout(function () {
+      do_reload(url)
+    }, 250)
     return
   }
 

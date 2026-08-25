@@ -262,12 +262,12 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     }
   }, true)
 
-  const { refreshTick } = useGlobalRefresh()
-
   // Serialize the request-relevant state into one key: a visibility toggle (visibility is
   // forced when fetching hidden) leaves the key unchanged, so it does not trigger a refetch,
   // while any other change re-fetches. A `deep` watch cannot be used here — it fires on every
   // tracked change regardless of value equality, defeating the invariance.
+  const { refreshTick, contentReloadPending } = useGlobalRefresh()
+
   watch(
     () =>
       JSON.stringify({
@@ -280,7 +280,12 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
         // The tick re-fetches even when the window did not move (keeps Today, This week live).
         refreshTick: refreshTick.value
       }),
-    schedule
+    () => {
+      if (contentReloadPending()) {
+        return
+      }
+      schedule()
+    }
   )
   void load()
 

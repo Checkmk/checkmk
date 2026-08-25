@@ -17,6 +17,12 @@ export interface ActiveTimeRangeState {
   origin: TimeRangeOrigin
 }
 
+/** What a refresh does beyond publishing a tick. `onContentReady` is expected on every path the
+ * strategy can take: it releases the fetch owners the coming content swap unmounts, see
+ * `GlobalRefresh.contentReloadPending`.
+ */
+export type RefreshStrategy = (onContentReady: () => void) => void
+
 const DEFAULT_INTERVAL_SECONDS = 30
 
 // Shared across the page's separate Vue apps. The range is a shallow ref: replace the value,
@@ -27,8 +33,13 @@ const pausedState = ref(true)
 const tickState = ref(0)
 
 let initialised = false
+let strategy: RefreshStrategy | null = null
 let timerId: ReturnType<typeof setInterval> | null = null
 let lastRefreshAtMs: number | null = null
+
+let contentReloadInFlight = false
+// Identifies the reload, so one reporting back late cannot release a later tick's suppression.
+let contentReloads = 0
 
 const activeTimeRangeState = computed(() => rangeState.value)
 const activeTimeRange = computed(() => rangeState.value.range)
@@ -59,9 +70,17 @@ function advanceRollingWindow(): void {
 }
 
 function fireRefresh(): void {
+  const reload = ++contentReloads
+  // Armed before the tick, so every fetch owner the coming swap unmounts sees it.
+  contentReloadInFlight = strategy !== null
   lastRefreshAtMs = Date.now()
   advanceRollingWindow()
   tickState.value += 1
+  strategy?.(() => {
+    if (reload === contentReloads) {
+      contentReloadInFlight = false
+    }
+  })
 }
 
 function stopTimer(): void {
@@ -111,16 +130,22 @@ export interface GlobalRefreshInit {
   /** `null` keeps the default. */
   intervalSeconds: number | null
   live: boolean
+  strategy?: RefreshStrategy
 }
 
 /** Wire the page's refresh, once - a late-mounting host must not clobber what the user picked in
  * the meantime. Never refreshes: what the server just rendered is already that fresh.
  */
-export function initGlobalRefresh({ intervalSeconds, live }: GlobalRefreshInit): void {
+export function initGlobalRefresh({
+  intervalSeconds,
+  live,
+  strategy: refresh
+}: GlobalRefreshInit): void {
   if (initialised) {
     return
   }
   initialised = true
+  strategy = refresh ?? null
   // Defensive: the props carrying the interval are untrusted.
   if (intervalSeconds !== null && Number.isFinite(intervalSeconds) && intervalSeconds > 0) {
     intervalSecondsState.value = intervalSeconds
@@ -134,6 +159,9 @@ export function initGlobalRefresh({ intervalSeconds, live }: GlobalRefreshInit):
 /** Only tests need this: a page load starts from a fresh module. */
 export function resetGlobalTimeState(): void {
   initialised = false
+  strategy = null
+  contentReloadInFlight = false
+  contentReloads = 0
   lastRefreshAtMs = null
   tickState.value = 0
   intervalSecondsState.value = DEFAULT_INTERVAL_SECONDS
@@ -160,6 +188,11 @@ export interface GlobalRefresh {
   pauseRefresh: () => void
   /** Goes live and refreshes now: live data means now, not one interval from now. */
   resumeRefresh: () => void
+  /** Whether a content reload is between asked for and swapped in: a fetch owner about to be
+   * unmounted skips instead. A function, not a ref: a reactive read would re-run the watcher
+   * that skipped a fetch, issuing it on release.
+   */
+  contentReloadPending: () => boolean
 }
 
 export function useGlobalRefresh(): GlobalRefresh {
@@ -169,6 +202,7 @@ export function useGlobalRefresh(): GlobalRefresh {
     refreshTick,
     setRefreshIntervalSeconds,
     pauseRefresh,
-    resumeRefresh
+    resumeRefresh,
+    contentReloadPending: () => contentReloadInFlight
   }
 }

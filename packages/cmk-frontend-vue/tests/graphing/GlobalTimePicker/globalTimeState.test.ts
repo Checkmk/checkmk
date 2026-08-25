@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { nextTick, watch } from 'vue'
 
 import {
+  type RefreshStrategy,
   initGlobalRefresh,
   resetGlobalTimeState,
   useGlobalRefresh,
@@ -277,6 +278,69 @@ describe('carrying the window forward', () => {
     const caughtUp = activeTimeRange.value!
     expect(endsNow(caughtUp, 0)).toBe(true)
     expect(durationSeconds(caughtUp)).toBe(durationSeconds(staleWindow))
+  })
+})
+
+describe('a page whose content the refresh re-fetches', () => {
+  let releaseContent: () => void
+  let reloads: number
+
+  const strategy: RefreshStrategy = (onContentReady) => {
+    reloads += 1
+    releaseContent = onContentReady
+  }
+
+  beforeEach(() => {
+    reloads = 0
+    releaseContent = () => {}
+  })
+
+  test('every refresh re-fetches the content', () => {
+    initGlobalRefresh({ intervalSeconds: 30, live: true, strategy })
+
+    vi.advanceTimersByTime(3 * oneIntervalMs())
+
+    expect(reloads).toBe(3)
+  })
+
+  test('the fetch owners the swap will unmount are held off', () => {
+    const { resumeRefresh, contentReloadPending } = useGlobalRefresh()
+    initGlobalRefresh({ intervalSeconds: 30, live: false, strategy })
+
+    resumeRefresh()
+
+    expect(contentReloadPending()).toBe(true)
+  })
+
+  test('they are released once the outgoing content is about to be replaced', () => {
+    const { resumeRefresh, contentReloadPending } = useGlobalRefresh()
+    initGlobalRefresh({ intervalSeconds: 30, live: false, strategy })
+    resumeRefresh()
+
+    releaseContent()
+
+    expect(contentReloadPending()).toBe(false)
+  })
+
+  test('a page with nothing to re-fetch never holds its fetch owners off', () => {
+    const { resumeRefresh, contentReloadPending } = useGlobalRefresh()
+    initGlobalRefresh({ intervalSeconds: 30, live: false })
+
+    resumeRefresh()
+
+    expect(contentReloadPending()).toBe(false)
+  })
+
+  test('a reload reporting back late cannot release the refresh that followed it', () => {
+    const { contentReloadPending } = useGlobalRefresh()
+    initGlobalRefresh({ intervalSeconds: 30, live: true, strategy })
+    vi.advanceTimersByTime(oneIntervalMs())
+    const releaseFirstReload = releaseContent
+    vi.advanceTimersByTime(oneIntervalMs())
+
+    releaseFirstReload()
+
+    expect(contentReloadPending()).toBe(true)
   })
 })
 

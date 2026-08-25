@@ -7,9 +7,13 @@ import { render, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, nextTick } from 'vue'
 
-import { resetGlobalTimeState, useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState'
+import {
+  initGlobalRefresh,
+  resetGlobalTimeState,
+  useGlobalRefresh
+} from '@/graphing/GlobalTimePicker/globalTimeState'
 import { timestampAt } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
 import {
   type GraphDataFetcher,
@@ -252,6 +256,8 @@ test("exposes a fetch's warnings apart from its errors", async () => {
 describe('the page refresh', () => {
   const A_RANGE = { start: 0, end: 3_600 }
   const A_CANVAS_WIDTH = 800
+  // Never reports back, so the content reload stays in flight for the whole test.
+  const RELOADING_CONTENT = { intervalSeconds: 30, live: false, strategy: () => {} }
 
   const loadsSoFar = (): number => postSpy.mock.calls.length
 
@@ -263,5 +269,27 @@ describe('the page refresh', () => {
     useGlobalRefresh().resumeRefresh()
 
     await waitFor(() => expect(loadsSoFar()).toBe(loadsBefore + 1))
+  })
+
+  test('a refresh whose content swap will unmount this graph fetches nothing', async () => {
+    initGlobalRefresh(RELOADING_CONTENT)
+    fetchFor(A_RANGE, A_CANVAS_WIDTH)
+    await waitFor(() => expect(loadsSoFar()).toBe(1))
+    const loadsBefore = loadsSoFar()
+
+    useGlobalRefresh().resumeRefresh()
+    await nextTick()
+    await nextTick()
+
+    expect(loadsSoFar()).toBe(loadsBefore)
+  })
+
+  test('a graph mounting while a content reload is in flight still loads', async () => {
+    initGlobalRefresh(RELOADING_CONTENT)
+    useGlobalRefresh().resumeRefresh()
+
+    fetchFor(A_RANGE, A_CANVAS_WIDTH)
+
+    await waitFor(() => expect(loadsSoFar()).toBe(1))
   })
 })

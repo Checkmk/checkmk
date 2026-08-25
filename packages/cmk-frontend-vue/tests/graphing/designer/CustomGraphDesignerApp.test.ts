@@ -732,3 +732,58 @@ test('opens on the metrics tab, so the first step is the one on screen', async (
     'inactive'
   )
 })
+
+describe('the unsaved-changes guard', () => {
+  function unloadIsGuarded(): boolean {
+    const event = new Event('beforeunload', { cancelable: true })
+    window.dispatchEvent(event)
+    return event.defaultPrevented
+  }
+
+  async function editTheRowTitle(): Promise<void> {
+    await userEvent.click(screen.getByRole('tab', { name: 'Metrics selection' }))
+    await fireEvent.update(await screen.findByLabelText<HTMLInputElement>('Title'), 'changed title')
+  }
+
+  test('stays out of the way while nothing has been changed', async () => {
+    await renderApp()
+    expect(unloadIsGuarded()).toBe(false)
+
+    await enterEdit()
+    await userEvent.click(screen.getByRole('tab', { name: 'Metrics selection' }))
+
+    expect(unloadIsGuarded()).toBe(false)
+  })
+
+  test('holds up the unload once an edit is unsaved', async () => {
+    await renderApp()
+    await enterEdit()
+    await editTheRowTitle()
+
+    await waitFor(() => expect(unloadIsGuarded()).toBe(true))
+  })
+
+  test('lets go again once the edit is saved', async () => {
+    await renderApp()
+    await enterEdit()
+    await editTheRowTitle()
+    await waitFor(() => expect(unloadIsGuarded()).toBe(true))
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('button', { name: 'Edit custom graph' })).toBeInTheDocument()
+    expect(unloadIsGuarded()).toBe(false)
+  })
+
+  test('lets go again once the edit is cancelled', async () => {
+    await renderApp()
+    await enterEdit()
+    await editTheRowTitle()
+    await waitFor(() => expect(unloadIsGuarded()).toBe(true))
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(await screen.findByRole('button', { name: 'Edit custom graph' })).toBeInTheDocument()
+    expect(unloadIsGuarded()).toBe(false)
+  })
+})

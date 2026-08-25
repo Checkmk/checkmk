@@ -139,11 +139,38 @@ const blockedSummary = computed(() =>
   )
 )
 
+function snapshot(): string {
+  return JSON.stringify({ items: store.items.value, options: graphOptions.value })
+}
+
+const committedSnapshot = ref<string | null>(null)
+
+const isDirty = computed(
+  () =>
+    mode.value === 'edit' &&
+    committedSnapshot.value !== null &&
+    snapshot() !== committedSnapshot.value
+)
+
+function warnBeforeUnload(event: BeforeUnloadEvent): void {
+  event.preventDefault()
+  event.returnValue = ''
+}
+
+watch(isDirty, (dirty) => {
+  if (dirty) {
+    window.addEventListener('beforeunload', warnBeforeUnload)
+  } else {
+    window.removeEventListener('beforeunload', warnBeforeUnload)
+  }
+})
+
 function resetEditor(graph: CustomGraphObject): void {
   store.replaceAll(graph.extensions.content.data_sources.map(fromApiDataSource))
   graphOptions.value = graph.extensions.content.graph_options
   hasAttemptedSave.value = false
   saveFailure.value = null
+  committedSnapshot.value = snapshot()
 }
 
 function urlState(): { name: string; owner: string; mode: CustomGraphDesignerMode } {
@@ -218,6 +245,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('popstate', onPopState)
+  window.removeEventListener('beforeunload', warnBeforeUnload)
 })
 
 function onGraphChange(selected: SelectableGraph): void {
@@ -294,6 +322,7 @@ async function saveAgainst(version: 'loaded' | 'any'): Promise<void> {
     )
     hasAttemptedSave.value = false
     loaded.value = result
+    committedSnapshot.value = snapshot()
     mode.value = 'view'
     replaceUrlState(urlState())
   } catch (e) {

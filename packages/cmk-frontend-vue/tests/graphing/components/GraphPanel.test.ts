@@ -68,9 +68,20 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
 vi.mock('@/graphing/components/GraphBrush/GraphBrush.vue', () => ({
   default: {
     inheritAttrs: false,
-    props: ['metrics', 'domain', 'window', 'minSpan', 'width', 'plotLeft', 'plotWidth'],
+    props: [
+      'metrics',
+      'domain',
+      'dataDomain',
+      'window',
+      'minSpan',
+      'width',
+      'plotLeft',
+      'plotWidth'
+    ],
     emits: ['update:requestedTimeRange'],
     template: `<div class="graphing-graph-brush">
+      <span data-testid="brush-window">{{ window.start }}-{{ window.end }}</span>
+      <span data-testid="brush-domain">{{ domain.start }}-{{ domain.end }}</span>
       <span
         data-testid="emit-brush-move"
         @click="$emit('update:requestedTimeRange', { start: 300, end: 400 }, 'translated_timerange')"
@@ -132,6 +143,12 @@ function makeMetric(name: string, title: string): Metric {
 
 const CPU = makeMetric('cpu', 'CPU')
 const MEM = makeMetric('mem', 'Memory')
+
+const BRUSH_SNAPSHOT: GraphPanelProps['brushSnapshot'] = {
+  drawnDomain: { start: TIME_RANGE.start - 3 * 3_600, end: TIME_RANGE.end },
+  window: { start: TIME_RANGE.start, end: TIME_RANGE.end },
+  data: { metrics: [CPU], dataTimeRange: TIME_RANGE }
+}
 
 function renderPanelWithLegend(metrics: Metric[], hiddenMetricNames: string[] = []) {
   return render(GraphPanel, {
@@ -251,7 +268,26 @@ test('renders the legend when showLegend is true', () => {
   expect(document.querySelector('.graphing-graph-panel__legend')).toBeInTheDocument()
 })
 
-test('renders the context view when showBrush is set and an overview is supplied', () => {
+test('the brush bar shows the committed window, not the range the curves are drawn against', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      // A range from some earlier fetch, which is what the panel draws while awaiting data.
+      dataTimeRange: { start: 1, end: 2, step: 300 },
+      awaitingData: true,
+      requestedTimeRange: REQUESTED,
+      timePickerRequests: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: { ...INTERACTION_NONE, brush: 'enabled' },
+      brushSnapshot: BRUSH_SNAPSHOT
+    }
+  })
+
+  const { window } = BRUSH_SNAPSHOT!
+  expect(screen.getByTestId('brush-window')).toHaveTextContent(`${window.start}-${window.end}`)
+})
+
+test('renders the context view when showBrush is set and a brush snapshot is supplied', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
@@ -260,7 +296,7 @@ test('renders the context view when showBrush is set and an overview is supplied
       timePickerRequests: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: { ...INTERACTION_NONE, brush: 'enabled' },
-      overview: { metrics: [CPU], dataTimeRange: TIME_RANGE, viewTimeRange: TIME_RANGE }
+      brushSnapshot: BRUSH_SNAPSHOT
     }
   })
   expect(document.querySelector('.graphing-graph-brush')).toBeInTheDocument()
@@ -276,7 +312,7 @@ function renderPanelWithBrush() {
       timePickerRequests: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: { ...INTERACTION_NONE, brush: 'enabled' },
-      overview: { metrics: [CPU], dataTimeRange: TIME_RANGE, viewTimeRange: TIME_RANGE }
+      brushSnapshot: BRUSH_SNAPSHOT
     }
   })
 }
@@ -340,7 +376,7 @@ test('does not render the context view when showBrush is not set', () => {
       timePickerRequests: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
-      overview: { metrics: [CPU], dataTimeRange: TIME_RANGE, viewTimeRange: TIME_RANGE }
+      brushSnapshot: BRUSH_SNAPSHOT
     }
   })
   expect(document.querySelector('.graphing-graph-brush')).not.toBeInTheDocument()

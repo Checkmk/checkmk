@@ -9,7 +9,7 @@ import useId from 'cmk-ui-library/lib/useId'
 import { area } from 'd3-shape'
 import { computed, onBeforeUnmount, ref } from 'vue'
 
-import type { TimeRangeCommitKind } from '../../types'
+import type { TimeInterval, TimeRangeCommitKind } from '../../types'
 import type { Metric, RequestedTimeRange, TimeRange } from '../TimeSeriesGraph'
 import { timestampAt } from '../TimeSeriesGraph/axes/timeAxis'
 import {
@@ -27,9 +27,9 @@ import { computeSparklineBands, formatOverviewExtent, formatWindowPreview } from
 
 const props = defineProps<{
   metrics: Metric[] // coarse overview series
-  domain: TimeRange // strip extent
+  domain: TimeInterval // strip extent
   dataDomain: TimeRange
-  window: { start: number; end: number } // selection = renderer viewTimeRange
+  window: { start: number; end: number }
   minSpan: number | null
   width: number // figure width (px)
   plotLeft: number // track left inset (= renderer MARGIN.left)

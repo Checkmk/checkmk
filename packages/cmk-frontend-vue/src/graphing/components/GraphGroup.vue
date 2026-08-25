@@ -18,12 +18,12 @@ import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComponentPublicInstance, computed, onMounted, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../GlobalRefreshControl/useGlobalRefresh'
-import { useBrushCoordination } from '../composables/useBrushCoordination'
+import { useBrushSnapshot } from '../composables/useBrushSnapshot'
 import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
 import { useGraphNotice } from '../composables/useGraphNotice'
 import { useLocalTimeRange } from '../composables/useLocalTimeRange'
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
-import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
+import type { BrushOverview, RequestedTimeRange, TimeRangeCommitKind } from '../types'
 import { drawnTimeRange } from '../utils/timeRange'
 import GraphNotice from './GraphNotice.vue'
 import GraphPanel from './GraphPanel.vue'
@@ -115,13 +115,14 @@ const consolidationFnOfPanel = (panelIndex: number): ConsolidationFn =>
 
 const { setRefreshPaused } = useGlobalRefresh()
 
-const brushCoordination = useBrushCoordination(
-  () => Math.floor(Date.now() / 1000),
-  () => requestedTimeRange.value
-)
+// One strip for the whole group — every panel shows the same range; only the series differ.
+const brush = useBrushSnapshot<BrushOverview[]>({
+  getNow: () => Math.floor(Date.now() / 1000),
+  getRequestedTimeRange: () => requestedTimeRange.value
+})
 
 function onPanelTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
-  brushCoordination.onBrushChange(range, kind)
+  brush.onRangeCommitted(range, kind)
   setRequestedTimeRange(range)
 }
 
@@ -135,18 +136,32 @@ const { graphs, isLoading, loadingSlots, error, partialErrors, warnings, reload 
 
 const { graphs: overviewGraphs, reload: reloadOverview } = useGraphData(
   () => props.graphs,
-  () => brushCoordination.brushDomain.value,
+  () => brush.requestedDomain.value,
   () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
   () => consolidationFnPerPanel.value,
   () => props.combination_mode
 )
-const overviews = computed(() =>
-  overviewGraphs.value.map((graph) => ({
-    metrics: graph.metrics,
-    dataTimeRange: graph.timeRange,
-    viewTimeRange: drawnTimeRange(brushCoordination.brushDomain.value, graph.timeRange)
-  }))
-)
+
+// Derived from the response that fills it, never from `brush.requestedDomain`, which by now may
+// have moved on: a strip snapped to one fetch's grid and drawn over another's series is what put
+// the selection bar in the wrong place.
+watch(overviewGraphs, (graphs) => {
+  const answered = graphs[0]
+  if (answered === undefined) {
+    return
+  }
+  brush.onOverviewFetched({
+    requestedDomain: answered.requestedTimeRange,
+    drawnDomain: drawnTimeRange(answered.requestedTimeRange, answered.timeRange),
+    data: graphs.map((graph) => ({ metrics: graph.metrics, dataTimeRange: graph.timeRange }))
+  })
+})
+
+function brushSnapshotOf(panelIndex: number) {
+  const snapshot = brush.snapshot.value
+  const overview = snapshot?.data[panelIndex]
+  return snapshot && overview ? { ...snapshot, data: overview } : undefined
+}
 
 // A refetch is skeletonised too: the curves still on screen are the previous range's, so leaving
 // them up reads as nothing having happened. Only that case is worth delaying - a slot that has
@@ -258,7 +273,7 @@ function onRetry(): void {
           :show-consolidation="show_consolidation"
           :show-legend="show_legend"
           :interaction="props.graphs[panelSlot.index]!.interaction"
-          :overview="overviews[panelSlot.index]"
+          :brush-snapshot="brushSnapshotOf(panelSlot.index)"
           :horizontal-lines="panelSlot.graph.horizontalLines"
           :figure-width="effectiveWidth"
           :figure-height="figure_height"

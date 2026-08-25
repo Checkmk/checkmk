@@ -90,7 +90,7 @@ export interface GraphPanelProps {
   showConsolidation?: boolean
   showLegend?: boolean
   legendPosition?: 'bottom' | 'right'
-  overview?: { metrics: Metric[]; dataTimeRange: TimeRange; viewTimeRange: TimeRange } | undefined
+  brushSnapshot?: BrushSnapshot<BrushOverview> | undefined
   addTo?: AddTo | null | undefined
   headerIsCompact?: boolean
 }

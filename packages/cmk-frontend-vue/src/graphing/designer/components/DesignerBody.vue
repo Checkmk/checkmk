@@ -21,11 +21,11 @@ import GraphNotice from '../../components/GraphNotice.vue'
 import GraphPanel from '../../components/GraphPanel.vue'
 import type { ConsolidationFn } from '../../components/consolidation'
 import GraphLegend from '../../components/legend/GraphLegend.vue'
-import { useBrushCoordination } from '../../composables/useBrushCoordination'
+import { useBrushSnapshot } from '../../composables/useBrushSnapshot'
 import { type GraphNoticeDescriptor, useGraphNotice } from '../../composables/useGraphNotice'
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
-import type { RequestedTimeRange, TimeRangeCommitKind } from '../../types'
-import type { CustomGraphOptions } from '../api'
+import type { RequestedTimeRange, TimeRange, TimeRangeCommitKind } from '../../types'
+import type { CustomGraphMetric, CustomGraphOptions } from '../api'
 import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
 import { useCustomGraphData } from '../composables/useCustomGraphData'
 import { useDeleteWithDependents } from '../composables/useDeleteWithDependents'
@@ -79,13 +79,13 @@ const consolidationFn = ref<ConsolidationFn>('max')
 // The app seeds the global time range from the configured default before we mount.
 const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } = useRequestedTimeRange()
 
-const brushCoordination = useBrushCoordination(
-  () => Math.floor(Date.now() / 1000),
-  () => requestedTimeRange.value
-)
+const brush = useBrushSnapshot<{ metrics: CustomGraphMetric[]; dataTimeRange: TimeRange }>({
+  getNow: () => Math.floor(Date.now() / 1000),
+  getRequestedTimeRange: () => requestedTimeRange.value
+})
 
 function onPanelTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
-  brushCoordination.onBrushChange(range, kind)
+  brush.onRangeCommitted(range, kind)
   setRequestedTimeRange(range)
 }
 
@@ -109,7 +109,7 @@ const data = useCustomGraphData({
   getRequestedTimeRange: () => requestedTimeRange.value,
   getConsolidationFn: () => consolidationFn.value,
   getFigureWidth: () => figureWidth.value,
-  getOverviewRange: () => (mode === 'view' ? brushCoordination.brushDomain.value : null),
+  getOverviewRange: () => (mode === 'view' ? brush.requestedDomain.value : null),
   // Edit mode fetches hidden rows too, so the appearance table can show their stats.
   getFetchHidden: () => mode === 'edit'
 })
@@ -121,15 +121,33 @@ const hiddenSourceIds = computed(
 const drawnMetrics = computed(() =>
   data.metrics.value.filter((metric) => !hiddenSourceIds.value.has(metric.source_id))
 )
-const drawnOverview = computed(() => {
-  const overview = data.overview.value
-  return overview === undefined
-    ? undefined
-    : {
-        metrics: overview.metrics.filter((metric) => !hiddenSourceIds.value.has(metric.source_id)),
-        dataTimeRange: overview.dataTimeRange,
-        viewTimeRange: overview.viewTimeRange
-      }
+watch(
+  () => data.overview.value,
+  (overview) => {
+    if (overview !== undefined) {
+      brush.onOverviewFetched({
+        requestedDomain: overview.requestedTimeRange,
+        drawnDomain: overview.viewTimeRange,
+        data: { metrics: overview.metrics, dataTimeRange: overview.dataTimeRange }
+      })
+    }
+  }
+)
+
+const drawnBrushSnapshot = computed(() => {
+  const snapshot = brush.snapshot.value
+  if (snapshot === null) {
+    return undefined
+  }
+  return {
+    ...snapshot,
+    data: {
+      ...snapshot.data,
+      metrics: snapshot.data.metrics.filter(
+        (metric) => !hiddenSourceIds.value.has(metric.source_id)
+      )
+    }
+  }
 })
 
 const fetchNotice = useGraphNotice({
@@ -242,7 +260,7 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
           zoom: 'enabled',
           pin: 'enabled'
         }"
-        :overview="drawnOverview"
+        :brush-snapshot="drawnBrushSnapshot"
         @update:requested-time-range="onPanelTimeRange"
         @inspect="setRefreshPaused(true)"
       />

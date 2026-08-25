@@ -43,11 +43,16 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
       'requestedTimeRange',
       'title',
       'figureWidth',
-      'consolidationFn'
+      'consolidationFn',
+      'brushSnapshot'
     ],
     emits: ['update:requestedTimeRange', 'update:consolidationFn', 'inspect'],
     template: `<div data-testid="graph-panel" :data-figure-width="figureWidth">
       <span>{{ title }}</span>
+      <span data-testid="brush-geometry">{{ brushSnapshot
+        ? brushSnapshot.drawnDomain.start + ',' + brushSnapshot.drawnDomain.end + '|' +
+          brushSnapshot.window.start + ',' + brushSnapshot.window.end
+        : 'none' }}</span>
       <span data-testid="panel-consolidation">{{ consolidationFn }}</span>
       <button @click="$emit('update:consolidationFn', 'min')">consolidate by min</button>
       <button @click="$emit('update:requestedTimeRange', { start: ${PAN_TARGET.start}, end: ${PAN_TARGET.end} }, 'translated_timerange')">
@@ -655,4 +660,62 @@ test('uses the supplied figure_width and never measures the page', async () => {
   const panel = await screen.findByTestId('graph-panel')
   expect(panel.getAttribute('data-figure-width')).toBe('640')
   expect(getElementById).not.toHaveBeenCalledWith(MAIN_PAGE_CONTENT_ID)
+})
+
+function brushBarFraction(): { left: number; width: number } | null {
+  const rendered = screen.getByTestId('brush-geometry').textContent!
+  if (rendered === 'none') {
+    return null
+  }
+  const [domain, window] = rendered.split('|').map((pair) => pair.split(',').map(Number))
+  const [domainStart, domainEnd] = domain as [number, number]
+  const [windowStart, windowEnd] = window as [number, number]
+  const span = domainEnd - domainStart
+  return { left: (windowStart - domainStart) / span, width: (windowEnd - windowStart) / span }
+}
+
+function servedAsRequested(): void {
+  postSpy.mockImplementation(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (_path: string, init: any) => ({
+      data: { ...FETCHED, time_range: init.body.requested_time_range },
+      error: undefined,
+      response: new Response('{}', { status: 200 })
+    })
+  )
+}
+
+// The strip used to be re-derived from the newly requested range at once while the bar still
+// followed the data on screen, so for the length of the fetch the bar was measured against a
+// strip it was never derived from, and sprang across the track when the data landed.
+describe('GraphGroup - the brush across a range switch', () => {
+  test('the bar holds its place while the new strip is still being fetched', async () => {
+    servedAsRequested()
+    renderGroup()
+    await waitFor(() => expect(brushBarFraction()).not.toBeNull())
+    const before = brushBarFraction()
+
+    // Both fetches hang, so what stays on screen is the frame the switch left behind.
+    postSpy.mockReturnValue(new Promise(() => {}))
+    useGlobalTimeRange().setActiveTimeRange(range(1, 2), 'time_picker')
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2 * REQUESTS_PER_PANEL))
+    await nextTick()
+
+    expect(brushBarFraction()).toEqual(before)
+  })
+
+  test('the bar covers the same share of the track once the new strip lands', async () => {
+    // A strip is a fixed multiple of its window, so a switch between two ranges the multiplier
+    // treats alike must leave the bar exactly where it was.
+    servedAsRequested()
+    renderGroup()
+    await waitFor(() => expect(brushBarFraction()).not.toBeNull())
+    const before = brushBarFraction()!
+
+    useGlobalTimeRange().setActiveTimeRange(range(1, 2), 'time_picker')
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2 * REQUESTS_PER_PANEL))
+    await waitFor(() => expect(brushBarFraction()!.width).toBeCloseTo(before.width, 6))
+
+    expect(brushBarFraction()!.left).toBeCloseTo(before.left, 6)
+  })
 })

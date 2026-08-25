@@ -18,6 +18,7 @@ import type {
   GraphPanelEmits,
   GraphPanelProps,
   RequestedTimeRange,
+  TimeInterval,
   TimeRange,
   TimeRangeCommitKind
 } from '../types.ts'
@@ -60,6 +61,7 @@ const headerTimeRange = computed<TimeRange | undefined>(() =>
 const {
   viewTimeRange,
   viewValueRange,
+  transientTimeRange,
   inspectionActive,
   zoomMode,
   pinTime,
@@ -177,6 +179,12 @@ const showGraphHeader: Ref<boolean> = computed(
     props.showConsolidation
 )
 
+// Not `viewTimeRange`: that is what the curves are drawn against, which during a refetch is
+// still the range the previous data covered.
+const brushWindow = computed<TimeInterval | undefined>(
+  () => transientTimeRange.value ?? props.brushSnapshot?.window
+)
+
 // The renderer sizes its own value-axis margin to the labels it draws; the brush track mirrors
 // it so the strip stays under the plot.
 const plotLeft = ref(CANVAS_MARGIN_LEFT)
@@ -254,12 +262,12 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVA
         </div>
 
         <GraphBrush
-          v-if="interaction.brush === 'enabled' && overview && dataTimeRange"
+          v-if="interaction.brush === 'enabled' && brushSnapshot && brushWindow && dataTimeRange"
           class="graphing-graph-panel__brush"
-          :metrics="overview.metrics"
-          :domain="overview.viewTimeRange"
-          :data-domain="overview.dataTimeRange"
-          :window="viewTimeRange"
+          :metrics="brushSnapshot.data.metrics"
+          :domain="brushSnapshot.drawnDomain"
+          :data-domain="brushSnapshot.data.dataTimeRange"
+          :window="brushWindow"
           :min-span="null"
           :width="figureWidth"
           :plot-left="plotLeft"

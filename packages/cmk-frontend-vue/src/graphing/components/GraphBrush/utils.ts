@@ -7,7 +7,7 @@ import { fromAbsolute, getLocalTimeZone } from '@internationalized/date'
 
 import { isoDate, pad2 } from '@/graphing/utils/timeFormat'
 
-import type { Metric, TimeRange } from '../TimeSeriesGraph'
+import type { Metric } from '../TimeSeriesGraph'
 
 const zonedTime = (unixSeconds: number, timeZone: string) =>
   fromAbsolute(unixSeconds * 1000, timeZone)
@@ -18,7 +18,7 @@ const fmtTime = (unixSeconds: number, timeZone: string) => {
 }
 
 export function formatOverviewExtent(
-  domain: TimeRange,
+  domain: { start: number; end: number },
   timeZone: string = getLocalTimeZone()
 ): string {
   const { start, end } = domain

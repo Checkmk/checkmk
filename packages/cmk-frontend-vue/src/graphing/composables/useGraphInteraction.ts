@@ -27,6 +27,7 @@ export function useGraphInteraction(
   const {
     timeRange: viewTimeRange,
     valueRange: viewValueRange,
+    transientTimeRange,
     inspectionActive: viewInspectionActive,
     handleIntent
   } = useGraphView(() => getBaseline() ?? EMPTY_TIME_RANGE)
@@ -133,6 +134,7 @@ export function useGraphInteraction(
   return {
     viewTimeRange,
     viewValueRange,
+    transientTimeRange,
     inspectionActive,
     zoomMode,
     pinTime,

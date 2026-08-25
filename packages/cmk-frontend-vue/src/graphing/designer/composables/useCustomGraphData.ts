@@ -40,6 +40,7 @@ export interface UseCustomGraphDataOptions {
 }
 
 export interface OverviewData {
+  requestedTimeRange: TimeInterval
   metrics: CustomGraphMetric[]
   dataTimeRange: TimeRange
   viewTimeRange: TimeRange
@@ -205,6 +206,10 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
         lastOverviewKey = null
       } else if (overviewResponse !== null) {
         overview.value = {
+          requestedTimeRange: {
+            start: overviewBody.requested_time_range.start,
+            end: overviewBody.requested_time_range.end
+          },
           metrics: [...overviewResponse.metrics],
           dataTimeRange: overviewResponse.time_range,
           viewTimeRange: drawnTimeRange(

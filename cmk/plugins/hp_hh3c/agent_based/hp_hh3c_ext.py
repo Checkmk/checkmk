@@ -10,10 +10,11 @@ from collections.abc import Mapping, Sequence
 from typing import Any, TypedDict
 
 from cmk.agent_based.v2 import (
-    any_of,
+    all_of,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    exists,
     get_value_store,
     OIDCached,
     OIDEnd,
@@ -25,6 +26,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.hp_hh3c.lib import OID_SysObjectID
 from cmk.plugins.lib.cpu_util import check_cpu_util
 from cmk.plugins.lib.memory import check_element, MemoryLevels
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
@@ -41,6 +43,15 @@ class DeviceData(TypedDict):
 
 Section = Mapping[str, DeviceData]
 
+_INVALID_TEMPERATURE = 65535
+
+
+def _int_or_default(value: str, default: int) -> int:
+    try:
+        return int(value)
+    except ValueError:
+        return default
+
 
 def parse_hp_hh3c_ext(string_table: Sequence[StringTable]) -> Section:
     entity_info = dict(string_table[1])
@@ -48,16 +59,15 @@ def parse_hp_hh3c_ext(string_table: Sequence[StringTable]) -> Section:
     for index, admin_state, oper_state, cpu, mem_usage, temperature, mem_size in string_table[0]:
         name = entity_info.get(index, "")
 
-        # mem_size measured in 'bytes' (hh3cEntityExtMemSize)
-        # check_element needs values in bytes, not percent
-        mem_total = int(mem_size)
-        mem_used = 0.01 * int(mem_usage) * mem_total
+        # hh3cEntityExtMemSize is in bytes, and check_element wants bytes, not percent.
+        mem_total = _int_or_default(mem_size, 0)
+        mem_used = 0.01 * _int_or_default(mem_usage, 0) * mem_total
 
         parsed.setdefault(
             f"{name} {index}",
             {
-                "temp": int(temperature),
-                "cpu": int(cpu),
+                "temp": _int_or_default(temperature, _INVALID_TEMPERATURE),
+                "cpu": _int_or_default(cpu, 0),
                 "mem_total": mem_total,
                 "mem_used": mem_used,
                 "admin": admin_state,
@@ -69,10 +79,9 @@ def parse_hp_hh3c_ext(string_table: Sequence[StringTable]) -> Section:
 
 snmp_section_hp_hh3c_ext = SNMPSection(
     name="hp_hh3c_ext",
-    detect=any_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.239"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.189"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.87"),
+    detect=all_of(
+        startswith(OID_SysObjectID, ".1.3.6.1.4.1.25506"),
+        exists(".1.3.6.1.4.1.25506.2.6.1.1.1.1.*"),
     ),
     fetch=[
         SNMPTree(
@@ -93,10 +102,9 @@ snmp_section_hp_hh3c_ext = SNMPSection(
 
 def discover_hp_hh3c_ext(section: Section) -> DiscoveryResult:
     for name, data in section.items():
-        # The invalid value is 65535.
-        # We assume: If mem_total <= 0, this module is not installed or
-        # does not provide reasonable data or is not a real sensor.
-        if data["temp"] != 65535 and data["mem_total"] > 0:
+        # Only an entity with memory of its own is a real module; the chassis,
+        # power supplies and ports report 0.
+        if data["temp"] != _INVALID_TEMPERATURE and data["mem_total"] > 0:
             yield Service(item=name)
 
 

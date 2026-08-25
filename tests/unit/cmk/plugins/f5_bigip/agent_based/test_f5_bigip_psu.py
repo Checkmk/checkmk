@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.f5_bigip_psu import (
+from cmk.plugins.f5_bigip.agent_based.f5_bigip_psu import (
     check_f5_bigip_psu,
     discover_f5_bigip_psu,
     parse_f5_bigip_psu,

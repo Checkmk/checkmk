@@ -3,13 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.f5_bigip.lib import F5_BIGIP
-
-check_info = {}
 
 # Agent / MIB output
 # SysChassisPowerSupplyEntry ::=
@@ -23,48 +30,52 @@ check_info = {}
 #   good(1),
 #   notpresent(2)
 
+_NOT_PRESENT = 2
 
-def discover_f5_bigip_psu(info):
-    inventory = []
-    for line in info:
-        psu = line[0]
-        state = line[1]
-        # inventorize the PSU unless it's in state 2 (notpresent)
-        if state != "2":
-            inventory.append((psu, None))
-    return inventory
+_PSU_STATES = {
+    0: (State.CRIT, "PSU state: bad!!"),
+    1: (State.OK, "PSU state: good"),
+    _NOT_PRESENT: (State.WARN, "PSU state: notpresent!"),
+}
 
-
-def check_f5_bigip_psu(item, _no_params, info):
-    for line in info:
-        psu = line[0]
-        state = int(line[1])
-        if psu == item:
-            if state == 1:
-                return (0, "PSU state: good")
-            if state == 0:
-                return (2, "PSU state: bad!!")
-            if state == 2:
-                return (1, "PSU state: notpresent!")
-            return (3, "PSU state is unknown")
-
-    return (3, "item not found in SNMP output")
+Section = Mapping[str, int]
 
 
-def parse_f5_bigip_psu(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_f5_bigip_psu(string_table: StringTable) -> Section:
+    return {psu: int(status) for psu, status in string_table}
 
 
-check_info["f5_bigip_psu"] = LegacyCheckDefinition(
+def discover_f5_bigip_psu(section: Section) -> DiscoveryResult:
+    # discover the PSU unless it's in state 2 (notpresent)
+    yield from (Service(item=psu) for psu, status in section.items() if status != _NOT_PRESENT)
+
+
+def check_f5_bigip_psu(item: str, section: Section) -> CheckResult:
+    if (status := section.get(item)) is None:
+        return
+
+    state, summary = _PSU_STATES.get(status, (State.UNKNOWN, "PSU state is unknown"))
+    yield Result(state=state, summary=summary)
+
+
+snmp_section_f5_bigip_psu = SimpleSNMPSection(
     name="f5_bigip_psu",
-    parse_function=parse_f5_bigip_psu,
     detect=F5_BIGIP,
+    # Get ID and status from the SysChassisPowerSupplyTable
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.3.2.2.2.1",
-        oids=["1", "2"],
+        oids=[
+            "1",  # F5-BIGIP-SYSTEM-MIB::sysChassisPowerSupplyIndex
+            "2",  # F5-BIGIP-SYSTEM-MIB::sysChassisPowerSupplyStatus
+        ],
     ),
+    parse_function=parse_f5_bigip_psu,
+)
+
+
+check_plugin_f5_bigip_psu = CheckPlugin(
+    name="f5_bigip_psu",
     service_name="PSU %s",
-    # Get ID and status from the SysChassisPowerSupplyTable,
     discovery_function=discover_f5_bigip_psu,
     check_function=check_f5_bigip_psu,
 )

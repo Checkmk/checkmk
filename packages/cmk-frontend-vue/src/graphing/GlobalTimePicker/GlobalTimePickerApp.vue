@@ -10,7 +10,7 @@ import { computed } from 'vue'
 
 import GlobalRefreshControl from '../GlobalRefreshControl/GlobalRefreshControl.vue'
 import GlobalTimePicker from './GlobalTimePicker.vue'
-import { seedRefreshIntervalSeconds, useGlobalTimeRange } from './globalTimeState.ts'
+import { initGlobalRefresh, useGlobalTimeRange } from './globalTimeState.ts'
 import { rollingRange } from './private/timeRange.ts'
 
 const props = defineProps<GlobalTimePickerProps>()
@@ -23,7 +23,7 @@ if (activeTimeRange.value === null) {
   setActiveTimeRange(fallback, 'time_picker')
 }
 
-seedRefreshIntervalSeconds(props.default_refresh_time)
+initGlobalRefresh({ intervalSeconds: props.default_refresh_time, live: false })
 
 const range = computed<DateTimeRange>({
   get: () => activeTimeRange.value ?? fallback,

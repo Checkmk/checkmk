@@ -173,7 +173,7 @@ const emptyStateNotice = computed<GraphNoticeDescriptor | null>(() =>
 // to fail - but which wins should be stated rather than left to that coincidence.
 const previewNotice = computed(() => fetchNotice.value ?? emptyStateNotice.value)
 
-const { refreshTick, setRefreshPaused } = useGlobalRefresh()
+const { refreshTick, pauseRefresh } = useGlobalRefresh()
 watch(refreshTick, () => data.refetch())
 watch(
   () => mode,
@@ -262,7 +262,7 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
         }"
         :brush-snapshot="drawnBrushSnapshot"
         @update:requested-time-range="onPanelTimeRange"
-        @inspect="setRefreshPaused(true)"
+        @inspect="pauseRefresh"
       />
       <GraphNotice
         v-if="previewNotice"

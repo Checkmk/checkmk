@@ -26,6 +26,9 @@ const intervalSecondsState = ref(DEFAULT_INTERVAL_SECONDS)
 const pausedState = ref(true)
 const tickState = ref(0)
 
+let initialised = false
+let timerId: ReturnType<typeof setInterval> | null = null
+
 const activeTimeRangeState = computed(() => rangeState.value)
 const activeTimeRange = computed(() => rangeState.value.range)
 
@@ -37,68 +40,75 @@ function setActiveTimeRange(value: ActiveTimeRange, origin: TimeRangeOrigin): vo
   rangeState.value = { range: value, origin }
   // Such a window cannot gain new data. One-way: resuming stays the user's call.
   if (value !== null && endsInThePast(value)) {
-    setRefreshPaused(true)
+    pauseRefresh()
   }
-}
-
-function setRefreshIntervalSeconds(seconds: number): void {
-  intervalSecondsState.value = seconds
-}
-
-function setRefreshPaused(paused: boolean): void {
-  pausedState.value = paused
-}
-
-let seededFromPreference = false
-
-/** Seed the interval from the user's profile preference, once per page load - a late-mounting host
- * must not clobber a choice the user made in the meantime. `null` = no preference. Only
- * preselects: never unpauses.
- */
-export function seedRefreshIntervalSeconds(defaultRefreshTime: number | null): void {
-  if (seededFromPreference || defaultRefreshTime === null) {
-    return
-  }
-  // Defensive: the props carrying the interval are untrusted.
-  if (!Number.isFinite(defaultRefreshTime) || defaultRefreshTime <= 0) {
-    return
-  }
-  // Consumed only once a seed takes effect, so a bogus value cannot swallow a later one.
-  seededFromPreference = true
-  intervalSecondsState.value = defaultRefreshTime
-}
-
-/** Only tests need this: a page load starts from a fresh module. */
-export function resetGlobalTimeState(): void {
-  seededFromPreference = false
-  intervalSecondsState.value = DEFAULT_INTERVAL_SECONDS
-  pausedState.value = true
-  rangeState.value = { range: null, origin: 'time_picker' }
 }
 
 function fireRefresh(): void {
   tickState.value += 1
 }
 
-let timerId: ReturnType<typeof setInterval> | null = null
+function stopTimer(): void {
+  if (timerId !== null) {
+    clearInterval(timerId)
+    timerId = null
+  }
+}
 
-watch(
-  [intervalSecondsState, pausedState],
-  ([intervalSeconds, paused], [, previouslyPaused]) => {
-    if (timerId !== null) {
-      clearInterval(timerId)
-      timerId = null
-    }
-    if (paused) {
-      return
-    }
-    if (previouslyPaused) {
-      fireRefresh()
-    }
-    timerId = setInterval(fireRefresh, intervalSeconds * 1000)
-  },
-  { flush: 'sync' }
-)
+function restartTimer(): void {
+  stopTimer()
+  if (pausedState.value) {
+    return
+  }
+  timerId = setInterval(fireRefresh, intervalSecondsState.value * 1000)
+}
+
+watch([intervalSecondsState, pausedState], restartTimer, { flush: 'sync' })
+
+function setRefreshIntervalSeconds(seconds: number): void {
+  intervalSecondsState.value = seconds
+}
+
+function pauseRefresh(): void {
+  pausedState.value = true
+}
+
+function resumeRefresh(): void {
+  // Unpaused first, so the interval that follows is measured from this refresh.
+  pausedState.value = false
+  fireRefresh()
+}
+
+export interface GlobalRefreshInit {
+  /** `null` keeps the default. */
+  intervalSeconds: number | null
+  live: boolean
+}
+
+/** Wire the page's refresh, once - a late-mounting host must not clobber what the user picked in
+ * the meantime. Never refreshes: what the server just rendered is already that fresh.
+ */
+export function initGlobalRefresh({ intervalSeconds, live }: GlobalRefreshInit): void {
+  if (initialised) {
+    return
+  }
+  initialised = true
+  // Defensive: the props carrying the interval are untrusted.
+  if (intervalSeconds !== null && Number.isFinite(intervalSeconds) && intervalSeconds > 0) {
+    intervalSecondsState.value = intervalSeconds
+  }
+  pausedState.value = !live
+}
+
+/** Only tests need this: a page load starts from a fresh module. */
+export function resetGlobalTimeState(): void {
+  initialised = false
+  tickState.value = 0
+  intervalSecondsState.value = DEFAULT_INTERVAL_SECONDS
+  pausedState.value = true
+  rangeState.value = { range: null, origin: 'time_picker' }
+  stopTimer()
+}
 
 export interface GlobalTimeRange {
   activeTimeRange: ComputedRef<ActiveTimeRange>
@@ -115,7 +125,9 @@ export interface GlobalRefresh {
   refreshPaused: ComputedRef<boolean>
   refreshTick: ComputedRef<number>
   setRefreshIntervalSeconds: (seconds: number) => void
-  setRefreshPaused: (paused: boolean) => void
+  pauseRefresh: () => void
+  /** Goes live and refreshes now: live data means now, not one interval from now. */
+  resumeRefresh: () => void
 }
 
 export function useGlobalRefresh(): GlobalRefresh {
@@ -124,6 +136,7 @@ export function useGlobalRefresh(): GlobalRefresh {
     refreshPaused,
     refreshTick,
     setRefreshIntervalSeconds,
-    setRefreshPaused
+    pauseRefresh,
+    resumeRefresh
   }
 }

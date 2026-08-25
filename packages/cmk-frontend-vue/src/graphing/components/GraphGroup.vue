@@ -113,7 +113,7 @@ const consolidationFnPerPanel = ref<ConsolidationFn[]>([])
 const consolidationFnOfPanel = (panelIndex: number): ConsolidationFn =>
   consolidationFnPerPanel.value[panelIndex] ?? DEFAULT_CONSOLIDATION_FN
 
-const { setRefreshPaused } = useGlobalRefresh()
+const { pauseRefresh } = useGlobalRefresh()
 
 // One strip for the whole group — every panel shows the same range; only the series differ.
 const brush = useBrushSnapshot<BrushOverview[]>({
@@ -281,7 +281,7 @@ function onRetry(): void {
           :header-is-compact="layout === 'wrap'"
           @update:requested-time-range="onPanelTimeRange"
           @update:consolidation-fn="consolidationFnPerPanel[panelSlot.index] = $event"
-          @inspect="setRefreshPaused(true)"
+          @inspect="pauseRefresh"
         />
         <GraphNotice
           v-if="notice"

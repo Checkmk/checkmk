@@ -599,7 +599,7 @@ test('a span-changing panel commit (resize/zoom) reseeds the overview domain', a
 
 test('a panel reporting inspection pauses the live refresh', async () => {
   resetGlobalTimeState()
-  useGlobalRefresh().setRefreshPaused(false)
+  useGlobalRefresh().resumeRefresh()
   renderGroup()
 
   await fireEvent.click(await screen.findByText('inspect'))

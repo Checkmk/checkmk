@@ -17,12 +17,7 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 
 import { GlobalRefreshControl } from '../GlobalRefreshControl'
-import {
-  rollingRange,
-  seedRefreshIntervalSeconds,
-  useGlobalRefresh,
-  useGlobalTimeRange
-} from '../GlobalTimePicker'
+import { initGlobalRefresh, rollingRange, useGlobalTimeRange } from '../GlobalTimePicker'
 import {
   type CustomGraphObject,
   type CustomGraphOptions,
@@ -52,7 +47,7 @@ if (activeTimeRange.value === null) {
   setActiveTimeRange(rollingRange(props.time_picker.default_time_range), 'time_picker')
 }
 
-seedRefreshIntervalSeconds(props.time_picker.default_refresh_time)
+initGlobalRefresh({ intervalSeconds: props.time_picker.default_refresh_time, live: true })
 
 function returnToLiveMonitoring(): void {
   setActiveTimeRange(rollingRange(props.time_picker.default_time_range), 'time_picker')
@@ -234,11 +229,9 @@ function onRetry(): void {
   }
 }
 
-const { setRefreshPaused } = useGlobalRefresh()
 const onPopState = (): void => window.location.reload()
 
 onMounted(() => {
-  setRefreshPaused(false)
   window.addEventListener('popstate', onPopState)
   loadFilters()
   void load(props.mode)

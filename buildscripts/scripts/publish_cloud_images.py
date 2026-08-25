@@ -47,6 +47,12 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         choices=CloudPublisher.CLOUD_TYPES,
     )
+
+    # Parse only cloud-type first to use that to define the mandatory args onwards without a subparser
+    cloud_type, _ = parser.parse_known_args()
+    cloud_is_aws = cloud_type.cloud_type == "aws"
+    cloud_is_azure = cloud_type.cloud_type == "azure"
+
     parser.add_argument(
         "--new-version",
         help="The new version which will be used for the update",
@@ -69,25 +75,25 @@ def parse_arguments() -> argparse.Namespace:
         "--marketplace-scanner-arn",
         help="The arn of an aws role which can access our ami images",
         action="store",
-        required=True,
+        required=cloud_is_aws,
     )
     parser.add_argument(
         "--product-id",
         help="The product id of the product which should receive a new version",
         action="store",
-        required=True,
+        required=cloud_is_aws,
     )
     parser.add_argument(
         "--azure-subscription-id",
         help="Azure's subscription id",
         action="store",
-        required=True,
+        required=cloud_is_azure,
     )
     parser.add_argument(
         "--azure-resource-group",
         help="Azure's resource group",
         action="store",
-        required=True,
+        required=cloud_is_azure,
     )
     return parser.parse_args()
 

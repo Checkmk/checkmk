@@ -5,34 +5,17 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
-import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
-import { computed } from 'vue'
 
 import GlobalRefreshControl from '../GlobalRefreshControl/GlobalRefreshControl.vue'
 import GlobalTimePicker from './GlobalTimePicker.vue'
-import { initGlobalRefresh, useGlobalTimeRange } from './globalTimeState.ts'
-import { rollingRange } from './private/timeRange.ts'
+import { initGlobalRefresh } from './globalTimeState.ts'
+import { useGlobalTimePickerRange } from './useGlobalTimePickerRange.ts'
 
 const props = defineProps<GlobalTimePickerProps>()
 
-const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
-
-const fallback = rollingRange(props.default_time_range)
-
-if (activeTimeRange.value === null) {
-  setActiveTimeRange(fallback, 'time_picker')
-}
+const { range, returnToLiveMonitoring } = useGlobalTimePickerRange(props.default_time_range)
 
 initGlobalRefresh({ intervalSeconds: props.default_refresh_time, live: false })
-
-const range = computed<DateTimeRange>({
-  get: () => activeTimeRange.value ?? fallback,
-  set: (value: DateTimeRange) => setActiveTimeRange(value, 'time_picker')
-})
-
-function returnToLiveMonitoring(): void {
-  setActiveTimeRange(rollingRange(props.default_time_range), 'time_picker')
-}
 </script>
 
 <template>

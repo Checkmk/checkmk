@@ -50,7 +50,7 @@ from cmk.gui.wato._omd_configuration import (
     ConfigDomainDiskspace,
     ConfigDomainRRDCached,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainOMD
+from cmk.gui.watolib.config_domains import _core_config_default_globals, ConfigDomainOMD
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.shared_typing.unified_search import ProviderName
 
@@ -472,11 +472,14 @@ class TestIndexSearcher:
 class TestRealisticSearch:
     @staticmethod
     @pytest.fixture()
-    def suppress_get_configuration_automation_call(monkeypatch: MonkeyPatch) -> None:
+    def suppress_get_configuration_automation_call(monkeypatch: MonkeyPatch) -> Iterator[None]:
         monkeypatch.setattr(
-            "cmk.gui.watolib.check_mk_automations.get_configuration",
+            "cmk.gui.watolib.config_domains.get_configuration",
             lambda *args, **kwargs: GetConfigurationResult({}),
         )
+        _core_config_default_globals.cache_clear()
+        yield
+        _core_config_default_globals.cache_clear()
 
     @pytest.fixture()
     def real_index_builder(self, clean_redis_client: Redis) -> IndexBuilder:

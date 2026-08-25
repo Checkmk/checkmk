@@ -42,6 +42,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings, TrustedCertificateAuthorities
 from cmk.gui.watolib import config_domain_name
+from cmk.gui.watolib.check_mk_automations import get_configuration, reload, restart
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     ConfigDomainName,
@@ -87,9 +88,6 @@ class ConfigDomainCoreSettings:
 def _core_config_default_globals(
     config_var_names: Sequence[str], *, debug: bool
 ) -> Mapping[str, object]:
-    # Import cycle
-    from cmk.gui.watolib.check_mk_automations import get_configuration
-
     return get_configuration(config_var_names, debug=debug).result
 
 
@@ -123,9 +121,6 @@ class ConfigDomainCore(ABCConfigDomain):
 
     @override
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
-        # Import cycle
-        from cmk.gui.watolib.check_mk_automations import reload, restart
-
         return {"restart": restart, "reload": reload}[active_config.wato_activation_method](
             self._parse_settings(settings).hosts_to_update, debug=active_config.debug
         ).config_warnings

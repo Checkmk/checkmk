@@ -838,8 +838,22 @@ fn format_instances(
     let all_dbusers = std::iter::once(dbuser).chain(dbuser_extras.iter());
     for entry in all_dbusers {
         let sid = &entry.sid;
-        let tns_alias = &entry.tns_alias;
-        if sid.is_none() && tns_alias.is_none() {
+        // Wallet auth connects via `/@<alias>`: the SEPS credential is keyed by
+        // the alias, not by host/port. The legacy plugin uses the explicit
+        // TNSALIAS and falls back to the SID as the alias
+        // (`${CFGTNSALIAS:-${ORACLE_SID}}`); we reproduce that mapping so the
+        // runtime resolves the instance through its alias. tnsping verification
+        // of the alias is not migrated yet (may be added later). The SID-as-alias
+        // fallback is a stopgap and will be revisited once ORACLE_HOME detection
+        // is finally solved (enabling a proper local connection).
+        let alias = entry.tns_alias.clone().or_else(|| {
+            let sid = entry.sid.clone().filter(|_| entry.wallet)?;
+            log::info!(
+                "wallet authentication without TNSALIAS: assuming SID '{sid}' as the TNS alias"
+            );
+            Some(sid)
+        });
+        if sid.is_none() && alias.is_none() {
             log::info!("DBUSER has neither SID nor TNS alias, skipping instance entry");
             continue;
         }
@@ -851,11 +865,11 @@ fn format_instances(
         } else {
             false
         };
-        if let Some(alias) = tns_alias {
+        if let Some(alias) = &alias {
             lines.push(format!(
                 "      {} alias: {}\n",
                 if sid_written { ' ' } else { '-' },
-                &alias
+                alias
             ));
         };
         // The main DBUSER (sid == None) inherits connection and authentication
@@ -2829,6 +2843,41 @@ sec3 () {
         assert!(result.contains("          role: sysdba\n"));
     }
 
+    /// The SID-as-alias fallback must survive loading, not just appear in the
+    /// yaml: `alias` outranks `sid` when the target is resolved, so such an
+    /// instance is an alias target with no standalone sid. The Windows reference
+    /// config takes this path (its `$DBUSER_*` arrays carry no TNSALIAS field),
+    /// and only the Windows CI node runs it - hence this check here.
+    #[test]
+    fn test_wallet_without_alias_resolves_as_an_alias_target() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::localhost:1521:".into()),
+            ("DBUSER_XE1".into(), "/:::::".into()),
+        ]);
+
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+
+        let config =
+            super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
+        let instance = &config
+            .ora_sql()
+            .expect("ora_sql must be present")
+            .instances()[0];
+        assert_eq!(
+            instance
+                .alias()
+                .as_ref()
+                .map(ToString::to_string)
+                .as_deref(),
+            Some("XE1"),
+            "got: {result}"
+        );
+        assert!(
+            instance.standalone_sid().is_none(),
+            "the alias outranks the sid, so there is no standalone sid: {result}"
+        );
+    }
+
     #[test]
     fn test_convert_slash_username_emits_wallet_auth() {
         let vars = HashMap::from([
@@ -2841,11 +2890,13 @@ sec3 () {
             "XE3 must have no connection (empty hostname)"
         );
         // "/" username → wallet auth: empty username/password, type wallet, role kept.
+        // No explicit TNSALIAS → the SID is assumed as the alias (wallet connects
+        // via `/@<alias>`), so `alias: XE3` precedes the authentication block.
         assert!(
             result.contains(
-                "      - sid: XE3\n        authentication:\n          username: \"\"\n          password: \"\"\n          type: wallet\n          role: sysasm\n"
+                "      - sid: XE3\n        alias: XE3\n        authentication:\n          username: \"\"\n          password: \"\"\n          type: wallet\n          role: sysasm\n"
             ),
-            "XE3 must have wallet authentication: {result}"
+            "XE3 must have wallet authentication with SID-as-alias: {result}"
         );
     }
 
@@ -3098,6 +3149,56 @@ sec3 () {
             piggyback_host: None,
             wallet: username == "/",
         }
+    }
+
+    /// Wallet auth without an explicit TNSALIAS connects via the SID used as the
+    /// alias (legacy `${CFGTNSALIAS:-${ORACLE_SID}}`), so the entry carries both
+    /// `sid:` and `alias:` (the runtime's alias path drives the connect).
+    #[test]
+    fn test_format_instances_wallet_falls_back_to_sid_alias() {
+        let dbuser = make_dbuser(None, "checkmk", "secret", "localhost", None, None, None);
+        let xe = make_dbuser(Some("XE"), "/", "", "", None, None, None);
+
+        let out: String = format_instances(&dbuser, &[xe], &[]).join("");
+
+        assert!(
+            out.contains("      - sid: XE\n        alias: XE\n"),
+            "wallet instance must use its SID as the TNS alias, got: {out}"
+        );
+    }
+
+    /// An explicit TNSALIAS on a wallet entry takes precedence over the SID.
+    #[test]
+    fn test_format_instances_wallet_keeps_explicit_alias() {
+        let dbuser = make_dbuser(None, "checkmk", "secret", "localhost", None, None, None);
+        let xe = make_dbuser(Some("XE"), "/", "", "", None, None, Some("PRODALIAS"));
+
+        let out: String = format_instances(&dbuser, &[xe], &[]).join("");
+
+        assert!(
+            out.contains("      - sid: XE\n        alias: PRODALIAS\n"),
+            "explicit TNSALIAS must win over SID-as-alias, got: {out}"
+        );
+        assert!(
+            !out.contains("alias: XE\n"),
+            "SID must not be reused as alias when TNSALIAS is set, got: {out}"
+        );
+    }
+
+    /// Standard (non-wallet) auth without an alias keeps a bare `sid:`; the
+    /// SID-as-alias fallback is wallet-only.
+    #[test]
+    fn test_format_instances_standard_auth_has_no_alias() {
+        let dbuser = make_dbuser(None, "checkmk", "secret", "localhost", None, None, None);
+        let xe = make_dbuser(Some("XE"), "user", "pass", "", None, None, None);
+
+        let out: String = format_instances(&dbuser, &[xe], &[]).join("");
+
+        assert!(out.contains("      - sid: XE\n"), "got: {out}");
+        assert!(
+            !out.contains("alias:"),
+            "standard auth must not synthesize an alias, got: {out}"
+        );
     }
 
     #[test]

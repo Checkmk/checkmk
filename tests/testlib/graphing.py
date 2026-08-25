@@ -95,6 +95,8 @@ _UPDATE_BATCH: Final = 1000
 # Each data source occupies its own band of values, so a series read back through a graph can
 # be attributed to the metric it came from.
 _BAND_WIDTH: Final = 100.0
+_BAND_CENTRE: Final = 50.0
+_BAND_AMPLITUDE: Final = 40.0
 # Samples per oscillation for the 'oscillating' shape. Below the smallest consolidating
 # archive's pdp_per_row (5 in the core's geometry), so every consolidated bucket spans a full
 # period and its MIN/AVERAGE/MAX come out far apart.
@@ -135,13 +137,22 @@ class InjectedRrd:
     count: int
     metric_names: Sequence[str]
 
+    def band_of(self, metric_name: str) -> tuple[float, float]:
+        """The closed interval this file's samples of `metric_name` stay within."""
+        offset = self.metric_names.index(metric_name) * _BAND_WIDTH
+        return offset + _BAND_CENTRE - _BAND_AMPLITUDE, offset + _BAND_CENTRE + _BAND_AMPLITUDE
+
 
 def _period(shape: GraphDataShape, count: int) -> int:
     return _OSCILLATION_PERIOD if shape is GraphDataShape.OSCILLATING else max(count, 1)
 
 
 def _value(index: int, period: int, ds_index: int) -> float:
-    return ds_index * _BAND_WIDTH + 50.0 + 40.0 * math.sin(2.0 * math.pi * index / period)
+    return (
+        ds_index * _BAND_WIDTH
+        + _BAND_CENTRE
+        + _BAND_AMPLITUDE * math.sin(2.0 * math.pi * index / period)
+    )
 
 
 def _is_gap(index: int, count: int, shape: GraphDataShape) -> bool:

@@ -65,6 +65,8 @@ pub mod keys {
     pub const IS_ASYNC: &str = "is_async";
     pub const DISABLED: &str = "disabled";
     pub const SEP: &str = "sep";
+    pub const HEADER_NAME: &str = "header_name";
+    pub const HEADER_SEP: &str = "header_sep";
     pub const AFFINITY: &str = "affinity";
 
     pub const PIGGYBACK_HOST: &str = "piggyback_host";

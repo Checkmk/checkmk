@@ -689,6 +689,29 @@ The plugin emits the section header (`<<<oracle_sql:sep(58)>>>`) and the subsect
 
 Each row returned by the SQL is emitted **as-is**: the plugin does not reinterpret, reorder, or join columns. In practice this means custom-metric SQL should `SELECT` a single string column whose value is already a complete line (e.g. `'details:OK'`), and emit one such row per output line.
 
+#### Own section header (`header_name`, `header_sep`)
+
+By default a custom metric is emitted under `<<<oracle_sql:sep(58)>>>` and is processed by the built-in `oracle_sql` check plugin. An entry that is meant for a check plugin of your own can name its own agent section instead:
+
+```yaml
+custom_metrics:
+  - myscn:
+      path: 'queries/myscn.sql'
+      header_name: my_section # emitted as <<<my_section:sep(124)>>>
+      header_sep: 124 # optional, ASCII code of the separator: 124 = '|'
+```
+
+- **Both keys belong to a `custom_metrics` entry.** On a `sections:` entry they are ignored with a warning: a built-in section is processed by a check plugin that ships with Checkmk, and renaming its header would only take its data away from that plugin.
+- **The name is used verbatim.** Unlike the built-in sections, `header_name` is _not_ prefixed with `oracle_` — write the complete section name your check plugin registers.
+- **Only ASCII letters, digits and `_` are allowed in the name.** This is the rule of the Checkmk site: a section whose name contains anything else is discarded on arrival, together with all its data. An entry with such a name therefore keeps the default header and logs an error instead.
+- **`header_sep` is the field separator announced in the header** (`:sep(<ASCII code>)`), i.e. how the Checkmk site splits the lines of the section. It does not change the rows themselves: as everywhere in `custom_metrics`, each row is emitted as-is, so the SQL has to produce the separators it declares. Without `header_sep` the header is emitted bare (`<<<my_section>>>`) and the site splits on whitespace.
+- **`header_sep` is a number, the ASCII code of the separator** — `124`, not `'|'` — exactly as the legacy `SQLS_SECTION_SEP` had it, and exactly what the header announces. A value that is not an ASCII code (a literal character such as `'|'`, or a number above 127) is ignored with an error, and the header is emitted bare.
+- **`header_sep` alone has no effect** and is ignored with a warning: the default `oracle_sql` header is always `sep(58)`.
+- **No item subsection.** A section of your own gets no `[[[<SID>|<item>]]]` line — that line is part of the `oracle_sql` format. The YAML key stays the entry's name (used for merging and for a directory `path:`), but it no longer appears in the output, so a query that has to distinguish instances must select the identification itself.
+- **Cache marker.** For a cached (async) metric the `cached(<since>,<age>)` marker then rides on the section header (`<<<my_section:cached(...):sep(124)>>>`), since there is no subsection to carry it.
+
+This mirrors the legacy `SQLS_SECTION_NAME` / `SQLS_SECTION_SEP` variables, and the [migration](#custom-sql-sections-sqls_) produces these keys.
+
 #### Differences from the legacy `mk_oracle` bash plugin
 
 Custom SQL metrics in this plugin replace the legacy `SQLS_*` configuration variables and `SQLS_SECTIONS` shell-function-based sections. Key differences:
@@ -696,8 +719,8 @@ Custom SQL metrics in this plugin replace the legacy `SQLS_*` configuration vari
 - **No SQL\*Plus directives.** Statements run through the Oracle OCI driver, not `sqlplus`, so `PROMPT`, `SET …`, `SPOOL`, `WHENEVER SQLERROR`, and similar `SQL*Plus`-only commands are not available. Use plain SQL.
 - **Inline SQL or external `.sql` file.** Define the query inline via `sql: "..."` or load it from an external file via `path:` (see [External SQL files](#external-sql-files-path)). The legacy `SQLS_DIR` / `SQLS_SQL` lookup semantics are replaced by the rules under `path:`.
 - **Item name is the YAML key.** Equivalent to the legacy `SQLS_ITEM_NAME` (replaces `SQLS_SECTIONS` shell functions).
-- **Cache marker location.** For cached (async) sections, the legacy `cached(<since>,<age>)` marker is emitted on the **subsection** header `[[[<SID>|<item>|cached(...)]]]`, not on the section header. The section header is always plain `<<<oracle_sql:sep(58)>>>`.
-- **Separator is fixed at `:` (ASCII 58).** The output is always emitted under `oracle_sql:sep(58)` so the existing server-side `oracle_sql` check plugin processes it unchanged.
+- **Cache marker location.** For cached (async) sections, the legacy `cached(<since>,<age>)` marker is emitted on the **subsection** header `[[[<SID>|<item>|cached(...)]]]`, not on the section header. The section header is always plain `<<<oracle_sql:sep(58)>>>`. With an [own section header](#own-section-header-header_name-header_sep) there is no subsection, and the marker sits on the section header as it did in the legacy plugin.
+- **Separator is fixed at `:` (ASCII 58).** Unless the entry names its [own section header](#own-section-header-header_name-header_sep), the output is emitted under `oracle_sql:sep(58)` so the existing server-side `oracle_sql` check plugin processes it unchanged.
 
 #### Targeting Pluggable Databases (PDBs)
 
@@ -1074,17 +1097,21 @@ Notes:
 
 Each function listed in `SQLS_SECTIONS` becomes one `custom_metrics:` entry:
 
-| Legacy variable                      | Migrated to                                                     |
-| ------------------------------------ | --------------------------------------------------------------- |
-| Function name in `SQLS_SECTIONS`     | The item name (YAML key) of the entry                           |
-| `SQLS_ITEM_NAME`                     | Overrides the item name                                         |
-| `SQLS_DIR` + `SQLS_SQL`              | `path:`                                                         |
-| `SQLS_SIDS` (literal list)           | Places the entry under the matching `instances:` entries        |
-| `SQLS_SIDS` (shell expression)       | The instances it expands to, or nothing (see below)             |
-| `SQLS_TNSALIAS`                      | Places the entry under the instance with that `alias:`          |
-| `SQLS_SIDS` + `SQLS_TNSALIAS`        | One entry carrying both, the alias identifies it (see below)    |
-| `SQLS_SECTION_NAME` (≠ `oracle_sql`) | `header_name:`                                                  |
-| `SQLS_SECTION_SEP` (ASCII code)      | `header_sep:` (kept only together with a custom `header_name:`) |
+| Legacy variable                      | Migrated to                                                    |
+| ------------------------------------ | -------------------------------------------------------------- |
+| Function name in `SQLS_SECTIONS`     | The item name (YAML key) of the entry                          |
+| `SQLS_ITEM_NAME`                     | Overrides the item name                                        |
+| `SQLS_DIR` + `SQLS_SQL`              | `path:`                                                        |
+| `SQLS_SIDS` (literal list)           | Places the entry under the matching `instances:` entries       |
+| `SQLS_SIDS` (shell expression)       | The instances it expands to, or nothing (see below)            |
+| `SQLS_TNSALIAS`                      | Places the entry under the instance with that `alias:`         |
+| `SQLS_SIDS` + `SQLS_TNSALIAS`        | One entry carrying both, the alias identifies it (see below)   |
+| `SQLS_SECTION_NAME` (≠ `oracle_sql`) | `header_name:`                                                 |
+| `SQLS_SECTION_SEP` (ASCII code)      | `header_sep:`, the same code (kept only with a `header_name:`) |
+
+A migrated `header_name:` keeps the legacy output shape: the section is emitted under
+that name verbatim and without an item subsection, see
+[Own section header](#own-section-header-header_name-header_sep).
 
 Placement rules:
 

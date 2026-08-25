@@ -268,11 +268,20 @@ def oracle_handle_ora_errors(line: Sequence[str]) -> Result | Literal[False] | N
     if legacy_error:
         return legacy_error
 
-    # Handle error output from new agent
+    # mk-oracle collapses "|" and line breaks, so its errors are exactly three
+    # fields and need not start with "ORA-". Legacy mk_oracle can emit ORA-
+    # messages containing "|", which splits the row into more fields. A longer
+    # row without an ORA- message is data (a PDB may be named "FAILURE").
     if line[1] == "FAILURE":
-        if len(line) >= 3 and line[2].startswith("ORA-"):
+        if len(line) == 3:
+            if not line[2].strip():
+                return False
+            return Result(state=State.UNKNOWN, summary=line[2])
+        if len(line) > 3 and line[2].startswith("ORA-"):
             return Result(state=State.UNKNOWN, summary="%s" % " ".join(line[2:]))
-        return False  # ignore other FAILURE lines
+        if len(line) == 2:
+            return False
+        return None
 
     # Handle error output from old (pre 1.2.0p2) agent
     if line[1] in ["select", "*", "ERROR"]:

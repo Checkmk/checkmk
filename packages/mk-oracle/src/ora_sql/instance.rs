@@ -464,7 +464,7 @@ fn connect_spots(
                     anyhow::bail!(
                         "{}|FAILURE|ERROR: {} ",
                         name,
-                        e.to_string().replace("OCI Error: ", "")
+                        sanitize_failure_message(&e.to_string())
                     )
                 }
             }

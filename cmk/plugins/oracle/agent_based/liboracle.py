@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal, NamedTuple, TypedDict
 
-from cmk.agent_based.v2 import Result, State, StringTable
+from cmk.agent_based.v2 import Result, State
 
 
 class OraErrors:
@@ -298,13 +298,3 @@ def _oracle_handle_legacy_ora_errors(line: Sequence[str]) -> Result | Literal[Fa
             state=State.UNKNOWN, summary='Found error in agent output "%s"' % " ".join(line[1:])
         )
     return None
-
-
-# Fully prevent creation of services when an error is found.
-def oracle_handle_ora_errors_discovery(info: StringTable) -> None:
-    for line in info:
-        err = oracle_handle_ora_errors(line)
-        if err is False:
-            continue
-        if isinstance(err, tuple):
-            raise RuntimeError(err[1])  # soooo ... we create a crash report?

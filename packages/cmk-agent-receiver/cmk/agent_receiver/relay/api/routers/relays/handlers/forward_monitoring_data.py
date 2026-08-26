@@ -4,10 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 import socket
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
 from cmk.agent_receiver.relay.lib.shared_types import Serial
+from cmk.relay_protocols.monitoring_data import PayloadType
+
+# The token the core expects in the header. Mapped explicitly rather than derived
+# from the enum, so adding a payload type cannot silently produce a header the
+# core does not understand.
+_HEADER_TOKEN: Final[Mapping[PayloadType, str]] = {
+    PayloadType.FETCHER: "fetcher",
+    PayloadType.ACTIVE_CHECK: "active_check",
+}
 
 
 class FailedToSendMonitoringDataError(Exception):
@@ -21,10 +31,17 @@ class ForwardMonitoringDataHandler:
         self._socket_timeout: Final = socket_timeout
 
     def process(
-        self, *, payload: bytes, host: str, config_serial: Serial, timestamp: int, service: str
+        self,
+        *,
+        payload: bytes,
+        host: str,
+        config_serial: Serial,
+        timestamp: int,
+        service: str,
+        payload_type: PayloadType,
     ) -> None:
         header = (
-            "payload_type:fetcher;"
+            f"payload_type:{_HEADER_TOKEN[payload_type]};"
             f"payload_size:{len(payload)};"
             f"config_serial:{config_serial};"
             f"start_timestamp:{timestamp};"

@@ -271,6 +271,14 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         after: Mapping[SiteId, GlobalSettings],
     ) -> Iterator[None]:
         yield
+        local = omd_site()
+        if local in after:
+            cas_after = after[local]["trusted_certificate_authorities"]
+            cas_before = before[local]["trusted_certificate_authorities"]
+            if cas_after != cas_before:
+                # We need to activate this immediately to make syncs to distributed
+                # setup remote sites possible right after changing the option
+                self.update_trust_stores(cas_after)
         self._log_trust_changes(before, after)
 
     def _log_trust_changes(
@@ -321,31 +329,12 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             "ca-certificates_sitespecific.mk" if site_specific else "ca-certificates.mk"
         )
 
-    @override
-    def save(
-        self,
-        settings: GlobalSettings,
-        site_specific: bool = False,
-        custom_site_path: str | None = None,
-    ) -> None:
-        super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
-
-        # default_globals() is keyed by config variable, so the fallback has to be
-        # the *value* of our one variable, not the whole mapping.
-        current_config = settings.get(
-            "trusted_certificate_authorities",
-            self.default_globals()["trusted_certificate_authorities"],
-        )
-
-        # We need to activate this immediately to make syncs to distributed
-        # setup remote sites possible right after changing the option
-        #
+    def update_trust_stores(self, current_config: TrustedCertificateAuthorities) -> None:
         # Since this can be called from any Setup page it is not possible to report
         # errors to the user here. The self._update_trusted_cas() method logs the
         # errors - this must be enough for the moment.
-        if not site_specific and custom_site_path is None:
-            self._update_trusted_cas(current_config)
-            self.update_remote_sites_cas(current_config["trusted_cas"])
+        self._update_trusted_cas(current_config)
+        self.update_remote_sites_cas(current_config["trusted_cas"])
 
     @override
     def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

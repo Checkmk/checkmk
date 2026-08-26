@@ -6,15 +6,16 @@
 
 from datetime import datetime, UTC
 from pathlib import Path
-from typing import TypedDict
 
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.store import load_text_from_file
+from cmk.gui.type_defs import GlobalSettings, TrustedCertificateAuthorities
 from cmk.gui.watolib import config_domains
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainOMD
+from cmk.livestatus_client import SiteConfigurations
 from cmk.utils.certs import cert_dir, initialize_site_ca, initialize_site_certificate, SiteCA
 
 remote1_newer = (
@@ -142,9 +143,13 @@ negative_serial_self_generated = (
 )
 
 
-class _CASettings(TypedDict):
-    use_system_wide_cas: bool
-    trusted_cas: list[str]
+def _ca_globals(*, use_system_wide_cas: bool) -> GlobalSettings:
+    return {
+        "trusted_certificate_authorities": {
+            "use_system_wide_cas": use_system_wide_cas,
+            "trusted_cas": [],
+        }
+    }
 
 
 class TestConfigDomainCACertificates:
@@ -212,34 +217,46 @@ class TestConfigDomainCACertificates:
             ),
         ],
     )
-    def test_save_empty(
+    def test_update_trust_stores(
         self,
         mocked_ca_config: ConfigDomainCACertificates,
-        ca_settings: _CASettings,
+        ca_settings: TrustedCertificateAuthorities,
         expected_file_content: str,
     ) -> None:
-        mocked_ca_config.save(
-            {
-                "trusted_certificate_authorities": ca_settings,
-            }
-        )
+        mocked_ca_config.update_trust_stores(ca_settings)
         assert load_text_from_file(mocked_ca_config.trusted_cas_file) == expected_file_content
 
-    def test_save_without_the_setting_falls_back_to_the_default(
+    def test_settings_change_updates_the_trust_store_from_the_local_site(
         self,
         mocked_ca_config: ConfigDomainCACertificates,
     ) -> None:
-        """A save that carries no CA setting must use the default, not raise.
-
-        ``save_global_settings`` hands each domain only the variables present in the
-        settings dict, so this domain is regularly called without its own key — it
-        used to fall back to the whole ``default_globals()`` mapping and then
-        KeyError on the variable name one level down.
-        """
-        mocked_ca_config.save({})
+        with mocked_ca_config.settings_change(
+            SiteConfigurations({}),
+            before={omd_site(): _ca_globals(use_system_wide_cas=False)},
+            after={omd_site(): _ca_globals(use_system_wide_cas=True)},
+        ):
+            pass
         assert load_text_from_file(mocked_ca_config.trusted_cas_file) == (
             "system_cert_1\nsystem_cert_2"
         )
+
+    def test_settings_change_leaves_the_trust_store_if_the_local_site_is_unaffected(
+        self,
+        mocked_ca_config: ConfigDomainCACertificates,
+    ) -> None:
+        with mocked_ca_config.settings_change(
+            SiteConfigurations({}),
+            before={
+                omd_site(): _ca_globals(use_system_wide_cas=False),
+                SiteId("remote"): _ca_globals(use_system_wide_cas=False),
+            },
+            after={
+                omd_site(): _ca_globals(use_system_wide_cas=False),
+                SiteId("remote"): _ca_globals(use_system_wide_cas=True),
+            },
+        ):
+            pass
+        assert not mocked_ca_config.trusted_cas_file.exists()
 
     def test_remote_sites_cas(self) -> None:
         longest_validity = datetime(3021, 2, 21, 19, 56, 49, tzinfo=UTC)

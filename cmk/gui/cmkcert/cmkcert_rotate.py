@@ -194,6 +194,7 @@ def start_rotate_site_ca_certificate(
         # Add site-ca certificate to the trusted store
         new_ca_settings["trusted_certificate_authorities"]["trusted_cas"].append(new_ca_certificate)
         ca_domain.save(new_ca_settings)
+        ca_domain.update_trust_stores(new_ca_settings["trusted_certificate_authorities"])
         log_security_event(
             CertManagementEvent(
                 event="certificate added",

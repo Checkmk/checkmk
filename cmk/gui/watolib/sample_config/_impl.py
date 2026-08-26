@@ -240,6 +240,10 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
     @override
     def generate(self, tree: FolderTree) -> None:
         save_global_settings_raw(self._initial_global_settings(), skip_cse_edition_check=True)
+        # Explicitly update the trust stores to initialise ca-certificates.crt, as
+        # save_global_settings_raw skips the settings_change() hook.
+        ca_domain = ConfigDomainCACertificates()
+        ca_domain.update_trust_stores(ca_domain.load()["trusted_certificate_authorities"])
 
         self._initialize_tag_config()
 

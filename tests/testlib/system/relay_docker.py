@@ -200,6 +200,11 @@ class DockerRelaySetup:
     def logs(self) -> str:
         return self._relay_container.logs().decode("utf-8")
 
+    @property
+    def container(self) -> docker.models.containers.Container:
+        """The running relay daemon container, for tests that exec into it."""
+        return self._relay_container
+
     def _attach_checkmk_to_network(self) -> str:
         logger.info("Connecting checkmk container to network %s", self._site_relay_network.name)
         self._site_relay_network.connect(self._checkmk.container)

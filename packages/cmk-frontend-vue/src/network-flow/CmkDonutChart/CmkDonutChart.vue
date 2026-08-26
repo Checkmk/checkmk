@@ -280,6 +280,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
       :highlighted="highlighted"
       @toggle="toggleHidden"
       @highlight="highlight"
+      @drill="emit('sliceActivate', $event)"
     />
     <DonutLegendTable
       v-else

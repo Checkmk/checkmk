@@ -4,6 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
@@ -19,12 +21,10 @@ defineProps<{
   highlighted: string | null
 }>()
 
-// No drill: the chips carry no chevron for the remainder either, because at
-// this size a second control per chip is what pushes the names back out of
-// view. A reader who wants the breakdown has the table.
 defineEmits<{
   toggle: [key: string]
   highlight: [key: string | null]
+  drill: [key: string]
 }>()
 </script>
 
@@ -66,7 +66,27 @@ defineEmits<{
           class="network-flow-donut-legend-compact__swatch"
           :style="{ backgroundColor: row.hidden ? '' : chartColorCss(row.color) }"
         />
-        <span class="network-flow-donut-legend-compact__label" :title="row.label">
+        <!-- The remainder opens its breakdown from the chip itself: no room
+             here for a control beside the name, so the name is the control. -->
+        <CmkButton
+          v-if="row.isOther && !row.hidden"
+          variant="text"
+          size="small"
+          class="network-flow-donut-legend-compact__drill"
+          :aria-label="_t('Show breakdown of %{category}', { category: row.label })"
+          @click="$emit('drill', row.key)"
+        >
+          <span class="network-flow-donut-legend-compact__label" :title="row.label">
+            {{ row.label }}
+          </span>
+          <CmkMultitoneIcon
+            class="network-flow-donut-legend-compact__chevron"
+            name="chevron-right"
+            primary-color="font"
+            size="small"
+          />
+        </CmkButton>
+        <span v-else class="network-flow-donut-legend-compact__label" :title="row.label">
           {{ row.label }}
         </span>
       </li>
@@ -126,6 +146,22 @@ defineEmits<{
 
 .network-flow-donut-legend-compact__chip--hidden .network-flow-donut-legend-compact__swatch {
   background-color: var(--color-mid-grey-30);
+}
+
+/* The button sizes itself for a form; in a chip it has to be the chip's own
+   text, and give way at the name the way the other chips do. */
+.network-flow-donut-legend-compact__drill {
+  gap: 2px;
+  justify-content: flex-start;
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+}
+
+.network-flow-donut-legend-compact__chevron {
+  flex: 0 0 auto;
 }
 
 .network-flow-donut-legend-compact__label {

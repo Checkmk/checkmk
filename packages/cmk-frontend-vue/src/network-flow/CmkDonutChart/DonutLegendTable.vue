@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
+import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
@@ -100,22 +101,34 @@ const hasPrevious = computed(() => props.rows.some((row) => row.previousText !==
                 class="network-flow-donut-legend-table__swatch"
                 :style="{ backgroundColor: row.hidden ? '' : chartColorCss(row.color) }"
               />
-              <!-- Truncated on the name, so the chevron keeps its place. -->
-              <span class="network-flow-donut-legend-table__label" :title="row.label">
-                {{ row.label }}
-              </span>
               <!-- The remainder is the one row with something behind it, and
                    only while it is part of the ring: drilling into a category
-                   the reader just hid would open the very thing they closed. -->
-              <CmkIconButton
+                   the reader just hid would open the very thing they closed.
+                   The name is part of the control rather than sitting beside
+                   it, so the row reads as one target instead of asking the
+                   reader to find a chevron. -->
+              <CmkButton
                 v-if="row.isOther && !row.hidden"
-                class="network-flow-donut-legend-table__drill"
-                name="chevron-right"
-                primary-color="font"
+                variant="text"
                 size="small"
+                class="network-flow-donut-legend-table__drill"
                 :aria-label="_t('Show breakdown of %{category}', { category: row.label })"
                 @click="$emit('drill', row.key)"
-              />
+              >
+                <!-- Truncated on the name, so the chevron keeps its place. -->
+                <span class="network-flow-donut-legend-table__label" :title="row.label">
+                  {{ row.label }}
+                </span>
+                <CmkMultitoneIcon
+                  class="network-flow-donut-legend-table__chevron"
+                  name="chevron-right"
+                  primary-color="font"
+                  size="small"
+                />
+              </CmkButton>
+              <span v-else class="network-flow-donut-legend-table__label" :title="row.label">
+                {{ row.label }}
+              </span>
             </span>
           </td>
           <td
@@ -248,7 +261,19 @@ const hasPrevious = computed(() => props.rows.some((row) => row.previousText !==
   white-space: nowrap;
 }
 
+/* The button sizes itself for a form; in a legend row it has to sit in the
+   line the other categories sit in, and give way at the name like they do. */
 .network-flow-donut-legend-table__drill {
+  gap: inherit;
+  justify-content: flex-start;
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+}
+
+.network-flow-donut-legend-table__chevron {
   flex: 0 0 auto;
 }
 

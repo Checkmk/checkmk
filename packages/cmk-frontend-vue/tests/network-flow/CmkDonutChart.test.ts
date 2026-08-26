@@ -137,6 +137,22 @@ test('marks the aggregated remainder as drillable', async () => {
   expect(emitted('sliceActivate')).toEqual([['other']])
 })
 
+test('opens the breakdown from the name of the remainder, not just a chevron', async () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { getByText, emitted } = renderChart(slices)
+
+  await fireEvent.click(getByText('Other'))
+
+  expect(emitted('sliceActivate')).toEqual([['other']])
+})
+
+test('leaves a category with nothing behind it as plain text in the legend', () => {
+  const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
+  const { getByText } = renderChart(slices)
+
+  expect(getByText('TLS').closest('button')).toBeNull()
+})
+
 test('takes the breakdown away from a category the reader hid', async () => {
   const slices = [SLICES[0]!, { ...SLICES[1]!, isOther: true }]
   const { queryByLabelText, getByLabelText } = renderChart(slices)
@@ -158,6 +174,35 @@ test('drops the table for a row of chips when the legend is compact', () => {
 
   expect(container.querySelector('table')).toBeNull()
   expect(container.querySelectorAll('.network-flow-donut-legend-compact__chip')).toHaveLength(2)
+})
+
+test('opens the breakdown from the remainder chip as well', async () => {
+  const { getByLabelText, emitted } = render(CmkDonutChart, {
+    props: {
+      slices: [SLICES[0]!, { ...SLICES[1]!, isOther: true }],
+      formatValue: (value: number) => `${value} B`,
+      legendMode: 'compact'
+    }
+  })
+
+  await fireEvent.click(getByLabelText('Show breakdown of Other'))
+
+  expect(emitted('sliceActivate')).toEqual([['other']])
+})
+
+test('takes the breakdown chip away from a remainder the reader hid', async () => {
+  const { getByLabelText, queryByLabelText } = render(CmkDonutChart, {
+    props: {
+      slices: [SLICES[0]!, { ...SLICES[1]!, isOther: true }],
+      formatValue: (value: number) => `${value} B`,
+      legendMode: 'compact'
+    }
+  })
+
+  await fireEvent.click(getByLabelText('Hide Other in the chart'))
+  await advanceTween()
+
+  expect(queryByLabelText('Show breakdown of Other')).toBeNull()
 })
 
 test('hides and highlights from a chip just as from a table row', async () => {

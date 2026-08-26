@@ -114,6 +114,7 @@ from cmk.fetchers import (
 )
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
+from cmk.flags import load_experimental_flags
 from cmk.helper_interface import SourceType
 from cmk.inventory.structured_data import RawIntervalFromConfig
 from cmk.password_store.v1_unstable import Secret
@@ -128,8 +129,10 @@ from cmk.server_side_calls_backend import (
     load_active_checks,
     load_special_agents,
     NotSupportedError,
+    relay_compatible_active_checks,
     relay_compatible_plugin_families,
     SecretsConfig,
+    SITE_SIDE_ONLY_ACTIVE_CHECKS,
     SpecialAgent,
     SpecialAgentCommandLine,
     SSCRules,
@@ -2537,6 +2540,17 @@ class ConfigCache:
             ),
             ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
             for_relay=for_relay,
+            # Experimental flag exp_relay_active_checks (CMK-38421): until the feature is GA no
+            # active check is relay-compatible, so relay-monitored hosts keep getting the
+            # "not supported on relays" warning / UNKNOWN result.
+            relay_supported_active_checks=(
+                relay_compatible_active_checks()
+                if load_experimental_flags(
+                    cmk.utils.paths.default_config_dir
+                ).exp_relay_active_checks
+                else frozenset()
+            ),
+            site_side_only_active_checks=SITE_SIDE_ONLY_ACTIVE_CHECKS,
         )
 
         for plugin_name, plugin_params in plugin_configs:

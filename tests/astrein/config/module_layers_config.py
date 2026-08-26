@@ -454,6 +454,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
     ),
     Component("cmk.base.config"): _allow(
         *PACKAGE_CCC,
+        *PACKAGE_FLAGS,
         *PACKAGE_PLUGIN_APIS,
         *PACKAGE_TRACE,
         "cmk.automations",
@@ -497,6 +498,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.automations",
         "cmk.fetcher_helper",
         "cmk.checkengine",
+        "cmk.check_helper_protocol",
         "cmk.discover_plugins",
         "cmk.ec",
         "cmk.events",

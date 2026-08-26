@@ -4,6 +4,7 @@ load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//:bazel_variables.bzl", "edition_python_deps")
+load("//:relay_supported_plugins.bzl", "RELAY_SUPPORTED_ACTIVE_CHECKS")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("do_not_deploy.bzl", "DO_NOT_DEPLOY")
@@ -334,6 +335,12 @@ py_library(
 py_wheel(
     name = "cmk_community",
     distribution = "checkmk",
+    entry_points = {
+        "cmk.active_check_supported_on_relay": [
+            "%s = %s" % (name, name)
+            for name in RELAY_SUPPORTED_ACTIVE_CHECKS
+        ],
+    },
     requires = REQUIRED_EXTERNAL_DEPS,
     # TODO(ml): cmk_version vs. PEP 440?
     version = "1+community",
@@ -350,6 +357,12 @@ py_wheel(
 [py_wheel(
     name = "cmk_" + edition,
     distribution = "checkmk",
+    entry_points = {
+        "cmk.active_check_supported_on_relay": [
+            "%s = %s" % (name, name)
+            for name in RELAY_SUPPORTED_ACTIVE_CHECKS
+        ],
+    },
     requires = REQUIRED_EXTERNAL_DEPS,
     # TODO(ml): cmk_version vs. PEP 440?
     version = "1+" + edition,

@@ -8,8 +8,9 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import NoReturn, override
 from unittest.mock import MagicMock
 
 import pytest
@@ -32,6 +33,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.version import edition
 from cmk.checkengine.discovery import CheckPreview, CheckPreviewEntry, QualifiedDiscovery
 from cmk.checkengine.plugins import AgentBasedPlugins
+from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.discover_plugins import PluginLocation
 from cmk.fetchers import (
     Fetcher,
@@ -40,6 +42,7 @@ from cmk.fetchers import (
     PiggybackFetcher,
     PlainFetcherTrigger,
 )
+from cmk.relay_protocols.tasks import AdHocActiveCheckTask
 from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, replace_macros
 from cmk.server_side_calls_backend import load_active_checks
 from cmk.snmplib import oids_to_walk, SNMPContextConfig
@@ -60,6 +63,12 @@ _HOST_ATTRS = {
     "_ADDRESS_FAMILY": "4",
     "display_name": "my_host",
 }
+
+
+@dataclass(frozen=True)
+class _FakeServiceData:
+    description: str
+    command: tuple[str, ...]
 
 
 def _prepare(
@@ -389,6 +398,79 @@ def test_automation_active_check_invalid_args(
     assert error_message == capsys.readouterr().err
 
 
+class _RecordingAutomation(check_mk.AutomationActiveCheck):
+    def __init__(self) -> None:
+        self.calls: dict[str, str | tuple[str, str, str]] = {}
+
+    @override
+    def _execute_check_plugin(self, commandline: str) -> tuple[ServiceState, ServiceDetails]:
+        self.calls["local"] = commandline
+        return (0, "local output")
+
+    @override
+    def _execute_check_plugin_on_relay(
+        self, relay_id: str, host: HostName, command_line: str
+    ) -> tuple[ServiceState, ServiceDetails]:
+        self.calls["relay"] = (relay_id, str(host), command_line)
+        return (0, "relay output")
+
+
+def test_active_check_on_relay_host_routes_to_relay(monkeypatch: pytest.MonkeyPatch) -> None:
+    app, config_cache, lr = _prepare(monkeypatch, relay_id="relay-1", loaded_active_checks={})
+    monkeypatch.setattr(
+        config_cache,
+        "active_check_services",
+        lambda *a, **kw: iter([_FakeServiceData("My svc", ("check_httpv2", "-u", "http://x"))]),
+    )
+    auto = _RecordingAutomation()
+    result = auto.execute(
+        app, ["my_host", "my_active_check", "My svc"], AgentBasedPlugins.empty(), lr
+    )
+    assert result == automation_results.ActiveCheckResult(state=0, output="relay output")
+    assert auto.calls["relay"] == ("relay-1", "my_host", "check_httpv2 -u http://x")
+    assert "local" not in auto.calls
+
+
+def test_active_check_on_non_relay_host_runs_locally(monkeypatch: pytest.MonkeyPatch) -> None:
+    app, config_cache, lr = _prepare(monkeypatch, relay_id=None, loaded_active_checks={})
+    monkeypatch.setattr(
+        config_cache,
+        "active_check_services",
+        lambda *a, **kw: iter([_FakeServiceData("My svc", ("check_httpv2", "-u", "http://x"))]),
+    )
+    auto = _RecordingAutomation()
+    result = auto.execute(
+        app, ["my_host", "my_active_check", "My svc"], AgentBasedPlugins.empty(), lr
+    )
+    assert result == automation_results.ActiveCheckResult(state=0, output="local output")
+    assert auto.calls["local"] == "check_httpv2 -u http://x"
+    assert "relay" not in auto.calls
+
+
+def test_active_check_site_side_only_on_relay_host_runs_locally(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # cmk_inv is site-side-only: even on a relay host it must run on the site, not the relay.
+    app, config_cache, lr = _prepare(monkeypatch, relay_id="relay-1", loaded_active_checks={})
+    monkeypatch.setattr(
+        config_cache,
+        "active_check_services",
+        lambda *a, **kw: iter(
+            [_FakeServiceData("Check_MK HW/SW Inventory", ("check_cmk_inv", "--inv"))]
+        ),
+    )
+    auto = _RecordingAutomation()
+    result = auto.execute(
+        app,
+        ["my_host", "cmk_inv", "Check_MK HW/SW Inventory"],
+        AgentBasedPlugins.empty(),
+        lr,
+    )
+    assert result == automation_results.ActiveCheckResult(state=0, output="local output")
+    assert auto.calls["local"] == "check_cmk_inv --inv"
+    assert "relay" not in auto.calls
+
+
 def test_active_check_unsupported_on_relay_reports_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
     context, config_cache, lr = _prepare(
         monkeypatch, relay_id="relay-1", loaded_active_checks={_TEST_LOCATION: MOCK_PLUGIN}
@@ -409,6 +491,58 @@ def test_active_check_unsupported_on_relay_reports_unknown(monkeypatch: pytest.M
     assert result == automation_results.ActiveCheckResult(
         state=3, output="UNKNOWN - Active check 'my_active_check' is not supported on relays"
     )
+
+
+def test_execute_on_relay_import_error_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    auto = check_mk.AutomationActiveCheck()
+
+    def _raise(relay_id: str, host: HostName, command: str) -> NoReturn:
+        raise ImportError("enterprise package missing")
+
+    monkeypatch.setattr(auto, "_submit_to_relay", _raise)
+    state, output = auto._execute_check_plugin_on_relay(
+        "relay-1", HostName("myhost"), "check_httpv2 -u http://x"
+    )
+    assert state == 3
+    assert "not available" in output
+
+
+def test_execute_on_relay_submit_failure_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    auto = check_mk.AutomationActiveCheck()
+    monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
+
+    def _raise(relay_id: str, host: HostName, command: str) -> NoReturn:
+        raise TimeoutError("no result")
+
+    monkeypatch.setattr(auto, "_submit_to_relay", _raise)
+    state, output = auto._execute_check_plugin_on_relay(
+        "relay-1", HostName("myhost"), "check_httpv2 -u http://x"
+    )
+    assert state == 3
+    assert "relay execution failed" in output
+
+
+def test_execute_on_relay_no_result_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    auto = check_mk.AutomationActiveCheck()
+    # submit_and_wait_for_result returns None (e.g. on timeout) -> explicit UNKNOWN
+    monkeypatch.setattr(auto, "_submit_to_relay", lambda relay_id, host, command: None)
+    state, output = auto._execute_check_plugin_on_relay(
+        "relay-1", HostName("myhost"), "check_httpv2 -u http://x"
+    )
+    assert state == 3
+    assert "no result" in output
+
+
+def test_relay_wait_timeout_outlasts_the_relays_own_timeout() -> None:
+    """The site must outlive the relay's own execution budget.
+
+    The task timeout is the relay's, and its clock only starts once the relay
+    dequeues the task; the site's wait starts at submit. Waiting exactly as long
+    means the site always gives up first, so the relay's timeout result - the one
+    naming the reason - could never be read.
+    """
+    task = AdHocActiveCheckTask(host="myhost", command="check_httpv2 -u http://x")
+    assert check_mk._relay_wait_timeout(task) > task.timeout
 
 
 @pytest.mark.parametrize(

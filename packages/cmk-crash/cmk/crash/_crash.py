@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
 
 """This module contains functions that can be used in all Checkmk components
 to produce crash reports in a generic format which can then be sent to Checkmk

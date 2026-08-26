@@ -11,8 +11,6 @@ all saves substantial CPU resources as opposed to running Checkmk
 in adhoc mode (about 75%).
 """
 
-# mypy: disable-error-code="type-arg"
-
 import enum
 import itertools
 import os

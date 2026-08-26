@@ -11,7 +11,6 @@
 # those registrations.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"

@@ -6,7 +6,6 @@
 
 Checkmk special agent for Elasticsearch
 """
-# mypy: disable-error-code="possibly-undefined"
 
 import argparse
 import json

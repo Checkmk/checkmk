@@ -8,7 +8,6 @@ Cares about the main navigation of our GUI. This is a) the small sidebar and b) 
 """
 
 # mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="unreachable"
 
 import dataclasses
 from typing import override, TypedDict

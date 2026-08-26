@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
 
 
 import typing

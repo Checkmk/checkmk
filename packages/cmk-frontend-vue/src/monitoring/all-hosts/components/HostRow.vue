@@ -98,7 +98,13 @@ const lastStateChange = computed(() =>
     :model-value="tableRow.getIsSelected()"
     @update:model-value="toggleSelected"
   />
-  <StateCell v-if="hasColumn('state')" column-id="state" :state="row.state" />
+  <StateCell
+    v-if="hasColumn('state')"
+    column-id="state"
+    :state="row.state"
+    :flapping="row.is_flapping"
+    :stale="row.stale"
+  />
   <IconCell v-if="hasColumn('modes')" column-id="modes" :icons="row.modes ?? []" />
   <StringCell
     v-if="hasColumn('name')"

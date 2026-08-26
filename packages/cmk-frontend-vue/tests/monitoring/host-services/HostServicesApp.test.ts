@@ -55,6 +55,8 @@ function makeApiEntry(): ApiServiceEntry {
   return {
     name: 'CPU load',
     state: 'OK',
+    is_flapping: false,
+    stale: false,
     summary: 'OK - 15 min load: 0.5',
     last_check: 1783942710,
     last_state_change: 1783942740
@@ -286,7 +288,7 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
 
   await userEvent.click(await screen.findByRole('button', { name: 'Filter Mode' }))
   let panel = screen.getByRole('group', { name: 'Filter Mode' })
-  await userEvent.click(within(panel).getByLabelText('Flapping'))
+  await userEvent.click(within(panel).getByLabelText('Acknowledged'))
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
   await userEvent.click(screen.getByRole('button', { name: 'Filter Mode' }))
@@ -444,6 +446,56 @@ test('shows the state filter a link arrived with as an active filter', async () 
   expect(
     within(screen.getByRole('group', { name: 'Filter State' })).getByLabelText('CRIT')
   ).toBeChecked()
+})
+
+test('requests services in a picked state that are also flapping', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State' }))
+  const panel = screen.getByRole('group', { name: 'Filter State' })
+  await userEvent.click(within(panel).getByLabelText('CRIT'))
+  await userEvent.click(within(panel).getByLabelText('Flapping'))
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: {
+        limit: 1000,
+        filter: {
+          type: 'and',
+          children: [
+            { type: 'condition', field: 'state', op: 'one_of', value: ['CRIT'] },
+            { type: 'condition', field: 'is_flapping', op: 'eq', value: true }
+          ]
+        },
+        fields: []
+      }
+    })
+  )
+})
+
+test('clearing the state filter also clears its flapping/stale flags', async () => {
+  mockServices([makeApiEntry()])
+  renderApp()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State' }))
+  let panel = screen.getByRole('group', { name: 'Filter State' })
+  await userEvent.click(within(panel).getByLabelText('Stale'))
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  await userEvent.click(screen.getByRole('button', { name: 'Filter State' }))
+  panel = screen.getByRole('group', { name: 'Filter State' })
+  await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
+  await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: { limit: 1000, fields: [] }
+    })
+  )
 })
 
 test('keeps the host and site params a filter write leaves the URL with', async () => {

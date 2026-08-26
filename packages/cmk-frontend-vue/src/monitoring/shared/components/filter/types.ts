@@ -102,6 +102,31 @@ export interface BooleanGroupFilter<F extends FilterField = FilterField> {
 }
 
 /**
+ * Filter that presents a {@link CheckboxListFilter}'s fixed list of checkable
+ * values together with one or more boolean flags, each rendered as a
+ * {@link BooleanGroupFilter}-style tri-state radio group below the checkbox
+ * list. Used for the state column, whose filter combines the state enum with
+ * orthogonal flags (flapping, stale) that used to live in a separate column.
+ *
+ * The v-model value is a `ColumnFilterNode<F | BF>` — the checkbox list's
+ * `one_of` condition and any active flag `eq` condition(s), AND-combined when
+ * more than one is active.
+ */
+export interface CheckboxListWithFlagsFilter<
+  F extends FilterField = FilterField,
+  BF extends FilterField = FilterField
+> {
+  type: 'checkbox-list-with-flags'
+  /** API field the checkbox list targets. */
+  field: F
+  options: FilterCheckboxOption[]
+  /** Show the inline search field once the option count exceeds this value. */
+  searchThreshold?: number
+  /** Boolean flags shown below the checkbox list, each as a tri-state radio group. */
+  flags: BooleanFilterGroup<BF>[]
+}
+
+/**
  * Filter over the values of a field only the server knows, picked as chips
  * against one of the registered autocompleters. Its value is a single `one_of`
  * condition, which is what the label, tag and contact-group conditions accept.
@@ -156,6 +181,7 @@ export type ColumnFilterDefinition<F extends FilterField = FilterField> =
   | NumericFilter<F>
   | DateTimeRangeFilter<F>
   | BooleanGroupFilter<F>
+  | CheckboxListWithFlagsFilter<F>
   | AutocompleteChoiceFilter<F>
   | ColumnVisibilityFilter
   | VisualFilterColumnFilter
@@ -167,10 +193,17 @@ export type ColumnFilterDefinition<F extends FilterField = FilterField> =
  * a concrete filter shape — a new filter type extends this one function.
  */
 export function filterFields(filter: ColumnFilterDefinition): FilterField[] {
-  if ('groups' in filter) {
-    return filter.groups.map((group) => group.field)
+  const fields: FilterField[] = []
+  if ('field' in filter) {
+    fields.push(filter.field)
   }
-  return 'field' in filter ? [filter.field] : []
+  if ('groups' in filter) {
+    fields.push(...filter.groups.map((group) => group.field))
+  }
+  if ('flags' in filter) {
+    fields.push(...filter.flags.map((flag) => flag.field))
+  }
+  return fields
 }
 
 /**

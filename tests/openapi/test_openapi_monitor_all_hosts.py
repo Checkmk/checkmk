@@ -430,6 +430,8 @@ class TestMonitorHostsFilters:
                 "num_services_warn": 0,
                 "site_id": "NO_SITE",
                 "state": "UP",
+                "is_flapping": False,
+                "stale": False,
                 "legacy_host_status_link": "view.py?view_name=hoststatus&site=NO_SITE&host=heute",
             },
         ]
@@ -991,6 +993,8 @@ class TestMonitorHostOverview:
                     "num_services_pending": 0,
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
+                    "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "tags": {"criticality": "prod"},
@@ -1061,6 +1065,8 @@ class TestMonitorHostOverview:
                     "num_services_pending": 0,
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
+                    "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                     "contact_groups": [],
@@ -1193,6 +1199,8 @@ _HOSTS = [
         "num_services_pending": 0,
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
+        "is_flapping": 0,
+        "staleness": 0.0,
         "last_check": 1700000000,
         "last_state_change": 1700000060,
         "filename": "/wato/hosts.mk",
@@ -1215,6 +1223,8 @@ _HOSTS = [
         "num_services_pending": 0,
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
+        "is_flapping": 0,
+        "staleness": 0.0,
         "last_check": 1700000100,
         "last_state_change": 1700000160,
         "filename": "/wato/network/hosts.mk",
@@ -1237,6 +1247,8 @@ _HOSTS = [
         "num_services_pending": 0,
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
+        "is_flapping": 0,
+        "staleness": 0.0,
         "last_check": 1700000200,
         "last_state_change": 1700000260,
         # Not managed via Setup, e.g. added directly to the monitoring core.
@@ -1250,7 +1262,14 @@ _HOSTS = [
 ]
 # Columns every host row needs, followed by the ones a request has to ask for. Both lists are in
 # the order the query names them, so the expectations below read like the real `Columns:` header.
-_MANDATORY_COLUMNS = ("name", "state", "acknowledged", "scheduled_downtime_depth")
+_MANDATORY_COLUMNS = (
+    "name",
+    "state",
+    "acknowledged",
+    "scheduled_downtime_depth",
+    "is_flapping",
+    "staleness",
+)
 _OPTIONAL_COLUMNS = {
     "alias": "alias",
     "address": "address",
@@ -1290,4 +1309,4 @@ def _host_columns(*fields: str) -> str:
 
 
 _HOST_TABLE_COLUMNS = _host_columns()
-_HOST_OVERVIEW_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth last_check last_state_change contact_groups tags labels label_sources filename"
+_HOST_OVERVIEW_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth is_flapping staleness last_check last_state_change contact_groups tags labels label_sources filename"

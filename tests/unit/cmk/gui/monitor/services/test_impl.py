@@ -20,6 +20,7 @@ from cmk.gui.monitor.services._models import (
     ServiceSortDirection,
 )
 from cmk.livestatus_client.testing import expect_single_query
+from tests.testlib.gui.web_test_app import SetConfig
 
 # "foo-server-01" matches no row in the default hosts/services test-data, so queries against it
 # return an empty result. This lets us assert on the exact query text without also needing to
@@ -27,7 +28,8 @@ from cmk.livestatus_client.testing import expect_single_query
 _UNKNOWN_HOSTNAME = "foo-server-01"
 _SERVICES_COLUMNS = (
     "description host_name state plugin_output acknowledged scheduled_downtime_depth "
-    "notifications_enabled is_flapping last_check last_state_change perf_data check_command"
+    "notifications_enabled is_flapping staleness last_check last_state_change perf_data "
+    "check_command"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 
@@ -238,3 +240,47 @@ def test_build_query_filter_searches_the_name_and_the_summary() -> None:
         ("Filter", "plugin_output ~~ CPU"),
         ("Or", "2"),
     ]
+
+
+@pytest.mark.parametrize(
+    "staleness, threshold, expected_stale",
+    [
+        pytest.param(5.0, 3.5, True, id="staleness at or above the threshold is stale"),
+        pytest.param(2.0, 3.5, False, id="staleness below the threshold is not stale"),
+    ],
+)
+def test_fetch_derives_stale_from_the_staleness_threshold(
+    staleness: float,
+    threshold: float,
+    expected_stale: bool,
+    request_context: None,
+    set_config: SetConfig,
+) -> None:
+    row = {
+        "description": "CPU load",
+        "host_name": _UNKNOWN_HOSTNAME,
+        "state": 0,
+        "plugin_output": "OK",
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "is_flapping": 0,
+        "staleness": staleness,
+        "last_check": 0,
+        "last_state_change": 0,
+        "perf_data": "",
+        "check_command": "check_cpu",
+    }
+    with expect_single_query("GET services", tables={"services": [row]}) as live:
+        repo = LiveStatusHostServicesRepository(connection=live)
+        with set_config(staleness_threshold=threshold):
+            services = repo.fetch(
+                _UNKNOWN_HOSTNAME,
+                limit=None,
+                query="",
+                sorters=[],
+                filters=ServiceFilter(""),
+                fields=frozenset(),
+            )
+
+    assert [service.stale for service in services] == [expected_stale]

@@ -12,13 +12,17 @@ from cmk.gui.monitor.hosts._impl import (
     _build_query_filter,
     _OPTIONAL_COLUMNS,
     _SORT_COLUMN_FIELDS,
+    LiveStatusHostRepository,
 )
 from cmk.gui.monitor.hosts._models import (
+    HostFilter,
     HostOptionalField,
     HostSort,
     HostSortColumn,
     HostSortDirection,
 )
+from cmk.livestatus_client.testing import expect_single_query
+from tests.testlib.gui.web_test_app import SetConfig
 
 
 @pytest.mark.parametrize(
@@ -143,3 +147,39 @@ def test_build_query_filter_leaves_out_a_hidden_field() -> None:
         ("Filter", "alias ~~ web"),
         ("Or", "2"),
     ]
+
+
+@pytest.mark.parametrize(
+    "staleness, threshold, expected_stale",
+    [
+        pytest.param(5.0, 3.5, True, id="staleness at or above the threshold is stale"),
+        pytest.param(2.0, 3.5, False, id="staleness below the threshold is not stale"),
+    ],
+)
+def test_fetch_derives_stale_from_the_staleness_threshold(
+    staleness: float,
+    threshold: float,
+    expected_stale: bool,
+    request_context: None,
+    set_config: SetConfig,
+) -> None:
+    row = {
+        "name": "some-host",
+        "state": 0,
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "is_flapping": 0,
+        "staleness": staleness,
+    }
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        repo = LiveStatusHostRepository(connection=live)
+        with set_config(staleness_threshold=threshold):
+            hosts = repo.fetch(
+                limit=None,
+                query="",
+                sorters=[],
+                filters=HostFilter(""),
+                fields=frozenset(),
+            )
+
+    assert [host.stale for host in hosts] == [expected_stale]

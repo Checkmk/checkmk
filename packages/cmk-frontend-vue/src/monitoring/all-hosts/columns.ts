@@ -17,6 +17,7 @@ import type {
   AutocompleteChoiceFilter,
   BooleanGroupFilter,
   CheckboxListFilter,
+  CheckboxListWithFlagsFilter,
   DateTimeRangeFilter,
   NumericFilter,
   StringInputFilter
@@ -117,14 +118,18 @@ export function buildHostColumns({
 }: HostColumnOptions): ColumnDef<HostEntry>[] {
   const { _t } = usei18n()
 
-  const stateFilter: CheckboxListFilter<'state'> = {
-    type: 'checkbox-list',
+  const stateFilter: CheckboxListWithFlagsFilter<'state', 'is_flapping' | 'stale'> = {
+    type: 'checkbox-list-with-flags',
     field: 'state',
     options: [
       { value: 'UP', title: _t('UP') },
       { value: 'DOWN', title: _t('DOWN') },
       { value: 'UNREACHABLE', title: _t('UNREACH') }
-    ] satisfies { value: HostState; title: string }[]
+    ] satisfies { value: HostState; title: string }[],
+    flags: [
+      { field: 'is_flapping', title: _t('Flapping') },
+      { field: 'stale', title: _t('Stale') }
+    ]
   }
 
   const nameFilter: StringInputFilter<'name'> = {

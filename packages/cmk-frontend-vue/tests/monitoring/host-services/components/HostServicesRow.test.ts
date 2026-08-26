@@ -18,6 +18,8 @@ function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntr
   return {
     name: 'CPU load',
     state: 'OK',
+    is_flapping: false,
+    stale: false,
     summary: 'OK - 15 min load: 0.5',
     last_check: 1783942710,
     last_state_change: 1783942740,
@@ -78,6 +80,25 @@ test('keeps the whole summary readable on hover, markers and all', () => {
   mountRow(makeService({ summary }))
 
   expect(screen.getByTitle(summary)).toBeInTheDocument()
+})
+
+test('renders the flapping icon next to the state badge for a flapping service', () => {
+  mountRow(makeService({ is_flapping: true }))
+
+  expect(screen.getByTitle('Flapping')).toBeInTheDocument()
+})
+
+test('renders the stale icon next to the state badge for a stale service', () => {
+  mountRow(makeService({ stale: true }))
+
+  expect(screen.getByTitle('Stale')).toBeInTheDocument()
+})
+
+test('renders neither icon for a service that is not flapping nor stale', () => {
+  mountRow(makeService())
+
+  expect(screen.queryByTitle('Flapping')).not.toBeInTheDocument()
+  expect(screen.queryByTitle('Stale')).not.toBeInTheDocument()
 })
 
 test('resolves the service into the url of a row action', () => {

@@ -69,6 +69,8 @@ class Host:
     service_counts: ServiceCounts | None
     acknowledged: bool
     in_downtime: bool
+    is_flapping: bool
+    stale: bool
     folder: str | None
     last_check: UnixTimestamp | None
     last_state_change: UnixTimestamp | None

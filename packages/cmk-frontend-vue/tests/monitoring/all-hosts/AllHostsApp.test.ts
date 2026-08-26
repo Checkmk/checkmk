@@ -29,6 +29,8 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
     name: 'web-1',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     site_id: 'local',
     address: '10.0.0.1',
     num_services: 1,

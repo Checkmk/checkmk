@@ -1420,6 +1420,7 @@ def expect_single_query(
     query: str = "",
     match_type: MatchType = "loose",
     expect_status_query: bool = False,
+    tables: Mapping[TableName, ResultList] | None = None,
 ) -> Iterator[MultiSiteConnection]:
     """A simplified testing context manager.
 
@@ -1434,6 +1435,11 @@ def expect_single_query(
             If the query of the status table (which Checkmk does when calling cmk.gui.sites.live())
             should be expected. Defaults to False.
 
+        tables:
+            Row data to seed before the query runs, replacing the default table data (for the
+            first configured site only; other sites stay empty). Use this when a test needs to
+            assert on values computed from the response rather than just the query text.
+
     Returns:
         A context manager.
 
@@ -1444,6 +1450,8 @@ def expect_single_query(
 
     """
     with mock_livestatus_communication() as mock_live:
+        for table_name, table_data in (tables or {}).items():
+            mock_live.add_table(table_name, table_data)
         if query:
             mock_live.expect_query(query, match_type=match_type)
         with mock_live(expect_status_query):

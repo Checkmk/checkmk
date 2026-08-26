@@ -47,6 +47,8 @@ function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntr
   return {
     name: 'CPU load',
     state: 'OK',
+    is_flapping: false,
+    stale: false,
     summary: 'OK - load average: 0.10, 0.05, 0.01',
     last_check: 1783942710,
     last_state_change: 1783942740,

@@ -11,6 +11,7 @@ from annotated_types import MinLen
 from pydantic import AfterValidator, PlainValidator, StringConstraints
 
 from cmk.ccc.site import SiteId
+from cmk.gui.config import active_config
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
@@ -156,7 +157,7 @@ class BooleanCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal["acknowledged", "in_downtime"] = api_field(
+    field: Literal["acknowledged", "in_downtime", "is_flapping", "stale"] = api_field(
         description="Host boolean field to filter on", example="acknowledged"
     )
     op: Literal["eq"] = api_field(description="Equality operation", example="eq")
@@ -418,6 +419,11 @@ def _accumulate_filters(
                     # downtime when scheduled_downtime_depth is greater than zero.
                     op = ">" if node.value else "="
                     filters.append(f"Filter: scheduled_downtime_depth {op} 0")
+                case "stale":
+                    # Livestatus has no boolean stale column; a host is stale when its
+                    # staleness exceeds the configured threshold.
+                    op = ">=" if node.value else "<"
+                    filters.append(f"Filter: staleness {op} {active_config.staleness_threshold}")
                 case _:
                     filters.append(f"Filter: {node.field} = {int(node.value)}")
 

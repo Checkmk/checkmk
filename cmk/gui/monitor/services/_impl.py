@@ -14,6 +14,7 @@ from collections.abc import Mapping, Sequence, Set
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.config import active_config
 from cmk.livestatus_client import (
     LivestatusClient,
     MultiSiteConnection,
@@ -73,6 +74,7 @@ class LiveStatusHostServicesRepository:
                 Services.scheduled_downtime_depth,
                 Services.notifications_enabled,
                 Services.is_flapping,
+                Services.staleness,
                 Services.last_check,
                 Services.last_state_change,
                 Services.perf_data,
@@ -98,6 +100,7 @@ class LiveStatusHostServicesRepository:
                         in_downtime=row["scheduled_downtime_depth"] > 0,
                         notifications_enabled=bool(row["notifications_enabled"]),
                         is_flapping=bool(row["is_flapping"]),
+                        stale=row["staleness"] >= active_config.staleness_threshold,
                         summary=row["plugin_output"],
                         last_check=int(row["last_check"]) or None,
                         last_state_change=int(row["last_state_change"]),
@@ -132,6 +135,7 @@ class LiveStatusHostServicesRepository:
                 Services.scheduled_downtime_depth,
                 Services.notifications_enabled,
                 Services.is_flapping,
+                Services.staleness,
                 Services.host_alias,
                 Services.host_state,
                 Services.host_acknowledged,
@@ -171,6 +175,7 @@ class LiveStatusHostServicesRepository:
             in_downtime=row["scheduled_downtime_depth"] > 0,
             notifications_enabled=bool(row["notifications_enabled"]),
             is_flapping=bool(row["is_flapping"]),
+            stale=row["staleness"] >= active_config.staleness_threshold,
             host_alias=row["host_alias"],
             host_state=HostState(row["host_state"]),
             host_acknowledged=bool(row["host_acknowledged"]),

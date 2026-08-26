@@ -17,7 +17,7 @@ export const a11yData = [
   {
     keys: ['↑', '↓', 'Home', 'End'],
     description:
-      'While the dropdown is open, arrow keys move the active option (Home/End jump to first/last). The active option is tracked by the parent FilterDropdown and exposed via aria-activedescendant; the option rows only render the highlight.'
+      'While the dropdown is open, arrow keys move the active option (Home/End jump to first/last). The active option is tracked by the parent FilterDropdown and exposed via aria-activedescendant; the option rows only render the highlight. Exception: a numeric or date-time-range filter leaves its arrow keys to the input itself, and a tri-state radio group (a boolean-group filter, or the flag rows of a checkbox-list-with-flags filter) moves focus within itself instead, since it owns Up/Down navigation natively.'
   },
   {
     keys: ['Enter', 'Space'],
@@ -219,6 +219,8 @@ const rows: HostEntry[] = [
   {
     name: 'web-server-01',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.1',
     alias: 'Frontend web server (eu-west)',
     site_id: 'local',
@@ -237,6 +239,8 @@ const rows: HostEntry[] = [
   {
     name: 'db-primary-02',
     state: 'DOWN',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.27',
     alias: 'Primary database (eu-west)',
     site_id: 'local',
@@ -255,6 +259,8 @@ const rows: HostEntry[] = [
   {
     name: 'cache-node-03',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.51',
     alias: 'Redis cache node',
     site_id: 'local',

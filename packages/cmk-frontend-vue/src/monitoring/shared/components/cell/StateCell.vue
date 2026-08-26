@@ -5,16 +5,15 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
-
 import type { HostState, ServiceState } from '../../api/types.ts'
 import HostStateDisplay from '../HostStateDisplay.vue'
 import ServiceStateDisplay from '../ServiceStateDisplay.vue'
+import StateModeIcons from '../StateModeIcons.vue'
 import BaseCell from './BaseCell.vue'
 
 interface BaseStateCellProps {
   stale?: boolean | undefined
+  flapping?: boolean | undefined
   pending?: boolean | undefined
   columnId?: string | undefined
 }
@@ -24,8 +23,6 @@ export type StateCellProps = BaseStateCellProps &
 
 /** The column width from which a spelled-out state label fits beside its icons. */
 const SPELLED_OUT_LABEL_WIDTH = 131
-
-const { _t } = usei18n()
 
 const props = defineProps<StateCellProps>()
 </script>
@@ -48,13 +45,7 @@ const props = defineProps<StateCellProps>()
           :stale="stale"
           abbreviated
         />
-        <CmkMultitoneIcon
-          v-if="stale"
-          class="monitoring-state-cell__mode-icon"
-          name="stale"
-          primary-color="font"
-          :title="_t('Stale')"
-        />
+        <StateModeIcons :flapping="flapping" :stale="stale" />
       </div>
     </template>
     <template #spelledOut>
@@ -66,13 +57,7 @@ const props = defineProps<StateCellProps>()
           :stale="stale"
         />
         <HostStateDisplay v-else :state="props.state" :pending="pending" :stale="stale" />
-        <CmkMultitoneIcon
-          v-if="stale"
-          class="monitoring-state-cell__mode-icon"
-          name="stale"
-          primary-color="font"
-          :title="_t('Stale')"
-        />
+        <StateModeIcons :flapping="flapping" :stale="stale" />
       </div>
     </template>
   </BaseCell>
@@ -86,10 +71,5 @@ const props = defineProps<StateCellProps>()
   min-height: 21px;
   align-items: center;
   justify-content: center;
-}
-
-.monitoring-state-cell__mode-icon {
-  width: var(--dimension-6);
-  height: var(--dimension-6);
 }
 </style>

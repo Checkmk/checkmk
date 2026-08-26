@@ -182,6 +182,38 @@ test('the site column filter offers the configured sites as options', () => {
   })
 })
 
+test('the state column filter offers the state checkboxes plus flapping/stale flags', () => {
+  const columns = hostColumns({ includeActions: true })
+  const stateColumn = columns.find((column) => columnId(column) === 'state')
+
+  expect(stateColumn?.meta?.filter).toEqual({
+    type: 'checkbox-list-with-flags',
+    field: 'state',
+    options: [
+      { value: 'UP', title: 'UP' },
+      { value: 'DOWN', title: 'DOWN' },
+      { value: 'UNREACHABLE', title: 'UNREACH' }
+    ],
+    flags: [
+      { field: 'is_flapping', title: 'Flapping' },
+      { field: 'stale', title: 'Stale' }
+    ]
+  })
+})
+
+test('the mode column filter no longer offers flapping, which moved to the state column', () => {
+  const columns = hostColumns({ includeActions: true })
+  const modesColumn = columns.find((column) => columnId(column) === 'modes')
+
+  expect(modesColumn?.meta?.filter).toEqual({
+    type: 'boolean-group',
+    groups: [
+      { field: 'in_downtime', title: 'In downtime' },
+      { field: 'acknowledged', title: 'Acknowledged' }
+    ]
+  })
+})
+
 test('the folder column offers a text filter', () => {
   const columns = hostColumns()
   const folderColumn = columns.find((column) => columnId(column) === 'folder')

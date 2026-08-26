@@ -32,6 +32,7 @@ import { MONITORING_SERVICE } from '../MonitoringTableContext'
 import FilterAutocompleteChoice from './FilterAutocompleteChoice.vue'
 import FilterBooleanGroup from './FilterBooleanGroup.vue'
 import FilterCheckboxList from './FilterCheckboxList.vue'
+import FilterCheckboxListWithFlags from './FilterCheckboxListWithFlags.vue'
 import FilterColumnVisibility from './FilterColumnVisibility.vue'
 import FilterDateTimeRange from './FilterDateTimeRange.vue'
 import FilterNumeric from './FilterNumeric.vue'
@@ -41,6 +42,7 @@ import type { ColumnFilterDefinition, ColumnFilterValue } from './types'
 
 const FILTER_COMPONENTS: Record<ColumnFilterDefinition['type'], Component> = {
   'checkbox-list': FilterCheckboxList,
+  'checkbox-list-with-flags': FilterCheckboxListWithFlags,
   'string-input': FilterStringInput,
   numeric: FilterNumeric,
   'date-time-range': FilterDateTimeRange,
@@ -234,13 +236,17 @@ function moveFocus(delta: number): void {
   focusRow(current + delta)
 }
 
-// Filter types whose input owns the vertical arrow keys (e.g. a number field's
-// native increment/decrement). For these the dropdown must not hijack ArrowUp /
-// ArrowDown for row navigation; Tab still moves between rows.
+// Filter types whose input owns the vertical arrow keys. Numeric/date-time
+// fields use them for native increment/decrement; boolean-group and
+// checkbox-list-with-flags render a tri-state radio group, and reka-ui already
+// gives each one its own roving-tabindex Up/Down handling. For all of these
+// the dropdown must not hijack ArrowUp/ArrowDown for row navigation - Tab
+// still moves between rows, including into and out of a radio group.
 const ARROW_NAV_DISABLED_TYPES = new Set<ColumnFilterDefinition['type']>([
   'numeric',
+  'date-time-range',
   'boolean-group',
-  'date-time-range'
+  'checkbox-list-with-flags'
 ])
 
 function registerShortcuts(): void {

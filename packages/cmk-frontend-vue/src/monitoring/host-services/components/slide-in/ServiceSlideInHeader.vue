@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { HostServiceEntry, ServiceMode } from '@/monitoring/shared/api/types'
 import ServiceStateDisplay from '@/monitoring/shared/components/ServiceStateDisplay.vue'
+import StateModeIcons from '@/monitoring/shared/components/StateModeIcons.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInHeader from '@/monitoring/shared/components/slide-in/SlideInHeader.vue'
 
@@ -30,7 +31,18 @@ withDefaults(
     :load-action-menu="loadActionMenu"
   >
     <template #state>
-      <ServiceStateDisplay :state="service.state" />
+      <span class="monitoring-service-slide-in-header__state">
+        <ServiceStateDisplay :state="service.state" :stale="service.stale" />
+        <StateModeIcons :flapping="service.is_flapping" :stale="service.stale" />
+      </span>
     </template>
   </SlideInHeader>
 </template>
+
+<style scoped>
+.monitoring-service-slide-in-header__state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dimension-3);
+}
+</style>

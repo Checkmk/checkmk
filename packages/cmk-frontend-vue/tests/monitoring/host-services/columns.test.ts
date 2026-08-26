@@ -86,6 +86,42 @@ test('the state column reads as the one in the hosts listing', () => {
   )
 })
 
+test('the state column filter offers the state checkboxes plus flapping/stale flags', () => {
+  const stateColumn = useHostServicesColumns().find(
+    (column) => columnId(column as ColumnDef<never>) === 'state'
+  )
+
+  expect(stateColumn?.meta?.filter).toEqual({
+    type: 'checkbox-list-with-flags',
+    field: 'state',
+    options: [
+      { value: 'OK', title: 'OK' },
+      { value: 'WARN', title: 'WARN' },
+      { value: 'CRIT', title: 'CRIT' },
+      { value: 'UNKNOWN', title: 'UNKNOWN' }
+    ],
+    flags: [
+      { field: 'is_flapping', title: 'Flapping' },
+      { field: 'stale', title: 'Stale' }
+    ]
+  })
+})
+
+test('the mode column filter no longer offers flapping, which moved to the state column', () => {
+  const modesColumn = useHostServicesColumns().find(
+    (column) => columnId(column as ColumnDef<never>) === 'modes'
+  )
+
+  expect(modesColumn?.meta?.filter).toEqual({
+    type: 'boolean-group',
+    groups: [
+      { field: 'in_downtime', title: 'In downtime' },
+      { field: 'acknowledged', title: 'Acknowledged' },
+      { field: 'notifications_enabled', title: 'Notifications enabled' }
+    ]
+  })
+})
+
 test('the hidden columns stay on offer in the picker', () => {
   expect(makeService().toggleableColumns.map((column) => column.id)).toEqual(
     expect.arrayContaining(['labels', 'tags', 'contacts', 'contact_groups'])

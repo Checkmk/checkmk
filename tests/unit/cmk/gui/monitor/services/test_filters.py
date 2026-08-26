@@ -23,6 +23,7 @@ from cmk.gui.monitor.services._api._filters import (
     ServiceTimestampCondition,
     ServiceTimestampOp,
 )
+from tests.testlib.gui.web_test_app import SetConfig
 
 
 @pytest.mark.parametrize(
@@ -82,6 +83,21 @@ def test_query_builder_boolean_condition_fields(
 def test_query_builder_downtime_condition(value: bool, expected: str) -> None:
     condition = ServiceBooleanCondition(type="condition", field="in_downtime", op="eq", value=value)
     assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (True, "Filter: staleness >= 3.5"),
+        (False, "Filter: staleness < 3.5"),
+    ],
+)
+def test_query_builder_stale_condition(
+    value: bool, expected: str, request_context: None, set_config: SetConfig
+) -> None:
+    condition = ServiceBooleanCondition(type="condition", field="stale", op="eq", value=value)
+    with set_config(staleness_threshold=3.5):
+        assert parse_as_livestatus_filter(condition) == expected
 
 
 def test_query_builder_state_choice_single_no_or() -> None:

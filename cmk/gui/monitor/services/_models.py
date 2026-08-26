@@ -60,6 +60,7 @@ class Service:
     in_downtime: bool
     notifications_enabled: bool
     is_flapping: bool
+    stale: bool
     summary: str
     last_check: UnixTimestamp | None
     last_state_change: UnixTimestamp

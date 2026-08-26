@@ -22,6 +22,8 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
     name: 'web-1',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.1',
     alias: 'web server 1',
     site_id: 'local',
@@ -78,6 +80,31 @@ test('renders the mode icons ahead of the host name', () => {
   expect(downtime.compareDocumentPosition(screen.getByText('web-1'))).toBe(
     Node.DOCUMENT_POSITION_FOLLOWING
   )
+})
+
+test('shows a flapping badge between the state and the host name', () => {
+  render(HostSlideInHeader, { props: { host: makeHost({ is_flapping: true }) } })
+
+  const flapping = screen.getByTitle('Flapping')
+  expect(flapping.compareDocumentPosition(screen.getByText('UP'))).toBe(
+    Node.DOCUMENT_POSITION_PRECEDING
+  )
+  expect(flapping.compareDocumentPosition(screen.getByText('web-1'))).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING
+  )
+})
+
+test('shows a stale badge when the host is stale', () => {
+  render(HostSlideInHeader, { props: { host: makeHost({ stale: true }) } })
+
+  expect(screen.getByTitle('Stale')).toBeInTheDocument()
+})
+
+test('shows neither badge for a host that is neither flapping nor stale', () => {
+  render(HostSlideInHeader, { props: { host: makeHost() } })
+
+  expect(screen.queryByTitle('Flapping')).not.toBeInTheDocument()
+  expect(screen.queryByTitle('Stale')).not.toBeInTheDocument()
 })
 
 test('renders the inline actions as links with their host-specific tooltips', () => {

@@ -171,6 +171,7 @@ class TestMonitorHostServicesFilters:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -233,6 +234,8 @@ class TestMonitorHostServicesFilters:
             {
                 "name": "CPU load",
                 "state": "WARN",
+                "is_flapping": False,
+                "stale": False,
                 "summary": "WARN - load average: 3.10, 2.05, 1.01",
                 "last_check": 1783942740,
                 "last_state_change": 1783942740,
@@ -263,6 +266,7 @@ class TestMonitorHostServicesFilters:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -326,6 +330,8 @@ class TestMonitorHostServicesFilters:
             {
                 "name": "CPU load",
                 "state": "WARN",
+                "is_flapping": False,
+                "stale": False,
                 "summary": "WARN - load average: 3.10, 2.05, 1.01",
                 "last_check": 1783942740,
                 "last_state_change": 1783942740,
@@ -381,6 +387,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                 }
@@ -424,6 +431,8 @@ class TestMonitorHostServices:
                 {
                     "name": "CPU load",
                     "state": "OK",
+                    "is_flapping": False,
+                    "stale": False,
                     "summary": "OK - load average: 0.10, 0.05, 0.01",
                     "last_check": 1783942710,
                     "last_state_change": 1783942740,
@@ -456,6 +465,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "",
@@ -496,6 +506,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "",
@@ -536,6 +547,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "",
@@ -573,6 +585,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "",
@@ -610,6 +623,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "",
@@ -648,6 +662,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "",
@@ -686,6 +701,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "",
@@ -725,6 +741,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "",
@@ -765,6 +782,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "test_metric=42;;;0;100",
@@ -807,6 +825,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "",
@@ -845,6 +864,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
                     "perf_data": "unknown_metric=42;;;0;100",
@@ -887,6 +907,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": 0,
                     "last_state_change": time.time(),
                 }
@@ -1013,6 +1034,7 @@ class TestMonitorHostServices:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -1082,6 +1104,7 @@ class TestMonitorHostServicessLimitPermissions:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -1151,6 +1174,7 @@ class TestMonitorHostServicessLimitPermissions:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "last_check": time.time(),
                     "last_state_change": time.time(),
                 }
@@ -1215,6 +1239,7 @@ class TestMonitorServiceOverview:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
                     "host_acknowledged": 0,
@@ -1321,6 +1346,7 @@ class TestMonitorServiceOverview:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
                     "host_acknowledged": 0,
@@ -1378,6 +1404,7 @@ class TestMonitorServiceOverview:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
                     "host_acknowledged": 0,
@@ -1434,6 +1461,7 @@ class TestMonitorServiceOverview:
                     "scheduled_downtime_depth": 0,
                     "notifications_enabled": 1,
                     "is_flapping": 0,
+                    "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
                     "host_acknowledged": 0,
@@ -1662,7 +1690,7 @@ _SERVICE_DESCRIPTION = "CPU load"
 _HOST_ALIAS = "Web Server"
 _SERVICE_OVERVIEW_COLUMNS = (
     "description host_name state plugin_output last_check last_state_change acknowledged "
-    "scheduled_downtime_depth notifications_enabled is_flapping host_alias host_state "
+    "scheduled_downtime_depth notifications_enabled is_flapping staleness host_alias host_state "
     "host_acknowledged host_scheduled_downtime_depth contact_groups long_plugin_output "
     "current_attempt max_check_attempts next_check tags labels label_sources perf_data "
     "check_command"
@@ -1670,7 +1698,8 @@ _SERVICE_OVERVIEW_COLUMNS = (
 _LIMIT = 1000
 _SERVICES_COLUMNS = (
     "description host_name state plugin_output acknowledged scheduled_downtime_depth "
-    "notifications_enabled is_flapping last_check last_state_change perf_data check_command"
+    "notifications_enabled is_flapping staleness last_check last_state_change perf_data "
+    "check_command"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 

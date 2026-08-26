@@ -65,6 +65,12 @@ _DEFAULT_FIELDS: frozenset[ServiceOptionalField] = frozenset()
 class HostServiceEntry:
     name: str = api_field(description="Service name", example="Check_MK HW/SW Inventory")
     state: ServiceStateLabel = api_field(description="Service state", example="OK")
+    is_flapping: bool = api_field(
+        description="Whether the service state is flapping", example=False
+    )
+    stale: bool = api_field(
+        description="Whether the service hasn't been checked recently enough", example=False
+    )
     summary: str = api_field(
         description="Service summary",
         example="Found no data, execution time 0.0 sec",
@@ -121,6 +127,8 @@ class HostServiceEntry:
         return cls(
             name=service.name,
             state=service.state_label,
+            is_flapping=service.is_flapping,
+            stale=service.stale,
             summary=service.summary,
             last_check=service.last_check,
             last_state_change=service.last_state_change,

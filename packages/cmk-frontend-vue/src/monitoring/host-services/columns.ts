@@ -19,7 +19,7 @@ import type {
 import type {
   AutocompleteChoiceFilter,
   BooleanGroupFilter,
-  CheckboxListFilter,
+  CheckboxListWithFlagsFilter,
   DateTimeRangeFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
@@ -55,18 +55,24 @@ export function buildHostServicesColumnPinning(): ColumnPinningState {
 /** Picks a column filter offers before it refuses more, per the views-table design. */
 const MAX_FILTER_CHOICES = 8
 
+type ServiceModeField = 'in_downtime' | 'acknowledged' | 'notifications_enabled'
+
 export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
   const { _t } = usei18n()
 
-  const stateFilter: CheckboxListFilter<'state'> = {
-    type: 'checkbox-list',
+  const stateFilter: CheckboxListWithFlagsFilter<'state', 'is_flapping' | 'stale'> = {
+    type: 'checkbox-list-with-flags',
     field: 'state',
     options: [
       { value: 'OK', title: _t('OK') },
       { value: 'WARN', title: _t('WARN') },
       { value: 'CRIT', title: _t('CRIT') },
       { value: 'UNKNOWN', title: _t('UNKNOWN') }
-    ] satisfies { value: ServiceState; title: string }[]
+    ] satisfies { value: ServiceState; title: string }[],
+    flags: [
+      { field: 'is_flapping', title: _t('Flapping') },
+      { field: 'stale', title: _t('Stale') }
+    ]
   }
 
   const nameFilter: StringInputFilter<'name'> = {
@@ -120,15 +126,12 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
     maxSelected: MAX_FILTER_CHOICES
   }
 
-  const modesFilter: BooleanGroupFilter<
-    'in_downtime' | 'acknowledged' | 'notifications_enabled' | 'is_flapping'
-  > = {
+  const modesFilter: BooleanGroupFilter<ServiceModeField> = {
     type: 'boolean-group',
     groups: [
       { field: 'in_downtime', title: _t('In downtime') },
       { field: 'acknowledged', title: _t('Acknowledged') },
-      { field: 'notifications_enabled', title: _t('Notifications enabled') },
-      { field: 'is_flapping', title: _t('Flapping') }
+      { field: 'notifications_enabled', title: _t('Notifications enabled') }
     ]
   }
 

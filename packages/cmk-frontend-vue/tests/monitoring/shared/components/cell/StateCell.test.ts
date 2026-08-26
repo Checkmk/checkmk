@@ -90,6 +90,25 @@ test('marks the state badge itself as stale', () => {
   expect(container.querySelector('.cmk-state-tag--stale')).toHaveTextContent('OK')
 })
 
+test('renders the flapping indicator when flapping', () => {
+  mountCell({ kind: 'service', state: 'OK', flapping: true })
+
+  expect(screen.getByTitle('Flapping')).toBeInTheDocument()
+})
+
+test('renders no flapping indicator when not flapping', () => {
+  mountCell({ kind: 'service', state: 'OK', flapping: false })
+
+  expect(screen.queryByTitle('Flapping')).not.toBeInTheDocument()
+})
+
+test('renders both the flapping and the stale indicator together', () => {
+  mountCell({ kind: 'service', state: 'OK', flapping: true, stale: true })
+
+  expect(screen.getByTitle('Flapping')).toBeInTheDocument()
+  expect(screen.getByTitle('Stale')).toBeInTheDocument()
+})
+
 test.each<[StateCellProps, string]>([
   [{ state: 'DOWN' }, 'DO'],
   [{ state: 'UNREACHABLE' }, 'UN'],
@@ -112,5 +131,12 @@ test('keeps the stale indicator in a narrow column', async () => {
   await mountCellInColumnOfWidth({ kind: 'service', state: 'OK', stale: true }, 86)
 
   expect(screen.getByTitle('Stale')).toBeInTheDocument()
+  expect(screen.getByText('OK')).toBeInTheDocument()
+})
+
+test('keeps the flapping indicator in a narrow column', async () => {
+  await mountCellInColumnOfWidth({ kind: 'service', state: 'OK', flapping: true }, 86)
+
+  expect(screen.getByTitle('Flapping')).toBeInTheDocument()
   expect(screen.getByText('OK')).toBeInTheDocument()
 })

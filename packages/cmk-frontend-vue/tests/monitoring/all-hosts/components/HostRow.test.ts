@@ -15,6 +15,8 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
     name: 'web-1',
     state: 'UP',
+    is_flapping: false,
+    stale: false,
     address: '10.0.0.1',
     alias: 'web server 1',
     folder: 'Netzwerk / Rechenzentrum 1',
@@ -110,6 +112,25 @@ test('renders state badge with unknown color for state UNREACHABLE', () => {
   const stateTag = container.querySelector('.cmk-state-tag--unknown')
   expect(stateTag).not.toBeNull()
   expect(stateTag).toHaveTextContent('UNREACH')
+})
+
+test('renders the flapping icon next to the state badge for a flapping host', () => {
+  mountRow(makeHost({ is_flapping: true }))
+
+  expect(screen.getByTitle('Flapping')).toBeInTheDocument()
+})
+
+test('renders the stale icon next to the state badge for a stale host', () => {
+  mountRow(makeHost({ stale: true }))
+
+  expect(screen.getByTitle('Stale')).toBeInTheDocument()
+})
+
+test('renders neither icon for a host that is not flapping nor stale', () => {
+  mountRow(makeHost())
+
+  expect(screen.queryByTitle('Flapping')).not.toBeInTheDocument()
+  expect(screen.queryByTitle('Stale')).not.toBeInTheDocument()
 })
 
 test('renders one cell per service state with its count', () => {

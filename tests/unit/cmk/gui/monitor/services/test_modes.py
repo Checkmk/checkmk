@@ -49,15 +49,13 @@ def test_build_service_modes_by_id_notifications_disabled() -> None:
     assert modes[0].link.startswith("view.py?")
 
 
-def test_build_service_modes_by_id_flapping() -> None:
+def test_build_service_modes_by_id_flapping_is_not_a_mode() -> None:
+    # Flapping is shown in the state column instead, not as a mode icon.
     service = ServiceFactory.build(
         in_downtime=False, acknowledged=False, notifications_enabled=True, is_flapping=True
     )
 
-    assert [
-        mode.icon_name
-        for mode in build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
-    ] == ["flapping"]
+    assert build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID) == []
 
 
 def test_build_service_modes_by_id_downtime_and_acknowledged() -> None:
@@ -79,7 +77,7 @@ def test_build_service_modes_by_id_all_modes() -> None:
     assert [
         mode.icon_name
         for mode in build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
-    ] == ["downtime", "ack", "notif-disabled", "flapping"]
+    ] == ["downtime", "ack", "notif-disabled"]
 
 
 def test_build_service_modes_none() -> None:
@@ -98,5 +96,13 @@ def test_build_service_modes_all_modes() -> None:
         "downtime",
         "ack",
         "notif-disabled",
-        "flapping",
     ]
+
+
+def test_build_service_modes_flapping_is_not_a_mode() -> None:
+    # Flapping is shown as its own badge next to the state in the slide-in header instead.
+    service = ServiceOverviewFactory.build(
+        in_downtime=False, acknowledged=False, notifications_enabled=True, is_flapping=True
+    )
+
+    assert build_service_modes(service) == []

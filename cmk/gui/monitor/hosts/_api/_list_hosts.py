@@ -70,6 +70,10 @@ _DEFAULT_FIELDS: frozenset[HostOptionalField] = frozenset(
 class HostEntry:
     name: str = api_field(description="Host name", example="web-server-01")
     state: HostStateLabel = api_field(description="Host state", example="UP")
+    is_flapping: bool = api_field(description="Whether the host state is flapping", example=False)
+    stale: bool = api_field(
+        description="Whether the host hasn't been checked recently enough", example=False
+    )
     site_id: str = api_field(description="Site ID", example="local")
     address: str | ApiOmitted = api_field(
         description="Primary IP address",
@@ -182,6 +186,8 @@ class HostEntry:
         return cls(
             name=host.name,
             state=host.state_label,
+            is_flapping=host.is_flapping,
+            stale=host.stale,
             site_id=host.site_id,
             address=included(HostOptionalField.ADDRESS, host.address),
             alias=included(HostOptionalField.ALIAS, host.alias),

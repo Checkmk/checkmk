@@ -14,6 +14,7 @@ from collections.abc import Callable, Mapping, Sequence, Set
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.config import active_config
 from cmk.livestatus_client import (
     LivestatusClient,
     MultiSiteConnection,
@@ -82,6 +83,8 @@ class LiveStatusHostRepository:
                 Hosts.state,
                 Hosts.acknowledged,
                 Hosts.scheduled_downtime_depth,
+                Hosts.is_flapping,
+                Hosts.staleness,
                 *(
                     column
                     for field, columns in _OPTIONAL_COLUMNS.items()
@@ -105,6 +108,8 @@ class LiveStatusHostRepository:
                         service_counts=_service_counts(row),
                         acknowledged=bool(row["acknowledged"]),
                         in_downtime=row["scheduled_downtime_depth"] > 0,
+                        is_flapping=bool(row["is_flapping"]),
+                        stale=row["staleness"] >= active_config.staleness_threshold,
                         last_check=_timestamp(row.get("last_check")),
                         last_state_change=_timestamp(row.get("last_state_change")),
                         folder=(
@@ -143,6 +148,8 @@ class LiveStatusHostRepository:
                 Hosts.num_services_pending,
                 Hosts.acknowledged,
                 Hosts.scheduled_downtime_depth,
+                Hosts.is_flapping,
+                Hosts.staleness,
                 Hosts.last_check,
                 Hosts.last_state_change,
                 Hosts.contact_groups,
@@ -173,6 +180,8 @@ class LiveStatusHostRepository:
             ),
             acknowledged=bool(row["acknowledged"]),
             in_downtime=row["scheduled_downtime_depth"] > 0,
+            is_flapping=bool(row["is_flapping"]),
+            stale=row["staleness"] >= active_config.staleness_threshold,
             last_check=int(row["last_check"]),
             last_state_change=int(row["last_state_change"]),
             folder=folder_title(row["filename"], self._folders.title_of),

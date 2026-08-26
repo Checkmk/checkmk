@@ -8,6 +8,7 @@ import { computed } from 'vue'
 
 import type { HostEntry, HostRef } from '@/monitoring/shared/api/types'
 import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vue'
+import StateModeIcons from '@/monitoring/shared/components/StateModeIcons.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInHeader from '@/monitoring/shared/components/slide-in/SlideInHeader.vue'
 
@@ -40,7 +41,18 @@ function onSelect(action: CellAction): void {
     @select="onSelect"
   >
     <template #state>
-      <HostStateDisplay :state="host.state" />
+      <span class="monitoring-host-slide-in-header__state">
+        <HostStateDisplay :state="host.state" :stale="host.stale" />
+        <StateModeIcons :flapping="host.is_flapping" :stale="host.stale" />
+      </span>
     </template>
   </SlideInHeader>
 </template>
+
+<style scoped>
+.monitoring-host-slide-in-header__state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dimension-3);
+}
+</style>

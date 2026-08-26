@@ -27,7 +27,7 @@ Provides:
 """
 
 import logging
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Self
@@ -183,9 +183,10 @@ def idle_relay_container(
 def run_check(
     container: docker.models.containers.Container,
     argv: Sequence[str],
+    env: Mapping[str, str] | None = None,
 ) -> CheckResult:
     """Exec an active-check plugin inside *container* and return its result."""
-    exit_code, output = _exec(container, argv)
+    exit_code, output = _exec(container, argv, env=env)
     return CheckResult(exit_code=exit_code, output=output)
 
 
@@ -288,9 +289,10 @@ def run_via_checkhelper(
 def _exec(
     container: docker.models.containers.Container,
     argv: Sequence[str],
+    env: Mapping[str, str] | None = None,
 ) -> tuple[int, str]:
     """Run *argv* in *container*; return its exit code and decoded output."""
-    exit_code, output = container.exec_run(list(argv))
+    exit_code, output = container.exec_run(list(argv), environment=dict(env) if env else None)
     # Neither stream nor detach nor socket mode is used, so the daemon reports the
     # exit code and hands back the whole output at once.
     assert exit_code is not None

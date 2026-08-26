@@ -72,10 +72,15 @@ class LogLevel(enum.StrEnum):
     CRITICAL = "CRITICAL"
 
 
-# Default size of both checkhelper pools (scheduled and ad-hoc active checks).
-# The single source for this number: the engine's built-in defaults, the relay
-# setup form and REST API on the site, and the relay config writer all import it.
+# Default size of the checkhelper pool, which scheduled and ad-hoc active checks
+# share. The single source for this number: the engine's built-in defaults, the
+# relay setup form and REST API on the site, and the relay config writer all
+# import it.
 DEFAULT_NUM_CHECKHELPERS: Final = 5
+
+# Where the relay image installs the active-check binaries. The site writes the
+# check commands relative to it and the relay puts it on the checks' PATH.
+RELAY_ACTIVE_CHECK_PLUGINS_DIR: Final = Path("/opt/check-mk-relay/lib/nagios/plugins")
 
 
 class UserEngineConfig(BaseModel):
@@ -101,7 +106,6 @@ class EngineConfig(UserEngineConfig):
     bin_adhoc_fetcher: Path = Path("/opt/check-mk-relay/bin/fetch-ad-hoc")
     num_adhoc_fetchers: int = 4
     bin_checkhelper: Path = Path("/opt/check-mk-relay/lib/cmc/checkhelper")
-    num_adhoc_checkhelpers: int = DEFAULT_NUM_CHECKHELPERS
     poll_sleep: float = 0.5
     config_cleanup_schedule: float = 60
     host_scheduler_sleep: float = 0.5

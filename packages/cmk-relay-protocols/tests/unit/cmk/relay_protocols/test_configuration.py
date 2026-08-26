@@ -21,7 +21,6 @@ class TestEngingeConfig:
         config = EngineConfig(num_fetchers=0, hosts=(), log_level=LogLevel.ERROR)
         assert config.bin_checkhelper == Path("/opt/check-mk-relay/lib/cmc/checkhelper")
         assert config.num_checkhelpers == 5
-        assert config.num_adhoc_checkhelpers == 5
 
     def test_load_config_written_without_num_checkhelpers(self, tmp_path: Path) -> None:
         """A config on a relay's disk may predate the field and must still load.

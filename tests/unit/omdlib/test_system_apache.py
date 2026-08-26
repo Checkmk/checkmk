@@ -35,13 +35,30 @@ def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> N
     content = apache_config.read_bytes()
     assert (
         sha256(content).hexdigest()
-        == "6da2e68b8f8aac2896934f9d6613ea17d1498c886c550b61c64e9cab2afeaeea"
+        == "6d7c42b18bc9d11ca3e817b22e338b5533c15b3deff60e07fe314ca5a5894e6e"
     ), (
         "The content of [site].conf was changed. Have you updated the apache_hook_version()? The "
         "number needs to be increased with every change to inform the user about an additional step "
         "he has to make. After you did it, you may update the hash here."
     )
     reload_apache.assert_called_once_with(["/usr/sbin/apachectl", "graceful"])
+
+
+def test_apache_hook_publishes_the_oauth_and_mcp_routes(tmp_path: Path) -> None:
+    apache_config = tmp_path / "omd/apache/unit.conf"
+    apache_config.parent.mkdir(parents=True)
+
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", apache_hook_version())
+
+    content = apache_config.read_text()
+    # RFC 9728 protected-resource-metadata, public, routed to the site apache.
+    assert "/.well-known/oauth-protected-resource/unit/check_mk/mcp" in content
+    assert "Require all granted" in content
+    # RFC 8414 authorization-server metadata plus the issuer-nested endpoints.
+    assert "<Location /.well-known/oauth-authorization-server/oauth-unit>" in content
+    assert "<Location /oauth-unit/authorize>" in content
+    assert "<Location /oauth-unit/token>" in content
+    assert "<Location /oauth-unit/register>" in content
 
 
 def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) -> None:

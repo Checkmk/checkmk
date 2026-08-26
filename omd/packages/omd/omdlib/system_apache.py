@@ -74,7 +74,7 @@ def apache_hook_header(version: int) -> str:
 
 
 def apache_hook_version() -> int:
-    return 2
+    return 3
 
 
 def create_apache_hook(
@@ -117,6 +117,51 @@ def create_apache_hook(
     # wrong devlivered pages sometimes
     ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name} retry=0 disablereuse=On timeout=120
     ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}
+  </Location>
+
+  <Location /.well-known/oauth-authorization-server/oauth-{site_name}>
+    # RFC 8414 authorization server metadata for this site. Single path
+    # segment (oauth-{site_name}, not {site_name}/check_mk/...): MCP clients
+    # (observed with Claude Code) don't reliably do RFC 8414's path insertion
+    # for multi-segment issuer paths. Lives outside the /{site_name} prefix,
+    # so it needs its own Location, but is served by the same site backend
+    # (see cmk.gui's noauth:oauth_authorization_server page).
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorization_server.py retry=0 disablereuse=On timeout=120
+    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorization_server.py
+  </Location>
+
+  # The authorization server's own endpoints, nested under its issuer path
+  # (/oauth-{site_name}/...) instead of under /{site_name}/check_mk/...: a
+  # client that guesses endpoint paths from the issuer instead of reading
+  # them out of the RFC 8414 metadata document lands on the real thing.
+  <Location /oauth-{site_name}/authorize>
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorize.py retry=0 disablereuse=On timeout=120
+    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorize.py
+  </Location>
+
+  <Location /oauth-{site_name}/token>
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_token.py retry=0 disablereuse=On timeout=120
+    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_token.py
+  </Location>
+
+  <Location /oauth-{site_name}/register>
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_client_registration.py retry=0 disablereuse=On timeout=120
+    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_client_registration.py
+  </Location>
+
+  <Proxy http://{apache_tcp_addr}:{apache_tcp_port}/.well-known/oauth-protected-resource/{site_name}/check_mk/mcp>
+    Order allow,deny
+    allow from all
+  </Proxy>
+
+  # OAuth 2.0 Protected Resource Metadata (RFC 9728) for the MCP server. Public
+  # discovery document at the origin root, routed to the site's own Apache which
+  # proxies it on to the MCP server. Unknown site -> no such <site>.conf, so this
+  # <Location> does not exist and the request 404s (never another site's data).
+  <Location /.well-known/oauth-protected-resource/{site_name}/check_mk/mcp>
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/.well-known/oauth-protected-resource/{site_name}/check_mk/mcp retry=0 disablereuse=On timeout=120
+    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/.well-known/oauth-protected-resource/{site_name}/check_mk/mcp
+    Require all granted
   </Location>
 </IfModule>
 

@@ -129,7 +129,8 @@ fi
 # File arguments are absolute, since `bazel run` executes its targets in the
 # runfiles tree, not in this directory. This measurement writes one directory,
 # holding its intermediates, its CSV and its HTML.
-COVERAGE_DAT="$REPO_PATH/bazel-out/_coverage/_coverage_report.dat"
+# Bazel's own, at the one fixed path every coverage run in this workspace shares.
+COMBINED_DAT="$REPO_PATH/bazel-out/_coverage/_coverage_report.dat"
 RESULT_DIR="$REPO_PATH/results/test_coverage/repository"
 PY_TEST_TARGETS="$RESULT_DIR/py_test_targets.txt"
 COVERAGE_FILTERED_DAT="$RESULT_DIR/filtered.dat"
@@ -221,6 +222,11 @@ if [[ "$RUN" == true ]]; then
     # that are platform-incompatible under the edition set above. Without the
     # flag their mere presence on the command line fails the build ("not all
     # targets were analyzed") even when every executed test passes.
+    #
+    # The combined report is removed first so a run that leaves it unwritten is
+    # an error here, rather than letting the steps below read whichever
+    # measurement wrote it last.
+    rm -f "$COMBINED_DAT"
     bazel coverage --target_pattern_file="$PY_TEST_TARGETS" \
         "$EDITION_FLAG" \
         "${RESOURCE_FLAGS[@]}" \
@@ -229,10 +235,14 @@ if [[ "$RUN" == true ]]; then
         --keep_going \
         --build_tests_only \
         --combined_report=lcov \
-        --nocache_test_results \
         --instrumentation_filter="//(${filter})[/:@]"
+    if [ ! -f "$COMBINED_DAT" ]; then
+        echo "Error: the coverage run wrote no combined report at $COMBINED_DAT," >&2
+        echo "so nothing was measured. Did every selected target get skipped?" >&2
+        exit 1
+    fi
     # Strip the repo root prefix so paths are workspace-relative
-    sed -i "s|^SF:${REPO_PATH}/|SF:|g" "$COVERAGE_DAT"
+    sed -i "s|^SF:${REPO_PATH}/|SF:|g" "$COMBINED_DAT"
     # Filter the report down to our own source code. This is needed because the
     # instrumentation filter above does not fully constrain what gets recorded:
     # for a test whose dependencies all lie outside the instrumented dirs (e.g.
@@ -242,7 +252,7 @@ if [[ "$RUN" == true ]]; then
     # coverage.py then records everything the test executes: its own sources,
     # pip packages from the bazel cache, the pytest runner itself.
     bazel run @lcov//:lcov "$EDITION_FLAG" -- \
-        --extract "$COVERAGE_DAT" \
+        --extract "$COMBINED_DAT" \
         "${SOURCE_DIRS[@]/%//*.py}" \
         --output-file "$COVERAGE_FILTERED_DAT"
     # lcov matches patterns as unanchored substrings, so the --extract above

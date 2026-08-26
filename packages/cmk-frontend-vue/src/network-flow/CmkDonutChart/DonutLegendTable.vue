@@ -10,6 +10,7 @@ import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
+import CmkDeltaArrow from '@/dashboard/components/CmkDeltaArrow.vue'
 import GraphLegendEyeButton from '@/graphing/components/legend/GraphLegendEyeButton.vue'
 
 import { chartColorCss } from '../colors'
@@ -33,6 +34,15 @@ defineEmits<{
 // Decided over the whole legend, not per row: a header that comes and goes with
 // the row under the pointer is worse than one column of dashes.
 const hasPrevious = computed(() => props.rows.some((row) => row.previousText !== null))
+
+/** Which way a row's arrow points, or null for a change that has no direction. */
+function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
+  const ratio = row.delta?.ratio ?? null
+  if (ratio === null || ratio === 0) {
+    return null
+  }
+  return ratio > 0 ? 'up' : 'down'
+}
 </script>
 
 <template>
@@ -145,7 +155,13 @@ const hasPrevious = computed(() => props.rows.some((row) => row.previousText !==
             <td
               class="network-flow-donut-legend-table__td network-flow-donut-legend-table__td--value network-flow-donut-legend-table__td--comparison"
             >
-              {{ row.deltaText }}
+              <span class="network-flow-donut-legend-table__delta">
+                <CmkDeltaArrow
+                  v-if="deltaDirection(row) !== null"
+                  :direction="deltaDirection(row)!"
+                />
+                {{ row.delta?.text }}
+              </span>
             </td>
           </template>
         </tr>
@@ -223,6 +239,15 @@ const hasPrevious = computed(() => props.rows.some((row) => row.previousText !==
      this is what makes the name give way inside it. */
   overflow: hidden;
   border-bottom: 1px solid var(--ux-theme-6);
+}
+
+/* The arrow rides along the end of the figure rather than taking a column of
+   its own, so the numbers stay in one right-aligned stack. */
+.network-flow-donut-legend-table__delta {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .network-flow-donut-legend-table__row--highlighted {

@@ -106,9 +106,38 @@ test('compares against the previous period once it is delivered', () => {
   ])
 
   expect(container).toHaveTextContent('Previous')
-  // 90 against 60 grew by half; 60 against 90 lost a third.
-  expect(container).toHaveTextContent('+50.0%')
-  expect(container).toHaveTextContent('-33.3%')
+  // 90 against 60 grew by half; 60 against 90 lost a third. The sign is the
+  // arrow's to carry, so it is not in the text.
+  expect(container).toHaveTextContent('50.0%')
+  expect(container).toHaveTextContent('33.3%')
+})
+
+test('points the change of every compared category the way it went', () => {
+  const { container } = renderChart([
+    { ...SLICES[0]!, previousValue: 60 },
+    { ...SLICES[1]!, previousValue: 90 }
+  ])
+
+  const arrows = [...container.querySelectorAll('.db-cmk-delta-arrow')]
+  expect(arrows).toHaveLength(2)
+  expect(arrows[0]).not.toHaveClass('db-cmk-delta-arrow--down')
+  expect(arrows[1]).toHaveClass('db-cmk-delta-arrow--down')
+})
+
+test('draws no arrow where the change has no direction to point in', () => {
+  // "new" has no ratio, an unchanged category has a ratio of zero, and the
+  // hidden one has nothing to compare at all.
+  const { container, getByLabelText } = renderChart([
+    { ...SLICES[0]!, previousValue: 0 },
+    { ...SLICES[1]!, previousValue: 60 }
+  ])
+
+  expect(container).toHaveTextContent('new')
+  expect(container.querySelectorAll('.db-cmk-delta-arrow')).toHaveLength(0)
+
+  fireEvent.click(getByLabelText('Hide Other in the chart'))
+
+  expect(container.querySelectorAll('.db-cmk-delta-arrow')).toHaveLength(0)
 })
 
 test('calls growth out of nothing new instead of dashing it out', () => {
@@ -125,7 +154,8 @@ test('drops the comparison of a hidden category without dropping the columns', a
   await advanceTween()
 
   expect(container).toHaveTextContent('Previous')
-  expect(container).not.toHaveTextContent('+50.0%')
+  expect(container).not.toHaveTextContent('50.0%')
+  expect(container.querySelectorAll('.db-cmk-delta-arrow')).toHaveLength(0)
 })
 
 test('marks the aggregated remainder as drillable', async () => {

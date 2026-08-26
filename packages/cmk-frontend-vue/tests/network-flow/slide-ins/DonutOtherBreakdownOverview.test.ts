@@ -52,10 +52,29 @@ test('renders share, volume and change per category', () => {
     [...row.querySelectorAll('td')].map((el) => el.textContent?.trim())
   )
   expect(cells).toEqual([
-    ['TLS', '60.0%', '30 MB', '20 MB', '+50.0%'],
+    // The sign is the arrow's to carry, so it is not in the text.
+    ['TLS', '60.0%', '30 MB', '20 MB', '50.0%'],
     // Growth out of nothing has no ratio, so it says "new".
     ['DNS', '20.0%', '10 MB', '0 B', 'new']
   ])
+})
+
+test('points the change the way it went, and only where it went somewhere', () => {
+  const { container } = renderOverview()
+
+  const arrows = [...container.querySelectorAll('.db-cmk-delta-arrow')]
+  // TLS grew; "new" has no ratio to point along.
+  expect(arrows).toHaveLength(1)
+  expect(arrows[0]).not.toHaveClass('db-cmk-delta-arrow--down')
+})
+
+test('turns the arrow over for a category that shrank', () => {
+  const { container } = renderOverview({
+    categories: [{ label: 'TLS', value: 20_000_000, previous_value: 30_000_000, share: 100 }],
+    category_count: 1
+  })
+
+  expect(container.querySelector('.db-cmk-delta-arrow')).toHaveClass('db-cmk-delta-arrow--down')
 })
 
 test('sums up what is behind the slice', () => {

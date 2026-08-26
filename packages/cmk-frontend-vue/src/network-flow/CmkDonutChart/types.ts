@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { ChartColor } from '../colors'
+import type { Delta } from '../format'
 
 export interface DonutSlice {
   /** Stable key for the slice (used as the render key). */
@@ -35,8 +36,8 @@ export interface DonutLegendRow {
   currentText: string
   /** Null while no history reaches the widget at all; a dash per row without it. */
   previousText: string | null
-  /** Signed percentage against the previous period, null when nothing compares. */
-  deltaText: string | null
+  /** Change against the previous period, null while no history reaches the widget. */
+  delta: Delta | null
 }
 
 export interface CmkDonutChartProps {

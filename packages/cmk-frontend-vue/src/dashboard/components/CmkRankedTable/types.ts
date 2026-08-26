@@ -3,7 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-export type RankedTableCellRender = 'text' | 'bytes' | 'count'
+/**
+ * How a cell turns into what the reader sees. `delta` draws an arrow along the
+ * sign of the cell's value and writes its `formatted` text beside it; a value
+ * of zero is no change and gets no arrow.
+ */
+export type RankedTableCellRender = 'text' | 'bytes' | 'count' | 'delta'
 
 export interface RankedTableColumn {
   key: string

@@ -38,10 +38,14 @@ test('carries no date, since a listing covers one range', () => {
 })
 
 test('signs a change and calls growth out of nothing new', () => {
-  expect(formatDelta(90, 60)).toBe('+50.0%')
-  expect(formatDelta(60, 90)).toBe('-33.3%')
-  expect(formatDelta(90, 0)).toBe('new')
-  expect(formatDelta(0, 0)).toBe('–')
+  // The figure is unsigned: the arrow drawn beside it carries the direction.
+  expect(formatDelta(90, 60)).toEqual({ ratio: 0.5, text: '50.0%' })
+  expect(formatDelta(60, 90)).toEqual({ ratio: -1 / 3, text: '33.3%' })
+  // Neither has a ratio to point an arrow along.
+  expect(formatDelta(90, 0)).toEqual({ ratio: null, text: 'new' })
+  expect(formatDelta(0, 0)).toEqual({ ratio: null, text: '–' })
+  // No change is no arrow, not an arrow pointing nowhere.
+  expect(formatDelta(90, 90)).toEqual({ ratio: 0, text: '0.0%' })
 })
 
 test('writes a window length the way Checkmk does', () => {

@@ -9,7 +9,11 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
-import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
+import type {
+  RankedTableCell,
+  RankedTableColumn,
+  RankedTableRow
+} from '@/dashboard/components/CmkRankedTable'
 import type { NetworkFlowDonutContent } from '@/dashboard/types/widget'
 import { CHART_COLOR_CSS } from '@/network-flow/colors'
 import { formatBytes, formatDelta } from '@/network-flow/format'
@@ -85,9 +89,16 @@ const columns = computed<RankedTableColumn[]>(() => {
       render: 'bytes',
       bar: false
     },
-    { key: 'delta', title: _t('Change'), render: 'count', bar: false }
+    { key: 'delta', title: _t('Change'), render: 'delta', bar: false }
   ]
 })
+
+// The ratio steers the arrow and the text says the change. A change with no
+// direction to point in carries a zero, which the table draws without an arrow.
+function deltaCell(value: number, previous: number): RankedTableCell {
+  const { ratio, text } = formatDelta(value, previous)
+  return { value: ratio ?? 0, formatted: text }
+}
 
 const rows = computed<RankedTableRow[]>(() =>
   breakdown.value.categories.map((category) => ({
@@ -97,7 +108,7 @@ const rows = computed<RankedTableRow[]>(() =>
     // Both are read only while the comparison columns are shown, which is
     // exactly when the payload carries them.
     previous_value: category.previous_value ?? 0,
-    delta: formatDelta(category.value, category.previous_value ?? 0)
+    delta: deltaCell(category.value, category.previous_value ?? 0)
   }))
 )
 // Derived rather than reported, so it cannot disagree with the list beside it.

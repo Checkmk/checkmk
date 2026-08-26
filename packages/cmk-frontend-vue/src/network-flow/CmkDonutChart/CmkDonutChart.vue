@@ -9,7 +9,7 @@ import { type PieArcDatum, arc, pie } from 'd3-shape'
 import { computed, ref, useId } from 'vue'
 
 import { chartColorCss } from '../colors'
-import { DASH, formatDelta } from '../format'
+import { DASH, formatDelta, noDelta } from '../format'
 import DonutLegendCompact from './DonutLegendCompact.vue'
 import DonutLegendTable from './DonutLegendTable.vue'
 import type { CmkDonutChartProps, DonutLegendRow, DonutSlice } from './types'
@@ -184,7 +184,7 @@ const legendRows = computed<DonutLegendRow[]>(() => {
       isOther: slice.isOther ?? false,
       currentText: isHidden ? DASH : props.formatValue(slice.value),
       previousText: !anyPrevious ? null : comparable ? props.formatValue(previous) : DASH,
-      deltaText: !anyPrevious ? null : comparable ? formatDelta(slice.value, previous) : DASH
+      delta: !anyPrevious ? null : comparable ? formatDelta(slice.value, previous) : noDelta()
     }
   })
 })

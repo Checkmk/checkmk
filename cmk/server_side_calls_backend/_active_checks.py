@@ -5,8 +5,9 @@
 
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Callable, Iterable, Mapping, Reversible, Sequence
+from collections.abc import Callable, Container, Iterable, Mapping, Reversible, Sequence
 from dataclasses import dataclass
+from typing import Final
 
 from cmk.ccc.hostaddress import HostName
 from cmk.discover_plugins import PluginLocation
@@ -21,6 +22,11 @@ from .config_processing import (
     OAuth2Connection,
     process_configuration_to_parameters,
 )
+
+# Active checks the site keeps running for relay-monitored hosts. cmk_inv (HW/SW
+# Inventory) uses the relay only as a fetcher; the relay config writer skips its
+# service by the same name. Kept as a hardcoded exception (design decision).
+SITE_SIDE_ONLY_ACTIVE_CHECKS: Final = frozenset({"cmk_inv"})
 
 
 @dataclass(frozen=True)
@@ -46,6 +52,8 @@ class ActiveCheck:
         *,
         ip_lookup_failed: bool,
         for_relay: bool,
+        relay_supported_active_checks: Container[str],
+        site_side_only_active_checks: Container[str],
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
@@ -58,6 +66,8 @@ class ActiveCheck:
         self._finder = finder
         self._ip_lookup_failed = ip_lookup_failed
         self._for_relay = for_relay
+        self._relay_supported_active_checks = relay_supported_active_checks
+        self._site_side_only_active_checks = site_side_only_active_checks
 
     def get_active_service_data(
         self, plugin_name: str, plugin_params: Iterable[ConfigSet]
@@ -66,20 +76,18 @@ class ActiveCheck:
             self._drop_empty_service_descriptions(self._make_services(plugin_name, plugin_params))
         )
 
-        if (
-            active_services_data
-            and self._for_relay
-            and not self._is_supported_for_relay(plugin_name)
-        ):
-            # note: more context is given where this exception is handled.
-            raise NotSupportedError("This active check is not supported on relays.")
+        if active_services_data and self._for_relay:
+            self._guard_relay_support(plugin_name)
 
         return active_services_data
 
-    def _is_supported_for_relay(self, plugin_name: str) -> bool:
-        # This will depend on the plugin family in the future.
-        # The case of our inventory active check is special: It will contact the relay when run on the site.
-        return plugin_name == "cmk_inv"
+    def _guard_relay_support(self, plugin_name: str) -> None:
+        """Three states: route to the relay, keep on the site, or reject."""
+        if plugin_name in self._relay_supported_active_checks:
+            return  # the relay runs it
+        if plugin_name in self._site_side_only_active_checks:
+            return  # the site runs it; the relay config writer drops the service
+        raise NotSupportedError("This active check is not supported on relays.")
 
     def _make_services(
         self, plugin_name: str, plugin_params: Iterable[ConfigSet]

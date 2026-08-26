@@ -1,6 +1,7 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_python//python:packaging.bzl", "py_wheel")
+load("//:relay_supported_plugins.bzl", "RELAY_SUPPORTED_ACTIVE_CHECKS")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_cmk_package.bzl", "py_cmk_package")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
@@ -75,29 +76,35 @@ py_cmk_package(
 py_wheel(
     name = "whl",
     distribution = "checkmk",
-    entry_points = {"console_scripts": [
-        "check_mk = cmk.cli.engine.main:main",
-        "cmk = cmk.cli.engine.main:main",
-        "cmk-automation-client = cmk.automations.client:main",
-        "cmk-automation-helper = cmk.base.automation_helper:main",
-        "cmk-cert = cmk.gui.cmkcert.main:main",
-        "cmk-config-anonymizer = cmk.config_anonymizer.main:main",
-        "cmk-convert-rrds = cmk.rrd.convert_rrds.__main__:main",
-        "cmk-create-rrd = cmk.rrd.create_rrd.__main__:main",
-        "cmk-migrate-extension-rulesets = cmk.update_config.migrate_extension_rulesets:main",
-        "cmk-migrate-oracle-rulesets = cmk.update_config.migrate_oracle_rulesets:main",
-        "cmk-passwd = cmk.cmkpasswd.main:main",
-        "cmk-piggyback = cmk.piggyback.cli:main",
-        "cmk-piggyback-hub = cmk.piggyback.hub.cli:main",
-        "cmk-product-usage = cmk.product_usage.cli:main",
-        "cmk-pwstore = cmk.utils.password_store.cli:main",
-        "cmk-ui-job-scheduler = cmk.gui.job_scheduler.main:main",
-        "cmk-validate-config = cmk.validate_config.__main__:main",
-        "cmk-validate-plugins = cmk.validate_plugins:main",
-        "init-redis = cmk.gui.search.index:main",
-        "message-broker-certs = cmk.message_broker_certs:main",
-        "mkp = cmk.mkp.cli:main",
-    ]},
+    entry_points = {
+        "cmk.active_check_supported_on_relay": [
+            "%s = %s" % (name, name)
+            for name in RELAY_SUPPORTED_ACTIVE_CHECKS
+        ],
+        "console_scripts": [
+            "check_mk = cmk.cli.engine.main:main",
+            "cmk = cmk.cli.engine.main:main",
+            "cmk-automation-client = cmk.automations.client:main",
+            "cmk-automation-helper = cmk.base.automation_helper:main",
+            "cmk-cert = cmk.gui.cmkcert.main:main",
+            "cmk-config-anonymizer = cmk.config_anonymizer.main:main",
+            "cmk-convert-rrds = cmk.rrd.convert_rrds.__main__:main",
+            "cmk-create-rrd = cmk.rrd.create_rrd.__main__:main",
+            "cmk-migrate-extension-rulesets = cmk.update_config.migrate_extension_rulesets:main",
+            "cmk-migrate-oracle-rulesets = cmk.update_config.migrate_oracle_rulesets:main",
+            "cmk-passwd = cmk.cmkpasswd.main:main",
+            "cmk-piggyback = cmk.piggyback.cli:main",
+            "cmk-piggyback-hub = cmk.piggyback.hub.cli:main",
+            "cmk-product-usage = cmk.product_usage.cli:main",
+            "cmk-pwstore = cmk.utils.password_store.cli:main",
+            "cmk-ui-job-scheduler = cmk.gui.job_scheduler.main:main",
+            "cmk-validate-config = cmk.validate_config.__main__:main",
+            "cmk-validate-plugins = cmk.validate_plugins:main",
+            "init-redis = cmk.gui.search.index:main",
+            "message-broker-certs = cmk.message_broker_certs:main",
+            "mkp = cmk.mkp.cli:main",
+        ],
+    },
     requires = [
         # alphabetical order
         "apispec",

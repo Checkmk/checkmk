@@ -75,6 +75,7 @@ from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.discover_plugins import DiscoveredPlugins, family_libexec_dir, PluginLocation
+from cmk.flags import ExperimentalFlagConfig
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.password_store.v1 import Secret
 from cmk.piggyback import backend as piggyback_backend
@@ -3404,6 +3405,82 @@ def test_cmk_inv_keeps_the_site_executable_on_a_relay_host(
         str(family_libexec_dir(location.module) / "check_cmk_inv")
     ]
     assert not [arg for s in services for arg in s.command if str(secrets_path) in arg]
+
+
+@pytest.mark.parametrize("flag_enabled", [False, True])
+def test_relay_active_checks_gated_by_experimental_flag(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    flag_enabled: bool,
+) -> None:
+    """A relay-compatible active check reaches the relay only with exp_relay_active_checks set.
+
+    Until the feature is GA (experimental flag CMK-38421) such a check must be reported as not
+    supported on relays, exactly like a check the relay cannot run at all.
+    """
+    monkeypatch.setattr(
+        config._impl,  # noqa: SLF001
+        "load_active_checks",
+        lambda **kw: {  # noqa: ARG005
+            PluginLocation(__name__, "active_check_my_active_check"): ActiveCheckConfig(
+                name="my_active_check",
+                parameter_parser=lambda p: p,
+                commands_function=lambda *a, **kw: [  # noqa: ARG005
+                    ActiveCheckCommand(service_description="My active check", command_arguments=())
+                ],
+            )
+        },
+    )
+    monkeypatch.setattr(
+        config._impl,  # noqa: SLF001
+        "relay_compatible_active_checks",
+        lambda: frozenset({"my_active_check"}),
+    )
+    monkeypatch.setattr(
+        config._impl,  # noqa: SLF001
+        "load_experimental_flags",
+        lambda _config_dir: ExperimentalFlagConfig(exp_relay_active_checks=flag_enabled),
+    )
+    host_name = HostName("test_host")
+    ts = Scenario()
+    ts.add_host(host_name)
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            "my_active_check": [
+                {
+                    "condition": {},
+                    "id": "2",
+                    "value": {"description": "My active check", "param1": "param1"},
+                }
+            ]
+        },
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+
+    services = list(
+        config_cache.active_check_services(
+            host_name,
+            IPStackConfig.IPv4,
+            socket.AddressFamily.AF_INET,
+            config_cache.get_host_attributes(
+                host_name,
+                socket.AddressFamily.AF_INET,
+                lambda *a, **kw: HostAddress(""),  # noqa: ARG005
+            ),
+            FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
+            lambda *a, **kw: HostAddress(""),  # noqa: ARG005
+            _SecretsConfig(path=Path(), secrets={}),
+            for_relay=True,
+        )
+    )
+
+    if flag_enabled:
+        assert [s.plugin_name for s in services] == ["my_active_check"]
+        assert capsys.readouterr().err == ""
+    else:
+        assert not services
+        assert "is not supported for relay-monitored hosts" in capsys.readouterr().err
 
 
 class TestLabelsConfig:

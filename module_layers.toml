@@ -571,6 +571,7 @@ allows = [
 [components."cmk.base.config"]
 allows = [
   "@ccc",
+  "@flags",
   "@plugin_apis",
   "@trace",
   "cmk.automations",
@@ -615,6 +616,7 @@ allows = [
   "@trace",
   "cmk.automations",
   "cmk.agent_based.prediction_backend",
+  "cmk.check_helper_protocol",
   "cmk.checkengine",
   "cmk.core_client",
   "cmk.crash",

@@ -37,3 +37,14 @@ def _discover_local_plugin_families(local_root: Path) -> Iterable[PluginFamily]:
         for module, (first_path, *_) in discover_families(raise_errors=False).items()
         if first_path.startswith(str(local_root))
     ]
+
+
+def relay_compatible_active_checks() -> frozenset[str]:
+    """Active-check plugin names a relay may run, from the entry-point group.
+
+    Unlike relay_compatible_plugin_families this reads only the entry-point group
+    (no local/MKP discovery): the supported checks are core binaries baked into
+    the relay image, declared by the single Bazel source of truth
+    RELAY_SUPPORTED_ACTIVE_CHECKS.
+    """
+    return frozenset(ep.name for ep in entry_points(group="cmk.active_check_supported_on_relay"))

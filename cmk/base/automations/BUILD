@@ -13,6 +13,7 @@ py_library(
     ],
     deps = [
         "//cmk/automations",
+        "//cmk/base:active-check-result",
         "//cmk/base:base-app",
         "//cmk/base:checkers",
         "//cmk/base:parent-scan",
@@ -50,6 +51,7 @@ py_library(
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-relay-protocols",
         "//packages/cmk-trace",
     ],
 )

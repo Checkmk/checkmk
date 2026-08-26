@@ -2,6 +2,21 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 
 py_library(
+    name = "active-check-result",
+    srcs = ["active_check_result.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__pkg__",
+        "//cmk/base:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//packages/cmk-check-engine:lib",
+        "//packages/cmk-check-engine:specs",
+    ],
+)
+
+py_library(
     name = "events",
     srcs = ["events.py"],
     imports = ["../.."],

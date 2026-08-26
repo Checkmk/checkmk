@@ -30,8 +30,8 @@ from ._autocompleters import live_query_to_choices as live_query_to_choices
 from ._breadcrumb import visual_page_breadcrumb as visual_page_breadcrumb
 from ._filter_context import active_context_from_request as active_context_from_request
 from ._filter_context import collect_filters as collect_filters
+from ._filter_context import configured_context_filters as configured_context_filters
 from ._filter_context import context_to_uri_vars as context_to_uri_vars
-from ._filter_context import filled_context_filters as filled_context_filters
 from ._filter_context import filters_of_visual as filters_of_visual
 from ._filter_context import get_context_from_uri_vars as get_context_from_uri_vars
 from ._filter_context import get_filter as get_filter

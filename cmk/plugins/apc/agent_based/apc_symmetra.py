@@ -292,20 +292,24 @@ def check_apc_symmetra(params: CheckParameters, section: ParsedSection) -> Check
         )
 
     if battery_capacity:
-        if alt_crit_capacity is not None and diff_sec < allowed_delay_sec:
+        if alt_crit_capacity is not None and diff_sec < allowed_delay_sec and calib_result == "3":
             yield from check_levels(
                 value=battery_capacity,
                 levels_lower=("fixed", (alt_crit_capacity, alt_crit_capacity)),
-                label="delay after calibration",
+                metric_name="capacity",
+                render_func=render.percent,
+                boundaries=(0, 100),
+                label="Capacity during/after calibration",
             )
-        yield from check_levels(
-            value=battery_capacity,
-            levels_lower=params["capacity"],
-            metric_name="capacity",
-            render_func=render.percent,
-            boundaries=(0, 100),
-            label="Capacity",
-        )
+        else:
+            yield from check_levels(
+                value=battery_capacity,
+                levels_lower=params["capacity"],
+                metric_name="capacity",
+                render_func=render.percent,
+                boundaries=(0, 100),
+                label="Capacity",
+            )
 
     if battery_time_remain:
         battery_time_remain = battery_time_remain / 100.0

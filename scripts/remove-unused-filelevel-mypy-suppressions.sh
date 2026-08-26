@@ -9,6 +9,9 @@
 #
 # Run from repo root.
 #
+#
+
+set -o pipefail
 
 TMPFILE="$(mktemp)"
 
@@ -39,7 +42,7 @@ remove_suppression() {
     echo "Changed files: $(git df | wc -l)"
 
     # Run linters and restore failures
-    while ! run_mypy &>"${TMPFILE}"; do
+    while ! run_mypy 2>&1 | tee "${TMPFILE}"; do
         echo "Checking failing files back out"
         # check them out individually, to avoid looping forever upon files unknown to git (like bazel artifacts)
         for f in $(extract_failed_files "${TMPFILE}" "${st}"); do

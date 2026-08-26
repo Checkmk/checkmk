@@ -1657,6 +1657,7 @@ allows = [
   "cmk.ccc.version_info",
   # discovery of feature-provided license usage counter plug-ins
   "cmk.discover_plugins",
+  "cmk.licensing.internal",
   # TYPE_CHECKING only, in license_distribution_registry
   "cmk.utils.automation_config",
 ]

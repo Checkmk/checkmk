@@ -12,66 +12,54 @@ the discovery edition-agnostic: no explicit edition check is required.
 """
 
 import logging
-from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Literal
+from collections.abc import Iterable, Mapping, Sequence
 
-import cmk.livestatus_client as livestatus
 from cmk.discover_plugins import discover_plugins_from_modules
+from cmk.licensing.internal import (
+    CounterCollectionContext,
+    entry_point_prefixes,
+    LICENSE_LABEL_EXCLUDE,
+    LICENSE_LABEL_NAME,
+    LicenseUsageCounter,
+    LicenseUsageCounterName,
+)
+from cmk.licensing.plugin_loader import discover_licensing_plugins
 
-LICENSE_LABEL_NAME = "cmk/licensing"
-LICENSE_LABEL_EXCLUDE = "excluded"
-
-# The counter names plug-ins may emit. Every name corresponds to a field of
-# the license usage sample which create_sample() fills from the collected
-# counters; sharing this type makes mypy check both sides of that contract.
-LicenseUsageCounterName = Literal[
-    "synthetic_tests",
-    "synthetic_tests_excluded",
-    "synthetic_kpis",
-    "synthetic_kpis_excluded",
-    "active_metric_series",
+# The counter contract now lives in the plug-in API package. Re-exported here
+# while the plug-ins are being moved to their new home.
+__all__ = [
+    "collect_license_usage_counters",
+    "CounterCollectionContext",
+    "discover_license_usage_counter_plugins",
+    "LICENSE_LABEL_EXCLUDE",
+    "LICENSE_LABEL_NAME",
+    "LicenseUsageCounter",
+    "LicenseUsageCounterName",
+    "LicenseUsageCounterPlugin",
 ]
 
-
-@dataclass(frozen=True)
-class CounterCollectionContext:
-    omd_root: Path
-    query_livestatus: Callable[[str], Sequence[Sequence[livestatus.LivestatusColumn]]]
+LicenseUsageCounterPlugin = LicenseUsageCounter
 
 
-@dataclass(frozen=True)
-class LicenseUsageCounterPlugin:
-    """A discoverable provider of feature-specific license usage counters.
-
-    ``collect`` returns a mapping of counter names to values which end up in
-    the license usage sample.
-    """
-
-    name: str
-    collect: Callable[[CounterCollectionContext], Mapping[LicenseUsageCounterName, int]]
-
-
-def discover_license_usage_counter_plugins() -> Sequence[LicenseUsageCounterPlugin]:
-    return list(
-        discover_plugins_from_modules(
-            {LicenseUsageCounterPlugin: "license_usage_counter_"},
-            # Modules that may expose a `LicenseUsageCounterPlugin`. Passed
-            # unconditionally: modules absent from the running edition are
-            # simply skipped.
-            (
-                "cmk.metric_backend.license_usage",  # non-free, ships with the metric backend
-                "cmk.robotmk.license_usage",  # non-free, ships with synthetic monitoring
-            ),
-            skip_wrong_types=False,
-            raise_errors=True,
-        ).plugins.values()
+def discover_license_usage_counter_plugins() -> Sequence[LicenseUsageCounter]:
+    discovered = discover_licensing_plugins(raise_errors=True)
+    # HACK for migrating plug-ins: also search the modules of the features that
+    # do not expose their counter from `cmk/plugins/<family>/licensing/` yet.
+    # Modules absent from the running edition are simply skipped.
+    not_yet_moved = discover_plugins_from_modules(
+        entry_point_prefixes(),
+        (
+            "cmk.metric_backend.license_usage",  # non-free, ships with the metric backend
+            "cmk.robotmk.license_usage",  # non-free, ships with synthetic monitoring
+        ),
+        skip_wrong_types=False,
+        raise_errors=True,
     )
+    return list({**discovered.plugins, **not_yet_moved.plugins}.values())
 
 
 def collect_license_usage_counters(
-    plugins: Iterable[LicenseUsageCounterPlugin],
+    plugins: Iterable[LicenseUsageCounter],
     context: CounterCollectionContext,
     logger: logging.Logger,
 ) -> Mapping[LicenseUsageCounterName, int]:

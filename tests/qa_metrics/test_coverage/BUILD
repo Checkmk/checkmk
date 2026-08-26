@@ -80,6 +80,9 @@ py_binary(
 )
 
 sh_library(
-    name = "main_sh",
-    srcs = ["main.sh"],
+    name = "coverage_scripts",
+    srcs = [
+        "common.sh",
+        "main.sh",
+    ],
 )

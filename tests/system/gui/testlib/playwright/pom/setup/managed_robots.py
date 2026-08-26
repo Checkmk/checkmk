@@ -11,10 +11,16 @@ from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
+from tests.system.gui.testlib.playwright.dropdown import DropdownHelper, DropdownOptions
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
+
+
+class EnvironmentSetup(DropdownOptions):
+    CONDA = "Conda"
+    RCC = "RCC (non-root deployments on Linux only)"
 
 
 class ManagedRobotsOverview(CmkPage):
@@ -161,6 +167,16 @@ class CreateManagedRobot(CmkPage):
         return self.main_area.locator().get_by_role("textbox", name="Relative path to test suite")
 
     @property
+    def environment_setup_dropdown(self) -> DropdownHelper[EnvironmentSetup]:
+        return DropdownHelper[EnvironmentSetup](
+            "Automated environment setup",
+            dropdown_box=self.main_area.locator().get_by_role(
+                "combobox", name="Automated environment setup"
+            ),
+            dropdown_list=self.main_area.locator().get_by_role("listbox"),
+        )
+
+    @property
     def conda_manifest_path_input(self) -> Locator:
         return self.main_area.locator().get_by_role("textbox", name="Relative manifest path")
 
@@ -204,6 +220,9 @@ class CreateManagedRobot(CmkPage):
         logger.info("Filling plan settings: app='%s', suite='%s'", app_name, suite_path)
         self.application_name_input.fill(app_name)
         self.suite_path_input.fill(suite_path)
+
+        logger.info("Selecting Conda as the environment setup")
+        self.environment_setup_dropdown.select_option(EnvironmentSetup.CONDA)
 
         logger.info("Filling conda manifest path")
         self.conda_manifest_path_input.fill(conda_path)

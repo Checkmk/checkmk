@@ -780,6 +780,7 @@ export const oneColorIcons = [
   'share',
   'stale',
   'reload',
+  'triangle-up',
   'filter',
   'pause',
   'play',

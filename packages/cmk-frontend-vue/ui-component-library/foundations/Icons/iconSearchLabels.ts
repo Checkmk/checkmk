@@ -640,6 +640,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   'topic-visualization': ['charts section', 'diagrams category'],
   trans: ['transparent', 'translucent', 'see through'],
   'tree-closed': ['collapsed tree', 'folder closed', 'expand'],
+  'triangle-up': ['delta', 'change', 'trend', 'increase', 'up', 'arrow', 'caret'],
   trust: ['verify', 'secure', 'trusted', 'shield'],
   twofa: ['two factor', 'authentication', 'mfa', 'otp', 'security'],
   'twofa-backup-codes': ['two factor recovery', 'mfa codes'],

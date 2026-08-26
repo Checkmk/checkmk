@@ -201,7 +201,14 @@ ignore = [
 max-complexity = 64 # TODO: This is far too much, we need to lower this!
 
 [tool.ruff.lint.isort]
-known-first-party = ["agents", "buildscripts", "cmk", "scripts", "tests"]
+known-first-party = [
+  "agents",
+  "buildscripts",
+  "cmk",
+  "reviewmk",
+  "scripts",
+  "tests",
+]
 known-third-party = [
   "requirements", # avoid confusion with our toplevel directory
 ]

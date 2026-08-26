@@ -127,12 +127,16 @@ fi
 # ---------------------------------------------------------------------------
 
 # File arguments are absolute, since `bazel run` executes its targets in the
-# runfiles tree, not in this directory.
+# runfiles tree, not in this directory. This measurement writes one directory,
+# holding its intermediates, its CSV and its HTML.
 COVERAGE_DAT="$REPO_PATH/bazel-out/_coverage/_coverage_report.dat"
-COVERAGE_FILTERED_DAT="$REPO_PATH/bazel-out/_coverage/_coverage_report_filtered.dat"
-COVERAGE_HTML_DIR="$REPO_PATH/results/test_coverage_html"
-RESULT_CSV="$REPO_PATH/results/test_coverage.csv"
-PY_TEST_TARGETS="/tmp/py_test_targets.txt"
+RESULT_DIR="$REPO_PATH/results/test_coverage/repository"
+PY_TEST_TARGETS="$RESULT_DIR/py_test_targets.txt"
+COVERAGE_FILTERED_DAT="$RESULT_DIR/filtered.dat"
+COVERAGE_HTML_DIR="$RESULT_DIR/html"
+RESULT_CSV="$RESULT_DIR/coverage.csv"
+
+mkdir -p "$RESULT_DIR"
 
 if [[ "$RUN" == true ]]; then
     filter=$(
@@ -323,7 +327,6 @@ if [[ "$DO_UPLOAD" == true ]]; then
         exit 1
     fi
 
-    mkdir -p "$(dirname "$RESULT_CSV")"
     bazel run "$PKG:summary" "$EDITION_FLAG" -- \
         -i "$COVERAGE_FILTERED_DAT" -o "$RESULT_CSV"
     if [ ! -f "$RESULT_CSV" ]; then

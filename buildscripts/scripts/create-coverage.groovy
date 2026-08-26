@@ -41,7 +41,7 @@ tests/qa_metrics/test_coverage/main.sh --run --generate-html --upload-totals --u
                 withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
                     sh("""
                         scp -r -o StrictHostKeyChecking=accept-new -i ${RELEASE_KEY} \
-                        results/test_coverage_html/* ${DEV_DOCS_URL}/test_coverage
+                        results/test_coverage/repository/html/* ${DEV_DOCS_URL}/test_coverage
                     """);
                 }
             }

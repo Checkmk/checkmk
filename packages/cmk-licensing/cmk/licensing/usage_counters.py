@@ -50,7 +50,6 @@ def discover_license_usage_counter_plugins() -> Sequence[LicenseUsageCounter]:
         entry_point_prefixes(),
         (
             "cmk.metric_backend.license_usage",  # non-free, ships with the metric backend
-            "cmk.robotmk.license_usage",  # non-free, ships with synthetic monitoring
         ),
         skip_wrong_types=False,
         raise_errors=True,

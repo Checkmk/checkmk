@@ -1825,6 +1825,7 @@ httpx2==2.12.0 \
     # via
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
+    #   -r non-free/packages/dev-ai/dev-requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   mcp
 hypothesis==6.167.1 \
@@ -4097,6 +4098,7 @@ pydantic==2.13.5 \
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r non-free/packages/cmk-robotmk/requirements.in
     #   -r non-free/packages/cmk-telemetry/requirements.in
+    #   -r non-free/packages/dev-ai/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-events/requirements.in

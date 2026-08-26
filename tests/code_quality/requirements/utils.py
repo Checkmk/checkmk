@@ -17,7 +17,7 @@ import requirements
 from tests.code_quality.bazel_utils import bazel_repo_root
 
 STDLIB_IMPORTS = isort.stdlibs.all.stdlib | {"__future__"}
-OWN_PACKAGES = {"cmk", "omdlib", "livestatus", "cmc_proto"}
+OWN_PACKAGES = {"cmk", "omdlib", "livestatus", "cmc_proto", "reviewmk"}
 
 
 def get_branch() -> str:

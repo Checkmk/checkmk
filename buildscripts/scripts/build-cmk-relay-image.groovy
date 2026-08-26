@@ -3,6 +3,26 @@
 /// file: build-relay-image.groovy
 
 // groovylint-disable MethodSize
+
+/// Artifact tests for the relay image: loads the image the 'Build Image' stage
+/// built into the local Docker daemon and tags it by commit SHA, because
+/// oci_load writes the shared :latest tag, which concurrent jobs on the same
+/// agent would otherwise collide on.
+void test_relay_image(String cmk_version) {
+    def short_sha = cmd_output("git rev-parse --short=8 HEAD");
+    def relay_image_tag = "check-mk-relay:${cmk_version}-${short_sha}";
+    try {
+        sh("""
+            bazel run --cmk_edition=ultimate //omd/non-free/relay:image_docker
+            docker tag check-mk-relay:latest ${relay_image_tag}
+            RELAY_IMAGE_TAG=${relay_image_tag} \
+            tests/run_tests.sh test-artifact-relay-image
+        """);
+    } finally {
+        sh("docker rmi -f ${relay_image_tag} || true");
+    }
+}
+
 void main() {
     check_job_parameters([
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
@@ -72,6 +92,12 @@ void main() {
                     cp \$(bazel cquery --cmk_edition=ultimate //omd/non-free/relay:bill_of_materials --output=files) \
                         ${artifact_directory}/${cmk_version_rc_aware}/${sbom_name}
                 """)
+            }
+
+            // Runs before any upload or push stage, so a broken image never
+            // reaches a registry.
+            stage(name: 'Test Image') {
+                test_relay_image(cmk_version);
             }
 
             stage(name: 'Archive SBOM') {

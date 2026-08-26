@@ -158,19 +158,10 @@ fn format_instance_info(
     local_instance: &LocalInstance,
     known_processes: Option<&HashSet<String>>,
 ) -> String {
-    let state = if let Some(processes) = known_processes {
-        if processes.contains(&local_instance.name.to_string()) {
-            "Run"
-        } else {
-            "Stop"
-        }
-    } else {
-        "N/A"
-    };
     format!(
         "{:16} {:5} {:60} {}",
         local_instance.name,
-        state,
+        local_instance.state(known_processes),
         local_instance.home.display(),
         local_instance
             .base
@@ -187,20 +178,30 @@ fn instance_info_header() -> String {
     )
 }
 
-pub fn dump_detected_sids() -> String {
-    let oracle_processes = if cfg!(windows) {
-        None
-    } else {
-        Some(
-            find_sids_by_processes(None)
-                .map_err(|e| {
-                    log::info!("Error while detecting Oracle processes: {:?}", e);
-                })
-                .unwrap_or_default(),
-        )
-    };
+/// The SIDs of the running Oracle processes, as far as they can be determined.
+///
+/// `None` means the question cannot be answered, so an instance's state is
+/// unknown rather than stopped: on Windows the process list is not scanned at
+/// all, and a failed scan is reported the same way as an empty one is not - an
+/// empty set would claim every instance is stopped.
+pub fn find_running_oracle_processes() -> Option<HashSet<String>> {
+    if cfg!(windows) {
+        return None;
+    }
+    Some(
+        find_sids_by_processes(None)
+            .map_err(|e| {
+                log::info!("Error while detecting Oracle processes: {:?}", e);
+            })
+            .unwrap_or_default(),
+    )
+}
 
-    print_detected_sids(&get_instances(None).unwrap_or_default(), oracle_processes)
+pub fn dump_detected_sids() -> String {
+    print_detected_sids(
+        &get_instances(None).unwrap_or_default(),
+        find_running_oracle_processes(),
+    )
 }
 
 fn print_detected_sids(
@@ -222,7 +223,7 @@ fn print_detected_sids(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::{InstanceName, LocalInstance};
+    use crate::types::{InstanceName, LocalInstance, LocalInstanceState};
     use std::path::PathBuf;
 
     fn make_instance(name: &str, home: &str, base: Option<&str>) -> LocalInstance {
@@ -311,6 +312,27 @@ mod tests {
             .split_whitespace()
             .map(str::to_string)
             .collect()
+    }
+
+    /// Both sides of the match are upper-cased - `InstanceName::from` and
+    /// `capture_sid` - so a lower-cased SID from either side still matches. If
+    /// one of them stops doing it, a running instance silently reports `Stop`.
+    #[test]
+    fn test_state_matches_regardless_of_the_written_case() {
+        let procs = HashSet::from(["ORCL".to_string()]);
+
+        assert_eq!(
+            make_instance("orcl", "/home", None).state(Some(&procs)),
+            LocalInstanceState::Run
+        );
+        assert_eq!(
+            make_instance("other", "/home", None).state(Some(&procs)),
+            LocalInstanceState::Stop
+        );
+        assert_eq!(
+            make_instance("orcl", "/home", None).state(None),
+            LocalInstanceState::NA
+        );
     }
 
     #[test]

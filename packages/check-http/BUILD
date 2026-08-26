@@ -92,6 +92,7 @@ pkg_tar(
     name = "check_http_tar",
     srcs = [":check_http_pkg"],
     stamp = 1,
+    visibility = ["//omd/non-free/relay:__pkg__"],
 )
 
 rust_doc(

@@ -92,6 +92,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 	test-docker test-docker-docker \
 	test-system-mk-oracle test-system-mk-oracle-docker \
 	test-system-relay test-system-relay-docker \
+	test-artifact-relay-image test-artifact-relay-image-docker \
 	test-format \
 	$(SYSTEM_TESTS) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
@@ -127,6 +128,8 @@ help:
 	@echo "test-system-mk-oracle-docker        - Run mk-oracle system tests in docker"
 	@echo "test-system-relay                   - Run relay system tests"
 	@echo "test-system-relay-docker            - Run relay system tests in docker"
+	@echo "test-artifact-relay-image           - Run relay image artifact tests"
+	@echo "test-artifact-relay-image-docker    - Run relay image artifact tests in docker"
 	@echo "test-mypy-community                 - Run mypy with community config"
 	@echo "test-packaging                      - Run packaging tests"
 	@echo "test-unit                           - Run unit tests"
@@ -213,6 +216,17 @@ test-system-relay-docker:
 
 test-system-relay:
 	$(PYTEST) -x $(realpath system/relay) \
+	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600
+
+# Unlike the -docker variants that run a site in a container via
+# run-dockerized.py, this one only runs the test code itself in a build
+# container via run-in-docker.sh; the relay image under test is pulled there.
+test-artifact-relay-image-docker:
+	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json:ro -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION -e RELAY_IMAGE_TAG" \
+	    ../scripts/run-in-docker.sh make --quiet test-artifact-relay-image
+
+test-artifact-relay-image:
+	$(PYTEST) -x $(realpath packaging/nonfree/ultimate/relay_image) \
 	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600
 
 test-lint-bazel:
@@ -384,7 +398,8 @@ test-mypy-gpl:
 
 test-packaging:
 	export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path); \
-	$(PYTEST) --log-cli-level=INFO packaging
+	$(PYTEST) --log-cli-level=INFO packaging \
+	    --ignore=packaging/nonfree/ultimate/relay_image
 
 test-shellcheck:
 	cd .. && $(SHELLCHECK) -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))

@@ -22,6 +22,14 @@ import docker.models.volumes
 
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import is_cleanup_enabled
+from tests.testlib.container_lifecycle import (
+    CONTAINER_READY_TIMEOUT,
+    wait_for_container_removed,
+    wait_for_container_running,
+)
+from tests.testlib.container_lifecycle import (
+    get_container_ip as get_container_ip,
+)
 from tests.testlib.docker import CheckmkApp
 from tests.testlib.openapi_session import APIVersion
 
@@ -29,81 +37,6 @@ logger = logging.getLogger(__name__)
 
 SNMPD_IMAGE = "docker.io/polinux/snmpd"
 RELAY_WORKDIR = "/opt/check-mk-relay/workdir"
-_CONTAINER_READY_TIMEOUT = 30  # seconds to wait for a container to become running
-
-
-def _wait_for_container_running(
-    container: docker.models.containers.Container,
-    timeout: int = _CONTAINER_READY_TIMEOUT,
-) -> None:
-    """Poll until the container reaches 'running' status or raise on timeout."""
-
-    def _is_running() -> bool:
-        try:
-            container.reload()
-        except docker.errors.NotFound as exc:
-            raise RuntimeError(
-                f"Container '{container.name}' exited and was removed — check config/image"
-            ) from exc
-        return container.status == "running"
-
-    wait_until(
-        _is_running,
-        timeout=timeout,
-        interval=1,
-        condition_name=f"container '{container.name}' running",
-    )
-
-
-def _wait_for_container_removed(
-    container: docker.models.containers.Container,
-    timeout: int = _CONTAINER_READY_TIMEOUT,
-) -> None:
-    """Poll until the container no longer exists or raise on timeout.
-
-    Containers started with ``auto_remove=True`` are removed by the Docker
-    daemon asynchronously after they stop. Anything that must wait for their
-    resources to be released (e.g. removing a named volume they mount) has to
-    wait for the removal itself, not just for ``stop()`` to return.
-    """
-
-    def _is_removed() -> bool:
-        try:
-            container.reload()
-        except docker.errors.NotFound:
-            return True
-        return False
-
-    wait_until(
-        _is_removed,
-        timeout=timeout,
-        interval=1,
-        condition_name=f"container '{container.name}' removed",
-    )
-
-
-def get_container_ip(
-    container: docker.models.containers.Container,
-    network: docker.models.networks.Network,
-) -> str:
-    """Return the IP of *container* on *network*.
-
-    Reads from NetworkSettings first; falls back to the network's endpoint
-    list, which is populated for containers started after network creation.
-    """
-    networks = container.attrs["NetworkSettings"]["Networks"]
-    logger.debug("Container %s networks: %s", container.name, list(networks.keys()))
-    ip: str = networks.get(network.name, {}).get("IPAddress", "")
-    if ip:
-        return ip
-    network.reload()
-    for endpoint in network.attrs.get("Containers", {}).values():
-        if endpoint.get("Name") == container.name:
-            cidr: str = endpoint.get("IPv4Address", "")
-            return cidr.split("/", maxsplit=1)[0]
-    raise RuntimeError(
-        f"Could not determine IP of container '{container.name}' on network '{network.name}'"
-    )
 
 
 class DockerSnmpHost:
@@ -172,7 +105,7 @@ class DockerSnmpHost:
             auto_remove=True,
             detach=True,
         )
-        _wait_for_container_running(container)
+        wait_for_container_running(container)
         logger.info("snmpd container status: %s", container.status)
         self._wait_for_snmpd_ready(container)
         return container
@@ -180,7 +113,7 @@ class DockerSnmpHost:
     @staticmethod
     def _wait_for_snmpd_ready(
         container: docker.models.containers.Container,
-        timeout: int = _CONTAINER_READY_TIMEOUT,
+        timeout: int = CONTAINER_READY_TIMEOUT,
     ) -> None:
         """Poll until snmpd responds to SNMP queries."""
 
@@ -214,11 +147,11 @@ class DockerSnmpHost:
             # daemon removes it asynchronously after stop(). Wait for the
             # removal so the monitored network fixture tears down against a
             # stable container list instead of racing the removal.
-            _wait_for_container_removed(self._container)
+            wait_for_container_removed(self._container)
         except TimeoutError as e:
             e.add_note(
                 f"snmpd container was not auto-removed within "
-                f"{_CONTAINER_READY_TIMEOUT} secs after stop()!"
+                f"{CONTAINER_READY_TIMEOUT} secs after stop()!"
             )
             raise
         except docker.errors.APIError as e:
@@ -341,7 +274,7 @@ class DockerRelaySetup:
         )
         logger.info("Connecting relay daemon to monitored network")
         self._relay_monitored_network.connect(container)
-        _wait_for_container_running(container)
+        wait_for_container_running(container)
         return container
 
     def __enter__(self) -> Self:
@@ -385,11 +318,11 @@ class DockerRelaySetup:
             # daemon removes it asynchronously after stop(). The relay volume
             # fixture tears down right after us and cannot remove the volume
             # while the container still references it (409 "volume is in use").
-            _wait_for_container_removed(self._relay_container)
+            wait_for_container_removed(self._relay_container)
         except TimeoutError as e:
             e.add_note(
                 f"Relay container was not auto-removed within "
-                f"{_CONTAINER_READY_TIMEOUT} secs after stop()!"
+                f"{CONTAINER_READY_TIMEOUT} secs after stop()!"
             )
             raise
         except docker.errors.APIError as e:

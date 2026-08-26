@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Definitions shared by the coverage entry points: main.sh (repository-wide,
+# Definitions shared by the coverage entry points: repository.sh (repository-wide,
 # uploads to postgres) and component.sh (one component, local only). What is
 # measured and which tests measure it lives here, so a component number stays
 # comparable to the dashboard's. Sourced, not executed.

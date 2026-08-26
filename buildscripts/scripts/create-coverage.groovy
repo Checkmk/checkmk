@@ -25,7 +25,7 @@ void main() {
 export POSTGRES_HOST="dev-kpi.lan.checkmk.net"
 export POSTGRES_PORT=5432
 export POSTGRES_DB=metabase
-tests/qa_metrics/test_coverage/main.sh --run --generate-html --upload-totals --upload-per-module""",
+tests/qa_metrics/test_coverage/repository.sh --run --generate-html --upload-totals --upload-per-module""",
                 container_name: container_name,
                 disable_hot_cache: true,
             ]);

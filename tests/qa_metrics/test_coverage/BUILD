@@ -83,6 +83,6 @@ sh_library(
     name = "coverage_scripts",
     srcs = [
         "common.sh",
-        "main.sh",
+        "repository.sh",
     ],
 )

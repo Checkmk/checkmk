@@ -11,9 +11,18 @@ from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.temperature import check_temperature
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, OIDCached, OIDEnd, SNMPTree, startswith
+from cmk.agent_based.v2 import all_of, exists, OIDCached, OIDEnd, SNMPTree, startswith
 
 check_info = {}
+
+_INVALID_TEMPERATURE = 65535
+
+
+def _int_or_default(value, default):
+    try:
+        return int(value)
+    except ValueError:
+        return default
 
 
 def parse_hp_hh3c_ext(string_table):
@@ -24,14 +33,14 @@ def parse_hp_hh3c_ext(string_table):
 
         # mem_size measured in 'bytes' (hh3cEntityExtMemSize)
         # check_memory_elements needs values in bytes, not percent
-        mem_total = int(mem_size)
-        mem_used = 0.01 * int(mem_usage) * mem_total
+        mem_total = _int_or_default(mem_size, 0)
+        mem_used = 0.01 * _int_or_default(mem_usage, 0) * mem_total
 
         parsed.setdefault(
             f"{name} {index}",
             {
-                "temp": int(temperature),
-                "cpu": int(cpu),
+                "temp": _int_or_default(temperature, _INVALID_TEMPERATURE),
+                "cpu": _int_or_default(cpu, 0),
                 "mem_total": mem_total,
                 "mem_used": mem_used,
                 "admin": admin_state,
@@ -53,10 +62,9 @@ def parse_hp_hh3c_ext(string_table):
 
 def inventory_hp_hh3c_ext(parsed):
     for k, v in parsed.items():
-        # The invalid value is 65535.
         # We assume: If mem_total <= 0, this module is not installed or
         # does not provide reasonable data or is not a real sensor.
-        if v["temp"] != 65535 and v["mem_total"] > 0:
+        if v["temp"] != _INVALID_TEMPERATURE and v["mem_total"] > 0:
             yield k, {}
 
 
@@ -68,9 +76,9 @@ def check_hp_hh3c_ext(item, params, parsed):
 
 check_info["hp_hh3c_ext"] = LegacyCheckDefinition(
     name="hp_hh3c_ext",
-    detect=any_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.239"),
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.87"),
+    detect=all_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506"),
+        exists(".1.3.6.1.4.1.25506.2.6.1.1.1.1.*"),
     ),
     fetch=[
         SNMPTree(

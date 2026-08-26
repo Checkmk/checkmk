@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import re
 from typing import Literal, overload, override
 
 from playwright.sync_api import expect, Locator, Page
@@ -98,10 +99,13 @@ class CustomDashboard(BaseDashboard):
 
     def save_widgets(self) -> None:
         """Save the edited dashboard and wait for the write to reach the site."""
-        self.save_button.click()
-        expect(
-            self.save_button, "The dashboard stayed in edit mode, so its save never landed"
-        ).to_have_count(0)
+        # The layout picks the endpoint, and loading the dashboard reads the same resource.
+        written = re.compile(r"/objects/dashboard_(relative|responsive)_grid/")
+        with self.page.expect_response(
+            lambda response: response.request.method != "GET" and bool(written.search(response.url))
+        ) as saved:
+            self.save_button.click()
+        assert saved.value.ok, f"Saving the dashboard answered HTTP {saved.value.status}"
 
     @overload
     def open_edit_widget_sidebar(

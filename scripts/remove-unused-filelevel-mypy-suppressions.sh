@@ -41,8 +41,10 @@ remove_suppression() {
     # Run linters and restore failures
     while ! run_mypy &>"${TMPFILE}"; do
         echo "Checking failing files back out"
-        # shellcheck disable=SC2046  # we want word splitting here
-        git checkout $(extract_failed_files "${TMPFILE}" "${st}")
+        # check them out individually, to avoid looping forever upon files unknown to git (like bazel artifacts)
+        for f in $(extract_failed_files "${TMPFILE}" "${st}"); do
+            git checkout "${f}"
+        done
         echo "Changed files: $(git df | wc -l)"
     done
     # we're removing lines before the imports. This is 'reformatting':

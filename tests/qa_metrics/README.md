@@ -15,7 +15,10 @@ push the result to the QA Metabase postgres for dashboarding.
   commit include a test?", written to `cmk_change_tested`.
 - `test_coverage/` — Python test coverage. Uploads overall coverage history to
   `cmk_code_coverage_total` and the latest per-module breakdown to
-  `cmk_code_coverage_per_module`.
+  `cmk_code_coverage_per_module`. Two entry points over the definitions in
+  `common.sh`: `repository.sh` measures the whole repository and is what the nightly
+  runs, `component.sh <component-id>` measures one component locally and never
+  uploads. See `component.sh --help` for its options.
 
 ## Adding a new metric
 

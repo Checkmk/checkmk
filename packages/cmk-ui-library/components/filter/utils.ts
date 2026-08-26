@@ -3,7 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ComponentConfig, ConfiguredValues, FilterDefinition, FilterType } from './types.ts'
+import type {
+  ComponentConfig,
+  ConfiguredFilters,
+  ConfiguredValues,
+  FilterDefinition,
+  FilterDefinitions,
+  FilterType
+} from './types.ts'
 
 export function parseFilterTypes(
   filterDefsRecord: Record<string, FilterDefinition>,
@@ -48,7 +55,7 @@ export function parseFilterTypes(
  * configured came at a later point in time (the filters logic itself was already fragile in the legacy non Vue world).
  * TODO: This function may need to be extended to cover more component types.
  */
-export function isFullyConfiguredFilter(
+function isFullyConfiguredFilter(
   filterValues: ConfiguredValues,
   filterDefinition: FilterDefinition
 ): boolean {
@@ -74,7 +81,7 @@ export function isFullyConfiguredFilter(
         continue
       }
 
-      const value = filterValues[component.id]
+      const value = filterValues[component.id] ?? ''
 
       switch (component.component_type) {
         case 'dropdown': {
@@ -101,4 +108,36 @@ export function isFullyConfiguredFilter(
   }
 
   return check(filterDefinition.extensions.components)
+}
+
+function knownFilters(
+  context: ConfiguredFilters,
+  definitions: FilterDefinitions
+): [FilterDefinition, ConfiguredValues][] {
+  return Object.entries(context).flatMap(([filterId, filterValues]) => {
+    const definition = definitions[filterId]
+    return definition === undefined
+      ? []
+      : [[definition, filterValues] as [FilterDefinition, ConfiguredValues]]
+  })
+}
+
+/** The filters of the context whose components all hold a value. */
+export function configuredFilters(
+  context: ConfiguredFilters,
+  definitions: FilterDefinitions
+): FilterDefinition[] {
+  return knownFilters(context, definitions)
+    .filter(([definition, filterValues]) => isFullyConfiguredFilter(filterValues, definition))
+    .map(([definition]) => definition)
+}
+
+/** The filters of the context that still miss a value. */
+export function unconfiguredFilters(
+  context: ConfiguredFilters,
+  definitions: FilterDefinitions
+): FilterDefinition[] {
+  return knownFilters(context, definitions)
+    .filter(([definition, filterValues]) => !isFullyConfiguredFilter(filterValues, definition))
+    .map(([definition]) => definition)
 }

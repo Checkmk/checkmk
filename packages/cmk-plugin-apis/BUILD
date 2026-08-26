@@ -259,6 +259,14 @@ py_library(
 )
 
 py_library(
+    name = "licensing",
+    srcs = glob(["cmk/licensing/internal/**/*.py"]),
+    data = ["cmk/licensing/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "post_rename_site",
     srcs = [
         "cmk/post_rename_site/internal/__init__.py",
@@ -280,6 +288,7 @@ py_doc_test(
         ":discover_plugins",
         ":graphing",
         ":inventory_ui",
+        ":licensing",
         ":password_store",
         ":post_rename_site",
         ":rulesets",
@@ -401,6 +410,15 @@ py_cmk_test(
     ],
 )
 
+py_cmk_test(
+    name = "licensing-test",
+    size = "small",
+    srcs = glob(["tests/cmk/licensing/**/*.py"]),
+    deps = [
+        ":licensing",
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-plugin-apis",
@@ -417,6 +435,7 @@ py_wheel(
         ":discover_plugins",
         ":graphing",
         ":inventory_ui",
+        ":licensing",
         ":password_store",
         ":post_rename_site",
         ":py_typed",
@@ -442,6 +461,7 @@ filegroup(
         "cmk/discover_plugins/py.typed",
         "cmk/graphing/py.typed",
         "cmk/inventory_ui/py.typed",
+        "cmk/licensing/py.typed",
         "cmk/password_store/py.typed",
         "cmk/post_rename_site/py.typed",
         "cmk/rulesets/py.typed",
@@ -474,6 +494,7 @@ py_requirements_test(
         ":discover_plugins",
         ":graphing",
         ":inventory_ui",
+        ":licensing",
         ":password_store",
         ":post_rename_site",
         ":rulesets",

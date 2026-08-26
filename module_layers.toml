@@ -49,6 +49,7 @@ plugin_apis = [
   "cmk.graphing.v1",
   "cmk.graphing.v2_unstable",
   "cmk.inventory_ui.v1_unstable",
+  "cmk.licensing.internal",
   "cmk.password_store.v1_unstable",
   "cmk.post_rename_site.internal",
   "cmk.rulesets.internal",
@@ -1250,6 +1251,9 @@ allows = [
 allows = ["@plugin_apis", "cmk.discover_plugins"]
 
 [components."cmk.diagnostics.internal"]
+allows = []
+
+[components."cmk.licensing.internal"]
 allows = []
 
 [components."cmk.checkengine.snmp_backends"]

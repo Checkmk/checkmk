@@ -311,7 +311,7 @@ class HTMLGenerator(HTMLWriter):
 
         self._inject_vue_frontend(load_frontend_vue)
 
-        self.set_js_csrf_token()
+        self.set_csrf_token_meta()
 
         if self.browser_reload != 0.0:
             self.javascript(f"cmk.utils.set_reload({self.browser_reload})")
@@ -365,13 +365,11 @@ class HTMLGenerator(HTMLWriter):
         )
         self.javascript_file(HTMLGenerator._append_cache_busting_query("js/tracking_entry_min.js"))
 
-    def set_js_csrf_token(self) -> None:
+    def set_csrf_token_meta(self) -> None:
         # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
         if not hasattr(session, "session_info"):
             return
-        self.javascript(
-            "var global_csrf_token = %s;" % (json.dumps(session.session_info.csrf_token))
-        )
+        self.meta(name="cmk-csrf-token", content=session.session_info.csrf_token)
 
     def _add_custom_style_sheet(self, custom_style_sheet: str | None) -> None:
         for css in HTMLGenerator._plugin_stylesheets():

@@ -11,6 +11,8 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { kioskMode } from 'cmk-ui-library/lib/kiosk'
 import { computed, ref } from 'vue'
 
+import { getCsrfToken } from '@/lib/csrf'
+
 import {
   type DashboardMetadata,
   DashboardOwnerType,
@@ -87,8 +89,7 @@ const setStartUrl = async (): Promise<void> => {
       params: {
         name: dashboard.name,
         owner: dashboard.owner,
-        // @ts-expect-error  TODO change if something is implemented to use CSRF token
-        _csrf_token: global_csrf_token
+        _csrf_token: getCsrfToken()
       }
     })
 

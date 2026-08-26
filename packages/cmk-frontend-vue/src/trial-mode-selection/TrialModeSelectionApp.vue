@@ -14,8 +14,7 @@ import { cmkAjax } from 'cmk-ui-library/lib/ajax'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref } from 'vue'
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-declare let global_csrf_token: string
+import { getCsrfToken } from '@/lib/csrf'
 
 const { _t } = usei18n()
 
@@ -33,7 +32,7 @@ async function choose(selection: 'trial' | 'customer'): Promise<void> {
   try {
     await cmkAjax(props.save_url, {
       selection,
-      _csrf_token: global_csrf_token
+      _csrf_token: getCsrfToken()
     })
     window.location.assign('index.py')
   } catch (e) {

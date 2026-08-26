@@ -73,7 +73,7 @@ def mobile_html_head(title: str) -> None:
 
     html.link(rel="apple-touch-icon", href="themes/facelift/images/favicon.ico")
     html.javascript_file(src="js/mobile_min.js")
-    html.set_js_csrf_token()
+    html.set_csrf_token_meta()
 
     html.close_head()
     html.open_body(class_="mobile")

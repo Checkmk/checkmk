@@ -31,7 +31,7 @@ describe('TrialModeSelectionApp', () => {
     mockCmkAjax.mockClear()
     mockCmkAjax.mockResolvedValue({})
     mockLocationAssign.mockClear()
-    vi.stubGlobal('global_csrf_token', 'the-csrf-token')
+    document.head.innerHTML = '<meta name="cmk-csrf-token" content="the-csrf-token">'
     Object.defineProperty(window, 'location', {
       value: { assign: mockLocationAssign },
       writable: true

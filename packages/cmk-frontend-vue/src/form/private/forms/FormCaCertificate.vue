@@ -19,12 +19,11 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
 import { ref, shallowRef } from 'vue'
 
+import { getCsrfToken } from '@/lib/csrf'
+
 import { type ValidationMessages } from '@/form/private/validation'
 
 import FormMultilineText from './FormMultilineText.vue'
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-declare let global_csrf_token: string
 
 interface FetchedCertificate {
   details: {
@@ -91,7 +90,7 @@ const fetchFromServer = async (): Promise<void> => {
   const params = new URLSearchParams({
     address: host.value,
     port: port.value,
-    _csrf_token: global_csrf_token
+    _csrf_token: getCsrfToken()
   })
   try {
     fetchState.value = new Fetched(

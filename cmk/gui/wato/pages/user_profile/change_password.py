@@ -202,6 +202,7 @@ class UserChangePasswordPage(Page):
             title=title,
             breadcrumb=breadcrumb,
             page_menu=user_profile_page_menu(self._edition, ctx.config.sites, breadcrumb),
+            show_main_navigation=session.session_info.session_state == "logged_in",
             debug=ctx.config.debug,
             lang=user.language,
             inject_js_profiling_code=ctx.config.inject_js_profiling_code,

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
+from enum import StrEnum
 from typing import Annotated
 
 from pydantic import Base64Bytes, BaseModel, StringConstraints
@@ -14,6 +15,11 @@ REGEX_SERVICE_NAME = re.compile(r"^[^\n;]+$")
 Service = Annotated[str, StringConstraints(min_length=1, pattern=REGEX_SERVICE_NAME)]
 
 
+class PayloadType(StrEnum):
+    FETCHER = "FETCHER"
+    ACTIVE_CHECK = "ACTIVE_CHECK"
+
+
 class MonitoringData(BaseModel):
     serial: int
     host: Host
@@ -21,3 +27,4 @@ class MonitoringData(BaseModel):
     payload: Base64Bytes
     service: Service
     version: int = 1
+    payload_type: PayloadType = PayloadType.FETCHER

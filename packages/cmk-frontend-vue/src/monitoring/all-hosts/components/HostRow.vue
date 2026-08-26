@@ -115,58 +115,66 @@ const lastStateChange = computed(() =>
     v-if="hasColumn('num_services')"
     column-id="num_services"
     :value="row.num_services"
-    :highlight="
-      !row.num_services ? undefined : { color: 'default', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
+    :highlight="{
+      color: 'default',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services
+    }"
     :linked-to="!row.num_services ? undefined : allServicesLink"
   />
   <NumberCell
     v-if="hasColumn('num_services_ok')"
     column-id="num_services_ok"
     :value="row.num_services_ok"
-    :highlight="
-      !row.num_services_ok ? undefined : { color: 'success', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
+    :highlight="{
+      color: 'success',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_ok
+    }"
     :linked-to="!row.num_services_ok ? undefined : servicesInStateLink('OK')"
   />
   <NumberCell
     v-if="hasColumn('num_services_warn')"
     column-id="num_services_warn"
     :value="row.num_services_warn"
-    :highlight="
-      !row.num_services_warn ? undefined : { color: 'warning', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
+    :highlight="{
+      color: 'warning',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_warn
+    }"
     :linked-to="!row.num_services_warn ? undefined : servicesInStateLink('WARN')"
   />
   <NumberCell
     v-if="hasColumn('num_services_crit')"
     column-id="num_services_crit"
     :value="row.num_services_crit"
-    :highlight="
-      !row.num_services_crit ? undefined : { color: 'danger', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
+    :highlight="{
+      color: 'danger',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_crit
+    }"
     :linked-to="!row.num_services_crit ? undefined : servicesInStateLink('CRIT')"
   />
   <NumberCell
     v-if="hasColumn('num_services_unknown')"
     column-id="num_services_unknown"
     :value="row.num_services_unknown"
-    :highlight="
-      !row.num_services_unknown
-        ? undefined
-        : { color: 'unknown', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
+    :highlight="{
+      color: 'unknown',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_unknown
+    }"
     :linked-to="!row.num_services_unknown ? undefined : servicesInStateLink('UNKNOWN')"
   />
   <NumberCell
     v-if="hasColumn('num_services_pending')"
     column-id="num_services_pending"
     :value="row.num_services_pending"
-    :highlight="
-      !row.num_services_pending
-        ? undefined
-        : { color: 'pending', minWidth: SERVICE_COUNT_MIN_WIDTH }
-    "
+    :highlight="{
+      color: 'pending',
+      minWidth: SERVICE_COUNT_MIN_WIDTH,
+      active: !!row.num_services_pending
+    }"
     :linked-to="
       !row.num_services_pending
         ? undefined

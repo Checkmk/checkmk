@@ -84,7 +84,7 @@ const activeSlot = computed<string>(() => {
 
 const highlightClasses = computed<string[]>(() => {
   const classes = ['monitoring-base-cell__highlight']
-  if (props.highlight) {
+  if (props.highlight && props.highlight.active !== false) {
     classes.push(`monitoring-base-cell__highlight--color-${props.highlight.color}`)
   }
   return classes
@@ -292,9 +292,10 @@ const highlightStyle = computed<CSSProperties>(() =>
   width: fit-content;
   min-height: 31px;
   align-items: center;
+  justify-content: v-bind(justifyContent);
   gap: var(--dimension-4);
   margin: 0 var(--dimension-3);
-  color: var(--cell-highlight-font-color);
+  color: var(--cell-highlight-font-color, inherit);
 }
 
 .monitoring-base-cell
@@ -309,7 +310,7 @@ const highlightStyle = computed<CSSProperties>(() =>
   flex: 0 0 auto;
   width: var(--cell-highlight-bar-width);
   height: var(--cell-highlight-bar-height);
-  background: var(--cell-highlight-accent-color);
+  background: var(--cell-highlight-accent-color, transparent);
 }
 
 /* The accent bar holds across both themes; only the value adapts to its background. */

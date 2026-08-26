@@ -14,6 +14,7 @@ import { defineComponent, h } from 'vue'
 import RrdQueryForm from '@/graphing/designer/components/forms/RrdQueryForm.vue'
 import { useGraphItems } from '@/graphing/designer/composables/useGraphItems'
 import { type DraftRRDQueryItem, newRrdQueryDraft } from '@/graphing/designer/drafts'
+import { validateRow } from '@/graphing/designer/validation'
 
 import { filterDefinitions } from '../fixtures'
 
@@ -86,6 +87,19 @@ test('adding a host filter from the dropdown puts it into the context, still wit
 
   expect(within(section('Add host filter')).getByRole('textbox')).toBeInTheDocument()
   expect(contextOf(store)).toEqual({ hostregex: { host_regex: '' } })
+})
+
+test('the folder filter satisfies its section on the value the widget reports', async () => {
+  const store = renderQueryForm(newRrdQueryDraft('A'))
+
+  await fireEvent.click(screen.getByRole('combobox', { name: 'Add host filter' }))
+  await fireEvent.click(await screen.findByRole('option', { name: 'Folder' }))
+
+  expect(contextOf(store)).toEqual({ wato_folder: { wato_folder: '' } })
+  const row = store.items.value[0]!
+  expect(validateRow(row, filterDefinitions)).not.toContainEqual(
+    expect.objectContaining({ field: 'host_filter' })
+  )
 })
 
 test('typing into a filter syncs its value into the query context', async () => {
@@ -165,10 +179,10 @@ test('both filter sections ask for a filter', () => {
 
 test('a filter section shows the errors it was given', () => {
   renderQueryForm(newRrdQueryDraft('A'), {
-    host: [untranslated('Add at least one filter.')]
+    host: [untranslated('Fill in at least one filter.')]
   })
 
   const alerts = screen.getAllByRole('alert')
   expect(alerts).toHaveLength(1)
-  expect(alerts[0]).toHaveTextContent('Add at least one filter.')
+  expect(alerts[0]).toHaveTextContent('Fill in at least one filter.')
 })

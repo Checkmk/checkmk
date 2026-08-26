@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { FilterDefinitions } from 'cmk-ui-library/components/filter'
+import { type FilterDefinitions, configuredFilters } from 'cmk-ui-library/components/filter'
 
 import { type ValidationIssue, validateFormula } from './calculation/formula'
 import type { DesignerItem, DraftRRDQueryItem } from './drafts'
@@ -69,15 +69,15 @@ function missingRequiredFields(item: DesignerItem): RequiredField[] {
   return requiredFieldStates(item).flatMap(([field, entered]) => (entered ? [] : [field]))
 }
 
-/** The filter sections of a query that hold no filter with a value yet. */
+/** The filter sections of a query that hold no fully configured filter yet. */
 function missingQueryFilters(
   item: DraftRRDQueryItem,
   filterDefinitions: FilterDefinitions | null
 ): RowIssue[] {
   const categories = new Set(
-    Object.entries(item.context)
-      .filter(([, values]) => Object.values(values).some(Boolean))
-      .map(([id]) => filterDefinitions?.[id]?.extensions.info)
+    configuredFilters(item.context, filterDefinitions ?? {}).map(
+      (definition) => definition.extensions.info
+    )
   )
   return QUERY_FILTER_SECTIONS.filter(({ category }) => !categories.has(category)).map(
     ({ field }): RowIssue => ({ id: item.id, field, code: 'filter-required' })

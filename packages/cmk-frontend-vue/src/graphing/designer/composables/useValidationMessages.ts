@@ -22,7 +22,7 @@ export function useValidationMessages(): ValidationMessages {
       case 'required':
         return _t('This field is required.')
       case 'filter-required':
-        return _t('Add at least one filter.')
+        return _t('Fill in at least one filter.')
       case 'not-finite':
         return _t('Enter a finite number.')
       case 'lookback-too-small':

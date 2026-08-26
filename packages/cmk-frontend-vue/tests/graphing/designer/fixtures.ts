@@ -43,6 +43,35 @@ export const filterDefinitions: FilterDefinitions = {
   ]),
   serviceregex: filterDefinition('serviceregex', 'Service name (regex)', 'service', [
     { component_type: 'text_input', id: 'service_regex', label: 'Service name (regex)' }
+  ]),
+  wato_folder: filterDefinition('wato_folder', 'Folder', 'host', [
+    {
+      component_type: 'dropdown',
+      id: 'wato_folder',
+      choices: { '': 'Main', server: 'server' },
+      default_value: ''
+    }
+  ]),
+  host_num_services: filterDefinition(
+    'host_num_services',
+    'Number of services of the host',
+    'host',
+    [
+      {
+        component_type: 'horizontal_group',
+        components: [
+          { component_type: 'text_input', id: 'host_num_services_from', label: 'From:' },
+          { component_type: 'text_input', id: 'host_num_services_until', label: 'To:' }
+        ]
+      }
+    ]
+  ),
+  svcstate: filterDefinition('svcstate', 'Service states', 'service', [
+    {
+      component_type: 'checkbox_group',
+      label: 'Service states',
+      choices: { st0: 'OK', st1: 'WARN' }
+    }
   ])
 }
 

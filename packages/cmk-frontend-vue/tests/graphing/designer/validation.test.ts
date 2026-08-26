@@ -81,6 +81,51 @@ describe('validateRow', () => {
     ])
   })
 
+  test('an empty dropdown choice counts, because it is a choice like any other', () => {
+    expect(
+      validateRow(
+        rrdQueryItem('A', {
+          context: { wato_folder: { wato_folder: '' }, serviceregex: { service_regex: 'CPU' } }
+        }),
+        filterDefinitions
+      )
+    ).toEqual([])
+  })
+
+  test('a filter counts once every one of its components holds a value', () => {
+    const halfFilled = { host_num_services_from: '5', host_num_services_until: '' }
+    expect(
+      validateRow(
+        rrdQueryItem('A', {
+          context: { host_num_services: halfFilled, serviceregex: { service_regex: 'CPU' } }
+        }),
+        filterDefinitions
+      )
+    ).toEqual([{ id: 'A', field: 'host_filter', code: 'filter-required' }])
+    expect(
+      validateRow(
+        rrdQueryItem('A', {
+          context: {
+            host_num_services: { ...halfFilled, host_num_services_until: '10' },
+            serviceregex: { service_regex: 'CPU' }
+          }
+        }),
+        filterDefinitions
+      )
+    ).toEqual([])
+  })
+
+  test('a checkbox group counts even with every box cleared, having no value to fill in', () => {
+    expect(
+      validateRow(
+        rrdQueryItem('A', {
+          context: { hostregex: { host_regex: 'web' }, svcstate: { st0: '', st1: '' } }
+        }),
+        filterDefinitions
+      )
+    ).toEqual([])
+  })
+
   test('a filter the definitions do not know counts for neither section', () => {
     expect(
       validateRow(rrdQueryItem('A', { context: { no_such_filter: { x: 'y' } } }), filterDefinitions)

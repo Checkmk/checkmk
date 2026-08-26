@@ -412,12 +412,13 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     ) -> None:
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
 
-        # default_globals() is keyed by config variable, so the fallback has to be
-        # the *value* of our one variable, not the whole mapping.
-        current_config = settings.get(
-            "trusted_certificate_authorities",
-            self.default_globals()["trusted_certificate_authorities"],
-        )
+        if custom_site_path is not None:
+            # Writing into another site's snapshot, so no need to touch this site's CA store.
+            return
+
+        effective_config = finalize_all_settings(
+            self.default_globals(), self.load(), self.load_site_globals()
+        )["trusted_certificate_authorities"]
 
         # We need to activate this immediately to make syncs to distributed
         # setup remote sites possible right after changing the option
@@ -425,9 +426,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         # Since this can be called from any Setup page it is not possible to report
         # errors to the user here. The self._update_trusted_cas() method logs the
         # errors - this must be enough for the moment.
-        if not site_specific and custom_site_path is None:
-            self._update_trusted_cas(current_config)
-            self.update_remote_sites_cas(current_config["trusted_cas"])
+        self._update_trusted_cas(effective_config)
+        self.update_remote_sites_cas(effective_config["trusted_cas"])
 
     @override
     def create_artifacts(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:

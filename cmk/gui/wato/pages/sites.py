@@ -67,7 +67,13 @@ from cmk.gui.site_config import (
 )
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
+from cmk.gui.type_defs import (
+    ActionResult,
+    IconNames,
+    PermissionName,
+    StaticIcon,
+    TrustedCertificateAuthorities,
+)
 from cmk.gui.utils.compatibility import make_site_version_info
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
@@ -101,6 +107,7 @@ from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
     make_global_settings_context,
+    ModeEditGlobalSetting,
 )
 from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.activate_changes import get_free_message
@@ -119,10 +126,12 @@ from cmk.gui.watolib.config_domain_name import (
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import (
+    ConfigDomainCACertificates,
     ConfigDomainGUI,
     finalize_all_settings_per_site,
 )
 from cmk.gui.watolib.global_settings import (
+    add_global_settings_change,
     load_configuration_settings,
     load_site_global_settings,
     save_global_settings,
@@ -1902,39 +1911,58 @@ class ModeSiteLivestatusEncryption(WatoMode):
         if cert_pem is None:
             raise MKGeneralException(_("Failed to find matching certificate in chain"))
 
-        config_variable = config_variable_registry["trusted_certificate_authorities"]
-
+        default_values = ABCConfigDomain.get_all_default_globals()
         global_settings = load_configuration_settings()
-        trusted = global_settings.get(
-            "trusted_certificate_authorities",
-            ABCConfigDomain.get_all_default_globals()["trusted_certificate_authorities"],
-        )
-        trusted_cas = trusted.setdefault("trusted_cas", [])
+        local_site = self._configured_sites.get(omd_site())
+        local_site_specific_settings = local_site.get("globals", {}) if local_site else {}
 
-        if (cert_str := cert_pem.decode()) in trusted_cas:
+        # If the local site uses site specific settings on trusted_certificate_authorities, we
+        # must add the remote's certificate there.
+        site_specific = "trusted_certificate_authorities" in local_site_specific_settings
+        current_cas = (local_site_specific_settings if site_specific else global_settings).get(
+            "trusted_certificate_authorities",
+            default_values["trusted_certificate_authorities"],
+        )
+
+        if (cert_str := cert_pem.decode()) in current_cas["trusted_cas"]:
             raise MKUserError(
                 None,
                 _('The CA is already a <a href="%s">trusted CA</a>.')
-                % "wato.py?mode=edit_configvar&varname=trusted_certificate_authorities",
+                % (
+                    ModeEditSiteGlobalSetting.mode_url(
+                        varname="trusted_certificate_authorities", site=omd_site()
+                    )
+                    if site_specific
+                    else ModeEditGlobalSetting.mode_url(varname="trusted_certificate_authorities")
+                ),
             )
 
-        trusted_cas.append(cert_str)
+        new_cas = TrustedCertificateAuthorities(
+            use_system_wide_cas=current_cas["use_system_wide_cas"],
+            trusted_cas=[*current_cas["trusted_cas"], cert_str],
+        )
 
-        _changes.add_change(
-            action_name="edit-configvar",
+        add_global_settings_change(
+            config_variable_registry["trusted_certificate_authorities"],
+            user_id=user.id,
             text=_("Added CA with fingerprint %s to trusted certificate authorities")
             % digest_sha256,
-            user_id=user.id,
-            domains=[config_variable.primary_domain()],
-            need_restart=config_variable.need_restart(),
+            sites=[omd_site()] if site_specific else None,
             use_git=config.wato_use_git,
         )
-        save_global_settings(
-            {
-                **global_settings,
-                "trusted_certificate_authorities": trusted,
-            }
-        )
+
+        if site_specific:
+            local_site_specific_settings["trusted_certificate_authorities"] = new_cas
+            self._site_mgmt.save_sites(
+                self._configured_sites,
+                activate=False,
+                pprint_value=config.wato_pprint_config,
+            )
+            save_site_global_settings(local_site_specific_settings)
+        else:
+            save_global_settings({**global_settings, "trusted_certificate_authorities": new_cas})
+
+        ConfigDomainCACertificates.log_changes(current_cas, new_cas)
 
         flash(_("Added CA with fingerprint %s to trusted certificate authorities") % digest_sha256)
         return None

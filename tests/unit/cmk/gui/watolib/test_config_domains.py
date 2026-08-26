@@ -246,6 +246,39 @@ class TestConfigDomainCACertificates:
             "system_cert_1\nsystem_cert_2"
         )
 
+    def test_save_site_specific_value_shadows_global_one(
+        self,
+        mocked_ca_config: ConfigDomainCACertificates,
+    ) -> None:
+        mocked_ca_config.save(
+            {
+                "trusted_certificate_authorities": {
+                    "use_system_wide_cas": True,
+                    "trusted_cas": ["global_cert"],
+                },
+            }
+        )
+        mocked_ca_config.save_site_globals(
+            {
+                "trusted_certificate_authorities": {
+                    "use_system_wide_cas": False,
+                    "trusted_cas": ["site_cert"],
+                },
+            }
+        )
+        assert load_text_from_file(mocked_ca_config.trusted_cas_file) == "site_cert"
+
+        # a later write to the shadowed global store must not resurrect its value
+        mocked_ca_config.save(
+            {
+                "trusted_certificate_authorities": {
+                    "use_system_wide_cas": True,
+                    "trusted_cas": ["global_cert", "another_global_cert"],
+                },
+            }
+        )
+        assert load_text_from_file(mocked_ca_config.trusted_cas_file) == "site_cert"
+
     def test_remote_sites_cas(self) -> None:
         longest_validity = datetime(3021, 2, 21, 19, 56, 49, tzinfo=UTC)
 

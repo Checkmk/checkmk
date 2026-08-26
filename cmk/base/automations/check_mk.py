@@ -216,6 +216,7 @@ from cmk.server_side_calls_backend import (
     ExecutableFinder,
     load_secrets_file,
     load_special_agents,
+    NotSupportedError,
     relay_compatible_plugin_families,
     SecretsConfig,
     SpecialAgent,
@@ -3760,34 +3761,41 @@ class AutomationActiveCheck:
             path=(p := cmk.utils.password_store.pending_secrets_path_site()),
             secrets=load_secrets_file(p),
         )
-        for service_data in env.config_cache.active_check_services(
-            host_name,
-            env.ip_lookup_config.ip_stack_config(host_name),
-            ip_family,
-            host_attrs,
-            FinalServiceNameConfig(
-                env.ruleset_matcher,
-                illegal_chars=env.loaded_config.cmc_illegal_chars
-                if env.loaded_config.monitoring_core == "cmc"
-                else env.loaded_config.nagios_illegal_chars,
-                translations=env.loaded_config.service_description_translation,
-            ),
-            ip_address_of,
-            secrets_config=secrets_config,
-            single_plugin=plugin,
-            for_relay=config.get_relay_id(env.label_manager.labels_of_host(host_name)) is not None,
-        ):
-            if service_data.description != item:
-                continue
-
-            command_line = self._replace_service_macros(
+        relay_id = config.get_relay_id(env.label_manager.labels_of_host(host_name))
+        try:
+            for service_data in env.config_cache.active_check_services(
                 host_name,
-                service_data.description,
-                env.label_manager.labels_of_service(host_name, service_data.description, {}),
-                " ".join(service_data.command),
-                core_objects_config=core_objects_config,
+                env.ip_lookup_config.ip_stack_config(host_name),
+                ip_family,
+                host_attrs,
+                FinalServiceNameConfig(
+                    env.ruleset_matcher,
+                    illegal_chars=env.loaded_config.cmc_illegal_chars
+                    if env.loaded_config.monitoring_core == "cmc"
+                    else env.loaded_config.nagios_illegal_chars,
+                    translations=env.loaded_config.service_description_translation,
+                ),
+                ip_address_of,
+                secrets_config=secrets_config,
+                single_plugin=plugin,
+                for_relay=relay_id is not None,
+                raise_on_unsupported=relay_id is not None,
+            ):
+                if service_data.description != item:
+                    continue
+
+                command_line = self._replace_service_macros(
+                    host_name,
+                    service_data.description,
+                    env.label_manager.labels_of_service(host_name, service_data.description, {}),
+                    " ".join(service_data.command),
+                    core_objects_config=core_objects_config,
+                )
+                return ActiveCheckResult(*self._execute_check_plugin(command_line))
+        except NotSupportedError:
+            return ActiveCheckResult(
+                3, f"UNKNOWN - Active check {plugin!r} is not supported on relays"
             )
-            return ActiveCheckResult(*self._execute_check_plugin(command_line))
 
         return ActiveCheckResult(
             None,

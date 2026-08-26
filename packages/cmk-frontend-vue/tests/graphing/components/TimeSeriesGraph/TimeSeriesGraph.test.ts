@@ -11,7 +11,11 @@ import TimeSeriesGraph from '@/graphing/components/TimeSeriesGraph/TimeSeriesGra
 import { measureAxisLabel } from '@/graphing/components/TimeSeriesGraph/axes/labelWidth'
 import type { Metric, TimeSeriesGraphProps } from '@/graphing/components/TimeSeriesGraph/types'
 import { AXIS_CLASSES } from '@/graphing/components/TimeSeriesGraph/useAxes'
-import { CANVAS_MARGIN_LEFT, VALUE_LABEL_GUTTER } from '@/graphing/components/constants'
+import {
+  CANVAS_MARGIN_LEFT,
+  PLOT_INSET_X,
+  VALUE_LABEL_TICK_OFFSET
+} from '@/graphing/components/constants'
 
 let drawnPoints: Array<[number, number]> = []
 
@@ -179,6 +183,24 @@ async function renderMemoryGraph(
 
 function plotCanvasStyle(container: Element): CSSStyleDeclaration {
   return within(container as HTMLElement).getByRole('img').style
+}
+
+// What the figure keeps between the plot's edge and its own, read back off the rendered plot.
+function plotInsets(container: Element): {
+  left: number
+  right: number
+  top: number
+  bottom: number
+} {
+  const style = plotCanvasStyle(container)
+  const left = parseFloat(style.left)
+  const top = parseFloat(style.top)
+  return {
+    left,
+    right: DEFAULT_PROPS.size.width - left - parseFloat(style.width),
+    top,
+    bottom: DEFAULT_PROPS.size.height - top - parseFloat(style.height)
+  }
 }
 
 function timeAxisLabels(container: Element): string[] {
@@ -359,7 +381,7 @@ describe('TimeSeriesGraph', () => {
     })
   })
 
-  test('a hidden value axis drops its labels and gives the left margin to the plot', async () => {
+  test('a hidden value axis gives its room to the plot but keeps the frame padding', async () => {
     const shown = renderComponent({ showValueAxis: true })
     const shownWidth = plotCanvasStyle(shown.container).width
 
@@ -370,9 +392,21 @@ describe('TimeSeriesGraph', () => {
     })
     expect(drawnValueAxisLabels(hidden.container)).toHaveLength(0)
     await waitFor(() => {
-      const hiddenStyle = plotCanvasStyle(hidden.container)
-      expect(hiddenStyle.left).toBe('0px')
-      expect(parseFloat(hiddenStyle.width)).toBeGreaterThan(parseFloat(shownWidth))
+      const insets = plotInsets(hidden.container)
+      expect(insets.left).toBe(insets.right)
+      expect(parseFloat(plotCanvasStyle(hidden.container).width)).toBeGreaterThan(
+        parseFloat(shownWidth)
+      )
+    })
+  })
+
+  test('a plot with both axes hidden sits centred in the figure', async () => {
+    const { container } = renderComponent({ showTimeAxis: false, showValueAxis: false })
+
+    await waitFor(() => {
+      const insets = plotInsets(container)
+      expect(insets.left).toBe(insets.right)
+      expect(insets.top).toBe(insets.bottom)
     })
   })
 
@@ -387,18 +421,21 @@ describe('TimeSeriesGraph', () => {
     })
   })
 
-  test('gives the value axis the width it was configured for', async () => {
-    const { container } = renderComponent({ minValueAxisWidth: 120 })
+  test('gives the value axis the width it was configured for, beside the padding', async () => {
+    const configuredWidth = 120
+
+    const { container } = renderComponent({ minValueAxisWidth: configuredWidth })
 
     await waitFor(() => {
-      expect(plotCanvasStyle(container).left).toBe('120px')
+      const insets = plotInsets(container)
+      expect(insets.left - insets.right).toBe(configuredWidth)
     })
   })
 
   test('widens the configured value axis width for labels that do not fit it', async () => {
     const { margin, widestLabel } = await renderMemoryGraph({ minValueAxisWidth: 1 })
 
-    expect(margin).toBeGreaterThanOrEqual(widestLabel + VALUE_LABEL_GUTTER)
+    expect(margin).toBeGreaterThanOrEqual(widestLabel + VALUE_LABEL_TICK_OFFSET + PLOT_INSET_X)
   })
 
   test('a hidden time axis takes the pan affordances with it', () => {
@@ -425,7 +462,7 @@ describe('TimeSeriesGraph', () => {
   test('sizes the value axis to hold its widest label', async () => {
     const { margin, widestLabel } = await renderMemoryGraph()
 
-    expect(margin).toBeGreaterThanOrEqual(widestLabel + VALUE_LABEL_GUTTER)
+    expect(margin).toBeGreaterThanOrEqual(widestLabel + VALUE_LABEL_TICK_OFFSET + PLOT_INSET_X)
     expect(margin).toBeGreaterThan(CANVAS_MARGIN_LEFT)
   })
 
@@ -436,7 +473,9 @@ describe('TimeSeriesGraph', () => {
     const spaced = await renderMemoryGraph()
 
     expect(spaced.margin).toBeGreaterThan(unspaced.margin)
-    expect(spaced.margin).toBeGreaterThanOrEqual(spaced.widestLabel + VALUE_LABEL_GUTTER)
+    expect(spaced.margin).toBeGreaterThanOrEqual(
+      spaced.widestLabel + VALUE_LABEL_TICK_OFFSET + PLOT_INSET_X
+    )
   })
 })
 

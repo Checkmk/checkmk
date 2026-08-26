@@ -27,7 +27,7 @@ import GraphBrush from './GraphBrush/GraphBrush.vue'
 import TimeSeriesGraph, { type ZoomPayload } from './TimeSeriesGraph'
 import { deriveYAxis } from './TimeSeriesGraph/yAxis'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from './consolidation'
-import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, MIN_ZOOM_TIME_RANGE_SECONDS } from './constants'
+import { CANVAS_MARGIN_LEFT, MIN_ZOOM_TIME_RANGE_SECONDS, PLOT_INSET_X } from './constants'
 import GraphHeader from './header/GraphHeader.vue'
 import GraphLegend from './legend/GraphLegend.vue'
 
@@ -188,7 +188,7 @@ const brushWindow = computed<TimeInterval | undefined>(
 // The renderer sizes its own value-axis margin to the labels it draws; the brush track mirrors
 // it so the strip stays under the plot.
 const plotLeft = ref(CANVAS_MARGIN_LEFT)
-const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - CANVAS_MARGIN_RIGHT)
+const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_INSET_X)
 </script>
 
 <template>

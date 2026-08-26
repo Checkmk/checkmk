@@ -20,7 +20,13 @@ import { scaleLinear, scaleTime } from 'd3-scale'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../consolidation'
-import { CANVAS_MARGIN_LEFT, CANVAS_MARGIN_RIGHT, VALUE_LABEL_GUTTER } from '../constants'
+import {
+  CANVAS_MARGIN_LEFT,
+  PLOT_INSET_X,
+  PLOT_INSET_Y,
+  VALUE_AXIS_ROOM_MIN,
+  VALUE_LABEL_TICK_OFFSET
+} from '../constants'
 import { axisLabelFontSize, measureAxisLabel } from './axes/labelWidth'
 import { computeTimeAxis } from './axes/timeAxis'
 import { computeYDomain } from './axes/valueAxis'
@@ -73,7 +79,6 @@ function showMaxZoomHint(point: { x: number; y: number }): void {
   }, MAX_ZOOM_HINT_DURATION_MS)
 }
 
-const MARGIN = { top: 4, right: CANVAS_MARGIN_RIGHT, bottom: 24 } as const
 const X_AXIS_BAND_HEIGHT = 20
 // The strip's top edge doubles as the plot's baseline rule, so anything laid over the strip
 // starts below it rather than covering it.
@@ -94,17 +99,20 @@ const marginLeft = ref(CANVAS_MARGIN_LEFT)
 const halfAValueLabel = computed(() => Math.ceil(axisLabelFontSize(axesContainer.value) / 2))
 const marginBottom = computed(() => {
   if (props.showTimeAxis) {
-    return MARGIN.bottom
+    return PLOT_INSET_Y + X_AXIS_BAND_HEIGHT
   }
-  return props.showValueAxis ? halfAValueLabel.value : 0
+  // The value axis' lowest label overhangs the plot's bottom edge by half a line. With no time
+  // axis band beneath it, the frame padding is what has to clear it.
+  const lowestValueLabelOverhang = props.showValueAxis ? halfAValueLabel.value : 0
+  return Math.max(PLOT_INSET_Y, lowestValueLabelOverhang)
 })
 
 // size is the outer figure size; the plot (canvas) area is what remains after
 // subtracting the axis/label margins.
 const figureWidth = computed(() => props.size.width)
 const figureHeight = computed(() => props.size.height)
-const plotWidth = computed(() => figureWidth.value - marginLeft.value - MARGIN.right)
-const plotTop = MARGIN.top
+const plotWidth = computed(() => figureWidth.value - marginLeft.value - PLOT_INSET_X)
+const plotTop = PLOT_INSET_Y
 const plotHeight = computed(() => figureHeight.value - plotTop - marginBottom.value)
 
 const pinVisible = computed(
@@ -362,12 +370,14 @@ let lastMargin = CANVAS_MARGIN_LEFT
 let refusedLowMargin: number | null = null
 
 // The value axis is drawn into the left margin, so the margin has to hold the widest label
-// the current domain produces. Writing it back grows plotWidth, which redraws once more with
-// the labels the wider plot resolves to; that second pass settles.
+// the current domain produces on top of the frame padding. Writing it back grows plotWidth,
+// which redraws once more with the labels the wider plot resolves to; that second pass settles.
 function fitMarginToValueLabels(): void {
   if (!props.showValueAxis) {
-    marginLeft.value = 0
-    lastMargin = props.minValueAxisWidth ?? CANVAS_MARGIN_LEFT
+    // No axis room to reserve, but the frame padding stands so the plot keeps the same
+    // breathing room on both sides.
+    marginLeft.value = PLOT_INSET_X
+    lastMargin = PLOT_INSET_X
     refusedLowMargin = null
     return
   }
@@ -376,10 +386,11 @@ function fitMarginToValueLabels(): void {
     (widest, label) => Math.max(widest, measureLabel(label)),
     0
   )
-  const next = Math.max(
-    props.minValueAxisWidth ?? CANVAS_MARGIN_LEFT,
-    Math.ceil(widestLabel) + VALUE_LABEL_GUTTER
+  const axisRoom = Math.max(
+    props.minValueAxisWidth ?? VALUE_AXIS_ROOM_MIN,
+    Math.ceil(widestLabel) + VALUE_LABEL_TICK_OFFSET
   )
+  const next = PLOT_INSET_X + axisRoom
 
   // Holding the high end of a detected flip: ignore the low value that keeps recurring.
   if (next === refusedLowMargin) {
@@ -678,7 +689,7 @@ watch(marginLeft, (left) => emit('update:plotLeft', left), { immediate: true })
       variant="secondary"
       size="small"
       class="graphing-time-series-graph__reset"
-      :style="{ top: `${plotTop + 6}px`, right: `${MARGIN.right + 6}px` }"
+      :style="{ top: `${plotTop + 6}px`, right: `${PLOT_INSET_X + 6}px` }"
       :title="resetLabel"
       :aria-label="resetLabel"
       @click="onResetClick"

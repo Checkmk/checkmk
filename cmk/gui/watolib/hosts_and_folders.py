@@ -28,6 +28,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, Self, TypedDict
 
+from redis import ConnectionError as RedisConnectionError
+from redis import TimeoutError as RedisTimeoutError
 from redis.client import Pipeline
 
 from livestatus import SiteConfiguration
@@ -208,17 +210,22 @@ class FolderMetaData:
     def num_hosts_recursively(self) -> int:
         if self._num_hosts_recursively is None:
             if may_use_redis():
-                self._num_hosts_recursively = self.tree.redis_client.num_hosts_recursively_lua(
-                    self._path,
-                    skip_permission_checks=(
-                        user.may("wato.see_all_folders")
-                        or not active_config.wato_hide_folders_without_read_permissions
-                    ),
-                    user_contact_groups=(
-                        set(userdb.contactgroups_of_user(user.id)) if user.id is not None else set()
+                self._num_hosts_recursively = degrade_to_cache_miss(
+                    self.tree,
+                    lambda: self.tree.redis_client.num_hosts_recursively_lua(
+                        self._path,
+                        skip_permission_checks=(
+                            user.may("wato.see_all_folders")
+                            or not active_config.wato_hide_folders_without_read_permissions
+                        ),
+                        user_contact_groups=(
+                            set(userdb.contactgroups_of_user(user.id))
+                            if user.id is not None
+                            else set()
+                        ),
                     ),
                 )
-            else:
+            if self._num_hosts_recursively is None:
                 self._num_hosts_recursively = self.tree.folder(
                     self._path.rstrip("/")
                 ).num_hosts_recursively()
@@ -980,6 +987,42 @@ def _redis_available() -> bool:
     return redis_server_reachable(get_redis_client())
 
 
+def degrade_to_cache_miss[T](tree: FolderTree, query: Callable[[], T]) -> T | None:
+    """Turn an unusable redis into a cache miss
+
+    may_use_redis() is only a fast path for a redis that is already known to be
+    down when the query is made. Redis can also become unusable afterwards:
+
+    1. Redis being restarted while the site is running. Two cases observed:
+        a) "omd reload" does not execute a graceful reload of redis but stop/start
+        b) MKP changes reload redis, the ui-job-scheduler and the automation helper concurrently
+
+    2. Redis is up but does not answer within the five second socket timeout
+        redis-py defaults to, because another client keeps the single threaded
+        server busy.
+
+    Since the redis cache is mainly used to improve the performance, answer the query
+    like a cache miss and let the caller compute the answer from disk. That is the same
+    behaviour as if redis had not been available at the start of the request handling.
+
+    However, such a silent fallback is a bit dangerous, because it can hide problems with
+    the redis server and lead to a degraded performance. So we log a warning to make the
+    problem visible.
+
+    The helper is dropped so that the next query reconnects and, if redis is usable
+    again, repopulates the cache.
+    """
+    try:
+        return query()
+    except (RedisConnectionError, RedisTimeoutError) as e:
+        logger.warning(
+            "Redis is not usable (%(error)s). Computing folder information from disk",
+            {"error": e},
+        )
+        tree.reset_redis_client()
+        return None
+
+
 @contextmanager
 def _disable_redis_locally() -> Iterator[None]:
     global _REDIS_ENABLED_LOCALLY
@@ -992,9 +1035,16 @@ def _disable_redis_locally() -> Iterator[None]:
 
 
 def _wato_folders_factory(tree: FolderTree) -> Mapping[PathWithoutSlash, Folder]:
-    if not may_use_redis():
-        return _get_fully_loaded_wato_folders(tree)
+    if (
+        may_use_redis()
+        and (cached_folders := degrade_to_cache_miss(tree, lambda: _cached_wato_folders(tree)))
+        is not None
+    ):
+        return cached_folders
+    return _get_fully_loaded_wato_folders(tree)
 
+
+def _cached_wato_folders(tree: FolderTree) -> Mapping[PathWithoutSlash, Folder]:
     redis_client = tree.redis_client
     if redis_client.loaded_wato_folders is not None:
         # Folders were already completely loaded during cache generation -> use these
@@ -1081,7 +1131,7 @@ class FolderTree:
         # to the recursive .drop_caches missing them them.
         self.root_folder().drop_caches()
         if may_use_redis():
-            self.redis_client.clear_cached_folders()
+            degrade_to_cache_miss(self, lambda: self.redis_client.clear_cached_folders())
         g.pop("wato_folders", {})
         for cache_id in ["folder_choices", "folder_choices_full_title"]:
             g.pop(cache_id, None)
@@ -1422,7 +1472,14 @@ class Folder(FolderProtocol):
             )
             if may_use_redis():
                 # Inform redis that the modified-timestamp of the folder has been updated.
-                self.tree.redis_client.folder_updated(self.filesystem_path())
+                # Losing that update is harmless: it would only have advanced
+                # wato:folder_list:last_update, so the next
+                # _RedisHelper._cache_integrity_ok() finds redis lagging behind disk and
+                # rebuilds the cache from scratch.
+                degrade_to_cache_miss(
+                    self.tree,
+                    lambda: self.tree.redis_client.folder_updated(self.filesystem_path()),
+                )
 
         call_hook_hosts_changed(self)
 
@@ -1667,7 +1724,7 @@ class Folder(FolderProtocol):
             storage_list=self.wato_info_storage_manager().write_storages,
         )
         if may_use_redis():
-            self.tree.redis_client.save_folder_info(self)
+            degrade_to_cache_miss(self.tree, lambda: self.tree.redis_client.save_folder_info(self))
 
     def _save_folder_attributes(self, *, storage_list: Sequence[ABCWATOInfoStorage]) -> None:
         Path(self.wato_info_path()).parent.mkdir(mode=0o770, parents=True, exist_ok=True)
@@ -1793,7 +1850,9 @@ class Folder(FolderProtocol):
 
     def num_hosts_recursively(self) -> int:
         if may_use_redis():
-            if folder_metadata := self.tree.redis_client.folder_metadata(self.path()):
+            if folder_metadata := degrade_to_cache_miss(
+                self.tree, lambda: self.tree.redis_client.folder_metadata(self.path())
+            ):
                 return folder_metadata.num_hosts_recursively
             return 0
 
@@ -1937,17 +1996,26 @@ class Folder(FolderProtocol):
     def _choices_for_moving(self, what: str) -> Choices:
         choices: Choices = []
 
-        if may_use_redis():
-            return self._get_sorted_choices(
-                self.tree.redis_client.choices_for_moving(
-                    self.path(),
-                    _MoveType(what),
-                    may_see_all_folders=user.may("wato.all_folders"),
-                    user_contact_groups=(
-                        set(userdb.contactgroups_of_user(user.id)) if user.id is not None else set()
+        if (
+            may_use_redis()
+            and (
+                cached_choices := degrade_to_cache_miss(
+                    self.tree,
+                    lambda: self.tree.redis_client.choices_for_moving(
+                        self.path(),
+                        _MoveType(what),
+                        may_see_all_folders=user.may("wato.all_folders"),
+                        user_contact_groups=(
+                            set(userdb.contactgroups_of_user(user.id))
+                            if user.id is not None
+                            else set()
+                        ),
                     ),
                 )
             )
+            is not None
+        ):
+            return self._get_sorted_choices(cached_choices)
 
         for folder in self.tree.all_folders().values():
             if not folder.permissions.may("write"):

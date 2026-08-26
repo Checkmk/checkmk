@@ -119,6 +119,7 @@ from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_K
 from .changes import add_change
 from .check_mk_automations import get_services_labels, update_merged_password_file
 from .hosts_and_folders import (
+    degrade_to_cache_miss,
     Folder,
     folder_preserving_link,
     folder_tree,
@@ -574,8 +575,7 @@ class RulesetCollection:
 
 class AllRulesets(RulesetCollection):
     def _load_rulesets_recursively(self, folder: Folder) -> None:
-        if may_use_redis():
-            self._load_rulesets_via_redis(folder)
+        if may_use_redis() and self._load_rulesets_via_redis(folder):
             return
 
         for subfolder in folder.subfolders():
@@ -583,15 +583,21 @@ class AllRulesets(RulesetCollection):
 
         self._load_folder_rulesets(folder)
 
-    def _load_rulesets_via_redis(self, folder: Folder) -> None:
+    def _load_rulesets_via_redis(self, folder: Folder) -> bool:
+        """Load the rulesets from the redis cache, telling whether it could be used"""
         tree = folder_tree()
         # Search relevant folders with rules.mk files
         # Note: The sort order of the folders does not matter here
         #       self._load_folder_rulesets ultimately puts each folder into a dict
         #       and groups/sorts them later on with a different mechanism
-        all_folders = tree.redis_client.recursive_subfolders_for_path(
-            f"{folder.path()}/".lstrip("/")
+        all_folders = degrade_to_cache_miss(
+            tree,
+            lambda: tree.redis_client.recursive_subfolders_for_path(
+                f"{folder.path()}/".lstrip("/")
+            ),
         )
+        if all_folders is None:
+            return False
 
         root_dir = str(wato_root_dir())
         relevant_folders = []
@@ -602,6 +608,7 @@ class AllRulesets(RulesetCollection):
         for folder_path_with_slash in relevant_folders:
             stripped_folder = folder_path_with_slash.strip("/")
             self._load_folder_rulesets(tree.folder(stripped_folder))
+        return True
 
     @staticmethod
     def load_all_rulesets() -> AllRulesets:
@@ -659,8 +666,7 @@ class SingleRulesetRecursively(RulesetCollection):
     def _load_rulesets_recursively(self, folder: Folder, only_varname: RulesetName) -> None:
         # Copy/paste from AllRulesets
 
-        if may_use_redis():
-            self._load_rulesets_via_redis(folder, only_varname)
+        if may_use_redis() and self._load_rulesets_via_redis(folder, only_varname):
             return
 
         for subfolder in folder.subfolders():
@@ -668,7 +674,8 @@ class SingleRulesetRecursively(RulesetCollection):
 
         self._load_folder_rulesets(folder, only_varname)
 
-    def _load_rulesets_via_redis(self, folder: Folder, only_varname: RulesetName) -> None:
+    def _load_rulesets_via_redis(self, folder: Folder, only_varname: RulesetName) -> bool:
+        """Load the rulesets from the redis cache, telling whether it could be used"""
         # Copy/paste from AllRulesets
 
         tree = folder_tree()
@@ -676,9 +683,14 @@ class SingleRulesetRecursively(RulesetCollection):
         # Note: The sort order of the folders does not matter here
         #       self._load_folder_rulesets ultimately puts each folder into a dict
         #       and groups/sorts them later on with a different mechanism
-        all_folders = tree.redis_client.recursive_subfolders_for_path(
-            f"{folder.path()}/".lstrip("/")
+        all_folders = degrade_to_cache_miss(
+            tree,
+            lambda: tree.redis_client.recursive_subfolders_for_path(
+                f"{folder.path()}/".lstrip("/")
+            ),
         )
+        if all_folders is None:
+            return False
 
         root_dir = str(wato_root_dir())
         relevant_folders = []
@@ -689,6 +701,7 @@ class SingleRulesetRecursively(RulesetCollection):
         for folder_path_with_slash in relevant_folders:
             stripped_folder = folder_path_with_slash.strip("/")
             self._load_folder_rulesets(tree.folder(stripped_folder), only_varname)
+        return True
 
     @staticmethod
     def load_single_ruleset_recursively(name: RulesetName) -> SingleRulesetRecursively:
@@ -2107,7 +2120,10 @@ class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
             )
         finally:
             if may_use_redis():
-                folder.tree.redis_client.folder_updated(folder.filesystem_path())
+                degrade_to_cache_miss(
+                    folder.tree,
+                    lambda: folder.tree.redis_client.folder_updated(folder.filesystem_path()),
+                )
 
 
 def may_edit_ruleset(varname: str) -> bool:

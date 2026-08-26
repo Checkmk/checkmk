@@ -25,6 +25,8 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 from pytest import MonkeyPatch
+from redis import ConnectionError as RedisConnectionError
+from redis import TimeoutError as RedisTimeoutError
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -1050,6 +1052,60 @@ def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch) -> None:
         assert g.wato_folders._raw_dict["sub1.2"] is None
         # Check if parent(main) folder got instantiated as well
         assert isinstance(g.wato_folders._raw_dict[""], hosts_and_folders.Folder)
+
+
+class _UnusableRedisHelper:
+    """Stands in for a _RedisHelper whose redis went away or stopped answering"""
+
+    def __init__(self, error: Exception) -> None:
+        self._error = error
+
+    def __getattr__(self, _name: str) -> object:
+        raise self._error
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(
+            # The socket is gone, e.g. during an `omd reload`
+            RedisConnectionError(
+                "Error 2 connecting to /omd/sites/heute/tmp/run/redis. No such file or directory."
+            ),
+            id="connection_error",
+        ),
+        pytest.param(
+            # Redis is up, but another client keeps it busy past the socket timeout
+            RedisTimeoutError("Timeout reading from socket"),
+            id="timeout_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("with_admin_login")
+def test_folder_queries_degrade_when_redis_is_unusable(
+    monkeypatch: MonkeyPatch, error: Exception
+) -> None:
+    tree = folder_tree()
+    subfolder = tree.root_folder().create_subfolder(
+        "sub", "sub", {}, pprint_value=False, use_git=False
+    )
+    tree.invalidate_caches()
+
+    monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
+    monkeypatch.setattr(
+        hosts_and_folders.FolderTree,
+        "redis_client",
+        property(lambda self: _UnusableRedisHelper(error)),
+    )
+
+    # Queries fall back to computing the answer from disk instead of raising
+    assert set(tree.all_folders()) == {"", "sub"}
+    assert subfolder.choices_for_moving_folder() == []
+
+    # Updates are dropped. They only advance the last_update timestamp, so the
+    # next integrity check rebuilds the cache from scratch anyway.
+    subfolder.save_folder_attributes()
+    subfolder.save_hosts(pprint_value=False)
 
 
 def test_folder_exists() -> None:

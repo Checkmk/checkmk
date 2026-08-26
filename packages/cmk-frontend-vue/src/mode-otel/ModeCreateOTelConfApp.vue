@@ -52,8 +52,8 @@ const props = defineProps<{
   metric_backend_allowed: boolean
   may_create_password: boolean
   activate_changes_url: string
-  cloud_grpc_receiver_endpoint?: string | null
-  cloud_http_receiver_endpoint?: string | null
+  grpc_receiver_endpoint_override?: string | null
+  http_receiver_endpoint_override?: string | null
 }>()
 
 const { _t } = usei18n()
@@ -425,8 +425,8 @@ async function onSaveClick(): Promise<void> {
           :http-auth="httpAuth"
           :grpc-event-console="grpcEventConsole"
           :http-event-console="httpEventConsole"
-          :cloud-grpc-endpoint="cloud_grpc_receiver_endpoint ?? null"
-          :cloud-http-endpoint="cloud_http_receiver_endpoint ?? null"
+          :grpc-endpoint-override="grpc_receiver_endpoint_override ?? null"
+          :http-endpoint-override="http_receiver_endpoint_override ?? null"
         />
       </template>
 

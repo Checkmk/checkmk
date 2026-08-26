@@ -35,8 +35,8 @@ const props = defineProps<{
   httpAuth: AuthConfig
   grpcEventConsole: EventConsoleConfig | null
   httpEventConsole: EventConsoleConfig | null
-  cloudGrpcEndpoint?: string | null
-  cloudHttpEndpoint?: string | null
+  grpcEndpointOverride?: string | null
+  httpEndpointOverride?: string | null
 }>()
 
 const activeTab = ref('collector')
@@ -44,14 +44,14 @@ const activeTab = ref('collector')
 const snippetInput = computed<CollectorSnippetInput>(() => ({
   siteName: props.siteName,
   httpInfo: props.httpEnabled
-    ? props.cloudHttpEndpoint
+    ? props.httpEndpointOverride
       ? {
           endpoint: props.httpEndpoint,
           tlsEnabled: true,
           tlsSimple: true,
           auth: props.httpAuth,
           eventConsole: props.httpEventConsole !== null,
-          overrideEndpoint: props.cloudHttpEndpoint
+          overrideEndpoint: props.httpEndpointOverride
         }
       : {
           endpoint: props.httpEndpoint,
@@ -61,14 +61,14 @@ const snippetInput = computed<CollectorSnippetInput>(() => ({
         }
     : null,
   grpcInfo: props.grpcEnabled
-    ? props.cloudGrpcEndpoint
+    ? props.grpcEndpointOverride
       ? {
           endpoint: props.grpcEndpoint,
           tlsEnabled: true,
           tlsSimple: true,
           auth: props.grpcAuth,
           eventConsole: props.grpcEventConsole !== null,
-          overrideEndpoint: props.cloudGrpcEndpoint
+          overrideEndpoint: props.grpcEndpointOverride
         }
       : {
           endpoint: props.grpcEndpoint,
@@ -89,14 +89,14 @@ const basicAuthEnabled = computed(
 // common SDK transport; fall back to gRPC when only that one is enabled.
 const sdkEndpointDisplay = computed(() => {
   const useHttp = props.httpEnabled
-  // Cloud: fixed receiver endpoints are injected; SDKs export to the one
-  // matching the transport shown, mirroring the override applied to the
-  // Collector snippet. HTTP is preferred when enabled.
-  if (useHttp && props.cloudHttpEndpoint) {
-    return props.cloudHttpEndpoint
+  // Fixed receiver endpoints may be injected by the hosting platform; SDKs
+  // export to the one matching the transport shown, mirroring the override
+  // applied to the Collector snippet. HTTP is preferred when enabled.
+  if (useHttp && props.httpEndpointOverride) {
+    return props.httpEndpointOverride
   }
-  if (!useHttp && props.grpcEnabled && props.cloudGrpcEndpoint) {
-    return props.cloudGrpcEndpoint
+  if (!useHttp && props.grpcEnabled && props.grpcEndpointOverride) {
+    return props.grpcEndpointOverride
   }
 
   const endpoint = useHttp ? props.httpEndpoint : props.grpcEnabled ? props.grpcEndpoint : null

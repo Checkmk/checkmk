@@ -139,6 +139,36 @@ test_container_unit_has_gidmap() {
     assertEquals "Container unit should have GIDMap directive" 0 $?
 }
 
+test_container_unit_has_net_raw_capability() {
+    grep -q "^AddCapability=NET_RAW$" "${QUADLET_DIR}/checkmk_relay.container"
+    assertEquals "Container unit should grant NET_RAW so check_icmp can open a raw socket" 0 $?
+}
+
+test_container_unit_grants_only_net_raw() {
+    local count
+    count=$(grep -c "^AddCapability=" "${QUADLET_DIR}/checkmk_relay.container" || true)
+    assertEquals "Container unit should grant exactly one capability" "1" "$count"
+}
+
+test_container_unit_is_not_privileged() {
+    # Granting one capability must never become a blanket privilege escalation.
+    # Quadlet reads Privileged= as a systemd boolean, so yes/on/1 escalate too.
+    assertFalse "Container unit must not run privileged" \
+        "grep -q '^Privileged=' '${QUADLET_DIR}/checkmk_relay.container'"
+}
+
+test_container_unit_capability_inside_container_section() {
+    # Quadlet only honours AddCapability inside [Container]; prove it is not
+    # stranded in a later section.
+    local unit="${QUADLET_DIR}/checkmk_relay.container"
+    local container_line cap_line service_line
+    container_line=$(grep -n "^\[Container\]$" "$unit" | cut -d: -f1)
+    cap_line=$(grep -n "^AddCapability=NET_RAW$" "$unit" | cut -d: -f1)
+    service_line=$(grep -n "^\[Service\]$" "$unit" | cut -d: -f1)
+    assertTrue "AddCapability should come after [Container]" "[ $cap_line -gt $container_line ]"
+    assertTrue "AddCapability should come before [Service]" "[ $cap_line -lt $service_line ]"
+}
+
 test_container_unit_uidmap_maps_root_to_99000() {
     grep -q "^UIDMap=0:99000:65536" "${QUADLET_DIR}/checkmk_relay.container"
     assertEquals "UIDMap should map container root to host UID 99000" 0 $?

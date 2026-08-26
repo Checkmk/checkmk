@@ -6,6 +6,8 @@
 # Tests for the --update-systemd mode, focused on network-mode handling:
 #   - preserve_network_mode() reads the on-disk .container so a regenerated unit
 #     keeps the relay on its current network, unless --use-host-network forces host.
+#   - update_systemd() warns that ICMP active checks cannot work on host
+#     networking, without failing the update.
 
 oneTimeSetUp() {
     # shellcheck disable=SC1091
@@ -42,6 +44,21 @@ setUp() {
     ARGS_USE_HOST_NETWORK=""
     mkdir -p "$QUADLET_DIR"
     rm -f "${QUADLET_DIR}/checkmk_relay.container"
+
+    # Capture warnings and neutralize the host-facing side effects, so a test can
+    # drive update_systemd() end to end instead of calling its steps by hand.
+    # Warnings go to a file, not a variable, so they survive being emitted from
+    # the subshell the entry point is driven in.
+    WARN_LOG_FILE="${TEST_DIR}/warnings.log"
+    : >"$WARN_LOG_FILE"
+    # shellcheck disable=SC2317
+    warn() { echo "$*" >>"$WARN_LOG_FILE"; }
+    # shellcheck disable=SC2317
+    systemctl() { :; }
+    # shellcheck disable=SC2317
+    sleep() { :; }
+    # shellcheck disable=SC2317
+    show_update_systemd_status() { :; }
 }
 
 # === preserve_network_mode() ===
@@ -103,6 +120,52 @@ test_update_forces_host_with_use_host_network_flag() {
     write_container_unit
     grep -q "^Network=host" "${QUADLET_DIR}/checkmk_relay.container"
     assertEquals "regenerated unit should use Network=host when flag is set" 0 $?
+}
+
+# === regeneration must add the NET_RAW capability to a pre-capability unit ===
+
+test_update_adds_net_raw_to_legacy_unit() {
+    # _write_container_with_network seeds a unit written before the capability
+    # existed, so it has no AddCapability line at all.
+    _write_container_with_network "bridge"
+
+    preserve_network_mode
+    write_container_unit
+
+    grep -q "^AddCapability=NET_RAW$" "${QUADLET_DIR}/checkmk_relay.container"
+    assertEquals "--update-systemd should grant NET_RAW to an existing relay" 0 $?
+}
+
+# === update_systemd() wiring: the ICMP warning must reach the operator ===
+
+# Drives the real entry point in a subshell, so a die() anywhere in the update
+# path fails the calling test instead of killing the whole run. The limitation is
+# a warning, not an error, so the update must always succeed.
+_run_update_systemd() {
+    set +e
+    (update_systemd)
+    local rc=$?
+    set -e
+    assertEquals "update_systemd must succeed" 0 "$rc"
+}
+
+test_update_warns_about_icmp_when_host_mode_is_preserved() {
+    # Host mode inherited from the on-disk unit, not the flag: this only warns
+    # while warn_if_host_network_icmp runs after preserve_network_mode.
+    _write_container_with_network "host"
+
+    _run_update_systemd
+
+    assertTrue "host relays must be warned that ICMP active checks cannot work" \
+        "grep -q 'ICMP active checks will not work' '$WARN_LOG_FILE'"
+}
+
+test_update_stays_silent_about_icmp_for_bridge_relay() {
+    _write_container_with_network "bridge"
+
+    _run_update_systemd
+
+    assertEquals "bridge relays must not be warned about ICMP" "" "$(cat "$WARN_LOG_FILE")"
 }
 
 # === check_relay_installed() — guard against updating an uninstalled host ===

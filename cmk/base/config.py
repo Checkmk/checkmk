@@ -127,6 +127,7 @@ from cmk.server_side_calls_backend import (
     ExecutableFinderProtocol,
     load_active_checks,
     load_special_agents,
+    NotSupportedError,
     relay_compatible_plugin_families,
     SecretsConfig,
     SpecialAgent,
@@ -2470,6 +2471,7 @@ class ConfigCache:
         single_plugin: str | None = None,
         *,
         for_relay: bool,
+        raise_on_unsupported: bool = False,
     ) -> Iterator[ActiveServiceData]:
         plugin_configs = (
             self.active_checks(host_name)
@@ -2518,10 +2520,20 @@ class ConfigCache:
             },
             lambda x: final_service_name_config(host_name, x, self.label_manager.labels_of_host),
             secrets_config,
+            # Built for the relay. cmk_inv (HW/SW Inventory) is the site-side exception:
+            # the relay config writer drops it, so it never runs on the relay. The prefix
+            # map does not touch its libexec path either, so its site command stays valid.
             ExecutableFinder(
                 cmk.utils.paths.local_nagios_plugins_dir,
                 cmk.utils.paths.nagios_plugins_dir,
-                prefix_map=(),  # no relay support yet.
+                prefix_map=(
+                    (
+                        cmk.utils.paths.nagios_plugins_dir,
+                        Path("/opt/check-mk-relay/lib/nagios/plugins"),
+                    ),
+                )
+                if for_relay
+                else (),
             ),
             ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
             for_relay=for_relay,
@@ -2530,6 +2542,18 @@ class ConfigCache:
         for plugin_name, plugin_params in plugin_configs:
             try:
                 yield from active_check_config.get_active_service_data(plugin_name, plugin_params)
+            except NotSupportedError:
+                if raise_on_unsupported:
+                    # The ad-hoc caller re-raises this into an explicit UNKNOWN result.
+                    raise
+                # This is a misconfiguration, not a failure: the check is fine, it just
+                # cannot run where this host is monitored. Report it as such. Unlike the
+                # generic handler below, do not re-raise under debug - nothing to debug.
+                config_warnings.warn(
+                    f"Host '{host_name}': active check '{plugin_name}' is not supported "
+                    "for relay-monitored hosts. Its services have not been created."
+                )
+                continue
             except Exception as e:
                 if cmk.ccc.debug.enabled():
                     raise

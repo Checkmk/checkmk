@@ -69,12 +69,13 @@ from cmk.checkengine.plugins import (
     ServiceID,
 )
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
-from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
+from cmk.discover_plugins import DiscoveredPlugins, family_libexec_dir, PluginLocation
 from cmk.fetchers import Mode, TCPEncryptionHandling
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback import backend as piggyback_backend
-from cmk.server_side_calls.v1 import ActiveCheckConfig
+from cmk.plugins.checkmk.server_side_calls import cmk_inv as active_check_cmk_inv_module
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig
 from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.rulesets import RuleSetName
@@ -3241,6 +3242,123 @@ def test_get_active_service_data_crash(
         captured.err
         == "\nWARNING: Config creation for active check my_active_check failed on test_host: division by zero\n"
     )
+
+
+@pytest.mark.parametrize("debug_enabled", [False, True])
+def test_get_active_service_data_not_supported_on_relay(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    debug_enabled: bool,
+) -> None:
+    """A check a relay cannot run is a misconfiguration, and must be reported as one.
+
+    The generic wording of a config-creation failure reads like an internal error and
+    says nothing about what the user should change.
+
+    Debug mode makes no difference here. It turns a swallowed exception into a crash so
+    that a defect can be traced, and there is no defect to trace in a configuration the
+    user is free to correct.
+    """
+    monkeypatch.setattr(cmk.ccc.debug, cmk.ccc.debug.enabled.__name__, lambda: debug_enabled)
+    monkeypatch.setattr(
+        config,
+        "load_active_checks",
+        lambda **kw: {
+            # the module must be importable: the executable finder loads it to look for
+            # a sibling "libexec" directory
+            PluginLocation(__name__, "active_check_my_active_check"): ActiveCheckConfig(
+                name="my_active_check",
+                parameter_parser=lambda p: p,
+                commands_function=lambda *a, **kw: [
+                    ActiveCheckCommand(service_description="My active check", command_arguments=())
+                ],
+            )
+        },
+    )
+    host_name = HostName("test_host")
+    ts = Scenario()
+    ts.add_host(host_name)
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            "my_active_check": [
+                {
+                    "condition": {},
+                    "id": "2",
+                    "value": {"description": "My active check", "param1": "param1"},
+                }
+            ]
+        },
+    )
+    config_cache = ts.apply(monkeypatch)
+
+    services = list(
+        config_cache.active_check_services(
+            host_name,
+            IPStackConfig.IPv4,
+            socket.AddressFamily.AF_INET,
+            config_cache.get_host_attributes(
+                host_name,
+                socket.AddressFamily.AF_INET,
+                lambda *a, **kw: HostAddress(""),
+            ),
+            FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
+            lambda *a, **kw: HostAddress(""),
+            _SecretsConfig(path=Path(), secrets={}),
+            for_relay=True,
+        )
+    )
+
+    assert not services
+    assert capsys.readouterr().err == (
+        "\nWARNING: Host 'test_host': active check 'my_active_check' is not supported "
+        "for relay-monitored hosts. Its services have not been created.\n"
+    )
+
+
+def test_cmk_inv_keeps_the_site_executable_on_a_relay_host(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The HW/SW Inventory check runs on the site even for a relay-monitored host.
+
+    Building the host's active checks for the relay must leave it usable there: its
+    executable resolves through the plugin family's libexec directory, which the relay
+    prefix map does not touch, and its command line references no stored secret.
+    """
+    location = PluginLocation(active_check_cmk_inv_module.__name__, "active_check_cmk_inv")
+    monkeypatch.setattr(
+        config,
+        "load_active_checks",
+        lambda **kw: {location: active_check_cmk_inv_module.active_check_cmk_inv},
+    )
+    host_name = HostName("test_host")
+    ts = Scenario()
+    ts.add_host(host_name)
+    ts.set_ruleset_bundle("active_checks", {"cmk_inv": [{"condition": {}, "id": "2", "value": {}}]})
+    config_cache = ts.apply(monkeypatch)
+    secrets_path = Path("/site/secrets")
+
+    services = list(
+        config_cache.active_check_services(
+            host_name,
+            IPStackConfig.IPv4,
+            socket.AddressFamily.AF_INET,
+            config_cache.get_host_attributes(
+                host_name,
+                socket.AddressFamily.AF_INET,
+                lambda *a, **kw: HostAddress(""),
+            ),
+            FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
+            lambda *a, **kw: HostAddress(""),
+            _SecretsConfig(path=secrets_path, secrets={}),
+            for_relay=True,
+        )
+    )
+
+    assert [s.command[0] for s in services] == [
+        str(family_libexec_dir(location.module) / "check_cmk_inv")
+    ]
+    assert not [arg for s in services for arg in s.command if str(secrets_path) in arg]
 
 
 class TestLabelsConfig:

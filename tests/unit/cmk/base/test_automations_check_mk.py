@@ -27,7 +27,7 @@ from cmk.base.automations import check_mk
 # The ExecutableFinder demands a location that exits :-/
 # We're importing it here, so that this fails the linters if that is removed.
 from cmk.base.automations.automations import AutomationContext
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.version import edition
 from cmk.checkengine.discovery import CheckPreview, CheckPreviewEntry, QualifiedDiscovery
@@ -52,6 +52,43 @@ _TEST_LOCATION = PluginLocation(
     cmk.plugins.collection.server_side_calls.ftp.__name__,
     "yolo",
 )
+
+_HOST_ATTRS = {
+    "alias": "my_host_alias",
+    "_ADDRESS_4": "127.0.0.1",
+    "address": "127.0.0.1",
+    "_ADDRESS_FAMILY": "4",
+    "display_name": "my_host",
+}
+
+
+def _prepare(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    relay_id: str | None,
+    loaded_active_checks: Mapping[PluginLocation, ActiveCheckConfig],
+    service_attrs: ObjectAttributes | None = None,
+) -> tuple[AutomationContext, ConfigCache, config.LoadingResult]:
+    _patch_plugin_loading(monkeypatch, loaded_active_checks)
+    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda *a, **kw: _HOST_ATTRS)
+    monkeypatch.setattr(check_mk, "get_service_attributes", lambda *a, **kw: service_attrs or {})
+    monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})
+    monkeypatch.setattr(config, "get_relay_id", lambda *a, **kw: relay_id)
+    app = make_app(edition(paths.omd_root))
+    config_cache = config.ConfigCache(EMPTY_CONFIG, app.get_builtin_host_labels)
+    context = AutomationContext(
+        edition=app.edition,
+        make_bake_on_restart=app.make_bake_on_restart,
+        create_core=app.create_core,
+        make_fetcher_trigger=app.make_fetcher_trigger,
+        make_metric_backend_fetcher=app.make_metric_backend_fetcher,
+        get_builtin_host_labels=app.get_builtin_host_labels,
+    )
+    loading_result = config.LoadingResult(
+        loaded_config=EMPTY_CONFIG,
+        config_cache=config_cache,
+    )
+    return context, config_cache, loading_result
 
 
 class _MockFetcherTrigger(PlainFetcherTrigger):
@@ -350,6 +387,28 @@ def test_automation_active_check_invalid_args(
     )
 
     assert error_message == capsys.readouterr().err
+
+
+def test_active_check_unsupported_on_relay_reports_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
+    context, config_cache, lr = _prepare(
+        monkeypatch, relay_id="relay-1", loaded_active_checks={_TEST_LOCATION: MOCK_PLUGIN}
+    )
+    monkeypatch.setattr(
+        config_cache,
+        "active_checks",
+        lambda *a, **kw: [
+            ("my_active_check", [{"description": "My active check", "param1": "param1"}])
+        ],
+    )
+    result = AutomationActiveCheckTestable().execute(
+        context,
+        ["my_host", "my_active_check", "Active check of my_host"],
+        AgentBasedPlugins.empty(),
+        lr,
+    )
+    assert result == automation_results.ActiveCheckResult(
+        state=3, output="UNKNOWN - Active check 'my_active_check' is not supported on relays"
+    )
 
 
 @pytest.mark.parametrize(

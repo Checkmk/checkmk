@@ -10,12 +10,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from cmk.licensing.usage_counters import (
-    collect_license_usage_counters,
+from cmk.licensing.internal import (
     CounterCollectionContext,
+    LicenseUsageCounter,
     LicenseUsageCounterName,
-    LicenseUsageCounterPlugin,
 )
+from cmk.licensing.usage_counters import collect_license_usage_counters
 
 
 @pytest.fixture
@@ -32,10 +32,10 @@ def test_counters_of_all_plugins_are_collected(
     context: CounterCollectionContext, logger: MagicMock
 ) -> None:
     plugins = [
-        LicenseUsageCounterPlugin(
+        LicenseUsageCounter(
             name="one", collect=lambda _ctx: {"synthetic_tests": 1, "synthetic_kpis": 2}
         ),
-        LicenseUsageCounterPlugin(name="two", collect=lambda _ctx: {"active_metric_series": 3}),
+        LicenseUsageCounter(name="two", collect=lambda _ctx: {"active_metric_series": 3}),
     ]
 
     assert collect_license_usage_counters(plugins, context, logger) == {
@@ -59,8 +59,8 @@ def test_failing_plugin_is_logged_and_skipped(
         raise exception
 
     plugins = [
-        LicenseUsageCounterPlugin(name="broken", collect=_raise),
-        LicenseUsageCounterPlugin(name="working", collect=lambda _ctx: {"active_metric_series": 1}),
+        LicenseUsageCounter(name="broken", collect=_raise),
+        LicenseUsageCounter(name="working", collect=lambda _ctx: {"active_metric_series": 1}),
     ]
 
     assert collect_license_usage_counters(plugins, context, logger) == {"active_metric_series": 1}
@@ -72,8 +72,8 @@ def test_duplicate_counter_is_logged_and_first_wins(
     logger: MagicMock,
 ) -> None:
     plugins = [
-        LicenseUsageCounterPlugin(name="one", collect=lambda _ctx: {"active_metric_series": 1}),
-        LicenseUsageCounterPlugin(
+        LicenseUsageCounter(name="one", collect=lambda _ctx: {"active_metric_series": 1}),
+        LicenseUsageCounter(
             name="two", collect=lambda _ctx: {"active_metric_series": 2, "synthetic_tests": 3}
         ),
     ]

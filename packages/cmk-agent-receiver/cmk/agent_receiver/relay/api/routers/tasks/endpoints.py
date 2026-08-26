@@ -30,8 +30,10 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.localhost_authorization imp
     validate_localhost_authorization,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
+    ActiveCheckSpec,
     FetchSpec,
     ResultType,
+    Spec,
     TaskStatus,
 )
 from cmk.agent_receiver.relay.api.routers.tasks.serializers import (
@@ -81,6 +83,7 @@ async def create_task_endpoint(
         - Task IDs are unique
         - Maximum number of stored tasks has limits
     """
+    spec: Spec
     match request_body.spec:
         case tasks_protocol.FetchAdHocTask():
             spec = FetchSpec(
@@ -88,12 +91,10 @@ async def create_task_endpoint(
                 timeout=request_body.spec.timeout,
             )
         case tasks_protocol.AdHocActiveCheckTask():
-            # A relay can run these, but this receiver cannot store them yet: the
-            # repository has no spec for them and the serializer could not return
-            # them. Reject explicitly rather than mis-storing them as a fetch.
-            raise fastapi.HTTPException(
-                status_code=fastapi.status.HTTP_501_NOT_IMPLEMENTED,
-                detail="Ad-hoc active check tasks are not supported yet",
+            spec = ActiveCheckSpec(
+                host=request_body.spec.host,
+                command=request_body.spec.command,
+                timeout=request_body.spec.timeout,
             )
         case _:  # pragma: no cover
             assert_never(request_body.spec)

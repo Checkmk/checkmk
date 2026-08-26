@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -23,6 +24,8 @@ const props = defineProps<{
   highlighted: string | null
   /** Names the window the comparison is against; falls back to a bare label. */
   previousLabel?: string | undefined
+  /** Whether the widget is wide enough to carry the comparison columns. */
+  showComparison: boolean
 }>()
 
 defineEmits<{
@@ -34,6 +37,18 @@ defineEmits<{
 // Decided over the whole legend, not per row: a header that comes and goes with
 // the row under the pointer is worse than one column of dashes.
 const hasPrevious = computed(() => props.rows.some((row) => row.previousText !== null))
+
+// The chart measures, because the answer also settles how much width the ring
+// may have.
+const comparisonVisible = computed(() => hasPrevious.value && props.showComparison)
+const comparisonWithheld = computed(() => hasPrevious.value && !props.showComparison)
+
+const withheldHint = computed(() =>
+  _t('%{previous} and %{change} are hidden: the widget is too narrow to carry them.', {
+    previous: props.previousLabel ?? _t('Previous'),
+    change: _t('Change')
+  })
+)
 
 /** Which way a row's arrow points, or null for a change that has no direction. */
 function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
@@ -62,20 +77,35 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
               {{ _t('Visible') }}
             </span>
           </th>
-          <th class="network-flow-donut-legend-table__th">{{ _t('Category') }}</th>
+          <!-- Also on the cell, because contextual help renders nothing at all
+               for a user who has turned the help icons off. -->
+          <th
+            class="network-flow-donut-legend-table__th"
+            :title="comparisonWithheld ? withheldHint : undefined"
+          >
+            <span class="network-flow-donut-legend-table__th-content">
+              {{ _t('Category') }}
+              <CmkHelpText
+                v-if="comparisonWithheld"
+                :help="withheldHint"
+                :aria-label="_t('Why the comparison is not shown')"
+                use-portal
+              />
+            </span>
+          </th>
           <th
             class="network-flow-donut-legend-table__th network-flow-donut-legend-table__th--value"
           >
             {{ _t('Current') }}
           </th>
-          <template v-if="hasPrevious">
+          <template v-if="comparisonVisible">
             <th
               class="network-flow-donut-legend-table__th network-flow-donut-legend-table__th--value network-flow-donut-legend-table__th--comparison"
             >
               {{ previousLabel ?? _t('Previous') }}
             </th>
             <th
-              class="network-flow-donut-legend-table__th network-flow-donut-legend-table__th--value network-flow-donut-legend-table__th--comparison"
+              class="network-flow-donut-legend-table__th network-flow-donut-legend-table__th--value network-flow-donut-legend-table__th--change"
             >
               {{ _t('Change') }}
             </th>
@@ -146,14 +176,14 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
           >
             {{ row.currentText }}
           </td>
-          <template v-if="hasPrevious">
+          <template v-if="comparisonVisible">
             <td
               class="network-flow-donut-legend-table__td network-flow-donut-legend-table__td--value network-flow-donut-legend-table__td--comparison"
             >
               {{ row.previousText }}
             </td>
             <td
-              class="network-flow-donut-legend-table__td network-flow-donut-legend-table__td--value network-flow-donut-legend-table__td--comparison"
+              class="network-flow-donut-legend-table__td network-flow-donut-legend-table__td--value network-flow-donut-legend-table__td--change"
             >
               <span class="network-flow-donut-legend-table__delta">
                 <CmkDeltaArrow
@@ -191,12 +221,17 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
   position: sticky;
   top: 0;
   z-index: 1;
-  padding: clamp(2px, 1.5cqh, 7px) clamp(2px, 1cqw, 8px);
+  padding: 0.45em 0.55em;
   font-size: 0.85em;
   font-weight: var(--font-weight-bold);
   color: var(--color-mid-grey-50);
   text-align: left;
   letter-spacing: 0.04em;
+
+  /* Ellipsis rather than stopping mid-glyph, where "Prev 30 min" read as
+     "Prev 30 mir". */
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 
   /* Opaque, or the rows scroll through the header. */
@@ -205,6 +240,15 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
   /* An inset shadow rather than a border: collapsed borders are painted by the
      table, so a border on a sticky cell scrolls away with the rows. */
   box-shadow: inset 0 -1px 0 var(--ux-theme-6);
+}
+
+/* Wrapped, because a th laid out as a flex container is no longer a table
+   cell, and the fixed column widths go with it. */
+.network-flow-donut-legend-table__th-content {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  vertical-align: middle;
 }
 
 .network-flow-donut-legend-table__th--eye {
@@ -222,18 +266,22 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
   white-space: nowrap;
 }
 
-/* Past a certain narrowness three numbers per row leave the category names a
-   few characters each. The comparison is what goes: what is flowing now is the
-   column nobody can do without. */
-@container nf-donut (width < 430px) {
-  .network-flow-donut-legend-table__th--comparison,
-  .network-flow-donut-legend-table__td--comparison {
-    display: none;
-  }
+/* Headed by the window it is against ("Prev 30 min"), which needs more room
+   than the figures under it. */
+.network-flow-donut-legend-table__th--comparison,
+.network-flow-donut-legend-table__td--comparison {
+  width: 6.5em;
+}
+
+/* An arrow and a percentage; narrower than a formatted volume. */
+.network-flow-donut-legend-table__th--change,
+.network-flow-donut-legend-table__td--change {
+  width: 4.5em;
 }
 
 .network-flow-donut-legend-table__td {
-  padding: clamp(2px, 1.5cqh, 7px) clamp(2px, 1cqw, 8px);
+  /* In em, so the rows get shorter as the text does. */
+  padding: 0.45em 0.55em;
 
   /* The fixed layout hands the category cell whatever the numbers leave, and
      this is what makes the name give way inside it. */

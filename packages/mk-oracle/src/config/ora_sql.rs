@@ -17,7 +17,7 @@
 use super::defines::{defaults, keys, values};
 use super::section::{names, Section, SectionKind, Sections};
 use super::yaml::{Get, Yaml};
-use crate::config::authentication::Authentication;
+use crate::config::authentication::{AuthType, Authentication};
 use crate::config::connection::Connection;
 use crate::config::options::Options;
 use crate::config::target::TargetId;
@@ -245,6 +245,47 @@ impl Config {
 
     pub fn params(&self) -> &Vec<SqlBindParam> {
         self.options.params()
+    }
+
+    /// Whether any configured instance is reached through `tnsnames.ora`: either
+    /// by an alias, or with wallet authentication, whose SEPS credential is keyed
+    /// by the connect identifier rather than by host and port.
+    ///
+    /// Both need the client to resolve names, so `TNS_ADMIN` has to be in place
+    /// before the connection is made.
+    pub fn uses_tns_resolution(&self) -> bool {
+        self.instances().iter().any(|instance| {
+            instance.alias().is_some()
+                || instance.auth().auth_type() == &AuthType::Wallet
+                || instance
+                    .target_id()
+                    .is_some_and(|target_id| target_id.alias().is_some())
+        })
+    }
+
+    pub fn need_sandbox(&self) -> bool {
+        // override all local sids, info from local sids will be ignored
+        if self.conn().tns_admin().is_some() {
+            return false;
+        }
+
+        // when no detect we don't need to spawn, everything should defined explicitly
+        if !self.discovery().detect {
+            return false;
+        }
+
+        // we may find an instance with a wallet, which is resolved through sqlnet.ora
+        if self.auth().auth_type() == &AuthType::Wallet {
+            return true;
+        }
+
+        // an alias or a wallet credential is resolved through tnsnames.ora, which
+        // the client only reads from TNS_ADMIN of an already-prepared environment
+        if self.uses_tns_resolution() {
+            return true;
+        }
+
+        false
     }
 }
 
@@ -1097,6 +1138,68 @@ oracle:
                 vec![SectionName::from("sessions".to_string())]
             )]
         );
+    }
+
+    /// `detect`, `tns_admin`, the main auth type and the instance list, in the
+    /// shapes the sandbox decision turns on.
+    fn config_for_sandbox(
+        detect: bool,
+        tns_admin: bool,
+        auth_type: &str,
+        instance: &str,
+    ) -> Config {
+        let yaml = format!(
+            r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: {auth_type}
+    connection:
+      hostname: localhost
+{}
+    discovery:
+      detect: {}
+    instances:
+      - {instance}
+"#,
+            if tns_admin {
+                "      tns_admin: \"/etc/check_mk\""
+            } else {
+                ""
+            },
+            if detect { "yes" } else { "no" },
+        );
+        Config::from_string(&yaml)
+            .expect("yaml parses")
+            .expect("oracle config present")
+    }
+
+    #[test]
+    fn test_uses_tns_resolution() {
+        // An alias is resolved through tnsnames.ora.
+        assert!(
+            config_for_sandbox(false, false, "standard", "alias: my_alias").uses_tns_resolution()
+        );
+        // So is the SEPS credential of a wallet, even for a plain sid target.
+        assert!(config_for_sandbox(false, false, "wallet", "sid: XE").uses_tns_resolution());
+        // A sid with standard auth needs no name resolution.
+        assert!(!config_for_sandbox(false, false, "standard", "sid: XE").uses_tns_resolution());
+    }
+
+    #[test]
+    fn test_need_sandbox() {
+        // An explicit tns_admin defines the one environment to use.
+        assert!(!config_for_sandbox(true, true, "wallet", "alias: my_alias").need_sandbox());
+        // Without detection there is one known home, so nothing to sandbox.
+        assert!(!config_for_sandbox(false, false, "wallet", "alias: my_alias").need_sandbox());
+        // Alias needs sandbox under condition detection on and no tns_admin.
+        assert!(config_for_sandbox(true, false, "standard", "alias: my_alias").need_sandbox());
+        // Wallet needs sandbox under condition detection on and no tns_admin.
+        assert!(config_for_sandbox(true, false, "wallet", "sid: XE").need_sandbox());
+        // Detected homes vary, but a sid with standard auth reads no tnsnames.ora.
+        assert!(!config_for_sandbox(true, false, "standard", "sid: XE").need_sandbox());
     }
 
     #[test]

@@ -62,6 +62,10 @@ async fn main() {
             ));
         };
 
+        if let Some(ora_sql) = config.ora_sql() {
+            log::info!("Sandbox needed: {}", ora_sql.need_sandbox());
+        }
+
         if environment.detect_sids() || environment.find_runtime() {
             run_utility_command(&config, &environment)
         } else if environment.runtime_ready() {

@@ -48,9 +48,7 @@ def discover_license_usage_counter_plugins() -> Sequence[LicenseUsageCounter]:
     # Modules absent from the running edition are simply skipped.
     not_yet_moved = discover_plugins_from_modules(
         entry_point_prefixes(),
-        (
-            "cmk.metric_backend.license_usage",  # non-free, ships with the metric backend
-        ),
+        (),
         skip_wrong_types=False,
         raise_errors=True,
     )

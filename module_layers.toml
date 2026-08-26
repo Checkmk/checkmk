@@ -255,6 +255,9 @@ allows = [
   "cmk.logwatch",
 ]
 
+[plugin_families.violations.metric_backend]
+allows = ["cmk.metric_backend"]
+
 [plugin_families.violations.metric_backend_connector]
 allows = [
   "cmk.ccc",

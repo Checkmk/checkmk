@@ -20,10 +20,20 @@ use std::fmt;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
+pub struct AliasInfo {
+    pub alias: InstanceAlias,
+    pub host_name: Option<HostName>,
+    pub port: Option<Port>,
+    pub sid: Option<Sid>,
+    pub service_name: Option<ServiceName>,
+}
+
+#[derive(Debug, Clone)]
 pub struct LocalInstance {
     pub name: InstanceName,
     pub home: PathBuf,
     pub base: Option<PathBuf>,
+    pub aliases: Vec<AliasInfo>,
 }
 
 /// Whether a local instance is running, as far as the process list shows.

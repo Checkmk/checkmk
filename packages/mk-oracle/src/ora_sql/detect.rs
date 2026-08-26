@@ -15,10 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::platform::registry::get_instances;
-use crate::types::LocalInstance;
-use anyhow::Result;
+use crate::types::{AliasInfo, HostName, InstanceAlias, LocalInstance, Port, ServiceName, Sid};
+use anyhow::{Context, Result};
 use regex::Regex;
 use std::collections::HashSet;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 
 /// Regex pattern to match Oracle PMON processes and capture the SID.
 ///
@@ -220,6 +223,202 @@ fn print_detected_sids(
     }
 }
 
+/// `<name> =` at the start of a line: the only place an alias may appear, so a
+/// `(SID = ...)` inside a descriptor is never mistaken for one.
+static TNS_ENTRY_NAME: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?m)^([A-Za-z0-9][\w.$-]*)\s*=").expect("hardcoded pattern must compile")
+});
+
+/// `(KEY = VALUE)` with a single-token value: enough for HOST, PORT, SID and
+/// SERVICE_NAME, and it never matches a nested group such as `(DESCRIPTION = (`.
+static TNS_PARAMETER: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)\(\s*(HOST|PORT|SID|SERVICE_NAME)\s*=\s*([^\s()]+)\s*\)")
+        .expect("hardcoded pattern must compile")
+});
+
+/// `IFILE = <path>`: an include directive, not an alias. Oracle allows several,
+/// and the path may be quoted.
+static TNS_IFILE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?im)^\s*IFILE\s*=\s*"?([^"\r\n]+?)"?\s*$"#)
+        .expect("hardcoded pattern must compile")
+});
+
+/// How deep `IFILE` may nest. A cycle would otherwise recurse until the stack
+/// runs out; the depth also bounds the work a hostile file can cause.
+const TNS_MAX_IFILE_DEPTH: usize = 8;
+
+/// Read the aliases of a `tnsnames.ora`.
+///
+/// Deliberately not a parser for the full Oracle grammar: it extracts only what
+/// the plugin can act on - the alias, its first address and its first target -
+/// and reports anything it cannot read as absent rather than failing. The file
+/// belongs to the Oracle client, and a shape this reader does not understand
+/// must never stop the monitoring.
+///
+/// Names come back upper-cased and hosts lower-cased: Oracle compares aliases,
+/// SIDs and service names case-insensitively, while a host is a DNS name.
+///
+/// Only the first `ADDRESS` and the first `SID`/`SERVICE_NAME` of an entry are
+/// taken - the plugin connects to one address, later ones are failover targets
+/// it does not use.
+///
+/// `IFILE = <path>` directives are followed, as the Oracle client does, and
+/// their aliases are appended after the ones of the including file. A relative
+/// path is resolved against the directory of the file holding the directive. An
+/// include that cannot be read is logged and skipped: it costs its aliases, not
+/// the whole file.
+///
+/// # Errors
+///
+/// Returns an error only if `file` itself cannot be read.
+pub fn parse_tns_names_ora(file: &Path) -> Result<Vec<AliasInfo>> {
+    let content = fs::read_to_string(file)
+        .with_context(|| format!("Failed to read tnsnames.ora at '{}'", file.display()))?;
+    Ok(parse_tns_names_file_content(
+        &content,
+        file,
+        TNS_MAX_IFILE_DEPTH,
+    ))
+}
+
+/// The aliases of one file: its own, then those of every file it includes.
+///
+/// `depth` is the remaining `IFILE` budget; at zero the includes are reported and
+/// skipped, which is what stops a cycle (`a.ora` including `b.ora` including
+/// `a.ora`) from recursing forever.
+fn parse_tns_names_file_content(content: &str, file: &Path, depth: usize) -> Vec<AliasInfo> {
+    let cleaned = strip_tns_comments(content);
+
+    let mut result = parse_tns_names_content(&cleaned);
+    for include in tns_include_paths(&cleaned, file) {
+        if depth == 0 {
+            log::warn!(
+                "tnsnames.ora at '{}': IFILE nesting deeper than {TNS_MAX_IFILE_DEPTH}, \
+                 skipping '{}'",
+                file.display(),
+                include.display()
+            );
+            continue;
+        }
+        match fs::read_to_string(&include) {
+            Ok(included) => {
+                log::info!("tnsnames.ora: following IFILE '{}'", include.display());
+                result.extend(parse_tns_names_file_content(&included, &include, depth - 1));
+            }
+            // The include belongs to the Oracle client; a missing or unreadable
+            // one costs its aliases, not the aliases already read.
+            Err(e) => log::warn!(
+                "tnsnames.ora at '{}': cannot read IFILE '{}': {e}",
+                file.display(),
+                include.display()
+            ),
+        }
+    }
+    result
+}
+
+/// The `IFILE` paths of an already-cleaned content, each resolved against the
+/// directory of the file it was found in - that is how the Oracle client reads a
+/// relative include.
+fn tns_include_paths(cleaned: &str, file: &Path) -> Vec<PathBuf> {
+    let base = file.parent().unwrap_or_else(|| Path::new("."));
+    TNS_IFILE
+        .captures_iter(cleaned)
+        .map(|c| {
+            let path = c.get(1).expect("group 1 is not optional").as_str().trim();
+            base.join(path)
+        })
+        .collect()
+}
+
+/// [`parse_tns_names_ora`] on already-read content.
+pub fn parse_tns_names_content(content: &str) -> Vec<AliasInfo> {
+    let cleaned = strip_tns_comments(content);
+
+    // Every match opens an entry; its body reaches to the next match, or to the
+    // end of the file for the last one.
+    let starts: Vec<(usize, String)> = TNS_ENTRY_NAME
+        .captures_iter(&cleaned)
+        .map(|c| {
+            let whole = c.get(0).expect("group 0 always exists");
+            let name = c.get(1).expect("group 1 is not optional").as_str();
+            (whole.end(), name.to_uppercase())
+        })
+        .collect();
+
+    starts
+        .iter()
+        .enumerate()
+        // `IFILE` is an include directive, not an alias: it is followed by
+        // `parse_tns_names_file_content`, and reporting it here would put a
+        // target-less entry into the result.
+        .filter(|(_, (_, name))| name != "IFILE")
+        .map(|(index, (body_start, name))| {
+            let body_end =
+                starts
+                    .get(index + 1)
+                    .map_or(cleaned.len(), |(next_start, next_name)| {
+                        // The next body starts after its `<name> =`, so step back over
+                        // the name and the `=` to end this body before it.
+                        next_start - next_name.len()
+                    });
+            parse_tns_entry(name, &cleaned[*body_start..body_end])
+        })
+        .collect()
+}
+
+/// Drop `#` comments and blank lines, keeping the line structure so that the
+/// `<name> =` anchor still works.
+fn strip_tns_comments(content: &str) -> String {
+    content
+        .lines()
+        .map(|line| line.split('#').next().unwrap_or(""))
+        .filter(|line| !line.trim().is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// The first host, port and target of one entry body.
+fn parse_tns_entry(name: &str, body: &str) -> AliasInfo {
+    let mut host_name = None;
+    let mut port = None;
+    let mut sid = None;
+    let mut service_name = None;
+
+    for parameter in TNS_PARAMETER.captures_iter(body) {
+        let key = parameter
+            .get(1)
+            .expect("group 1 is not optional")
+            .as_str()
+            .to_uppercase();
+        let value = parameter.get(2).expect("group 2 is not optional").as_str();
+        match key.as_str() {
+            "HOST" if host_name.is_none() => host_name = Some(HostName::from(value.to_lowercase())),
+            "PORT" if port.is_none() => match value.parse::<u16>() {
+                Ok(number) => port = Some(Port(number)),
+                Err(e) => log::warn!("{name}: port {value:?} is not a port number: {e}"),
+            },
+            // A SID and a service name are alternatives; the first one wins, so
+            // an entry naming both is read the way the client reads it.
+            "SID" if sid.is_none() && service_name.is_none() => {
+                sid = Some(Sid::from(value.to_uppercase().as_str()))
+            }
+            "SERVICE_NAME" if sid.is_none() && service_name.is_none() => {
+                service_name = Some(ServiceName::from(value.to_uppercase().as_str()))
+            }
+            _ => log::debug!("{name}: ignoring repeated or unknown parameter {key}"),
+        }
+    }
+
+    AliasInfo {
+        alias: InstanceAlias::from(name.to_string()),
+        host_name,
+        port,
+        sid,
+        service_name,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -231,6 +430,7 @@ mod tests {
             name: InstanceName::from(name),
             home: PathBuf::from(home),
             base: base.map(PathBuf::from),
+            aliases: vec![],
         }
     }
 
@@ -421,5 +621,255 @@ mod tests {
             split_row(lines[2]),
             vec!["XE", "Stop", "/path/to/ora/xe", "N/A"]
         );
+    }
+
+    /// The file shipped in `tests/files/tns`, the shape a real client uses.
+    const TNS_REFERENCE: &str = include_str!("../../tests/files/tns/tnsnames.ora");
+
+    fn tns_entry(content: &str) -> AliasInfo {
+        let entries = parse_tns_names_content(content);
+        assert_eq!(entries.len(), 1, "expected exactly one entry: {entries:?}");
+        entries.into_iter().next().expect("checked above")
+    }
+
+    fn tns_parts(
+        entry: &AliasInfo,
+    ) -> (
+        String,
+        Option<String>,
+        Option<u16>,
+        Option<String>,
+        Option<String>,
+    ) {
+        (
+            entry.alias.to_string(),
+            entry.host_name.as_ref().map(ToString::to_string),
+            entry.port.as_ref().map(|p| p.value()),
+            entry.sid.as_ref().map(ToString::to_string),
+            entry.service_name.as_ref().map(ToString::to_string),
+        )
+    }
+
+    #[test]
+    fn test_parse_tns_names_reference_file() {
+        let entries = parse_tns_names_content(TNS_REFERENCE);
+
+        assert_eq!(
+            entries.iter().map(tns_parts).collect::<Vec<_>>(),
+            vec![
+                (
+                    "ORA_LOCAL".to_string(),
+                    Some("localhost".to_string()),
+                    Some(1521),
+                    Some("FREE".to_string()),
+                    None,
+                ),
+                (
+                    "ORA_REMOTE".to_string(),
+                    Some("oracle-rocky-ci.lan.checkmk.net".to_string()),
+                    Some(1521),
+                    Some("SID23".to_string()),
+                    None,
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_parse_tns_names_multi_line_entry_with_service_name() {
+        let entry = tns_entry(
+            r#"
+LISTENER20 =
+  (DESCRIPTION =
+    (ADDRESS = ( protocol = TCP)(host = ORACLE-rocky-ci.lan.checkmk.net)(PORT = 1522))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = dbtest19)
+    )
+  )
+"#,
+        );
+
+        assert_eq!(
+            tns_parts(&entry),
+            (
+                "LISTENER20".to_string(),
+                Some("oracle-rocky-ci.lan.checkmk.net".to_string()),
+                Some(1522),
+                None,
+                Some("DBTEST19".to_string()),
+            )
+        );
+    }
+
+    /// Keys, alias and values are matched case-insensitively; names come back
+    /// upper-cased and the host lower-cased.
+    #[test]
+    fn test_parse_tns_names_ignores_case() {
+        let entry = tns_entry(
+            "MiXeD = (description = (address = (protocol = tcp)(Host = Oracle-Host.Example.NET)\
+             (pOrT = 1521))(connect_data = (service_Name = MyService)))",
+        );
+
+        assert_eq!(
+            tns_parts(&entry),
+            (
+                "MIXED".to_string(),
+                Some("oracle-host.example.net".to_string()),
+                Some(1521),
+                None,
+                Some("MYSERVICE".to_string()),
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_tns_names_tolerates_padded_values() {
+        let entry = tns_entry("PADDED = (ADDRESS = (HOST =  host.example.net )(PORT =  1600 ))");
+
+        assert_eq!(
+            entry.host_name.map(|h| h.to_string()).as_deref(),
+            Some("host.example.net")
+        );
+        assert_eq!(entry.port.map(|p| p.value()), Some(1600));
+    }
+
+    /// Only the first address and the first target are taken: the rest are
+    /// failover targets the plugin does not use.
+    #[test]
+    fn test_parse_tns_names_takes_only_the_first_address_and_target() {
+        let entry = tns_entry(
+            "FAILOVER = (DESCRIPTION = (ADDRESS_LIST =
+                 (ADDRESS = (PROTOCOL = TCP)(HOST = first.example.net)(PORT = 1521))
+                 (ADDRESS = (PROTOCOL = TCP)(HOST = second.example.net)(PORT = 1522)))
+               (CONNECT_DATA = (SID = FIRSTSID)(SERVICE_NAME = ignored)))",
+        );
+
+        assert_eq!(
+            tns_parts(&entry),
+            (
+                "FAILOVER".to_string(),
+                Some("first.example.net".to_string()),
+                Some(1521),
+                Some("FIRSTSID".to_string()),
+                None,
+            )
+        );
+    }
+
+    #[test]
+    fn test_parse_tns_names_drops_comments_and_blank_lines() {
+        let entries = parse_tns_names_content(
+            "# leading comment\n\
+             \n\
+             # ONLY_A_COMMENT = (HOST = commented.example.net)\n\
+             REAL = (ADDRESS = (HOST = real.example.net)(PORT = 1521)) # trailing comment\n",
+        );
+
+        assert_eq!(entries.len(), 1, "{entries:?}");
+        assert_eq!(entries[0].alias.to_string(), "REAL");
+        assert_eq!(
+            entries[0]
+                .host_name
+                .as_ref()
+                .map(ToString::to_string)
+                .as_deref(),
+            Some("real.example.net")
+        );
+    }
+
+    /// A missing key is reported as absent, not as an error: the file belongs to
+    /// the Oracle client and may hold shapes this reader does not read.
+    #[test]
+    fn test_parse_tns_names_missing_parts_are_none() {
+        let entry = tns_entry("BARE = (DESCRIPTION = (CONNECT_DATA = (SERVER = DEDICATED)))");
+
+        assert_eq!(
+            tns_parts(&entry),
+            ("BARE".to_string(), None, None, None, None)
+        );
+    }
+
+    #[test]
+    fn test_parse_tns_names_non_numeric_port_is_none() {
+        let entry =
+            tns_entry("BADPORT = (ADDRESS = (HOST = host.example.net)(PORT = not_a_number))");
+
+        assert_eq!(
+            entry.host_name.map(|h| h.to_string()).as_deref(),
+            Some("host.example.net")
+        );
+        assert!(entry.port.is_none(), "an unparsable port is absent");
+    }
+
+    #[test]
+    fn test_parse_tns_names_empty_content_yields_nothing() {
+        assert!(parse_tns_names_content("").is_empty());
+        assert!(parse_tns_names_content("\n\n   \n").is_empty());
+        assert!(parse_tns_names_content("# just a comment\n").is_empty());
+    }
+
+    /// An indented `(SID = ...)` must not open an entry: only a name at the
+    /// start of a line does.
+    #[test]
+    fn test_parse_tns_names_nested_keys_do_not_open_an_entry() {
+        let entries = parse_tns_names_content(
+            "ONLY_ONE =\n  (DESCRIPTION =\n    (CONNECT_DATA =\n      (SID = FREE)))\n",
+        );
+
+        assert_eq!(entries.len(), 1, "{entries:?}");
+        assert_eq!(entries[0].alias.to_string(), "ONLY_ONE");
+        assert_eq!(
+            entries[0].sid.as_ref().map(ToString::to_string).as_deref(),
+            Some("FREE")
+        );
+    }
+
+    /// Aliases may carry dots, dashes and underscores; the entry after them must
+    /// still be found.
+    #[test]
+    fn test_parse_tns_names_dotted_and_dashed_alias_names() {
+        let entries = parse_tns_names_content(
+            "db-one.world = (ADDRESS = (HOST = a.example.net)(PORT = 1521))\n\
+             DB_TWO = (ADDRESS = (HOST = b.example.net)(PORT = 1522))\n",
+        );
+
+        assert_eq!(
+            entries
+                .iter()
+                .map(|e| e.alias.to_string())
+                .collect::<Vec<_>>(),
+            vec!["DB-ONE.WORLD", "DB_TWO"]
+        );
+        assert_eq!(entries[1].port.as_ref().map(|p| p.value()), Some(1522));
+    }
+
+    /// Reads from disk, not from `include_str!`: the file path is what the
+    /// caller passes. Written to a temp dir so the test does not depend on the
+    /// working directory, which differs between cargo and bazel.
+    #[test]
+    fn test_parse_tns_names_ora_reads_the_file() {
+        let file = std::env::temp_dir().join(format!(
+            "mk-oracle-test-{}-tnsnames.ora",
+            std::process::id()
+        ));
+        fs::write(&file, TNS_REFERENCE).expect("write the reference file");
+
+        let entries = parse_tns_names_ora(&file);
+        let _ = fs::remove_file(&file);
+
+        assert_eq!(
+            entries
+                .expect("the written file must be readable")
+                .iter()
+                .map(|e| e.alias.to_string())
+                .collect::<Vec<_>>(),
+            vec!["ORA_LOCAL", "ORA_REMOTE"]
+        );
+    }
+
+    #[test]
+    fn test_parse_tns_names_ora_reports_an_unreadable_file() {
+        assert!(parse_tns_names_ora(Path::new("no/such/tnsnames.ora")).is_err());
     }
 }

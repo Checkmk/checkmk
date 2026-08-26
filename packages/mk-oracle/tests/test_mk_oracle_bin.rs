@@ -17,6 +17,7 @@
 use assert_cmd::Command;
 use mk_oracle::config::merge::{merge_configs, MergedConfig};
 use mk_oracle::config::OracleConfig;
+use mk_oracle::ora_sql::detect::parse_tns_names_ora;
 use mk_oracle::setup::CLIENT_LIB_NAME;
 use mk_oracle::version::VERSION;
 use std::ffi::OsString;
@@ -1580,4 +1581,85 @@ fn test_merge_configs_none_when_both_missing() {
     )
     .unwrap();
     assert!(merged.config.is_none());
+}
+
+/// `tnsnames.ora` aliases are read from disk, and an `IFILE` include is followed:
+/// its aliases are appended after the ones of the including file, while `IFILE`
+/// itself is no alias. A relative include resolves against the including file.
+#[test]
+fn test_parse_tns_names_ora_follows_ifile() {
+    let tmp = tempfile::tempdir().unwrap();
+    let main = tmp.path().join("tnsnames.ora");
+    std::fs::write(
+        &main,
+        "IFILE = included.ora\nOWN = (ADDRESS = (HOST = own.example.net)(PORT = 1521))\n",
+    )
+    .unwrap();
+    std::fs::write(
+        tmp.path().join("included.ora"),
+        "FROM_INCLUDE = (ADDRESS = (HOST = inc.example.net)(PORT = 1522))\n",
+    )
+    .unwrap();
+
+    let entries = parse_tns_names_ora(&main).expect("the written file must be readable");
+
+    assert_eq!(
+        entries
+            .iter()
+            .map(|e| (
+                e.alias.to_string(),
+                e.host_name.as_ref().map(ToString::to_string),
+                e.port.as_ref().map(|p| p.value()),
+            ))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                "OWN".to_string(),
+                Some("own.example.net".to_string()),
+                Some(1521)
+            ),
+            (
+                "FROM_INCLUDE".to_string(),
+                Some("inc.example.net".to_string()),
+                Some(1522)
+            ),
+        ]
+    );
+}
+
+/// Two files including each other must terminate: the depth budget stops the
+/// recursion instead of exhausting the stack. Each pass adds the aliases it
+/// finds, so the result is bounded but non-empty.
+#[test]
+fn test_parse_tns_names_ora_stops_on_an_ifile_cycle() {
+    let tmp = tempfile::tempdir().unwrap();
+    let first = tmp.path().join("first.ora");
+    let second = tmp.path().join("second.ora");
+    std::fs::write(
+        &first,
+        "IFILE = second.ora\nFIRST = (ADDRESS = (HOST = first.example.net)(PORT = 1521))\n",
+    )
+    .unwrap();
+    std::fs::write(
+        &second,
+        "IFILE = first.ora\nSECOND = (ADDRESS = (HOST = second.example.net)(PORT = 1522))\n",
+    )
+    .unwrap();
+
+    // Returning at all is the assertion: an unbounded walk would never get here.
+    let entries = parse_tns_names_ora(&first).expect("the written file must be readable");
+
+    let names: Vec<String> = entries.iter().map(|e| e.alias.to_string()).collect();
+    assert!(
+        names.len() > 1 && names.len() < 32,
+        "the cycle must be cut, not walked forever: {names:?}"
+    );
+    assert_eq!(
+        names[0], "FIRST",
+        "the including file comes first: {names:?}"
+    );
+    assert!(
+        names.iter().all(|n| n == "FIRST" || n == "SECOND"),
+        "only the two aliases of the cycle may appear: {names:?}"
+    );
 }

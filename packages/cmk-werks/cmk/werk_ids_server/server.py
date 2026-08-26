@@ -32,6 +32,9 @@ def _auth() -> Response | None:
     if request.endpoint == "health":
         return None
     secret = current_app.config["secret_file"].read_text().strip()
+    if not secret:
+        _logger.error("Empty secret in %(path)r", {"path": str(current_app.config["secret_file"])})
+        return _error(500, "Server misconfigured.")
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer ") or not secrets.compare_digest(
         auth.removeprefix("Bearer "), secret

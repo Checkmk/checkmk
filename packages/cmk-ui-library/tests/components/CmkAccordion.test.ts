@@ -137,3 +137,13 @@ test('Accordion wich ignores disabled item', async () => {
 
   await checkAccordionState(opened.value, ['item-1'], ['item-2', 'item-3', 'item-4'])
 })
+
+test('Accordion items render a derived state indicator unless disabled', () => {
+  const opened = ref<string[]>(['item-1'])
+  const { container } = render(createAccordionComponent(3, 0, 0, opened))
+
+  const indicators = container.querySelectorAll('.cmk-accordion-item-state-indicator')
+  expect(indicators).toHaveLength(2)
+  expect(indicators[0]).toHaveClass('open')
+  expect(indicators[1]).not.toHaveClass('open')
+})

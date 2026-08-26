@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
-import CmkAccordionItemStateIndicator from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItemStateIndicator.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import type { CmkIconProps } from 'cmk-ui-library/components/CmkIcon'
@@ -144,7 +143,6 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
         <CmkIcon :name="item.header.icon.name" class="ucl-cmk-accordion-dev__header-icon"></CmkIcon>
         <span class="ucl-cmk-accordion-dev__header-title">
           {{ item.header.title }}
-          <CmkAccordionItemStateIndicator :value="item.id"></CmkAccordionItemStateIndicator>
         </span>
       </template>
       <template #content>

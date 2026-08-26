@@ -8,7 +8,6 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import CmkAccordionItem from '../CmkAccordion/CmkAccordionItem.vue'
-import CmkAccordionItemStateIndicator from '../CmkAccordion/CmkAccordionItemStateIndicator.vue'
 import CmkBadge from '../CmkBadge.vue'
 import CmkIcon from '../CmkIcon'
 import CmkTag from '../CmkTag.vue'
@@ -39,11 +38,6 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
       >
         <CmkIcon v-if="props.accomplished" size="small" name="checkmark-bare"></CmkIcon>
       </CmkBadge>
-      <CmkAccordionItemStateIndicator
-        v-if="!disabled"
-        :value="value"
-        class="cmk-accordion-item-state-indicator"
-      />
       <CmkHeading type="h3">
         {{ title }}
       </CmkHeading>
@@ -64,13 +58,8 @@ const value = computed(() => 'step-'.concat(props.step.toString()))
 <style scoped>
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .cmk-step-panel-item-indicator {
-  margin: 0 16px 0 0;
+  margin: 0 8px 0 0;
   font-weight: 700;
-}
-
-/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
-.cmk-accordion-item-state-indicator {
-  margin-right: 4px;
 }
 
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */

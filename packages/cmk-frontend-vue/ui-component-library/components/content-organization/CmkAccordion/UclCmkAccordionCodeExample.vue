@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
-import CmkAccordionItemStateIndicator from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItemStateIndicator.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import { ref } from 'vue'
 
@@ -20,7 +19,6 @@ const openedItems = ref(['item-1'])
         <div style="display: flex; align-items: center; gap: 8px">
           <CmkIcon name="users" />
           <span>Personal Information</span>
-          <CmkAccordionItemStateIndicator value="item-1" />
         </div>
       </template>
       <template #content>

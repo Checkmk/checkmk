@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import { ref } from 'vue'
 
 const openedItems = ref(['item-1'])
@@ -14,37 +13,22 @@ const openedItems = ref(['item-1'])
 
 <template>
   <CmkAccordion v-model="openedItems" :min-open="1" :max-open="1">
-    <CmkAccordionItem value="item-1">
-      <template #header>
-        <div style="display: flex; align-items: center; gap: 8px">
-          <CmkIcon name="users" />
-          <span>Personal Information</span>
-        </div>
-      </template>
+    <CmkAccordionItem value="item-1" icon="users">
+      <template #header>Personal Information</template>
       <template #content>
         <p>Manage your personal details, email address, and profile settings.</p>
       </template>
     </CmkAccordionItem>
 
-    <CmkAccordionItem value="item-2">
-      <template #header>
-        <div style="display: flex; align-items: center; gap: 8px">
-          <CmkIcon name="passwords" />
-          <span>Security Settings</span>
-        </div>
-      </template>
+    <CmkAccordionItem value="item-2" icon="passwords">
+      <template #header>Security Settings</template>
       <template #content>
         <p>Update your password, enable 2FA, and manage security keys.</p>
       </template>
     </CmkAccordionItem>
 
-    <CmkAccordionItem value="item-3">
-      <template #header>
-        <div style="display: flex; align-items: center; gap: 8px">
-          <CmkIcon name="notifications" />
-          <span>Notifications</span>
-        </div>
-      </template>
+    <CmkAccordionItem value="item-3" icon="notifications">
+      <template #header>Notifications</template>
       <template #content>
         <p>Configure email digests and real-time alert preferences.</p>
       </template>

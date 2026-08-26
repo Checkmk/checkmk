@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { AccordionContent, AccordionHeader, AccordionItem } from 'reka-ui'
 
+import CmkIcon, { type SimpleIcons } from '../CmkIcon'
 import CmkAccordionItemStateIndicator from './CmkAccordionItemStateIndicator.vue'
 import CmkAccordionTrigger from './CmkAccordionTrigger.vue'
 
@@ -13,6 +14,7 @@ export interface CmkAccordionItemProps {
   value?: string
   headerAs?: string
   disabled?: boolean | undefined
+  icon?: SimpleIcons
 }
 
 const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordionItemProps>()
@@ -22,6 +24,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   <AccordionItem :value="value" :disabled="disabled" class="cmk-accordion-item">
     <AccordionHeader :as="headerAs" class="cmk-accordion-item__header"
       ><CmkAccordionTrigger :value="value" :disabled="disabled ? true : false">
+        <CmkIcon v-if="icon" :name="icon" size="xlarge" class="cmk-accordion-item__icon" />
         <CmkAccordionItemStateIndicator
           v-if="!disabled"
           :value="value"
@@ -62,6 +65,11 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   &:last-of-type {
     margin-bottom: 0;
   }
+}
+
+.cmk-accordion-item__icon {
+  flex-shrink: 0;
+  margin-right: 8px;
 }
 
 .cmk-accordion-item__state-indicator {

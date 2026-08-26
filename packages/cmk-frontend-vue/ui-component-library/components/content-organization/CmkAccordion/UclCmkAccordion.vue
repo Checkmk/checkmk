@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 import type { StringArrayPropDef } from '@ucl/_ucl/types/prop-def'
+import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon'
 import { type HeadingType } from 'cmk-ui-library/components/typography/CmkHeading.vue'
 
 import codeExample from './UclCmkAccordionCodeExample.vue?raw'
@@ -64,6 +65,17 @@ export const itemPanelConfig = {
     title: 'disabled',
     initialState: false,
     help: 'Disables all items in the accordion.'
+  },
+  icon: {
+    type: 'list' as const,
+    title: 'icon',
+    options: [
+      { title: 'users', name: 'users' },
+      { title: 'passwords', name: 'passwords' },
+      { title: 'notifications', name: 'notifications' }
+    ] satisfies Options<SimpleIcons>[],
+    initialState: 'users' as SimpleIcons,
+    help: 'Icon shown in front of the open/closed chevron.'
   }
 } satisfies PanelConfigFor<typeof CmkAccordionItem, 'value'>
 </script>
@@ -81,7 +93,6 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 
 import UclCmkAccordionDev from './UclCmkAccordionDev.vue'
 
@@ -106,12 +117,12 @@ const itemPropState = new PanelStateCreator<typeof CmkAccordionItem, 'value'>().
       >
         <CmkAccordionItem
           value="item-1"
+          :icon="itemPropState.icon"
           :header-as="itemPropState.headerAs"
           :disabled="itemPropState.disabled"
         >
           <template #header>
             <div style="display: flex; align-items: center; gap: 8px">
-              <CmkIcon name="users" />
               <span>Personal Information</span>
             </div>
           </template>
@@ -122,12 +133,12 @@ const itemPropState = new PanelStateCreator<typeof CmkAccordionItem, 'value'>().
 
         <CmkAccordionItem
           value="item-2"
+          :icon="itemPropState.icon"
           :header-as="itemPropState.headerAs"
           :disabled="itemPropState.disabled"
         >
           <template #header>
             <div style="display: flex; align-items: center; gap: 8px">
-              <CmkIcon name="passwords" />
               <span>Security Settings</span>
             </div>
           </template>
@@ -138,12 +149,12 @@ const itemPropState = new PanelStateCreator<typeof CmkAccordionItem, 'value'>().
 
         <CmkAccordionItem
           value="item-3"
+          :icon="itemPropState.icon"
           :header-as="itemPropState.headerAs"
           :disabled="itemPropState.disabled"
         >
           <template #header>
             <div style="display: flex; align-items: center; gap: 8px">
-              <CmkIcon name="notifications" />
               <span>Notifications</span>
             </div>
           </template>

@@ -10,7 +10,6 @@ import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordio
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import type { CmkIconProps } from 'cmk-ui-library/components/CmkIcon'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import { ref } from 'vue'
 
 defineProps<{ screenshotMode: boolean }>()
@@ -138,12 +137,10 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
       :key="item.id"
       :value="item.id"
       :disabled="item.disabled"
+      :icon="item.header.icon.name"
     >
       <template #header>
-        <CmkIcon :name="item.header.icon.name" class="ucl-cmk-accordion-dev__header-icon"></CmkIcon>
-        <span class="ucl-cmk-accordion-dev__header-title">
-          {{ item.header.title }}
-        </span>
+        {{ item.header.title }}
       </template>
       <template #content>
         <div v-if="item.id === 'item-1'" class="ucl-cmk-accordion-dev__additional-div">
@@ -160,14 +157,6 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
 </template>
 
 <style scoped>
-.ucl-cmk-accordion-dev__header-icon {
-  margin-right: 16px;
-}
-
-.ucl-cmk-accordion-dev__header-title {
-  margin: 0;
-}
-
 .ucl-cmk-accordion-dev__additional-div {
   background: red;
   padding: 16px;

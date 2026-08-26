@@ -147,3 +147,24 @@ test('Accordion items render a derived state indicator unless disabled', () => {
   expect(indicators[0]).toHaveClass('open')
   expect(indicators[1]).not.toHaveClass('open')
 })
+
+test('Accordion item renders its icon inside the trigger button', () => {
+  const opened = ref<string[]>([])
+  const component = defineComponent({
+    components: { CmkAccordion, CmkAccordionItem },
+    setup() {
+      return { opened }
+    },
+    template: `
+    <CmkAccordion v-model="opened" :min-open="0" :max-open="0">
+      <CmkAccordionItem value="item-1" icon="users">
+        <template #header>Header</template>
+        <template #content>Content</template>
+      </CmkAccordionItem>
+    </CmkAccordion>`
+  })
+  render(component)
+
+  const trigger = screen.getByRole('button', { name: 'Toggle accordion item item-1' })
+  expect(trigger).toContainElement(trigger.querySelector('.cmk-accordion-item__icon'))
+})

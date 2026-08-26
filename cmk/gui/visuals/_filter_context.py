@@ -213,6 +213,23 @@ def filled_context_filters(context: VisualContext) -> set[FilterName]:
     }
 
 
+def configured_context_filters(context: VisualContext) -> set[FilterName]:
+    """The filters of the context whose components all hold a value."""
+    configured: set[FilterName] = set()
+    for filter_name, filter_context in context.items():
+        if not isinstance(filter_context, dict):
+            continue
+        if (filter_object := filter_registry.get(filter_name)) is None:
+            continue
+        try:
+            components = list(filter_object.components())
+        except NotImplementedError:
+            continue
+        if all(component.is_configured(filter_context) for component in components):
+            configured.add(filter_name)
+    return configured
+
+
 def missing_context_filters(
     require_filters: set[FilterName], context: VisualContext
 ) -> set[FilterName]:

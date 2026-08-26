@@ -68,18 +68,11 @@ class _FileTally:
 def parse_lcov(lines: Iterable[str]) -> dict[str, RawStats]:
     """Aggregate per-file line and function coverage from LCOV tracefile lines.
 
-    Line coverage comes from ``DA:<line>,<hits>``, spelled alike in both
-    tracefile generations. Function coverage has two spellings, and which appears
-    depends on which step wrote the record:
-
-    * ``FNDA:<hits>,<name>`` -- lcov 1.x, as Bazel's ``--combined_report=lcov``
-      writes the measured records.
-    * ``FNA:<index>,<hits>,<name>`` -- lcov 2.x, as :mod:`scope` writes the
-      zero-coverage records it appends.
-
-    Both are accepted so a file is counted the same either way; a single file's
-    records only ever use one, being either measured or synthesised. The
-    ``FNL:``/``FN:`` declarations carry no hit count and are ignored.
+    Line coverage comes from ``DA:<line>,<hits>``, function coverage from
+    ``FNDA:<hits>,<name>``. Both producers write that spelling: Bazel's
+    ``--combined_report=lcov`` for the measured records, coverage.py for the
+    zero-coverage ones :mod:`scope` appends. The ``FN:`` declarations carry no hit
+    count and are ignored.
     """
     tallies: dict[str, _FileTally] = defaultdict(_FileTally)
 
@@ -90,8 +83,6 @@ def parse_lcov(lines: Iterable[str]) -> dict[str, RawStats]:
             current_file = line[3:]
         elif current_file is None:
             continue
-        elif line.startswith("FNA:"):
-            tallies[current_file].record_function(hits=int(line[4:].split(",", 2)[1]))
         elif line.startswith("FNDA:"):
             tallies[current_file].record_function(hits=int(line[5:].split(",", 1)[0]))
         elif line.startswith("DA:"):

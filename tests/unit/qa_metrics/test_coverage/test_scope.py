@@ -198,6 +198,11 @@ def test_a_file_without_executable_lines_gets_no_record(tmp_path: Path) -> None:
     assert _write_zero_records(io.StringIO(), [Path("empty.py")], tmp_path) == 0
 
 
+def test_no_paths_writes_no_record(tmp_path: Path) -> None:
+    """Every listed file was measured. coverage.py raises NoDataError on an empty list."""
+    assert _write_zero_records(io.StringIO(), [], tmp_path) == 0
+
+
 def test_the_count_returned_is_the_records_written(tmp_path: Path) -> None:
     for name in ("a.py", "b.py"):
         (tmp_path / name).write_text("x = 1\n")
@@ -213,15 +218,20 @@ def test_only_the_given_paths_get_a_record(tmp_path: Path) -> None:
     assert "not_owned.py" not in written
 
 
-def test_a_zero_record_uses_the_lcov_2_x_function_spelling(tmp_path: Path) -> None:
-    """`parse_lcov` counts FNA and FNDA alike, so only the text itself pins the form."""
+def test_a_zero_record_uses_bazels_function_spelling(tmp_path: Path) -> None:
+    """Only the text itself pins the form `parse_lcov` reads the hit count from.
+
+    coverage.py and Bazel's combined report agree on FNDA, which is the line that
+    carries the count. They disagree on the FN declaration -- coverage.py writes
+    `FN:<first>,<last>,<name>`, Bazel `FN:<line>,<name>` -- but nothing in this
+    pipeline reads it except genhtml, which accepts both.
+    """
     (tmp_path / "missing.py").write_text("def f():\n    pass\n")
     lines = _zero_records(tmp_path, "missing.py").splitlines()
-    assert "FNL:0,1" in lines
-    assert "FNA:0,0,f" in lines
+    assert "FNDA:0,f" in lines
     assert "FNF:1" in lines
     assert "FNH:0" in lines
-    assert f"LF:{sum(line.startswith('DA:') for line in lines)}" in lines
+    assert "LF:2" in lines
     assert "LH:0" in lines
 
 

@@ -71,24 +71,8 @@ def test_parse_lcov_keeps_two_functions_sharing_a_name() -> None:
     ) == {"cmk/foo.py": RawStats(lines=0, lines_covered=0, functions=2, functions_covered=1)}
 
 
-def test_parse_lcov_counts_lcov_2_x_function_records() -> None:
-    """lcov 2.x emits FNL/FNA; function hits must be read from FNA records."""
-    assert parse_lcov(
-        [
-            "SF:cmk/foo.py",
-            "FNL:0,10",
-            "FNA:0,3,covered_func",
-            "FNL:1,20",
-            "FNA:1,0,uncovered_func",
-            "DA:10,3",
-            "DA:11,0",
-            "end_of_record",
-        ]
-    ) == {"cmk/foo.py": RawStats(lines=2, lines_covered=1, functions=2, functions_covered=1)}
-
-
-def test_parse_lcov_counts_lcov_1_x_function_records() -> None:
-    """Bazel's own combined report emits FN/FNDA; hits are FNDA's first field."""
+def test_parse_lcov_counts_function_records() -> None:
+    """Both producers emit FN/FNDA; hits are FNDA's first field."""
     assert parse_lcov(
         [
             "SF:cmk/foo.py",
@@ -103,14 +87,8 @@ def test_parse_lcov_counts_lcov_1_x_function_records() -> None:
     ) == {"cmk/foo.py": RawStats(lines=2, lines_covered=1, functions=2, functions_covered=1)}
 
 
-def test_parse_lcov_handles_lcov_1_x_function_names_containing_commas() -> None:
-    assert parse_lcov(["SF:cmk/foo.py", "FNDA:1,outer.<locals>.inner,weird", "end_of_record"]) == {
-        "cmk/foo.py": RawStats(lines=0, lines_covered=0, functions=1, functions_covered=1)
-    }
-
-
 def test_parse_lcov_handles_function_names_containing_commas() -> None:
-    assert parse_lcov(["SF:cmk/foo.py", "FNA:0,1,outer.<locals>.inner,weird", "end_of_record"]) == {
+    assert parse_lcov(["SF:cmk/foo.py", "FNDA:1,outer.<locals>.inner,weird", "end_of_record"]) == {
         "cmk/foo.py": RawStats(lines=0, lines_covered=0, functions=1, functions_covered=1)
     }
 
@@ -125,12 +103,12 @@ def test_calculate_total_coverage_sums_across_files() -> None:
     file_data = parse_lcov(
         [
             "SF:cmk/a.py",
-            "FNA:0,1,a",
-            "FNA:1,0,b",
+            "FNDA:1,a",
+            "FNDA:0,b",
             "DA:1,1",
             "end_of_record",
             "SF:cmk/b.py",
-            "FNA:0,1,c",
+            "FNDA:1,c",
             "DA:1,0",
             "DA:2,1",
             "end_of_record",

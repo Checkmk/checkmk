@@ -25,6 +25,7 @@ py_library(
     imports = ["../../.."],
     deps = [
         ":file_lists",
+        requirement("coverage"),
         "//tests/qa_metrics/components",
         "//tests/qa_metrics/db",
     ],
@@ -47,7 +48,10 @@ py_binary(
     testonly = True,
     srcs = ["scope.py"],
     imports = ["../../.."],
-    deps = [":file_lists"],
+    deps = [
+        ":file_lists",
+        requirement("coverage"),
+    ],
 )
 
 py_binary(

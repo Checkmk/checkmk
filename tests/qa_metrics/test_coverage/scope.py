@@ -22,12 +22,15 @@ Usage:
 """
 
 import argparse
-import ast
+import contextlib
 import sys
+import tempfile
 from collections.abc import Container, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TextIO
+
+import coverage
 
 from tests.qa_metrics.test_coverage._file_lists import read_file_list
 
@@ -122,57 +125,27 @@ def _write_zero_records(out: TextIO, paths: Sequence[Path], repo_root: Path) -> 
     A file with no executable line is left out: it is neither covered nor
     uncovered, and a 0/0 row is a percentage no reader can render.
 
-    Whether a path has a file on disk is settled where the list is produced (see
-    :func:`_file_lists.existing`), so a vanished one raises here rather than
-    being skipped a second time by a second rule.
+    coverage.py names the files it reports relative to the working directory,
+    and ``bazel run`` starts us in the runfiles tree, so the report is produced
+    from the workspace instead. Whether a path has a file on disk is settled
+    where the list is produced (see :func:`_file_lists.existing`), so a vanished
+    one fails here rather than being skipped a second time by a second rule.
     """
+    if not paths:
+        return 0
     added = 0
-    for path in paths:
-        executable_lines, functions = _coverage_data((repo_root / path).read_text(errors="replace"))
-        if not executable_lines:
-            continue
-        out.write(f"SF:{path}\n")
-        # lcov 2.x function records: FNL declares the function, FNA carries its
-        # hit count (always 0 here).
-        for index, (lineno, name) in enumerate(functions):
-            out.write(f"FNL:{index},{lineno}\n")
-            out.write(f"FNA:{index},0,{name}\n")
-        out.write(f"FNF:{len(functions)}\nFNH:0\n")
-        for lineno in sorted(executable_lines):
-            out.write(f"DA:{lineno},0\n")
-        out.write(f"LF:{len(executable_lines)}\nLH:0\nend_of_record\n")
-        added += 1
+    with tempfile.TemporaryDirectory() as directory:
+        report = Path(directory) / "zero.dat"
+        with contextlib.chdir(repo_root):
+            coverage.Coverage(data_file=None).lcov_report(
+                morfs=[str(path) for path in paths], outfile=str(report)
+            )
+        with report.open(encoding="utf-8") as source:
+            for record in _records(source):
+                if any(line.startswith("DA:") for line in record):
+                    out.writelines(record)
+                    added += 1
     return added
-
-
-def _coverage_data(source: str) -> tuple[set[int], list[tuple[int, str]]]:
-    """Parse source and return executable lines and functions."""
-    tree = ast.parse(source)
-
-    lines: set[int] = set()
-    functions: list[tuple[int, str]] = []
-
-    def collect_functions(node: ast.AST, prefix: str) -> None:
-        for child in ast.iter_child_nodes(node):
-            if isinstance(child, ast.ClassDef):
-                collect_functions(child, f"{prefix}{child.name}.")
-            elif isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                name = f"{prefix}{child.name}"
-                functions.append((child.lineno, name))
-                collect_functions(child, f"{name}.<locals>.")
-            else:
-                collect_functions(child, prefix)
-
-    for node in ast.walk(tree):
-        if isinstance(node, ast.stmt):
-            if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant):
-                continue
-            lines.add(node.lineno)
-            for decorator in getattr(node, "decorator_list", []):
-                lines.add(decorator.lineno)
-
-    collect_functions(tree, "")
-    return lines, functions
 
 
 def _records(lines: Iterable[str]) -> Iterator[list[str]]:

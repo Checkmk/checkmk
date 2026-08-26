@@ -52,6 +52,7 @@ edition_deps = select({
         "//non-free/packages/cmk-plugins-nonfree:pkg_tar-diagnostics",
         "//non-free/packages/cmk-relay-engine:relay_install_pkg",
         "//non-free/packages/cmk-telemetry:pkg_tar",
+        "//non-free/packages/cmk-telemetry:pkg_tar-auth-only",
         "//non-free/packages/cmk-update-agent:pkg_tar",
         "//omd/non-free/packages/alert-handling:pkg_tar",
         "//omd/non-free/packages/cmc:pkg_tar",

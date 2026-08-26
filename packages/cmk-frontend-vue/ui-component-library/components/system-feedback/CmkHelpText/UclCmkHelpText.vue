@@ -38,6 +38,11 @@ export const panelConfig = {
     type: 'string' as const,
     title: 'Custom Aria Label',
     initialState: 'Help regarding this setting'
+  },
+  usePortal: {
+    type: 'boolean' as const,
+    title: 'Render popup at the document root',
+    initialState: false
   }
 } satisfies PanelConfigFor<typeof CmkHelpText>
 </script>
@@ -65,7 +70,11 @@ const propState = new PanelStateCreator<typeof CmkHelpText>().createRef(panelCon
 
     <UclDetailPageComponent>
       <span> Example Configuration Field </span>
-      <CmkHelpText :help="propState.help" :aria-label="propState.ariaLabel" />
+      <CmkHelpText
+        :help="propState.help"
+        :aria-label="propState.ariaLabel"
+        :use-portal="propState.usePortal"
+      />
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

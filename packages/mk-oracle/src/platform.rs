@@ -128,6 +128,7 @@ pub mod registry {
                             name: InstanceName::from(values[2].as_str()),
                             home: PathBuf::from(values[0].as_str()),
                             base: Some(PathBuf::from(values[1].as_str())),
+                            aliases: vec![],
                         })
                     } else {
                         None
@@ -182,6 +183,8 @@ pub mod registry {
                         name: InstanceName::from(parts[0].trim()),
                         home: PathBuf::from(parts[1].trim()),
                         base: None, // oratab does not contain base information, we set it to None
+                        // oratab names no aliases; they come from tnsnames.ora
+                        aliases: vec![],
                     })
                 } else {
                     None

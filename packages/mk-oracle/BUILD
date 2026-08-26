@@ -148,6 +148,7 @@ rust_test(
     name = "mk-oracle-lib-test-internal",
     compile_data = [
         "tests/files/not-ora_sql.yml",
+        "tests/files/tns/tnsnames.ora",
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
@@ -187,8 +188,8 @@ rust_test_suite(
         "tests/test_ora_with_db.rs",
     ],
     compile_data = [
-        "tests/files/tns/tnsnames.ora",
         "tests/files/not-ora_sql.yml",
+        "tests/files/tns/tnsnames.ora",
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",
@@ -243,6 +244,7 @@ rust_test(
     name = "mk-oracle-lib-test-internal-windows",
     compile_data = [
         "tests/files/not-ora_sql.yml",
+        "tests/files/tns/tnsnames.ora",
         "tests/files/not-yaml.yml",
         "tests/files/test-config.yml",
         "tests/files/test-mini.yml",

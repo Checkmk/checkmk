@@ -32,6 +32,9 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
         />
         <slot name="header" />
       </CmkAccordionTrigger>
+      <span v-if="$slots['header-right']" class="cmk-accordion-item__header-right">
+        <slot name="header-right" />
+      </span>
     </AccordionHeader>
     <!-- @vue-ignore aria-labelledby not a property of AccordionContent -->
     <AccordionContent
@@ -75,6 +78,15 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
 .cmk-accordion-item__state-indicator {
   flex-shrink: 0;
   margin-right: 8px;
+}
+
+.cmk-accordion-item__header-right {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-right: 20px;
 }
 
 .cmk-accordion-item__content-wrapper {

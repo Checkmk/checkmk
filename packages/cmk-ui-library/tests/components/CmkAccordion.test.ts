@@ -168,3 +168,28 @@ test('Accordion item renders its icon inside the trigger button', () => {
   const trigger = screen.getByRole('button', { name: 'Toggle accordion item item-1' })
   expect(trigger).toContainElement(trigger.querySelector('.cmk-accordion-item__icon'))
 })
+
+test('Accordion item renders header-right outside the trigger button', () => {
+  const opened = ref<string[]>([])
+  const component = defineComponent({
+    components: { CmkAccordion, CmkAccordionItem },
+    setup() {
+      return { opened }
+    },
+    template: `
+    <CmkAccordion v-model="opened" :min-open="0" :max-open="0">
+      <CmkAccordionItem value="item-1">
+        <template #header>Header</template>
+        <template #header-right><span data-testid="header-right" /></template>
+        <template #content>Content</template>
+      </CmkAccordionItem>
+    </CmkAccordion>`
+  })
+  render(component)
+
+  const trigger = screen.getByRole('button', { name: 'Toggle accordion item item-1' })
+  expect(trigger).not.toContainElement(screen.getByTestId('header-right'))
+  expect(trigger.closest('.cmk-accordion-item__header')).toContainElement(
+    screen.getByTestId('header-right')
+  )
+})

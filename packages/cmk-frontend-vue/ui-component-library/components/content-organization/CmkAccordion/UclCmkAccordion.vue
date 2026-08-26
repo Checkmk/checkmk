@@ -93,6 +93,7 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
+import CmkTag from 'cmk-ui-library/components/CmkTag.vue'
 
 import UclCmkAccordionDev from './UclCmkAccordionDev.vue'
 
@@ -125,6 +126,9 @@ const itemPropState = new PanelStateCreator<typeof CmkAccordionItem, 'value'>().
             <div style="display: flex; align-items: center; gap: 8px">
               <span>Personal Information</span>
             </div>
+          </template>
+          <template #header-right>
+            <CmkTag size="medium" variant="fill" content="3 fields" />
           </template>
           <template #content>
             <p>Manage your personal details, email address, and profile settings.</p>

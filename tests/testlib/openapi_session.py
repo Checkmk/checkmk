@@ -150,6 +150,7 @@ class CMKOpenApiSession(requests.Session):
         self.folders = FoldersAPI(self)
         self.hosts = HostsAPI(self)
         self.host_groups = HostGroupsAPI(self)
+        self.service_groups = ServiceGroupsAPI(self)
         self.host_tag_groups = HostTagGroupsAPI(self)
         self.service_discovery = ServiceDiscoveryAPI(self)
         self.services = ServicesAPI(self)
@@ -928,6 +929,27 @@ class HostGroupsAPI(BaseAPI):
 
     def delete(self, name: str) -> None:
         response = self.session.delete(f"/objects/host_group_config/{name}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+
+class ServiceGroupsAPI(BaseAPI):
+    def create(self, name: str, alias: str) -> requests.Response:
+        body = {"name": name, "alias": alias}
+        # In the ultimatemt edition every config object belongs to a customer,
+        # so the field is mandatory here.
+        if self.session.site_edition.is_ultimatemt_edition():
+            body["customer"] = "global"
+        response = self.session.post(
+            "/domain-types/service_group_config/collections/all",
+            json=body,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
+    def delete(self, name: str) -> None:
+        response = self.session.delete(f"/objects/service_group_config/{name}")
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 

@@ -117,6 +117,7 @@ RESULT_DIR="$REPO_PATH/results/test_coverage/repository"
 PY_TEST_TARGETS="$RESULT_DIR/py_test_targets.txt"
 SOURCE_LABELS_QUERY="$RESULT_DIR/source_labels_query.txt"
 SOURCE_LABELS="$RESULT_DIR/source_labels.txt"
+COVERAGE_LOG="$RESULT_DIR/coverage.log"
 SCOPED_DAT="$RESULT_DIR/scoped.dat"
 SOURCE_PATHS="$RESULT_DIR/source_paths.txt"
 COVERAGE_HTML_DIR="$RESULT_DIR/html"
@@ -230,15 +231,28 @@ EOF
     # The combined report is removed first so a run that leaves it unwritten is
     # an error here, rather than letting the steps below read whichever
     # measurement wrote it last.
+    #
+    # The run must pass: the aspect_rules_py runner writes its lcov report only
+    # on a green exit, so a failing test leaves an empty coverage.dat behind and
+    # the lines only it reaches read as uncovered -- a number quietly too low
+    # rather than a missing one. Its output goes to a log as well, a run over the
+    # whole repository being too long to scroll back through.
     rm -f "$COMBINED_DAT"
-    bazel coverage --target_pattern_file="$PY_TEST_TARGETS" \
+    if ! bazel coverage --target_pattern_file="$PY_TEST_TARGETS" \
         "$EDITION_FLAG" \
         --skip_incompatible_explicit_targets \
         --test_tag_filters=-manual \
         --keep_going \
         --build_tests_only \
         --combined_report=lcov \
-        --instrumentation_filter="//(${filter//./\\.})[/:@]"
+        --instrumentation_filter="//(${filter//./\\.})[/:@]" \
+        2>&1 | tee "$COVERAGE_LOG"; then
+        echo "Error: the coverage run did not succeed, so no report is written -- what" >&2
+        echo "a suite covers is only meaningful once it passes. Fix the failures and run" >&2
+        echo "this again; cached results make the second run cheap. Full output:" >&2
+        echo "  $COVERAGE_LOG" >&2
+        exit 1
+    fi
     if [ ! -f "$COMBINED_DAT" ]; then
         echo "Error: the coverage run wrote no combined report at $COMBINED_DAT," >&2
         echo "so nothing was measured. Did every selected target get skipped?" >&2

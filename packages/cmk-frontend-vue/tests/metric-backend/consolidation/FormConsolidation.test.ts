@@ -383,22 +383,16 @@ test('a sub-second lookback is flagged only on a blocked leave', async () => {
   await waitFor(() => expect(screen.queryByLabelText('Lookback Seconds')).toBeNull())
 })
 
-test('a changed metric type resets the function to the new type default', async () => {
+test('resolved types without the current type keep the pick and still offer it', async () => {
   const { model, availableTypes } = renderWidget({ type: 'sum', function: 'sum_delta' }, ['sum'])
 
   availableTypes.value = ['gauge']
   await nextTick()
 
-  expect(model.value.type).toBe('gauge')
-  expect(model.value.function).toBe('gauge_last')
-})
-
-test('a still-available metric type keeps the current function', async () => {
-  const { model, availableTypes } = renderWidget({ type: 'sum', function: 'sum_delta' }, ['sum'])
-
-  availableTypes.value = ['sum', 'gauge']
-  await nextTick()
-
   expect(model.value.type).toBe('sum')
   expect(model.value.function).toBe('sum_delta')
+
+  await openFunctionDropdown()
+  expect(await screen.findByText('Treat as Sum')).toBeVisible()
+  expect(screen.getByText('Treat as Gauge')).toBeVisible()
 })

@@ -356,6 +356,7 @@ const {
           v-model:consolidation-function="consolidationFunction"
           :label="_t('Then consolidate by: consolidation function and lookback')"
           :metric-types="metricTypes"
+          :metric-name="metricName"
         />
       </SourceFormStack>
 

@@ -267,6 +267,7 @@ const {
         v-model:consolidation-function="consolidationFunction"
         :label="_t('Consolidation')"
         :metric-types="metricTypes"
+        :metric-name="metricName"
       />
     </SourceFormStack>
 

@@ -16,7 +16,7 @@ import {
 } from 'cmk-ui-library/components/user-input/CmkTimeSpan/timeSpan'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
 
 import InlineEditPill from '../InlineEditPill.vue'
 import { useHistogramParams } from '../histogram-params'
@@ -26,7 +26,7 @@ import {
   lookbackLabel,
   typeLabel
 } from './consolidation-label'
-import { CONSOLIDATION_CATALOG, DEFAULT_QUANTILE, METRIC_TYPES, defaultFunction } from './types'
+import { CONSOLIDATION_CATALOG, DEFAULT_QUANTILE, METRIC_TYPES } from './types'
 import type {
   ConsolidationFunction,
   ConsolidationFunctionName,
@@ -50,9 +50,15 @@ const typeToken = computed(() => `[${model.value.type}]`)
 const functionToken = computed(() => compactFunction(model.value))
 const lookbackToken = computed(() => lookbackLabel(model.value.lookbackSeconds))
 
-const candidateTypes = computed<MetricType[]>(() =>
-  props.availableTypes.length > 0 ? props.availableTypes : [...METRIC_TYPES]
-)
+// Keep the current pick reachable even when the backend did not resolve its type.
+const candidateTypes = computed<MetricType[]>(() => {
+  if (props.availableTypes.length === 0) {
+    return [...METRIC_TYPES]
+  }
+  return props.availableTypes.includes(model.value.type)
+    ? props.availableTypes
+    : [model.value.type, ...props.availableTypes]
+})
 
 function suggestionsForType(type: MetricType) {
   return CONSOLIDATION_CATALOG[type].map((spec) => ({
@@ -90,13 +96,6 @@ function onFunctionUpdate(value: string | null): void {
   const [type, fn] = value.split(':') as [MetricType, ConsolidationFunctionName]
   applyFunction({ type, function: fn } as ConsolidationFunction)
 }
-
-watch(candidateTypes, (types) => {
-  if (types.includes(model.value.type)) {
-    return
-  }
-  applyFunction(defaultFunction(types[0]!))
-})
 
 const editing = ref(false)
 

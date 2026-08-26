@@ -15,6 +15,7 @@ import type { ValidationMessages } from '@/form'
 
 import FormConsolidation from '@/metric-backend/consolidation/FormConsolidation.vue'
 import {
+  DEFAULT_QUANTILE,
   METRIC_TYPES,
   consolidationFunctionOf,
   defaultFunction
@@ -31,6 +32,7 @@ const FALLBACK_TYPE: MetricType = 'histogram'
 const props = defineProps<{
   label: TranslatedString
   metricTypes: string[]
+  metricName: string | null
 }>()
 
 const backendValidation = defineModel<ValidationMessages>('backendValidation', { default: [] })
@@ -89,6 +91,28 @@ function buildModel(): ConsolidationModel {
 }
 
 const model = ref<ConsolidationModel>(buildModel())
+
+// Non-immediate: the initial stored name never fires, so a load keeps its consolidation as is.
+const pendingMetricReset = ref(false)
+watch(
+  () => props.metricName,
+  () => {
+    pendingMetricReset.value = true
+  }
+)
+watch(availableTypes, (types) => {
+  // Empty is "not resolved yet", not "no types": wait for the new metric's real list.
+  if (!pendingMetricReset.value || types.length === 0) {
+    return
+  }
+  pendingMetricReset.value = false
+  if (types.includes(model.value.type)) {
+    return
+  }
+  const fn = defaultFunction(types[0]!)
+  const params = fn.function === 'histogram_quantile' ? { quantile: DEFAULT_QUANTILE } : {}
+  model.value = { ...model.value, ...fn, params }
+})
 
 // Mirror the editable pill values back to the persisted fields. Each param
 // belongs to its own function only, so other types leave it untouched.

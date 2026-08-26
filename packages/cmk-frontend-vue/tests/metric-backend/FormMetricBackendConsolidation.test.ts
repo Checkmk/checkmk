@@ -10,6 +10,7 @@ import { defineComponent, nextTick, ref } from 'vue'
 import type { ValidationMessages } from '@/form'
 
 import FormMetricBackendConsolidation from '@/metric-backend/FormMetricBackendConsolidation.vue'
+import type { ConsolidationFunction } from '@/metric-backend/consolidation/types'
 
 afterEach(cleanup)
 
@@ -20,6 +21,8 @@ function renderConsolidation(initial: {
   aggregationHistogramLowerThresholdForFractionBetween?: number
   aggregationHistogramUpperThresholdForFractionBetween?: number
   metricTypes?: string[]
+  metricName?: string | null
+  consolidationFunction?: ConsolidationFunction | null
   backendValidation?: ValidationMessages
 }) {
   const models = {
@@ -35,6 +38,8 @@ function renderConsolidation(initial: {
       initial.aggregationHistogramUpperThresholdForFractionBetween ?? 100
     ),
     metricTypes: ref(initial.metricTypes ?? []),
+    metricName: ref<string | null>(initial.metricName ?? null),
+    consolidationFunction: ref<ConsolidationFunction | null>(initial.consolidationFunction ?? null),
     backendValidation: ref<ValidationMessages>(initial.backendValidation ?? [])
   }
   const wrapper = defineComponent({
@@ -55,8 +60,10 @@ function renderConsolidation(initial: {
         v-model:aggregation-histogram-upper-threshold-for-fraction-between="
           models.aggregationHistogramUpperThresholdForFractionBetween.value
         "
+        v-model:consolidation-function="models.consolidationFunction.value"
         v-model:backend-validation="models.backendValidation.value"
         :metric-types="models.metricTypes.value"
+        :metric-name="models.metricName.value"
         label="Consolidation"
       />
     `
@@ -248,15 +255,59 @@ test('editing the fraction-between thresholds writes them back to their models',
   })
 })
 
-test('the displayed type follows the resolved metric types', async () => {
-  const models = renderConsolidation({ metricTypes: [] })
+test('resolving a loaded metric leaves the stored consolidation untouched', async () => {
+  const models = renderConsolidation({
+    metricName: 'test.request.duration',
+    metricTypes: [],
+    consolidationFunction: { type: 'gauge', function: 'gauge_last' }
+  })
 
-  models.metricTypes.value = ['gauge']
+  models.metricTypes.value = ['histogram']
   await nextTick()
 
-  await waitFor(() => expect(chip()).toHaveTextContent('[gauge]'))
+  expect(chip()).toHaveTextContent('[gauge]')
   expect(chip()).toHaveTextContent('last')
 })
+
+test.each<{
+  scenario: string
+  consolidationFunction: ConsolidationFunction
+  resolvedTypes: string[]
+  expectedType: string
+  expectedFunction: string
+}>([
+  {
+    scenario: 'resets a now-unsupported consolidation to the new type default',
+    consolidationFunction: { type: 'gauge', function: 'gauge_last' },
+    resolvedTypes: ['sum'],
+    expectedType: '[sum]',
+    expectedFunction: 'rate'
+  },
+  {
+    scenario: 'keeps a consolidation the new type still supports',
+    consolidationFunction: { type: 'gauge', function: 'gauge_max' },
+    resolvedTypes: ['gauge'],
+    expectedType: '[gauge]',
+    expectedFunction: 'max'
+  }
+])(
+  'picking a new metric $scenario',
+  async ({ consolidationFunction, resolvedTypes, expectedType, expectedFunction }) => {
+    const models = renderConsolidation({
+      metricName: 'old.metric',
+      metricTypes: ['gauge'],
+      consolidationFunction
+    })
+
+    models.metricName.value = 'new.metric'
+    await nextTick()
+    models.metricTypes.value = resolvedTypes
+    await nextTick()
+
+    await waitFor(() => expect(chip()).toHaveTextContent(expectedType))
+    expect(chip()).toHaveTextContent(expectedFunction)
+  }
+)
 
 test('backend validation for the lookback is surfaced and its replacement applied', async () => {
   const models = renderConsolidation({ aggregationLookback: 0, metricTypes: ['sum'] })

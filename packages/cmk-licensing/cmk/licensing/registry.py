@@ -51,18 +51,6 @@ def is_free(omd_root: Path) -> bool:
     return _make_licensing_handler(omd_root).state is LicenseState.FREE
 
 
-def is_trial(omd_root: Path) -> bool:
-    return _make_licensing_handler(omd_root).state is LicenseState.TRIAL
-
-
-def is_licensed(omd_root: Path) -> bool:
-    return _make_licensing_handler(omd_root).state is LicenseState.LICENSED
-
-
-def is_unlicensed(omd_root: Path) -> bool:
-    return _make_licensing_handler(omd_root).state is LicenseState.UNLICENSED
-
-
 def get_license_message(omd_root: Path) -> str:
     return _make_licensing_handler(omd_root).message
 

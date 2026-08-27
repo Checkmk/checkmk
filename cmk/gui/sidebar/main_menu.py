@@ -7,8 +7,6 @@
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the main menu
 """
 
-# mypy: disable-error-code="possibly-undefined"
-
 import dataclasses
 from typing import override, TypedDict
 
@@ -143,7 +141,7 @@ class MainMenuConfigCreator:
                 if menu.header
                 else None,
                 shortcut=menu.shortcut,
-                show_more=NavItemShowMore(active=show_more) if has_show_more else None,
+                show_more=NavItemShowMore(active=show_more) if has_show_more else None,  # type: ignore[possibly-undefined]
                 popup_small=menu.popup_small,
                 hint=str(menu.hint),
                 badge=menu.badge,

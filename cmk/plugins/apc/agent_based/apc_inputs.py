@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Mapping
 from typing import Any
@@ -54,7 +53,7 @@ def check_apc_inputs(item: str, params: Mapping[str, Any], section: StringTable)
                 case "1":
                     check_state = State.OK
 
-            yield Result(state=check_state, summary="State is %s" % alarm_states[alarm_status])
+            yield Result(state=check_state, summary="State is %s" % alarm_states[alarm_status])  # type: ignore[possibly-undefined]
 
             if params["state"] != state:
                 yield Result(

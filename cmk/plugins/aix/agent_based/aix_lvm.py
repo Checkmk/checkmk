@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 # Agent output and things to know:
 
@@ -73,7 +72,7 @@ def parse_aix_lvm(info: StringTable) -> Section:
             # split lv state into two relevant values
             activation, mirror = act_state.split("/")
             mountpoint: str | None = None if mountpoint_raw == "N/A" else mountpoint_raw
-            lvmconf[vgname].update(
+            lvmconf[vgname].update(  # type: ignore[possibly-undefined]
                 {
                     lv: (
                         lvtype,

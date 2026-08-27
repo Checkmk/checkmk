@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import dataclasses
 from collections.abc import Mapping
@@ -44,7 +43,7 @@ def parse_postgres_instances(string_table: StringTable) -> Section:
             try:
                 pid = int(line[0])
                 all_pids.append(pid)
-                instance_to_pid[instance_name] = pid
+                instance_to_pid[instance_name] = pid  # type: ignore[possibly-undefined]
             except ValueError:
                 pass
     instance_to_pid.pop("", None)

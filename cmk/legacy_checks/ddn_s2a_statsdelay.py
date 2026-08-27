@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Mapping, Sequence
 
@@ -107,8 +106,8 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
     old_writes = value_store.get("writes")
 
     value_store["time_intervals"] = time_intervals
-    value_store["reads"] = reads
-    value_store["writes"] = writes
+    value_store["reads"] = reads  # type: ignore[possibly-undefined]
+    value_store["writes"] = writes  # type: ignore[possibly-undefined]
 
     if old_intervals is None:
         raise IgnoreResultsError("Initializing")

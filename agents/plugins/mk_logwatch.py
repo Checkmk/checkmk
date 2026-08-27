@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """mk_logwatch
@@ -1291,10 +1290,10 @@ def main(argv=None):
         output = itertools.chain(
             output,
             [
-                header,
+                header,  # type: ignore[possibly-undefined]
                 "BATCH: %s\n" % batch_id,
             ],
-            filtered_log_lines,
+            filtered_log_lines,  # type: ignore[possibly-undefined]
         )
 
     process_batches(

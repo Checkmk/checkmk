@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -915,7 +914,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
                 except SyntaxError as e:
                     raise MKGeneralException(
                         _("Cannot load %(type_name)s from %(path)s: %(error)s")
-                        % {"type_name": cls.type_name(), "path": path, "error": e}
+                        % {"type_name": cls.type_name(), "path": path, "error": e}  # type: ignore[possibly-undefined]
                     )
 
         return page_dicts_by_instance_id

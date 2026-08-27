@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -38,7 +37,7 @@ def check_avaya_chassis_ps(item: str, section: StringTable) -> CheckResult:
         if line[0] == item:
             ps_status_code = int(line[1])
 
-    status, status_name, description = avaya_chassis_ps_status_codes[ps_status_code]
+    status, status_name, description = avaya_chassis_ps_status_codes[ps_status_code]  # type: ignore[possibly-undefined]
     yield Result(state=status, summary=f"{description} ({status_name})")
 
 

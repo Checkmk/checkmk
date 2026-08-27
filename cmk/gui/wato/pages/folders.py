@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """Modes for managing folders"""
@@ -944,14 +943,14 @@ class ModeFolder(WatoMode):
             for name in sorted_subfolder_names:
                 subfolder = subfolders_dict[name]
                 if searched_folder is not None:
-                    if not match_regex.search(subfolder.title()):
+                    if not match_regex.search(subfolder.title()):  # type: ignore[possibly-undefined]
                         continue
-                    search_results += 1
+                    search_results += 1  # type: ignore[possibly-undefined]
 
                 self._show_subfolder(subfolder, show_file_names=show_file_names)
 
             if searched_folder is not None:
-                set_inpage_search_result_info(search_results)
+                set_inpage_search_result_info(search_results)  # type: ignore[possibly-undefined]
 
             html.close_div()
             html.open_div(

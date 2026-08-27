@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """agent_pure_storage_fa
@@ -336,7 +335,7 @@ def agent_pure_storage_fa(args: argparse.Namespace) -> int:
             if args.debug:
                 return 1
 
-        sys.stdout.write(f"<<<pure_storage_fa_{spec.name}:sep(0)>>>\n{json.dumps(data)}\n")
+        sys.stdout.write(f"<<<pure_storage_fa_{spec.name}:sep(0)>>>\n{json.dumps(data)}\n")  # type: ignore[possibly-undefined]
 
     return 0
 

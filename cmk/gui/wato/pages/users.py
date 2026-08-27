@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -663,7 +662,7 @@ class ModeUsers(WatoMode):
                         img_txt = StaticIcon(IconNames.hyphen)
 
                     table.cell(_("Act."))
-                    html.static_icon(img_txt, title=title)
+                    html.static_icon(img_txt, title=title)  # type: ignore[possibly-undefined]
 
                     table.cell(_("Last seen"))
                     if last_seen != 0:

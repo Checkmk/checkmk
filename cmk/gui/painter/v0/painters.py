@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -5807,7 +5806,7 @@ class PainterLogIcon(Painter):
                 title = _("Stopped acknowledgment")
 
         if img:
-            return "icon", html.render_static_icon(img, title=title)
+            return "icon", html.render_static_icon(img, title=title)  # type: ignore[possibly-undefined]
         return "icon", ""
 
 

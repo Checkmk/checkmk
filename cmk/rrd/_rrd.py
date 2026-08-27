@@ -15,7 +15,6 @@ This module does the following operations
 """
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import os
@@ -540,7 +539,7 @@ class RRDConverter:
             xml_file = self._rrd_paths.pnp_xml_storage(self._hostname, servicedesc).path(".xml")
             if xml_file is not None:
                 _fixup_pnp_xml_file(xml_file)
-            os.remove(old_rrd_path)
+            os.remove(old_rrd_path)  # type: ignore[possibly-undefined]
             console.verbose(f"    deleted {old_rrd_path}")
 
     def _convert_cmc_rrd_of(

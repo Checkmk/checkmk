@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="unreachable"
 
 import abc
@@ -2953,7 +2952,7 @@ def _execute_diag_special_agent(
         yield 1, str(exc)
 
     with ad_hoc_secrets.provide_file():
-        for cmd in cmds:
+        for cmd in cmds:  # type: ignore[possibly-undefined]
             fetcher = ProgramFetcher(
                 cmdline=cmd.cmdline,
                 stdin=cmd.stdin,
@@ -3936,7 +3935,7 @@ def _execute_snmp_walk(snmp_config: SNMPHostConfig, backend: SNMPBackend) -> tup
                 if cmk.ccc.debug.enabled():
                     raise
                 try:
-                    error_output += f"OID '{oid}': {e}\n"
+                    error_output += f"OID '{oid}': {e}\n"  # type: ignore[possibly-undefined]
                 except UnboundLocalError:
                     # Surprise, the exception was raised before the `oid` is assigned.
                     error_output += f"{e}\n"

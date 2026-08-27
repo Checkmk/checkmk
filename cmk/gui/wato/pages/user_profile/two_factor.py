@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """The user can change own 2FA related settings on this page"""
@@ -545,7 +544,7 @@ class UserTwoFactorOverview(Page):
             "",
             backup_codes_content
             + backup_codes_info
-            + (invalidate_codes_button if backup_codes else ""),
+            + (invalidate_codes_button if backup_codes else ""),  # type: ignore[possibly-undefined]
         )
 
     def _show_form(self, request: Request, config: Config) -> None:

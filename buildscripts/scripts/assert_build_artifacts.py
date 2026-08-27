@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import hashlib
@@ -304,7 +303,9 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     relay_missing = False
     if not args.skip_docker:
         for image_name, edition, registry in build_docker_image_name_and_registry(
-            args, loaded_yaml, registries
+            args,
+            loaded_yaml,
+            registries,  # type: ignore[possibly-undefined]
         ):
             image_exists = registry.image_exists(image_name, edition)
             results.append(

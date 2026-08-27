@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="unreachable"
 
 import time
@@ -946,7 +945,7 @@ def command_acknowledge_confirm_dialog_additions(
     )
     expire_time_li = html.render_li(
         _("On %(formatted_datetime_str)s (server time).")
-        % {"formatted_datetime_str": formatted_datetime_str}
+        % {"formatted_datetime_str": formatted_datetime_str}  # type: ignore[possibly-undefined]
         if request.var("_ack_expire")
         else _("No expiration date")
     )
@@ -2026,7 +2025,7 @@ class CommandScheduleDowntimesForm:
                 action_rows = host_action_rows
         else:
             specs = [spec]
-        return cmdtag, specs, action_rows
+        return cmdtag, specs, action_rows  # type: ignore[possibly-undefined]
 
     def _vs_down_from(self) -> AbsoluteDate:
         return AbsoluteDate(

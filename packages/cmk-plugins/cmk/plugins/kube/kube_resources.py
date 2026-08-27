@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Callable, Iterable, Mapping, MutableMapping
 from typing import Any, cast, Literal, TypedDict
@@ -226,7 +225,7 @@ def check_resource(
     ):
         if requirement != 0.0 and resource_usage is not None:
             result, metric = check_with_utilization(
-                usage,
+                usage,  # type: ignore[possibly-undefined]
                 resource_type,
                 requirement_type,
                 kubernetes_object,

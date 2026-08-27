@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="unreachable"
 
 import time
@@ -226,7 +225,7 @@ def check_jolokia_metrics_app_sess(item, params, info):
         app = jolokia_metrics_serv(info, item.split())
     elif len(item.split()) == 2:
         app = jolokia_metrics_app(info, item.split())
-    if not app:
+    if not app:  # type: ignore[possibly-undefined]
         return
 
     sessions = app.get("Sessions", app.get("activeSessions", app.get("OpenSessionsCurrentCount")))

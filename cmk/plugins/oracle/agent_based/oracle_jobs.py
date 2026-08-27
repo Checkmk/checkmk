@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 # <<<oracle_jobs>>>
 # IODBSZ1 SYS SM$CLEAN_AUTO_SPLIT_MERGE SCHEDULED 0 763 TRUE 24.04.13 00:00:00,600000 EUROPE/VIENNA - SUCCEEDED
@@ -165,8 +164,8 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
             (
                 lineformat == 3
                 and itemname == job_name
-                and itemowner == job_owner
-                and itempdb == job_pdb
+                and itemowner == job_owner  # type: ignore[possibly-undefined]
+                and itempdb == job_pdb  # type: ignore[possibly-undefined]
                 and itemsid == sid
             )
             or (
@@ -188,7 +187,7 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
         # switch to UNKNOWN, but will get stale.
         raise IgnoreResultsError("Login not possible for check %s" % item)
 
-    if not service_found:
+    if not service_found:  # type: ignore[possibly-undefined]
         # 'missingjob' was once used in the default parameters, so we still need to keep this key
         # for old autochecks file to continue working.
         yield Result(
@@ -201,22 +200,22 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
     output = []
     perfdata = []
 
-    txt = "Job-State: %s" % job_state
+    txt = "Job-State: %s" % job_state  # type: ignore[possibly-undefined]
     if job_state == "BROKEN":
         txt += "(!!)"
         state = State.CRIT
     output.append(txt)
 
-    txt = "Enabled: %s" % (job_enabled == "TRUE" and "Yes" or "No")
+    txt = "Enabled: %s" % (job_enabled == "TRUE" and "Yes" or "No")  # type: ignore[possibly-undefined]
     if job_enabled != "TRUE" and job_state != "RUNNING":
-        if param_consider_job_status == "ignore":
+        if param_consider_job_status == "ignore":  # type: ignore[possibly-undefined]
             txt += " (ignored)"
         else:
             txt += "(!)"
             state = State.worst(state, State.WARN)
     output.append(txt)
 
-    if job_runtime in {"", "SCHEDULED"}:
+    if job_runtime in {"", "SCHEDULED"}:  # type: ignore[possibly-undefined]
         last_duration = 0
     else:
         last_duration = int(job_runtime.replace(".", ",").split(",", 1)[0])
@@ -238,8 +237,8 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
     perfdata.append(Metric("duration", last_duration))
 
     # 01.05.13 01:01:01,000000 +01:00
-    if job_nextrun.startswith("01.01.70 00:00:00"):
-        if job_schedule == "-" and job_state != "DISABLED":
+    if job_nextrun.startswith("01.01.70 00:00:00"):  # type: ignore[possibly-undefined]
+        if job_schedule == "-" and job_state != "DISABLED":  # type: ignore[possibly-undefined]
             job_nextrun = "not scheduled(!)"
             state = State.worst(state, State.WARN)
         else:
@@ -250,7 +249,7 @@ def check_oracle_jobs(item: str, params: Mapping[str, Any], section: StringTable
 
     # A job who is running forever has no last run state and job_last_state is
     # STOPPED
-    if job_state == "RUNNING" and job_runtime == "" and job_last_state == "STOPPED":
+    if job_state == "RUNNING" and job_runtime == "" and job_last_state == "STOPPED":  # type: ignore[possibly-undefined]
         txt = "Job is running forever"
     elif job_last_state == "":
         # no information from job log (outer join in SQL is empty)

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -2259,9 +2258,9 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                             msg += _(", the first match skips this rule pack")
                             icon = StaticIcon(IconNames.hyphen)
                         else:
-                            if cancelling:
+                            if cancelling:  # type: ignore[possibly-undefined]
                                 msg += _(", first match is a cancelling match")
-                            if groups:
+                            if groups:  # type: ignore[possibly-undefined]
                                 msg += _(", match groups of decisive match: %(groups)s") % {
                                     "groups": ",".join([g or _("&lt;None&gt;") for g in groups])
                                 }
@@ -3038,7 +3037,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         vs = self._valuespec(config.sites)
         rule = vs.from_html_vars("rule")
         vs.validate_value(dict(rule), "rule")
-        if not self._new and old_id != rule["id"]:
+        if not self._new and old_id != rule["id"]:  # type: ignore[possibly-undefined]
             raise MKUserError(
                 "rule_p_id", _("It is not allowed to change the ID of an existing rule.")
             )

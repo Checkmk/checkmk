@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -206,13 +205,13 @@ class ABCFoldableTreeRenderer(abc.ABC):
             self._assume_icon(site, host, service)
 
             if show_host:
-                html.a(host.replace(" ", "&nbsp;"), href=host_url)
+                html.a(host.replace(" ", "&nbsp;"), href=host_url)  # type: ignore[possibly-undefined]
                 html.b(HTML.without_escaping("&diams;"), class_="bullet")
 
             if not service:
-                html.a(_("Host state"), href=host_url)
+                html.a(_("Host state"), href=host_url)  # type: ignore[possibly-undefined]
             else:
-                html.a(service.replace(" ", "&nbsp;"), href=service_url)
+                html.a(service.replace(" ", "&nbsp;"), href=service_url)  # type: ignore[possibly-undefined]
 
     @abc.abstractmethod
     def _show_node(

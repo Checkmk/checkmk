@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 
 r"""Check_MK Agent Plugin: mk_filestats
 
@@ -441,8 +440,8 @@ def parse_grouping_config(
     return parent_group_name, (
         child_group_name,
         {
-            "type": grouping_type,
-            "rule": grouping_rule,
+            "type": grouping_type,  # type: ignore[possibly-undefined]
+            "rule": grouping_rule,  # type: ignore[possibly-undefined]
         },
     )
 

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import abc
 import time
@@ -650,7 +649,7 @@ class TreeRenderer:
             self._show_table(
                 now,
                 hint.table.name if isinstance(hint.table, TableWithView) else "",
-                columns,
+                columns,  # type: ignore[possibly-undefined]
                 sorted_rows,
             )
         for name in sorted(tree.nodes_by_name):

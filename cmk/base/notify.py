@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -1382,7 +1381,7 @@ def _process_notifications(
                 log_to_history(
                     notification_result_message(
                         plugin=NotificationPluginName(entry.plugin_name),
-                        context=plugin_context,
+                        context=plugin_context,  # type: ignore[possibly-undefined]
                         exit_code=NotificationResultCode(2),
                         output=[str(e)],
                     )
@@ -2398,7 +2397,7 @@ def do_bulk_notify(
         plugin_context["PARAMETER_BULK_SUBJECT"] = bulk["bulk_subject"]
 
     if "host" in bulkby:
-        bulk_path.extend(
+        bulk_path.extend(  # type: ignore[possibly-undefined]
             [
                 "host",
                 plugin_context["HOSTNAME"],
@@ -2406,7 +2405,7 @@ def do_bulk_notify(
         )
 
     elif "folder" in bulkby:
-        bulk_path.extend(
+        bulk_path.extend(  # type: ignore[possibly-undefined]
             [
                 "folder",
                 str(find_wato_folder(NotificationContext(plugin_context))),
@@ -2414,7 +2413,7 @@ def do_bulk_notify(
         )
 
     if "service" in bulkby:
-        bulk_path.extend(
+        bulk_path.extend(  # type: ignore[possibly-undefined]
             [
                 "service",
                 plugin_context.get("SERVICEDESC", ""),
@@ -2422,7 +2421,7 @@ def do_bulk_notify(
         )
 
     if "sl" in bulkby:
-        bulk_path.extend(
+        bulk_path.extend(  # type: ignore[possibly-undefined]
             [
                 "sl",
                 plugin_context.get(what + "_SL", ""),
@@ -2430,7 +2429,7 @@ def do_bulk_notify(
         )
 
     if "check_type" in bulkby:
-        bulk_path.extend(
+        bulk_path.extend(  # type: ignore[possibly-undefined]
             [
                 "check_type",
                 plugin_context.get(what + "CHECKCOMMAND", "").split("!")[0],
@@ -2438,7 +2437,7 @@ def do_bulk_notify(
         )
 
     if "state" in bulkby:
-        bulk_path.extend(
+        bulk_path.extend(  # type: ignore[possibly-undefined]
             [
                 "state",
                 plugin_context.get(what + "STATE", ""),
@@ -2446,7 +2445,7 @@ def do_bulk_notify(
         )
 
     if "ec_contact" in bulkby:
-        bulk_path.extend(
+        bulk_path.extend(  # type: ignore[possibly-undefined]
             [
                 "ec_contact",
                 plugin_context.get("EC_CONTACT", ""),
@@ -2454,7 +2453,7 @@ def do_bulk_notify(
         )
 
     if "ec_comment" in bulkby:
-        bulk_path.extend(
+        bulk_path.extend(  # type: ignore[possibly-undefined]
             [
                 "ec_comment",
                 plugin_context.get("EC_COMMENT", ""),
@@ -2468,7 +2467,7 @@ def do_bulk_notify(
         value = plugin_context.get("SERVICE" + "_" + macroname, "") or plugin_context.get(
             "HOST" + "_" + macroname, ""
         )
-        bulk_path.extend(
+        bulk_path.extend(  # type: ignore[possibly-undefined]
             [
                 macroname.lower(),
                 value,
@@ -2477,7 +2476,7 @@ def do_bulk_notify(
 
     logger.info(
         "    --> storing for bulk notification %(bulk_path)s",
-        {"bulk_path": "|".join(bulk_path)},
+        {"bulk_path": "|".join(bulk_path)},  # type: ignore[possibly-undefined]
     )
     bulk_dir = _create_bulk_dir(bulk_path)
     notify_uuid = str(uuid.uuid4())

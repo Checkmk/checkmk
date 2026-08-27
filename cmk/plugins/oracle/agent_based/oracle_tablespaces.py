@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
@@ -318,7 +317,7 @@ def check_oracle_tablespaces(
         ):
             yield from check_levels_v1(
                 stats.free_space,
-                levels_lower=(warn, crit),
+                levels_lower=(warn, crit),  # type: ignore[possibly-undefined]
                 render_func=render.bytes,
                 label="Space left",
             )

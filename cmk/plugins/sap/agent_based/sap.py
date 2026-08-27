@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 # <<<sap:sep(9)>>>
 # sap_XYZ    1    50 Nagios/Allgemein/Intern/ResponseTime    249 msec
@@ -209,7 +208,7 @@ def check_sap_value(item: str, params: Mapping[str, Any], section: Section) -> C
     if status is None:
         raise IgnoreResultsError("no output about sap value in agent output")
 
-    yield Result(state=status, summary=output)
+    yield Result(state=status, summary=output)  # type: ignore[possibly-undefined]
 
 
 check_plugin_sap_value = CheckPlugin(

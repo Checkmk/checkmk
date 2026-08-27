@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="possibly-undefined"
 
 import abc
 import binascii
@@ -206,14 +205,14 @@ class EWS(_Connection):
                     break
             if i > 0:  # break loop if at least the 1st lvl subfolder is found in the root folder
                 break
-        subfolder_names = subfolder_names[i:]
+        subfolder_names = subfolder_names[i:]  # type: ignore[possibly-undefined]
 
         # Create new subfolder(s)
         for fname in subfolder_names:
             new_folder = Folder(parent=parent_folder, name=fname)
             new_folder.save()
             parent_folder = new_folder
-        return new_folder
+        return new_folder  # type: ignore[possibly-undefined]
 
     def mails_by_date(
         self,

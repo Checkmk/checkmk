@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -2601,7 +2600,9 @@ def _prepare_for_activation_tasks(
 
             if activate_changes.is_sync_needed(site_id, snapshot_settings.site_config):
                 central_file_infos_per_site[site_id] = _get_site_central_file_infos(
-                    site_id, snapshot_settings, config_sync_file_infos_per_inode
+                    site_id,
+                    snapshot_settings,
+                    config_sync_file_infos_per_inode,  # type: ignore[possibly-undefined]
                 )
         except Exception as e:
             _handle_activation_changes_exception(

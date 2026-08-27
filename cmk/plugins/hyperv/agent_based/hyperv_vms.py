@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 # Example output from agent:
 # <<<hyperv_vms>>>
@@ -93,7 +92,7 @@ def parse_hyperv_vms(string_table: StringTable) -> VMData:
             line = line[1:]
 
         if ":" in line[1]:  # skip heading line
-            parsed[vm_name] = {
+            parsed[vm_name] = {  # type: ignore[possibly-undefined]
                 "state": line[0],
                 "uptime": line[1],
                 "state_msg": " ".join(line[2:]),

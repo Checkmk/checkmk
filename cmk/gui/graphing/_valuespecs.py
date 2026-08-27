@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import json
@@ -436,7 +435,7 @@ def id_from_unit_spec(unit_spec: ConvertibleUnitSpecification) -> str:
             precision_id = "AutoPrecision"
         case StrictPrecision():
             precision_id = "StrictPrecision"
-    return f"{notation_id}_{unit_spec.notation.symbol}_{precision_id}_{unit_spec.precision.digits}"
+    return f"{notation_id}_{unit_spec.notation.symbol}_{precision_id}_{unit_spec.precision.digits}"  # type: ignore[possibly-undefined]
 
 
 def _title_from_formatter(formatter: NotationFormatter) -> str:

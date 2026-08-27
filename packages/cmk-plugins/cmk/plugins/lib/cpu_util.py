@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import re
@@ -287,7 +286,7 @@ def check_cpu_util_unix(
         util_total = core.util_total
         total_diff = util_total - prev_total
         value_store[key] = util_total
-        total_perc = (100.0 * total_diff / sum_jiffies) * len(cores)
+        total_perc = (100.0 * total_diff / sum_jiffies) * len(cores)  # type: ignore[possibly-undefined]
         summary_cores.append((core.name, total_perc))
 
     yield from check_cpu_util(

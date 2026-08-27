@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -2137,7 +2136,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
             except KeyError:
                 raise MKUserError("site", _("Invalid site"))
 
-        self._current_settings = site.setdefault("globals", {})
+        self._current_settings = site.setdefault("globals", {})  # type: ignore[possibly-undefined]
         self._global_settings = load_configuration_settings()
 
     @override

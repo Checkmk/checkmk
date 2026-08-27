@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import os
@@ -240,7 +239,7 @@ def _load_custom_user_visuals[TVisual: Visual](
         except SyntaxError as e:
             raise MKGeneralException(
                 _("Cannot load %(what)s from %(visual_path)s: %(e)s")
-                % {"what": what, "visual_path": visual_path, "e": e}
+                % {"what": what, "visual_path": visual_path, "e": e}  # type: ignore[possibly-undefined]
             )
 
     visuals.update(

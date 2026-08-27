@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -71,7 +70,7 @@ def _ignored_dict_elements(when: Literal["discovery", "summary"]) -> Mapping[str
             parameter_form=List(
                 element_template=String(),
                 title=Title("Ignore the following IPMI sensors"),
-                help_text=ignored_sensors_help,
+                help_text=ignored_sensors_help,  # type: ignore[possibly-undefined]
             ),
         ),
         "ignored_sensorstates": DictElement(
@@ -79,7 +78,7 @@ def _ignored_dict_elements(when: Literal["discovery", "summary"]) -> Mapping[str
             parameter_form=List(
                 element_template=String(),
                 title=Title("Ignore the following IPMI sensor states"),
-                help_text=ignored_sensorsstate_help,
+                help_text=ignored_sensorsstate_help,  # type: ignore[possibly-undefined]
             ),
         ),
     }

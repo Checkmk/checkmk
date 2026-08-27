@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import time
 
@@ -44,31 +43,31 @@ def _parse_aix_common(
                 timestamp=timestamp,
             )
         elif line[0] == "Bytes:" and line[2] == "Bytes:":
-            iface.counters.out_octets = interfaces.saveint(line[1])
-            iface.counters.in_octets = interfaces.saveint(line[3])
+            iface.counters.out_octets = interfaces.saveint(line[1])  # type: ignore[possibly-undefined]
+            iface.counters.in_octets = interfaces.saveint(line[3])  # type: ignore[possibly-undefined]
         elif line[0] == "Packets:" and line[2] == "Packets:":
-            iface.counters.out_ucast = interfaces.saveint(line[1])
-            iface.counters.in_ucast = interfaces.saveint(line[3])
+            iface.counters.out_ucast = interfaces.saveint(line[1])  # type: ignore[possibly-undefined]
+            iface.counters.in_ucast = interfaces.saveint(line[3])  # type: ignore[possibly-undefined]
         elif line[0] == "Transmit" and line[1] == "Errors:":
-            iface.counters.out_err = interfaces.saveint(line[2])
-            iface.counters.in_err = interfaces.saveint(line[5])
+            iface.counters.out_err = interfaces.saveint(line[2])  # type: ignore[possibly-undefined]
+            iface.counters.in_err = interfaces.saveint(line[5])  # type: ignore[possibly-undefined]
         elif " ".join(line[0:2]) == "Broadcast Packets:":
-            iface.counters.out_bcast = interfaces.saveint(line[2])
-            iface.counters.in_bcast = interfaces.saveint(line[5])
+            iface.counters.out_bcast = interfaces.saveint(line[2])  # type: ignore[possibly-undefined]
+            iface.counters.in_bcast = interfaces.saveint(line[5])  # type: ignore[possibly-undefined]
         elif " ".join(line[0:2]) == "Multicast Packets:":
-            iface.counters.out_mcast = interfaces.saveint(line[2])
-            iface.counters.in_mcast = interfaces.saveint(line[5])
+            iface.counters.out_mcast = interfaces.saveint(line[2])  # type: ignore[possibly-undefined]
+            iface.counters.in_mcast = interfaces.saveint(line[5])  # type: ignore[possibly-undefined]
         elif " ".join(line[0:2]) == "Hardware Address:":
-            iface.attributes.phys_address = interfaces.mac_address_from_hexstring(line[2])
+            iface.attributes.phys_address = interfaces.mac_address_from_hexstring(line[2])  # type: ignore[possibly-undefined]
         elif " ".join(line[0:3]) == "Adapter Data Rate:":
             # speed is in Mb/s
-            iface.attributes.speed = int(line[3]) * 1000000
+            iface.attributes.speed = int(line[3]) * 1000000  # type: ignore[possibly-undefined]
         elif " ".join(line[0:2]) == "Driver Flags:":
-            flags[nic] = line[2:]
+            flags[nic] = line[2:]  # type: ignore[possibly-undefined]
         elif " ".join(line[0:3]) == "KIM Driver Flags:":
-            flags[nic] = line[3:]
-        elif line and ":" not in line and nic in flags:
-            flags[nic] += line
+            flags[nic] = line[3:]  # type: ignore[possibly-undefined]
+        elif line and ":" not in line and nic in flags:  # type: ignore[possibly-undefined]
+            flags[nic] += line  # type: ignore[possibly-undefined]
 
     return ifaces, flags
 

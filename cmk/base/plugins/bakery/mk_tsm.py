@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from pathlib import Path
 from shlex import quote
@@ -44,7 +43,7 @@ def get_mk_tsm_files(conf: TSMConfig) -> FileGenerator:
         raise ValueError("Missing 'auth' configuration")
 
     for base_os in (OS.LINUX, OS.AIX, OS.SOLARIS):
-        yield Plugin(base_os=base_os, source=Path("mk_tsm"), interval=interval)
+        yield Plugin(base_os=base_os, source=Path("mk_tsm"), interval=interval)  # type: ignore[possibly-undefined]
 
         yield PluginConfig(
             base_os=base_os,

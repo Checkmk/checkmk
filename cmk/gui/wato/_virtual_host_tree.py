@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Collection, Sequence
 from contextlib import AbstractContextManager as ContextManager
@@ -427,7 +426,7 @@ function virtual_host_tree_enter(path)
 
                     if level <= len(folder_titles):
                         node_title = folder_titles[level - 1]
-                        node_value = "folder:%d:%s" % (level, folder_path_components[level - 1])
+                        node_value = "folder:%d:%s" % (level, folder_path_components[level - 1])  # type: ignore[possibly-undefined]
                     else:
                         node_title = _("Hosts in this folder")
                         node_value = "folder:%d:" % level
@@ -441,7 +440,7 @@ function virtual_host_tree_enter(path)
                 elif level_spec.startswith("foldertree:"):
                     path_components = []
                     foldertree_tree_entry = tree_entry
-                    for path_component in folder_path_components:
+                    for path_component in folder_path_components:  # type: ignore[possibly-undefined]
                         path_components.append(path_component)
 
                         level = len(path_components)
@@ -483,7 +482,7 @@ function virtual_host_tree_enter(path)
             parent_level_branches = this_level_branches
 
         # Add the numbers/state of this host to the last level the host is invovled with
-        for tree_entry in this_level_branches:
+        for tree_entry in this_level_branches:  # type: ignore[possibly-undefined]
             tree_entry.setdefault("_num_hosts", 0)
             tree_entry.setdefault("_state", 0)
 

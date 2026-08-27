@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Generator
 from datetime import datetime
@@ -184,7 +183,7 @@ def test_only_affected_sites_require_activation_when_adding_users(  # type: igno
             pprint_value=False,
         )
     all_users = userdb.load_users()
-    assert user_id in all_users
+    assert user_id in all_users  # type: ignore[possibly-undefined]
     assert expected_changed_sites == _changed_sites(sites)
 
 

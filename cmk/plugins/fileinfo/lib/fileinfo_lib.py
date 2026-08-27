@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import fnmatch
@@ -463,7 +462,7 @@ def _check_individual_files(
             levels_lower=levels_lower,
         )
 
-    overall_state = max(r.state.value for r in results if isinstance(r, Result))
+    overall_state = max(r.state.value for r in results if isinstance(r, Result))  # type: ignore[possibly-undefined]
     if skip_ok_files and State(overall_state) == State.OK:
         return
 

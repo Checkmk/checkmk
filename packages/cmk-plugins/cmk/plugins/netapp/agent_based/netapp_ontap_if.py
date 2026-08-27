@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import time
@@ -136,7 +135,7 @@ def _merge_if_counters_sections(
 
         if section_netapp_ontap_if_counters:
             counters = section_netapp_ontap_if_counters.get(
-                interface_to_counter.get(f"{interface['node_name']}:{interface['name']}", "")
+                interface_to_counter.get(f"{interface['node_name']}:{interface['name']}", "")  # type: ignore[possibly-undefined]
             )
             interface = _merge_interface_counters(counters, interface)
 

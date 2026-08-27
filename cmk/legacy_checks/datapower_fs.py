@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
@@ -50,7 +49,7 @@ def check_datapower_fs(item, params, info):
     elif item == "Internal":
         i = 6
 
-    avail_mb = float(info[0][i])
+    avail_mb = float(info[0][i])  # type: ignore[possibly-undefined]
     size_mb = float(info[0][i + 1])
     fslist = [(item, size_mb, avail_mb, 0)]
 

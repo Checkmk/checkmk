@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Mapping
 from typing import Any
@@ -206,7 +205,7 @@ def parse_ipmi(string_table: StringTable) -> ipmi.Section:
             )
 
             sensor = parsed.setdefault(
-                name,
+                name,  # type: ignore[possibly-undefined]
                 ipmi.Sensor(
                     data["status_txt"],
                     data["unit"].replace(" ", "_"),

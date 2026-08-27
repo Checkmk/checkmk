@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 # Example output from agent:
 # Slot Number: 0
@@ -97,17 +96,19 @@ def parse_megaraid_pdisks(
                 name = " ".join(inquiry_data)
                 # Adapter, Enclosure, Encolsure Device ID, Slot, State, Name
                 enclosure = adapters[adapter][enclosure_devid]
-                item = f"/c{adapter}/e{enclosure}/s{slot}"
+                item = f"/c{adapter}/e{enclosure}/s{slot}"  # type: ignore[possibly-undefined]
 
                 disk = megaraid.PDisk(
-                    name, _NORMALIZE_STATE.get(state, state), predictive_failure_count
+                    name,
+                    _NORMALIZE_STATE.get(state, state),  # type: ignore[possibly-undefined]
+                    predictive_failure_count,
                 )
 
                 parsed[item] = disk
                 predictive_failure_count = None
 
                 # Add it under the old item name. Not discovered, but can be used when checking
-                legacy_item = f"{megaraid_pdisks_adapterstr[adapter]}{enclosure}/{slot}"
+                legacy_item = f"{megaraid_pdisks_adapterstr[adapter]}{enclosure}/{slot}"  # type: ignore[possibly-undefined]
                 parsed[legacy_item] = disk
 
     return parsed

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -552,7 +551,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                 if analyse:
                     table.cell(css=["buttons"])
                     idx = nr + start_nr
-                    if idx < len(analyse_rules):
+                    if idx < len(analyse_rules):  # type: ignore[possibly-undefined]
                         what, _anarule, reason = analyse_rules[idx]
                         if what == "match":
                             html.static_icon(

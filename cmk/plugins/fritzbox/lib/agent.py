@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 # This agent uses UPNP API calls to the FRITZ!Box to gather information
 # about connection configuration and status.
@@ -159,7 +158,7 @@ def _get_response(
         response.raise_for_status()
         return response
     except requests.exceptions.HTTPError:
-        if response.status_code != 500:
+        if response.status_code != 500:  # type: ignore[possibly-undefined]
             raise
 
     # old URL can not be found, select other base url in the hope that the other

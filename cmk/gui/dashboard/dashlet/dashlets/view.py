@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import copy
 from typing import cast, override, TypeVar
@@ -63,7 +62,7 @@ def copy_view_into_dashlet(
                 view = this_view
                 break
 
-        if not view:
+        if not view:  # type: ignore[possibly-undefined]
             raise MKGeneralException(
                 _(
                     "Failed to convert a built-in dashboard which is referencing "

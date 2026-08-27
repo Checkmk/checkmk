@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import contextlib
@@ -169,7 +168,7 @@ def check_aws_limits(
         if is_valid_aws_limits_perf_data(resource_key):
             yield Metric(name=f"aws_{aws_service}_{resource_key}", value=amount)
 
-        if param_absolute_limit is not None:
+        if param_absolute_limit is not None:  # type: ignore[possibly-undefined]
             limit = param_absolute_limit
 
         if not limit:

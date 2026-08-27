@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 
 import re
 import socket
@@ -21,7 +20,7 @@ def parse_response(data: str) -> Mapping[str, str]:
     except ValueError, KeyError:
         bail_out(3, f"Invalid data: {data!r}")
 
-    return parsed
+    return parsed  # type: ignore[possibly-undefined]
 
 
 def send_and_receive(sock: socket.socket, request_str: str) -> Mapping[str, str]:

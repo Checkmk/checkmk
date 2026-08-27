@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 # Coords:
@@ -1001,10 +1000,10 @@ class Document:
                 if height_mm is not None:
                     height = height_mm * mm
                 if width_mm is None:
-                    width = height * aspect
+                    width = height * aspect  # type: ignore[possibly-undefined]
                 elif height_mm is None:
-                    height = width / aspect  # fixed: true-division
-        return width, height
+                    height = width / aspect  # type: ignore[possibly-undefined]  # fixed: true-division
+        return width, height  # type: ignore[possibly-undefined]
 
     @staticmethod
     def _sanitize_text(text: str) -> str:

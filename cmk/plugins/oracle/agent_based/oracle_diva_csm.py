@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 # .1.3.6.1.4.1.110901.1.2.1.1.1.2.1       lib status
@@ -297,7 +296,7 @@ def check_oracle_diva_csm_tapes(
 
     yield from check_levels(
         blank_tapes,
-        levels_lower=levels_lower,
+        levels_lower=levels_lower,  # type: ignore[possibly-undefined]
         metric_name="tapes_free",
         render_func=str,
         label="Blank tapes",

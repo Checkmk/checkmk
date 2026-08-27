@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Mapping
 from typing import Any, NamedTuple
@@ -219,13 +218,13 @@ def parse_oracle_asm_diskgroup(
             failgroups: list[Failgroup] = []
             if dgstate == "MOUNTED":
                 this_failgroup = Failgroup(
-                    fg_name=fg_name,
+                    fg_name=fg_name,  # type: ignore[possibly-undefined]
                     fg_voting_files=voting_files,
                     fg_type=fg_type,
                     fg_free_mb=int(free_mb),
                     fg_total_mb=int(total_mb),
-                    fg_disks=int(fg_disks),
-                    fg_min_repair_time=int(fg_min_repair_time),
+                    fg_disks=int(fg_disks),  # type: ignore[possibly-undefined]
+                    fg_min_repair_time=int(fg_min_repair_time),  # type: ignore[possibly-undefined]
                 )
 
                 if dgname in tmp_section:
@@ -420,16 +419,16 @@ def check_oracle_asm_diskgroup(
         if data.fail_groups:
             # => New agentformat!
 
-            infotext += ", %i disks" % dg_disks
+            infotext += ", %i disks" % dg_disks  # type: ignore[possibly-undefined]
 
             if dgtype != "EXTERN":
                 # EXTERN Redundancy has only 1 FG. => useless information
-                infotext += " in %i failgroups" % fg_count
+                infotext += " in %i failgroups" % fg_count  # type: ignore[possibly-undefined]
 
-            if not fg_uniform_size:
+            if not fg_uniform_size:  # type: ignore[possibly-undefined]
                 infotext += ", failgroups with unequal size"
 
-            if dg_votecount > 0:
+            if dg_votecount > 0:  # type: ignore[possibly-undefined]
                 votemarker = ""
                 if dgtype == "HIGH" and dg_votecount < 5:
                     # HIGH redundancy allows a loss of 2 votes. => 1 is only a WARN
@@ -445,7 +444,7 @@ def check_oracle_asm_diskgroup(
                 infotext += ", %i votings" % dg_votecount
                 infotext += votemarker
 
-            if dg_min_repair < 8640000:
+            if dg_min_repair < 8640000:  # type: ignore[possibly-undefined]
                 # no need to set a state due to offline disks
                 infotext += ", disk repair timer for offline disks at %s (!)" % render.timespan(
                     dg_min_repair

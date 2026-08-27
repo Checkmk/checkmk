@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 
 import time
 
@@ -77,7 +76,7 @@ def check_f5_bigip_conns(item, params, info):
             "SSL connections",
         ),
         (total_native_compat_rate, conn_rate_params, "connections_rate", "Connections/s"),
-        (stat_http_req_rate, params.get("http_req_rate"), "requests_per_second", "HTTP requests/s"),
+        (stat_http_req_rate, params.get("http_req_rate"), "requests_per_second", "HTTP requests/s"),  # type: ignore[possibly-undefined]
     ]:
         # SSL may not be configured, eg. on test servers
         if val is None:

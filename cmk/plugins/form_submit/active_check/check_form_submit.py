@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -212,7 +211,7 @@ def open_url(
     except TimeoutError as e:
         new_state(2, f"Unable to open {url} : {e}")
 
-    real_url = fd.geturl()
+    real_url = fd.geturl()  # type: ignore[possibly-undefined]
     code = fd.getcode()
     content = fd.read()
 
@@ -305,7 +304,7 @@ def parse_form(content: str, form_name: str | None) -> dict[str, Any]:
                 ),
             )
 
-    return form
+    return form  # type: ignore[possibly-undefined]
 
 
 def update_form_vars(form_elem: dict[str, Any], params: Mapping[str, str]) -> dict[str, str]:

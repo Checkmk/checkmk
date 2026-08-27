@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import dataclasses
 
@@ -254,7 +253,7 @@ def kubernetes_dashboard_breadcrumb(
                 )
             )
             break
-    if not obj_name:
+    if not obj_name:  # type: ignore[possibly-undefined]
         breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)]), None))
 
     return breadcrumb

@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pre update checks, executed before any configuration is changed."""
 
-# mypy: disable-error-code="possibly-undefined"
-
 import warnings
 from dataclasses import dataclass
 from logging import Logger
@@ -60,7 +58,7 @@ class PreUpdateRulesets(PreUpdateAction):
         with disable_redis(), gui_context(), SuperUserContext():
             set_global_vars()
             result = _validate_rule_values(
-                rulesets,
+                rulesets,  # type: ignore[possibly-undefined]
                 load_contact_group_information(),
                 conflict_mode,
                 logger,

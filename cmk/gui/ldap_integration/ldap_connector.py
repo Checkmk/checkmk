@@ -7,7 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -833,7 +832,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
             self._clear_nearest_dc_cache()
             msg = e.message["desc"] if hasattr(e, "message") and "desc" in e.message else "%s" % e
 
-            return None, f"{uri}: {msg}"
+            return None, f"{uri}: {msg}"  # type: ignore[possibly-undefined]
 
         except MKLDAPException as e:
             self._clear_nearest_dc_cache()

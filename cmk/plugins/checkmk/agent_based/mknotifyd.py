@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 # Example output from agent:
@@ -223,13 +222,13 @@ def parse_mknotifyd(
             if varname == "Site":
                 connected_site = value.split(" (")[0]
             elif varname == "Spool":
-                index, site_entry.spools[value] = _get_spool(index, data)
+                index, site_entry.spools[value] = _get_spool(index, data)  # type: ignore[possibly-undefined]
             elif varname == "Connection":
                 index, connection = _get_connection(index, data)
                 # for "mknotifyd.connection_v2"
-                site_entry.connections_v2[connected_site] = connection
+                site_entry.connections_v2[connected_site] = connection  # type: ignore[possibly-undefined]
                 # keep the "mknotifyd.connection" services working
-                site_entry.connections[value] = connection
+                site_entry.connections[value] = connection  # type: ignore[possibly-undefined]
 
         index += 1
 

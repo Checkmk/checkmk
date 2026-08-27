@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import asyncio
@@ -180,7 +179,7 @@ class BaseAsyncApiClient:
                 timeout=aiohttp.ClientTimeout(total=30),
             )
 
-        return session
+        return session  # type: ignore[possibly-undefined]
 
     async def __aenter__(self):
         if self._session is None or self._session.closed:

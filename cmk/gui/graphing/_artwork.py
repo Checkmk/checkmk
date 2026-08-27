@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -275,7 +274,7 @@ def _layout_graph_curves(
                     )
                     stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
 
-            layouted_curves.append(layouted_curve)
+            layouted_curves.append(layouted_curve)  # type: ignore[possibly-undefined]
             curve_annotations.append(
                 CurveAnnotations(
                     scalars=scalars,

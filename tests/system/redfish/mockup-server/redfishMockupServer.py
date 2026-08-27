@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="unreachable"
 
 # redfishMockupServer.py
@@ -459,7 +458,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
                     filename, file_extension = os.path.splitext(fpath_direct)
                     file_extension = file_extension.strip(".")
                 self.send_response(200)
-                self.send_header("Content-Type", "application/" + file_extension + ";charset=utf-8")
+                self.send_header("Content-Type", "application/" + file_extension + ";charset=utf-8")  # type: ignore[possibly-undefined]
                 self.send_header("OData-Version", "4.0")
             else:
                 self.send_response(404)
@@ -622,7 +621,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 print("Decoding JSON has failed, sending 400")
                 data_received = None
 
-        if data_received:
+        if data_received:  # type: ignore[possibly-undefined]
             logger.info("   PATCH: Data: %s", data_received)
 
             # construct path "mockdir/path/to/resource/<filename>"

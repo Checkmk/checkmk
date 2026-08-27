@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 # Example output
@@ -62,7 +61,7 @@ def parse_solaris_pkginfo(string_table: StringTable) -> Section:
         elif key == "NAME":
             # build a dict for each package initiator = PKGINST
             # concat solaris pkginst and name to mk inventory name and write to dict
-            entry = {"name": f"{pkginst} - {value}"}
+            entry = {"name": f"{pkginst} - {value}"}  # type: ignore[possibly-undefined]
         elif key == "INSTDATE":
             # 'try, except' blog is necessary because date conversion may fail because of non en_US
             # locale settings on the remote solaris server

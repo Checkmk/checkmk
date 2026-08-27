@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 """Code for support of Nagios (and compatible) cores"""
@@ -619,7 +618,7 @@ def create_nagios_host_spec(
 
     elif hostname in hosts_config.clusters:
         # Special handling of clusters
-        host_spec["parents"] = ",".join(sorted(nodes))
+        host_spec["parents"] = ",".join(sorted(nodes))  # type: ignore[possibly-undefined]
 
     # Custom configuration last -> user may override all other values
     # TODO: Find a generic mechanism for CMC and Nagios

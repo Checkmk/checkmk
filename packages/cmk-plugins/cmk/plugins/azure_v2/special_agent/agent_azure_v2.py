@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -1698,7 +1697,7 @@ class UsageDetailsCache(AzureAsyncCache):
                             remaining_tenant_requests_str.removeprefix("DefaultQuota:")
                         )
 
-                    if remaining_tenant_requests <= 0 or retry_after > 10:
+                    if remaining_tenant_requests <= 0 or retry_after > 10:  # type: ignore[possibly-undefined]
                         LOGGER.warning(
                             "Rate limit exceeded for Microsoft.CostManagement API. "
                             "Received a 'retry after' of %(retry_after)d seconds. "

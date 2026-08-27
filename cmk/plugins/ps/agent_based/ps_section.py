@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import time
@@ -97,7 +96,7 @@ def _extract_wmic_info(info: StringTable) -> tuple[int, StringTable]:
             break  # Finished with all lines
 
         if is_wmic:
-            row = dict(zip(wmic_headers, line))
+            row = dict(zip(wmic_headers, line))  # type: ignore[possibly-undefined]
             # Row might be damaged. I've seen this agent output:
             # Node - TILE-BUILDER02
             # ERROR:
@@ -109,7 +108,7 @@ def _extract_wmic_info(info: StringTable) -> tuple[int, StringTable]:
         else:
             ps_result.append(line)  # plain list of process names
 
-    return _merge_wmic(ps_result, wmic_info, wmic_headers)
+    return _merge_wmic(ps_result, wmic_info, wmic_headers)  # type: ignore[possibly-undefined]
 
 
 def _merge_wmic(

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 from collections.abc import Mapping, Sequence
 
@@ -58,7 +57,7 @@ def _split_bonds(string_table: StringTable) -> Mapping[str, StringTable]:
         elif "Channel Bonding Driver" in line:
             pass
         else:
-            current.append(line)
+            current.append(line)  # type: ignore[possibly-undefined]
     return bonds
 
 

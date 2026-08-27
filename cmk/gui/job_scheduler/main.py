@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 
 import logging
 import os
@@ -144,13 +143,13 @@ def main(crash_report_callback: Callable[[Exception], str] = default_crash_repor
                 scheduler_thread.join()
     except MKGeneralException as exc:
         # Expected error, the traceback adds no value here.
-        logger.error("ERROR: %(error)s", {"error": exc})  # noqa: TRY400
+        logger.error("ERROR: %(error)s", {"error": exc})  # type: ignore[possibly-undefined]  # noqa: TRY400
         return 1
     except SystemExit:
         raise
     except Exception as exc:
         crash_msg = crash_report_callback(exc)
-        logger.exception("Unhandled exception (Crash ID: %(crash_id)s)", {"crash_id": crash_msg})
+        logger.exception("Unhandled exception (Crash ID: %(crash_id)s)", {"crash_id": crash_msg})  # type: ignore[possibly-undefined]
         return 1
     return 0
 

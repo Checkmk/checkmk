@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 from logging import Logger
@@ -116,7 +115,7 @@ class PreUpdatePagetypes[TOverridable_co: Overridable](PreUpdateAction):
                     },
                 )
             try:
-                self._updater.target_type.deserialize(updated_raw_page_dict)
+                self._updater.target_type.deserialize(updated_raw_page_dict)  # type: ignore[possibly-undefined]
             except Exception:
                 encountered_deserialization_errors = True
                 logger.exception(

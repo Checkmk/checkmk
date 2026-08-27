@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -2001,7 +2000,7 @@ def _convert_to_legacy_levels[NumberT: (int, float)](
             title=_localize_optional(to_convert.title, localizer),
             help=_localize_optional(to_convert.help_text, localizer),
             choices=choices,
-            default_value=_make_levels_default_value(to_convert, prefill_value),
+            default_value=_make_levels_default_value(to_convert, prefill_value),  # type: ignore[possibly-undefined]
             # Mypy does not see, to see Literal["..."] as a str
             validate=validate,  # type: ignore[arg-type]
         ),

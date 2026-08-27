@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 
@@ -1242,9 +1241,9 @@ class ReplicationStatusFetcher:
             except Exception as e:
                 logger.exception(
                     "error collecting replication results from site %(site_id)s",
-                    {"site_id": result.site_id},
+                    {"site_id": result.site_id},  # type: ignore[possibly-undefined]
                 )
-                html.show_error(f"{result.site_id}: {e}")
+                html.show_error(f"{result.site_id}: {e}")  # type: ignore[possibly-undefined]
 
         self._logger.debug("Got results")
         return results_by_site

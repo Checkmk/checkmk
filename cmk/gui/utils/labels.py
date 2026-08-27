@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 
@@ -320,7 +319,7 @@ def _get_validated_count_value(ident: str, value: FilterHTTPVariables) -> int:
         raise MKUserError(
             ident,
             _('The value "%(str_val)s" of HTTP variable "%(ident)s" is not an integer.')
-            % {"str_val": str_val, "ident": ident},
+            % {"str_val": str_val, "ident": ident},  # type: ignore[possibly-undefined]
         )
 
 

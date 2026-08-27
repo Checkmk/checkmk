@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -160,7 +159,7 @@ class GroupedBoxesLayout(Layout):
                 last_group = this_group
                 current_group: list[tuple[str, Row]] = []
                 groups.append((this_group, current_group))
-            current_group.append((row_id(view["datasource"], row), row))
+            current_group.append((row_id(view["datasource"], row), row))  # type: ignore[possibly-undefined]
 
         columns: list[list[tuple[Hashable, list[tuple[str, Row]]]]] = []
 

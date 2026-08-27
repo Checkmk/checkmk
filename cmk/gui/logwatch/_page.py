@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import contextlib
@@ -813,7 +812,7 @@ def parse_file(
                 else:
                     continue  # ignore this line
 
-                log_lines.append({"level": line_level, "class": line_class, "line": line_display})
+                log_lines.append({"level": line_level, "class": line_class, "line": line_display})  # type: ignore[possibly-undefined]
     except Exception as e:
         if debug:
             raise

@@ -3,7 +3,6 @@
 # Copyright 2016-2019 DMTF. All rights reserved.
 # License: BSD 3-Clause License. For full text see link: https://github.com/DMTF/Redfish-Mockup-Server/blob/main/LICENSE.md
 
-# mypy: disable-error-code="attr-defined"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="possibly-undefined"
@@ -93,8 +92,8 @@ class RfMockupServer(BaseHTTPRequestHandler):
         :param path:
         :param filename:
         """
-        apath = self.server.mockDir
-        rpath = clean_path(path, self.server.shortForm)
+        apath = self.server.mockDir  # type: ignore[attr-defined]
+        rpath = clean_path(path, self.server.shortForm)  # type: ignore[attr-defined]
         return f"{apath}/{rpath}/{filename}" if filename not in ["", None] else f"{apath}/{rpath}"
 
     def get_cached_link(self, path):
@@ -119,15 +118,15 @@ class RfMockupServer(BaseHTTPRequestHandler):
         :param method:
         :param path:
         """
-        if self.server.timefromJson:
+        if self.server.timefromJson:  # type: ignore[attr-defined]
             responseTime = self.getResponseTime(method, path)
             try:
                 time.sleep(float(responseTime))
             except ValueError:
                 logger.info("Time is not a float value. Sleeping with default response time")
-                time.sleep(float(self.server.responseTime))
+                time.sleep(float(self.server.responseTime))  # type: ignore[attr-defined]
         else:
-            time.sleep(float(self.server.responseTime))
+            time.sleep(float(self.server.responseTime))  # type: ignore[attr-defined]
 
     def send_header_file(self, fpath):
         """send_header_file
@@ -199,7 +198,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
         event_payload["Name"] = "Test Event"
         event_payload["Id"] = str(self.event_id)
         event_payload["Events"] = []  # type: ignore[assignment]
-        event_payload["Events"].append(data_received)
+        event_payload["Events"].append(data_received)  # type: ignore[attr-defined]
 
         # Go through each subscriber
         events = []
@@ -435,7 +434,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
     def do_HEAD(self):
         """do_HEAD"""
         logger.info("Headers: ")
-        logger.info(self.server.headers)
+        logger.info(self.server.headers)  # type: ignore[attr-defined]
 
         # construct path "mockdir/path/to/resource/headers.json"
         fpath = self.construct_path(self.path, "index.json")
@@ -445,10 +444,10 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
         # If bool headers is true and headers.json exists...
         # else, send normal headers for given resource
-        if self.server.headers and (os.path.isfile(fpath_headers)):
+        if self.server.headers and (os.path.isfile(fpath_headers)):  # type: ignore[attr-defined]
             self.send_response(200)
             self.send_header_file(fpath_headers)
-        elif (self.server.headers is False) or (os.path.isfile(fpath_headers) is False):
+        elif (self.server.headers is False) or (os.path.isfile(fpath_headers) is False):  # type: ignore[attr-defined]
             if self.get_cached_link(fpath)[0]:
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
@@ -490,13 +489,13 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
         # handle resource paths that don't exist for shortForm
         # '/' and '/redfish'
-        if self.path == "/" and self.server.shortForm:
+        if self.path == "/" and self.server.shortForm:  # type: ignore[attr-defined]
             self.send_response(404)
             self.end_headers()
 
-        elif self.path in ["/redfish", "/redfish/"] and self.server.shortForm:
+        elif self.path in ["/redfish", "/redfish/"] and self.server.shortForm:  # type: ignore[attr-defined]
             self.send_response(200)
-            if self.server.headers and (os.path.isfile(fpath_headers)):
+            if self.server.headers and (os.path.isfile(fpath_headers)):  # type: ignore[attr-defined]
                 self.send_header_file(fpath_headers)
             else:
                 self.send_header("Content-Type", "application/json")
@@ -504,7 +503,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
 
             encoded_data = json.dumps({"v1": "/redfish/v1"}, indent=4).encode()
 
-            if not (self.server.headers and (os.path.isfile(fpath_headers))):
+            if not (self.server.headers and (os.path.isfile(fpath_headers))):  # type: ignore[attr-defined]
                 self.send_header("Content-Length", len(encoded_data))  # type: ignore[arg-type]
             self.end_headers()
 
@@ -515,7 +514,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
             # if headers exist... send information (except for chunk info)
             # end headers here (always end headers after response)
             self.send_response(200)
-            if self.server.headers and (os.path.isfile(fpath_headers)):
+            if self.server.headers and (os.path.isfile(fpath_headers)):  # type: ignore[attr-defined]
                 self.send_header_file(fpath_headers)
             else:
                 self.send_header("Content-Type", "application/json")
@@ -566,7 +565,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
                 output_data, sort_keys=True, indent=4, separators=(",", ": ")
             ).encode()
 
-            if not (self.server.headers and (os.path.isfile(fpath_headers))):
+            if not (self.server.headers and (os.path.isfile(fpath_headers))):  # type: ignore[attr-defined]
                 self.send_header("Content-Length", len(encoded_data))  # type: ignore[arg-type]
             self.end_headers()
 
@@ -857,11 +856,11 @@ class RfMockupServer(BaseHTTPRequestHandler):
                         logger.info(
                             "Time in the json file, not a float/int value. Reading the default time."
                         )
-                        return self.server.responseTime
+                        return self.server.responseTime  # type: ignore[attr-defined]
                     return float(d[time_str])
         else:
-            logger.info(("response time:", self.server.responseTime))
-            return self.server.responseTime
+            logger.info(("response time:", self.server.responseTime))  # type: ignore[attr-defined]
+            return self.server.responseTime  # type: ignore[attr-defined]
         return None
 
 
@@ -974,13 +973,13 @@ def main():
         myServer.socket = context.wrap_socket(myServer.socket, server_side=True)
 
     # save the test flag, and real path to the mockup dir for the handler to use
-    myServer.mockDir = mockDir
-    myServer.testEtagFlag = testEtagFlag
-    myServer.headers = headers
-    myServer.timefromJson = timefromJson
-    myServer.shortForm = shortForm
+    myServer.mockDir = mockDir  # type: ignore[attr-defined]
+    myServer.testEtagFlag = testEtagFlag  # type: ignore[attr-defined]
+    myServer.headers = headers  # type: ignore[attr-defined]
+    myServer.timefromJson = timefromJson  # type: ignore[attr-defined]
+    myServer.shortForm = shortForm  # type: ignore[attr-defined]
     try:
-        myServer.responseTime = float(responseTime)
+        myServer.responseTime = float(responseTime)  # type: ignore[attr-defined]
     except ValueError:
         logger.info("Enter an integer or float value")
         sys.exit(2)
@@ -993,8 +992,8 @@ def main():
         monkey.patch_all()
         # construct path "mockdir/path/to/resource/<filename>"
         path, filename, jsonData = "/redfish/v1", "index.json", None
-        apath = myServer.mockDir
-        rpath = clean_path(path, myServer.shortForm)
+        apath = myServer.mockDir  # type: ignore[attr-defined]
+        rpath = clean_path(path, myServer.shortForm)  # type: ignore[attr-defined]
         fpath = (
             os.path.join(apath, rpath, filename)
             if filename not in ["", None]

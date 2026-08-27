@@ -6,7 +6,6 @@
 # netapp_ontap switched to a lazy loading scheme via apipkg which hides all useful
 # information from mypy. :-/ See
 # https://library.netapp.com/ecmdocs/ECMLP3364865/html/index.html#9181-library-updates
-# mypy: disable-error-code="attr-defined"
 
 import argparse
 import logging
@@ -77,7 +76,7 @@ def test_agent_exits_1_when_connection_returns_401(capsys: pytest.CaptureFixture
 
     with (
         patch("cmk.plugins.netapp.special_agent.agent_netapp_ontap.HostConnection") as mock_conn,
-        patch.object(NetAppResource.Node, "get_collection", side_effect=_AuthError()),
+        patch.object(NetAppResource.Node, "get_collection", side_effect=_AuthError()),  # type: ignore[attr-defined]
     ):
         mock_conn.return_value.__enter__ = MagicMock(return_value=MagicMock())
         mock_conn.return_value.__exit__ = MagicMock(return_value=False)
@@ -110,7 +109,7 @@ def test_agent_does_not_exit_1_when_connection_returns_non_auth_error(
 
     with (
         patch("cmk.plugins.netapp.special_agent.agent_netapp_ontap.HostConnection") as mock_conn,
-        patch.object(NetAppResource.Node, "get_collection", side_effect=_ServerError()),
+        patch.object(NetAppResource.Node, "get_collection", side_effect=_ServerError()),  # type: ignore[attr-defined]
     ):
         mock_conn.return_value.__enter__ = MagicMock(return_value=MagicMock())
         mock_conn.return_value.__exit__ = MagicMock(return_value=False)
@@ -309,7 +308,7 @@ def test_fetch_interfaces_enriches_sfo_partners_only_with_ha_partner_names() -> 
     """
     with (
         patch.object(
-            NetAppResource.IpInterface,
+            NetAppResource.IpInterface,  # type: ignore[attr-defined]
             "get_collection",
             return_value=iter(
                 [
@@ -319,7 +318,7 @@ def test_fetch_interfaces_enriches_sfo_partners_only_with_ha_partner_names() -> 
             ),
         ),
         patch.object(
-            NetAppResource.Node,
+            NetAppResource.Node,  # type: ignore[attr-defined]
             "get_collection",
             return_value=iter([_node_element("node1", ("node2",))]),
         ),
@@ -337,11 +336,11 @@ def test_fetch_interfaces_skips_ha_partner_query_without_sfo_partners_only() -> 
     """Without a single sfo_partners_only interface the extra node query is not issued."""
     with (
         patch.object(
-            NetAppResource.IpInterface,
+            NetAppResource.IpInterface,  # type: ignore[attr-defined]
             "get_collection",
             return_value=iter([_ip_interface_element("lif_default", "default", "node1")]),
         ),
-        patch.object(NetAppResource.Node, "get_collection") as mock_node_collection,
+        patch.object(NetAppResource.Node, "get_collection") as mock_node_collection,  # type: ignore[attr-defined]
     ):
         interfaces = list(fetch_interfaces(connection=MagicMock(), logger=MagicMock()))
 
@@ -359,11 +358,11 @@ def test_fetch_interfaces_continues_when_ha_partner_query_fails(
     """
     with (
         patch.object(
-            NetAppResource.IpInterface,
+            NetAppResource.IpInterface,  # type: ignore[attr-defined]
             "get_collection",
             return_value=iter([_ip_interface_element("lif_sfo", "sfo_partners_only", "node1")]),
         ),
-        patch.object(NetAppResource.Node, "get_collection", side_effect=_ServerError()),
+        patch.object(NetAppResource.Node, "get_collection", side_effect=_ServerError()),  # type: ignore[attr-defined]
         caplog.at_level(logging.ERROR),
     ):
         interfaces = list(

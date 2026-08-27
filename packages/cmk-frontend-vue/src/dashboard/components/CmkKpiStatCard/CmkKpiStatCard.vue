@@ -5,12 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import StateTag, { type StateTone } from 'cmk-ui-library/components/StateTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import KpiSparkLine from './KpiSparkLine.vue'
 import type {
@@ -22,6 +23,7 @@ import type {
 } from './types'
 
 const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
+  title: undefined,
   unit: undefined,
   series: () => [],
   delta: () => ({}),
@@ -253,6 +255,29 @@ const scrubValueText = computed<string | undefined>(() => {
   return sample ? `${lastSampleTimeLabel.value}: ${props.formatValue(sample.value!)}` : undefined
 })
 
+// One announcement per settle, not per keystroke/pointer-move, so a held key or a
+// mouse sweep doesn't flood the live region.
+const ANNOUNCE_SETTLE_MS = 300
+const announcedText = ref<TranslatedString>('' as TranslatedString)
+let announceTimer: ReturnType<typeof setTimeout> | undefined
+
+watch(hoveredSample, (sample) => {
+  clearTimeout(announceTimer)
+  if (!sample) {
+    announcedText.value = '' as TranslatedString
+    return
+  }
+  announceTimer = setTimeout(() => {
+    const formatted = hoveredFormatted.value
+    announcedText.value = _t('%{time}: %{value}', {
+      time: hoveredTimeLabel.value ?? '',
+      value: formatted ? `${formatted.value}${formatted.unit ? ` ${formatted.unit}` : ''}` : ''
+    })
+  }, ANNOUNCE_SETTLE_MS)
+})
+
+onBeforeUnmount(() => clearTimeout(announceTimer))
+
 const KEYDOWN_HANDLERS: Record<string, (spark: InstanceType<typeof KpiSparkLine>) => void> = {
   ArrowLeft: (spark) => spark.stepBy(-1),
   ArrowRight: (spark) => spark.stepBy(1),
@@ -319,6 +344,56 @@ watch(() => [props.value, props.unit, delta.value, hoveredSample.value], measure
   flush: 'post'
 })
 onMounted(measureScrim)
+
+// Window low/high for the composite aria-label below; prefers the caller's
+// rangeLimits, else the real samples' own min/max.
+const windowRangeLabel = computed<string | undefined>(() => {
+  if (props.rangeLimits) {
+    return _t('%{minimum} to %{maximum}', {
+      minimum: props.rangeLimits.minimum,
+      maximum: props.rangeLimits.maximum
+    })
+  }
+  const realValues = props.series
+    .filter((sample): sample is TimestampedSample & { value: number } => sample.value !== null)
+    .map((sample) => sample.value)
+  if (realValues.length < 2) {
+    return undefined
+  }
+  return _t('%{minimum} to %{maximum}', {
+    minimum: props.formatValue(Math.min(...realValues)),
+    maximum: props.formatValue(Math.max(...realValues))
+  })
+})
+
+// A scrubbable card is one tab stop, so on focus it reads as a single composite
+// string; state stays text, matching the visible badge.
+const cardAriaLabel = computed<TranslatedString | undefined>(() => {
+  if (!hasSparkLine.value) {
+    return undefined
+  }
+  const parts: TranslatedString[] = []
+  if (props.title) {
+    parts.push(props.title as TranslatedString)
+  }
+  parts.push(`${props.value} ${props.unit ?? ''}`.trim() as TranslatedString)
+  if (stateLabel.value) {
+    parts.push(stateLabel.value)
+  }
+  if (delta.value) {
+    parts.push(
+      _t('%{direction} %{percent} %{comparison}', {
+        direction: delta.value.up ? _t('up') : _t('down'),
+        percent: delta.value.percent,
+        comparison: delta.value.comparisonText
+      })
+    )
+  }
+  if (windowRangeLabel.value) {
+    parts.push(_t('range %{range}', { range: windowRangeLabel.value }))
+  }
+  return parts.join(', ') as TranslatedString
+})
 </script>
 
 <template>
@@ -342,11 +417,19 @@ onMounted(measureScrim)
     :aria-valuemax="hasSparkLine ? realSampleCount - 1 : undefined"
     :aria-valuenow="scrubValueNow"
     :aria-valuetext="scrubValueText"
+    :aria-label="cardAriaLabel"
     @keydown="onCardKeydown"
     @pointermove="hasSparkLine ? onCardPointerMove($event) : undefined"
     @pointerleave="hasSparkLine ? onCardPointerLeave() : undefined"
   >
-    <div ref="valueRowEl" class="db-cmk-kpi-stat-card__value-row">
+    <!-- A focusable, scrubbable card reads as one composite aria-label (see
+         cardAriaLabel); its visible text is redundant to a screen reader and
+         hidden accordingly, rather than trusting every AT to dedupe it itself. -->
+    <div
+      ref="valueRowEl"
+      class="db-cmk-kpi-stat-card__value-row"
+      :aria-hidden="hasSparkLine ? 'true' : undefined"
+    >
       <component :is="href ? 'a' : 'span'" :href="href" class="db-cmk-kpi-stat-card__value-link">
         <span class="db-cmk-kpi-stat-card__value">
           {{ hoveredValueText ?? (hasData ? value : '—') }}
@@ -383,6 +466,8 @@ onMounted(measureScrim)
       </div>
     </div>
 
+    <CmkVisuallyHidden live="polite" :text="announcedText" />
+
     <p v-if="!hasData" class="db-cmk-kpi-stat-card__no-data-note">
       {{ _t('No data in this timeframe.') }}
     </p>
@@ -406,6 +491,7 @@ onMounted(measureScrim)
       :tone="STATE_TAG_TONE[state.severity]"
       kind="service"
       :stale="isStale"
+      :aria-hidden="hasSparkLine ? 'true' : undefined"
     />
 
     <div v-if="hasSparkLine" class="db-cmk-kpi-stat-card__spark-line">
@@ -418,10 +504,16 @@ onMounted(measureScrim)
         @focus="onSparkLineFocus"
       />
       <template v-if="rangeLimits">
-        <span class="db-cmk-kpi-stat-card__range db-cmk-kpi-stat-card__range--maximum">
+        <span
+          class="db-cmk-kpi-stat-card__range db-cmk-kpi-stat-card__range--maximum"
+          aria-hidden="true"
+        >
           {{ rangeLimits.maximum }}
         </span>
-        <span class="db-cmk-kpi-stat-card__range db-cmk-kpi-stat-card__range--minimum">
+        <span
+          class="db-cmk-kpi-stat-card__range db-cmk-kpi-stat-card__range--minimum"
+          aria-hidden="true"
+        >
           {{ rangeLimits.minimum }}
         </span>
       </template>

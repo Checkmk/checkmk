@@ -138,6 +138,7 @@ const deltaConfig = computed<KpiDeltaConfig>(() => ({
       <CmkLoading v-else-if="data === undefined" />
       <CmkKpiStatCard
         v-else
+        :title="effectiveTitle"
         :value="data.value"
         :unit="data.unit"
         :delta="deltaConfig"

@@ -85,6 +85,11 @@ export interface TimestampedSample {
 }
 
 export interface CmkKpiStatCardProps {
+  /**
+   * The widget's own title, read as part of the composite aria-label on focus
+   * (accessibility only - rendered elsewhere).
+   */
+  title?: string | undefined
   /** Pre-formatted headline value, e.g. "801.84" or "4.3". Omit for "no data". */
   value?: string | undefined
   /** Unit rendered after the value, e.g. "GB" or "K"; omit for plain counts. */

@@ -99,7 +99,7 @@ const VALUE_COLOR = 'var(--font-color)'
         <CmkAlertBox variant="error">{{ fetchingErrorMessage }}</CmkAlertBox>
       </div>
       <CmkLoading v-else-if="data === undefined" />
-      <CmkKpiStatCard v-else :value="data.value" :color="VALUE_COLOR" />
+      <CmkKpiStatCard v-else :title="effectiveTitle" :value="data.value" :color="VALUE_COLOR" />
     </div>
   </DashboardContentContainer>
 </template>

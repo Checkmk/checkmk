@@ -19,6 +19,12 @@ import codeExample from './UclCmkKpiStatCardCodeExample.vue?raw'
 type DataState = 'complete' | 'gap' | 'stale' | 'no-data'
 
 export const panelConfig = {
+  title: {
+    type: 'string' as const,
+    title: 'Title',
+    help: 'Read as part of the composite aria-label a scrubbable card exposes on focus.',
+    initialState: 'Total bytes'
+  },
   value: {
     type: 'string' as const,
     title: 'Value',
@@ -275,6 +281,7 @@ function formatValue(value: number): string {
         }"
       >
         <CmkKpiStatCard
+          :title="propState.title"
           :value="propState.dataState === 'no-data' ? undefined : propState.value"
           :unit="propState.unit || undefined"
           :delta="{ show: propState.showDelta, comparisonBasis: propState.comparisonBasis }"

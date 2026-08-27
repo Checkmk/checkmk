@@ -122,6 +122,7 @@ const series = computed<TimestampedSample[]>(
       <CmkLoading v-else-if="data === undefined" />
       <CmkKpiStatCard
         v-else
+        :title="effectiveTitle"
         :value="data.value"
         :unit="data.unit"
         :series="series"

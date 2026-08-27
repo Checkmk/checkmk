@@ -84,10 +84,8 @@ export function drawStackedBand(
   xScale: ScaleTime<number, number>,
   yScale: ScaleLinear<number, number>,
   color: string,
-  style: { fillOpacity?: number | undefined; strokeWidth?: number | undefined } = {}
+  fillOpacity: number = 0.45
 ): void {
-  const fillOpacity = style.fillOpacity ?? 0.45
-  const strokeWidth = style.strokeWidth ?? 1
   const bandAnchorX = (band: StackedBand): number => xScale(new Date(band.anchorTime * 1000))
 
   let runStart = 0
@@ -119,7 +117,7 @@ export function drawStackedBand(
     ctx.fillStyle = colorWithAlpha(color, fillOpacity)
     ctx.fill()
     ctx.strokeStyle = color
-    ctx.lineWidth = strokeWidth
+    ctx.lineWidth = 1
     ctx.stroke()
 
     runStart = runEnd

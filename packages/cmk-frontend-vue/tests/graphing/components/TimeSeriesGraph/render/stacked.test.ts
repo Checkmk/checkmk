@@ -182,9 +182,14 @@ describe('drawStackedBand', () => {
     const fillOpacity = 0.3
     const series: StackedSeries = { kind: 'area-stacked', bands: [makeBand(), makeBand()] }
 
-    drawStackedBand(ctx as unknown as CanvasRenderingContext2D, series, xScale, yScale, color, {
+    drawStackedBand(
+      ctx as unknown as CanvasRenderingContext2D,
+      series,
+      xScale,
+      yScale,
+      color,
       fillOpacity
-    })
+    )
 
     expect(ctx.strokeStyle).toBe(color)
     expect(ctx.fillStyle).toMatch(new RegExp(`^rgba\\(\\d+, \\d+, \\d+, ${fillOpacity}\\)$`))

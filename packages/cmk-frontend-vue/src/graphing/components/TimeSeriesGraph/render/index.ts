@@ -12,12 +12,6 @@ import { type StackedSeries, drawStackedBand } from './stacked'
 
 export interface DrawOptions {
   interpolator: LineInterpolator
-  /**
-   * Stroke weights, in css pixels. Defaulted to the plot's; the brush strip is a fraction of its
-   * height and at the plot's weights would read as mostly stroke.
-   */
-  lineWidth?: number | undefined
-  bandStrokeWidth?: number | undefined
 }
 
 export function drawData(
@@ -40,9 +34,7 @@ export function drawData(
         highlightedMetricName !== null && metrics[i]!.metadata.name !== highlightedMetricName
           ? 0.4
           : 1
-      drawStackedBand(ctx, stacks[i]!, xScale, yScale, metrics[i]!.metadata.color, {
-        strokeWidth: options.bandStrokeWidth
-      })
+      drawStackedBand(ctx, stacks[i]!, xScale, yScale, metrics[i]!.metadata.color)
     }
   }
   for (let i = 0; i < metrics.length; i++) {
@@ -60,8 +52,7 @@ export function drawData(
         xScale,
         yScale,
         metrics[i]!.metadata.color,
-        options.interpolator,
-        options.lineWidth
+        options.interpolator
       )
     }
   }

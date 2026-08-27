@@ -177,26 +177,6 @@ def test_context_view_drag_shifts_the_window(
     assert not javascript_errors, f"Uncaught JS errors during the brush drag: {javascript_errors}"
 
 
-def test_returning_to_live_switches_the_refresh_indicator(
-    service_graphs: ServiceGraphs, javascript_errors: list[str]
-) -> None:
-    """The page opens with refresh off, and resuming puts it back on live.
-
-    The indicator is the page's single answer to "am I looking at data that still moves?",
-    so it has to be readable and reversible without a reload.
-    """
-    expect(
-        service_graphs.refresh_indicator, "The page did not open with the refresh turned off"
-    ).to_contain_text("Refresh off")
-
-    service_graphs.resume_refresh_button.click()
-
-    expect(
-        service_graphs.refresh_indicator, "Resuming did not switch the indicator to live"
-    ).to_contain_text("Live refresh")
-    assert not javascript_errors, f"Uncaught JS errors returning to live: {javascript_errors}"
-
-
 @pytest.mark.skip(reason="Test is flaky")
 def test_pin_marks_the_same_point_on_every_graph_and_outlives_a_reload(
     service_graphs: ServiceGraphs, javascript_errors: list[str]

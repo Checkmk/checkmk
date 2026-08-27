@@ -29,11 +29,14 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       'pinEnabled',
       'pinTime',
       'atMinTimeZoom',
-      'consolidationFunction'
+      'consolidationFunction',
+      'options'
     ],
     emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
     template: `<div data-testid="time-series-graph">
       <span>{{ metrics.map((m) => m.metadata.title).join(",") }}</span>
+      <span data-testid="renderer-y-axis-range">{{ options?.y_axis?.explicit_range?.max ?? 'none' }}</span>
+      <span data-testid="renderer-y-axis-unit">{{ options?.y_axis?.unit?.notation ?? 'none' }}</span>
       <span data-testid="view-start">{{ view_time_range.start }}</span>
       <span data-testid="view-end">{{ view_time_range.end }}</span>
       <span data-testid="inspecting">{{ inspecting }}</span>
@@ -1086,4 +1089,38 @@ test('a window that returned no data reuses the all-hidden message', () => {
   // Pins today's wording: nothing was hidden, there was nothing to show. Change both together.
   expect(screen.getByText('All metrics are hidden')).toBeInTheDocument()
   expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
+})
+
+test('forwards a provided y-axis, explicit range included, into the renderer options', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      timePickerRequests: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE,
+      yAxis: { unit: UNIT, explicit_range: { min: 1, max: 5 } }
+    }
+  })
+
+  expect(screen.getByTestId('renderer-y-axis-range')).toHaveTextContent('5')
+})
+
+test('derives the renderer y-axis from the metrics when none is provided', () => {
+  render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: REQUESTED,
+      timePickerRequests: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE,
+      yAxis: null
+    }
+  })
+
+  // The unit comes from the metric, and no explicit range is invented.
+  expect(screen.getByTestId('renderer-y-axis-unit')).toHaveTextContent('decimal')
+  expect(screen.getByTestId('renderer-y-axis-range')).toHaveTextContent('none')
 })

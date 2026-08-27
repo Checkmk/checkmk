@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+
 import type { GraphCombinationMode, GraphDataFetcher } from '../../composables/useGraphData'
 import type { BurgerMenuGroup } from '../../types'
 import type { TimerangeModel } from './computeEpochTimeRange'
@@ -29,4 +31,5 @@ export interface GraphFigureProps {
    * session-authenticated graph fetch endpoint.
    */
   fetchGraph?: GraphDataFetcher | undefined
+  yAxis?: YAxis | null
 }

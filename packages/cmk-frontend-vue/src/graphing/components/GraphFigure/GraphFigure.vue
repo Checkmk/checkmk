@@ -184,15 +184,17 @@ const onResetIntent = () => {
 
 // The host's surroundings render the title (e.g. the dashboard widget frame); the graph
 // time is shown by the header's GraphTimestamp, not by the renderer.
-const graphOptions = computed(
-  (): GraphOptions => ({
+const graphOptions = computed((): GraphOptions => {
+  const effectiveYAxis = deriveYAxis(graph.value?.metrics ?? [], props.yAxis ?? null)
+
+  return {
     name: '',
     header: { title: null, show_graph_time: false },
     x_axis: null,
-    y_axis: deriveYAxis(graph.value?.metrics ?? []),
+    y_axis: effectiveYAxis,
     font_size_pt: FONT_SIZE_PT
-  })
-)
+  }
+})
 
 // The marker stands above the plot, in the gap below the header, which is widened to fit it.
 // With no header there is no gap and the frame clips it, so the figure reserves the room.

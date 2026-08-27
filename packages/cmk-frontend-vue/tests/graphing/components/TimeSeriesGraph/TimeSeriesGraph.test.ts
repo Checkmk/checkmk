@@ -579,4 +579,62 @@ describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
 
     expect(emitted()).not.toHaveProperty('pinCreate')
   })
+
+  describe('explicit value range', () => {
+    // A range the data (between 1 and 5) can never produce, so any tick reaching it proves the
+    // axis was forced onto the explicit range rather than derived from the data. Symmetric bounds
+    // so d3's ticks land on the endpoints regardless of the chosen step.
+    const EXPLICIT_RANGE = { min: -40, max: 40 }
+
+    // Empty tick texts appear mid-transition; Number('') is 0, not NaN, so they must be
+    // dropped before parsing or they would spuriously pull the min down to zero.
+    function numericTicks(container: Element): number[] {
+      return valueAxisLabels(container)
+        .filter((label) => label.trim() !== '')
+        .map((label) => Number(label))
+        .filter((value) => !Number.isNaN(value))
+    }
+
+    test('forces the value domain onto the explicit range, past the data extent', async () => {
+      const { container } = renderComponent({
+        metrics: [LINE_METRIC],
+        options: {
+          ...DEFAULT_PROPS.options,
+          y_axis: { unit: UNIT, explicit_range: EXPLICIT_RANGE }
+        },
+        valueRange: null
+      })
+
+      // Tick text lands when the d3 axis transition starts, hence the waitFor.
+      await waitFor(() => {
+        const ticks = numericTicks(container)
+        // The data never goes negative nor above 5; only the forced range reaches here.
+        expect(Math.min(...ticks)).toBeLessThan(0)
+        expect(Math.max(...ticks)).toBeGreaterThanOrEqual(40)
+      })
+    })
+
+    test('lets a zoom value range take precedence over the configured explicit range', async () => {
+      const { container } = renderComponent({
+        metrics: [LINE_METRIC],
+        options: {
+          ...DEFAULT_PROPS.options,
+          y_axis: { unit: UNIT, explicit_range: EXPLICIT_RANGE }
+        },
+        // A value-zoom is active: it must win, collapsing the axis back towards [1, 5] - these
+        // are not necessarily the exact bounds of the axis, as they are aligned through the tick
+        // step.
+        valueRange: { min: 1, max: 5 }
+      })
+
+      await waitFor(() => {
+        const ticks = numericTicks(container)
+        expect(ticks.length).toBeGreaterThan(0)
+        // Test for [0, 6] instead of [1, 5] as the y-axis bounds are aligned not forced to the
+        // zoom's value range.
+        expect(Math.min(...ticks)).toBeGreaterThanOrEqual(0)
+        expect(Math.max(...ticks)).toBeLessThanOrEqual(6)
+      })
+    })
+  })
 })

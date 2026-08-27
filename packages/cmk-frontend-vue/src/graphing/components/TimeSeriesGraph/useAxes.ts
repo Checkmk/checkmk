@@ -8,18 +8,18 @@ import { axisLeft } from 'd3-axis'
 import type { ScaleLinear, ScaleTime } from 'd3-scale'
 import type { Selection } from 'd3-selection'
 import { select } from 'd3-selection'
-import type { Transition } from 'd3-transition'
 import 'd3-transition'
+import type { Transition } from 'd3-transition'
 import type { Ref } from 'vue'
 import { ref } from 'vue'
 
-import { alignedDomain, stepIncrements } from './axes/tickStepping'
+import { type ValueRangeMode, stepIncrements, valueDomain } from './axes/tickStepping'
 import type { TimeAxisTick } from './axes/timeAxis'
 
 // Minimum pixel gap between ticks when computing how many to display.
 const MIN_VALUE_TICK_SPACING_PX = 65
 
-// Minimum pixel gap per tick used when computing the domain step via alignedDomain.
+// Minimum pixel gap per tick used when computing the domain step via valueDomain.
 // Smaller than MIN_VALUE_TICK_SPACING_PX because domain computation requests more ticks
 // than are ultimately displayed.
 const VALUE_DOMAIN_ALIGNMENT_PX = 50
@@ -122,10 +122,19 @@ export function useAxes(
     )
   }
 
-  function prepareValueDomain(rawYMin: number, rawYMax: number): void {
+  function prepareValueDomain(
+    rawYMin: number,
+    rawYMax: number,
+    mode: ValueRangeMode = 'aligned'
+  ): void {
     const tickCount = Math.max(2, Math.ceil(plotHeight.value / VALUE_DOMAIN_ALIGNMENT_PX))
     const increments = stepIncrements(yStepping.value)
-    const [alignedMin, alignedMax, step] = alignedDomain([rawYMin, rawYMax], tickCount, increments)
+    const [alignedMin, alignedMax, step] = valueDomain(
+      [rawYMin, rawYMax],
+      tickCount,
+      increments,
+      mode
+    )
     yScale.domain([alignedMin, alignedMax])
     yScale.range([plotHeight.value, VALUE_AXIS_TOP_PADDING_PX])
     yStep.value = step

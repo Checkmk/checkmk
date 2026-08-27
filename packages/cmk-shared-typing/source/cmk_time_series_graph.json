@@ -44,11 +44,21 @@
       },
       "required": ["unit", "fixed_timerange"]
     },
+    "explicit_range": {
+      "title": "ExplicitRange",
+      "type": "object",
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" }
+      },
+      "required": ["min", "max"]
+    },
     "y_axis": {
       "title": "YAxis",
       "type": "object",
       "properties": {
-        "unit": { "$ref": "unit_format.json#" }
+        "unit": { "$ref": "unit_format.json#" },
+        "explicit_range": { "$ref": "#/$defs/explicit_range" }
       }
     },
     "graph_options": {

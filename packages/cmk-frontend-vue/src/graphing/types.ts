@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { AddTo, Interaction } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import type { AddTo, Interaction, YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type { IconNames } from 'cmk-shared-typing/typescript/icon'
 
 import type { HorizontalLine, Metric, TimeRange } from './components/TimeSeriesGraph'
@@ -78,6 +78,7 @@ export interface GraphPanelProps {
   // While true the panel draws the range its data covers, not the one requested.
   awaitingData?: boolean | undefined
   timePickerRequests: number
+  yAxis?: YAxis | null
   interaction: Interaction
   title?: string
   showTitle?: boolean

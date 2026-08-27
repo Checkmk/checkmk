@@ -44,7 +44,8 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
       'title',
       'figureWidth',
       'consolidationFn',
-      'brushSnapshot'
+      'brushSnapshot',
+      'yAxis'
     ],
     emits: ['update:requestedTimeRange', 'update:consolidationFn', 'inspect'],
     template: `<div data-testid="graph-panel" :data-figure-width="figureWidth">
@@ -53,6 +54,7 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
         ? brushSnapshot.drawnDomain.start + ',' + brushSnapshot.drawnDomain.end + '|' +
           brushSnapshot.window.start + ',' + brushSnapshot.window.end
         : 'none' }}</span>
+      <span data-testid="panel-y-axis-range">{{ yAxis?.explicit_range?.max ?? 'none' }}</span>
       <span data-testid="panel-consolidation">{{ consolidationFn }}</span>
       <button @click="$emit('update:consolidationFn', 'min')">consolidate by min</button>
       <button @click="$emit('update:requestedTimeRange', { start: ${PAN_TARGET.start}, end: ${PAN_TARGET.end} }, 'translated_timerange')">
@@ -718,4 +720,17 @@ describe('GraphGroup - the brush across a range switch', () => {
 
     expect(brushBarFraction()!.left).toBeCloseTo(before.left, 6)
   })
+})
+
+test("threads each definition's configured y-axis to its own panel", async () => {
+  const withRange = makeGraphDefinition('CPU utilization')
+  withRange.options.y_axis = { unit: UNIT, explicit_range: { min: 1, max: 5 } }
+  const withoutRange = makeGraphDefinition('Memory')
+
+  renderGroup([withRange, withoutRange])
+  await screen.findAllByTestId('graph-panel')
+
+  const ranges = Array.from(document.querySelectorAll('[data-testid="panel-y-axis-range"]'))
+  // The explicit range reaches the panel that carries it, and only that one.
+  expect(ranges.map((el) => el.textContent)).toEqual(['5', 'none'])
 })

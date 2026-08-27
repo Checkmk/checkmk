@@ -134,7 +134,7 @@ const atMinTimeZoom = computed(
   () => props.requestedTimeRange.end - props.requestedTimeRange.start <= MIN_ZOOM_TIME_RANGE_SECONDS
 )
 
-const yAxis = computed(() => deriveYAxis(props.metrics))
+const effectiveYAxis = computed(() => deriveYAxis(props.metrics, props.yAxis ?? null))
 
 // The add-to target is what the burger menu exists for, so it carries everything the actions
 // need: the type the menu is assembled for, the specification most of them replay and the built
@@ -246,7 +246,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
               header: { title: title ?? null, show_graph_time: false },
               name: title ?? '',
               x_axis: null,
-              y_axis: yAxis,
+              y_axis: effectiveYAxis,
               font_size_pt: 10
             }"
             :highlighted-metric-name="highlightedMetricName"

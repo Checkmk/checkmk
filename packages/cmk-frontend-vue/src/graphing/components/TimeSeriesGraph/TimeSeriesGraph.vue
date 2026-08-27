@@ -28,6 +28,7 @@ import {
   VALUE_LABEL_TICK_OFFSET
 } from '../constants'
 import { axisLabelFontSize, measureAxisLabel } from './axes/labelWidth'
+import type { ValueRangeMode } from './axes/tickStepping'
 import { computeTimeAxis } from './axes/timeAxis'
 import OverlayLayer from './overlay/OverlayLayer.vue'
 import PinHandle from './overlay/PinHandle.vue'
@@ -286,10 +287,16 @@ function draw(): void {
   )
 
   const [autoYMin, autoYMax] = composedValueDomain(props.metrics, composed)
+
+  const explicitRange = props.options.y_axis?.explicit_range || null
   const [rawYMin, rawYMax] = props.valueRange
     ? [props.valueRange.min, props.valueRange.max]
-    : [autoYMin, autoYMax]
-  prepareValueDomain(rawYMin, rawYMax)
+    : explicitRange
+      ? [explicitRange.min, explicitRange.max]
+      : [autoYMin, autoYMax]
+  const valueRangeMode: ValueRangeMode =
+    explicitRange !== null && props.valueRange === null ? 'explicit' : 'aligned'
+  prepareValueDomain(rawYMin, rawYMax, valueRangeMode)
   fitMarginToValueLabels()
 
   // Setting width/height resets the 2d context state; setTransform must follow.

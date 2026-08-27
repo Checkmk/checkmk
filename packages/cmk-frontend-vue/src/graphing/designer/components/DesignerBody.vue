@@ -224,6 +224,14 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
   emit('update-graph-options', newGraphOptions)
   displaySettings.value = false
 }
+
+const explicitRange = computed(() => {
+  const range = graphOptions.explicit_vertical_range
+  if (range?.type === 'fixed' && range.lower !== null && range.upper !== null) {
+    return { min: range.lower, max: range.upper }
+  }
+  return null
+})
 </script>
 
 <template>
@@ -245,6 +253,7 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
         :horizontal-lines="data.horizontalLines.value"
         :requested-time-range="requestedTimeRange"
         :time-picker-requests="timePickerRequests"
+        :y-axis="explicitRange ? { explicit_range: explicitRange } : null"
         :title="title"
         show-title
         show-timestamp

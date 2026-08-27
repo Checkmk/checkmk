@@ -267,6 +267,7 @@ function onRetry(): void {
           :requested-time-range="requestedTimeRange"
           :awaiting-data="panelSlot.isAwaitingData"
           :time-picker-requests="timePickerRequests"
+          :y-axis="props.graphs[panelSlot.index]!.options.y_axis"
           :title="panelSlot.graph.title"
           :show-title="true"
           :show-timestamp="true"

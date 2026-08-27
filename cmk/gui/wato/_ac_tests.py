@@ -25,7 +25,6 @@ from cmk.gui import userdb
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
@@ -33,11 +32,6 @@ from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
 )
 from cmk.gui.type_defs import Users
-from cmk.gui.utils.doc_references import (
-    doc_reference_url,
-    DocReference,
-    DocReferenceUtm,
-)
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
@@ -57,7 +51,6 @@ from cmk.gui.watolib.sites import site_management_registry
 from cmk.livestatus_client import LocalConnection, SiteConfiguration, SiteConfigurations
 from cmk.ruleset_matcher.definition import RuleGroup, RuleGroupType
 from cmk.utils.paths import (
-    local_checks_dir,
     local_gui_plugins_dir,
     local_legacy_check_manpages_dir,
     local_pnp_templates_dir,
@@ -90,7 +83,6 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestBrokenGUIExtension)
     ac_test_registry.register(ACTestDeprecatedRuleSets)
     ac_test_registry.register(ACTestUnknownCheckParameterRuleSets)
-    ac_test_registry.register(ACTestDeprecatedCheckPlugins)
     ac_test_registry.register(ACTestDeprecatedCheckManpages)
     ac_test_registry.register(ACTestDeprecatedGUIExtensions)
     ac_test_registry.register(ACTestDeprecatedLegacyGUIExtensions)
@@ -1301,63 +1293,6 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
         yield ACSingleResult(
             state=ACResultState.OK,
             text=_("No unknown check parameter rule sets found."),
-            site_id=site_id,
-        )
-
-
-class ACTestDeprecatedCheckPlugins(ACTest):
-    @override
-    def category(self) -> str:
-        return ACTestCategories.deprecations
-
-    @override
-    def title(self) -> str:
-        return _("Deprecated check plug-ins (legacy)")
-
-    @override
-    def help(self) -> str:
-        return _(
-            "The check plug-in API for plug-ins in <tt>%(plugins_dir)s</tt> is deprecated."
-            " Plug-in files in this folder are still considered, but the API they are using may change at any time without notice."
-            " Please migrate the plug-ins to the new API."
-            " More information can be found in our <a href='%(guide_url)s'>User Guide</a>."
-        ) % {
-            "plugins_dir": "/".join(local_checks_dir.parts[-4:]),
-            "guide_url": doc_reference_url(
-                user.language,
-                DocReferenceUtm(campaign="error_help", content="setup.deprecated_plugins"),
-                DocReference.DEVEL_CHECK_PLUGINS,
-            ),
-        }
-
-    def _get_files(self) -> Sequence[Path]:
-        try:
-            return list(local_checks_dir.iterdir())
-        except FileNotFoundError:
-            return []
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
-    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if files := self._get_files():
-            for plugin_filepath in files:
-                yield compute_deprecation_result(
-                    version=__version__,
-                    deprecated_version="2.3.0",
-                    removed_version="2.4.0",
-                    title_entity=_("Check plug-in"),
-                    title_api=_("legacy"),
-                    site_id=site_id,
-                    path=plugin_filepath,
-                )
-            return
-
-        yield ACSingleResult(
-            state=ACResultState.OK,
-            text=_("No check plug-ins using the deprecated API"),
             site_id=site_id,
         )
 

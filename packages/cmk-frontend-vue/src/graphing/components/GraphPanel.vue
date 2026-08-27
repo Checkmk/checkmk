@@ -110,12 +110,6 @@ const { visibleMetrics, visibleHorizontalLines } = useGraphVisibility(
   { hiddenMetricNames, hiddenLineNames, highlightedMetricName }
 )
 
-const { visibleMetrics: visibleBrushMetrics } = useGraphVisibility(
-  () => props.brushSnapshot?.data.metrics ?? [],
-  () => [],
-  { hiddenMetricNames }
-)
-
 function updateTimeRange(val: RequestedTimeRange, kind: TimeRangeCommitKind) {
   // The served window is a storage step wider; adopting its span would grow it on every pan.
   const asked = props.requestedTimeRange
@@ -270,11 +264,10 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
         <GraphBrush
           v-if="interaction.brush === 'enabled' && brushSnapshot && brushWindow && dataTimeRange"
           class="graphing-graph-panel__brush"
-          :metrics="visibleBrushMetrics"
+          :metrics="brushSnapshot.data.metrics"
           :domain="brushSnapshot.drawnDomain"
           :data-domain="brushSnapshot.data.dataTimeRange"
           :window="brushWindow"
-          :consolidation-fn="consolidationFn"
           :min-span="null"
           :width="figureWidth"
           :plot-left="plotLeft"

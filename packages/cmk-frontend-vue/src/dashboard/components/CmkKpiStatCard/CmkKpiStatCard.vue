@@ -778,6 +778,12 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
   max-width: 40%;
 }
 
+/* With no plot, the corner badge has nowhere to anchor against - it joins the
+   centered column below the value instead, in its normal DOM position. */
+.db-cmk-kpi-stat-card--value-only .db-cmk-kpi-stat-card__state {
+  position: static;
+}
+
 /* Grey and dashed, not accent-colored: this marks a scrub position, not data -
    the curve and its own dot already carry the data color. Matches the
    graphing initiative's own crosshair exactly (setLineDash([3, 3]) at

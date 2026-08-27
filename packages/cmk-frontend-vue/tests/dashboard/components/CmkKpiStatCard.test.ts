@@ -223,7 +223,7 @@ test('positions the state against the card, not against the value row', () => {
   ).toBeNull()
 })
 
-test('keeps the state badge in the same corner even with no spark line', () => {
+test('the state badge joins the centered column below the value when there is no spark line', () => {
   const { container } = renderCard({ series: [], state: { severity: 'warn' } })
 
   expect(

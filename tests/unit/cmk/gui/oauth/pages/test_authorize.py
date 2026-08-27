@@ -156,6 +156,24 @@ class TestOAuthAuthorizePage:
             assert 'name="_authorize"' in body
             assert 'name="_deny"' in body
 
+    def test_consent_page_breaks_out_of_the_iframe_frameset(
+        self, flask_app: Flask, registered_client_id: str
+    ) -> None:
+        # 2.5.0's GUI wraps content pages in the classic iframe frameset. Without
+        # a breakout the consent page renders inside the frame (sidebar chrome
+        # around it) and its redirect only navigates the inner frame.
+        with flask_app.test_request_context(
+            query_string=_authorize_request(client_id=registered_client_id, state="xyz")
+        ):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
+            assert response.status_code == 200
+            body = response.get_data(as_text=True)
+            assert "window.top.location.href" in body
+
     def test_answers_head_like_get(self, flask_app: Flask, registered_client_id: str) -> None:
         # Werkzeug adds HEAD to every GET route, so turning it away would fail a
         # request clients are free to make.

@@ -2,6 +2,8 @@ set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/plugins/OWNERS_DEFINITION
 
+per-file test_f5_bigip_*=file:/component_owners/plugins_f5/OWNERS_DEFINITION
+per-file test_f5_bigip_*=set noparent
 per-file test_mongodb*=file:/component_owners/plugins_databases/OWNERS_DEFINITION
 per-file test_mongodb*=set noparent
 per-file test_mssql*=file:/component_owners/plugins_databases/OWNERS_DEFINITION

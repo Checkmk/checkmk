@@ -255,6 +255,26 @@ const scrubValueText = computed<string | undefined>(() => {
   return sample ? `${lastSampleTimeLabel.value}: ${props.formatValue(sample.value!)}` : undefined
 })
 
+// A freshly polled value dips in opacity rather than counting up - rolling digits would
+// imply readings that never existed; skipped on mount since watch() doesn't fire for
+// the initial value.
+const isRefreshing = ref(false)
+let refreshTimer: ReturnType<typeof setTimeout> | undefined
+watch(
+  () => props.value,
+  (current, previous) => {
+    if (current === previous) {
+      return
+    }
+    clearTimeout(refreshTimer)
+    isRefreshing.value = true
+    refreshTimer = setTimeout(() => {
+      isRefreshing.value = false
+    }, 240)
+  }
+)
+onBeforeUnmount(() => clearTimeout(refreshTimer))
+
 // One announcement per settle, not per keystroke/pointer-move, so a held key or a
 // mouse sweep doesn't flood the live region.
 const ANNOUNCE_SETTLE_MS = 300
@@ -431,7 +451,10 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
       :aria-hidden="hasSparkLine ? 'true' : undefined"
     >
       <component :is="href ? 'a' : 'span'" :href="href" class="db-cmk-kpi-stat-card__value-link">
-        <span class="db-cmk-kpi-stat-card__value">
+        <span
+          class="db-cmk-kpi-stat-card__value"
+          :class="{ 'db-cmk-kpi-stat-card__value--refreshing': isRefreshing && !hoveredValueText }"
+        >
           {{ hoveredValueText ?? (hasData ? value : '—') }}
         </span>
         <span
@@ -535,6 +558,17 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 
   /* The card's own background, shared with the full-height scrim below so the two can't drift apart. */
   --card-effective-bg: var(--db-content-bg-color);
+
+  /* Set unconditionally (not just on --tinted) so toggling the tint state
+     transitions the color instead of jumping between "unset" and "set". */
+  background-color: var(--card-effective-bg);
+  transition: background-color 120ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-cmk-kpi-stat-card {
+    transition: none;
+  }
 }
 
 /* Crosshair only where scrubbing does something - a tile without a curve (no
@@ -546,8 +580,6 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 .db-cmk-kpi-stat-card--tinted {
   /* Opaque (mixed against the real backdrop, not transparent), so the scrim can reuse it to block the curve. */
   --card-effective-bg: color-mix(in srgb, var(--tint-color) 12%, var(--db-content-bg-color));
-
-  background-color: var(--card-effective-bg);
 }
 
 /* Full-bleed by default; band mode overrides this below. */
@@ -604,6 +636,31 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
 
   /* Neutral: the accent/data color belongs to the curve, not the number. */
   color: var(--font-color);
+}
+
+/* A freshly polled value dips in opacity instead of counting up - digits
+   rolling through intermediate numbers would imply readings that never
+   existed. Two 120ms fades (out, then back in), never tweening the digits
+   themselves. */
+.db-cmk-kpi-stat-card__value--refreshing {
+  animation: db-cmk-kpi-stat-card-value-dip 240ms linear;
+}
+
+@keyframes db-cmk-kpi-stat-card-value-dip {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .db-cmk-kpi-stat-card__value--refreshing {
+    animation: none;
+  }
 }
 
 .db-cmk-kpi-stat-card__unit {

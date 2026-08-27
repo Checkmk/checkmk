@@ -430,7 +430,6 @@ mod tests {
             name: InstanceName::from(name),
             home: PathBuf::from(home),
             base: base.map(PathBuf::from),
-            aliases: vec![],
         }
     }
 

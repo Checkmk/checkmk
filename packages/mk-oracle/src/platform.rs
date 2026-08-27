@@ -14,8 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::types::LocalInstance;
+use crate::types::{LocalInstance, Sid};
 use anyhow::Result;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 
 pub struct Block {
     pub headline: Vec<String>,
@@ -96,6 +98,30 @@ pub fn get_local_instances() -> Result<Vec<LocalInstance>> {
     registry::get_instances(None)
 }
 
+pub fn home_key(home: &Path) -> PathBuf {
+    if cfg!(windows) {
+        PathBuf::from(home.to_string_lossy().to_lowercase())
+    } else {
+        home.to_path_buf()
+    }
+}
+
+/// The SIDs each `ORACLE_HOME` owns, upper-cased: [`get_local_instances`]
+/// inverted. Keys are [`home_key`], so a lookup has to use it too.
+pub fn get_oracle_home_sids(instances: &[LocalInstance]) -> HashMap<PathBuf, HashSet<Sid>> {
+    let mut homes: HashMap<PathBuf, HashSet<Sid>> = HashMap::new();
+    for instance in instances {
+        // `Sid::from` keeps the case, so fold it here: Oracle compares SIDs
+        // case-insensitively, and names differing only in case must collapse.
+        let sid = Sid::from(instance.name.to_string().to_uppercase().as_str());
+        homes
+            .entry(home_key(&instance.home))
+            .or_default()
+            .insert(sid);
+    }
+    homes
+}
+
 pub mod registry {
     use std::path::PathBuf;
 
@@ -128,7 +154,6 @@ pub mod registry {
                             name: InstanceName::from(values[2].as_str()),
                             home: PathBuf::from(values[0].as_str()),
                             base: Some(PathBuf::from(values[1].as_str())),
-                            aliases: vec![],
                         })
                     } else {
                         None
@@ -183,8 +208,6 @@ pub mod registry {
                         name: InstanceName::from(parts[0].trim()),
                         home: PathBuf::from(parts[1].trim()),
                         base: None, // oratab does not contain base information, we set it to None
-                        // oratab names no aliases; they come from tnsnames.ora
-                        aliases: vec![],
                     })
                 } else {
                     None
@@ -292,6 +315,59 @@ pub mod path_var {
 
 #[cfg(test)]
 mod tests {
+    use super::{get_oracle_home_sids, home_key};
+    use crate::types::{InstanceName, LocalInstance, Sid};
+    use std::path::Path;
+    use std::path::PathBuf;
+
+    /// `From<String>` keeps the case, unlike `From<&str>`, so the name reaches
+    /// the function exactly as spelled here.
+    fn instance(name: &str, home: &str) -> LocalInstance {
+        LocalInstance {
+            name: InstanceName::from(name.to_string()),
+            home: PathBuf::from(home),
+            base: None,
+        }
+    }
+
+    #[test]
+    fn test_get_oracle_home_sids() {
+        let homes = get_oracle_home_sids(&[
+            instance("xe", "/opt/oracle/21c"),
+            instance("free", "/opt/oracle/21c"),
+            instance("XE", "/opt/oracle/21c"),
+            instance("sid19", "/opt/oracle/19c"),
+        ]);
+
+        assert_eq!(homes.len(), 2);
+        assert_eq!(
+            homes[&PathBuf::from("/opt/oracle/21c")],
+            ["XE", "FREE"].into_iter().map(Sid::from).collect()
+        );
+        assert_eq!(
+            homes[&PathBuf::from("/opt/oracle/19c")],
+            ["SID19"].into_iter().map(Sid::from).collect()
+        );
+        assert!(get_oracle_home_sids(&[]).is_empty());
+    }
+
+    /// Windows spells one directory in several cases; Unix does not.
+    #[test]
+    fn test_get_oracle_home_sids_folds_the_home_case_on_windows() {
+        let homes = get_oracle_home_sids(&[
+            instance("XE", r"C:\app\oracle\dbhome_1"),
+            instance("FREE", r"c:\app\oracle\DBHOME_1"),
+        ]);
+
+        if cfg!(windows) {
+            assert_eq!(homes.len(), 1, "one directory, one entry: {homes:?}");
+            let key = home_key(Path::new(r"C:\APP\Oracle\dbhome_1"));
+            assert_eq!(homes[&key].len(), 2, "both sids land in it");
+        } else {
+            assert_eq!(homes.len(), 2, "case names two directories on unix");
+        }
+    }
+
     #[cfg(windows)]
     #[test]
     fn test_which() {

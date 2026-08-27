@@ -33,7 +33,6 @@ pub struct LocalInstance {
     pub name: InstanceName,
     pub home: PathBuf,
     pub base: Option<PathBuf>,
-    pub aliases: Vec<AliasInfo>,
 }
 
 /// Whether a local instance is running, as far as the process list shows.

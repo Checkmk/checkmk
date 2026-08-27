@@ -21,11 +21,15 @@ use crate::ora_sql::backend::{
     make_custom_spot, make_spot, sanitize_failure_message, with_container, ClosedSpot, Opened,
     OpenedSpot, Spot,
 };
+use crate::ora_sql::detect::parse_tns_names_ora;
 use crate::ora_sql::perf::{Label, PerfTimer};
 use crate::ora_sql::section::Section;
-use crate::setup::Env;
-use crate::types::{InstanceName, SectionFilter, SqlQuery};
+use crate::setup::{
+    Env, LOCAL_ORACLE_HOME_TARGETS_ENV_VAR, ORACLE_HOME_ENV_VAR, TNS_ADMIN_ENV_VAR,
+};
+use crate::types::{InstanceName, LocalInstance, SectionFilter, Sid, SqlQuery};
 use std::collections::HashSet;
+use std::path::{Path, PathBuf};
 
 use crate::config::authentication::AuthType;
 use crate::config::connection::{add_tns_admin_to_env, setup_wallet_environment};
@@ -35,8 +39,12 @@ use crate::config::section::names;
 use crate::ora_sql::spots::{
     make_spot_work_results, ClosedSpotWorks, OpenedSpotWorks, PostProcessing, QueryBlock,
 };
+use crate::platform::{get_local_instances, get_oracle_home_sids, home_key};
 use anyhow::{Context, Result};
 use std::sync::Mutex;
+
+/// The alias file both the client and this module look for.
+const TNS_NAMES_FILE: &str = "tnsnames.ora";
 
 type ClosedSpotResults = (ClosedSpot, Vec<String>);
 
@@ -91,8 +99,14 @@ pub async fn generate_data(
         // TODO: customize instances
         // TODO: resulting in the list of endpoints
 
-        let all = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
-        let all = filter_spots(all, ora_sql.discovery());
+        let all_raw = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
+        let all_raw = filter_spots(all_raw, ora_sql.discovery());
+        let local_instances = get_local_instances().unwrap_or_else(|e| {
+            log::warn!("Cannot determine the local instances: {e}");
+            Vec::new()
+        });
+
+        let all = filter_spots_by_oracle_home(all_raw, environment, &local_instances);
 
         // Set up wallet environment (creates sqlnet.ora with wallet location)
         // Only if tns_admin is NOT explicitly set in config.
@@ -312,6 +326,186 @@ fn process_spot_works_para(works: Vec<ClosedSpotWorks>, threads: usize) -> Vec<C
                 .collect::<Vec<_>>()
         })
         .collect::<Vec<_>>()
+}
+
+/// Keep only the spots this run is responsible for, as `LOCAL_ORACLE_HOME_TARGETS`
+/// defines it.
+///
+/// `LOCAL_ORACLE_HOME_TARGETS` defines which half of the targets a run is responsible for:
+///
+/// * **`yes`**: this oracle home's own targets - the aliases of its `tnsnames.ora` and
+///   its own sids with wallet.
+/// * **`no`**: the targets that need no oracle home - a sid no local instance owns, a
+///   sid needing no wallet, a descriptor, and an alias a global `TNS_ADMIN`
+///   resolves.
+/// * **absent**: nothing states how the targets are divided, so none is dropped.
+fn filter_spots_by_oracle_home(
+    spots: Vec<ClosedSpot>,
+    environment: &Env,
+    local_instances: &[LocalInstance],
+) -> Vec<ClosedSpot> {
+    let Some(local_oracle_home_targets) = environment.local_oracle_home_targets() else {
+        log::info!(
+            "{LOCAL_ORACLE_HOME_TARGETS_ENV_VAR} is not set: monitoring every configured target"
+        );
+        return spots;
+    };
+
+    let received = spots.len();
+    let homes_to_sids = get_oracle_home_sids(local_instances);
+    let kept: Vec<ClosedSpot> = if local_oracle_home_targets {
+        // Gather wallets SID of the home and aliases from home tns_aliases
+        let Some(oracle_home) = environment.oracle_home() else {
+            log::warn!(
+                "{LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}=yes without an {ORACLE_HOME_ENV_VAR}: \
+                 no target for this run"
+            );
+            return vec![];
+        };
+        let Some(local_sids) = homes_to_sids.get(&home_key(oracle_home)) else {
+            log::warn!(
+                "No local instance belongs to {ORACLE_HOME_ENV_VAR} '{}': no target for this run",
+                oracle_home.display()
+            );
+            return vec![];
+        };
+        let local_aliases = local_tns_aliases(environment);
+        spots
+            .into_iter()
+            .filter(|spot| is_spot_local(spot, local_sids, &local_aliases))
+            .collect()
+    } else {
+        log::info!("{LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}=no: taking the targets that need no home");
+        let global_aliases = global_tns_aliases();
+        // Every sid: which home owns it does not matter
+        let all_local_sids: HashSet<Sid> = homes_to_sids.into_values().flatten().collect();
+        spots
+            .into_iter()
+            .filter(|spot| {
+                if let Some(alias) = spot.target.alias() {
+                    return global_aliases.contains(&alias.to_string().to_uppercase());
+                }
+                if spot.target.standalone_sid().is_some() {
+                    return !(is_sid_from_list(spot, &all_local_sids) && uses_wallet_auth(spot));
+                }
+                // descriptors and similar need no home and will be processed here
+                true
+            })
+            .collect()
+    };
+
+    // Unusual to have an empty kept list, but not impossible - log it
+    if kept.is_empty() && received > 0 {
+        log::warn!(
+            "{LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}={} left none of {received} configured targets: \
+             the run taking the other half has to exist too",
+            if local_oracle_home_targets {
+                "yes"
+            } else {
+                "no"
+            }
+        );
+    } else {
+        log::info!("Monitoring {} of {received} configured targets", kept.len());
+    }
+    kept
+}
+
+/// SID is standalone and case-insensitive
+fn is_sid_from_list(spot: &ClosedSpot, sids: &HashSet<Sid>) -> bool {
+    spot.target
+        .standalone_sid()
+        .map(|sid| Sid::from(sid.to_string().to_uppercase()))
+        .is_some_and(|sid| sids.contains(&sid))
+}
+
+fn is_spot_local(
+    spot: &ClosedSpot,
+    local_sids: &HashSet<Sid>,
+    local_aliases: &HashSet<String>,
+) -> bool {
+    // local alias is to be processed
+    if is_alias_from_list(spot, local_aliases) {
+        return true;
+    }
+
+    // local sid with wallet to be processed
+    if is_sid_from_list(spot, local_sids) && uses_wallet_auth(spot) {
+        return true;
+    }
+    log::debug!(
+        "Skip {}: handled by the run that owns it, not by this {ORACLE_HOME_ENV_VAR}",
+        spot.target().display_name()
+    );
+    false
+}
+
+fn uses_wallet_auth(spot: &ClosedSpot) -> bool {
+    spot.target().connection_auth().auth_type == AuthType::Wallet
+}
+
+/// The aliases of the `tnsnames.ora` of the inherited `ORACLE_HOME`, upper-cased
+/// as the parser reports them. Empty when the file is absent: an alias that
+/// cannot be resolved is not one this home owns.
+fn local_tns_aliases(environment: &Env) -> HashSet<String> {
+    if global_tns_file().is_some_and(|file| file.is_file()) {
+        return HashSet::new();
+    }
+
+    let Some(tns_admin) = environment.local_tns_admin() else {
+        return HashSet::new();
+    };
+    let file = tns_admin.join(TNS_NAMES_FILE);
+    extract_aliases(&file)
+}
+
+/// The aliases of the `tnsnames.ora` that `TNS_ADMIN` names, upper-cased as the
+/// parser reports them. Empty when there is no such file.
+fn global_tns_aliases() -> HashSet<String> {
+    if let Some(file) = global_tns_file() {
+        extract_aliases(&file)
+    } else {
+        log::info!("No global {TNS_ADMIN_ENV_VAR} file, no global aliases");
+        HashSet::new()
+    }
+}
+
+/// uppercased aliases of the `tnsnames.ora` at `file`, or empty if the file is absent/not readable
+fn extract_aliases(file: &Path) -> HashSet<String> {
+    match parse_tns_names_ora(file) {
+        Ok(entries) => entries
+            .into_iter()
+            .map(|entry| entry.alias.to_string().to_uppercase())
+            .collect(),
+        Err(e) => {
+            log::info!("No usable {}: {e}", file.display());
+            HashSet::new()
+        }
+    }
+}
+
+fn global_tns_file() -> Option<PathBuf> {
+    // if exists TNS_ADMIN/tnsnames.ora return empty - we can't use local tnsnames.ora in this case
+    if let Some(dir) = std::env::var_os(TNS_ADMIN_ENV_VAR).filter(|dir| !dir.is_empty()) {
+        let external = PathBuf::from(dir).join(TNS_NAMES_FILE);
+        if external.is_file() {
+            log::info!(
+                "'{}' resolves the aliases, not the one of {ORACLE_HOME_ENV_VAR}",
+                external.display()
+            );
+            return Some(external);
+        }
+    }
+    None
+}
+
+/// Whether the spot names an alias that the local `tnsnames.ora` defines.
+/// Compared case-insensitively, since only a SID is upper-cased on parsing.
+fn is_alias_from_list(spot: &ClosedSpot, aliases: &HashSet<String>) -> bool {
+    spot.target()
+        .target_id()
+        .and_then(|target_id| target_id.alias())
+        .is_some_and(|alias| aliases.contains(&alias.to_string().to_uppercase()))
 }
 
 fn open_spots(
@@ -743,6 +937,266 @@ mod tests {
                 "<<<<>>>>".to_string(),
             ]
         );
+    }
+
+    /// One instance per target shape the filter distinguishes.
+    fn instance_for_home(
+        target: Option<crate::config::target::TargetId>,
+        wallet: bool,
+    ) -> CustomInstance {
+        let auth = if wallet {
+            config::authentication::Authentication::from_yaml(&create_yaml(
+                "authentication:\n  username: u\n  password: p\n  type: wallet",
+            ))
+            .unwrap()
+            .unwrap()
+        } else {
+            config::authentication::Authentication::default()
+        };
+        CustomInstance::new(auth, Connection::default(), target, None, None)
+    }
+
+    fn sid_target(sid: &str) -> Option<crate::config::target::TargetId> {
+        TargetIdBuilder::new().sid(Some(sid)).build()
+    }
+
+    fn alias_target(alias: &str) -> Option<crate::config::target::TargetId> {
+        TargetIdBuilder::new()
+            .alias(Some(&crate::types::InstanceAlias::from(alias.to_string())))
+            .build()
+    }
+
+    /// One spot of the given shape.
+    fn one_spot(target: Option<crate::config::target::TargetId>, wallet: bool) -> ClosedSpot {
+        calc_custom_spots(&[instance_for_home(target, wallet)])
+            .pop()
+            .expect("a defined target yields a spot")
+    }
+
+    fn local_instance(name: &str, home: &str) -> LocalInstance {
+        LocalInstance {
+            name: InstanceName::from(name),
+            home: std::path::PathBuf::from(home),
+            base: None,
+        }
+    }
+
+    #[test]
+    fn test_global_tns_without_tns_admin() {
+        if std::env::var_os(TNS_ADMIN_ENV_VAR).is_some() {
+            return;
+        }
+        assert!(global_tns_file().is_none());
+        assert!(global_tns_aliases().is_empty());
+    }
+
+    #[test]
+    fn test_local_tns_admin_without_tns_admin_and_oracle_home() {
+        if std::env::var_os(TNS_ADMIN_ENV_VAR).is_some()
+            || std::env::var_os(ORACLE_HOME_ENV_VAR).is_some()
+        {
+            return;
+        }
+
+        let inherited = Env::new(&crate::args::Args::default());
+        assert!(inherited.oracle_home().is_none());
+        assert!(inherited.local_tns_admin().is_none());
+        assert!(local_tns_aliases(&inherited).is_empty());
+
+        // An empty value names no home, so it arrives as none at all.
+        let empty = Env::with_oracle_home(Some(""), None);
+        assert!(empty.oracle_home().is_none());
+        assert!(empty.local_tns_admin().is_none());
+        assert!(local_tns_aliases(&empty).is_empty());
+
+        let set = Env::with_oracle_home(Some("/opt/oracle"), None);
+        assert!(set.oracle_home().is_some());
+        assert_eq!(
+            set.local_tns_admin(),
+            Some(std::path::PathBuf::from("/opt/oracle/network/admin"))
+        );
+    }
+
+    #[test]
+    fn test_local_tns_aliases_reads_the_home_file() {
+        if std::env::var_os(TNS_ADMIN_ENV_VAR).is_some() {
+            return;
+        }
+        let home = std::env::temp_dir().join(format!("mk-oracle-tns-{}", std::process::id()));
+        let admin = home.join("network").join("admin");
+        std::fs::create_dir_all(&admin).expect("temp home");
+        std::fs::write(
+            admin.join(TNS_NAMES_FILE),
+            "known = (ADDRESS = (HOST = h)(PORT = 1521))\n",
+        )
+        .expect("write tnsnames.ora");
+
+        let aliases = local_tns_aliases(&Env::with_oracle_home(home.to_str(), None));
+        let _ = std::fs::remove_dir_all(&home);
+
+        let expected: HashSet<String> = ["KNOWN".to_string()].into_iter().collect();
+        assert_eq!(aliases, expected);
+    }
+
+    #[test]
+    fn test_is_sid_from_list() {
+        // As `get_oracle_home_sids` builds it: upper-cased.
+        let known = get_oracle_home_sids(&[local_instance("xe", "/opt/oracle")]);
+        let known = &known[&std::path::PathBuf::from("/opt/oracle")];
+
+        // Matched ignoring case, in both directions.
+        assert!(is_sid_from_list(&one_spot(sid_target("xe"), false), known));
+        assert!(is_sid_from_list(&one_spot(sid_target("XE"), false), known));
+        assert!(!is_sid_from_list(
+            &one_spot(sid_target("other"), false),
+            known
+        ));
+        // An alias target names no sid.
+        assert!(!is_sid_from_list(
+            &one_spot(alias_target("xe"), false),
+            known
+        ));
+        assert!(!is_sid_from_list(
+            &one_spot(sid_target("xe"), false),
+            &HashSet::new()
+        ));
+    }
+
+    #[test]
+    fn test_is_alias_from_list() {
+        let known: HashSet<String> = ["XE".to_string()].into_iter().collect();
+
+        assert!(is_alias_from_list(
+            &one_spot(alias_target("xe"), false),
+            &known
+        ));
+        assert!(!is_alias_from_list(
+            &one_spot(alias_target("other"), false),
+            &known
+        ));
+        // A sid target names no alias.
+        assert!(!is_alias_from_list(
+            &one_spot(sid_target("xe"), false),
+            &known
+        ));
+    }
+
+    #[test]
+    fn test_is_spot_local() {
+        let sids: HashSet<Sid> = [Sid::from("XE")].into_iter().collect();
+        let aliases: HashSet<String> = ["KNOWN".to_string()].into_iter().collect();
+
+        // A local alias counts, whatever the authentication.
+        assert!(is_spot_local(
+            &one_spot(alias_target("known"), false),
+            &sids,
+            &aliases
+        ));
+        // A local sid counts only with wallet authentication.
+        assert!(is_spot_local(
+            &one_spot(sid_target("xe"), true),
+            &sids,
+            &aliases
+        ));
+        assert!(!is_spot_local(
+            &one_spot(sid_target("xe"), false),
+            &sids,
+            &aliases
+        ));
+        // A sid of another home never counts.
+        assert!(!is_spot_local(
+            &one_spot(sid_target("other"), true),
+            &sids,
+            &aliases
+        ));
+    }
+
+    /// Names of the spots that survived, as the log reports them.
+    fn surviving(spots: Vec<ClosedSpot>, env: &Env, known: &[LocalInstance]) -> Vec<String> {
+        let mut names: Vec<String> = filter_spots_by_oracle_home(spots, env, known)
+            .iter()
+            .map(|spot| spot.target().display_name())
+            .collect();
+        names.sort();
+        names
+    }
+
+    /// The three `ORACLE_HOME` states, against every target shape: a plain sid, a
+    /// sid with wallet auth, an alias the local `tnsnames.ora` knows, and one it
+    /// does not.
+    #[test]
+    fn test_filter_spots_by_oracle_home() {
+        let home = std::env::temp_dir().join(format!("mk-oracle-home-{}", std::process::id()));
+        let tns_admin = home.join("network").join("admin");
+        std::fs::create_dir_all(&tns_admin).expect("temp home");
+        std::fs::write(
+            tns_admin.join("tnsnames.ora"),
+            "known = (ADDRESS = (HOST = h)(PORT = 1521))\n",
+        )
+        .expect("write tnsnames.ora");
+
+        let spots = calc_custom_spots(&[
+            instance_for_home(sid_target("plain"), false),
+            instance_for_home(sid_target("walletsid"), true),
+            instance_for_home(alias_target("known"), false),
+            instance_for_home(alias_target("unknown"), false),
+        ]);
+        assert_eq!(spots.len(), 4, "every target shape must yield a spot");
+
+        // Absent: nothing states how the targets are divided, so none is dropped.
+        assert_eq!(
+            surviving(
+                spots.clone(),
+                &Env::with_oracle_home(home.to_str(), None),
+                &[]
+            ),
+            vec!["KNOWN", "PLAIN", "UNKNOWN", "WALLETSID"]
+        );
+
+        // `no`: an alias belongs to whichever tnsnames.ora resolves it - here
+        // none does, since no global TNS_ADMIN is set - and a local sid with
+        // wallet to the home holding that wallet. Only the sid no home owns
+        // stays.
+        assert_eq!(
+            surviving(
+                spots.clone(),
+                &Env::with_oracle_home(home.to_str(), Some(false)),
+                &[local_instance("walletsid", "/opt/oracle")]
+            ),
+            vec!["PLAIN"]
+        );
+
+        // `yes`: only what this home resolves itself - its own sid with wallet,
+        // and the alias its own tnsnames.ora defines.
+        let known = [local_instance(
+            "walletsid",
+            home.to_str().expect("utf-8 temp dir"),
+        )];
+        assert_eq!(
+            surviving(
+                spots.clone(),
+                &Env::with_oracle_home(home.to_str(), Some(true)),
+                &known
+            ),
+            vec!["KNOWN", "WALLETSID"]
+        );
+
+        // `yes` for a home no local instance belongs to owns nothing.
+        assert!(surviving(
+            spots.clone(),
+            &Env::with_oracle_home(Some("/opt/other"), Some(true)),
+            &known
+        )
+        .is_empty());
+
+        // `yes` without an ORACLE_HOME cannot own anything either.
+        let result = surviving(
+            spots.clone(),
+            &Env::with_oracle_home(None, Some(true)),
+            &known,
+        );
+        let _ = std::fs::remove_dir_all(&home);
+        assert!(result.is_empty());
     }
 
     #[test]

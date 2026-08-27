@@ -53,8 +53,8 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
-from cmk.gui.watolib.rulesets import AllRulesets, Rule, SingleRulesetRecursively
+from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.rulesets import AllRulesets, SingleRulesetRecursively
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.livestatus_client import LocalConnection, SiteConfiguration, SiteConfigurations
 from cmk.ruleset_matcher.definition import RuleGroup, RuleGroupType
@@ -92,7 +92,6 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestGenericCheckHelperUsage)
     ac_test_registry.register(ACTestSizeOfExtensions)
     ac_test_registry.register(ACTestBrokenGUIExtension)
-    ac_test_registry.register(ACTestESXDatasources)
     ac_test_registry.register(ACTestDeprecatedRuleSets)
     ac_test_registry.register(ACTestUnknownCheckParameterRuleSets)
     ac_test_registry.register(ACTestDeprecatedV1CheckPlugins)
@@ -1207,55 +1206,6 @@ class ACTestBrokenGUIExtension(ACTest):
                 % {"gui_part": gui_part, "plugin_file": plugin_file, "error": error},
                 site_id=site_id,
                 path=plugin_filepath,
-            )
-
-
-class ACTestESXDatasources(ACTest):
-    @override
-    def category(self) -> str:
-        return ACTestCategories.deprecations
-
-    @override
-    def title(self) -> str:
-        return _("The Checkmk agent is queried via the ESX data source program")
-
-    @override
-    def help(self) -> str:
-        return _(
-            "The Checkmk agent is queried via the data source program for ESX systems. This option will be deleted in a future release. Please configure the host to contact the Checkmk agent and the configured data source programs instead."
-        )
-
-    def _get_rules(self) -> list[tuple[Folder, int, Rule]]:
-        collection = SingleRulesetRecursively.load_single_ruleset_recursively(
-            folder_tree(), RuleGroup.SpecialAgents("vsphere")
-        )
-
-        ruleset = collection.get(RuleGroup.SpecialAgents("vsphere"))
-        return ruleset.get_rules()
-
-    @override
-    def is_relevant(self) -> bool:
-        return bool(self._get_rules())
-
-    @override
-    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        all_rules_ok = True
-        for folder, rule_index, rule in self._get_rules():
-            vsphere_queries_agent = rule.value.get("direct") in ["agent", "hostsystem_agent"]
-            if vsphere_queries_agent:
-                all_rules_ok = False
-                yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=_("Rule %(nr)d in Folder %(folder)s is affected")
-                    % {"nr": rule_index + 1, "folder": folder.title()},
-                    site_id=site_id,
-                )
-
-        if all_rules_ok:
-            yield ACSingleResult(
-                state=ACResultState.OK,
-                text=_("No configured rules are affected"),
-                site_id=site_id,
             )
 
 

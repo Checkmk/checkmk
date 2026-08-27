@@ -43,7 +43,6 @@ def test_registered_ac_tests() -> None:
         "ACTestDeprecatedGUIExtensions",
         "ACTestDeprecatedLegacyGUIExtensions",
         "ACTestDeprecatedPNPTemplates",
-        "ACTestESXDatasources",
         "ACTestEscapeHTMLDisabled",
         "ACTestGenericCheckHelperUsage",
         "ACTestHTTPSecured",

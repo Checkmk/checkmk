@@ -25,14 +25,12 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.form_specs import (
     DisplayMode,
-    get_visitor,
     IncomingData,
     localize,
     parse_data_from_field_id,
     RawDiskData,
     read_data_from_frontend,
     render_form_spec,
-    VisitorOptions,
 )
 from cmk.gui.form_specs.unstable.legacy_converter import resolve_help_text, resolve_title
 from cmk.gui.global_config import get_global_config
@@ -85,7 +83,9 @@ from cmk.gui.watolib.config_domains import (
 )
 from cmk.gui.watolib.global_settings import (
     add_global_settings_change,
+    global_settings_diff_text,
     load_configuration_settings,
+    make_global_settings_context,
     save_global_settings,
     STATIC_PERMISSIONS_GLOBAL_SETTINGS,
 )
@@ -102,52 +102,12 @@ from cmk.gui.watolib.pending_changes import (
 )
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
-from cmk.gui.watolib.utils import site_neutral_path
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec
-from cmk.utils.object_diff import make_diff, make_diff_text
-from cmk.utils.paths import log_dir, var_dir
 from cmk.web.utils import escaping
 from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeactionuri, makeuri_contextless
-
-
-def _masked_value_for_log(
-    config_variable: ConfigVariable, context: GlobalSettingsContext, value: object
-) -> object:
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        visitor = get_visitor(
-            value_model,
-            VisitorOptions(migrate_values=True, mask_values=True),
-        )
-        return visitor.to_disk(RawDiskData(value))
-    return value_model.mask(value)
-
-
-def _global_settings_diff_text(
-    config_variable: ConfigVariable,
-    context: GlobalSettingsContext,
-    old_settings: GlobalSettings,
-    new_settings: GlobalSettings,
-) -> str:
-    old_masked = {
-        varname: _masked_value_for_log(config_variable, context, value)
-        for varname, value in old_settings.items()
-    }
-    new_masked = {
-        varname: _masked_value_for_log(config_variable, context, value)
-        for varname, value in new_settings.items()
-    }
-
-    unmasked_diff = make_diff(old_settings, new_settings)
-    masked_diff = make_diff(old_masked, new_masked)
-
-    if unmasked_diff == masked_diff:
-        return make_diff_text(old_masked, new_masked)
-
-    return (masked_diff + "\n" if masked_diff else "") + _("Redacted secrets changed.")
 
 
 def register(
@@ -523,7 +483,7 @@ class ABCEditGlobalSettingMode(WatoMode):
                 local_site=omd_site(),
                 user_id=user.id,
             ),
-            diff_text=_global_settings_diff_text(
+            diff_text=global_settings_diff_text(
                 self._config_variable,
                 self.make_global_settings_context(config),
                 old_settings,
@@ -785,7 +745,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
                 local_site=omd_site(),
                 user_id=user.id,
             ),
-            diff_text=_global_settings_diff_text(
+            diff_text=global_settings_diff_text(
                 config_variable,
                 self.make_global_settings_context(config),
                 old_settings,
@@ -803,7 +763,12 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     @override
     def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(self._edition, omd_site(), config)
+        return make_global_settings_context(
+            self._edition,
+            omd_site(),
+            sites=config.sites,
+            graph_timeranges=config.graph_timeranges,
+        )
 
 
 class DefaultModeEditGlobals(ModeEditGlobals):
@@ -841,7 +806,12 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
 
     @override
     def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(self._edition, omd_site(), config)
+        return make_global_settings_context(
+            self._edition,
+            omd_site(),
+            sites=config.sites,
+            graph_timeranges=config.graph_timeranges,
+        )
 
 
 class DefaultModeEditGlobalSetting(ModeEditGlobalSetting):
@@ -939,19 +909,6 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
     @override
     def is_localization_dependent(self) -> bool:
         return True
-
-
-def make_global_settings_context(
-    edition: Edition, target_site_id: SiteId, config: Config
-) -> GlobalSettingsContext:
-    return GlobalSettingsContext(
-        target_site_id=target_site_id,
-        edition_of_local_site=edition,
-        site_neutral_log_dir=site_neutral_path(log_dir),
-        site_neutral_var_dir=site_neutral_path(var_dir),
-        configured_sites=config.sites,
-        configured_graph_timeranges=config.graph_timeranges,
-    )
 
 
 def _pending_changes(

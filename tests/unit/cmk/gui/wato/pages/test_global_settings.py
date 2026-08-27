@@ -28,7 +28,6 @@ from cmk.gui.valuespec import TextInput
 from cmk.gui.wato._check_mk_configuration import ConfigVariableTableRowLimit
 from cmk.gui.wato.pages import global_settings
 from cmk.gui.wato.pages.global_settings import (
-    _global_settings_diff_text,
     DefaultModeEditGlobals,
     MatchItemGeneratorSettings,
 )
@@ -40,6 +39,7 @@ from cmk.gui.watolib.config_domain_name import (
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
+from cmk.gui.watolib.global_settings import global_settings_diff_text
 from cmk.rulesets.internal.form_specs import SimplePassword
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
@@ -238,7 +238,7 @@ def test_diff_text_valuespec_value_changed(
     global_settings_context: GlobalSettingsContext,
 ) -> None:
     assert (
-        _global_settings_diff_text(
+        global_settings_diff_text(
             _valuespec_config_variable(),
             global_settings_context,
             {"test_setting": "before"},
@@ -252,7 +252,7 @@ def test_diff_text_form_spec_value_changed(
     global_settings_context: GlobalSettingsContext,
 ) -> None:
     assert (
-        _global_settings_diff_text(
+        global_settings_diff_text(
             _form_spec_config_variable(),
             global_settings_context,
             {"test_setting": 100},
@@ -266,7 +266,7 @@ def test_diff_text_first_override_reads_as_added(
     global_settings_context: GlobalSettingsContext,
 ) -> None:
     assert (
-        _global_settings_diff_text(
+        global_settings_diff_text(
             _form_spec_config_variable(),
             global_settings_context,
             {},
@@ -280,7 +280,7 @@ def test_diff_text_reset_reads_as_removed(
     global_settings_context: GlobalSettingsContext,
 ) -> None:
     assert (
-        _global_settings_diff_text(
+        global_settings_diff_text(
             _form_spec_config_variable(),
             global_settings_context,
             {"test_setting": 100},
@@ -299,7 +299,7 @@ def test_diff_text_valuespec_secret_is_redacted(
         ident="test_setting",
         valuespec=lambda context: PasswordValuespec(),
     )
-    diff_text = _global_settings_diff_text(
+    diff_text = global_settings_diff_text(
         config_variable,
         global_settings_context,
         {"test_setting": "old-secret"},
@@ -319,7 +319,7 @@ def test_diff_text_form_spec_secret_is_redacted(
         ident="test_setting",
         form_spec=lambda context: SimplePassword(),
     )
-    diff_text = _global_settings_diff_text(
+    diff_text = global_settings_diff_text(
         config_variable,
         global_settings_context,
         {"test_setting": "old-secret"},

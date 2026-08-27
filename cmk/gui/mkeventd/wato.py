@@ -127,7 +127,6 @@ from cmk.gui.wato import (
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
-    make_global_settings_context,
     MatchItemGeneratorSettings,
 )
 from cmk.gui.watolib.attributes import SNMPCredentials
@@ -156,7 +155,11 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
 )
-from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    make_global_settings_context,
+    save_global_settings,
+)
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     FolderTree,
@@ -3401,7 +3404,12 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
 
     @override
     def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(self._edition, omd_site(), config)
+        return make_global_settings_context(
+            self._edition,
+            omd_site(),
+            sites=config.sites,
+            graph_timeranges=config.graph_timeranges,
+        )
 
 
 ConfigVariableGroupEventConsoleGeneric = ConfigVariableGroup(
@@ -3456,7 +3464,12 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
 
     @override
     def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(self._edition, omd_site(), config)
+        return make_global_settings_context(
+            self._edition,
+            omd_site(),
+            sites=config.sites,
+            graph_timeranges=config.graph_timeranges,
+        )
 
 
 def _get_event_console_sync_sites() -> list[SiteId]:

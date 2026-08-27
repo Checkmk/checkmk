@@ -79,7 +79,6 @@ from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
-    make_global_settings_context,
 )
 from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.activate_changes import get_free_message
@@ -108,6 +107,7 @@ from cmk.gui.watolib.config_sync import (
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,
+    make_global_settings_context,
     save_global_settings,
     save_site_global_settings,
     STATIC_PERMISSIONS_GLOBAL_SETTINGS,
@@ -2107,7 +2107,12 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
     @override
     def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(self._edition, self._site_id, config)
+        return make_global_settings_context(
+            self._edition,
+            self._site_id,
+            sites=config.sites,
+            graph_timeranges=config.graph_timeranges,
+        )
 
 
 class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
@@ -2177,7 +2182,12 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
 
     @override
     def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(self._edition, self._site_id, config)
+        return make_global_settings_context(
+            self._edition,
+            self._site_id,
+            sites=config.sites,
+            graph_timeranges=config.graph_timeranges,
+        )
 
 
 class ModeSiteLivestatusEncryption(WatoMode):

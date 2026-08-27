@@ -7,18 +7,26 @@ from collections.abc import Callable, Sequence
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.global_config import get_global_config, GlobalConfig
-from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.i18n import _
+from cmk.gui.type_defs import GlobalSettings, GraphTimerange
 from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
     ConfigVariable,
+    GlobalSettingsContext,
     UNREGISTERED_SETTINGS,
 )
 from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
+from cmk.gui.watolib.utils import site_neutral_path
+from cmk.livestatus_client import SiteConfigurations
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import paths
+from cmk.utils.object_diff import make_diff, make_diff_text
+from cmk.utils.paths import log_dir, var_dir
 
 STATIC_PERMISSIONS_GLOBAL_SETTINGS = ["global"]
 
@@ -113,3 +121,57 @@ def add_global_settings_change(
         ),
         ChangeScope.all_activation_sites() if sites is None else ChangeScope.sites(sites),
     )
+
+
+def make_global_settings_context(
+    edition: Edition,
+    target_site_id: SiteId,
+    *,
+    sites: SiteConfigurations,
+    graph_timeranges: Sequence[GraphTimerange],
+) -> GlobalSettingsContext:
+    return GlobalSettingsContext(
+        target_site_id=target_site_id,
+        edition_of_local_site=edition,
+        site_neutral_log_dir=site_neutral_path(log_dir),
+        site_neutral_var_dir=site_neutral_path(var_dir),
+        configured_sites=sites,
+        configured_graph_timeranges=graph_timeranges,
+    )
+
+
+def _masked_value_for_log(
+    config_variable: ConfigVariable, context: GlobalSettingsContext, value: object
+) -> object:
+    value_model = config_variable.value_model(context)
+    if isinstance(value_model, FormSpec):
+        visitor = get_visitor(
+            value_model,
+            VisitorOptions(migrate_values=True, mask_values=True),
+        )
+        return visitor.to_disk(RawDiskData(value))
+    return value_model.mask(value)
+
+
+def global_settings_diff_text(
+    config_variable: ConfigVariable,
+    context: GlobalSettingsContext,
+    old_settings: GlobalSettings,
+    new_settings: GlobalSettings,
+) -> str:
+    old_masked = {
+        varname: _masked_value_for_log(config_variable, context, value)
+        for varname, value in old_settings.items()
+    }
+    new_masked = {
+        varname: _masked_value_for_log(config_variable, context, value)
+        for varname, value in new_settings.items()
+    }
+
+    unmasked_diff = make_diff(old_settings, new_settings)
+    masked_diff = make_diff(old_masked, new_masked)
+
+    if unmasked_diff == masked_diff:
+        return make_diff_text(old_masked, new_masked)
+
+    return (masked_diff + "\n" if masked_diff else "") + _("Redacted secrets changed.")

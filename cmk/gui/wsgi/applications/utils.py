@@ -197,12 +197,8 @@ def _handle_not_authenticated(ctx: PageContext) -> Response:
     requested_file = requested_file_name(request)
     if requested_file != "login":
         post_login_url = makeuri(request, [])
-        if requested_file not in ("index", "oauth_authorize"):
-            # Ensure that users start with a navigation after they have logged in.
-            # The OAuth consent page is exempt: it is a standalone dialog, not a
-            # GUI entry point. Wrapping it in index.py's frameset would flash the
-            # sidebar around it and make its post-consent redirect navigate the
-            # inner frame instead of the whole window.
+        if requested_file != "index":
+            # Ensure that users start with a navigation after they have logged in
             post_login_url = makeuri_contextless(
                 request, [("start_url", post_login_url)], filename="index.py"
             )

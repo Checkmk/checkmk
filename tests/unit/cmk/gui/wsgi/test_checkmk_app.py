@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import urllib.parse
 from collections.abc import Callable, Iterator
 
 import pytest
@@ -82,26 +81,3 @@ def test_non_wsgi_oserror_from_page_handler_propagates(
 
     with pytest.raises(OSError, match="Random OS Error"):
         wsgi_app.get(f"/NO_SITE/check_mk/{OS_ERROR_PAGE}.py")
-
-
-@pytest.mark.parametrize(
-    "requested_file, wrapped_in_frameset",
-    [
-        # A normal deep link is wrapped in index.py so the user lands in the
-        # navigable GUI after logging in.
-        ("dashboard", True),
-        # The OAuth consent page is exempt: it is a standalone dialog, not a GUI
-        # entry point. Wrapping it in index.py's frameset would flash the sidebar
-        # around it and make its post-consent redirect fight the frame.
-        ("oauth_authorize", False),
-    ],
-)
-def test_login_redirect_wraps_deep_links_but_not_the_oauth_consent_page(
-    wsgi_app: WebTestAppForCMK, requested_file: str, wrapped_in_frameset: bool
-) -> None:
-    resp = wsgi_app.get(f"/NO_SITE/check_mk/{requested_file}.py", status=302)
-
-    origtarget = urllib.parse.parse_qs(urllib.parse.urlsplit(resp.headers["Location"]).query)[
-        "_origtarget"
-    ][0]
-    assert ("index.py" in origtarget) is wrapped_in_frameset

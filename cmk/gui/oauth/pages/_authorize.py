@@ -204,16 +204,6 @@ class OAuthAuthorizePage(Page):
         html.add_body_css_class("login")
         html.add_body_css_class("two_factor")
         make_header(html, title, Breadcrumb())
-        # 2.5.0's GUI still wraps content pages in the classic iframe frameset.
-        # A standalone page like this one must break out of it, or it renders
-        # inside the frame: the sidebar chrome shows around it, and its
-        # meta-refresh redirect would navigate the inner frame instead of the
-        # whole window. Mirrors the same guard in cmk.gui.login's login page.
-        html.javascript(
-            """if(top != self) {
-    window.top.location.href = location;
-}"""
-        )
         html.open_div(id_="login")
         html.open_div(id_="login_window")
 

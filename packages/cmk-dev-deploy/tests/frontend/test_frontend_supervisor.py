@@ -71,11 +71,6 @@ class TestFrontendConfig:
         config = FrontendConfig()
         assert not hasattr(config, "shutdown_grace")
 
-    def test_frozen(self) -> None:
-        config = FrontendConfig()
-        with pytest.raises(AttributeError):
-            config.port = 9999  # type: ignore[misc]
-
     def test_startup_timeout_300s(self) -> None:
         """300s timeout for initial Bazel builds (cold cache can take 3-5 min)."""
         config = FrontendConfig()

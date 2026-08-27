@@ -226,19 +226,28 @@ class MkpRulePackProxy(MutableMapping[str, Any]):
     def __getitem__(self, key: str) -> Any:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
-        return self.rule_pack[key]  # type: ignore[literal-required] # TODO: Nuke this!
+        return self.rule_pack[self.__validate_key(key)]
 
     @override
     def __setitem__(self, key: str, value: Any) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
-        self.rule_pack[key] = value  # type: ignore[literal-required] # TODO: Nuke this!
+        self.rule_pack[self.__validate_key(key)] = value
 
     @override
     def __delitem__(self, key: str) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
-        del self.rule_pack[key]  # type: ignore[misc] # TODO: Nuke this!
+        del self.rule_pack[self.__validate_key(key)]
+
+    # We should really use something different than TypedDict here... :-/
+    @staticmethod
+    def __validate_key(key: str) -> Literal["id" | "title" | "disabled" | "rules" | "customer"]:
+        match key:
+            case "id" | "title" | "disabled" | "rules" | "customer":
+                return key
+            case _:
+                raise KeyError(key)
 
     @override
     def __repr__(self) -> str:

@@ -643,15 +643,14 @@ def df_check_filesystem_list(
         metric_name: str, info: dict[str, dict[str, float | None]], mountpoints_group: list[str]
     ) -> float | None:
         """Calculate sum of named values for matching mount points"""
-        try:
-            # If we have a None, sum will throw a TypeError which we catch...
-            return sum(
-                block_info[metric_name]  # type: ignore[misc]
-                for (mp, block_info) in info.items()  #
-                if mp in mountpoints_group
-            )
-        except TypeError:
-            return None
+        the_sum = 0.0
+        for mp, block_info in info.items():
+            if mp not in mountpoints_group:
+                continue
+            if (value := block_info[metric_name]) is None:
+                return None
+            the_sum += value
+        return the_sum
 
     # Translate lists of tuples into convenient dicts
     blocks_info = {

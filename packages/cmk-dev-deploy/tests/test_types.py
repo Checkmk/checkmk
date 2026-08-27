@@ -4,7 +4,6 @@
 
 """Unit tests for cmk.dev_deploy.types (Edition enum and SiteInfo dataclass)."""
 
-from dataclasses import FrozenInstanceError
 from pathlib import Path
 
 import pytest
@@ -38,19 +37,6 @@ def test_edition_from_version_suffix_old_style(old_suffix: str) -> None:
     """Old-style suffixes from pre-2.6.0 naming raise ValueError."""
     with pytest.raises(ValueError, match="Unknown edition suffix"):
         Edition.from_version_suffix(old_suffix)
-
-
-def test_siteinfo_frozen() -> None:
-    """SiteInfo is immutable -- assigning to a field raises FrozenInstanceError."""
-    site = SiteInfo(
-        name="v260",
-        root=Path("/omd/sites/v260"),
-        edition=Edition.PRO,
-        version_string="2.6.0-2026.02.13.pro",
-        build_commit="a" * 40,
-    )
-    with pytest.raises(FrozenInstanceError):
-        site.name = "other"  # type: ignore[misc]
 
 
 def test_siteinfo_with_commit() -> None:

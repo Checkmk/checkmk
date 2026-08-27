@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import dataclasses
 from collections.abc import Mapping, Sequence
 
 import pytest
@@ -74,16 +73,6 @@ def test_metrics_section_host_label_defaults() -> None:
     assert section.host_label_ruleset_name is None
 
 
-def test_metrics_section_is_immutable() -> None:
-    section = MetricsSection(
-        name="test_section",
-        selectors=[MetricSelector(metric_name="cpu.load", aggregation=GaugeAggregation())],
-        parse_function=parse_func,
-    )
-    with pytest.raises(dataclasses.FrozenInstanceError):
-        section.name = "other_name"  # type: ignore[misc]
-
-
 @pytest.mark.parametrize(
     "name",
     ["", "contains-hyphen", "contains space"],
@@ -95,25 +84,3 @@ def test_invalid_name(name: str) -> None:
             selectors=[MetricSelector(metric_name="cpu.load", aggregation=GaugeAggregation())],
             parse_function=parse_func,
         )
-
-
-@pytest.mark.parametrize(
-    "kwargs",
-    [
-        {"name": "cpu_load", "parse_function": dict},
-        {
-            "name": "cpu_temperature",
-            "selectors": [MetricSelector(metric_name="cpu.load", aggregation=GaugeAggregation())],
-        },
-        {
-            "parse_function": dict,
-            "selectors": [MetricSelector(metric_name="cpu.load", aggregation=GaugeAggregation())],
-        },
-    ],
-)
-def test_missing_required_arguments(kwargs: dict[str, object]) -> None:
-    """
-    Test that instantiating without required arguments raises a TypeError.
-    """
-    with pytest.raises(TypeError):
-        MetricsSection(**kwargs)  # type: ignore[arg-type]

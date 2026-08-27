@@ -76,24 +76,24 @@ def _get_branches(
     r: Repo, c: Config, branch_replacement: Mapping[str, str]
 ) -> Iterable[tuple[str, Commit]]:
     if branch_replacement:
-        for branch, ref in branch_replacement.items():
-            yield branch, r.commit(ref)
+        for branch, rev in branch_replacement.items():
+            yield branch, r.commit(rev)
         return
 
-    for ref in r.remote().refs:  # type: ignore[assignment]
-        if not ref.name.startswith("origin/"):  # type: ignore[attr-defined]
+    for ref in r.remote().refs:
+        if not ref.name.startswith("origin/"):
             logger.info(
                 "ignoring ref %(ref)s (only considering one from remote origin)", {"ref": ref}
             )
             continue
 
-        branch_name = ref.name.removeprefix("origin/")  # type: ignore[attr-defined]
+        branch_name = ref.name.removeprefix("origin/")
         if not re.match(c.branch_regex, branch_name):
             logger.info(
                 "ignoring branch %(branch)s (does not match regex)", {"branch": branch_name}
             )
             continue
-        yield branch_name, ref  # type: ignore[misc]
+        yield branch_name, ref.commit
 
 
 def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:

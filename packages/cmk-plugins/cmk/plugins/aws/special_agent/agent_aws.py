@@ -68,7 +68,12 @@ from ._data_cache import DataCache
 LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from mypy_boto3_logs.client import CloudWatchLogsClient
+    from mypy_boto3_logs.client import (
+        CloudWatchLogsClient,
+        GetQueryResultsResponseTypeDef,
+        QueryStatusType,
+        ResultFieldTypeDef,
+    )
 
 __version__ = "3.0.0b1"
 
@@ -2877,7 +2882,7 @@ class Glacier(AWSSection):
         :param colleague_contents:
         :return:
         """
-        if colleague_contents and colleague_contents.content:  # type: ignore[redundant-expr]
+        if colleague_contents.content:
             return colleague_contents.content
         return self._get_response_content(self._client.list_vaults(), "VaultList")
 
@@ -5552,7 +5557,7 @@ class LambdaProvisionedConcurrency(AWSSection):
         assert isinstance(content, dict), "%s: Result content must be of type 'dict'" % self.name
 
 
-LambdaMetricStats = Sequence[Mapping[str, str]]
+type LambdaMetricStats = Sequence[ResultFieldTypeDef]
 
 
 class LambdaCloudwatchInsights(AWSSection):
@@ -5605,10 +5610,12 @@ class LambdaCloudwatchInsights(AWSSection):
         sleep_duration: float = 0.5,
     ) -> Sequence[LambdaMetricStats] | None:
         "Synchronous wrapper for asynchronous query API with timeout checking. (agent should not be blocked)."
-        response_results: dict = {"status": "Scheduled"}
+        response_results: GetQueryResultsResponseTypeDef
         query_start = datetime.now().timestamp()
-        while response_results["status"] != "Complete":
-            response_results = client.get_query_results(queryId=query_id)  # type: ignore[assignment]
+        status: QueryStatusType = "Scheduled"
+        while status != "Complete":
+            response_results = client.get_query_results(queryId=query_id)
+            status = response_results["status"]
             if datetime.now().timestamp() - query_start >= timeout_seconds:
                 client.stop_query(queryId=query_id)
                 LOGGER.error(

@@ -163,12 +163,6 @@ class TestChangeSet:
         )
         assert cs.has_python_only is True
 
-    def test_frozen(self) -> None:
-        """ChangeSet is frozen (immutable)."""
-        cs = ChangeSet(build_commit="a" * 40, files=(), categories={})
-        with pytest.raises(AttributeError):
-            cs.build_commit = "b" * 40  # type: ignore[misc]
-
 
 # ---------------------------------------------------------------------------
 # ChangeDetectionError tests

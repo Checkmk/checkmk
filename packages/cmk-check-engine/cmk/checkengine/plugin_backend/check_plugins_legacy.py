@@ -135,15 +135,15 @@ def _create_signature_check_function(
     """Create the function for a check function with the required signature"""
     if requires_item:
 
-        def check_migration_wrapper(item, params, section):
+        def check_migration_wrapper_with_item(item, params, section):
             return original_function(item, params, section)
 
-    else:
+        return check_migration_wrapper_with_item
 
-        def check_migration_wrapper(params, section):  # type: ignore[misc]
-            return original_function(None, params, section)
+    def check_migration_wrapper_without_item(params, section):
+        return original_function(None, params, section)
 
-    return check_migration_wrapper
+    return check_migration_wrapper_without_item
 
 
 def _create_check_plugin_from_legacy(

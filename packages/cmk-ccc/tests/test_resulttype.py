@@ -7,7 +7,7 @@ from collections.abc import Iterable
 
 import pytest
 
-from cmk.ccc.resulttype import Error, OK, Result
+from cmk.ccc.resulttype import bind, Error, join, OK, Result
 
 
 class NoInEqual:
@@ -102,39 +102,35 @@ class TestOk:
     def test_as_optional(self, result: Result[int, object]) -> None:
         assert result.as_optional() == result.ok
 
-    def test_flatten1(self, result: Result[int, object]) -> None:
+    def test_join1(self, result: Result[int, object]) -> None:
         nested: Result[Result[int, object], object] = OK(result)
         assert nested != result
-        assert nested.flatten() == result
-        assert nested.flatten() == result.flatten()
-        assert nested.flatten() == nested.join()
+        assert join(nested) == result
+        assert join(nested) == join(nested)
 
-    def test_flatten2(self, result: Result[int, object]) -> None:
+    def test_join2(self, result: Result[int, object]) -> None:
         nested: Result[Result[Result[int, object], object], object] = OK(OK(result))
         assert nested != result
-        assert nested.flatten() == result
-        assert nested.flatten() == result.flatten()
-        assert nested.flatten() == nested.join()
+        assert join(nested) == OK(result)
+        assert join(nested) == join(nested)
 
     def test_bind_ok(self, result: Result[int, object]) -> None:
         ok: Result[object, object] = OK("ok")
         assert result.ok != ok.ok
 
-        other = result.bind(lambda _: ok)
+        other = bind(result, lambda _: ok)
         assert other != result
         assert other == ok
 
     def test_bind_error(self, result: Result[int, object], value: int) -> None:
         error: Result[int, object] = Error(value + 1)
 
-        other = result.bind(lambda _: error)
+        other = bind(result, lambda _: error)
         assert other != result
         assert other == error
 
     def test_map(self, result: Result[int, object]) -> None:
         ok = "ok"
-        assert not isinstance(result.ok, type(ok))  # type: ignore[unreachable]
-
         other = result.map(lambda _: ok)
         assert other != result
         assert other == OK(ok)
@@ -235,24 +231,10 @@ class TestError:
     def test_as_optional(self, result: Result[object, int]) -> None:
         assert result.as_optional() is None
 
-    def test_flatten1(self, result: Result[object, int]) -> None:
-        nested: Result[object, Result[object, int]] = Error(result)
-        assert nested != result
-        assert nested.flatten() == result
-        assert nested.flatten() == result.flatten()
-        assert nested.flatten() == nested.join()
-
-    def test_flatten2(self, result: Result[object, int]) -> None:
-        nested: Result[object, Result[object, Result[object, int]]] = Error(Error(result))
-        assert nested != result
-        assert nested.flatten() == result
-        assert nested.flatten() == result.flatten()
-        assert nested.flatten() == nested.join()
-
     def test_bind_ok(self, result: Result[object, int]) -> None:
         ok: Result[object, int] = OK("ok")
 
-        other = result.bind(lambda _: ok)
+        other = bind(result, lambda _: ok)
         assert other != ok
         assert other == result
 
@@ -260,7 +242,7 @@ class TestError:
         error: Result[object, int] = Error(value + 1)
         assert result.error != error.error
 
-        other = result.bind(lambda _: error)
+        other = bind(result, lambda _: error)
         assert other != error
         assert other == result
 

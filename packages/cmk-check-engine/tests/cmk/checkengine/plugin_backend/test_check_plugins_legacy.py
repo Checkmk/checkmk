@@ -221,7 +221,7 @@ def test_convert_legacy_check_plugins_wo_params() -> None:
     assert plugin.discovery_function.__name__ == "discovery_migration_wrapper"
     assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None
-    assert plugin.check_function.__name__ == "check_migration_wrapper"
+    assert plugin.check_function.__name__ == "check_migration_wrapper_without_item"
     assert plugin.check_default_parameters == {}
     assert plugin.check_ruleset_name is None
     assert plugin.cluster_check_function is None
@@ -248,7 +248,7 @@ def test_convert_legacy_check_plugins_with_params() -> None:
     assert plugin.discovery_function.__name__ == "discovery_migration_wrapper"
     assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None
-    assert plugin.check_function.__name__ == "check_migration_wrapper"
+    assert plugin.check_function.__name__ == "check_migration_wrapper_without_item"
     assert plugin.check_default_parameters == {
         "levels": (23, 42),
     }

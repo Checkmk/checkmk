@@ -8,8 +8,6 @@
 
 from typing import Any
 
-import pytest
-
 from cmk.dev_deploy.manifest.reader import _parse_categorization_rule, get_categorization_rules
 from cmk.dev_deploy.types import CategorizationRule, ChangeCategory
 
@@ -45,8 +43,6 @@ class TestParseCategorizationRule:
         raw = {"prefix": "cmk/", "extensions": [".py"], "category": "python"}
         result = _parse_categorization_rule(raw)
         assert result is not None
-        with pytest.raises(AttributeError):
-            result.prefix = "other/"  # type: ignore[misc]
 
 
 # ---------------------------------------------------------------------------

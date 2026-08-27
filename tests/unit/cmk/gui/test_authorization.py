@@ -36,6 +36,8 @@ def test_read_scope_denies_a_write_permission() -> None:
     read = Authorization.from_scopes({ScopeId.READ})
     assert not read.permits("wato.edit")
     assert not read.permits("wato.activate")
+    # the write counterpart of the allow-listed wato.see_all_folders
+    assert not read.permits("wato.all_folders")
 
 
 def test_read_scope_denies_an_unknown_permission() -> None:

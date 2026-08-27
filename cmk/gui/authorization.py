@@ -19,12 +19,17 @@ from cmk.gui.scopes import normalize_scopes, ScopeId
 # PRELIMINARY LIST, extend as we go.
 READ_PERMISSIONS: Final[frozenset[str]] = frozenset(
     {
+        # Not a read capability but the prerequisite for any request at all.
+        "general.use",
+        # hosts/services/comments/downtimes/EC/folders
         "bi.see_all",
         "general.see_all",
-        "general.see_availability",
-        "general.use",  # Not a read capability but the prerequisite for any request at all.
         "mkeventd.seeall",
         "wato.see_all_folders",
+        # get_config_changes
+        "wato.auditlog",
+        # get_availability
+        "general.see_availability",
     }
 )
 

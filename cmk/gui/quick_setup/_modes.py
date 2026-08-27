@@ -89,6 +89,7 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.ruleset_matcher.definition import RuleGroup, RuleGroupType
+from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.html import HTML
@@ -345,7 +346,7 @@ class ModeEditConfigurationBundles(WatoMode):
             return
 
         bundles_with_references = identify_bundle_references(
-            tree, group_name, bundle_ids, acting_user=user
+            tree, group_name, bundle_ids, acting_user=user, program_id=PROGRAM_ID_QUICK_SETUP
         )
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             self._special_agent_bundles_listing(group_name, bundles_with_references)
@@ -806,7 +807,11 @@ class ModeConfigurationBundle(WatoMode):
         self._bundle: ConfigBundle = bundle_store[self._bundle_id]
         self._bundle_group = self._bundle["group"]
         self._bundle_references = identify_bundle_references(
-            folder_tree(), self._bundle_group, {self._bundle_id}, acting_user=user
+            folder_tree(),
+            self._bundle_group,
+            {self._bundle_id},
+            acting_user=user,
+            program_id=self._bundle["program_id"],
         )[self._bundle_id]
 
         self._rule_group_type = RuleGroupType(self._bundle_group.split(":")[0])
@@ -985,7 +990,11 @@ class ModeConfigurationBundle(WatoMode):
         if request.has_var("_clean_up"):
             tree = make_folder_tree(config)
             references = identify_bundle_references(
-                tree, None, {self._bundle_id}, acting_user=user
+                tree,
+                None,
+                {self._bundle_id},
+                acting_user=user,
+                program_id=self._bundle["program_id"],
             )[self._bundle_id]
             delete_config_bundle_objects(
                 tree,

@@ -116,6 +116,37 @@ from cmk.update_config.plugins.lib.autochecks import get_fixed_autochecks
                     check_plugin_name=CheckPluginName("ps"),
                     item="test automation helpers",
                     parameters={
+                        "cpu_rescale_max": True,
+                        "process": "~(.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
+                        "match_groups": ("gunicorn: worker [automation-helper]",),
+                        "user": "test",
+                        "cgroup": (None, False),
+                    },
+                    service_labels={},
+                ),
+            ],
+            [
+                AutocheckEntry(
+                    check_plugin_name=CheckPluginName("ps"),
+                    item="test automation helpers",
+                    parameters={
+                        "cpu_rescale_max": True,
+                        "process": "~(?:.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
+                        "match_groups": (),
+                        "user": "test",
+                        "cgroup": (None, False),
+                    },
+                    service_labels={},
+                ),
+            ],
+            id="2.4.0p26 capturing automation helper process pattern",
+        ),
+        pytest.param(
+            [
+                AutocheckEntry(
+                    check_plugin_name=CheckPluginName("ps"),
+                    item="test automation helpers",
+                    parameters={
                         "process": "~(?:.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
                         "match_groups": (),
                         "user": "test",

@@ -57,10 +57,12 @@ def _transform_automation_helper_ps_patterns(item: str | None, params: Any) -> M
     if not (item and item.endswith("automation helpers")):
         return new_params
 
-    if (
-        process := new_params.get("process")
-    ) is not None and process == "~gunicorn:.*automation-helper":
+    if new_params.get("process") in (
+        "~gunicorn:.*automation-helper",
+        "~(.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
+    ):
         new_params["process"] = "~(?:.*cmk-automation-helper.*|gunicorn:.*automation-helper)"
+        new_params["match_groups"] = ()
 
     return new_params
 

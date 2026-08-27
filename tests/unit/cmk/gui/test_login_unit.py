@@ -22,6 +22,7 @@ from werkzeug.test import create_environ
 from cmk.ccc.user import UserId
 from cmk.gui import auth, http, login
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKInsufficientScope
 from cmk.gui.http import request
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.oauth.store.client_store import get_client_store
@@ -267,6 +268,38 @@ def test_token_auth_is_not_exchangeable_for_a_session_cookie(
         if cookie.startswith(auth_cookie_name())
     ]
     assert not load_session_infos(username)
+
+
+def test_scope_denial_fails_explicitly(
+    with_user: tuple[UserId, str], flask_app: flask.Flask
+) -> None:
+    """Check that permission denial based on the token's scope fails with MKInsufficientScope."""
+    username, _ = with_user
+    with get_client_store() as clients:
+        registration = clients.register(["https://client.example/callback"], None)
+    assert registration.is_ok()
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            username,
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=DEFAULT_SCOPE,
+            client_id=registration.ok.client_id,
+        )
+    assert token.is_ok()
+
+    with (
+        flask_app.test_request_context(
+            "/",
+            method="GET",
+            headers={"Authorization": f"Bearer {token.ok}"},
+        ),
+        pytest.raises(MKInsufficientScope) as exc_info,
+    ):
+        session.user.need_permission("general.act")
+
+    # not MKAuthException's 401: an OAuth client told to re-authenticate would just retry
+    assert exc_info.value.status == 403
 
 
 def test_login_with_invalid_oauth_bearer_token(flask_app: flask.Flask) -> None:

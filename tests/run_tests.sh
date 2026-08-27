@@ -57,6 +57,7 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-relay                       Run system tests for the relay (ultimate edition)
   test-system-mk-oracle                   Run system tests for the mk_oracle agent plugins
   test-system-otel                        Run system tests for otel (ultimate edition)
+  test-system-azure                       Run system tests for azure (ultimate edition)
   test-system-mcp                         Run system tests for the mcp-server (pro edition)
   test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
   test-system-multisite                   Run multisite system tests
@@ -352,6 +353,12 @@ test-system-otel() {
         --session-timeout 1800
 }
 
+test-system-azure-ultimate() {
+    EDITION=ultimate _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
+        "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/ultimate/azure/" \
+        --session-timeout 1800
+}
+
 test-system-mcp() {
     EDITION=pro _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/singlesite")/nonfree/pro/mcp/" \
@@ -492,6 +499,7 @@ test-system-singlesite-k8s-docker() { _system-tests-docker test-system-singlesit
 test-system-singlesite-non-root-docker() { _system-tests-docker test-system-singlesite-non-root; }
 test-system-redfish-docker() { _system-tests-docker test-system-redfish; }
 test-system-otel-docker() { _system-tests-docker test-system-otel; }
+test-system-azure-docker() { _system-tests-docker test-system-azure; }
 test-system-multisite-docker() { _system-tests-docker test-system-multisite; }
 test-system-update-community-docker() { _system-tests-docker test-system-update-community; }
 test-system-update-pro-docker() { _system-tests-docker test-system-update-pro; }

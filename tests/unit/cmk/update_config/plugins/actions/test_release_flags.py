@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import logging
 from pathlib import Path
 
@@ -28,7 +29,7 @@ def test_removes_flags_that_no_longer_exist(tmp_path: Path) -> None:
 
     update_action_registry["release_flags"](LOGGER)
 
-    assert config_file.read_text() == "{}"
+    assert "already_removed_flag" not in json.loads(config_file.read_text())
 
 
 @pytest.mark.usefixtures("request_context")

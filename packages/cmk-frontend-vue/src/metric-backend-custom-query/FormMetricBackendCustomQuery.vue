@@ -42,15 +42,14 @@ import {
   fractionBetweenGroupBy,
   percentileGroupBy
 } from '@/metric-backend/group-by/wire'
-
 import {
   DEFAULT_HISTOGRAM_PERCENTILE,
   DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
   DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
-  DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
-  buildConsolidationFunction,
-  consolidationFunctionFromWire
-} from './consolidation'
+  DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN
+} from '@/metric-backend/histogram-params'
+
+import { buildConsolidationFunction, consolidationFunctionFromWire } from './consolidation'
 
 const { _t } = usei18n()
 

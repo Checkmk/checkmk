@@ -39,15 +39,15 @@ import {
   groupPercentileToWire,
   percentileGroupBy
 } from '@/metric-backend/group-by/wire'
-
-import type { GraphItemsStore } from '../../composables/useGraphItems'
-import type { DraftMetricBackendItem } from '../../drafts'
 import {
   DEFAULT_HISTOGRAM_PERCENTILE,
   DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
   DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
   DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN
-} from '../../metricBackend'
+} from '@/metric-backend/histogram-params'
+
+import type { GraphItemsStore } from '../../composables/useGraphItems'
+import type { DraftMetricBackendItem } from '../../drafts'
 import type { MetricBackendItem } from '../../types'
 import SourceFormField from './SourceFormField.vue'
 import SourceFormStack from './SourceFormStack.vue'

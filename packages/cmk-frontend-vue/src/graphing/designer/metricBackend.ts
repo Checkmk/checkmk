@@ -7,13 +7,14 @@ import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import type { ConsolidationGroupByKey } from 'cmk-shared-typing/typescript/consolidation'
 
-import { DEFAULT_TITLE_MACRO, type MetricBackendItem } from './types'
+import {
+  DEFAULT_HISTOGRAM_PERCENTILE,
+  DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
+  DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
+  DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN
+} from '@/metric-backend/histogram-params'
 
-// The rule form spec's own defaults, for the aggregation parameters a consolidation does not carry.
-export const DEFAULT_HISTOGRAM_PERCENTILE = 90
-export const DEFAULT_THRESHOLD_FOR_FRACTION_BELOW = 0
-export const DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN = 0
-export const DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN = 100
+import { DEFAULT_TITLE_MACRO, type MetricBackendItem } from './types'
 
 /** One query of the `special_agents:custom_query_metric_backend` rule value. */
 export interface MetricBackendRuleQuery {

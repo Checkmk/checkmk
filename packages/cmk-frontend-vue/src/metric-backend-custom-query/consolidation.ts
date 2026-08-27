@@ -18,11 +18,6 @@ import {
   percentileGroupBy
 } from '@/metric-backend/group-by/wire'
 
-export const DEFAULT_HISTOGRAM_PERCENTILE = 90
-export const DEFAULT_THRESHOLD_FOR_FRACTION_BELOW = 0
-export const DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN = 0
-export const DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN = 100
-
 export function consolidationFunctionFromWire(
   wire: WireConsolidationFunction
 ): ConsolidationFunction {

@@ -8,6 +8,12 @@ import { type ComputedRef, type WritableComputedRef, computed } from 'vue'
 
 export const DEFAULT_QUANTILE = 0.95
 
+// The rule form spec's own defaults, for the aggregation parameters a consolidation does not carry.
+export const DEFAULT_HISTOGRAM_PERCENTILE = 90
+export const DEFAULT_THRESHOLD_FOR_FRACTION_BELOW = 0
+export const DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN = 0
+export const DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN = 100
+
 export interface HistogramParams {
   /** The quantile in the range 0–1 (default 0.95). */
   quantile?: number

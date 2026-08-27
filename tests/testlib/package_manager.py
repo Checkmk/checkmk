@@ -224,7 +224,10 @@ class ABCPackageManager(abc.ABC):
             expected_hash, expected_file = f.readline().split()
         assert expected_file == package_path.name
 
-        assert _sha256_file(package_path) == expected_hash
+        package_hash = _sha256_file(package_path)
+        assert package_hash == expected_hash, (
+            f"Hash of '{package_path}' is {package_hash!r}, not the expected {expected_hash!r}"
+        )
 
     def package_url_public(self, version: str, package_name: str) -> PackageUrl:
         return PackageUrl(f"https://download.checkmk.com/checkmk/{version}/{package_name}")

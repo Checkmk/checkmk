@@ -440,6 +440,11 @@ def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> 
     except ValueError:
         summary, details = local_result.text, ""
 
+    hide = params.get("hide_cache_info_from_summary", False)
+
+    if local_result.cache_info is not None and hide:
+        summary = f"{summary} ◷" if summary else "◷"
+
     if local_result.text:
         yield Result(
             state=local_result.state,
@@ -448,7 +453,9 @@ def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> 
         )
     yield from _local_make_metrics(local_result)
 
-    if local_result.cache_info is not None:
+    if local_result.cache_info is not None and hide:
+        yield Result(state=State.OK, notice=render_cache_info(local_result.cache_info))
+    elif local_result.cache_info is not None and not hide:
         yield Result(state=State.OK, summary=render_cache_info(local_result.cache_info))
 
 
@@ -457,6 +464,6 @@ check_plugin_local = CheckPlugin(
     service_name="%s",
     discovery_function=discover_local,
     check_default_parameters={},
-    check_ruleset_name="local",
+    check_ruleset_name="hide_cache_info_local",
     check_function=check_local,
 )

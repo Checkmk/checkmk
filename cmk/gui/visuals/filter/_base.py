@@ -49,7 +49,6 @@ class FilterGroup(Enum):
     KUBERNETES = "kubernetes"
     SITE = "site"
     TOPOLOGY = "topology"
-    SERVICE_NAME = "service_name"
     SERVICE_CHECK_COMMAND = "service_check_command"
     SERVICE_CONTACT = "service_contact"
     SERVICE_IN = "service_in"

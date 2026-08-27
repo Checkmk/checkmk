@@ -198,7 +198,6 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 negateable=True,
             ),
             description=_l("Search field allowing regular expressions and partial matches"),
-            group=FilterGroup.SERVICE_NAME,
         )
     )
 
@@ -215,7 +214,6 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             ),
             description=_l("Exact match, used for linking"),
             is_show_more=True,
-            group=FilterGroup.SERVICE_NAME,
         )
     )
 
@@ -230,7 +228,6 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
                 op="~~",
             ),
             is_show_more=True,
-            group=FilterGroup.SERVICE_NAME,
         )
     )
 

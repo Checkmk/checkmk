@@ -39,7 +39,6 @@ _FILTER_GROUP_TITLES: Mapping[FilterGroup, str] = {
     FilterGroup.KUBERNETES: "Kubernetes",
     FilterGroup.SITE: "Site",
     FilterGroup.TOPOLOGY: "Topology",
-    FilterGroup.SERVICE_NAME: "Service name",
     FilterGroup.SERVICE_CHECK_COMMAND: "Service check command",
     FilterGroup.SERVICE_CONTACT: "Service contact",
     FilterGroup.SERVICE_IN: "Service in",

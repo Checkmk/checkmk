@@ -129,6 +129,7 @@ const series = computed<TimestampedSample[]>(
         :color="data.color"
         :state="state"
         :range-limits="data.range_limits"
+        :range="data.range"
         :href="href"
       />
     </div>

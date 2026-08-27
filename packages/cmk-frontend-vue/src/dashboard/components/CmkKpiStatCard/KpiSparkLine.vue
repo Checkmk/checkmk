@@ -150,11 +150,20 @@ const plot: Ref<Plot> = computed(() => {
   const latest = [...data].reverse().find((d) => d.value !== null)
   const dot = latest ? { x: x(latest), y: y(latest) } : null
 
-  const ticks = props.range
-    ? data
-        .filter((d) => d.value !== null && (d.value! < domainMin || d.value! > domainMax))
-        .map((d) => ({ x: x(d), y: y(d) }))
-    : []
+  // One tick per excursion, not per sample - a long run of out-of-range samples (e.g.
+  // idling below a manual floor for many minutes) would otherwise draw a tick for each
+  // one, a dense comb instead of a single marker at the excursion's start.
+  const ticks: Point[] = []
+  if (props.range) {
+    let wasOutOfRange = false
+    for (const d of data) {
+      const isOutOfRange = d.value !== null && (d.value < domainMin || d.value > domainMax)
+      if (isOutOfRange && !wasOutOfRange) {
+        ticks.push({ x: x(d), y: y(d) })
+      }
+      wasOutOfRange = isOutOfRange
+    }
+  }
 
   const bridgeLineGen = line<TimestampedSample>().x(x).y(y)
   const bridgeAreaGen = area<TimestampedSample>().x(x).y0(VIEW_HEIGHT).y1(y)

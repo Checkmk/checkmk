@@ -112,50 +112,20 @@ test('compares against the previous period once it is delivered', () => {
   expect(container).toHaveTextContent('33.3%')
 })
 
-// The widget measures itself to decide whether it can carry the comparison;
-// jsdom lays nothing out, so the width is supplied by hand.
-async function renderChartAtWidth(width: number, slices: DonutSlice[]) {
-  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
-    width,
-    height: 0
-  } as DOMRect)
-  const rendered = renderChart(slices)
-  // The widget is measured once its ref lands, which is a tick after mounting,
-  // and dropping a column is another render on top of that.
-  await nextTick()
-  await nextTick()
-  return rendered
-}
-
 const COMPARED_SLICES: DonutSlice[] = [
   { ...SLICES[0]!, previousValue: 60 },
   { ...SLICES[1]!, previousValue: 90 }
 ]
 
-test('keeps the comparison while the legend has the width for it', async () => {
-  const { container } = await renderChartAtWidth(900, COMPARED_SLICES)
-
-  expect(container).toHaveTextContent('Previous')
-  expect(container).toHaveTextContent('Change')
-})
-
-test('drops the comparison once the legend can no longer carry it', async () => {
-  const { container } = await renderChartAtWidth(200, COMPARED_SLICES)
-
-  expect(container).not.toHaveTextContent('Previous')
-  expect(container).not.toHaveTextContent('Change')
-  // The category and its current volume are what nobody can do without.
-  expect(container.querySelectorAll('th')).toHaveLength(3)
-})
-
-test('says that it is withholding the comparison rather than dropping it quietly', async () => {
-  const { queryByLabelText } = await renderChartAtWidth(200, COMPARED_SLICES)
+test('offers the note explaining a dropped comparison whenever there is one to drop', () => {
+  // Whether it is on screen is the container query's business, not jsdom's.
+  const { queryByLabelText } = renderChart(COMPARED_SLICES)
 
   expect(queryByLabelText('Why the comparison is not shown')).not.toBeNull()
 })
 
-test('says nothing about a comparison it was never given', async () => {
-  const { queryByLabelText } = await renderChartAtWidth(200, SLICES)
+test('says nothing about a comparison it was never given', () => {
+  const { queryByLabelText } = renderChart(SLICES)
 
   expect(queryByLabelText('Why the comparison is not shown')).toBeNull()
 })

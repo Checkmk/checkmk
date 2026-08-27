@@ -5,9 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type PieArcDatum, arc, pie } from 'd3-shape'
-import { computed, ref, useId, watch } from 'vue'
+import { computed, ref, useId } from 'vue'
 
 import { chartColorCss } from '../colors'
 import { DASH, formatDelta, noDelta } from '../format'
@@ -38,61 +37,9 @@ const shadingId = `donut-shading-${useId()}`
 // this fraction of it.
 const RING_INNER_OFFSET = `${(INNER_RADIUS / OUTER_RADIUS) * 100}%`
 
-// The eye column does not scale with the text; the value columns, the cell
-// padding and a recognisable stretch of name do.
-const COMPARISON_MIN_EM = 28
-const COMPARISON_MIN_PX = 20
-// Kept in step with --nf-donut-figure-min and --nf-donut-gap.
-const RING_MIN_PX = 80
-const GAP_EM = 0.75
-const DEFAULT_FONT_SIZE_PX = 16
-
-const rootRef = ref<HTMLElement | null>(null)
-const width = ref(0)
-const fontSize = ref(DEFAULT_FONT_SIZE_PX)
-
-function measure(element: HTMLElement): void {
-  width.value = element.getBoundingClientRect().width
-  fontSize.value = Number.parseFloat(getComputedStyle(element).fontSize) || DEFAULT_FONT_SIZE_PX
-}
-
-const { observe } = useResizeObserver((entries) => {
-  const entry = entries[0]
-  if (entry?.target instanceof HTMLElement) {
-    measure(entry.target)
-  }
-})
-observe(rootRef)
-
-// Ahead of the observer's first delivery, which arrives a frame late.
-watch(
-  rootRef,
-  (element) => {
-    if (element) {
-      measure(element)
-    }
-  },
-  { immediate: true }
-)
-
 const hasComparison = computed(() =>
   props.slices.some((slice) => slice.previousValue !== undefined)
 )
-
-// Measured against the width the legend has once the ring has given up
-// everything it can, so the ring can then be sized off the answer. Nothing
-// measured yet is not grounds for holding a column back.
-const comparisonFits = computed(() => {
-  if (width.value <= 0) {
-    return true
-  }
-  const forLegend = width.value - RING_MIN_PX - GAP_EM * fontSize.value
-  return forLegend >= COMPARISON_MIN_EM * fontSize.value + COMPARISON_MIN_PX
-})
-
-// Reserving the width of columns that carry no data would squeeze the ring for
-// nothing, so the width the legend asks for follows both.
-const showComparison = computed(() => hasComparison.value && comparisonFits.value)
 
 // The ring, the total and every share are recomputed over what is left.
 const hidden = ref(new Set<string>())
@@ -249,12 +196,8 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 
 <template>
   <div
-    ref="rootRef"
     class="network-flow-cmk-donut-chart"
-    :class="{
-      'network-flow-cmk-donut-chart--compact': props.legendMode === 'compact',
-      'network-flow-cmk-donut-chart--comparison': showComparison
-    }"
+    :class="{ 'network-flow-cmk-donut-chart--compact': props.legendMode === 'compact' }"
   >
     <div class="network-flow-cmk-donut-chart__figure">
       <svg
@@ -347,7 +290,6 @@ const legendRows = computed<DonutLegendRow[]>(() => {
       v-else
       :rows="legendRows"
       :previous-label="props.previousLabel"
-      :show-comparison="showComparison"
       :highlighted="highlighted"
       @toggle="toggleHidden"
       @highlight="highlight"
@@ -362,23 +304,13 @@ const legendRows = computed<DonutLegendRow[]>(() => {
 
 <style scoped>
 .network-flow-cmk-donut-chart {
-  /* What the legend needs before the ring is entitled to any width. Which of
-     the two applies is decided in script, from the same numbers. */
-  --nf-donut-legend-min: calc(16em + 20px);
-
   /* Past this the ring stops reading as a ring. */
   --nf-donut-figure-min: 80px;
 
   /* Not in cqw: this element is the container, so its own cq units would
      resolve against whatever box lies outside it. */
   --nf-donut-gap: 0.75em;
-
-  /* The legend is served first and the ring takes what is left: a ring 100px
-     across says what one 200px across says, a name clipped to "Un..." does not. */
-  --nf-donut-figure-size: max(
-    var(--nf-donut-figure-min),
-    min(40cqw, 100cqh, calc(100cqw - var(--nf-donut-legend-min) - var(--nf-donut-gap)))
-  );
+  --nf-donut-figure-size: min(40cqw, 100cqh);
 
   display: flex;
   gap: var(--nf-donut-gap);
@@ -395,11 +327,6 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   container: nf-donut / size;
 }
 
-/* Three more columns to make room for. */
-.network-flow-cmk-donut-chart--comparison {
-  --nf-donut-legend-min: calc(28em + 20px);
-}
-
 /* Stacked, the ring is bounded by the height it leaves the chips, so it
    competes with nothing for the width. */
 .network-flow-cmk-donut-chart--compact {
@@ -409,11 +336,15 @@ const legendRows = computed<DonutLegendRow[]>(() => {
   justify-content: center;
 }
 
+/* Shrinkable, and the legend below states the width its numbers need, so the
+   browser takes the difference out of the ring rather than out of the names.
+   The ratio keeps it round once flex has had its way with the width. */
 .network-flow-cmk-donut-chart__figure {
   position: relative;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   width: var(--nf-donut-figure-size);
-  height: var(--nf-donut-figure-size);
+  min-width: var(--nf-donut-figure-min);
+  aspect-ratio: 1;
 
   /* A container of its own, so what is written in the hole is measured against
      the ring rather than against the widget. */

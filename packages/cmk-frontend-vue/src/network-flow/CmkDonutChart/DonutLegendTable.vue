@@ -24,8 +24,6 @@ const props = defineProps<{
   highlighted: string | null
   /** Names the window the comparison is against; falls back to a bare label. */
   previousLabel?: string | undefined
-  /** Whether the widget is wide enough to carry the comparison columns. */
-  showComparison: boolean
 }>()
 
 defineEmits<{
@@ -37,11 +35,6 @@ defineEmits<{
 // Decided over the whole legend, not per row: a header that comes and goes with
 // the row under the pointer is worse than one column of dashes.
 const hasPrevious = computed(() => props.rows.some((row) => row.previousText !== null))
-
-// The chart measures, because the answer also settles how much width the ring
-// may have.
-const comparisonVisible = computed(() => hasPrevious.value && props.showComparison)
-const comparisonWithheld = computed(() => hasPrevious.value && !props.showComparison)
 
 const withheldHint = computed(() =>
   _t('%{previous} and %{change} are hidden: the widget is too narrow to carry them.', {
@@ -77,20 +70,20 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
               {{ _t('Visible') }}
             </span>
           </th>
-          <!-- Also on the cell, because contextual help renders nothing at all
-               for a user who has turned the help icons off. -->
           <th
-            class="network-flow-donut-legend-table__th"
-            :title="comparisonWithheld ? withheldHint : undefined"
+            class="network-flow-donut-legend-table__th network-flow-donut-legend-table__th--category"
           >
             <span class="network-flow-donut-legend-table__th-content">
               {{ _t('Category') }}
-              <CmkHelpText
-                v-if="comparisonWithheld"
-                :help="withheldHint"
-                :aria-label="_t('Why the comparison is not shown')"
-                use-portal
-              />
+              <!-- Rendered whenever there is a comparison to lose; shown only
+                   where the same query that drops it applies. -->
+              <span v-if="hasPrevious" class="network-flow-donut-legend-table__withheld">
+                <CmkHelpText
+                  :help="withheldHint"
+                  :aria-label="_t('Why the comparison is not shown')"
+                  use-portal
+                />
+              </span>
             </span>
           </th>
           <th
@@ -98,14 +91,14 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
           >
             {{ _t('Current') }}
           </th>
-          <template v-if="comparisonVisible">
+          <template v-if="hasPrevious">
             <th
               class="network-flow-donut-legend-table__th network-flow-donut-legend-table__th--value network-flow-donut-legend-table__th--comparison"
             >
               {{ previousLabel ?? _t('Previous') }}
             </th>
             <th
-              class="network-flow-donut-legend-table__th network-flow-donut-legend-table__th--value network-flow-donut-legend-table__th--change"
+              class="network-flow-donut-legend-table__th network-flow-donut-legend-table__th--value network-flow-donut-legend-table__th--comparison"
             >
               {{ _t('Change') }}
             </th>
@@ -124,7 +117,7 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
           @mouseenter="$emit('highlight', row.key)"
           @mouseleave="$emit('highlight', null)"
         >
-          <td class="network-flow-donut-legend-table__td">
+          <td class="network-flow-donut-legend-table__td network-flow-donut-legend-table__td--eye">
             <GraphLegendEyeButton
               :hidden="row.hidden"
               :aria-label="
@@ -135,7 +128,9 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
               @toggle="$emit('toggle', row.key)"
             />
           </td>
-          <td class="network-flow-donut-legend-table__td">
+          <td
+            class="network-flow-donut-legend-table__td network-flow-donut-legend-table__td--category"
+          >
             <span class="network-flow-donut-legend-table__category">
               <span
                 class="network-flow-donut-legend-table__swatch"
@@ -176,14 +171,14 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
           >
             {{ row.currentText }}
           </td>
-          <template v-if="comparisonVisible">
+          <template v-if="hasPrevious">
             <td
               class="network-flow-donut-legend-table__td network-flow-donut-legend-table__td--value network-flow-donut-legend-table__td--comparison"
             >
               {{ row.previousText }}
             </td>
             <td
-              class="network-flow-donut-legend-table__td network-flow-donut-legend-table__td--value network-flow-donut-legend-table__td--change"
+              class="network-flow-donut-legend-table__td network-flow-donut-legend-table__td--value network-flow-donut-legend-table__td--comparison"
             >
               <span class="network-flow-donut-legend-table__delta">
                 <CmkDeltaArrow
@@ -202,18 +197,17 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
 
 <style scoped>
 /* Sized off the chart's container query, so no container of its own here. */
+
+/* min-content, not 0: it is the table's own numbers saying how much width they
+   need, which is what the ring then gives way to. */
 .network-flow-donut-legend-table {
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 auto;
+  min-width: min-content;
 }
 
 .network-flow-donut-legend-table__table {
   width: 100%;
   border-collapse: collapse;
-
-  /* Fixed, so a value column can never push the table past the widget: the
-     category column absorbs the shortfall and its name truncates instead. */
-  table-layout: fixed;
 }
 
 /* On the cells, not on thead, which does not stick reliably. */
@@ -251,32 +245,39 @@ function deltaDirection(row: DonutLegendRow): 'up' | 'down' | null {
   vertical-align: middle;
 }
 
-.network-flow-donut-legend-table__th--eye {
-  /* The eye button is a hard 20x20 and does not scale with the text. */
-  width: 20px;
-}
-
+/* No width: the table sizes these to their content, so a formatted volume is
+   never clipped into a different one ("519.98 M" is not "519.98 MB"). The
+   category column is what gives way instead. */
 .network-flow-donut-legend-table__th--value,
 .network-flow-donut-legend-table__td--value {
-  /* Wide enough for a formatted volume, and em-relative so the column tracks
-     the text as the widget shrinks. */
-  width: 5.5em;
   font-variant-numeric: tabular-nums;
   text-align: right;
   white-space: nowrap;
 }
 
-/* Headed by the window it is against ("Prev 30 min"), which needs more room
-   than the figures under it. */
-.network-flow-donut-legend-table__th--comparison,
-.network-flow-donut-legend-table__td--comparison {
-  width: 6.5em;
+/* The one flexible column: it takes what the others leave, and a name too long
+   for that truncates rather than widening the table. The floor is what the
+   legend is for - a column narrow enough to hide the name is worth no width at
+   all - and it is what the ring gives way to. */
+.network-flow-donut-legend-table__th--category,
+.network-flow-donut-legend-table__td--category {
+  width: 100%;
+  min-width: 7em;
 }
 
-/* An arrow and a percentage; narrower than a formatted volume. */
-.network-flow-donut-legend-table__th--change,
-.network-flow-donut-legend-table__td--change {
-  width: 4.5em;
+/* The comparison is what goes when the numbers no longer fit beside a name
+   worth reading, and the note explaining that appears with it. */
+@container nf-donut (width >= 50em) {
+  .network-flow-donut-legend-table__withheld {
+    display: none;
+  }
+}
+
+@container nf-donut (width < 50em) {
+  .network-flow-donut-legend-table__th--comparison,
+  .network-flow-donut-legend-table__td--comparison {
+    display: none;
+  }
 }
 
 .network-flow-donut-legend-table__td {

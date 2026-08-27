@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 from typing import NamedTuple
@@ -32,7 +31,7 @@ def parse_sap_hana(info: StringTable) -> dict[str, StringTable]:
 
 
 def get_replication_state(raw: str) -> tuple[State, str, str]:
-    match raw:
+    match raw:  # type: ignore[exhaustive-match]
         case "0":
             return State.UNKNOWN, "unknown status from replication script", "state_unknown"
         case "10":

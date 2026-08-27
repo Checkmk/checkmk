@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import re
 from collections.abc import Sequence
@@ -65,7 +64,7 @@ def _parse_gcp_links(links_message: str) -> Sequence[str]:
 
 
 def _parse_error_message(exc_type: str, exc_message: str) -> str:
-    match exc_type:
+    match exc_type:  # type: ignore[exhaustive-match]
         case "PermissionDenied" if exc_message.startswith("403 Cloud Asset API"):
             return exc_message.split(" [links {", maxsplit=1)[0]
         case "PermissionDenied" if exc_message.startswith("403 Request denied by Cloud IAM"):

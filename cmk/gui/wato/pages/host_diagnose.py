@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 """Verify or find out a hosts agent related configuration"""
@@ -259,7 +258,7 @@ class ModeDiagHost(WatoMode):
         tcp_connect_timeouts_ruleset = all_rulesets.get("tcp_connect_timeouts")
         snmp_timing_ruleset = all_rulesets.get("snmp_timing")
         agent_port: int | None = None
-        match agent_ports_ruleset.analyse_ruleset(
+        match agent_ports_ruleset.analyse_ruleset(  # type: ignore[exhaustive-match]
             hostname=self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,
@@ -270,7 +269,7 @@ class ModeDiagHost(WatoMode):
                 pass
 
         tcp_connect_timeout: float | None = None
-        match tcp_connect_timeouts_ruleset.analyse_ruleset(
+        match tcp_connect_timeouts_ruleset.analyse_ruleset(  # type: ignore[exhaustive-match]
             hostname=self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,
@@ -281,7 +280,7 @@ class ModeDiagHost(WatoMode):
                 pass
 
         snmp_timing: dict[str, int] = {}
-        match snmp_timing_ruleset.analyse_ruleset(
+        match snmp_timing_ruleset.analyse_ruleset(  # type: ignore[exhaustive-match]
             hostname=self._hostname,
             svc_desc_or_item=None,
             svc_desc=None,

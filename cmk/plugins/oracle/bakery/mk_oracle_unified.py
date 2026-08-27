@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
@@ -482,7 +481,7 @@ def _get_oracle_additional_options(
                 pass
     permissions_check: bool | None = None
     permissions_safe_entries: list[str] | None = None
-    match options.validate_permissions:
+    match options.validate_permissions:  # type: ignore[exhaustive-match]
         case ("enabled", GuiOracleSafeEntries(safe_entries=entries)):
             permissions_check = True
             permissions_safe_entries = entries

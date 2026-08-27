@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
@@ -1141,7 +1140,7 @@ class ModeCreateHost(CreateHostMode):
             host_name = HostName("")
         tree = folder_tree()
         if prefill := request.get_ascii_input("prefill"):
-            match prefill:
+            match prefill:  # type: ignore[exhaustive-match]
                 case "snmp":
                     return Host(
                         folder=folder_from_request(tree, request.var("folder"), host_name),

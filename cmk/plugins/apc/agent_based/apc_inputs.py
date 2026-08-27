@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
 
@@ -47,7 +46,7 @@ def check_apc_inputs(item: str, params: Mapping[str, Any], section: StringTable)
     }
     for name, _location, state, alarm_status in section:
         if name == item:
-            match alarm_status:
+            match alarm_status:  # type: ignore[exhaustive-match]
                 case "2" | "4":
                     check_state = State.WARN
                 case "3":

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
@@ -467,7 +466,7 @@ def get_all_storage_readers() -> list[ABCHostsStorage]:
 
 
 def get_storage_format(format_option: object) -> StorageFormat:
-    match format_option:
+    match format_option:  # type: ignore[exhaustive-match]
         case None:
             return StorageFormat.PICKLE
         case StorageFormat() as already_parsed:

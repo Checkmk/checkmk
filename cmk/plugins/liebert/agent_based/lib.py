@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Callable, Mapping, Sequence
 
@@ -100,7 +99,7 @@ def temperature_to_celsius(reading: float, unit: str) -> float:
     '4.50'
 
     """
-    match unit.replace("deg ", "").lower():
+    match unit.replace("deg ", "").lower():  # type: ignore[exhaustive-match]
         case "c" | "%":
             # '%' should probably be dealt with elsewhere...
             return reading

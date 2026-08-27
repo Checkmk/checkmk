@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="unreachable"
 
@@ -63,7 +62,7 @@ def discover(section: Section) -> DiscoveryResult:
 
 
 def _abs_and_rel_levels(levels: tuple[str, LEVEL_TYPE]) -> tuple[LEVEL_TYPE, LEVEL_TYPE]:
-    match levels:
+    match levels:  # type: ignore[exhaustive-match]
         case "ignore":
             return None, None
         case ("abs_user", thresholds):

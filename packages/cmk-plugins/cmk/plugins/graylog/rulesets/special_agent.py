@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
@@ -261,7 +260,7 @@ rule_spec_special_agent_graylog = SpecialAgent(
 
 
 def _migrate_to_float(value: object) -> float:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case int(value) | float(value):
             return float(value)
     raise ValueError(value)

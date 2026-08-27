@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import abc
 import math
@@ -43,7 +42,7 @@ class _MetricNamesOrScalars:
     ]
 
     def collect_quantity_names(self, quantity: Quantity) -> None:
-        match quantity:
+        match quantity:  # type: ignore[exhaustive-match]
             case str():
                 self._metric_names.append(quantity)
             case metrics_v2_unstable.LowerWarningOf():
@@ -354,7 +353,7 @@ def _make_projection(
     # Note: if we have closed boundaries and a value exceeds the lower or upper limit then we use
     # the related limit. With this the value is always visible, we don't have any execption and the
     # perfometer is not filled resp. completely filled.
-    match focus_range.lower, focus_range.upper:
+    match focus_range.lower, focus_range.upper:  # type: ignore[exhaustive-match]
         case (
             perfometers_v1.Closed() | perfometers_v2_unstable.Closed(),
             perfometers_v1.Closed() | perfometers_v2_unstable.Closed(),

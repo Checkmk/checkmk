@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
@@ -290,7 +289,7 @@ def check_oracle_diva_csm_tapes(
     except IndexError:
         return
 
-    match params["levels_lower"]:
+    match params["levels_lower"]:  # type: ignore[exhaustive-match]
         case None:
             levels_lower: LevelsT = ("no_levels", None)
         case (warn, crit):

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 import re
@@ -84,7 +83,7 @@ class NTPMessageSection:
 
 
 def _strip_sign(time_string: str) -> tuple[str, int]:
-    match time_string[0]:
+    match time_string[0]:  # type: ignore[exhaustive-match]
         case "-":
             return time_string[1:], -1
         case "+":

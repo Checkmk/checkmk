@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import re
 from collections import Counter
@@ -56,7 +55,7 @@ def parse_zypper(string_table: StringTable) -> Section:
         return Error(firstline)
 
     for line in string_table:
-        match line:
+        match line:  # type: ignore[exhaustive-match]
             case [_, _, _, pt, n] | [_, _, _, pt, n, _] | [_, _, pt, _, _, n, *_]:
                 if (patch_type := pt.strip()) and n.lower().strip() == "needed":
                     patch_types.append(patch_type)

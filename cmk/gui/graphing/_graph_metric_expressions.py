@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
-
 
 import functools
 import json
@@ -464,7 +462,7 @@ graph_metric_expression_registry = GraphMetricExpressionRegistry()
 
 
 def parse_graph_metric_expression(raw: object) -> GraphMetricExpression:
-    match raw:
+    match raw:  # type: ignore[exhaustive-match]
         case GraphMetricExpression():
             return raw
         case {"ident": str(ident), **rest}:

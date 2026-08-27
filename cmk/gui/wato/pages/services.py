@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
@@ -904,7 +903,7 @@ class DiscoveryPageRenderer:
             # Colored overall state field
             html.open_div(class_="state_bar state%s" % overall_state)
             html.open_span()
-            match overall_state:
+            match overall_state:  # type: ignore[exhaustive-match]
                 case 0:
                     html.static_icon(StaticIcon(IconNames.check))
                 case 1:
@@ -1086,7 +1085,7 @@ class DiscoveryPageRenderer:
         messages = []
         for current_table, num in changed_entry.current_tables_with_count.items():
             use_plural = num > 1 or len(changed_entry.current_tables_with_count) > 1
-            match current_table:
+            match current_table:  # type: ignore[exhaustive-match]
                 case DiscoveryState.UNDECIDED:
                     messages.append(
                         _(
@@ -1375,7 +1374,7 @@ class DiscoveryPageRenderer:
         if not user.may("wato.services"):
             return
 
-        match table_source:
+        match table_source:  # type: ignore[exhaustive-match]
             case DiscoveryState.MONITORED | DiscoveryState.CHANGED:
                 if has_modification_specific_permissions(UpdateType.UNDECIDED):
                     self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
@@ -1735,7 +1734,7 @@ class DiscoveryPageRenderer:
         checkbox_name = checkbox_id(entry.check_plugin_name, entry.item)
 
         num_buttons = 0
-        match entry.check_source:
+        match entry.check_source:  # type: ignore[exhaustive-match]
             case DiscoveryState.CHANGED:
                 if has_modification_specific_permissions(UpdateType.MONITORED):
                     html.icon_button(

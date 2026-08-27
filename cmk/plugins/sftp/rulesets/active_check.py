@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Mapping
 
@@ -26,7 +25,7 @@ from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 
 def _migrate_from_tuple(params: object) -> Mapping[str, object]:
-    match params:
+    match params:  # type: ignore[exhaustive-match]
         case (str(host), str(user), (str(secret_type), str(secret)), {**rest}):
             return {
                 "host": host,
@@ -40,7 +39,7 @@ def _migrate_from_tuple(params: object) -> Mapping[str, object]:
 
 
 def _migrate_put_params(params: object) -> Mapping[str, object]:
-    match params:
+    match params:  # type: ignore[exhaustive-match]
         case (str(local), str(remote)):
             return {"local": local, "remote": remote}
         case dict():
@@ -49,7 +48,7 @@ def _migrate_put_params(params: object) -> Mapping[str, object]:
 
 
 def _migrate_get_params(params: object) -> Mapping[str, object]:
-    match params:
+    match params:  # type: ignore[exhaustive-match]
         case (str(remote), str(local)):
             return {"local": local, "remote": remote}
         case dict():

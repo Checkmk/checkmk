@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
@@ -248,7 +247,7 @@ def check_oracle_dataguard_stats(item: str, params: Mapping[str, Any], section: 
 
 
 def _modernize_levels(levels: None | tuple) -> LevelsT:
-    match levels:
+    match levels:  # type: ignore[exhaustive-match]
         case None | (None, None):
             return ("no_levels", None)
         case (warn, crit):

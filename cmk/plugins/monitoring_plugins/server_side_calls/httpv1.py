@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -236,7 +235,7 @@ def _cert_arguments(
     host: DirectHost | ProxyHost, settings: HttpModeCertParams
 ) -> list[str | Secret]:
     args: list[str | Secret] = []
-    match settings.cert_days:
+    match settings.cert_days:  # type: ignore[exhaustive-match]
         case ("fixed", (float(warn), float(crit))):
             args += ["-C", "%d,%d" % (int(warn / _SECONDS_PER_DAY), int(crit / _SECONDS_PER_DAY))]
     if isinstance(host, ProxyHost):
@@ -269,7 +268,7 @@ def _url_arguments(
     if (uri := settings.uri) is not None:
         args += ["-u", replace_macros(uri, host_config.macros)]
 
-    match settings.ssl:
+    match settings.ssl:  # type: ignore[exhaustive-match]
         case "auto":
             args.append("--ssl")
         case str(settings_ssl):
@@ -283,7 +282,7 @@ def _url_arguments(
             args.append("--ssl=%s" % ssl)
 
     if (response_time := settings.response_time) is not None:
-        match response_time:
+        match response_time:  # type: ignore[exhaustive-match]
             case ("fixed", (float(warn), float(crit))):
                 args += ["-w", "%f" % warn, "-c", "%f" % crit]
 
@@ -355,7 +354,7 @@ def _common_args(
     host_config: HostConfig,
 ) -> list[str | Secret]:
     args: list[str | Secret] = []
-    match host.settings.family:
+    match host.settings.family:  # type: ignore[exhaustive-match]
         case Family.ipv4:
             args.append("-4")
         case Family.ipv6:

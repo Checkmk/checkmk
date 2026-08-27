@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 import ipaddress
@@ -214,7 +213,7 @@ def _migrate_form_specs(p: object) -> dict[str, object]:
 
 
 def _migrate_namespaces(p: object) -> tuple[str, list[str]]:
-    match p:
+    match p:  # type: ignore[exhaustive-match]
         case (str(k), list(patterns)):
             return (k.replace("-", "_"), patterns)
     raise TypeError(p)
@@ -232,7 +231,7 @@ def _migrate_cluster_resource_aggregation(p: object) -> tuple[str, list[str] | N
 
 
 def _migrate_import_annotations(p: object) -> tuple[str, object]:
-    match p:
+    match p:  # type: ignore[exhaustive-match]
         case "include-annotations-as-host-labels":
             return "include_annotations_as_host_labels", None
         case "include-matching-annotations-as-host-labels", str(pattern):

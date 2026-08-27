@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 import time
@@ -196,7 +195,7 @@ def check_livestatus_status(
 
 
 def _make_levels(raw_days: tuple[float | None, float | None]) -> None | tuple[float, float]:
-    match raw_days:
+    match raw_days:  # type: ignore[exhaustive-match]
         case float(w), float(c):
             return (w * 86400.0, c * 86400.0)
     return None

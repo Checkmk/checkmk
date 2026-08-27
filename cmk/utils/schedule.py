@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 # Computes for a scheduling entry the last/next time that this entry
 # should have run or will be run. Such a scheduling entry is specified
@@ -153,7 +152,7 @@ def _get_schedule(period: str | tuple[str, int], timeofday: tuple[int, int]) -> 
     if period == "day":
         return DaySchedule(t)
     assert isinstance(period, tuple)
-    match period[0]:
+    match period[0]:  # type: ignore[exhaustive-match]
         case "week":
             return WeekSchedule(period[1], t)
         case "month_begin":

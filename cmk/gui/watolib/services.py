@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 
@@ -432,7 +431,7 @@ class Discovery:
 
     def _verify_permissions(self, table_target: str, entry: CheckPreviewEntry) -> None:
         if entry.check_source != table_target:
-            match table_target:
+            match table_target:  # type: ignore[exhaustive-match]
                 case DiscoveryState.UNDECIDED:
                     self.user_need_permission("wato.service_discovery_to_undecided")
                 case (
@@ -457,7 +456,7 @@ class Discovery:
             entry.old_labels,
         )
         if entry.check_source != table_target:
-            match table_target:
+            match table_target:  # type: ignore[exhaustive-match]
                 case (
                     DiscoveryState.MONITORED
                     | DiscoveryState.CHANGED
@@ -906,7 +905,7 @@ def _apply_state_change(
     add_disabled_rule: set[str],
     remove_disabled_rule: set[str],
 ) -> None:
-    match table_source:
+    match table_source:  # type: ignore[exhaustive-match]
         case DiscoveryState.UNDECIDED:
             _case_undecided(
                 table_target,

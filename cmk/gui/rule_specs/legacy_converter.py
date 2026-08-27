@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
@@ -1906,7 +1905,7 @@ LevelsConfigModel = (
 
 
 def _transform_levels_forth(value: object) -> LevelsConfigLegacyModel:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "no_levels", None:
             return "no_levels", None
         case "fixed", tuple(fixed_levels):
@@ -1976,7 +1975,7 @@ def _convert_to_legacy_levels[NumberT: (int, float)](
             )
         )
 
-    match to_convert.form_spec_template:
+    match to_convert.form_spec_template:  # type: ignore[exhaustive-match]
         case (
             ruleset_api_v1.form_specs.Float()
             | ruleset_api_v1.form_specs.TimeSpan()
@@ -2041,7 +2040,7 @@ def _make_levels_default_value[NumberT: (int, float)](
 
 
 def _transform_proxy_forth(value: object) -> tuple[str, str | None]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "cmk_postprocessed", "environment_proxy", str():
             return "environment", "environment"
         case "cmk_postprocessed", "no_proxy", str():
@@ -2061,7 +2060,7 @@ def _transform_proxy_back(
     Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
     str,
 ]:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
         case "no_proxy", None:
@@ -2651,7 +2650,7 @@ def _convert_to_legacy_text_area(
 
 
 def _transform_timeperiod_forth(value: object) -> str | None:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "cmk_postprocessed", "stored_time_period", str(time_period):
             return time_period
         # time_period is None when adding a new rule

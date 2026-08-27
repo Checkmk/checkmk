@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
@@ -53,7 +52,7 @@ def check_tsm_scratch(item: str, params: Mapping[str, Any], section: Section) ->
         return
 
     levels_lower = params["levels_lower"]
-    match levels_lower:
+    match levels_lower:  # type: ignore[exhaustive-match]
         case None:
             levels_lower = ("no_levels", None)
 

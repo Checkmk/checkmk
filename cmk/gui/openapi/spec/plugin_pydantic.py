@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
@@ -142,7 +141,7 @@ class CheckmkGenerateJsonSchema(GenerateJsonSchema):
         )
 
     def _contains_omitted(self, schema: core_schema.CoreSchema) -> bool:
-        match schema["type"]:
+        match schema["type"]:  # type: ignore[exhaustive-match]
             case "is-instance":
                 return schema["cls"] is ApiOmitted
             case "default" | "nullable":

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import ipaddress
 from typing import Literal
@@ -64,7 +63,7 @@ def _migrate_to_password(
 ) -> tuple[
     Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
 ]:
-    match model:
+    match model:  # type: ignore[exhaustive-match]
         # old password format
         case str(password):
             return (

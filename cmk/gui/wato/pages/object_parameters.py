@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 """Mode for displaying and modifying the rule based host and service
@@ -713,7 +712,7 @@ class ModeObjectParameters(WatoMode):
 
 
 def _get_irrelevant_rulesets(service: str | None) -> Container[str]:
-    match service:
+    match service:  # type: ignore[exhaustive-match]
         case "Check_MK Discovery":
             return {
                 # These two are not considered for the discovery service.

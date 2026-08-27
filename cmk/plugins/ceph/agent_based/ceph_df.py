@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 import re
@@ -86,7 +85,7 @@ def parse_ceph_df(string_table: StringTable) -> FSBlocks:
             continue
 
         if section == "pools":
-            match line:
+            match line:  # type: ignore[exhaustive-match]
                 case [
                     "NAME",
                     "ID",

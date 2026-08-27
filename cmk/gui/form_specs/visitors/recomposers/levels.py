@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 import dataclasses
@@ -75,7 +74,7 @@ def _transform_from_disk[NumberT: (int, float)](
     if isinstance(value, FrontendDefaultValue):
         return value
 
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "no_levels", None:
             return "no_levels", None
         case "fixed", tuple(fixed_levels):
@@ -98,7 +97,7 @@ def _wrapped_transform_to_disk[NumberT: (int, float)](
     def _transform_to_disk(
         value: object,
     ) -> _LevelsConfigModel[NumberT]:
-        match value:
+        match value:  # type: ignore[exhaustive-match]
             case "no_levels", None:
                 return "no_levels", None
             case "fixed", tuple(fixed_levels):

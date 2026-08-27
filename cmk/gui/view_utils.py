@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
@@ -168,7 +167,7 @@ def _normalize_check_http_link(output: str) -> str:
 def _render_icon_button(output: str) -> str:
     buffer = []
     for idx, token in enumerate(re.split(r"([\"']?)" + _URL_PATTERN + r"(\1)", output)):
-        match idx % 4:
+        match idx % 4:  # type: ignore[exhaustive-match]
             case 0:
                 buffer.append(escaping.escape_attribute(token))
             case 2:

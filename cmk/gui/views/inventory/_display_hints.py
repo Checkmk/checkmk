@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
@@ -1026,7 +1025,7 @@ def _parse_col_filter_from_legacy(
             ident=filter_ident,
             title=title,
         )
-    match filter_class.__name__:
+    match filter_class.__name__:  # type: ignore[exhaustive-match]
         case "FilterInvtableAdminStatus":
             return FilterInvtableChoice(
                 inv_info=table_view_name,
@@ -1597,7 +1596,7 @@ def find_non_canonical_filters(
             continue
         if inv_path.source == inventory.TreeSource.attributes:
             name = "_".join(["inv"] + [str(e) for e in inv_path.path] + [str(inv_path.key)])
-            match legacy_hint.get("paint"):
+            match legacy_hint.get("paint"):  # type: ignore[exhaustive-match]
                 case "bytes" | "bytes_rounded":
                     filters[name] = FilterMigrationScale(name=name, prefix="M")
                 case "hz":
@@ -1610,7 +1609,7 @@ def find_non_canonical_filters(
             and (legacy_filter := legacy_hint.get("filter"))
         ):
             name = f"{_parse_view_name(view_name)}_{inv_path.key}"
-            match legacy_filter.__class__.__name__:
+            match legacy_filter.__class__.__name__:  # type: ignore[exhaustive-match]
                 case "FilterInvtableOperStatus":
                     filters.setdefault(
                         name,

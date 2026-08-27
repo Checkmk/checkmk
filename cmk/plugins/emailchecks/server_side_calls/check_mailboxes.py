@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterable, Sequence
 from typing import Literal
@@ -41,15 +40,15 @@ def check_mailboxes_arguments(
         *timeout_to_args(params.connect_timeout),
     ]
 
-    match params.age:
+    match params.age:  # type: ignore[exhaustive-match]
         case ("fixed", (warn, crit)):
             args += [f"--warn-age-oldest={warn:.0f}", f"--crit-age-oldest={crit:.0f}"]
 
-    match params.age_newest:
+    match params.age_newest:  # type: ignore[exhaustive-match]
         case ("fixed", (warn, crit)):
             args += [f"--warn-age-newest={warn:.0f}", f"--crit-age-newest={crit:.0f}"]
 
-    match params.count:
+    match params.count:  # type: ignore[exhaustive-match]
         case ("fixed", (warn, crit)):
             args += [f"--warn-count={warn}", f"--crit-count={crit}"]
 

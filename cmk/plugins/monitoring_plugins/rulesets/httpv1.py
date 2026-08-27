@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
@@ -38,14 +37,14 @@ from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 
 def _migrate_to_float(value: object) -> float:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case int(value) | float(value):
             return float(value)
     raise ValueError(value)
 
 
 def _migrate_ssl_choices(value: object) -> str:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "1.1":
             return "ssl_1_1"
         case "1.2":
@@ -58,7 +57,7 @@ def _migrate_ssl_choices(value: object) -> str:
 
 
 def _migrate_address_family_choices(value: object) -> str:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "ipv4":
             return "any"
         case "ipv6":
@@ -71,7 +70,7 @@ def _migrate_address_family_choices(value: object) -> str:
 
 
 def _migrate_to_auth(value: object) -> dict:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case {**val}:
             return val
         case (str(user), password):
@@ -80,7 +79,7 @@ def _migrate_to_auth(value: object) -> dict:
 
 
 def _migrate_to_post_data(value: object) -> dict:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case {**val}:
             return val
         case (str(data), str(content_type)):
@@ -89,7 +88,7 @@ def _migrate_to_post_data(value: object) -> dict:
 
 
 def _migrate_to_page_size(value: object) -> dict:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case {**val}:
             return val
         case (int(minimum), int(maximum)):
@@ -111,7 +110,7 @@ def _migrate_to_expect_regex(value: object) -> dict:
 
 
 def _migrate_http_method(value: object) -> str:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "CONNECT:POST":
             return "CONNECT_POST"
         case (

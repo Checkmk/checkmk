@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="type-arg"
 
 from typing import NotRequired, TypedDict
@@ -111,7 +110,7 @@ def scale_predictive(p: dict, factor: float) -> dict:
 
 
 def _scale_predictive_element(k: str, v: object, factor: float) -> object:
-    match k, v:
+    match k, v:  # type: ignore[exhaustive-match]
         case "levels_upper" | "levels_lower", (type_, (float(warn), float(crit))):
             return (type_, (warn * factor, crit * factor) if type_ == "absolute" else (warn, crit))
         case "levels_upper_min", (float(warn), float(crit)):

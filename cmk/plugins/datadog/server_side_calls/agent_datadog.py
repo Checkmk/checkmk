@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterator, Sequence
 
@@ -75,7 +74,7 @@ def agent_datadog_arguments(
         params.instance.api_host,
     ]
 
-    match params.proxy:
+    match params.proxy:  # type: ignore[exhaustive-match]
         case URLProxy(url=url):
             args += ["--proxy", url]
         case EnvProxy():

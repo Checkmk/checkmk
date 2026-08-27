@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="possibly-undefined"
 
 from pathlib import Path
@@ -31,7 +30,7 @@ class TSMConfig(TypedDict):
 
 def get_mk_tsm_files(conf: TSMConfig) -> FileGenerator:
     deployment = conf.get("deployment", ("do_not_deploy", 0.0))
-    match deployment:
+    match deployment:  # type: ignore[exhaustive-match]
         case "do_not_deploy", _:
             return
         case "cached", float(raw_interval):

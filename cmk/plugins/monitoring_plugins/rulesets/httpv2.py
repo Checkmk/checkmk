@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
@@ -676,7 +675,7 @@ def _valuespec_content() -> Dictionary:
 
 
 def _migrate_to_cascading(params: object) -> tuple[str, object]:
-    match params:
+    match params:  # type: ignore[exhaustive-match]
         case "validate", tuple(value):
             return "validate", value
         case "no_validation", None:

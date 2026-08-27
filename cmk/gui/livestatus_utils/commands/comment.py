@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 """This module contains helpers to set comments for host and service."""
 
@@ -99,7 +98,7 @@ def get_comments(
 
     q = comments_query().filter(query) if query else comments_query()
 
-    match collection_name:
+    match collection_name:  # type: ignore[exhaustive-match]
         case CollectionName.host:
             q = q.filter(Comments.is_service.equals(0))
 

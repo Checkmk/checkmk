@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Mapping
 
@@ -121,7 +120,7 @@ def _parameter_form() -> Dictionary:
 
 
 def _migrate_tuple_to_dict(param: object) -> Mapping[str, object]:
-    match param:
+    match param:  # type: ignore[exhaustive-match]
         case (username, password):
             return {"username": username, "password": password}
         case dict() as already_migrated:

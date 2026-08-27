@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 import enum
@@ -236,7 +235,7 @@ class IPNetworkAdapter:
 
 
 def _to_item_appearance(value: str) -> _ItemAppearance:
-    match value:
+    match value:  # type: ignore[exhaustive-match]
         case "index" | "descr" | "alias" | "name":
             return value
     raise ValueError(f"Invalid item appearance: {value}")
@@ -1183,7 +1182,7 @@ def _compute_item[TInterfaceType: (InterfaceWithCounters, InterfaceWithRates)](
     section: Section[TInterfaceType],
     pad_portnumbers: bool,
 ) -> ItemInfo:
-    match configured_item_appearance:
+    match configured_item_appearance:  # type: ignore[exhaustive-match]
         case "descr":
             if attributes.descr:
                 return ItemInfo(

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import ipaddress
 from collections.abc import Mapping
@@ -40,7 +39,7 @@ def _validate_ip_address(value: str) -> None:
 
 
 def _migrate_host(param: object) -> tuple[str, str]:
-    match param:
+    match param:  # type: ignore[exhaustive-match]
         case "use_parent_host":
             return ("use_parent_host", "")
         case "define_host", str(host):
@@ -51,7 +50,7 @@ def _migrate_host(param: object) -> tuple[str, str]:
 
 
 def _migrate_auth_tuple(params: object) -> Mapping[str, object]:
-    match params:
+    match params:  # type: ignore[exhaustive-match]
         case (user, password):
             return {"user": user, "password": password}
         case {"user": user, "password": password}:

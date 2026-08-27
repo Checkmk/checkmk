@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="possibly-undefined"
 
 # Example output from agent:
@@ -64,7 +63,7 @@ def parse_megaraid_pdisks(
     enclosure_devid = -181
     predictive_failure_count = None
     for line in string_table:
-        match line:
+        match line:  # type: ignore[exhaustive-match]
             case ["adapter", adapter_id]:
                 current_adapter = {}
                 adapters[int(adapter_id)] = current_adapter

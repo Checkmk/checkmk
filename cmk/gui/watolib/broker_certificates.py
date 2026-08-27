@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 import abc
 import logging
@@ -187,7 +186,7 @@ def ask_remote_csr(
         debug=debug,
     )
 
-    match raw_response:
+    match raw_response:  # type: ignore[exhaustive-match]
         case {"csr": bytes(raw_csr)}:
             return load_pem_x509_csr(raw_csr)
 

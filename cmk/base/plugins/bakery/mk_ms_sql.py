@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterable, Sequence
 from pathlib import Path
@@ -263,7 +262,7 @@ def _to_sql_section(kind: _SectionType) -> SqlSection | None:
     if kind == "sync":
         return None
     section = SqlSection()
-    match kind:
+    match kind:  # type: ignore[exhaustive-match]
         case "async":
             section["is_async"] = True
         case "disabled":
@@ -276,7 +275,7 @@ def _to_sql_discovery(discovery: GuiDiscovery) -> SqlDiscovery:
     d = SqlDiscovery(detect=discovery[0])
     combi_list = discovery[1]
     if isinstance(combi_list, tuple):
-        match combi_list[0]:
+        match combi_list[0]:  # type: ignore[exhaustive-match]
             case "include":
                 d["include"] = combi_list[1]
             case "exclude":

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 # Relevant SNMP OIDs:
@@ -349,7 +348,7 @@ def _calculate_bandwidth(
         except KeyError:
             continue
 
-        match qos_unit:
+        match qos_unit:  # type: ignore[exhaustive-match]
             case _QueueingBandwidthUnits.KBPS:
                 bandwidth = qos_bandwidth * 1000
             case _QueueingBandwidthUnits.PERCENTAGE:

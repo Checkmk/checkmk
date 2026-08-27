@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 # mypy: disable-error-code="explicit-any"
 
 # We use the following OIDs:
@@ -105,7 +104,7 @@ def check_apc_test(params: Mapping[str, Any], section: StringTable) -> CheckResu
     )
 
     state = State.OK
-    match params:
+    match params:  # type: ignore[exhaustive-match]
         case {"levels_elapsed_time": ("fixed", (warn, crit))}:
             if days_diff >= crit:
                 state = State.CRIT

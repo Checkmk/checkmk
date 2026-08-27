@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Mapping
 
@@ -16,7 +15,7 @@ from cmk.ruleset_matcher.definition import RuleGroup
 
 
 def _migrate_mk_msoffice(param: object) -> Mapping[str, str] | None:
-    match param:
+    match param:  # type: ignore[exhaustive-match]
         case None:
             return None
         case {

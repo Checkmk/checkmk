@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
-
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
@@ -213,7 +211,7 @@ graph_specification_registry = GraphSpecificationRegistry()
 
 
 def parse_graph_specification(graph_specification: object) -> GraphSpecification:
-    match graph_specification:
+    match graph_specification:  # type: ignore[exhaustive-match]
         case GraphSpecification():
             return graph_specification
         case {"graph_type": str(graph_type), **rest}:

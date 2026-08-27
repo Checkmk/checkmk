@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
 
 from collections.abc import Iterable, Mapping, Sequence
 from typing import cast, Literal
@@ -152,7 +151,7 @@ def aws_arguments(
     auth = params.auth
     access = params.access or APIAccess()
 
-    match auth:
+    match auth:  # type: ignore[exhaustive-match]
         case ("sts", sts):
             assert isinstance(sts, AuthSts)
             args.extend(("--assume-role", "--role-arn", sts.role_arn_id))

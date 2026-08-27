@@ -1477,32 +1477,8 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
         if files := self._get_files():
             for plugin_filepath in files:
                 match plugin_filepath.parent.name:
-                    case "metrics" | "perfometer":
-                        yield compute_deprecation_result(
-                            version=__version__,
-                            deprecated_version="2.3.0",
-                            removed_version="2.4.0",
-                            title_entity=(
-                                _("Legacy GUI extension in %(plugin_name)r")
-                                % {"plugin_name": plugin_filepath.parent.name}
-                            ),
-                            title_api=_("legacy"),
-                            site_id=site_id,
-                            path=plugin_filepath,
-                        )
-                    case "wato":
-                        yield compute_deprecation_result(
-                            version=__version__,
-                            deprecated_version="2.4.0",
-                            removed_version="2.5.0",
-                            title_entity=(
-                                _("Legacy GUI extension in %(plugin_name)r")
-                                % {"plugin_name": plugin_filepath.parent.name}
-                            ),
-                            title_api=_("legacy"),
-                            site_id=site_id,
-                            path=plugin_filepath,
-                        )
+                    case "metrics" | "perfometer" | "wato":
+                        pass  # We've been warning for those for long enough now.
                     case "views":
                         yield _compute_deprecation_result_of_views_plugin(site_id, plugin_filepath)
                     case _:

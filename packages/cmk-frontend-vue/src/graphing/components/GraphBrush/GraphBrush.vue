@@ -5,13 +5,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import useId from 'cmk-ui-library/lib/useId'
-import { area } from 'd3-shape'
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { scaleLinear, scaleTime } from 'd3-scale'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import type { TimeInterval, TimeRangeCommitKind } from '../../types'
 import type { Metric, RequestedTimeRange, TimeRange } from '../TimeSeriesGraph'
-import { timestampAt } from '../TimeSeriesGraph/axes/timeAxis'
+import { drawData } from '../TimeSeriesGraph/render'
+import {
+  composeSeries,
+  composedValueDomain,
+  createM4CacheStore
+} from '../TimeSeriesGraph/render/composeSeries'
+import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import {
   type BrushMode,
   clampMove,
@@ -23,18 +28,22 @@ import {
   resizeRight,
   timeToPx
 } from './geometry'
-import { computeSparklineBands, formatOverviewExtent, formatWindowPreview } from './utils'
+import { formatOverviewExtent, formatWindowPreview } from './utils'
 
-const props = defineProps<{
-  metrics: Metric[] // coarse overview series
-  domain: TimeInterval // strip extent
-  dataDomain: TimeRange
-  window: { start: number; end: number }
-  minSpan: number | null
-  width: number // figure width (px)
-  plotLeft: number // track left inset (= renderer MARGIN.left)
-  plotWidth: number // track width (= plot width)
-}>()
+const props = withDefaults(
+  defineProps<{
+    metrics: Metric[] // coarse overview series
+    domain: TimeInterval // strip extent
+    dataDomain: TimeRange
+    window: { start: number; end: number }
+    minSpan: number | null
+    width: number // figure width (px)
+    plotLeft: number // track left inset (= renderer MARGIN.left)
+    plotWidth: number // track width (= plot width)
+    consolidationFn?: ConsolidationFn
+  }>(),
+  { consolidationFn: DEFAULT_CONSOLIDATION_FN }
+)
 
 const emit = defineEmits<{
   'update:requestedTimeRange': [RequestedTimeRange, TimeRangeCommitKind]
@@ -69,29 +78,69 @@ const toPx = (time: number) =>
 const toTime = (px: number) =>
   pxToTime(px, props.domain.start, props.domain.end, props.plotLeft, props.plotWidth)
 
-const sparklinePaths = computed<{ d: string; color: string }[]>(() => {
-  const { bands, sampleCount, yMin, yMax } = computeSparklineBands(props.metrics)
-  if (sampleCount === 0) {
-    return []
-  }
-  const sampleTimes = Array.from({ length: sampleCount }, (_, i) =>
-    timestampAt(props.dataDomain, i)
-  )
-  const withinStrip = (i: number) =>
-    sampleTimes[i]! >= props.domain.start && sampleTimes[i]! <= props.domain.end
-  const span = yMax - yMin || 1
-  // Maps the value domain into the strip (STRIP_TOP..STRIP_BOTTOM); the move-bar sits below it.
-  const yPx = (value: number) => STRIP_BOTTOM - ((value - yMin) / span) * STRIP_H
+// The strip is the plot's renderer pointed at a coarser fetch over a wider extent, so that a
+// series cannot read as one shape here and another there. Only the stroke weights are the
+// strip's own: the plot's would leave 32px of height reading as mostly stroke.
+const M4_BUCKETS = 4000
+const STRIP_LINE_WIDTH = 1
+const STRIP_BAND_STROKE_WIDTH = 0.5
 
-  return bands.map(({ lower, upper, color }) => {
-    const gen = area<number>()
-      .defined((_, i) => withinStrip(i))
-      .x((_, i) => toPx(sampleTimes[i]!))
-      .y0((_, i) => yPx(lower[i]!))
-      .y1((_, i) => yPx(upper[i]!))
-    return { d: gen(lower) ?? '', color }
+const waveformCanvas = ref<HTMLCanvasElement | null>(null)
+const m4CacheStore = createM4CacheStore(M4_BUCKETS)
+const waveformXScale = scaleTime()
+const waveformYScale = scaleLinear()
+
+function drawWaveform(): void {
+  const canvasEl = waveformCanvas.value
+  const ctx = canvasEl?.getContext('2d')
+  if (!canvasEl || !ctx) {
+    return
+  }
+
+  const composed = composeSeries({
+    metrics: props.metrics,
+    cache: m4CacheStore.ensure(props.metrics, props.dataDomain),
+    visibleTimeRange: [props.domain.start, props.domain.end],
+    columnCount: Math.max(1, Math.floor(props.plotWidth)),
+    consolidation: props.consolidationFn
   })
-})
+  const [yMin, yMax] = composedValueDomain(props.metrics, composed)
+
+  waveformXScale
+    .domain([new Date(props.domain.start * 1000), new Date(props.domain.end * 1000)])
+    .range([0, props.plotWidth])
+  waveformYScale.domain([yMin, yMax]).range([STRIP_H, 0])
+
+  const dpr = window.devicePixelRatio || 1
+  canvasEl.width = Math.round(props.plotWidth * dpr)
+  canvasEl.height = Math.round(STRIP_H * dpr)
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+  ctx.clearRect(0, 0, props.plotWidth, STRIP_H)
+
+  drawData(
+    ctx,
+    props.metrics,
+    composed.paddedBuckets,
+    composed.stacks,
+    waveformXScale,
+    waveformYScale,
+    {
+      interpolator: 'linear',
+      lineWidth: STRIP_LINE_WIDTH,
+      bandStrokeWidth: STRIP_BAND_STROKE_WIDTH
+    },
+    // Highlighting a legend entry dims the plot only; the strip is a fixed overview.
+    null
+  )
+}
+
+onMounted(drawWaveform)
+// The selection window moves over the waveform without changing it, so a drag redraws the
+// scrims below and leaves the canvas alone.
+watch(
+  () => [props.metrics, props.domain, props.dataDomain, props.plotWidth, props.consolidationFn],
+  drawWaveform
+)
 
 const svgRef = ref<SVGSVGElement | null>(null)
 const preview = ref<{ start: number; end: number } | null>(null)
@@ -117,7 +166,13 @@ const edgeHandles = computed(() =>
 
 const rangeLabel = computed(() => formatOverviewExtent(props.domain))
 
-const windowClipId = `brush-window-clip-${useId()}`
+const windowScrims = computed(() => {
+  const trackRight = props.plotLeft + props.plotWidth
+  return [
+    { x: props.plotLeft, width: Math.max(0, winLeftPx.value - props.plotLeft) },
+    { x: winRightPx.value, width: Math.max(0, trackRight - winRightPx.value) }
+  ]
+})
 
 const windowPreview = computed(() => formatWindowPreview(winRange.value))
 const windowLabelX = computed(() => (winLeftPx.value + winRightPx.value) / 2)
@@ -227,6 +282,27 @@ onBeforeUnmount(() => {
     :class="{ 'graphing-graph-brush--dragging': dragging }"
     :style="{ width: `${width}px`, height: `${HEIGHT}px` }"
   >
+    <!-- Behind the canvas so the track reads as the waveform's ground; the track's border is
+         restated by the stroke-only rect in the svg above, which the canvas would else cover. -->
+    <div
+      class="graphing-graph-brush__track-fill"
+      :style="{
+        left: `${plotLeft}px`,
+        top: `${TRACK_TOP}px`,
+        width: `${plotWidth}px`,
+        height: `${TRACK_H}px`
+      }"
+    />
+    <canvas
+      ref="waveformCanvas"
+      class="graphing-graph-brush__waveform"
+      :style="{
+        left: `${plotLeft}px`,
+        top: `${STRIP_TOP}px`,
+        width: `${plotWidth}px`,
+        height: `${STRIP_H}px`
+      }"
+    />
     <svg
       ref="svgRef"
       class="graphing-graph-brush__track-svg"
@@ -242,42 +318,23 @@ onBeforeUnmount(() => {
         :width="plotWidth"
         :height="TRACK_H"
       />
-      <defs>
-        <clipPath :id="windowClipId">
-          <rect
-            :x="winLeftPx"
-            :y="STRIP_TOP"
-            :width="Math.max(0, winRightPx - winLeftPx)"
-            :height="STRIP_H"
-          />
-        </clipPath>
-      </defs>
-      <!-- Coarse cumulative-area sparkline (the overview waveform), painted twice: dimmed
-         across the strip, then at full strength clipped to the selection window. -->
-      <g class="graphing-graph-brush__waveform--dimmed">
-        <path
-          v-for="(p, i) in sparklinePaths"
-          :key="`area-dim-${i}`"
-          class="graphing-graph-brush__area"
-          :d="p.d"
-          :fill="p.color"
-        />
-      </g>
-      <g :clip-path="`url(#${windowClipId})`">
-        <path
-          v-for="(p, i) in sparklinePaths"
-          :key="`area-${i}`"
-          class="graphing-graph-brush__area"
-          :d="p.d"
-          :fill="p.color"
-        />
-      </g>
       <!-- Invisible, but it is what makes a click anywhere on the strip recentre the window. -->
       <rect
         class="graphing-graph-brush__hit-area"
         :x="plotLeft"
         :y="STRIP_TOP"
         :width="plotWidth"
+        :height="STRIP_H"
+      />
+      <!-- The waveform is painted at full strength on the canvas below; scrimming it in the
+           track's own colour dims what falls outside the selection without tinting the track. -->
+      <rect
+        v-for="(scrim, i) in windowScrims"
+        :key="`scrim-${i}`"
+        class="graphing-graph-brush__scrim"
+        :x="scrim.x"
+        :y="STRIP_TOP"
+        :width="scrim.width"
         :height="STRIP_H"
       />
       <!-- Selection window over the waveform. -->
@@ -351,8 +408,20 @@ onBeforeUnmount(() => {
   user-select: none;
 }
 
+/* Lifted over the absolutely positioned track fill and canvas, which would else paint on top. */
 .graphing-graph-brush__track-svg {
   display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.graphing-graph-brush__track-fill {
+  position: absolute;
+  background-color: var(--ux-theme-1);
+}
+
+.graphing-graph-brush__waveform {
+  position: absolute;
 }
 
 .graphing-graph-brush--dragging {
@@ -361,6 +430,7 @@ onBeforeUnmount(() => {
 
 .graphing-graph-brush__preview {
   position: absolute;
+  z-index: 2; /* over the svg, which is itself lifted over the canvas */
   bottom: 0;
   display: flex;
   align-items: center;
@@ -380,20 +450,19 @@ onBeforeUnmount(() => {
   color: var(--font-color-dimmed);
 }
 
+/* Transparent rather than unfilled: the fill sits behind the canvas, but the rect still has to
+   take pointer events for its grab cursor, and unfilled rects take none. */
 .graphing-graph-brush__track {
-  fill: var(--ux-theme-1);
+  fill: transparent;
   stroke: var(--graphing-brush-track-stroke);
   shape-rendering: crispedges;
   cursor: grab;
 }
 
-.graphing-graph-brush__area {
+.graphing-graph-brush__scrim {
+  fill: var(--ux-theme-1);
   fill-opacity: 0.6;
-  stroke: none;
-}
-
-.graphing-graph-brush__waveform--dimmed {
-  opacity: 0.4;
+  pointer-events: none;
 }
 
 .graphing-graph-brush__hit-area {

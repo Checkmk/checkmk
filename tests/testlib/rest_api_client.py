@@ -4741,19 +4741,32 @@ class GlobalSettingClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def update(self, varname: str, value: Any, expect_ok: bool = True) -> Response:
+    def update(
+        self,
+        varname: str,
+        value: Any,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
         return self.request(
             "put",
             url=f"/objects/{self.domain}/{varname}",
             body={"value": value},
             expect_ok=expect_ok,
+            headers=self._set_etag_header(varname, etag),
         )
 
-    def delete(self, varname: str, expect_ok: bool = True) -> Response:
+    def delete(
+        self,
+        varname: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
         return self.request(
             "delete",
             url=f"/objects/{self.domain}/{varname}",
             expect_ok=expect_ok,
+            headers=self._set_etag_header(varname, etag),
         )
 
     def get_site(self, site_id: str, varname: str, expect_ok: bool = True) -> Response:
@@ -4779,6 +4792,13 @@ class GlobalSettingClient(RestApiClient):
             url=f"/objects/site_connection/{site_id}/{self.domain}/{varname}",
             expect_ok=expect_ok,
         )
+
+    def _set_etag_header(
+        self, varname: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(varname).headers["ETag"]}
+        return set_if_match_header(etag)
 
 
 class JavascriptCrashReportClient(RestApiClient):

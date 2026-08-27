@@ -5,24 +5,35 @@
 
 import json
 from collections.abc import Mapping
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import AfterValidator
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import edition
-from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
+from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
+from cmk.gui.global_config import get_global_config
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import ApiContext, ETag, PathParam
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
+from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.user_sites import activation_sites, get_event_console_site_choices
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
+    ConfigDomainName,
     ConfigVariable,
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.global_settings import make_global_settings_context
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import paths
 from cmk.web.utils import permission_verification as permissions
@@ -37,6 +48,8 @@ RO_PERMISSIONS = permissions.AnyPerm(
                 permissions.Perm("wato.global"),
                 # the password visitor checks this for every secret carrying variable
                 permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
+                # only required for the "actions" variable
+                permissions.Optional(permissions.Perm("wato.add_or_modify_executables")),
             ]
         ),
         permissions.Perm("mkeventd.config"),
@@ -50,6 +63,8 @@ RW_PERMISSIONS = permissions.AnyPerm(
                 permissions.Perm("wato.global"),
                 # the password visitor checks this for every secret carrying variable
                 permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
+                # only required for the "actions" variable
+                permissions.Optional(permissions.Perm("wato.add_or_modify_executables")),
             ]
         ),
         permissions.AllPerm(
@@ -65,6 +80,8 @@ SITE_RO_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.global"),
         permissions.Perm("wato.sites"),
+        # only required for the "actions" variable
+        permissions.Optional(permissions.Perm("wato.add_or_modify_executables")),
     ]
 )
 SITE_RW_PERMISSIONS = permissions.AllPerm(
@@ -72,8 +89,14 @@ SITE_RW_PERMISSIONS = permissions.AllPerm(
         permissions.Perm("wato.edit"),
         permissions.Perm("wato.global"),
         permissions.Perm("wato.sites"),
+        # only required for the "actions" variable
+        permissions.Optional(permissions.Perm("wato.add_or_modify_executables")),
     ]
 )
+
+
+# cmk.gui.mkeventd.config_domain.EVENT_CONSOLE; not imported, openapi does not depend on it
+_EVENT_CONSOLE_DOMAIN: Final[ConfigDomainName] = "ec"
 
 
 class GlobalSettingConverter:
@@ -106,29 +129,53 @@ class GlobalSettingConverter:
         Consults the variable's flag, not the domain's same-named one: that only says
         whether a domain shows on the default page, which the Event Console clears even
         though its variables are editable on their own page.
+
+        A variable the edition deactivates is rejected here; save_global_settings() would
+        otherwise drop the write and the endpoint would report a success that changed nothing.
         """
         config_variable = GlobalSettingConverter._lookup(varname)
-        if config_variable.in_global_settings():
-            return varname
+        if not config_variable.in_global_settings():
+            raise ValueError(
+                f"The configuration variable {varname!r} is not editable via global settings."
+            )
 
-        raise ValueError(
-            f"The configuration variable {varname!r} is not editable via global settings."
-        )
+        if not get_global_config().global_settings.is_activated(varname):
+            raise ValueError(
+                f"The configuration variable {varname!r} is not activated in this edition."
+            )
+
+        return varname
 
 
 def _permission_for_varname(varname: str) -> str:
     return config_variable_registry[varname].primary_domain().global_settings_permission
 
 
+def _need_executables_permission(varname: str) -> None:
+    """Mirrors ABCEditGlobalSettingMode._may_edit_configvar()."""
+    if varname == "actions":
+        user.need_permission("wato.add_or_modify_executables")
+
+
 def need_read_permission(varname: str) -> None:
     """Must stay in sync with RO_PERMISSIONS."""
     user.need_permission(_permission_for_varname(varname))
+    _need_executables_permission(varname)
 
 
 def need_write_permission(varname: str) -> None:
     """Must stay in sync with RW_PERMISSIONS."""
     user.need_permission("wato.edit")
     user.need_permission(_permission_for_varname(varname))
+    _need_executables_permission(varname)
+
+
+def affected_sites(config_variable: ConfigVariable) -> list[SiteId] | None:
+    """The sites a change has to be activated on; None means all activation sites."""
+    if config_variable.primary_domain().ident() == _EVENT_CONSOLE_DOMAIN:
+        return [site_id for site_id, _title in get_event_console_site_choices()]
+
+    return None
 
 
 # TODO: the GUI's site_globals_editable() also allows any site that already carries
@@ -179,6 +226,18 @@ def value_to_json(form_spec: FormSpec[object], value: object) -> object:
     return json_value
 
 
+def value_from_json(form_spec: FormSpec[object], json_value: object) -> object:
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=False, mask_values=False))
+    if problems := visitor.validate(RawFrontendData(json_value)):
+        raise ProblemException(
+            status=400,
+            title=f"Problem in field {'.'.join(problems[0].location)}",
+            detail=problems[0].message,
+        )
+
+    return visitor.to_disk(RawFrontendData(json_value))
+
+
 def _etag_value(json_value: object) -> str:
     """Not hash_of_dict(): that assumes string dict keys and repr()s in insertion order."""
     return json.dumps(json_value, sort_keys=True, default=repr)
@@ -218,3 +277,17 @@ def effective_value(settings: Mapping[str, object], varname: str) -> tuple[objec
         return settings[varname], False
 
     return ABCConfigDomain.get_all_default_globals()[varname], True
+
+
+def make_pending_changes(api_context: ApiContext) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(api_context.config.sites),
+        local_site=omd_site(),
+        acting_user=api_context.user.id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=api_context.config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )

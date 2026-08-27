@@ -1778,6 +1778,7 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("missing-required-keys", {"by_host": {"limit": 500, "action": "stop"}}),
     ],
     "eventsocket_queue_len": MIN_ONE_INTEGER_CASES,
+    "exp_relay_active_checks": CHECKBOX_CASES,
     "exp_trial_mode_selection": CHECKBOX_CASES,
     "failed_notification_horizon": [
         CasePass("configured", 172800),

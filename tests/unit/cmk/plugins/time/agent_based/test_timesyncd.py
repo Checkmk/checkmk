@@ -392,12 +392,12 @@ def _string_table(offset: str, jitter: str, stratum: str, synced: bool = True) -
                 Metric("time_offset", 0.1, levels=(0.2, 0.5)),
                 Result(state=State.OK, summary="Time since last sync: 1 minute 0 seconds"),
                 Metric("last_sync_time", 60.0),
-                Result(state=State.CRIT, summary="Stratum: 9.00 (warn/crit at 9.00/9.00)"),
+                Result(state=State.WARN, summary="Stratum: 9.00 (warn/crit at 9.00/10.00)"),
                 Result(state=State.OK, summary="Jitter: 0 seconds"),
                 Metric("jitter", 0.0, levels=(0.2, 0.5)),
                 Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
             ],
-            id="stratum CRIT one below the configured level",
+            id="stratum WARN",
         ),
         pytest.param(
             _string_table(offset="100ms", jitter="0", stratum="10"),
@@ -406,21 +406,17 @@ def _string_table(offset: str, jitter: str, stratum: str, synced: bool = True) -
                 Metric("time_offset", 0.1, levels=(0.2, 0.5)),
                 Result(state=State.OK, summary="Time since last sync: 1 minute 0 seconds"),
                 Metric("last_sync_time", 60.0),
-                Result(state=State.CRIT, summary="Stratum: 10.00 (warn/crit at 9.00/9.00)"),
+                Result(state=State.CRIT, summary="Stratum: 10.00 (warn/crit at 9.00/10.00)"),
                 Result(state=State.OK, summary="Jitter: 0 seconds"),
                 Metric("jitter", 0.0, levels=(0.2, 0.5)),
                 Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
             ],
-            id="stratum CRIT at the configured level",
+            id="stratum CRIT",
         ),
     ],
 )
 def test_check_timesyncd_default_levels(string_table: StringTable, result: CheckResult) -> None:
-    """The default levels for offset, jitter and stratum yield OK, WARN and CRIT results.
-
-    Stratum is the exception: its levels are built as warn == crit == configured value - 1,
-    so it never WARNs and already goes CRIT one stratum below the configured value.
-    """
+    """The default levels for offset, jitter and stratum yield OK, WARN and CRIT results."""
     server_time = 1569922392.37 + 60
     section = timesyncd.parse_timesyncd(string_table)
     with time_machine.travel(

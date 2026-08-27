@@ -151,9 +151,12 @@ STAGES:
       DIR: "tests"
       COMMAND: |
           make_rc=0
+          VITEST_MAX_WORKERS=$(../buildscripts/scripts/vitest_max_workers.sh)
+          echo "VITEST_MAX_WORKERS=$VITEST_MAX_WORKERS"
           ../buildscripts/scripts/bazel_test_ci.sh \
               --test_verbose_timeout_warnings \
               --test_env=TZ='America/Chicago' \
+              --test_env=VITEST_MAX_WORKERS="$VITEST_MAX_WORKERS" \
               --cmk_edition=ultimate \
               -- \
               //... || make_rc=$?

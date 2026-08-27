@@ -34,6 +34,11 @@ function bazelManifestPathFix(): Plugin {
   }
 }
 
+// CI hands over the CPU budget of its container. os.availableParallelism() does
+// not see a cgroup quota, and where that quota lives is CI's concern rather than
+// this config's. Unset elsewhere so vitest keeps its own default.
+const maxWorkers = Number(process.env.VITEST_MAX_WORKERS) || undefined
+
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
   const resultBuild: UserConfig = {
@@ -132,6 +137,7 @@ export default defineConfig(({ command }) => {
         globals: true,
         environment: 'jsdom',
         pool: 'threads',
+        ...(maxWorkers === undefined ? {} : { maxWorkers }),
         setupFiles: ['tests/setup-tests.ts'],
         reporters: process.env.XML_OUTPUT_FILE // variable set by bazel
           ? [

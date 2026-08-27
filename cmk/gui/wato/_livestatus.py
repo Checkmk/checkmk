@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ipaddress
-
 from cmk.gui.form_specs.unstable import OptionalChoice
+from cmk.gui.form_specs.unstable.validators import validate_ip_network
 from cmk.gui.watolib.config_domain_name import ConfigVariable
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
 from cmk.rulesets.internal.form_specs import ListOfStrings, ListOfStringsLayout
-from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
@@ -20,22 +19,6 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
-from cmk.rulesets.v1.form_specs.validators import ValidationError
-
-
-def _validate_ip_network(value: str) -> None:
-    # Port of the IPNetwork() valuespec.
-    errors = []
-    for ip_class in (ipaddress.IPv4Network, ipaddress.IPv6Network):
-        try:
-            ip_class(value)
-            return
-        except ValueError as exc:
-            errors.append(str(exc))
-    raise ValidationError(
-        Message("Invalid host or network address. IPv4: %(e4)s, IPv6: %(e6)s")
-        % {"e4": errors[0], "e6": errors[1]}
-    )
 
 
 def _livestatus_via_tcp() -> Dictionary:
@@ -58,7 +41,7 @@ def _livestatus_via_tcp() -> Dictionary:
                         "configured source IP addresses. You can either configure specific "
                         "IP addresses or networks in the syntax <tt>10.3.3.0/24</tt>."
                     ),
-                    string_spec=String(custom_validate=[_validate_ip_network]),
+                    string_spec=String(custom_validate=[validate_ip_network]),
                     layout=ListOfStringsLayout.horizontal,
                     custom_validate=[validators.LengthInRange(min_value=1)],
                     prefill=DefaultValue(["0.0.0.0", "::/0"]),

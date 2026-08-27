@@ -170,3 +170,18 @@ class HostAddressList:
                         raise ValidationError(
                             Message(str(e).title())  # astrein: disable=localization-checker
                         )
+
+
+def validate_ip_network(value: str) -> None:
+    """Accept what the IPNetwork() valuespec accepted: an IPv4/IPv6 address or network."""
+    errors = []
+    for ip_class in (ipaddress.IPv4Network, ipaddress.IPv6Network):
+        try:
+            ip_class(value)
+            return
+        except ValueError as exc:
+            errors.append(str(exc))
+    raise ValidationError(
+        Message("Invalid host or network address. IPv4: %(e4)s, IPv6: %(e6)s")
+        % {"e4": errors[0], "e6": errors[1]}
+    )

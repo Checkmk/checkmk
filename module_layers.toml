@@ -768,6 +768,7 @@ allows = [
   "@network_flow",
   "cmk.gui",
   "cmk.gui_plugins.internal",
+  "cmk.rulesets",
   "cmk.shared_typing",
   "cmk.utils",
 ]

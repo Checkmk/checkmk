@@ -99,6 +99,19 @@ class SkippedScenario(NamedTuple):
     condition: bool = True
 
 
+class BaselineAlert(NamedTuple):
+    """Represents a finding of the baseline validation.
+
+    Attributes:
+        message: Human-readable description of the finding.
+        is_failure: Whether the finding should fail the job. Findings that merely report
+            the absence of data are reported, but do not fail the job.
+    """
+
+    message: str
+    is_failure: bool = True
+
+
 class JobDetails(NamedTuple):
     """
     Represents details about a performance test job.
@@ -1638,7 +1651,7 @@ class PerftestPlot:
                 return True
         return False
 
-    def validate_performance_baselines(self) -> list[str]:
+    def validate_performance_baselines(self) -> list[BaselineAlert]:
         """
         Validate current performance metrics against calculated baselines for each test scenario.
 
@@ -1651,11 +1664,12 @@ class PerftestPlot:
             - CPU usage (avg_cpu)
             - Memory usage (avg_mem)
 
-        If no current data (averages) are available for a scenario, an alert is added.
+        If no current data (averages) are available for a scenario, a non-failing alert is
+        added: the scenario is reported, but a missing measurement is not a regression.
 
         Returns:
-            list[str]
-                A list of human-readable alert messages. The list is empty if all scenarios
+            list[BaselineAlert]
+                A list of alerts in scenario order. The list is empty if all scenarios
                 are within tolerated performance bounds.
         """
         cpu_tolerance = self.args.cpu_tolerance
@@ -1676,7 +1690,7 @@ class PerftestPlot:
             ),
         ]
 
-        alerts = []
+        alerts: list[BaselineAlert] = []
         for scenario_name in self.scenario_names:
             if not scenario_name.startswith("test_"):
                 continue
@@ -1696,7 +1710,11 @@ class PerftestPlot:
                 continue
             averages = self._current_averages(scenario_name)
             if not averages:
-                alerts.append(f"{msg_prefix}Missing data! Test aborted or skipped?")
+                alerts.append(
+                    BaselineAlert(
+                        f"{msg_prefix}Missing data! Test aborted or skipped?", is_failure=False
+                    )
+                )
                 continue
             baseline = self._calculate_baseline(scenario_name)
             if averages.avg_time > baseline.avg_time * (100 + runtime_tolerance) / 100:
@@ -1707,7 +1725,7 @@ class PerftestPlot:
                     f" actual: {round(averages.avg_time, 2)}"
                 )
 
-                alerts.append(f"{msg_prefix}{msg}{msg_suffix}")
+                alerts.append(BaselineAlert(f"{msg_prefix}{msg}{msg_suffix}"))
             if averages.avg_cpu > baseline.avg_cpu * (100 + cpu_tolerance) / 100:
                 overshoot = round((averages.avg_cpu / baseline.avg_cpu) * 100 - 100, 2)
                 msg = (
@@ -1715,7 +1733,7 @@ class PerftestPlot:
                     f"(baseline: {round(baseline.avg_cpu, 2)}%;"
                     f" actual: {round(averages.avg_cpu, 2)}%"
                 )
-                alerts.append(f"{msg_prefix}{msg} {msg_suffix}")
+                alerts.append(BaselineAlert(f"{msg_prefix}{msg} {msg_suffix}"))
             if averages.avg_mem > baseline.avg_mem * (100 + mem_tolerance) / 100:
                 overshoot = round((averages.avg_mem / baseline.avg_mem) * 100 - 100, 2)
                 msg = (
@@ -1723,7 +1741,7 @@ class PerftestPlot:
                     f"(baseline: {round(baseline.avg_mem, 2)}%;"
                     f" actual: {round(averages.avg_mem, 2)}%"
                 )
-                alerts.append(f"{msg_prefix}{msg}{msg_suffix}")
+                alerts.append(BaselineAlert(f"{msg_prefix}{msg}{msg_suffix}"))
         return alerts
 
     def create_ticket(self, summary: str, description: str) -> None:
@@ -2089,11 +2107,13 @@ def main():
     if app.validate_baselines:
         alerts = app.validate_performance_baselines()
         summary = f"Validate performance test {list(app.jobs.keys())[-1]}"
-        description = (f"\n  {'\n  '.join(alerts)}") if alerts else "PASSED!"
+        messages = [alert.message for alert in alerts]
+        description = (f"\n  {'\n  '.join(messages)}") if messages else "PASSED!"
         print(f"{summary}: {description}")
-        if app.alert_on_failure and alerts:
+        failures = [alert for alert in alerts if alert.is_failure]
+        if app.alert_on_failure and failures:
             app.create_ticket(summary=summary, description=description)
-        if alerts:
+        if failures:
             rc = 2
 
     print(app.output_dir)

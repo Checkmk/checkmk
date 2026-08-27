@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 
 import contextlib
@@ -368,7 +367,7 @@ class _ServiceFilter:
         if self._mode is FilterMode.NONE:
             return self.is_mine(service)
 
-        return assert_never(self._mode)
+        return assert_never(self._mode)  # type: ignore[unreachable]
 
     def is_mine(self, service: ConfiguredService) -> bool:
         """Determine whether a service should be displayed on this host's service overview.
@@ -2758,7 +2757,7 @@ class ConfigCache:
                 if addr is not None:
                     node_ips_4.append(addr)
                 else:
-                    node_ips_4.append(ip_lookup.fallback_ip_for(family))
+                    node_ips_4.append(ip_lookup.fallback_ip_for(family))  # type: ignore[unreachable]
 
         node_ips_6 = []
         if IPStackConfig.IPv6 in ip_stack_config:
@@ -2772,7 +2771,7 @@ class ConfigCache:
                 if addr is not None:
                     node_ips_6.append(addr)
                 else:
-                    node_ips_6.append(ip_lookup.fallback_ip_for(family))
+                    node_ips_6.append(ip_lookup.fallback_ip_for(family))  # type: ignore[unreachable]
 
         node_ips = node_ips_6 if host_ip_family is socket.AF_INET6 else node_ips_4
 
@@ -3222,8 +3221,8 @@ class CoreObjectsConfig:
             self._loaded_config.service_contactgroups,
             self.label_manager.labels_of_host,
         ):
-            if isinstance(entry, list):
-                folder_cgrs.append(entry)
+            if isinstance(entry, list):  # type: ignore[unreachable]
+                folder_cgrs.append(entry)  # type: ignore[unreachable]
             else:
                 cgrs.add(entry)
 
@@ -3274,8 +3273,8 @@ class CoreObjectsConfig:
             for entry in self.ruleset_matcher.get_host_values_all(
                 host_name, self._loaded_config.host_contactgroups, self.label_manager.labels_of_host
             ):
-                if isinstance(entry, list):
-                    folder_cgrs.append(entry)
+                if isinstance(entry, list):  # type: ignore[unreachable]
+                    folder_cgrs.append(entry)  # type: ignore[unreachable]
                 else:
                     cgrs.append(entry)
 

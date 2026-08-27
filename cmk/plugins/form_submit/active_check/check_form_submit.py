@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """check_form_submit
 
@@ -255,7 +254,7 @@ class FormParser(html.parser.HTMLParser):
         elif tag == "input":
             if self.current_form is None:
                 debug("Ignoring form field out of form tag", self.debug_enabled)
-            elif "name" in attrs_dict:
+            elif "name" in attrs_dict:  # type: ignore[unreachable]
                 self.current_form["elements"][attrs_dict["name"]] = attrs_dict.get("value", "")
             else:
                 debug("Ignoring form field without name %r" % attrs_dict, self.debug_enabled)

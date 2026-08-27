@@ -8,7 +8,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 # FIXME: Cleanups
 # - Consolidate ListChoice and DualListChoice to use the same class
@@ -236,8 +235,8 @@ class ValueSpec[T](abc.ABC):
         if self._help is None:
             return None
 
-        if isinstance(self._help, LazyString):
-            return str(self._help)
+        if isinstance(self._help, LazyString):  # type: ignore[unreachable]
+            return str(self._help)  # type: ignore[unreachable]
 
         if not isinstance(self._help, str):
             raise ValueError(self._help)
@@ -776,8 +775,8 @@ class Integer(ValueSpec[int]):
 
     @override
     def validate_datatype(self, value: int, varprefix: str) -> None:
-        if isinstance(value, numbers.Integral):
-            return
+        if isinstance(value, numbers.Integral):  # type: ignore[unreachable]
+            return  # type: ignore[unreachable]
         raise MKUserError(
             varprefix,
             _("The value %(value)r has the wrong type %(type)s, but must be of type int")
@@ -3019,7 +3018,7 @@ class Float(ValueSpec[float]):
     def validate_datatype(self, value: float, varprefix: str) -> None:
         if isinstance(value, float):
             return
-        if isinstance(value, numbers.Integral) and self._allow_int:
+        if isinstance(value, numbers.Integral) and self._allow_int:  # type: ignore[unreachable]
             return
         raise MKUserError(
             varprefix,
@@ -4530,7 +4529,7 @@ class DualListChoice(ListChoice):
         value: list = []
         selection_str = request.var(varprefix, "")
         if selection_str is None:
-            return value
+            return value  # type: ignore[unreachable]
         selected = selection_str.split("|")
         if self._custom_order:
             edict = dict(self._elements)
@@ -6382,7 +6381,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
     def _render_input(self, varprefix: str, value: DictionaryModel | None, render: str) -> None:
         value = self.migrate(value)
         if not isinstance(value, MutableMapping):
-            value = {}  # makes code simpler in complain phase
+            value = {}  # type: ignore[unreachable]  # makes code simpler in complain phase
 
         elements = list(self._get_elements())
         if len(elements) == 0:
@@ -7573,7 +7572,7 @@ class ImageUpload(FileUpload):
     def render_input(self, varprefix: str, value: FileUploadModel) -> None:
         if isinstance(value, str):
             # since latin_1 only uses one byte, we can use it for str->byte conversion
-            value = value.encode("latin_1")
+            value = value.encode("latin_1")  # type: ignore[unreachable]
         if self._show_current_image and value:
             if not isinstance(value, bytes):  # Hmmm...
                 raise TypeError(value)
@@ -7681,7 +7680,7 @@ class UploadOrPasteTextFile(Alternative):
                 return value[-1].decode("utf-8")
             except UnicodeDecodeError as exc:
                 raise MKUserError(varprefix, _("Please choose a file to upload.")) from exc
-        return value
+        return value  # type: ignore[unreachable]
 
 
 class TextOrRegExp(Alternative):

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Mode for activating pending changes. Does also replication with
 remote sites in distributed Setup."""
@@ -875,7 +874,7 @@ class ModeActivateChanges(WatoMode):
             html.write_text_permissive(_("Is not logged in.") + " ")
 
         if not last_state:
-            html.write_text_permissive(_("Has never been activated"))
+            html.write_text_permissive(_("Has never been activated"))  # type: ignore[unreachable]
         elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
             html.write_text_permissive(_("Activation needed"))
         else:
@@ -997,7 +996,7 @@ def _get_object_reference(object_ref: ObjectRef | None) -> tuple[str | None, str
         )
         return url, object_ref.ident
 
-    return None, object_ref.ident
+    return None, object_ref.ident  # type: ignore[unreachable]
 
 
 def _vs_activation(

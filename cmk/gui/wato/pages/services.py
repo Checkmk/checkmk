@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Modes for services and discovery"""
 
@@ -646,7 +645,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     pending_changes=pending_changes,
                 )
             case DiscoveryAction.UPDATE_SERVICES:
-                discovery_result = perform_service_discovery(
+                discovery_result = perform_service_discovery(  # type: ignore[unreachable]
                     action=action,
                     discovery_result=discovery_result,
                     update_source=None,
@@ -1235,7 +1234,7 @@ class DiscoveryPageRenderer:
 
     def _show_fix_all(self, discovery_result: DiscoveryResult) -> None:
         if not discovery_result:
-            return
+            return  # type: ignore[unreachable]
 
         if not user.may("wato.services"):
             return
@@ -2735,7 +2734,7 @@ def ajax_popup_service_action_menu(ctx: PageContext) -> None:
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))
     if checkbox_name is None or hostname is None:  # type: ignore[redundant-expr]
-        html.show_error(_("Cannot render drop-down: Missing required information"))
+        html.show_error(_("Cannot render drop-down: Missing required information"))  # type: ignore[unreachable]
         return
 
     html.open_a(href=DiscoveryPageRenderer.rulesets_button_link(entry.description, hostname))

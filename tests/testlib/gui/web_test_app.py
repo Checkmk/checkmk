@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 
 import json
@@ -210,8 +209,8 @@ class WebTestAppForCMK(FlaskClient):
 
         if len(value) == 2:
             authtype, creds = value
-            if authtype == "Basic" and creds and isinstance(creds, tuple):
-                creds = ":".join(list(creds))
+            if authtype == "Basic" and creds and isinstance(creds, tuple):  # type: ignore[unreachable]
+                creds = ":".join(list(creds))  # type: ignore[unreachable]
                 creds = b64encode(_to_bytes(creds)).strip()
                 creds = creds.decode("latin1")
             elif authtype in ("Bearer", "JWT") and creds and isinstance(creds, str):

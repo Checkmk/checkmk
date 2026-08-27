@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -64,7 +63,7 @@ def discover(section: Section) -> DiscoveryResult:
 def _abs_and_rel_levels(levels: tuple[str, LEVEL_TYPE]) -> tuple[LEVEL_TYPE, LEVEL_TYPE]:
     match levels:  # type: ignore[exhaustive-match]
         case "ignore":
-            return None, None
+            return None, None  # type: ignore[unreachable]
         case ("abs_user", thresholds):
             return thresholds, None
         case ("perc_user", thresholds):

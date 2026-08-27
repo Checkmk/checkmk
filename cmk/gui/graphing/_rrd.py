@@ -5,7 +5,6 @@
 """Core for getting the actual raw data points via Livestatus from RRD"""
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 import collections
 import contextlib
@@ -408,7 +407,7 @@ def all_rrd_columns_potentially_relevant_for_metric(
         (
             MetricProperties(
                 metric_name=metric_name,
-                consolidation_function=consolidation_function or "max",
+                consolidation_function=consolidation_function or "max",  # type: ignore[unreachable]
                 # at this point, we do not yet know if there any potential scalings due to metric
                 # translations
                 scale=1,

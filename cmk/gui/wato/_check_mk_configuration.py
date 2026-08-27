@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Generator, Iterable, Mapping, Sequence
 from typing import Any, Literal, override
@@ -4656,7 +4655,7 @@ def _migrate_automatic_rediscover_parameters(
     # already migrated to new format
     if isinstance(param, tuple):
         if param[0] == "update_everything" and param[1] is None:
-            return param[0], {
+            return param[0], {  # type: ignore[unreachable]
                 "add_new_services": True,
                 "remove_vanished_services": True,
                 "update_changed_service_labels": True,
@@ -5848,8 +5847,8 @@ def _migrate_encryption_settings(p: Mapping[str, Any]) -> str | None:
     'this-is-also-for-the-agent'
 
     """
-    if p is None or isinstance(p, str):  # type: ignore[redundant-expr]
-        return p
+    if p is None or isinstance(p, str):  # type: ignore[redundant-expr, unreachable]
+        return p  # type: ignore[unreachable]
     return p["passphrase"] if "use_regular" in p else None
 
 

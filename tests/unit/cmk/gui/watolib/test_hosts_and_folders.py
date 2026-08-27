@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="unreachable"
 
 import datetime
 import os
@@ -1285,7 +1284,7 @@ def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch, tree: FolderTree
         assert isinstance(wato_folders._raw_dict["sub1.1"], hosts_and_folders.Folder)
 
         # Check if other folder is still None
-        assert wato_folders._raw_dict["sub1.2"] is None
+        assert wato_folders._raw_dict["sub1.2"] is None  # type: ignore[unreachable]
         # Check if parent(main) folder got instantiated as well
         assert isinstance(wato_folders._raw_dict[""], hosts_and_folders.Folder)
 

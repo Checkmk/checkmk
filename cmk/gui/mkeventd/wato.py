@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import abc
 import ast
@@ -3747,7 +3746,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         check_csrf_token()
 
         if not request.uploaded_file("_upload_mib"):
-            return None
+            return None  # type: ignore[unreachable]
         filename, mimetype, content = request.uploaded_file("_upload_mib")
         if filename:
             try:

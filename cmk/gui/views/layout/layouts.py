@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import abc
 import re
@@ -219,7 +218,7 @@ class GroupedBoxesLayout(Layout):
             # state = row.get("service_state", row.get("aggr_state"))
             state = saveint(row.get("service_state"))
             if state is None:
-                state = saveint(row.get("host_state", 0))
+                state = saveint(row.get("host_state", 0))  # type: ignore[unreachable]
                 if state > 0:
                     state += 1  # 1 is critical for hosts
 

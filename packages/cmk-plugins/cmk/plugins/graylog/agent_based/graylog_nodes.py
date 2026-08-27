@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 # <<<graylog_nodes:sep(0)>>>
 # {"139f455e-0bb7-4db9-9b9d-bba11767a674": {"facility": "graylog-server",
@@ -103,7 +102,7 @@ def discover_graylog_nodes(section: Section) -> DiscoveryResult:
 
 def check_graylog_nodes(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if section is None:
-        return
+        return  # type: ignore[unreachable]
 
     if item not in section:
         yield Result(state=State.CRIT, summary="Missing in agent output (graylog service running?)")

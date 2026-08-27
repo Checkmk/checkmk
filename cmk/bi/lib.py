@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 
 import enum
@@ -378,7 +377,7 @@ def replace_macros(
         return replace_macros_in_list(pattern, macros)
     if isinstance(pattern, dict):
         return replace_macros_in_dict(pattern, macros)
-    return NoReturn
+    return NoReturn  # type: ignore[unreachable]
 
 
 def replace_macros_in_tuple(

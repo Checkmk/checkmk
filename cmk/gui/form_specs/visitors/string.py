@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 from typing import cast, override
 
@@ -87,4 +86,4 @@ def field_size_translator(field_size: FieldSize) -> shared_type_defs.StringField
         case FieldSize.LARGE:
             return shared_type_defs.StringFieldSize.large
         case _:
-            return shared_type_defs.StringFieldSize.medium
+            return shared_type_defs.StringFieldSize.medium  # type: ignore[unreachable]

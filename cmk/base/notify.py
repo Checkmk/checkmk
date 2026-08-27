@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 # Please have a look at doc/Notifications.png:
 #
@@ -538,8 +537,8 @@ def do_notify(
                 all_timeperiods=all_timeperiods,
             )
         elif notify_mode == "test":
-            assert isinstance(args[0], dict)
-            _notify_notify(
+            assert isinstance(args[0], dict)  # type: ignore[unreachable]
+            _notify_notify(  # type: ignore[unreachable]
                 EventContext(args[0]),
                 timeperiods_active,
                 get_http_proxy,
@@ -1534,7 +1533,7 @@ def _rbn_get_bulk_params(
     if isinstance(bulk, tuple):
         method, params = bulk
     else:
-        method, params = (
+        method, params = (  # type: ignore[unreachable]
             "always",
             bulk,
         )  # old format: treat as "Always Bulk" - typing says this can't ever be the case. Can it be removed?

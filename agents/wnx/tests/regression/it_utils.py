@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="unreachable"
 
 import os
 import platform
@@ -18,7 +17,7 @@ import pytest
 def check_actual_input(name: str, lines: int, alone: bool, data: Sequence[str] | None) -> bool:
     if data is None:
         pytest.skip(f"Section '{name}': Data is absent")
-        return False
+        return False  # type: ignore[unreachable]
 
     if not alone:
         lines += 2
@@ -26,7 +25,7 @@ def check_actual_input(name: str, lines: int, alone: bool, data: Sequence[str] |
     if len(data) < lines:
         all_data = "\n".join(data)
         pytest.skip(f"Section '{name}': Data is TOO short:\n{all_data}\n")
-        return False
+        return False  # type: ignore[unreachable]
 
     return True
 

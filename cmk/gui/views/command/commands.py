@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="unreachable"
 
 import time
 from collections.abc import Iterable, Sequence
@@ -2162,7 +2161,7 @@ def _find_all_leaves(
         return entries
 
     # place holders
-    return []
+    return []  # type: ignore[unreachable]
 
 
 def _local_time_if_representable(timestamp: float | None) -> time.struct_time | None:
@@ -2202,7 +2201,7 @@ def time_interval_end(
         return time.mktime((new_year, new_month, 1, 0, 0, 0, 0, 0, now.tm_isdst))
     if time_value == "next_year":
         return time.mktime((now.tm_year, 12, 31, 23, 59, 59, 0, 0, now.tm_isdst)) + 1
-    return None
+    return None  # type: ignore[unreachable]
 
 
 def command_remove_downtime_render(what: str) -> None:

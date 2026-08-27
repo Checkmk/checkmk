@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 import re
 import time
@@ -310,7 +309,7 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
         # (will be converted back later individually for the different cores)
         text = (raw_info or "").replace("\\n", "\n")
         if state_msg or perf_msg:  # type: ignore[redundant-expr]
-            state = 3
+            state = 3  # type: ignore[unreachable]
             text = f"{state_msg}{perf_msg}Output is: {text}"
 
         parsed_data[item] = LocalResult(

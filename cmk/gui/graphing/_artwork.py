@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import math
 import time
@@ -975,5 +974,5 @@ def _t_axis_labels(
 def _add_step_to_title(title_label: str, step: int) -> str:
     step_label = get_step_label(step)
     if title_label is None:
-        return step_label
+        return step_label  # type: ignore[unreachable]
     return f"{title_label} @ {step_label}"

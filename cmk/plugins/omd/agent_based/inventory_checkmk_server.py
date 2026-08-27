@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 # README: HISTORICAL HINT
 # This inventory plug-in used to be split-up into the inventory plugins "livestatus_status",
@@ -90,7 +89,7 @@ def merge_sections(
     # SECTION: livestatus_status
     for site, status in section_livestatus_status.items():
         if status is None:
-            continue
+            continue  # type: ignore[unreachable]
 
         try:
             helper_usage_fetcher = float(status["helper_usage_fetcher"] or "0") * 100

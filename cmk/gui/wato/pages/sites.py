@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Mode for managing sites"""
 
@@ -1904,7 +1903,7 @@ class PageAjaxFetchSiteStatus(AjaxPage):
             case ConnectionRefused.CLOSED:
                 return StaticIcon(IconNames.cross), _("Not available")
 
-                return "cross", _("Connection to port %(remote_port)s refused") % {
+                return "cross", _("Connection to port %(remote_port)s refused") % {  # type: ignore[unreachable]
                     "remote_port": remote_port
                 }
             case _:

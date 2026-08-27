@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 
 import contextlib
@@ -773,7 +772,7 @@ class HTMLGenerator(HTMLWriter):
         css_classes = ["button", "buttonlink"]
         if class_:
             if not isinstance(class_, list):
-                css_classes.append(class_)
+                css_classes.append(class_)  # type: ignore[unreachable]
             else:
                 css_classes.extend(class_)
 
@@ -1163,7 +1162,7 @@ class HTMLGenerator(HTMLWriter):
         if isinstance(class_, list):
             css_classes.extend(class_)
         elif class_ is not None:
-            css_classes.append(class_)
+            css_classes.append(class_)  # type: ignore[unreachable]
 
         self.open_select(
             name=varname,
@@ -1341,7 +1340,7 @@ class HTMLGenerator(HTMLWriter):
         if isinstance(class_, list):
             classes.extend(class_)
         elif class_ is not None:
-            classes.append(class_)
+            classes.append(class_)  # type: ignore[unreachable]
 
         if isinstance(icon, StaticIcon):
             return HTMLGenerator.render_static_icon(
@@ -1476,7 +1475,7 @@ class HTMLGenerator(HTMLWriter):
         if isinstance(class_, list):
             classes.extend(class_)
         elif class_ is not None:
-            classes.append(class_)
+            classes.append(class_)  # type: ignore[unreachable]
 
         href = url if not onclick else "javascript:void(0)"
         assert href is not None
@@ -1664,7 +1663,7 @@ class HTMLGenerator(HTMLWriter):
         if isinstance(cssclass, list):
             classes.extend(cssclass)
         elif cssclass:
-            classes.append(cssclass)
+            classes.append(cssclass)  # type: ignore[unreachable]
 
         # TODO: Make method.content return HTML
         return HTMLWriter.render_div(

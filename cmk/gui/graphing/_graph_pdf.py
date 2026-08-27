@@ -5,7 +5,6 @@
 """Render graphs in PDF. Is also used for PNG image rendering."""
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 from typing import TypeGuard
 
@@ -228,7 +227,7 @@ def render_graph_pdf(
 
     # Show the inline title
     if display_config.show_title == "inline":
-        title_top = top - (_mm_per_ex_by_render_options(display_config) * 2)
+        title_top = top - (_mm_per_ex_by_render_options(display_config) * 2)  # type: ignore[unreachable]
         pdf_document.render_aligned_text(
             left,
             title_top,
@@ -398,7 +397,7 @@ def render_graph_pdf(
 
     pdf_document.restore_state()
     if left is None:  # floating element
-        pdf_document.margin(2.5)
+        pdf_document.margin(2.5)  # type: ignore[unreachable]
 
     logger.debug("  Finished rendering graph")
 

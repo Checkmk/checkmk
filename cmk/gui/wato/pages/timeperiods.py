@@ -7,7 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Modes for managing timeperiod definitions for the core"""
 
@@ -499,7 +498,7 @@ class ModeTimeperiodImportICal(WatoMode):
         ):
             ice = ICalEvent(e)
             if ice.dtstart_dt is None:
-                continue
+                continue  # type: ignore[unreachable]
 
             exceptions = ice.to_timeperiod_exception()
             for dt, timerange in exceptions.items():
@@ -854,7 +853,7 @@ class ModeEditTimeperiod(WatoMode):
     # ]}}
     def _to_valuespec(self, tp_spec: TimeperiodSpec) -> dict:
         if not tp_spec:
-            return {}
+            return {}  # type: ignore[unreachable]
 
         exceptions = []
         for exception_name, time_ranges in tp_spec.items():

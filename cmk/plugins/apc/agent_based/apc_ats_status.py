@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
 
@@ -79,7 +78,7 @@ def check_apc_ats_status(params: Mapping[str, object], section: Status) -> Check
 
     for powersource in section.powersources:
         if powersource is None:
-            continue
+            continue  # type: ignore[unreachable]
         match powersource.status:  # type: ignore[exhaustive-match]
             case PowerSupplyStatus.Failure:
                 yield Result(state=State.CRIT, summary=f"{powersource.name} power supply failed")

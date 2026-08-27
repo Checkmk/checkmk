@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Container, Iterable, Sequence
 from typing import Literal, TypeVar
@@ -50,9 +49,9 @@ def _unmigrate_password(
 ) -> object:
     match model:
         case "password", password:
-            return "password", password
+            return "password", password  # type: ignore[unreachable]
         case "store", password_store_id:
-            return "store", password_store_id
+            return "store", password_store_id  # type: ignore[unreachable]
         # already migrated passwords
         case "cmk_postprocessed", "explicit_password", (str(_password_id), str(password)):
             return "password", password

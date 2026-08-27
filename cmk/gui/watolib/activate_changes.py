@@ -7,7 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Manage configuration activation of Checkmk"""
 
@@ -633,7 +632,7 @@ def _calc_status_details(
             "time_started": render.time_of_day(time_started)
         }
     else:
-        value = _("Not started.")
+        value = _("Not started.")  # type: ignore[unreachable]
 
     if phase == PHASE_DONE:
         if time_ended is not None:

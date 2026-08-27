@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """WATO's awesome rule editor: Lets the user edit rule based parameters"""
 
@@ -1306,7 +1305,7 @@ class ModeEditRuleset(WatoMode):
             case "all" | "list":
                 html.write_text_permissive(_("All matching rules will add to the resulting list."))
             case _:
-                html.write_text_permissive(
+                html.write_text_permissive(  # type: ignore[unreachable]
                     _("Unknown match type: %(match_type)s") % {"match_type": match_type}
                 )
 

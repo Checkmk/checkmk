@@ -8,7 +8,6 @@ Checkmk special agent for monitoring Graylog servers.
 """
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="unreachable"
 
 import argparse
 import json
@@ -102,7 +101,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         handle_section(args, session, "streams", "/streams", section_streams)
         handle_section(args, session, "events", "/events/search", section_events)
         return 0
-    return 2
+    return 2  # type: ignore[unreachable]
 
 
 def handle_section(

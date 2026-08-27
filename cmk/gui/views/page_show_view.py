@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 """Display a table view"""
 
@@ -666,12 +665,12 @@ def _sort_data(data: Rows, sorters: list[SorterEntry], config: Config) -> None:
         config: Config,
         req: Request,
     ) -> int:
-        if row1 is None and row2 is None:
-            return 0
+        if row1 is None and row2 is None:  # type: ignore[unreachable]
+            return 0  # type: ignore[unreachable]
         if row1 is None:
-            return -1
+            return -1  # type: ignore[unreachable]
         if row2 is None:
-            return 1
+            return 1  # type: ignore[unreachable]
         return compfunc(
             row1,
             row2,

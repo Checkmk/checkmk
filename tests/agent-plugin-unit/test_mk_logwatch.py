@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="unreachable"
 
 # fmt: off
 
@@ -487,8 +486,8 @@ def _cvt(path):
 # NOTE: helper for mypy
 def _end_with(actual: Union[str, bytes], *, expected: bytes) -> bool:
     if isinstance(actual, str):
-        assert isinstance(expected, str)
-        return actual.endswith(expected)
+        assert isinstance(expected, str)  # type: ignore[unreachable]
+        return actual.endswith(expected)  # type: ignore[unreachable]
     assert isinstance(expected, bytes)
     return actual.endswith(expected)
 

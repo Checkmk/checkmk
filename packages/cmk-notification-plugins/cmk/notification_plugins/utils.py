@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import base64
 import os
@@ -316,7 +315,7 @@ def retrieve_from_passwordstore(parameter: str | list[str]) -> str:
         else:
             value = cmk.utils.password_store.extract(parameter[-2])
             if value is None:
-                sys.stderr.write("Unable to retrieve password from passwordstore")
+                sys.stderr.write("Unable to retrieve password from passwordstore")  # type: ignore[unreachable]
                 sys.exit(2)
     else:
         # old valuespec style
@@ -326,7 +325,7 @@ def retrieve_from_passwordstore(parameter: str | list[str]) -> str:
             if values[0] == "store":
                 value = cmk.utils.password_store.extract(values[1])
                 if value is None:
-                    sys.stderr.write("Unable to retrieve password from passwordstore")
+                    sys.stderr.write("Unable to retrieve password from passwordstore")  # type: ignore[unreachable]
                     sys.exit(2)
             else:
                 value = values[1]
@@ -357,7 +356,7 @@ def post_request(
     if not url:
         url = retrieve_from_passwordstore(context["PARAMETER_WEBHOOK_URL"])
         if url is None:
-            sys.stderr.write("No URL was retrieved from passwordstore")
+            sys.stderr.write("No URL was retrieved from passwordstore")  # type: ignore[unreachable]
             sys.exit(2)
 
     serialized_proxy_config = context.get("PARAMETER_PROXY_URL")

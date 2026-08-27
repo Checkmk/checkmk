@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 # <<<oracle_sessions>>>
 # pengt  15
@@ -67,8 +66,8 @@ def discover_oracle_sessions(section: SectionOracleSessions) -> DiscoveryResult:
 def check_oracle_sessions(
     item: str, params: Mapping[str, Any], section: SectionOracleSessions
 ) -> CheckResult:
-    if isinstance(params, tuple):
-        params = {"sessions_abs": params}
+    if isinstance(params, tuple):  # type: ignore[unreachable]
+        params = {"sessions_abs": params}  # type: ignore[unreachable]
 
     data = section.get(item)
     if data is None:

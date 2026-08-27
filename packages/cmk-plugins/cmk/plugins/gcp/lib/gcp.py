@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import json
 from collections.abc import Callable, Mapping, Sequence
@@ -293,7 +292,7 @@ def generic_check(
         else:
             levels_upper = params[metric_name]
         if isinstance(levels_upper, dict):
-            yield from check_levels_predictive(
+            yield from check_levels_predictive(  # type: ignore[unreachable]
                 value,
                 metric_name=metric_name,
                 render_func=metric_spec.display.render_func,

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 import abc
 import ast
@@ -3062,7 +3061,7 @@ def _automation_diag_cmk_agent(
             )
 
         if resolved_address is None:
-            return DiagCmkAgentResult(
+            return DiagCmkAgentResult(  # type: ignore[unreachable]
                 1,
                 "Cannot resolve host name %s into IP address" % host_name,
             )

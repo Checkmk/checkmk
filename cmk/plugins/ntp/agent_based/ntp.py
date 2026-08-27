@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 # Example output from agent:
 # <<<ntp>>>
@@ -220,8 +219,8 @@ def check_ntp_summary(
         )
         return
 
-    if isinstance(params, tuple):
-        params = {
+    if isinstance(params, tuple):  # type: ignore[unreachable]
+        params = {  # type: ignore[unreachable]
             "ntp_levels": params,
             "alert_delay": (300, 3600),
         }

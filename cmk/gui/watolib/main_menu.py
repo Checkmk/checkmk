@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 import abc
 import re
@@ -169,7 +168,7 @@ class ABCMainModule(MenuItem, abc.ABC):
     def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
         """This class method allows for adding additional items to the breadcrumb navigation"""
         return
-        yield
+        yield  # type: ignore[unreachable]
 
     @classmethod
     def main_menu_search_terms(cls) -> Sequence[str]:

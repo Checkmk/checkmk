@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
 from typing import Any, assert_never
@@ -39,8 +38,8 @@ def discover_oracle_logswitches(section: StringTable) -> DiscoveryResult:
 def check_oracle_logswitches(
     item: str, params: Mapping[str, Any], section: StringTable
 ) -> CheckResult:
-    if isinstance(params, tuple):
-        params = {
+    if isinstance(params, tuple):  # type: ignore[unreachable]
+        params = {  # type: ignore[unreachable]
             "levels": (params[2], params[3]),
             "levels_lower": (params[0], params[1]),
         }

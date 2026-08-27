@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 from typing import Any
 
@@ -32,7 +31,7 @@ def _transform_tuple_format(params: tuple[str, Any]) -> dict:
             "name": params[0],
             "url_details": params[1],
         }
-    return params
+    return params  # type: ignore[unreachable]
 
 
 def _valuespec_active_checks_form_submit() -> Transform:

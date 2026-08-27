@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="unreachable"
 
 #########################################################################################
 #                                                                                       #
@@ -150,7 +149,7 @@ def compile_reclassify_params(params: Sequence[ParameterLogwatchRules]) -> Recla
                 # (mo) wondering during migration: doesn't this mean the last one wins?
                 states = rule["reclassify_states"]
         else:
-            patterns.extend(rule)
+            patterns.extend(rule)  # type: ignore[unreachable]
 
     return ReclassifyParameters(patterns, states)
 

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Display information about the Checkmk check plug-ins
 
@@ -320,8 +319,8 @@ class ModeCheckPluginTopic(WatoMode):
 
     @override
     def page(self, config: Config) -> None:
-        if isinstance(self._manpages, list):
-            _render_manpage_list(
+        if isinstance(self._manpages, list):  # type: ignore[unreachable]
+            _render_manpage_list(  # type: ignore[unreachable]
                 self._titles,
                 self._manpages,
                 self._path[-1],
@@ -420,7 +419,7 @@ def _render_manpage_list(
     ) as table:
         for entry in sorted(manpage_list, key=lambda x: x["title"]):
             if not isinstance(entry, dict):
-                continue
+                continue  # type: ignore[unreachable]
             table.row()
             url = makeuri(
                 request,

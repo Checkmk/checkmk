@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 from json import dumps
 from pathlib import Path
@@ -26,13 +25,13 @@ def get_mk_msoffice_files(conf: dict[str, str]) -> FileGenerator:
 def _get_mk_msoffice_conf_lines(conf: dict[str, str]) -> str:
     match conf["client_secret"]:
         case ("password", secret):
-            ...
+            ...  # type: ignore[unreachable]
         case ("store", pwd_id):
-            secret = lookup_for_bakery(pwd_id)
+            secret = lookup_for_bakery(pwd_id)  # type: ignore[unreachable]
         case other:
             raise ValueError(f"Invalid password type: {other!r}")
 
-    config_dict = {
+    config_dict = {  # type: ignore[unreachable]
         "ClientId": conf["client_id"],
         "TenantId": conf["tenant_id"],
         "ClientSecret": secret,

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Modes for managing users and contacts"""
 
@@ -737,7 +736,7 @@ class ModeUsers(WatoMode):
                 if "disable_notifications" in user_spec and isinstance(
                     user_spec["disable_notifications"], bool
                 ):
-                    disable_notifications_opts = {"disable": user_spec["disable_notifications"]}
+                    disable_notifications_opts = {"disable": user_spec["disable_notifications"]}  # type: ignore[unreachable]
                 else:
                     disable_notifications_opts = user_spec.get("disable_notifications", {})
 

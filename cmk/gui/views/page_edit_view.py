@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Provides the view editor dialog"""
 
@@ -703,7 +702,7 @@ def _view_editor_spec(
         column_spec: ColumnSpec,
     ) -> PainterName | tuple[PainterName, PainterParameters]:
         if column_spec.parameters is None:
-            return column_spec.name
+            return column_spec.name  # type: ignore[unreachable]
         return (column_spec.name, column_spec.parameters)
 
     vs_column = Transform(

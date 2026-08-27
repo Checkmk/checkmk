@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Mapping
 from typing import Any
@@ -214,8 +213,8 @@ def check_oracle_tablespaces(
     db_version = tablespace["db_version"]
 
     # Conversion of old autochecks params
-    if isinstance(params, tuple):
-        params = {"autoextend": params[0], "levels": params[1:]}
+    if isinstance(params, tuple):  # type: ignore[unreachable]
+        params = {"autoextend": params[0], "levels": params[1:]}  # type: ignore[unreachable]
 
     autoext = params.get("autoextend")
     uses_default_increment = False

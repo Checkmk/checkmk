@@ -8,7 +8,6 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 # TODO FIXME: Change attribute sync plug-ins to classes. The current dict
 # based approach is not very readable. Classes/objects make it a lot
@@ -1228,7 +1227,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                         base, self._ldap_get_scope(scope), filt, columns
                     ):
                         if dn is None:
-                            continue  # skip unwanted answers
+                            continue  # type: ignore[unreachable]  # skip unwanted answers
                         new_obj = {}
                         for key, val in obj.items():
                             new_obj[key.lower()] = [v.decode("utf-8") for v in val]
@@ -1412,7 +1411,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         user_id = self._sanitize_user_id(raw_user_id)
         if user_id is None:
-            return None
+            return None  # type: ignore[unreachable]
 
         fetched_ldap_user = FetchedLDAPUser(
             dn=dn if no_escape else dn.replace("\\", "\\\\"),

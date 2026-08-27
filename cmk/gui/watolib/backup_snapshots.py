@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import glob
 import io
@@ -274,8 +273,8 @@ def get_snapshot_status(
     validate_checksums: bool = False,
     check_correct_core: bool = True,
 ) -> SnapshotStatus:
-    if isinstance(snapshot, tuple):
-        name, file_stream = snapshot
+    if isinstance(snapshot, tuple):  # type: ignore[unreachable]
+        name, file_stream = snapshot  # type: ignore[unreachable]
     else:
         name = snapshot
         file_stream = None
@@ -295,13 +294,13 @@ def get_snapshot_status(
 
     def access_snapshot(handler: Callable[[IO | str], T]) -> T:
         if file_stream:
-            file_stream.seek(0)
+            file_stream.seek(0)  # type: ignore[unreachable]
             return handler(file_stream)
         return handler(snapshot_dir + name)
 
     def check_size() -> None:
         if file_stream:
-            file_stream.seek(0, os.SEEK_END)
+            file_stream.seek(0, os.SEEK_END)  # type: ignore[unreachable]
             size = file_stream.tell()
         else:
             statinfo = os.stat(snapshot_dir + name)

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Callable, Iterable, Mapping
 from math import ceil
@@ -146,7 +145,7 @@ def wmi_yield_raw_persec(
     if table is None:
         # This case may be when a check was discovered with a table which subsequently disappeared again.
         # We expect to get `None` in this case.
-        return
+        return  # type: ignore[unreachable]
 
     if row == "":
         row = 0

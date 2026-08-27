@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Iterator, Sequence
 from pathlib import Path
@@ -115,7 +114,7 @@ def test_user_config_move_snapin_before(
         move = user_config.get_snapin(move_id)
     except KeyError as e:
         if result is None:
-            assert "does not exist" in "%s" % e
+            assert "does not exist" in "%s" % e  # type: ignore[unreachable]
             return
         raise
 
@@ -480,6 +479,6 @@ def test_move_snapin(mocker: MockerFixture, move: str, before: str, do_save: boo
     )
 
     if do_save is None:
-        m_save.assert_not_called()
+        m_save.assert_not_called()  # type: ignore[unreachable]
     else:
         m_save.assert_called_once()

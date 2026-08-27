@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 
 from collections.abc import Iterable, Sequence
@@ -296,7 +295,7 @@ class JobRenderer:
             (_("Result"), "<br>".join(loginfo["JobResult"])),
         ]:
             if right is None:
-                continue
+                continue  # type: ignore[unreachable]
             html.open_tr()
             html.th(left)
             html.td(HTML.without_escaping(right))
@@ -465,7 +464,7 @@ class JobRenderer:
                 css="job_result",
             )
         else:
-            html.td("", css="job_last_progress")
+            html.td("", css="job_last_progress")  # type: ignore[unreachable]
             html.td("", css="job_result")
 
         html.close_tr()

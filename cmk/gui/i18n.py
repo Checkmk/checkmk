@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
-
 
 import contextlib
 import gettext as gettext_module
@@ -50,7 +48,7 @@ def translate_to_current_language(message: str) -> str:
         return ""
     if translation:
         return translation.translation.gettext(message)
-    return str(message)
+    return str(message)  # type: ignore[unreachable]
 
 
 def _(message: str, /) -> str:
@@ -73,7 +71,7 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
     """
     if translation:
         return translation.translation.ngettext(singular, plural, n)
-    if n == 1:
+    if n == 1:  # type: ignore[unreachable]
         return str(singular)
     return str(plural)
 
@@ -81,7 +79,7 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
 def get_current_language() -> str:
     if translation:
         return translation.name
-    return "en"
+    return "en"  # type: ignore[unreachable]
 
 
 def _get_language_dirs() -> list[Path]:

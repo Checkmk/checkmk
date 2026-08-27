@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
-
 
 from typing import assert_never, overload
 
@@ -40,4 +38,4 @@ def denilled[T](
         return [entry for entry in obj if entry is not None]
     if isinstance(obj, dict):
         return {key: value for key, value in obj.items() if value is not None}
-    return assert_never(type(obj))
+    return assert_never(type(obj))  # type: ignore[unreachable]

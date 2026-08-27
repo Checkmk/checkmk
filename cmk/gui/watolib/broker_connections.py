@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 
 from dataclasses import asdict, dataclass
@@ -38,7 +37,7 @@ class BrokerConnectionsConfigFile(WatoSingleConfigFile[BrokerConnections]):
                 lock=lock,
             )
         ) is None:
-            return BrokerConnections({})
+            return BrokerConnections({})  # type: ignore[unreachable]
 
         return BrokerConnections(
             {

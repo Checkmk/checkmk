@@ -7,7 +7,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 
 import json
@@ -2520,7 +2519,7 @@ class Folder:
 
         time_allowed = self.attributes["network_scan"].get("time_allowed")
         if time_allowed is None:
-            return next_time  # No time frame limit
+            return next_time  # type: ignore[unreachable]  # No time frame limit
 
         # Transform pre 1.6 single time window to list of time windows
         times_allowed = [time_allowed] if isinstance(time_allowed, tuple) else time_allowed
@@ -3252,24 +3251,24 @@ class Folder:
                     "Host attributes are locked (you cannot create, edit or delete hosts in this folder)"
                 )
             )
-        elif isinstance(self._locked_hosts, str) and self._locked_hosts:
-            lock_messages.append(self._locked_hosts)
+        elif isinstance(self._locked_hosts, str) and self._locked_hosts:  # type: ignore[unreachable]
+            lock_messages.append(self._locked_hosts)  # type: ignore[unreachable]
 
         # Locked folder attributes
         if self._locked is True:
             lock_messages.append(
                 _("Folder attributes are locked (you cannot edit the attributes of this folder)")
             )
-        elif isinstance(self._locked, str) and self._locked:
-            lock_messages.append(self._locked)
+        elif isinstance(self._locked, str) and self._locked:  # type: ignore[unreachable]
+            lock_messages.append(self._locked)  # type: ignore[unreachable]
 
         # Also subfolders are locked
         if self._locked_subfolders:
             lock_messages.append(
                 _("Subfolders are locked (you cannot create or remove folders in this folder)")
             )
-        elif isinstance(self._locked_subfolders, str) and self._locked_subfolders:
-            lock_messages.append(self._locked_subfolders)
+        elif isinstance(self._locked_subfolders, str) and self._locked_subfolders:  # type: ignore[unreachable]
+            lock_messages.append(self._locked_subfolders)  # type: ignore[unreachable]
 
         if lock_messages:
             if len(lock_messages) == 1:
@@ -3544,7 +3543,7 @@ class SearchFolder:
 
     def path(self) -> str:
         if self._name:
-            return self._base_folder.path() + "//search:" + self._name
+            return self._base_folder.path() + "//search:" + self._name  # type: ignore[unreachable]
         return self._base_folder.path() + "//search"
 
     def url(self, request: Request, add_vars: HTTPVariables | None = None) -> str:

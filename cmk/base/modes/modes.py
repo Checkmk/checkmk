@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 
 import sys
@@ -237,7 +236,7 @@ class Option:
 
     def short_help_text(self, fmt: str) -> str | None:
         if self.short_help is None:
-            return None
+            return None  # type: ignore[unreachable]
 
         option_txt = " %s" % (", ".join(self.options()))
 

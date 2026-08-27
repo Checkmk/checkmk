@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 from itertools import count
 
@@ -443,7 +442,7 @@ def test_check_alert_resets() -> None:
         if expected_notice is None:
             assert notice == []
         else:
-            assert isinstance(notice[0], Result)
+            assert isinstance(notice[0], Result)  # type: ignore[unreachable]
             assert expected_notice == notice[0].details
 
 

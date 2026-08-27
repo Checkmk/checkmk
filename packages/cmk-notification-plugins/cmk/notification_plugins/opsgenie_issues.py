@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="unreachable"
 
 import os
 import sys
@@ -208,7 +207,7 @@ def _get_proxy_url(proxy_setting: str | None, url: str | None) -> str | None:
     if isinstance(proxy, ExplicitProxyConfig):
         return proxy_setting
 
-    sys.stderr.write(f"Unsupported proxy setting: {proxy_setting}\n")
+    sys.stderr.write(f"Unsupported proxy setting: {proxy_setting}\n")  # type: ignore[unreachable]
     sys.exit(2)
 
 

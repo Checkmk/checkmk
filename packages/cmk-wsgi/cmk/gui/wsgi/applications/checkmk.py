@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 
 import functools
@@ -235,7 +234,7 @@ def _process_request(
             raise MKNotFound(str(exc)) from exc
 
         if file_name is None:
-            page_handler = _page_not_found
+            page_handler = _page_not_found  # type: ignore[unreachable]
         elif _handler := pages.get_page_handler(file_name):
             page_handler = ensure_authentication(_handler)
         elif _handler := pages.get_page_handler(f"noauth:{file_name}"):

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Callable, Mapping
 from typing import Literal, NotRequired, override, TypedDict
@@ -168,7 +167,7 @@ def http_proxy_config_from_user_setting(
         case (p_type, p_value):
             proxy_type, value = p_type, p_value
         case _:
-            return EnvironmentProxyConfig()
+            return EnvironmentProxyConfig()  # type: ignore[unreachable]
 
     if proxy_type == "environment":
         return EnvironmentProxyConfig()

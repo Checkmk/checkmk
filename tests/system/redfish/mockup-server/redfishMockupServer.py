@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="unreachable"
 
 # redfishMockupServer.py
 # tested and developed Python 3.4
@@ -235,7 +234,7 @@ class RfMockupServer(BaseHTTPRequestHandler):
         except Exception as e:
             logger.info("post error %s", str(e))
         return 204
-        self.event_id = self.event_id + 1
+        self.event_id = self.event_id + 1  # type: ignore[unreachable]
         return None
 
     def handle_telemetry(self, data_received):

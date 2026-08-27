@@ -14,7 +14,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """agent_aws
 
@@ -6823,7 +6822,7 @@ class ElastiCacheSummary(AWSSection):
         if colleague_content:
             return colleague_content
 
-        clusters = list(
+        clusters = list(  # type: ignore[unreachable]
             get_paginated_resources(
                 self._client, "describe_replication_groups", "ReplicationGroups", ElastiCacheCluster
             )

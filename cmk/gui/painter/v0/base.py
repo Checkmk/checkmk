@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 
 import abc
@@ -603,7 +602,7 @@ class Cell:
             if css_classes is None:
                 css_classes = ""
             if rendered_txt is None:
-                return css_classes.split(), ""
+                return css_classes.split(), ""  # type: ignore[unreachable]
             assert isinstance(rendered_txt, str | HTML)
 
             txt = rendered_txt.strip()
@@ -612,7 +611,7 @@ class Cell:
             # Handle <img...>. Our PDF writer cannot draw arbitrary
             # images, but all that we need for showing simple icons.
             # Current limitation: *one* image
-            assert not isinstance(txt, tuple)
+            assert not isinstance(txt, tuple)  # type: ignore[unreachable]
             if (isinstance(txt, str) and txt.lower().startswith("<img")) or (
                 isinstance(txt, HTML) and txt.lower().startswith(HTML.without_escaping("<img"))
             ):
@@ -626,7 +625,7 @@ class Cell:
                     html_str = replace_anchor_tags_with_urls(html_str)
                     html_str = replace_br_with_newlines(html_str)
                     content = escaping.strip_tags(html_str)
-                elif not isinstance(txt, tuple):
+                elif not isinstance(txt, tuple):  # type: ignore[unreachable]
                     content = escaping.strip_tags(unescape(txt))
 
             return css_classes.split(), content

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import dataclasses
 import inspect
@@ -97,8 +96,8 @@ class ParameterInfo:
 
 
 def _collect_sources(type_: type) -> Sequence[SourceAnnotation]:
-    if isinstance(type_, TypeAliasType):
-        if type_.__type_params__:
+    if isinstance(type_, TypeAliasType):  # type: ignore[unreachable]
+        if type_.__type_params__:  # type: ignore[unreachable]
             # TypeAliasType with type parameters, we cannot handle this case
             raise ValueError(f"Unsupported TypeAliasType with type parameters: {type_}")
         return _collect_sources(type_.__value__)

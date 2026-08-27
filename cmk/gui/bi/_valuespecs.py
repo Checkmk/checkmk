@@ -7,7 +7,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import abc
 import copy
@@ -686,7 +685,7 @@ def is_contact_for_pack(bi_pack: BIAggregationPack) -> bool:
     assert user.id is not None
     contact_groups = userdb.contactgroups_of_user(user.id)
     if contact_groups is None:
-        return True
+        return True  # type: ignore[unreachable]
 
     return any(group in bi_pack.contact_groups for group in contact_groups)
 

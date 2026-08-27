@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="unreachable"
 
 import time
 
@@ -119,7 +118,7 @@ def discover_jolokia_metrics_serv(info):
     needed_key = "Requests"
     for inst, vals in parsed.items():
         if vals is None:
-            continue  # no data from agent
+            continue  # type: ignore[unreachable]  # no data from agent
         for app, val in vals.get("apps", {}).items():
             for serv, servinfo in val.get("servlets", {}).items():
                 if needed_key in servinfo:

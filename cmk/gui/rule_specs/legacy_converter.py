@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import dataclasses
 import enum
@@ -2062,8 +2061,8 @@ def _transform_proxy_back(
     match value:  # type: ignore[exhaustive-match]
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
-        case "no_proxy", None:
-            return "cmk_postprocessed", "no_proxy", ""
+        case "no_proxy", None:  # type: ignore[unreachable]
+            return "cmk_postprocessed", "no_proxy", ""  # type: ignore[unreachable]
         case "global", str(stored_proxy_id):
             return "cmk_postprocessed", "stored_proxy", stored_proxy_id
         case "url", str(url):
@@ -2228,7 +2227,7 @@ def _transform_from_legacy_internal_proxy(
         case "environment", "environment":
             return "cmk_postprocessed", "environment_proxy", ""
 
-        case "no_proxy", None:
+        case "no_proxy", None:  # type: ignore[unreachable]
             return "cmk_postprocessed", "no_proxy", ""
 
         case "global", str(stored_proxy_id):
@@ -2237,7 +2236,7 @@ def _transform_from_legacy_internal_proxy(
         case "manual", {
             "scheme": str(scheme),
             "proxy_server_name": str(proxy_server_name),
-            "port": int(port),
+            "port": int(port),  # type: ignore[unreachable]
             "auth": {
                 "user": str(user),
                 "password": (
@@ -2268,7 +2267,7 @@ def _transform_from_legacy_internal_proxy(
         case "manual", {
             "scheme": str(scheme),
             "proxy_server_name": str(proxy_server_name),
-            "port": int(port),
+            "port": int(port),  # type: ignore[unreachable]
         }:
             return (
                 "cmk_postprocessed",

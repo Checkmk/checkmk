@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 import dataclasses
 from collections.abc import Mapping, Sequence
@@ -120,7 +119,7 @@ def _mssql_datafiles_process_sizes(
                     levels[0] * reference_value / 100.0,
                     levels[1] * reference_value / 100.0,
                 )
-        elif levels[0] is not None:
+        elif levels[0] is not None:  # type: ignore[unreachable]
             return (
                 levels[0] * 1024 * 1024,
                 levels[1] * 1024 * 1024,

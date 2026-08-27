@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Modes for managing notification configuration"""
 
@@ -1424,7 +1423,7 @@ def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:
                 continue
             # Should not happen
             if rule is None:
-                continue
+                continue  # type: ignore[unreachable]
 
             rule_list.append(
                 Rule(

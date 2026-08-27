@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 
 import abc
@@ -373,7 +372,7 @@ class _SortFunctionText:
         if not isinstance(val_a, str):
             raise TypeError(val_a)
 
-        if not isinstance(val_b, str):
+        if not isinstance(val_b, str):  # type: ignore[unreachable]
             raise TypeError(val_a)
 
         if self._text_field.sort_key is None:
@@ -794,7 +793,7 @@ def _make_title_function(legacy_hint: InventoryHintSpec) -> Callable[[str], str]
 
     if callable(title := legacy_hint["title"]):
         # TODO Do we still need this?
-        return title
+        return title  # type: ignore[unreachable]
 
     return lambda word: str(title)
 

@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 
 import urllib.parse
@@ -232,7 +231,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
             if instance.is_permitted(user_permissions):
                 for topic, _bookmarks in instance.bookmarks_by_topic():
                     if topic is None:
-                        topic = instance.default_bookmark_topic()
+                        topic = instance.default_bookmark_topic()  # type: ignore[unreachable]
                     topics.add(topic)
         return [(t, t) for t in sorted(topics)]
 
@@ -343,7 +342,7 @@ class Bookmarks(SidebarSnapin):
             if instance.is_permitted(user_permissions):
                 for topic, bookmarks in instance.bookmarks_by_topic():
                     if topic is None:
-                        topic = instance.default_bookmark_topic()
+                        topic = instance.default_bookmark_topic()  # type: ignore[unreachable]
                     bookmark_list = topics.setdefault(topic, [])
                     bookmark_list += bookmarks
         return sorted(topics.items())

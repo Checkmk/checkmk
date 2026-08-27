@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="unreachable"
 
 
 from functools import partial
@@ -103,7 +102,7 @@ def session_attr[T](name: SessionVarName, type_class: type[T]) -> T:
             rv = get_attr_or_item(rv, attr)
 
         if rv is None:
-            return None
+            return None  # type: ignore[unreachable]
 
         if not isinstance(rv, type_class):
             raise ValueError(

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Iterator
 from pathlib import Path
@@ -116,7 +115,7 @@ class BlobStorage:
                 client_id=ad_credentials["client_id"],
                 client_secret=client_secret,
             )
-        return assert_never(configured_credentials)
+        return assert_never(configured_credentials)  # type: ignore[unreachable]
 
 
 class BlobStorageTarget(RemoteTarget[BlobStorageParams, BlobStorage]):

@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="unreachable"
 
 """agent_gcp
 
@@ -1156,7 +1155,7 @@ def default_labeler(asset: Asset) -> HostLabelSection:
     if "labels" in asset.asset.resource.data:
         labels = asset.asset.resource.data["labels"]
         if isinstance(labels, Mapping):
-            return HostLabelSection(labels={f"cmk/gcp/labels/{k}": v for k, v in labels.items()})
+            return HostLabelSection(labels={f"cmk/gcp/labels/{k}": v for k, v in labels.items()})  # type: ignore[unreachable]
         # data are malformed, we have to break
         raise RuntimeError(f"Invalid data type asset.asset.resource.data: '{type(labels)}'")
 

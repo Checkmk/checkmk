@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 import abc
 import datetime
@@ -408,7 +407,7 @@ def _filter_notifiable_users(
 ) -> Iterator[_NotifiableUser]:
     for user_id, user_spec in users.items():
         if user_id is None:
-            continue
+            continue  # type: ignore[unreachable]
         notification_categories = []
         if user_permissions.user_may(user_id, "wato.manage_mkps"):
             notification_categories.append(_NotificationCategory.manage_mkps)

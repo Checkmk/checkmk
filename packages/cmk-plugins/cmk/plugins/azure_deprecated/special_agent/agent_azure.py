@@ -8,7 +8,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """agent_azure
 
@@ -939,7 +938,7 @@ class ExplicitConfig:
             return
         if self.current_group is None:
             raise RuntimeError("missing arg: group=<name>")
-        self.current_group.add_key(key, value)
+        self.current_group.add_key(key, value)  # type: ignore[unreachable]
 
     def is_configured(self, resource: AzureResource) -> bool:
         if self.fetchall:

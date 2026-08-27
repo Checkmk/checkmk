@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="unreachable"
 
 import time
 
@@ -61,8 +60,8 @@ def inv_paint_generic(value: SDValue) -> PaintResult:
         return "number", "%.2f" % value
     if isinstance(value, int):
         return "number", "%d" % value
-    if isinstance(value, bool):
-        return "", _("Yes") if value else _("No")
+    if isinstance(value, bool):  # type: ignore[unreachable]
+        return "", _("Yes") if value else _("No")  # type: ignore[unreachable]
     return "", escape_text("%s" % value)
 
 

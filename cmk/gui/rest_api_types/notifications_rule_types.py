@@ -8,7 +8,6 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
@@ -1327,12 +1326,12 @@ class CheckboxURLPrefix:
             case None:
                 return CheckboxURLPrefixAPIValueType(state="disabled")
 
-            case ("automatic_http", None):
+            case ("automatic_http", None):  # type: ignore[unreachable]
                 return CheckboxURLPrefixAPIValueType(
                     state="enabled",
                     value={"option": "automatic", "schema": "http"},
                 )
-            case ("automatic_https", None):
+            case ("automatic_https", None):  # type: ignore[unreachable]
                 return CheckboxURLPrefixAPIValueType(
                     state="enabled",
                     value={"option": "automatic", "schema": "https"},
@@ -1888,7 +1887,7 @@ class ManagementType:
 
     def to_mk_file_format(self) -> MgmtTypeCaseType | MgmtTypeIncidentType | None:
         if self.mgmt_type is None:
-            return None
+            return None  # type: ignore[unreachable]
 
         if self.mgmt_type == "case":
             r_case = {

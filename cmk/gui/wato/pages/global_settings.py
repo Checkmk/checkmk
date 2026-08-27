@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """Editor for global settings in main.mk and modes for these global
 settings"""
@@ -667,8 +666,8 @@ class ABCEditGlobalSettingMode(WatoMode):
                 html.write_text_permissive(_("This variable is at factory settings."))
             else:
                 curvalue = self._current_settings[self._varname]
-                if is_configured_globally and curvalue == self._global_settings[self._varname]:
-                    html.write_text_permissive(_("Site setting and global setting are identical."))
+                if is_configured_globally and curvalue == self._global_settings[self._varname]:  # type: ignore[unreachable]
+                    html.write_text_permissive(_("Site setting and global setting are identical."))  # type: ignore[unreachable]
                 elif curvalue == defvalue:
                     html.write_text_permissive(
                         _("Your setting and factory settings are identical.")

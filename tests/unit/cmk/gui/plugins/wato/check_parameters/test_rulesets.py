@@ -13,7 +13,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 from collections.abc import Iterator, Mapping
 
@@ -359,7 +358,7 @@ def test_rule_from_config_dict(  # type: ignore[misc]
     if rule_options is not None:
         assert rule.rule_options == RuleOptions.from_config(rule_options)
     else:
-        assert rule.rule_options == RuleOptions.from_config({})
+        assert rule.rule_options == RuleOptions.from_config({})  # type: ignore[unreachable]
 
     # test for synchronous to_dict on the way. Except when rule_spec.id was not set, because the ID
     # is added dynamically when processing such rules.
@@ -369,7 +368,7 @@ def test_rule_from_config_dict(  # type: ignore[misc]
     if "id" in rule_spec:
         assert new_rule_config == rule_spec_for_config
     else:
-        assert new_rule_config["id"] == "1"
+        assert new_rule_config["id"] == "1"  # type: ignore[unreachable]
         del new_rule_config["id"]
         assert new_rule_config == rule_spec_for_config
 

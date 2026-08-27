@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="unreachable"
 
 
 import base64
@@ -213,7 +212,7 @@ def _check_auth_by_remote_user(config: Config) -> UserId | None:
     WARNING: This way of authentication does NOT verify any credentials!
     """
     if (username := request.remote_user) is None:
-        return None
+        return None  # type: ignore[unreachable]
 
     user_id = _try_user_id(username)
     if userdb.user_exists(user_id):

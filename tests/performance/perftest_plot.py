@@ -50,7 +50,6 @@ Example:
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 import argparse
 import json
@@ -608,7 +607,7 @@ class PerformanceDb:
             - If no data is found for the scenario, an empty list is returned.
         """
         if (job_details := self.get_job(job_name=job_name)) is None:
-            return []
+            return []  # type: ignore[unreachable]
         if (scenario_details := self.get_scenario(scenario_name=scenario_name)) is None:
             return []
         if (

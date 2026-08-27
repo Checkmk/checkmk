@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 # <<<jenkins_instance>>>
 # {"quietingDown": false, "nodeDescription": "the master Jenkins node",
@@ -65,7 +64,7 @@ def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResul
 
     if (instance_description := section.get("nodeDescription")) is not None:
         if not isinstance(instance_description, str):
-            instance_description = str(instance_description)
+            instance_description = str(instance_description)  # type: ignore[unreachable]
 
         yield Result(state=State.OK, summary=f"Description: {instance_description.title()}")
 

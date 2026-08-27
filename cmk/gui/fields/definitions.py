@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
-# mypy: disable-error-code="unreachable"
 
 """A few upgraded Fields which handle some OpenAPI validation internally."""
 
@@ -357,8 +356,8 @@ class ExprSchema(CmkOneOfSchema):
     ) -> object:  # this could be anything, but probably either a QueryExpression, a dict, or a list
         # When being passed in via the query string, we may get the raw JSON string instead of
         # the deserialized dictionary. We need to unpack it ourselves.
-        if isinstance(data, str):
-            try:
+        if isinstance(data, str):  # type: ignore[unreachable]
+            try:  # type: ignore[unreachable]
                 data = json.loads(data)
             except json.decoder.JSONDecodeError as exc:
                 raise ValidationError(
@@ -503,8 +502,8 @@ class _ListOfColumns(base.List):
         columns: list[str] = super()._deserialize(value, attr, data)
         assert isinstance(columns, list), f"Expected a list of column names, got {value!r}"
         for column in reversed(self.mandatory):
-            if isinstance(column, Column):  # noqa: SIM108
-                column_name = column.name
+            if isinstance(column, Column):  # type: ignore[unreachable]  # noqa: SIM108
+                column_name = column.name  # type: ignore[unreachable]
             else:
                 column_name = column
             if column_name not in columns:

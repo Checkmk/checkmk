@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 """agent_tinkerforge
 
@@ -238,7 +237,7 @@ def init_device_handlers() -> dict[int, Callable[[IPConnection, Mapping[str, Any
         if dev_id is not None:
             device_handlers[dev_id] = handler
         else:
-            module = __import__("tinkerforge." + module_name)
+            module = __import__("tinkerforge." + module_name)  # type: ignore[unreachable]
             sub_module = module.__dict__[module_name]
             device_handlers[sub_module.__dict__[clazz].DEVICE_IDENTIFIER] = handler
 

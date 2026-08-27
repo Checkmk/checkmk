@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="unreachable"
 
 
 import contextlib
@@ -546,7 +545,7 @@ class Table:
 
             if isinstance(row.css, list):
                 class_.extend([c for c in row.css if c is not None])  # type: ignore[redundant-expr]
-            elif row.css is not None:
+            elif row.css is not None:  # type: ignore[unreachable]
                 class_.append(row.css)
 
             html.open_tr(
@@ -667,7 +666,7 @@ class Table:
                 header_title = header.title
 
             if not isinstance(header.css, list):
-                css_class: CSSSpec = [header.css]
+                css_class: CSSSpec = [header.css]  # type: ignore[unreachable]
             else:
                 css_class = header.css
 

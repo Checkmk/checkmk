@@ -321,7 +321,7 @@ def _graph_time_caption(time_range: TimeRange) -> str:
 
 
 def _notation_formatter(y_axis: YAxis | None) -> NotationFormatter | None:
-    if y_axis is None:
+    if y_axis is None or y_axis.unit is None:
         return None
     unit_format = y_axis.unit
     # The engine fetch does not (yet) convert values for the user's temperature preference, so
@@ -387,7 +387,7 @@ def _apply_render_config(
         )
 
     if config.show_vertical_axis:
-        if y_axis is not None and y_axis.unit.symbol:
+        if y_axis is not None and y_axis.unit is not None and y_axis.unit.symbol:
             ax.set_ylabel(y_axis.unit.symbol, fontsize=config.font_size)
         if formatter is not None and is_mirrored:
             target_number_of_labels = max(1.0, config.size[1] / 8.0 + 1)

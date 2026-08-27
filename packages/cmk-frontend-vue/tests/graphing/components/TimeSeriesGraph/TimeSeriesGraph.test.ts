@@ -135,7 +135,7 @@ const MEMORY_METRIC: Metric = {
 }
 const MEMORY_PROPS: Partial<TimeSeriesGraphProps> = {
   metrics: [MEMORY_METRIC],
-  options: { ...DEFAULT_PROPS.options, y_axis: { title: '', unit: IEC_UNIT } }
+  options: { ...DEFAULT_PROPS.options, y_axis: { unit: IEC_UNIT } }
 }
 
 function drawnXs(): number[] {

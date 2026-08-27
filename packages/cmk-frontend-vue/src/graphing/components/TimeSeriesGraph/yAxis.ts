@@ -14,5 +14,5 @@ import type { Metric, YAxis } from './types'
  */
 export function deriveYAxis(metrics: Metric[]): YAxis | null {
   const unit = metrics[0]?.metadata.unit
-  return unit === undefined ? null : { title: '', unit }
+  return unit === undefined ? null : { unit }
 }

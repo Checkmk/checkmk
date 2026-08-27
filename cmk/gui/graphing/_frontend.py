@@ -189,7 +189,7 @@ def y_axis_from_units(units: Iterable[Unit]) -> YAxis | None:
     _graph_png._derive_y_axis (the EvaluatedGraph), which carries the same CurveAttributes.unit
     on its curves but has no common curve type to walk with this one.
     """
-    return next((YAxis(title="", unit=unit_to_unit_format(unit)) for unit in units), None)
+    return next((YAxis(unit=unit_to_unit_format(unit)) for unit in units), None)
 
 
 def derive_y_axis(graph: Graph) -> YAxis | None:

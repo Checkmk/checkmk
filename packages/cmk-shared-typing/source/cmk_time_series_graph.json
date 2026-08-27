@@ -39,20 +39,17 @@
       "title": "XAxis",
       "type": "object",
       "properties": {
-        "title": { "type": "string" },
         "unit": { "type": "string", "enum": ["time"] },
         "fixed_timerange": { "type": "boolean" }
       },
-      "required": ["title", "unit", "fixed_timerange"]
+      "required": ["unit", "fixed_timerange"]
     },
     "y_axis": {
       "title": "YAxis",
       "type": "object",
       "properties": {
-        "title": { "type": "string" },
         "unit": { "$ref": "unit_format.json#" }
-      },
-      "required": ["title", "unit"]
+      }
     },
     "graph_options": {
       "title": "GraphOptions",

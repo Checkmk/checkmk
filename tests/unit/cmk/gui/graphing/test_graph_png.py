@@ -139,7 +139,6 @@ def test_notation_formatter_never_converts_temperature_values() -> None:
     the PNG renderer must never apply a real conversion formula to a celsius/fahrenheit unit -
     doing so would mislabel the still-unconverted plotted values."""
     y_axis = YAxis(
-        title="",
         unit=UnitFormat(
             notation="decimal", symbol="°C", precision=Precision(type="auto", digits=2)
         ),
@@ -162,7 +161,6 @@ def test_render_png_ex_with_a_unit_renders_ticks_and_legend_via_the_formatter() 
         lines=[],
     )
     y_axis = YAxis(
-        title="",
         unit=UnitFormat(notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)),
     )
 
@@ -197,7 +195,6 @@ def test_mirrored_y_labels_mirrors_positive_text_to_the_negative_side() -> None:
     ax = fig.add_subplot(1, 1, 1)
     ax.set_ylim(-2000, 2000)
     y_axis = YAxis(
-        title="",
         unit=UnitFormat(notation="decimal", symbol="B", precision=Precision(type="auto", digits=2)),
     )
     formatter = _notation_formatter(y_axis)
@@ -280,6 +277,7 @@ def test_derive_y_axis_reads_unit_from_the_first_curve() -> None:
     y_axis = _derive_y_axis(graph)
 
     assert y_axis is not None
+    assert y_axis.unit is not None
     assert y_axis.unit.notation == "decimal"
     assert y_axis.unit.precision.digits == 2
 

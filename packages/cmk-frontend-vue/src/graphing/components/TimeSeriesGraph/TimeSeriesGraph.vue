@@ -155,7 +155,7 @@ const maxZoomHintSide = computed(() =>
 
 // 'iec' notation is 1024-based so its ticks step in binary; every other notation is decimal.
 const yStepping = computed((): 'binary' | 'decimal' =>
-  props.options.y_axis?.unit.notation === 'iec' ? 'binary' : 'decimal'
+  props.options.y_axis?.unit?.notation === 'iec' ? 'binary' : 'decimal'
 )
 // The axis unit places the labels, not just their text: renderYLabels steps in the unit's own
 // atoms, so an IEC axis lands on 2 MiB rather than on a decimally round 2 * 10^6 bytes.

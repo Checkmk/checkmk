@@ -430,7 +430,6 @@ def get_url_raw(
     headers_ = {
         "x-checkmk-version": cmk_version.__version__,
         "x-checkmk-edition": cmk_version.edition(paths.omd_root).short,
-        "x-checkmk-license-state": get_license_state().readable,
     }
     headers_.update(add_headers or {})
 
@@ -481,7 +480,6 @@ def _verify_compatibility(response: requests.Response) -> None:
 
     remote_version = response.headers.get("x-checkmk-version", "")
     remote_edition_short = response.headers.get("x-checkmk-edition", "")
-    remote_license_state = parse_license_state(response.headers.get("x-checkmk-license-state", ""))
 
     if not remote_version or not remote_edition_short:
         return  # No validation
@@ -493,7 +491,7 @@ def _verify_compatibility(response: requests.Response) -> None:
             central_license_state,
             remote_version,
             remote_edition_short,
-            remote_license_state,
+            remote_license_state=None,
             is_replication_enabled=True,
         ),
         cmk_version.VersionsCompatible,
@@ -505,8 +503,10 @@ def _verify_compatibility(response: requests.Response) -> None:
                 central_license_state,
                 remote_version,
                 remote_edition_short,
-                remote_license_state,
-                compatibility,
+                # Note: Remote license state compatibility check was never implemented correctly.
+                # We plan to clean up these checks in CMK-38403.
+                remote_license_state=None,
+                compatibility=compatibility,
             )
         )
 
@@ -525,7 +525,6 @@ def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
         if "x-checkmk-edition" in request.headers
         else request.get_ascii_input_mandatory("_edition_short")
     )
-    central_license_state = parse_license_state(request.headers.get("x-checkmk-license-state", ""))
     remote_version = cmk_version.__version__
     remote_edition_short = cmk_version.edition(paths.omd_root).short
     remote_license_state = get_license_state()
@@ -533,10 +532,10 @@ def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
     compatibility = _compatible_with_central_site(
         central_version,
         central_edition_short,
-        central_license_state,
-        remote_version,
-        remote_edition_short,
-        remote_license_state,
+        central_license_state=None,
+        remote_version=remote_version,
+        remote_edition_short=remote_edition_short,
+        remote_license_state=remote_license_state,
         is_replication_enabled=True,
     )
 
@@ -548,11 +547,13 @@ def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
             make_incompatible_info(
                 central_version,
                 central_edition_short,
-                central_license_state,
-                remote_version,
-                remote_edition_short,
-                remote_license_state,
-                compatibility,
+                # Note: Central license state compatibility check was never implemented correctly.
+                # We plan to clean up these checks in CMK-38403.
+                central_license_state=None,
+                remote_version=remote_version,
+                remote_edition_short=remote_edition_short,
+                remote_license_state=remote_license_state,
+                compatibility=compatibility,
             )
         )
 

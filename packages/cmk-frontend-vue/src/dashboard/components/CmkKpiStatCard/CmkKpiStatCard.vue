@@ -342,8 +342,7 @@ const showScrim = computed(() => hasSparkLine.value && props.sparkHeightMode ===
 
 const cardEl = ref<HTMLElement | null>(null)
 const valueRowEl = ref<HTMLElement | null>(null)
-// The value row's live edges - the scrim must stay within the text's own band, not the whole card.
-const scrimRightEdge = ref(0)
+// The value row's live bottom edge - the scrim fades out below it, not at a fixed height.
 const scrimBottomEdge = ref(0)
 
 function measureScrim(): void {
@@ -354,7 +353,6 @@ function measureScrim(): void {
   }
   const cardRect = card.getBoundingClientRect()
   const rowRect = row.getBoundingClientRect()
-  scrimRightEdge.value = rowRect.right - cardRect.left
   scrimBottomEdge.value = rowRect.bottom - cardRect.top
 }
 
@@ -428,7 +426,6 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
     :style="{
       '--accent-color': color,
       '--tint-color': tintColor,
-      '--scrim-right-edge': `${scrimRightEdge}px`,
       '--scrim-bottom-edge': `${scrimBottomEdge}px`
     }"
     :tabindex="hasSparkLine ? 0 : undefined"
@@ -802,7 +799,7 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
   pointer-events: none;
 }
 
-/* Fades out in both directions past the text, so a curve peak near it isn't sliced off flat. */
+/* A full-width top vignette, fading continuously - not just a box under the text. */
 .db-cmk-kpi-stat-card__scrim {
   position: absolute;
   top: 0;
@@ -810,16 +807,10 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
   left: 0;
   height: calc(var(--scrim-bottom-edge) + clamp(8px, 6cqh, 32px));
   z-index: 1;
-  background: linear-gradient(
-    to right,
-    var(--card-effective-bg) 0,
-    var(--card-effective-bg) var(--scrim-right-edge),
-    transparent calc(var(--scrim-right-edge) + clamp(8px, 6cqw, 32px))
-  );
+  background: var(--card-effective-bg);
   mask-image: linear-gradient(
     to bottom,
     black 0,
-    black var(--scrim-bottom-edge),
     transparent calc(var(--scrim-bottom-edge) + clamp(8px, 6cqh, 32px))
   );
   pointer-events: none;

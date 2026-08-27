@@ -3,71 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
+from typing import Final
 
-from logging import Logger
-from typing import Final, override, Protocol
-
-from cmk.ccc.user import UserId
-from cmk.gui.config import active_config
-from cmk.gui.pagetypes import (
-    Overridable,
-    OverridableInstances,
-    PagetypeTopics,
-)
-from cmk.gui.permissions import permission_registry
-from cmk.gui.utils.roles import UserPermissions
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
-
-
-class PagetypeUpdater[TOverridable_co: Overridable](Protocol):
-    @property
-    def target_type(self) -> type[TOverridable_co]: ...
-
-    def update_raw_page_dict(self, page_dict: dict[str, object]) -> dict[str, object]: ...
-
-
-class UpdatePagetypes[TOverridable_co: Overridable](UpdateAction):
-    def __init__(
-        self,
-        *,
-        name: str,
-        title: str,
-        sort_index: int,
-        updater: PagetypeUpdater[TOverridable_co],
-        continue_on_failure: bool = True,
-    ):
-        super().__init__(
-            name=name,
-            title=title,
-            sort_index=sort_index,
-            expiry_version=ExpiryVersion.NEVER,
-            continue_on_failure=continue_on_failure,
-        )
-        self._updater = updater
-
-    @override
-    def __call__(self, logger: Logger) -> None:
-        updated_raw_page_dicts = {
-            instance_id: self._updater.update_raw_page_dict(raw_page_dict)
-            for instance_id, raw_page_dict in self._updater.target_type.load_raw().items()
-        }
-
-        instances = OverridableInstances[TOverridable_co]()
-        for (user_id, name), raw_page_dict in updated_raw_page_dicts.items():
-            instances.add_instance(
-                (user_id, name), self._updater.target_type.deserialize(raw_page_dict)
-            )
-
-        for user_id in (
-            user_id for (user_id, name) in instances.instances_dict() if user_id != UserId.builtin()
-        ):
-            self._updater.target_type.save_user_instances(
-                instances,
-                UserPermissions.from_config(active_config, permission_registry),
-                owner=user_id,
-            )
+from cmk.gui.pagetypes import PagetypeTopics
+from cmk.update_config.plugins.lib.pagetypes import UpdatePagetypes
+from cmk.update_config.registry import update_action_registry
 
 
 class PagetypeTopicsUpdater:

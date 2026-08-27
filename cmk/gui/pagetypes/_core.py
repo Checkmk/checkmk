@@ -149,6 +149,14 @@ class BaseConfig:
     description: str = ""
 
 
+class PageDeserializationError(Exception):
+    """Raised by ``deserialize`` for stored content the page type cannot read.
+
+    ``load`` skips such a page and logs it, so one unreadable page does not keep every other page
+    of every user from loading.
+    """
+
+
 class OverridableModel(BaseModel):
     owner: AnnotatedUserId
     public: VisualPublic | None
@@ -931,7 +939,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         for (user_id, name), raw_page_dict in cls.load_raw().items():
             try:
                 instance = cls.deserialize(raw_page_dict)
-            except ValidationError:
+            except ValidationError, PageDeserializationError:
                 logger.exception(
                     "Skipping invalid %(type_name)s %(name)r of user %(user_id)r",
                     {"type_name": cls.type_name(), "name": name, "user_id": user_id},

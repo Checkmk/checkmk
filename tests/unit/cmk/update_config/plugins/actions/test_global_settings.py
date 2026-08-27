@@ -11,7 +11,6 @@ from pytest_mock import MockerFixture
 from cmk.ccc.version import Edition
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
-from cmk.gui.valuespec import TextInput, Transform
 from cmk.gui.wato._check_mk_configuration import ConfigVariableLogLevels
 from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
@@ -20,36 +19,6 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.rulesets.v1.form_specs import String
 from cmk.update_config.plugins.actions import global_settings
-
-
-@pytest.mark.usefixtures("request_context")
-def test_update_global_config_transform_values(
-    mocker: MockerFixture,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # Disable variable filtering by known Checkmk variables
-    mocker.patch.object(
-        global_settings, "filter_unknown_settings", lambda global_config: global_config
-    )
-
-    ConfigVariableKey = ConfigVariable(
-        group=ConfigVariableGroupUserInterface,
-        primary_domain=ConfigDomainGUI,
-        ident="key",
-        valuespec=lambda context: Transform(  # noqa: ARG005
-            TextInput(), forth=lambda x: "new" if x == "old" else x
-        ),
-    )
-
-    registry = ConfigVariableRegistry()
-    registry.register(ConfigVariableKey)
-    monkeypatch.setattr(global_settings, "config_variable_registry", registry)
-
-    assert global_settings.update_global_config(
-        logging.getLogger(),
-        {"key": "old"},
-        active_config,
-    ) == {"key": "new"}
 
 
 @pytest.mark.usefixtures("request_context")

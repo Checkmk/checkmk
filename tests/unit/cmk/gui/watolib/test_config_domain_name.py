@@ -3,32 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
 
-import pytest
-
-from cmk.ccc.site import SiteId
-from cmk.ccc.version import Edition
-from cmk.gui.valuespec import FixedValue
-from cmk.gui.watolib.config_domain_name import (
-    ConfigVariable,
-    GlobalSettingsContext,
-)
+from cmk.gui.watolib.config_domain_name import ConfigVariable
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI, ConfigDomainOMD
 from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupSiteManagement,
 )
-from cmk.livestatus_client import SiteConfigurations
-from cmk.rulesets.v1.form_specs import FormSpec, Integer
-
-DUMMY_CONTEXT = GlobalSettingsContext(
-    target_site_id=SiteId("test-site"),
-    edition_of_local_site=Edition.COMMUNITY,
-    site_neutral_log_dir=Path(""),
-    site_neutral_var_dir=Path(""),
-    configured_sites=SiteConfigurations({}),
-    configured_graph_timeranges=[],
-)
+from cmk.rulesets.v1.form_specs import Integer
 
 
 def test_config_variable_add_domain() -> None:
@@ -36,7 +17,7 @@ def test_config_variable_add_domain() -> None:
         group=ConfigVariableGroupSiteManagement,
         primary_domain=ConfigDomainGUI,
         ident="test_var",
-        valuespec=lambda context: FixedValue(None),  # noqa: ARG005
+        form_spec=lambda context: Integer(),  # noqa: ARG005
     )
     test_var.add_config_domain_affected_by_change(ConfigDomainCore)
     test_var.add_config_domain_affected_by_change(ConfigDomainOMD)
@@ -52,7 +33,7 @@ def test_config_variable_add_domain_unique() -> None:
         group=ConfigVariableGroupSiteManagement,
         primary_domain=ConfigDomainGUI,
         ident="test_var",
-        valuespec=lambda context: FixedValue(None),  # noqa: ARG005
+        form_spec=lambda context: Integer(),  # noqa: ARG005
     )
     test_var.add_config_domain_affected_by_change(ConfigDomainCore)
     test_var.add_config_domain_affected_by_change(ConfigDomainCore)
@@ -62,52 +43,3 @@ def test_config_variable_add_domain_unique() -> None:
             ConfigDomainCore.ident(),
         ]
     )
-
-
-def test_config_variable_valuespec_backend() -> None:
-    test_var = ConfigVariable(
-        group=ConfigVariableGroupSiteManagement,
-        primary_domain=ConfigDomainGUI,
-        ident="test_var",
-        valuespec=lambda context: FixedValue(None),  # noqa: ARG005
-    )
-    assert isinstance(test_var.value_model(DUMMY_CONTEXT), FixedValue)
-
-
-def test_config_variable_form_spec_backend() -> None:
-    test_var = ConfigVariable(
-        group=ConfigVariableGroupSiteManagement,
-        primary_domain=ConfigDomainGUI,
-        ident="test_var",
-        form_spec=lambda context: Integer(),  # noqa: ARG005
-    )
-    assert isinstance(test_var.value_model(DUMMY_CONTEXT), FormSpec)
-
-
-def test_config_variable_valuespec_on_form_spec_raises() -> None:
-    test_var = ConfigVariable(
-        group=ConfigVariableGroupSiteManagement,
-        primary_domain=ConfigDomainGUI,
-        ident="test_var",
-        form_spec=lambda context: Integer(),  # noqa: ARG005
-    )
-    with pytest.raises(RuntimeError, match="declared with a form spec"):
-        test_var.valuespec(DUMMY_CONTEXT)
-
-
-def test_config_variable_requires_exactly_one_backend() -> None:
-    with pytest.raises(ValueError, match="Exactly one"):
-        ConfigVariable(
-            group=ConfigVariableGroupSiteManagement,
-            primary_domain=ConfigDomainGUI,
-            ident="test_var",
-        )
-
-    with pytest.raises(ValueError, match="Exactly one"):
-        ConfigVariable(
-            group=ConfigVariableGroupSiteManagement,
-            primary_domain=ConfigDomainGUI,
-            ident="test_var",
-            valuespec=lambda context: FixedValue(None),  # noqa: ARG005
-            form_spec=lambda context: Integer(),  # noqa: ARG005
-        )

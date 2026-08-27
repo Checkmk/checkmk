@@ -25,8 +25,6 @@ from cmk.gui.pages import PageContext
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
 from cmk.gui.search.matchers import MatchItem
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.valuespec import Password as PasswordValuespec
-from cmk.gui.valuespec import TextInput
 from cmk.gui.wato._check_mk_configuration import ConfigVariableTableRowLimit
 from cmk.gui.wato.pages import global_settings
 from cmk.gui.wato.pages.global_settings import (
@@ -49,6 +47,7 @@ from cmk.rulesets.v1.form_specs import (
     FormSpec,
     Integer,
     Password,
+    String,
 )
 
 
@@ -66,7 +65,7 @@ def test_match_item_generator_settings(
         group=group,
         primary_domain=ConfigDomainCore,
         ident="ident",
-        valuespec=lambda context: TextInput(title="title"),  # noqa: ARG005
+        form_spec=lambda context: String(title=Title("title")),  # noqa: ARG005
     )
 
     class SomeSettingsMode(DefaultModeEditGlobals):
@@ -218,35 +217,12 @@ def test_table_row_limit_upgrade_keeps_stored_int(
     )
 
 
-def _valuespec_config_variable() -> ConfigVariable:
-    return ConfigVariable(
-        group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
-        primary_domain=ConfigDomainCore,
-        ident="test_setting",
-        valuespec=lambda context: TextInput(),  # noqa: ARG005
-    )
-
-
 def _form_spec_config_variable() -> ConfigVariable:
     return ConfigVariable(
         group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
         primary_domain=ConfigDomainCore,
         ident="test_setting",
         form_spec=lambda context: Integer(),  # noqa: ARG005
-    )
-
-
-def test_diff_text_valuespec_value_changed(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    assert (
-        global_settings_diff_text(
-            _valuespec_config_variable(),
-            global_settings_context,
-            {"test_setting": "before"},
-            {"test_setting": "after"},
-        )
-        == 'Value of "test_setting" changed from "before" to "after".'
     )
 
 
@@ -290,26 +266,6 @@ def test_diff_text_reset_reads_as_removed(
         )
         == 'Attribute "test_setting" with value 100 removed.'
     )
-
-
-def test_diff_text_valuespec_secret_is_redacted(
-    global_settings_context: GlobalSettingsContext,
-) -> None:
-    config_variable = ConfigVariable(
-        group=ConfigVariableGroup(title=_l("Test"), sort_index=10),
-        primary_domain=ConfigDomainCore,
-        ident="test_setting",
-        valuespec=lambda context: PasswordValuespec(),  # noqa: ARG005
-    )
-    diff_text = global_settings_diff_text(
-        config_variable,
-        global_settings_context,
-        {"test_setting": "old-secret"},
-        {"test_setting": "new-secret"},
-    )
-    assert diff_text == "Redacted secrets changed."
-    assert "old-secret" not in diff_text
-    assert "new-secret" not in diff_text
 
 
 def test_diff_text_form_spec_secret_is_redacted(

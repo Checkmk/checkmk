@@ -28,7 +28,6 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
-from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.log import VERBOSE
@@ -219,10 +218,7 @@ def _transform_global_config_value(
         sites=ui_config.sites,
         graph_timeranges=ui_config.graph_timeranges,
     )
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        return migrate_form_spec_disk_value(value_model, global_settings_val)
-    return value_model.transform_value(global_settings_val)
+    return migrate_form_spec_disk_value(config_variable.value_model(context), global_settings_val)
 
 
 def _transform_global_config_values(

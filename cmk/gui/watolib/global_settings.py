@@ -23,7 +23,6 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.utils import site_neutral_path
 from cmk.livestatus_client import SiteConfigurations
-from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import paths
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.paths import log_dir, var_dir
@@ -143,14 +142,11 @@ def make_global_settings_context(
 def _masked_value_for_log(
     config_variable: ConfigVariable, context: GlobalSettingsContext, value: object
 ) -> object:
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        visitor = get_visitor(
-            value_model,
-            VisitorOptions(migrate_values=True, mask_values=True),
-        )
-        return visitor.to_disk(RawDiskData(value))
-    return value_model.mask(value)
+    visitor = get_visitor(
+        config_variable.value_model(context),
+        VisitorOptions(migrate_values=True, mask_values=True),
+    )
+    return visitor.to_disk(RawDiskData(value))
 
 
 def global_settings_diff_text(

@@ -38,7 +38,6 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     get_search_expression,
@@ -65,7 +64,6 @@ from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.valuespec import Checkbox, Transform, ValueSpec
 from cmk.gui.wato.piggyback_hub import CONFIG_VARIABLE_PIGGYBACK_HUB_IDENT
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
@@ -245,13 +243,8 @@ class ABCGlobalSettingsMode(WatoMode):
                 varname = config_variable.ident()
                 context = self.make_global_settings_context(config)
                 value_model = config_variable.value_model(context)
-                help_text: str | HTML
-                if isinstance(value_model, FormSpec):
-                    help_text = localize(resolve_help_text(value_model))
-                    title_text = localize(resolve_title(value_model))
-                else:
-                    help_text = value_model.help() or ""
-                    title_text = value_model.title() or ""
+                help_text = localize(resolve_help_text(value_model))
+                title_text = localize(resolve_title(value_model))
 
                 if not global_config.global_settings.is_activated(varname):
                     continue
@@ -316,38 +309,16 @@ class ABCGlobalSettingsMode(WatoMode):
                     _show_toggle_switch(varname, bool(value), modified_cls, value_title)
                     continue
 
-                if isinstance(value_model, FormSpec):
-                    forms.section(title, simple=True)
-                    html.open_a(href=edit_url, class_=modified_cls, title=value_title)
-                    render_form_spec(
-                        value_model,
-                        f"_vue_gs_{varname}",
-                        RawDiskData(value),
-                        do_validate=False,
-                        display_mode=DisplayMode.READONLY,
-                    )
-                    html.close_a()
-                    continue
-
-                try:
-                    to_text = value_model.value_to_html(value)
-                except Exception:
-                    logger.exception("error converting %(value)r to text", {"value": value})
-                    to_text = html.render_error(
-                        _("Failed to render value: %(value)r") % {"value": value}
-                    )
-
-                # Is this a simple (single) value or not? change styling in these cases...
-                simple = True
-                if "\n" in to_text or "<td>" in to_text:
-                    simple = False
-                forms.section(title, simple=simple)
-
-                if is_a_checkbox(value_model):
-                    _show_toggle_switch(varname, value, modified_cls, value_title)
-
-                else:
-                    html.a(to_text, href=edit_url, class_=modified_cls, title=value_title)
+                forms.section(title, simple=True)
+                html.open_a(href=edit_url, class_=modified_cls, title=value_title)
+                render_form_spec(
+                    value_model,
+                    f"_vue_gs_{varname}",
+                    RawDiskData(value),
+                    do_validate=False,
+                    display_mode=DisplayMode.READONLY,
+                )
+                html.close_a()
 
             if header_is_painted:
                 forms.end()
@@ -365,7 +336,7 @@ class ABCEditGlobalSettingMode(WatoMode):
         # Don't call this in _from_vars. make_global_settings_context might rely on the object
         # being fully initialized.
         context = self.make_global_settings_context(active_config)
-        self._value_model: ValueSpec | FormSpec[Any] = self._config_variable.value_model(context)
+        self._value_model: FormSpec[Any] = self._config_variable.value_model(context)
 
     @override
     def _from_vars(self) -> None:
@@ -548,44 +519,26 @@ class ABCEditGlobalSettingMode(WatoMode):
         return "_vue_global_settings"
 
     def _title(self) -> str:
-        if isinstance(self._value_model, FormSpec):
-            return localize(resolve_title(self._value_model))
-        title = self._value_model.title()
-        assert isinstance(title, str)
-        return title
+        return localize(resolve_title(self._value_model))
 
     def _parse_submitted_value(self) -> object:
-        if isinstance(self._value_model, FormSpec):
-            return parse_data_from_field_id(self._value_model, self._vue_field_id())
-        new_value = self._value_model.from_html_vars("ve")
-        self._value_model.validate_value(new_value, "ve")
-        return new_value
+        return parse_data_from_field_id(self._value_model, self._vue_field_id())
 
     def _render_editable_value(self, value: object) -> None:
-        if isinstance(self._value_model, FormSpec):
-            if request.has_var(self._vue_field_id()):
-                value_incoming: IncomingData = read_data_from_frontend(self._vue_field_id())
-            else:
-                value_incoming = RawDiskData(value)
-            render_form_spec(
-                self._value_model, self._vue_field_id(), value_incoming, do_validate=True
-            )
-            return
-        self._value_model.render_input("ve", value)
-        self._value_model.set_focus("ve")
-        html.help(self._value_model.help())
+        if request.has_var(self._vue_field_id()):
+            value_incoming: IncomingData = read_data_from_frontend(self._vue_field_id())
+        else:
+            value_incoming = RawDiskData(value)
+        render_form_spec(self._value_model, self._vue_field_id(), value_incoming, do_validate=True)
 
     def _render_readonly_value(self, field_id: str, value: object) -> None:
-        if isinstance(self._value_model, FormSpec):
-            render_form_spec(
-                self._value_model,
-                field_id,
-                RawDiskData(value),
-                do_validate=False,
-                display_mode=DisplayMode.READONLY,
-            )
-            return
-        html.write_text_permissive(self._value_model.value_to_html(value))
+        render_form_spec(
+            self._value_model,
+            field_id,
+            RawDiskData(value),
+            do_validate=False,
+            display_mode=DisplayMode.READONLY,
+        )
 
     @override
     def page(self, config: Config) -> None:
@@ -846,15 +799,6 @@ def _show_toggle_switch(
     html.close_div()
 
 
-def is_a_checkbox(vs: ValueSpec) -> bool:
-    """Checks if a valuespec is a Checkbox"""
-    if isinstance(vs, Checkbox):
-        return True
-    if isinstance(vs, Transform):
-        return is_a_checkbox(vs._valuespec)  # noqa: SLF001
-    return False
-
-
 class MatchItemGeneratorSettings(ABCMatchItemGenerator):
     def __init__(
         self,
@@ -876,11 +820,9 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         edit_mode_name: str,
         global_settings_context: GlobalSettingsContext,
     ) -> MatchItem:
-        value_model = config_variable.value_model(global_settings_context)
-        if isinstance(value_model, FormSpec):
-            title = localize(resolve_title(value_model)) or _("Untitled setting")
-        else:
-            title = value_model.title() or _("Untitled setting")
+        title = localize(resolve_title(config_variable.value_model(global_settings_context))) or _(
+            "Untitled setting"
+        )
         ident = config_variable.ident()
         return MatchItem(
             title=title,

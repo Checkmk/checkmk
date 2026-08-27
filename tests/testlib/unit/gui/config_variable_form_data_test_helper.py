@@ -92,11 +92,11 @@ def make_global_settings_context(edition: Edition) -> GlobalSettingsContext:
 
 
 def default_disk_value(config_variable: ConfigVariable, context: GlobalSettingsContext) -> object:
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        visitor = get_visitor(value_model, VisitorOptions(migrate_values=True, mask_values=False))
-        return visitor.to_disk(DEFAULT_VALUE)
-    return value_model.default_value()
+    visitor = get_visitor(
+        config_variable.value_model(context),
+        VisitorOptions(migrate_values=True, mask_values=False),
+    )
+    return visitor.to_disk(DEFAULT_VALUE)
 
 
 def round_trip_disk_value(
@@ -104,10 +104,7 @@ def round_trip_disk_value(
 ) -> object:
     """The load-and-save-again path of cmk-update-config, see
     _transform_global_config_value in cmk.update_config.plugins.actions.global_settings."""
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        return migrate_form_spec_disk_value(value_model, value)
-    return value_model.transform_value(value)
+    return migrate_form_spec_disk_value(config_variable.value_model(context), value)
 
 
 def gui_save_round_trip_disk_value[T](form_spec: FormSpec[T], value: object) -> object:
@@ -186,14 +183,12 @@ integer."""
 def validate_disk_value(
     config_variable: ConfigVariable, context: GlobalSettingsContext, value: object
 ) -> None:
-    value_model = config_variable.value_model(context)
-    if isinstance(value_model, FormSpec):
-        visitor = get_visitor(value_model, VisitorOptions(migrate_values=True, mask_values=False))
-        if errors := visitor.validate(RawDiskData(value)):
-            raise MKUserError(None, ", ".join(str(e.message) for e in errors))
-        return
-    value_model.validate_datatype(value, "")
-    value_model.validate_value(value, "")
+    visitor = get_visitor(
+        config_variable.value_model(context),
+        VisitorOptions(migrate_values=True, mask_values=False),
+    )
+    if errors := visitor.validate(RawDiskData(value)):
+        raise MKUserError(None, ", ".join(str(e.message) for e in errors))
 
 
 @dataclass(frozen=True)
@@ -223,8 +218,7 @@ class CaseMigrates:
 class CaseDirty:
     """Valid stored data that the current value model fails to validate cleanly,
     while the round trip still keeps it unchanged. Expected to become a CasePass
-    once the variable is ported to FormSpec (or the test environment gap closes,
-    or the valuespec bug named in the case id is fixed)."""
+    once the test environment gap named in the case id closes."""
 
     id: str
     value: object
@@ -366,15 +360,6 @@ CLOUD_EXCLUSIVE_VARIABLES = frozenset({"enable_ai_explanations"})
 
 SCALAR_VALUE_MODELS: frozenset[type] = frozenset(
     {
-        valuespec.Age,
-        valuespec.Checkbox,
-        valuespec.DropdownChoice,
-        valuespec.EmailAddress,
-        valuespec.Filesize,
-        valuespec.Float,
-        valuespec.Integer,
-        valuespec.TextInput,
-        valuespec.Url,
         form_specs.BooleanChoice,
         form_specs.DataSize,
         form_specs.Float,
@@ -447,7 +432,7 @@ def revealed_defaults_mismatches(
     }
 
 
-def collect_revealed_defaults(value_model: object) -> dict[str, object]:
+def collect_revealed_defaults(value_model: FormSpec[Any]) -> dict[str, object]:
     """The defaults the GUI reveals on interaction, keyed by reveal path.
 
     A reveal point is a sub-form whose default is not part of the stored value
@@ -459,15 +444,8 @@ def collect_revealed_defaults(value_model: object) -> dict[str, object]:
     alternative by its name, ``[choice N]`` for element N of a legacy
     Alternative (its elements have no names) and tuple elements by index."""
     revealed: dict[str, object] = {}
-    _walk_value_model(value_model, "", revealed)
+    _walk_form_spec(value_model, "", revealed)
     return revealed
-
-
-def _walk_value_model(model: object, path: str, revealed: dict[str, object]) -> None:
-    if isinstance(model, FormSpec):
-        _walk_form_spec(model, path, revealed)
-    else:
-        _walk_legacy_valuespec(model, path, revealed)
 
 
 def _join_key(path: str, key: str) -> str:
@@ -621,9 +599,9 @@ def _legacy_revealed_default(vs: valuespec.ValueSpec[Any]) -> object:
 
 
 def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -> None:
-    """Delete this walker, _legacy_revealed_default and the LegacyValueSpec
-    handoff in _walk_form_spec once the last config variable is ported to
-    FormSpec (CMK-24409): only _walk_form_spec is needed then."""
+    """Only reached through LegacyValueSpec elements inside a FormSpec (e.g. the
+    IconSelector of user_icons_and_actions). Delete this walker and
+    _legacy_revealed_default once the last of those is ported."""
     if isinstance(vs, valuespec.Transform | valuespec.Foldable):
         _walk_legacy_valuespec(vs._valuespec, path, revealed)  # noqa: SLF001
     elif isinstance(vs, valuespec.Dictionary):
@@ -2800,8 +2778,6 @@ class ConfigVariableSuite:
         the first place (e.g. an empty list below the minimum length)."""
         for config_variable in config_variable_registry.values():
             value_model = config_variable.value_model(global_settings_context)
-            if not isinstance(value_model, FormSpec):
-                continue
             try:
                 value = default_disk_value(config_variable, global_settings_context)
             except MKGeneralException as e:
@@ -2833,9 +2809,6 @@ class ConfigVariableSuite:
         conscious rewrites pinned in FACTORY_DEFAULTS_NORMALIZED_BY_LOAD."""
         problems: dict[str, object] = {}
         for ident, config_variable in config_variable_registry.items():
-            value_model = config_variable.value_model(global_settings_context)
-            if not isinstance(value_model, FormSpec):
-                continue
             factory = factory_default_disk_value(config_variable)
             if isinstance(factory, NoFactoryDefault):
                 continue
@@ -2855,9 +2828,7 @@ class ConfigVariableSuite:
         as well: the FormSpec port of a config variable must not change it, and
         the DefaultWithOverrides cases silently shift their meaning when the
         default underneath them moves. Scalar variables need no pin, see
-        is_scalar_value_model.
-
-        Once every config variable is moved to FormSpec this restriction can be deleted."""
+        is_scalar_value_model."""
         pinned = DEFAULT_DISK_VALUES[ident]
         if isinstance(pinned, EditionDependentDefault):
             pinned = pinned.for_edition(self.EDITION)
@@ -2945,9 +2916,10 @@ class ConfigVariableSuite:
             case CasePass():
                 validate_disk_value(config_variable, context, value)
                 assert round_trip_disk_value(config_variable, context, value) == value
-                value_model = config_variable.value_model(context)
-                if isinstance(value_model, FormSpec):
-                    assert gui_save_round_trip_disk_value(value_model, value) == value
+                assert (
+                    gui_save_round_trip_disk_value(config_variable.value_model(context), value)
+                    == value
+                )
             case CaseMigrates():
                 expected = resolve_case_value(config_variable, context, case.expected)
                 assert round_trip_disk_value(config_variable, context, value) == expected

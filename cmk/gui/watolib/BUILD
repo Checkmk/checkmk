@@ -31,7 +31,6 @@ py_library(
         "//cmk/gui/search:index",
         "//cmk/gui/utils:base",
         "//cmk/gui/utils:middle",
-        "//cmk/gui/valuespec",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",

@@ -68,6 +68,7 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.internal.form_specs import (
     ListOfStrings,
     MultipleChoiceExtended,
+    SimplePassword,
     SingleChoiceExtended,
     UserSelection,
 )
@@ -560,6 +561,7 @@ _FORM_SPEC_LEAVES = (
     DatePicker,
     Labels,
     MultipleChoiceExtended,
+    SimplePassword,
     SingleChoiceExtended,
     TimePicker,
     UserSelection,
@@ -672,13 +674,17 @@ def _walk_legacy_valuespec(vs: object, path: str, revealed: dict[str, object]) -
 REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     "actions": {
         "[add]": {
-            "action": ("email", {"body": "", "subject": "", "to": ""}),
+            "action": NoSaveableDefault(),
             "disabled": False,
             "hidden": False,
-            "id": "",
-            "title": "",
+            "id": NoSaveableDefault(),
+            "title": NoSaveableDefault(),
         },
-        "[add].action.email": {"body": "", "subject": "", "to": ""},
+        "[add].action.email": {
+            "body": "",
+            "subject": NoSaveableDefault(),
+            "to": NoSaveableDefault(),
+        },
         "[add].action.script": {"script": ""},
     },
     "adhoc_downtime": {
@@ -767,9 +773,9 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "case": None,
         "drop_domain": True,
         "mapping": [],
-        "mapping[add]": ("", ""),
+        "mapping[add]": (NoSaveableDefault(), NoSaveableDefault()),
         "regex": [],
-        "regex[add]": ("", ""),
+        "regex[add]": (NoSaveableDefault(), NoSaveableDefault()),
     },
     "http_proxies": {
         "[add]": {
@@ -961,10 +967,14 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     "remote_status": {
         "[enable]": (6558, False, None),
         "[enable].2[enable]": [],
-        "[enable].2[enable][add]": "",
+        "[enable].2[enable][add]": NoSaveableDefault(),
     },
     "replication": {
-        "[enable]": {"connect_timeout": 10, "interval": 10, "master": ("", 6558)},
+        "[enable]": {
+            "connect_timeout": 10,
+            "interval": 10,
+            "master": (NoSaveableDefault(), 6558),
+        },
         "[enable].disabled": True,
         "[enable].fallback": 60,
         "[enable].logging": True,
@@ -1067,17 +1077,30 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "other_collector": {"url": NoSaveableDefault()},
     },
     "snmp_credentials": {
-        "[add]": {"credentials": "public", "description": ""},
-        "[add].credentials.[choice 0]": "public",
-        "[add].credentials.[choice 1]": ("noAuthNoPriv", ""),
-        "[add].credentials.[choice 2]": ("authNoPriv", "md5", "", ""),
-        "[add].credentials.[choice 3]": ("authPriv", "md5", "", "", "DES", ""),
+        "[add]": {"credentials": NoSaveableDefault(), "description": ""},
+        "[add].credentials.community": NoSaveableDefault(),
+        "[add].credentials.snmpv3_noAuthNoPriv": ("noAuthNoPriv", NoSaveableDefault()),
+        "[add].credentials.snmpv3_authNoPriv": (
+            "authNoPriv",
+            "md5",
+            NoSaveableDefault(),
+            NoSaveableDefault(),
+        ),
+        "[add].credentials.snmpv3_authPriv": (
+            "authPriv",
+            "md5",
+            NoSaveableDefault(),
+            NoSaveableDefault(),
+            "DES",
+            NoSaveableDefault(),
+        ),
         "[add].engine_ids": [],
-        "[add].engine_ids[add]": "",
+        "[add].engine_ids[add]": NoSaveableDefault(),
     },
     "translate_snmptraps": {
-        "True": {},
-        "True.add_description": True,
+        "no_translation": True,
+        "translate": {},
+        "translate.add_description": True,
     },
     "trusted_certificate_authorities": {
         # An added row starts out empty, which is not a valid certificate.
@@ -2560,6 +2583,11 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail(
             "invalid-credential-tuple-length",
             [{"description": "broken", "credentials": ("authPriv", "SHA-256")}],
+        ),
+        CaseFail(
+            "unknown-credential-tuple-length-crashes-in-shared-snmp-credentials-generator",
+            [{"description": "broken", "credentials": ("authPriv", "SHA-256", "monitor")}],
+            MKGeneralException,
         ),
     ],
     "snmp_walk_download_timeout": MIN_ONE_AGE_CASES,

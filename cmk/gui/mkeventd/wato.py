@@ -11,6 +11,7 @@ import abc
 import ast
 import contextlib
 import io
+import logging
 import re
 import socket
 import sys
@@ -43,8 +44,14 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.host_address import HostAddressValidator
+from cmk.gui.form_specs.generators.log_level import LogLevelChoice as FSLogLevelChoice
+from cmk.gui.form_specs.generators.snmp_credentials import create_snmp_credentials
 from cmk.gui.form_specs.unstable import OptionalChoice
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
+from cmk.gui.form_specs.unstable.validators import id_validators, validate_ip_network
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
@@ -97,25 +104,20 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     DualListChoice,
     FixedValue,
-    Foldable,
     ID,
     Integer,
     IPAddress,
     IPNetwork,
     ListChoice,
     ListOf,
-    ListOfStrings,
-    LogLevelChoice,
     Migrate,
     MigrateNotUpdated,
     Optional,
     RegExp,
     rule_option_elements,
-    TextAreaUnicode,
     TextInput,
     Transform,
     Tuple,
-    ValueSpec,
 )
 from cmk.gui.wato import (
     ContactGroupSelection,
@@ -127,7 +129,6 @@ from cmk.gui.wato.pages.global_settings import (
     ABCGlobalSettingsMode,
     MatchItemGeneratorSettings,
 )
-from cmk.gui.watolib.attributes import SNMPCredentials
 from cmk.gui.watolib.audit_log import log_audit, make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -192,8 +193,7 @@ from cmk.gui.watolib.sample_config import (
     SampleConfigGeneratorRegistry,
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
-from cmk.gui.watolib.translation import HostnameTranslation
-from cmk.gui.watolib.utils import site_neutral_path
+from cmk.gui.watolib.translation import translation_form_spec_elements
 from cmk.livestatus_client import (
     ECCreate,
     ECResetCounters,
@@ -213,7 +213,7 @@ from cmk.rulesets.internal.form_specs import (
     SingleChoiceExtended,
 )
 from cmk.rulesets.v1 import form_specs as fs
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     DefaultValue,
@@ -428,58 +428,70 @@ MACROS_AND_VARS = [
 ]
 
 
-def _macros_help() -> HTML:
-    _help_list = [(f"${macro_name}$", description) for macro_name, description in MACROS_AND_VARS]
-
-    _help_rows = [
-        HTMLWriter.render_tr(HTMLWriter.render_td(key) + HTMLWriter.render_td(str(value)))
-        for key, value in _help_list
-    ]
-
-    return (
-        _("Text-body of the email to send. ")
-        + _("The following macros will be substituted by value from the actual event:")
-        + HTMLWriter.render_br()
-        + HTMLWriter.render_br()
-        + HTMLWriter.render_table(HTML.empty().join(_help_rows), class_="help")
+def _macros_and_vars_list(key_format: Callable[[str], str]) -> str:
+    return str(
+        HTMLWriter.render_ul(
+            HTML.empty().join(
+                HTMLWriter.render_li(HTMLWriter.render_tt(key_format(name)) + ": " + str(desc))
+                for name, desc in MACROS_AND_VARS
+            )
+        )
     )
 
 
-def _vars_help() -> HTML:
-    _help_list = [(f"CMK_{macro_name}", description) for macro_name, description in MACROS_AND_VARS]
-
-    _help_rows = [
-        HTMLWriter.render_tr(HTMLWriter.render_td(key) + HTMLWriter.render_td(str(value)))
-        for key, value in _help_list
-    ]
-
-    return (
-        _("This script will be executed using the BASH shell. ")
-        + _("This information is available as environment variables")
-        + HTMLWriter.render_br()
-        + HTMLWriter.render_br()
-        + HTMLWriter.render_table(HTML.empty().join(_help_rows), class_="help")
-    )
+def _macros_help() -> Help:
+    return Help(
+        "Text-body of the email to send. The following macros will be substituted by value "
+        "from the actual event:%(macros)s"
+    ) % {"macros": _macros_and_vars_list(lambda name: f"${name}$")}
 
 
-def ActionList(vs: ValueSpec, **kwargs: Any) -> ListOf:
-    def validate_action_list(value: Any, varprefix: str) -> None:
-        action_ids = [v["id"] for v in value]
-        rule_packs = ec.load_rule_packs(ec.create_paths(cmk.utils.paths.omd_root))
-        for rule_pack in rule_packs:
-            for rule in rule_pack["rules"]:
-                for action_id in rule.get("actions", []):
-                    if action_id not in action_ids + ["@NOTIFY"]:
-                        raise MKUserError(
-                            varprefix,
-                            _(
-                                "You are missing the action with the ID <b>%(action_id)s</b>, "
-                                "which is still used in some rules."
-                            )
-                            % {"action_id": action_id},
+def _vars_help() -> Help:
+    return Help(
+        "This script will be executed using the BASH shell. This information is available "
+        "as environment variables:%(variables)s"
+    ) % {"variables": _macros_and_vars_list(lambda name: f"CMK_{name}")}
+
+
+def _validate_referenced_action_ids(actions: Sequence[Mapping[str, object]]) -> None:
+    action_ids = [action["id"] for action in actions]
+    for rule_pack in ec.load_rule_packs(ec.create_paths(cmk.utils.paths.omd_root)):
+        for rule in rule_pack["rules"]:
+            for action_id in rule.get("actions", []):
+                if action_id not in action_ids + ["@NOTIFY"]:
+                    raise validators.ValidationError(
+                        Message(
+                            "You are missing the action with the ID %(action_id)s, "
+                            "which is still used in some rules."
                         )
+                        % {"action_id": action_id}
+                    )
 
-    return ListOf(valuespec=vs, validate=validate_action_list, **kwargs)
+
+def _fs_fixed_true(
+    title: Title, label: Label, help_text: Help | None = None
+) -> TransformDataForLegacyFormatOrRecomposeFunction:
+    def from_disk(value: object) -> bool:
+        if value is not True:
+            raise ValueError(f"Expected True, got {value!r}")
+        return value
+
+    return TransformDataForLegacyFormatOrRecomposeFunction(
+        wrapped_form_spec=fs.FixedValue(value=True, title=title, label=label, help_text=help_text),
+        from_disk=from_disk,
+        to_disk=lambda value: value,
+    )
+
+
+_SNMPV3_TAG_BY_TUPLE_LENGTH = {2: "noAuthNoPriv", 4: "authNoPriv", 6: "authPriv"}
+
+
+def _reject_mismatching_snmpv3_tag(value: object) -> object:
+    if isinstance(value, tuple) and (
+        not value or _SNMPV3_TAG_BY_TUPLE_LENGTH.get(len(value)) != value[0]
+    ):
+        raise ValueError(f"SNMPv3 credentials {value!r} carry the wrong security level tag")
+    return value
 
 
 class RuleState(CascadingDropdown):
@@ -4171,48 +4183,46 @@ ConfigVariableEventConsoleRemoteStatus = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="remote_status",
-    valuespec=lambda context: Optional(  # noqa: ARG005
-        valuespec=Tuple(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
+        parameter_form=FSTuple(
             elements=[
-                Integer(
-                    title=_("Port number:"),
-                    help=_(
+                FSInteger(
+                    title=Title("Port number:"),
+                    help_text=Help(
                         "If you are running the Event Console as a non-root (such as in an OMD site) "
                         "please choose port number greater than 1024."
                     ),
-                    minvalue=1,
-                    maxvalue=65535,
-                    default_value=6558,
+                    custom_validate=[validators.NumberInRange(min_value=1, max_value=65535)],
+                    prefill=DefaultValue(6558),
                 ),
-                Checkbox(
-                    title=_("Security"),
-                    label=_("allow execution of commands and actions via TCP"),
-                    help=_(
+                BooleanChoice(
+                    title=Title("Security"),
+                    label=Label("allow execution of commands and actions via TCP"),
+                    help_text=Help(
                         "Without this option the access is limited to querying the current "
                         "and historic event status."
                     ),
-                    default_value=False,
-                    true_label=_("allow commands"),
-                    false_label=_("no commands"),
+                    prefill=DefaultValue(False),
                 ),
-                Optional(
-                    valuespec=ListOfStrings(
-                        help=_(
+                OptionalChoice(
+                    parameter_form=FSList(
+                        help_text=Help(
                             "The access to the event status via TCP will only be allowed from "
                             "this source IP addresses or an IPv4/IPv6 network "
                             "in the notation X.X.X.X/Bits or X:X:.../Bits for IPv6"
                         ),
-                        valuespec=IPNetwork(ip_class=None, size="max"),
-                        orientation="horizontal",
-                        allow_empty=False,
+                        element_template=String(custom_validate=[validate_ip_network]),
+                        custom_validate=[validators.LengthInRange(min_value=1)],
                     ),
-                    label=_("Restrict access to the following source IPv4/IPv6 addresses/networks"),
-                    none_label=_("access unrestricted"),
+                    label=Label(
+                        "Restrict access to the following source IPv4/IPv6 addresses/networks"
+                    ),
+                    none_label=Label("access unrestricted"),
                 ),
             ],
         ),
-        title=_("Access to event status via TCP"),
-        help=_(
+        title=Title("Access to event status via TCP"),
+        help_text=Help(
             "In graphical user interface (GUI) setups, if you want "
             '<a href="%(url)s">event status checks</a> for hosts that live on a '
             "remote site you need to activate remote access to the event "
@@ -4223,7 +4233,7 @@ ConfigVariableEventConsoleRemoteStatus = ConfigVariable(
             "not allowing commands via TCP."
         )
         % {"url": "wato.py?mode=edit_ruleset&varname=active_checks%3Amkevents"},
-        none_label=_("no access via TCP"),
+        none_label=Label("no access via TCP"),
     ),
 )
 
@@ -4231,108 +4241,104 @@ ConfigVariableEventConsoleReplication = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="replication",
-    valuespec=lambda context: Optional(  # noqa: ARG005
-        valuespec=Dictionary(
-            optional_keys=["takeover", "fallback", "disabled", "logging"],
-            elements=[
-                (
-                    "master",
-                    Tuple(
-                        title=_("Central Event Console"),
-                        help=_(
+    form_spec=lambda context: OptionalChoice(  # noqa: ARG005
+        parameter_form=fs.Dictionary(
+            elements={
+                "master": DictElement(
+                    required=True,
+                    parameter_form=FSTuple(
+                        title=Title("Central Event Console"),
+                        help_text=Help(
                             "Specify the host name or IP address of the central Event Console that you want to replicate from. The port number must be the same as set in the central site in <i>Access to event status via TCP</i>."
                         ),
                         elements=[
-                            TextInput(
-                                title=_("Host name/IP address of central Event Console:"),
-                                allow_empty=False,
+                            String(
+                                title=Title("Host name/IP address of central Event Console:"),
+                                custom_validate=[validators.LengthInRange(min_value=1)],
                             ),
-                            Integer(
-                                title=_("TCP Port number of status socket:"),
-                                minvalue=1,
-                                maxvalue=65535,
-                                default_value=6558,
+                            FSInteger(
+                                title=Title("TCP Port number of status socket:"),
+                                custom_validate=[
+                                    validators.NumberInRange(min_value=1, max_value=65535)
+                                ],
+                                prefill=DefaultValue(6558),
                             ),
                         ],
                     ),
                 ),
-                (
-                    "interval",
-                    Integer(
-                        title=_("Replication interval"),
-                        help=_("The replication will be triggered each this number of seconds"),
-                        label=_("Do a replication every"),
-                        unit=_("sec"),
-                        minvalue=1,
-                        default_value=10,
+                "interval": DictElement(
+                    required=True,
+                    parameter_form=FSInteger(
+                        title=Title("Replication interval"),
+                        help_text=Help(
+                            "The replication will be triggered each this number of seconds"
+                        ),
+                        label=Label("Do a replication every"),
+                        unit_symbol="sec",
+                        custom_validate=[validators.NumberInRange(min_value=1)],
+                        prefill=DefaultValue(10),
                     ),
                 ),
-                (
-                    "connect_timeout",
-                    Integer(
-                        title=_("Connect timeout"),
-                        help=_("TCP connect timeout for connecting to the central site"),
-                        label=_("Try bringing up TCP connection for"),
-                        unit=_("sec"),
-                        minvalue=1,
-                        default_value=10,
+                "connect_timeout": DictElement(
+                    required=True,
+                    parameter_form=FSInteger(
+                        title=Title("Connect timeout"),
+                        help_text=Help("TCP connect timeout for connecting to the central site"),
+                        label=Label("Try bringing up TCP connection for"),
+                        unit_symbol="sec",
+                        custom_validate=[validators.NumberInRange(min_value=1)],
+                        prefill=DefaultValue(10),
                     ),
                 ),
-                (
-                    "takeover",
-                    Integer(
-                        title=_("Automatic takeover"),
-                        help=_(
+                "takeover": DictElement(
+                    parameter_form=FSInteger(
+                        title=Title("Automatic takeover"),
+                        help_text=Help(
                             "If you enable this option, the remote site will automatically take over and enable event processing if the central site is unreachable for the configured number of seconds."
                         ),
-                        label=_("Takeover after a central site downtime of"),
-                        unit=_("sec"),
-                        minvalue=1,
-                        default_value=30,
+                        label=Label("Takeover after a central site downtime of"),
+                        unit_symbol="sec",
+                        custom_validate=[validators.NumberInRange(min_value=1)],
+                        prefill=DefaultValue(30),
                     ),
                 ),
-                (
-                    "fallback",
-                    Integer(
-                        title=_("Automatic fallback"),
-                        help=_(
+                "fallback": DictElement(
+                    parameter_form=FSInteger(
+                        title=Title("Automatic fallback"),
+                        help_text=Help(
                             "If you enable this option, the remote site will automatically fallback from takeover mode to remote mode if the central site is reachable again within the selected number of seconds since the previous unreachability (not since the takeover)"
                         ),
-                        label=_("Fallback if central comes back within"),
-                        unit=_("sec"),
-                        minvalue=1,
-                        default_value=60,
+                        label=Label("Fallback if central comes back within"),
+                        unit_symbol="sec",
+                        custom_validate=[validators.NumberInRange(min_value=1)],
+                        prefill=DefaultValue(60),
                     ),
                 ),
-                (
-                    "disabled",
-                    FixedValue(
-                        value=True,
-                        totext=_("Replication is disabled"),
-                        title=_("Currently disable replication"),
-                        help=_(
+                "disabled": DictElement(
+                    parameter_form=_fs_fixed_true(
+                        title=Title("Currently disable replication"),
+                        label=Label("Replication is disabled"),
+                        help_text=Help(
                             "This allows you to disable the replication without losing "
                             "your settings. If you check this box, then no replication "
                             "will be done and the Event Console will act as its own central site."
                         ),
                     ),
                 ),
-                (
-                    "logging",
-                    FixedValue(
-                        value=True,
-                        title=_("Log replication events"),
-                        totext=_("logging is enabled"),
-                        help=_(
+                "logging": DictElement(
+                    parameter_form=_fs_fixed_true(
+                        title=Title("Log replication events"),
+                        label=Label("logging is enabled"),
+                        help_text=Help(
                             "Enabling this option will create detailed log entries for all "
                             "replication activities of the remote site. If disabled only problems "
                             "will be logged."
                         ),
                     ),
                 ),
-            ],
+            },
         ),
-        title=_("Enable replication from a central"),
+        title=Title("Enable replication from a central"),
     ),
 )
 
@@ -4460,127 +4466,122 @@ ConfigVariableEventConsoleActions = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="actions",
-    valuespec=lambda context: ActionList(  # noqa: ARG005
-        Foldable(
-            valuespec=Dictionary(
-                title=_("Action"),
-                optional_keys=False,
-                elements=[
-                    (
-                        "id",
-                        ID(
-                            title=_("Action ID"),
-                            help=_(
-                                "A unique ID of this action that is used as an internal "
-                                "reference in the configuration. Changing the ID is not "
-                                "possible if still rules refer to this ID."
-                            ),
-                            allow_empty=False,
-                            size=12,
+    form_spec=lambda context: FSList(  # noqa: ARG005
+        element_template=fs.Dictionary(
+            title=Title("Action"),
+            elements={
+                "id": DictElement(
+                    required=True,
+                    parameter_form=String(
+                        title=Title("Action ID"),
+                        help_text=Help(
+                            "A unique ID of this action that is used as an internal "
+                            "reference in the configuration. Changing the ID is not "
+                            "possible if still rules refer to this ID."
                         ),
+                        custom_validate=id_validators(),
                     ),
-                    (
-                        "title",
-                        TextInput(
-                            title=_("Title"),
-                            help=_("A descriptive title of this action."),
-                            allow_empty=False,
-                            size=64,
+                ),
+                "title": DictElement(
+                    required=True,
+                    parameter_form=String(
+                        title=Title("Title"),
+                        help_text=Help("A descriptive title of this action."),
+                        field_size=fs.FieldSize.LARGE,
+                        custom_validate=[validators.LengthInRange(min_value=1)],
+                    ),
+                ),
+                "disabled": DictElement(
+                    required=True,
+                    parameter_form=BooleanChoice(
+                        title=Title("Disable"),
+                        label=Label("Currently disable execution of this action"),
+                        prefill=DefaultValue(False),
+                    ),
+                ),
+                "hidden": DictElement(
+                    required=True,
+                    parameter_form=BooleanChoice(
+                        title=Title("Hide from Status GUI"),
+                        label=Label("Do not offer this action as a command on open events"),
+                        help_text=Help(
+                            "If you enabled this option, then this action will not "
+                            "be available as an interactive user command. It is usable "
+                            "as an ad-hoc action when a rule fires, nevertheless."
                         ),
+                        prefill=DefaultValue(False),
                     ),
-                    (
-                        "disabled",
-                        Checkbox(
-                            title=_("Disable"),
-                            label=_("Currently disable execution of this action"),
-                        ),
-                    ),
-                    (
-                        "hidden",
-                        Checkbox(
-                            title=_("Hide from Status GUI"),
-                            label=_("Do not offer this action as a command on open events"),
-                            help=_(
-                                "If you enabled this option, then this action will not "
-                                "be available as an interactive user command. It is usable "
-                                "as an ad-hoc action when a rule fires, nevertheless."
-                            ),
-                        ),
-                    ),
-                    (
-                        "action",
-                        CascadingDropdown(
-                            title=_("Type of Action"),
-                            help=_("Choose the type of action to perform"),
-                            choices=[
-                                (
-                                    "email",
-                                    _("Send email"),
-                                    Dictionary(
-                                        optional_keys=False,
-                                        elements=[
-                                            (
-                                                "to",
-                                                TextInput(
-                                                    title=_("Recipient email address"),
-                                                    allow_empty=False,
-                                                ),
+                ),
+                "action": DictElement(
+                    required=True,
+                    parameter_form=fs.CascadingSingleChoice(
+                        title=Title("Type of Action"),
+                        help_text=Help("Choose the type of action to perform"),
+                        prefill=DefaultValue("email"),
+                        elements=[
+                            fs.CascadingSingleChoiceElement(
+                                name="email",
+                                title=Title("Send email"),
+                                parameter_form=fs.Dictionary(
+                                    elements={
+                                        "to": DictElement(
+                                            required=True,
+                                            parameter_form=String(
+                                                title=Title("Recipient email address"),
+                                                custom_validate=[
+                                                    validators.LengthInRange(min_value=1)
+                                                ],
                                             ),
-                                            (
-                                                "subject",
-                                                TextInput(
-                                                    title=_("Subject"),
-                                                    allow_empty=False,
-                                                    size=64,
-                                                ),
+                                        ),
+                                        "subject": DictElement(
+                                            required=True,
+                                            parameter_form=String(
+                                                title=Title("Subject"),
+                                                field_size=fs.FieldSize.LARGE,
+                                                custom_validate=[
+                                                    validators.LengthInRange(min_value=1)
+                                                ],
                                             ),
-                                            (
-                                                "body",
-                                                TextAreaUnicode(
-                                                    title=_("Body"),
-                                                    help=_macros_help,
-                                                    cols=64,
-                                                    rows=10,
-                                                ),
+                                        ),
+                                        "body": DictElement(
+                                            required=True,
+                                            parameter_form=fs.MultilineText(
+                                                title=Title("Body"),
+                                                help_text=_macros_help(),
+                                                prefill=DefaultValue(""),
                                             ),
-                                        ],
-                                    ),
+                                        ),
+                                    },
                                 ),
-                                (
-                                    "script",
-                                    _("Execute shell script"),
-                                    Dictionary(
-                                        optional_keys=False,
-                                        elements=[
-                                            (
-                                                "script",
-                                                TextAreaUnicode(
-                                                    title=_("Script body"),
-                                                    help=_vars_help,
-                                                    cols=64,
-                                                    rows=10,
-                                                ),
+                            ),
+                            fs.CascadingSingleChoiceElement(
+                                name="script",
+                                title=Title("Execute shell script"),
+                                parameter_form=fs.Dictionary(
+                                    elements={
+                                        "script": DictElement(
+                                            required=True,
+                                            parameter_form=fs.MultilineText(
+                                                title=Title("Script body"),
+                                                help_text=_vars_help(),
+                                                prefill=DefaultValue(""),
                                             ),
-                                        ],
-                                    ),
+                                        ),
+                                    },
                                 ),
-                            ],
-                        ),
+                            ),
+                        ],
                     ),
-                ],
-            ),
-            title_function=lambda value: (
-                not value["id"] and _("New Action") or (value["id"] + " - " + value["title"])
-            ),
+                ),
+            },
         ),
-        title=_("Actions (emails & scripts)"),
-        help=_(
+        title=Title("Actions (emails & scripts)"),
+        help_text=Help(
             "Configure that possible actions that can be performed when a "
             "rule triggers and also manually by a user."
         ),
-        # astrein: disable=localization-named-placeholder
-        totext=_("%d actions"),
-        add_label=_("Add new action"),
+        add_element_label=Label("Add new action"),
+        custom_validate=[_validate_referenced_action_ids],
     ),
     # TODO: Why? Can we drop this?
     allow_reset=False,
@@ -4606,17 +4607,38 @@ ConfigVariableHostnameTranslation = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="hostname_translation",
-    valuespec=lambda context: HostnameTranslation(  # noqa: ARG005
-        title=_("Host name translation for incoming messages"),
-        help_txt=_(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
+        title=Title("Host name translation for incoming messages"),
+        help_text=Help(
             "When the Event Console receives a message than the host name "
             "that is contained in that message will be translated using "
             "this configuration. This can be used for unifying host names "
             "from message with those of actively monitored hosts. Note: this translation "
             "is happening before any rule is being applied."
         ),
+        elements={
+            "drop_domain": DictElement(
+                parameter_form=_fs_fixed_true(
+                    title=Title("Convert FQHN"),
+                    label=Label("Drop domain part (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"),
+                ),
+            ),
+            **{
+                key: DictElement(parameter_form=parameter_form)
+                for key, parameter_form in translation_form_spec_elements()
+            },
+        },
+        migrate=_migrate_hostname_translation,
     ),
 )
+
+
+def _migrate_hostname_translation(value: object) -> Mapping[str, object]:
+    if not isinstance(value, dict):
+        raise ValueError(f"Expected a dictionary, got {value!r}")
+    if isinstance(regex := value.get("regex"), tuple):
+        return {**value, "regex": [regex]}
+    return value
 
 
 def vs_ec_event_limit_actions(notify_txt: str) -> DropdownChoice:
@@ -4696,25 +4718,108 @@ def vs_ec_host_limit(title: str) -> Dictionary:
     )
 
 
+def _form_spec_ec_event_limit_actions(notify_txt: str) -> fs.SingleChoice:
+    return fs.SingleChoice(
+        title=Title("Action"),
+        help_text=Help(
+            "Choose the action the Event Console should trigger once the limit is reached."
+        ),
+        elements=[
+            fs.SingleChoiceElement(name="stop", title=Title("Stop creating new events")),
+            fs.SingleChoiceElement(
+                name="stop_overflow", title=Title("Stop creating new events, create overflow event")
+            ),
+            fs.SingleChoiceElement(
+                name="stop_overflow_notify",
+                title=Title("Stop creating new events, create overflow event, %(notify)s")
+                % {"notify": notify_txt},
+            ),
+            fs.SingleChoiceElement(
+                name="delete_oldest", title=Title("Delete oldest event, create new event")
+            ),
+        ],
+        prefill=DefaultValue("stop_overflow_notify"),
+    )
+
+
+def _form_spec_ec_limit(
+    title: Title, help_text: Help, limit_prefill: int, notify_txt: str
+) -> fs.Dictionary:
+    return fs.Dictionary(
+        title=title,
+        help_text=help_text,
+        elements={
+            "limit": DictElement(
+                required=True,
+                parameter_form=FSInteger(
+                    title=Title("Limit"),
+                    unit_symbol="current events",
+                    custom_validate=[validators.NumberInRange(min_value=1)],
+                    prefill=DefaultValue(limit_prefill),
+                ),
+            ),
+            "action": DictElement(
+                required=True, parameter_form=_form_spec_ec_event_limit_actions(notify_txt)
+            ),
+        },
+    )
+
+
 ConfigVariableEventConsoleEventLimit = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="event_limit",
-    valuespec=lambda context: Dictionary(  # noqa: ARG005
-        title=_("Limit amount of current events"),
-        help=_(
+    form_spec=lambda context: fs.Dictionary(  # noqa: ARG005
+        title=Title("Limit amount of current events"),
+        help_text=Help(
             "This option helps you to protect the Event Console from resource "
             "problems which may occur in case of too many current events at the "
             "same time."
         ),
-        elements=[
-            ("by_host", vs_ec_host_limit(title=_("Host limit"))),
-            ("by_rule", vs_ec_rule_limit()),
-            (
-                "overall",
-                Dictionary(
-                    title=_("Overall current events"),
-                    help=_(
+        elements={
+            "by_host": DictElement(
+                required=True,
+                parameter_form=_form_spec_ec_limit(
+                    title=Title("Host limit"),
+                    help_text=Help(
+                        "You can limit the number of current events created by a single "
+                        "host here. This is meant to "
+                        "prevent you from message storms created by one device.<br>"
+                        "Once the limit is reached, the Event Console will block "
+                        "all future incoming messages sent by this host until the "
+                        "number of current "
+                        "events has been reduced to be below this limit. In the "
+                        "moment the limit is reached, the Event Console will notify "
+                        "the configured contacts of the host."
+                    ),
+                    limit_prefill=1000,
+                    notify_txt="notify contacts of the host",
+                ),
+            ),
+            "by_rule": DictElement(
+                required=True,
+                parameter_form=_form_spec_ec_limit(
+                    title=Title("Rule limit"),
+                    help_text=Help(
+                        "You can limit the number of current events created by a single "
+                        "rule here. This is meant to "
+                        "prevent you from too generous rules creating a lot of events.<br>"
+                        "Once the limit is reached, the Event Console will stop the rule "
+                        "creating new current events until the number of current "
+                        "events has been reduced to be below this limit. In the "
+                        "moment the limit is reached, the Event Console will notify "
+                        "the configured contacts of the rule or create a notification "
+                        "with empty contact information."
+                    ),
+                    limit_prefill=1000,
+                    notify_txt="notify contacts in rule or fallback contacts",
+                ),
+            ),
+            "overall": DictElement(
+                required=True,
+                parameter_form=_form_spec_ec_limit(
+                    title=Title("Overall current events"),
+                    help_text=Help(
                         "To protect you against a continuously growing list of current "
                         "events created by different hosts or rules, you can configure "
                         "this overall limit of current events. All currently current events "
@@ -4723,23 +4828,11 @@ ConfigVariableEventConsoleEventLimit = ConfigVariable(
                         "dropped. In the moment the limit is reached, the Event Console "
                         "will create a notification with empty contact information."
                     ),
-                    elements=[
-                        (
-                            "limit",
-                            Integer(
-                                title=_("Limit"),
-                                minvalue=1,
-                                default_value=10000,
-                                unit=_("current events"),
-                            ),
-                        ),
-                        ("action", vs_ec_event_limit_actions("notify all fallback contacts")),
-                    ],
-                    optional_keys=[],
+                    limit_prefill=10000,
+                    notify_txt="notify all fallback contacts",
                 ),
             ),
-        ],
-        optional_keys=[],
+        },
     ),
 )
 
@@ -4816,80 +4909,114 @@ ConfigVariableEventConsoleTranslateSNMPTraps = ConfigVariable(
     group=ConfigVariableGroupEventConsoleSNMP,
     primary_domain=ConfigDomainEventConsole,
     ident="translate_snmptraps",
-    valuespec=lambda context: CascadingDropdown(  # noqa: ARG005
-        title=_("Translate SNMP traps"),
-        help=_(
-            "When this option is enabled all available SNMP MIB files will be used "
-            "to translate the incoming SNMP traps. Information which cannot be "
-            "translated, e.g. because a MIB is missing, are written untouched to "
-            "the event message."
-        ),
-        choices=[
-            (False, _("Do not translate SNMP traps")),
-            (
-                True,
-                _("Translate SNMP traps using the available MIBs"),
-                Dictionary(
-                    elements=[
-                        (
-                            "add_description",
-                            FixedValue(
-                                value=True,
-                                title=_("Add OID descriptions"),
-                                totext=_("Append descriptions of OIDs to message texts"),
-                            ),
-                        ),
-                    ],
-                ),
+    form_spec=lambda context: TransformDataForLegacyFormatOrRecomposeFunction(  # noqa: ARG005
+        wrapped_form_spec=fs.CascadingSingleChoice(
+            title=Title("Translate SNMP traps"),
+            help_text=Help(
+                "When this option is enabled all available SNMP MIB files will be used "
+                "to translate the incoming SNMP traps. Information which cannot be "
+                "translated, e.g. because a MIB is missing, are written untouched to "
+                "the event message."
             ),
-        ],
+            prefill=DefaultValue("no_translation"),
+            elements=[
+                fs.CascadingSingleChoiceElement(
+                    name="no_translation",
+                    title=Title("Do not translate SNMP traps"),
+                    parameter_form=fs.FixedValue(value=True, label=Label("")),
+                ),
+                fs.CascadingSingleChoiceElement(
+                    name="translate",
+                    title=Title("Translate SNMP traps using the available MIBs"),
+                    parameter_form=fs.Dictionary(
+                        elements={
+                            "add_description": DictElement(
+                                parameter_form=_fs_fixed_true(
+                                    title=Title("Add OID descriptions"),
+                                    label=Label("Append descriptions of OIDs to message texts"),
+                                ),
+                            ),
+                        },
+                    ),
+                ),
+            ],
+        ),
+        from_disk=_translate_snmptraps_from_disk,
+        to_disk=_translate_snmptraps_to_disk,
     ),
 )
+
+
+def _translate_snmptraps_from_disk(value: object) -> tuple[str, object]:
+    if value is False:
+        return "no_translation", True
+    if isinstance(value, tuple) and len(value) == 2 and value[0] is True:
+        return "translate", value[1]
+    raise ValueError(f"Expected False or (True, {{...}}), got {value!r}")
+
+
+def _translate_snmptraps_to_disk(value: object) -> object:
+    if not isinstance(value, tuple) or len(value) != 2:
+        raise ValueError(f"Expected a (name, value) tuple, got {value!r}")
+    match value:
+        case ("no_translation", _):
+            return False
+        case ("translate", options):
+            return True, options
+        case _:
+            raise ValueError(f"Unknown SNMP trap translation choice {value[0]!r}")
+
 
 ConfigVariableEventConsoleSNMPCredentials = ConfigVariable(
     group=ConfigVariableGroupEventConsoleSNMP,
     primary_domain=ConfigDomainEventConsole,
     ident="snmp_credentials",
-    valuespec=lambda context: ListOf(  # noqa: ARG005
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "description",
-                    TextInput(
-                        title=_("Description"),
+    form_spec=lambda context: FSList(  # noqa: ARG005
+        element_template=fs.Dictionary(
+            elements={
+                "description": DictElement(
+                    required=True,
+                    parameter_form=String(title=Title("Description"), prefill=DefaultValue("")),
+                ),
+                "credentials": DictElement(
+                    required=True,
+                    parameter_form=TransformDataForLegacyFormatOrRecomposeFunction(
+                        wrapped_form_spec=create_snmp_credentials(
+                            title=Title("SNMP credentials"), default_value=None, for_ec=True
+                        ),
+                        from_disk=_reject_mismatching_snmpv3_tag,
+                        to_disk=lambda value: value,
                     ),
                 ),
-                ("credentials", SNMPCredentials(for_ec=True)),
-                (
-                    "engine_ids",
-                    ListOfStrings(
-                        valuespec=TextInput(
-                            size=24,
-                            minlen=2,
-                            allow_empty=False,
-                            regex="^[A-Fa-f0-9]*$",
-                            regex_error=_(
-                                "The engine IDs have to be configured as hex strings "
-                                "like <tt>8000000001020304</tt>."
-                            ),
+                "engine_ids": DictElement(
+                    parameter_form=FSList(
+                        element_template=String(
+                            custom_validate=[
+                                validators.LengthInRange(min_value=2),
+                                validators.MatchRegex(
+                                    regex="^[A-Fa-f0-9]*$",
+                                    error_msg=Message(
+                                        "The engine IDs have to be configured as hex strings "
+                                        "like 8000000001020304."
+                                    ),
+                                ),
+                            ],
                         ),
-                        title=_("Engine IDs (only needed for SNMPv3)"),
-                        help=_(
+                        title=Title("Engine IDs (only needed for SNMPv3)"),
+                        help_text=Help(
                             "Each SNMPv3 device has its own engine ID. This is normally automatically generated, but can also be configured manually for some devices. As the engine ID is used for the encryption of SNMPv3 traps sent by the devices, Checkmk needs to know the engine ID to be able to decrypt the SNMP traps.<br>The engine IDs have to be configured as hex strings like <tt>8000000001020304</tt>."
                         ),
-                        allow_empty=False,
+                        custom_validate=[validators.LengthInRange(min_value=1)],
                     ),
                 ),
-            ],
-            # NOTE: For SNMPv3, this should not be empty, otherwise users will be confused...
-            optional_keys=["engine_ids"],
+            },
         ),
-        title=_("Credentials for processing SNMP traps"),
-        help=_(
+        title=Title("Credentials for processing SNMP traps"),
+        help_text=Help(
             "When you want to process SNMP traps with the Event Console it is "
             "necessary to configure the credentials to decrypt the incoming traps."
         ),
-        text_if_empty=_("SNMP traps not configured"),
+        no_element_label=Label("SNMP traps not configured"),
     ),
 )
 
@@ -4913,70 +5040,66 @@ ConfigVariableEventConsoleLogLevel = ConfigVariable(
     group=ConfigVariableGroupEventConsoleLogging,
     primary_domain=ConfigDomainEventConsole,
     ident="log_level",
-    valuespec=lambda context: Dictionary(  # noqa: ARG005
-        title=_("Log level"),
-        help=_(
+    form_spec=lambda context: DictionaryExtended(
+        title=Title("Log level"),
+        help_text=Help(
             "You can configure the Event Console to log more details about its actions. "
             "This information is logged into the file <tt>%(path)s</tt>."
         )
-        % {"path": site_neutral_path(cmk.utils.paths.log_dir / "mkeventd.log")},
+        % {"path": str(context.site_neutral_log_dir / "mkeventd.log")},
         elements=_ec_log_level_elements(),
-        optional_keys=[],
     ),
 )
 
 
-def _ec_log_level_elements() -> list[tuple[str, DropdownChoice]]:
-    elements = []
-
-    for component, title, help_txt in [
+def _ec_log_level_elements() -> dict[str, DictElement[int]]:
+    loggers = [
         (
             "cmk.mkeventd",
-            _("General messages"),
-            _("Log level for all log messages that are not in one of the categories below"),
+            Title("General messages"),
+            Help("Log level for all log messages that are not in one of the categories below"),
         ),
         (
             "cmk.mkeventd.EventServer",
-            _("Processing of incoming events"),
-            _("Log level for the processing of all incoming events"),
+            Title("Processing of incoming events"),
+            Help("Log level for the processing of all incoming events"),
         ),
         (
             "cmk.mkeventd.EventStatus",
-            _("Event database"),
-            _("Log level for managing already created events"),
+            Title("Event database"),
+            Help("Log level for managing already created events"),
         ),
         (
             "cmk.mkeventd.StatusServer",
-            _("Status queries"),
-            _("Log level for handling of incoming queries to the status socket"),
+            Title("Status queries"),
+            Help("Log level for handling of incoming queries to the status socket"),
         ),
         (
             "cmk.mkeventd.lock",
-            _("Locking"),
-            _(
+            Title("Locking"),
+            Help(
                 "Log level for the locking mechanics. Setting this to debug will enable "
                 "log entries for each lock/unlock action."
             ),
         ),
         (
             "cmk.mkeventd.EventServer.snmp",
-            _("SNMP trap processing"),
-            _(
+            Title("SNMP trap processing"),
+            Help(
                 "Log level for the SNMP trap processing mechanics. Setting this to debug will enable "
                 "detailed log entries for each received SNMP trap."
             ),
         ),
-    ]:
-        elements.append(
-            (
-                component,
-                LogLevelChoice(
-                    title=title,
-                    help=help_txt,
-                ),
-            )
+    ]
+    return {
+        component: DictElement(
+            required=True,
+            parameter_form=FSLogLevelChoice(
+                title=title, help_text=help_text, prefill=DefaultValue(logging.INFO)
+            ),
         )
-    return elements
+        for component, title, help_text in loggers
+    }
 
 
 ConfigVariableEventLogRuleHits = ConfigVariable(

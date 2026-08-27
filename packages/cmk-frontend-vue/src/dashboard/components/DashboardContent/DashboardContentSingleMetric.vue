@@ -99,14 +99,7 @@ const state = computed<KpiState | undefined>(() => {
     : undefined
 })
 
-// The single metric endpoint (cmk/gui/nonfree/pro/dashboard/_single_metric_data.py)
-// drops timestamps and filters out None values before they reach here, so it
-// cannot express gaps or staleness. The index is used as a stand-in timestamp
-// purely to satisfy CmkKpiStatCard's contract - it does not represent real time,
-// and this card never shows a real gap until that endpoint is migrated.
-const series = computed<TimestampedSample[]>(
-  () => data.value?.series.map((value, index) => ({ timestamp: index, value })) ?? []
-)
+const series = computed<TimestampedSample[]>(() => data.value?.series ?? [])
 </script>
 
 <template>

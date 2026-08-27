@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/graph_designer'
+import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import { staticAssertNever } from 'cmk-ui-library/lib/typeUtils'
 
 import { catalogFunctionName } from '@/metric-backend/consolidation/types'
@@ -73,43 +73,37 @@ export function buildConsolidationFunction(
       return {
         type: 'histogram',
         function: 'histogram_count_delta',
-        lookback_seconds: lookbackSeconds,
-        percentile: 0
+        lookback_seconds: lookbackSeconds
       }
     case 'histogram_count_rate':
       return {
         type: 'histogram',
         function: 'histogram_count_rate',
-        lookback_seconds: lookbackSeconds,
-        percentile: 0
+        lookback_seconds: lookbackSeconds
       }
     case 'histogram_sum_rate':
       return {
         type: 'histogram',
         function: 'histogram_sum_rate',
-        lookback_seconds: lookbackSeconds,
-        percentile: 0
+        lookback_seconds: lookbackSeconds
       }
     case 'histogram_sum_delta':
       return {
         type: 'histogram',
         function: 'histogram_sum_delta',
-        lookback_seconds: lookbackSeconds,
-        percentile: 0
+        lookback_seconds: lookbackSeconds
       }
     case 'histogram_sum_raw':
       return {
         type: 'histogram',
         function: 'histogram_sum_raw',
-        lookback_seconds: lookbackSeconds,
-        percentile: 0
+        lookback_seconds: lookbackSeconds
       }
     case 'histogram_fraction_below':
       return {
         type: 'histogram',
         function: 'histogram_fraction_below',
         lookback_seconds: lookbackSeconds,
-        percentile: 0,
         threshold: thresholdForFractionBelow
       }
     case 'histogram_fraction_between':
@@ -117,7 +111,6 @@ export function buildConsolidationFunction(
         type: 'histogram',
         function: 'histogram_fraction_between',
         lookback_seconds: lookbackSeconds,
-        percentile: 0,
         lower_threshold: lowerThresholdForFractionBetween,
         upper_threshold: upperThresholdForFractionBetween
       }
@@ -138,7 +131,6 @@ export function buildConsolidationFunction(
             type: 'histogram',
             function: 'histogram_preserve_fraction_below',
             lookback_seconds: lookbackSeconds,
-            percentile: 0,
             threshold: groupFractionBelowThresholdToWire(groupBy),
             group_by: groupKeysToWire(groupBy.keys)
           }
@@ -147,7 +139,6 @@ export function buildConsolidationFunction(
             type: 'histogram',
             function: 'histogram_preserve_fraction_between',
             lookback_seconds: lookbackSeconds,
-            percentile: 0,
             lower_threshold: groupFractionLowerThresholdToWire(groupBy),
             upper_threshold: groupFractionUpperThresholdToWire(groupBy),
             group_by: groupKeysToWire(groupBy.keys)

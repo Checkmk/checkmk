@@ -5,7 +5,7 @@
  */
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
-import type { ConsolidationGroupByKey } from 'cmk-shared-typing/typescript/graph_designer'
+import type { ConsolidationGroupByKey } from 'cmk-shared-typing/typescript/consolidation'
 
 import { DEFAULT_TITLE_MACRO, type MetricBackendItem } from './types'
 

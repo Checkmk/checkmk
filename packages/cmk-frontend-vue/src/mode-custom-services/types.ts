@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
-import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/graph_designer'
+import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 
 // The custom service being created: the metric query (step 1) and the host
 // assignment (step 2) of the creation wizard.

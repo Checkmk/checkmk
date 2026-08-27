@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
-import { type ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/graph_designer'
+import { type ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import type { MetricBackendCustomQuery } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -146,7 +146,7 @@ const consolidation = computed<WireConsolidationFunction>({
           ? (value.upper_threshold ??
             current.aggregation_histogram_upper_threshold_for_fraction_between)
           : current.aggregation_histogram_upper_threshold_for_fraction_between,
-      aggregation_histogram_group_by: value.type === 'histogram' ? (value.group_by ?? []) : []
+      aggregation_histogram_group_by: 'group_by' in value ? value.group_by : []
     })
   }
 })

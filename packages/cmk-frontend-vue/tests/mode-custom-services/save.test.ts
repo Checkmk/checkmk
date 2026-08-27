@@ -6,6 +6,7 @@
 // Black-box behaviour of the persistence path: drive createCustomService with a model,
 // stub the create endpoint at the network boundary (MSW) and assert only the observable
 // outcome (created / error surfaced / guarded).
+import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
@@ -123,9 +124,8 @@ describe('createCustomService', () => {
         type: 'histogram',
         function: 'histogram_fraction_between',
         lookback_seconds: 120,
-        percentile: 90,
         lower_threshold: 10
-      }
+      } as ConsolidationFunction
     })
     expect(result.ok).toBe(false)
     expect(result.error).toBeTruthy()

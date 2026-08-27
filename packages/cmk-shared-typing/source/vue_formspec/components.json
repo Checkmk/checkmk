@@ -1056,7 +1056,7 @@
               "type": "number"
             },
             "consolidation_function": {
-              "$ref": "../consolidation.json"
+              "$ref": "../consolidation.json#/$defs/consolidation_function_name"
             },
             "aggregation_histogram_group_by": {
               "type": "array",

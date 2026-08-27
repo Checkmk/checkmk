@@ -78,7 +78,7 @@
           "$ref": "#/$defs/graph_line_metric_name"
         },
         "consolidation_function": {
-          "$ref": "#/$defs/consolidation_function"
+          "$ref": "consolidation.json"
         },
         "attribute_filter": {
           "$ref": "attribute_filter.json"
@@ -98,66 +98,6 @@
         "mirrored",
         "metric_name",
         "consolidation_function"
-      ]
-    },
-    "consolidation_gauge": {
-      "type": "object",
-      "title": "consolidation_gauge",
-      "properties": {
-        "type": { "type": "string", "enum": ["gauge"] },
-        "function": { "$ref": "consolidation.json#/$defs/gauge_function" },
-        "lookback_seconds": { "type": "number" }
-      },
-      "required": ["type", "function", "lookback_seconds"]
-    },
-    "consolidation_sum": {
-      "type": "object",
-      "title": "consolidation_sum",
-      "properties": {
-        "type": { "type": "string", "enum": ["sum"] },
-        "function": { "$ref": "consolidation.json#/$defs/sum_function" },
-        "lookback_seconds": { "type": "number" }
-      },
-      "required": ["type", "function", "lookback_seconds"]
-    },
-    "consolidation_group_by_key": {
-      "type": "object",
-      "title": "consolidation_group_by_key",
-      "properties": {
-        "kind": { "type": "string", "enum": ["resource", "scope", "data_point"] },
-        "key": { "type": "string" }
-      },
-      "required": ["kind", "key"]
-    },
-    "consolidation_histogram": {
-      "type": "object",
-      "title": "consolidation_histogram",
-      "properties": {
-        "type": { "type": "string", "enum": ["histogram"] },
-        "function": {
-          "anyOf": [
-            { "$ref": "consolidation.json#/$defs/histogram_function" },
-            { "$ref": "consolidation.json#/$defs/histogram_preserve_function" }
-          ]
-        },
-        "lookback_seconds": { "type": "number" },
-        "percentile": { "type": "number" },
-        "threshold": { "type": "number", "default": 0 },
-        "lower_threshold": { "type": "number", "default": 0 },
-        "upper_threshold": { "type": "number", "default": 0 },
-        "group_by": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/consolidation_group_by_key" },
-          "default": []
-        }
-      },
-      "required": ["type", "function", "lookback_seconds", "percentile"]
-    },
-    "consolidation_function": {
-      "anyOf": [
-        { "$ref": "#/$defs/consolidation_gauge" },
-        { "$ref": "#/$defs/consolidation_sum" },
-        { "$ref": "#/$defs/consolidation_histogram" }
       ]
     },
     "graph_line_metric": {

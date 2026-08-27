@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
+import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import { describe, expect, test } from 'vitest'
 
 import {
@@ -100,7 +101,6 @@ describe('buildCustomServiceDefinition', () => {
           type: 'histogram',
           function: 'histogram_fraction_between',
           lookback_seconds: 120,
-          percentile: 90,
           lower_threshold: 10,
           upper_threshold: 50
         }
@@ -139,7 +139,6 @@ describe('buildCustomServiceDefinition', () => {
           type: 'histogram',
           function: 'histogram_fraction_below',
           lookback_seconds: 120,
-          percentile: 90,
           threshold: 0.25
         }
       })
@@ -157,7 +156,6 @@ describe('buildCustomServiceDefinition', () => {
           type: 'histogram',
           function: 'histogram_preserve_fraction_below',
           lookback_seconds: 120,
-          percentile: 90,
           threshold: 0.5,
           group_by: [{ kind: 'data_point', key: 'pod' }]
         }
@@ -177,7 +175,6 @@ describe('buildCustomServiceDefinition', () => {
           type: 'histogram',
           function: 'histogram_preserve_fraction_between',
           lookback_seconds: 120,
-          percentile: 90,
           lower_threshold: 1,
           upper_threshold: 9,
           group_by: [{ kind: 'scope', key: 'otel.library.name' }]
@@ -195,12 +192,13 @@ describe('buildCustomServiceDefinition', () => {
   test('never builds a threshold pair the endpoint would reject', () => {
     const definition = buildCustomServiceDefinition(
       model({
+        // Partial form state the user has not finished filling: the precise wire type
+        // requires both thresholds, but the runtime path fills defaults / validates.
         consolidation: {
           type: 'histogram',
           function: 'histogram_fraction_between',
-          lookback_seconds: 120,
-          percentile: 90
-        }
+          lookback_seconds: 120
+        } as ConsolidationFunction
       })
     )
     expect(definition.configuration.consolidation).toEqual({
@@ -241,9 +239,8 @@ describe('aggregationProblem', () => {
       aggregationProblem({
         type: 'histogram',
         function: 'histogram_fraction_below',
-        lookback_seconds: 120,
-        percentile: 90
-      })
+        lookback_seconds: 120
+      } as ConsolidationFunction)
     ).toBe('thresholds_missing')
   })
 
@@ -253,9 +250,8 @@ describe('aggregationProblem', () => {
         type: 'histogram',
         function: 'histogram_fraction_between',
         lookback_seconds: 120,
-        percentile: 90,
         lower_threshold: 10
-      })
+      } as ConsolidationFunction)
     ).toBe('thresholds_missing')
   })
 
@@ -265,10 +261,9 @@ describe('aggregationProblem', () => {
         type: 'histogram',
         function: 'histogram_preserve_fraction_between',
         lookback_seconds: 120,
-        percentile: 90,
         lower_threshold: 50,
         upper_threshold: 10
-      })
+      } as ConsolidationFunction)
     ).toBe('thresholds_out_of_order')
   })
 
@@ -278,7 +273,6 @@ describe('aggregationProblem', () => {
         type: 'histogram',
         function: 'histogram_fraction_between',
         lookback_seconds: 120,
-        percentile: 90,
         lower_threshold: 10,
         upper_threshold: 50
       })

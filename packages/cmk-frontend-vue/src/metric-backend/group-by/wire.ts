@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
-import type { ConsolidationGroupByKey } from 'cmk-shared-typing/typescript/graph_designer'
+import type { ConsolidationGroupByKey } from 'cmk-shared-typing/typescript/consolidation'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 
 import { DEFAULT_QUANTILE } from '../histogram-params'

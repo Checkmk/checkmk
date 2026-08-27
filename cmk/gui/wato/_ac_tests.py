@@ -21,7 +21,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__
-from cmk.crypto.password import Password
 from cmk.gui import userdb
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
@@ -34,7 +33,6 @@ from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
 )
 from cmk.gui.type_defs import Users
-from cmk.gui.userdb import get_user_attributes, htpasswd
 from cmk.gui.utils.doc_references import (
     doc_reference_url,
     DocReference,
@@ -83,7 +81,6 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestLivestatusSecured)
     ac_test_registry.register(ACTestNumberOfUsers)
     ac_test_registry.register(ACTestHTTPSecured)
-    ac_test_registry.register(ACTestOldDefaultCredentials)
     ac_test_registry.register(ACTestBackupConfigured)
     ac_test_registry.register(ACTestBackupNotEncryptedConfigured)
     ac_test_registry.register(ACTestEscapeHTMLDisabled)
@@ -501,62 +498,6 @@ class ACTestHTTPSecured(ACTest):
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_("Site is using plain HTTP. Consider enabling HTTPS."),
-                site_id=site_id,
-            )
-
-
-class ACTestOldDefaultCredentials(ACTest):
-    @override
-    def category(self) -> str:
-        return ACTestCategories.security
-
-    @override
-    def title(self) -> str:
-        return _("Default credentials")
-
-    @override
-    def help(self) -> str:
-        return _(
-            "In versions prior to version 1.4.0 the first administrative user of the "
-            "site was named <tt>omdadmin</tt> with the standard password <tt>omd</tt>. "
-            "This test warns you in case the site uses these standard credentials. "
-            "It is highly recommended to change this password."
-        )
-
-    @override
-    def is_relevant(self) -> bool:
-        return userdb.user_exists(UserId("omdadmin"))
-
-    @override
-    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if (
-            htpasswd.HtpasswdUserConnector(
-                {
-                    "type": "htpasswd",
-                    "id": "htpasswd",
-                    "disabled": False,
-                }
-            ).check_credentials(
-                UserId("omdadmin"),
-                Password("omd"),
-                get_user_attributes(config.wato_user_attrs),
-                config.user_connections,
-                config.default_user_profile,
-            )
-            == "omdadmin"
-        ):
-            yield ACSingleResult(
-                state=ACResultState.CRIT,
-                text=_(
-                    "Found <tt>omdadmin</tt> with default password. "
-                    "It is highly recommended to change this password."
-                ),
-                site_id=site_id,
-            )
-        else:
-            yield ACSingleResult(
-                state=ACResultState.OK,
-                text=_("Found <tt>omdadmin</tt> using custom password."),
                 site_id=site_id,
             )
 

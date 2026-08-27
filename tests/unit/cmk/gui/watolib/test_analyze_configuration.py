@@ -52,7 +52,6 @@ def test_registered_ac_tests() -> None:
         "ACTestLivestatusUsage",
         "ACTestLivestatusSecured",
         "ACTestNumberOfUsers",
-        "ACTestOldDefaultCredentials",
         "ACTestPersistentConnections",
         "ACTestSizeOfExtensions",
         "ACTestTmpfs",

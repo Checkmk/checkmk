@@ -16,14 +16,6 @@ import { computed, ref, watch } from 'vue'
 
 import { type ValidationMessages } from '@/form/private/validation'
 
-import {
-  DEFAULT_HISTOGRAM_PERCENTILE,
-  DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
-  DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
-  DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
-  buildConsolidationFunction,
-  consolidationFunctionFromWire
-} from '@/graph-designer/consolidation'
 import SourceFormField from '@/graphing/designer/components/forms/SourceFormField.vue'
 import SourceFormStack from '@/graphing/designer/components/forms/SourceFormStack.vue'
 import SourceFormText from '@/graphing/designer/components/forms/SourceFormText.vue'
@@ -50,6 +42,15 @@ import {
   fractionBetweenGroupBy,
   percentileGroupBy
 } from '@/metric-backend/group-by/wire'
+
+import {
+  DEFAULT_HISTOGRAM_PERCENTILE,
+  DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
+  DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
+  DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
+  buildConsolidationFunction,
+  consolidationFunctionFromWire
+} from './consolidation'
 
 const { _t } = usei18n()
 

@@ -9,7 +9,7 @@ import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 
 import type { ValidationMessages } from '@/form'
 
-import FormMetricBackendCustomQuery from '@/graph-designer/FormMetricBackendCustomQuery.vue'
+import FormMetricBackendCustomQuery from '@/metric-backend-custom-query/FormMetricBackendCustomQuery.vue'
 
 test('surfaces the metric-name error but not the consolidation error already shown on-field', () => {
   render(FormMetricBackendCustomQuery, {

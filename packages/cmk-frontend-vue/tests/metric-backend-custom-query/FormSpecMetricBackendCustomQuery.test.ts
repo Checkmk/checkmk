@@ -10,7 +10,7 @@ import { defineComponent, ref } from 'vue'
 
 import type { ValidationMessages } from '@/form'
 
-import FormSpecMetricBackendCustomQuery from '@/graph-designer/FormSpecMetricBackendCustomQuery.vue'
+import FormSpecMetricBackendCustomQuery from '@/metric-backend-custom-query/FormSpecMetricBackendCustomQuery.vue'
 
 const SPEC: MetricBackendCustomQuery = {
   type: 'metric_backend_custom_query',

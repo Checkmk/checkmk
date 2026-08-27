@@ -208,7 +208,7 @@ const aggregator = computed<Aggregator | undefined>({
     <template #additional-fields>
       <SourceFormStack spacing="label">
         <SourceFormText variant="description">{{ _t('Service name template') }}</SourceFormText>
-        <div class="gd-form-spec-metric-backend-custom-query__service-name-template">
+        <div class="mbcq-form-spec-metric-backend-custom-query__service-name-template">
           <CmkInput
             v-model="serviceNameTemplate"
             type="text"
@@ -225,7 +225,7 @@ const aggregator = computed<Aggregator | undefined>({
 </template>
 
 <style scoped>
-.gd-form-spec-metric-backend-custom-query__service-name-template {
+.mbcq-form-spec-metric-backend-custom-query__service-name-template {
   display: flex;
   align-items: center;
   gap: 8px;

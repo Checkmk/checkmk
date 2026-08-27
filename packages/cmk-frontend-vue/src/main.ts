@@ -12,7 +12,7 @@ import { FormApp } from '@/form'
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
 import '@/assets/variables.css'
-import { registerGraphDesignerFormComponents } from '@/graph-designer/registerFormComponents'
+import { registerCustomQueryFormComponents } from '@/metric-backend-custom-query/registerFormComponents'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
 import NotificationParametersOverviewApp from '@/notification/NotificationParametersOverviewApp.vue'
 import { translationLoader } from '@/translationLoader'
@@ -56,7 +56,7 @@ import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
 const { defineCmkComponent } = initCmkUi({ translationLoader })
 
 initializeComponentRegistry()
-registerGraphDesignerFormComponents()
+registerCustomQueryFormComponents()
 registerOAuth2ConnectionFormComponents()
 registerMetricBackendFormComponents()
 

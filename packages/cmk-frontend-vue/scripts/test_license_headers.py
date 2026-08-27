@@ -130,7 +130,7 @@ def check(suffix: str, abs_path: Path, rel_path: Path) -> bool:
         return CHECKER[suffix].check(
             abs_path,
             HEADER_CEE
-            if rel_path.is_relative_to(Path("src/graph-designer"))
+            if rel_path.is_relative_to(Path("src/metric-backend-custom-query"))
             or rel_path.is_relative_to(Path("src/metric-backend"))
             or rel_path in ENTERPRISE_LICENSED_FILES_FORM_SPECS
             else HEADER,

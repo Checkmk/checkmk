@@ -9,7 +9,7 @@ import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-sha
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import FormMetricBackendCustomQuery from '@/graph-designer/FormMetricBackendCustomQuery.vue'
+import FormMetricBackendCustomQuery from '@/metric-backend-custom-query/FormMetricBackendCustomQuery.vue'
 
 const { _t } = usei18n()
 

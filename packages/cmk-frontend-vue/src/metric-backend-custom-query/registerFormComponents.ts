@@ -7,7 +7,7 @@ import { registerFormComponents } from '@/form'
 
 import FormSpecMetricBackendCustomQuery from './FormSpecMetricBackendCustomQuery.vue'
 
-export function registerGraphDesignerFormComponents(): void {
+export function registerCustomQueryFormComponents(): void {
   registerFormComponents({
     metric_backend_custom_query: FormSpecMetricBackendCustomQuery
   })

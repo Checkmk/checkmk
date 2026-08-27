@@ -151,6 +151,10 @@ def factory_default_disk_value(config_variable: ConfigVariable) -> object:
 
 FACTORY_DEFAULTS_NORMALIZED_BY_LOAD: Mapping[str, object] = {
     "notification_spooling": "local",
+    "site_opentelemetry_collector_delta_to_cumulative_processor": {
+        "max_stale": 300.0,
+        "max_streams": 2**53 - 1,
+    },
     "reporting_table_layout": {
         "font_size": 8.0,
         "show_headings": True,
@@ -172,7 +176,10 @@ allows values the form cannot express, and the form spec's migrate maps them
 to the value with the same meaning. The reporting_table_layout row shading
 colors are edited as 8-bit RGB integers, so loading snaps the hand-written
 factory floats (0.97, 0.94, 0.70) onto the nearest n/255 grid value below,
-exactly as the legacy Transform did on every edit."""
+exactly as the legacy Transform did on every edit. The delta-to-cumulative
+max_streams default is the int64 maximum, which exceeds what a JSON number
+can represent exactly, so loading clamps it to the largest JSON-safe
+integer."""
 
 
 def validate_disk_value(
@@ -1045,7 +1052,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "[enable]": [],
     },
     "site_opentelemetry_collector_memory_limit": {
-        "limit.absolute": {"limit": 0, "spike_limit": 0},
+        "limit.absolute": {"limit": NoSaveableDefault(), "spike_limit": NoSaveableDefault()},
         "limit.relative": {"limit": 80, "spike_limit": 20},
     },
     "site_subject_alternative_names": {
@@ -1306,11 +1313,11 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
     "site_livestatus_tcp": None,
     "site_mkeventd": None,
     "site_opentelemetry_collector_delta_to_cumulative_processor": {
-        "max_stale": 300,
-        "max_streams": 9223372036854775807,
+        "max_stale": 300.0,
+        "max_streams": 2**53 - 1,
     },
     "site_opentelemetry_collector_memory_limit": {
-        "check_interval": 1,
+        "check_interval": 1.0,
         "limit": ("relative", {"limit": 80, "spike_limit": 20}),
     },
     "site_subject_alternative_names": [],
@@ -2476,22 +2483,35 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "site_opentelemetry_collector": CHECKBOX_CASES,
     "site_opentelemetry_collector_delta_to_cumulative_processor": [
-        CasePass("configured", {"max_stale": 600, "max_streams": 1000}),
+        CasePass("configured", {"max_stale": 600.0, "max_streams": 1000}),
+        CaseMigrates(
+            "legacy-int-seconds",
+            {"max_stale": 600, "max_streams": 1000},
+            {"max_stale": 600.0, "max_streams": 1000},
+        ),
+        CaseMigrates(
+            "int64-max-streams-clamped-to-json-safe",
+            {"max_stale": 300, "max_streams": 9223372036854775807},
+            {"max_stale": 300.0, "max_streams": 2**53 - 1},
+        ),
         CaseFail("stale-below-minimum", {"max_stale": 0, "max_streams": 1000}),
         CaseFail("missing-required-keys", {}),
     ],
     "site_opentelemetry_collector_memory_limit": [
         CasePass(
             "absolute",
-            {"check_interval": 5, "limit": ("absolute", {"limit": 2048, "spike_limit": 512})},
+            {
+                "check_interval": 5.0,
+                "limit": ("absolute", {"limit": 2147483648, "spike_limit": 536870912}),
+            },
         ),
         CasePass(
             "relative",
-            {"check_interval": 1, "limit": ("relative", {"limit": 75.0, "spike_limit": 25.0})},
+            {"check_interval": 1.0, "limit": ("relative", {"limit": 75.0, "spike_limit": 25.0})},
         ),
         CaseFail(
             "spike-not-below-limit",
-            {"check_interval": 1, "limit": ("relative", {"limit": 20.0, "spike_limit": 20.0})},
+            {"check_interval": 1.0, "limit": ("relative", {"limit": 20.0, "spike_limit": 20.0})},
         ),
     ],
     "site_piggyback_hub": CHECKBOX_CASES,

@@ -55,6 +55,26 @@ _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms 
     },
 }
 
+_AUTOMATION_HELPER_STALE_PS_PATTERNS = frozenset(
+    {
+        "~gunicorn:.*automation-helper",
+        "~(.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
+    }
+)
+_AUTOMATION_HELPER_CURRENT_PS_PATTERN = (
+    "~(?:.*cmk-automation-helper.*|gunicorn:.*automation-helper)"
+)
+
+
+def _transform_automation_helper_ps_patterns(
+    item: str, params: Mapping[str, object]
+) -> Mapping[str, object]:
+    if not item.endswith("automation helpers"):
+        return params
+    if params.get("process") not in _AUTOMATION_HELPER_STALE_PS_PATTERNS:
+        return params
+    return {**params, "process": _AUTOMATION_HELPER_CURRENT_PS_PATTERN, "match_groups": ()}
+
 
 @dataclass(frozen=True)
 class RewriteError:
@@ -129,12 +149,16 @@ def _fix_entry(
         _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.get(new_plugin_name, lambda x: x)
     )
 
+    parameters = explicit_parameters_transform(entry.parameters)
+    if new_plugin_name == CheckPluginName("ps") and isinstance(parameters, dict):
+        parameters = _transform_automation_helper_ps_patterns(entry.item or "", parameters)
+
     return AutocheckEntry(
         check_plugin_name=new_plugin_name,
         item=explicit_item_transform(entry.item),
         parameters=_transformed_params(
             new_plugin_name,
-            explicit_parameters_transform(entry.parameters),
+            parameters,
             all_rulesets,
             check_plugins,
             hostname,

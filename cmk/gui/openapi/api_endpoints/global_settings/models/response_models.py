@@ -13,7 +13,7 @@ class GlobalSettingModel:
         example="log_levels",
     )
     value: object = api_field(
-        description="The value of the configuration variable.",
+        description="The value of the configuration variable, values not masked.",
         example={"cmk.web": 20},
     )
     is_default: bool = api_field(

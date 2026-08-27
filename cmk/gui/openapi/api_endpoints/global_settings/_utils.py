@@ -3,15 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+from collections.abc import Mapping
 from typing import Annotated
 
 from pydantic import AfterValidator
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import edition
+from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.framework import ETag, PathParam
+from cmk.gui.openapi.framework import ApiContext, ETag, PathParam
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
-from cmk.gui.watolib.config_domain_name import config_variable_registry, ConfigVariable
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_variable_registry,
+    ConfigVariable,
+    GlobalSettingsContext,
+)
+from cmk.gui.watolib.global_settings import make_global_settings_context
+from cmk.rulesets.v1.form_specs import FormSpec
+from cmk.utils import paths
 from cmk.web.utils import permission_verification as permissions
 
 # Every value ABCConfigDomain.global_settings_permission can take, since a permission checked
@@ -19,7 +32,13 @@ from cmk.web.utils import permission_verification as permissions
 # populated only after this module is imported.
 RO_PERMISSIONS = permissions.AnyPerm(
     [
-        permissions.Perm("wato.global"),
+        permissions.AllPerm(
+            [
+                permissions.Perm("wato.global"),
+                # the password visitor checks this for every secret carrying variable
+                permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
+            ]
+        ),
         permissions.Perm("mkeventd.config"),
     ]
 )
@@ -29,6 +48,8 @@ RW_PERMISSIONS = permissions.AnyPerm(
             [
                 permissions.Perm("wato.edit"),
                 permissions.Perm("wato.global"),
+                # the password visitor checks this for every secret carrying variable
+                permissions.Optional(permissions.Perm("wato.edit_all_passwords")),
             ]
         ),
         permissions.AllPerm(
@@ -129,12 +150,71 @@ GlobalSettingVarName = Annotated[
 ]
 
 
-def global_setting_etag(varname: str, value: object, is_default: bool) -> ETag:
+def global_settings_context_of(site_id: SiteId, api_context: ApiContext) -> GlobalSettingsContext:
+    return make_global_settings_context(
+        edition(paths.omd_root),
+        site_id,
+        sites=api_context.config.sites,
+        graph_timeranges=api_context.config.graph_timeranges,
+    )
+
+
+def form_spec_of(
+    config_variable: ConfigVariable, site_id: SiteId, api_context: ApiContext
+) -> FormSpec[object]:
+    value_model = config_variable.value_model(global_settings_context_of(site_id, api_context))
+    if not isinstance(value_model, FormSpec):
+        raise MKGeneralException(
+            f"Configuration variable {config_variable.ident()!r} is not form spec backed yet "
+            f"and cannot be served by the REST API."
+        )
+
+    return value_model
+
+
+def value_to_json(form_spec: FormSpec[object], value: object) -> object:
+    """The frontend representation, i.e. the one the GUI exchanges with the form spec."""
+    visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
+    _component, json_value = visitor.to_vue(RawDiskData(value))
+    return json_value
+
+
+def _etag_value(json_value: object) -> str:
+    """Not hash_of_dict(): that assumes string dict keys and repr()s in insertion order."""
+    return json.dumps(json_value, sort_keys=True, default=repr)
+
+
+def global_setting_etag(varname: str, json_value: object, is_default: bool) -> ETag:
     # Must cover is_default too, so that "unset -> explicitly set to the default" changes the tag.
-    raise NotImplementedError("ETag support for global settings is not implemented yet.")
+    return ETag(
+        {
+            "varname": varname,
+            "value": _etag_value(json_value),
+            "is_default": is_default,
+        }
+    )
 
 
 def site_global_setting_etag(
-    site_id: SiteId, varname: str, value: object, is_default: bool
+    site_id: SiteId, varname: str, json_value: object, is_default: bool
 ) -> ETag:
-    raise NotImplementedError("ETag support for global settings is not implemented yet.")
+    return ETag(
+        {
+            "site_id": site_id,
+            "varname": varname,
+            "value": _etag_value(json_value),
+            "is_default": is_default,
+        }
+    )
+
+
+def effective_value(settings: Mapping[str, object], varname: str) -> tuple[object, bool]:
+    """The value in effect and whether it is the built-in default.
+
+    Writers pass the same mapping they later hand to save_global_settings(), which
+    rewrites the whole file, so they need a mutable copy of it.
+    """
+    if varname in settings:
+        return settings[varname], False
+
+    return ABCConfigDomain.get_all_default_globals()[varname], True

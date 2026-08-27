@@ -31,6 +31,7 @@ function singleMetric(overrides: Partial<ComputedSingleMetric> = {}): ComputedSi
       { timestamp: 120, value: 15 },
       { timestamp: 180, value: 30 }
     ],
+    stale: false,
     url: 'view.py?view_name=service',
     ...overrides
   }

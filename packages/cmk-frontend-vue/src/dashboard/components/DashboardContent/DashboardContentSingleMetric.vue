@@ -123,6 +123,7 @@ const series = computed<TimestampedSample[]>(() => data.value?.series ?? [])
         :state="state"
         :range-limits="data.range_limits"
         :range="data.range"
+        :stale="data.stale"
         :href="href"
       />
     </div>

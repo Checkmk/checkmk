@@ -165,7 +165,7 @@ export const panelConfig = {
   }
 } satisfies PanelConfigFor<
   typeof CmkKpiStatCard,
-  'series' | 'state' | 'rangeLimits' | 'range' | 'href' | 'formatValue' | 'delta'
+  'series' | 'state' | 'stale' | 'rangeLimits' | 'range' | 'href' | 'formatValue' | 'delta'
 > & {
   sparkHeightMode: ListPropDef<SparkHeightMode>
   showDelta: BoolPropDef
@@ -208,7 +208,7 @@ defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<
   typeof CmkKpiStatCard,
-  'series' | 'state' | 'rangeLimits' | 'range' | 'href' | 'formatValue' | 'delta'
+  'series' | 'state' | 'stale' | 'rangeLimits' | 'range' | 'href' | 'formatValue' | 'delta'
 >().createRef(panelConfig)
 
 // A window of per-minute values, oldest first (as the compute endpoints

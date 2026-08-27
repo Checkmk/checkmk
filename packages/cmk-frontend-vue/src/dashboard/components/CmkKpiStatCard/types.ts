@@ -109,6 +109,14 @@ export interface CmkKpiStatCardProps {
   /** Monitoring state shown beside the value; omit to show none. */
   state?: KpiState | undefined
   /**
+   * Overrides the "No recent data" staleness indicator instead of deriving it
+   * from whether `series` ends in a trailing gap. For callers whose value isn't
+   * backed by a series at all (e.g. a current-value-only reading), where a
+   * caller-known staleness signal (e.g. the check's own staleness) is the only
+   * one available.
+   */
+  stale?: boolean | undefined
+  /**
    * Labels for the ends of the displayed value range, drawn over the sparkline.
    * Omit to leave the range implicit.
    */

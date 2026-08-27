@@ -29,6 +29,7 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   delta: () => ({}),
   formatValue: (value: number) => value.toFixed(1),
   state: undefined,
+  stale: undefined,
   rangeLimits: undefined,
   range: undefined,
   href: undefined,
@@ -176,9 +177,12 @@ const lastRealSample = computed<TimestampedSample | undefined>(() =>
 )
 
 // A trailing null run means nothing has arrived since - stale. A null run
-// bounded by real samples on both sides is just a gap, not stale.
+// bounded by real samples on both sides is just a gap, not stale. A caller
+// that knows better (e.g. the check's own staleness) overrides this.
 const isStale = computed(
-  () => lastRealSample.value !== undefined && props.series[props.series.length - 1]?.value === null
+  () =>
+    props.stale ??
+    (lastRealSample.value !== undefined && props.series[props.series.length - 1]?.value === null)
 )
 
 const lastSampleTimeLabel = computed<string | undefined>(() => {

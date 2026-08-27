@@ -3555,6 +3555,7 @@ packaging==26.3 \
     #   opentelemetry-instrumentation
     #   pytest
     #   pytest-check
+    #   pytest-rerunfailures
     #   requirements-parser
     #   setuptools-scm
     #   sphinx
@@ -4523,6 +4524,7 @@ pytest==9.1.1 \
     #   pytest-random-order
     #   pytest-recording
     #   pytest-repeat
+    #   pytest-rerunfailures
     #   pytest-socket
 pytest-asyncio==1.4.0 \
     --hash=sha256:933ca923a23075a87fb7070c0ec272a6848489824d887c85c812670932835aa1 \
@@ -4595,6 +4597,10 @@ pytest-recording==0.13.4 \
 pytest-repeat==0.9.4 \
     --hash=sha256:c1738b4e412a6f3b3b9e0b8b29fcd7a423e50f87381ad9307ef6f5a8601139f3 \
     --hash=sha256:d92ac14dfaa6ffcfe6917e5d16f0c9bc82380c135b03c2a5f412d2637f224485
+    # via -r tests/dev-requirements.in
+pytest-rerunfailures==16.6 \
+    --hash=sha256:29dbfee46f542073c888e0ed4e81c51e15b9096f49a299eb1a759629c601684a \
+    --hash=sha256:6af2d1ebd6e5cb79666ac408942cd6a0672a49fefd8523664770718560795e13
     # via -r tests/dev-requirements.in
 pytest-socket==0.8.1 \
     --hash=sha256:2f57787914ad2e1308d09ce141b95c3e55741fbb4fb7b7556593a6b063e0c9c7 \

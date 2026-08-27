@@ -41,6 +41,7 @@ pytest-check # used to queue failed assertions and continue test execution
 pytest-opentelemetry # instrument pytest runs
 pytest-playwright # used for the GUI system tests
 pytest-repeat # used to rerun system tests
+pytest-rerunfailures # used to rerun flaky tests
 python-lsp-server  # Note: There are extras, but the default seems sensible.
 requirements-parser # used to parse requirements.txt file for testing
 responses  # used for unit tests

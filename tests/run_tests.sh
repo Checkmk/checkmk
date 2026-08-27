@@ -62,7 +62,7 @@ SYSTEM TESTS (local / -docker variant available for each)
   test-system-ai-features                 Run system tests for the mcp-server and the ai-control-plane (pro edition)
   test-system-oauth                       Run system tests for the oauth authorization server (pro edition)
   test-system-multisite                   Run multisite system tests
-  test-system-agent-updates               Run system tests for agent updates
+  test-system-agent-updates               Run system tests for agent updates (needs a running systemd)
   test-system-update-community            Run update tests for community edition
   test-system-update-pro                  Run update tests for pro edition
   test-system-update-ultimate             Run update tests for ultimate edition
@@ -396,6 +396,7 @@ test-system-multisite() {
         "$(realpath "$SCRIPT_DIR/system/multisite")"
 }
 
+# Requires a running systemd, so use the -docker variant unless you know what you are doing.
 test-system-agent-updates() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/system/agent_updates")" \
@@ -507,6 +508,11 @@ _system-tests-docker() {
     $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" "$target"
 }
 
+_system-tests-docker-systemd() {
+    local target="$1"
+    $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" --systemd "$target"
+}
+
 _dockerable-test-docker() {
     local target="$1"
     "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh $target
@@ -521,7 +527,7 @@ test-system-otel-docker() { _system-tests-docker test-system-otel; }
 test-system-azure-docker() { _system-tests-docker test-system-azure; }
 test-system-ai-features-docker() { _system-tests-docker test-system-ai-features; }
 test-system-multisite-docker() { _system-tests-docker test-system-multisite; }
-test-system-agent-updates-docker() { _system-tests-docker test-system-agent-updates; }
+test-system-agent-updates-docker() { _system-tests-docker-systemd test-system-agent-updates; }
 test-system-update-community-docker() { _system-tests-docker test-system-update-community; }
 test-system-update-pro-docker() { _system-tests-docker test-system-update-pro; }
 test-system-update-ultimate-docker() { _system-tests-docker test-system-update-ultimate; }
@@ -546,6 +552,7 @@ test-extension-compatibility-docker() { _system-tests-docker test-extension-comp
 # Debug variants
 test-system-singlesite-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
 test-system-multisite-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
+test-system-agent-updates-docker-debug() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" --systemd debug; }
 container-debug-docker() { $UVENV "$SCRIPT_DIR/scripts/run-dockerized.py" debug; }
 
 # Siteless test -docker variants

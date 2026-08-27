@@ -82,6 +82,7 @@ def main(raw_args: Sequence[str]) -> int:
         package_info=package_info,
         result_path=result_path,
         interactive=args.make_target.rsplit("-", 1)[-1] == "debug",
+        systemd=args.systemd,
     )
 
 
@@ -100,6 +101,12 @@ def _parse_arguments(args: Sequence[str]) -> tuple[argparse.Namespace, list[str]
         "make_target",
         metavar="MAKE_TARGET",
         help="The make target to execute in the tests directory",
+    )
+    p.add_argument(
+        "--systemd",
+        action="store_true",
+        help="Boot systemd as PID 1 in the container instead of running the tests under a "
+        "plain shell. Required by test suites that exercise the agent's systemd units.",
     )
 
     return p.parse_known_args(args)

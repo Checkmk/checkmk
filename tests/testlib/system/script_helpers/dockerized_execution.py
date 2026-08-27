@@ -45,6 +45,40 @@ _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
 _DOCKER_BUILD_ID = 1
 _TESTUSER = "testuser"
 
+# Docker mounts /sys/fs/cgroup read-only in every container that is not privileged. systemd
+# cannot create its own cgroup tree under such a mount and exits immediately without writing
+# anything to the container log. Remounting read-write is refused, so mount a fresh cgroup2
+# filesystem over it instead. That needs CAP_SYS_ADMIN and an AppArmor exception, both of
+# which the host config below already grants.
+_BOOT_SYSTEMD = (
+    "umount /sys/fs/cgroup 2>/dev/null || true; "
+    "mount -t cgroup2 none /sys/fs/cgroup || "
+    "{ echo 'failed to mount cgroup2 over /sys/fs/cgroup' >&2; exit 1; }; "
+    # cgroupfs never allows creating plain files, so probing with touch reports a false failure
+    "{ mkdir /sys/fs/cgroup/probe.slice && rmdir /sys/fs/cgroup/probe.slice; } || "
+    "{ echo 'cgroup2 at /sys/fs/cgroup is not writable' >&2; exit 1; }; "
+    "exec /sbin/init"
+)
+_SYSTEMD_PACKAGES = ["systemd", "systemd-sysv", "dbus", "dbus-user-session"]
+# Units that either cannot work in a container or serve no purpose in one. tmp.mount would
+# replace /tmp by a fresh tmpfs and thereby change the size of the directory the package
+# downloads and pytest's tmp_path use.
+_SYSTEMD_UNITS_TO_MASK = [
+    "console-getty.service",
+    "getty-static.service",
+    "getty.target",
+    "sys-kernel-config.mount",
+    "systemd-firstboot.service",
+    "systemd-journald-audit.socket",
+    "systemd-modules-load.service",
+    "systemd-resolved.service",
+    "systemd-udev-trigger.service",
+    "systemd-udevd-control.socket",
+    "systemd-udevd-kernel.socket",
+    "systemd-udevd.service",
+    "tmp.mount",
+]
+
 logger = logging.getLogger()
 
 
@@ -55,6 +89,7 @@ def execute_tests_in_container(
     result_path: Path,
     command: list[str],
     interactive: bool,
+    systemd: bool = False,
 ) -> int:
     client: docker.DockerClient = _docker_client()
     info = client.info()
@@ -62,8 +97,40 @@ def execute_tests_in_container(
 
     container_env = _container_env(package_info)
     image_name_with_tag = _create_cmk_image(
-        client, distro_name, docker_tag, package_info, container_env
+        client, distro_name, docker_tag, package_info, container_env, systemd
     )
+
+    host_config_args: dict[str, object] = {
+        "cap_add": ["SYS_ADMIN"],
+        # Why unconfined? see https://github.com/moby/moby/issues/16429
+        "security_opt": ["apparmor:unconfined"],
+        # Important to workaround really high default of docker which results
+        # in problems when trying to close all FDs in Python 2.
+        "ulimits": [docker.types.Ulimit(name="nofile", soft=8192, hard=8192)],
+        "binds": _runtime_binds(),
+    }
+    start_args: CreateContainerKwargs
+    if systemd:
+        host_config_args |= {
+            # systemd needs a private cgroup namespace and a writable /run of its own
+            "cgroupns": "private",
+            "tmpfs": {"/run": "", "/run/lock": ""},
+        }
+        start_args = {
+            # Docker's own init would occupy PID 1, and systemd refuses to run as anything else
+            "entrypoint": ["/bin/bash", "-c"],
+            "command": [_BOOT_SYSTEMD],
+            # systemd reads SIGTERM as a request to re-execute itself, so stopping the container
+            # with the default signal would block until the timeout and then end in SIGKILL
+            "stop_signal": "SIGRTMIN+3",
+            "stop_timeout": 60,
+        }
+    else:
+        host_config_args |= {"init": True}
+        start_args = {"command": "/bin/bash", "stdin_open": True, "tty": True}
+
+    start_args["host_config"] = client.api.create_host_config(**host_config_args)  # type: ignore[arg-type]
+
     # Start the container
     container: docker.models.containers.Container
     with _start(
@@ -71,23 +138,10 @@ def execute_tests_in_container(
         image=image_name_with_tag,
         # TODO: Re-enable using dedicated container names, the following causes name conflicts:
         # name=f"test-{container_name_suffix(distro_name, docker_tag)}",
-        command="/bin/bash",
-        host_config=client.api.create_host_config(
-            # Create some init process that manages signals and processes
-            init=True,
-            cap_add=["SYS_ADMIN"],
-            # Why unconfined? see https://github.com/moby/moby/issues/16429
-            security_opt=["apparmor:unconfined"],
-            # Important to workaround really high default of docker which results
-            # in problems when trying to close all FDs in Python 2.
-            ulimits=[
-                docker.types.Ulimit(name="nofile", soft=8192, hard=8192),
-            ],
-            binds=_runtime_binds(),
-        ),
-        stdin_open=True,
-        tty=True,
+        **start_args,
     ) as container:
+        if systemd:
+            _await_systemd(container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git", _TESTUSER)
         _cleanup_previous_virtual_environment(container, container_env)
         _reuse_persisted_virtual_environment(container, container_env, _TESTUSER)
@@ -112,6 +166,23 @@ def execute_tests_in_container(
                 * If you want to test a patched version, you need to patch it before running tests.
                 * If you install a site manually and want to access the UI, you need to run this:
                     sudo apache2ctl start
+                """)
+                if not systemd
+                else textwrap.dedent("""
+                This container runs systemd as PID 1. Start the test of your choice, for example:
+
+                Run the agent update system tests:
+                    tests/run_tests.sh test-system-agent-updates
+
+                Inspect the units the agent package deploys:
+                    systemctl status cmk-agent-ctl-daemon.service check-mk-agent.socket
+                    journalctl -u cmk-agent-ctl-daemon -b --no-pager
+
+                NOTE:
+                * The version of Checkmk you test against is set using the VERSION environment variable
+                    and defaults to the current daily build of your branch.
+                * If you install a site manually and want to access the UI, you need to run this:
+                    sudo systemctl start apache2
                 """)
             )
 
@@ -147,11 +218,119 @@ def execute_tests_in_container(
             tty=True,  # NOTE: Some tests require a tty (e.g. test-system-update)!
         )
 
+        if systemd:
+            _dump_systemd_state(container, Path("/results/systemd"))
+
         # Collect the test results located in /results of the container. The
         # CI job will make it available as artifact later
         _copy_directory(container, Path("/results"), result_path)
 
         return exit_code
+
+
+def _await_systemd(container: docker.models.containers.Container, timeout: float = 60.0) -> None:
+    """Block until systemd finished booting inside the container.
+
+    A "degraded" system is accepted. Masking every unit that cannot work in a container is not
+    realistic, and a single masked-away failure must not fail the whole run.
+    """
+    deadline = time.time() + timeout
+    state = "unknown"
+    while time.time() < deadline:
+        container.reload()
+        if container.status != "running":
+            state = f"the container itself is {container.status}"
+            break
+        try:
+            _rc, output = container.exec_run(["systemctl", "is-system-running"])
+        except docker.errors.APIError:
+            # The container died between the status check and the exec.
+            continue
+        assert isinstance(output, bytes)  # stream/socket/demux not used above
+        state = output.decode("utf-8", errors="replace").strip()
+        if state in ("running", "degraded"):
+            logger.info("systemd finished booting, state: %s", state)
+            return
+        time.sleep(1)
+
+    _log_systemd_boot_failure(container)
+    raise RuntimeError(
+        f"systemd did not finish booting within {timeout}s (last state: {state!r}). A container "
+        "that exits without a log message usually failed to mount cgroup2 over /sys/fs/cgroup."
+    )
+
+
+def _log_systemd_boot_failure(container: docker.models.containers.Container) -> None:
+    logger.error(
+        "Container log:\n%s",
+        container.logs().decode("utf-8", errors="replace"),
+    )
+    container.reload()
+    if container.status != "running":
+        return
+    for cmd in (
+        ["systemctl", "list-units", "--failed"],
+        ["journalctl", "-b", "--no-pager", "-n", "200"],
+    ):
+        try:
+            _rc, output = container.exec_run(cmd)
+        except docker.errors.APIError:
+            logger.exception("Could not run %s", subprocess.list2cmdline(cmd))
+            continue
+        assert isinstance(output, bytes)  # stream/socket/demux not used above
+        logger.error(
+            "%s:\n%s",
+            subprocess.list2cmdline(cmd),
+            output.decode("utf-8", errors="replace"),
+        )
+
+
+def _dump_systemd_state(container: docker.models.containers.Container, target: Path) -> None:
+    """Write systemd diagnostics into the results directory, so CI archives them."""
+    _exec_run(container, ["mkdir", "-p", target.as_posix()], check=False)
+    for name, cmd in (
+        ("failed-units.txt", "systemctl list-units --failed --no-pager"),
+        ("journal.txt", "journalctl -b --no-pager"),
+    ):
+        _exec_run(container, ["sh", "-c", f"{cmd} > {target / name} 2>&1"], check=False)
+
+
+def _prepare_systemd(container: docker.models.containers.Container, distro_name: str) -> None:
+    """Install systemd and mask the units that cannot work in a container.
+
+    systemctl mask works without a running systemd, because it only symlinks the unit to
+    /dev/null.
+    """
+    if not distro_name.startswith(("debian-", "ubuntu-")):
+        raise NotImplementedError(
+            f"Preparing systemd for {distro_name} is not implemented yet. Only the apt based "
+            "distributions are supported so far."
+        )
+    logger.info("Installing systemd: %s", " ".join(_SYSTEMD_PACKAGES))
+    _exec_run(container, ["apt-get", "update"], stream=True)
+    _exec_run(
+        container,
+        ["apt-get", "install", "-y", "--no-install-recommends"] + _SYSTEMD_PACKAGES,
+        environment={"DEBIAN_FRONTEND": "noninteractive"},
+        stream=True,
+    )
+    logger.info("Masking %d systemd units", len(_SYSTEMD_UNITS_TO_MASK))
+    _exec_run(container, ["systemctl", "mask"] + _SYSTEMD_UNITS_TO_MASK)
+
+
+def _restore_systemctl(container: docker.models.containers.Container) -> None:
+    """Undo what shadow_systemctl() did during the Checkmk installation."""
+    _exec_run(
+        container,
+        [
+            "scripts/run-uvenv",
+            "python3",
+            "-c",
+            "from tests.testlib.system.systemctl_stub import unshadow_systemctl; unshadow_systemctl()",
+        ],
+        workdir="/git",
+    )
+    _exec_run(container, ["sh", "-c", "systemctl --version | grep -q '^systemd '"])
 
 
 def _docker_client() -> docker.DockerClient:
@@ -284,6 +463,7 @@ def _create_cmk_image(
     docker_tag: str,
     package_info: CMKPackageInfo,
     container_env: dict[str, str],
+    systemd: bool = False,
 ) -> str:
     base_image_name_with_tag = f"{_DOCKER_REGISTRY}/{distro_name}:{docker_tag}"
     logger.info("Prepare distro-specific base image [%s]", base_image_name_with_tag)
@@ -296,9 +476,14 @@ def _create_cmk_image(
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
+    # The two flavours must not share a tag. Neither _is_based_on_current_base_image nor
+    # _is_using_current_cmk_package would notice that one overwrote the other, because both
+    # compare only the base image and the Checkmk package.
+    flavour = "-systemd" if systemd else ""
     image_name_with_tag = (
         f"{_DOCKER_REGISTRY}/"
-        f"{distro_name}-{package_info.edition.short}-{package_info.version.version_rc_aware}"
+        f"{distro_name}{flavour}-{package_info.edition.short}"
+        f"-{package_info.version.version_rc_aware}"
         f":{docker_tag}"
     )
     if use_local_package := check_for_local_package(package_info, distro_name):
@@ -334,7 +519,7 @@ def _create_cmk_image(
         "com.checkmk.cmk_version_rc_aware": package_info.version.version_rc_aware,
         "com.checkmk.cmk_branch": package_info.version.branch,
         # override the base image label
-        "com.checkmk.image_type": "cmk-image",
+        "com.checkmk.image_type": "cmk-systemd-image" if systemd else "cmk-image",
     }
     # Add information about CI jobs creating these images for easier debugging
     for env_info_key in ("CI_JOB_NAME", "CI_BUILD_NUMBER", "CI_BUILD_URL"):
@@ -365,6 +550,8 @@ def _create_cmk_image(
         _prepare_git_overlay(container, "/git-lowerdir", "/git", username=_TESTUSER)
         _prepare_virtual_environment(container, container_env, username=_TESTUSER)
         _persist_virtual_environment(container, container_env)
+        if systemd:
+            _prepare_systemd(container, distro_name)
         logger.info("Install Checkmk version")
         _exec_run(
             container,
@@ -373,6 +560,10 @@ def _create_cmk_image(
             environment={**container_env, "SKIP_MAKEFILE_CALL": "1"},
             stream=True,
         )
+        if systemd:
+            # install-cmk.py replaced systemctl by /bin/true, because this build container
+            # runs no systemd. The image is meant to boot one, so put the binary back.
+            _restore_systemctl(container)
 
         logger.info("Check whether or not installation was OK")
         _exec_run(container, ["ls", "/omd/versions/default"], workdir="/")

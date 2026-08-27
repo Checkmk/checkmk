@@ -51,11 +51,11 @@ def default_config() -> ConfigFromWATO:
         ),
         log_rulehits=False,
         log_messages=False,
-        retention_interval=60,
-        housekeeping_interval=60,
-        sqlite_housekeeping_interval=3600,  # seconds ValueSpec Age
+        retention_interval=60.0,
+        housekeeping_interval=60.0,
+        sqlite_housekeeping_interval=3600.0,  # seconds
         sqlite_freelist_size=50 * 1024 * 1024,  # bytes ValueSpec FIlesize
-        statistics_interval=5,
+        statistics_interval=5.0,
         history_lifetime=365,  # days
         history_rotation="daily",
         replication=None,

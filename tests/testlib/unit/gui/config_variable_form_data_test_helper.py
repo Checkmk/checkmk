@@ -1822,7 +1822,7 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("unknown-case-conversion", {"case": "mixed"}),
         CaseFail("invalid-regex", {"regex": [("(unbalanced", "x")]}),
     ],
-    "housekeeping_interval": UNBOUNDED_AGE_CASES,
+    "housekeeping_interval": UNBOUNDED_TIME_SPAN_CASES,
     "http_proxies": [
         CasePass(
             "configured",
@@ -2386,7 +2386,7 @@ CASES: Mapping[str, list[Case]] = {
         CasePass("disabled", None),
         CaseFail("not-a-choice", "block"),
     ],
-    "retention_interval": UNBOUNDED_AGE_CASES,
+    "retention_interval": UNBOUNDED_TIME_SPAN_CASES,
     "rrdcached_tuning": [
         CasePass(
             "configured",
@@ -2559,14 +2559,14 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("below-minimum", 1024),
         CaseFail("not-an-int", "10MB"),
     ],
-    "sqlite_housekeeping_interval": UNBOUNDED_AGE_CASES,
+    "sqlite_housekeeping_interval": UNBOUNDED_TIME_SPAN_CASES,
     "staleness_threshold": MIN_ONE_FLOAT_CASES,
     "start_url": [
         CasePass("configured", "dashboard.py"),
         CaseFail("absolute-url", "http://evil.example.com/"),
         CaseFail("not-a-string", 123),
     ],
-    "statistics_interval": UNBOUNDED_AGE_CASES,
+    "statistics_interval": UNBOUNDED_TIME_SPAN_CASES,
     "table_row_limit": MIN_ONE_INTEGER_CASES,
     "tcp_connect_timeout": MIN_ONE_FLOAT_CASES,
     "translate_snmptraps": [

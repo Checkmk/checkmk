@@ -97,7 +97,6 @@ from cmk.gui.valuespec import (
     DictionaryModel,
     DropdownChoice,
     DualListChoice,
-    Filesize,
     FixedValue,
     Foldable,
     ID,
@@ -4337,16 +4336,25 @@ ConfigVariableEventConsoleReplication = ConfigVariable(
     ),
 )
 
+
+_TIME_SPAN_MAGNITUDES = [
+    fs.TimeMagnitude.DAY,
+    fs.TimeMagnitude.HOUR,
+    fs.TimeMagnitude.MINUTE,
+    fs.TimeMagnitude.SECOND,
+]
+
 ConfigVariableEventConsoleRetentionInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="retention_interval",
-    valuespec=lambda context: Age(
-        title=_("State retention interval"),
-        help=_(
+    form_spec=lambda context: fs.TimeSpan(
+        title=Title("State retention interval"),
+        help_text=Help(
             "In this interval the event daemon will save its state to disk, so that you won't lose your current event "
             "state in case of a crash."
         ),
+        displayed_magnitudes=_TIME_SPAN_MAGNITUDES,
     ),
 )
 
@@ -4354,14 +4362,15 @@ ConfigVariableEventConsoleHousekeepingInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="housekeeping_interval",
-    valuespec=lambda context: Age(
-        title=_("Housekeeping interval"),
-        help=_(
+    form_spec=lambda context: fs.TimeSpan(
+        title=Title("Housekeeping interval"),
+        help_text=Help(
             "From time to time the eventd checks for messages that are expected to "
             "be seen on a regular base, for events that time out and yet for "
             "count periods that elapse. Here you can specify the regular interval "
             "for that job."
         ),
+        displayed_magnitudes=_TIME_SPAN_MAGNITUDES,
     ),
 )
 
@@ -4369,14 +4378,15 @@ ConfigVariableEventConsoleSqliteHousekeepingInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="sqlite_housekeeping_interval",
-    valuespec=lambda context: Age(
-        title=_("Event Console housekeeping interval"),
-        help=_(
+    form_spec=lambda context: fs.TimeSpan(
+        title=Title("Event Console housekeeping interval"),
+        help_text=Help(
             "From time to time the Event Console history requires maintenance. "
             "For example, it needs to clean up old data, optimize the storage and "
             "defragment the data. Here you can specify the regular interval "
             "for that job."
         ),
+        displayed_magnitudes=_TIME_SPAN_MAGNITUDES,
     ),
 )
 
@@ -4384,15 +4394,25 @@ ConfigVariableEventConsoleSqliteFreelistSize = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="sqlite_freelist_size",
-    valuespec=lambda context: Filesize(
-        title=_("Event Console history fragmentation limit size"),
-        help=_(
+    form_spec=lambda context: fs.DataSize(
+        title=Title("Event Console history fragmentation limit size"),
+        help_text=Help(
             "Event Console history can become fragmented over time. "
             "So if the total size of deleted entries reaches this number "
             "the Event Console history will be cleaned up."
         ),
-        minvalue=1 * 1024 * 1024,
-        maxvalue=100 * 1024 * 1024 * 1024,
+        custom_validate=[
+            validators.NumberInRange(
+                min_value=1 * 1024 * 1024,
+                max_value=100 * 1024 * 1024 * 1024,
+            )
+        ],
+        displayed_magnitudes=(
+            fs.IECMagnitude.BYTE,
+            fs.IECMagnitude.KIBI,
+            fs.IECMagnitude.MEBI,
+            fs.IECMagnitude.GIBI,
+        ),
     ),
 )
 
@@ -4400,14 +4420,15 @@ ConfigVariableEventConsoleStatisticsInterval = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="statistics_interval",
-    valuespec=lambda context: Age(
-        title=_("Statistics interval"),
-        help=_(
+    form_spec=lambda context: fs.TimeSpan(
+        title=Title("Statistics interval"),
+        help_text=Help(
             "The event daemon keeps statistics about the rate of messages, events "
             "rule hits, and other stuff. These values are updated in the interval "
             "configured here and are available in the sidebar snap-in <i>Event Console "
             "performance</i>."
         ),
+        displayed_magnitudes=_TIME_SPAN_MAGNITUDES,
     ),
 )
 
@@ -4415,10 +4436,10 @@ ConfigVariableEventConsoleLogMessages = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="log_messages",
-    valuespec=lambda context: Checkbox(
-        title=_("Syslog-like message logging"),
-        label=_("Log all messages into Syslog-like log files"),
-        help=_(
+    form_spec=lambda context: BooleanChoice(
+        title=Title("Syslog-like message logging"),
+        label=Label("Log all messages into Syslog-like log files"),
+        help_text=Help(
             "When this option is enabled, then <b>every</b> incoming message is being logged into the directory <tt>messages</tt> in the Event Consoles state directory. The log file rotation is analog to that of the history log files. Please note that if you have lots of incoming messages then these files can get very large."
         ),
     ),
@@ -4428,10 +4449,10 @@ ConfigVariableEventConsoleRuleOptimizer = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="rule_optimizer",
-    valuespec=lambda context: Checkbox(
-        title=_("Optimize rule execution"),
-        label=_("enable optimized rule execution"),
-        help=_("This option turns on a faster algorithm for matching events to rules. "),
+    form_spec=lambda context: BooleanChoice(
+        title=Title("Optimize rule execution"),
+        label=Label("enable optimized rule execution"),
+        help_text=Help("This option turns on a faster algorithm for matching events to rules. "),
     ),
 )
 
@@ -4569,10 +4590,10 @@ ConfigVariableEventConsoleArchiveOrphans = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="archive_orphans",
-    valuespec=lambda context: Checkbox(
-        title=_("Force message archiving"),
-        label=_("Archive messages that do not match any rule"),
-        help=_(
+    form_spec=lambda context: BooleanChoice(
+        title=Title("Force message archiving"),
+        label=Label("Archive messages that do not match any rule"),
+        help_text=Help(
             "When this option is enabled then messages that do not match "
             "a rule will be archived into the event history anyway (Messages "
             "that do match a rule will be archived always, as long as they are not "
@@ -4726,10 +4747,16 @@ ConfigVariableEventConsoleHistoryRotation = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="history_rotation",
-    valuespec=lambda context: DropdownChoice(
-        title=_("Event history log file rotation"),
-        help=_("Specify at which time period a new file for the event history will be created."),
-        choices=[("daily", _("daily")), ("weekly", _("weekly"))],
+    form_spec=lambda context: fs.SingleChoice(
+        title=Title("Event history log file rotation"),
+        help_text=Help(
+            "Specify at which time period a new file for the event history will be created."
+        ),
+        elements=[
+            fs.SingleChoiceElement(name="daily", title=Title("daily")),
+            fs.SingleChoiceElement(name="weekly", title=Title("weekly")),
+        ],
+        prefill=DefaultValue("daily"),
     ),
 )
 
@@ -4737,11 +4764,13 @@ ConfigVariableEventConsoleHistoryLifetime = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="history_lifetime",
-    valuespec=lambda context: Integer(
-        title=_("Event history lifetime"),
-        help=_("After this number of days old log files of the event history will be deleted."),
-        unit=_("days"),
-        minvalue=1,
+    form_spec=lambda context: FSInteger(
+        title=Title("Event history lifetime"),
+        help_text=Help(
+            "After this number of days old log files of the event history will be deleted."
+        ),
+        unit_symbol="days",
+        custom_validate=[validators.NumberInRange(min_value=1)],
     ),
 )
 
@@ -4749,18 +4778,18 @@ ConfigVariableEventConsoleSocketQueueLength = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="socket_queue_len",
-    valuespec=lambda context: Integer(
-        title=_("Max. number of pending connections to the status socket"),
-        help=_(
+    form_spec=lambda context: FSInteger(
+        title=Title("Max. number of pending connections to the status socket"),
+        help_text=Help(
             "When the graphical user interface (GUI) or the active check check_mkevents connects "
             "to the socket of the event daemon in order to retrieve information "
             "about current and historic events, then its connection request might "
             "be queued before being processed. This setting defines the number of unaccepted "
             "connections to be queued before refusing new connections."
         ),
-        minvalue=1,
-        label="max.",
-        unit=_("pending connections"),
+        label=Label("max."),
+        unit_symbol="pending connections",
+        custom_validate=[validators.NumberInRange(min_value=1)],
     ),
 )
 
@@ -4768,18 +4797,18 @@ ConfigVariableEventConsoleEventSocketQueueLength = ConfigVariable(
     group=ConfigVariableGroupEventConsoleGeneric,
     primary_domain=ConfigDomainEventConsole,
     ident="eventsocket_queue_len",
-    valuespec=lambda context: Integer(
-        title=_("Max. number of pending connections to the event socket"),
-        help=_(
+    form_spec=lambda context: FSInteger(
+        title=Title("Max. number of pending connections to the event socket"),
+        help_text=Help(
             "The event socket is an alternative way for sending events "
             "to the Event Console. It is used by the Checkmk logwatch check "
             "when forwarding log messages to the Event Console. "
             "This setting defines the number of unaccepted "
             "connections to be queued before refusing new connections."
         ),
-        minvalue=1,
-        label="max.",
-        unit=_("pending connections"),
+        label=Label("max."),
+        unit_symbol="pending connections",
+        custom_validate=[validators.NumberInRange(min_value=1)],
     ),
 )
 
@@ -4868,15 +4897,15 @@ ConfigVariableEventConsoleDebugRules = ConfigVariable(
     group=ConfigVariableGroupEventConsoleLogging,
     primary_domain=ConfigDomainEventConsole,
     ident="debug_rules",
-    valuespec=lambda context: Checkbox(
-        title=_("Debug rule execution"),
-        label=_("enable extensive rule logging"),
-        help=_(
+    form_spec=lambda context: BooleanChoice(
+        title=Title("Debug rule execution"),
+        label=Label("enable extensive rule logging"),
+        help_text=Help(
             "This option turns on logging the execution of rules. For each message received "
             "the execution details of each rule are logged. This creates an immense "
             "volume of logging and should never be used in productive operation."
         ),
-        default_value=False,
+        prefill=DefaultValue(False),
     ),
 )
 
@@ -4954,10 +4983,10 @@ ConfigVariableEventLogRuleHits = ConfigVariable(
     group=ConfigVariableGroupEventConsoleLogging,
     primary_domain=ConfigDomainEventConsole,
     ident="log_rulehits",
-    valuespec=lambda context: Checkbox(
-        title=_("Log rule hits"),
-        label=_("Log hits for rules in log of Event Console"),
-        help=_(
+    form_spec=lambda context: BooleanChoice(
+        title=Title("Log rule hits"),
+        label=Label("Log hits for rules in log of Event Console"),
+        help_text=Help(
             "If you enable this option then every time an event matches a rule "
             "(by normal hit, cancelling, counting or dropping) a log entry will be written "
             "into the log file of the Event Console. Please be aware that this might lead to "

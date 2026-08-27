@@ -345,21 +345,21 @@ class ConfigFromWATO(TypedDict):
     history_lifetime: int
     history_rotation: Literal["daily", "weekly"]
     hostname_translation: TranslationOptions  # TODO: Mutable???
-    housekeeping_interval: int
+    housekeeping_interval: float
     log_level: LogConfig  # TODO: Mutable???
     log_messages: bool
     log_rulehits: bool
     remote_status: tuple[int, bool, Sequence[str] | None] | None
     replication: Replication | None
-    retention_interval: int
+    retention_interval: float
     rule_optimizer: bool
     rule_packs: Sequence[ECRulePack]
     rules: Collection[Rule]
-    sqlite_housekeeping_interval: int
+    sqlite_housekeeping_interval: float
     sqlite_freelist_size: int
     snmp_credentials: Collection[SNMPCredential]
     socket_queue_len: int
-    statistics_interval: int
+    statistics_interval: float
     translate_snmptraps: SNMPTrapTranslation
 
 

@@ -82,6 +82,13 @@ function buildDelta(value: number, previousValue: number): KpiDelta | undefined 
   }
 }
 
+// The metric's own formatter, for anything CmkKpiStatCard renders from a raw number
+// (hovered value, aria-label window range) rather than the pre-formatted value/unit
+// below.
+function formatValue(value: number): string {
+  return presentation.value.formatter.render(value)
+}
+
 function buildCardData(
   value: number,
   previousValue: number,
@@ -134,6 +141,7 @@ const deltaConfig = computed<KpiDeltaConfig>(() => ({
         :value="data.value"
         :unit="data.unit"
         :delta="deltaConfig"
+        :format-value="formatValue"
         :series="data.series"
         :color="chartColorCss(content.accent)"
         spark-height-mode="band"

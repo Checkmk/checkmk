@@ -193,6 +193,61 @@ const lastSampleTimeLabel = computed<string | undefined>(() => {
 // value takes the card to itself. No data at all means no curve either.
 const hasSparkLine = computed(() => hasData.value && props.series.length >= 2)
 
+// KpiSparkLine reports the focused real sample here while scrubbing; a tile with no
+// curve has nothing to scrub.
+const sparkLine = ref<InstanceType<typeof KpiSparkLine> | null>(null)
+const hoveredSample = ref<TimestampedSample | undefined>(undefined)
+// Drives the card-wide crosshair line - kept separate from KpiSparkLine's own dot,
+// which band mode confines below the value/date text.
+const hoveredXPercent = ref<number | undefined>(undefined)
+
+function onSparkLineFocus(
+  sample: TimestampedSample | undefined,
+  xPercent: number | undefined
+): void {
+  hoveredSample.value = sample
+  hoveredXPercent.value = xPercent
+}
+
+// formatValue's output may embed its own unit (e.g. "414.49 Mbps"), so split it like
+// the headline value/unit or a hovered sample's unit doubles up with the static one.
+const hoveredFormatted = computed<{ value: string; unit: string | undefined } | undefined>(() => {
+  const sample = hoveredSample.value
+  if (!sample) {
+    return undefined
+  }
+  const rendered = props.formatValue(sample.value!)
+  const spaceIndex = rendered.indexOf(' ')
+  return spaceIndex === -1
+    ? { value: rendered, unit: undefined }
+    : { value: rendered.slice(0, spaceIndex), unit: rendered.slice(spaceIndex + 1) }
+})
+
+const hoveredValueText = computed<string | undefined>(() => hoveredFormatted.value?.value)
+
+const hoveredTimeLabel = computed<string | undefined>(() => {
+  const sample = hoveredSample.value
+  if (!sample) {
+    return undefined
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(sample.timestamp * 1000)
+})
+
+// Scrubbing spans the whole card, so the card (not KpiSparkLine's SVG) owns pointer
+// capture; KpiSparkLine still does the coordinate math.
+function onCardPointerMove(event: PointerEvent): void {
+  sparkLine.value?.focusFromPointerX(event.clientX)
+}
+
+function onCardPointerLeave(): void {
+  sparkLine.value?.clearWithDelay()
+}
+
 // Curve-less metrics center the value to fill the card. No-data is
 // different - it would normally plot a curve, so it stays top-left.
 const isValueOnly = computed(() => hasData.value && props.series.length < 2)
@@ -220,7 +275,9 @@ function measureScrim(): void {
 
 const { observe } = useResizeObserver(measureScrim)
 observe(valueRowEl)
-watch(() => [props.value, props.unit, delta.value], measureScrim, { flush: 'post' })
+watch(() => [props.value, props.unit, delta.value, hoveredSample.value], measureScrim, {
+  flush: 'post'
+})
 onMounted(measureScrim)
 </script>
 
@@ -239,17 +296,30 @@ onMounted(measureScrim)
       '--scrim-right-edge': `${scrimRightEdge}px`,
       '--scrim-bottom-edge': `${scrimBottomEdge}px`
     }"
+    :tabindex="hasSparkLine ? 0 : undefined"
+    @pointermove="hasSparkLine ? onCardPointerMove($event) : undefined"
+    @pointerleave="hasSparkLine ? onCardPointerLeave() : undefined"
   >
     <div ref="valueRowEl" class="db-cmk-kpi-stat-card__value-row">
       <component :is="href ? 'a' : 'span'" :href="href" class="db-cmk-kpi-stat-card__value-link">
-        <span class="db-cmk-kpi-stat-card__value">{{ hasData ? value : '—' }}</span>
-        <span v-if="unit" class="db-cmk-kpi-stat-card__unit">{{ unit }}</span>
+        <span class="db-cmk-kpi-stat-card__value">
+          {{ hoveredValueText ?? (hasData ? value : '—') }}
+        </span>
+        <span
+          v-if="hoveredFormatted ? (hoveredFormatted.unit ?? unit) : unit"
+          class="db-cmk-kpi-stat-card__unit"
+        >
+          {{ hoveredFormatted ? (hoveredFormatted.unit ?? unit) : unit }}
+        </span>
       </component>
       <div
-        v-if="hasData && (isStale || delta !== undefined)"
+        v-if="hasData && (hoveredSample || isStale || delta !== undefined)"
         class="db-cmk-kpi-stat-card__info-slot"
       >
-        <span v-if="isStale" class="db-cmk-kpi-stat-card__stale-note">
+        <span v-if="hoveredSample" class="db-cmk-kpi-stat-card__hover-note">
+          {{ hoveredTimeLabel }}
+        </span>
+        <span v-else-if="isStale" class="db-cmk-kpi-stat-card__stale-note">
           <CmkIcon name="clock" size="small" :colored="false" />
           {{ _t('No recent data — last sample %{time}', { time: lastSampleTimeLabel ?? '' }) }}
         </span>
@@ -273,6 +343,16 @@ onMounted(measureScrim)
 
     <div v-if="showScrim" class="db-cmk-kpi-stat-card__scrim" aria-hidden="true" />
 
+    <!-- Spans the whole card, not just KpiSparkLine's own box: in band mode
+         that box only covers the area below the value/date text, but the
+         crosshair itself should still reach the widget's actual top and bottom. -->
+    <div
+      v-if="hoveredXPercent !== undefined"
+      class="db-cmk-kpi-stat-card__crosshair-line"
+      :style="{ left: `${hoveredXPercent}%` }"
+      aria-hidden="true"
+    />
+
     <StateTag
       v-if="hasData && state && stateLabel"
       class="db-cmk-kpi-stat-card__state"
@@ -284,10 +364,12 @@ onMounted(measureScrim)
 
     <div v-if="hasSparkLine" class="db-cmk-kpi-stat-card__spark-line">
       <KpiSparkLine
+        ref="sparkLine"
         :series="series"
         :color="color"
         :fade-to-floor="tintColor !== undefined"
         :range="range"
+        @focus="onSparkLineFocus"
       />
       <template v-if="rangeLimits">
         <span class="db-cmk-kpi-stat-card__range db-cmk-kpi-stat-card__range--maximum">
@@ -315,6 +397,12 @@ onMounted(measureScrim)
 
   /* The card's own background, shared with the full-height scrim below so the two can't drift apart. */
   --card-effective-bg: var(--db-content-bg-color);
+}
+
+/* Crosshair only where scrubbing does something - a tile without a curve (no
+   [tabindex]) keeps the default cursor. */
+.db-cmk-kpi-stat-card[tabindex] {
+  cursor: crosshair;
 }
 
 .db-cmk-kpi-stat-card--tinted {
@@ -456,6 +544,15 @@ onMounted(measureScrim)
   min-height: clamp(16px, 20cqh, 28px);
 }
 
+.db-cmk-kpi-stat-card__hover-note {
+  overflow: hidden;
+  font-size: clamp(9px, 14cqh, 16px);
+  font-weight: var(--font-weight-bold);
+  color: var(--font-color-dimmed);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .db-cmk-kpi-stat-card__stale-note {
   display: inline-flex;
   gap: clamp(2px, 1cqw, 5px);
@@ -487,6 +584,27 @@ onMounted(measureScrim)
   right: var(--spacing);
   z-index: 3;
   max-width: 40%;
+}
+
+/* Grey and dashed, not accent-colored: this marks a scrub position, not data -
+   the curve and its own dot already carry the data color. Matches the
+   graphing initiative's own crosshair exactly (setLineDash([3, 3]) at
+   lineWidth 1) - a plain `dotted` border renders much tighter, browser-default
+   spacing, so the dash/gap is drawn via a repeating gradient instead. */
+.db-cmk-kpi-stat-card__crosshair-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 1px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--font-color-dimmed) 0,
+    var(--font-color-dimmed) 3px,
+    transparent 3px,
+    transparent 6px
+  );
+  pointer-events: none;
 }
 
 /* Fades out in both directions past the text, so a curve peak near it isn't sliced off flat. */

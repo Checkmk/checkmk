@@ -6,6 +6,9 @@
 import { render } from '@testing-library/vue'
 
 import KpiSparkLine from '@/dashboard/components/CmkKpiStatCard/KpiSparkLine.vue'
+// Pointer-driven hover/scrub tests live in CmkKpiStatCard.test.ts instead - scrubbing
+// is driven via this component's exposed methods, which testing-library can't reach
+// without @vue/test-utils (disallowed here).
 import type { KpiValueRange, TimestampedSample } from '@/dashboard/components/CmkKpiStatCard/types'
 
 function sample(timestamp: number, value: number | null): TimestampedSample {
@@ -19,6 +22,10 @@ function renderSparkLine(
   return render(KpiSparkLine, {
     props: { series, color: 'var(--color-corporate-green-50)', ...props }
   })
+}
+
+function crosshairOf(container: Element): Element | null {
+  return container.querySelector('.db-kpi-spark-line__crosshair')
 }
 
 function linePathOf(container: Element): string {
@@ -105,4 +112,10 @@ test('clamps samples outside a manual range and marks them with a tick', () => {
   })
 
   expect(ticksOf(container)).toHaveLength(2)
+})
+
+test('offers no crosshair when there is nothing to plot', () => {
+  const { container } = renderSparkLine([sample(0, 10), sample(60, null)])
+
+  expect(crosshairOf(container)).toBeNull()
 })

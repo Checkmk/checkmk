@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render } from '@testing-library/vue'
+import { fireEvent, render } from '@testing-library/vue'
 import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 
 import CmkKpiStatCard from '@/dashboard/components/CmkKpiStatCard/CmkKpiStatCard.vue'
@@ -401,4 +401,57 @@ test('delta.fromCaller: an undefined override stays empty, not a series-derived 
   const { container } = renderCard({ delta: { fromCaller: true } })
 
   expect(deltaOf(container)).toBeNull()
+})
+
+function cardOf(container: Element): HTMLElement {
+  return container.querySelector('.db-cmk-kpi-stat-card')!
+}
+
+function hoverNoteOf(container: Element): Element | null {
+  return container.querySelector('.db-cmk-kpi-stat-card__hover-note')
+}
+
+// jsdom never lays anything out, so a mocked 100-wide rect makes clientX map 1:1 to
+// the 0..100 viewBox.
+function mockSvgWidth(container: Element): void {
+  const svg = container.querySelector('.db-kpi-spark-line')!
+  vi.spyOn(svg, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 100 } as DOMRect)
+}
+
+test('hovering anywhere on the card swaps the value and shows the hovered time', async () => {
+  const { container } = renderCard()
+  mockSvgWidth(container)
+
+  // Scrubbing spans the whole card, so the event fires on the card root, not inside
+  // KpiSparkLine's own SVG.
+  await fireEvent.pointerMove(cardOf(container), { clientX: 0 })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('10.0')
+  expect(deltaOf(container)).toBeNull()
+  expect(hoverNoteOf(container)).not.toBeNull()
+})
+
+test('never snaps to a null sample', async () => {
+  const series = [sample(0, 10), sample(60, null), sample(120, 30)]
+  const { container } = renderCard({ series })
+  mockSvgWidth(container)
+
+  // Nearest by timestamp is the null bucket at t=60, but only real samples count;
+  // t=0 and t=120 tie, so the scan picks the earlier one.
+  await fireEvent.pointerMove(cardOf(container), { clientX: 50 })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('10.0')
+})
+
+test('leaving the card restores the latest value and the delta', async () => {
+  const { container } = renderCard()
+  mockSvgWidth(container)
+
+  await fireEvent.pointerMove(cardOf(container), { clientX: 0 })
+  await fireEvent.pointerLeave(cardOf(container))
+  await new Promise((resolve) => setTimeout(resolve, 200))
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('801.84')
+  expect(hoverNoteOf(container)).toBeNull()
+  expect(deltaOf(container)).not.toBeNull()
 })

@@ -32,6 +32,7 @@ from ._translated_metrics import TranslatedMetric
 GraphConsolidationFunction = Literal["max", "min", "average"]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 type DrawnLineType = Literal["line", "area", "stack"]
+type AttributeGroup = Literal["resource", "scope", "data_point"]
 
 
 def create_graph_metric_expression_from_translated_metric(
@@ -102,7 +103,7 @@ class GraphLineQueryAttribute:
 
 @dataclass(frozen=True, kw_only=True)
 class GraphLineGroupByKey:
-    kind: Literal["resource", "scope", "data_point"]
+    kind: AttributeGroup
     key: str
 
 
@@ -277,7 +278,7 @@ class QueryDataKey:
 class QueryDataTimeSeries:
     time_series: TimeSeries
     id: str
-    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
+    attributes: Mapping[AttributeGroup, Mapping[str, str]]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -408,9 +409,7 @@ class AugmentedTimeSeries:
     title: str | None = None
     line_type: LineType | Literal["ref"] | None = None
     color: str | None = None
-    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]] = field(
-        default_factory=dict
-    )
+    attributes: Mapping[AttributeGroup, Mapping[str, str]] = field(default_factory=dict)
     metric_name: str | None = None
 
 

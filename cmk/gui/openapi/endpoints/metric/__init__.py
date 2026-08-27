@@ -16,33 +16,33 @@ from typing import Any
 
 import cmk.product_usage.collectors.grafana as grafana_collector
 from cmk.ccc.version import Edition
+from cmk.graphing_engine import ConsolidationFunction
+from cmk.graphing_engine import HostName as EngineHostName
+from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing import (
-    get_temperature_unit,
-    graph_spec_from_request,
-    GraphEnvironment,
-    GraphExportRequest,
+    build_template_graphs,
+    evaluate_built_graphs,
+    evaluated_to_graph_spec,
     graphs_from_api,
-    METRIC_BACKEND_KEY,
-    metric_backend_registry,
-    metrics_from_api,
+    RRDFetchMetricNames,
     TemplateGraphSpecification,
 )
+from cmk.gui.graphing._engine_plugins import registered_metrics, registered_translations
+from cmk.gui.graphing._graph_templates import get_graph_plugin_from_id, MKGraphNotFound
 from cmk.gui.http import request, Response
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas
 from cmk.gui.openapi.endpoints.metric.common import (
     graph_id_from_request,
     reorganize_response,
-    reorganize_time_range,
+    requested_time_range,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
-from cmk.gui.permissions import permission_registry
-from cmk.gui.utils.roles import UserPermissions
+from cmk.livestatus_client import MKLivestatusNotFoundError
 from cmk.utils import paths
 
 
@@ -72,29 +72,47 @@ def get_graph(params: Mapping[str, Any]) -> Response:
     )
 
     body = params["body"]
+    graph_id = graph_id_from_request(body)
+    specification = TemplateGraphSpecification(
+        site=body.get("site") or None,
+        host_name=body["host_name"],
+        service_description=body["service_description"],
+        graph_id=graph_id,
+    )
+    time_range = requested_time_range(body["time_range"])
 
     try:
-        result = graph_spec_from_request(
-            GraphExportRequest(
-                specification=TemplateGraphSpecification(
-                    site=body.get("site") or None,
-                    host_name=body["host_name"],
-                    service_description=body["service_description"],
-                    graph_id=graph_id_from_request(body),
-                ),
-                **(reorganize_time_range(body["time_range"]) or {}),
-                consolidation_function=body["reduce"],
-            ),
-            GraphEnvironment(
-                registered_metrics=metrics_from_api,
-                registered_graphs=graphs_from_api,
-                user_permissions=UserPermissions.from_config(active_config, permission_registry),
-                temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
-                backend_time_series_fetcher=metric_backend_registry[
-                    METRIC_BACKEND_KEY
-                ].get_time_series_fetcher(),
+        # A single-metric request has no plug-in to resolve: the engine builds that graph itself.
+        graph_plugins = (
+            []
+            if body["type"] == "single_metric"
+            else [get_graph_plugin_from_id(graphs_from_api, graph_id)]
+        )
+        built_graphs = build_template_graphs(
+            specification,
+            registered_graphs=graph_plugins,
+            registered_metrics=registered_metrics(),
+            fetch_metric_names=RRDFetchMetricNames(
+                host_name=EngineHostName(str(specification.host_name)),
+                service_name=EngineServiceName(str(specification.service_description)),
                 debug=active_config.debug,
+                site_id=specification.site,
+                registered_translations=registered_translations(),
             ),
+        )
+        if (requested := next(iter(built_graphs), None)) is None:
+            return problem(
+                status=400,
+                title="Bad Request",
+                detail="The requested graph does not exist",
+            )
+        evaluated = evaluate_built_graphs(
+            [requested.graph],
+            {
+                "consolidation_function": ConsolidationFunction(body["reduce"]),
+                "time_range": time_range,
+                "destination": None,
+            },
         )
 
     except MKUserError as e:
@@ -104,9 +122,25 @@ def get_graph(params: Mapping[str, Any]) -> Response:
             detail=e.message,
         )
 
-    response = reorganize_response(result)
+    except (MKGraphNotFound, MKMissingDataError, MKLivestatusNotFoundError) as e:
+        return problem(
+            status=400,
+            title="Bad Request",
+            detail=str(e),
+        )
 
-    return serve_json(response)
+    if (evaluated_graph := next(iter(evaluated.graphs), None)) is None:
+        return problem(
+            status=400,
+            title="Bad Request",
+            detail="The requested graph does not exist",
+        )
+
+    return serve_json(
+        reorganize_response(
+            evaluated_to_graph_spec(evaluated_graph, fallback_time_range=time_range)
+        )
+    )
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:

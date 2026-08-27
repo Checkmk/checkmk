@@ -7,6 +7,7 @@ from ._artwork import (
     iter_graph_artworks,
 )
 from ._engine_dispatch import evaluate_built_graphs
+from ._engine_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
 from ._engine_source import RRDFetchMetricNames
 from ._engine_template_graphs import build_template_graphs
 from ._explicit_graphs import ExplicitGraphSpecification
@@ -32,11 +33,9 @@ from ._graph_display_config import (
     GraphRenderOptions,
     resolve_size,
 )
-from ._graph_images import (
-    graph_spec_from_request,
-    GraphSpec,
-)
+from ._graph_images import graph_spec_from_request
 from ._graph_metric_expressions import (
+    AttributeGroup,
     GraphConsolidationFunction,
     GraphMetricConstant,
     GraphMetricExpression,
@@ -139,6 +138,7 @@ __all__ = [
     "GraphDisplayConfigImage",
     "GraphRenderOptions",
     "resolve_size",
+    "AttributeGroup",
     "GraphSpec",
     "GraphSpecification",
     "LineType",
@@ -189,7 +189,9 @@ __all__ = [
     "perfometers_from_api",
     "registered_metric_ids_and_titles",
     "build_template_graphs",
+    "empty_graph_spec",
     "evaluate_built_graphs",
+    "evaluated_to_graph_spec",
     "compute_png_size_mm",
     "mm_per_ex",
     "render_graph_pdf",

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._graph_images import _compute_graph_spec, Curves, GraphSpec
+from cmk.gui.graphing._engine_graph_spec import Curve, GraphSpec
+from cmk.gui.graphing._graph_images import _compute_graph_spec
 from cmk.gui.graphing._graph_metric_expressions import AugmentedTimeSeries
 from cmk.gui.graphing._graph_specification import (
     AugmentedTimeSeriesOfGraphMetric,
@@ -77,28 +78,28 @@ def test__compute_graph_spec() -> None:
         ],
     ) == GraphSpec(
         curves=[
-            Curves(
+            Curve(
                 attributes={},
                 color="#123456",
                 line_type="line",
                 rrddata=[0, 1, 2, 3, 4, 5],
                 title="A title 1.1",
             ),
-            Curves(
+            Curve(
                 attributes={},
                 color="#123456",
                 line_type="line",
                 rrddata=[6, 7, 8, 9, 10],
                 title="A title 1.2",
             ),
-            Curves(
+            Curve(
                 attributes={},
                 color="#123456",
                 line_type="line",
                 rrddata=[0, 1, 2, 3, 4, 5],
                 title="A title 2.1",
             ),
-            Curves(
+            Curve(
                 attributes={},
                 color="#123456",
                 line_type="line",

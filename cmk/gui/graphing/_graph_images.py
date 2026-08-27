@@ -10,7 +10,7 @@ import base64
 import itertools
 import time
 from collections.abc import Mapping, Sequence
-from typing import Literal, override, TypedDict
+from typing import override
 
 import cmk.livestatus_client as livestatus
 from cmk import trace
@@ -31,6 +31,7 @@ from cmk.gui.utils.roles import UserPermissions
 
 from . import _engine_plugins as engine_plugins
 from ._engine_dispatch import evaluate_built_graphs
+from ._engine_graph_spec import Curve, GraphSpec
 from ._engine_source import RRDFetchMetricNames
 from ._engine_template_graphs import build_template_graphs
 from ._fetch_time_series import fetch_augmented_time_series
@@ -40,7 +41,6 @@ from ._graph_display_config import (
     GraphRenderOptions,
     GraphTitleFormat,
 )
-from ._graph_metric_expressions import LineType
 from ._graph_pdf import (
     compute_pdf_graph_ranges,
     get_mm_per_ex,
@@ -228,21 +228,6 @@ def graph_recipes_from_request(
     return GraphRanges(time_range=(start, end), step=60), recipes
 
 
-class Curves(TypedDict):
-    line_type: LineType | Literal["ref"]
-    color: str
-    title: str
-    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
-    rrddata: Sequence[float | None]
-
-
-class GraphSpec(TypedDict):
-    start_time: int
-    end_time: int
-    step: int
-    curves: Sequence[Curves]
-
-
 def _compute_graph_spec(
     ranges: GraphRanges,
     augmented_time_series_of_graph_metrics: Sequence[AugmentedTimeSeriesOfGraphMetric],
@@ -261,7 +246,7 @@ def _compute_graph_spec(
             time_series = augmented_time_series.time_series
             start, end, step = time_series.start, time_series.end, time_series.step
             api_curves.append(
-                Curves(
+                Curve(
                     line_type=augmented_time_series.line_type,
                     color=augmented_time_series.color,
                     title=augmented_time_series.title,

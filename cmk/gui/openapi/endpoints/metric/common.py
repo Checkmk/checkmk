@@ -9,14 +9,19 @@
 import re
 from collections.abc import Mapping, Sequence
 from datetime import datetime, UTC
-from typing import Any, Literal, TypedDict
+from typing import Any, Final, Literal, TypedDict
 
 import marshmallow
 
 from cmk.fields import Nested, String
+from cmk.graphing_engine import TimeRange
 from cmk.gui.fields import Timestamp
 from cmk.gui.fields.base import BaseSchema
-from cmk.gui.graphing import GraphSpec, LineType
+from cmk.gui.graphing import AttributeGroup, GraphSpec, LineType
+
+# The step every request asks the data source for. The response reports the step the data actually
+# came back on, which is coarser whenever the time range resolves to a coarser RRA.
+_REQUESTED_STEP: Final = 60
 
 GRAPH_NAME_REGEX = r"^\w[_\-\w\d\.]*$"
 GRAPH_NAME_ERROR_MESSAGE = "{input} is not a valid value for this field. It must match the pattern {regex} and contain only ASCII characters."
@@ -109,7 +114,7 @@ class ReorganizedCurves(TypedDict):
     line_type: LineType | Literal["ref"]
     color: str
     title: str
-    attributes: Mapping[Literal["resource", "scope", "data_point"], Mapping[str, str]]
+    attributes: Mapping[AttributeGroup, Mapping[str, str]]
     data_points: Sequence[float | None]
 
 
@@ -160,17 +165,17 @@ def reorganize_response(graph_spec: GraphSpec) -> ReorganizedGraphSpec:
     )
 
 
-def reorganize_time_range(time_range: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Reorganize a GraphTimeRange into the format GraphExportRequest uses.
+def requested_time_range(time_range: Mapping[str, Any]) -> TimeRange:
+    """The time range a request asks for, at the step the graph spec has always reported.
 
-    >>> reorganize_time_range({'start': 0, 'end': 30})
-    {'time_start': 0, 'time_end': 30}
-    >>> reorganize_time_range({'start': 0.123, 'end': 30.456})
-    {'time_start': 0, 'time_end': 30}
+    >>> requested_time_range({'start': 0, 'end': 30})
+    TimeRange(start=0, end=30, step=60)
+    >>> requested_time_range({'start': 0.123, 'end': 30.456})
+    TimeRange(start=0, end=30, step=60)
     """
-    if time_range is None:
-        return None
-    return {"time_start": int(time_range["start"]), "time_end": int(time_range["end"])}
+    return TimeRange(
+        start=int(time_range["start"]), end=int(time_range["end"]), step=_REQUESTED_STEP
+    )
 
 
 def graph_id_from_request(body: dict[str, Any]) -> str:

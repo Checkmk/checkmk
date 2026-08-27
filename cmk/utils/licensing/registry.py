@@ -48,18 +48,6 @@ def is_free() -> bool:
     return _make_licensing_handler().state is LicenseState.FREE
 
 
-def is_trial() -> bool:
-    return _make_licensing_handler().state is LicenseState.TRIAL
-
-
-def is_licensed() -> bool:
-    return _make_licensing_handler().state is LicenseState.LICENSED
-
-
-def is_unlicensed() -> bool:
-    return _make_licensing_handler().state is LicenseState.UNLICENSED
-
-
 def get_license_message() -> str:
     return _make_licensing_handler().message
 

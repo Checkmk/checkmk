@@ -322,7 +322,6 @@ def register(
     rulespec_registry.register(SnmpWithoutSysDescr)
     rulespec_registry.register(Snmpv2CHosts)
     rulespec_registry.register(SnmpTiming)
-    rulespec_registry.register(NonInlineSnmpHosts)
     rulespec_registry.register(make_snmp_backend_hosts_rulespec(edition))
     rulespec_registry.register(UsewalkHosts)
     rulespec_registry.register(SnmpPorts)
@@ -5630,27 +5629,6 @@ SnmpTiming = HostRulespec(
     match_type="dict",
     name="snmp_timing",
     valuespec=_valuespec_snmp_timing,
-)
-
-
-def _help_non_inline_snmp_hosts() -> str:
-    return _(
-        "Checkmk has an efficient SNMP implementation called inline SNMP "
-        "which reduces the load produced by SNMP monitoring on the "
-        "monitoring host significantly. This option is enabled by default "
-        "for all SNMP hosts and it is a good idea to keep this default "
-        "setting. However, there are SNMP devices which have problems "
-        "with this SNMP implementation. You can use this rule to disable "
-        "inline SNMP for these hosts."
-    )
-
-
-NonInlineSnmpHosts = BinaryHostRulespec(
-    group=RulespecGroupAgentSNMP,
-    help_func=_help_non_inline_snmp_hosts,
-    name="non_inline_snmp_hosts",
-    title=lambda: _("Hosts not using inline SNMP"),
-    is_deprecated=True,
 )
 
 

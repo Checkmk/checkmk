@@ -93,8 +93,6 @@ snmp_backend_default: Literal["inline", "classic"] = "classic"
 
 # Ruleset to enable specific SNMP Backend for each host.
 snmp_backend_hosts: list[RuleSpec[object]] = []
-# Deprecated: Replaced by snmp_backend_hosts
-non_inline_snmp_hosts: list[RuleSpec[object]] = []
 
 # Ruleset to recduce fetched OIDs of a check, only inline SNMP
 snmp_limit_oid_range: Sequence[RuleSpec[object]] = []

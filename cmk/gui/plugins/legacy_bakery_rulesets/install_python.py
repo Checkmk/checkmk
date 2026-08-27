@@ -3,88 +3,76 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import override
-
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    rulespec_group_registry,
-    rulespec_registry,
-    RulespecGroup,
-    RulespecGroupMonitoringAgents,
-    RulespecSubGroup,
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    SingleChoice,
+    SingleChoiceElement,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice
-from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-class RulespecGroupMonitoringAgentsWindowsModules(RulespecSubGroup):
-    @property
-    @override
-    def main_group(self) -> type[RulespecGroup]:
-        return RulespecGroupMonitoringAgents
-
-    @property
-    @override
-    def sub_group_name(self) -> str:
-        return "windows_modules"
-
-    @property
-    @override
-    def title(self) -> str:
-        return _("Windows Modules")  # and Custom files in the future
-
-
-rulespec_group_registry.register(RulespecGroupMonitoringAgentsWindowsModules)
-
-
-def _valuespec_agent_install_python() -> Dictionary:
+def _form_spec() -> Dictionary:
     return Dictionary(
-        title=_("Install Python runtime environment"),
-        elements=[
-            (
-                "installation",
-                DropdownChoice(
-                    title=_("Installation"),
-                    help=_(
+        elements={
+            # Consumed by the Windows agent package builder, not by this bakelet.
+            "installation": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Installation"),
+                    help_text=Help(
                         "This rule set allows to add embedded Python "
-                        "to the Windows agent installation. "
+                        "to the Windows agent installation."
                     ),
-                    choices=[
-                        (
-                            "auto",
-                            _("Install Python automatically when configured plug-ins need it"),
+                    elements=[
+                        SingleChoiceElement(
+                            name="auto",
+                            title=Title(
+                                "Install Python automatically when configured plug-ins need it"
+                            ),
                         ),
-                        ("install", _("Always install Python with agent")),
-                        ("no_install", _("Never install Python with the agent")),
+                        SingleChoiceElement(
+                            name="install",
+                            title=Title("Always install Python with agent"),
+                        ),
+                        SingleChoiceElement(
+                            name="no_install",
+                            title=Title("Never install Python with the agent"),
+                        ),
                     ],
-                    default_value="auto",
+                    prefill=DefaultValue("auto"),
                 ),
             ),
-            (
-                "usage",
-                DropdownChoice(
-                    title=_("Usage"),
-                    help=_(
+            "usage": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Usage"),
+                    help_text=Help(
                         "This rule set allows to choose which Python interpreter is used "
                         "to run Python scripts."
                     ),
-                    choices=[
-                        ("auto", _("Use Checkmk Python, if it has been installed")),
-                        ("system", _("Do not use Checkmk Python, even if it has been installed")),
+                    elements=[
+                        SingleChoiceElement(
+                            name="auto",
+                            title=Title("Use Checkmk Python, if it has been installed"),
+                        ),
+                        SingleChoiceElement(
+                            name="system",
+                            title=Title("Do not use Checkmk Python, even if it has been installed"),
+                        ),
                     ],
-                    default_value="auto",
+                    prefill=DefaultValue("auto"),
                 ),
             ),
-        ],
-        optional_keys=False,
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsWindowsModules,
-        name=RuleGroup.AgentConfig("install_python"),
-        valuespec=_valuespec_agent_install_python,
-    )
+rule_spec_install_python = AgentConfig(
+    title=Title("Install Python runtime environment"),
+    name="install_python",
+    topic=Topic.WINDOWS,
+    parameter_form=_form_spec,
 )

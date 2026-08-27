@@ -27,13 +27,20 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariable,
     GlobalSettingsContext,
 )
-from cmk.gui.watolib.global_settings import make_global_settings_context
+from cmk.gui.watolib.global_settings import (
+    load_configuration_settings,
+    make_global_settings_context,
+    save_site_global_settings,
+)
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
     PendingChangesStore,
 )
 from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
+from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
+from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils import paths
 from cmk.web.utils import permission_verification as permissions
@@ -170,6 +177,21 @@ def need_write_permission(varname: str) -> None:
     _need_executables_permission(varname)
 
 
+def need_site_read_permission(varname: str) -> None:
+    """Must stay in sync with SITE_RO_PERMISSIONS."""
+    user.need_permission("wato.global")
+    user.need_permission("wato.sites")
+    _need_executables_permission(varname)
+
+
+def need_site_write_permission(varname: str) -> None:
+    """Must stay in sync with SITE_RW_PERMISSIONS."""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.global")
+    user.need_permission("wato.sites")
+    _need_executables_permission(varname)
+
+
 def affected_sites(config_variable: ConfigVariable) -> list[SiteId] | None:
     """The sites a change has to be activated on; None means all activation sites."""
     if config_variable.primary_domain().ident() == _EVENT_CONSOLE_DOMAIN:
@@ -178,11 +200,20 @@ def affected_sites(config_variable: ConfigVariable) -> list[SiteId] | None:
     return None
 
 
-# TODO: the GUI's site_globals_editable() also allows any site that already carries
-#       overrides. Resolve once values are really read and written.
+def _site_globals_editable(value: str) -> SiteId:
+    """On a non-distributed setup this only accepts sites that already carry overrides,
+    which nothing can create. Same as ModeEditSiteGlobals."""
+    site_id = SiteIdConverter.should_be_configurable(value)
+    all_sites = load_configured_sites()
+    if site_id not in all_sites or not site_globals_editable(all_sites, all_sites[site_id]):
+        raise ValueError(f"Site-specific global settings cannot be edited for site {site_id!r}.")
+
+    return site_id
+
+
 SiteIdPathParam = Annotated[
     SiteId,
-    TypedPlainValidator(str, SiteIdConverter.should_be_configurable),
+    TypedPlainValidator(str, _site_globals_editable),
     PathParam(description="An existing site ID.", example="prod"),
 ]
 
@@ -277,6 +308,48 @@ def effective_value(settings: Mapping[str, object], varname: str) -> tuple[objec
         return settings[varname], False
 
     return ABCConfigDomain.get_all_default_globals()[varname], True
+
+
+def load_configured_sites() -> SiteConfigurations:
+    return site_management_registry["site_management"].load_sites()
+
+
+def load_site_globals(sites: SiteConfigurations, site_id: SiteId) -> dict[str, object]:
+    """The site's own overrides, as a copy that writers may mutate before saving."""
+    return dict(sites[site_id].get("globals", {}))
+
+
+def effective_site_value(site_globals: Mapping[str, object], varname: str) -> tuple[object, bool]:
+    """The value in effect for the site and whether it comes from outside the site.
+
+    Without an override the site inherits the central value, which in turn falls back
+    to the built-in default.
+    """
+    if varname in site_globals:
+        return site_globals[varname], False
+
+    value, _is_built_in_default = effective_value(load_configuration_settings(), varname)
+    return value, True
+
+
+def save_site_setting(
+    site_id: SiteId,
+    configured_sites: SiteConfigurations,
+    site_globals: dict[str, object],
+    api_context: ApiContext,
+) -> None:
+    configured_sites[site_id]["globals"] = site_globals
+    site_management_registry["site_management"].save_sites(
+        make_folder_tree(api_context.config),
+        configured_sites,
+        activate=False,
+        pprint_value=api_context.config.wato_pprint_config,
+        liveproxyd_enabled=api_context.config.liveproxyd_enabled,
+        use_git=api_context.config.wato_use_git,
+        acting_user_id=api_context.user.id,
+    )
+    if site_id == omd_site():
+        save_site_global_settings(site_globals)
 
 
 def make_pending_changes(api_context: ApiContext) -> PendingChanges:

@@ -4777,20 +4777,33 @@ class GlobalSettingClient(RestApiClient):
         )
 
     def update_site(
-        self, site_id: str, varname: str, value: Any, expect_ok: bool = True
+        self,
+        site_id: str,
+        varname: str,
+        value: Any,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
         return self.request(
             "put",
             url=f"/objects/site_connection/{site_id}/{self.domain}/{varname}",
             body={"value": value},
             expect_ok=expect_ok,
+            headers=self._set_site_etag_header(site_id, varname, etag),
         )
 
-    def delete_site(self, site_id: str, varname: str, expect_ok: bool = True) -> Response:
+    def delete_site(
+        self,
+        site_id: str,
+        varname: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
         return self.request(
             "delete",
             url=f"/objects/site_connection/{site_id}/{self.domain}/{varname}",
             expect_ok=expect_ok,
+            headers=self._set_site_etag_header(site_id, varname, etag),
         )
 
     def _set_etag_header(
@@ -4798,6 +4811,13 @@ class GlobalSettingClient(RestApiClient):
     ) -> Mapping[str, str] | None:
         if etag == "valid_etag":
             return {"If-Match": self.get(varname).headers["ETag"]}
+        return set_if_match_header(etag)
+
+    def _set_site_etag_header(
+        self, site_id: str, varname: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get_site(site_id, varname).headers["ETag"]}
         return set_if_match_header(etag)
 
 

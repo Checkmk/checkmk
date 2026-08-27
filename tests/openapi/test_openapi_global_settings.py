@@ -9,6 +9,9 @@ import pytest
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk.ccc.site import SiteId
+from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
+    default_config_example,
+)
 from cmk.gui.openapi.endpoints.global_settings.schemas import (
     CAInputSchema,
     FileUploadSchema,
@@ -50,6 +53,14 @@ def sample_ca_certificates() -> None:
     config_file.write_text(
         "trusted_certificate_authorities = {'use_system_wide_cas': False, 'trusted_cas': []}\n"
     )
+
+
+@pytest.fixture(name="remote_site")
+def fixture_remote_site(clients: ClientRegistry) -> str:
+    """The site scope needs a distributed setup, see the negative test below."""
+    config = default_config_example()
+    clients.SiteManagement.create(site_config=config)
+    return config["basic_settings"]["site_id"]
 
 
 @pytest.fixture(name="user_without_global_permission")
@@ -201,6 +212,109 @@ def test_central_scope_needs_the_global_permission(clients: ClientRegistry) -> N
     clients.GlobalSetting.get(INT_VAR, expect_ok=False).assert_status_code(403)
     clients.GlobalSetting.update(INT_VAR, 42, expect_ok=False).assert_status_code(403)
     clients.GlobalSetting.delete(INT_VAR, expect_ok=False).assert_status_code(403)
+
+
+@pytest.mark.usefixtures("user_without_global_permission")
+def test_site_scope_needs_the_global_permission(clients: ClientRegistry, remote_site: str) -> None:
+    clients.GlobalSetting.get_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(403)
+    clients.GlobalSetting.update_site(remote_site, INT_VAR, 42, expect_ok=False).assert_status_code(
+        403
+    )
+    clients.GlobalSetting.delete_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(403)
+
+
+def test_site_value_falls_back_to_the_central_value(
+    clients: ClientRegistry, remote_site: str
+) -> None:
+    assert clients.GlobalSetting.get_site(remote_site, INT_VAR).json == {
+        "site_id": remote_site,
+        "varname": INT_VAR,
+        "value": INT_DEFAULT,
+        "is_default": True,
+    }
+
+    clients.GlobalSetting.update(INT_VAR, 42)
+    resp = clients.GlobalSetting.get_site(remote_site, INT_VAR)
+    assert resp.json["value"] == 42
+    assert resp.json["is_default"] is True
+
+
+def test_site_override_replaces_the_central_value(
+    clients: ClientRegistry, remote_site: str
+) -> None:
+    clients.GlobalSetting.update(INT_VAR, 42)
+    assert clients.GlobalSetting.update_site(remote_site, INT_VAR, 7).json == {
+        "site_id": remote_site,
+        "varname": INT_VAR,
+        "value": 7,
+        "is_default": False,
+    }
+    # the central value is untouched
+    assert clients.GlobalSetting.get(INT_VAR).json["value"] == 42
+
+
+def test_deleting_a_site_override_falls_back_to_the_central_value(
+    clients: ClientRegistry, remote_site: str
+) -> None:
+    clients.GlobalSetting.update(INT_VAR, 42)
+    clients.GlobalSetting.update_site(remote_site, INT_VAR, 7)
+    clients.GlobalSetting.delete_site(remote_site, INT_VAR).assert_status_code(204)
+    resp = clients.GlobalSetting.get_site(remote_site, INT_VAR)
+    assert resp.json["value"] == 42
+    assert resp.json["is_default"] is True
+
+
+def test_site_scope_changes_are_scoped_to_that_site(
+    clients: ClientRegistry, remote_site: str
+) -> None:
+    clients.GlobalSetting.update_site(remote_site, INT_VAR, 7)
+    assert _changes_of(remote_site) == [
+        f"Changed site-specific configuration variable {INT_VAR} for site {remote_site}."
+    ]
+    assert _changes_of(LOCAL_SITE) == []
+
+
+def test_site_scope_etags(clients: ClientRegistry, remote_site: str) -> None:
+    clients.GlobalSetting.update_site(
+        remote_site, INT_VAR, 7, etag=None, expect_ok=False
+    ).assert_status_code(428)
+    clients.GlobalSetting.update_site(
+        remote_site, INT_VAR, 7, etag="invalid_etag", expect_ok=False
+    ).assert_status_code(412)
+    clients.GlobalSetting.update_site(
+        remote_site, INT_VAR, 7, etag="valid_etag"
+    ).assert_status_code(200)
+    clients.GlobalSetting.delete_site(remote_site, INT_VAR, etag="valid_etag").assert_status_code(
+        204
+    )
+
+
+def test_the_site_etag_returned_by_an_update_is_still_valid(
+    clients: ClientRegistry, remote_site: str
+) -> None:
+    """Same as for the central scope: the update does not read the value back."""
+    etag = clients.GlobalSetting.update_site(remote_site, INT_VAR, 7).headers["ETag"]
+    assert clients.GlobalSetting.get_site(remote_site, INT_VAR).headers["ETag"] == etag
+    clients.GlobalSetting.request(
+        "put",
+        url=f"/objects/site_connection/{remote_site}/global_setting/{INT_VAR}",
+        body={"value": 8},
+        headers={"If-Match": etag},
+    ).assert_status_code(200)
+
+
+def test_site_scope_is_unavailable_without_a_distributed_setup(clients: ClientRegistry) -> None:
+    """site_globals_editable() only accepts a site that already carries overrides, and here
+    nothing can create the first one. The GUI refuses the same sites."""
+    clients.GlobalSetting.get_site(LOCAL_SITE, INT_VAR, expect_ok=False).assert_status_code(404)
+    clients.GlobalSetting.update_site(LOCAL_SITE, INT_VAR, 7, expect_ok=False).assert_status_code(
+        404
+    )
+    clients.GlobalSetting.delete_site(LOCAL_SITE, INT_VAR, expect_ok=False).assert_status_code(404)
+
+
+def test_unknown_site_404(clients: ClientRegistry, remote_site: str) -> None:
+    clients.GlobalSetting.get_site("no_such_site", INT_VAR, expect_ok=False).assert_status_code(404)
 
 
 @pytest.mark.parametrize(

@@ -19,6 +19,7 @@ py_library(
     imports = ["../../.."],
     deps = [
         requirement("pytest"),
+        requirement("pytest-check"),
         requirement("pytest-mock"),
         requirement("pysaml2"),
         requirement("matplotlib"),

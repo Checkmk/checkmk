@@ -60,7 +60,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
     new = True
     session_info = dict_property[SessionInfo]()
     exc = dict_property[MKException | None](default=None)
-    is_gui_session = dict_property[bool](default=True)
+    can_persist = dict_property[bool](default=True)
     is_secure = dict_property[bool](default=False)
     # What the credential this request authenticated with permits. Read back via
     # cmk.gui.authorization.request_authorization(). Defaults to UNRESTRICTED so
@@ -94,8 +94,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         if isinstance(self.user, LoggedInNobody | LoggedInSuperUser | LoggedInRemoteSite):
             return False
 
-        if not self.is_gui_session:
-            # No persistant sessions for the REST API or token-authenticated requests
+        if not self.can_persist:
             return False
 
         return not self.user.automation_user
@@ -116,8 +115,8 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         self.user = LoggedInUser(user_name, user_permissions)
         # Note that interactive logins don't come through this path, so we don't need to worry
         # about their auth_types here. They go create_empty_session() -> login(), which leaves
-        # is_gui_session at its default.
-        self.is_gui_session = auth_type in _COOKIE_ELIGIBLE_AUTH_TYPES
+        # can_persist at its default.
+        self.can_persist = auth_type in _COOKIE_ELIGIBLE_AUTH_TYPES
 
         self.session_info = SessionInfo(
             session_id=userdb.session.create_session_id(),

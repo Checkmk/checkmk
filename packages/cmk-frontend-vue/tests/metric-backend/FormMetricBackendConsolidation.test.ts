@@ -272,6 +272,7 @@ test('resolving a loaded metric leaves the stored consolidation untouched', asyn
 test.each<{
   scenario: string
   consolidationFunction: ConsolidationFunction
+  load: 'name-first' | 'types-first'
   resolvedTypes: string[]
   expectedType: string
   expectedFunction: string
@@ -279,6 +280,7 @@ test.each<{
   {
     scenario: 'resets a now-unsupported consolidation to the new type default',
     consolidationFunction: { type: 'gauge', function: 'gauge_last' },
+    load: 'name-first',
     resolvedTypes: ['sum'],
     expectedType: '[sum]',
     expectedFunction: 'rate'
@@ -286,22 +288,38 @@ test.each<{
   {
     scenario: 'keeps a consolidation the new type still supports',
     consolidationFunction: { type: 'gauge', function: 'gauge_max' },
+    load: 'name-first',
     resolvedTypes: ['gauge'],
     expectedType: '[gauge]',
     expectedFunction: 'max'
+  },
+  {
+    scenario: 'resets when the type list resolves before the name',
+    consolidationFunction: { type: 'gauge', function: 'gauge_last' },
+    load: 'types-first',
+    resolvedTypes: ['sum'],
+    expectedType: '[sum]',
+    expectedFunction: 'rate'
   }
 ])(
   'picking a new metric $scenario',
-  async ({ consolidationFunction, resolvedTypes, expectedType, expectedFunction }) => {
+  async ({ consolidationFunction, load, resolvedTypes, expectedType, expectedFunction }) => {
     const models = renderConsolidation({
       metricName: 'old.metric',
       metricTypes: ['gauge'],
       consolidationFunction
     })
 
-    models.metricName.value = 'new.metric'
+    const setName = () => {
+      models.metricName.value = 'new.metric'
+    }
+    const setTypes = () => {
+      models.metricTypes.value = resolvedTypes
+    }
+    const [first, second] = load === 'name-first' ? [setName, setTypes] : [setTypes, setName]
+    first()
     await nextTick()
-    models.metricTypes.value = resolvedTypes
+    second()
     await nextTick()
 
     await waitFor(() => expect(chip()).toHaveTextContent(expectedType))

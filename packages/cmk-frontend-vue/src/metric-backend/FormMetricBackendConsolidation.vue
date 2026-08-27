@@ -92,27 +92,35 @@ function buildModel(): ConsolidationModel {
 
 const model = ref<ConsolidationModel>(buildModel())
 
-// Non-immediate: the initial stored name never fires, so a load keeps its consolidation as is.
+// name and resolved types settle in an unpredictable order, so both watches drive the reset.
 const pendingMetricReset = ref(false)
-watch(
-  () => props.metricName,
-  () => {
-    pendingMetricReset.value = true
-  }
-)
-watch(availableTypes, (types) => {
+
+function applyPendingReset(typesJustResolved: boolean): void {
+  const types = availableTypes.value
   // Empty is "not resolved yet", not "no types": wait for the new metric's real list.
   if (!pendingMetricReset.value || types.length === 0) {
     return
   }
-  pendingMetricReset.value = false
-  if (types.includes(model.value.type)) {
-    return
+  const stillFits = types.includes(model.value.type)
+  if (!stillFits) {
+    const fn = defaultFunction(types[0]!)
+    const params = fn.function === 'histogram_quantile' ? { quantile: DEFAULT_QUANTILE } : {}
+    model.value = { ...model.value, ...fn, params }
   }
-  const fn = defaultFunction(types[0]!)
-  const params = fn.function === 'histogram_quantile' ? { quantile: DEFAULT_QUANTILE } : {}
-  model.value = { ...model.value, ...fn, params }
-})
+  if (typesJustResolved || !stillFits) {
+    pendingMetricReset.value = false
+  }
+}
+
+// Non-immediate: the initial stored name never fires, so a load keeps its consolidation as is.
+watch(
+  () => props.metricName,
+  () => {
+    pendingMetricReset.value = true
+    applyPendingReset(false)
+  }
+)
+watch(availableTypes, () => applyPendingReset(true))
 
 // Mirror the editable pill values back to the persisted fields. Each param
 // belongs to its own function only, so other types leave it untouched.

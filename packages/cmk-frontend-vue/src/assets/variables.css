@@ -83,7 +83,9 @@
 
     /* Fonts */
     --font-color: var(--color-conference-grey-100);
+    --font-color-secondary: var(--color-conference-grey-70);
     --font-color-dimmed: var(--grey-4-dimmed);
+    --font-underline-color: var(--color-conference-grey-60);
     --font-color-light-bg: var(--font-color);
     --font-perfometer-color: var(--color-conference-grey-100);
 
@@ -226,7 +228,9 @@
 
     /* Fonts */
     --font-color: var(--color-white-100);
+    --font-color-secondary: var(--color-white-70);
     --font-color-dimmed: var(--white-dimmed);
+    --font-underline-color: var(--color-white-60);
     --font-color-light-bg: var(--color-mist-grey-100);
     --font-perfometer-color: var(--color-mid-grey-60);
 

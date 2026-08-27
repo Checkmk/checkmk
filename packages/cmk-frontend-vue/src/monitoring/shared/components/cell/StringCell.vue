@@ -89,4 +89,10 @@ const display = useSoftBreak(
   flex: 1 1 auto;
   min-width: 0;
 }
+
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.monitoring-string-cell :deep(.monitoring-base-cell__button) .monitoring-string-cell__text {
+  width: auto;
+  max-width: 100%;
+}
 </style>

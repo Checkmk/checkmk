@@ -398,6 +398,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   npassive: ['passive check', 'no active'],
   ntop: ['network traffic', 'flows', 'bandwidth'],
   ooservice: ['out of service', 'unmonitored', 'disabled check'],
+  'open-details': ['slide-in', 'panel', 'pane', 'expand', 'detail', 'open', 'sidebar'],
   'open-telemetry': ['otel', 'observability', 'tracing', 'metrics'],
   opentelemetry: ['otel', 'observability', 'tracing', 'metrics'],
   'os-other': ['operating system', 'misc os'],

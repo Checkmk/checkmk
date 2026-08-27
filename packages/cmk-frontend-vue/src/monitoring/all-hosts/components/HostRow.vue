@@ -211,3 +211,10 @@ const lastStateChange = computed(() =>
     @select="onActionSelect"
   />
 </template>
+
+<style scoped>
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+.monitoring-base-cell {
+  color: var(--font-color-secondary);
+}
+</style>

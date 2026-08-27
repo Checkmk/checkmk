@@ -449,7 +449,7 @@ function tableRowAt(index: number): Row<T> {
 body[data-theme='facelift'] .monitoring-table__row:hover,
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 body[data-theme='facelift'] .monitoring-table__row:hover :deep(td) {
-  background-color: var(--color-light-blue-0);
+  background-color: var(--color-dark-blue-10);
 }
 
 .monitoring-table__spacer {

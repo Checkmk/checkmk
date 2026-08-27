@@ -102,6 +102,7 @@ const highlightStyle = computed<CSSProperties>(() =>
       'monitoring-base-cell--pinned': pinnedLeft !== null || pinnedRight !== null,
       'monitoring-base-cell--last-pinned': columnInfo?.isLastPinned,
       'monitoring-base-cell--first-pinned-right': columnInfo?.isFirstPinnedRight,
+      'monitoring-base-cell--button': button === true,
       'monitoring-base-cell--vertical-middle': verticalAlign === 'middle',
       'monitoring-base-cell--no-wrap': noWrap === true
     }"
@@ -120,10 +121,10 @@ const highlightStyle = computed<CSSProperties>(() =>
         <slot :name="activeSlot" />
       </div>
       <CmkMultitoneIcon
-        class="monitoring-base-cell__chevron"
-        name="chevron-right"
-        primary-color="font"
-        size="small"
+        class="monitoring-base-cell__action-icon"
+        name="open-details"
+        :primary-color="{ custom: 'var(--font-color-secondary)' }"
+        size="medium"
       />
     </button>
     <a
@@ -214,33 +215,53 @@ const highlightStyle = computed<CSSProperties>(() =>
     margin: 0;
     background: transparent;
     border: none;
-    color: inherit;
+    color: var(--font-color);
     font: inherit;
     text-align: left;
     cursor: pointer;
-
-    &:hover {
-      background-color: var(--ux-theme-3);
-    }
 
     &:focus-visible {
       outline: 1px solid var(--success);
       outline-offset: -1px;
     }
 
-    .monitoring-base-cell__chevron {
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+    }
+
+    .monitoring-base-cell__action-icon {
       flex: 0 0 auto;
       align-self: center;
-      margin-left: auto;
-      margin-top: calc(-1 * var(--dimension-2));
+      margin-left: var(--dimension-3);
       margin-right: var(--dimension-3);
+      width: var(--dimension-6);
       height: var(--dimension-6);
+      visibility: hidden;
+    }
+
+    &:hover .monitoring-base-cell__action-icon,
+    &:focus-visible .monitoring-base-cell__action-icon {
+      visibility: visible;
     }
   }
 
   .monitoring-base-cell__plain {
     padding: 5px var(--dimension-4);
   }
+
+  /* Underline the name only, so the reserved icon slot stays undecorated. */
+  .monitoring-base-cell__button .monitoring-base-cell__plain {
+    min-width: 0;
+    text-decoration: underline dotted;
+    text-decoration-color: var(--font-underline-color);
+    text-underline-offset: var(--dimension-2);
+  }
+}
+
+.monitoring-base-cell--button {
+  position: relative;
 }
 
 .monitoring-base-cell--vertical-middle {

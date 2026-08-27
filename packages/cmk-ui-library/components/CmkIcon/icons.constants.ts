@@ -785,7 +785,8 @@ export const oneColorIcons = [
   'pause',
   'play',
   'waiting',
-  'more-actions'
+  'more-actions',
+  'open-details'
 ] as const
 export const twoColorIcons = ['aggr', 'experiment'] as const
 

@@ -118,6 +118,21 @@ test('renders no button and emits nothing without the button prop', async () => 
   expect(container.querySelector('button')).toBeNull()
 })
 
+test('offers the open-details icon inside the button', async () => {
+  const { container } = await mountCell({ button: true }, { cellWidth: 500 })
+  expect(container.querySelector('button .monitoring-base-cell__action-icon')).not.toBeNull()
+})
+
+test('marks the cell so the button can cover it entirely', async () => {
+  const { container } = await mountCell({ button: true }, { cellWidth: 500 })
+  expect(container.querySelector('td')).toHaveClass('monitoring-base-cell--button')
+})
+
+test('offers no open-details icon without the button prop', async () => {
+  const { container } = await mountCell({}, { cellWidth: 500 })
+  expect(container.querySelector('.monitoring-base-cell__action-icon')).toBeNull()
+})
+
 test('is top-aligned and wrapping by default', async () => {
   const { container } = await mountCell({}, { cellWidth: 500 })
   const td = container.querySelector('td')

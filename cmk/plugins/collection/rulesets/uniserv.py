@@ -24,18 +24,32 @@ def _migrate(value: object) -> Mapping[str, object]:
     if not isinstance(value, dict):
         raise TypeError(value)
 
-    def _kept_values():
-        return {str(k): v for k, v in value.items() if k != "job"}
+    migrated = {str(k): v for k, v in value.items() if k != "job"}
 
     match value.get("job"):
         case None:
-            return value
+            pass
         case "version":
-            return {"check_version": True, **_kept_values()}
-        case ("address", address):
-            return {"check_address": address, **_kept_values()}
+            migrated["check_version"] = True
+        case ("address", dict() as address):
+            migrated["check_version"] = False
+            migrated["check_address"] = ("yes", address)
         case other:
             raise ValueError(other)
+
+    # Both elements are required. Rules written by 2.4 versions that only set one of
+    # them are invalid on disk, and the missing element can not be restored by editing
+    # the rule in the GUI, so we heal them here.
+    migrated.setdefault("check_version", False)
+    match migrated.get("check_address"):
+        case ("no", None) | ("yes", dict()):
+            pass
+        case dict() as address:
+            migrated["check_address"] = ("yes", address)
+        case _:
+            migrated["check_address"] = ("no", None)
+
+    return migrated
 
 
 def _valuespec_active_checks_uniserv():

@@ -50,7 +50,7 @@ def _error(error: _TokenError) -> None:
     """RFC 6749 section 5.2 error response: HTTP 400 with a JSON body."""
     response.status_code = http_client.BAD_REQUEST
     response.set_content_type("application/json")
-    response.set_data(OAuthTokenErrorResponse(error=error).model_dump_json(exclude_none=True))
+    response.set_data(OAuthTokenErrorResponse(error=error).model_dump_json())
 
 
 def _matches_challenge(code_verifier: str, code_challenge: str) -> bool:

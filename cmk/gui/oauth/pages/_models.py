@@ -62,7 +62,7 @@ class OAuthClientRegistrationResponse(BaseModel):
 
     client_id: str
     redirect_uris: list[str] = []
-    client_name: str | None = None
+    client_name: str | None = Field(None, exclude_if=lambda v: v is None)
 
 
 class OAuthClientRegistrationErrorResponse(BaseModel):
@@ -95,9 +95,9 @@ class OAuthTokenIntrospectionResponse(BaseModel):
 class OAuthTokenErrorResponse(BaseModel):
     """RFC 6749 section 5.2 token endpoint error response.
 
-    Serialized with exclude_none so the optional error_description is absent
-    from the body rather than null: clients parse {"error": ...} strictly.
+    error_description is excluded rather than serialized as null when absent:
+    clients parse {"error": ...} strictly.
     """
 
     error: str
-    error_description: str | None = None
+    error_description: str | None = Field(None, exclude_if=lambda v: v is None)

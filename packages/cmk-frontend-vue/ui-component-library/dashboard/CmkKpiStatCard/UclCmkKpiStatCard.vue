@@ -277,8 +277,7 @@ function formatValue(value: number): string {
         <CmkKpiStatCard
           :value="propState.dataState === 'no-data' ? undefined : propState.value"
           :unit="propState.unit || undefined"
-          :show-delta="propState.showDelta"
-          :comparison-basis="propState.comparisonBasis"
+          :delta="{ show: propState.showDelta, comparisonBasis: propState.comparisonBasis }"
           :format-value="formatValue"
           :series="series"
           :color="propState.color"

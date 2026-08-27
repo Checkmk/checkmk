@@ -10,6 +10,7 @@ export type {
   CmkKpiStatCardProps,
   ComparisonBasis,
   KpiDelta,
+  KpiDeltaConfig,
   KpiRangeLimits,
   KpiState,
   KpiStateSeverity,

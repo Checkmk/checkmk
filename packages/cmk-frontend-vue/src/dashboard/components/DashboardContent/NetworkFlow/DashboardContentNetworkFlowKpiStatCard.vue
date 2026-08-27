@@ -12,6 +12,7 @@ import { computed } from 'vue'
 
 import CmkKpiStatCard, {
   type KpiDelta,
+  type KpiDeltaConfig,
   type TimestampedSample
 } from '@/dashboard/components/CmkKpiStatCard'
 import type { NetworkFlowKpiStatCardContent } from '@/dashboard/types/widget.ts'
@@ -109,6 +110,12 @@ const { data, error } = useNetworkFlowWidgetData(
     buildCardData(response.value.value, response.value.previous_value, response.value.series),
   () => ({ filters: props.effective_filter_context.filters, content: props.content })
 )
+
+const deltaConfig = computed<KpiDeltaConfig>(() => ({
+  show: props.content.show_delta,
+  override: data.value?.delta,
+  fromCaller: true
+}))
 </script>
 
 <template>
@@ -126,8 +133,7 @@ const { data, error } = useNetworkFlowWidgetData(
         v-else
         :value="data.value"
         :unit="data.unit"
-        :show-delta="content.show_delta"
-        :delta="data.delta"
+        :delta="deltaConfig"
         :series="data.series"
         :color="chartColorCss(content.accent)"
         spark-height-mode="band"

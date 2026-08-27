@@ -71,8 +71,8 @@ test('hides the delta indicator when fewer than two real samples exist', () => {
   expect(deltaOf(container)).toBeNull()
 })
 
-test('hides the delta indicator when showDelta is false', () => {
-  const { container } = renderCard({ showDelta: false })
+test('hides the delta indicator when delta.show is false', () => {
+  const { container } = renderCard({ delta: { show: false } })
 
   expect(deltaOf(container)).toBeNull()
 })
@@ -105,7 +105,7 @@ test.each([
 ] as const)(
   'compares against the %s of the real samples before the current one',
   (basis, expected) => {
-    const { container } = renderCard({ comparisonBasis: basis })
+    const { container } = renderCard({ delta: { comparisonBasis: basis } })
 
     expect(deltaComparisonOf(container)).toContain(`vs. ${expected}`)
   }
@@ -114,7 +114,7 @@ test.each([
 test('the "last" basis reads as "prev. sample" with no window suffix', () => {
   // Series is [10, 20, 15, 30]; current is 30, so the basis is the sample
   // immediately before it (15), not the whole basis window's own average.
-  const { container } = renderCard({ comparisonBasis: 'last' })
+  const { container } = renderCard({ delta: { comparisonBasis: 'last' } })
 
   expect(deltaComparisonOf(container)).toBe('vs. 15.0 prev. sample')
 })
@@ -392,4 +392,13 @@ test('labels both ends of the displayed range', () => {
   expect(container.querySelector('.db-cmk-kpi-stat-card__range--maximum')).toHaveTextContent(
     '1.00 GB'
   )
+})
+
+test('delta.fromCaller: an undefined override stays empty, not a series-derived fallback', () => {
+  // Without fromCaller this same series would produce a series-derived delta (see
+  // "compares the current value against the average..." above) - fromCaller must
+  // suppress that fallback instead of silently swapping in the wrong delta.
+  const { container } = renderCard({ delta: { fromCaller: true } })
+
+  expect(deltaOf(container)).toBeNull()
 })

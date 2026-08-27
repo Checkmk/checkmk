@@ -24,9 +24,7 @@ import type {
 const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
   unit: undefined,
   series: () => [],
-  showDelta: true,
-  comparisonBasis: 'average',
-  delta: undefined,
+  delta: () => ({}),
   formatValue: (value: number) => value.toFixed(1),
   state: undefined,
   rangeLimits: undefined,
@@ -36,6 +34,8 @@ const props = withDefaults(defineProps<CmkKpiStatCardProps>(), {
 })
 
 const { _t } = usei18n()
+const showDelta = computed(() => props.delta.show ?? true)
+const comparisonBasis = computed(() => props.delta.comparisonBasis ?? 'average')
 
 // Reuses the shared adaptive-unit formatter (the same one profiling's own
 // formatDuration() wraps) rather than hand-rolling seconds -> "6h" maths.
@@ -76,9 +76,9 @@ function computeBasisValue(basis: ComparisonBasis, values: number[]): number {
 // The basis excludes the current sample itself - it is a comparison, not a
 // self-inclusive average. Hidden below two real samples: one alone has
 // nothing to compare against, and a zero basis has no meaningful ratio.
-// Superseded by `props.delta` when given - see the `delta` computed below.
+// Superseded by `delta.override` when given - see the `delta` computed below.
 const seriesDelta = computed<KpiDelta | undefined>(() => {
-  if (!props.showDelta) {
+  if (!showDelta.value) {
     return undefined
   }
   const realSamples = props.series.filter(
@@ -90,7 +90,7 @@ const seriesDelta = computed<KpiDelta | undefined>(() => {
   const currentSample = realSamples[realSamples.length - 1]!
   const basisSamples = realSamples.slice(0, -1)
   const basisValue = computeBasisValue(
-    props.comparisonBasis,
+    comparisonBasis.value,
     basisSamples.map((sample) => sample.value)
   )
   if (basisValue === 0) {
@@ -100,14 +100,14 @@ const seriesDelta = computed<KpiDelta | undefined>(() => {
   // "prev. sample" is a single adjacent point, not a range - a window duration
   // describes a span being averaged/scanned, which doesn't apply to it.
   const comparisonText =
-    props.comparisonBasis === 'last'
+    comparisonBasis.value === 'last'
       ? _t('vs. %{basisValue} %{basisLabel}', {
           basisValue: props.formatValue(basisValue),
-          basisLabel: BASIS_LABEL[props.comparisonBasis]()
+          basisLabel: BASIS_LABEL[comparisonBasis.value]()
         })
       : _t('vs. %{basisValue} %{basisLabel} (%{window})', {
           basisValue: props.formatValue(basisValue),
-          basisLabel: BASIS_LABEL[props.comparisonBasis](),
+          basisLabel: BASIS_LABEL[comparisonBasis.value](),
           window: durationFormatter.render(currentSample.timestamp - basisSamples[0]!.timestamp)
         })
   return {
@@ -117,12 +117,15 @@ const seriesDelta = computed<KpiDelta | undefined>(() => {
   }
 })
 
-// A caller-supplied delta (e.g. network-flow's window-aggregate metrics, where
-// `value` isn't `series`'s own last sample) takes priority over deriving one
-// from `series` - the two would otherwise disagree about what "the delta" is.
-const delta = computed<KpiDelta | undefined>(() =>
-  props.showDelta ? (props.delta ?? seriesDelta.value) : undefined
-)
+// A caller-supplied delta takes priority over series-derived one; fromCaller uses
+// delta.override exclusively so a per-render undefined stays empty, not a wrong fallback.
+const delta = computed<KpiDelta | undefined>(() => {
+  if (!showDelta.value) {
+    return undefined
+  }
+  const override = props.delta.override
+  return props.delta.fromCaller ? override : (override ?? seriesDelta.value)
+})
 
 const STATE_TAG_TONE: Record<KpiStateSeverity, StateTone> = {
   ok: 'ok',

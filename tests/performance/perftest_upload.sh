@@ -37,8 +37,7 @@ for target in $(bazel query --output=label "tests(//tests/performance:bazel_perf
         PLOT_ARGS=(
             --branch-version="${BRANCH}" --root-dir="${ROOT_DIR}"
             --dbname="performance_${suite//-/_}" --dbhost=qa.lan.checkmk.net
-            --log-level=INFO --validate-baselines --alert-on-failure
-            --jira-url="https://jira.lan.tribe29.com/"
+            --log-level=INFO --validate-baselines
         )
         # update database; generate report and check weekly baseline
         "${SCRIPT_DIR}/perftest_plot.py" --update "${PLOT_ARGS[@]}" || exit 200

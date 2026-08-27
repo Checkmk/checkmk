@@ -750,6 +750,7 @@ allows = [
   "@metric_backend",
   "cmk.shared_typing.aggregation",
   "cmk.shared_typing.attribute_filter",
+  "cmk.shared_typing.consolidation",
 ]
 
 [components."cmk.network_flow"]

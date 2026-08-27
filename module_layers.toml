@@ -1810,6 +1810,7 @@ allows = [
   "cmk.web.utils",
   "@livestatus_client",
   "@plugin_apis",
+  "cmk.ccc.hostaddress",
   "cmk.ccc.site",
   "cmk.ccc.version",
   "cmk.fields",
@@ -1822,6 +1823,7 @@ allows = [
   "cmk.shared_typing.mode_custom_services",
   "cmk.shared_typing.vue_formspec_components",
   "cmk.telemetry.host_name_template",
+  "cmk.utils.paths",
 ]
 
 [components."cmk.web"]

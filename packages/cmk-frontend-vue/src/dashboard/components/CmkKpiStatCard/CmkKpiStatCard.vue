@@ -425,7 +425,8 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
     :class="{
       'db-cmk-kpi-stat-card--tinted': tintColor !== undefined,
       'db-cmk-kpi-stat-card--value-only': isValueOnly,
-      'db-cmk-kpi-stat-card--band': hasSparkLine && sparkHeightMode === 'band'
+      'db-cmk-kpi-stat-card--band': hasSparkLine && sparkHeightMode === 'band',
+      'db-cmk-kpi-stat-card--has-range': rangeLimits
     }"
     :style="{
       '--accent-color': color,
@@ -780,6 +781,12 @@ const cardAriaLabel = computed<TranslatedString | undefined>(() => {
   right: var(--spacing);
   z-index: 3;
   max-width: 40%;
+}
+
+/* Offset below the top edge by the range-maximum label's own height (plus a small
+   gap), so the two don't overlap - only when that label is actually rendered. */
+.db-cmk-kpi-stat-card--has-range .db-cmk-kpi-stat-card__state {
+  top: calc(var(--spacing) + clamp(8px, 9cqh, 11px) + 4px);
 }
 
 /* With no plot, the corner badge has nowhere to anchor against - it joins the

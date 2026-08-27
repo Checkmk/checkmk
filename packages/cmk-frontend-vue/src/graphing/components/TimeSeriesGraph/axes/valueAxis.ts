@@ -45,9 +45,10 @@ export function computeYDomain(
     return [-bound, bound]
   }
   if (yMin === yMax) {
-    // A flat series widens upward only, so a graph flat at zero keeps its floor at zero
-    // instead of dipping into a negative range its data can never reach.
-    return [yMin, yMax + 1]
+    if (yMin === 0) {
+      return [0, 1]
+    }
+    return yMin > 0 ? [0, 2 * yMin] : [2 * yMin, 0]
   }
   return [yMin, yMax]
 }

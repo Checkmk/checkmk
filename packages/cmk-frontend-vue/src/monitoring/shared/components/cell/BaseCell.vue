@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import CmkIconLink from 'cmk-ui-library/components/CmkIconLink.vue'
 import { type CSSProperties, computed, inject, useSlots } from 'vue'
 
 import {
@@ -147,13 +147,14 @@ const highlightStyle = computed<CSSProperties>(() =>
       <div v-else class="monitoring-base-cell__plain">
         <slot :name="activeSlot" />
       </div>
-      <a
+      <CmkIconLink
         v-if="linkedTo && linkedTo.variant === 'icon'"
+        class="monitoring-base-cell__link-icon"
+        name="external"
+        size="small"
         :href="linkedTo.href"
         :target="linkedTo.target"
-      >
-        <CmkIcon class="monitoring-base-cell__link-icon" name="external" size="small" />
-      </a>
+      />
     </div>
   </td>
 </template>

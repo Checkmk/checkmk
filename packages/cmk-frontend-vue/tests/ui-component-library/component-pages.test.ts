@@ -338,7 +338,7 @@ test('CmkAlertBox page renders its component', () => {
 test('CmkCopyIcon page renders its component', () => {
   render(UclCmkCopy, { props: { screenshotMode: false } })
   const previews = screen.getAllByRole('region', { name: 'component preview' })
-  within(previews[0]!).getByRole('img', { name: 'Copy' })
+  within(previews[0]!).getByRole('button', { name: 'Copy' })
   within(previews[1]!).getByRole('button', { name: 'Copy' })
 })
 

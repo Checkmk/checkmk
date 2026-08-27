@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
+import CmkIconLink from 'cmk-ui-library/components/CmkIconLink.vue'
 
 import type { MonitoringIcon } from '@/monitoring/shared/api/types'
 
@@ -17,17 +18,20 @@ defineProps<{
 
 <template>
   <div class="monitoring-icon-list">
-    <component
-      :is="icon.link ? 'a' : 'span'"
-      v-for="icon in icons"
-      :key="icon.icon_name"
-      class="monitoring-icon-list__item"
-      :href="icon.link"
-      :target="icon.link ? '_top' : undefined"
-      :title="icon.title"
-    >
-      <CmkIcon :name="icon.icon_name as SimpleIcons" :title="icon.title" size="medium" />
-    </component>
+    <template v-for="icon in icons" :key="icon.icon_name">
+      <CmkIconLink
+        v-if="icon.link"
+        class="monitoring-icon-list__item"
+        :name="icon.icon_name as SimpleIcons"
+        :title="icon.title"
+        :href="icon.link"
+        target="_top"
+        size="medium"
+      />
+      <span v-else class="monitoring-icon-list__item" :title="icon.title">
+        <CmkIcon :name="icon.icon_name as SimpleIcons" :title="icon.title" size="medium" />
+      </span>
+    </template>
   </div>
 </template>
 

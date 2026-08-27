@@ -6,7 +6,7 @@
 
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, override, Self
+from typing import Literal, override
 
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
@@ -17,7 +17,6 @@ from cmk.graphing.v1 import Title as TitleV1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
@@ -40,13 +39,12 @@ from ._graph_specification import (
     GraphEnvironment,
     GraphMetric,
     GraphRecipe,
-    GraphRecipeWithOverrides,
     GraphSpecification,
     HorizontalRule,
     MinimalVerticalRange,
 )
 from ._graphs_order import GRAPHS_ORDER
-from ._rrd import fetch_graph_row, HostGraphRow, ServiceGraphRow
+from ._rrd import fetch_graph_row
 from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
@@ -151,42 +149,6 @@ def get_graph_plugin_and_single_metric_choices(
                 )
             )
     return graph_plugin_choices, single_metric_choices
-
-
-def _create_graph_recipe_from_translated_metric(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    consolidation_function: GraphConsolidationFunction,
-    translated_metric: TranslatedMetric,
-    *,
-    temperature_unit: TemperatureUnit,
-) -> GraphRecipe:
-    title = translated_metric.title
-    graph_metric = GraphMetric(
-        title=title,
-        line_type="area",
-        operation=create_graph_metric_expression_from_translated_metric(
-            site_id,
-            host_name,
-            service_name,
-            translated_metric,
-            consolidation_function,
-        ),
-        unit=translated_metric.unit_spec,
-        color=translated_metric.color,
-    )
-    return GraphRecipe(
-        title=title,
-        metrics=[graph_metric],
-        unit_spec=graph_metric.unit,
-        explicit_vertical_range=None,
-        horizontal_rules=compute_warn_crit_rules_from_translated_metric(
-            user_specific_unit(translated_metric.unit_spec, temperature_unit),
-            translated_metric,
-        ),
-        omit_zero_metrics=False,
-    )
 
 
 def _create_graph_recipe(
@@ -315,138 +277,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     @override
     def add_visual_type(cls) -> Literal["pnpgraph"]:
         return "pnpgraph"
-
-    @override
-    def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
-        return [
-            fetch_graph_row(
-                self.site,
-                self.host_name,
-                self.service_description,
-                env.registered_metrics,
-                debug=env.debug,
-                temperature_unit=env.temperature_unit,
-            )
-        ]
-
-    @classmethod
-    def _make_specification(
-        cls,
-        *,
-        site: SiteId | None,
-        host_name: AnnotatedHostName,
-        service_description: ServiceName,
-        graph_id: str | None,
-        destination: str | None,
-    ) -> Self:
-        return cls(
-            site=site,
-            host_name=host_name,
-            service_description=service_description,
-            destination=destination,
-            graph_id=graph_id,
-        )
-
-    def _post_process_recipe(
-        self,
-        user_permissions: UserPermissions,
-        site_id: SiteId,
-        host_name: HostName,
-        service_name: ServiceName,
-        show_graph_ids: bool,
-        *,
-        graph_id: str,
-        recipe: GraphRecipe,
-        consolidation_function: GraphConsolidationFunction,
-    ) -> GraphRecipeWithOverrides | None:
-        return GraphRecipeWithOverrides(
-            recipe=GraphRecipe(
-                title=(
-                    f"{recipe.title} (Graph ID: {graph_id})" if show_graph_ids else recipe.title
-                ),
-                unit_spec=recipe.unit_spec,
-                explicit_vertical_range=recipe.explicit_vertical_range,
-                horizontal_rules=recipe.horizontal_rules,
-                omit_zero_metrics=recipe.omit_zero_metrics,
-                metrics=recipe.metrics,
-            ),
-            specification=self._make_specification(
-                site=site_id,
-                host_name=host_name,
-                service_description=service_name,
-                graph_id=graph_id,
-                destination=self.destination,
-            ),
-            consolidation_function=consolidation_function,
-        )
-
-    @tracer.instrument("graphing.TemplateGraphSpecification.recipes")
-    @override
-    def recipes(
-        self,
-        env: GraphEnvironment,
-        graph_rows: Sequence[HostGraphRow | ServiceGraphRow],
-        consolidation_function: GraphConsolidationFunction = "max",
-    ) -> Sequence[GraphRecipeWithOverrides]:
-        if not graph_rows:
-            return []
-
-        graph_row = graph_rows[0]
-        if not graph_row.translated_metrics:
-            return []
-
-        site_id = graph_row.site_id
-        host_name = graph_row.host_name
-        service_name = graph_row.service_name
-        if (
-            isinstance(self.graph_id, str)
-            and self.graph_id.startswith("METRIC_")
-            and self.graph_id[7:] in graph_row.translated_metrics
-        ):
-            recipes = [
-                (
-                    self.graph_id,
-                    _create_graph_recipe_from_translated_metric(
-                        site_id,
-                        host_name,
-                        service_name,
-                        consolidation_function,
-                        graph_row.translated_metrics[self.graph_id[7:]],
-                        temperature_unit=env.temperature_unit,
-                    ),
-                )
-            ]
-        else:
-            recipes = [
-                (graph_recipe_id, recipe)
-                for graph_recipe_id, recipe in _evaluate_graph_plugins(
-                    env.registered_metrics,
-                    sort_registered_graph_plugins(env.registered_graphs),
-                    site_id,
-                    host_name,
-                    service_name,
-                    graph_row.translated_metrics,
-                    consolidation_function=consolidation_function,
-                    temperature_unit=env.temperature_unit,
-                )
-                if self.graph_id is None or self.graph_id == graph_recipe_id
-            ]
-        return [
-            post_processed_recipe
-            for graph_id, recipe in recipes
-            if (
-                post_processed_recipe := self._post_process_recipe(
-                    env.user_permissions,
-                    site_id,
-                    host_name,
-                    service_name,
-                    env.show_graph_ids,
-                    graph_id=graph_id,
-                    recipe=recipe,
-                    consolidation_function=consolidation_function,
-                )
-            )
-        ]
 
 
 def get_template_graph_specification(

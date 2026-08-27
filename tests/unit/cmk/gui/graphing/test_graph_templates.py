@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator, Mapping, Sequence
-from typing import override
 
 import pytest
 
@@ -25,10 +24,9 @@ from cmk.gui.graphing._graph_templates import (
     _evaluate_graph_plugins,
     resolve_graph_id_from_index,
     sort_registered_graph_plugins,
-    TemplateGraphSpecification,
 )
 from cmk.gui.graphing._legacy import check_metrics
-from cmk.gui.graphing._rrd import HostGraphRow, ServiceGraphRow
+from cmk.gui.graphing._rrd import ServiceGraphRow
 from cmk.gui.graphing._translated_metrics import (
     compute_translated_metrics,
     parse_perf_data,
@@ -567,193 +565,6 @@ _HEAP_MEM_GRAPH = {
         ],
     ),
 }
-
-
-class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
-    @override
-    def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
-        perf_data, check_command = parse_perf_data(
-            "metric1=163651.992188;;;; metric2=313848.039062;;;", "check_mk-foo", debug=False
-        )
-        return [
-            ServiceGraphRow(
-                site_id=SiteId("site_id"),
-                host_name=HostName("host_name"),
-                service_name=ServiceName("service_name"),
-                check_command=check_command,
-                translated_metrics=compute_translated_metrics(
-                    perf_data,
-                    ["metric1", "metric2"],
-                    check_command,
-                    env.registered_metrics,
-                    debug=env.debug,
-                    temperature_unit=env.temperature_unit,
-                ),
-            )
-        ]
-
-
-@pytest.mark.parametrize(
-    ("graph_id", "expected"),
-    [
-        pytest.param(
-            None,
-            [
-                GraphRecipe(
-                    title="Graph 1",
-                    unit_spec=ConvertibleUnitSpecification(
-                        notation=DecimalNotation(symbol=""),
-                        precision=AutoPrecision(digits=2),
-                    ),
-                    explicit_vertical_range=None,
-                    horizontal_rules=[],
-                    omit_zero_metrics=False,
-                    metrics=[
-                        GraphMetric(
-                            title="Metric1",
-                            line_type="line",
-                            operation=GraphMetricRRDSource(
-                                site_id=SiteId("site_id"),
-                                host_name=HostName("host_name"),
-                                service_name=ServiceName("service_name"),
-                                metric_name="metric1",
-                                consolidation_func_name="max",
-                                scale=1.0,
-                            ),
-                            unit=ConvertibleUnitSpecification(
-                                notation=DecimalNotation(symbol=""),
-                                precision=AutoPrecision(digits=2),
-                            ),
-                            color="#0080c0",
-                        )
-                    ],
-                ),
-                GraphRecipe(
-                    title="Graph 2",
-                    unit_spec=ConvertibleUnitSpecification(
-                        notation=DecimalNotation(symbol=""),
-                        precision=AutoPrecision(digits=2),
-                    ),
-                    explicit_vertical_range=None,
-                    horizontal_rules=[],
-                    omit_zero_metrics=False,
-                    metrics=[
-                        GraphMetric(
-                            title="Metric2",
-                            line_type="line",
-                            operation=GraphMetricRRDSource(
-                                site_id=SiteId("site_id"),
-                                host_name=HostName("host_name"),
-                                service_name=ServiceName("service_name"),
-                                metric_name="metric2",
-                                consolidation_func_name="max",
-                                scale=1.0,
-                            ),
-                            unit=ConvertibleUnitSpecification(
-                                notation=DecimalNotation(symbol=""),
-                                precision=AutoPrecision(digits=2),
-                            ),
-                            color="#0080c0",
-                        )
-                    ],
-                ),
-            ],
-            id="no id",
-        ),
-        pytest.param(
-            "graph2",
-            [
-                GraphRecipe(
-                    title="Graph 2",
-                    unit_spec=ConvertibleUnitSpecification(
-                        notation=DecimalNotation(symbol=""),
-                        precision=AutoPrecision(digits=2),
-                    ),
-                    explicit_vertical_range=None,
-                    horizontal_rules=[],
-                    omit_zero_metrics=False,
-                    metrics=[
-                        GraphMetric(
-                            title="Metric2",
-                            line_type="line",
-                            operation=GraphMetricRRDSource(
-                                site_id=SiteId("site_id"),
-                                host_name=HostName("host_name"),
-                                service_name=ServiceName("service_name"),
-                                metric_name="metric2",
-                                consolidation_func_name="max",
-                                scale=1.0,
-                            ),
-                            unit=ConvertibleUnitSpecification(
-                                notation=DecimalNotation(symbol=""),
-                                precision=AutoPrecision(digits=2),
-                            ),
-                            color="#0080c0",
-                        )
-                    ],
-                ),
-            ],
-            id="matching id",
-        ),
-        pytest.param(
-            "wrong",
-            [],
-            id="non-matching id",
-        ),
-    ],
-)
-def test_template_recipes_matching(
-    graph_id: str | None,
-    expected: Sequence[GraphRecipe],
-) -> None:
-    graph_specification = _FakeTemplateGraphSpecification(
-        site=SiteId("site_id"),
-        host_name=HostName("host_name"),
-        service_description=ServiceName("service_name"),
-        graph_id=graph_id,
-    )
-    env = GraphEnvironment(
-        registered_metrics={
-            "metric1": RegisteredMetric(
-                name="metric1",
-                title_localizer=lambda _localizer: "Metric1",
-                unit_spec=ConvertibleUnitSpecification(
-                    notation=DecimalNotation(symbol=""),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="#0080c0",
-            ),
-            "metric2": RegisteredMetric(
-                name="metric2",
-                title_localizer=lambda _localizer: "Metric2",
-                unit_spec=ConvertibleUnitSpecification(
-                    notation=DecimalNotation(symbol=""),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="#0080c0",
-            ),
-        },
-        registered_graphs={
-            "graph1": graphs_v1.Graph(
-                name="graph1",
-                title=TitleV1("Graph 1"),
-                simple_lines=["metric1"],
-            ),
-            "graph2": graphs_v1.Graph(
-                name="graph2",
-                title=TitleV1("Graph 2"),
-                simple_lines=["metric2"],
-            ),
-        },
-        user_permissions=UserPermissions({}, {}, {}, []),
-        temperature_unit=TemperatureUnit.CELSIUS,
-        backend_time_series_fetcher=None,
-        debug=False,
-    )
-    assert [
-        r.recipe
-        for r in graph_specification.recipes(env, graph_specification.fetch_graph_rows(env))
-    ] == expected
 
 
 def _env_for_resolve_helper(registered_metrics: Mapping[str, RegisteredMetric]) -> GraphEnvironment:

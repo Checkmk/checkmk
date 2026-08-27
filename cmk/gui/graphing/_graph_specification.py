@@ -34,7 +34,6 @@ from ._graph_metric_expressions import (
     parse_graph_metric_expression,
 )
 from ._metric_backend_registry import FetchTimeSeriesProtocol
-from ._rrd import HostGraphRow, ServiceGraphRow
 from ._translated_metrics import TranslatedMetric
 from ._unit import (
     ConvertibleUnitSpecification,
@@ -53,7 +52,6 @@ class GraphEnvironment:
     temperature_unit: TemperatureUnit
     backend_time_series_fetcher: FetchTimeSeriesProtocol | None
     debug: bool = False
-    show_graph_ids: bool = False
 
 
 @dataclass(frozen=True)
@@ -170,19 +168,6 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     @staticmethod
     @abstractmethod
     def graph_type_name() -> str: ...
-
-    @abstractmethod
-    def fetch_graph_rows(
-        self, env: GraphEnvironment
-    ) -> Sequence[HostGraphRow | ServiceGraphRow]: ...
-
-    @abstractmethod
-    def recipes(
-        self,
-        env: GraphEnvironment,
-        graph_rows: Sequence[HostGraphRow | ServiceGraphRow],
-        consolidation_function: GraphConsolidationFunction = "max",
-    ) -> Sequence[GraphRecipeWithOverrides]: ...
 
     # mypy does not support other decorators on top of @property:
     # https://github.com/python/mypy/issues/14461

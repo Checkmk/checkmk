@@ -9,7 +9,7 @@
 import re
 from collections.abc import Mapping, Sequence
 from datetime import datetime, UTC
-from typing import Any, Final, Literal, TypedDict
+from typing import Any, Final, TypedDict
 
 import marshmallow
 
@@ -111,7 +111,7 @@ class ReorganizedTimeRange(TypedDict):
 
 
 class ReorganizedCurves(TypedDict):
-    line_type: LineType | Literal["ref"]
+    line_type: LineType
     color: str
     title: str
     attributes: Mapping[AttributeGroup, Mapping[str, str]]

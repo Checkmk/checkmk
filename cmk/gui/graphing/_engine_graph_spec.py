@@ -6,7 +6,7 @@
 """The graph spec the metric endpoints and the browser's JSON export answer with."""
 
 from collections.abc import Mapping, Sequence
-from typing import Final, Literal, TypedDict
+from typing import Final, TypedDict
 
 from cmk.graphing_engine import EvaluatedCurve, EvaluatedGraph, SeriesAttributes
 from cmk.graphing_engine import TimeRange as EngineTimeRange
@@ -18,7 +18,7 @@ _ATTRIBUTE_GROUPS: Final[tuple[AttributeGroup, ...]] = ("resource", "scope", "da
 
 
 class Curve(TypedDict):
-    line_type: LineType | Literal["ref"]
+    line_type: LineType
     color: str
     title: str
     attributes: Mapping[AttributeGroup, Mapping[str, str]]

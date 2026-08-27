@@ -33,7 +33,6 @@ from ._graph_display_config import (
     GraphRenderOptions,
     resolve_size,
 )
-from ._graph_images import graph_spec_from_request
 from ._graph_metric_expressions import (
     AttributeGroup,
     GraphConsolidationFunction,
@@ -52,7 +51,6 @@ from ._graph_specification import (
     GraphEnvironment,
     GraphMetric,
     GraphRanges,
-    GraphRecipeWithOverrides,
     GraphSpecification,
     parse_graph_specification,
 )
@@ -132,7 +130,6 @@ __all__ = [
     "GraphMetricExpression",
     "GraphMetricOperation",
     "GraphPluginChoice",
-    "GraphRecipeWithOverrides",
     "GraphEnvironment",
     "GraphDisplayConfigHTML",
     "GraphDisplayConfigImage",
@@ -171,7 +168,6 @@ __all__ = [
     "get_mm_per_ex",
     "get_temperature_unit",
     "get_template_graph_specification",
-    "graph_spec_from_request",
     "GraphExportRequest",
     "graphs_from_api",
     "host_service_graph_popup_cmk",

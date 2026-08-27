@@ -9,17 +9,16 @@ This is needed for the graphs sent with mail notifications."""
 import base64
 import itertools
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import override
 
 import cmk.livestatus_client as livestatus
-from cmk import trace
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing_engine import ConsolidationFunction, TimeRange
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
-from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
+from cmk.gui.exceptions import MKUnauthenticatedException
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -31,10 +30,8 @@ from cmk.gui.utils.roles import UserPermissions
 
 from . import _engine_plugins as engine_plugins
 from ._engine_dispatch import evaluate_built_graphs
-from ._engine_graph_spec import Curve, GraphSpec
 from ._engine_source import RRDFetchMetricNames
 from ._engine_template_graphs import build_template_graphs
-from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import graphs_from_api, metrics_from_api
 from ._graph_display_config import (
     GraphDisplayConfigImage,
@@ -47,20 +44,13 @@ from ._graph_pdf import (
 )
 from ._graph_png import render_png
 from ._graph_specification import (
-    AugmentedTimeSeriesOfGraphMetric,
     GraphEnvironment,
     GraphRanges,
-    GraphRecipeWithOverrides,
 )
-from ._graph_templates import (
-    get_template_graph_specification,
-    MKGraphNotFound,
-)
-from ._html_render import GraphDestinations, GraphExportRequest
+from ._graph_templates import get_template_graph_specification
+from ._html_render import GraphDestinations
 from ._metric_backend_registry import METRIC_BACKEND_KEY, metric_backend_registry
 from ._unit import get_temperature_unit
-
-tracer = trace.get_tracer()
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -200,90 +190,3 @@ def graph_image_render_options(
         graph_render_options = graph_render_options.model_copy(update=render_opts)
 
     return graph_render_options
-
-
-def graph_recipes_from_request(
-    export_request: GraphExportRequest,
-    env: GraphEnvironment,
-) -> tuple[GraphRanges, Sequence[GraphRecipeWithOverrides]]:
-    now = int(time.time())
-    start = (
-        export_request.time_start if export_request.time_start is not None else now - (25 * 3600)
-    )
-    end = export_request.time_end if export_request.time_end is not None else now
-
-    try:
-        recipes = export_request.specification.recipes(
-            env,
-            export_request.specification.fetch_graph_rows(env),
-            consolidation_function=export_request.consolidation_function,
-        )
-
-    except MKGraphNotFound:
-        raise MKNotFound
-
-    except livestatus.MKLivestatusNotFoundError as e:
-        raise MKUserError(None, _("Cannot calculate graph recipes: %(e)s") % {"e": e})
-
-    return GraphRanges(time_range=(start, end), step=60), recipes
-
-
-def _compute_graph_spec(
-    ranges: GraphRanges,
-    augmented_time_series_of_graph_metrics: Sequence[AugmentedTimeSeriesOfGraphMetric],
-) -> GraphSpec:
-    api_curves = []
-    start, end, step = ranges.time_range[0], ranges.time_range[1], 60  # empty graph
-    for augmented_time_series_of_graph_metric in augmented_time_series_of_graph_metrics:
-        for augmented_time_series in augmented_time_series_of_graph_metric.time_series:
-            if (
-                augmented_time_series.line_type is None
-                or augmented_time_series.color is None
-                or augmented_time_series.title is None
-            ):
-                continue
-
-            time_series = augmented_time_series.time_series
-            start, end, step = time_series.start, time_series.end, time_series.step
-            api_curves.append(
-                Curve(
-                    line_type=augmented_time_series.line_type,
-                    color=augmented_time_series.color,
-                    title=augmented_time_series.title,
-                    attributes=augmented_time_series.attributes,
-                    rrddata=time_series.values,
-                )
-            )
-    return GraphSpec(start_time=start, end_time=end, step=step, curves=api_curves)
-
-
-@tracer.instrument("graphing.graph_spec_from_request")
-def graph_spec_from_request(
-    export_request: GraphExportRequest,
-    env: GraphEnvironment,
-) -> GraphSpec:
-    try:
-        ranges, recipes = graph_recipes_from_request(export_request, env)
-        recipe = recipes[0].recipe
-
-    except MKGraphNotFound:
-        raise MKNotFound
-
-    except IndexError:
-        raise MKUserError(None, _("The requested graph does not exist"))
-
-    return _compute_graph_spec(
-        ranges,
-        [
-            result.ok
-            for result in fetch_augmented_time_series(
-                env.registered_metrics,
-                recipe,
-                ranges,
-                consolidation_function=recipes[0].consolidation_function,
-                temperature_unit=env.temperature_unit,
-                backend_time_series_fetcher=env.backend_time_series_fetcher,
-            )
-            if result.is_ok()
-        ],
-    )

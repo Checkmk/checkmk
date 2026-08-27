@@ -575,31 +575,3 @@ class CheckmkApp:
         assert isinstance(register_agent_output, bytes)  # stream/socket/demux not used above
         if register_agent_rc != 0:
             raise RuntimeError(f"Error registering agent: {register_agent_output.decode('utf-8')}")
-
-    @staticmethod
-    def install_agent_controller_daemon(app: docker.models.containers.Container) -> None:
-        """Install an agent controller daemon in an application container
-        to avoid systemd dependency."""
-        daemon_path = str(repo_path() / "tests" / "scripts" / "agent_controller_daemon.py")
-
-        python_pkg_name = "python3.12"
-        python_bin_name = "python3.12"
-        logger.info("Installing %s...", python_pkg_name)
-        install_python_rc, install_python_output = app.exec_run(
-            f"dnf install '{python_pkg_name}'",
-            user="root",
-        )
-        assert isinstance(install_python_output, bytes)  # stream/socket/demux not used above
-        if install_python_rc != 0:
-            raise RuntimeError(
-                f"Error during {python_pkg_name} setup: {install_python_output.decode('utf-8')}"
-            )
-
-        logger.info('Installing Checkmk agent controller daemon "%s"...', daemon_path)
-        if not copy_to_container(app, daemon_path, "/"):
-            raise RuntimeError(f"Failed to copy {daemon_path} into the container")
-        app.exec_run(
-            f'{python_bin_name} "/{os.path.basename(daemon_path)}"',
-            user="root",
-            detach=True,
-        )

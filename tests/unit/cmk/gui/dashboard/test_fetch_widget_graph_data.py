@@ -20,7 +20,7 @@ from cmk.gui.dashboard.api.fetch_widget_graph_data import (
     fetch_widget_graph_data_v1,
     WidgetGraphFetchRequest,
 )
-from cmk.gui.dashboard.dashlet.dashlets.graph import ABCGraphDashlet, TemplateGraphDashlet
+from cmk.gui.dashboard.dashlet.dashlets.graph import TemplateGraphDashlet
 from cmk.gui.dashboard.token_util import InvalidWidgetError
 from cmk.gui.dashboard.type_defs import DashboardConfig, DashletConfig
 from cmk.gui.graphing._engine_discovery import BuiltGraph, DiscoveredGraphs
@@ -79,16 +79,6 @@ def _api_context(token: AuthToken | None) -> ApiContext:
     context.config.debug = False
     context.config.user_permissions.return_value = UserPermissions({}, {}, {}, [])
     return context
-
-
-@pytest.fixture(name="without_legacy_recipes", autouse=True)
-def fixture_without_legacy_recipes(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Constructing a graph widget computes its legacy recipes over livestatus.
-
-    The fetch does not use them, so they are stubbed out rather than mocked at the livestatus
-    level - these tests are about the engine graphs, not the legacy rendering path.
-    """
-    monkeypatch.setattr(ABCGraphDashlet, "_compute_graph_recipes", staticmethod(lambda *_args: []))
 
 
 def _graph_widget(widget_type: str = "pnpgraph", **extra: object) -> DashletConfig:

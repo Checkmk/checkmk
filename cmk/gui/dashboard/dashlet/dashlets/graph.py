@@ -8,18 +8,20 @@
 # mypy: disable-error-code="type-arg"
 
 import abc
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping
 from typing import Any, Literal, NotRequired, override
 
 import cmk.livestatus_client as livestatus
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.graphing_engine import ConsolidationFunction, TimeRange
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
-from cmk.gui.exceptions import MKMissingDataError, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
+    evaluate_built_graphs,
     fetch_graph_row,
     get_graph_plugin_and_single_metric_choices,
     get_graph_plugin_choices,
@@ -30,11 +32,9 @@ from cmk.gui.graphing import (
     GraphEnvironment,
     GraphFromAPI,
     GraphPluginChoice,
-    GraphRecipeWithOverrides,
     graphs_from_api,
     GraphSpecification,
     metrics_from_api,
-    MKCombinedGraphLimitExceededError,
     RegisteredMetric,
     resolve_graph_id_from_index,
     sort_registered_graph_plugins,
@@ -56,6 +56,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     DropdownChoiceWithHostAndServiceHints,
+    Timerange,
 )
 from cmk.gui.visuals import (
     get_only_sites_from_context,
@@ -70,7 +71,6 @@ from ..base import (
     ResponsiveLayoutConstraints,
     WidgetSize,
 )
-from .status_helpers import make_mk_missing_data_error
 
 GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID = "available_graph_templates"
 
@@ -203,20 +203,17 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
 
         self._graph_resolved = False
         self._cached_graph_specification: TGraphSpec | None = None
-        self._cached_recipes: Sequence[GraphRecipeWithOverrides] | None = None
         self._resolve_exception: Exception | None = None
+        self._cached_display_title: str | None = None
 
     def _resolve_graph(self) -> None:
-        """Build the specification and its recipes once, recording rather than raising failures."""
+        """Build the specification once, recording rather than raising a failure."""
         if self._graph_resolved:
             return
         self._graph_resolved = True
         try:
             self._cached_graph_specification = self.build_graph_specification(
                 self.context if self.has_context() else {}
-            )
-            self._cached_recipes = self._compute_graph_recipes(
-                self._cached_graph_specification, active_config
             )
         except Exception as e:
             self._resolve_exception = e
@@ -226,42 +223,32 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
         self._resolve_graph()
         return self._cached_graph_specification
 
-    @staticmethod
-    def _compute_graph_recipes(
-        graph_specification: TGraphSpec, config: Config
-    ) -> Sequence[GraphRecipeWithOverrides]:
-        try:
-            env = GraphEnvironment(
-                registered_metrics=metrics_from_api,
-                registered_graphs=graphs_from_api,
-                user_permissions=UserPermissions.from_config(config, permission_registry),
-                temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
-                backend_time_series_fetcher=None,
-                debug=config.debug,
-            )
-            return graph_specification.recipes(env, graph_specification.fetch_graph_rows(env))
-        except MKMissingDataError:
-            raise
-        except livestatus.MKLivestatusNotFoundError:
-            raise make_mk_missing_data_error(reason=_("Service or host not found."))
-        except MKCombinedGraphLimitExceededError as limit_exceeded_error:
-            raise make_mk_missing_data_error(reason=str(limit_exceeded_error))
-        except Exception as e:
-            raise make_mk_missing_data_error(reason=_("Failed to calculate a graph recipe.")) from e
-
-    def recipes(self) -> Sequence[GraphRecipeWithOverrides]:
-        self._resolve_graph()
-        if self._cached_recipes is None:
-            assert self._resolve_exception is not None
-            raise self._resolve_exception
-        return self._cached_recipes
-
     @override
     def default_display_title(self) -> str:
-        self._resolve_graph()
-        if self._cached_recipes:
-            return self._cached_recipes[0].recipe.title
-        return self.title()
+        # TODO: This evaluates the graph only to substitute a title expression. Move the macro
+        # resolution to the frontend, or give the engine a performance-data-only fetch for titles.
+        if self._cached_display_title is None:
+            self._cached_display_title = self._resolve_display_title()
+        return self._cached_display_title
+
+    def _resolve_display_title(self) -> str:
+        try:
+            start, end = Timerange.compute_range(self._dashlet_spec["timerange"]).range
+            discovered = self.discover_graphs(
+                debug=active_config.debug,
+                user_permissions=UserPermissions.from_config(active_config, permission_registry),
+            )
+            evaluated = evaluate_built_graphs(
+                [built.graph for built in discovered.graphs[:1]],
+                {
+                    "consolidation_function": ConsolidationFunction.MAX,
+                    "time_range": TimeRange(start=int(start), end=int(end), step=60),
+                    "destination": None,
+                },
+            )
+        except Exception:
+            return self.title()
+        return evaluated.graphs[0].title if evaluated.graphs else self.title()
 
 
 class TemplateGraphDashletConfig(ABCGraphDashletConfig):

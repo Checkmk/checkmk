@@ -19,9 +19,7 @@ def _error() -> None:
     """RFC 7662 section 2.3: a malformed request gets an RFC 6749 section 5.2 error."""
     response.status_code = http_client.BAD_REQUEST
     response.set_content_type("application/json")
-    response.set_data(
-        OAuthTokenErrorResponse(error="invalid_request").model_dump_json(exclude_none=True)
-    )
+    response.set_data(OAuthTokenErrorResponse(error="invalid_request").model_dump_json())
 
 
 class OAuthIntrospectPage(Page):

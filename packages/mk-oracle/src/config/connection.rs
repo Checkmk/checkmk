@@ -163,7 +163,7 @@ pub fn add_tns_admin_to_env(conn: &Connection) {
                 tns_admin.display()
             );
         }
-    } else {
+    } else if std::env::var("TNS_ADMIN").is_err() {
         log::info!(
             "No TNS_ADMIN specified, using default path: {}",
             config.display()

@@ -7,8 +7,6 @@
 Checkmk special agent for monitoring Redfish power management interfaces.
 """
 
-# mypy: disable-error-code="exhaustive-match"
-
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="no-untyped-call"
@@ -201,7 +199,7 @@ def fetch_sections(
         section_data = fetch_data(redfishobj, data[section].get("@odata.id"), section)
         if section_data.get("Members@odata.count") == 0:
             continue
-        if "Collection" in section_data.get("@odata.type"):
+        if "Collection" in section_data.get("@odata.type", {}):
             if section_data.get("Members@odata.count", 0) != 0:
                 result = fetch_collection(redfishobj, section_data, section)
                 result_set[section] = result
@@ -237,7 +235,7 @@ def detect_vendor(root_data: Any) -> Vendor:
     if vendor_string == "" and root_data.get("Vendor") is not None:
         vendor_string = root_data.get("Vendor")
 
-    match vendor_string:
+    match vendor_string:  # type: ignore[exhaustive-match]
         case "Hpe" | "Hp":
             manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", {})[0]
             if not manager_data:
@@ -287,6 +285,7 @@ def get_information(redfishobj):
 
     manager_url = base_data.get("Managers", {}).get("@odata.id")
     systems_url = base_data.get("PowerEquipment", {}).get("@odata.id")
+    pdu_url = base_data.get("PowerDistribution", {}).get("@odata.id")
 
     manager_data = []
     fw_version = vendor_data.firmware_version
@@ -309,25 +308,39 @@ def get_information(redfishobj):
     sys.stdout.write(f"<<<labels:sep(0)>>>\n{json.dumps(labels)}\n")
 
     # fetch systems
-    if not systems_url:
+    if systems_url:
+        power_equipment = fetch_data(redfishobj, systems_url, "PowerEquipment")
+    else:
+        # Some PDUs (e.g. PANDUIT) don't advertise PowerEquipment but may still serve it.
+        probed = fetch_data(redfishobj, "/redfish/v1/PowerEquipment", "PowerEquipment")
+        power_equipment = None if "error" in probed else probed
+
+    if power_equipment is not None:
+        systems_data = [power_equipment]
+    elif pdu_url:
+        # No PowerEquipment resource exists here, so there is nothing to report
+        # as a system - hence the gated redfish_system output below.
+        systems_data = [{"RackPDUs": {"@odata.id": pdu_url}}]
+    else:
         raise CannotRecover(
             "ERROR: probably not a Redfish power equipment - missing PowerEquipment information"
         )
-    systems_data = list([fetch_data(redfishobj, systems_url, "PowerEquipment")])
 
     if manager_data:
         sys.stdout.write("<<<redfish_manager:sep(0)>>>\n")
         sys.stdout.write(f"{json.dumps(manager_data, sort_keys=True)}\n")
 
-    sys.stdout.write("<<<redfish_system:sep(0)>>>\n")
-    sys.stdout.write(f"{json.dumps(systems_data, sort_keys=True)}\n")
+    if power_equipment:
+        sys.stdout.write("<<<redfish_system:sep(0)>>>\n")
+        sys.stdout.write(f"{json.dumps(systems_data, sort_keys=True)}\n")
 
     resulting_sections: tuple[SectionName, ...] = ("RackPDUs",)
     for system in systems_data:
         result = fetch_sections(redfishobj, resulting_sections, system)
         process_result(result)
+        if not (pdu_data := result.get("RackPDUs")):
+            continue
         sub_sections: tuple[SectionName, ...] = ("Mains", "Outlets", "Sensors")
-        pdu_data = result["RackPDUs"]
         if isinstance(pdu_data, list):
             for entry in pdu_data:
                 process_result(fetch_sections(redfishobj, sub_sections, entry))

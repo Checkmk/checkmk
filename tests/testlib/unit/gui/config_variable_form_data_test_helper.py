@@ -332,6 +332,19 @@ UNBOUNDED_AGE_CASES: list[Case] = [
     CaseFail("not-an-int", "30s"),
 ]
 
+UNBOUNDED_TIME_SPAN_CASES: list[Case] = [
+    CasePass("configured", 30.0),
+    CaseMigrates("legacy-int-seconds", 30, 30.0),
+    CaseFail("not-a-number", "30s"),
+]
+
+MIN_ONE_TIME_SPAN_CASES: list[Case] = [
+    CasePass("configured", 120.0),
+    CaseMigrates("legacy-int-seconds", 120, 120.0),
+    CaseFail("below-minimum", 0),
+    CaseFail("not-a-number", "2m"),
+]
+
 
 def choice_cases(configured: object, not_a_choice: object) -> list[Case]:
     return [
@@ -1702,27 +1715,29 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("not-a-dict", "ENV"),
     ],
     "dcd_activate_changes_timeout": [
-        CasePass("configured", 300),
+        CasePass("configured", 300.0),
+        CaseMigrates("legacy-int-seconds", 300, 300.0),
         CaseFail("below-minimum", 1),
-        CaseFail("not-an-int", "5m"),
+        CaseFail("not-a-number", "5m"),
     ],
     "dcd_bulk_discovery_timeout": [
-        CasePass("configured", 300),
+        CasePass("configured", 300.0),
+        CaseMigrates("legacy-int-seconds", 300, 300.0),
         CaseFail("below-minimum", 1),
-        CaseFail("not-an-int", "5m"),
+        CaseFail("not-a-number", "5m"),
     ],
     "dcd_log_levels": [
         CasePass("configured", DefaultWithOverrides({"cmk.dcd": 10})),
         CaseFail("not-a-log-level", DefaultWithOverrides({"cmk.dcd": 25})),
     ],
-    "dcd_max_activation_delay": UNBOUNDED_AGE_CASES,
+    "dcd_max_activation_delay": UNBOUNDED_TIME_SPAN_CASES,
     "dcd_max_hosts_per_bulk_discovery": [
         CasePass("configured", 100),
         CaseFail("below-minimum", 1),
         CaseFail("not-an-int", "100"),
     ],
     "dcd_prevent_unwanted_notification": CHECKBOX_CASES,
-    "dcd_site_update_interval": MIN_ONE_AGE_CASES,
+    "dcd_site_update_interval": MIN_ONE_TIME_SPAN_CASES,
     "debug": CHECKBOX_CASES,
     "debug_livestatus_queries": CHECKBOX_CASES,
     "debug_rules": CHECKBOX_CASES,

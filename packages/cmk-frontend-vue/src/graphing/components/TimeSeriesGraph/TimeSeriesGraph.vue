@@ -29,17 +29,16 @@ import {
 } from '../constants'
 import { axisLabelFontSize, measureAxisLabel } from './axes/labelWidth'
 import { computeTimeAxis } from './axes/timeAxis'
+import { computeYDomain } from './axes/valueAxis'
+import { downsampleToColumns, edgeNeighbours, edgeSample, m4 } from './decimation/decimate'
+import type { M4Cache } from './decimation/types'
 import OverlayLayer from './overlay/OverlayLayer.vue'
 import PinHandle from './overlay/PinHandle.vue'
 import { crosshairCentreX, pinLineCentreX } from './overlay/crosshair'
 import { drawData } from './render'
-import {
-  composeSeries,
-  composedValueDomain,
-  createM4CacheStore,
-  withoutOffPlotNeighbours
-} from './render/composeSeries'
+import { invertBucket } from './render/bucket'
 import { drawHorizontalLines } from './render/horizontalLines'
+import { computeStackedSeries } from './render/stacked'
 import type { PinPayload, TimeRange, TimeSeriesGraphProps, ZoomPayload } from './types'
 import { useAxes } from './useAxes'
 import { useHover } from './useHover'
@@ -242,7 +241,22 @@ const {
   onCommit: (timeRange) => emit('pan', { timeRange })
 })
 
-const m4CacheStore = createM4CacheStore(M4_BUCKETS)
+function withoutOffPlotNeighbours<T>(buckets: T[]): T[] {
+  return buckets.slice(1, -1)
+}
+
+let m4Cache: M4Cache[] = []
+let m4CacheMetrics: TimeSeriesGraphProps['metrics'] | null = null
+let m4CacheTimeRange: TimeRange | null = null
+function ensureM4Cache(): void {
+  const dataTimeRange = props.data_time_range ?? props.view_time_range
+  if (m4CacheMetrics === props.metrics && m4CacheTimeRange === dataTimeRange) {
+    return
+  }
+  m4CacheMetrics = props.metrics
+  m4CacheTimeRange = dataTimeRange
+  m4Cache = props.metrics.map((metric) => m4(metric.data_points, dataTimeRange, M4_BUCKETS))
+}
 
 // HiDPI: bitmap sized in physical pixels (cssSize * dpr), CSS size in logical pixels, the
 // ctx transform keeps draw code in CSS-pixel coordinates regardless of DPR.
@@ -256,17 +270,31 @@ function draw(): void {
     return
   }
 
-  const composed = composeSeries({
-    metrics: props.metrics,
-    cache: m4CacheStore.ensure(props.metrics, props.data_time_range ?? props.view_time_range),
-    visibleTimeRange: [props.view_time_range.start, props.view_time_range.end],
-    columnCount: Math.max(1, Math.floor(plotWidth.value)),
-    consolidation: consolidationFn.value
+  ensureM4Cache()
+
+  const columnCount = Math.max(1, Math.floor(plotWidth.value))
+  const visibleTimeRange: [number, number] = [
+    props.view_time_range.start,
+    props.view_time_range.end
+  ]
+  const bucketsOnPlot = m4Cache.map((cache) => [
+    ...downsampleToColumns(cache, visibleTimeRange, columnCount),
+    edgeSample(cache, visibleTimeRange[1])
+  ])
+
+  const bucketsWithOffPlotNeighbours = m4Cache.map((cache, i) => {
+    const [before, after] = edgeNeighbours(cache, visibleTimeRange)
+    return [before, ...bucketsOnPlot[i]!, after]
   })
-  const { paddedBuckets: inverted, stacks } = composed
+
+  // Inverse mirrors a metric below the baseline; stacking then resolves cumulative bands.
+  const inverted = bucketsWithOffPlotNeighbours.map((buckets, i) =>
+    props.metrics[i]!.render.inverse ? buckets.map((bucket) => invertBucket(bucket)) : buckets
+  )
+  const stacks = computeStackedSeries(props.metrics, inverted, consolidationFn.value)
 
   recordDrawnGeometry(
-    composed.bucketsOnPlot,
+    bucketsOnPlot,
     stacks.map((series) => ({ ...series, bands: withoutOffPlotNeighbours(series.bands) }))
   )
 
@@ -285,7 +313,19 @@ function draw(): void {
     measureLabel
   )
 
-  const [autoYMin, autoYMax] = composedValueDomain(props.metrics, composed)
+  // Line metrics contribute their drawn extremes; stacked metrics their cumulative band
+  // extents. Forced symmetric around zero when any metric is inverse.
+  const domainBuckets = props.metrics.map((_, i) =>
+    stacks[i]!.kind === 'area-stacked'
+      ? withoutOffPlotNeighbours(stacks[i]!.bands).map((band) => ({
+          gap: band.gap,
+          minValue: Math.min(band.lower, band.upper),
+          maxValue: Math.max(band.lower, band.upper)
+        }))
+      : withoutOffPlotNeighbours(inverted[i]!)
+  )
+  const anyInverse = props.metrics.some((metric) => metric.render.inverse)
+  const [autoYMin, autoYMax] = computeYDomain(domainBuckets, { symmetric: anyInverse })
   const [rawYMin, rawYMax] = props.valueRange
     ? [props.valueRange.min, props.valueRange.max]
     : [autoYMin, autoYMax]

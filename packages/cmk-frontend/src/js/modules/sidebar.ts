@@ -16,18 +16,6 @@ import {
   update_contents
 } from './utils'
 
-// The main iframe is gone, so the sidebar no longer has a sibling frame to
-// observe. ``initialize_sidebar`` used to spawn a 1 Hz interval that polled
-// the content iframe's URL and pushed it onto ``window.parent.history`` via
-// ``replaceState`` to keep the address bar in sync. With each content page
-// now rendering its own URL directly there is nothing to poll, and the
-// helpers (``update_content_location*``, ``is_content_frame_accessible``,
-// ``register_edge_listeners``, ``on_mouse_leave``) have no remaining
-// callers. The Python side still emits ``cmk.sidebar.initialize_sidebar()``
-// after rendering the sidebar; we keep this as a no-op until that callsite
-// is removed.
-export function initialize_sidebar() {}
-
 export function register_event_handlers() {
   window.addEventListener(
     'mousemove',

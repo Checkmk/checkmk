@@ -62,6 +62,7 @@ register()
 $(() => {
   utils.update_header_timer()
   forms.enable_dynamic_form_elements()
+  visibility_detection.initialize()
   // TODO: only register when needed?
   element_dragging.register_event_handlers()
 

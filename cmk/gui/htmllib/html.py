@@ -476,7 +476,6 @@ class HTMLGenerator(HTMLWriter):
         if self.have_help:
             enable_page_menu_entry(self, "inline_help")
         self.write_final_javascript()
-        self.javascript("cmk.visibility_detection.initialize();")
         if self._main_navigation_open:
             self.close_div()  # #content_area
             self._main_navigation_open = False

@@ -594,9 +594,12 @@ class SidebarRenderer:
             if user.id is not None
             else None
         )
+        sidebar_classes = [] if sidebar_position is None else [sidebar_position]
+        if user_config.folded:
+            sidebar_classes.append("folded")
         html.open_div(
             id_="check_mk_sidebar",
-            class_=[] if sidebar_position is None else [sidebar_position],
+            class_=sidebar_classes,
         )
 
         self._show_snapin_bar(
@@ -607,9 +610,6 @@ class SidebarRenderer:
         )
 
         html.close_div()
-
-        if user_config.folded:
-            html.final_javascript("cmk.sidebar.fold_sidebar();")
 
     def _migrate_to_vue_sidbar_snapin_config(
         self, snapin: UserSidebarSnapin
@@ -648,8 +648,6 @@ class SidebarRenderer:
                 )
             ),
         )
-
-        html.javascript("cmk.sidebar.initialize_sidebar();\n")
 
     def _show_snapins(
         self, config: Config, user_config: UserSidebarConfig

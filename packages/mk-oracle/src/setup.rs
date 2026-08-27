@@ -61,6 +61,14 @@ pub struct Env {
 
     /// generate plugins and stop
     generate_plugins: Option<PathBuf>,
+
+    /// `ORACLE_HOME` as inherited from the environment, `None` when unset or
+    /// empty. Read once at start: the parent process exports its own value
+    /// before spawning, so a later read would see that instead.
+    oracle_home: Option<PathBuf>,
+
+    /// What `LOCAL_ORACLE_HOME_TARGETS` states, `None` when it says nothing.
+    local_oracle_home_targets: Option<bool>,
 }
 
 impl Env {
@@ -81,6 +89,40 @@ impl Env {
             runtime_ready: args.runtime_ready,
             filter: args.filter.unwrap_or_default(),
             generate_plugins: args.generate_plugins.clone(),
+            oracle_home: Env::inherited_oracle_home(),
+            local_oracle_home_targets: Env::inherited_local_oracle_home_targets(),
+        }
+    }
+
+    fn inherited_oracle_home() -> Option<PathBuf> {
+        std::env::var(ORACLE_HOME_ENV_VAR)
+            .ok()
+            .filter(|home| !home.is_empty())
+            .map(PathBuf::from)
+    }
+
+    fn inherited_local_oracle_home_targets() -> Option<bool> {
+        parse_local_oracle_home_targets(
+            std::env::var(LOCAL_ORACLE_HOME_TARGETS_ENV_VAR)
+                .ok()
+                .as_deref(),
+        )
+    }
+
+    /// An `Env` that only carries `ORACLE_HOME` and `LOCAL_ORACLE_HOME_TARGETS`, for
+    /// tests that need their states without mutating the process environment,
+    /// which is global and would race between parallel tests.
+    #[cfg(test)]
+    pub fn with_oracle_home(
+        oracle_home: Option<&str>,
+        local_oracle_home_targets: Option<bool>,
+    ) -> Self {
+        Self {
+            oracle_home: oracle_home
+                .filter(|home| !home.is_empty())
+                .map(PathBuf::from),
+            local_oracle_home_targets,
+            ..Default::default()
         }
     }
 
@@ -120,6 +162,25 @@ impl Env {
         self.filter
     }
 
+    pub fn oracle_home(&self) -> Option<&Path> {
+        self.oracle_home.as_deref()
+    }
+
+    /// Whether this run serves only the targets of its `ORACLE_HOME`, as
+    /// `LOCAL_ORACLE_HOME_TARGETS` states it. `None` when it states nothing.
+    pub fn local_oracle_home_targets(&self) -> Option<bool> {
+        self.local_oracle_home_targets
+    }
+
+    /// The `TNS_ADMIN` directory that comes with the inherited `ORACLE_HOME`:
+    /// `<ORACLE_HOME>/network/admin`, where a full Oracle installation keeps its
+    /// `tnsnames.ora`, `sqlnet.ora` and wallet.
+    pub fn local_tns_admin(&self) -> Option<PathBuf> {
+        self.oracle_home
+            .as_ref()
+            .map(|home| home.join("network").join("admin"))
+    }
+
     fn build_dir(dir: &Option<PathBuf>, fallback: &Option<&Path>) -> Option<PathBuf> {
         if dir.is_some() {
             dir.as_deref()
@@ -138,6 +199,21 @@ impl Env {
         }
 
         path.is_dir().then(|| path.to_path_buf())
+    }
+}
+
+/// `LOCAL_ORACLE_HOME_TARGETS` as a decision: `yes` and `no` state one, anything else
+/// states nothing and is reported, so a typo does not silently pick a side.
+/// Matched ignoring case and surrounding blanks.
+fn parse_local_oracle_home_targets(value: Option<&str>) -> Option<bool> {
+    let value = value?;
+    match value.trim().to_lowercase().as_str() {
+        "yes" => Some(true),
+        "no" => Some(false),
+        other => {
+            log::warn!("{LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}: '{other}' is neither 'yes' nor 'no'");
+            None
+        }
     }
 }
 
@@ -566,6 +642,27 @@ const ENV_VAR_SEP: &str = ";";
 const ENV_VAR_SEP: &str = ":";
 
 pub const ORACLE_HOME_ENV_VAR: &str = "ORACLE_HOME";
+
+/// The directory the Oracle client resolves names from, in preference to
+/// `ORACLE_HOME/network/admin`.
+pub const TNS_ADMIN_ENV_VAR: &str = "TNS_ADMIN";
+
+/// Which half of the configured targets this run takes: `yes` or `no`.
+///
+/// * `yes` - the targets of this run's `ORACLE_HOME`: the aliases of its
+///   `tnsnames.ora` and its own SIDs with wallet authentication. Requires
+///   `ORACLE_HOME`; without one the run has no target at all.
+/// * `no` - the targets needing no home: a SID no local instance owns, a SID
+///   needing no wallet, a descriptor, and an alias a global `TNS_ADMIN`
+///   resolves.
+/// * absent - nothing states how the targets are divided, so none is dropped.
+///   This is the behaviour today, since no code sets the variable yet.
+///
+/// The two values are complements: one `no` run plus one `yes` run per
+/// `ORACLE_HOME` cover every target exactly once. Setting only one of them
+/// drops the other's share, so whoever sets this has to start both runs.
+/// An alias no `tnsnames.ora` resolves is taken by neither.
+pub const LOCAL_ORACLE_HOME_TARGETS_ENV_VAR: &str = "LOCAL_ORACLE_HOME_TARGETS";
 
 /// The environment the monitoring process is spawned with: computed by
 /// detect_runtime_env, exported by apply_runtime_env and rendered for
@@ -999,6 +1096,20 @@ pub fn spawn_new_process(args: Vec<String>, old_path: std::path::PathBuf) -> i32
 mod tests {
     use super::*;
     use std::path::PathBuf;
+
+    #[test]
+    fn test_parse_local_oracle_home_targets() {
+        assert_eq!(parse_local_oracle_home_targets(None), None);
+        assert_eq!(parse_local_oracle_home_targets(Some("yes")), Some(true));
+        assert_eq!(parse_local_oracle_home_targets(Some("no")), Some(false));
+        // Case and blanks do not decide.
+        assert_eq!(parse_local_oracle_home_targets(Some(" YES ")), Some(true));
+        assert_eq!(parse_local_oracle_home_targets(Some("No")), Some(false));
+        // Anything else states nothing rather than picking a side.
+        assert_eq!(parse_local_oracle_home_targets(Some("")), None);
+        assert_eq!(parse_local_oracle_home_targets(Some("true")), None);
+        assert_eq!(parse_local_oracle_home_targets(Some("1")), None);
+    }
 
     #[test]
     fn test_spec() {

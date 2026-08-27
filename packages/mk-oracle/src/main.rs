@@ -69,6 +69,7 @@ async fn main() {
         if environment.detect_sids() || environment.find_runtime() {
             run_utility_command(&config, &environment)
         } else if environment.runtime_ready() {
+            log::info!("ORACLE_HOME {:?}", environment.oracle_home());
             // the parent process has already prepared the environment
             execute(config, environment).await
         } else {

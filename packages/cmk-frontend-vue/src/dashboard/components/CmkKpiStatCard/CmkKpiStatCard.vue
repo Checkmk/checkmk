@@ -238,6 +238,46 @@ const hoveredTimeLabel = computed<string | undefined>(() => {
   }).format(sample.timestamp * 1000)
 })
 
+const realSampleCount = computed(
+  () => props.series.filter((sample) => sample.value !== null).length
+)
+const sparkFocusedIndex = computed(() => sparkLine.value?.focusedIndex)
+const scrubValueNow = computed<number | undefined>(() =>
+  realSampleCount.value > 0 ? (sparkFocusedIndex.value ?? realSampleCount.value - 1) : undefined
+)
+const scrubValueText = computed<string | undefined>(() => {
+  if (hoveredSample.value) {
+    return `${hoveredTimeLabel.value}: ${hoveredValueText.value}`
+  }
+  const sample = lastRealSample.value
+  return sample ? `${lastSampleTimeLabel.value}: ${props.formatValue(sample.value!)}` : undefined
+})
+
+const KEYDOWN_HANDLERS: Record<string, (spark: InstanceType<typeof KpiSparkLine>) => void> = {
+  ArrowLeft: (spark) => spark.stepBy(-1),
+  ArrowRight: (spark) => spark.stepBy(1),
+  PageUp: (spark) => spark.stepBy(-10),
+  PageDown: (spark) => spark.stepBy(10),
+  Home: (spark) => spark.jumpToStart(),
+  End: (spark) => spark.jumpToEnd(),
+  ArrowUp: (spark) => spark.jumpToPeak(),
+  ArrowDown: (spark) => spark.jumpToLow(),
+  Escape: (spark) => spark.clear()
+}
+
+function onCardKeydown(event: KeyboardEvent): void {
+  if (event.target !== event.currentTarget) {
+    return
+  }
+  const spark = sparkLine.value
+  const handler = spark && KEYDOWN_HANDLERS[event.key]
+  if (!handler) {
+    return
+  }
+  event.preventDefault()
+  handler(spark)
+}
+
 // Scrubbing spans the whole card, so the card (not KpiSparkLine's SVG) owns pointer
 // capture; KpiSparkLine still does the coordinate math.
 function onCardPointerMove(event: PointerEvent): void {
@@ -297,6 +337,12 @@ onMounted(measureScrim)
       '--scrim-bottom-edge': `${scrimBottomEdge}px`
     }"
     :tabindex="hasSparkLine ? 0 : undefined"
+    :role="hasSparkLine ? 'slider' : undefined"
+    :aria-valuemin="hasSparkLine ? 0 : undefined"
+    :aria-valuemax="hasSparkLine ? realSampleCount - 1 : undefined"
+    :aria-valuenow="scrubValueNow"
+    :aria-valuetext="scrubValueText"
+    @keydown="onCardKeydown"
     @pointermove="hasSparkLine ? onCardPointerMove($event) : undefined"
     @pointerleave="hasSparkLine ? onCardPointerLeave() : undefined"
   >

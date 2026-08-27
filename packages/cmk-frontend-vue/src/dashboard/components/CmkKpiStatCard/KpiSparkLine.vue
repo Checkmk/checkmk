@@ -234,7 +234,9 @@ defineExpose({
   jumpToLow: focus.jumpToLow,
   clear: focus.clearImmediately,
   clearWithDelay: focus.clearWithDelay,
-  isHoverable: computed(() => scales.value !== null)
+  isHoverable: computed(() => scales.value !== null),
+  focusedIndex: focus.focusedIndex,
+  sampleCount: computed(() => realSamples.value.length)
 })
 </script>
 

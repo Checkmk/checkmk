@@ -418,6 +418,16 @@ function mockSvgWidth(container: Element): void {
   vi.spyOn(svg, 'getBoundingClientRect').mockReturnValue({ left: 0, width: 100 } as DOMRect)
 }
 
+test('is keyboard-focusable only when there is a curve to scrub', () => {
+  const { container: withSparkLine } = renderCard()
+  const { container: withoutSparkLine } = renderCard({ series: [] })
+
+  expect(cardOf(withSparkLine)).toHaveAttribute('tabindex', '0')
+  expect(cardOf(withoutSparkLine)).not.toHaveAttribute('tabindex')
+  expect(cardOf(withSparkLine)).toHaveAttribute('role', 'slider')
+  expect(cardOf(withoutSparkLine)).not.toHaveAttribute('role')
+})
+
 test('hovering anywhere on the card swaps the value and shows the hovered time', async () => {
   const { container } = renderCard()
   mockSvgWidth(container)
@@ -454,4 +464,82 @@ test('leaving the card restores the latest value and the delta', async () => {
   expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('801.84')
   expect(hoverNoteOf(container)).toBeNull()
   expect(deltaOf(container)).not.toBeNull()
+})
+
+test('arrow keys step the scrubbed sample one at a time', async () => {
+  const { container } = renderCard()
+
+  await fireEvent.keyDown(cardOf(container), { key: 'ArrowLeft' })
+
+  // Series is [10, 20, 15, 30]; ArrowLeft from nothing focused starts at the last
+  // sample (30) and steps back to 15.
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('15.0')
+})
+
+test('Home and End jump to the oldest and newest real sample', async () => {
+  const { container } = renderCard()
+
+  await fireEvent.keyDown(cardOf(container), { key: 'Home' })
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('10.0')
+
+  await fireEvent.keyDown(cardOf(container), { key: 'End' })
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('30.0')
+})
+
+test('Up and Down arrows jump to the window peak and low', async () => {
+  const { container } = renderCard()
+
+  await fireEvent.keyDown(cardOf(container), { key: 'ArrowUp' })
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('30.0')
+
+  await fireEvent.keyDown(cardOf(container), { key: 'ArrowDown' })
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('10.0')
+})
+
+test('Escape clears the scrub back to the latest reading', async () => {
+  const { container } = renderCard()
+
+  await fireEvent.keyDown(cardOf(container), { key: 'Home' })
+  await fireEvent.keyDown(cardOf(container), { key: 'Escape' })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('801.84')
+  expect(hoverNoteOf(container)).toBeNull()
+})
+
+test('a key with no scrubbing meaning is left alone', async () => {
+  const { container } = renderCard()
+
+  await fireEvent.keyDown(cardOf(container), { key: 'Tab' })
+
+  expect(hoverNoteOf(container)).toBeNull()
+})
+
+test('ignores a keydown that bubbled up from a focusable child, not the card itself', async () => {
+  const { container } = renderCard({ href: '#' })
+  const link = container.querySelector('.db-cmk-kpi-stat-card__value-link')!
+
+  await fireEvent.keyDown(link, { key: 'Home' })
+
+  expect(container.querySelector('.db-cmk-kpi-stat-card__value')).toHaveTextContent('801.84')
+})
+
+test('aria-valuemin/max span the real samples; aria-valuenow defaults to the latest one', () => {
+  const { container } = renderCard()
+  const card = cardOf(container)
+
+  // Series is [10, 20, 15, 30]: 4 real samples, so valuemax is 3 (index of the last).
+  expect(card).toHaveAttribute('aria-valuemin', '0')
+  expect(card).toHaveAttribute('aria-valuemax', '3')
+  expect(card).toHaveAttribute('aria-valuenow', '3')
+  expect(card.getAttribute('aria-valuetext')).toContain('30.0')
+})
+
+test('aria-valuenow and aria-valuetext follow the focused sample', async () => {
+  const { container } = renderCard()
+  const card = cardOf(container)
+
+  await fireEvent.keyDown(card, { key: 'Home' })
+
+  expect(card).toHaveAttribute('aria-valuenow', '0')
+  expect(card.getAttribute('aria-valuetext')).toContain('10.0')
 })

@@ -163,6 +163,9 @@ class CertificateWithPrivateKey(NamedTuple):
                 raise PEMDecodingError("Could not find private key")
             key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(key_match.group(0)), None)
 
+        if cert.public_key != key.public_key:
+            raise PEMDecodingError("Certificate and private key do not belong together")
+
         return cls(
             certificate=cert,
             private_key=key,

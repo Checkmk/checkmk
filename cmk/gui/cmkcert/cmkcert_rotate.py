@@ -12,20 +12,33 @@ This module is separated from cmk.gui.cmkcert to allow conditional imports of GU
 """
 
 import json
+import logging
 import os
 import shutil
+import subprocess
 import sys
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 
+from cryptography import x509
+from cryptography.hazmat.primitives.asymmetric import ec, rsa
+from cryptography.x509.oid import ExtendedKeyUsageOID
 from dateutil.relativedelta import relativedelta
 
 import cmk.gui.site_config
 from cmk.ccc.site import omd_site, SiteId
-from cmk.crypto.certificate import Certificate, CertificatePEM
+from cmk.crypto.certificate import (
+    Certificate,
+    CertificatePEM,
+    CertificateWithPrivateKey,
+    InvalidExpiryError,
+)
+from cmk.crypto.keys import PublicKey
+from cmk.crypto.pem import PEMDecodingError
 from cmk.gui.config import load_config
+from cmk.gui.log import logger
 from cmk.gui.site_config import all_activation_sites
 from cmk.gui.wato._check_mk_configuration import ConfigVariableTrustedCertificateAuthorities
 from cmk.gui.watolib.activate_changes import ActivateChanges
@@ -46,8 +59,10 @@ from cmk.gui.watolib.pending_changes import (
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.certs import (
+    agent_root_ca_path,
     cert_dir,
     CertManagementEvent,
+    RootCA,
     SiteCA,
 )
 from cmk.utils.security_event import log_security_event
@@ -364,3 +379,221 @@ def rotate_site_certificate(
                     f"automation response for {site_id} was not 'success', instead "
                     f"it was received: {automation_response}"
                 )
+
+
+# Minimum key sizes accepted by OpenSSL security level 2, which the distributions we support
+# configure as their default.
+_MINIMUM_RSA_KEY_SIZE = 2048
+_MINIMUM_EC_KEY_SIZE = 256
+
+
+def _key_is_strong_enough(public_key: PublicKey) -> bool:
+    key = public_key.key
+    if isinstance(key, rsa.RSAPublicKey):
+        return key.key_size >= _MINIMUM_RSA_KEY_SIZE
+    if isinstance(key, ec.EllipticCurvePublicKey):
+        return key.curve.key_size >= _MINIMUM_EC_KEY_SIZE
+    return True  # Ed25519 and Ed448 keys have a fixed and sufficient size
+
+
+def _allows_agent_tls_connections(certificate: Certificate) -> bool:
+    """Check that an extended key usage, if present, allows both agent certificate roles."""
+    try:
+        usages = set(certificate.get_extension_for_class(x509.ExtendedKeyUsage).value)
+    except x509.ExtensionNotFound:
+        return True
+
+    # Note that OpenSSL does not accept 'anyExtendedKeyUsage' here, both usages have to be listed.
+    return {ExtendedKeyUsageOID.SERVER_AUTH, ExtendedKeyUsageOID.CLIENT_AUTH} <= usages
+
+
+def _has_subject_key_identifier(certificate: Certificate) -> bool:
+    try:
+        certificate.get_extension_for_class(x509.SubjectKeyIdentifier)
+    except x509.ExtensionNotFound:
+        return False
+    return True
+
+
+def _agent_ca_requirement_violation(certificate: Certificate) -> str | None:
+    """Describe why a certificate cannot serve as the agent signing CA, None if it can."""
+    if not certificate.may_sign_certificates():
+        return "it may not sign other certificates (CA flag or keyCertSign bit missing)"
+
+    # The rotated CAs share their subject name, so their key identifiers are what tells the
+    # certificates in the agents' trust store apart.
+    if not _has_subject_key_identifier(certificate):
+        return "it has no subject key identifier, which conforming CA certificates must have"
+
+    if not certificate.has_authority_key_identifier():
+        return "it has no authority key identifier, which conforming CA certificates must have"
+
+    try:
+        certificate.verify_expiry()
+    except InvalidExpiryError as e:
+        return f"it is not valid at the moment: {e}"
+
+    if not _key_is_strong_enough(certificate.public_key):
+        return (
+            f"its {certificate.public_key.show_type()} key is too weak, at least "
+            f"RSA {_MINIMUM_RSA_KEY_SIZE} bits or an equivalent elliptic curve key is required"
+        )
+
+    if not _allows_agent_tls_connections(certificate):
+        return (
+            "its extended key usage does not allow both TLS server and TLS client "
+            "authentication, which the certificates it issues need"
+        )
+
+    return None
+
+
+def _load_provided_agent_ca(ca_pem_file: Path) -> RootCA:
+    """Load and validate a user provided CA from its PEM file."""
+    try:
+        ca = CertificateWithPrivateKey.load_combined_file_content(
+            ca_pem_file.read_text(), passphrase=None
+        )
+    except (PEMDecodingError, ValueError) as e:
+        raise ValueError(
+            f"Aborting, could not load a CA from {ca_pem_file}: {e}. The file has to contain "
+            "both the CA certificate and its unencrypted private key, just like the agent CA it "
+            "replaces."
+        )
+
+    if (violation := _agent_ca_requirement_violation(ca.certificate)) is not None:
+        raise ValueError(f"Aborting, the CA in {ca_pem_file} cannot be used because {violation}.")
+
+    return RootCA(certificate=ca.certificate, private_key=ca.private_key)
+
+
+def _verify_common_name(
+    provided_certificate: Certificate, current_certificate: Certificate, force: bool
+) -> None:
+    """Verify that a provided CA can authorize the already registered agents.
+
+    The agent receiver authorizes agents by the common name of their certificate's issuer, so a
+    different common name would lock out all agents until they are registered again. `force`
+    performs the rotation regardless, accepting that lockout.
+    """
+    if (provided_cn := provided_certificate.common_name) == (
+        expected_cn := current_certificate.common_name
+    ):
+        return
+
+    if not force:
+        raise ValueError(
+            f'Aborting, the provided CA has the common name "{provided_cn}", but the agent '
+            f"receiver only accepts agents whose certificate was issued by a CA with the common "
+            f"name '{expected_cn}'. Rotating to it would lock out all registered agents.\n"
+            "Use --force to rotate to it anyway and register all agents again afterwards."
+        )
+
+    sys.stdout.write(
+        f'cmk-cert: WARNING: The provided CA has the common name "{provided_cn}" instead of '
+        f"'{expected_cn}'. The agent receiver will reject all currently registered agents, "
+        "they have to be registered again.\n"
+    )
+
+
+def _reload_agent_receiver() -> None:
+    """Reload the agent receiver, which rebuilds the trusted certificate store on startup."""
+    completed_process = subprocess.run(
+        ["omd", "reload", "agent-receiver"],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+        shell=False,
+        encoding="utf-8",
+        check=False,
+    )
+    logger.log(
+        logging.DEBUG if completed_process.returncode == 0 else logging.WARNING,
+        "'omd reload agent-receiver' finished. Exit code: %(returncode)s, Output: %(output)s",
+        {"returncode": completed_process.returncode, "output": completed_process.stdout},
+    )
+
+    if completed_process.returncode:
+        raise RuntimeError(f"Failed to reload the agent receiver:\n{completed_process.stdout}")
+
+
+def rotate_agent_ca_certificate(
+    omd_root: Path,
+    site_id: SiteId,
+    expiry: int | None = None,
+    key_size: int = 4096,
+    ca_pem: Path | None = None,
+    force: bool = False,
+) -> None:
+    """Rotate the agent signing CA certificate.
+
+    The current CA is renamed and stays trusted, so that the certificates it issued keep working.
+    It is replaced by a newly generated CA or by the one provided in `ca_pem`.
+    """
+    expiry_ = _days_until_10_years_from_today() if expiry is None else expiry
+
+    ca_path = agent_root_ca_path(site_root_dir=omd_root)
+    retired_ca_path = ca_path.with_name(f"{date.today().isoformat()}_ca_old.pem")
+    if retired_ca_path.exists():
+        free_path = retired_ca_path
+        count = 1
+        while free_path.exists():
+            count += 1
+            free_path = retired_ca_path.with_name(f"{retired_ca_path.stem}_{count}.pem")
+        raise ValueError(
+            f"Aborting, the agent CA has already been rotated today: {retired_ca_path} exists and "
+            "would be overwritten, which would lock out the agents still using it.\n"
+            "To rotate again today, move it aside first. Keep it in the same directory with a "
+            "'.pem' suffix, so that it stays trusted:\n"
+            f"  mv {retired_ca_path} {free_path}\n"
+        )
+
+    # Validate a provided CA before touching the current one
+    provided_ca = None if ca_pem is None else _load_provided_agent_ca(ca_pem)
+    if provided_ca is not None:
+        _verify_common_name(
+            provided_ca.certificate,
+            Certificate.load_pem(CertificatePEM(ca_path.read_bytes())),
+            force,
+        )
+
+    # Generate first, swap later, so a failure leaves the current CA in place. The temporary
+    # name must not end in '.pem', or the agent receiver would already trust it.
+    new_ca_path = ca_path.with_name(f"{ca_path.name}.new")
+    if provided_ca is None:
+        new_ca = RootCA.create(
+            path=new_ca_path,
+            name=f"Site '{site_id}' agent signing CA",
+            validity=relativedelta(days=expiry_),
+            key_size=key_size,
+        )
+    else:
+        new_ca = provided_ca
+        new_ca_path.write_bytes(
+            new_ca.private_key.dump_pem(password=None).bytes + new_ca.certificate.dump_pem().bytes
+        )
+        new_ca_path.chmod(mode=0o660)
+
+    shutil.move(ca_path, retired_ca_path)
+    new_ca_path.replace(ca_path)
+
+    log_security_event(
+        CertManagementEvent(
+            event="certificate rotated",
+            component="agent certificate authority",
+            actor="cmk-cert",
+            cert=new_ca.certificate,
+        )
+    )
+
+    _reload_agent_receiver()
+
+    sys.stdout.write(
+        "cmk-cert: Agent signing CA certificate rotation successfully finished.\n"
+        f"The previous CA is kept at {retired_ca_path} and stays trusted, so that agents "
+        "registered with it keep working until they have renewed their certificate.\n"
+        "Once no agent uses a certificate issued by the previous CA anymore, remove it with:\n"
+        f"  rm {retired_ca_path}\n"
+        "  omd reload agent-receiver\n"
+    )

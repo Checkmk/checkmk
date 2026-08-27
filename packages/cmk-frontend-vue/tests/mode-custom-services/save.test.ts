@@ -75,7 +75,7 @@ describe('createCustomService', () => {
   test('sends the payload the endpoint expects', async () => {
     await createCustomService(completeModel())
     expect(lastBody).toEqual({
-      configuration_name: 'http_duration',
+      configuration_name: 'http_duration_on_web01',
       host_assignment: { mode: 'explicit_host', host_name: 'web01' },
       configuration: {
         metric_name: 'otel.http.duration',

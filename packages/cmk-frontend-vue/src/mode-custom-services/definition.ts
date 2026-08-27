@@ -74,21 +74,29 @@ function apiConsolidationFor(consolidation: WireConsolidationFunction): ApiConso
   }
 }
 
-export function configurationNameFor(serviceName: string): string {
-  return serviceName
+export function slugForId(value: string): string {
+  return value
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '')
+}
+
+// The id has to be unique per site, and the backend rejects a duplicate. Creating the same service
+// on a second host is ordinary, so the host is part of the id. A name without ASCII alphanumerics
+// slugs to nothing, hence the fall back to the metric name.
+export function configurationNameFor(
+  model: Pick<ServiceModel, 'serviceName'> & { metricName: string; hostName: string }
+): string {
+  const name = slugForId(model.serviceName) || slugForId(model.metricName) || 'custom_service'
+  const host = slugForId(model.hostName)
+  return host === '' ? name : `${name}_on_${host}`
 }
 
 export function buildCustomServiceDefinition(
   model: ServiceModel & { metricName: string; hostName: string }
 ): CustomServiceDefinition {
   return {
-    configuration_name:
-      configurationNameFor(model.serviceName) ||
-      configurationNameFor(model.metricName) ||
-      'custom_service',
+    configuration_name: configurationNameFor(model),
     host_assignment: { mode: 'explicit_host', host_name: model.hostName },
     configuration: {
       metric_name: model.metricName,

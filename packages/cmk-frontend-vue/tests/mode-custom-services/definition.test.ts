@@ -9,7 +9,8 @@ import { describe, expect, test } from 'vitest'
 import {
   aggregationProblem,
   buildCustomServiceDefinition,
-  configurationNameFor
+  configurationNameFor,
+  slugForId
 } from '@/mode-custom-services/definition'
 import { type ServiceModel, emptyService } from '@/mode-custom-services/types'
 
@@ -209,22 +210,28 @@ describe('buildCustomServiceDefinition', () => {
     })
   })
 
-  test('derives the identifier from the service name', () => {
-    expect(buildCustomServiceDefinition(model()).configuration_name).toBe('http_duration')
+  test('derives the identifier from the service name and the host', () => {
+    expect(buildCustomServiceDefinition(model()).configuration_name).toBe('http_duration_on_web01')
   })
 
   test('falls back to the metric when the service name yields no identifier', () => {
     const definition = buildCustomServiceDefinition(
       model({ serviceName: '\u5ef6\u8fdf\u6642\u9593' })
     )
-    expect(definition.configuration_name).toBe('otel_http_duration')
+    expect(definition.configuration_name).toBe('otel_http_duration_on_web01')
   })
 
   test('falls back to a constant when neither name yields an identifier', () => {
     const definition = buildCustomServiceDefinition(
       model({ serviceName: '\u5ef6\u8fdf', metricName: '\u5ef6\u8fdf' })
     )
-    expect(definition.configuration_name).toBe('custom_service')
+    expect(definition.configuration_name).toBe('custom_service_on_web01')
+  })
+
+  test('gives the same service on two hosts distinct identifiers', () => {
+    expect(buildCustomServiceDefinition(model({ hostName: 'web01' })).configuration_name).not.toBe(
+      buildCustomServiceDefinition(model({ hostName: 'web02' })).configuration_name
+    )
   })
 })
 
@@ -285,7 +292,7 @@ describe('aggregationProblem', () => {
   })
 })
 
-describe('configurationNameFor', () => {
+describe('slugForId', () => {
   test.each([
     ['HTTP duration', 'http_duration'],
     ['otel.http.server.duration', 'otel_http_server_duration'],
@@ -294,6 +301,18 @@ describe('configurationNameFor', () => {
     ['\u5ef6\u8fdf\u6642\u9593', ''],
     ['!!!', '']
   ])('turns %o into %o', (serviceName, expected) => {
-    expect(configurationNameFor(serviceName)).toBe(expected)
+    expect(slugForId(serviceName)).toBe(expected)
+  })
+})
+
+describe('configurationNameFor', () => {
+  test('scopes the identifier to the host', () => {
+    expect(
+      configurationNameFor({
+        serviceName: 'HTTP duration',
+        metricName: 'otel.http.duration',
+        hostName: 'web-01.example.com'
+      })
+    ).toBe('http_duration_on_web_01_example_com')
   })
 })

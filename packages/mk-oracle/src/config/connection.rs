@@ -159,12 +159,14 @@ pub fn add_tns_admin_to_env(conn: &Connection) {
             );
         }
     } else {
-        log::info!(
-            "No TNS_ADMIN specified, using default path: {}",
-            config.display()
-        );
-        unsafe {
-            std::env::set_var("TNS_ADMIN", config);
+        if std::env::var("TNS_ADMIN").is_err() {
+            log::info!(
+                "No TNS_ADMIN specified, using default path: {}",
+                config.display()
+            );
+            unsafe {
+                std::env::set_var("TNS_ADMIN", config);
+            }
         }
     }
 }

@@ -4,17 +4,42 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { GlobalSettingsApp } from 'cmk-shared-typing/typescript/global_settings'
+import type {
+  GlobalSettingsApp,
+  GlobalSettingsVariable
+} from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
-import { computed, ref } from 'vue'
+import { computed, ref, toRaw } from 'vue'
 
 import ExpandCollapseToggle from './components/ExpandCollapseToggle.vue'
+import GlobalSettingsEditSlideIn from './components/GlobalSettingsEditSlideIn.vue'
 import GlobalSettingsTopic from './components/GlobalSettingsTopic.vue'
 
 const props = defineProps<GlobalSettingsApp>()
 
 const allTopicIds = computed(() => props.topics.map((topic) => topic.headline))
 const openedItems = ref<string[]>([])
+
+const editableTopics = ref(structuredClone(toRaw(props.topics)))
+const editedVariable = ref<GlobalSettingsVariable | null>(null)
+
+function saveVariable(value: unknown): void {
+  if (editedVariable.value === null) {
+    return
+  }
+  editedVariable.value.value = value
+  editedVariable.value.modified = true
+  editedVariable.value = null
+}
+
+function resetVariable(): void {
+  if (editedVariable.value === null) {
+    return
+  }
+  editedVariable.value.value = structuredClone(toRaw(editedVariable.value.default_value))
+  editedVariable.value.modified = false
+  editedVariable.value = null
+}
 </script>
 
 <template>
@@ -29,12 +54,21 @@ const openedItems = ref<string[]>([])
     </div>
     <CmkAccordion v-model="openedItems" :min-open="0" :max-open="0">
       <GlobalSettingsTopic
-        v-for="topic in topics"
+        v-for="topic in editableTopics"
         :key="topic.headline"
         :topic="topic"
         :value="topic.headline"
+        @edit="editedVariable = $event"
       />
     </CmkAccordion>
+    <GlobalSettingsEditSlideIn
+      v-if="editedVariable !== null"
+      :variable="editedVariable"
+      :title="title"
+      @close="editedVariable = null"
+      @save="saveVariable"
+      @reset="resetVariable"
+    />
   </div>
 </template>
 

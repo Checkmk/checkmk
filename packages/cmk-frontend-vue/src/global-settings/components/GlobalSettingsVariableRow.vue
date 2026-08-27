@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { GlobalSettingsVariable } from 'cmk-shared-typing/typescript/global_settings'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 
 import FormReadonly from '@/form/FormReadonly.vue'
@@ -13,10 +13,12 @@ import FormReadonly from '@/form/FormReadonly.vue'
 const { _t } = usei18n()
 
 defineProps<{ variable: GlobalSettingsVariable }>()
+
+const emit = defineEmits<{ edit: [] }>()
 </script>
 
 <template>
-  <div class="global-settings-variable-row">
+  <div class="global-settings-variable-row" @click="emit('edit')">
     <div class="global-settings-variable-row__label">
       <span class="global-settings-variable-row__title" :title="variable.spec.title">
         {{ variable.spec.title }}
@@ -28,7 +30,13 @@ defineProps<{ variable: GlobalSettingsVariable }>()
         {{ _t('(modified)') }}
       </span>
     </div>
-    <CmkIcon name="edit" size="small" class="global-settings-variable-row__edit" />
+    <CmkIconButton
+      name="edit"
+      size="small"
+      :title="_t('Edit %{title}', { title: variable.spec.title })"
+      class="global-settings-variable-row__edit"
+      @click.stop="emit('edit')"
+    />
   </div>
 </template>
 
@@ -37,11 +45,13 @@ defineProps<{ variable: GlobalSettingsVariable }>()
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  width: 100%;
   padding: 8px 12px;
   border-radius: 2px;
+  cursor: pointer;
 
   &:hover,
-  &:focus-visible {
+  &:focus-within {
     background: var(--ux-theme-6);
   }
 }
@@ -84,11 +94,11 @@ defineProps<{ variable: GlobalSettingsVariable }>()
 .global-settings-variable-row__edit {
   flex-shrink: 0;
   align-self: center;
-  visibility: hidden;
+  opacity: 0;
 
   .global-settings-variable-row:hover &,
-  .global-settings-variable-row:focus-visible & {
-    visibility: visible;
+  .global-settings-variable-row:focus-within & {
+    opacity: 1;
   }
 }
 </style>

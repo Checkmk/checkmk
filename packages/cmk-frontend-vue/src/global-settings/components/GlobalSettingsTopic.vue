@@ -4,7 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { GlobalSettingsTopic } from 'cmk-shared-typing/typescript/global_settings'
+import type {
+  GlobalSettingsTopic,
+  GlobalSettingsVariable
+} from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
@@ -17,6 +20,8 @@ import GlobalSettingsVariableRow from './GlobalSettingsVariableRow.vue'
 const { _t, _tn } = usei18n()
 
 const props = defineProps<{ topic: GlobalSettingsTopic; value: string }>()
+
+const emit = defineEmits<{ edit: [variable: GlobalSettingsVariable] }>()
 
 const modifiedCount = computed(
   () => props.topic.variables.filter((variable) => variable.modified).length
@@ -70,6 +75,7 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
         v-for="variable in topic.variables"
         :key="variable.name"
         :variable="variable"
+        @edit="emit('edit', variable)"
       />
     </template>
   </CmkAccordionItem>

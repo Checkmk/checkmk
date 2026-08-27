@@ -487,7 +487,13 @@ export const globalSettingsPagePayload = {
             default: ['alternative_no_defaults', null],
             abandoned_file_age: 2592000.0
           },
-          modified: false
+          default_value: {
+            for_hosts: [],
+            default: ['alternative_no_defaults', null],
+            abandoned_file_age: 2592000.0
+          },
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'trusted_certificate_authorities',
@@ -549,7 +555,23 @@ export const globalSettingsPagePayload = {
             use_system_wide_cas: true,
             trusted_cas: []
           },
-          modified: false
+          default_value: {
+            use_system_wide_cas: true,
+            trusted_cas: []
+          },
+          modified: false,
+          site_overrides: [
+            {
+              site_id: 'muc',
+              title: 'Munich site',
+              url: 'wato.py?mode=edit_site_globals&site=muc'
+            },
+            {
+              site_id: 'ber',
+              title: 'Berlin site',
+              url: 'wato.py?mode=edit_site_globals&site=ber'
+            }
+          ]
         },
         {
           name: 'site_subject_alternative_names',
@@ -575,7 +597,9 @@ export const globalSettingsPagePayload = {
             type: 'list'
           },
           value: [],
-          modified: false
+          default_value: [],
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'agent_controller_certificates',
@@ -640,7 +664,11 @@ export const globalSettingsPagePayload = {
           value: {
             lifetime_in_months: '39fa9ec190eee7b6f4dff1100d6343e10918d044c75eac8f9e9a2596173f80c9'
           },
-          modified: false
+          default_value: {
+            lifetime_in_months: '39fa9ec190eee7b6f4dff1100d6343e10918d044c75eac8f9e9a2596173f80c9'
+          },
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'rest_api_etag_locking',
@@ -654,7 +682,9 @@ export const globalSettingsPagePayload = {
             type: 'boolean_choice'
           },
           value: true,
-          modified: false
+          default_value: true,
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'site_autostart',
@@ -668,7 +698,9 @@ export const globalSettingsPagePayload = {
             type: 'boolean_choice'
           },
           value: false,
-          modified: false
+          default_value: false,
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'site_core',
@@ -693,7 +725,9 @@ export const globalSettingsPagePayload = {
             ]
           },
           value: null,
-          modified: false
+          default_value: null,
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'site_livestatus_tcp',
@@ -841,7 +875,9 @@ export const globalSettingsPagePayload = {
             type: 'optional_choice'
           },
           value: null,
-          modified: false
+          default_value: null,
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'diskspace_cleanup',
@@ -997,7 +1033,11 @@ export const globalSettingsPagePayload = {
           value: {
             cleanup_abandoned_host_files: 2592000.0
           },
-          modified: false
+          default_value: {
+            cleanup_abandoned_host_files: 2592000.0
+          },
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'site_piggyback_hub',
@@ -1011,7 +1051,9 @@ export const globalSettingsPagePayload = {
             type: 'boolean_choice'
           },
           value: false,
-          modified: false
+          default_value: false,
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'site_mkeventd',
@@ -1073,7 +1115,14 @@ export const globalSettingsPagePayload = {
               title: 'Receive Syslog messages (UDP/514)'
             }
           ],
-          modified: false
+          default_value: [
+            {
+              name: 'SYSLOG',
+              title: 'Receive Syslog messages (UDP/514)'
+            }
+          ],
+          modified: false,
+          site_overrides: []
         }
       ]
     },
@@ -1127,7 +1176,11 @@ export const globalSettingsPagePayload = {
           value: {
             rule_render_mode: '28e1990ecf99f31c23d958ae87836e94b41bae5a19717b30ad1b77c3dcd9dca4'
           },
-          modified: false
+          default_value: {
+            rule_render_mode: '28e1990ecf99f31c23d958ae87836e94b41bae5a19717b30ad1b77c3dcd9dca4'
+          },
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'inject_js_profiling_code',
@@ -1141,7 +1194,9 @@ export const globalSettingsPagePayload = {
             type: 'boolean_choice'
           },
           value: false,
-          modified: false
+          default_value: false,
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'profiling_options',
@@ -1230,7 +1285,12 @@ export const globalSettingsPagePayload = {
             enabled: false,
             max_count: 100
           },
-          modified: false
+          default_value: {
+            enabled: false,
+            max_count: 100
+          },
+          modified: false,
+          site_overrides: []
         },
         {
           name: 'load_frontend_vue',
@@ -1255,7 +1315,9 @@ export const globalSettingsPagePayload = {
             ]
           },
           value: 'dacd0e5190a1f3403075296c7741647942c3d2efa8c0dc7fa5de66a3960ae2bc',
-          modified: false
+          default_value: 'dacd0e5190a1f3403075296c7741647942c3d2efa8c0dc7fa5de66a3960ae2bc',
+          modified: false,
+          site_overrides: []
         }
       ]
     }

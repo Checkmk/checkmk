@@ -76,12 +76,30 @@
         },
         "spec": { "$ref": "vue_formspec/components.json#/$defs/components" },
         "value": {},
+        "default_value": {},
         "modified": {
           "description": "Whether the variable is explicitly configured in the scope of this app.",
           "type": "boolean"
+        },
+        "site_overrides": {
+          "description": "Sites that configure their own explicit value for this variable.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/global_settings_site_override" }
         }
       },
-      "required": ["name", "spec", "value", "modified"]
+      "required": ["name", "spec", "value", "default_value", "modified", "site_overrides"]
+    },
+    "global_settings_site_override": {
+      "type": "object",
+      "properties": {
+        "site_id": { "type": "string" },
+        "title": { "type": "string" },
+        "url": {
+          "description": "Link to the site-specific global settings page.",
+          "type": "string"
+        }
+      },
+      "required": ["site_id", "title", "url"]
     }
   }
 }

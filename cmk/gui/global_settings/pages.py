@@ -14,6 +14,7 @@ from cmk.gui.config import Config
 from cmk.gui.form_specs.visitors import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
@@ -35,11 +36,13 @@ from cmk.shared_typing.global_settings import (
     GlobalSettingsApp,
     GlobalSettingsDomain,
     GlobalSettingsScopeGlobal,
+    GlobalSettingsSiteOverride,
     GlobalSettingsTopic,
     GlobalSettingsVariable,
     IconNames,
 )
 from cmk.utils import paths
+from cmk.web.utils.urls import makeuri_contextless
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -71,6 +74,22 @@ def _make_context(config: Config) -> GlobalSettingsContext:
     )
 
 
+def _site_overrides(varname: str, config: Config) -> list[GlobalSettingsSiteOverride]:
+    return [
+        GlobalSettingsSiteOverride(
+            site_id=site_id,
+            title=site_conf["alias"],
+            url=makeuri_contextless(
+                request,
+                [("mode", "edit_site_globals"), ("site", site_id)],
+                filename="wato.py",
+            ),
+        )
+        for site_id, site_conf in config.sites.items()
+        if varname in site_conf.get("globals", {})
+    ]
+
+
 def _variables(
     group: ConfigVariableGroup,
     config: Config,
@@ -87,6 +106,7 @@ def _variables(
         visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
         default_value = default_values[varname]
         spec, vue_value = visitor.to_vue(RawDiskData(current_settings.get(varname, default_value)))
+        _, vue_default_value = visitor.to_vue(RawDiskData(default_value))
         yield GlobalSettingsVariable(
             name=varname,
             # The cast is needed twice over: to_vue() statically returns the base
@@ -96,7 +116,9 @@ def _variables(
             # visitor output nominally incompatible with Components either way.
             spec=cast(Components, spec),
             value=vue_value,
+            default_value=vue_default_value,
             modified=varname in current_settings,
+            site_overrides=_site_overrides(varname, config),
         )
 
 

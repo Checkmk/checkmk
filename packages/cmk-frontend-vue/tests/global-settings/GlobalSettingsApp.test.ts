@@ -40,7 +40,9 @@ const data: GlobalSettingsAppData = {
             input_hint: null
           },
           value: 10,
-          modified: false
+          default_value: 10,
+          modified: false,
+          site_overrides: []
         }
       ]
     }

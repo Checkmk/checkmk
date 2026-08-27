@@ -6216,6 +6216,13 @@ msgstr ""
 "Todos los datos absolutos mostrados en esta página se refieren al tiempo "
 "transcurrido desde el arranque de este host."
 
+msgid ""
+"All access tokens issued to the selected clients are revoked immediately."
+msgstr ""
+
+msgid "All access tokens issued to this client are revoked immediately."
+msgstr ""
+
 msgid "All aggregations"
 msgstr "Todas las agregaciones"
 
@@ -7186,6 +7193,9 @@ msgstr "Un alias o descripción del periodo de tiempo"
 
 msgid "An alias or description of this group."
 msgstr "Un alias o descripción de este grupo."
+
+msgid "An application is requesting access to this Checkmk site."
+msgstr ""
 
 #, fuzzy
 msgid "An empty value is not allowed here"
@@ -8419,6 +8429,14 @@ msgstr "Configuración de la autorización"
 
 msgid "Authorizations per DB security group"
 msgstr "Autorizaciones por grupo de seguridad de la BD"
+
+#, fuzzy
+msgid "Authorize"
+msgstr "Autor"
+
+#, fuzzy
+msgid "Authorize access"
+msgstr "Sitios autorizados"
 
 #, fuzzy
 msgid "Authorized user"
@@ -14958,6 +14976,10 @@ msgstr ""
 msgid "Click for instant reload."
 msgstr "Haga clic para una recarga instantánea."
 
+#, fuzzy
+msgid "Click here if you are not redirected automatically."
+msgstr "El servicio de Windows no se reinicia automáticamente"
+
 #, python-format
 msgid "Click here to change the graphs consolidation function to \"%s\"."
 msgstr ""
@@ -20562,6 +20584,10 @@ msgid "Delete backup key #%d"
 msgstr "Borrar clave de seguridad #%d"
 
 #, fuzzy
+msgid "Delete clients"
+msgstr "Comentario del evento"
+
+#, fuzzy
 msgid "Delete comments"
 msgstr "Comentario del evento"
 
@@ -20667,6 +20693,10 @@ msgid "Delete processed messages"
 msgstr "Borrar los mensajes procesados"
 
 #, fuzzy
+msgid "Delete registered client"
+msgstr "Eliminar este elemento"
+
+#, fuzzy
 msgid "Delete relay"
 msgstr "Borrar regla"
 
@@ -20716,6 +20746,10 @@ msgstr "Borrar las MIBs seleccionadas"
 
 msgid "Delete selected aggregations"
 msgstr "Borrar agregaciones seleccionadas"
+
+#, fuzzy
+msgid "Delete selected clients"
+msgstr "Borrar las reglas seleccionadas"
 
 msgid "Delete selected hosts"
 msgstr "Borrar hosts seleccionados"
@@ -20790,6 +20824,10 @@ msgstr "Eliminar este trabajo de copia de seguridad"
 
 msgid "Delete this backup target"
 msgstr "Eliminar este objetivo de copia de seguridad"
+
+#, fuzzy
+msgid "Delete this client"
+msgstr "Eliminar este elemento"
 
 #, fuzzy
 msgid "Delete this configuration"
@@ -20879,6 +20917,10 @@ msgstr "Eliminar usuarios"
 
 msgid "Delete vanished hosts"
 msgstr "Borrar hosts desaparecidos"
+
+#, fuzzy, python-format
+msgid "Deleted %(n)d clients."
+msgstr "Comentario del evento"
 
 #, python-format
 msgid "Deleted %s %d"
@@ -20980,6 +21022,10 @@ msgstr "Paquete de reglas borradas %s"
 #, python-format
 msgid "Deleted site %s"
 msgstr "Sitio borrado %s"
+
+#, fuzzy
+msgid "Deleted the client."
+msgstr "Eliminar este elemento"
 
 #, python-format
 msgid "Deleted time period %s"
@@ -39149,6 +39195,9 @@ msgstr ""
 "Se recomienda habilitar TLS lo antes posible ejecutando el comando "
 "`register` de la utilidad `cmk-agent-ctl` en el host monitorizado."
 
+msgid "It is requesting these permissions:"
+msgstr ""
+
 msgid "It is still in use by"
 msgstr "Sigue siendo utilizado por"
 
@@ -50769,6 +50818,10 @@ msgstr "En las MIB seleccionadas"
 msgid "On selected aggregations"
 msgstr "En las agregaciones seleccionadas"
 
+#, fuzzy
+msgid "On selected clients"
+msgstr "En las reglas seleccionadas"
+
 msgid "On selected hosts"
 msgstr "En los hosts seleccionados"
 
@@ -57667,6 +57720,10 @@ msgstr "tiempo de ejecución"
 msgid "Read"
 msgstr "Leer"
 
+#, fuzzy
+msgid "Read & write"
+msgstr "Leer espera"
+
 msgid "Read / Write queue length"
 msgstr "Longitud de la cola de lectura/escritura"
 
@@ -57786,6 +57843,10 @@ msgid ""
 msgstr ""
 "Lea más sobre [regexes|comparación de expresiones regulares en Checkmk] en "
 "nuestra guía de usuario."
+
+#, fuzzy
+msgid "Read only"
+msgstr "Modo de sólo lectura"
 
 msgid "Read only mode"
 msgstr "Modo de sólo lectura"
@@ -58135,8 +58196,20 @@ msgstr "Descubrimiento del contador MSSQL"
 msgid "Redirect URI"
 msgstr "E/S directa"
 
+#, fuzzy
+msgid "Redirect URIs"
+msgstr "E/S directa"
+
 msgid "Redirect URL (has to be https)"
 msgstr "URL de redirección (tiene que ser https)"
+
+#, python-format
+msgid "Redirect target: %(redirect_uri)s"
+msgstr ""
+
+#, fuzzy
+msgid "Redirecting..."
+msgstr "Recarga..."
 
 #, fuzzy
 msgid "Redis Caches"
@@ -58405,6 +58478,10 @@ msgstr ""
 
 msgid "Registered"
 msgstr "Registrado"
+
+#, fuzzy
+msgid "Registered OAuth clients"
+msgstr "Agentes registrados"
 
 msgid "Registered agents"
 msgstr "Agentes registrados"
@@ -71462,6 +71539,11 @@ msgstr ""
 "Los títulos de agregación no son únicos. \"%s\" es creado por la agregación "
 "<b>%s</b> y <b>%s</b>"
 
+#, python-format
+msgid ""
+"The application \"%(client_id)s\" is requesting access to this Checkmk site."
+msgstr ""
+
 msgid "The aspect of the image is preserved."
 msgstr "El aspecto de la imagen se conserva."
 
@@ -75115,10 +75197,12 @@ msgstr ""
 msgid "The site certificate"
 msgstr "Verificar el certificado"
 
-msgid "The site id must consist only of letters, digit and the underscore."
+#, fuzzy
+msgid ""
+"The site id must begin with a letter or underscore, may contain only "
+"letters, digits and underscores and must be 1 to 16 characters long."
 msgstr ""
-"El identificador del sitio debe estar compuesto únicamente por letras, "
-"dígitos y el guión bajo."
+"El nombre de la vista sólo puede contener letras, dígitos y guiones bajos."
 
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr "El sitio está marcado como muerto. No se trata de replicar."
@@ -90207,6 +90291,9 @@ msgstr "Ver"
 msgid "View all maps"
 msgstr "Ver todos los mapas"
 
+msgid "View and delete OAuth clients that dynamically registered themselves."
+msgstr ""
+
 msgid "View and edit the details of this package"
 msgstr "Ver y editar los detalles de este paquete"
 
@@ -95353,6 +95440,10 @@ msgstr "Sus modificaciones afectan a algunos objetos"
 
 msgid "Your old password is wrong."
 msgstr "Tu antigua contraseña es incorrecta."
+
+#, fuzzy
+msgid "Your own user permissions still apply."
+msgstr "Usted no tiene los permisos para diseñar este gráfico."
 
 #, fuzzy
 msgid "Your password has expired"
@@ -102971,6 +103062,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "The site id must consist only of letters, digit and the underscore."
+#~ msgstr ""
+#~ "El identificador del sitio debe estar compuesto únicamente por letras, "
+#~ "dígitos y el guión bajo."
 
 #~ msgid "GB"
 #~ msgstr "GB"

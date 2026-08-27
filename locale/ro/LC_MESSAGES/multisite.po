@@ -6198,6 +6198,13 @@ msgstr ""
 "Toate datele absolute afișate pe această pagină se referă la intervalul de "
 "timp de când a fost pornită această gazdă."
 
+msgid ""
+"All access tokens issued to the selected clients are revoked immediately."
+msgstr ""
+
+msgid "All access tokens issued to this client are revoked immediately."
+msgstr ""
+
 msgid "All aggregations"
 msgstr "Toate agregările"
 
@@ -7157,6 +7164,9 @@ msgstr "Un pseudonim sau o descriere a perioadei de timp"
 
 msgid "An alias or description of this group."
 msgstr "Un pseudonim sau o descriere a acestui grup."
+
+msgid "An application is requesting access to this Checkmk site."
+msgstr ""
 
 #, fuzzy
 msgid "An empty value is not allowed here"
@@ -8375,6 +8385,14 @@ msgstr "Setări de autorizare"
 
 msgid "Authorizations per DB security group"
 msgstr "Autorizații per grup de securitate DB"
+
+#, fuzzy
+msgid "Authorize"
+msgstr "Autor"
+
+#, fuzzy
+msgid "Authorize access"
+msgstr "Site-uri autorizate"
 
 #, fuzzy
 msgid "Authorized user"
@@ -14927,6 +14945,10 @@ msgstr ""
 msgid "Click for instant reload."
 msgstr "Faceți clic pentru reîncărcare instantanee."
 
+#, fuzzy
+msgid "Click here if you are not redirected automatically."
+msgstr "Serviciul Windows nu repornește automat"
+
 #, python-format
 msgid "Click here to change the graphs consolidation function to \"%s\"."
 msgstr ""
@@ -20510,6 +20532,10 @@ msgstr "Ștergeți copia de rezervă"
 msgid "Delete backup key #%d"
 msgstr "Ștergerea cheii de rezervă #%d"
 
+#, fuzzy
+msgid "Delete clients"
+msgstr "Ștergeți comentariile"
+
 msgid "Delete comments"
 msgstr "Ștergeți comentariile"
 
@@ -20614,6 +20640,10 @@ msgid "Delete processed messages"
 msgstr "Ștergerea mesajelor procesate"
 
 #, fuzzy
+msgid "Delete registered client"
+msgstr "Ștergeți acest element"
+
+#, fuzzy
 msgid "Delete relay"
 msgstr "Ștergeți regula"
 
@@ -20663,6 +20693,10 @@ msgstr "Ștergeți MIB-urile selectate"
 
 msgid "Delete selected aggregations"
 msgstr "Ștergerea agregărilor selectate"
+
+#, fuzzy
+msgid "Delete selected clients"
+msgstr "Ștergeți regulile selectate"
 
 msgid "Delete selected hosts"
 msgstr "Ștergeți gazdele selectate"
@@ -20737,6 +20771,10 @@ msgstr "Ștergeți această sarcină de backup"
 
 msgid "Delete this backup target"
 msgstr "Ștergeți această țintă de backup"
+
+#, fuzzy
+msgid "Delete this client"
+msgstr "Ștergeți acest element"
 
 #, fuzzy
 msgid "Delete this configuration"
@@ -20826,6 +20864,10 @@ msgstr "Ștergeți utilizatorii"
 
 msgid "Delete vanished hosts"
 msgstr "Ștergeți gazdele dispărute"
+
+#, fuzzy, python-format
+msgid "Deleted %(n)d clients."
+msgstr "Ștergeți comentariile"
 
 #, python-format
 msgid "Deleted %s %d"
@@ -20926,6 +20968,10 @@ msgstr "Pachet de reguli șterse %s"
 #, python-format
 msgid "Deleted site %s"
 msgstr "Site eliminat %s"
+
+#, fuzzy
+msgid "Deleted the client."
+msgstr "Ștergeți acest element"
 
 #, python-format
 msgid "Deleted time period %s"
@@ -39046,6 +39092,9 @@ msgstr ""
 "Se recomandă să activați TLS cât mai curând posibil prin rularea comenzii "
 "`register` a utilitarului `cmk-agent-ctl` pe gazda monitorizată."
 
+msgid "It is requesting these permissions:"
+msgstr ""
+
 msgid "It is still in use by"
 msgstr "Acesta este încă folosit de"
 
@@ -50549,6 +50598,10 @@ msgstr "La MIB-urile selectate"
 msgid "On selected aggregations"
 msgstr "La agregările selectate"
 
+#, fuzzy
+msgid "On selected clients"
+msgstr "La regulile selectate"
+
 msgid "On selected hosts"
 msgstr "Pe gazdele selectate"
 
@@ -57412,6 +57465,10 @@ msgstr "Reexecutări"
 msgid "Read"
 msgstr "Citește"
 
+#, fuzzy
+msgid "Read & write"
+msgstr "Citiți așteptați"
+
 msgid "Read / Write queue length"
 msgstr "Lungimea cozii de citire / scriere"
 
@@ -57531,6 +57588,10 @@ msgid ""
 msgstr ""
 "Citiți mai multe despre [regexuri|corespondență de expresii regulate în "
 "Checkmk] în ghidul nostru de utilizare."
+
+#, fuzzy
+msgid "Read only"
+msgstr "Mod de numai citire"
 
 msgid "Read only mode"
 msgstr "Mod de numai citire"
@@ -57882,8 +57943,20 @@ msgstr "Descoperirea contorului MSSQL"
 msgid "Redirect URI"
 msgstr "I/O direct"
 
+#, fuzzy
+msgid "Redirect URIs"
+msgstr "I/O direct"
+
 msgid "Redirect URL (has to be https)"
 msgstr "URL de redirecționare (trebuie să fie https)"
+
+#, python-format
+msgid "Redirect target: %(redirect_uri)s"
+msgstr ""
+
+#, fuzzy
+msgid "Redirecting..."
+msgstr "Reîncărcare..."
 
 #, fuzzy
 msgid "Redis Caches"
@@ -58149,6 +58222,10 @@ msgstr ""
 
 msgid "Registered"
 msgstr "Înregistrat"
+
+#, fuzzy
+msgid "Registered OAuth clients"
+msgstr "Agenți înregistrați"
 
 msgid "Registered agents"
 msgstr "Agenți înregistrați"
@@ -71158,6 +71235,11 @@ msgstr ""
 "Titlurile agregării nu sunt unice. \"%s\" este creat prin agregarea <b>%s</"
 "b> și <b>%s</b>."
 
+#, python-format
+msgid ""
+"The application \"%(client_id)s\" is requesting access to this Checkmk site."
+msgstr ""
+
 msgid "The aspect of the image is preserved."
 msgstr "Aspectul imaginii este păstrat."
 
@@ -74824,9 +74906,13 @@ msgstr ""
 msgid "The site certificate"
 msgstr "Verificarea certificatului"
 
-msgid "The site id must consist only of letters, digit and the underscore."
+#, fuzzy
+msgid ""
+"The site id must begin with a letter or underscore, may contain only "
+"letters, digits and underscores and must be 1 to 16 characters long."
 msgstr ""
-"ID-ul site-ului trebuie să fie format numai din litere, cifre și subliniere."
+"Numele vizualizării poate conține numai litere, cifre și caractere de "
+"subliniere."
 
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr "Site-ul este marcat ca fiind mort. Nu încerc să reproduc."
@@ -89861,6 +89947,9 @@ msgstr "Vezi"
 msgid "View all maps"
 msgstr "Vezi toate hărțile"
 
+msgid "View and delete OAuth clients that dynamically registered themselves."
+msgstr ""
+
 msgid "View and edit the details of this package"
 msgstr "Vizualizați și editați detaliile acestui pachet"
 
@@ -94991,6 +95080,10 @@ msgstr "Modificările dumneavoastră afectează unele obiecte"
 
 msgid "Your old password is wrong."
 msgstr "Vechea dvs. parolă este greșită."
+
+#, fuzzy
+msgid "Your own user permissions still apply."
+msgstr "Nu aveți permisiunea de a proiecta acest grafic."
 
 #, fuzzy
 msgid "Your password has expired"
@@ -102624,6 +102717,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "The site id must consist only of letters, digit and the underscore."
+#~ msgstr ""
+#~ "ID-ul site-ului trebuie să fie format numai din litere, cifre și "
+#~ "subliniere."
 
 #~ msgid "GB"
 #~ msgstr "GB"

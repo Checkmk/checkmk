@@ -6182,6 +6182,13 @@ msgstr ""
 "Alle absolute gegevens die op deze pagina worden getoond, hebben betrekking "
 "op de tijd sinds deze host is opgestart."
 
+msgid ""
+"All access tokens issued to the selected clients are revoked immediately."
+msgstr ""
+
+msgid "All access tokens issued to this client are revoked immediately."
+msgstr ""
+
 msgid "All aggregations"
 msgstr "Alle aggregaties"
 
@@ -7139,6 +7146,9 @@ msgstr "Een alias of beschrijving van de periode"
 
 msgid "An alias or description of this group."
 msgstr "Een alias of beschrijving van deze groep."
+
+msgid "An application is requesting access to this Checkmk site."
+msgstr ""
 
 #, fuzzy
 msgid "An empty value is not allowed here"
@@ -8365,6 +8375,14 @@ msgstr "Autorisatie-instellingen"
 
 msgid "Authorizations per DB security group"
 msgstr "Autorisaties per DB-beveiligingsgroep"
+
+#, fuzzy
+msgid "Authorize"
+msgstr "Auteur"
+
+#, fuzzy
+msgid "Authorize access"
+msgstr "Toegestane sites"
 
 #, fuzzy
 msgid "Authorized user"
@@ -14870,6 +14888,10 @@ msgstr ""
 msgid "Click for instant reload."
 msgstr "Klik voor onmiddellijk herladen."
 
+#, fuzzy
+msgid "Click here if you are not redirected automatically."
+msgstr "Windows Service start niet automatisch opnieuw op"
+
 #, python-format
 msgid "Click here to change the graphs consolidation function to \"%s\"."
 msgstr ""
@@ -20441,6 +20463,10 @@ msgid "Delete backup key #%d"
 msgstr "Delete backup key #%d"
 
 #, fuzzy
+msgid "Delete clients"
+msgstr "Evenement commentaar"
+
+#, fuzzy
 msgid "Delete comments"
 msgstr "Evenement commentaar"
 
@@ -20546,6 +20572,10 @@ msgid "Delete processed messages"
 msgstr "Verwerkte berichten verwijderen"
 
 #, fuzzy
+msgid "Delete registered client"
+msgstr "Verwijder dit element"
+
+#, fuzzy
 msgid "Delete relay"
 msgstr "Regels verwijderen"
 
@@ -20594,6 +20624,10 @@ msgstr "Verwijder geselecteerde MIBs"
 
 msgid "Delete selected aggregations"
 msgstr "Geselecteerde aggregaties verwijderen"
+
+#, fuzzy
+msgid "Delete selected clients"
+msgstr "Geselecteerde regels verwijderen"
 
 msgid "Delete selected hosts"
 msgstr "Geselecteerde hosts verwijderen"
@@ -20668,6 +20702,10 @@ msgstr "Deze back-uptaak verwijderen"
 
 msgid "Delete this backup target"
 msgstr "Dit back-updoel verwijderen"
+
+#, fuzzy
+msgid "Delete this client"
+msgstr "Verwijder dit element"
 
 #, fuzzy
 msgid "Delete this configuration"
@@ -20757,6 +20795,10 @@ msgstr "Gebruikers verwijderen"
 
 msgid "Delete vanished hosts"
 msgstr "Verwijder verdwenen hosts"
+
+#, fuzzy, python-format
+msgid "Deleted %(n)d clients."
+msgstr "Evenement commentaar"
 
 #, python-format
 msgid "Deleted %s %d"
@@ -20857,6 +20899,10 @@ msgstr "Verwijderde regel pack %s"
 #, python-format
 msgid "Deleted site %s"
 msgstr "Verwijderde site %s"
+
+#, fuzzy
+msgid "Deleted the client."
+msgstr "Verwijder dit element"
 
 #, python-format
 msgid "Deleted time period %s"
@@ -38888,6 +38934,9 @@ msgstr ""
 "`register` commando van de `cmk-agent-ctl` utility uit te voeren op de "
 "gemonitorde host."
 
+msgid "It is requesting these permissions:"
+msgstr ""
+
 msgid "It is still in use by"
 msgstr "Het is nog steeds in gebruik door"
 
@@ -50405,6 +50454,10 @@ msgstr "Op geselecteerde MIBs"
 msgid "On selected aggregations"
 msgstr "Op geselecteerde aggregaties"
 
+#, fuzzy
+msgid "On selected clients"
+msgstr "Op geselecteerde regels"
+
 msgid "On selected hosts"
 msgstr "Op geselecteerde hosts"
 
@@ -57254,6 +57307,10 @@ msgstr "uitvoeringstermijn"
 msgid "Read"
 msgstr "Lees"
 
+#, fuzzy
+msgid "Read & write"
+msgstr "Wacht even"
+
 msgid "Read / Write queue length"
 msgstr "Lees / Schrijf wachtrij lengte"
 
@@ -57373,6 +57430,10 @@ msgid ""
 msgstr ""
 "Lees meer over [regexes|regular expression matching in Checkmk] in onze "
 "gebruikershandleiding."
+
+#, fuzzy
+msgid "Read only"
+msgstr "Alleen lezen"
 
 msgid "Read only mode"
 msgstr "Alleen lezen"
@@ -57722,8 +57783,20 @@ msgstr "MSSQL teller ontdekking"
 msgid "Redirect URI"
 msgstr "Directe I/O"
 
+#, fuzzy
+msgid "Redirect URIs"
+msgstr "Directe I/O"
+
 msgid "Redirect URL (has to be https)"
 msgstr "Redirect URL (moet https zijn)"
+
+#, python-format
+msgid "Redirect target: %(redirect_uri)s"
+msgstr ""
+
+#, fuzzy
+msgid "Redirecting..."
+msgstr "Herladen..."
 
 #, fuzzy
 msgid "Redis Caches"
@@ -57992,6 +58065,10 @@ msgstr ""
 
 msgid "Registered"
 msgstr "Geregistreerd"
+
+#, fuzzy
+msgid "Registered OAuth clients"
+msgstr "Geregistreerde agenten"
 
 msgid "Registered agents"
 msgstr "Geregistreerde agenten"
@@ -70904,6 +70981,11 @@ msgstr ""
 "De aggregatietitels zijn niet uniek. \"%s\" is gemaakt door aggregatie "
 "<b>%s</b> en <b>%s</b>"
 
+#, python-format
+msgid ""
+"The application \"%(client_id)s\" is requesting access to this Checkmk site."
+msgstr ""
+
 msgid "The aspect of the image is preserved."
 msgstr "Het aspect van het beeld blijft behouden."
 
@@ -74544,8 +74626,12 @@ msgstr ""
 msgid "The site certificate"
 msgstr "Verifieer het certificaat"
 
-msgid "The site id must consist only of letters, digit and the underscore."
-msgstr "De site-id mag alleen bestaan uit letters, cijfers en de underscore."
+#, fuzzy
+msgid ""
+"The site id must begin with a letter or underscore, may contain only "
+"letters, digits and underscores and must be 1 to 16 characters long."
+msgstr ""
+"De naam van de view mag alleen letters, cijfers en underscores bevatten."
 
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr "De site is gemarkeerd als dood. Ik probeer niet te repliceren."
@@ -89533,6 +89619,9 @@ msgstr "Bekijk"
 msgid "View all maps"
 msgstr "Bekijk alle kaarten"
 
+msgid "View and delete OAuth clients that dynamically registered themselves."
+msgstr ""
+
 msgid "View and edit the details of this package"
 msgstr "Bekijk en bewerk de details van dit pakket"
 
@@ -94656,6 +94745,10 @@ msgstr "Uw wijzigingen beïnvloeden sommige objecten"
 
 msgid "Your old password is wrong."
 msgstr "Je oude wachtwoord is fout."
+
+#, fuzzy
+msgid "Your own user permissions still apply."
+msgstr "U hebt niet de rechten om deze grafiek te ontwerpen."
 
 #, fuzzy
 msgid "Your password has expired"
@@ -102249,6 +102342,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "The site id must consist only of letters, digit and the underscore."
+#~ msgstr ""
+#~ "De site-id mag alleen bestaan uit letters, cijfers en de underscore."
 
 #~ msgid "GB"
 #~ msgstr "GB"

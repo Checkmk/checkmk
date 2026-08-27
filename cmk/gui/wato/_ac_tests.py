@@ -20,7 +20,6 @@ from cmk.backup.gui.handler import BackupConfig
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import __version__
 from cmk.gui import userdb
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
@@ -34,12 +33,12 @@ from cmk.gui.site_config import (
 from cmk.gui.type_defs import Users
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.analyze_configuration import (
+    ABCACTestOutdatedPluginAPIs,
     ACResultState,
     ACSingleResult,
     ACTest,
     ACTestCategories,
     ACTestRegistry,
-    compute_deprecation_result,
     try_relative_site_path,
 )
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
@@ -85,6 +84,10 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestDeprecatedGUIExtensions)
     ac_test_registry.register(ACTestDeprecatedLegacyGUIExtensions)
     ac_test_registry.register(ACTestDeprecatedPNPTemplates)
+    ac_test_registry.register(ACTestOutdatedSpecialAgentsAPI)
+    ac_test_registry.register(ACTestOutdatedPasswordStoreAPI)
+    ac_test_registry.register(ACTestOutdatedHaSIAPI)
+    ac_test_registry.register(ACTestOutdatedBakeryAPI)
     ac_test_registry.register(ACTestUnexpectedAllowedIPRanges)
     ac_test_registry.register(ACTestCheckMKCheckerNumber)
     ac_test_registry.register(ACTestAutomationUserSecret)
@@ -1358,42 +1361,6 @@ class ACTestDeprecatedGUIExtensions(ACTest):
         )
 
 
-def _compute_deprecation_result_of_views_plugin(
-    site_id: SiteId, plugin_filepath: Path
-) -> ACSingleResult:
-    with plugin_filepath.open() as fp:
-        content = fp.read()
-    if "inventory_displayhints.update(" in content:
-        return compute_deprecation_result(
-            version=__version__,
-            deprecated_version="3.0.0",
-            removed_version="3.1.0",
-            title_entity=(
-                _("HW/SW inventory display hints in %(plugin_name)r")
-                % {"plugin_name": plugin_filepath.parent.name}
-            ),
-            title_api=_("legacy"),
-            site_id=site_id,
-            path=plugin_filepath,
-        )
-    return ACSingleResult(
-        state=ACResultState.WARN,
-        text=(
-            _(
-                "Legacy GUI extension in %(plugin_name)r uses an API which is "
-                "marked as deprecated and may not work anymore due "
-                "to unknown imports or objects (file: %(file)s)."
-            )
-            % {
-                "plugin_name": plugin_filepath.parent.name,
-                "file": try_relative_site_path(site_id, plugin_filepath),
-            }
-        ),
-        site_id=site_id,
-        path=plugin_filepath,
-    )
-
-
 class ACTestDeprecatedLegacyGUIExtensions(ACTest):
     @override
     def category(self) -> str:
@@ -1428,8 +1395,6 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
                 match plugin_filepath.parent.name:
                     case "metrics" | "perfometer" | "wato":
                         pass  # We've been warning for those for long enough now.
-                    case "views":
-                        yield _compute_deprecation_result_of_views_plugin(site_id, plugin_filepath)
                     case _:
                         yield ACSingleResult(
                             state=ACResultState.WARN,
@@ -1507,6 +1472,140 @@ class ACTestDeprecatedPNPTemplates(ACTest):
             text=_("No PNP templates using the deprecated API"),
             site_id=site_id,
         )
+
+
+class ACTestOutdatedSpecialAgentsAPI(ABCACTestOutdatedPluginAPIs):
+    @property
+    @override
+    def api_name(self) -> str:
+        return _("Special agents API 'cmk.special_agents'")
+
+    @property
+    @override
+    def successor(self) -> str:
+        return "cmk.server_side_programs.v1"
+
+    @property
+    @override
+    def deprecated_version(self) -> str:
+        return "3.0.0"
+
+    @property
+    @override
+    def removed_version(self) -> str:
+        return "3.1.0"
+
+    @property
+    @override
+    def import_paths(self) -> tuple[str, ...]:
+        return ("cmk.special_agents",)
+
+    @property
+    @override
+    def content_patterns(self) -> tuple[str, ...]:
+        return ()
+
+
+class ACTestOutdatedPasswordStoreAPI(ABCACTestOutdatedPluginAPIs):
+    @property
+    @override
+    def api_name(self) -> str:
+        return _("Password store utils 'cmk.utils.password_store'")
+
+    @property
+    @override
+    def successor(self) -> str:
+        return "cmk.password_store.v1"
+
+    @property
+    @override
+    def deprecated_version(self) -> str:
+        return "3.0.0"
+
+    @property
+    @override
+    def removed_version(self) -> str:
+        return "3.1.0"
+
+    @property
+    @override
+    def import_paths(self) -> tuple[str, ...]:
+        return ("cmk.utils.password_store",)
+
+    @property
+    @override
+    def content_patterns(self) -> tuple[str, ...]:
+        return ()
+
+
+class ACTestOutdatedHaSIAPI(ABCACTestOutdatedPluginAPIs):
+    @property
+    @override
+    def api_name(self) -> str:
+        return _("HW/SW inventory display hints")
+
+    @property
+    @override
+    def successor(self) -> str:
+        return "cmk.inventory_ui.v1"
+
+    @property
+    @override
+    def deprecated_version(self) -> str:
+        return "3.0.0"
+
+    @property
+    @override
+    def removed_version(self) -> str:
+        return "3.1.0"
+
+    @property
+    @override
+    def import_paths(self) -> tuple[str, ...]:
+        return ()
+
+    @property
+    @override
+    def content_patterns(self) -> tuple[str, ...]:
+        return ("inventory_displayhints.update",)
+
+
+class ACTestOutdatedBakeryAPI(ABCACTestOutdatedPluginAPIs):
+    @property
+    @override
+    def api_name(self) -> str:
+        return _("Bakery API v1")
+
+    @property
+    @override
+    def successor(self) -> str:
+        return "cmk.bakery.v2"
+
+    @property
+    @override
+    def deprecated_version(self) -> str:
+        return "3.0.0"
+
+    @property
+    @override
+    def removed_version(self) -> str:
+        return "3.1.0"
+
+    @property
+    @override
+    def import_paths(self) -> tuple[str, ...]:
+        return (
+            "cmk.bakery.v1",
+            # Please do NOT rename 'cee': It's the legacy path for bakery plug-ins.
+            "cmk.base.cee.plugins.bakery.bakery_api",
+            "cmk.base.plugins.bakery.bakery_api",
+            ".bakery_api",
+        )
+
+    @property
+    @override
+    def content_patterns(self) -> tuple[str, ...]:
+        return ()
 
 
 def _site_is_using_livestatus_proxy(site_id: SiteId) -> bool:

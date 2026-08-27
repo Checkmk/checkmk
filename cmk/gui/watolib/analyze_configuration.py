@@ -9,13 +9,19 @@
 """Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved."""
 
+import ast
 import dataclasses
 import enum
 import json
 import logging
+import os
+import re
+import stat
 import time
 import traceback
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from abc import abstractmethod
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
+from functools import lru_cache
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Any, assert_never, Literal, override, Self, TypedDict
@@ -23,7 +29,8 @@ from typing import Any, assert_never, Literal, override, Self, TypedDict
 import cmk.gui.sites
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.version import Version
+from cmk.ccc.version import __version__, Version
+from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.gui import log
 from cmk.gui.config import Config
 from cmk.gui.http import Request
@@ -39,6 +46,12 @@ from cmk.gui.watolib.automations import (
 from cmk.gui.watolib.sites import get_effective_global_setting
 from cmk.livestatus_client import LocalConnection, SiteConfigurations
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
+from cmk.utils.paths import (
+    local_lib_dir,
+    local_nagios_plugins_dir,
+    local_special_agents_dir,
+    local_web_dir,
+)
 from cmk.utils.statename import short_service_state_name
 from cmk.web.utils import escaping
 
@@ -477,107 +490,319 @@ def try_relative_site_path(site_id: SiteId, abs_path: Path) -> Path:
         return abs_path
 
 
-def compute_deprecation_result(
-    *,
-    version: str,
-    deprecated_version: str,
-    removed_version: str,
-    title_entity: str,
-    title_api: str,
-    site_id: SiteId,
-    path: Path,
-) -> ACSingleResult:
-    base = Version.from_str(version).base
-    deprecated_base = Version.from_str(deprecated_version).base
-    removed_base = Version.from_str(removed_version).base
-    assert base is not None
-    assert removed_base is not None
-    assert deprecated_base is not None
-    assert removed_base > deprecated_base
+class ABCACTestOutdatedPluginAPIs(ACTest):
+    """An API which is superseded by a newer one"""
 
-    rel_path = try_relative_site_path(site_id, path)
+    @property
+    @abstractmethod
+    def api_name(self) -> str: ...
 
-    if base > removed_base:
-        return ACSingleResult(
-            state=ACResultState.CRIT,
-            text=(
-                _(
-                    "%(title_entity)s uses an API (%(title_api)s) which was removed in Checkmk %(removed_version)s (file: %(rel_path)s)."
+    @property
+    @abstractmethod
+    def successor(self) -> str: ...
+
+    @property
+    @abstractmethod
+    def deprecated_version(self) -> str: ...
+
+    @property
+    @abstractmethod
+    def removed_version(self) -> str: ...
+
+    @property
+    @abstractmethod
+    def import_paths(self) -> tuple[str, ...]: ...
+
+    @property
+    @abstractmethod
+    def content_patterns(self) -> tuple[str, ...]: ...
+
+    def _describe(self) -> str:
+        return _(
+            "%(api_name)s (deprecated in Checkmk %(deprecated_version)s,"
+            " removed in Checkmk %(removed_version)s, use %(successor)s instead)"
+        ) % {
+            "api_name": self.api_name,
+            "deprecated_version": self.deprecated_version,
+            "removed_version": self.removed_version,
+            "successor": self.successor,
+        }
+
+    @override
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    @override
+    def title(self) -> str:
+        return _("Outdated plug-in API: %(api_name)s") % {"api_name": self.api_name}
+
+    @override
+    def help(self) -> str:
+        return _(
+            "This API is superseded by a newer one: %(description)s."
+            " Checkmk searches the plug-in files below <tt>'%(folders)s'</tt> for its usage."
+            " Please migrate the plug-ins to the new API."
+        ) % {
+            "description": self._describe(),
+            "folders": "', '".join(str(r) for r in local_plugin_roots()),
+        }
+
+    @override
+    def is_relevant(self) -> bool:
+        return True
+
+    @override
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        yield from self.make_outdated_plugin_api_results(site_id, local_plugin_roots())
+
+    def make_outdated_plugin_api_results(
+        self, site_id: SiteId, roots: Iterable[Path]
+    ) -> Sequence[ACSingleResult]:
+        """Report the plug-in files below the given folders which use an outdated API"""
+        # Reading and parsing a file is expensive compared to a plain substring search,
+        # so only files mentioning one of the searched tokens are inspected further.
+        needles = {
+            *(_search_needle(module) for module in self.import_paths),
+            *self.content_patterns,
+        }
+        results = [
+            self._compute_result(
+                used_api=", ".join(sorted(indicators)),
+                site_id=site_id,
+                path=plugin.path,
+            )
+            for plugin in _iter_local_plugins(roots, needles)
+            if (
+                indicators := [
+                    *_find_imported_modules(plugin.content, plugin.imports, self.import_paths),
+                    *_find_content_patterns(plugin.content, self.content_patterns),
+                ]
+            )
+        ]
+        if not results:
+            return [
+                ACSingleResult(
+                    state=ACResultState.OK,
+                    text=_("No plug-ins using an outdated API"),
+                    site_id=site_id,
                 )
-                % {
-                    "title_entity": title_entity,
-                    "title_api": title_api,
-                    "removed_version": removed_version,
-                    "rel_path": rel_path,
-                }
-            ),
+            ]
+        # 'os.walk' yields the entries in arbitrary order, but the report should be stable.
+        return sorted(results, key=lambda result: (str(result.path), result.text))
+
+    def _compute_result(
+        self,
+        *,
+        site_id: SiteId,
+        path: Path,
+        used_api: str,
+    ) -> ACSingleResult:
+        base = Version.from_str(__version__).base
+        deprecated_base = Version.from_str(self.deprecated_version).base
+        removed_base = Version.from_str(self.removed_version).base
+        assert base is not None
+        assert removed_base is not None
+        assert deprecated_base is not None
+
+        # The usage is reported before the deprecation as well, so that users can
+        # migrate ahead of time. It only escalates once the timeline is reached.
+        if base >= removed_base:
+            state = ACResultState.CRIT
+            template = _(
+                "'%(path)s' uses %(used)s which is deprecated in"
+                " Checkmk %(deprecated_version)s and removed in Checkmk %(removed_version)s."
+                " Use %(successor)s instead."
+            )
+        elif base >= deprecated_base:
+            state = ACResultState.WARN
+            template = _(
+                "'%(path)s' uses %(used)s which is deprecated in"
+                " Checkmk %(deprecated_version)s and will be removed in Checkmk"
+                " %(removed_version)s. Use %(successor)s instead."
+            )
+        else:
+            state = ACResultState.OK
+            template = _(
+                "'%(path)s' uses %(used)s which will be deprecated in"
+                " Checkmk %(deprecated_version)s and removed in Checkmk %(removed_version)s."
+                " Use %(successor)s instead."
+            )
+
+        return ACSingleResult(
+            state=state,
+            text=template
+            % {
+                "path": path,
+                # The API name of a test with several import paths does not name them
+                # all, so the ones actually found are spelled out in addition.
+                "used": (
+                    self.api_name if used_api in self.api_name else f"{self.api_name} ({used_api})"
+                ),
+                "deprecated_version": self.deprecated_version,
+                "removed_version": self.removed_version,
+                "successor": self.successor,
+            },
             site_id=site_id,
             path=path,
         )
 
-    if base == removed_base:
-        return ACSingleResult(
-            state=ACResultState.CRIT,
-            text=(
-                _(
-                    "%(title_entity)s uses an API (%(title_api)s) which was marked as deprecated in"
-                    " Checkmk %(deprecated_version)s and is removed in Checkmk %(removed_version)s (file: %(rel_path)s)."
-                )
-                % {
-                    "title_entity": title_entity,
-                    "title_api": title_api,
-                    "deprecated_version": deprecated_version,
-                    "removed_version": removed_version,
-                    "rel_path": rel_path,
-                }
-            ),
-            site_id=site_id,
-            path=path,
-        )
 
-    if base > deprecated_base:
-        return ACSingleResult(
-            state=ACResultState.WARN,
-            text=(
-                _(
-                    "%(title_entity)s uses an API (%(title_api)s) which was marked as deprecated in"
-                    " Checkmk %(deprecated_version)s and will be removed in Checkmk %(removed_version)s (file: %(rel_path)s)."
-                )
-                % {
-                    "title_entity": title_entity,
-                    "title_api": title_api,
-                    "deprecated_version": deprecated_version,
-                    "removed_version": removed_version,
-                    "rel_path": rel_path,
-                }
-            ),
-            site_id=site_id,
-            path=path,
-        )
+# Plug-in files may live next to arbitrary payload (agent binaries, archives, ...).
+# Don't read files which are too big to be a plug-in.
+MAX_SCANNED_FILE_SIZE = 2 * 1024 * 1024
 
-    if base == deprecated_base:
-        return ACSingleResult(
-            state=ACResultState.WARN,
-            text=(
-                _(
-                    "%(title_entity)s uses an API (%(title_api)s) which is marked as deprecated in"
-                    " Checkmk %(deprecated_version)s and will be removed in Checkmk %(removed_version)s (file: %(rel_path)s)."
-                )
-                % {
-                    "title_entity": title_entity,
-                    "title_api": title_api,
-                    "deprecated_version": deprecated_version,
-                    "removed_version": removed_version,
-                    "rel_path": rel_path,
-                }
-            ),
-            site_id=site_id,
-            path=path,
-        )
 
-    return ACSingleResult(
-        state=ACResultState.OK,
-        text="",
-        site_id=site_id,
-        path=path,
-    )
+def local_plugin_roots() -> Iterator[Path]:
+    """Yield the folders in which users may place plug-in files"""
+    if (cmk_plugins_dir := plugins_local_path()) is not None:
+        yield cmk_plugins_dir
+    if (cmk_addons_plugins_dir := addons_plugins_local_path()) is not None:
+        yield cmk_addons_plugins_dir
+    yield local_special_agents_dir
+    yield local_nagios_plugins_dir
+    yield local_web_dir / "plugins" / "views"
+    # Please do NOT rename 'cee': It's the legacy path for bakery plug-ins and is part of MKPs.
+    yield local_lib_dir / "python3/cmk/base/cee/plugins/bakery"
+
+
+@dataclasses.dataclass(frozen=True)
+class _LocalPlugin:
+    path: Path
+    content: str
+    imports: set[str] | None
+
+
+# Compiled Python and shared objects are no plug-in sources, but may well contain the
+# searched tokens.
+_IGNORED_SUFFIXES = frozenset({".pyc", ".pyo", ".so"})
+
+
+def _iter_local_plugins(roots: Iterable[Path], needles: Collection[str]) -> Iterator[_LocalPlugin]:
+    """Yield the readable text files below the given folders which mention a needle
+
+    Files without a '.py' suffix are included on purpose: special agents and active
+    checks are executables which usually don't have any suffix at all.
+
+    Symlinked files are followed, symlinked folders are not (see 'os.walk').
+    """
+    for root in roots:
+        for dirpath, dirnames, filenames in os.walk(root):
+            dirnames[:] = [d for d in dirnames if d != "__pycache__" and not d.startswith(".")]
+            for filename in filenames:
+                path = Path(dirpath, filename)
+                if path.suffix in _IGNORED_SUFFIXES:
+                    continue
+                try:
+                    file_stat = path.stat()
+                    if (
+                        not stat.S_ISREG(file_stat.st_mode)
+                        or file_stat.st_size > MAX_SCANNED_FILE_SIZE
+                    ):
+                        continue
+                    content = path.read_text(encoding="utf-8")
+                except OSError, UnicodeDecodeError:
+                    continue
+                if not any(needle in content for needle in needles):
+                    continue
+                yield _LocalPlugin(
+                    path=path, content=content, imports=_parse_imported_names(content)
+                )
+
+
+# A version component such as 'v1' is no useful needle: it occurs in nearly every
+# plug-in file, which would defeat the substring prefilter entirely.
+_VERSION_COMPONENT = re.compile(r"^v\d")
+
+
+def _search_needle(module: str) -> str:
+    """Return the substring which every import of the given module must contain
+
+    Only a single component is searched: it is the only part which is guaranteed to
+    occur, be it imported from its parent package ('from cmk.bakery import v1') or
+    relatively ('from . import bakery_api'). Trailing version components are skipped
+    in favour of the component which actually names the API.
+    """
+    components = module.split(".")
+    while len(components) > 1 and _VERSION_COMPONENT.match(components[-1]):
+        components.pop()
+    return components[-1]
+
+
+@lru_cache
+def _import_pattern(module: str) -> re.Pattern[str]:
+    """Compile a pattern matching the import statements of the given module
+
+    A module starting with a dot is matched as the corresponding relative import.
+    """
+    name = re.escape(module)
+    alternatives = [
+        # 'from cmk.utils.password_store import ...', submodules included
+        rf"from[ \t]+{name}(?:\.\S+)?[ \t]+import[ \t]",
+        # 'import cmk.utils.password_store', submodules and further modules included
+        rf"import[ \t]+{name}(?:\.\S+)?(?:[ \t,]|$)",
+    ]
+    parent, separator, leaf = module.rpartition(".")
+    if separator:
+        # 'from cmk.utils import password_store', 'from . import bakery_api'
+        alternatives.append(
+            rf"from[ \t]+{re.escape(parent) if parent else re.escape('.')}[ \t]+import[ \t]+"
+            rf"(?:[^\n]*[ \t(,])?{re.escape(leaf)}\b"
+        )
+    return re.compile(rf"^[ \t]*(?:{'|'.join(alternatives)})", re.MULTILINE)
+
+
+def _parse_imported_names(content: str) -> set[str] | None:
+    """Return the modules and objects imported by the given Python source
+
+    None is returned if the content is no valid Python: plug-in folders may contain
+    shell scripts, agent binaries and other payload.
+    """
+    try:
+        tree = ast.parse(content)
+    except SyntaxError, ValueError, RecursionError:
+        return None
+
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        match node:
+            case ast.Import():
+                names.update(alias.name for alias in node.names)
+            case ast.ImportFrom():
+                # 'from . import foo' has no module, 'from .foo import bar' has no dots
+                module = "." * node.level + (node.module or "")
+                separator = "" if module.endswith(".") else "."
+                names.update(f"{module}{separator}{alias.name}" for alias in node.names)
+            case _:
+                pass
+    return names
+
+
+def _find_imported_modules(
+    content: str, imported: set[str] | None, modules: Iterable[str]
+) -> set[str]:
+    r"""Return those of the modules which are imported by the given file content
+
+    'imported' are the names parsed from the content, or None if it is no valid
+    Python. Modules which merely share a prefix are never matched, and a module
+    starting with a dot matches the corresponding relative import.
+
+    Mentions in comments or strings are ignored as long as the content could be
+    parsed. The textual fallback below cannot tell code from a string: it matches
+    any line starting with a matching import statement, including one inside a
+    docstring or a heredoc.
+    """
+    if imported is None:
+        # Fall back to a textual search, so that at least the imports of a plug-in
+        # which we cannot parse are reported. Continuation lines are not matched.
+        return {module for module in modules if _import_pattern(module).search(content)}
+
+    return {
+        module
+        for module in modules
+        if any(name == module or name.startswith(f"{module}.") for name in imported)
+    }
+
+
+def _find_content_patterns(content: str, markers: Iterable[str]) -> set[str]:
+    """Return those markers that are found in the given file content"""
+    return {m for m in markers if m in content}

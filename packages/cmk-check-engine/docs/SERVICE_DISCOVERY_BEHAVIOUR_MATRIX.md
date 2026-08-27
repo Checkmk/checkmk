@@ -3,10 +3,12 @@
 **Purpose:** written statement of _today's_ behaviour of `cmk/gui/watolib/services.py`, so that
 "no behaviour change" during CMK-32255 / CMK-37497 is verifiable rather than assumed.
 
-**Status:** derived from the code at `68bd2fd4651` (branch `cmk-34150`). Not yet pinned by tests —
-the test list in §7 is the proposal. §1–§6 are descriptive (current behaviour, verified) with two
-exceptions: §6.3 and §11 are **prescriptive** — §6.3 states what follows for the rewrite from §6's
-mechanics, §11 states the intended per-state semantics. Both are for review.
+**Status:** derived from the code at `68bd2fd4651` (branch `cmk-34150`). **Tier 1 of §7 is
+implemented** — 352 pure cases pinning the transition matrix, of which 31 are strict-xfail
+quarantine tests carrying a ticket each; Tiers 2–4 remain proposals. §1–§6 are descriptive (current
+behaviour, verified) with two exceptions: §6.3 and §11 are **prescriptive** — §6.3 states what
+follows for the rewrite from §6's mechanics, §11 states the intended per-state semantics. Both are
+for review.
 
 **Scope:** `cmk/gui/watolib/services.py` + the automation boundary in
 `cmk/gui/watolib/check_mk_automations.py`. The AJAX transport (`ModeAjaxServiceDiscovery`,
@@ -197,10 +199,19 @@ the check engine would produce a 500 with no compile-time warning.
 | `UPDATE_SERVICE_LABELS`            | `perform_service_discovery`                                     | **yes**              |
 | `UPDATE_DISCOVERY_PARAMETERS`      | `perform_service_discovery`                                     | **yes**              |
 
-The 5 non-`Discovery` actions have **uniform** columns: no per-service state changes at all. Their
-behaviour is host/job-level and is characterized in §6, not per cell. That collapses the literal
-15 × 12 = 180-cell grid to **13 × 7 = 91 live cells**, plus 24 unreachable-row cells and 65
+The 5 non-`Discovery` actions have **uniform** columns — no cell of this matrix varies with them.
+Their behaviour is host/job-level and is characterized in §6, not per cell. That collapses the
+literal 15 × 12 = 180-cell grid to **13 × 7 = 91 live cells**, plus 24 unreachable-row cells and 65
 uniform-column cells.
+
+"Uniform column" is not the same as "changes nothing", and `TABULA_RASA` is the exception that
+matters: `_perform_automatic_refresh` calls `local_discovery` with all five `DiscoverySettings`
+flags set, so it adds, removes and re-parameterises services and records a `refresh-autochecks`
+pending change (`services.py:1196`). It has no column here because it is a **second write path**
+that never reaches `compute_discovery_transition` — which is exactly A3-F2, and the reason §6.3
+proposes decomposing it rather than carrying it over. `REFRESH`, by contrast, really does write
+nothing: it re-fetches from the host and recomputes the preview, its pre-gate is plain
+`wato.services` (`:802`), and it adds no pending change.
 
 ### 2.3 The target axis is not a free choice
 
@@ -828,9 +839,56 @@ add_disabled_rule = add_disabled_rule - remove_disabled_rule - (saved_services -
   `EVERYTHING` → **all descriptions**, so the subtraction term collapses to `∅`.
   **`FIX_ALL` and `UPDATE_SERVICES` therefore compute different disabled-rule sets** on hosts with
   duplicate service descriptions. (A1-F3.)
+- **`selected_services` is overloaded, and this line is where the two meanings collide.** Everywhere
+  else it answers "which rows does this command apply to" (`_get_table_target:549`, `:580`, `:590`);
+  here it answers "which services did the user name as services to _disable_". A whole-table action
+  must pass `EVERYTHING` for the first question, and that answer is wrong for the second — which is
+  not a corner case but every REST save and every checkbox-less GUI save. This is the whole of
+  R-F1 / §10.11, and it is why A1-F3 is a defect rather than a design choice: `FIX_ALL` reaches
+  identical targets on the same table and gets the subtraction right only because it happens to
+  pass `()`.
 - `old_autochecks` (audit diff only) is built from sources
   `{unchanged, changed, ignored, vanished}` using **old** values — so an `ignored` service appears
   in the "before" side of the diff even though it is not in autochecks.
+
+#### The duplicate-description premise, and the bound on it
+
+The subtraction term only does anything when two rows of one host share a service **description**
+while disagreeing about being disabled. That configuration is real and documented — werk 6708
+(1.6.0i1) names _"CPU utilization"_ produced by both an SNMP-based and a TCP-based plugin, and werk
+19062 (2.6.0b1, `236107e4330`, the commit that introduced the term) restates the premise as
+_"Different check plugins may have the same service description"_. The two werks are the two caveats
+in the code:
+
+| werk  | what it added                                 | why                                                                                                                                                                   |
+| ----- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 6708  | subtract `saved_services`                     | a _Disabled checks_ rule on the SNMP plugin made the discovery page write a description-matching _Disabled services_ rule, **which disabled the TCP-based check too** |
+| 19062 | subtract `saved_services − selected_services` | 6708's guard also swallowed rules the user had explicitly requested, so services could not be disabled from the page at all                                           |
+
+**Only one ruleset can produce the precondition.** `ignore_service` matches on host + description, so
+it matches both rows or neither; `ignore_plugin` matches on the plugin name
+(`ConfigCache.check_plugin_ignored`, `cmk/base/config/_impl.py:2874`). `_node_service_source` returns
+`ignored` if _either_ holds, so a _Disabled checks_ rule is the only way one of two
+identically-described services can be `ignored` while the other is not. A reader who assumes the
+disabling came from _Disabled services_ will conclude the scenario is impossible — it is, that way.
+
+**And the bound: duplicate descriptions are an error state, not a supported one.** Both core config
+writers detect them, emit `ERROR: Duplicate service name …` naming both occurrences, and **drop the
+second** — `cmk/base/core/nagios/_create_config.py:683-692` and
+`cmk/base/nonfree/cmc/_services.py:331-341`, the latter under the comment _"Make sure the service
+name is unique on this host"_ (`duplicate_service_warning` lives in `cmk/base/core/shared.py:44`).
+So the guard protects a service that would not have been monitored anyway had both been enabled.
+Two consequences: the arithmetic is worth keeping (a spurious rule is a _configuration_ change with
+a pending change and an automation round trip, whatever the core later does with it), and this is
+the sharpest available evidence for domain model §12.5 — exclusion identity is description-based
+while autochecks are `ServiceKey`-based, and here the two disagree observably.
+
+Note also what the guard does **not** need to protect against. On a host with no duplicate
+descriptions, losing the subtraction costs an automation round trip and a pending change but writes
+a rule that is redundant with whatever already disabled the service. The duplicate-description case
+is the only one where losing it changes what is monitored. §10.11 is therefore two defects of very
+different severity sharing one root cause, and the quarantine tier runs both tables down both paths
+for exactly that reason.
 
 ---
 
@@ -872,6 +930,40 @@ lost: it behaved like `SINGLE_UPDATE` while being presented as "Fix all". A batc
 must state, per disposition, which side of this line it is on — and if it wants both behaviours it
 needs an explicit flag, not an implicit default.
 
+**Adoption differs by surface, and that is intended (A3-F3).** Three surfaces offer "accept
+everything", and each answers "does it adopt the newly discovered values?" differently, because each
+assumes a different level of user attention:
+
+| surface                                       | adopts?                    | why                                                                               |
+| --------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------- |
+| Discovery page, "Accept all" (`FIX_ALL`)      | **both facets**            | the user has the table in front of them and has reviewed what will change         |
+| Discovery page, "Tabula rasa" (`TABULA_RASA`) | **both facets**            | the user does not want to review details — they want it done now, from fresh data |
+| Bulk / periodic rediscovery                   | **whatever the rule says** | unattended, so the user configures in advance what the system may do without them |
+
+The rediscovery ruleset's stored mode `2` ("fix all") is migrated to _no_ adoption
+(`_check_mk_configuration.py:4652-4661`) while mode `3` ("tabula rasa") adopts both — consistent with
+the above, since only the ruleset surface has a user who is absent.
+
+Two consequences. **The user-facing documentation of "Accept all" predates this** and still describes
+the pre-2.4 behaviour; that is **KNW-2342**, a docs ticket, not a code defect. And **the naming is
+the real problem**: "fix all" means one thing on the page and another in the ruleset, and "tabula
+rasa" describes an operation that forgets nothing. The rewrite must not inherit either name — §11.1's
+explicit `adopt` parameter is what makes the distinction statable without them.
+
+**The disposition is upheld, and §11.1 is its formalisation:** adoption is a _parameter_ of
+`monitor` (`adopt ⊆ {parameters, labels}`), not a command, so `SINGLE_UPDATE` on a `changed` row is
+`monitor(adopt=∅)` and writing the old values back is _correct_. The domain model spells the same
+thing as `Monitor(adopt: PropertyFacets)`, noting that `adopt` has meaning only for a `Changed` row.
+
+There is a residual defect, but it is not about which values are written. `monitor(adopt=∅)` on a
+`changed` row is a **no-op**, and today it is executed as a change: `apply_changes` compares
+`entry.check_source != table_target`, i.e. the observation `"changed"` against the command spelled
+`"unchanged"`, so the value-identical write goes ahead, `wato.service_discovery_to_monitored` is
+demanded, a pending change is recorded, and the host's autochecks are rebuilt. That belongs to the
+§10.8 family of spurious rewrites and is quarantined as T1b.8. It exists only because the target
+vocabulary is spelled in observation names (§2.4, §10.12); in the target model `ChangeSet != current`
+decides and the case disappears.
+
 **Scope:** adoption is observable **only for source `changed`**. `DiscoveredItem` sets
 `older = newer` whenever either side is `None` (`types.py:130-136`), so for `new`, `vanished`,
 `clustered_new` and `clustered_vanished` the old and new parameters and labels are identical and
@@ -884,14 +976,30 @@ through `Discovery` at all; `_perform_automatic_refresh` calls `local_discovery`
 `DiscoverySettings(update_host_labels=True, add_new_services=True, remove_vanished_services=True,
 update_changed_service_labels=True, update_changed_service_parameters=True)`.
 
-> **Reviewer disposition: the difference is intentional.** `FIX_ALL` accepts everything;
-> `TABULA_RASA` _forgets_ everything and then accepts everything. A meaningful distinction, not a
-> duplication — the two are not interchangeable today.
+> **Reviewer disposition: the two are the same plan; the difference is the fetch.** With all five
+> flags set `TABULA_RASA` is `New → monitor`, `Changed → monitor` adopting both facets,
+> `Vanished → drop`, host labels updated — which is `FIX_ALL`'s plan, facet for facet (§5's A3
+> table). Nothing is forgotten despite the name: `_autodiscovery.py:339-403` keeps `unchanged`
+> unconditionally, keeps `changed` with its previous values unless the flag is set, and drops
+> `vanished` only when `remove_vanished_services`. The clear-and-rediscover behaviour the name refers
+> to predates the 2.3 rework (werk 16865).
 >
-> **Open question for after the epic:** once Phase 1's primitives exist
-> (`invalidate cache` + `start_scan` + `fix_all`), is `TABULA_RASA` still needed as its own action,
-> or does it become a composition of them? That is Story F2's real question, and it is worth asking
-> _after_ the rewrite rather than before.
+> What actually differs:
+>
+> 1. **The fetch.** `TABULA_RASA` runs as a background job with `prevent_fetching=False` and
+>    `scan=True`, so it re-contacts the host first. `FIX_ALL` applies the plan to whichever preview
+>    the page is holding, fresh or cached. This is the whole of what it adds, and it is what the
+>    "I don't want to review the details, just use current data" intent needs.
+> 2. **The write path.** `FIX_ALL` → `compute_discovery_transition` → `set-autochecks-v2`;
+>    `TABULA_RASA` → `local_discovery` → the check engine's rebuild. Two observable consequences:
+>    `FIX_ALL` additionally retargets the 11-of-13 non-discovered sources to `monitored` (A1-F1),
+>    which the engine path structurally cannot do because `manual`/`active`/`custom` are not in its
+>    `Transition` vocabulary; and the pending change is `refresh-autochecks` rather than
+>    `set-autochecks`.
+>
+> **Consequence for the rewrite:** `TABULA_RASA` is `Scan.start(Fetch) ▸ fix_all` and needs no
+> independent existence in the target model. Story F2 can be decided now rather than deferred. The
+> forced fetch is what must survive the collapse.
 
 ### 5.1 Permission table
 
@@ -1319,11 +1427,17 @@ generated — pinning the buggy value `{MOCK_KEY: MOCK_VALUE}` — while the nei
 would have shown the inconsistency were never run.
 
 **Consequence for the plan:** Tier 1 **replaces** `test_do_discovery.py` rather than sitting beside
-it. Two competing matrices for the same function would be worse than one. The migration is
-mechanical: swap `combinations_with_replacement` for `itertools.product`, port the expected values,
-and fix or delete whatever the newly-covered 105 cells reveal. Note that the three
-`(*, IGNORED)` rows currently pin A2-F2's buggy behaviour, so those rows must change in the same
-commit as the fix.
+it. Two competing matrices for the same function would be worse than one.
+
+> **Implemented.** `test_do_discovery.py` is deleted; Tier 1c
+> (`test_discovery_transition_sweep.py`) is its total replacement — 15 × 15, every cell asserted,
+> no `.get(pair, empty_result)` default. The migration was _not_ the mechanical
+> `combinations_with_replacement → product` swap sketched here: porting `known_results` verbatim
+> would have re-pinned A2-F2's buggy `(*, IGNORED)` rows as expected values. The sweep instead
+> derives every expectation from one `HandlerSpec` per source — the §4 Matrix A2 semantics as
+> data — and the cells that are _wrong_ are named separately in Tier 1a/1b. Tier 1c also tests
+> one level up, through `compute_discovery_transition` rather than `_apply_state_change`, so
+> permissions, `need_sync` and the rule arithmetic are covered too.
 
 ### Tier 1 — exhaustive matrix, pure (replaces `tests/unit/cmk/gui/watolib/test_do_discovery.py`)
 
@@ -1331,6 +1445,31 @@ commit as the fix.
 `user_need_permission` as a constructor parameter. **No mocking is needed at all** for this tier —
 it is a pure function over a hand-built `DiscoveryResult`. Assertions are on `DiscoveryTransition`
 fields (which survive the rewrite), never on `_get_table_target` or other privates.
+
+> **Status: implemented**, 314 passing cases plus 27 strict-xfails, in four files under
+> `tests/unit/cmk/gui/watolib/`:
+>
+> | file                                      | tier | what it holds                                                      |
+> | ----------------------------------------- | ---- | ------------------------------------------------------------------ |
+> | `discovery_matrix.py`                     | —    | shared scaffolding: `Command`, `Outcome`, `make_entry`, `run_cell` |
+> | `test_discovery_transition_matrix.py`     | 1a   | conformance — must pass, every phase                               |
+> | `test_discovery_transition_quarantine.py` | 1b   | one strict-xfail + one characterization per divergence             |
+> | `test_discovery_transition_sweep.py`      | 1c   | total 15 × 15 characterization (see §7.0)                          |
+>
+> **Some of Tier 1 lives in the check-engine package**, because `clustered_ignored`'s
+> unreachability is a property of the _classifier_, not of the transition. In
+> `packages/cmk-check-engine/tests/cmk/checkengine/discovery/test__autodiscovery.py`:
+>
+> - `test_node_service_source_emits_exactly_eight_of_the_nine_transitions` — drives
+>   `_node_service_source` over its whole input space and asserts the emitted set. This is
+>   **1b-style characterization**, and it carries the strict-xfail partner
+>   `test_disabled_clustered_service_is_classified_as_clustered_ignored` plus its plain
+>   counterpart, so §10.13's fix trips the tripwire instead of producing an unexplained red.
+> - `test_clustered_service_is_only_disabled_by_a_rule_matching_the_cluster` — the node row
+>   consults the rule on the **cluster**. Surprising, correct, and preserved by §10.13's fix, so
+>   plain conformance.
+> - `test_node_service_source_never_turns_a_vanished_service_into_ignored` — the classifier-side
+>   reason `vanished` admits no `disable` (§11.3). Also conformance.
 
 **Tier 1 is split by verdict, not by subject.** §11 establishes that a substantial part of today's
 behaviour is wrong, so pinning all of it as "expected" would bake in defects and make the suite an
@@ -1354,36 +1493,46 @@ tier depends on the explicit flag, not on the fix.
 
 #### Tier 1a — conformance (must pass)
 
-| #      | test                                             | parametrization                                                                                                            | pins                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ------ | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| T1a.1  | `test_meaningful_cell_outcome`                   | **8 of the 10** meaningful `(state, command)` pairs of §11.2 — those with at least one realisation that is already correct | `CellOutcome(in_new_autochecks, params, labels, add_disabled, remove_disabled, need_sync, permission)`. Expected values are §11.2's, not a transcript of the code. Five pairs are wholly correct today (`new + monitor`, `new + disable`, `unchanged + drop`, `changed + drop`, `ignored + monitor`); three are correct in one realisation only and have their other realisation in 1b — `changed + monitor` (correct under the adopting actions, T1b.8), `ignored + drop` (correct via the `new` label, T1b.6), `vanished + drop` (correct via the `removed` label, T1b.5). The two remaining pairs, `unchanged + disable` and `changed + disable`, have no correct realisation and live entirely in 1b. |
-| T1a.2  | `test_no_op_cells_yield_no_transition`           | 3 cells                                                                                                                    | `new + drop`, `unchanged + monitor`, `ignored + disable` ⇒ `compute_discovery_transition() is None`, no write, no permission demanded. Idempotency, which the REST `PUT` contract needs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| T1a.3  | `test_permission_demanded_per_cell`              | the 1a cells                                                                                                               | The §4 `Perm` column via a recording `user_need_permission`, **including** the cells that must demand nothing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| T1a.4  | `test_unreachable_sources`                       | 2                                                                                                                          | `removed` ∉ `Transition`; `clustered_ignored` is not produced by `_node_service_source`/`_make_cluster_table`. Pins §2.1's unreachability claims so they cannot silently become false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| T1a.5  | `test_matrix_is_total`                           | 1                                                                                                                          | Every `DiscoveryState` and `DiscoveryAction` member appears in the 1a table, the 1b table, or an explicit `UNREACHABLE` / `NO_PER_SERVICE_EFFECT` / `NOT_ELIGIBLE` set. **Fails when an enum value is added without a verdict.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| T1a.6  | `test_value_adoption_matrix`                     | 12 actions                                                                                                                 | §5 A3-F1, source `changed` with distinguishable old/new params and labels. The per-action adoption table is current _and_ intended behaviour — the divergence is only whether plain `monitor` should adopt, which is 1b.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| T1a.7  | `test_disabled_rule_arithmetic`                  | ~6 scenarios                                                                                                               | §4.2: the `saved_services − selected_services` term; `FIX_ALL` (`selected=()`) vs `UPDATE_SERVICES` (`selected=EVERYTHING`); `need_sync=True` with an empty final `add_disabled_rule`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| T1a.8  | `test_old_autochecks_audit_shape`                | 4                                                                                                                          | §4.2: `old_autochecks` built from `{unchanged, changed, ignored, vanished}` with **old** values.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| T1a.9  | `test_cluster_node_table_handling`               | ~6 scenarios                                                                                                               | `_get_effective_check_tables`: `found_on_nodes` filtering, "not found on any node ⇒ keep", the same action applied to node tables. Structural, not a transition verdict.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| T1a.10 | `test_has_discovery_action_specific_permissions` | 12 actions × permission sets                                                                                               | §5.1 pre-gate table; total via the existing `assert_never`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| #      | test                                                                                                                                                                           | parametrization                                                                                                            | pins                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T1a.1  | `test_meaningful_cell_outcome`                                                                                                                                                 | **8 of the 10** meaningful `(state, command)` pairs of §11.2 — those with at least one realisation that is already correct | `CellOutcome(in_new_autochecks, params, labels, add_disabled, remove_disabled, need_sync, permission)`. Expected values are §11.2's, not a transcript of the code. Five pairs are wholly correct today (`new + monitor`, `new + disable`, `unchanged + drop`, `changed + drop`, `ignored + monitor`); three are correct in one realisation only and have their other realisation in 1b — `changed + monitor` (correct under the adopting actions, T1b.8), `ignored + drop` (correct via the `new` label, T1b.6), `vanished + drop` (correct via the `removed` label, T1b.5). The two remaining pairs, `unchanged + disable` and `changed + disable`, have no correct realisation and live entirely in 1b.                                                                                                                                                                                                                                                     |
+| T1a.2  | `test_no_op_cells_yield_no_transition`                                                                                                                                         | 3 cells                                                                                                                    | `new + drop`, `unchanged + monitor`, `ignored + disable` ⇒ `compute_discovery_transition() is None`, no write, no permission demanded. Idempotency, which the REST `PUT` contract needs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| T1a.3  | `test_permission_demanded_per_cell`                                                                                                                                            | the 1a cells                                                                                                               | The §4 `Perm` column via a recording `user_need_permission`, **including** the cells that must demand nothing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| T1a.4  | `test_unreachable_sources`                                                                                                                                                     | 2                                                                                                                          | `removed` ∉ `Transition`; `clustered_ignored` is not produced by `_node_service_source`/`_make_cluster_table`. Pins §2.1's unreachability claims so they cannot silently become false.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| T1a.5  | `test_matrix_is_total`                                                                                                                                                         | 1                                                                                                                          | Every `DiscoveryState` and `DiscoveryAction` member appears in the 1a table, the 1b table, or an explicit `UNREACHABLE` / `NO_PER_SERVICE_EFFECT` / `NOT_ELIGIBLE` set. **Fails when an enum value is added without a verdict.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| T1a.6  | `test_value_adoption_matrix`                                                                                                                                                   | 12 actions                                                                                                                 | §5 A3-F1, source `changed` with distinguishable old/new params and labels. The per-action adoption table is current _and_ intended behaviour — the divergence is only whether plain `monitor` should adopt, which is 1b.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| T1a.7  | `test_disabled_rule_arithmetic`                                                                                                                                                | 3 scenarios                                                                                                                | §4.2: the `saved_services − selected_services` term under `FIX_ALL` (`selected=()`), the only path that gets it right; `need_sync=True` with an empty final `add_disabled_rule`. Both of the code's stated caveats are covered with the configuration they were written for — **two plugins rendering one description**, one of them disabled by a plugin-level rule, which is the only way two rows can disagree about being disabled (the _Disabled checks_ ruleset matches on plugin name, _Disabled services_ on description). The `EVERYTHING` scenarios started here as characterization and **moved to T1b.12** once §10.11 was judged a defect: keeping them would have had this tier assert as conformant the divergence the quarantine tier marks as a bug. The two fixtures live in the shared scaffolding module, because the divergence is only visible by running the same table down both paths.                                               |
+| T1a.8  | `test_old_autochecks_audit_shape`                                                                                                                                              | 4                                                                                                                          | §4.2: `old_autochecks` built from `{unchanged, changed, ignored, vanished}` with **old** values.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| T1a.9  | `test_cluster_node_table_handling`                                                                                                                                             | 4 scenarios                                                                                                                | `_get_effective_check_tables`: `found_on_nodes` filtering, "not found on any node ⇒ keep", "not in the cluster's table ⇒ drop", the same action applied to node tables. Structural, not a transition verdict. The filter's condition is _this node's absence_ from `found_on_nodes`, not another node's presence in it — the failover case and the found-on-both case are both pinned, because the two are indistinguishable without the second and only the first is a drop.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| T1a.10 | `test_has_discovery_action_specific_permissions`                                                                                                                               | 12 actions × permission sets                                                                                               | §5.1 pre-gate table; total via the existing `assert_never`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| T1a.11 | `test_bulk_update_reaches_exactly_the_rows_of_its_update_source`, `test_an_unselected_row_is_left_alone`, `test_a_whole_table_value_update_leaves_a_disabled_service_disabled` | 4 + 4 + 2                                                                                                                  | §5, the **selector**: which rows an action reaches at all, as opposed to what happens to a row it reaches. Three filters, each with a case the action must leave alone — a filter that stops filtering is invisible to a table whose every row it admits. (a) `BULK_UPDATE`'s `update_source` filter, including the `changed ⊂ unchanged` carve-out **and its one-directionality**; (b) the four actions that honour `selected_services` — `FIX_ALL` and the two `UPDATE_*` value actions are absent because ignoring the selection is intended for them (A1-F2: the host-wide scope is the design, the missing `update_source` filter is the defect, §10.5); (c) werk 17711 / CMK-22272's `IGNORED` carve-out in both value-update branches, whose entire diff it is — without it, "Update service labels" re-accepts every disabled service on the host. Added after a review found all three unpinned: mutating any one of them left the whole tier green. |
+
+> **Where the implementation departed from the names above.** T1a.3 is not a separate test:
+> the demanded permission is a field of `Outcome`, so every cell test asserts it, including the
+> cells that must demand nothing — a permission that silently disappears fails the cell it belongs
+> to rather than a distant test. T1a.4, T1a.7, T1a.9 and T1a.10 each became several named tests
+> instead of one parametrized one, because their scenarios do not share a shape. T1a.5 became two
+> (`test_every_discovery_state_has_a_verdict`, `test_every_discovery_action_has_a_verdict`) plus a
+> parametrized check that the five host/job actions really do leave every service alone.
 
 #### Tier 1b — quarantine (each row yields one strict-xfail + one characterization test)
 
 One parametrized table, one row per divergence, each row carrying `intended`, `current` and `ticket`:
 
-| #      | divergence                                                 | intended (§11.2)            | current                                                                                          | ticket |
-| ------ | ---------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------ | ------ |
-| T1b.1  | `unchanged + disable`                                      | entry absent, rule added    | entry **written**, rule added                                                                    | §10.1  |
-| T1b.2  | `changed + disable`                                        | entry absent, rule added    | entry **written**, rule added                                                                    | §10.1  |
-| T1b.3  | `vanished + disable`                                       | rejected                    | entry written + rule added                                                                       | §10.16 |
-| T1b.4  | `vanished + monitor`                                       | rejected                    | entry kept                                                                                       | §10.16 |
-| T1b.5  | `vanished + drop` via the `new` label                      | entry dropped               | entry **kept** (only the `removed` label drops)                                                  | §10.16 |
-| T1b.6  | `ignored + drop` via the `removed` label                   | rule removed, entry absent  | rule **left in place**                                                                           | §11.3  |
-| T1b.7  | `new + drop` via the `removed` label                       | rejected (wrong label)      | accepted, demands `to_removed`, does nothing                                                     | §11.3  |
-| T1b.8  | `monitor` on `changed` via `SINGLE_UPDATE` / `BULK_UPDATE` | adopts the requested facets | writes **old** values ⇒ returns as `changed`                                                     | A3-F1  |
-| T1b.9  | any command on a non-discovered origin                     | rejected                    | `FIX_ALL` retargets to `monitored`, forcing a spurious write                                     | §10.8  |
-| T1b.10 | any command on a `clustered_*` source                      | rejected with a redirect    | handled by `_case_clustered`; `disable` drops the node's entry and un-monitors it on the cluster | §10.17 |
-| T1b.11 | any non-command target (13 values)                         | `400`                       | silently deletes the service, `204`, and 10 of them demand no permission                         | §10.3  |
+| #      | divergence                                                                          | intended (§11.2)                                               | current                                                                                                                                                           | ticket               |
+| ------ | ----------------------------------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| T1b.1  | `unchanged + disable`                                                               | entry absent, rule added                                       | entry **written**, rule added                                                                                                                                     | §10.1                |
+| T1b.2  | `changed + disable`                                                                 | entry absent, rule added                                       | entry **written**, rule added                                                                                                                                     | §10.1                |
+| T1b.3  | `vanished + disable`                                                                | rejected                                                       | entry written + rule added                                                                                                                                        | §10.16               |
+| T1b.4  | `vanished + monitor`                                                                | rejected                                                       | entry kept                                                                                                                                                        | §10.16               |
+| T1b.5  | `vanished + drop` via the `new` label                                               | entry dropped                                                  | entry **kept** (only the `removed` label drops)                                                                                                                   | §10.16               |
+| T1b.6  | `ignored + drop` via the `removed` label                                            | rule removed, entry absent                                     | rule **left in place**                                                                                                                                            | §11.3                |
+| T1b.7  | `new + drop` via the `removed` label                                                | rejected (wrong label)                                         | accepted, demands `to_removed`, does nothing                                                                                                                      | §11.3                |
+| T1b.8  | `monitor` with an empty adoption set on `changed` (`SINGLE_UPDATE` / `BULK_UPDATE`) | no transition — nothing to write                               | transition computed, value-identical write, permission demanded, host-wide rebuild                                                                                | A3-F1 residue, §10.8 |
+| T1b.9  | any command on a non-discovered origin                                              | rejected                                                       | `FIX_ALL` retargets to `monitored`, forcing a spurious write                                                                                                      | §10.8                |
+| T1b.10 | any command on a `clustered_*` source                                               | rejected with a redirect                                       | handled by `_case_clustered`; `disable` drops the node's entry and un-monitors it on the cluster                                                                  | §10.17               |
+| T1b.11 | any non-command target (13 of the 17 REST phases)                                   | `400`                                                          | silently deletes the service, `204`, and 10 of them demand no permission — `legacy` and `legacy_ignored` among them, which are not `DiscoveryState` values at all | §10.3                |
+| T1b.12 | accepting a whole table with a disabled service present                             | the same rule delta `FIX_ALL` computes on the same table: none | a rule is written for the disabled service's description; on a shared description that disables the service just accepted                                         | §10.11               |
 
 Two properties this buys:
 
@@ -1395,6 +1544,39 @@ Two properties this buys:
    survived werk 19800 (§7.0).
 
 A single `_expect` helper generating both tests from one row keeps this at one edit per ticket.
+
+> **As implemented:** rows T1b.1–T1b.6 and T1b.8 are single cells and go through the shared
+> `_DIVERGENCES` table, which generates `test_intended_outcome` (strict-xfail) and
+> `test_current_outcome` from each. T1b.7, T1b.9, T1b.10 and T1b.11 are not single cells — they
+> quantify over a _set_ of sources or targets — so each has its own pair of parametrized tests,
+> written to the same rule: the xfail states the intended rejection, the plain test states what
+> happens today. The intended outcome of a rejection is spelled `pytest.raises(Exception)`,
+> deliberately loose: which exception type the rejection uses is a Phase 2 decision (§10.12), and
+> pinning it now would make the test fail for the wrong reason.
+>
+> T1b.12 is the one row that is not a cell at all: it is cross-cell arithmetic over a two-row table
+> (§4.2), so it takes the whole `DiscoveryTransition` rather than the projected `Outcome`. Its
+> intended half is asserted **against `FIX_ALL` on the same table** instead of against a literal.
+> That is not shorthand: `FIX_ALL` reaches an identical target for every row, so it is the same
+> operation, and pinning the two together says "these must agree" — which is the actual contract —
+> rather than restating today's correct answer as a constant that a future fix might legitimately
+> change.
+
+#### Tier 1c — total characterization (`test_discovery_transition_sweep.py`)
+
+1a and 1b together cover the cells that _matter_; they do not cover all 225. Tier 1c does, and it is
+what discharges §7.0: every ordered `(source, target)` pair is asserted, none defaulted.
+
+It is **characterization, not conformance** — its job is that no cell changes by accident, not that
+any cell is right. The expectations are one `HandlerSpec` per source naming the target sets that
+write the entry, add the rule and remove the rule; that is §4's Matrix A2 as data rather than as a
+re-implementation of the dispatch, so a change in behaviour forces an edit to the spec instead of
+being absorbed by it. Three further tests pin the arithmetic that only shows up across the whole
+grid: that a `DiscoveryState` value without a `HandlerSpec` fails collection, and that 9 of the 15
+targets delete a monitored service while demanding no permission at all (§5.1, §10.3).
+
+When a §10 ticket lands, its cells change in 1c _and_ the paired 1b rows disappear — the strict
+xfail is what makes forgetting the second half impossible.
 
 ### Tier 2 — side effects and local/remote dispatch (new file: `tests/unit/cmk/gui/watolib/test_services_dispatch.py`)
 
@@ -1451,13 +1633,23 @@ has no method for it either).
 
 ### Volume
 
-| tier | files                 | test functions                       | generated cases | speed                                       |
-| ---- | --------------------- | ------------------------------------ | --------------- | ------------------------------------------- |
-| 1a   | 1 new                 | 10                                   | ~120            | fast, pure                                  |
-| 1b   | same file, own module | 2 (table-driven, 11 rows ⇒ 22 cases) | ~22             | fast, pure; 11 of them `xfail(strict=True)` |
-| 2    | 1 new                 | 11                                   | ~27             | fast, mocked at the transport               |
-| 3    | extend 1              | 6                                    | ~36             | medium                                      |
-| 4    | 1 new                 | 7 (+ reserved)                       | ~20             | slow, real sites                            |
+| tier | files                                   | test functions | cases                                    | speed                         |
+| ---- | --------------------------------------- | -------------- | ---------------------------------------- | ----------------------------- |
+| 1a   | 1 new + 1 helper module                 | 23             | 70                                       | fast, pure — **implemented**  |
+| 1b   | 1 new                                   | 13             | 70, of which 33 are `xfail(strict=True)` | fast, pure — **implemented**  |
+| 1c   | 1 new (replaces `test_do_discovery.py`) | 3              | 227                                      | fast, pure — **implemented**  |
+| —    | added to the check-engine suite         | 5              | 12, of which 3 are `xfail(strict=True)`  | fast, pure — **implemented**  |
+| 2    | 1 new                                   | 11             | ~27                                      | fast, mocked at the transport |
+| 3    | extend 1                                | 6              | ~36                                      | medium                        |
+| 4    | 1 new                                   | 7 (+ reserved) | ~20                                      | slow, real sites              |
+
+Tier 1 totals 367 cases across the three test files — 334 passing and 33 strict-xfail — running
+in under five seconds. Run it with:
+
+```console
+$ bazel test //tests/unit/cmk/gui:setup_tests --test_arg=-k --test_arg=discovery_transition
+$ bazel test //packages/cmk-check-engine:discovery-tests
+```
 
 ---
 
@@ -1466,35 +1658,35 @@ has no method for it either).
 `⚠️` cells are behaviour, not bugs-to-fix-now. Each needs a disposition in the Phase 2 contract.
 The **Status** column reflects the 2026-08-14 review; see §9 for detail.
 
-| ID    | Finding                                                                                                                                                                                                                                         | Consequence for the rewrite                                                                                                                                              | Status                                                                      |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| A1-F1 | `FIX_ALL` retargets **11 of 13** sources to `unchanged`; the guarding comment is false and never was true (since 2020)                                                                                                                          | Spurious pending change + automation round trip per click on most real hosts; silently prunes enforced-shadowed autochecks                                               | ✅ **confirmed** → §10.8                                                    |
-| A1-F2 | `UPDATE_SERVICE_LABELS` / `UPDATE_DISCOVERY_PARAMETERS` ignore **`update_source`** (not `selected_services` — host-wide scope is intended)                                                                                                      | Accepts every undecided service on the host; unfixed remainder of werk 17711                                                                                             | ✅ **confirmed defect** → §10.5                                             |
-| A1-F3 | `FIX_ALL` ≠ `UPDATE_SERVICES` (adoption + disabled-rule arithmetic)                                                                                                                                                                             | Two "accept" semantics; batch-apply must pick one                                                                                                                        | open                                                                        |
-| A1-F4 | The alias is correct and disclosed ("including changed" in both titles); `changed` really is a subset of monitored                                                                                                                              | Alias is fine; the asymmetry surfaces as dead `bulk_changed_*` enables                                                                                                   | ✅ **not a defect**; separate bug → §10.7                                   |
-| A2-F1 | Permission half is **not exploitable today** (the only caller demands all four); data-loss half is **real** — 13 of 17 `target_phase` values delete a service and return `204`, and 10 of the 17 demand no permission                           | Latent authz hole that goes live with a second caller                                                                                                                    | ✅ **verified, split verdict** → §10.3                                      |
-| A2-F2 | **werk 19800 gap:** `unchanged`/`changed` → `ignored` still write the service to autochecks; only the `ignored` and `clustered_*` sources were fixed                                                                                            | Autochecks residue — entries for services a "Disabled services" rule matches — accumulating on hosts with volatile services                                              | ✅ **confirmed defect** → §10.1                                             |
-| A2-F3 | **No inconsistency exists** — `unchanged` is the only source for which `undecided` is a valid target; the two apparent disagreements (`vanished`, `clustered_*`) are invalid transitions                                                        | An apparent inconsistency in a transition table is a symptom of cells that should be rejections                                                                          | ✅ **verified — not a defect**; splits into A2-F6 / A2-F7                   |
-| A2-F4 | `_case_vanished`'s `else` keeps the service for every unlisted target, so `removed` is the only target that cleans up                                                                                                                           | **No data harm** — the write is value-identical (`older is newer` for vanished rows), so nothing is resurrected; the effect is a failure to clean up                     | ✅ **verified — not a defect**                                              |
-| A2-F5 | **No gap on GUI paths** — `may_edit_ruleset("ignored_services")` is `wato.services or wato.rulesets`, already guaranteed by `_service_discovery_context`. The real gap is the REST endpoint (= P-F1)                                            | Vacuous on GUI paths                                                                                                                                                     | ✅ **verified — not a defect**; folded into §10.4                           |
-| A2-F7 | **No operation on a `clustered_*` row is valid on the node** — the service is owned by the cluster. The GUI honours this (no bulk actions, no row buttons); `_verify_permissions`, `_apply_state_change`, REST and the host-wide actions do not | `clustered_* → ignored` drops the node's entry with no rule, silently un-monitoring the service **on the cluster** until the next node discovery                         | ✅ **confirmed defect** → §10.17                                            |
-| A2-F6 | **`removed` is the only valid target for `vanished`** — `ignored`, `undecided` and `monitored` name states the classifier cannot produce for a not-discovered service, yet the GUI offers `ignored` in two places and REST offers all three     | `vanished → ignored` writes the service back with a rule attached, creating inescapable residue; the fix is withdrawal, not repair                                       | ✅ **confirmed defect** → §10.16                                            |
-| A3-F1 | `SINGLE_UPDATE` / `BULK_UPDATE` / `UPDATE_SERVICES` don't adopt new params or labels                                                                                                                                                            | **The exact PoC downgrade.** Batch apply must state its side                                                                                                             | **intended** — contract input                                               |
-| A3-F2 | `TABULA_RASA` is a second, independent "accept everything"                                                                                                                                                                                      | Story F2                                                                                                                                                                 | **intended** — revisit after epic                                           |
-| P-F1  | `update_service_phase` bypasses `wato.services` **and** `wato.edit`, and requires only host _read_ on a mutating `PUT`                                                                                                                          | A role denied "Manage services" can still write `ignored_services` rules and delete services                                                                             | ✅ **confirmed authz gap** → §10.4                                          |
-| P-F2  | GUI degrades permission failure to `NONE`; REST returns `403`                                                                                                                                                                                   | REST is correct; GUI is deleted                                                                                                                                          | **closed**                                                                  |
-| P-F3  | `clear_discovery_failed` is **guarded**, so it costs near nothing. But it can raise _after_ the write, and `update_service_phase` never clears the flag                                                                                         | Stale "discovery failed" icon; bulk-discovery retry set never converges                                                                                                  | ✅ **verified**; not a cost issue, 2 real defects → §10.9                   |
-| C-F1  | `clustered_ignored` has had no producer since `692c918bf86` (2021-02-05) — an early `return "ignored"` replaced a mutate-then-prefix, reverting werk 7128                                                                                       | Disabled clustered services misfiled on the node with bulk actions enabled, and shown as `vanished`/absent on the cluster; re-enabling from the node silently fails      | ✅ **confirmed regression** → §10.13                                        |
-| C-F2  | `ignored_active` / `ignored_custom` were unrenderable GUI values from `35b96ecaeb9` (2021-11-11) until werk 18136 (2025-10-09, 2.5.0b1) — producer and consumer spelled the two halves in opposite order                                        | Third cross-boundary string mismatch to survive years unnoticed; concealed N-F1 for four years; the concrete case for §10.12                                             | ✅ **fixed upstream** — precedent, no ticket                                |
-| N-F1  | The Nagios config writer applies no "Disabled services" / `effective_host` filter to `custom_checks`; the omit call was deleted in passing by werk 10883 (`cbbcad6fb5f`, 2020-04-09). CMC is unaffected                                         | A service the discovery page files under "Disabled custom checks" keeps being checked and keeps notifying on every Nagios-core site                                      | ✅ **confirmed regression** → §10.15                                        |
-| L-F1  | `legacy` / `legacy_ignored` are fossils of `legacy_checks` (removed in 1.6, werk 7342), still published in the v1 REST `target_phase` enum                                                                                                      | Two of the 13 destructive values in §10.3                                                                                                                                | ✅ **confirmed** → §10.14                                                   |
-| Q-F1  | Quick setup passes `LocalAutomationConfig()` to `perform_fix_all` while deriving the real config for the read                                                                                                                                   | Remote-site hosts get autochecks written on the **central** site — the PoC's worst bug, in surviving production code                                                     | ✅ **confirmed defect** → §10.10                                            |
-| R-F1  | All writing REST modes pass `selected_services=EVERYTHING`, collapsing the duplicate-service guard term to ∅                                                                                                                                    | Spurious `ignored_services` rule for plugin-disabled services                                                                                                            | ⚠️ confirmed in part; `ignored_checks` sub-case needs a live check → §10.11 |
-| T-F1  | `test_do_discovery.py`'s matrix uses `combinations_with_replacement`, covering 120 of 225 cells; the untested half contains every "accept" and "re-enable" transition, and some `known_results` rows are unreachable dead data                  | Explains how A2-F2 survived werk 19800; Tier 1 must replace this file, not extend it                                                                                     | ✅ **confirmed** → §7.0                                                     |
-| B-F1  | `local_discovery{,_preview}` hard-code `LocalAutomationConfig()`                                                                                                                                                                                | Mocking them erases the remote branch — the AC's forbidden pattern                                                                                                       | confirmed, drives test design                                               |
-| B-F2  | 5 distinct remote asymmetries (pre-sync, central-only change, lossy wire format, double permission check, cross-site rule write)                                                                                                                | R5 in the plan; must be re-verified at every phase exit                                                                                                                  | open                                                                        |
-| B-F3  | `update_service_phase` performs no job-active check; while a scan runs, `get_result` hands it an empty table, so the transition is `None` and the endpoint answers `204`                                                                        | A requested change is silently discarded. Low severity, but it shows _job-active_ being used as a proxy for _your table is still current_, in one entry point out of two | ✅ **confirmed defect** → §10.18                                            |
-| §2.1  | `removed` is target-only (alive, required); `clustered_ignored` is unreachable; `legacy` / `legacy_ignored` aren't `DiscoveryState` members but are accepted by REST                                                                            | `DiscoveryState` mixes one verb with 14 nouns; evidence for splitting source from target (Phase 3)                                                                       | `removed` **closed**; rest investigating                                    |
+| ID    | Finding                                                                                                                                                                                                                                               | Consequence for the rewrite                                                                                                                                              | Status                                                                           |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| A1-F1 | `FIX_ALL` retargets **11 of 13** sources to `unchanged`; the guarding comment is false and never was true (since 2020)                                                                                                                                | Spurious pending change + automation round trip per click on most real hosts; silently prunes enforced-shadowed autochecks                                               | ✅ **confirmed** → §10.8                                                         |
+| A1-F2 | `UPDATE_SERVICE_LABELS` / `UPDATE_DISCOVERY_PARAMETERS` ignore **`update_source`** (not `selected_services` — host-wide scope is intended)                                                                                                            | Accepts every undecided service on the host; unfixed remainder of werk 17711                                                                                             | ✅ **confirmed defect** → §10.5                                                  |
+| A1-F3 | `FIX_ALL` ≠ `UPDATE_SERVICES` (adoption + disabled-rule arithmetic)                                                                                                                                                                                   | Two "accept" semantics; batch-apply must pick one                                                                                                                        | open                                                                             |
+| A1-F4 | The alias is correct and disclosed ("including changed" in both titles); `changed` really is a subset of monitored                                                                                                                                    | Alias is fine; the asymmetry surfaces as dead `bulk_changed_*` enables                                                                                                   | ✅ **not a defect**; separate bug → §10.7                                        |
+| A2-F1 | Permission half is **not exploitable today** (the only caller demands all four); data-loss half is **real** — 13 of 17 `target_phase` values delete a service and return `204`, and 10 of the 17 demand no permission                                 | Latent authz hole that goes live with a second caller                                                                                                                    | ✅ **verified, split verdict** → §10.3                                           |
+| A2-F2 | **werk 19800 gap:** `unchanged`/`changed` → `ignored` still write the service to autochecks; only the `ignored` and `clustered_*` sources were fixed                                                                                                  | Autochecks residue — entries for services a "Disabled services" rule matches — accumulating on hosts with volatile services                                              | ✅ **confirmed defect** → §10.1                                                  |
+| A2-F3 | **No inconsistency exists** — `unchanged` is the only source for which `undecided` is a valid target; the two apparent disagreements (`vanished`, `clustered_*`) are invalid transitions                                                              | An apparent inconsistency in a transition table is a symptom of cells that should be rejections                                                                          | ✅ **verified — not a defect**; splits into A2-F6 / A2-F7                        |
+| A2-F4 | `_case_vanished`'s `else` keeps the service for every unlisted target, so `removed` is the only target that cleans up                                                                                                                                 | **No data harm** — the write is value-identical (`older is newer` for vanished rows), so nothing is resurrected; the effect is a failure to clean up                     | ✅ **verified — not a defect**                                                   |
+| A2-F5 | **No gap on GUI paths** — `may_edit_ruleset("ignored_services")` is `wato.services or wato.rulesets`, already guaranteed by `_service_discovery_context`. The real gap is the REST endpoint (= P-F1)                                                  | Vacuous on GUI paths                                                                                                                                                     | ✅ **verified — not a defect**; folded into §10.4                                |
+| A2-F7 | **No operation on a `clustered_*` row is valid on the node** — the service is owned by the cluster. The GUI honours this (no bulk actions, no row buttons); `_verify_permissions`, `_apply_state_change`, REST and the host-wide actions do not       | `clustered_* → ignored` drops the node's entry with no rule, silently un-monitoring the service **on the cluster** until the next node discovery                         | ✅ **confirmed defect** → §10.17                                                 |
+| A2-F6 | **`removed` is the only valid target for `vanished`** — `ignored`, `undecided` and `monitored` name states the classifier cannot produce for a not-discovered service, yet the GUI offers `ignored` in two places and REST offers all three           | `vanished → ignored` writes the service back with a rule attached, creating inescapable residue; the fix is withdrawal, not repair                                       | ✅ **confirmed defect** → §10.16                                                 |
+| A3-F1 | `SINGLE_UPDATE` / `BULK_UPDATE` / `UPDATE_SERVICES` don't adopt new params or labels                                                                                                                                                                  | **The exact PoC downgrade.** Batch apply must state its side                                                                                                             | **intended** — contract input                                                    |
+| A3-F2 | `TABULA_RASA` is a second, independent "accept everything"                                                                                                                                                                                            | Story F2                                                                                                                                                                 | **intended** — revisit after epic                                                |
+| P-F1  | `update_service_phase` bypasses `wato.services` **and** `wato.edit`, and requires only host _read_ on a mutating `PUT`                                                                                                                                | A role denied "Manage services" can still write `ignored_services` rules and delete services                                                                             | ✅ **confirmed authz gap** → §10.4                                               |
+| P-F2  | GUI degrades permission failure to `NONE`; REST returns `403`                                                                                                                                                                                         | REST is correct; GUI is deleted                                                                                                                                          | **closed**                                                                       |
+| P-F3  | `clear_discovery_failed` is **guarded**, so it costs near nothing. But it can raise _after_ the write, and `update_service_phase` never clears the flag                                                                                               | Stale "discovery failed" icon; bulk-discovery retry set never converges                                                                                                  | ✅ **verified**; not a cost issue, 2 real defects → §10.9                        |
+| C-F1  | `clustered_ignored` has had no producer since `692c918bf86` (2021-02-05) — an early `return "ignored"` replaced a mutate-then-prefix, reverting werk 7128                                                                                             | Disabled clustered services misfiled on the node with bulk actions enabled, and shown as `vanished`/absent on the cluster; re-enabling from the node silently fails      | ✅ **confirmed regression** → §10.13                                             |
+| C-F2  | `ignored_active` / `ignored_custom` were unrenderable GUI values from `35b96ecaeb9` (2021-11-11) until werk 18136 (2025-10-09, 2.5.0b1) — producer and consumer spelled the two halves in opposite order                                              | Third cross-boundary string mismatch to survive years unnoticed; concealed N-F1 for four years; the concrete case for §10.12                                             | ✅ **fixed upstream** — precedent, no ticket                                     |
+| N-F1  | The Nagios config writer applies no "Disabled services" / `effective_host` filter to `custom_checks`; the omit call was deleted in passing by werk 10883 (`cbbcad6fb5f`, 2020-04-09). CMC is unaffected                                               | A service the discovery page files under "Disabled custom checks" keeps being checked and keeps notifying on every Nagios-core site                                      | ✅ **confirmed regression** → §10.15                                             |
+| L-F1  | `legacy` / `legacy_ignored` are fossils of `legacy_checks` (removed in 1.6, werk 7342), still published in the v1 REST `target_phase` enum                                                                                                            | Two of the 13 destructive values in §10.3                                                                                                                                | ✅ **confirmed** → §10.14                                                        |
+| Q-F1  | Quick setup passes `LocalAutomationConfig()` to `perform_fix_all` while deriving the real config for the read                                                                                                                                         | Remote-site hosts get autochecks written on the **central** site — the PoC's worst bug, in surviving production code                                                     | ✅ **confirmed defect** → §10.10                                                 |
+| R-F1  | `selected_services` is overloaded: it selects the rows a command may touch **and** is the subtrahend of the duplicate-service guard. Every whole-table action must pass `EVERYTHING` for the first job, which collapses the guard to ∅ for the second | A service the user asked to _monitor_ is accepted into the autochecks and disabled by a new rule in the same transition                                                  | ✅ **confirmed defect** → §10.11                                                 |
+| T-F1  | `test_do_discovery.py`'s matrix uses `combinations_with_replacement`, covering 120 of 225 cells; the untested half contains every "accept" and "re-enable" transition, and some `known_results` rows are unreachable dead data                        | Explains how A2-F2 survived werk 19800; Tier 1 must replace this file, not extend it                                                                                     | ✅ **fixed in this branch** — file deleted, Tier 1c covers all 225 (§7.0, §10.2) |
+| B-F1  | `local_discovery{,_preview}` hard-code `LocalAutomationConfig()`                                                                                                                                                                                      | Mocking them erases the remote branch — the AC's forbidden pattern                                                                                                       | confirmed, drives test design                                                    |
+| B-F2  | 5 distinct remote asymmetries (pre-sync, central-only change, lossy wire format, double permission check, cross-site rule write)                                                                                                                      | R5 in the plan; must be re-verified at every phase exit                                                                                                                  | open                                                                             |
+| B-F3  | `update_service_phase` performs no job-active check; while a scan runs, `get_result` hands it an empty table, so the transition is `None` and the endpoint answers `204`                                                                              | A requested change is silently discarded. Low severity, but it shows _job-active_ being used as a proxy for _your table is still current_, in one entry point out of two | ✅ **confirmed defect** → §10.18                                                 |
+| §2.1  | `removed` is target-only (alive, required); `clustered_ignored` is unreachable; `legacy` / `legacy_ignored` aren't `DiscoveryState` members but are accepted by REST                                                                                  | `DiscoveryState` mixes one verb with 14 nouns; evidence for splitting source from target (Phase 3)                                                                       | `removed` **closed**; rest investigating                                         |
 
 ---
 
@@ -1505,30 +1697,32 @@ what is still being verified, so that the document is honest about its own confi
 
 ### 9.1 Adjudicated — no ticket
 
-| ID        | Disposition                                                                                                                                                                                      |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| A3-F1     | **Intended.** Narrow adoption is why `UPDATE_SERVICE_LABELS` / `UPDATE_DISCOVERY_PARAMETERS` exist. Kept as a contract requirement for batch apply, not as a defect.                             |
-| A3-F2     | **Intended.** `FIX_ALL` accepts; `TABULA_RASA` forgets _then_ accepts. Follow-up question deferred to after the epic: is `TABULA_RASA` still needed once Phase 1's primitives exist?             |
-| P-F2      | **Closed.** REST's `403` is correct; the degrading GUI is deleted at the end of the epic.                                                                                                        |
-| `removed` | **Not a defect.** Target-only by design and required in that role.                                                                                                                               |
-| A2-F2     | **Confirmed defect, ticket proposed (§10.1).** werk 19800 landed, but covered only the `ignored` and `clustered_*` sources. `unchanged`/`changed`/`vanished` → `ignored` still write autochecks. |
+| ID        | Disposition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A3-F1     | **Intended, disposition upheld.** Narrow adoption is why `UPDATE_SERVICE_LABELS` / `UPDATE_DISCOVERY_PARAMETERS` exist; §11.1 formalises it as `adopt ⊆ {parameters, labels}`, a _parameter_ of `monitor`. Kept as a contract requirement for batch apply, not as a defect. **Residue, separately ticketed:** with `adopt`=∅ the operation is a no-op, and today it is executed as a change (value-identical write, permission demanded, pending change, host-wide rebuild) because `apply_changes` compares an observation to a command. → §10.8 family, T1b.8                                    |
+| A3-F3     | **Intended.** Adoption differs by surface because the level of user attention differs: "Accept all" adopts (the user reviewed the table), "Tabula rasa" adopts (the user wants it done now from fresh data), bulk/periodic rediscovery adopts whatever its rule says (the user is absent and configured it in advance). No code change. Two follow-ups: the user-facing docs for "Accept all" still describe pre-2.4 behaviour (**KNW-2342**, docs), and the _naming_ must be cleaned up in the rewrite — "fix all" means different things on two surfaces and "tabula rasa" forgets nothing. → §5 |
+| A3-F2     | **Intended.** `TABULA_RASA` computes `FIX_ALL`'s plan facet for facet; it differs by forcing a fetch and by using the check engine's write path. It forgets nothing — the name predates the 2.3 rework (werk 16865). It is therefore already `Scan.start(Fetch) ▸ fix_all` and needs no separate existence in the target model; Story F2 is answerable now. → §5                                                                                                                                                                                                                                   |
+| P-F2      | **Closed.** REST's `403` is correct; the degrading GUI is deleted at the end of the epic.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `removed` | **Not a defect.** Target-only by design and required in that role.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| A2-F2     | **Confirmed defect, ticket proposed (§10.1).** werk 19800 landed, but covered only the `ignored` and `clustered_*` sources. `unchanged`/`changed`/`vanished` → `ignored` still write autochecks.                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ### 9.2 Resolved by investigation
 
 All items are folded into the sections above and, where confirmed, ticketed in §10.
 
-| ID                          | Outcome                                                                                                                                                                                                                                                                             |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A1-F1                       | **Confirmed.** Comment false since 2020; no upstream filter; the `is_discovered` filter is only a status-message heuristic. 11 of 13 sources reach the fall-through. → §10.8                                                                                                        |
-| A1-F2                       | **Confirmed.** The missing gate is `update_source`, not `selected_services` — host-wide scope is intended. Unfixed remainder of werk 17711. → §10.5                                                                                                                                 |
-| A1-F4                       | **Not a defect.** The alias is intentional and disclosed; `changed` genuinely is a subset of monitored. Uncovered a separate real bug → §10.7                                                                                                                                       |
-| A2-F1                       | **Split.** Permission half not exploitable today; data-loss half real (13 values delete, 10 of 17 undefended). → §10.3                                                                                                                                                              |
-| A2-F2                       | **Confirmed defect.** werk 19800 covered only the `ignored` and `clustered_*` sources. → §10.1                                                                                                                                                                                      |
-| A2-F3 / A2-F4               | **No data harm** — the write is value-identical, so nothing is resurrected; the effect is a failure to clean up. `vanished → new` is reachable via REST (the endpoint's HATEOAS links advertise it on vanished rows) but is an **invalid** transition, split out as A2-F6 → §10.16. |
-| A2-F5                       | **Not a defect on GUI paths** — `may_edit_ruleset("ignored_services")` is satisfied by `wato.services`, which every GUI path already holds. Real gap is P-F1. → §10.4                                                                                                               |
-| P-F1                        | **Confirmed authorization gap**, covering `wato.edit` as well as `wato.services`. → §10.4                                                                                                                                                                                           |
-| P-F3                        | **Not a cost issue** (the write is guarded and normally a no-op); two real defects underneath. → §10.9                                                                                                                                                                              |
-| `legacy` / `legacy_ignored` | **Origin found:** they were real `DiscoveryState` members at `aecd8007105` (June 2020). Removal path still open.                                                                                                                                                                    |
+| ID                          | Outcome                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A1-F1                       | **Confirmed.** Comment false since 2020; no upstream filter; the `is_discovered` filter is only a status-message heuristic. 11 of 13 sources reach the fall-through. → §10.8                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| A1-F2                       | **Confirmed.** The missing gate is `update_source`, not `selected_services` — host-wide scope is intended. Unfixed remainder of werk 17711. → §10.5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| A1-F4                       | **Not a defect.** The alias is intentional and disclosed; `changed` genuinely is a subset of monitored. Uncovered a separate real bug → §10.7                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| A2-F1                       | **Split.** Permission half not exploitable today; data-loss half real (13 values delete, 10 of 17 undefended). → §10.3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| A2-F2                       | **Confirmed defect.** werk 19800 covered only the `ignored` and `clustered_*` sources. → §10.1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| A2-F3 / A2-F4               | **No data harm** — the write is value-identical, so nothing is resurrected; the effect is a failure to clean up. `vanished → new` is reachable via REST (the endpoint's HATEOAS links advertise it on vanished rows) but is an **invalid** transition, split out as A2-F6 → §10.16.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| A2-F5                       | **Not a defect on GUI paths** — `may_edit_ruleset("ignored_services")` is satisfied by `wato.services`, which every GUI path already holds. Real gap is P-F1. → §10.4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| P-F1                        | **Confirmed authorization gap**, covering `wato.edit` as well as `wato.services`. → §10.4                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| P-F3                        | **Not a cost issue** (the write is guarded and normally a no-op); two real defects underneath. → §10.9                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| R-F1                        | **Confirmed defect; no live check needed after all.** The rule-writing half is derivable: `save_host_service_enable_disable_rules` calls `analyse_ruleset` on `rulesets.get("ignored_services")` (`rulesets.py:1905`), and `analyse_ruleset` matches only against that ruleset's own `get_rules()` (`:1229`), so an `ignored_checks` rule can never enter `rule_matches`, never make `value_without_host_rule` true, and never satisfy the filter at `:1930-1932` — at that line a plugin-disabled service is _indistinguishable_ from one nothing disables, which no site configuration can change. `get_services_labels` cannot fail on it either (`discovered_labels.get(service, {})`, `check_mk.py:1886`). Root cause is the `selected_services` overload, not the sentinel. → §10.11 |
+| `legacy` / `legacy_ignored` | **Origin found:** they were real `DiscoveryState` members at `aecd8007105` (June 2020). Removal path still open.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ### 9.3 Still open
 
@@ -1536,7 +1730,6 @@ Everything else has been resolved. What remains:
 
 | ID            | Question                                                                                                                                                        |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R-F1 / §10.11 | The `ignored_checks` sub-case (a disabled check _plugin_, where `analyse_ruleset` returns `None`) needs one confirmation on a live site before §10.11 is filed. |
 | §10.14 step 3 | Whether to narrow the v1 request enum at the next major API version or leave it rejecting with `400` indefinitely — an API-ownership call, not a code question. |
 
 ### 9.4 Resolved — the `DiscoveryState` values with no producer
@@ -1616,7 +1809,14 @@ already drives the `unchanged → ignored` transition and needs only an assertio
 `mock_set_autochecks.call_args.args[1].target_services`; today it requests the
 `mock_set_autochecks` fixture and never inspects it.
 
-### 10.2 The `_apply_state_change` matrix test covers 120 of 225 cells
+### 10.2 The `_apply_state_change` matrix test covers 120 of 225 cells — ✅ **RESOLVED, no ticket**
+
+> **Fixed in this branch, not filed.** The ticket's own closing sentence said it _"and CMK-34150's
+> Tier 1 should be the same change"_, and that is what happened: `test_do_discovery.py` is deleted
+> and Tier 1c (`test_discovery_transition_sweep.py`) covers all 225 ordered pairs, each asserted.
+> Kept here because the _explanation_ is still load-bearing — it is the answer to "how did werk
+> 19800 ship with the gap", and every future guardrail claim in this document is measured against
+> it.
 
 **Verified:** re-derived the generator's output. Source finding: T-F1, detail in §7.0.
 
@@ -1635,9 +1835,36 @@ including `changed → unchanged` — the core transition of the feature — plu
 pinned cells but are never executed. The file presents as an exhaustive 15 × 15 matrix and is not
 one, which is how A2-F2 survived werk 19800: the `(MONITORED, IGNORED)` cell _is_ generated and pins
 the buggy value, while the neighbouring cells that would have exposed the inconsistency never ran.
-The fix is to switch to `itertools.product` and resolve whatever the newly covered 105 cells reveal —
-which is exactly the Tier 1 work in §7, so this ticket and CMK-34150's Tier 1 should be the same
-change.
+**The prescribed fix was wrong, and the implementation departed from it.** Switching to
+`itertools.product` and porting `known_results` would have re-pinned the buggy `(*, IGNORED)` rows —
+A2-F2's behaviour — as plain expectations, in a file with no way to say "this cell is wrong". Tier 1c
+instead derives every expectation from one `HandlerSpec` per source, and the cells that are wrong are
+carried by Tier 1b as strict-xfail/characterization pairs (§7).
+
+**What the newly covered 105 cells revealed: nothing.** Every one of them behaved exactly as §4
+already described. That is the useful result rather than a disappointing one — the characterization
+was accurate before it was executable, so the 120 cells that _were_ covered had not been propping up
+a wrong description of the other 105.
+
+One set of numbers is worth stating precisely, because three different populations get counted in
+this document and they give three different answers. All three are "applied to a currently
+**monitored** service", which is the only condition under which the question has one answer:
+
+- of the **17** REST `target_phase` values, **11** demand no permission — the four command phases
+  demand one each except `monitored`, which is a no-op on a monitored service and so demands nothing;
+- of the **13** non-command phases among them, **10** — this is T1b.11, which derives its list from
+  `SERVICE_DISCOVERY_PHASES` itself so that the count in this document and the count in the test
+  cannot drift apart, and fails outright when a phase is added;
+- of the **15** `DiscoveryState` values used as targets, **9** — this is Tier 1c
+  (`test_only_six_of_fifteen_targets_demand_a_permission`).
+
+The second and third populations differ by exactly `legacy` and `legacy_ignored`: phase keys that map
+to bare strings rather than to `DiscoveryState` members. Counting non-command targets in the enum's
+vocabulary instead of the endpoint's therefore gives 11 rather than 13, and 8 rather than 10 demanding
+nothing — which is precisely the discrepancy T1b.11 carried between its row in §7 and its own
+parametrization until a review caught it. The three non-commands that _do_ demand something are
+`changed`, `clustered_new` and `clustered_old`, which `_verify_permissions` folds into
+`to_monitored`'s arm.
 
 ### 10.3 REST `update_discovery_phase`: 13 of 17 `target_phase` values silently delete services
 
@@ -1790,23 +2017,87 @@ explicitly handles remote sites elsewhere (`site_is_local` at `:447`, a remote-s
 unconditionally local — in production code that _survives_ the rewrite. It is exactly what test T2.2
 is designed to catch, and it is the strongest argument for that test.
 
-### 10.11 REST modes pass `selected_services=EVERYTHING`, disabling the duplicate-service guard
+### 10.11 A whole-table save disables the service it was asked to monitor
 
-**Verified empirically** for the `add_disabled_rule` delta; the `ignored_checks` sub-case is
-**unconfirmed** and needs one check on a live site before this is filed.
+**Confirmed defect.** Quarantined as T1b.12 in
+`tests/unit/cmk/gui/watolib/test_discovery_transition_quarantine.py`.
 
-`compute_discovery_transition` guards against creating "Disabled services" rules for services disabled
-by a _plugin_ rule via `add_disabled_rule - remove_disabled_rule - (saved_services - selected_services)`
-(`services.py:404-406`). All three writing REST modes pass `selected_services=EVERYTHING`, so
-`_get_selected_descriptions` yields every description and the subtraction term collapses to ∅ —
-measured: an already-`ignored` row yields `add_disabled_rule=['svc-ignored']` under `EVERYTHING`
-versus `[]` under the GUI's `()`. Every REST save on a host with disabled services therefore invokes
-`EnabledDisabledServicesEditor`, costing one `get_services_labels` automation; and for services
-disabled through `ignored_checks` (a disabled check _plugin_) `analyse_ruleset` returns `None`, so they
-survive the filter at `rulesets.py:1931-1934` and `_update_rule_of_host` creates a host-pinned
-`ignored_services` rule the user never asked for — with neither
-`wato.service_discovery_to_ignored` nor `may_edit_ruleset` checked on that path (source == target, so
-`_verify_permissions` demands nothing). Idempotent after the first write.
+#### The mechanism
+
+`selected_services` does two unrelated jobs:
+
+| Job              | Read at                                                                                                                           | Meaning                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Row eligibility  | `_get_table_target:549` (`UPDATE_SERVICES`), `:580` (`BULK_UPDATE`), `:590` (`SINGLE_UPDATE`, `SINGLE_UPDATE_SERVICE_PROPERTIES`) | "the rows this command applies to"                                    |
+| Guard subtrahend | `:405`, `saved_services - selected_services`                                                                                      | "the services the user named as services to **disable**" (werk 19062) |
+
+A whole-table action has no per-service selection, so it must pass `EVERYTHING` to satisfy job 1.
+Job 2 then reads the same value as "the user explicitly asked to disable every service on this
+host", the subtrahend collapses to ∅, and werk 6708's guard is gone. **The overload is the defect**
+— not the sentinel, which job 1 genuinely requires.
+
+That the sentinel never carries the meaning job 2 assumes is settled by the call sites, not by
+judgement. `EVERYTHING` is passed at four places:
+
+| Call site                                                  | Action                  | `update_target` | Is it a disable request?                                                                                                                                                                           |
+| ---------------------------------------------------------- | ----------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `execute_service_discovery.py:124` (`new`)                 | `BULK_UPDATE`           | `unchanged`     | no                                                                                                                                                                                                 |
+| `execute_service_discovery.py:140` (`remove`)              | `BULK_UPDATE`           | `removed`       | no                                                                                                                                                                                                 |
+| `execute_service_discovery.py:192` (`only_service_labels`) | `UPDATE_SERVICE_LABELS` | `unchanged`     | no — and this action never consults the selection for eligibility either (`:558`), so its `EVERYTHING` has no purpose at all                                                                       |
+| `wato/pages/services.py:677`                               | `UPDATE_SERVICES`       | —               | no — it is what `_resolve_selected_services` returns when checkboxes are _unavailable_, under the comment _"empty list can mean everything or nothing"_, i.e. "no explicit selection was possible" |
+
+None of them targets `ignored`. The one REST path that _can_ disable,
+`update_service_phase.py:104`, passes `((check_type, service_item),)` — the single service it was
+given, which is exactly the explicit selection werk 19062's carve-out exists for. So the carve-out
+is correctly served where it is needed and fires as pure collateral everywhere else.
+
+#### The harm
+
+Run `two_plugins_one_description` — an SNMP plugin disabled by a _Disabled checks_ rule and a TCP
+plugin rendering the same description, discovered normally (§4.2) — through REST mode `new`, which
+means "accept all undecided services into monitoring":
+
+| Row              | Target                                                                       | `_apply_state_change` writes                                                  |
+| ---------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `ignored` (SNMP) | `ignored` — source, so no permission is demanded (`_verify_permissions:435`) | `saved_services ∋ "CPU utilization"`, `add_disabled_rule ∋ "CPU utilization"` |
+| `new` (TCP)      | `unchanged`                                                                  | the autochecks entry, `saved_services ∋ "CPU utilization"`                    |
+
+`_case_undecided` is not even passed `remove_disabled_rule` (`services.py:983-996`), so nothing
+cancels the first row. With the subtrahend collapsed, `add_disabled_rule = {"CPU utilization"}`.
+The TCP service is therefore **written into the autochecks and covered by a new
+`ignored_services` rule in the same transition**, and reads back as `ignored` on the next scan. The
+user asked for it to be monitored.
+
+This breaks the §4 invariant that a disabled service is never in the autochecks file, from the
+opposite side to §10.1: there the rule is right and the autochecks entry is residue, here the
+autochecks entry is right and the rule is residue.
+
+The blast radius has a bound worth stating: both core writers reject duplicate service descriptions
+(`duplicate_service_warning` plus `continue`, `nagios/_create_config.py:683-692`,
+`nonfree/cmc/_services.py:331-341`), so had both services been enabled only one would be monitored
+anyway. What the rule costs is a _configuration_ change nobody asked for — visible on the ruleset
+page, carrying a pending change, and surviving the deletion of the `ignored_checks` rule that
+provoked it, because it is host-pinned and unconditional on the plugin.
+
+On a host with no duplicate descriptions the same bug is only wasteful: the rule is redundant with
+whatever already disabled the service, but `EnabledDisabledServicesEditor` still costs one
+`get_services_labels` automation plus one rule-match per description (CMK-26792), and `need_sync`
+is computed _before_ the subtraction (`services.py:397-399`), so the pending change is created even
+when the delta is empty. Idempotent after the first write.
+
+#### The fix
+
+Not "stop passing `EVERYTHING`": `new` and `remove` are `BULK_UPDATE` and need it for eligibility,
+so `()` would make them no-ops. The two jobs have to be separated — the rows a command may touch,
+and the rows the user named as a disable. §11's command model gives this for free, since `disable`
+there is a per-service command with an explicit subject; until then the guard's subtrahend must be
+built from an explicit selection only, with `EVERYTHING` never counting as one.
+
+One piece is separable and can land on its own: `only_service_labels` (`:192`) never consults the
+selection for eligibility, so its `EVERYTHING` can become `()` today with no other effect.
+
+Note what this does _not_ need: a live site. The rule-writing half is derivable from source — see
+the R-F1 row in §9.2.
 
 ### 10.12 Split `DiscoveryState` into a display state and a transition command
 
@@ -1874,6 +2165,13 @@ vanished services" deletes the autocheck without touching the responsible rule.
 add a _Disabled services_ rule with no host restriction matching S. Open N's service discovery: S is
 under "Disabled services", not "Disabled clustered services". Open C's: S is under "Vanished services"
 or absent. Re-enable S from N's page: reports success, has no effect.
+
+**Tests are already in place and quarantined.** `test__autodiscovery.py` carries a strict-xfail
+asserting the intended `clustered_ignored` classification, paired with a characterization of today's
+plain `ignored`, plus a conformance test pinning that the node row is disabled by the _cluster's_ rule
+(which this fix must preserve). Implementing the fix turns the xfail into an XPASS and the suite red:
+delete the xfail, the paired characterization, and update the emitted-transition set in
+`test_node_service_source_emits_exactly_eight_of_the_nine_transitions` to nine.
 
 **Fix.** Return `"clustered_ignored"` from the node branch, and classify the cluster side with
 `is_ignored(cluster)` rather than letting `appears_on_cluster`'s node-level ignore filter drop the
@@ -2068,9 +2366,9 @@ will clean up.
 **Verified:** `_case_clustered`'s branches, the GUI's clustered table-group flags, and the cluster
 autochecks-gathering path. Source finding: A2-F7.
 
-**Proposed title:** \_Service discovery: operations on clustered services are rejected by the GUI but
-accepted by the backend; `clustered\__ → ignored` drops the node's autochecks entry and silently
-un-monitors the service on the cluster\_
+**Proposed title:** _Service discovery: operations on clustered services are rejected by the GUI but
+accepted by the backend; targeting `ignored` on a clustered row drops the node's autochecks entry
+and silently un-monitors the service on the cluster_
 
 **Summary.** A `clustered_*` row on a node's discovery page is informational: a "Clustered services" rule
 assigns the service to a cluster, the cluster owns it, and the responsibility for discovering it belongs
@@ -2238,17 +2536,32 @@ Sources with `origin ≠ discovered` (`manual`, `active`, `custom`, `ignored_act
 sources with `effective_host_is_self = no` (all `clustered_*`) admit **no** operation at all, and are
 excluded from the table by the eligibility gate rather than given rows of `✗` — see §11.2a. What remains:
 
-| state                                             | M `monitor`                 | D `disable` | X `drop`                | meaningful  | resulting state                                             |
-| ------------------------------------------------- | --------------------------- | ----------- | ----------------------- | ----------- | ----------------------------------------------------------- |
-| **`new`** <br>found, ¬stored, ¬ruled              | ✓                           | ✓           | – already in this state | **M, D**    | M → `unchanged` · D → `ignored`                             |
-| **`unchanged`** <br>found, stored, props=, ¬ruled | – already                   | ✓           | ✓                       | **D, X**    | D → `ignored` · X → `new`                                   |
-| **`changed`** <br>found, stored, props≠, ¬ruled   | ✓ adopts the changed facets | ✓           | ✓                       | **M, D, X** | M → `unchanged` with new values · D → `ignored` · X → `new` |
-| **`ignored`** <br>found, ¬stored, ruled           | ✓ drops the rule            | – already   | ✓ drops the rule        | **M, X**    | M → `unchanged` · X → `new`                                 |
-| **`vanished`** <br>¬found, stored, ¬ruled         | ✗                           | ✗           | ✓                       | **X only**  | X → gone                                                    |
+| state                                             | M `monitor`                       | D `disable` | X `drop`                | meaningful  | resulting state                                                                                             |
+| ------------------------------------------------- | --------------------------------- | ----------- | ----------------------- | ----------- | ----------------------------------------------------------------------------------------------------------- |
+| **`new`** <br>found, ¬stored, ¬ruled              | ✓                                 | ✓           | – already in this state | **M, D**    | M → `unchanged` · D → `ignored`                                                                             |
+| **`unchanged`** <br>found, stored, props=, ¬ruled | – already                         | ✓           | ✓                       | **D, X**    | D → `ignored` · X → `new`                                                                                   |
+| **`changed`** <br>found, stored, props≠, ¬ruled   | ✓ adopts `adopt` · – if `adopt`=∅ | ✓           | ✓                       | **M, D, X** | M → `unchanged` with the adopted facets written, or nothing at all if `adopt`=∅ · D → `ignored` · X → `new` |
+| **`ignored`** <br>found, ¬stored, ruled           | ✓ drops the rule                  | – already   | ✓ drops the rule        | **M, X**    | M → `unchanged` · X → `new`                                                                                 |
+| **`vanished`** <br>¬found, stored, ¬ruled         | ✗                                 | ✗           | ✓                       | **X only**  | X → gone                                                                                                    |
 
-**Fifteen cells: 10 meaningful, 3 no-op, 2 rejections.** Against **206** off-diagonal
-`(source, target)` combinations reachable today via `update_service_phase` (13 sources × 17 targets − 15
-diagonals). That ratio is the case for validating the _pair_, not merely narrowing the target vocabulary.
+**Fifteen cells: 10 meaningful, 3 no-op, 2 rejections.** Against **208** off-diagonal
+`(source, target)` combinations reachable today via `update_service_phase`: 13 reachable sources × 17
+accepted target phases = 221 pairs, less the 13 diagonals — one per source, since every reachable
+source has a matching phase key. (Note this is a _different_ grid from the 15 × 15 = 225 declared pair
+space of §2.1: the 17 phases include `legacy` and `legacy_ignored`, which are not states at all.)
+That ratio is the case for validating the _pair_, not merely narrowing the target vocabulary.
+
+**`changed` + `monitor` is the one cell whose verdict depends on the command's parameter**, and the
+only place `adopt` is meaningful at all (§11.1, §5). With `adopt ≠ ∅` it is a real operation and is
+counted among the ten; with `adopt = ∅` it degenerates to a no-op — "keep monitoring this, do not
+take the newly discovered values" — and must write nothing. Both readings are legitimate and
+neither is a defect: A3-F1's separation of _phase movement_ from _property adoption_ is exactly what
+the parameter expresses. What **is** a defect is that today the `adopt = ∅` realisation is executed
+as a change: `apply_changes` is derived from `check_source != table_target`, so `"changed" !=
+"unchanged"` is true, and the no-op costs a value-identical write, a `to_monitored` permission
+check, a pending change and a host-wide autochecks rebuild. Quarantined as T1b.8; it is the §10.8
+family, not a value-adoption bug. In the target model `ChangeSet != current` decides, so the
+identical `ChangeSet` produces no write and the cell needs no special case.
 
 Note what the table no longer contains: a **duplicate** verdict. Earlier drafts needed one because
 `removed` shadowed `forget` for every source that is still discovered. Merging them removes the concept,
@@ -2322,9 +2635,13 @@ cluster. That is A2-F7 / §10.17; the misclassification that routes disabled clu
 
 **`changed` is the only state where property adoption is meaningful**, because it is the only transition
 where `DiscoveredItem` has both sides set and differing (§5). It is also the only state with three
-meaningful operations, and the only one where `monitor` needs a parameter: today's `SINGLE_UPDATE` and
-`BULK_UPDATE` reclassify without adopting, so the service returns as `changed` (A3-F1). The contract must
-state, per caller, which facets `monitor` adopts — it cannot be left implicit.
+meaningful operations, and the only one where `monitor` needs a parameter. Today's `SINGLE_UPDATE` and
+`BULK_UPDATE` are `monitor(adopt=∅)` — which is a legitimate reading of the command, not a defect
+(A3-F1): the row keeps its stored properties and therefore stays `changed`. The contract must state,
+per caller, which facets `monitor` adopts — it cannot be left implicit, because the same command with
+`adopt=∅` and with `adopt={parameters, labels}` are different operations that today share one spelling.
+What _is_ a defect is that the `adopt=∅` case is executed as a change rather than recognised as a no-op
+(§11.2, T1b.8).
 
 ### 11.4 Consequences for the contract and the API
 
@@ -2356,18 +2673,30 @@ state, per caller, which facets `monitor` adopts — it cannot be left implicit.
    `409`s — a stale page or script (undetected today by either entry point) and a write during an active
    scan (B-F3, §10.18, where `check_table_created` is `0`). This replaces the job-active probe rather
    than adding to it; see domain model §9.4 and its API-compatibility decision in §12.7.
+7. **A command carries its own subject; "which rows" and "which rows the user named" must not be one
+   parameter.** Today `selected_services` answers both questions (`_get_table_target:549`/`:580`/`:590`
+   for the first, the `add_disabled_rule` subtrahend at `:405` for the second), and a whole-table
+   action has to answer the first with `EVERYTHING` — which is then read as an explicit request to
+   disable every service on the host. That is R-F1 / §10.11, and it is not fixable by changing what
+   the callers pass, because both readings are load-bearing. In the §11 model the overload cannot be
+   expressed: `disable` is a per-service command whose subject is the row it names, so "the services
+   the user asked to disable" is exactly the set of `disable` commands in the request, and a batch
+   accept contains none of them. **The bug disappears by construction rather than by fix** — which
+   makes T1b.12 a test that should XPASS on the strength of the model alone, and a useful check that
+   the model really is stronger than the code it replaces.
 
 ### 11.5 Divergences from current behaviour, indexed
 
-| #   | intended (§11.2)                                                   | current                                                                                                         | finding                           |
-| --- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| 1   | `vanished + disable` rejected                                      | writes the service back into autochecks, with a rule attached                                                   | A2-F6, §10.16                     |
-| 2   | `vanished + monitor` rejected                                      | keeps it; `vanished` forever                                                                                    | A2-F6, A2-F4, reachable via A1-F2 |
-| 3   | `vanished + drop` drops the entry, whichever label the caller used | only the `removed` label drops; `new` and `unchanged` keep it                                                   | A2-F6, §10.16                     |
-| 4   | `monitor` always adopts the changed facets it is asked for         | `SINGLE_UPDATE` / `BULK_UPDATE` reclassify without adopting, so the service returns as `changed`                | A3-F1                             |
-| 5   | `{unchanged, changed} + disable` → absent from autochecks          | writes it                                                                                                       | §10.1                             |
-| 6   | non-autocheck origins reject everything                            | `FIX_ALL` retargets them to `monitored`; REST admits every target                                               | §10.8, §10.3                      |
-| 7   | clustered sources reject everything on the node                    | every target except `ignored` rewrites the entry; `ignored` drops it and un-monitors the service on the cluster | A2-F7, §10.17                     |
-| 8   | `ignored + drop` removes the disabled rule                         | the `removed` label leaves the rule in place — the one `drop` cell `_case_ignored` treats differently           | §11.3, §10.3                      |
-| 9   | the `removed` label is rejected on any still-discovered source     | accepted and handled as `drop`, with a different permission                                                     | §11.3                             |
-| 10  | only 10 pairs accepted, under 4 rules                              | 206 reachable via `update_service_phase`                                                                        | §10.3, §10.14                     |
+| #   | intended (§11.2)                                                                   | current                                                                                                                                      | finding                           |
+| --- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| 1   | `vanished + disable` rejected                                                      | writes the service back into autochecks, with a rule attached                                                                                | A2-F6, §10.16                     |
+| 2   | `vanished + monitor` rejected                                                      | keeps it; `vanished` forever                                                                                                                 | A2-F6, A2-F4, reachable via A1-F2 |
+| 3   | `vanished + drop` drops the entry, whichever label the caller used                 | only the `removed` label drops; `new` and `unchanged` keep it                                                                                | A2-F6, §10.16                     |
+| 4   | `monitor` with `adopt`=∅ on a `changed` row writes nothing — it is a no-op         | executed as a change: value-identical write, `to_monitored` demanded, pending change, host-wide autochecks rebuild                           | A3-F1 residue, §10.8 family       |
+| 5   | `{unchanged, changed} + disable` → absent from autochecks                          | writes it                                                                                                                                    | §10.1                             |
+| 6   | non-autocheck origins reject everything                                            | `FIX_ALL` retargets them to `monitored`; REST admits every target                                                                            | §10.8, §10.3                      |
+| 7   | clustered sources reject everything on the node                                    | every target except `ignored` rewrites the entry; `ignored` drops it and un-monitors the service on the cluster                              | A2-F7, §10.17                     |
+| 8   | `ignored + drop` removes the disabled rule                                         | the `removed` label leaves the rule in place — the one `drop` cell `_case_ignored` treats differently                                        | §11.3, §10.3                      |
+| 9   | the `removed` label is rejected on any still-discovered source                     | accepted and handled as `drop`, with a different permission                                                                                  | §11.3                             |
+| 10  | only 10 pairs accepted, under 4 rules                                              | 208 reachable via `update_service_phase`                                                                                                     | §10.3, §10.14                     |
+| 11  | a batch accept issues no `disable` command, so it writes no disabled-services rule | every whole-table save re-writes a rule for each already-disabled service, and on a shared description disables the service it just accepted | R-F1, §10.11                      |

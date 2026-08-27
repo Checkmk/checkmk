@@ -44,9 +44,11 @@ Conflation 2 is the expensive one. It is _not_ wrong for one type to describe bo
 a current and a desired state — that is what a state type is for. It is wrong for
 an **observation** to be usable as a **command**. "This service vanished" is a fact
 about the world; it cannot be an instruction. Because `DiscoveryState` is used in
-both positions, the declared pair space is 15 × 15 = 225, of which **206** are
-reachable today via `update_service_phase` (13 reachable sources × 17 accepted
-target phases, less the 15 diagonals) — against 10 that mean anything.
+both positions, the declared pair space is 15 × 15 = 225. What a client can
+actually request is a different and larger grid — 13 reachable sources × 17 accepted
+target phases = 221 pairs, less the 13 diagonals, leaving **208** off-diagonal
+(the 17 phases include `legacy` and `legacy_ignored`, which are not states, so the
+two grids are not nested) — against 10 that mean anything.
 
 ---
 
@@ -302,7 +304,7 @@ unrepresentable:
 
 The 15-name enum was a flattening of `DiscoveryStatus × origin × excluded ×
 effective_host`. Flattening a product type into names is exactly why the value set
-is both incomplete (no `clustered_changed`) and over-large (206 reachable pairs).
+is both incomplete (no `clustered_changed`) and over-large (208 reachable pairs).
 
 ---
 
@@ -337,14 +339,23 @@ For `origin = Discovered` and `effective_host = host`:
 
 ✓ meaningful · – accepted as a no-op · ✗ rejected
 
-**10 meaningful (state, intent) pairs.** Against 206 reachable today. The count
+**10 meaningful (state, intent) pairs.** Against 208 reachable today. The count
 matches §11 of the behaviour matrix, reached from a different decomposition.
 
 `Changed → Monitor` with `adopt = ∅` is the deliberate "keep monitoring, keep the
 old properties" no-op. That is the only place the adoption set changes the outcome,
 and it is what preserves the distinction recorded as intended in the behaviour
-matrix (§9.1, A3-F1/A3-F2): `FIX_ALL`
-adopts nothing for changed services, a full refresh adopts both facets.
+matrix (§9.1, A3-F1): moving a service into or within a monitored state is
+independent of updating its stored properties, and the two narrow actions
+(`UPDATE_SERVICE_LABELS`, `UPDATE_DISCOVERY_PARAMETERS`) exist to do the second
+without the first.
+
+The actions that adopt **both** facets are `FIX_ALL`,
+`SINGLE_UPDATE_SERVICE_PROPERTIES` and `TABULA_RASA`; the ones that adopt neither —
+i.e. `Monitor(∅)` — are `SINGLE_UPDATE`, `BULK_UPDATE` and `UPDATE_SERVICES`
+(behaviour matrix §5). That the page's whole-table actions adopt is intended: the user
+has reviewed the table, or has asked for it to be done from fresh data without
+reviewing. Only unattended rediscovery leaves adoption to configuration.
 
 ### 6.3 Rejection list — a validation spec
 
@@ -389,7 +400,7 @@ understanding, because it is the point of the model:
 | 2. `origin ≠ discovered`                              | §6.3 item 1 (Gate 0)                                      | same rule                                                                                                                                                                                                                                                                                                                                                 |
 | 3. `effective_host_is_self = no`                      | §6.3 item 2 (Gate 0)                                      | same rule                                                                                                                                                                                                                                                                                                                                                 |
 | 4. source is `vanished` and the command is not `drop` | §6.3 items 3 + 4                                          | one rule, stated as two rejections because the matrix records two distinct current behaviours                                                                                                                                                                                                                                                             |
-| _(absent)_                                            | §6.3 item 5 — `Monitor(adopt ≠ ∅)` on a non-`Changed` row | no counterpart: the matrix has no explicit adoption set to validate                                                                                                                                                                                                                                                                                       |
+| _(absent)_                                            | §6.3 item 5 — `Monitor(adopt ≠ ∅)` on a non-`Changed` row | no counterpart: the matrix carries the adoption set (§11.1, and §11.2's `changed` cell) and states that it is meaningful only for `changed`, but does not turn that into a rejection rule                                                                                                                                                                 |
 | _(absent)_                                            | §6.3 item 6 — stale `against_table_version` (409)         | no counterpart: the matrix has no table-version precondition                                                                                                                                                                                                                                                                                              |
 
 **Vocabulary mapping.** The two documents name the third command differently; they
@@ -439,7 +450,7 @@ expected-data.
 | `STOP`                             | `Scan.stop()`                                                                                                               | E        |
 | `REFRESH`                          | `Scan.start(Fetch)`                                                                                                         | E        |
 | `TABULA_RASA`                      | `Scan.start(Fetch)` **▸** `ChangePlan[ ByStatus{New, Unchanged, Changed} → Monitor(both), ByStatus{Vanished} → Unmonitor ]` | E then D |
-| `FIX_ALL`                          | `ChangePlan[ ByStatus{New} → Monitor(∅), ByStatus{Vanished} → Unmonitor ]`                                                  | D        |
+| `FIX_ALL`                          | `ChangePlan[ ByStatus{New, Changed} → Monitor(both), ByStatus{Vanished} → Unmonitor ]`                                      | D        |
 | `UPDATE_SERVICES`                  | `ChangePlan[ Explicit(sel) → <intent from the button> ]`                                                                    | D        |
 | `BULK_UPDATE`                      | `ChangePlan[ ByStatus{s} → <intent> ]`                                                                                      | D        |
 | `SINGLE_UPDATE`                    | `ChangePlan[ Explicit({key}) → <intent> ]`                                                                                  | D        |
@@ -451,14 +462,24 @@ expected-data.
 The table expresses each action's **documented intent**, not its current
 implementation. Several diverge — `FIX_ALL` additionally retargets 11 of 13 sources
 to `monitored` (behaviour matrix A1-F1), and the two `UPDATE_*` actions do not apply
-the `Changed` selector they transmit (A1-F2). Those divergences are exactly the
+the `Changed` selector they transmit (A1-F2). `FIX_ALL`'s `Monitor(both)` is _not_
+such a divergence — it is the intended semantics (behaviour matrix §5, A3-F3). Those divergences are exactly the
 behaviour matrix's findings; the plans above are what the actions should compile to.
 
 Three things fall out:
 
 - **`TABULA_RASA` is superfluous as a concept.** It is a scan followed by a plan,
-  both of which the model already has. Whether it survives as a _UI shortcut label_
-  is a separate question, worth answering after the epic rather than before.
+  both of which the model already has, and the plan is `FIX_ALL`'s facet for facet —
+  the two differ only in the forced fetch and the write path (behaviour matrix §5,
+  A3-F2). As a distinct operation it is already redundant; as a _UI shortcut_ —
+  "rescan, then accept everything" — it is worth keeping, because that is a real
+  intent the model should still be able to express in one click.
+- **The action names must not survive the rewrite.** "Fix all" means _adopt_ on the
+  discovery page and _do not adopt_ in the rediscovery ruleset; "tabula rasa" names an
+  operation that forgets nothing. Both are fossils that today have to be explained
+  rather than read. `ChangePlan` states the adoption set explicitly, so the names carry
+  no semantics any more and the UI is free to label the buttons by what the user
+  intends — which is the distinction that actually exists (behaviour matrix §5, A3-F3).
 - **The six `UPDATE_*`/`*_UPDATE` actions differ only in their selector.** They are
   not different operations. `UPDATE_SERVICE_LABELS` currently reaches rows outside
   `Changed` because the selector is implicit and unchecked (A1-F2); making the
@@ -637,20 +658,21 @@ Three properties the current code lacks:
 
 ## 11. What this deletes
 
-| removed                                                                                                                                 | replaced by                                                                                                                                                                                                                                                                 |
-| --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DiscoveryState` (15 values, plain class, `str`-valued)                                                                                 | `DiscoveryStatus` (5) + `origin` + `excluded` + `effective_host`                                                                                                                                                                                                            |
-| `table_target: str`                                                                                                                     | `ServiceIntent` (3)                                                                                                                                                                                                                                                         |
-| `DiscoveryAction` (12 values)                                                                                                           | `ScanRequest` + `ChangePlan` (§7)                                                                                                                                                                                                                                           |
-| `UpdateType` (4 values)                                                                                                                 | `ServiceIntent` (3) — `UpdateType` is the right idea already: a target-only type. It has one value too many, because `UNDECIDED` and `REMOVED` are two labels for one command, and it is not the type the transition machinery actually uses (`update_target: str \| None`) |
-| `update_source` / `update_target` / `selected_services` as three loose parameters                                                       | `(ServiceSelector, ServiceIntent)`                                                                                                                                                                                                                                          |
-| `apply_changes` (host-global, string-comparison-derived)                                                                                | `ChangeSet != current`                                                                                                                                                                                                                                                      |
-| `Transition` literal in `_autodiscovery.py` (never includes `removed`)                                                                  | — no transition type; the plan is the input                                                                                                                                                                                                                                 |
-| `DiscoveryResult.job_status`, `.is_active()`                                                                                            | `ScanStatus`, beside the table                                                                                                                                                                                                                                              |
-| `check_table.mk`, the job's read-once-then-`unlink` preview store, and the `_cleaned_up_status` laundering that a job-less caller needs | nothing — a read of the table is a query; the fetcher cache is the only cache                                                                                                                                                                                               |
-| the `job_snapshot(...).is_active` probe as concurrency control                                                                          | `ChangePlan.against_table_version` (§9.4)                                                                                                                                                                                                                                   |
-| 17 REST `target_phase` values                                                                                                           | 3 intents + Gate 0                                                                                                                                                                                                                                                          |
-| `DiscoveryOptions.show_*`                                                                                                               | view state, out of the domain                                                                                                                                                                                                                                               |
+| removed                                                                                                                                                                                                                                                     | replaced by                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DiscoveryState` (15 values, plain class, `str`-valued)                                                                                                                                                                                                     | `DiscoveryStatus` (5) + `origin` + `excluded` + `effective_host`                                                                                                                                                                                                            |
+| `table_target: str`                                                                                                                                                                                                                                         | `ServiceIntent` (3)                                                                                                                                                                                                                                                         |
+| `DiscoveryAction` (12 values)                                                                                                                                                                                                                               | `ScanRequest` + `ChangePlan` (§7)                                                                                                                                                                                                                                           |
+| `UpdateType` (4 values)                                                                                                                                                                                                                                     | `ServiceIntent` (3) — `UpdateType` is the right idea already: a target-only type. It has one value too many, because `UNDECIDED` and `REMOVED` are two labels for one command, and it is not the type the transition machinery actually uses (`update_target: str \| None`) |
+| `update_source` / `update_target` / `selected_services` as three loose parameters                                                                                                                                                                           | `(ServiceSelector, ServiceIntent)`                                                                                                                                                                                                                                          |
+| `selected_services` doing double duty — the rows a command may touch **and** the rows the user named as rows to disable, which is why a whole-table save must pass `EVERYTHING` and thereby disables the service it just accepted (behaviour matrix §10.11) | nothing: a `ChangePlan` is a set of `(ServiceKey, ServiceIntent)` pairs, so "the services the user asked to disable" is the subset with `Disable` and a batch accept contains none. The overload is not expressible                                                         |
+| `apply_changes` (host-global, string-comparison-derived)                                                                                                                                                                                                    | `ChangeSet != current`                                                                                                                                                                                                                                                      |
+| `Transition` literal in `_autodiscovery.py` (never includes `removed`)                                                                                                                                                                                      | — no transition type; the plan is the input                                                                                                                                                                                                                                 |
+| `DiscoveryResult.job_status`, `.is_active()`                                                                                                                                                                                                                | `ScanStatus`, beside the table                                                                                                                                                                                                                                              |
+| `check_table.mk`, the job's read-once-then-`unlink` preview store, and the `_cleaned_up_status` laundering that a job-less caller needs                                                                                                                     | nothing — a read of the table is a query; the fetcher cache is the only cache                                                                                                                                                                                               |
+| the `job_snapshot(...).is_active` probe as concurrency control                                                                                                                                                                                              | `ChangePlan.against_table_version` (§9.4)                                                                                                                                                                                                                                   |
+| 17 REST `target_phase` values                                                                                                                                                                                                                               | 3 intents + Gate 0                                                                                                                                                                                                                                                          |
+| `DiscoveryOptions.show_*`                                                                                                                                                                                                                                   | view state, out of the domain                                                                                                                                                                                                                                               |
 
 ---
 
@@ -679,11 +701,17 @@ document and is the cheaper option: it needs no API version break.
 
 **12.2 `Monitor` on a `Changed` row: default adoption.** §3.5 models
 `adopt` as explicit, with no default. The alternative is `Monitor` always adopting
-both facets, which makes `FIX_ALL` and a full refresh identical and removes the
-`adopt` parameter entirely — simpler, but it discards the `FIX_ALL`-vs-refresh
-distinction recorded as intended in the behaviour matrix (§9.1). **Recommendation:**
-keep `adopt` explicit; require it at the API boundary so no caller gets it by
-accident.
+both facets, which removes the `adopt` parameter entirely — simpler, but it also
+removes `UPDATE_SERVICE_LABELS` and `UPDATE_DISCOVERY_PARAMETERS`, whose whole
+purpose is to adopt one facet and not the other, and it removes the "keep monitoring,
+keep my properties" no-op. That is A3-F1's separation, recorded as intended in the
+behaviour matrix (§9.1). **Recommendation:** keep `adopt` explicit; require it at the
+API boundary so no caller gets it by accident.
+
+This is _not_ a `FIX_ALL`-vs-`TABULA_RASA` argument: those two compute the same plan
+and are separated by the forced fetch, not by adoption (behaviour matrix §5, A3-F2).
+The load-bearing argument for keeping `adopt` is the two narrow actions and the
+unattended rediscovery rule, none of which is expressible without it.
 
 **12.3 `New → Disable`.** §6.2 marks it meaningful: "I have seen this service
 and never want it monitored" is a real intent, and it correctly writes only the
@@ -702,8 +730,26 @@ as being on a key and the description as a rendering, which is a lie the ruleset
 does not support — a description-matching rule can catch services the plan never
 selected. Either the model admits `ServiceExclusion` is a _predicate_ rather than a
 set of keys (honest, and means `Disable`'s effect is not fully knowable at plan
-time), or the ruleset grows key-based matching. This is the one place where I do
-not think the clean model is reachable without a config-format decision.
+time), or the ruleset grows key-based matching. This is the one place where the
+clean model does not look reachable without a config-format decision.
+
+Evidence that the mismatch is observable rather than theoretical: two plugins may
+render one service description (werk 6708's SNMP- and TCP-based _CPU utilization_),
+and a _Disabled checks_ rule can disable one of them. Discovery then has to avoid
+writing a description-matching exclusion that would catch the other — the
+`saved_services − selected_services` term, and two werks to get it right (behaviour
+matrix §4.2). Note also that both core config writers treat duplicate descriptions
+as an error and monitor only the first, so today's answer to "what does `Disable`
+affect" is genuinely ambiguous at plan time.
+
+The guard is also currently defeated on every whole-table save (matrix §10.11), which
+sharpens the decision rather than merely illustrating it. A key-based ruleset would
+make the guard unnecessary — there would be nothing to subtract, because an exclusion
+on one plugin's service could not reach the other's. Keeping the description-matching
+ruleset means keeping a guard, and a guard needs to know which services the user
+actually named. So 12.5 and §11.4's item 7 are the same decision seen from two sides:
+the predicate reading is honest about `Disable` being unknowable at plan time, and it
+is also what forces the plan to carry its subjects explicitly.
 
 **12.6 Naming.** `Disabled` (matches the GUI's "Disabled services" and the werks)
 vs `Excluded` (avoids collision with `MonitoringState.Disabled` being both a status

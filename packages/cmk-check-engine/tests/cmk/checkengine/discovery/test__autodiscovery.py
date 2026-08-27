@@ -8,16 +8,23 @@
 import datetime
 import logging
 import time
-from collections.abc import Mapping
+from collections.abc import Container, Mapping
 from io import StringIO
 from typing import override
 from zoneinfo import ZoneInfo
 
+import pytest
 import time_machine
 
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery._autochecks import AutocheckServiceWithNodes
-from cmk.checkengine.discovery._autodiscovery import _may_rediscover, get_host_services_by_host_name
+from cmk.checkengine.discovery._autodiscovery import (
+    _may_rediscover,
+    _node_service_source,
+    BasicTransition,
+    get_host_services_by_host_name,
+    Transition,
+)
 from cmk.checkengine.discovery._utils.filters import RediscoveryParameters
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
@@ -514,3 +521,134 @@ def test_may_rediscover_relies_on_time_zone_when_allowing() -> None:
             is True
         )
     assert buffer.getvalue().strip("\n").split("\n") == [""]
+
+
+_BASIC_TRANSITIONS: tuple[BasicTransition, ...] = ("new", "unchanged", "changed", "vanished")
+
+
+def _classify(
+    host_name: HostName,
+    *,
+    check_source: BasicTransition,
+    service_ignored_on: Container[HostName] = (),
+    plugin_ignored_on: Container[HostName] = (),
+) -> Transition:
+    """Classify one service of `CLUSTER`, as seen from `host_name`.
+
+    `service_ignored_on` / `plugin_ignored_on` are the hosts a *Disabled services* resp. plugin
+    rule matches on -- which host the classifier consults is itself part of the behaviour under
+    test.
+    """
+    return _node_service_source(
+        host_name,
+        AUTOCHECK_1A,
+        ignore_service=lambda host_name, _entry: host_name in service_ignored_on,
+        ignore_plugin=lambda host_name, _plugin_name: host_name in plugin_ignored_on,
+        check_source=check_source,
+        cluster_name=CLUSTER,
+    )
+
+
+def test_node_service_source_emits_exactly_eight_of_the_nine_transitions() -> None:
+    """Characterization of the classifier's whole output space.
+
+    `clustered_ignored` is declared in `Transition` and produced by nothing: since
+    `692c918bf86` (2021-02-05) an early `return "ignored"` has replaced a mutate-then-prefix,
+    silently reverting werk 7128. The counter, the `Transition` literal, `_case_clustered`'s match
+    arm and the GUI's "Disabled clustered services" group are all still there and all unreachable.
+
+    **§10.13 changes this set**: its fix returns `clustered_ignored` from the node branch, so this
+    assertion gains a ninth element. The paired strict-xfail below is what makes that a deliberate
+    edit rather than a mystery failure. See
+    `packages/cmk-check-engine/docs/SERVICE_DISCOVERY_BEHAVIOUR_MATRIX.md` §2.1 and §10.13.
+    """
+    produced = {
+        _classify(
+            host_name,
+            check_source=check_source,
+            service_ignored_on=(CLUSTER, NODE_1) if service_ignored else (),
+            plugin_ignored_on=(CLUSTER, NODE_1) if plugin_ignored else (),
+        )
+        for host_name in (CLUSTER, NODE_1)
+        for check_source in _BASIC_TRANSITIONS
+        for service_ignored in (True, False)
+        for plugin_ignored in (True, False)
+    }
+
+    assert produced == {
+        "new",
+        "unchanged",
+        "changed",
+        "vanished",
+        "ignored",
+        "clustered_new",
+        "clustered_old",
+        "clustered_vanished",
+    }
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="§10.13 -- a disabled clustered service must be classified as `clustered_ignored` so "
+    "that it is filed under 'Disabled clustered services' on the node (no bulk actions) and shown "
+    "on the cluster, which is the host that actually manages it. Today it lands in the generic "
+    "'Disabled services' group with bulk actions enabled, and re-enabling it from the node writes "
+    "a node-scoped rule that has no effect while reporting success",
+)
+@pytest.mark.parametrize("check_source", ["new", "unchanged", "changed"])
+def test_disabled_clustered_service_is_classified_as_clustered_ignored(
+    check_source: BasicTransition,
+) -> None:
+    assert _classify(NODE_1, check_source=check_source, service_ignored_on=(CLUSTER,)) == (
+        "clustered_ignored"
+    )
+
+
+@pytest.mark.parametrize("check_source", ["new", "unchanged", "changed"])
+def test_disabled_clustered_service_is_currently_classified_as_plain_ignored(
+    check_source: BasicTransition,
+) -> None:
+    """Today's behaviour. Not an endorsement -- see the paired strict-xfail above."""
+    assert _classify(NODE_1, check_source=check_source, service_ignored_on=(CLUSTER,)) == "ignored"
+
+
+@pytest.mark.parametrize("check_source", ["new", "unchanged", "changed"])
+def test_clustered_service_is_only_disabled_by_a_rule_matching_the_cluster(
+    check_source: BasicTransition,
+) -> None:
+    """For a node row the classifier consults the rule on the **cluster**, not on the node.
+
+    Surprising, but correct and preserved by §10.13's fix: the cluster owns the service, so the
+    cluster's rules decide whether it is disabled. Pinned because the asymmetry against
+    `appears_on_cluster` -- which tests the rule on the *node* -- is what makes §10.13's common
+    case the worst one, and a fix that "tidies" this line would reintroduce it.
+    """
+    assert _classify(NODE_1, check_source=check_source, service_ignored_on=(NODE_1,)) not in (
+        "ignored",
+        "clustered_ignored",
+    )
+    assert _classify(NODE_1, check_source=check_source, service_ignored_on=(CLUSTER,)) in (
+        "ignored",
+        "clustered_ignored",
+    )
+
+
+@pytest.mark.parametrize("host_name", [CLUSTER, NODE_1])
+def test_node_service_source_never_turns_a_vanished_service_into_ignored(
+    host_name: HostName,
+) -> None:
+    """A service absent from the agent output stays `vanished`, disabled-services rule or not.
+
+    Intended behaviour, not characterization: this is the classifier-side reason why `vanished`
+    admits no `disable` command -- the state the command would produce is one the classifier never
+    assigns to a not-discovered service. See the behaviour matrix §11.3 and §10.16.
+    """
+    assert (
+        _classify(
+            host_name,
+            check_source="vanished",
+            service_ignored_on=(CLUSTER, NODE_1),
+            plugin_ignored_on=(CLUSTER, NODE_1),
+        )
+        != "ignored"
+    )

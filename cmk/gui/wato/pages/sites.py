@@ -147,7 +147,7 @@ from cmk.gui.watolib.sites import (
     STATIC_PERMISSIONS_SITES,
 )
 from cmk.licensing.license_distribution_registry import distribute_license_to_remotes
-from cmk.licensing.registry import is_free
+from cmk.licensing.registry import get_license_state
 from cmk.livestatus_client import (
     BrokerConnection,
     BrokerConnections,
@@ -311,7 +311,9 @@ class ModeEditSite(WatoMode):
         self._clone_id = None if _clone_id_return is None else SiteId(_clone_id_return)
         self._new = self._site_id is None
 
-        if is_free(omd_root) and (self._new or self._site_id != omd_site()):
+        if get_license_state(omd_root).blocks_distributed_setup_changes_free() and (
+            self._new or self._site_id != omd_site()
+        ):
             raise MKUserError(None, get_free_message())
 
         self._configured_sites = self._site_mgmt.load_sites()
@@ -1489,7 +1491,7 @@ class ModeDistributedMonitoring(WatoMode):
     def page(self, config: Config) -> None:
         sites = sort_sites(site_configs := self._site_mgmt.load_sites())
 
-        if is_free(omd_root):
+        if get_license_state(omd_root).blocks_distributed_setup_changes_free():
             html.show_message(get_free_message(format_html=True))
 
         html.div("", id_="message_container")

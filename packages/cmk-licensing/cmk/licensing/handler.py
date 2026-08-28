@@ -16,7 +16,16 @@ from cmk.ccc import store
 
 
 class LicenseState(Enum):
-    """All possible license states of the Checkmk site"""
+    """All possible license states of the Checkmk site.
+
+    Note that new enums may be added at any point, and the precise definitions of existing enums may
+    change (e.g. which parts of Checkmk are supposed to work in which state). Therefore, please use
+    the methods that are defined for each state, instead of matching the states themselves (i.e.
+    instead of `state in [...]` use `state.is_...()`).
+
+    The methods are intended to guard the site capabilities and apply other effects depending on the
+    license state. This way, all the implications of licensed states are managed centrally.
+    """
 
     TRIAL = auto()
     FREE = auto()
@@ -34,6 +43,12 @@ class LicenseState(Enum):
         if self is LicenseState.UNLICENSED:
             return "unlicensed"
         raise ValueError
+
+    def blocks_distributed_setup_changes_free(self) -> bool:
+        """Returns True if the site should block distributed changes.
+
+        This typically happens when the site enters a free state after a trial expiration."""
+        return self is LicenseState.FREE
 
 
 class LicenseStateError(Exception):

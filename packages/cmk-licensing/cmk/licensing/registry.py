@@ -47,10 +47,6 @@ def _make_licensing_handler(omd_root: Path) -> LicensingHandler:
     return _get_licensing_handler_factory(omd_root)()
 
 
-def is_free(omd_root: Path) -> bool:
-    return _make_licensing_handler(omd_root).state is LicenseState.FREE
-
-
 def get_license_message(omd_root: Path) -> str:
     return _make_licensing_handler(omd_root).message
 

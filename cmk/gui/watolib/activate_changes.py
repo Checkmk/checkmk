@@ -148,7 +148,7 @@ from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
 from cmk.licensing.export import LicenseUsageExtensions
 from cmk.licensing.handler import ActivationBlock
-from cmk.licensing.registry import get_licensing_user_effect, is_free
+from cmk.licensing.registry import get_license_state, get_licensing_user_effect
 from cmk.licensing.usage import save_extensions
 from cmk.livestatus_client import (
     BrokerConnections,
@@ -2673,7 +2673,9 @@ def _sync_and_activate(
         activate_changes.load(list(all_site_configs))
         activate_changes.load_changes_until(activation_id, site_snapshot_settings.keys())
 
-        if is_free(paths.omd_root) and _handle_distributed_sites_in_free(
+        if get_license_state(
+            paths.omd_root
+        ).blocks_distributed_setup_changes_free() and _handle_distributed_sites_in_free(
             site_snapshot_settings, time_started
         ):
             return

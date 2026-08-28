@@ -3,18 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Service, StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.legacy_checks import fortigate_cpu
 from cmk.legacy_checks.fortigate_cpu import (
     check_fortigate_cpu,
     discover_fortigate_cpu,
     parse_fortigate_cpu,
 )
+
+
+@pytest.fixture(name="empty_value_store")
+def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(fortigate_cpu, "get_value_store", dict)
 
 
 def test_parse_fortigate_cpu_keeps_stringtable() -> None:
@@ -27,31 +31,32 @@ def test_parse_fortigate_cpu_empty_returns_none() -> None:
 
 
 def test_discover_fortigate_cpu() -> None:
-    parsed = [["25"], ["31"]]
-    assert list(discover_fortigate_cpu(parsed)) == [Service()]
+    assert list(discover_fortigate_cpu([["25"], ["31"]])) == [Service()]
 
 
+@pytest.mark.usefixtures("empty_value_store")
 @pytest.mark.parametrize(
     "params, section, expected",
     [
         pytest.param(
             {"util": (80.0, 90.0)},
             [["25"], ["31"]],
-            (
-                0,
-                "Total CPU: 28.00% at 2 CPUs",
-                [("util", 28.0, 80.0, 90.0, 0, 100)],
-            ),
+            [
+                Result(state=State.OK, summary="Total CPU: 28.00% at 2 CPUs"),
+                Metric("util", 28.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+            ],
             id="ok",
         ),
         pytest.param(
             {"util": (80.0, 90.0)},
             [["95"], ["99"]],
-            (
-                2,
-                "Total CPU: 97.00% (warn/crit at 80.00%/90.00%) at 2 CPUs",
-                [("util", 97.0, 80.0, 90.0, 0, 100)],
-            ),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Total CPU: 97.00% (warn/crit at 80.00%/90.00%) at 2 CPUs",
+                ),
+                Metric("util", 97.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+            ],
             id="crit",
         ),
     ],
@@ -59,10 +64,6 @@ def test_discover_fortigate_cpu() -> None:
 def test_check_fortigate_cpu(
     params: Mapping[str, object],
     section: StringTable,
-    expected: tuple[int, str, list[tuple[object, ...]]],
+    expected: Sequence[object],
 ) -> None:
-    assert check_fortigate_cpu(None, params, section) == expected
-
-
-def test_check_fortigate_cpu_empty_returns_none() -> None:
-    assert check_fortigate_cpu(None, {"util": (80.0, 90.0)}, []) is None
+    assert list(check_fortigate_cpu(params, section)) == expected

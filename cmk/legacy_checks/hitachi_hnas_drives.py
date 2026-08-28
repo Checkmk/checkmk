@@ -3,47 +3,56 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.hitachi_hnas.lib import DETECT
 
-check_info = {}
+Section = Mapping[str, int]
+
+_STATUS_MAP = (
+    ("Online", State.OK),
+    ("MBR corrupt", State.CRIT),
+    ("Failed and unaccessible", State.CRIT),
+    ("Not present", State.CRIT),
+    ("Not accessible by controller", State.CRIT),
+    ("Offline", State.CRIT),
+    ("Initializing", State.CRIT),
+    ("Formatting", State.CRIT),
+    ("Unknown", State.UNKNOWN),
+)
 
 
-def discover_hitachi_hnas_drives(info):
-    if info:
-        return [(None, None)]
-    return []
-
-
-def parse_hitachi_hnas_drives(string_table):
-    parsed: dict[str, int] = {}
+def parse_hitachi_hnas_drives(string_table: StringTable) -> Section:
+    section: dict[str, int] = {}
     for (status,) in string_table:
-        parsed.setdefault(status, 0)
-        parsed[status] += 1
-    return parsed
+        section.setdefault(status, 0)
+        section[status] += 1
+    return section
 
 
-def check_hitachi_hnas_drives(_no_item, params, info):
-    status_map = (
-        ("Online", 0),
-        ("MBR corrupt", 2),
-        ("Failed and unaccessible", 2),
-        ("Not present", 2),
-        ("Not accessible by controller", 2),
-        ("Offline", 2),
-        ("Initializing", 2),
-        ("Formatting", 2),
-        ("Unknown", 3),
-    )
-    for status, count in info.items():
-        infotext = "%s: %d" % (status_map[int(status) - 1][0], count)
-        yield status_map[int(status) - 1][1], infotext
+def discover_hitachi_hnas_drives(section: Section) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-check_info["hitachi_hnas_drives"] = LegacyCheckDefinition(
+def check_hitachi_hnas_drives(section: Section) -> CheckResult:
+    for status, count in section.items():
+        name, state = _STATUS_MAP[int(status) - 1]
+        yield Result(state=state, summary=f"{name}: {count}")
+
+
+snmp_section_hitachi_hnas_drives = SimpleSNMPSection(
     name="hitachi_hnas_drives",
     detect=DETECT,
     fetch=SNMPTree(
@@ -51,6 +60,11 @@ check_info["hitachi_hnas_drives"] = LegacyCheckDefinition(
         oids=["4"],
     ),
     parse_function=parse_hitachi_hnas_drives,
+)
+
+
+check_plugin_hitachi_hnas_drives = CheckPlugin(
+    name="hitachi_hnas_drives",
     service_name="System Drives",
     discovery_function=discover_hitachi_hnas_drives,
     check_function=check_hitachi_hnas_drives,

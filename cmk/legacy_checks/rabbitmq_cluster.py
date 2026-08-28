@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
 # <<<rabbitmq_cluster>>>
 # {'cluster_name': 'rabbit@my-rabbit', 'message_stats': {'disk_reads': 0,
@@ -27,10 +26,25 @@
 
 import enum
 import json
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+Section = Mapping[str, Any]
 
 
 class MessageType(enum.StrEnum):
@@ -49,8 +63,8 @@ class MessageType(enum.StrEnum):
     DELIVER_RATE = "messages_deliver_rate"
 
 
-def parse_rabbitmq_cluster(string_table):
-    parsed = {}
+def parse_rabbitmq_cluster(string_table: StringTable) -> Section:
+    parsed: dict[str, Any] = {}
 
     for clusters in string_table:
         try:
@@ -106,43 +120,49 @@ def parse_rabbitmq_cluster(string_table):
     return parsed
 
 
-def discover_rabbitmq_cluster(parsed):
-    info_data = parsed.get("info")
-    if info_data:
-        yield None, {}
+agent_section_rabbitmq_cluster = AgentSection(
+    name="rabbitmq_cluster",
+    parse_function=parse_rabbitmq_cluster,
+)
 
 
-def check_rabbitmq_cluster(_no_item, params, parsed):
-    info_data = parsed.get("info")
+def discover_rabbitmq_cluster(section: Section) -> DiscoveryResult:
+    if section.get("info"):
+        yield Service()
+
+
+def check_rabbitmq_cluster(section: Section) -> CheckResult:
+    info_data = section.get("info")
     if not info_data:
         return
 
-    for info_key in [
-        ("cluster_name"),
-        ("rabbitmq_version"),
-        ("erlang_version"),
-    ]:
+    for info_key in (
+        "cluster_name",
+        "rabbitmq_version",
+        "erlang_version",
+    ):
         info_value = info_data.get(info_key)
-        yield 0, "{}: {}".format(info_key.replace("_", " ").capitalize(), info_value)
+        yield Result(
+            state=State.OK,
+            summary=f"{info_key.replace('_', ' ').capitalize()}: {info_value}",
+        )
 
 
-check_info["rabbitmq_cluster"] = LegacyCheckDefinition(
+check_plugin_rabbitmq_cluster = CheckPlugin(
     name="rabbitmq_cluster",
-    parse_function=parse_rabbitmq_cluster,
     service_name="RabbitMQ Cluster",
     discovery_function=discover_rabbitmq_cluster,
     check_function=check_rabbitmq_cluster,
 )
 
 
-def discover_rabbitmq_cluster_messages(parsed):
-    msg_data = parsed.get("msg")
-    if msg_data:
-        yield None, {}
+def discover_rabbitmq_cluster_messages(section: Section) -> DiscoveryResult:
+    if section.get("msg"):
+        yield Service()
 
 
-def check_rabbitmq_cluster_messages(_no_item, params, parsed):
-    msg_data = parsed.get("msg")
+def check_rabbitmq_cluster_messages(params: Mapping[str, Any], section: Section) -> CheckResult:
+    msg_data = section.get("msg")
     if not msg_data:
         return
 
@@ -160,27 +180,27 @@ def check_rabbitmq_cluster_messages(_no_item, params, parsed):
         if value is None:
             continue
 
-        yield _handle_output(params, type_(value), key, infotext)
+        yield from _handle_output(params, type_(value), key, infotext)
 
 
-check_info["rabbitmq_cluster.messages"] = LegacyCheckDefinition(
+check_plugin_rabbitmq_cluster_messages = CheckPlugin(
     name="rabbitmq_cluster_messages",
     service_name="RabbitMQ Cluster Messages",
     sections=["rabbitmq_cluster"],
     discovery_function=discover_rabbitmq_cluster_messages,
     check_function=check_rabbitmq_cluster_messages,
     check_ruleset_name="rabbitmq_cluster_messages",
+    check_default_parameters={},
 )
 
 
-def discover_rabbitmq_cluster_stats(parsed):
-    msg_data = parsed.get("msg")
-    if msg_data:
-        yield None, {}
+def discover_rabbitmq_cluster_stats(section: Section) -> DiscoveryResult:
+    if section.get("msg"):
+        yield Service()
 
 
-def check_rabbitmq_cluster_stats(_no_item, params, parsed):
-    stats_data = parsed.get("object_totals")
+def check_rabbitmq_cluster_stats(params: Mapping[str, Any], section: Section) -> CheckResult:
+    stats_data = section.get("object_totals")
     if not stats_data:
         return
 
@@ -195,15 +215,15 @@ def check_rabbitmq_cluster_stats(_no_item, params, parsed):
         if value is None:
             continue
 
-        yield _handle_output(params, int(value), key, infotext)
+        yield from _handle_output(params, int(value), key, infotext)
 
 
-def _handle_output(params, value, key, infotext):
+def _handle_output(params: Mapping[str, Any], value: float, key: str, infotext: str) -> CheckResult:
     unit = "/s" if "rate" in key else ""
 
-    levels_upper = params.get("%s_upper" % key, (None, None))
-    levels_lower = params.get("%s_lower" % key, (None, None))
-    return check_levels(
+    levels_upper = params.get(f"{key}_upper", (None, None))
+    levels_lower = params.get(f"{key}_lower", (None, None))
+    yield from check_levels(
         value,
         key,
         levels_upper + levels_lower,
@@ -212,11 +232,12 @@ def _handle_output(params, value, key, infotext):
     )
 
 
-check_info["rabbitmq_cluster.stats"] = LegacyCheckDefinition(
+check_plugin_rabbitmq_cluster_stats = CheckPlugin(
     name="rabbitmq_cluster_stats",
     service_name="RabbitMQ Cluster Stats",
     sections=["rabbitmq_cluster"],
     discovery_function=discover_rabbitmq_cluster_stats,
     check_function=check_rabbitmq_cluster_stats,
     check_ruleset_name="rabbitmq_cluster_stats",
+    check_default_parameters={},
 )

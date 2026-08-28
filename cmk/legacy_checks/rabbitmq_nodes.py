@@ -4,25 +4,44 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import json
 import time
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import timedelta
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding rulesets.
+    check_levels_legacy_compatible as check_levels_legacy,
 )
-from cmk.agent_based.v2 import render, StringTable
-from cmk.legacy_includes.mem import check_memory_element
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.memory import check_element
 
-check_info = {}
+_ItemData = dict
+
+Section = Mapping[str, _ItemData]
+
+
+def discover_key(key: str) -> Callable[[Section], DiscoveryResult]:
+    def _discover_bound_key(section: Section) -> DiscoveryResult:
+        yield from (Service(item=item) for item, data in section.items() if key in data)
+
+    return _discover_bound_key
+
 
 # <<<rabbitmq_nodes>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,
@@ -39,17 +58,6 @@ check_info = {}
 # "sockets_key": 0, "proc_key": 426, "gc_num": 70827, "gc_bytes_reclaimed":
 # 1556846120, "io_file_handle_open_attempt_count": 11, "node_links":
 # []}
-
-_ItemData = dict
-
-Section = Mapping[str, _ItemData]
-
-
-def discover_key(key: str) -> Callable[[Section], Iterable[tuple[str, dict]]]:
-    def _discover_bound_key(section: Section) -> Iterable[tuple[str, dict]]:
-        yield from ((item, {}) for item, data in section.items() if key in data)
-
-    return _discover_bound_key
 
 
 def parse_rabbitmq_nodes(string_table: StringTable) -> Section:
@@ -118,26 +126,29 @@ def parse_rabbitmq_nodes(string_table: StringTable) -> Section:
     return parsed
 
 
-def discover_rabbitmq_nodes(section: Section) -> Iterable[tuple[str, dict]]:
-    yield from ((item, {}) for item in section)
+agent_section_rabbitmq_nodes = AgentSection(
+    name="rabbitmq_nodes",
+    parse_function=parse_rabbitmq_nodes,
+)
 
 
-def check_rabbitmq_nodes(item, params, parsed):
-    if not (data := parsed.get(item)):
+def discover_rabbitmq_nodes(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_rabbitmq_nodes(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
 
     node_type = data.get("type")
     if node_type is not None:
-        yield 0, "Type: %s" % node_type.title()
+        yield Result(state=State.OK, summary=f"Type: {node_type.title()}")
 
     node_state = data.get("state")
     if node_state is not None:
-        state = 0
-        if not node_state:
-            state = params.get("state")
-        yield (
-            state,
-            "Is running: %s" % str(node_state).replace("True", "yes").replace("False", "no"),
+        yield Result(
+            state=State.OK if node_state else State(params["state"]),
+            summary="Is running: {}".format("yes" if node_state else "no"),
         )
 
     for alarm_key, alarm_infotext in [
@@ -148,22 +159,15 @@ def check_rabbitmq_nodes(item, params, parsed):
         if alarm_value is None:
             continue
 
-        alarm_state = 0
         if alarm_value:
-            alarm_state = params.get(alarm_key)
-
-            yield (
-                alarm_state,
-                "{}: {}".format(
-                    alarm_infotext,
-                    str(alarm_value).replace("True", "yes").replace("False", "no"),
-                ),
+            yield Result(
+                state=State(params[alarm_key]),
+                summary=f"{alarm_infotext}: yes",
             )
 
 
-check_info["rabbitmq_nodes"] = LegacyCheckDefinition(
+check_plugin_rabbitmq_nodes = CheckPlugin(
     name="rabbitmq_nodes",
-    parse_function=parse_rabbitmq_nodes,
     service_name="RabbitMQ Node %s",
     discovery_function=discover_rabbitmq_nodes,
     check_function=check_rabbitmq_nodes,
@@ -176,8 +180,10 @@ check_info["rabbitmq_nodes"] = LegacyCheckDefinition(
 )
 
 
-def check_rabbitmq_nodes_filedesc(item, params, parsed):
-    fd_data = parsed.get(item, {}).get("fd")
+def check_rabbitmq_nodes_filedesc(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    fd_data = section.get(item, {}).get("fd")
     if not fd_data:
         return
 
@@ -189,13 +195,15 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
     if total is None:
         return
 
-    yield _handle_output(params, value, total, "File descriptors used", "open_file_descriptors")
+    yield from _handle_output(
+        params, value, total, "File descriptors used", "open_file_descriptors"
+    )
 
     open_fd = fd_data.get("fd_open")
     if open_fd is not None:
         levels_upper = params.get("fd_open_upper", (None, None))
 
-        yield check_levels(
+        yield from check_levels_legacy(
             open_fd,
             "file_descriptors_open_attempts",
             levels_upper,
@@ -208,7 +216,7 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
         levels_upper = params.get("fd_open_rate_upper", (None, None))
         levels_lower = params.get("fd_open_rate_lower", (None, None))
 
-        yield check_levels(
+        yield from check_levels_legacy(
             open_fd_rate,
             "file_descriptors_open_attempts_rate",
             levels_upper + levels_lower,
@@ -217,18 +225,19 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
         )
 
 
-check_info["rabbitmq_nodes.filedesc"] = LegacyCheckDefinition(
+check_plugin_rabbitmq_nodes_filedesc = CheckPlugin(
     name="rabbitmq_nodes_filedesc",
     service_name="RabbitMQ Node %s Filedesc",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("fd"),
     check_function=check_rabbitmq_nodes_filedesc,
     check_ruleset_name="rabbitmq_nodes_filedesc",
+    check_default_parameters={},
 )
 
 
-def check_rabbitmq_nodes_mem(item, params, parsed):
-    mem_data = parsed.get(item, {}).get("mem")
+def check_rabbitmq_nodes_mem(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    mem_data = section.get(item, {}).get("mem")
     if not mem_data:
         return
 
@@ -241,20 +250,18 @@ def check_rabbitmq_nodes_mem(item, params, parsed):
         return
 
     levels = params.get("levels")
-    yield check_memory_element(
+    mode = "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used"
+    yield from check_element(
         "Memory used",
         mem_used,
         mem_mark,
-        (
-            "abs_used" if isinstance(levels, tuple) and isinstance(levels[0], int) else "perc_used",
-            levels,
-        ),
+        (mode, levels),  # type: ignore[arg-type]
         label_total="High watermark",
         metric_name="mem_used",
     )
 
 
-check_info["rabbitmq_nodes.mem"] = LegacyCheckDefinition(
+check_plugin_rabbitmq_nodes_mem = CheckPlugin(
     name="rabbitmq_nodes_mem",
     service_name="RabbitMQ Node %s Memory",
     sections=["rabbitmq_nodes"],
@@ -276,18 +283,12 @@ _METRIC_SPECS: Sequence[tuple[str, str, Callable, str]] = [
 ]
 
 
-def _get_levels(params, key):
-    if key not in params:
-        return None, None
-
-    level_type, levels = params[key]
-    if level_type == "no_levels":
-        return None, None
-    return levels
+def _make_render_func(hr_func: Callable, unit: str) -> Callable[[float], str]:
+    return lambda x: f"{hr_func(x)}{unit}"
 
 
-def check_rabbitmq_nodes_gc(item, params, parsed):
-    gc_data = parsed.get(item, {}).get("gc")
+def check_rabbitmq_nodes_gc(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    gc_data = section.get(item, {}).get("gc")
     if not gc_data:
         return
 
@@ -296,49 +297,52 @@ def check_rabbitmq_nodes_gc(item, params, parsed):
         if value is None:
             continue
 
-        levels_upper = _get_levels(params, f"{key}_upper")
-        levels_lower = _get_levels(params, f"{key}_lower")
-
-        yield check_levels(
+        yield from check_levels(
             value,
-            perf_key,
-            levels_upper + levels_lower,
-            human_readable_func=lambda x, hr=hr_func, u=_UNITS_NODES_GC.get(key, ""): f"{hr(x)}{u}",
-            infoname=infotext,
+            levels_upper=params.get(f"{key}_upper"),
+            levels_lower=params.get(f"{key}_lower"),
+            metric_name=perf_key,
+            render_func=_make_render_func(hr_func, _UNITS_NODES_GC.get(key, "")),
+            label=infotext,
         )
 
 
 def check_rabbitmq_nodes_uptime(
     item: str, params: Mapping[str, Any], section: Section
-) -> LegacyCheckResult:
+) -> CheckResult:
     try:
         if (uptime := section[item]["uptime"]["uptime"]) is None:
             return
     except KeyError:
         return
 
-    params = params.get("max", (None, None)) + params.get("min", (None, None))
-    yield 0, f"Up since {time.strftime('%c', time.localtime(time.time() - uptime))}", []
-    yield check_levels(
+    yield Result(
+        state=State.OK,
+        summary=f"Up since {time.strftime('%c', time.localtime(time.time() - uptime))}",
+    )
+    yield from check_levels_legacy(
         uptime,
         "uptime",
-        params,
+        params.get("max", (None, None)) + params.get("min", (None, None)),
         human_readable_func=lambda x: timedelta(seconds=int(x)),
         infoname="Uptime",
     )
 
 
-check_info["rabbitmq_nodes.uptime"] = LegacyCheckDefinition(
+check_plugin_rabbitmq_nodes_uptime = CheckPlugin(
     name="rabbitmq_nodes_uptime",
     service_name="RabbitMQ Node %s Uptime",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("uptime"),
     check_function=check_rabbitmq_nodes_uptime,
     check_ruleset_name="rabbitmq_nodes_uptime",
+    check_default_parameters={},
 )
 
 
-def _handle_output(params, value, total, info_text, perf_key):
+def _handle_output(
+    params: Mapping[str, Any], value: float, total: float, info_text: str, perf_key: str
+) -> CheckResult:
     levels = params.get("levels")
     if levels is None:
         warn, crit = (None, None)
@@ -358,26 +362,33 @@ def _handle_output(params, value, total, info_text, perf_key):
         crit_abs = crit
         level_msg = f" (warn/crit at {warn}/{crit})"
 
-    state, _info, _perf = check_levels(
-        value_check,
-        None,
-        (warn, crit),
-    )
+    if crit is not None and value_check >= crit:
+        state = State.CRIT
+    elif warn is not None and value_check >= warn:
+        state = State.WARN
+    else:
+        state = State.OK
 
     infotext = f"{info_text}: {value} of {total}, {render.percent(perc_value)}"
-
-    if state:
+    if state is not State.OK:
         infotext += level_msg
 
+    yield Result(state=state, summary=infotext)
     # construct perfdata for absolut values even perc levels are set
-    return state, infotext, [(perf_key, value, warn_abs, crit_abs, 0, total)]
+    yield Metric(
+        perf_key,
+        value,
+        levels=None if warn_abs is None or crit_abs is None else (warn_abs, crit_abs),
+        boundaries=(0, total),
+    )
 
 
-check_info["rabbitmq_nodes.gc"] = LegacyCheckDefinition(
+check_plugin_rabbitmq_nodes_gc = CheckPlugin(
     name="rabbitmq_nodes_gc",
     service_name="RabbitMQ Node %s GC",
     sections=["rabbitmq_nodes"],
     discovery_function=discover_key("gc"),
     check_function=check_rabbitmq_nodes_gc,
     check_ruleset_name="rabbitmq_nodes_gc",
+    check_default_parameters={},
 )

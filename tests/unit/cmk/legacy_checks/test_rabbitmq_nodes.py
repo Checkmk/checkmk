@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
@@ -13,6 +11,7 @@
 
 import time_machine
 
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.rabbitmq_nodes import (
     check_rabbitmq_nodes,
     check_rabbitmq_nodes_filedesc,
@@ -38,319 +37,266 @@ def _section() -> Section:
 
 def test_discover_rabbitmq_nodes() -> None:
     """Test discovery of main RabbitMQ nodes service."""
-    result = list(discover_rabbitmq_nodes(_section()))
-
-    assert len(result) == 1
-    assert result[0] == ("rabbit@my-rabbit", {})
+    assert list(discover_rabbitmq_nodes(_section())) == [Service(item="rabbit@my-rabbit")]
 
 
 def test_discover_key_filedesc() -> None:
     """Test discovery function for file descriptor service."""
-    discover_func = discover_key("fd")
-    result = list(discover_func(_section()))
-
-    assert len(result) == 1
-    assert result[0] == ("rabbit@my-rabbit", {})
+    assert list(discover_key("fd")(_section())) == [Service(item="rabbit@my-rabbit")]
 
 
 def test_discover_key_mem() -> None:
     """Test discovery function for memory service."""
-    discover_func = discover_key("mem")
-    result = list(discover_func(_section()))
-    assert len(result) == 1
-    assert result[0] == ("rabbit@my-rabbit", {})
+    assert list(discover_key("mem")(_section())) == [Service(item="rabbit@my-rabbit")]
 
 
 def test_discover_key_uptime() -> None:
     """Test discovery function for uptime service."""
-    discover_func = discover_key("uptime")
-    result = list(discover_func(_section()))
-
-    assert len(result) == 1
-    assert result[0] == ("rabbit@my-rabbit", {})
+    assert list(discover_key("uptime")(_section())) == [Service(item="rabbit@my-rabbit")]
 
 
 def test_discover_key_gc() -> None:
     """Test discovery function for garbage collection service."""
-    discover_func = discover_key("gc")
-    result = list(discover_func(_section()))
-    assert len(result) == 1
-    assert result[0] == ("rabbit@my-rabbit", {})
+    assert list(discover_key("gc")(_section())) == [Service(item="rabbit@my-rabbit")]
 
 
 def test_check_rabbitmq_nodes_ok() -> None:
     """Test main RabbitMQ nodes check function with normal state."""
     params = {"state": 2, "disk_free_alarm": 2, "mem_alarm": 2}
 
-    result = list(check_rabbitmq_nodes("rabbit@my-rabbit", params, _section()))
-
-    assert result == [(0, "Type: Disc"), (0, "Is running: yes")]
+    assert list(check_rabbitmq_nodes("rabbit@my-rabbit", params, _section())) == [
+        Result(state=State.OK, summary="Type: Disc"),
+        Result(state=State.OK, summary="Is running: yes"),
+    ]
 
 
 def test_check_rabbitmq_nodes_with_alarms() -> None:
     """Test main RabbitMQ nodes check function with alarms triggered."""
-    string_table = [
+    parsed = parse_rabbitmq_nodes(
         [
-            '{"name": "rabbit@test", "type": "disc", "running": true, "disk_free_alarm": true, "mem_alarm": true}'
+            [
+                '{"name": "rabbit@test", "type": "disc", "running": true, "disk_free_alarm": true, "mem_alarm": true}'
+            ]
         ]
-    ]
-    parsed = parse_rabbitmq_nodes(string_table)
+    )
     params = {"state": 2, "disk_free_alarm": 2, "mem_alarm": 2}
 
-    result = list(check_rabbitmq_nodes("rabbit@test", params, parsed))
-
-    assert len(result) == 4
-
-    # Check that alarms trigger critical states
-    state, summary = result[2][:2]
-    assert state == 2  # Should be critical
-    assert "Disk alarm in effect: yes" in summary
-
-    state, summary = result[3][:2]
-    assert state == 2  # Should be critical
-    assert "Memory alarm in effect: yes" in summary
+    assert list(check_rabbitmq_nodes("rabbit@test", params, parsed)) == [
+        Result(state=State.OK, summary="Type: Disc"),
+        Result(state=State.OK, summary="Is running: yes"),
+        Result(state=State.CRIT, summary="Disk alarm in effect: yes"),
+        Result(state=State.CRIT, summary="Memory alarm in effect: yes"),
+    ]
 
 
 def test_check_rabbitmq_nodes_not_running() -> None:
     """Test main RabbitMQ nodes check function when node is not running."""
-    string_table = [
+    parsed = parse_rabbitmq_nodes(
         [
-            '{"name": "rabbit@test", "type": "disc", "running": false, "disk_free_alarm": false, "mem_alarm": false}'
+            [
+                '{"name": "rabbit@test", "type": "disc", "running": false, "disk_free_alarm": false, "mem_alarm": false}'
+            ]
         ]
-    ]
-    parsed = parse_rabbitmq_nodes(string_table)
+    )
     params = {"state": 2, "disk_free_alarm": 2, "mem_alarm": 2}
 
-    result = list(check_rabbitmq_nodes("rabbit@test", params, parsed))
-
-    assert len(result) == 2
-
-    # Check running state
-    state, summary = result[1][:2]
-    assert state == 2  # Should be critical when not running
-    assert "Is running: no" in summary
+    assert list(check_rabbitmq_nodes("rabbit@test", params, parsed)) == [
+        Result(state=State.OK, summary="Type: Disc"),
+        Result(state=State.CRIT, summary="Is running: no"),
+    ]
 
 
 def test_check_rabbitmq_nodes_missing_item() -> None:
     """Test main RabbitMQ nodes check function with missing item."""
     params = {"state": 2, "disk_free_alarm": 2, "mem_alarm": 2}
 
-    result = list(check_rabbitmq_nodes("missing@item", params, _section()))
-    assert len(result) == 0
+    assert not list(check_rabbitmq_nodes("missing@item", params, _section()))
 
 
 def test_check_rabbitmq_nodes_filedesc() -> None:
     """Test RabbitMQ file descriptor check function."""
-    result = list(check_rabbitmq_nodes_filedesc("rabbit@my-rabbit", {}, _section()))
-
-    assert len(result) == 2
-
-    # Check file descriptors usage
-    state, summary, metrics = result[0]
-    assert state == 0
-    assert "File descriptors used: 34 of 1048576, <0.01%" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "open_file_descriptors"
-    assert metrics[0][1] == 34
-    assert metrics[0][4] == 0  # min
-    assert metrics[0][5] == 1048576  # max
-
-    # Check file descriptor open attempts
-    state, summary, metrics = result[1]
-    assert state == 0
-    assert "File descriptor open attempts: 11" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "file_descriptors_open_attempts"
-    assert metrics[0][1] == 11
+    assert list(check_rabbitmq_nodes_filedesc("rabbit@my-rabbit", {}, _section())) == [
+        Result(state=State.OK, summary="File descriptors used: 34 of 1048576, <0.01%"),
+        Metric("open_file_descriptors", 34.0, boundaries=(0.0, 1048576.0)),
+        Result(state=State.OK, summary="File descriptor open attempts: 11"),
+        Metric("file_descriptors_open_attempts", 11.0),
+    ]
 
 
 def test_check_rabbitmq_nodes_filedesc_with_thresholds() -> None:
     """Test RabbitMQ file descriptor check function with thresholds."""
-    string_table = [
+    parsed = parse_rabbitmq_nodes(
         [
-            '{"name": "rabbit@test", "fd_used": 800000, "fd_total": 1000000, "io_file_handle_open_attempt_count": 500}'
+            [
+                '{"name": "rabbit@test", "fd_used": 800000, "fd_total": 1000000, "io_file_handle_open_attempt_count": 500}'
+            ]
         ]
-    ]
-    parsed = parse_rabbitmq_nodes(string_table)
+    )
     # The levels parameter should be a tuple of warn/crit values
     params = {"levels": ((None, None), (70.0, 90.0)), "fd_open_upper": (400, 600)}
 
-    result = list(check_rabbitmq_nodes_filedesc("rabbit@test", params, parsed))
-
-    assert len(result) == 2
-
-    # Should trigger warning for high file descriptor usage (80% > 70%)
-    state, summary, metrics = result[0]
-    assert state == 1  # Warning
-    assert "File descriptors used: 800000 of 1000000, 80.00%" in summary
-    assert "(warn/crit at 70.00%/90.00%)" in summary
-
-    # Should trigger warning for high open attempts (500 > 400)
-    state, summary, metrics = result[1]
-    assert state == 1  # Warning
+    assert list(check_rabbitmq_nodes_filedesc("rabbit@test", params, parsed)) == [
+        Result(
+            state=State.WARN,
+            summary=(
+                "File descriptors used: 800000 of 1000000, 80.00% (warn/crit at 70.00%/90.00%)"
+            ),
+        ),
+        Metric(
+            "open_file_descriptors",
+            800000.0,
+            levels=(700000.0, 900000.0),
+            boundaries=(0.0, 1000000.0),
+        ),
+        Result(
+            state=State.WARN, summary="File descriptor open attempts: 500 (warn/crit at 400/600)"
+        ),
+        Metric("file_descriptors_open_attempts", 500.0, levels=(400.0, 600.0)),
+    ]
 
 
 def test_check_rabbitmq_nodes_filedesc_missing_item() -> None:
     """Test RabbitMQ file descriptor check function with missing item."""
-    result = list(check_rabbitmq_nodes_filedesc("missing@item", {}, _section()))
-
-    assert len(result) == 0
+    assert not list(check_rabbitmq_nodes_filedesc("missing@item", {}, _section()))
 
 
 def test_check_rabbitmq_nodes_mem() -> None:
     """Test RabbitMQ memory check function."""
-    params = {"levels": None}
-
-    result = list(check_rabbitmq_nodes_mem("rabbit@my-rabbit", params, _section()))
-    assert len(result) == 1
-
-    state, summary, metrics = result[0]
-    assert state == 0
-    assert "Memory used: 1.71% - 108 MiB of 6.15 GiB High watermark" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "mem_used"
-    assert metrics[0][1] == 113299456
-    assert metrics[0][4] == 0  # min
-    assert metrics[0][5] == 6608874700  # max
+    assert list(check_rabbitmq_nodes_mem("rabbit@my-rabbit", {"levels": None}, _section())) == [
+        Result(state=State.OK, summary="Memory used: 1.71% - 108 MiB of 6.15 GiB High watermark"),
+        Metric("mem_used", 113299456.0, boundaries=(0.0, 6608874700.0)),
+    ]
 
 
 def test_check_rabbitmq_nodes_mem_with_percentage_thresholds() -> None:
     """Test RabbitMQ memory check function with percentage thresholds."""
-    string_table = [['{"name": "rabbit@test", "mem_used": 5000000000, "mem_limit": 6000000000}']]
-    parsed = parse_rabbitmq_nodes(string_table)
-    params = {"levels": (80.0, 90.0)}
+    parsed = parse_rabbitmq_nodes(
+        [['{"name": "rabbit@test", "mem_used": 5000000000, "mem_limit": 6000000000}']]
+    )
 
-    result = list(check_rabbitmq_nodes_mem("rabbit@test", params, parsed))
-
-    assert len(result) == 1
-
-    # Should trigger warning for high memory usage (83.3% > 80%)
-    state, summary, metrics = result[0]
-    assert state == 1  # Warning
+    assert list(check_rabbitmq_nodes_mem("rabbit@test", {"levels": (80.0, 90.0)}, parsed)) == [
+        Result(
+            state=State.WARN,
+            summary=(
+                "Memory used: 83.33% - 4.66 GiB of 5.59 GiB High watermark"
+                " (warn/crit at 80.00%/90.00% used)"
+            ),
+        ),
+        Metric(
+            "mem_used",
+            5000000000.0,
+            levels=(4800000000.0, 5400000000.0),
+            boundaries=(0.0, 6000000000.0),
+        ),
+    ]
 
 
 def test_check_rabbitmq_nodes_mem_with_absolute_thresholds() -> None:
     """Test RabbitMQ memory check function with absolute thresholds."""
-    string_table = [['{"name": "rabbit@test", "mem_used": 5000000000, "mem_limit": 6000000000}']]
-    parsed = parse_rabbitmq_nodes(string_table)
+    parsed = parse_rabbitmq_nodes(
+        [['{"name": "rabbit@test", "mem_used": 5000000000, "mem_limit": 6000000000}']]
+    )
     params = {"levels": (4500000000, 5500000000)}  # Absolute values
 
-    (result,) = list(check_rabbitmq_nodes_mem("rabbit@test", params, parsed))
-
-    # Should trigger warning for high memory usage (5GB > 4.5GB)
-    assert result[0] == 1
+    assert list(check_rabbitmq_nodes_mem("rabbit@test", params, parsed)) == [
+        Result(
+            state=State.WARN,
+            summary=(
+                "Memory used: 83.33% - 4.66 GiB of 5.59 GiB High watermark"
+                " (warn/crit at 4.19 GiB/5.12 GiB used)"
+            ),
+        ),
+        Metric(
+            "mem_used",
+            5000000000.0,
+            levels=(4500000000.0, 5500000000.0),
+            boundaries=(0.0, 6000000000.0),
+        ),
+    ]
 
 
 def test_check_rabbitmq_nodes_mem_missing_item() -> None:
     """Test RabbitMQ memory check function with missing item."""
-    params = {"levels": None}
-
-    assert not list(check_rabbitmq_nodes_mem("missing@item", params, _section()))
+    assert not list(check_rabbitmq_nodes_mem("missing@item", {"levels": None}, _section()))
 
 
 @time_machine.travel("2020-03-18 15:38:00")
 def test_check_rabbitmq_nodes_uptime() -> None:
     """Test RabbitMQ uptime check function."""
     assert list(check_rabbitmq_nodes_uptime("rabbit@my-rabbit", {}, _section())) == [
-        (0, "Up since Wed Mar 18 08:50:10 2020", []),
-        (0, "Uptime: 6:47:49", [("uptime", 24469.577, None, None)]),
+        Result(state=State.OK, summary="Up since Wed Mar 18 08:50:10 2020"),
+        Result(state=State.OK, summary="Uptime: 6:47:49"),
+        Metric("uptime", 24469.577),
     ]
 
 
 def test_check_rabbitmq_nodes_uptime_missing_item() -> None:
     """Test RabbitMQ uptime check function with missing item."""
-    result = list(check_rabbitmq_nodes_uptime("missing@item", {}, _section()))
-
-    assert len(result) == 0
+    assert not list(check_rabbitmq_nodes_uptime("missing@item", {}, _section()))
 
 
 def test_check_rabbitmq_nodes_gc() -> None:
     """Test RabbitMQ garbage collection check function."""
-    result = list(check_rabbitmq_nodes_gc("rabbit@my-rabbit", {}, _section()))
-
-    assert len(result) == 3
-
-    # Check GC runs
-    state, summary, metrics = result[0]
-    assert state == 0
-    assert "GC runs: 282855" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "gc_runs"
-    assert metrics[0][1] == 282855
-
-    # Check bytes reclaimed by GC
-    state, summary, metrics = result[1]
-    assert state == 0
-    assert "Bytes reclaimed by GC: 16.0 GiB" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "gc_bytes"
-    assert metrics[0][1] == 17144463144
-
-    # Check runtime run queue
-    state, summary, metrics = result[2]
-    assert state == 0
-    assert "Runtime run queue: 1" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "runtime_run_queue"
-    assert metrics[0][1] == 1
+    assert list(check_rabbitmq_nodes_gc("rabbit@my-rabbit", {}, _section())) == [
+        Result(state=State.OK, summary="GC runs: 282855"),
+        Metric("gc_runs", 282855.0),
+        Result(state=State.OK, summary="Bytes reclaimed by GC: 16.0 GiB"),
+        Metric("gc_bytes", 17144463144.0),
+        Result(state=State.OK, summary="Runtime run queue: 1"),
+        Metric("runtime_run_queue", 1.0),
+    ]
 
 
 def test_check_rabbitmq_nodes_gc_with_thresholds() -> None:
     """Test RabbitMQ garbage collection check function with thresholds."""
-    string_table = [
+    parsed = parse_rabbitmq_nodes(
         [
-            '{"name": "rabbit@test", "gc_num": 500000, "gc_bytes_reclaimed": 20000000000, "run_queue": 10}'
+            [
+                '{"name": "rabbit@test", "gc_num": 500000, "gc_bytes_reclaimed": 20000000000, "run_queue": 10}'
+            ]
         ]
-    ]
-    parsed = parse_rabbitmq_nodes(string_table)
+    )
     params = {
-        "gc_num_upper": ("levels", (400000, 600000)),
-        "gc_bytes_reclaimed_upper": ("levels", (15000000000, 25000000000)),
-        "run_queue_upper": ("levels", (8, 12)),
+        "gc_num_upper": ("fixed", (400000, 600000)),
+        "gc_bytes_reclaimed_upper": ("fixed", (15000000000, 25000000000)),
+        "run_queue_upper": ("fixed", (8, 12)),
     }
 
-    result = list(check_rabbitmq_nodes_gc("rabbit@test", params, parsed))
-
-    assert len(result) == 3
-
-    # GC runs should trigger warning
-    state, summary, metrics = result[0]
-    assert state == 1  # Warning
-
-    # Bytes reclaimed should trigger warning
-    state, summary, metrics = result[1]
-    assert state == 1  # Warning
-
-    # Run queue should trigger warning
-    state, summary, metrics = result[2]
-    assert state == 1  # Warning
+    assert list(check_rabbitmq_nodes_gc("rabbit@test", params, parsed)) == [
+        Result(state=State.WARN, summary="GC runs: 500000 (warn/crit at 400000/600000)"),
+        Metric("gc_runs", 500000.0, levels=(400000.0, 600000.0)),
+        Result(
+            state=State.WARN,
+            summary="Bytes reclaimed by GC: 18.6 GiB (warn/crit at 14.0 GiB/23.3 GiB)",
+        ),
+        Metric("gc_bytes", 20000000000.0, levels=(15000000000.0, 25000000000.0)),
+        Result(state=State.WARN, summary="Runtime run queue: 10 (warn/crit at 8/12)"),
+        Metric("runtime_run_queue", 10.0, levels=(8.0, 12.0)),
+    ]
 
 
 def test_check_rabbitmq_nodes_gc_missing_item() -> None:
     """Test RabbitMQ garbage collection check function with missing item."""
-    result = list(check_rabbitmq_nodes_gc("missing@item", {}, _section()))
-
-    assert len(result) == 0
+    assert not list(check_rabbitmq_nodes_gc("missing@item", {}, _section()))
 
 
 def test_check_rabbitmq_nodes_partial_data() -> None:
     """Test RabbitMQ checks with partial data availability."""
-    string_table = [
-        [
-            '{"name": "rabbit@test", "type": "disc", "running": true}'  # Only basic data
-        ]
-    ]
-    parsed = parse_rabbitmq_nodes(string_table)
+    parsed = parse_rabbitmq_nodes(
+        [['{"name": "rabbit@test", "type": "disc", "running": true}']]  # Only basic data
+    )
 
     # Main check should work with minimal data
-    result = list(check_rabbitmq_nodes("rabbit@test", {"state": 2}, parsed))
-    assert len(result) == 2
+    assert list(check_rabbitmq_nodes("rabbit@test", {"state": 2}, parsed)) == [
+        Result(state=State.OK, summary="Type: Disc"),
+        Result(state=State.OK, summary="Is running: yes"),
+    ]
 
     # Sub-checks should return empty when data is missing
-    assert len(list(check_rabbitmq_nodes_filedesc("rabbit@test", {}, parsed))) == 0
-    assert len(list(check_rabbitmq_nodes_mem("rabbit@test", {}, parsed))) == 0
-    assert len(list(check_rabbitmq_nodes_uptime("rabbit@test", {}, parsed))) == 0
-    assert len(list(check_rabbitmq_nodes_gc("rabbit@test", {}, parsed))) == 0
+    assert not list(check_rabbitmq_nodes_filedesc("rabbit@test", {}, parsed))
+    assert not list(check_rabbitmq_nodes_mem("rabbit@test", {}, parsed))
+    assert not list(check_rabbitmq_nodes_uptime("rabbit@test", {}, parsed))
+    assert not list(check_rabbitmq_nodes_gc("rabbit@test", {}, parsed))
 
 
 def test_parse_rabbitmq_nodes_multiple_nodes() -> None:
@@ -383,5 +329,4 @@ def test_parse_rabbitmq_nodes_missing_name() -> None:
     ]
 
     # Should handle missing name gracefully and return empty dict
-    result = parse_rabbitmq_nodes(string_table)
-    assert result == {}
+    assert parse_rabbitmq_nodes(string_table) == {}

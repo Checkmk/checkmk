@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.legacy_checks.infoblox_dns_stats import check_infoblox_dns_stats
+from cmk.plugins.infoblox.agent_based.infoblox_dns_stats import check_infoblox_dns_stats
 
 
 def test_empty_counters_treated_as_zero() -> None:

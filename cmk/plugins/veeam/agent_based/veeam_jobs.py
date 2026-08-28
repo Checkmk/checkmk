@@ -33,22 +33,30 @@ def discovery_veeam_jobs(section: Mapping[str, Job | None]) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 
-def monitoring_state(last_state: str, last_result: str, type_: str) -> State:
-    if last_result == "None":
-        if last_state in ["Starting", "Working", "Postprocessing"]:
-            # If result is absent and the job is still running, we cannot check the result yet.
-            # We try to get previous result from the last run.
-            raise IgnoreResultsError("Data not present at the moment")
-        if last_state == "Idle" and type_ == "BackupSync":
-            # We assume that if the job is OK on idle and a backup sync job
+_RUNNING_STATES = ("Starting", "Working", "Postprocessing")
+_NOT_RUNNING_STATES = ("Idle", "Stopped", "Suspended")
+
+
+def monitoring_state(last_state: str, last_result: str) -> State:
+    match last_result:
+        case "None":
+            if last_state in _RUNNING_STATES:
+                # If result is absent and the job is still running, we cannot check the result yet.
+                # We try to get previous result from the last run.
+                raise IgnoreResultsError("Data not present at the moment")
+            if last_state in _NOT_RUNNING_STATES:
+                # The job exists and was queried successfully, it simply has no
+                # execution history yet: its first run is still pending.
+                return State.OK
+            return State.UNKNOWN
+        case "Success":
             return State.OK
-    if last_result == "Success":
-        return State.OK
-    if last_result == "Failed":
-        return State.CRIT
-    if last_result == "Warning":
-        return State.WARN
-    return State.UNKNOWN
+        case "Failed":
+            return State.CRIT
+        case "Warning":
+            return State.WARN
+        case _:
+            return State.UNKNOWN
 
 
 def check_veeam_jobs(item: str, section: Mapping[str, Job | None]) -> CheckResult:
@@ -56,7 +64,7 @@ def check_veeam_jobs(item: str, section: Mapping[str, Job | None]) -> CheckResul
         return
 
     yield Result(
-        state=monitoring_state(job.last_state, job.last_result, job.type_),
+        state=monitoring_state(job.last_state, job.last_result),
         summary=f"State: {job.last_state}, Result: {job.last_result}",
     )
     if job.creation_time != "":

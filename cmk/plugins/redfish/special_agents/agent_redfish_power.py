@@ -181,7 +181,7 @@ def fetch_sections(
         section_data = fetch_data(redfishobj, data[section].get("@odata.id"), section)
         if section_data.get("Members@odata.count") == 0:
             continue
-        if "Collection" in section_data.get("@odata.type"):
+        if "Collection" in section_data.get("@odata.type", {}):
             if section_data.get("Members@odata.count", 0) != 0:
                 result = fetch_collection(redfishobj, section_data, section)
                 result_set[section] = result
@@ -269,6 +269,7 @@ def get_information(redfishobj):
 
     manager_url = base_data.get("Managers", {}).get("@odata.id")
     systems_url = base_data.get("PowerEquipment", {}).get("@odata.id")
+    pdu_url = base_data.get("PowerDistribution", {}).get("@odata.id")
 
     manager_data = []
     fw_version = vendor_data.firmware_version
@@ -291,25 +292,39 @@ def get_information(redfishobj):
     sys.stdout.write("<<<labels:sep(0)>>>\n" f"{json.dumps(labels)}\n")
 
     # fetch systems
-    if not systems_url:
+    if systems_url:
+        power_equipment = fetch_data(redfishobj, systems_url, "PowerEquipment")
+    else:
+        # Some PDUs (e.g. PANDUIT) don't advertise PowerEquipment but may still serve it.
+        probed = fetch_data(redfishobj, "/redfish/v1/PowerEquipment", "PowerEquipment")
+        power_equipment = None if "error" in probed else probed
+
+    if power_equipment is not None:
+        systems_data = [power_equipment]
+    elif pdu_url:
+        # No PowerEquipment resource exists here, so there is nothing to report
+        # as a system - hence the gated redfish_system output below.
+        systems_data = [{"RackPDUs": {"@odata.id": pdu_url}}]
+    else:
         raise CannotRecover(
             "ERROR: probably not a Redfish power equipment - missing PowerEquipment information"
         )
-    systems_data = list([fetch_data(redfishobj, systems_url, "PowerEquipment")])
 
     if manager_data:
         with SectionWriter("redfish_manager") as w:
             w.append_json(manager_data)
 
-    with SectionWriter("redfish_system") as w:
-        w.append_json(systems_data)
+    if power_equipment:
+        with SectionWriter("redfish_system") as w:
+            w.append_json(systems_data)
 
     resulting_sections: tuple[SectionName, ...] = ("RackPDUs",)
     for system in systems_data:
         result = fetch_sections(redfishobj, resulting_sections, system)
         process_result(result)
+        if not (pdu_data := result.get("RackPDUs")):
+            continue
         sub_sections: tuple[SectionName, ...] = ("Mains", "Outlets", "Sensors")
-        pdu_data = result["RackPDUs"]
         if isinstance(pdu_data, list):
             for entry in pdu_data:
                 process_result(fetch_sections(redfishobj, sub_sections, entry))

@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.rabbitmq_vhosts import (
+from cmk.plugins.rabbitmq.agent_based.vhosts import (
     check_rabbitmq_vhosts,
     discover_rabbitmq_vhosts,
     parse_rabbitmq_vhosts,

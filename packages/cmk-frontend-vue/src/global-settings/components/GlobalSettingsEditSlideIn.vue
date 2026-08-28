@@ -4,7 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { GlobalSettingsVariable } from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
 import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
@@ -14,31 +13,46 @@ import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, ref, toRaw } from 'vue'
+import { computed, ref, toRaw, watch } from 'vue'
 
 import FormEdit from '@/form/FormEdit.vue'
 import FormReadonly from '@/form/FormReadonly.vue'
 
+import type { EditorSession } from '../useGlobalSettingsEditor'
+
 const { _t } = usei18n()
 
 const props = defineProps<{
-  variable: GlobalSettingsVariable
+  session: EditorSession
   title: string
 }>()
 
 const emit = defineEmits<{
   close: []
-  save: [value: unknown]
-  reset: []
 }>()
 
 const CURRENT_SECTION = 'current-setting'
 const FACTORY_SECTION = 'factory-settings'
 const SITE_OVERRIDES_SECTION = 'site-overrides'
 
-const draft = ref<unknown>(structuredClone(toRaw(props.variable.value)))
-const confirmReset = ref(false)
+const variable = computed(() => props.session.variable)
+const error = computed(() => props.session.error)
+
+const draft = ref<unknown>(structuredClone(toRaw(props.session.variable.value)))
+const confirmResetOpen = ref(false)
 const openedSections = ref<string[]>([CURRENT_SECTION, FACTORY_SECTION])
+
+watch(
+  () => props.session.variable.value,
+  (value) => {
+    draft.value = structuredClone(toRaw(value))
+  }
+)
+
+function confirmReset(): void {
+  confirmResetOpen.value = false
+  void props.session.reset()
+}
 
 const resetButtonLabel = computed<TranslatedString>(() => _t('Remove modification'))
 
@@ -53,7 +67,7 @@ const resetConfirmation = computed<{
 }))
 
 const currentStateText = computed<TranslatedString>(() =>
-  props.variable.modified
+  variable.value.modified
     ? _t('This variable has been modified.')
     : _t('This variable is at factory settings.')
 )
@@ -68,13 +82,16 @@ const currentStateText = computed<TranslatedString>(() =>
   >
     <div class="global-settings-edit-slide-in">
       <div class="global-settings-edit-slide-in__actions">
-        <CmkButton variant="primary" @click="emit('save', draft)">{{ _t('Save') }}</CmkButton>
+        <CmkButton variant="primary" :disabled="!session.editable" @click="session.save(draft)">
+          {{ _t('Save') }}
+        </CmkButton>
         <CmkButton
           v-if="variable.modified"
           variant="secondary"
           :icon="{ name: 'reset' }"
+          :disabled="!session.editable"
           :title="_t('Reset to factory default')"
-          @click="confirmReset = true"
+          @click="confirmResetOpen = true"
         >
           {{ resetButtonLabel }}
         </CmkButton>
@@ -83,15 +100,19 @@ const currentStateText = computed<TranslatedString>(() =>
         </CmkButton>
       </div>
 
+      <CmkAlertBox v-if="error !== null" variant="error" :heading="error.heading">
+        <span class="global-settings-edit-slide-in__error">{{ error.message }}</span>
+      </CmkAlertBox>
+
       <CmkAlertBox
-        v-if="confirmReset"
+        v-if="confirmResetOpen"
         variant="warning"
         :heading="resetConfirmation.heading"
-        :main-button="{ title: resetConfirmation.confirm, onclick: () => emit('reset') }"
+        :main-button="{ title: resetConfirmation.confirm, onclick: confirmReset }"
         :optional-button="{
           title: _t('Cancel'),
           icon: 'cancel',
-          onclick: () => (confirmReset = false)
+          onclick: () => (confirmResetOpen = false)
         }"
       >
         {{ resetConfirmation.body }}
@@ -192,6 +213,10 @@ const currentStateText = computed<TranslatedString>(() =>
 
 .global-settings-edit-slide-in__section-title {
   font-weight: bold;
+}
+
+.global-settings-edit-slide-in__error {
+  white-space: pre-wrap;
 }
 
 .global-settings-edit-slide-in__row {

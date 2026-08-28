@@ -170,11 +170,6 @@ def _global_settings_page(ctx: PageContext) -> None:
         hide_suggestions=not user.get_tree_state("suggestions", "all", True),
         user_role_ids=user.role_ids,
     )
-    html.show_warning(
-        _(
-            "This page is work in progress. It shows a subset of the global settings "
-            "and changes made here are not saved."
-        )
-    )
+    html.show_warning(_("This page is work in progress. It shows a subset of the global settings."))
     html.vue_component(component_name="cmk-global-settings", data=asdict(data))
     html.footer()

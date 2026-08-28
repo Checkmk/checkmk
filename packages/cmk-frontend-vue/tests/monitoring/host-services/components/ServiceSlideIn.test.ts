@@ -410,6 +410,7 @@ describe('ServiceSlideIn', () => {
                   limit: 500,
                   truncated: false,
                   since: Math.floor(Date.now() / 1000) - 8 * 24 * 60 * 60,
+                  time_window_days: 8,
                   legacy_events_link:
                     'view.py?view_name=svcevents&site=local&host=web-server-01&service=CPU+load'
                 }
@@ -430,9 +431,7 @@ describe('ServiceSlideIn', () => {
         query: { site_id: 'local', service_name: 'CPU load' }
       }
     })
-    expect(
-      await screen.findByText('This service has no events in the last 8 days.')
-    ).toBeInTheDocument()
+    expect(await screen.findByText('No events in the last 8 days.')).toBeInTheDocument()
   })
 
   it('emits close when the close button is used', async () => {

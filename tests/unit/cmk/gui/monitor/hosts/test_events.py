@@ -5,7 +5,7 @@
 import pytest
 
 from cmk.gui.monitor.hosts._api._event_icons import EventIcon
-from cmk.gui.monitor.hosts._api._events import _handle_get_host_events
+from cmk.gui.monitor.hosts._api._events import _handle_get_host_events, _SECONDS_PER_DAY
 from cmk.gui.monitor.hosts._impl import _build_event_filter
 from cmk.gui.monitor.hosts._models import Event
 from cmk.gui.openapi.utils import ProblemException
@@ -63,6 +63,18 @@ class TestEventsResponse:
         assert response.events == []
         assert response.meta.truncated is False
 
+    def test_the_time_window_days_is_reported(self) -> None:
+        response = _handle_get_host_events(
+            get_fake_host_repository(hostnames=["web-server-01"]),
+            get_fake_event_repository([]),
+            hostname="web-server-01",
+            site_id="local",
+            since=_SINCE,
+            time_window_days=30,
+        )
+
+        assert response.meta.time_window_days == 30
+
     def test_events_come_newest_first(self) -> None:
         events = [
             _event(time=_SINCE + 1, lineno=1),
@@ -101,6 +113,41 @@ class TestEventsResponse:
         assert [entry.time for entry in response.events] == [_SINCE + 5, _SINCE + 4]
         assert response.meta.truncated is True
         assert response.meta.limit == 2
+
+    def test_a_truncated_response_reports_the_window_down_to_its_oldest_shown_event(self) -> None:
+        events = [_event(time=_SINCE + 100, lineno=1), _event(time=_SINCE + 50, lineno=2)]
+
+        response = _handle_get_host_events(
+            get_fake_host_repository(hostnames=["web-server-01"]),
+            get_fake_event_repository(events),
+            hostname="web-server-01",
+            site_id="local",
+            since=_SINCE,
+            time_window_days=8,
+            limit=1,
+            # Oldest shown event (the only one, given the limit) is _SINCE + 100. Two days and
+            # a second later than that rounds up to three days covered, not the requested eight.
+            now=_SINCE + 100 + 2 * _SECONDS_PER_DAY + 1,
+        )
+
+        assert response.meta.truncated is True
+        assert response.meta.time_window_days == 3
+
+    def test_a_truncated_response_still_covering_today_reports_one_day(self) -> None:
+        events = [_event(time=_SINCE + 100, lineno=1), _event(time=_SINCE + 50, lineno=2)]
+
+        response = _handle_get_host_events(
+            get_fake_host_repository(hostnames=["web-server-01"]),
+            get_fake_event_repository(events),
+            hostname="web-server-01",
+            site_id="local",
+            since=_SINCE,
+            time_window_days=8,
+            limit=1,
+            now=_SINCE + 100,
+        )
+
+        assert response.meta.time_window_days == 1
 
     def test_a_full_page_without_more_rows_is_not_truncated(self) -> None:
         events = [_event(time=_SINCE + offset, lineno=offset) for offset in range(1, 3)]

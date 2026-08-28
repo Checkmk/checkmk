@@ -9,6 +9,7 @@ import { nextTick } from 'vue'
 
 import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
 import type { EventEntry, EventsResponse } from '@/monitoring/events/api'
+import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
 
 // MonitoringTable virtualizes off its own wrapper, which jsdom measures as zero-sized;
 // without a height no row would be rendered at all.
@@ -60,6 +61,7 @@ function mountTab(data: Partial<EventsResponse> = {}, subject: 'host' | 'service
           limit: 500,
           truncated: false,
           since: since(8),
+          time_window_days: 8,
           legacy_events_link: HISTORY_LINK
         },
         ...data
@@ -135,16 +137,15 @@ test('an event kind the API resolved no icon for still renders its row', async (
 test('a host without events in the window is explained rather than shown an empty table', () => {
   mountTab()
 
-  expect(
-    screen.getByText('This host and its services have no events in the last 8 days.')
-  ).toBeInTheDocument()
+  expect(screen.getByText('No events in the last 8 days.')).toBeInTheDocument()
   expect(screen.queryByRole('table')).not.toBeInTheDocument()
 })
 
-test('the explanation speaks of the service when that is the subject', () => {
+test('the empty explanation does not repeat the subject already named in the header above it', () => {
   mountTab({}, 'service')
 
-  expect(screen.getByText('This service has no events in the last 8 days.')).toBeInTheDocument()
+  expect(screen.getByText('No events in the last 8 days.')).toBeInTheDocument()
+  expect(screen.getByText(/^Events of the last 8 days for this service/)).toBeInTheDocument()
 })
 
 test('the service column is dropped for a service, whose rows would all repeat its name', async () => {
@@ -165,7 +166,13 @@ test('an event of the host itself is marked as such in the service column', asyn
 test('a list the row limit cut off says so', () => {
   mountTab({
     events: [makeEvent()],
-    meta: { limit: 1, truncated: true, since: since(8), legacy_events_link: HISTORY_LINK }
+    meta: {
+      limit: 1,
+      truncated: true,
+      since: since(8),
+      time_window_days: 8,
+      legacy_events_link: HISTORY_LINK
+    }
   })
 
   expect(
@@ -190,10 +197,94 @@ test('the tab links to the legacy history view the API resolved for its subject'
 
 test('the explained window follows what the API applied, not a hard-coded eight days', () => {
   mountTab({
-    meta: { limit: 500, truncated: false, since: since(2), legacy_events_link: HISTORY_LINK }
+    meta: {
+      limit: 500,
+      truncated: false,
+      since: since(2),
+      time_window_days: 2,
+      legacy_events_link: HISTORY_LINK
+    }
+  })
+
+  expect(screen.getByText('No events in the last 2 days.')).toBeInTheDocument()
+})
+
+test('the header states the window and its start, next to the legacy history link', () => {
+  mountTab({
+    events: [makeEvent()],
+    meta: {
+      limit: 500,
+      truncated: false,
+      since: since(8),
+      time_window_days: 8,
+      legacy_events_link: HISTORY_LINK
+    }
+  })
+
+  // Asserted as a shape rather than a literal: `formatTimestamp` renders local time and
+  // the test suite pins no timezone.
+  expect(
+    screen.getByText(
+      /^Events of the last 8 days for this host \(since \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\)$/
+    )
+  ).toBeInTheDocument()
+})
+
+test('the header speaks of the service when that is the subject', () => {
+  mountTab({ events: [makeEvent()] }, 'service')
+
+  expect(screen.getByText(/^Events of the last 8 days for this service/)).toBeInTheDocument()
+})
+
+test('a list that is not truncated states the full requested window, not just its oldest event', () => {
+  mountTab({
+    events: [makeEvent({ time: since(1) })],
+    meta: {
+      limit: 500,
+      truncated: false,
+      since: since(8),
+      time_window_days: 8,
+      legacy_events_link: HISTORY_LINK
+    }
+  })
+
+  expect(screen.getByText(/^Events of the last 8 days for this host/)).toBeInTheDocument()
+})
+
+test('a truncated list shows its since as its oldest shown event, not the full requested window', () => {
+  const oldestShownTime = 1752000000
+  mountTab({
+    events: [makeEvent({ time: 1752405510 }), makeEvent({ time: oldestShownTime })],
+    meta: {
+      limit: 2,
+      truncated: true,
+      since: since(8),
+      time_window_days: 8,
+      legacy_events_link: HISTORY_LINK
+    }
   })
 
   expect(
-    screen.getByText('This host and its services have no events in the last 2 days.')
+    screen.getByText(
+      `Events of the last 8 days for this host (since ${formatTimestamp(oldestShownTime)})`
+    )
   ).toBeInTheDocument()
+})
+
+// The day count itself is never recomputed here: meta.time_window_days already accounts for
+// truncation (see EventHistoryApp.vue and its backend counterpart, _covered_window_days in
+// cmk/gui/monitor/hosts/_api/_events.py), so the component only has to display it verbatim.
+test('the window info uses the API-reported day count even when the response is truncated', () => {
+  mountTab({
+    events: [makeEvent()],
+    meta: {
+      limit: 1,
+      truncated: true,
+      since: since(8),
+      time_window_days: 3,
+      legacy_events_link: HISTORY_LINK
+    }
+  })
+
+  expect(screen.getByText(/^Events of the last 3 days for this host/)).toBeInTheDocument()
 })

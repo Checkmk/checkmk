@@ -37,24 +37,47 @@ const props = withDefaults(
   { subject: 'host' }
 )
 
-const { _t } = usei18n()
-
-const SECONDS_PER_DAY = 24 * 60 * 60
+const { _t, _tn } = usei18n()
 
 const columns = computed(() => buildHistoryColumns(props.subject))
 
-// The window's length is not part of the response, only its start; the difference to now
-// re-derives the days the endpoint was asked for.
-const windowDays = computed(() =>
-  Math.round((Date.now() / 1000 - props.data.meta.since) / SECONDS_PER_DAY)
+// The requested window is always meta.since, but a truncated response only actually covers
+// events back to the oldest one it could still fit under the row limit - which lands more
+// recently than meta.since whenever there are more matching events than the limit allows.
+const displayedSince = computed(() =>
+  props.data.meta.truncated && props.data.events.length > 0
+    ? props.data.events[props.data.events.length - 1]!.time
+    : props.data.meta.since
 )
 
+// meta.time_window_days already accounts for truncation server side: it's the requested
+// window as-is when the response wasn't truncated, or the window down to the oldest shown
+// event otherwise. Re-deriving that here from displayedSince against the browser's clock
+// would drift with request latency and rendering delay, so it isn't - the endpoint knows the
+// oldest row it returned and its own clock, and reports the number outright.
 const emptyExplanation = computed(() =>
+  _tn(
+    'No events in the last 1 day.',
+    'No events in the last %{days} days.',
+    props.data.meta.time_window_days,
+    { days: props.data.meta.time_window_days }
+  )
+)
+
+const windowInfo = computed(() =>
   props.subject === 'host'
-    ? _t('This host and its services have no events in the last %{days} days.', {
-        days: windowDays.value
-      })
-    : _t('This service has no events in the last %{days} days.', { days: windowDays.value })
+    ? _tn(
+        'Events of the last 1 day for this host (since %{since})',
+        'Events of the last %{days} days for this host (since %{since})',
+        props.data.meta.time_window_days,
+        { days: props.data.meta.time_window_days, since: formatTimestamp(displayedSince.value) }
+      )
+    : _tn(
+        'Events of the last 1 day for this service (since %{since})',
+        'Events of the last %{days} days for this service (since %{since})',
+        props.data.meta.time_window_days,
+        { days: props.data.meta.time_window_days, since: formatTimestamp(displayedSince.value) }
+      )
 )
 
 // The time column carries the date, which is what lets the list stay flat instead of
@@ -72,14 +95,19 @@ function iconsOf(event: EventEntry): MonitoringIcon[] {
 
 <template>
   <div class="monitoring-event-history-app">
-    <CmkLink
-      class="monitoring-event-history-app__link"
-      :href="data.meta.legacy_events_link"
-      target="_top"
-    >
-      <CmkIcon name="history" size="small" />
-      {{ _t('Open the full history view') }}
-    </CmkLink>
+    <div class="monitoring-event-history-app__header">
+      <CmkParagraph class="monitoring-event-history-app__window-info">
+        {{ windowInfo }}
+      </CmkParagraph>
+      <CmkLink
+        class="monitoring-event-history-app__link"
+        :href="data.meta.legacy_events_link"
+        target="_top"
+      >
+        <CmkIcon name="history" size="small" />
+        {{ _t('Open the full history view') }}
+      </CmkLink>
+    </div>
 
     <CmkParagraph v-if="data.events.length === 0" class="monitoring-event-history-app__empty">
       {{ emptyExplanation }}
@@ -127,10 +155,21 @@ function iconsOf(event: EventEntry): MonitoringIcon[] {
   gap: var(--spacing);
 }
 
+.monitoring-event-history-app__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing);
+}
+
+.monitoring-event-history-app__window-info {
+  font-weight: var(--font-weight-bold);
+}
+
 .monitoring-event-history-app__link {
-  align-self: flex-end;
   align-items: center;
   width: auto;
+  flex: 0 0 auto;
 }
 
 .monitoring-event-history-app__empty,

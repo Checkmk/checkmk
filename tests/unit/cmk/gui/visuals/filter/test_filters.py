@@ -196,6 +196,12 @@ filter_tests = [
         request_vars=[("event_facility", "0")],
         expected_filters="Filter: event_facility = 0\n",
     ),
+    # Testing base class EventHostQuery
+    FilterTest(
+        ident="event_host",
+        request_vars=[("event_host", "myhost")],
+        expected_filters=("Filter: event_host = myhost\nFilter: event_core_host = myhost\nOr: 2\n"),
+    ),
     # Testing base class FilterNagiosFlag, FilterOption
     FilterTest(
         ident="event_host_in_downtime",

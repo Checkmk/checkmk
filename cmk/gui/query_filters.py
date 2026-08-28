@@ -550,6 +550,25 @@ class HostnameOrAliasQuery(TextQuery):
         )
 
 
+class EventHostQuery(TextQuery):
+    def __init__(self) -> None:
+        super().__init__(ident="event_host", column="event_host", op="=")
+        self.link_columns = ["event_host", "event_core_host"]
+
+    @override
+    def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        # The Event Console stores the host name as it arrived in "event_host" and the
+        # canonical name from the monitoring in "event_core_host". A trap sender is often
+        # only known by its IP address, so match either of them.
+        host = livestatus.lqencode(value[self.request_vars[0]])
+
+        return lq_logic(
+            "Filter:",
+            [f"event_host {self.op} {host}", f"event_core_host {self.op} {host}"],
+            "Or",
+        )
+
+
 class OptEventEffectiveContactgroupQuery(TextQuery):
     def __init__(self) -> None:
         super().__init__(

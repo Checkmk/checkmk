@@ -105,7 +105,7 @@ def register(filter_registry: FilterRegistry) -> None:
             title=_l("Host name of event (exact match)"),
             sort_index=201,
             info="event",
-            query_filter=query_filters.TextQuery(ident="event_host", op="="),
+            query_filter=query_filters.EventHostQuery(),
         )
     )
 

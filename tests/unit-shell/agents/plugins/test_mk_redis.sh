@@ -17,8 +17,11 @@ REDIS_HOST_IPHOST="127.0.0.1"
 REDIS_PORT_IPHOST="6380"
 REDIS_PASSWORD_IPHOST='MYPASSWORD'
 
-REDIS_HOST_test-123="127.0.0.1"
-REDIS_PORT_test-123="6379"
+REDIS_HOST_test_123="127.0.0.1"
+REDIS_PORT_test_123="6379"
+
+REDIS_HOST_cache___="127.0.0.1"
+REDIS_PORT_cache___="6381"
 
 EOF
 }
@@ -40,15 +43,18 @@ test_mk_redis_config() {
 
 # An instance name may contain hyphens, a shell variable name may not.
 test_mk_redis_config_hyphenated_instance() {
-    errors=$(MK_CONFDIR="${SHUNIT_TMPDIR}" load_config 2>&1)
-    assertContains "$errors" "REDIS_HOST_test-123=127.0.0.1: command not found"
+    MK_CONFDIR="${SHUNIT_TMPDIR}" load_config
 
-    # the invalid expansion would otherwise abort the test function
-    output=$(
-        redis_args "test-123" 2>/dev/null
-        echo "${REDIS_ARGS[*]}"
-    )
-    assertEquals "" "$output"
+    redis_args "test-123"
+    assertEquals "-h 127.0.0.1 -p 6379 info" "${REDIS_ARGS[*]}"
+}
+
+# a rule saved before the Setup field was validated may hold a non-ASCII name
+test_mk_redis_config_non_ascii_instance() {
+    MK_CONFDIR="${SHUNIT_TMPDIR}" load_config
+
+    redis_args "cache-é"
+    assertEquals "-h 127.0.0.1 -p 6381 info" "${REDIS_ARGS[*]}"
 }
 
 # shellcheck disable=SC1090 # Can't follow

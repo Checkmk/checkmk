@@ -47,13 +47,13 @@ def AbsoluteTimestamp(
             case DateTimeFormat.TIME:
                 if not isinstance(value, list):
                     raise TypeError("Expected list[int] for TIME format")
-                return [f"{value[0]}:{value[1]}"]
+                return [f"{value[0]:02}:{value[1]:02}"]
             case other:
                 assert_never(other)
 
     def to_disk(value: object) -> int | list[int]:
         if not isinstance(value, tuple):
-            raise TypeError("Unable to serialize invalid timestamp format: {type(value)}")
+            raise TypeError(f"Unable to serialize invalid timestamp format: {type(value)}")
         match use_format:
             case DateTimeFormat.TIME:
                 hour, minute = map(int, value[0].split(":"))

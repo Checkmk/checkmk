@@ -754,36 +754,36 @@ http_archive(
 http_file(
     name = "python_msi_ucrt",
     downloaded_file_path = "ucrt.msi",
-    sha256 = "5e6af3bfa726e50a320830ce6bf080d5fad049389cfea13d63812a7f4be50aa2",
-    url = "https://www.python.org/ftp/python/3.13.13/amd64/ucrt.msi",
+    sha256 = "c35e76105318b7472c6028e8d4a2f9b8ec1a3ef02897b4e49350c8adb84a2105",
+    url = "https://www.python.org/ftp/python/3.14.7/amd64/ucrt.msi",
 )
 
 http_file(
     name = "python_msi_core",
     downloaded_file_path = "core.msi",
-    sha256 = "863c2828e167418fc53e0290b379938f3bdbcfbb88e89e15e6265672345940a4",
-    url = "https://www.python.org/ftp/python/3.13.13/amd64/core.msi",
+    sha256 = "3dfcfe7b42e6f2d683be427af62369761c7e6627aff6a8da2f439a9d11e62cdf",
+    url = "https://www.python.org/ftp/python/3.14.7/amd64/core.msi",
 )
 
 http_file(
     name = "python_msi_exe",
     downloaded_file_path = "exe.msi",
-    sha256 = "6ec09f11d20a58d77bcc40c86eb1eff0bd55ea4d28a89a569754583705efa1ac",
-    url = "https://www.python.org/ftp/python/3.13.13/amd64/exe.msi",
+    sha256 = "63035cb1fc01ec085c0f18e73f8c1b000ca148378f4f4b1db11f3baabcc8cf3a",
+    url = "https://www.python.org/ftp/python/3.14.7/amd64/exe.msi",
 )
 
 http_file(
     name = "python_msi_lib",
     downloaded_file_path = "lib.msi",
-    sha256 = "c72f5fca7ed487818bb52c66fc9126f2ecc4260e8e394c9394e21825bbf0c936",
-    url = "https://www.python.org/ftp/python/3.13.13/amd64/lib.msi",
+    sha256 = "d68a92dcc61addb49e4678f60af2838d7675991341c9bf0facd2c5e7283841c3",
+    url = "https://www.python.org/ftp/python/3.14.7/amd64/lib.msi",
 )
 
 http_file(
     name = "python_msi_pip",
     downloaded_file_path = "pip.msi",
-    sha256 = "6899283565a7d4d85058518d58f9edcda2e0828496d46b0bca4fee20d7e7d7cf",
-    url = "https://www.python.org/ftp/python/3.13.13/amd64/pip.msi",
+    sha256 = "b9c87eee34ab2ded2702b1fb26ea031b07ffbb665617336b2a70508e660153eb",
+    url = "https://www.python.org/ftp/python/3.14.7/amd64/pip.msi",
 )
 
 # win_amd64 wheel closure for python-3.cab's .venv, fetched at the fetch phase

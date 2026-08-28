@@ -17,4 +17,4 @@ cryptography = "*"    # cmk_update_agent
 pywin32 = "*"       # logwatch
 
 [requires]
-python_version = "3.13"
+python_version = "3.14"

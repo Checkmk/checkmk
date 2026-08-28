@@ -4,6 +4,7 @@ package(default_visibility = ["//tests:__subpackages__"])
 
 py_library(
     name = "qa_metrics",
+    testonly = True,
     srcs = ["__init__.py"],
     imports = ["../.."],
 )

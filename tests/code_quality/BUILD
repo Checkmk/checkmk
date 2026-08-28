@@ -4,6 +4,7 @@ load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
 py_library(
     name = "bazel_utils",
+    testonly = True,
     srcs = ["bazel_utils.py"],
     imports = ["../.."],
     visibility = ["//:__subpackages__"],

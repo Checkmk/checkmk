@@ -5,6 +5,7 @@ package(default_visibility = ["//tests:__subpackages__"])
 
 py_library(
     name = "test_coverage",
+    testonly = True,
     srcs = [
         "__init__.py",
         "rows.py",
@@ -19,6 +20,7 @@ py_library(
 
 py_binary(
     name = "upload",
+    testonly = True,
     srcs = ["upload.py"],
     imports = ["../../.."],
     deps = [
@@ -35,6 +37,7 @@ py_binary(
 
 py_binary(
     name = "summary",
+    testonly = True,
     srcs = ["summary.py"],
 )
 

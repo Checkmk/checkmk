@@ -5,6 +5,7 @@ package(default_visibility = ["//tests:__subpackages__"])
 
 py_library(
     name = "db",
+    testonly = True,
     srcs = [
         "__init__.py",
         "connection.py",

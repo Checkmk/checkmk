@@ -38,6 +38,7 @@ py_library(
 
 py_library(
     name = "empty_config",
+    testonly = True,
     srcs = ["empty_config.py"],
     imports = ["../../.."],
     visibility = [

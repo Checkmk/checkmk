@@ -3,6 +3,7 @@ load("@rules_python//python:defs.bzl", "py_library")
 
 py_library(
     name = "wnx-agent-regression-python-tests",
+    testonly = True,
     srcs = [
         "__init__.py",
         "_test_section_logfiles.py",

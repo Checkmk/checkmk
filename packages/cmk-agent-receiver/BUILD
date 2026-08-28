@@ -131,6 +131,7 @@ py_library(
 
 py_library(
     name = "testlib",
+    testonly = True,
     srcs = glob(["cmk/testlib/agent_receiver/**/*.py"]),
     data = [
         "@wiremock_standalone//file",

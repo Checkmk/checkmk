@@ -26,6 +26,7 @@ from ._quantities import rrd_metric_of, RRDMetric, ScalarKind, ScalarOf
 from ._quantity import QuantityProtocol
 
 _PREDICT_PREFIX = "predict_"
+_METRIC_PREFIX = "METRIC_"
 
 
 def _matches(
@@ -133,7 +134,13 @@ _FALLBACK_SCALAR_KINDS = (
 def _matches_graph_name(graph: Graph, graph_name: str) -> bool:
     # Legacy configs and autocompleters identify single-metric graphs as "METRIC_<name>", while the
     # engine names the corresponding fallback graphs after the bare metric name.
-    return graph.name == graph_name or graph.name == graph_name.removeprefix("METRIC_")
+    return graph.name == graph_name or graph.name == graph_name.removeprefix(_METRIC_PREFIX)
+
+
+def _requested_single_metric(graph_name: str | None) -> MetricName | None:
+    if graph_name is None or not graph_name.startswith(_METRIC_PREFIX):
+        return None
+    return MetricName(graph_name.removeprefix(_METRIC_PREFIX))
 
 
 def build_matched_graphs(
@@ -204,6 +211,13 @@ def build_matched_graphs(
             ],
             rules=_fallback_rules(name),
         )
+
+    # A single-metric request names no plug-in, and a plug-in graph drawing that metric claims it,
+    # which keeps the loop below from reaching it. Answer such a request on its own.
+    if (single_metric := _requested_single_metric(graph_name)) is not None:
+        if single_metric in available:
+            _collect(_single_metric_graph(single_metric))
+        return matched_graphs
 
     for plugin in registered_graphs:
         parts = _matchable_parts(plugin)

@@ -191,6 +191,7 @@ def _discover(
     ],
     *,
     fetch_data: _FakeRRDFetchData,
+    graph_name: str | None = None,
 ) -> Sequence[Graph]:
     return build_matched_graphs(
         localizer=_id,
@@ -198,6 +199,7 @@ def _discover(
         kind=_KIND,
         registered_graphs=registered_graphs,
         registered_metrics=_METRICS,
+        graph_name=graph_name,
     )
 
 
@@ -310,6 +312,29 @@ def test_build_matched_graphs_filters_to_the_requested_graph_name() -> None:
     assert [graph.name for graph in _matched("extra")] == ["extra"]
     assert [graph.name for graph in _matched("METRIC_extra")] == ["extra"]
     assert list(_matched("does_not_exist")) == []
+
+
+def test_build_matched_graphs_answers_a_single_metric_request_a_plugin_claims() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    plugin = graphs_v1.Graph(name="cpu", title=Title("CPU"), simple_lines=["cpu_user"])
+    fetch_data = _FakeRRDFetchData(performance_response={service: _perf_data(_perf(cpu_user))})
+
+    # The plug-in claims the metric, so discovery offers its graph alone.
+    assert [graph.name for graph in _discover([plugin], fetch_data=fetch_data)] == ["cpu"]
+
+    [requested] = _discover([plugin], fetch_data=fetch_data, graph_name=f"METRIC_{cpu_user}")
+
+    assert requested == _fallback(cpu_user)
+
+
+def test_build_matched_graphs_answers_no_single_metric_request_for_an_absent_metric() -> None:
+    service = _service()
+    fetch_data = _FakeRRDFetchData(
+        performance_response={service: _perf_data(_perf(MetricName("cpu_user")))}
+    )
+
+    assert list(_discover([], fetch_data=fetch_data, graph_name="METRIC_absent")) == []
 
 
 def test_build_matched_graphs_rejects_plugin_when_required_metric_missing() -> None:

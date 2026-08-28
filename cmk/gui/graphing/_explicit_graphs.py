@@ -24,7 +24,7 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     title: str
     unit: ConvertibleUnitSpecification
     consolidation_function: GraphConsolidationFunction | None
-    explicit_vertical_range: tuple[float | None, float | None]
+    explicit_vertical_range: tuple[float, float] | None
     omit_zero_metrics: bool
     horizontal_rules: Sequence[HorizontalRule]
     metrics: Sequence[GraphMetric]
@@ -49,9 +49,13 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
                 recipe=GraphRecipe(
                     title=self.title,
                     unit_spec=self.unit,
-                    explicit_vertical_range=FixedVerticalRange(
-                        min=self.explicit_vertical_range[0],
-                        max=self.explicit_vertical_range[1],
+                    explicit_vertical_range=(
+                        None
+                        if self.explicit_vertical_range is None
+                        else FixedVerticalRange(
+                            min=self.explicit_vertical_range[0],
+                            max=self.explicit_vertical_range[1],
+                        )
                     ),
                     omit_zero_metrics=self.omit_zero_metrics,
                     horizontal_rules=self.horizontal_rules,

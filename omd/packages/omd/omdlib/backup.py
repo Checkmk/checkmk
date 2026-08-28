@@ -5,6 +5,9 @@
 
 """Cares about backing up the files of a site"""
 
+# mypy: disable-error-code="comparison-overlap"
+# mypy: disable-error-code="redundant-expr"
+
 import contextlib
 import errno
 import fnmatch
@@ -384,7 +387,7 @@ def _tar_add(
             # Create a TarInfo object from the file.
             tarinfo = _get_tar_info_or_raise(tar, name, arcname)
             # Exclude files.
-            if not predicate(tarinfo):
+            if tarinfo is None or not predicate(tarinfo):
                 return
 
             # Create a backup of history file and add it to the archive as history.sqlite.

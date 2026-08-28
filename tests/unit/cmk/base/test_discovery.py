@@ -6,7 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 import socket
-from collections.abc import Mapping, Sequence
+from collections.abc import Container, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple, override
 
@@ -54,19 +54,21 @@ from cmk.checkengine.discovery import (
     QualifiedDiscovery,
 )
 from cmk.checkengine.discovery._autodiscovery import (
-    _get_post_discovery_autocheck_services,
     _group_by_transition,
     _make_diff,
     discovery_by_host,
+    get_post_discovery_autocheck_services,
     make_table,
     ServicesByTransition,
     ServicesTable,
     ServicesTableEntry,
 )
+from cmk.checkengine.discovery._discover.host_labels import HostLabelPlugin
 from cmk.checkengine.discovery._entrypoints.active_check import (
     _check_host_labels,
     _check_service_lists,
 )
+from cmk.checkengine.discovery._entrypoints.commandline import _commandline_discovery_on_host
 from cmk.checkengine.discovery._utils.filters import (
     RediscoveryParameters,
     ServiceFilters,
@@ -87,6 +89,7 @@ from cmk.checkengine.plugins import (
     AgentSectionPlugin,
     AutocheckEntry,
     CheckPluginName,
+    DiscoveryPlugin,
     FinalCheckResult,
     FinalDiscoveryResult,
     LegacyPluginLocation,
@@ -822,7 +825,7 @@ def test__get_post_discovery_services(
 
     new_item_names = [
         entry.service.newer.item or ""
-        for entry in _get_post_discovery_autocheck_services(
+        for entry in get_post_discovery_autocheck_services(
             HostName("hostname"),
             grouped_services,
             service_filters,
@@ -869,7 +872,7 @@ def test__get_post_discovery_services_drops_ignored_from_autochecks() -> None:
     }
     result = DiscoveryReport()
 
-    post_discovery = _get_post_discovery_autocheck_services(
+    post_discovery = get_post_discovery_autocheck_services(
         HostName("hostname"),
         services_by_transition,
         ServiceFilters.accept_all(),
@@ -1706,7 +1709,10 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             check_plugins=_TEST_CHECK_PLUGINS,
         ),
         run_plugin_names=EVERYTHING,
-        ignore_plugin=lambda *args, **kw: False,
+        autochecks_config=config.AutochecksConfigurer(
+            config_cache, _TEST_CHECK_PLUGINS, service_name_config
+        ),
+        enforced_services={},
         arg_only_new=False,
         on_error=OnError.RAISE,
         autochecks_dir=cmk.utils.paths.autochecks_dir,
@@ -1719,6 +1725,259 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
 
     store = DiscoveredHostLabelsStore(testhost, cmk.utils.paths.discovered_host_labels_dir)
     assert store.load() == _EXPECTED_HOST_LABELS
+
+
+# ---------------------------------------------------------------------------
+# CMK-37187: the commandline entrypoint (`cmk -I` / `cmk -II`) must apply the
+# same semantic filters as the other three discovery entrypoints, i.e. it must
+# route through the shared transition-table layer.  The tests below pin the
+# three divergences described in the ticket:
+#   * disabled services (ignore_service) are dropped from the autochecks,
+#   * services shadowed by an enforced (static) check are dropped,
+#   * a stale autocheck of a now-disabled check plug-in is dropped, even for
+#     `cmk -I` (which previously kept it).
+# ---------------------------------------------------------------------------
+
+
+class _CommandlineAutochecksConfig:
+    """Configurable AutochecksConfig fake for the commandline entrypoint tests.
+
+    Service descriptions are ``"<plugin> <item>"`` so that ``ignore_service`` and
+    enforced-service collisions can be targeted precisely.
+    """
+
+    def __init__(
+        self,
+        *,
+        ignored_services: Container[str] = frozenset(),
+        ignored_plugins: Container[CheckPluginName] = frozenset(),
+    ) -> None:
+        self._ignored_services = ignored_services
+        self._ignored_plugins = ignored_plugins
+
+    def ignore_plugin(self, host_name: HostName, plugin_name: CheckPluginName) -> bool:
+        return plugin_name in self._ignored_plugins
+
+    def ignore_service(self, host_name: HostName, entry: AutocheckEntry) -> bool:
+        return self.service_description(host_name, entry) in self._ignored_services
+
+    def effective_host(self, host_name: HostName, entry: AutocheckEntry) -> HostName:
+        return host_name
+
+    def service_description(self, host_name: HostName, entry: AutocheckEntry) -> str:
+        return f"{entry.check_plugin_name} {entry.item}"
+
+    def service_labels(self, host_name: HostName, entry: AutocheckEntry) -> Mapping[str, str]:
+        return {}
+
+
+_OTHER_PLUGIN_NAME = CheckPluginName("other_plugin")
+
+
+def _test_discovery_plugin() -> DiscoveryPlugin:
+    """A discovery plug-in yielding one service per row of ``test_section``."""
+
+    def discover(
+        check_plugin_name: CheckPluginName, *, section: Mapping[str, str]
+    ) -> Iterable[AutocheckEntry]:
+        for item in section:
+            yield AutocheckEntry(check_plugin_name, item, {}, {})
+
+    return DiscoveryPlugin(
+        sections=[_TEST_PARSED_NAME],
+        function=discover,
+        parameters=lambda host_name: None,
+    )
+
+
+def _test_discovery_plugins() -> Mapping[CheckPluginName, DiscoveryPlugin]:
+    return {_TEST_PLUGIN_NAME: _test_discovery_plugin()}
+
+
+def _test_providers(host_name: HostName, rows: StringTable) -> Mapping[HostKey, Provider]:
+    return {
+        HostKey(hostname=host_name, source_type=SourceType.HOST): ParsedSectionsResolver(
+            SectionsParser(
+                host_sections=HostSections[AgentRawDataSection](
+                    sections={_TEST_SECTION_NAME: rows}
+                ),
+                host_name=host_name,
+                error_handling=lambda *args, **kw: "error",
+            ),
+            section_plugins={_TEST_SECTION_NAME: _section_plugin(_TEST_SECTION)},
+        )
+    }
+
+
+def _autochecks_dir(tmp_path: Path) -> Path:
+    # The autochecks store and the host-labels store both use "<host>.mk" as the file name,
+    # so they must not share a directory.
+    (path := tmp_path / "autochecks").mkdir(exist_ok=True)
+    return path
+
+
+def _run_commandline_service_discovery(
+    host_name: HostName,
+    *,
+    providers: Mapping[HostKey, Provider],
+    autochecks_config: _CommandlineAutochecksConfig,
+    enforced_services: Container[ServiceID],
+    only_new: bool,
+    tmp_path: Path,
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin] | None = None,
+    run_plugin_names: Container[CheckPluginName] = EVERYTHING,
+) -> set[ServiceID]:
+    (labels_dir := tmp_path / "host_labels").mkdir(exist_ok=True)
+    _commandline_discovery_on_host(
+        real_host_name=host_name,
+        host_label_plugins={_TEST_SECTION_NAME: HostLabelPlugin.trivial()},
+        clear_ruleset_matcher_caches=lambda: None,
+        providers=providers,
+        plugins=_test_discovery_plugins() if plugins is None else plugins,
+        run_plugin_names=run_plugin_names,
+        autochecks_config=autochecks_config,
+        enforced_services=enforced_services,
+        only_new=only_new,
+        load_labels=only_new,
+        only_host_labels=False,
+        on_error=OnError.RAISE,
+        autochecks_dir=_autochecks_dir(tmp_path),
+        discovered_host_labels_dir=labels_dir,
+    )
+    return {e.id() for e in AutochecksStore(host_name, _autochecks_dir(tmp_path)).read()}
+
+
+@pytest.mark.parametrize("only_new", [True, False], ids=["cmk-I", "cmk-II"])
+def test_commandline_discovery_drops_disabled_services(only_new: bool, tmp_path: Path) -> None:
+    """A service matched by a 'Disabled services' rule must not land in the autochecks."""
+    host_name = HostName("test-host")
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"], ["item_b", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(
+            ignored_services={f"{_TEST_PLUGIN_NAME} item_b"}
+        ),
+        enforced_services={},
+        only_new=only_new,
+        tmp_path=tmp_path,
+    )
+    assert written == {ServiceID(_TEST_PLUGIN_NAME, "item_a")}
+
+
+@pytest.mark.parametrize("only_new", [True, False], ids=["cmk-I", "cmk-II"])
+def test_commandline_discovery_drops_enforced_shadowed_services(
+    only_new: bool, tmp_path: Path
+) -> None:
+    """A discovered service shadowed by an enforced (static) check must not be persisted."""
+    host_name = HostName("test-host")
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"], ["item_b", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(),
+        enforced_services={ServiceID(_TEST_PLUGIN_NAME, "item_b")},
+        only_new=only_new,
+        tmp_path=tmp_path,
+    )
+    assert written == {ServiceID(_TEST_PLUGIN_NAME, "item_a")}
+
+
+def test_commandline_discovery_i_drops_stale_disabled_check(tmp_path: Path) -> None:
+    """`cmk -I` must drop an existing autocheck whose check plug-in is now disabled.
+
+    This is the regression from CMK-37187: the commandline path used to keep the stale entry
+    because it excluded disabled plug-ins from the candidates instead of classifying their
+    services as "ignored".
+    """
+    host_name = HostName("test-host")
+    AutochecksStore(host_name, _autochecks_dir(tmp_path)).write(
+        [AutocheckEntry(_TEST_PLUGIN_NAME, "item_a", {}, {})]
+    )
+
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(ignored_plugins={_TEST_PLUGIN_NAME}),
+        enforced_services={},
+        only_new=True,
+        tmp_path=tmp_path,
+    )
+    assert written == set()
+
+
+def test_commandline_discovery_i_keeps_existing_and_adds_new(tmp_path: Path) -> None:
+    """`cmk -I` adds newly discovered services while keeping the existing ones."""
+    host_name = HostName("test-host")
+    AutochecksStore(host_name, _autochecks_dir(tmp_path)).write(
+        [AutocheckEntry(_TEST_PLUGIN_NAME, "item_a", {}, {})]
+    )
+
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"], ["item_b", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(),
+        enforced_services={},
+        only_new=True,
+        tmp_path=tmp_path,
+    )
+    assert written == {
+        ServiceID(_TEST_PLUGIN_NAME, "item_a"),
+        ServiceID(_TEST_PLUGIN_NAME, "item_b"),
+    }
+
+
+def test_commandline_discovery_ii_removes_vanished(tmp_path: Path) -> None:
+    """`cmk -II` drops services that are no longer discovered (tabula rasa)."""
+    host_name = HostName("test-host")
+    AutochecksStore(host_name, _autochecks_dir(tmp_path)).write(
+        [
+            AutocheckEntry(_TEST_PLUGIN_NAME, "item_a", {}, {}),
+            AutocheckEntry(_TEST_PLUGIN_NAME, "gone", {}, {}),
+        ]
+    )
+
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(),
+        enforced_services={},
+        only_new=False,
+        tmp_path=tmp_path,
+    )
+    assert written == {ServiceID(_TEST_PLUGIN_NAME, "item_a")}
+
+
+def test_commandline_discovery_ii_leaves_unselected_plugins_alone(tmp_path: Path) -> None:
+    """`cmk -II --plugins X` must not touch services of plug-ins that were not selected.
+
+    Only the selected plug-in is rediscovered, so its vanished services are dropped, while
+    existing autochecks of the unselected plug-in are remembered and kept (they must not surface
+    as "vanished" and get removed).
+    """
+    host_name = HostName("test-host")
+    AutochecksStore(host_name, _autochecks_dir(tmp_path)).write(
+        [
+            AutocheckEntry(_TEST_PLUGIN_NAME, "gone", {}, {}),
+            AutocheckEntry(_OTHER_PLUGIN_NAME, "keep", {}, {}),
+        ]
+    )
+
+    written = _run_commandline_service_discovery(
+        host_name,
+        providers=_test_providers(host_name, [["item_a", "ok"]]),
+        autochecks_config=_CommandlineAutochecksConfig(),
+        enforced_services={},
+        only_new=False,
+        tmp_path=tmp_path,
+        plugins={
+            _TEST_PLUGIN_NAME: _test_discovery_plugin(),
+            _OTHER_PLUGIN_NAME: _test_discovery_plugin(),
+        },
+        run_plugin_names={_TEST_PLUGIN_NAME},
+    )
+    assert written == {
+        ServiceID(_TEST_PLUGIN_NAME, "item_a"),
+        ServiceID(_OTHER_PLUGIN_NAME, "keep"),
+    }
 
 
 class RealHostScenario(NamedTuple):

@@ -2702,7 +2702,10 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
                 check_plugins=plugins.check_plugins,
             ),
             run_plugin_names=run_plugin_names,
-            ignore_plugin=config_cache.check_plugin_ignored,
+            autochecks_config=config.AutochecksConfigurer(
+                config_cache, plugins.check_plugins, service_name_config
+            ),
+            enforced_services=enforced_services_table(hostname),
             arg_only_new=options["discover"] == 1,
             only_host_labels="only-host-labels" in options,
             on_error=on_error,

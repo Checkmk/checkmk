@@ -254,7 +254,7 @@ def automation_discovery(
 
         # Create new list of checks
         final_services_by_host = {
-            h: _get_post_discovery_autocheck_services(
+            h: get_post_discovery_autocheck_services(
                 h,
                 s,
                 service_filters or ServiceFilters.accept_all(),
@@ -311,7 +311,7 @@ def automation_discovery(
     return results[host_name]
 
 
-def _get_post_discovery_autocheck_services(
+def get_post_discovery_autocheck_services(
     host_name: HostName,
     services: ServicesByTransition,
     service_filters: ServiceFilters,
@@ -354,7 +354,7 @@ def _get_post_discovery_autocheck_services(
             case "ignored":
                 # services matched by a "Disabled services" rule must not be persisted
                 # to the autochecks file -- only monitored services are supposed to be
-                # there (see werk 19800).  Drop them from the post-discovery output;
+                # there (see werk 19806).  Drop them from the post-discovery output;
                 # the disabled-services rule itself remains in place.
                 result.services.kept += len(discovered_services_with_nodes)
 
@@ -666,7 +666,14 @@ def get_host_services_by_host_name(
     cluster_nodes: Iterable[HostName],
     autochecks_config: AutochecksConfig,
     enforced_services: Container[ServiceID],
+    run_plugin_names: Container[CheckPluginName] = EVERYTHING,
 ) -> dict[HostName, ServicesByTransition]:
+    # `run_plugin_names` restricts which plugins were actually (re)discovered.  Existing
+    # services of plugins that were not run are always remembered and kept, so they keep their
+    # "unchanged" transition instead of surfacing as "vanished".  This is what allows the
+    # commandline entrypoint to honour `cmk -II --plugins ...` without dropping services of the
+    # plugins that were not selected.  The other callers discover every plugin and rely on the
+    # `EVERYTHING` default.
     services_by_host_name: dict[HostName, ServicesTable[Transition]]
     if is_cluster:
         services_by_host_name = {
@@ -676,6 +683,7 @@ def get_host_services_by_host_name(
                 discovered_services=discovered_services,
                 cluster_nodes=cluster_nodes,
                 autochecks_config=autochecks_config,
+                run_plugin_names=run_plugin_names,
             )
         }
     else:
@@ -686,7 +694,7 @@ def get_host_services_by_host_name(
                     analyse_services(
                         existing_services=existing_services[host_name],
                         discovered_services=discovered_services[host_name],
-                        run_plugin_names=EVERYTHING,
+                        run_plugin_names=run_plugin_names,
                         forget_existing=False,
                         keep_vanished=False,
                     ),
@@ -821,6 +829,7 @@ def _get_cluster_services(
     existing_services: Mapping[HostName, Sequence[AutocheckEntry]],
     discovered_services: Mapping[HostName, Sequence[AutocheckEntry]],
     autochecks_config: AutochecksConfig,
+    run_plugin_names: Container[CheckPluginName] = EVERYTHING,
 ) -> dict[HostName, ServicesTable[Transition]]:
     # should/can we move these up the stack?
     def is_ignored(hn: HostName, entry: AutocheckEntry) -> bool:
@@ -845,7 +854,7 @@ def _get_cluster_services(
         node: analyse_services(
             existing_services=existing_services[node],
             discovered_services=discovered_services[node],
-            run_plugin_names=EVERYTHING,
+            run_plugin_names=run_plugin_names,
             forget_existing=False,
             keep_vanished=False,
         )

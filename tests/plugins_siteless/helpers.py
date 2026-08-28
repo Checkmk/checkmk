@@ -156,6 +156,35 @@ class _EmptyDiscoveryConfig(ABCDiscoveryConfig):
         return [] if rule_set_type == "all" else {}
 
 
+class _SitelessAutochecksConfig:
+    """Minimal AutochecksConfig for the siteless discovery: no disabled-services rules, no
+    clustering and no service labels are configured in this context."""
+
+    def __init__(
+        self,
+        check_plugin_ignored: Callable[[HostName, CheckPluginName], bool],
+        check_plugins,
+    ) -> None:
+        self._check_plugin_ignored = check_plugin_ignored
+        self._check_plugins = check_plugins
+
+    def ignore_plugin(self, host_name: HostName, plugin_name: CheckPluginName) -> bool:
+        return self._check_plugin_ignored(host_name, plugin_name)
+
+    def ignore_service(self, host_name, entry) -> bool:
+        return False
+
+    def effective_host(self, host_name: HostName, entry) -> HostName:
+        return host_name
+
+    def service_description(self, host_name, entry):
+        service_name = self._check_plugins[entry.check_plugin_name].service_name
+        return service_name if entry.item is None else service_name % entry.item
+
+    def service_labels(self, host_name, entry) -> Mapping[str, str]:
+        return {}
+
+
 def discover_services(
     hostname: HostName,
     agent_data_filename: str,
@@ -189,7 +218,10 @@ def discover_services(
             check_plugins=agent_based_plugins.check_plugins,
         ),
         run_plugin_names=EVERYTHING,
-        ignore_plugin=check_plugin_ignored,
+        autochecks_config=_SitelessAutochecksConfig(
+            check_plugin_ignored, agent_based_plugins.check_plugins
+        ),
+        enforced_services=frozenset(),
         arg_only_new=False,
         only_host_labels=False,
         on_error=OnError.RAISE,

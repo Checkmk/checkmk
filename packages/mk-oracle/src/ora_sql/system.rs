@@ -98,6 +98,15 @@ impl DetectedVersion {
     }
 }
 
+impl std::fmt::Display for DetectedVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Since18c(v) => write!(f, "{v} (18c or newer)"),
+            Self::Before18c(v) => write!(f, "{v} (before 18c)"),
+        }
+    }
+}
+
 fn _detect_version(spot: &OpenedSpot) -> Result<DetectedVersion> {
     let ask = |sql: &str| -> Result<InstanceVersion> {
         let rows = spot.query_table(&SqlQuery::new(sql, &Vec::new())).0?;
@@ -122,7 +131,7 @@ fn _get_instances(spot: &OpenedSpot, custom_query: Option<&str>) -> Result<_Inst
     }
 
     let detected = _detect_version(spot)?;
-    log::info!("Instance reports {detected:?}");
+    log::info!("Instance reports version {detected}");
 
     let sql = match (spot.target().is_asm(), &detected) {
         (true, DetectedVersion::Since18c(_)) => {

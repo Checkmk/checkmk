@@ -3,15 +3,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, contains, not_equals, OIDEnd, SNMPTree
-from cmk.legacy_includes.cpu_util import check_cpu_util
+import time
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    all_of,
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    get_value_store,
+    not_equals,
+    OIDEnd,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 #
 # monitoring of cluster members (nodes) in fortigate high availability tree
@@ -47,11 +63,27 @@ check_info = {}
 #   '----------------------------------------------------------------------'
 
 
-def parse_fortigate_node(string_table):
-    parsed: dict = {"nodes": {}}
-    if string_table[0]:
-        parsed["cluster_info"] = string_table[0][0]
+@dataclass(frozen=True)
+class ClusterInfo:
+    system_mode: str
+    group_name: str
 
+
+@dataclass(frozen=True)
+class Node:
+    cpu: float
+    memory: int
+    sessions: int
+
+
+@dataclass(frozen=True)
+class Section:
+    cluster_info: ClusterInfo | None
+    nodes: Mapping[str, Node]
+
+
+def parse_fortigate_node(string_table: Sequence[StringTable]) -> Section:
+    nodes: dict[str, Node] = {}
     for hostname, cpu_str, memory_str, sessions_str, oid_end in string_table[1]:
         # This means we have a standalone cluster
         if len(string_table[1]) == 1:
@@ -59,40 +91,48 @@ def parse_fortigate_node(string_table):
         elif hostname:
             item_name = hostname
         else:
-            item_name = "Node %s" % oid_end
+            item_name = f"Node {oid_end}"
 
-        parsed["nodes"].setdefault(
+        nodes.setdefault(
             item_name,
-            {
-                "cpu": float(cpu_str),
-                "memory": int(memory_str),
-                "sessions": int(sessions_str),
-            },
+            Node(
+                cpu=float(cpu_str),
+                memory=int(memory_str),
+                sessions=int(sessions_str),
+            ),
         )
 
-    return parsed
+    cluster_info = None
+    if string_table[0]:
+        system_mode, group_name = string_table[0][0]
+        cluster_info = ClusterInfo(system_mode=system_mode, group_name=group_name)
+
+    return Section(cluster_info=cluster_info, nodes=nodes)
 
 
-def discover_fortigate_cluster(parsed):
-    if "cluster_info" in parsed:
-        return [(None, None)]
-    return []
+def discover_fortigate_cluster(section: Section) -> DiscoveryResult:
+    if section.cluster_info is not None:
+        yield Service()
 
 
-def check_fortigate_cluster(_no_item, _no_params, parsed):
+def check_fortigate_cluster(section: Section) -> CheckResult:
     map_mode = {
         "1": "Standalone",
         "2": "Active/Active",
         "3": "Active/Passive",
     }
 
-    if "cluster_info" in parsed:
-        system_mode, group_name = parsed["cluster_info"]
-        return 0, f"System mode: {map_mode[system_mode]}, Group: {group_name}"
-    return None
+    if (cluster_info := section.cluster_info) is not None:
+        yield Result(
+            state=State.OK,
+            summary=(
+                f"System mode: {map_mode[cluster_info.system_mode]}, "
+                f"Group: {cluster_info.group_name}"
+            ),
+        )
 
 
-check_info["fortigate_node"] = LegacyCheckDefinition(
+snmp_section_fortigate_node = SNMPSection(
     name="fortigate_node",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
@@ -109,6 +149,11 @@ check_info["fortigate_node"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_fortigate_node,
+)
+
+
+check_plugin_fortigate_node = CheckPlugin(
+    name="fortigate_node",
     service_name="Cluster Info",
     discovery_function=discover_fortigate_cluster,
     check_function=check_fortigate_cluster,
@@ -125,18 +170,24 @@ check_info["fortigate_node"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_fortigate_node_cpu(section):
-    for hostname in section["nodes"]:
-        yield hostname, {}
+def discover_fortigate_node_cpu(section: Section) -> DiscoveryResult:
+    for hostname in section.nodes:
+        yield Service(item=hostname)
 
 
-def check_fortigate_node_cpu(item, params, parsed):
-    if item in parsed["nodes"]:
-        return check_cpu_util(parsed["nodes"][item]["cpu"], params["levels"])
-    return None
+def check_fortigate_node_cpu(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if (node := section.nodes.get(item)) is None:
+        return
+
+    yield from check_cpu_util(
+        util=node.cpu,
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
 
 
-check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
+check_plugin_fortigate_node_cpu = CheckPlugin(
     name="fortigate_node_cpu",
     service_name="CPU utilization %s",
     sections=["fortigate_node"],
@@ -156,21 +207,25 @@ check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_fortigate_node_ses(parsed):
-    for hostname in parsed["nodes"]:
-        yield hostname, {}
+def discover_fortigate_node_ses(section: Section) -> DiscoveryResult:
+    for hostname in section.nodes:
+        yield Service(item=hostname)
 
 
-def check_fortigate_node_ses(item, params, parsed):
-    if (data := parsed["nodes"].get(item)) is None:
+def check_fortigate_node_ses(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if (node := section.nodes.get(item)) is None:
         return
 
-    yield check_levels(
-        data["sessions"], "session", params["levels"], human_readable_func=str, infoname="Sessions"
+    yield from check_levels_v1(
+        node.sessions,
+        metric_name="session",
+        levels_upper=params["levels"],
+        render_func=str,
+        label="Sessions",
     )
 
 
-check_info["fortigate_node.sessions"] = LegacyCheckDefinition(
+check_plugin_fortigate_node_sessions = CheckPlugin(
     name="fortigate_node_sessions",
     service_name="Sessions %s",
     sections=["fortigate_node"],

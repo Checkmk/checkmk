@@ -12,3 +12,13 @@ load("//bazel/rules:shunit2.bzl", "shunit2_test")
     )
     for src in glob(["test_*.sh"])
 ]
+
+shunit2_test(
+    name = "test_mk_redis",
+    src = "plugins/test_mk_redis.sh",
+    env = {
+        "UNIT_SH_AGENTS_DIR": "${UNIT_SH_REPO_PATH}/agents",
+        "UNIT_SH_PLUGINS_DIR": "${UNIT_SH_REPO_PATH}/agents/plugins",
+    },
+    deps = ["//agents/plugins:agents_plugins_sh"],
+)

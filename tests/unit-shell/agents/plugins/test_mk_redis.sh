@@ -9,13 +9,16 @@ MK_SOURCE_ONLY=true source "${UNIT_SH_PLUGINS_DIR}/mk_redis"
 oneTimeSetUp() {
     cat <<EOF >"${SHUNIT_TMPDIR}/mk_redis.cfg"
 
-REDIS_INSTANCES=(LOCAL IPHOST)
+REDIS_INSTANCES=(LOCAL IPHOST test-123)
 REDIS_HOST_LOCAL="/var/redis/redis.sock"
 REDIS_PORT_LOCAL="unix-socket"
 
 REDIS_HOST_IPHOST="127.0.0.1"
 REDIS_PORT_IPHOST="6380"
 REDIS_PASSWORD_IPHOST='MYPASSWORD'
+
+REDIS_HOST_test-123="127.0.0.1"
+REDIS_PORT_test-123="6379"
 
 EOF
 }
@@ -33,6 +36,19 @@ test_mk_redis_config() {
 
     assertEquals "-h" "${REDIS_ARGS[0]}"
 
+}
+
+# An instance name may contain hyphens, a shell variable name may not.
+test_mk_redis_config_hyphenated_instance() {
+    errors=$(MK_CONFDIR="${SHUNIT_TMPDIR}" load_config 2>&1)
+    assertContains "$errors" "REDIS_HOST_test-123=127.0.0.1: command not found"
+
+    # the invalid expansion would otherwise abort the test function
+    output=$(
+        redis_args "test-123" 2>/dev/null
+        echo "${REDIS_ARGS[*]}"
+    )
+    assertEquals "" "$output"
 }
 
 # shellcheck disable=SC1090 # Can't follow

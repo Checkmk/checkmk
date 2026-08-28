@@ -49,6 +49,21 @@ py_library(
 )
 
 py_library(
+    name = "wire_format",
+    srcs = [
+        "wire_format.py",
+    ],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//packages/cmk-licensing",
+    ],
+)
+
+py_library(
     name = "registries",
     srcs = [
         "automation_commands.py",
@@ -66,6 +81,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":wire_format",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
@@ -202,6 +218,7 @@ py_library(
             "passwords.py",
             "tag_config_file.py",
             "timeperiods.py",
+            "wire_format.py",
         ],
     ),
     imports = ["../../.."],
@@ -223,6 +240,7 @@ py_library(
         ":registries",
         ":tag_config_file",
         ":timeperiods",
+        ":wire_format",
         "//cmk/automations",
         "//cmk/bi",
         "//cmk/fields",

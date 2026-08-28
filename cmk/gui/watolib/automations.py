@@ -570,13 +570,6 @@ def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
         )
 
 
-def parse_license_state(raw_license_state: str) -> LicenseState | None:
-    try:
-        return LicenseState[raw_license_state]
-    except KeyError:
-        return None
-
-
 def get_url(
     url: str,
     insecure: bool,

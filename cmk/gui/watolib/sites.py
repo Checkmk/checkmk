@@ -72,10 +72,10 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     ValueSpec,
 )
+from cmk.gui.watolib import wire_format
 from cmk.gui.watolib.automation_commands import OMDStatus
 from cmk.gui.watolib.automations import (
     do_remote_automation,
-    parse_license_state,
 )
 from cmk.gui.watolib.broker_connections import BrokerConnectionsConfigFile
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
@@ -1285,7 +1285,9 @@ class ReplicationStatusFetcher:
                 response=PingResult(
                     version=raw_result["version"],
                     edition=raw_result["edition"],
-                    license_state=parse_license_state(raw_result.get("license_state", "")),
+                    license_state=wire_format.license_state_from_ping_string(
+                        raw_result.get("license_state", "")
+                    ),
                     omd_status=raw_result["omd_status"],
                 ),
             )

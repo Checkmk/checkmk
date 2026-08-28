@@ -31,6 +31,7 @@ from ._translated_metrics import TranslatedMetric
 
 GraphConsolidationFunction = Literal["max", "min", "average"]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
+type DrawnLineType = Literal["line", "area", "stack"]
 
 
 def create_graph_metric_expression_from_translated_metric(

@@ -35,6 +35,7 @@ from cmk.gui.unit_formatter import Label, NegativeYRange, NotationFormatter, Pos
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import YAxis
 
+from ._engine_curves import drawn_curves
 from ._frontend import y_axis_from_units
 from ._graph_display_config import GraphDisplayConfigImage
 from ._unit import user_specific_unit_from_unit_format
@@ -59,13 +60,10 @@ _MM_PER_INCH = 25.4
 def _all_curves_with_sign(graph: EvaluatedGraph) -> list[tuple[EvaluatedCurve, float]]:
     """Every drawn curve (stack members, not their hidden reference; then lines) together
     with the sign its inverse (mirrored-below-zero) flag applies to its values."""
-    result: list[tuple[EvaluatedCurve, float]] = []
-    for stack in graph.stacks:
-        sign = -1.0 if stack.inverse else 1.0
-        result.extend((member, sign) for member in stack.members)
-    for line in graph.lines:
-        result.append((line.curve, -1.0 if line.inverse else 1.0))
-    return result
+    return [
+        (drawn.curve, -1.0 if drawn.mirrored else 1.0)
+        for drawn in drawn_curves(graph.stacks, graph.lines)
+    ]
 
 
 def _time_range(graph: EvaluatedGraph) -> TimeRange | None:

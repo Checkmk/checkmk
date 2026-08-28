@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import assert_never, NamedTuple, Protocol
+from typing import assert_never
 
 from cmk.graphing_engine import (
     ConsolidationFunction,
@@ -14,6 +14,7 @@ from cmk.graphing_engine import (
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
 
+from .._engine_curves import DrawnCurve, serialize_drawn_curves
 from .._engine_source import FetchDiagnostics
 from .._engine_unit_format import notation_name, precision_kind
 from .models import (
@@ -45,46 +46,8 @@ def api_time_range_to_engine(time_range: ApiTimeRange) -> EngineTimeRange:
     return EngineTimeRange(start=time_range.start, end=time_range.end, step=time_range.step)
 
 
-class _ToMetric[MetricT](Protocol):
-    def __call__(
-        self, curve: EvaluatedCurve, *, stack: str | None, inverse: bool, hidden: bool
-    ) -> MetricT: ...
-
-
-class SerializedCurves[MetricT](NamedTuple):
-    time_range: ApiTimeRange
-    metrics: list[MetricT]
-
-
-def serialize_curves[MetricT](
-    evaluated: EvaluatedGraph,
-    to_metric: _ToMetric[MetricT],
-    *,
-    fallback_time_range: EngineTimeRange,
-) -> SerializedCurves[MetricT]:
-    metrics: list[MetricT] = []
-    data_time_range: EngineTimeRange | None = None
-
-    def add(curve: EvaluatedCurve, *, stack: str | None, inverse: bool, hidden: bool) -> None:
-        nonlocal data_time_range
-        if data_time_range is None:
-            data_time_range = curve.time_series.time_range
-        metrics.append(to_metric(curve, stack=stack, inverse=inverse, hidden=hidden))
-
-    for index, stack in enumerate(evaluated.stacks):
-        stack_id = f"stack-{index}"
-        # The reference (invisible baseline) is emitted first so it is the stacking floor by order.
-        if stack.reference is not None:
-            add(stack.reference, stack=stack_id, inverse=stack.inverse, hidden=True)
-        for member in stack.members:
-            add(member, stack=stack_id, inverse=stack.inverse, hidden=False)
-    for line in evaluated.lines:
-        add(line.curve, stack=None, inverse=line.inverse, hidden=False)
-
-    effective = fallback_time_range if data_time_range is None else data_time_range
-    return SerializedCurves(
-        ApiTimeRange(start=effective.start, end=effective.end, step=effective.step), metrics
-    )
+def api_time_range_from_engine(time_range: EngineTimeRange) -> ApiTimeRange:
+    return ApiTimeRange(start=time_range.start, end=time_range.end, step=time_range.step)
 
 
 def horizontal_lines_to_api(evaluated: EvaluatedGraph) -> list[ApiHorizontalLine]:
@@ -110,9 +73,8 @@ def _series_attributes_to_api(attributes: SeriesAttributes) -> list[ApiMetricAtt
     ]
 
 
-def curve_to_api_metric(
-    curve: EvaluatedCurve, *, stack: str | None, inverse: bool, hidden: bool
-) -> ApiMetric:
+def curve_to_api_metric(drawn: DrawnCurve[EvaluatedCurve]) -> ApiMetric:
+    curve = drawn.curve
     return ApiMetric(
         metadata=ApiMetricMetadata(
             name=curve.id,
@@ -121,7 +83,7 @@ def curve_to_api_metric(
             color=curve.attributes.color,
             attributes=_series_attributes_to_api(curve.series_attributes),
         ),
-        render=ApiMetricRender(stack=stack, inverse=inverse, hidden=hidden),
+        render=ApiMetricRender(stack=drawn.stack, inverse=drawn.mirrored, hidden=drawn.hidden),
         data_points=list(curve.time_series.values),
     )
 
@@ -143,12 +105,15 @@ def evaluated_to_response(
     fallback_time_range: EngineTimeRange,
     diagnostics: FetchDiagnostics,
 ) -> GraphFetchResponse:
-    time_range, metrics = serialize_curves(
-        evaluated, curve_to_api_metric, fallback_time_range=fallback_time_range
+    time_range, metrics = serialize_drawn_curves(
+        evaluated,
+        curve_to_api_metric,
+        fallback_time_range=fallback_time_range,
+        include_reference=True,
     )
     return GraphFetchResponse(
         title=evaluated.title,
-        time_range=time_range,
+        time_range=api_time_range_from_engine(time_range),
         metrics=metrics,
         horizontal_lines=horizontal_lines_to_api(evaluated),
         warnings=diagnostics_to_warnings(diagnostics),

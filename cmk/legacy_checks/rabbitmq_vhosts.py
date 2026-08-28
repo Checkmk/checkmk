@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
 # <<<rabbitmq_vhosts>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,
@@ -23,14 +23,29 @@
 
 
 import json
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+Section = Mapping[str, Mapping[str, Any]]
 
 
-def parse_rabbitmq_vhosts(string_table):
-    parsed: dict[str, dict[str, object]] = {}
+def parse_rabbitmq_vhosts(string_table: StringTable) -> Section:
+    parsed: dict[str, dict[str, Any]] = {}
 
     for vhosts in string_table:
         for vhost_json in vhosts:
@@ -61,13 +76,23 @@ def parse_rabbitmq_vhosts(string_table):
     return parsed
 
 
-def check_rabbitmq_vhosts(item, params, parsed):
-    if not (data := parsed.get(item)):
+agent_section_rabbitmq_vhosts = AgentSection(
+    name="rabbitmq_vhosts",
+    parse_function=parse_rabbitmq_vhosts,
+)
+
+
+def discover_rabbitmq_vhosts(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_rabbitmq_vhosts(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
 
     vhost_desc = data.get("description")
     if vhost_desc is not None:
-        yield 0, "Description: %s" % vhost_desc
+        yield Result(state=State.OK, summary=f"Description: {vhost_desc}")
 
     for msg_key, msg_infotext, hr_func, param_key in [
         ("messages", "Total number of messages", int, "msg"),
@@ -86,10 +111,10 @@ def check_rabbitmq_vhosts(item, params, parsed):
         if "rate" in msg_key:
             unit = "/s"
 
-        msg_levels_upper = params.get("%s_upper" % param_key, (None, None))
-        msg_levels_lower = params.get("%s_lower" % param_key, (None, None))
+        msg_levels_upper = params.get(f"{param_key}_upper", (None, None))
+        msg_levels_lower = params.get(f"{param_key}_lower", (None, None))
 
-        yield check_levels(
+        yield from check_levels(
             msg_value,
             msg_key,
             msg_levels_upper + msg_levels_lower,
@@ -98,15 +123,11 @@ def check_rabbitmq_vhosts(item, params, parsed):
         )
 
 
-def discover_rabbitmq_vhosts(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["rabbitmq_vhosts"] = LegacyCheckDefinition(
+check_plugin_rabbitmq_vhosts = CheckPlugin(
     name="rabbitmq_vhosts",
-    parse_function=parse_rabbitmq_vhosts,
     service_name="RabbitMQ Vhost %s",
     discovery_function=discover_rabbitmq_vhosts,
     check_function=check_rabbitmq_vhosts,
     check_ruleset_name="rabbitmq_vhosts",
+    check_default_parameters={},
 )

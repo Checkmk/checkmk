@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.rabbitmq_vhosts import (
     check_rabbitmq_vhosts,
     discover_rabbitmq_vhosts,
@@ -26,17 +24,16 @@ from cmk.legacy_checks.rabbitmq_vhosts import (
                     '{"description": "Default virtual host", "message_stats": {"publish": 2, "publish_details": {"rate": 0.0}}, "messages": 0, "messages_ready": 0, "messages_unacknowledged": 0, "name": "/"}'
                 ]
             ],
-            [("/", {})],
+            [Service(item="/")],
         ),
     ],
 )
 def test_discover_rabbitmq_vhosts(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for rabbitmq_vhosts check."""
     parsed = parse_rabbitmq_vhosts(string_table)
-    result = list(discover_rabbitmq_vhosts(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert list(discover_rabbitmq_vhosts(parsed)) == expected_discoveries
 
 
 @pytest.mark.parametrize(
@@ -51,12 +48,17 @@ def test_discover_rabbitmq_vhosts(
                 ]
             ],
             [
-                (0, "Description: Default virtual host"),
-                (0, "Total number of messages: 0", [("messages", 0, None, None)]),
-                (0, "Ready messages: 0", [("messages_ready", 0, None, None)]),
-                (0, "Unacknowledged messages: 0", [("messages_unacknowledged", 0, None, None)]),
-                (0, "Published messages: 2", [("message_publish", 2, None, None)]),
-                (0, "Rate: 0.0/s", [("message_publish_rate", 0.0, None, None)]),
+                Result(state=State.OK, summary="Description: Default virtual host"),
+                Result(state=State.OK, summary="Total number of messages: 0"),
+                Metric("messages", 0),
+                Result(state=State.OK, summary="Ready messages: 0"),
+                Metric("messages_ready", 0),
+                Result(state=State.OK, summary="Unacknowledged messages: 0"),
+                Metric("messages_unacknowledged", 0),
+                Result(state=State.OK, summary="Published messages: 2"),
+                Metric("message_publish", 2),
+                Result(state=State.OK, summary="Rate: 0.0/s"),
+                Metric("message_publish_rate", 0.0),
             ],
         ),
     ],
@@ -69,5 +71,4 @@ def test_check_rabbitmq_vhosts(
 ) -> None:
     """Test check function for rabbitmq_vhosts check."""
     parsed = parse_rabbitmq_vhosts(string_table)
-    result = list(check_rabbitmq_vhosts(item, params, parsed))
-    assert result == expected_results
+    assert list(check_rabbitmq_vhosts(item, params, parsed)) == expected_results

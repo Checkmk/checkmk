@@ -115,8 +115,6 @@ class OK[T, E](Result[T, E]):
     __slots__ = ["_ok"]
 
     def __init__(self, ok: T) -> None:
-        if isinstance(ok, Error):
-            raise TypeError(ok)
         self._ok: Final[T] = ok
 
     @override
@@ -131,25 +129,19 @@ class OK[T, E](Result[T, E]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        return self.ok == other.ok if isinstance(other, OK) else False
+        return isinstance(other, OK) and self.ok == other.ok
 
     @override
     def __lt__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, Error):
-            return True
-        assert isinstance(other, OK)
-        return bool(self.ok < other.ok)
+        return isinstance(other, Error) or bool(self.ok < other.ok)
 
     @override
     def __gt__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, Error):
-            return False
-        assert isinstance(other, OK)
-        return bool(self.ok > other.ok)
+        return not isinstance(other, Error) and bool(self.ok > other.ok)
 
     @override
     def __iter__(self) -> Iterable[T]:
@@ -202,8 +194,6 @@ class Error[T, E](Result[T, E]):
     __slots__ = ["_error"]
 
     def __init__(self, error: E) -> None:
-        if isinstance(error, OK):
-            raise TypeError(error)
         self._error: Final[E] = error
 
     @override
@@ -218,25 +208,19 @@ class Error[T, E](Result[T, E]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        return self.error == other.error if isinstance(other, Error) else False
+        return isinstance(other, Error) and self.error == other.error
 
     @override
     def __lt__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, OK):
-            return False
-        assert isinstance(other, Error)
-        return bool(self._error < other._error)
+        return not isinstance(other, OK) and bool(self.error < other.error)
 
     @override
     def __gt__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if isinstance(other, OK):
-            return True
-        assert isinstance(other, Error)
-        return bool(self._error > other._error)
+        return isinstance(other, OK) or bool(self.error > other.error)
 
     @override
     def __iter__(self) -> Iterable[T]:
@@ -288,13 +272,3 @@ def bind[T, E, U](result: Result[T, E], func: Callable[[T], Result[U, E]]) -> Re
 
 def join[T, E](result: Result[Result[T, E], E]) -> Result[T, E]:
     return bind(result, lambda v: v)
-
-
-aaa: Result[int | str, float] = OK(11)
-# bbb: Result[int, float] = aaa
-ccc: Result[int | str | bytes, float] = aaa
-
-
-xxx: Result[float, int | str] = OK(1.2)
-# yyy: Result[float, int] = xxx
-zzz: Result[float, int | str | bytes] = xxx

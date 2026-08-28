@@ -23,10 +23,6 @@ class TestOk:
     def result(self, value: int) -> Result[int, object]:
         return OK(value)
 
-    def test_bad_nesting(self, result: Result[int, object]) -> None:
-        with pytest.raises(TypeError):
-            Error(result)
-
     def test_eq(self, result: Result[int, object], value: int) -> None:
         assert (result == value) is False
         assert (value == result) is False
@@ -151,10 +147,6 @@ class TestError:
     @pytest.fixture
     def result(self, value: int) -> Result[object, int]:
         return Error(value)
-
-    def test_bad_nesting(self, result: Result[object, int]) -> None:
-        with pytest.raises(TypeError):
-            OK(result)
 
     def test_eq(self, result: Result[object, int], value: int) -> None:
         assert (result == value) is False

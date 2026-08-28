@@ -1,5 +1,6 @@
 type = "Component"
 members_required = 2
+tier = 1
 product_managers = ["annika.felgentraeger@checkmk.com"]
 description = """
 - Checkmk MCP server

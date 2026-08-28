@@ -3,6 +3,7 @@ display_name = "Navigation & Sidebar"
 previous_name = "UI - Navigation & Sidebar"
 has_support_component = true
 members_required = 2
+tier = 1
 product_managers = ["monika.hiegeist@checkmk.com"]
 description = """
 How users get around in Checkmk: the main navigation menus and the sidebar.

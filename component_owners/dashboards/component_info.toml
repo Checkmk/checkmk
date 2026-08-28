@@ -3,6 +3,7 @@ display_name = "Dashboards"
 previous_name = "UI - Dashboards"
 has_support_component = true
 members_required = 3
+tier = 1
 product_managers = ["mathieu.sobrero@checkmk.com"]
 description = """
 Everything a user sees and does on dashboards, Checkmk's customizable overview pages.

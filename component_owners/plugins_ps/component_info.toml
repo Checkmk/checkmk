@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Plugins: Process Discovery"
 has_support_component = true
 members_required = 0
+tier = 3
 product_managers = ["andrea.vaccaro@checkmk.com"]
 description = """
 Generic process-monitoring plugins.

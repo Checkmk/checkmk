@@ -1,6 +1,7 @@
 type = "Component"
 has_support_component = true
 members_required = 1
+tier = 1
 description = """
 Interface between UI and base to provide the UI with capabilities provided by base. Includes the automation helpers and the automation call interface.
 """

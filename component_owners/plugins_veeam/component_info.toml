@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Plugins: Veeam"
 has_support_component = true
 members_required = 0
+tier = 3
 product_managers = ["mohamed.saleh@checkmk.com"]
 description = """
 Plugins for Veeam Backup & Replication.

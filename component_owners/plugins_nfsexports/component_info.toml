@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Plugins: NFS Exports"
 has_support_component = true
 members_required = 0
+tier = 4
 product_managers = ["mohamed.saleh@checkmk.com"]
 description = """
 Plugins for Linux NFS server state and per-mount IO statistics.

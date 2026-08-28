@@ -2,6 +2,7 @@ type = "Component"
 display_name = "Plugins: IPR400"
 has_support_component = true
 members_required = 0
+tier = 4
 product_managers = ["andrea.vaccaro@checkmk.com"]
 description = """
 Plugins for IPR (Internet Protocol Radio) IPR400 PMR gateways.

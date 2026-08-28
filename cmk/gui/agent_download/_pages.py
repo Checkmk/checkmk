@@ -164,7 +164,7 @@ class ABCModeDownloadAgents(WatoMode):
         "/cfg_examples/systemd": _("Example configuration for systemd"),
         "/windows": _("Windows agent"),
         "/windows/plugins": _("Plug-ins"),
-        "/windows/mrpe": _("Scripts to integrate Nagios plugis"),
+        "/windows/mrpe": _("Scripts to integrate Nagios plug-ins"),
         "/windows/cfg_examples": _("Example configurations"),
         "/z_os": _("z/OS"),
         "/sap": _("SAP R/3"),

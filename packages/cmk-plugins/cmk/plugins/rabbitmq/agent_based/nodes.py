@@ -30,18 +30,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib.memory import check_element
-
-_ItemData = dict
-
-Section = Mapping[str, _ItemData]
-
-
-def discover_key(key: str) -> Callable[[Section], DiscoveryResult]:
-    def _discover_bound_key(section: Section) -> DiscoveryResult:
-        yield from (Service(item=item) for item, data in section.items() if key in data)
-
-    return _discover_bound_key
-
+from cmk.plugins.rabbitmq.lib import discover_key, Section
 
 # <<<rabbitmq_nodes>>>
 # {"fd_total": 1098576, "sockets_total": 973629, "mem_limit": 6808874700,
@@ -61,7 +50,7 @@ def discover_key(key: str) -> Callable[[Section], DiscoveryResult]:
 
 
 def parse_rabbitmq_nodes(string_table: StringTable) -> Section:
-    parsed: dict[str, _ItemData] = {}
+    parsed: dict[str, dict] = {}
 
     for nodes in string_table:
         for node_json in nodes:

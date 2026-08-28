@@ -17,6 +17,7 @@ py_library(
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugin-apis:server_side_calls",
+        "//packages/cmk-plugins/cmk/plugins/lib",
         requirement("pydantic"),
         requirement("requests"),
     ],

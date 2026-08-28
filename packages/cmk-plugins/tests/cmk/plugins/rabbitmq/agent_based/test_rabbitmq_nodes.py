@@ -12,17 +12,16 @@
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.rabbitmq_nodes import (
+from cmk.plugins.rabbitmq.agent_based.nodes import (
     check_rabbitmq_nodes,
     check_rabbitmq_nodes_filedesc,
     check_rabbitmq_nodes_gc,
     check_rabbitmq_nodes_mem,
     check_rabbitmq_nodes_uptime,
-    discover_key,
     discover_rabbitmq_nodes,
     parse_rabbitmq_nodes,
-    Section,
 )
+from cmk.plugins.rabbitmq.lib import discover_key, Section
 
 
 def _section() -> Section:

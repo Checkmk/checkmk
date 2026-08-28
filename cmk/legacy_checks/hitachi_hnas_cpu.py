@@ -3,25 +3,41 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
 import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import DiscoveryResult, get_value_store, Service, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.hitachi_hnas.lib import DETECT
 from cmk.plugins.lib.cpu_util import check_cpu_util
 
-check_info = {}
+
+def parse_hitachi_hnas_cpu(string_table: StringTable) -> StringTable:
+    return string_table
 
 
-def discover_hitachi_hnas_cpu(string_table: StringTable) -> DiscoveryResult:
-    for id_, _util in string_table:
+def discover_hitachi_hnas_cpu(section: StringTable) -> DiscoveryResult:
+    for id_, _util in section:
         yield Service(item=id_)
 
 
-def check_hitachi_hnas_cpu(item, params, info):
-    for id_, util in info:
+def check_hitachi_hnas_cpu(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    for id_, util in section:
         if id_ == item:
             yield from check_cpu_util(
                 util=float(util),
@@ -31,14 +47,10 @@ def check_hitachi_hnas_cpu(item, params, info):
             )
             return
 
-    yield 3, "No CPU utilization found"
+    yield Result(state=State.UNKNOWN, summary="No CPU utilization found")
 
 
-def parse_hitachi_hnas_cpu(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["hitachi_hnas_cpu"] = LegacyCheckDefinition(
+snmp_section_hitachi_hnas_cpu = SimpleSNMPSection(
     name="hitachi_hnas_cpu",
     parse_function=parse_hitachi_hnas_cpu,
     detect=DETECT,
@@ -46,6 +58,11 @@ check_info["hitachi_hnas_cpu"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.11096.6.1.1.6.1.2.1",
         oids=["1", "3"],
     ),
+)
+
+
+check_plugin_hitachi_hnas_cpu = CheckPlugin(
+    name="hitachi_hnas_cpu",
     service_name="CPU utilization PNode %s",
     discovery_function=discover_hitachi_hnas_cpu,
     check_function=check_hitachi_hnas_cpu,

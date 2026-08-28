@@ -3,14 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.infoblox import check_infoblox_statistics
-from cmk.plugins.infoblox.lib import DETECT_INFOBLOX
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.infoblox.lib import check_infoblox_statistics, DETECT_INFOBLOX
 
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.1.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfDiscovers.0
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.2.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfRequests.0
@@ -23,16 +25,31 @@ check_info = {}
 # .1.3.6.1.4.1.7779.3.1.1.4.1.3.9.0 0 --> IB-DHCPONE-MIB::ibDhcpTotalNoOfOthers.0
 
 
-def discover_infoblox_statistics(info):
-    return [(None, None)]
+def parse_infoblox_dhcp_stats(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
-def check_infoblox_dhcp_stats(_no_item, _no_params, info):
+snmp_section_infoblox_dhcp_stats = SimpleSNMPSection(
+    name="infoblox_dhcp_stats",
+    parse_function=parse_infoblox_dhcp_stats,
+    detect=DETECT_INFOBLOX,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.7779.3.1.1.4.1.3",
+        oids=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
+    ),
+)
+
+
+def discover_infoblox_dhcp_stats(section: StringTable) -> DiscoveryResult:
+    yield Service()
+
+
+def check_infoblox_dhcp_stats(section: StringTable) -> CheckResult:
     discovers, requests, releases, offers, acks, nacks, declines, informs, others = map(
-        int, info[0]
+        int, section[0]
     )
 
-    return check_infoblox_statistics(
+    yield from check_infoblox_statistics(
         "dhcp",
         [
             ("discovery", discovers, "Received", "discovery messages"),
@@ -48,19 +65,9 @@ def check_infoblox_dhcp_stats(_no_item, _no_params, info):
     )
 
 
-def parse_infoblox_dhcp_stats(string_table: StringTable) -> StringTable | None:
-    return string_table or None
-
-
-check_info["infoblox_dhcp_stats"] = LegacyCheckDefinition(
+check_plugin_infoblox_dhcp_stats = CheckPlugin(
     name="infoblox_dhcp_stats",
-    parse_function=parse_infoblox_dhcp_stats,
-    detect=DETECT_INFOBLOX,
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.7779.3.1.1.4.1.3",
-        oids=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
-    ),
     service_name="DHCP statistics",
-    discovery_function=discover_infoblox_statistics,
+    discovery_function=discover_infoblox_dhcp_stats,
     check_function=check_infoblox_dhcp_stats,
 )

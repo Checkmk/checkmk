@@ -170,7 +170,7 @@ from cmk.utils import agent_registration, paths, render, setup_search_index
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.handler import ActivationBlock
-from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
+from cmk.utils.licensing.registry import get_license_state, get_licensing_user_effect
 from cmk.utils.licensing.usage import save_extensions
 from cmk.utils.paths import configuration_lockfile
 from cmk.utils.visuals import invalidate_visuals_cache
@@ -2522,7 +2522,7 @@ def _sync_and_activate(
         activate_changes.load(list(all_site_configs))
         activate_changes.load_changes_until(activation_id, site_snapshot_settings.keys())
 
-        if is_free():
+        if get_license_state().blocks_distributed_setup_changes_free():
             if _handle_distributed_sites_in_free(site_snapshot_settings, time_started):
                 return
 

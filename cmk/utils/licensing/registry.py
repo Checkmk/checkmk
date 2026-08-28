@@ -44,10 +44,6 @@ def _make_licensing_handler() -> LicensingHandler:
     return _get_licensing_handler().make()
 
 
-def is_free() -> bool:
-    return _make_licensing_handler().state is LicenseState.FREE
-
-
 def get_license_message() -> str:
     return _make_licensing_handler().message
 

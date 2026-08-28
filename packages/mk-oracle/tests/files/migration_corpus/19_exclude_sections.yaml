@@ -1,0 +1,34 @@
+# --- Known environment variables defined in legacy config ---
+# ASYNC_SECTIONS jobs
+# DBUSER ***
+# EXCLUDE_XE1 ALL
+# EXCLUDE_XE2 jobs sessions
+# ONLY_SIDS XE1 XE2 XE3
+# SKIP_SIDS XE3
+# SYNC_SECTIONS instance sessions
+# --- Unified Config ---
+---
+oracle:
+  main:
+    connection:
+      hostname: localhost
+      port: 1521
+    authentication:
+      username: "user"
+      password: "pass"
+      type: standard
+    excluded_sections:
+      - target_id:
+          sid: XE2
+        sections: [jobs, sessions]
+    sections:
+      - instance:
+          is_async: false
+      - jobs:
+          is_async: true
+      - sessions:
+          is_async: false
+    discovery:
+      detect: true
+      include: [XE1, XE2, XE3]
+      exclude: [XE3]

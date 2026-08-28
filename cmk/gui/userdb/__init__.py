@@ -43,6 +43,7 @@ from ._connector import (
     UserConnectorRegistry,
 )
 from ._find_usage import find_timeperiod_usage_in_notification_rule
+from ._login_timeout import LoginTimeoutStore
 from ._need_to_change_pw import need_to_change_pw
 from ._on_failed_login import on_failed_login
 from ._roles import (
@@ -144,6 +145,7 @@ __all__ = [
     "is_two_factor_login_enabled",
     "is_valid_user_session",
     "load_connection_config",
+    "LoginTimeoutStore",
     "login_connections_of_other_customer",
     "load_contacts",
     "load_custom_attr",

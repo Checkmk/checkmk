@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.fortigate_memory import (
     check_fortigate_memory,
     discover_fortigate_memory,
@@ -16,47 +16,54 @@ from cmk.legacy_checks.fortigate_memory import (
 
 
 @pytest.mark.parametrize(
-    "string_table, expected_discoveries",
+    "string_table, expected",
     [
-        ([["42"]], [(None, {})]),
+        ([["42"]], 42),
+        ([], None),
+        ([["not a number"]], None),
     ],
 )
-def test_discover_fortigate_memory(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[None, Mapping[str, object]]]
-) -> None:
-    """Test discovery function for fortigate_memory check."""
-    parsed = parse_fortigate_memory(string_table)
-    result = list(discover_fortigate_memory(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+def test_parse_fortigate_memory(string_table: StringTable, expected: int | None) -> None:
+    assert parse_fortigate_memory(string_table) == expected
+
+
+def test_discover_fortigate_memory() -> None:
+    assert list(discover_fortigate_memory(42)) == [Service()]
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "params, section, expected_results",
     [
         (
-            None,
             {"levels": (30.0, 80.0)},
-            [["42"]],
-            [(1, "Usage: 42.00% (warn/crit at 30.00%/80.00%)", [("mem_usage", 42, 30.0, 80.0)])],
+            42,
+            [
+                Result(state=State.WARN, summary="Usage: 42.00% (warn/crit at 30.00%/80.00%)"),
+                Metric("mem_usage", 42.0, levels=(30.0, 80.0)),
+            ],
         ),
         (
-            None,
-            {"levels": (-80, -30)},
-            [["42"]],
+            {"levels": (-80.0, -30.0)},
+            42,
             [
-                (3, "Absolute levels are not supported"),
-                (0, "Usage: 42.00%", [("mem_usage", 42, None, None)]),
+                Result(state=State.WARN, summary="Usage: 42.00% (warn/crit at 20.00%/70.00%)"),
+                Metric("mem_usage", 42.0, levels=(20.0, 70.0)),
+            ],
+        ),
+        (
+            {"levels": (-80, -30)},
+            42,
+            [
+                Result(state=State.UNKNOWN, summary="Absolute levels are not supported"),
+                Result(state=State.OK, summary="Usage: 42.00%"),
+                Metric("mem_usage", 42.0),
             ],
         ),
     ],
 )
 def test_check_fortigate_memory(
-    item: str,
     params: Mapping[str, object],
-    string_table: StringTable,
+    section: int,
     expected_results: Sequence[object],
 ) -> None:
-    """Test check function for fortigate_memory check."""
-    parsed = parse_fortigate_memory(string_table)
-    result = list(check_fortigate_memory(item, params, parsed))
-    assert result == expected_results
+    assert list(check_fortigate_memory(params, section)) == expected_results

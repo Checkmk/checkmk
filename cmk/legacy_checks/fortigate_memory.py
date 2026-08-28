@@ -8,56 +8,59 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    all_of,
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    exists,
+    render,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import all_of, contains, exists, render, SNMPTree, StringTable
 
-check_info = {}
+Section = int
 
 
-def parse_fortigate_memory(string_table: StringTable) -> int | None:
+def parse_fortigate_memory(string_table: StringTable) -> Section | None:
     try:
         return int(string_table[0][0])
     except ValueError, IndexError:
         return None
 
 
-def discover_fortigate_memory(parsed: int | None) -> list[tuple[None, dict[str, Any]]]:
-    if parsed is not None:
-        return [(None, {})]
-    return []
+def discover_fortigate_memory(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-def check_fortigate_memory(
-    item: object, params: Mapping[str, Any], current_reading: int | None
-) -> LegacyCheckResult:
-    if current_reading is None:
-        return
-
+def check_fortigate_memory(params: Mapping[str, Any], section: Section) -> CheckResult:
     warn, crit = params["levels"]
     if isinstance(warn, int):
-        yield 3, "Absolute levels are not supported"
-        warn, crit = None, None
+        yield Result(state=State.UNKNOWN, summary="Absolute levels are not supported")
+        levels_upper = None
+    elif warn < 0:
+        # The checkgroup "memory" might set negative values which act as levels for free space
+        # These levels are converted to used space, too..
+        levels_upper = (100 + warn, 100 + crit)
+    else:
+        levels_upper = (warn, crit)
 
-    # The checkgroup "memory" might set negative values which act as levels for free space
-    # These levels are converted to used space, too..
-    if warn is not None and warn < 0:
-        warn = 100 + warn
-        crit = 100 + crit
-
-    yield check_levels(
-        current_reading,
-        "mem_usage",
-        (warn, crit),
-        infoname="Usage",
-        human_readable_func=render.percent,
+    yield from check_levels_v1(
+        section,
+        metric_name="mem_usage",
+        levels_upper=levels_upper,
+        render_func=render.percent,
+        label="Usage",
     )
 
 
-check_info["fortigate_memory"] = LegacyCheckDefinition(
+snmp_section_fortigate_memory = SimpleSNMPSection(
     name="fortigate_memory",
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "fortigate"), exists(".1.3.6.1.4.1.12356.1.9.0")),
     fetch=SNMPTree(
@@ -65,6 +68,11 @@ check_info["fortigate_memory"] = LegacyCheckDefinition(
         oids=["9"],
     ),
     parse_function=parse_fortigate_memory,
+)
+
+
+check_plugin_fortigate_memory = CheckPlugin(
+    name="fortigate_memory",
     service_name="Memory",
     discovery_function=discover_fortigate_memory,
     check_function=check_fortigate_memory,

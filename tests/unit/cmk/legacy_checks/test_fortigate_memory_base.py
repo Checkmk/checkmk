@@ -3,97 +3,124 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.fortigate_memory_base import (
     check_fortigate_memory_base,
     discover_fortigate_memory_base,
     parse_fortigate_memory_base,
 )
 
+_SECTION = (367217213.44, 1932722176.0)
+
 
 @pytest.mark.parametrize(
-    "string_table, expected_discoveries",
+    "string_table, expected",
     [
-        ([["19", "1887424"]], [(None, {})]),
+        ([["19", "1887424"]], _SECTION),
+        ([], None),
+        ([["19", "not a number"]], None),
     ],
 )
-def test_discover_fortigate_memory_base(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
+def test_parse_fortigate_memory_base(
+    string_table: StringTable, expected: tuple[float, float] | None
 ) -> None:
-    """Test discovery function for fortigate_memory_base check."""
-    parsed = parse_fortigate_memory_base(string_table)
-    result = list(discover_fortigate_memory_base(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert parse_fortigate_memory_base(string_table) == expected
+
+
+def test_discover_fortigate_memory_base() -> None:
+    assert list(discover_fortigate_memory_base(_SECTION)) == [Service()]
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "params, expected_results",
     [
         (
-            None,
             (70, 80),
-            [["19", "1887424"]],
-            (
-                0,
-                "Used: 19.00% - 350 MiB of 1.80 GiB",
-                [("mem_used", 367217213.44, 1352905523.1999998, 1546177740.8000002, 0, 1932722176)],
-            ),
+            [
+                Result(state=State.OK, summary="Used: 19.00% - 350 MiB of 1.80 GiB"),
+                Metric(
+                    "mem_used",
+                    367217213.44,
+                    levels=(1352905523.1999998, 1546177740.8000002),
+                    boundaries=(0.0, 1932722176.0),
+                ),
+            ],
         ),
         (
-            None,
             {"levels": (15.0, 85.0)},
-            [["19", "1887424"]],
-            (
-                1,
-                "Used: 19.00% - 350 MiB of 1.80 GiB (warn/crit at 15.00%/85.00% used)",
-                [("mem_used", 367217213.44, 289908326.4, 1642813849.6, 0, 1932722176)],
-            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Used: 19.00% - 350 MiB of 1.80 GiB (warn/crit at 15.00%/85.00% used)",
+                ),
+                Metric(
+                    "mem_used",
+                    367217213.44,
+                    levels=(289908326.4, 1642813849.6),
+                    boundaries=(0.0, 1932722176.0),
+                ),
+            ],
         ),
         (
-            None,
             {"levels": (-85.0, -15.0)},
-            [["19", "1887424"]],
-            (
-                1,
-                "Used: 19.00% - 350 MiB of 1.80 GiB (warn/crit below 85.00%/15.00% free)",
-                [("mem_used", 367217213.44, 289908326.4000001, 1642813849.6, 0, 1932722176)],
-            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary=(
+                        "Used: 19.00% - 350 MiB of 1.80 GiB (warn/crit below 85.00%/15.00% free)"
+                    ),
+                ),
+                Metric(
+                    "mem_used",
+                    367217213.44,
+                    levels=(289908326.4000001, 1642813849.6),
+                    boundaries=(0.0, 1932722176.0),
+                ),
+            ],
         ),
         (
-            None,
             {"levels": (340, 1500)},
-            [["19", "1887424"]],
-            (
-                1,
-                "Used: 19.00% - 350 MiB of 1.80 GiB (warn/crit at 340 MiB/1.46 GiB used)",
-                [("mem_used", 367217213.44, 356515840.0, 1572864000.0, 0, 1932722176)],
-            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary=(
+                        "Used: 19.00% - 350 MiB of 1.80 GiB (warn/crit at 340 MiB/1.46 GiB used)"
+                    ),
+                ),
+                Metric(
+                    "mem_used",
+                    367217213.44,
+                    levels=(356515840.0, 1572864000.0),
+                    boundaries=(0.0, 1932722176.0),
+                ),
+            ],
         ),
         (
-            None,
             {"levels": (-1717, -1)},
-            [["19", "1887424"]],
-            (
-                1,
-                "Used: 19.00% - 350 MiB of 1.80 GiB (warn/crit below 1.68 GiB/1.00 MiB free)",
-                [("mem_used", 367217213.44, 132317184.0, 1931673600.0, 0, 1932722176)],
-            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary=(
+                        "Used: 19.00% - 350 MiB of 1.80 GiB"
+                        " (warn/crit below 1.68 GiB/1.00 MiB free)"
+                    ),
+                ),
+                Metric(
+                    "mem_used",
+                    367217213.44,
+                    levels=(132317184.0, 1931673600.0),
+                    boundaries=(0.0, 1932722176.0),
+                ),
+            ],
         ),
     ],
 )
 def test_check_fortigate_memory_base(
-    item: str,
-    params: Mapping[str, object],
-    string_table: StringTable,
+    params: Mapping[str, object] | tuple[float, float],
     expected_results: Sequence[object],
 ) -> None:
-    """Test check function for fortigate_memory_base check."""
-    parsed = parse_fortigate_memory_base(string_table)
-    result = check_fortigate_memory_base(item, params, parsed)
-    assert result == expected_results
+    assert list(check_fortigate_memory_base(params, _SECTION)) == expected_results

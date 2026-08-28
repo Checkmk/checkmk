@@ -3,34 +3,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
-from cmk.legacy_includes.mem import check_memory_element
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.fortinet.lib import DETECT_FORTIGATE
-from cmk.plugins.lib.memory import get_levels_mode_from_value, LevelsMode
+from cmk.plugins.lib.memory import check_element, get_levels_mode_from_value, MemoryLevels
 
-check_info = {}
+Section = tuple[float, float]
 
 
-def parse_fortigate_memory_base(string_table):
+def parse_fortigate_memory_base(string_table: StringTable) -> Section | None:
     try:
         total = int(string_table[0][1]) * 1024  # value from device is in kb, we need bytes
         used = float(string_table[0][0]) / 100.0 * total
     except IndexError, ValueError:
-        return ()
+        return None
     return used, total
 
 
-def discover_fortigate_memory_base(parsed):
-    if parsed:
-        yield None, {}
+def discover_fortigate_memory_base(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-def check_fortigate_memory_base(_item, params, parsed):
+def check_fortigate_memory_base(
+    params: Mapping[str, Any] | tuple[float, float], section: Section
+) -> CheckResult:
     if isinstance(params, tuple):
-        levels: tuple[LevelsMode, tuple[float, float]] = ("perc_used", params)
+        levels: MemoryLevels = ("perc_used", params)
     else:
         warn, crit = params["levels"]
         mode = get_levels_mode_from_value(warn)
@@ -38,14 +48,11 @@ def check_fortigate_memory_base(_item, params, parsed):
         scale = 1.0 if mode.startswith("perc") else 2**20
         levels = (mode, (abs(warn) * scale, abs(crit) * scale))
 
-    if not parsed:
-        return None
-    used, total = parsed
-
-    return check_memory_element("Used", used, total, levels, metric_name="mem_used")
+    used, total = section
+    yield from check_element("Used", used, total, levels, metric_name="mem_used")
 
 
-check_info["fortigate_memory_base"] = LegacyCheckDefinition(
+snmp_section_fortigate_memory_base = SimpleSNMPSection(
     name="fortigate_memory_base",
     detect=DETECT_FORTIGATE,
     fetch=SNMPTree(
@@ -53,6 +60,11 @@ check_info["fortigate_memory_base"] = LegacyCheckDefinition(
         oids=["4", "5"],
     ),
     parse_function=parse_fortigate_memory_base,
+)
+
+
+check_plugin_fortigate_memory_base = CheckPlugin(
+    name="fortigate_memory_base",
     service_name="Memory",
     discovery_function=discover_fortigate_memory_base,
     check_function=check_fortigate_memory_base,

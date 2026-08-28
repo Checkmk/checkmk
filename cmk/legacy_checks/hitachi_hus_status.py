@@ -3,54 +3,63 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
-
-check_info = {}
-
-
-def discover_hitachi_hus_status(info):
-    return [(None, None)]
-
-
-def check_hitachi_hus_status(_no_item, _no_params, info):
-    status_values = {
-        0: (0, "Array in normal status"),
-        1: (2, "Drive blocked"),
-        2: (2, "Spare drive blockade"),
-        4: (2, "Data drive blockade"),
-        8: (1, "ENC alarm"),
-        64: (1, "Warned array"),
-        128: (2, "Mate controller blocked"),
-        256: (2, "UPS alarm"),
-        1024: (2, "Path blocked"),
-        16384: (2, "Drive I/O module failure"),
-        32768: (2, "Controller failure by related parts"),
-        65536: (1, "Battery alarm"),
-        131072: (2, "Power supply failure"),
-        1048576: (1, "Fan alarm"),
-        4194304: (2, "Host I/O module failure"),
-        8388608: (2, "Management module failure"),
-        16777216: (2, "Host connector alarm"),
-        268435456: (2, "Host connector alarm"),
-    }
-    if int(info[0][0]) == 0:
-        yield 0, "Array in normal status"
-    else:
-        yield 0, "Errorcode: %s" % info[0][0]
-        for status, output in status_values.items():
-            state, message = output
-            if status & int(info[0][0]):
-                yield state, message
+_STATUS_VALUES = {
+    0: (State.OK, "Array in normal status"),
+    1: (State.CRIT, "Drive blocked"),
+    2: (State.CRIT, "Spare drive blockade"),
+    4: (State.CRIT, "Data drive blockade"),
+    8: (State.WARN, "ENC alarm"),
+    64: (State.WARN, "Warned array"),
+    128: (State.CRIT, "Mate controller blocked"),
+    256: (State.CRIT, "UPS alarm"),
+    1024: (State.CRIT, "Path blocked"),
+    16384: (State.CRIT, "Drive I/O module failure"),
+    32768: (State.CRIT, "Controller failure by related parts"),
+    65536: (State.WARN, "Battery alarm"),
+    131072: (State.CRIT, "Power supply failure"),
+    1048576: (State.WARN, "Fan alarm"),
+    4194304: (State.CRIT, "Host I/O module failure"),
+    8388608: (State.CRIT, "Management module failure"),
+    16777216: (State.CRIT, "Host connector alarm"),
+    268435456: (State.CRIT, "Host connector alarm"),
+}
 
 
 def parse_hitachi_hus_status(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-check_info["hitachi_hus_status"] = LegacyCheckDefinition(
+def discover_hitachi_hus_status(section: StringTable) -> DiscoveryResult:
+    yield Service()
+
+
+def check_hitachi_hus_status(section: StringTable) -> CheckResult:
+    raw_error_code = section[0][0]
+    error_code = int(raw_error_code)
+    if error_code == 0:
+        yield Result(state=State.OK, summary="Array in normal status")
+        return
+
+    yield Result(state=State.OK, summary=f"Errorcode: {raw_error_code}")
+    for status, (state, message) in _STATUS_VALUES.items():
+        if status & error_code:
+            yield Result(state=state, summary=message)
+
+
+snmp_section_hitachi_hus_status = SimpleSNMPSection(
     name="hitachi_hus_status",
     parse_function=parse_hitachi_hus_status,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.116"),
@@ -58,6 +67,11 @@ check_info["hitachi_hus_status"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.116.5.11.1.2.2",
         oids=["1"],
     ),
+)
+
+
+check_plugin_hitachi_hus_status = CheckPlugin(
+    name="hitachi_hus_status",
     service_name="Status",
     discovery_function=discover_hitachi_hus_status,
     check_function=check_hitachi_hus_status,

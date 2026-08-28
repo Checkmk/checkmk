@@ -15,6 +15,7 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.site import get_agent_receiver_port
 from cmk.gui.config import Config
 from cmk.gui.http import Request
+from cmk.gui.watolib import wire_format
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_state
 
@@ -79,7 +80,7 @@ class AutomationPing(AutomationCommand[None]):
         return {
             "version": cmk_version.__version__,
             "edition": cmk_version.edition(paths.omd_root).short,
-            "license_state": get_license_state().name,
+            "license_state": wire_format.license_state_to_ping_string(get_license_state()),
             "omd_status": self._get_omd_status(),
         }
 

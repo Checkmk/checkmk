@@ -9,7 +9,7 @@ import argparse
 import csv
 from collections import defaultdict
 from collections.abc import Iterable
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 
@@ -25,36 +25,63 @@ class CoverageStats:
     total_functions: int
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class RawStats:
-    """Covered and total line/function counts accumulated from an LCOV tracefile."""
+    """Covered and total line/function counts read off an LCOV tracefile."""
 
     lines: int = 0
     lines_covered: int = 0
     functions: int = 0
     functions_covered: int = 0
 
-    def record_line(self, *, hits: int) -> None:
-        """Count one more line, covered when ``hits > 0``."""
-        self.lines += 1
-        self.lines_covered += int(hits > 0)
+
+@dataclass
+class _FileTally:
+    """What one file's records say, before it becomes a :class:`RawStats`.
+
+    Lines are kept per line number so a line counts once however many records
+    mention it. Nothing in this pipeline writes a file twice, but these counts
+    are what the dashboard publishes and should not depend on that staying true.
+
+    Function records are kept as a list and not keyed by name: a closure defined
+    in both branches of an if/else has one qualified name and two definitions.
+    """
+
+    line_hits: dict[int, int] = field(default_factory=dict)
+    function_hits: list[int] = field(default_factory=list)
+
+    def record_line(self, *, lineno: int, hits: int) -> None:
+        self.line_hits[lineno] = max(self.line_hits.get(lineno, 0), hits)
 
     def record_function(self, *, hits: int) -> None:
-        """Count one more function, covered when ``hits > 0``."""
-        self.functions += 1
-        self.functions_covered += int(hits > 0)
+        self.function_hits.append(hits)
+
+    def stats(self) -> RawStats:
+        return RawStats(
+            lines=len(self.line_hits),
+            lines_covered=sum(hits > 0 for hits in self.line_hits.values()),
+            functions=len(self.function_hits),
+            functions_covered=sum(hits > 0 for hits in self.function_hits),
+        )
 
 
 def parse_lcov(lines: Iterable[str]) -> dict[str, RawStats]:
     """Aggregate per-file line and function coverage from LCOV tracefile lines.
 
-    The tracefile is lcov 2.x, as emitted by the ``lcov`` filtering step that
-    feeds this parser. Function coverage comes from the
-    ``FNA:<index>,<hits>,<name>`` data records (the ``FNL:`` declarations carry
-    no hit count and are ignored); line coverage from ``DA:<line>,<hits>``
-    records.
+    Line coverage comes from ``DA:<line>,<hits>``, spelled alike in both
+    tracefile generations. Function coverage has two spellings, and which appears
+    depends on which step wrote the record:
+
+    * ``FNDA:<hits>,<name>`` -- lcov 1.x, as Bazel's ``--combined_report=lcov``
+      writes the measured records.
+    * ``FNA:<index>,<hits>,<name>`` -- lcov 2.x, as :mod:`scope` writes the
+      zero-coverage records it appends.
+
+    Both are accepted so a file is counted the same either way; a single file's
+    records only ever use one, being either measured or synthesised. The
+    ``FNL:``/``FN:`` declarations carry no hit count and are ignored.
     """
-    file_data: dict[str, RawStats] = defaultdict(RawStats)
+    tallies: dict[str, _FileTally] = defaultdict(_FileTally)
 
     current_file: str | None = None
     for raw_line in lines:
@@ -64,10 +91,13 @@ def parse_lcov(lines: Iterable[str]) -> dict[str, RawStats]:
         elif current_file is None:
             continue
         elif line.startswith("FNA:"):
-            file_data[current_file].record_function(hits=int(line[4:].split(",", 2)[1]))
+            tallies[current_file].record_function(hits=int(line[4:].split(",", 2)[1]))
+        elif line.startswith("FNDA:"):
+            tallies[current_file].record_function(hits=int(line[5:].split(",", 1)[0]))
         elif line.startswith("DA:"):
-            file_data[current_file].record_line(hits=int(line[3:].split(",")[1]))
-    return file_data
+            lineno, hits = line[3:].split(",")[:2]
+            tallies[current_file].record_line(lineno=int(lineno), hits=int(hits))
+    return {path: tally.stats() for path, tally in tallies.items()}
 
 
 def calculate_coverage_stats(stats: RawStats) -> CoverageStats:

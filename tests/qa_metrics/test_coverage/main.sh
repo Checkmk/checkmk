@@ -13,24 +13,6 @@ REPO_PATH="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 # directory) all need to run inside the workspace.
 cd "$REPO_PATH"
 
-SOURCE_DIRS=(cmk non-free omd packages agents)
-# Top-level dirs that contain Python but are intentionally excluded from
-# coverage (the tests themselves, tooling, docs).
-NON_SOURCE_DIRS=(tests doc scripts buildscripts bin bazel .ide)
-
-# Guard against silent drift: every top-level dir that ships tracked Python
-# must be classified as source or non-source. A new or renamed one surfaces
-# here as an error instead of quietly skewing the coverage number.
-known_dirs=$(printf '%s\n' "${SOURCE_DIRS[@]}" "${NON_SOURCE_DIRS[@]}" | sort -u)
-actual_dirs=$(git ls-files '*.py' | sed 's#/.*##' | sort -u)
-unclassified=$(comm -23 <(printf '%s\n' "$actual_dirs") <(printf '%s\n' "$known_dirs"))
-if [[ -n "$unclassified" ]]; then
-    echo "Error: top-level dir(s) with Python not classified as source/non-source:" >&2
-    echo "  ${unclassified//$'\n'/$'\n'  }" >&2
-    echo "Add each to SOURCE_DIRS or NON_SOURCE_DIRS in ${BASH_SOURCE[0]}." >&2
-    exit 1
-fi
-
 # Every tool is invoked through `bazel run` so Bazel provides it hermetically --
 # no venv activation, no PATH manipulation. The edition flag is passed to every
 # bazel command that builds something (`bazel coverage` and `bazel run`) so they
@@ -133,17 +115,55 @@ fi
 COMBINED_DAT="$REPO_PATH/bazel-out/_coverage/_coverage_report.dat"
 RESULT_DIR="$REPO_PATH/results/test_coverage/repository"
 PY_TEST_TARGETS="$RESULT_DIR/py_test_targets.txt"
-COVERAGE_FILTERED_DAT="$RESULT_DIR/filtered.dat"
+SOURCE_LABELS_QUERY="$RESULT_DIR/source_labels_query.txt"
+SOURCE_LABELS="$RESULT_DIR/source_labels.txt"
+SCOPED_DAT="$RESULT_DIR/scoped.dat"
+SOURCE_PATHS="$RESULT_DIR/source_paths.txt"
 COVERAGE_HTML_DIR="$RESULT_DIR/html"
 RESULT_CSV="$RESULT_DIR/coverage.csv"
 
 mkdir -p "$RESULT_DIR"
 
 if [[ "$RUN" == true ]]; then
-    filter=$(
-        IFS='|'
-        echo "${SOURCE_DIRS[*]}"
-    )
+    # The measured source files, as Bazel labels: what a py rule compiles, minus
+    # what Bazel marks as test support. `testonly` is enforced -- a non-testonly
+    # target may not depend on a testonly one -- so a target claiming it has been
+    # checked by the build, unlike a naming convention. Configuration-less, the
+    # query following every select() branch, so one edition's run measures them
+    # all.
+    #
+    # Filtered to .py: a py rule's srcs also carry the data files beside the code,
+    # which have no executable line and would otherwise reach the denominator.
+    #
+    # Read into a variable and label-filtered for the same reasons as the universe
+    # query below.
+    cat >"$SOURCE_LABELS_QUERY" <<'EOF'
+filter("\.py$", labels(srcs, kind("py_.*", //...) except attr("testonly", 1, //...)))
+EOF
+    labels=$(bazel query --query_file="$SOURCE_LABELS_QUERY")
+    labels=$(grep '^//' <<<"$labels" || true)
+    if [[ -z "$labels" ]]; then
+        echo "Error: the source file query matched no file. Check the query above" >&2
+        echo "against a renamed rule kind." >&2
+        exit 1
+    fi
+    printf '%s\n' "$labels" >"$SOURCE_LABELS"
+
+    # Derived from the measured files rather than listed by hand, so the filter
+    # cannot name a directory the denominator does not, or miss one it does.
+    # Top-level only: a pattern per Bazel package would be thousands long.
+    #
+    # Narrow on purpose. Broadening it to every target pulls some 26k
+    # external-repo records into the report, and gives the tests whose manifest
+    # is empty -- the ones coverage.py therefore measures unfiltered -- an
+    # include list disjoint from what they execute, so they collect nothing and
+    # the runner raises NoDataError.
+    #
+    # A label in the root package -- //:refresh_compile_commands.py -- names no
+    # directory, so the grep drops it: an empty alternative would match every
+    # label. The dot is escaped where the filter is assembled, the filter being a
+    # regex: .ide would otherwise match aide as well.
+    filter=$(sed 's#^//##; s#[/:].*##' "$SOURCE_LABELS" | sort -u | grep -v '^$' | paste -sd'|')
 
     # Restrict coverage to Python tests. Selecting by rule kind (py_test) drops
     # rust_test/cc_test/js_test/shell tests and the deploy drift test, so their
@@ -216,54 +236,29 @@ if [[ "$RUN" == true ]]; then
         --keep_going \
         --build_tests_only \
         --combined_report=lcov \
-        --instrumentation_filter="//(${filter})[/:@]"
+        --instrumentation_filter="//(${filter//./\\.})[/:@]"
     if [ ! -f "$COMBINED_DAT" ]; then
         echo "Error: the coverage run wrote no combined report at $COMBINED_DAT," >&2
         echo "so nothing was measured. Did every selected target get skipped?" >&2
         exit 1
     fi
-    # Strip the repo root prefix so paths are workspace-relative
-    sed -i "s|^SF:${REPO_PATH}/|SF:|g" "$COMBINED_DAT"
-    # Filter the report down to our own source code. This is needed because the
-    # instrumentation filter above does not fully constrain what gets recorded:
-    # for a test whose dependencies all lie outside the instrumented dirs (e.g.
-    # //scripts:requirements-test), Bazel hands the test an empty
-    # COVERAGE_MANIFEST, aspect_rules_py passes the manifest to coverage.py as
-    # its `include` list, and an empty include list means "no filter" --
-    # coverage.py then records everything the test executes: its own sources,
-    # pip packages from the bazel cache, the pytest runner itself.
-    bazel run @lcov//:lcov "$EDITION_FLAG" -- \
-        --extract "$COMBINED_DAT" \
-        "${SOURCE_DIRS[@]/%//*.py}" \
-        --output-file "$COVERAGE_FILTERED_DAT"
-    # lcov matches patterns as unanchored substrings, so the --extract above
-    # also keeps leaked pip files ('packages/*.py' matches their
-    # site-packages/... paths). Remove what slipped through:
-    #   '*/.cache/bazel/*': leaked pip packages that survived --extract
-    #   '*/tests/*':        test helpers nested inside source dirs
-    #                       (e.g. non-free/tests/testlib)
-    #   'tests/*':          defensive, matches nothing in normal runs: a leaked
-    #                       top-level test source whose path contains a source
-    #                       dir as substring (e.g. tests/unit/cmk/...) would
-    #                       survive --extract yet dodge '*/tests/*'
-    # --ignore-errors unused: lcov 2.x aborts when a pattern matches nothing,
-    # but 'tests/*' being unused is the expected steady state.
-    bazel run @lcov//:lcov "$EDITION_FLAG" -- \
-        --remove "$COVERAGE_FILTERED_DAT" \
-        '*/.cache/bazel/*' '*/tests/*' 'tests/*' \
-        --ignore-errors unused \
-        --output-file "$COVERAGE_FILTERED_DAT"
-    # Source dirs are relative to the repo root, passed explicitly because
-    # `bazel run` executes in the runfiles tree, not the workspace.
-    bazel run "$PKG:add_missing" "$EDITION_FLAG" -- \
+
+    # The files the number is about. Enumerated once and used twice below, so
+    # the records that survive and the files counted at 0% are the same set.
+    bazel run "$PKG:source_files" "$EDITION_FLAG" -- \
         --repo-root "$REPO_PATH" \
-        --coverage-file "$COVERAGE_FILTERED_DAT" \
-        "${SOURCE_DIRS[@]}"
+        --source-labels "$SOURCE_LABELS" \
+        --paths-out "$SOURCE_PATHS"
+    bazel run "$PKG:scope" "$EDITION_FLAG" -- \
+        --repo-root "$REPO_PATH" \
+        --coverage-file "$COMBINED_DAT" \
+        --file-list "$SOURCE_PATHS" \
+        --output "$SCOPED_DAT"
 fi
 
 if [[ "$GENERATE_HTML" == true ]]; then
-    if [ ! -f "$COVERAGE_FILTERED_DAT" ]; then
-        echo "Error: Coverage data file not found at $COVERAGE_FILTERED_DAT" >&2
+    if [ ! -f "$SCOPED_DAT" ]; then
+        echo "Error: Coverage data file not found at $SCOPED_DAT" >&2
         exit 1
     fi
     # The coverage data stores source paths workspace-relative, but `bazel run`
@@ -289,7 +284,7 @@ if [[ "$GENERATE_HTML" == true ]]; then
         --title "Checkmk Test Coverage" \
         --quiet \
         --output "$COVERAGE_HTML_DIR" \
-        "$COVERAGE_FILTERED_DAT"
+        "$SCOPED_DAT"
 
     # genhtml's low/medium/high limits (75%/90%) can be moved but not switched
     # off, and no pair of them fits a report spanning the whole product, so
@@ -327,13 +322,13 @@ EOF
 fi
 
 if [[ "$DO_UPLOAD" == true ]]; then
-    if [ ! -f "$COVERAGE_FILTERED_DAT" ]; then
-        echo "Error: Coverage data file not found at $COVERAGE_FILTERED_DAT" >&2
+    if [ ! -f "$SCOPED_DAT" ]; then
+        echo "Error: Coverage data file not found at $SCOPED_DAT" >&2
         exit 1
     fi
 
     bazel run "$PKG:summary" "$EDITION_FLAG" -- \
-        -i "$COVERAGE_FILTERED_DAT" -o "$RESULT_CSV"
+        -i "$SCOPED_DAT" -o "$RESULT_CSV"
     if [ ! -f "$RESULT_CSV" ]; then
         echo "Error: $RESULT_CSV not created." >&2
         exit 1

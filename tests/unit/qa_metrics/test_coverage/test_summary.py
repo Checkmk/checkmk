@@ -12,37 +12,63 @@ from tests.qa_metrics.test_coverage.summary import (
 )
 
 
-def test_record_line_counts_covered_when_hit() -> None:
-    stats = RawStats()
-    stats.record_line(hits=3)
-    assert stats == RawStats(lines=1, lines_covered=1, functions=0, functions_covered=0)
+def test_parse_lcov_counts_a_hit_line_as_covered() -> None:
+    assert parse_lcov(["SF:cmk/foo.py", "DA:10,3", "end_of_record"]) == {
+        "cmk/foo.py": RawStats(lines=1, lines_covered=1, functions=0, functions_covered=0)
+    }
 
 
-def test_record_line_counts_uncovered_when_not_hit() -> None:
-    stats = RawStats()
-    stats.record_line(hits=0)
-    assert stats == RawStats(lines=1, lines_covered=0, functions=0, functions_covered=0)
+def test_parse_lcov_counts_a_zero_hit_line_as_uncovered() -> None:
+    assert parse_lcov(["SF:cmk/foo.py", "DA:10,0", "end_of_record"]) == {
+        "cmk/foo.py": RawStats(lines=1, lines_covered=0, functions=0, functions_covered=0)
+    }
 
 
-def test_record_function_counts_covered_when_hit() -> None:
-    stats = RawStats()
-    stats.record_function(hits=2)
-    assert stats == RawStats(lines=0, lines_covered=0, functions=1, functions_covered=1)
+def test_parse_lcov_counts_lines_and_functions_independently() -> None:
+    assert parse_lcov(
+        [
+            "SF:cmk/foo.py",
+            "DA:10,1",
+            "DA:11,0",
+            "FNDA:5,covered",
+            "FNDA:0,uncovered",
+            "end_of_record",
+        ]
+    ) == {"cmk/foo.py": RawStats(lines=2, lines_covered=1, functions=2, functions_covered=1)}
 
 
-def test_record_function_counts_uncovered_when_not_hit() -> None:
-    stats = RawStats()
-    stats.record_function(hits=0)
-    assert stats == RawStats(lines=0, lines_covered=0, functions=1, functions_covered=0)
+def test_parse_lcov_counts_a_line_once_however_often_it_appears() -> None:
+    """These counts are what the dashboard publishes; a repeated file must not double them."""
+    assert parse_lcov(
+        [
+            "SF:cmk/foo.py",
+            "DA:10,1",
+            "end_of_record",
+            "SF:cmk/foo.py",
+            "DA:10,1",
+            "DA:11,0",
+            "end_of_record",
+        ]
+    ) == {"cmk/foo.py": RawStats(lines=2, lines_covered=1, functions=0, functions_covered=0)}
 
 
-def test_record_accumulates_lines_and_functions_independently() -> None:
-    stats = RawStats()
-    stats.record_line(hits=1)
-    stats.record_line(hits=0)
-    stats.record_function(hits=5)
-    stats.record_function(hits=0)
-    assert stats == RawStats(lines=2, lines_covered=1, functions=2, functions_covered=1)
+def test_parse_lcov_takes_the_highest_hit_count_for_a_repeated_line() -> None:
+    """A line one record misses and another hits is covered, not uncovered."""
+    assert parse_lcov(
+        ["SF:cmk/foo.py", "DA:10,0", "end_of_record", "SF:cmk/foo.py", "DA:10,4", "end_of_record"]
+    ) == {"cmk/foo.py": RawStats(lines=1, lines_covered=1, functions=0, functions_covered=0)}
+
+
+def test_parse_lcov_keeps_two_functions_sharing_a_name() -> None:
+    """A closure defined in both branches of an if/else: one name, two functions."""
+    assert parse_lcov(
+        [
+            "SF:cmk/foo.py",
+            "FNDA:1,outer.<locals>.inner",
+            "FNDA:0,outer.<locals>.inner",
+            "end_of_record",
+        ]
+    ) == {"cmk/foo.py": RawStats(lines=0, lines_covered=0, functions=2, functions_covered=1)}
 
 
 def test_parse_lcov_counts_lcov_2_x_function_records() -> None:
@@ -59,6 +85,28 @@ def test_parse_lcov_counts_lcov_2_x_function_records() -> None:
             "end_of_record",
         ]
     ) == {"cmk/foo.py": RawStats(lines=2, lines_covered=1, functions=2, functions_covered=1)}
+
+
+def test_parse_lcov_counts_lcov_1_x_function_records() -> None:
+    """Bazel's own combined report emits FN/FNDA; hits are FNDA's first field."""
+    assert parse_lcov(
+        [
+            "SF:cmk/foo.py",
+            "FN:10,covered_func",
+            "FNDA:3,covered_func",
+            "FN:20,uncovered_func",
+            "FNDA:0,uncovered_func",
+            "DA:10,3",
+            "DA:11,0",
+            "end_of_record",
+        ]
+    ) == {"cmk/foo.py": RawStats(lines=2, lines_covered=1, functions=2, functions_covered=1)}
+
+
+def test_parse_lcov_handles_lcov_1_x_function_names_containing_commas() -> None:
+    assert parse_lcov(["SF:cmk/foo.py", "FNDA:1,outer.<locals>.inner,weird", "end_of_record"]) == {
+        "cmk/foo.py": RawStats(lines=0, lines_covered=0, functions=1, functions_covered=1)
+    }
 
 
 def test_parse_lcov_handles_function_names_containing_commas() -> None:

@@ -17,6 +17,8 @@ py_library(
         "__init__.py",
         "owned_files.py",
         "rows.py",
+        "scope.py",
+        "source_files.py",
         "summary.py",
     ],
     data = ["schema.sql"],
@@ -41,8 +43,19 @@ py_binary(
 )
 
 py_binary(
-    name = "add_missing",
-    srcs = ["add_missing.py"],
+    name = "scope",
+    testonly = True,
+    srcs = ["scope.py"],
+    imports = ["../../.."],
+    deps = [":file_lists"],
+)
+
+py_binary(
+    name = "source_files",
+    testonly = True,
+    srcs = ["source_files.py"],
+    imports = ["../../.."],
+    deps = [":file_lists"],
 )
 
 py_binary(

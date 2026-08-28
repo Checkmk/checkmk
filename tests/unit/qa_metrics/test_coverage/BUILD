@@ -9,6 +9,7 @@ py_test(
         "test_file_lists.py",
         "test_owned_files.py",
         "test_rows.py",
+        "test_scope.py",
         "test_summary.py",
     ],
     pytest_main = True,

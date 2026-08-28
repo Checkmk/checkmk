@@ -1080,8 +1080,17 @@ class SyncPlugins:
 
         # Custom user attributes can be added here too.
         for k, v in config.items():
-            if k not in ap:
-                ap[k] = sync_attribute_to_internal[v]  # type: ignore[valid-type,misc]
+            if k in ap:
+                continue
+            match v:
+                case {"state": "enabled", "attribute_to_sync": str() as attribute_to_sync}:
+                    ap[k] = sync_attribute_to_internal(
+                        {"state": "enabled", "attribute_to_sync": attribute_to_sync}
+                    )
+                case {"state": "disabled"}:
+                    ap[k] = None
+                case _:
+                    raise ValueError(f"Invalid sync attribute value for {k!r}: {v!r}")
 
         active_plugins = cast(ActivePlugins, {k: v for k, v in ap.items() if v is not None})
         return cls(active_plugins=active_plugins)

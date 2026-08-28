@@ -64,6 +64,11 @@ class LicenseState(Enum):
         # probably makes sense to remove the UNLICENSED state here.
         return self in [LicenseState.TRIAL, LicenseState.LICENSED, LicenseState.UNLICENSED]
 
+    def has_reduced_metric_series_limit(self) -> bool:
+        """Returns True if the site should reduce the active metric series limit (typically to 750)."""
+
+        return self is LicenseState.FREE
+
 
 class LicenseStateError(Exception):
     pass

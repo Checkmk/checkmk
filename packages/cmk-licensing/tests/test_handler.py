@@ -90,21 +90,25 @@ def test_license_state_properties_trial() -> None:
     assert not LicenseState.TRIAL.blocks_distributed_setup_changes_free()
     assert LicenseState.TRIAL.is_connecting_to_remotes_enabled()
     assert LicenseState.TRIAL.is_adding_as_remote_enabled()
+    assert not LicenseState.TRIAL.has_reduced_metric_series_limit()
 
 
 def test_license_state_properties_free() -> None:
     assert LicenseState.FREE.blocks_distributed_setup_changes_free()
     assert not LicenseState.FREE.is_connecting_to_remotes_enabled()
     assert not LicenseState.FREE.is_adding_as_remote_enabled()
+    assert LicenseState.FREE.has_reduced_metric_series_limit()
 
 
 def test_license_state_properties_licensed() -> None:
     assert not LicenseState.LICENSED.blocks_distributed_setup_changes_free()
     assert LicenseState.LICENSED.is_connecting_to_remotes_enabled()
     assert LicenseState.LICENSED.is_adding_as_remote_enabled()
+    assert not LicenseState.LICENSED.has_reduced_metric_series_limit()
 
 
 def test_license_state_properties_unlicensed() -> None:
     assert not LicenseState.UNLICENSED.blocks_distributed_setup_changes_free()
     assert not LicenseState.UNLICENSED.is_connecting_to_remotes_enabled()
     assert LicenseState.UNLICENSED.is_adding_as_remote_enabled()
+    assert not LicenseState.UNLICENSED.has_reduced_metric_series_limit()

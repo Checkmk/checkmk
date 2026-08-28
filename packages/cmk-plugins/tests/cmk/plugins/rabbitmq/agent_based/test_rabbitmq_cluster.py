@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.rabbitmq_cluster import (
+from cmk.plugins.rabbitmq.agent_based.cluster import (
     check_rabbitmq_cluster,
     discover_rabbitmq_cluster,
     parse_rabbitmq_cluster,

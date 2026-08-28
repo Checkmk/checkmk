@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.fortigate_sessions import (
+from cmk.plugins.fortinet.agent_based.fortigate_sessions import (
     check_fortigate_sessions,
     discover_fortigate_sessions,
     parse_fortigate_sessions,

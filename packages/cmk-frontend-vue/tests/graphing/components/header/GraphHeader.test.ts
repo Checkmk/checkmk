@@ -38,16 +38,22 @@ test('the consolidation dropdown shows the selected function', async () => {
   )
 })
 
-test('selecting a consolidation function emits update:consolidationFn', async () => {
+test('selecting a consolidation function shows the new selection and emits update:consolidationFn', async () => {
   const user = userEvent.setup()
   const { emitted } = render(GraphHeader, {
-    props: { showConsolidation: true, consolidationFn: 'avg' }
+    props: { showConsolidation: true, consolidationFn: 'max' }
   })
+  const dropdown = screen.getByRole('combobox', { name: 'Graph values' })
 
-  await user.click(screen.getByRole('combobox', { name: 'Graph values' }))
-  await user.click(await screen.findByRole('option', { name: 'Max' }))
+  await user.click(dropdown)
+  await user.click(await screen.findByRole('option', { name: 'Min' }))
+  expect(dropdown).toHaveTextContent('Min')
+  expect(emitted('update:consolidationFn')?.at(-1)).toEqual(['min'])
 
-  expect(emitted()['update:consolidationFn']).toEqual([['max']])
+  await user.click(dropdown)
+  await user.click(await screen.findByRole('option', { name: 'Average' }))
+  expect(dropdown).toHaveTextContent('Average')
+  expect(emitted('update:consolidationFn')?.at(-1)).toEqual(['avg'])
 })
 
 test('describes a same-day range with a single date and its resolution', () => {

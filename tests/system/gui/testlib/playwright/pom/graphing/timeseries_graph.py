@@ -207,6 +207,7 @@ class GraphPanel:
     def __init__(self, root: Locator, page: Page, document: MainArea) -> None:
         self.root = root
         self.page = page
+        self._document = document
         self.graph = TimeSeriesGraph(root.locator(".graphing-time-series-graph"), page, document)
 
     @property
@@ -217,6 +218,38 @@ class GraphPanel:
     def title(self) -> Locator:
         """Settles only once the graph has its data: the title comes from the fetch."""
         return self.header.locator(".graphing-graph-title")
+
+    @property
+    def _values_and_time_group(self) -> Locator:
+        """The header's first group containing the consolidation function selector (the "Graph
+        values" dropdown) and the time information (date/time and resolution).
+        """
+        return self.header.get_by_role(
+            role="group", name="Graph values and time information", exact=True
+        )
+
+    @property
+    def consolidation_control(self) -> Locator:
+        """The header's consolidation function selector (the "Graph values" dropdown).
+
+        Present only when the panel was told to show it; its shown text is the currently
+        selected function.
+        """
+        return self._values_and_time_group.get_by_role("combobox", name="Graph values", exact=True)
+
+    def select_consolidation(self, option_label: str) -> None:
+        """Open the consolidation dropdown and pick the option shown as `option_label`."""
+        logger.info("Selecting the consolidation function '%s'", option_label)
+        self.consolidation_control.click()
+        options = self._values_and_time_group.locator(".cmk-suggestions")
+        expect(
+            options, f"The consolidation dropdown did not open to offer {option_label!r}"
+        ).to_be_visible()
+        option = options.get_by_role("option", name=option_label, exact=True)
+        expect(
+            option, f"The consolidation dropdown offered no {option_label!r} option"
+        ).to_be_visible()
+        option.click()
 
     @property
     def resolution_note(self) -> Locator:

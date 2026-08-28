@@ -57,6 +57,7 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
       <span data-testid="panel-y-axis-range">{{ yAxis?.explicit_range?.max ?? 'none' }}</span>
       <span data-testid="panel-consolidation">{{ consolidationFn }}</span>
       <button @click="$emit('update:consolidationFn', 'min')">consolidate by min</button>
+      <button @click="$emit('update:consolidationFn', 'avg')">consolidate by avg</button>
       <button @click="$emit('update:requestedTimeRange', { start: ${PAN_TARGET.start}, end: ${PAN_TARGET.end} }, 'translated_timerange')">
         pan
       </button>
@@ -523,6 +524,21 @@ test('asks only the panel whose consolidation function was selected for data aga
   ])
   const stated = screen.getAllByTestId('panel-consolidation').map((node) => node.textContent)
   expect(stated).toEqual(['min', 'max'])
+})
+
+test('holds two graphs at independent consolidation functions simultaneously', async () => {
+  const PANEL_TITLES = ['CPU utilization', 'Memory']
+  renderGroup(PANEL_TITLES.map(makeGraphDefinition))
+  const requestsOnLoad = PANEL_TITLES.length * REQUESTS_PER_PANEL
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(requestsOnLoad))
+
+  await fireEvent.click((await screen.findAllByText('consolidate by min'))[0]!) // graph A -> min
+  await fireEvent.click((await screen.findAllByText('consolidate by avg'))[1]!) // graph B -> avg
+
+  await waitFor(() => {
+    const stated = screen.getAllByTestId('panel-consolidation').map((node) => node.textContent)
+    expect(stated).toEqual(['min', 'avg'])
+  })
 })
 
 test('keeps a panel it did not refetch showing the data it already holds', async () => {

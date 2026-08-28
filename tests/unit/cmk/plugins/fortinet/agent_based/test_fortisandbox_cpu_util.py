@@ -8,8 +8,8 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks import fortisandbox_cpu_util
-from cmk.legacy_checks.fortisandbox_cpu_util import (
+from cmk.plugins.fortinet.agent_based import fortisandbox_cpu_util
+from cmk.plugins.fortinet.agent_based.fortisandbox_cpu_util import (
     check_fortisandbox_cpu_util,
     discover_fortisandbox_cpu_util,
     parse_fortisandbox_cpu_util,

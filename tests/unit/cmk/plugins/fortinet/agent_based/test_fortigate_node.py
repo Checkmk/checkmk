@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.fortigate_node import (
+from cmk.plugins.fortinet.agent_based.fortigate_node import (
     check_fortigate_cluster,
     check_fortigate_node_ses,
     ClusterInfo,

@@ -174,15 +174,26 @@ if [[ "$RUN" == true ]]; then
     #     the coverage. The same holds for eg. tests/plugins_consistency.
     # The list is passed via --target_pattern_file since it is too long for
     # the command line.
+    # Querying into a variable rather than piping: an empty result has to reach
+    # the check below, and through a pipe grep's exit 1 would kill the script
+    # under `set -e` before it. Only target labels are kept, since the Aspect CLI
+    # writes first-run prompt escape sequences to stdout.
     # shellcheck disable=SC2016  # $t is bazel query let-syntax, not a shell variable
-    bazel query '
+    universe=$(bazel query '
         let t = kind("py_test", tests(//...)) in
         $t
         except attr("srcs", "-doctest-runner\.py", $t)
         except //tests/unit/qa_metrics/...
         except //omd/...
         except (//tests/... except (//tests/openapi/... + //tests/agent-plugin-unit/... + //tests/unit/...))
-    ' >"$PY_TEST_TARGETS"
+    ')
+    universe=$(grep '^//' <<<"$universe" || true)
+    if [[ -z "$universe" ]]; then
+        echo "Error: the py_test universe query matched no target. Check the query" >&2
+        echo "above against a renamed rule kind or an exclusion that stopped matching." >&2
+        exit 1
+    fi
+    printf '%s\n' "$universe" >"$PY_TEST_TARGETS"
 
     # Cap the local resource pool so build and test actions together leave
     # cores idle for the subprocesses some tests spawn, which Bazel does not
@@ -279,6 +290,9 @@ if [[ "$GENERATE_HTML" == true ]]; then
     #                 def g(): ...
     #   category: genhtml fails to classify a few lines (reports category 'UNK').
     # Both are real properties of the source, not corrupt data.
+    # genhtml writes one page per source file and never removes stale ones, so a
+    # file that left the report keeps its page and its old number at a deep link.
+    rm -rf "$COVERAGE_HTML_DIR"
     bazel run @lcov//:genhtml "$EDITION_FLAG" --run_under="cd $REPO_PATH &&" -- \
         --ignore-errors inconsistent,category \
         --title "Checkmk Test Coverage" \

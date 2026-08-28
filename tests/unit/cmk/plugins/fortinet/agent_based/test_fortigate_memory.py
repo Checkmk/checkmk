@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.fortigate_memory import (
+from cmk.plugins.fortinet.agent_based.fortigate_memory import (
     check_fortigate_memory,
     discover_fortigate_memory,
     parse_fortigate_memory,

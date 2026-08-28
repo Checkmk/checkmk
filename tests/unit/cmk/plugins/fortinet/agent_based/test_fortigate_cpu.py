@@ -8,8 +8,8 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks import fortigate_cpu
-from cmk.legacy_checks.fortigate_cpu import (
+from cmk.plugins.fortinet.agent_based import fortigate_cpu
+from cmk.plugins.fortinet.agent_based.fortigate_cpu import (
     check_fortigate_cpu,
     discover_fortigate_cpu,
     parse_fortigate_cpu,

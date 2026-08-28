@@ -6,6 +6,8 @@ py_test(
     size = "small",
     srcs = [
         "__init__.py",
+        "test_file_lists.py",
+        "test_owned_files.py",
         "test_rows.py",
         "test_summary.py",
     ],

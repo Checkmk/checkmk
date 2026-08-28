@@ -21,8 +21,8 @@ def _parameter_valuespec_proxmox_ve_mem_usage():
                 Tuple(
                     title=_("Levels"),
                     elements=[
-                        Percentage(title=_("Warning at"), default_value=80.0),
-                        Percentage(title=_("Critical at"), default_value=90.0),
+                        Percentage(title=_("Warning at"), default_value=80.0, maxvalue=None),
+                        Percentage(title=_("Critical at"), default_value=90.0, maxvalue=None),
                     ],
                 ),
             ),

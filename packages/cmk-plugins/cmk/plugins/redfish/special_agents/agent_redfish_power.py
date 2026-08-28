@@ -275,7 +275,7 @@ def detect_vendor(root_data: Any) -> Vendor:
     return Vendor(name="Generic", version=None, firmware_version=None)
 
 
-def get_information(redfishobj):
+def get_information(redfishobj: HttpClient) -> int:
     """get a the information from the Redfish management interface"""
     base_data = fetch_data(redfishobj, "/redfish/v1", "Base")
 

@@ -42,12 +42,17 @@ const PAST_WINDOW: DateTimeRange = {
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
-    props: ['metrics', 'highlightedMetricName', 'panEnabled', 'view_time_range'],
+    props: ['metrics', 'highlightedMetricName', 'panEnabled', 'view_time_range', 'options'],
     emits: ['pan'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="drawn">{{ metrics.map((m) => m.metadata.title).join(',') }}</span>
       <span data-testid="highlighted">{{ highlightedMetricName ?? '' }}</span>
       <span data-testid="pan-enabled">{{ panEnabled }}</span>
+      <span data-testid="axis-unit">{{ options.y_axis?.unit?.symbol ?? '' }}</span>
+      <span data-testid="axis-range">{{ options.y_axis?.explicit_range?.max ?? '' }}</span>
+      <span data-testid="curve-units">{{
+        metrics.map((m) => m.metadata.unit.symbol).join(',')
+      }}</span>
       <button
         data-testid="pan-back"
         @click="$emit('pan', {
@@ -282,6 +287,34 @@ test('hovering a metric in the detached legend highlights it in the preview', as
 
   await fireEvent.mouseLeave(cpuRow)
   expect(screen.getByTestId('highlighted').textContent).toBe('')
+})
+
+test("the graph's own unit and range label the preview's axis", async () => {
+  const graph = graphObject()
+  graph.extensions.content.graph_options.unit = {
+    type: 'custom',
+    notation: { notation: 'si', symbol: 'W' },
+    precision: { type: 'strict', digits: 0 }
+  }
+  graph.extensions.content.graph_options.explicit_vertical_range = {
+    type: 'fixed',
+    lower: 0,
+    upper: 100
+  }
+  renderBody('view', { graph })
+
+  await waitFor(() => expect(screen.getByTestId('drawn')).toHaveTextContent('CPU'))
+  expect(screen.getByTestId('axis-unit')).toHaveTextContent('W')
+  expect(screen.getByTestId('axis-range')).toHaveTextContent('100')
+  expect(screen.getByTestId('curve-units').textContent).toBe(',')
+})
+
+test('an unconfigured axis is left to the drawn metrics', async () => {
+  renderBody('view')
+
+  await waitFor(() => expect(screen.getByTestId('drawn')).toHaveTextContent('CPU'))
+  expect(screen.getByTestId('axis-unit').textContent).toBe('')
+  expect(screen.getByTestId('axis-range').textContent).toBe('')
 })
 
 test('view mode renders the legend beneath the preview, not the config tabs', async () => {

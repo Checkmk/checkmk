@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type {
   CustomGraphDesignerMode,
   TitleMacroGroup
@@ -37,6 +38,7 @@ import type { GraphItemsStore } from '../composables/useGraphItems'
 import { useItemValidation } from '../composables/useItemValidation'
 import type { FormulaDraft, ItemId } from '../types'
 import type { RowIssue } from '../validation'
+import { yAxisUnitOf } from '../yAxisUnit'
 import AppearanceTable from './AppearanceTable.vue'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
 import DesignerSettings from './DesignerSettings.vue'
@@ -230,12 +232,17 @@ function onSettingsUpdate(newGraphOptions: CustomGraphOptions): void {
   displaySettings.value = false
 }
 
-const explicitRange = computed(() => {
+const yAxis = computed<YAxis | null>(() => {
+  const unit = yAxisUnitOf(graphOptions)
   const range = graphOptions.explicit_vertical_range
-  if (range?.type === 'fixed' && range.lower !== null && range.upper !== null) {
-    return { min: range.lower, max: range.upper }
+  const explicitRange = range.type === 'fixed' ? { min: range.lower, max: range.upper } : null
+  if (unit === null && explicitRange === null) {
+    return null
   }
-  return null
+  return {
+    ...(unit === null ? {} : { unit }),
+    ...(explicitRange === null ? {} : { explicit_range: explicitRange })
+  }
 })
 </script>
 
@@ -258,7 +265,7 @@ const explicitRange = computed(() => {
         :horizontal-lines="data.horizontalLines.value"
         :requested-time-range="requestedTimeRange"
         :time-picker-requests="timePickerRequests"
-        :y-axis="explicitRange ? { explicit_range: explicitRange } : null"
+        :y-axis="yAxis"
         :title="title"
         show-title
         show-timestamp

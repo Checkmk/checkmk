@@ -3,53 +3,69 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="explicit-any"
 
-from collections.abc import Iterable
+import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.cpu_util import check_cpu_util
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.fortinet.lib import DETECT_FORTISANDBOX
-
-check_info = {}
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 # Nikolas Hagemann, comNET GmbH - nikolas.hagemann@comnetgmbh.com
 
 # Example output:
 # .1.3.6.1.4.1.12356.118.3.1.3.0 10
 
-Section = StringTable
+Section = int
 
 
-def discover_fortisandbox_cpu_util(section: Section) -> Iterable[tuple[None, dict]]:
-    if section:
-        yield None, {}
-
-
-def check_fortisandbox_cpu_util(_no_item, params, info):
-    if not info:
+def parse_fortisandbox_cpu_util(string_table: StringTable) -> Section | None:
+    try:
+        return int(string_table[0][0])
+    except IndexError, ValueError:
         return None
-    util = int(info[0][0])
-    return check_cpu_util(util, params)
 
 
-def parse_fortisandbox_cpu_util(string_table: StringTable) -> StringTable:
-    return string_table
+def discover_fortisandbox_cpu_util(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-check_info["fortisandbox_cpu_util"] = LegacyCheckDefinition(
+def check_fortisandbox_cpu_util(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from check_cpu_util(
+        util=section,
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
+
+
+snmp_section_fortisandbox_cpu_util = SimpleSNMPSection(
     name="fortisandbox_cpu_util",
-    parse_function=parse_fortisandbox_cpu_util,
     detect=DETECT_FORTISANDBOX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.118.3.1",
         oids=["3"],
     ),
+    parse_function=parse_fortisandbox_cpu_util,
+)
+
+
+check_plugin_fortisandbox_cpu_util = CheckPlugin(
+    name="fortisandbox_cpu_util",
     service_name="CPU utilization",
     discovery_function=discover_fortisandbox_cpu_util,
     check_function=check_fortisandbox_cpu_util,
     check_ruleset_name="cpu_utilization",
+    check_default_parameters={},
 )

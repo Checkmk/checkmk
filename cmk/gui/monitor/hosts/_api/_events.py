@@ -36,7 +36,7 @@ from ._urls import host_view_link_by_id, service_view_link_by_id
 _DEFAULT_TIME_WINDOW_DAYS = 8
 _MAX_TIME_WINDOW_DAYS = 365
 
-_DEFAULT_LIMIT = 500
+_DEFAULT_LIMIT = 100
 _MAX_LIMIT = 5_000
 
 _SECONDS_PER_DAY = 86400

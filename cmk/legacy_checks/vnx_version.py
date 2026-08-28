@@ -3,30 +3,39 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
-
-
-def discover_vnx_version(info):
-    return [(None, None)]
-
-
-def check_vnx_version(item, params, info):
-    for line in info:
-        yield 0, f"{line[0]}: {line[1]}"
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
 def parse_vnx_version(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["vnx_version"] = LegacyCheckDefinition(
+agent_section_vnx_version = AgentSection(
     name="vnx_version",
     parse_function=parse_vnx_version,
+)
+
+
+def discover_vnx_version(section: StringTable) -> DiscoveryResult:
+    yield Service()
+
+
+def check_vnx_version(section: StringTable) -> CheckResult:
+    for line in section:
+        yield Result(state=State.OK, summary=f"{line[0]}: {line[1]}")
+
+
+check_plugin_vnx_version = CheckPlugin(
+    name="vnx_version",
     service_name="VNX Version",
     discovery_function=discover_vnx_version,
     check_function=check_vnx_version,

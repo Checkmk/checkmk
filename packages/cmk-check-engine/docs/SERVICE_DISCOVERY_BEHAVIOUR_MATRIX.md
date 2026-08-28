@@ -1587,19 +1587,122 @@ xfail is what makes forgetting the second half impossible.
 **Every test parametrized over `automation_config ∈ {LocalAutomationConfig(), RemoteAutomationConfig(...)}`,
 patching only the automation transport** — never `local_discovery_preview` (B-F1).
 
-| #     | test                                               | pins                                                                                                                                                                                                                                                                                                             |
-| ----- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| T2.1  | `test_get_check_table_dispatch`                    | Local → `check_mk_local_automation_serialized("service-discovery-preview", …)`. Remote → `sync_changes_before_remote_automation(site_id)` **then** `do_remote_automation(cfg, "service-discovery-job", [host_name, options])` with the exact options payload, and the result is the deserialized remote payload. |
-| T2.2  | `test_write_paths_use_the_given_automation_config` | **The PoC's worst defect.** `set_autochecks_v2`, `update_host_labels` and `get_services_labels` all receive the _same_ `automation_config` that was passed to `perform_*`. Fails if any write path is hard-coded local.                                                                                          |
-| T2.3  | `test_tabula_rasa_pending_change_is_central`       | B-F2.2: `refresh-autochecks` added before the branch, scoped to the host's site; no equivalent remote change.                                                                                                                                                                                                    |
-| T2.4  | `test_remote_sync_only_on_remote`                  | B-F2.1: `sync_changes_before_remote_automation` called exactly once on remote, never on local.                                                                                                                                                                                                                   |
-| T2.5  | `test_job_lifecycle_per_action`                    | §6 Matrix B row-by-row: which actions start the job, which call `job.stop()`, `prevent_fetching` per call, and that only `TABULA_RASA` reaches `local_discovery` (with all five `DiscoverySettings` flags `True`).                                                                                               |
-| T2.6  | `test_discovery_result_wire_round_trip`            | B-F2.3: `serialize`/`deserialize` for `2.4.0`, `2.5.0b1`, `3.0.0b1` peers — field truncation and the `sources` dict/list shape.                                                                                                                                                                                  |
-| T2.7  | `test_pending_changes_recorded`                    | Change `action_name`, `object_ref`, domains, `force_sync` (from `need_sync`) and site scope for `set-autochecks`, `update-host-labels`, `refresh-autochecks`.                                                                                                                                                    |
-| T2.8  | `test_service_discovery_context_side_effects`      | P-F3: `wato.services` demanded; `clear_discovery_failed` called for unlocked hosts, skipped for locked ones, on every `perform_*` including no-ops.                                                                                                                                                              |
-| T2.9  | `test_discovery_used_directly_skips_context`       | P-F1: `Discovery(...).do_discovery(...)` (the `update_service_phase` shape) does **not** demand `wato.services` and does **not** clear `discovery_failed`.                                                                                                                                                       |
-| T2.10 | `test_fix_all_updates_host_labels_before_services` | Ordering: labels are written even when the transition is `None` (already covered by one existing test — fold it in).                                                                                                                                                                                             |
-| T2.11 | `test_read_during_active_job_yields_empty_table`   | Mechanic 5 / B-F3: with `is_active()` patched `True`, `execute_discovery_job` returns `check_table == []` and `check_table_created == 0`, and `Discovery(...).do_discovery(...)` against that result calls **no** write automation. Pins the silent no-op until §10.18 replaces it with a rejection.             |
+**One file, two sections.** Tier 1 splits conformance and quarantine across two files because 1a and
+1b are two projections of one data table through one shared `run_cell` helper — they share
+scaffolding but no fixtures. Tier 2 has no data table: every test is a bespoke scenario over mocked
+transport fixtures, so the same split would mean either duplicating those fixtures or inventing a
+shared module plus fixture re-export for five tests. The quarantine tests therefore live in a marked
+section at the end of the same file, under Tier 1b's rule: one `xfail(strict=True)` test for the
+intended behaviour, one plain test for today's, `strict` spelled out (the repository default is
+non-strict — see Tier 1b), a `reason=` naming the §10 section, and both halves deleted together when
+the ticket lands.
+
+> **Status: implemented**, 29 test functions / 97 cases (4 strict-xfail) in
+> `tests/unit/cmk/gui/watolib/test_services_dispatch.py`, running in about six seconds. Preview
+> entries come from Tier 1's `discovery_matrix.make_entry`, so both tiers describe the same table.
+>
+> **Where the implementation departed from the table below.** The `test` column names the
+> functions as implemented; several rows became more than one test, because their observations do
+> not share a shape: T2.5 became four ("does it start a job", "does it stop one", "does it fetch",
+> "does it rediscover"), T2.8 became three (the permission, the guarded write, the locked host),
+> and T2.1, T2.6, T2.7 and T2.10 became two each. T2.9 was cut down to the permission half and
+> renamed accordingly (see its row). T2.11 lost its xfail partner (see the quarantine section).
+> `prevent_fetching` is asserted through the `@nofetch` automation argument rather than the
+> keyword, and `stop`/`is_active` are the only job-API members patched: everything else is observed
+> at the transport.
+>
+> **Two hosts, not one.** Every `REMOTE` case uses a `remote_host` fixture whose `site` attribute
+> really is the remote site, with that site registered in the folder tree's site table. Against a
+> host on the local site, "the change is scoped to the host's site" and "to the central site" are
+> the same assertion and a local/remote parametrization states one thing twice — and the pre-sync
+> target, which is `host.site_id()` rather than the automation config's site, is likewise
+> indistinguishable. A review found T2.3 in exactly that state.
+>
+> **Collaborators patched that are not transport**, each scoped to the action under test and named
+> in its docstring: `Folder.save_hosts` is made to raise for T2.13, because the documented cause of
+> §10.9(a) is exactly that call requiring folder write; quick setup's `perform_fix_all` and
+> `_get_service_discovery_result` are stubbed for T2.15, where the question is only which
+> `automation_config` reaches the call site; `Host.locked` is forced for T2.8's third test;
+> `ServiceDiscoveryBackgroundJob.is_active`/`stop` are the job-lifecycle seam for T2.5 and T2.11;
+> `LoggedInUser.need_permission` is _wrapped_, not replaced, so the demand is recorded and still
+> enforced; and the endpoint's `make_pending_changes` factory is patched for the quarantine tests,
+> because the endpoint builds its own `PendingChanges` instead of taking one and the recording
+> instance has to get in somehow.
+>
+> The subject of T2.12/T2.14 lives in `cmk/gui/openapi/`, so
+> `//cmk/gui/openapi/api_endpoints` was added to the `setup_tests` target's deps.
+
+#### Conformance
+
+| #     | test                                                                                                                                                                                                                  | pins                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T2.1  | `test_get_check_table_reads_locally_through_the_local_transport`, `test_get_check_table_reads_remotely_by_syncing_then_delegating_the_job`                                                                            | Local → `check_mk_local_automation_serialized("service-discovery-preview", …)`. Remote → `sync_changes_before_remote_automation(site_id)` **then** `do_remote_automation(cfg, "service-discovery-job", [host_name, options])` with the exact options payload, and the result is the deserialized remote payload.                                                                                                                                                                                                                      |
+| T2.2  | `test_write_paths_use_the_given_automation_config`                                                                                                                                                                    | **The PoC's worst defect.** `set_autochecks_v2`, `update_host_labels` and `get_services_labels` all receive the _same_ `automation_config` that was passed to `perform_*`. Fails if any write path is hard-coded local. Passes today: the live instance of this defect class is in the caller, not here — T2.15.                                                                                                                                                                                                                      |
+| T2.3  | `test_tabula_rasa_records_its_change_centrally_on_both_transports`                                                                                                                                                    | B-F2.2: `refresh-autochecks` added before the branch, scoped to the host's site; no equivalent remote change. Parametrized over both transports, each with the host that belongs to it — the remote half is the one that separates "the host's site" from "the site this process runs on".                                                                                                                                                                                                                                            |
+| T2.4  | `test_changes_are_synced_before_a_remote_automation_only`                                                                                                                                                             | B-F2.1: `sync_changes_before_remote_automation` called exactly once on remote, never on local, and with the **host's** site — which is what the code passes, not the automation config's.                                                                                                                                                                                                                                                                                                                                             |
+| T2.5  | `test_only_refresh_and_tabula_rasa_start_the_background_job`, `test_only_stop_stops_a_running_background_job`, `test_prevent_fetching_per_preview_call`, `test_only_tabula_rasa_rediscovers_and_it_adopts_everything` | §6 Matrix B row-by-row: which actions start the job, which call `job.stop()`, `prevent_fetching` per call, and that only `TABULA_RASA` reaches `local_discovery` (with all five `DiscoverySettings` flags `True`). The start and stop guards are **each** parametrized over `is_active` as well as the action, because each is a conjunction of the two and a table where no job ever runs cannot see half of it.                                                                                                                     |
+| T2.6  | `test_discovery_result_wire_shape_per_peer`, `test_discovery_result_round_trips_for_peers_carrying_every_field`                                                                                                       | B-F2.3: `serialize`/`deserialize` for `2.4.0`, `2.5.0b1`, `3.0.0b1` peers — field truncation and the `sources` dict/list shape.                                                                                                                                                                                                                                                                                                                                                                                                       |
+| T2.7  | `test_set_autochecks_change_carries_the_sync_requirement`, `test_update_host_labels_change_is_recorded_for_the_labelled_host`                                                                                         | Change `action_name`, `object_ref`, domains, `force_sync` (from `need_sync`) and site scope for `set-autochecks`, `update-host-labels`, `refresh-autochecks`.                                                                                                                                                                                                                                                                                                                                                                         |
+| T2.8  | `test_service_discovery_context_demands_wato_services`, `test_discovery_failed_flag_is_written_only_when_it_was_set`, `test_discovery_failed_flag_is_left_alone_for_a_locked_host`                                    | P-F3: `wato.services` demanded on entry; `clear_discovery_failed` reached on exit for unlocked hosts and skipped for locked ones. **Assert what the guard decides, not a fixed cost per click** (§5.1): the `hosts.mk` write happens only when the flag is actually set, so the expected number of writes is a function of that flag — one for a flagged host, none for an unflagged or a locked one. The locked case also asserts that the discovery itself still ran, so that an action which did nothing at all cannot satisfy it. |
+| T2.9  | `test_discovery_alone_demands_no_wato_services`                                                                                                                                                                       | The layering fact behind P-F1: `Discovery(...).do_discovery(...)` — the `update_service_phase` shape — demands no `wato.services`, because `_service_discovery_context` is the enforcement point and `Discovery` is not. Conformance, not endorsement: §10.4's fix is at the endpoint, so this stays true afterwards. The endpoint-level gap is T2.12.                                                                                                                                                                                |
+| T2.10 | `test_host_labels_are_written_even_when_no_service_changes`, `test_host_labels_are_written_before_services`                                                                                                           | Ordering, and that labels are written even when the transition is `None`. **The fold happened:** `test_services.py`'s `test_perform_fix_all_clears_host_labels_without_service_changes` (CMK-31896 / CMK-32535) is gone, replaced by the first of these — which asserts the property on the `update-host-labels` automation that leaves the process instead of on the label deltas of a result read back through a patched `local_discovery_preview`, and keeps its two assertions. A pointer comment marks the old site.             |
+
+#### Quarantine
+
+Tier 1b quarantines the divergences of the transition function itself. The ones below sit one layer
+out, in dispatch and side effects. §10.4, §10.9, §10.10 and §10.18 each have a subject that is an
+importable function reachable without the HTTP layer — for §10.4 and §10.9(b) that is the REST
+endpoint's own handler, called directly — which makes them Tier 2 tests rather than deferrals to
+Tier 3; §10.5's REST-level symptom stays with T3.1, and §10.15 belongs to the Nagios
+config-writer tests, where its own section already asks for a regression test.
+
+| #     | subject                                                                         | intended (`xfail(strict=True)`)                            | current (plain)                                                                                                          | ticket   |
+| ----- | ------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------- |
+| T2.11 | a phase update issued while a discovery job is active                           | _no partner here_ — see below                              | `is_active()` ⇒ empty table ⇒ `check_table_created == 0` ⇒ transition `None` ⇒ no write, `204`                           | §10.18   |
+| T2.12 | `update_service_phase_v1`, the endpoint's whole handler                         | `UPDATE_PHASE_PERMISSIONS` declares `wato.services`        | it is not declared and never demanded; the handler writes autochecks _and_ an `ignored_services` rule, and answers `204` | §10.4    |
+| T2.13 | a flagged host, acted on by a user holding `wato.services` but not folder write | the discovery completes                                    | `clear_discovery_failed` reaches `Folder.save_hosts` and raises **after** `set_autochecks_v2` ran                        | §10.9(a) |
+| T2.14 | `update_service_phase_v1` on a host flagged by a failed discovery               | the flag is cleared                                        | the flag stays set indefinitely                                                                                          | §10.9(b) |
+| T2.15 | quick setup's `_run_service_discovery` for a remote-site host                   | `perform_fix_all` receives the derived `automation_config` | receives `LocalAutomationConfig()`, so the autochecks land on the central site                                           | §10.10   |
+
+**Every tripwire must sit no lower than the code the ticket will change.** A strict xfail below
+that line keeps failing after a correct fix, so it never fires and the paired characterization test
+is never deleted — the exact failure mode §7.0 records for A2-F2 and werk 19800, reintroduced by the
+scaffolding meant to prevent it. That rules the layer for three of the five rows here:
+
+- **T2.12 and T2.14 drive `update_service_phase_v1`**, the endpoint's whole handler, not the
+  `_update_single_service_phase` it delegates to. The four existing `need_permission` calls are in
+  the handler, so §10.4's fifth will be too; and §10.9(b) can be fixed in the handler, in the
+  helper, or in `Discovery.do_discovery`, so only a test above all three sees every version of it.
+  A review found both rows driving the helper, where neither could ever turn green.
+- **T2.12's tripwire is the _declared_ permission set, not the demand.** `PermissionValidator`
+  raises in a testing context when an endpoint checks a permission it has not declared
+  (`openapi/restful_objects/validators.py:559-572`), so no fix can land without adding
+  `wato.services` to `UPDATE_PHASE_PERMISSIONS`, whereas where the `need_permission` call ends up is
+  a free choice. The declaration is also what a client reads in the generated documentation, which
+  is half of what the ticket is about.
+- **T2.11 is characterization only, and deliberately has no xfail partner.** §10.18's fix is a `409`
+  driven by a `check_table_created` precondition the _client_ sends. The field belongs to the request
+  model, which the harness here fills in by hand, so a fixed endpoint would answer `409` only for a
+  request carrying the precondition and an xfail would have to guess its spelling to send one.
+  §10.18's tripwire is T3.6, which drives a real request and only has to change the status it
+  expects. The two plain tests stay: they pin the mechanism (empty table, `check_table_created == 0`,
+  no write, `204`) that the precondition replaces.
+
+**T2.13's xfail asserts both outcomes, not the absence of one.** `assert not (raised and written)`
+is also satisfied by a request that neither raised nor wrote anything — a silently dropped write,
+which a strict xfail would report as the ticket having landed. The test therefore branches: if the
+request raised, nothing may have been written and no change recorded; if it did not, the write and
+its pending change must both be there. Today's behaviour (raised **and** written) fails both
+branches, and the dropped-write world fails the second.
+
+T2.15 reaches into `cmk/gui/quick_setup/v0_unstable/predefined/_complete.py` rather than
+`services.py`, which is a module boundary this file otherwise respects; it is here because §10.10
+names T2.2 as the test whose shape it violates, and pinning that shape while leaving the violation
+itself unpinned would cover the wrong half. §10.9's two defects are split across three artifacts
+because they have different subjects: the guard itself
+(`test_discovery_failed_flag_is_written_only_when_it_was_set`, conformance — the flag _is_ cleared
+on the GUI path), the context manager's exit ordering (T2.13), and the endpoint that never enters it
+(T2.14).
 
 ### Tier 3 — REST characterization (extend `tests/openapi/test_openapi_service_discovery.py`)
 
@@ -1637,15 +1740,15 @@ has no method for it either).
 
 ### Volume
 
-| tier | files                                   | test functions | cases                                    | speed                         |
-| ---- | --------------------------------------- | -------------- | ---------------------------------------- | ----------------------------- |
-| 1a   | 1 new + 1 helper module                 | 23             | 70                                       | fast, pure — **implemented**  |
-| 1b   | 1 new                                   | 13             | 70, of which 33 are `xfail(strict=True)` | fast, pure — **implemented**  |
-| 1c   | 1 new (replaces `test_do_discovery.py`) | 3              | 227                                      | fast, pure — **implemented**  |
-| —    | added to the check-engine suite         | 5              | 12, of which 3 are `xfail(strict=True)`  | fast, pure — **implemented**  |
-| 2    | 1 new                                   | 11             | ~27                                      | fast, mocked at the transport |
-| 3    | extend 1                                | 6              | ~36                                      | medium                        |
-| 4    | 1 new                                   | 7 (+ reserved) | ~20                                      | slow, real sites              |
+| tier | files                                   | test functions | cases                                    | speed                                           |
+| ---- | --------------------------------------- | -------------- | ---------------------------------------- | ----------------------------------------------- |
+| 1a   | 1 new + 1 helper module                 | 23             | 70                                       | fast, pure — **implemented**                    |
+| 1b   | 1 new                                   | 13             | 70, of which 33 are `xfail(strict=True)` | fast, pure — **implemented**                    |
+| 1c   | 1 new (replaces `test_do_discovery.py`) | 3              | 227                                      | fast, pure — **implemented**                    |
+| —    | added to the check-engine suite         | 5              | 12, of which 3 are `xfail(strict=True)`  | fast, pure — **implemented**                    |
+| 2    | 1 new                                   | 29             | 97, of which 4 are `xfail(strict=True)`  | fast, mocked at the transport — **implemented** |
+| 3    | extend 1                                | 6              | ~36                                      | medium                                          |
+| 4    | 1 new                                   | 7 (+ reserved) | ~20                                      | slow, real sites                                |
 
 Tier 1 totals 367 cases across the three test files — 334 passing and 33 strict-xfail — running
 in under five seconds. Run it with:
@@ -1895,7 +1998,8 @@ Fix: narrow the accepted set to the four meaningful phases (in `unstable`/v2, or
 ### 10.4 REST `update_discovery_phase` bypasses `wato.services` and `wato.edit`
 
 **Verified:** `may_edit_ruleset` definition; endpoint permission surface; framework validation order.
-Source findings: P-F1, A2-F5.
+Source findings: P-F1, A2-F5. Quarantined as T2.12 in
+`tests/unit/cmk/gui/watolib/test_services_dispatch.py`.
 
 `update_service_phase_v1` calls `Discovery(...).do_discovery(...)` directly, never entering
 `_service_discovery_context` and therefore never checking `wato.services`. Its entire authorization
@@ -1911,6 +2015,9 @@ path performs any permission check of its own. Note `EndpointPermissions(require
 the framework validates it only after the handler has written to disk, and only to confirm declared
 permissions were used. **Implementer note:** adding `need_permission("wato.services")` requires
 extending `UPDATE_PHASE_PERMISSIONS` too, or `PermissionValidator` raises under `is_testing=True`.
+That is also what makes the declaration the right tripwire: T2.12's strict xfail asserts
+`"wato.services" in UPDATE_PHASE_PERMISSIONS`, which no fix can leave untouched, rather than
+guessing which function will end up carrying the `need_permission` call.
 
 ### 10.5 "Update service labels" / "Update discovery parameters" retarget every service on the host
 
@@ -1985,6 +2092,10 @@ created in 2020.
 
 **Verified:** guard in `set_discovery_failed`; `save_hosts` permission check; single producer.
 Source finding: P-F3 (whose cost claim was wrong — the write is guarded and normally a no-op).
+Quarantined in `tests/unit/cmk/gui/watolib/test_services_dispatch.py` as T2.13 (a) and T2.14 (b) —
+two rows rather than one, because the two have different subjects. The conformance test next to them,
+`test_discovery_failed_flag_is_written_only_when_it_was_set`, pins the part that is _not_ a defect:
+on the GUI path the flag is cleared, and only when it was set.
 
 **(a) `clear_discovery_failed` can raise after the discovery has been written.** Its comment claims
 _"We do not check permissions. They are checked during the discovery."_, but when the flag is set it
@@ -2005,7 +2116,8 @@ endpoint through the context manager.
 ### 10.10 Quick setup applies discovery to the central site for remote-site hosts
 
 **Verified:** read the call site; `site_id` comes from an explicit user selection and the surrounding
-code handles remote sites explicitly.
+code handles remote sites explicitly. Quarantined as T2.15 in
+`tests/unit/cmk/gui/watolib/test_services_dispatch.py`.
 
 `_run_service_discovery` (`cmk/gui/quick_setup/v0_unstable/predefined/_complete.py`) receives a
 correctly derived `automation_config` and uses it for `get_check_table` and
@@ -2018,8 +2130,10 @@ explicitly handles remote sites elsewhere (`site_is_local` at `:447`, a remote-s
 `:480`), so this is a missed parameter rather than an unreachable path.
 
 **This is the same defect class as the hackathon PoC's worst bug** — an apply path that is
-unconditionally local — in production code that _survives_ the rewrite. It is exactly what test T2.2
-is designed to catch, and it is the strongest argument for that test.
+unconditionally local — in production code that _survives_ the rewrite. It is exactly the shape test
+T2.2 is designed to catch, and it is the strongest argument for that test. T2.2 itself passes today,
+because `perform_fix_all` does thread the config it is given through every write; the defect is one
+caller up, which is why it needs T2.15 of its own.
 
 ### 10.11 A whole-table save disables the service it was asked to monitor
 
@@ -2447,7 +2561,9 @@ class `fix`, component `wato`, `compatible: yes`.
 
 **Verified:** `execute_discovery_job`, `ServiceDiscoveryBackgroundJob.get_result`,
 `compute_discovery_transition`'s `apply_changes` guard, and the absence of a job probe in
-`update_service_phase`. Source finding: B-F3 (§6.2).
+`update_service_phase`. Source finding: B-F3 (§6.2). The mechanism is characterized as T2.11 in
+`tests/unit/cmk/gui/watolib/test_services_dispatch.py`; the tripwire is T3.6, because the refusal is
+a status code and the precondition is a request field, neither of which exists below the endpoint.
 
 **Proposed title:** _Service discovery: `update_discovery_phase` silently discards the change when a
 discovery background job is running for the host_

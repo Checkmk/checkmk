@@ -170,6 +170,7 @@ py_cmk_test(
         "//cmk/gui/form_specs",
         "//cmk/gui/graphing",
         "//cmk/gui/inventory",
+        "//cmk/gui/openapi/api_endpoints",
         "//cmk/gui/painter:v0_base",
         "//cmk/gui/parentscan",
         "//cmk/gui/plugins/wato",

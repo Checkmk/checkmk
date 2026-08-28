@@ -3,18 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.infoblox.lib import check_infoblox_statistics, DETECT_INFOBLOX
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.infoblox import check_infoblox_statistics
-from cmk.plugins.infoblox.lib import DETECT_INFOBLOX
 
-check_info = {}
+def parse_infoblox_dns_stats(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
-def discover_infoblox_statistics(info):
-    return [(None, None)]
+snmp_section_infoblox_dns_stats = SimpleSNMPSection(
+    name="infoblox_dns_stats",
+    parse_function=parse_infoblox_dns_stats,
+    detect=DETECT_INFOBLOX,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.7779.3.1.1.3.1.1.1",
+        oids=["2", "3", "4", "5", "6", "7"],
+    ),
+)
+
+
+def discover_infoblox_dns_stats(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
 def _saveint(value: str) -> int:
@@ -24,10 +41,10 @@ def _saveint(value: str) -> int:
         return 0
 
 
-def check_infoblox_dns_stats(_no_item, _no_params, info):
-    successes, referrals, nxrrset, nxdomain, recursion, failures = map(_saveint, info[0])
+def check_infoblox_dns_stats(section: StringTable) -> CheckResult:
+    successes, referrals, nxrrset, nxdomain, recursion, failures = map(_saveint, section[0])
 
-    return check_infoblox_statistics(
+    yield from check_infoblox_statistics(
         "dns",
         [
             ("successes", successes, "Since DNS process started", "successful responses"),
@@ -45,19 +62,9 @@ def check_infoblox_dns_stats(_no_item, _no_params, info):
     )
 
 
-def parse_infoblox_dns_stats(string_table: StringTable) -> StringTable | None:
-    return string_table or None
-
-
-check_info["infoblox_dns_stats"] = LegacyCheckDefinition(
+check_plugin_infoblox_dns_stats = CheckPlugin(
     name="infoblox_dns_stats",
-    parse_function=parse_infoblox_dns_stats,
-    detect=DETECT_INFOBLOX,
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.7779.3.1.1.3.1.1.1",
-        oids=["2", "3", "4", "5", "6", "7"],
-    ),
     service_name="DNS statistics",
-    discovery_function=discover_infoblox_statistics,
+    discovery_function=discover_infoblox_dns_stats,
     check_function=check_infoblox_dns_stats,
 )

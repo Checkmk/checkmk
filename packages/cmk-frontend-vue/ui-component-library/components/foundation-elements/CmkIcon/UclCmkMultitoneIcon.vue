@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import { allMultitoneIconOptions } from '@ucl/_ucl/lib/icon'
 import {
   type CmkMultitoneIconColor,
   type CmkMultitoneIconNames,
@@ -17,16 +18,7 @@ export const panelConfig = {
   name: {
     type: 'list' as const,
     title: 'Icon Name',
-    options: [
-      { title: 'Services', name: 'services' },
-      { title: 'Monitoring', name: 'monitoring' },
-      { title: 'Setup', name: 'setup' },
-      { title: 'User', name: 'user' },
-      { title: 'Success', name: 'success' },
-      { title: 'Error', name: 'error' },
-      { title: 'Warning', name: 'warning' },
-      { title: 'Aggregation (two-color)', name: 'aggr' }
-    ] satisfies Options<CmkMultitoneIconNames>[],
+    options: allMultitoneIconOptions satisfies Options<CmkMultitoneIconNames>[],
     initialState: 'services' as CmkMultitoneIconNames
   },
   size: {

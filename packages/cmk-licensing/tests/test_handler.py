@@ -84,3 +84,27 @@ def test_write_licensed_file(
     licensing_handler = LicensingHandlerMock(license_state)
     licensing_handler.persist_licensed_state(state_file_path)
     assert state_file_path.read_text() == expected_file_content
+
+
+def test_license_state_properties_trial() -> None:
+    assert not LicenseState.TRIAL.blocks_distributed_setup_changes_free()
+    assert LicenseState.TRIAL.is_connecting_to_remotes_enabled()
+    assert LicenseState.TRIAL.is_adding_as_remote_enabled()
+
+
+def test_license_state_properties_free() -> None:
+    assert LicenseState.FREE.blocks_distributed_setup_changes_free()
+    assert not LicenseState.FREE.is_connecting_to_remotes_enabled()
+    assert not LicenseState.FREE.is_adding_as_remote_enabled()
+
+
+def test_license_state_properties_licensed() -> None:
+    assert not LicenseState.LICENSED.blocks_distributed_setup_changes_free()
+    assert LicenseState.LICENSED.is_connecting_to_remotes_enabled()
+    assert LicenseState.LICENSED.is_adding_as_remote_enabled()
+
+
+def test_license_state_properties_unlicensed() -> None:
+    assert not LicenseState.UNLICENSED.blocks_distributed_setup_changes_free()
+    assert not LicenseState.UNLICENSED.is_connecting_to_remotes_enabled()
+    assert LicenseState.UNLICENSED.is_adding_as_remote_enabled()

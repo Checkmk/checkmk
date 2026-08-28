@@ -48,7 +48,21 @@ class LicenseState(Enum):
         """Returns True if the site should block distributed changes.
 
         This typically happens when the site enters a free state after a trial expiration."""
+
         return self is LicenseState.FREE
+
+    def is_connecting_to_remotes_enabled(self) -> bool:
+        """Returns True if distributed monitoring features should be enabled (for central sites)."""
+
+        return self in [LicenseState.TRIAL, LicenseState.LICENSED]
+
+    def is_adding_as_remote_enabled(self) -> bool:
+        """Returns True if the site can be added to a distributed monitoring setup (as a remote site)."""
+
+        # Note: it's not clear if UNLICENSED remote sites should be prevented from remote site
+        # automation. This code replicates the behaviour that existed in the past, however, it
+        # probably makes sense to remove the UNLICENSED state here.
+        return self in [LicenseState.TRIAL, LicenseState.LICENSED, LicenseState.UNLICENSED]
 
 
 class LicenseStateError(Exception):

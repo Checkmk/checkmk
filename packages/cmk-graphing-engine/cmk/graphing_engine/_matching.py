@@ -11,6 +11,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._api_plugins import drawn_metric_names_of_graph
+from ._display import metric_display_attributes
 from ._fetch import FetchMetricNamesProtocol
 from ._from_api import (
     build_curve,
@@ -184,6 +185,26 @@ def build_matched_graphs(
             for scalar_kind in _FALLBACK_SCALAR_KINDS
         ]
 
+    def _single_metric_graph(name: MetricName) -> Graph:
+        return Graph(
+            name=name,
+            title=metric_display_attributes(name, localizer, registered_metrics).title,
+            kind=kind,
+            stacks=[
+                Stack(
+                    members=[
+                        build_curve(
+                            drawn_quantity(name, resolved, quantity_builder),
+                            localizer,
+                            registered_metrics,
+                        )
+                    ],
+                    inverse=False,
+                )
+            ],
+            rules=_fallback_rules(name),
+        )
+
     for plugin in registered_graphs:
         parts = _matchable_parts(plugin)
         if not any(
@@ -207,25 +228,6 @@ def build_matched_graphs(
     for name in available:
         if name in claimed or name.startswith(_PREDICT_PREFIX):
             continue
-        _collect(
-            Graph(
-                name=name,
-                title=name,
-                kind=kind,
-                stacks=[
-                    Stack(
-                        members=[
-                            build_curve(
-                                drawn_quantity(name, resolved, quantity_builder),
-                                localizer,
-                                registered_metrics,
-                            )
-                        ],
-                        inverse=False,
-                    )
-                ],
-                rules=_fallback_rules(name),
-            )
-        )
+        _collect(_single_metric_graph(name))
 
     return matched_graphs

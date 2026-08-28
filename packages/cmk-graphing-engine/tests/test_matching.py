@@ -100,7 +100,7 @@ def _fallback(name: MetricName) -> Graph:
     # with its display resolved.
     return Graph(
         name=name,
-        title=name,
+        title=_TITLE.localize(_id),
         kind=_KIND,
         stacks=[_dstack(_rrd(name))],
         rules=[
@@ -236,6 +236,17 @@ def test_build_matched_graphs_falls_back_to_single_metric_graph_for_unclaimed_me
         curve.value for stack in _evaluate(discovered, fetch_data).stacks for curve in stack.members
     ] == [1.0]
     assert _evaluate(discovered, fetch_data).lines == []
+
+
+def test_build_matched_graphs_titles_a_fallback_graph_after_its_metric() -> None:
+    service = _service()
+    cpu_user = MetricName("cpu_user")
+    fetch_data = _FakeRRDFetchData(performance_response={service: _perf_data(_perf(cpu_user))})
+
+    [discovered] = _discover([], fetch_data=fetch_data)
+
+    assert discovered.name == cpu_user
+    assert discovered.title == "Metric"
 
 
 def test_build_matched_graphs_matching_plugin_claims_its_metrics() -> None:

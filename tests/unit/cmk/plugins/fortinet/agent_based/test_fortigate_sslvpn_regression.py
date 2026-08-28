@@ -13,7 +13,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.fortigate_sslvpn import (
+from cmk.plugins.fortinet.agent_based.fortigate_sslvpn import (
     check_fortigate_sslvpn,
     discover_fortigate_sslvpn,
     parse_fortigate_sslvpn,

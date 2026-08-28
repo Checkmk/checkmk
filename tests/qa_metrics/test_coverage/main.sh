@@ -171,21 +171,22 @@ EOF
     # link under coverage instrumentation -- are never built. On top of that:
     #   * doc tests are dropped; the py_doc_test macro expands to a plain
     #     py_test, so they are recognized by their generated runner script
-    #   * tests/unit/qa_metrics is dropped: it tests the QA tooling under
-    #     tests/qa_metrics, which is not part of the source code whose coverage
-    #     we measure, so running it under coverage contributes nothing. For
-    #     change_quality it would even fail the run: its instrumented
-    #     dependencies (cmk-ccc, cmk-werks, pulled in transitively via the
-    #     untested push.py) are never imported by its tests, so coverage.py
-    #     collects no data and the aspect_rules_py test runner crashes with
-    #     NoDataError, failing a target whose tests all pass.
-    #   * omd is dropped: its py_tests cover license/BOM tooling, not shipped
-    #     source code. test_licenses would even fail the run: its
+    #   * requirements tests are dropped: py_requirements_test builds its own
+    #     runner, so nothing starts coverage.py and the target contributes no
+    #     coverage.dat -- only the cost of building the code it checks under
+    #     instrumentation, which it takes as data. Matched by tag; Bazel matches
+    #     attr() against the stringified list, so the bracket/comma delimiters
+    #     pin the whole tag -- a word boundary would also match a tag like
+    #     no-requirements.
+    #   * omd/dependency_management:test_licenses is dropped: its
     #     list_of_dependencies data dep generates an SBOM of the whole product
     #     payload, so building the test's runfiles builds the Rust agent
-    #     controller -- coverage-instrumented, since //packages matches the
-    #     instrumentation filter -- and that link fails (undefined gcov
-    #     references in the static musl link).
+    #     controller -- coverage-instrumented -- and that link fails (undefined
+    #     gcov references in the static musl link).
+    #   * omd/dependency_management:test_manual_dep_manifest is dropped: it
+    #     passes under `bazel test` but not under `bazel coverage`, a second
+    #     coverage.py Collector being created while pytest imports the module, so
+    #     the runner's cov.stop() finds the wrong one on the stack.
     #   * From tests/, only keep openapi, agent-plugin-unit, unit. In particular,
     #     we don't want integration or system tests. They are currently anyway not
     #     bazelized, but even if they were, we wouldn't want to include them in
@@ -204,8 +205,9 @@ EOF
         let t = kind("py_test", tests(//...)) in
         $t
         except attr("srcs", "-doctest-runner\.py", $t)
-        except //tests/unit/qa_metrics/...
-        except //omd/...
+        except attr("tags", "[\[ ]requirements[,\]]", $t)
+        except //omd/dependency_management:test_licenses
+        except //omd/dependency_management:test_manual_dep_manifest
         except (//tests/... except (//tests/openapi/... + //tests/agent-plugin-unit/... + //tests/unit/...))
     ')
     universe=$(grep '^//' <<<"$universe" || true)

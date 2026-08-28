@@ -692,13 +692,6 @@ def _compute_v_axis_min_max(
     return min_value, max_value
 
 
-def _remove_useless_zeroes(label: str) -> str:
-    if "." not in label:
-        return label
-
-    return label.replace(".00 ", " ").replace(".0 ", " ")
-
-
 # .
 #   .--Time Axis-----------------------------------------------------------.
 #   |            _____ _                     _          _                  |

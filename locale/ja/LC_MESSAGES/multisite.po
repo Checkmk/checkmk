@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-08-25 13:08+0000\n"
+"PO-Revision-Date: 2026-08-28 13:55+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -29674,7 +29674,6 @@ msgstr ""
 "リ内のルールよりも優先されます。また、ディレクトリ内ではルールの順序が重要で"
 "あり、リストの上位にあるルールが下位にあるルールよりも優先されます。"
 
-#, fuzzy
 msgid ""
 "Here, you can define field names that should be used in the search. "
 "Wildcards are allowed as described <a href=\"https://www.elastic.co/guide/en/"
@@ -29682,11 +29681,11 @@ msgid ""
 "target=\"_blank\">here</a>. If you want to speed up your search, use defined "
 "indices."
 msgstr ""
-"ここでは、検索に使用するフィールド名を定義することができます。Regexp クエリ"
-"は <a href=\"https://www.elastic.co/guide/en/elasticsearch/reference/current/"
-"query-dsl-regexp-query.html\"target=\"_blank\">here</a>で説明されているように"
-"許可されています。検索を高速化したい場合は、定義済みインデックスを使用しま"
-"す。"
+"ここでは、検索に使用するフィールド名を定義できます。ワイルドカードの使用は"
+"、<a href=\"https://www.elastic.co/guide/en/elasticsearch/reference/current/"
+"query-dsl-query-string-query.html\" target=\"_blank\"> こちら </a> に記載され"
+"ている通り許可されています。検索を高速化したい場合は、定義済みのインデックス"
+"を使用してください。"
 
 #, fuzzy
 msgid ""
@@ -37056,9 +37055,8 @@ msgstr ""
 "監視するホストで `cmk-agent-ctl` ユーティリティの `register` コマンドを実行し"
 "て、できるだけ早く TLS を有効にすることをお勧めします。"
 
-#, fuzzy
 msgid "It is requesting these permissions:"
-msgstr "以下の許可を要求しています。%(grants)s。"
+msgstr "以下の許可を要求しています："
 
 msgid "It is still in use by"
 msgstr "それはまだ使用されています"
@@ -43245,7 +43243,7 @@ msgid "Minute of the hour (0-59)"
 msgstr "分表示(0-59)"
 
 msgid "Minutes"
-msgstr "議事録"
+msgstr "分"
 
 msgid "Mirror margins"
 msgstr "ミラーマージン"
@@ -54950,9 +54948,9 @@ msgstr "リダイレクト URI"
 msgid "Redirect URL (has to be https)"
 msgstr "リダイレクトURL(httpsである必要があります)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Redirect target: %(redirect_uri)s"
-msgstr "ターゲットからの復元: %(title)s"
+msgstr "リダイレクト先: %(redirect_uri)s"
 
 #, fuzzy
 msgid "Redirecting..."

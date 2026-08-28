@@ -288,7 +288,7 @@ def injected_ping_rrds(
         }
         start = int(time.time()) - _WINDOW_START_DAYS_AGO * _DAY
         count = _WINDOW_DAYS * _DAY // _DEFAULT_STEP_SECONDS
-        site.omd("stop")
+        site.stop()
         try:
             injected = {
                 host_name: InjectedPingRrd(
@@ -306,7 +306,7 @@ def injected_ping_rrds(
                 for host_name, shape in shapes.items()
             }
         finally:
-            site.omd("start")
+            site.start()
         yield injected
     finally:
         site.openapi.hosts.bulk_delete(host_names)

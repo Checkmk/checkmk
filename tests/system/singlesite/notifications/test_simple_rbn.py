@@ -12,18 +12,7 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from tests.testlib.site import Site
-
-from .watch_log import WatchLog
-
-
-@pytest.fixture(name="fake_sendmail")
-def fake_sendmail_fixture(site: Site) -> Iterator[None]:
-    site.write_file("local/bin/sendmail", '#!/bin/bash\nset -e\necho "sendmail called with: $@"\n')
-    try:
-        site.run(["chmod", "0775", site.path("local/bin/sendmail").as_posix()])
-        yield
-    finally:
-        site.delete_file("local/bin/sendmail")
+from tests.testlib.watch_log import WatchLog
 
 
 @pytest.fixture(name="fake_notification_rule")

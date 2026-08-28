@@ -14,8 +14,7 @@ import pytest
 from cmk.ruleset_matcher.definition import RuleGroup
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
-
-from .watch_log import WatchLog
+from tests.testlib.watch_log import WatchLog
 
 STATE_UP = 0
 STATE_DOWN = 1

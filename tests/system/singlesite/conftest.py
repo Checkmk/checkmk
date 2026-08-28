@@ -65,3 +65,14 @@ def fixture_web(site: Site) -> CMKWebSession:
 @pytest.fixture(scope="session")
 def ec(site: Site) -> CMKEventConsole:
     return CMKEventConsole(site)
+
+
+@pytest.fixture(name="fake_sendmail")
+def fixture_fake_sendmail(site: Site) -> Iterator[None]:
+    """Spool mail locally instead of trying to reach a real mail transmission agent."""
+    site.write_file("local/bin/sendmail", '#!/bin/bash\nset -e\necho "sendmail called with: $@"\n')
+    try:
+        site.run(["chmod", "0775", site.path("local/bin/sendmail").as_posix()])
+        yield
+    finally:
+        site.delete_file("local/bin/sendmail")

@@ -3,64 +3,85 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any
+
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.fortinet.lib import DETECT_FORTIGATE
 
-check_info = {}
+
+@dataclass(frozen=True)
+class VPNDomain:
+    state: str
+    users: int
+    web_sessions: int
+    tunnels: int
+    tunnels_max: int
 
 
-def parse_fortigate_sslvpn(string_table):
-    parsed = {}
-    for domain_name, domain_info in zip(string_table[0], string_table[1]):
-        parsed[domain_name[0]] = {
-            "state": domain_info[0],
-            "users": int(domain_info[1]),
-            "web_sessions": int(domain_info[2]),
-            "tunnels": int(domain_info[3]),
-            "tunnels_max": int(domain_info[4]),
-        }
-    return parsed
+Section = Mapping[str, VPNDomain]
 
 
-def check_fortigate_sslvpn(item, params, parsed):
-    if not (data := parsed.get(item)):
+def parse_fortigate_sslvpn(string_table: Sequence[StringTable]) -> Section:
+    return {
+        domain_name[0]: VPNDomain(
+            state=domain_info[0],
+            users=int(domain_info[1]),
+            web_sessions=int(domain_info[2]),
+            tunnels=int(domain_info[3]),
+            tunnels_max=int(domain_info[4]),
+        )
+        for domain_name, domain_info in zip(string_table[0], string_table[1])
+    }
+
+
+def discover_fortigate_sslvpn(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_fortigate_sslvpn(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if (data := section.get(item)) is None:
         return
-    if params is None:
-        params = {}
 
     fn_bool_state = {"1": "disabled", "2": "enabled"}
-    yield 0, "%s" % fn_bool_state[data["state"]]
+    yield Result(state=State.OK, summary=fn_bool_state[data.state])
 
-    yield check_levels(
-        data["users"], "active_vpn_users", None, infoname="Users", human_readable_func=str
+    yield from check_levels_v1(
+        data.users, metric_name="active_vpn_users", render_func=str, label="Users"
     )
 
-    yield check_levels(
-        data["web_sessions"],
-        "active_vpn_websessions",
-        None,
-        infoname="Web sessions",
-        human_readable_func=str,
+    yield from check_levels_v1(
+        data.web_sessions,
+        metric_name="active_vpn_websessions",
+        render_func=str,
+        label="Web sessions",
     )
 
-    yield check_levels(
-        data["tunnels"],
-        "active_vpn_tunnels",
-        params.get("tunnel_levels"),
-        infoname="Tunnels",
-        boundaries=(0, data["tunnels_max"]),
-        human_readable_func=str,
+    yield from check_levels_v1(
+        data.tunnels,
+        metric_name="active_vpn_tunnels",
+        levels_upper=params.get("tunnel_levels"),
+        render_func=str,
+        label="Tunnels",
+        boundaries=(0, data.tunnels_max),
     )
 
 
-def discover_fortigate_sslvpn(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["fortigate_sslvpn"] = LegacyCheckDefinition(
+snmp_section_fortigate_sslvpn = SNMPSection(
     name="fortigate_sslvpn",
     detect=DETECT_FORTIGATE,
     fetch=[
@@ -74,8 +95,14 @@ check_info["fortigate_sslvpn"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_fortigate_sslvpn,
+)
+
+
+check_plugin_fortigate_sslvpn = CheckPlugin(
+    name="fortigate_sslvpn",
     service_name="VPN SSL %s",
     discovery_function=discover_fortigate_sslvpn,
     check_function=check_fortigate_sslvpn,
     check_ruleset_name="fortigate_sslvpn",
+    check_default_parameters={},
 )

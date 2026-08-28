@@ -3,45 +3,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
 # .1.3.6.1.4.1.12196.13.0.9.0 1
 # .1.3.6.1.4.1.12196.13.0.10.0 7.1-20b.20140926-1505
 
 
-from collections.abc import Mapping
-from typing import Any
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    exists,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, any_of, equals, exists, SNMPTree, StringTable
-
-check_info = {}
-
-
-def discover_kemp_loadmaster_ha(info: StringTable) -> list[tuple[None, None]]:
-    if info and info[0][0] != "0":
-        return [(None, None)]
-    return []
-
-
-def check_kemp_loadmaster_ha(
-    _no_item: None, _no_params: Mapping[str, Any], info: StringTable
-) -> tuple[int, str]:
-    map_states = {
-        "0": "none",
-        "1": "master",
-        "2": "standby",
-        "3": "passive",
-    }
-
-    return 0, f"Device is: {map_states[info[0][0]]} (Firmware: {info[0][1]})"
+_MAP_STATES = {
+    "0": "none",
+    "1": "master",
+    "2": "standby",
+    "3": "passive",
+}
 
 
 def parse_kemp_loadmaster_ha(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["kemp_loadmaster_ha"] = LegacyCheckDefinition(
+def discover_kemp_loadmaster_ha(section: StringTable) -> DiscoveryResult:
+    if section and section[0][0] != "0":
+        yield Service()
+
+
+def check_kemp_loadmaster_ha(section: StringTable) -> CheckResult:
+    state, firmware = section[0]
+    yield Result(state=State.OK, summary=f"Device is: {_MAP_STATES[state]} (Firmware: {firmware})")
+
+
+snmp_section_kemp_loadmaster_ha = SimpleSNMPSection(
     name="kemp_loadmaster_ha",
     parse_function=parse_kemp_loadmaster_ha,
     detect=all_of(
@@ -55,6 +59,11 @@ check_info["kemp_loadmaster_ha"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.12196.13.0",
         oids=["9", "10"],
     ),
+)
+
+
+check_plugin_kemp_loadmaster_ha = CheckPlugin(
+    name="kemp_loadmaster_ha",
     service_name="HA State",
     discovery_function=discover_kemp_loadmaster_ha,
     check_function=check_kemp_loadmaster_ha,

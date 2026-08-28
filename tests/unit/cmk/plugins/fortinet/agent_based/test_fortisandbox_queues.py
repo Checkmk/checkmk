@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.fortisandbox_queues import (
+from cmk.plugins.fortinet.agent_based.fortisandbox_queues import (
     check_fortisandbox_queues,
     discover_fortisandbox_queues,
     parse_fortisandbox_queues,

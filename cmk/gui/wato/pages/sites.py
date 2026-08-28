@@ -424,6 +424,8 @@ class ModeEditSite(WatoMode):
         if self._site_id is None:
             raise MKUserError(None, _("Site ID must be set"))
 
+        # TODO: Isn't the loop below simply the same as:
+        # site_spec = configured_sites.get(self._site_id, site_spec) | site_spec
         for key, value in configured_sites.get(self._site_id, {}).items():
             # We need to review whether or not we still want to allow setting arbritrary keys
             site_spec.setdefault(key, value)  # type: ignore[misc]

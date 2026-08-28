@@ -804,11 +804,11 @@ def groups_to_attributes_internal_to_api(
             case "force_authuser":
                 fa = cast(FORCE_AUTH_USER, group["attribute"])
                 api_groups.append(
-                    {  # type: ignore[arg-type,misc]
-                        "group_cn": group["cn"],
-                        "attribute_to_set": "visibility_of_hosts_or_services",
-                        "value": ("show_all" if fa[1] is None else "show_for_user_contacts_only"),  # type: ignore[redundant-expr]
-                    }
+                    APIVisibilityOfHostService(
+                        group_cn=group["cn"],
+                        attribute_to_set="visibility_of_hosts_or_services",
+                        value=("show_all" if fa[1] is None else "show_for_user_contacts_only"),  # type: ignore[redundant-expr]
+                    )
                 )
 
             case _:
@@ -1097,8 +1097,8 @@ class SyncPlugins:
 
     def api_response(self) -> APISyncPlugins:
         def checkbox_state(plugin_key: str) -> SYNC_ATTRIBUTE:
-            value = cast(dict, self.active_plugins.get(plugin_key))
-            if value is not None and (attr := value.get("attr")) is not None:  # type: ignore[redundant-expr]
+            value = cast(dict | None, self.active_plugins.get(plugin_key))
+            if value is not None and (attr := value.get("attr")) is not None:
                 return {"state": "enabled", "attribute_to_sync": attr}
             return {"state": "disabled"}
 

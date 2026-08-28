@@ -244,6 +244,8 @@ map_events = {
 }
 
 
+# The suppression below is needed because without an actual pyinotify
+# package available, the superclass is effectively Any.
 class NotifyEventHandler(pyinotify.ProcessEvent):  # type: ignore[misc]
     def process_IN_MOVED_TO(self, event: pyinotify.Event) -> None:
         do_output("movedto", event)

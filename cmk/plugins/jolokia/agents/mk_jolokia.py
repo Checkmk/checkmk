@@ -263,12 +263,12 @@ DEFAULT_CONFIG_TUPLES = (
     (PASSWORD_OPTION, None, "Password to use for connecting."),
     ("mode", "digest", 'Authentication mode. Can be "basic", "digest" or "https".'),
     ("instance", None, "Name of the instance in the monitoring. Defaults to port."),
-    ("verify", None),
+    ("verify", None, ""),
     ("client_cert", None, "Path to client cert for https authentication."),
     ("client_key", None, "Client cert secret for https authentication."),
-    ("service_url", None),
-    ("service_user", None),
-    ("service_password", None),
+    ("service_url", None, ""),
+    ("service_user", None, ""),
+    ("service_password", None, ""),
     (
         "product",
         None,
@@ -277,11 +277,11 @@ DEFAULT_CONFIG_TUPLES = (
         % ", ".join(AVAILABLE_PRODUCTS),
     ),
     ("timeout", 1.0, "Connection/read timeout for requests."),
-    ("custom_vars", []),
+    ("custom_vars", [], ""),
     # List of instances to monitor. Each instance is a dict where
     # the global configuration values can be overridden.
-    ("instances", [{}]),
-)  # type: tuple[tuple[str | None | float | list[Any], ...], ...]
+    ("instances", [{}], ""),
+)  # type: tuple[tuple[str, str | int | float | list[object] | None, str], ...]
 
 
 class SkipInstance(RuntimeError):
@@ -293,7 +293,7 @@ class SkipMBean(RuntimeError):
 
 
 def get_default_config_dict():
-    return {elem[0]: elem[1] for elem in DEFAULT_CONFIG_TUPLES}
+    return {key: default for key, default, _help in DEFAULT_CONFIG_TUPLES}
 
 
 def write_section(name, iterable):

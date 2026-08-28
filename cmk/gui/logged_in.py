@@ -167,12 +167,12 @@ class LoggedInUser:
     def get_attribute(self, key: str, deflt: Any = None) -> Any:
         return self.attributes.get(key, deflt)
 
-    def _set_attribute(self, key: str, value: Any) -> None:
-        self.attributes[key] = value  # type: ignore[literal-required]
+    def _set_attribute(self, key: Literal["language", "ntop_alias"], value: Any) -> None:
+        self.attributes[key] = value
 
-    def _unset_attribute(self, key: str) -> None:
+    def _unset_attribute(self, key: Literal["language"]) -> None:
         with contextlib.suppress(KeyError):
-            del self.attributes[key]  # type: ignore[misc]
+            del self.attributes[key]
 
     @property
     def language(self) -> str:

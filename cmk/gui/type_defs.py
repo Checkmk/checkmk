@@ -355,6 +355,7 @@ class UserSpec(TypedDict, total=False):
     ldap_quarantine: NotRequired[QuarantineInfo | None]
     navbar_changes_action: NotRequired[Literal["full_page", "slideout"] | None]
     created_on_version: NotRequired[str]  # The Checkmk version string when the user was created
+    ntop_alias: NotRequired[str]
 
 
 AnnotatedUserId = Annotated[

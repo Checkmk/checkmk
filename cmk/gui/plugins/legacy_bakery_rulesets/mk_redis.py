@@ -61,6 +61,11 @@ def _valuespec_agent_config_mk_redis() -> CascadingDropdown:
                                     TextInput(
                                         title=_("Name of the instance in the monitoring"),
                                         allow_empty=False,
+                                        regex="^[A-Za-z0-9_][A-Za-z0-9_-]{0,62}$",
+                                        regex_error=_(
+                                            "Use at most 63 letters, digits, underscores and "
+                                            "hyphens, and do not start with a hyphen."
+                                        ),
                                     ),
                                 ),
                                 (

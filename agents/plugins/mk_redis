@@ -17,7 +17,7 @@ CMK_VERSION="3.0.0b1"
 
 # example cfg file /etc/check_mk/mk_redis.cfg
 #
-# REDIS_INSTANCES=(My_First_Redis My_Second_Redis My_socket_Redis)
+# REDIS_INSTANCES=(My_First_Redis My_Second_Redis My_socket_Redis My-Fourth-Redis)
 #
 # REDIS_HOST_My_First_Redis="127.0.0.1"
 # REDIS_PORT_My_First_Redis="6380"
@@ -28,6 +28,10 @@ CMK_VERSION="3.0.0b1"
 
 # REDIS_HOST_My_socket_Redis="/var/redis/redis.sock"
 # REDIS_PORT_My_socket_Redis="unix-socket"
+#
+# characters invalid in a variable name become "_"
+# REDIS_HOST_My_Fourth_Redis="127.0.0.1"
+# REDIS_PORT_My_Fourth_Redis="6381"
 
 load_config() {
     # source optional configuration file
@@ -37,12 +41,18 @@ load_config() {
     fi
 }
 
+variable_suffix() {
+    # an instance name may contain characters invalid in a variable name
+    printf '%s' "$1" | LC_ALL=C tr -c 'A-Za-z0-9_' '_'
+}
+
 redis_args() {
     INSTANCE=$1
+    SUFFIX=$(variable_suffix "$INSTANCE")
 
-    HOST="REDIS_HOST_$INSTANCE"
-    PORT="REDIS_PORT_$INSTANCE"
-    PASSWORD="REDIS_PASSWORD_$INSTANCE"
+    HOST="REDIS_HOST_$SUFFIX"
+    PORT="REDIS_PORT_$SUFFIX"
+    PASSWORD="REDIS_PASSWORD_$SUFFIX"
 
     # if autodetection is used, rewrite instance name for section output
     if [[ "$IS_DETECTED" == true ]]; then
@@ -83,8 +93,7 @@ main() {
             for inst in $REDIS_INSTANCE; do
                 IFS=":" read -ra parts <<<"$inst"
 
-                # dot of IP can not be used in variable names
-                REDIS_NAME=$(echo "$inst" | tr ':./' '_')
+                REDIS_NAME=$(variable_suffix "$inst")
 
                 # create dynamic variables
                 if [[ "${parts[0]}" == "unixsocket" ]]; then

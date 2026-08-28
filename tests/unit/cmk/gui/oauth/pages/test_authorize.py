@@ -109,12 +109,16 @@ def fixture_mock_vue_manifest() -> Iterator[None]:
         yield
 
 
-@pytest.fixture(name="registered_client_id")
-def fixture_registered_client_id() -> str:
+def _register_client(client_name: str | None) -> str:
     with get_client_store() as store:
-        registration = store.register([_REDIRECT_URI], "Test Client")
+        registration = store.register([_REDIRECT_URI], client_name)
         assert registration.is_ok()
         return registration.ok.client_id
+
+
+@pytest.fixture(name="registered_client_id")
+def fixture_registered_client_id() -> str:
+    return _register_client("Test Client")
 
 
 @pytest.fixture(name="valid_transaction")
@@ -141,7 +145,9 @@ def fixture_security_log(mocker: MockerFixture) -> MagicMock:
 
 @pytest.mark.usefixtures("mock_vue_manifest")
 class TestOAuthAuthorizePage:
-    def test_shows_consent_page_on_get(self, flask_app: Flask, registered_client_id: str) -> None:
+    def test_shows_consent_page_on_get(
+        self, flask_app: Flask, registered_client_id: str, patch_theme: None
+    ) -> None:
         with flask_app.test_request_context(
             query_string=_authorize_request(client_id=registered_client_id, state="xyz")
         ):
@@ -156,7 +162,56 @@ class TestOAuthAuthorizePage:
             assert 'name="_authorize"' in body
             assert 'name="_deny"' in body
 
-    def test_answers_head_like_get(self, flask_app: Flask, registered_client_id: str) -> None:
+    def test_shows_the_registered_client_name(self, flask_app: Flask, patch_theme: None) -> None:
+        client_id = _register_client("My Test App")
+
+        with flask_app.test_request_context(query_string=_authorize_request(client_id=client_id)):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
+            assert response.status_code == 200
+            body = response.get_data(as_text=True)
+
+        assert "My Test App" in body
+
+    def test_falls_back_to_the_client_id_when_unnamed(
+        self, flask_app: Flask, patch_theme: None
+    ) -> None:
+        client_id = _register_client(None)
+
+        with flask_app.test_request_context(query_string=_authorize_request(client_id=client_id)):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
+            assert response.status_code == 200
+            body = response.get_data(as_text=True)
+
+        assert client_id in body
+
+    def test_escapes_the_client_name(self, flask_app: Flask, patch_theme: None) -> None:
+        # <a href> specifically: escaping.escape_text()'s tag allowlist would
+        # let this back through as a live link, unlike a plain <script> probe.
+        client_id = _register_client('<a href="http://evil.example">click here</a>')
+
+        with flask_app.test_request_context(query_string=_authorize_request(client_id=client_id)):
+            flask_app.preprocess_request()
+            OAuthAuthorizePage(lambda: True).handle_page(
+                PageContext(config=Config(), request=request)
+            )
+
+            assert response.status_code == 200
+            body = response.get_data(as_text=True)
+
+        assert '<a href="http://evil.example">' not in body
+        assert "&lt;a href=&quot;http://evil.example&quot;&gt;" in body
+
+    def test_answers_head_like_get(
+        self, flask_app: Flask, registered_client_id: str, patch_theme: None
+    ) -> None:
         # Werkzeug adds HEAD to every GET route, so turning it away would fail a
         # request clients are free to make.
         with flask_app.test_request_context(
@@ -186,7 +241,7 @@ class TestOAuthAuthorizePage:
             assert response.status_code == 405
 
     def test_consent_page_offers_the_wider_scope_too(
-        self, flask_app: Flask, registered_client_id: str
+        self, flask_app: Flask, registered_client_id: str, patch_theme: None
     ) -> None:
         # Every supported scope is offered regardless of what was requested;
         # only the preselection reflects what the client actually asked for.
@@ -217,7 +272,11 @@ class TestOAuthAuthorizePage:
         ],
     )
     def test_consent_page_offers_the_narrower_scope_too(
-        self, flask_app: Flask, registered_client_id: str, requested_scope: str
+        self,
+        flask_app: Flask,
+        registered_client_id: str,
+        requested_scope: str,
+        patch_theme: None,
     ) -> None:
         with flask_app.test_request_context(
             query_string=_authorize_request(client_id=registered_client_id, scope=requested_scope)
@@ -264,7 +323,7 @@ class TestOAuthAuthorizePage:
         assert parse_qs(urlsplit(target_url).query)["error"] == ["invalid_request"]
 
     def test_consent_form_posts_back_to_the_request_path(
-        self, flask_app: Flask, registered_client_id: str
+        self, flask_app: Flask, registered_client_id: str, patch_theme: None
     ) -> None:
         # Reached via the external OAuth issuer alias (/oauth-<site>/authorize,
         # see system_apache.py), not the backend's own /check_mk/oauth_authorize.py

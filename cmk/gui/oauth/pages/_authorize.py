@@ -9,6 +9,7 @@ import urllib.parse
 from collections.abc import Callable
 from typing import override
 
+from cmk.ccc.site import omd_site
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
@@ -26,10 +27,13 @@ from cmk.gui.scopes import (
     parse_scopes,
     ScopeId,
 )
+from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.security_log_events import OAuthAuthorizationFailureEvent
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.utils.security_event import log_security_event
+from cmk.web.utils import escaping
+from cmk.web.utils.html import HTML
 
 _SCOPE_REQUESTED_VARNAME = "scope"
 _SCOPE_SELECTED_VARNAME = "_scope"
@@ -134,7 +138,12 @@ class OAuthAuthorizePage(Page):
                 )
             case "GET" | "HEAD":
                 # Werkzeug adds HEAD to every GET route and strips the body.
-                self._get(ctx, redirect_uri=redirect_uri, requested_scopes=requested_scopes)
+                self._get(
+                    ctx,
+                    redirect_uri=redirect_uri,
+                    requested_scopes=requested_scopes,
+                    client_name=registration.client_name,
+                )
             case _:
                 # RFC 6749 section 3.1 gives this endpoint GET and POST, so
                 # there is nothing else to answer.
@@ -142,32 +151,62 @@ class OAuthAuthorizePage(Page):
         return None
 
     def _get(
-        self, ctx: PageContext, redirect_uri: str, requested_scopes: frozenset[ScopeId]
+        self,
+        ctx: PageContext,
+        redirect_uri: str,
+        requested_scopes: frozenset[ScopeId],
+        client_name: str | None,
     ) -> None:
         client_id = request.var("client_id")
 
-        self._open_center_frame(ctx, _("Authorize access"))
-        html.h1(_("Authorize access"))
+        self._open_center_frame(ctx, _("Authorize application"))
+        self._render_logo()
+        html.h1(_("Authorize application"))
         if client_id is None:
             html.p(_("An application is requesting access to this Checkmk site."))
         else:
             html.p(
-                _('The application "%(client_id)s" is requesting access to this Checkmk site.')
-                % {"client_id": client_id}
+                HTML.without_escaping(
+                    _("<b>%(client_name)s</b> is requesting access to this Checkmk site.")
+                    % {"client_name": escaping.escape(client_name or client_id)}
+                )
             )
+        html.div(
+            HTML.without_escaping(
+                _("Granting access as <b>%(user)s</b> on site <b>%(site)s</b>.")
+                % {
+                    "user": escaping.escape(user.alias or ""),
+                    "site": escaping.escape(str(omd_site())),
+                }
+            ),
+            class_="grant_context",
+        )
         # Explicit action: this page is also reachable via the external OAuth
         # issuer alias (/oauth-<site>/authorize, see system_apache.py), where
         # the default relative "oauth_authorize.py" action would resolve
         # against the wrong base path and never reach the backend.
         with html.form_context("oauth_authorize", method="POST", action=request.path):
-            html.p(_("It is requesting these permissions:"))
+            html.div(_("Permissions requested"), class_="permissions_title")
             self._render_scope_choice(requested_scopes)
             html.p(_("Your own user permissions still apply."))
             html.p(_("Redirect target: %(redirect_uri)s") % {"redirect_uri": redirect_uri})
-            html.button("_authorize", _("Authorize"), cssclass="hot")
+            html.open_div(class_="actions")
             html.button("_deny", _("Deny"))
+            html.button("_authorize", _("Approve"), cssclass="hot")
+            html.close_div()
             html.hidden_fields()
         self._close_center_frame()
+
+    def _render_logo(self) -> None:
+        html.open_a(href="https://checkmk.com", class_="login_window_logo_link")
+        html.img(
+            src=theme.detect_icon_path(
+                icon_name="login_logo" if theme.has_custom_logo("login_logo") else "checkmk_logo",
+                prefix="",
+            ),
+            id_="logo",
+        )
+        html.close_a()
 
     def _post(
         self,
@@ -202,7 +241,7 @@ class OAuthAuthorizePage(Page):
         # the user reaches the normal, navigable GUI, just like those.
         html.render_headfoot = False
         html.add_body_css_class("login")
-        html.add_body_css_class("two_factor")
+        html.add_body_css_class("oauth_authorize")
         make_header(
             html,
             title=title,
@@ -304,14 +343,27 @@ class OAuthAuthorizePage(Page):
     def _render_scope_choice(self, requested_scopes: frozenset[ScopeId]) -> None:
         # Preselected, so approving an untouched form binds what was asked for.
         as_requested = ScopeId.WRITE if ScopeId.WRITE in requested_scopes else ScopeId.READ
-        html.open_p()
-        for index, scope in enumerate(ScopeLabels.keys()):
-            if index:
-                html.br()
-            html.radiobutton(
-                _SCOPE_SELECTED_VARNAME,
-                scope.value,
-                checked=scope is as_requested,
-                label=ScopeLabels[scope],
+        html.add_form_var(_SCOPE_SELECTED_VARNAME)
+        html.open_div(class_="permissions")
+        for scope, description in ScopeLabels.items():
+            checked = scope is as_requested
+            if html.request.has_var(_SCOPE_SELECTED_VARNAME):
+                checked = html.request.var(_SCOPE_SELECTED_VARNAME) == scope.value
+            id_ = f"rb_{_SCOPE_SELECTED_VARNAME}_{scope.value}"
+            html.label(
+                html.render_input(
+                    name=_SCOPE_SELECTED_VARNAME,
+                    type_="radio",
+                    value=scope.value,
+                    checked="" if checked else None,
+                    id_=id_,
+                )
+                + html.render_span(
+                    html.render_span(scope.value, class_="code")
+                    + html.render_div(description, class_="desc"),
+                    class_="permission_text",
+                ),
+                for_=id_,
+                class_="permission_row",
             )
-        html.close_p()
+        html.close_div()

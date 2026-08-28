@@ -26,6 +26,7 @@ class ClientRegistration:
 
     client_id: ClientId
     redirect_uris: list[str]
+    # Unauthenticated free text (RFC 7591) -- never render without escaping.
     client_name: str | None
     registered_at: datetime
 

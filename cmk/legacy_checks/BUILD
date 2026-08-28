@@ -13,6 +13,5 @@ py_library(
         "//cmk/legacy_includes",
         "//cmk/plugins",
         "//packages/cmk-plugin-apis:agent_based",
-        "//packages/cmk-plugins:lib",
     ],
 )

@@ -2,8 +2,6 @@ set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/plugins/OWNERS_DEFINITION
 
-per-file aws*=file:/component_owners/plugins_aws/OWNERS_DEFINITION
-per-file aws*=set noparent
 per-file datapower_*=file:/component_owners/plugins_datapower/OWNERS_DEFINITION
 per-file datapower_*=set noparent
 per-file ddn_s2a_*=file:/component_owners/plugins_ddn_s2a/OWNERS_DEFINITION
@@ -14,16 +12,10 @@ per-file f5_bigip_*=file:/component_owners/plugins_f5/OWNERS_DEFINITION
 per-file f5_bigip_*=set noparent
 per-file fireeye_*=file:/component_owners/plugins_fireeye/OWNERS_DEFINITION
 per-file fireeye_*=set noparent
-per-file fortigate_*=file:/component_owners/plugins_fortinet/OWNERS_DEFINITION
-per-file fortigate_*=set noparent
-per-file fortisandbox_*=file:/component_owners/plugins_fortinet/OWNERS_DEFINITION
-per-file fortisandbox_*=set noparent
 per-file fsc_*=file:/component_owners/plugins_fujitsu/OWNERS_DEFINITION
 per-file fsc_*=set noparent
 per-file hitachi_*=file:/component_owners/plugins_hitachi/OWNERS_DEFINITION
 per-file hitachi_*=set noparent
-per-file infoblox_*=file:/component_owners/plugins_infoblox/OWNERS_DEFINITION
-per-file infoblox_*=set noparent
 per-file innovaphone_*=file:/component_owners/plugins_innovaphone/OWNERS_DEFINITION
 per-file innovaphone_*=set noparent
 per-file intel_true_scale_*=file:/component_owners/plugins_intel/OWNERS_DEFINITION
@@ -44,8 +36,6 @@ per-file prometheus_*=file:/component_owners/plugins_prometheus/OWNERS_DEFINITIO
 per-file prometheus_*=set noparent
 per-file ra32e_*=file:/component_owners/plugins_roomalert/OWNERS_DEFINITION
 per-file ra32e_*=set noparent
-per-file rabbitmq_*=file:/component_owners/plugins_rabbitmq/OWNERS_DEFINITION
-per-file rabbitmq_*=set noparent
 per-file raritan_*=file:/component_owners/plugins_raritan/OWNERS_DEFINITION
 per-file raritan_*=set noparent
 per-file sap_state*=file:/component_owners/plugins_sap/OWNERS_DEFINITION
@@ -66,8 +56,6 @@ per-file tinkerforge*=file:/component_owners/plugins_tinkerforge/OWNERS_DEFINITI
 per-file tinkerforge*=set noparent
 per-file ucs_*=file:/component_owners/plugins_cisco/OWNERS_DEFINITION
 per-file ucs_*=set noparent
-per-file vnx_*=file:/component_owners/plugins_emc/OWNERS_DEFINITION
-per-file vnx_*=set noparent
 per-file vutlan_*=file:/component_owners/plugins_vutlan/OWNERS_DEFINITION
 per-file vutlan_*=set noparent
 

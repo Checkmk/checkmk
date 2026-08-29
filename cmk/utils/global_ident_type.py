@@ -8,6 +8,9 @@ from typing import TypedDict
 PROGRAM_ID_DCD = "dcd"
 PROGRAM_ID_QUICK_SETUP = "quick_setup"
 PROGRAM_ID_OAUTH = "oauth"
+PROGRAM_ID_CUSTOM_SERVICE = "custom_service"
+
+PROGRAM_IDS_LOCKED_BY_CONF_BUNDLE = frozenset({PROGRAM_ID_QUICK_SETUP, PROGRAM_ID_CUSTOM_SERVICE})
 
 
 class GlobalIdent(TypedDict):

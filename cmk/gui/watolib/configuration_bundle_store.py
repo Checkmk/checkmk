@@ -8,7 +8,7 @@ from typing import NewType, NotRequired, TypedDict, TypeGuard
 from cmk.gui.hooks import request_memoize
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import multisite_dir
-from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_QUICK_SETUP
+from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_IDS_LOCKED_BY_CONF_BUNDLE
 
 BundleId = NewType("BundleId", str)
 
@@ -16,7 +16,7 @@ BundleId = NewType("BundleId", str)
 def is_locked_by_quick_setup(
     ident: GlobalIdent | None, *, check_reference_exists: bool = True
 ) -> TypeGuard[GlobalIdent]:
-    """Check if the given ident of a config object is locked by the quick setup program.
+    """Check if the given ident of a config object is locked by a configuration bundle.
 
     Args:
         ident:
@@ -32,7 +32,7 @@ def is_locked_by_quick_setup(
     """
     return (
         ident is not None
-        and ident["program_id"] == PROGRAM_ID_QUICK_SETUP
+        and ident["program_id"] in PROGRAM_IDS_LOCKED_BY_CONF_BUNDLE
         and (not check_reference_exists or ident["instance_id"] in load_configuration_bundles())
     )
 

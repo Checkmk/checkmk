@@ -19,6 +19,8 @@ py_library(
     imports = ["../.."],
     deps = [
         ":sysmon",
+        # The faked Livestatus fleet, shared with the in-process comparison suite so the same
+        # generated estate serves both.
         requirement("pytest"),
         requirement("psycopg"),
         requirement("jira"),
@@ -64,6 +66,7 @@ test_suite(
     tags = ["manual"],
     tests = [
         "//non-free/packages/cmk-data-backend:performance",
+        "//tests/performance/monitoring_views/in_process",
     ],
 )
 

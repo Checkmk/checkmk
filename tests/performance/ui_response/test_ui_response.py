@@ -109,6 +109,20 @@ def _monitored_host(perftest: PerformanceTest) -> Iterator[str]:
             wait_for_selector=MONITORING_TABLE_ROW,
             max_average_duration=MONITORING_PAGE_MAX_SECONDS,
         ),
+        # The classic views the two pages above replace, measured the same way so the pair can
+        # be compared. A classic view is server-rendered, so its table is in the document and
+        # `domcontentloaded` is the whole story; naming a row selector would only add the wait
+        # for an element that is already there.
+        CmkPageUrl(
+            "view_all_hosts",
+            "view.py?view_name=allhosts",
+            max_average_duration=MONITORING_PAGE_MAX_SECONDS,
+        ),
+        CmkPageUrl(
+            "view_host_services",
+            "view.py?view_name=host&host={monitored_host}&site={site}",
+            max_average_duration=MONITORING_PAGE_MAX_SECONDS,
+        ),
     ],
     ids=lambda url: url.id,
 )

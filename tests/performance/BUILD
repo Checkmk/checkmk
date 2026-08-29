@@ -41,9 +41,13 @@ py_library(
         "sysmon.py",
     ],
     imports = ["../.."],
-    # Also used by performance suites living in their components, so their
-    # resource tracking feeds the same reporting pipeline.
-    visibility = ["//non-free/packages/cmk-data-backend:__pkg__"],
+    # Also used by performance suites living in their components, and by the scenario
+    # packages here that carry a Bazel target of their own, so their resource tracking feeds
+    # the same reporting pipeline.
+    visibility = [
+        "//non-free/packages/cmk-data-backend:__pkg__",
+        "//tests/performance:__subpackages__",
+    ],
     deps = [
         "//tests:pkg_marker",
         "//tests/testlib",

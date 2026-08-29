@@ -15,6 +15,11 @@ from tests.performance.perftest import PerformanceTest
 from tests.performance.ui_response import scenario
 from tests.performance.ui_response.scenario import CmkPageUrl
 
+#: Deliberately loose. These are the first figures anyone has for the monitoring pages, and
+#: the first runs are for learning what they are rather than policing a threshold nobody has
+#: agreed. Tighten once a baseline exists.
+MONITORING_PAGE_MAX_SECONDS = 30.0
+
 
 @pytest.mark.parametrize(
     "page_url",
@@ -25,6 +30,14 @@ from tests.performance.ui_response.scenario import CmkPageUrl
         CmkPageUrl(
             "host_parameters",
             "wato.py?folder={folder}&host={host}&mode=object_parameters",
+        ),
+        # The classic view, measured the same way so it can be compared with the new pages of
+        # later branches. A classic view is server-rendered, so its table is in the document
+        # and `domcontentloaded` is the whole story.
+        CmkPageUrl(
+            "view_all_hosts",
+            "view.py?view_name=allhosts",
+            max_average_duration=MONITORING_PAGE_MAX_SECONDS,
         ),
     ],
     ids=lambda url: url.id,

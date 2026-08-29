@@ -21,6 +21,8 @@ py_library(
         ":sysmon",
         # The faked Livestatus fleet, shared with the in-process comparison suite so the same
         # generated estate serves both.
+        "//tests/performance/monitoring_views:livestatus_fake",
+        "//tests/performance/monitoring_views:site_comparison",
         requirement("pytest"),
         requirement("psycopg"),
         requirement("jira"),

@@ -40,6 +40,13 @@ from tests.testlib.site import (  # noqa: E402
 
 site_factory = get_site_factory(prefix="perf_")
 
+# The in-process half of the monitoring-view comparison is a Bazel suite: it runs the GUI in this
+# process against faked `cmk.utils.paths`, which its conftest sets up at import time. Collecting it
+# inside a run that drives real sites would repoint those paths at a temp directory and break every
+# site test, so it is reached only through its own Bazel target. Its own directory is what gets
+# named here, because a conftest is loaded whenever the directory holding it is collected at all.
+collect_ignore = ["monitoring_views/in_process"]
+
 logger = logging.getLogger(__name__)
 
 
@@ -71,6 +78,55 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         type=int,
         help="The number of warmup rounds used for each scenario.",
         default=0,
+    )
+    parser.addoption(
+        "--fake-remotes",
+        action="store",
+        type=int,
+        help=(
+            "Number of faked Livestatus remote sites to serve and connect to the central site, "
+            "for the monitoring-view comparison. Zero uses the real distributed setup instead. "
+            "Faked by default: a faked remote costs the central site what a real one does (see "
+            "the fidelity test in the same module), and twenty of them fit on one machine."
+        ),
+        default=20,
+    )
+    parser.addoption(
+        "--fake-remote-hosts",
+        action="store",
+        type=int,
+        help="Number of hosts each faked remote site monitors.",
+        default=500,
+    )
+    parser.addoption(
+        "--fake-remote-latency-ms",
+        action="store",
+        type=float,
+        help=(
+            "Delay every faked remote adds before answering, in milliseconds. A fan-out is "
+            "issued in parallel, so this costs one link's latency per round trip a page takes - "
+            "which is what makes the round-trip difference between two pages visible."
+        ),
+        default=0.0,
+    )
+    parser.addoption(
+        "--fake-remote-proxy",
+        action="store_true",
+        help=(
+            "Reach the faked remotes through the Livestatus proxy, the way the commercial "
+            "editions reach a distributed setup, instead of connecting to each site directly."
+        ),
+        default=False,
+    )
+    parser.addoption(
+        "--row-limit-real",
+        action="store",
+        choices=("soft", "hard", "none"),
+        help=(
+            "Which row limit the monitoring pages are measured at against a real site: 'soft' "
+            "(1000 rows, either page's default), 'hard' (5000) or 'none' (no limit)."
+        ),
+        default="soft",
     )
     parser.addoption(
         "--object-count",
@@ -294,3 +350,14 @@ def _perftest_dist(
     return PerformanceTest(
         central_site, remote_sites=[remote_site, remote_site_2], pytestconfig=pytestconfig
     )
+
+
+def pytest_terminal_summary(terminalreporter: pytest.TerminalReporter) -> None:
+    """Print the monitoring-page comparison, if this run produced one."""
+    from tests.performance.monitoring_views.test_monitoring_views import REPORT
+
+    if not (lines := REPORT.lines()):
+        return
+    terminalreporter.write_sep("=", "monitoring page comparison (real site)")
+    for line in lines:
+        terminalreporter.write_line(line)

@@ -35,7 +35,7 @@ AGENT_DUMP_GENERATOR = "ui_response_dump_generator.py"
 def _monitored_host(perftest: PerformanceTest) -> Iterator[str]:
     """One host with its services discovered, for pages that must address a real object.
 
-    The Services-of-a-host page lists the services of one named host, so pointing it at a
+    The services-of-a-host view lists the services of one named host, so pointing it at a
     host that does not exist would time an error page and report it as a page-load figure.
     The generated hosts of the other scenarios cannot be relied on: their bulk discovery
     belongs to a scenario of its own, so whether any of them has services depends on what
@@ -100,6 +100,20 @@ def _monitored_host(perftest: PerformanceTest) -> Iterator[str]:
             "monitor_all_hosts",
             "monitor_all_hosts.py",
             wait_for_selector=MONITORING_TABLE_ROW,
+            max_average_duration=MONITORING_PAGE_MAX_SECONDS,
+        ),
+        # The classic views, measured the same way so they can be compared with the page above
+        # and with master's new pages. A classic view is server-rendered, so its table is in the
+        # document and `domcontentloaded` is the whole story; naming a row selector would only
+        # add the wait for an element that is already there.
+        CmkPageUrl(
+            "view_all_hosts",
+            "view.py?view_name=allhosts",
+            max_average_duration=MONITORING_PAGE_MAX_SECONDS,
+        ),
+        CmkPageUrl(
+            "view_host_services",
+            "view.py?view_name=host&host={monitored_host}&site={site}",
             max_average_duration=MONITORING_PAGE_MAX_SECONDS,
         ),
     ],

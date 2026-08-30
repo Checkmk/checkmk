@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from typing import Any
 
@@ -18,12 +17,11 @@ from cmk.plugins.ibm_mq.lib import ibm_mq_check_version, is_ibm_mq_service_vanis
 pytestmark = pytest.mark.checks
 
 
-def parse_info(lines, separator=None):
+def parse_info(lines: str, separator: str | None = None) -> list[list[str]]:
     result = []
     for l in lines.splitlines():
         l = l.strip()
-        l = l.split(separator)
-        result.append(l)
+        result.append(l.split(separator))
     return result
 
 

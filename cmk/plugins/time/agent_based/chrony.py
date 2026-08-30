@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 # Example output from agent:
 # <<<chrony>>>
@@ -22,6 +21,7 @@
 # 506 Cannot talk to daemon
 import contextlib
 from calendar import timegm
+from collections.abc import Mapping
 from time import strptime, time
 from typing import Any
 
@@ -29,6 +29,8 @@ from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     render,
     Result,
     Service,
@@ -79,7 +81,9 @@ agent_section_chrony = AgentSection(
 )
 
 
-def discover_chrony(section_chrony, section_ntp):
+def discover_chrony(
+    section_chrony: dict[str, Any] | None, section_ntp: object | None
+) -> DiscoveryResult:
     if not section_chrony:
         return
     if section_ntp and "error" in section_chrony:
@@ -88,7 +92,11 @@ def discover_chrony(section_chrony, section_ntp):
     yield Service()
 
 
-def check_chrony(params, section_chrony, section_ntp):
+def check_chrony(
+    params: Mapping[str, Any],
+    section_chrony: dict[str, Any] | None,
+    section_ntp: object | None,
+) -> CheckResult:
     """
     check if agent returned error message
     check if chrony can reach NTP servers

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import argparse
 import sys
@@ -26,7 +25,7 @@ from buildscripts.scripts.lib.registry import (
 Edition = Literal["community", "ultimate", "pro", "ultimatemt"]
 
 
-def main():
+def main() -> None:
     arguments = parse_arguments()
     editions = list(load_editions_file(arguments.editions_file)["editions"])
     editions = [arguments.edition] if arguments.edition != "all" else editions

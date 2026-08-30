@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import hashlib
@@ -339,7 +338,7 @@ def assert_hash_matches_package_content(
         return AssertResult(assertion_ok=True, message="")
 
 
-def _download_file(url, credentials: Credentials, destination: Path):
+def _download_file(url: str, credentials: Credentials, destination: Path) -> None:
     with requests.get(
         url, auth=(credentials.username, credentials.password), stream=True, timeout=20
     ) as r:

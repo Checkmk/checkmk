@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import sys
@@ -63,7 +62,7 @@ def print_editions(_args: Args, loaded_yaml: dict) -> None:
     print(" ".join(sorted(loaded_yaml["editions"].keys())))
 
 
-def test_distro_lists():
+def test_distro_lists() -> None:
     edition_distros = load_editions_file(Path(__file__).parent.parent.parent / "editions.yml")[
         "editions"
     ]

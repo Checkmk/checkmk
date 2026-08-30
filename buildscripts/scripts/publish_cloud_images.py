@@ -6,7 +6,6 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import abc
 import argparse
@@ -111,7 +110,7 @@ class CloudPublisher(abc.ABC):
         self.image_name = image_name
 
     @abc.abstractmethod
-    async def publish(self): ...
+    async def publish(self) -> None: ...
 
     @staticmethod
     def build_release_notes_url(version: str) -> str:
@@ -322,7 +321,7 @@ class AzurePublisher(CloudPublisher):
         assert isinstance(version.base, _BaseVersion)
         return f"{version.base.major}.{version.base.minor}.{version.release.value}"
 
-    async def build_gallery_image(self):
+    async def build_gallery_image(self) -> None:
         image_id = self.get_azure_image_id()
         print(f"Creating new gallery image from {self.version=} by using {image_id=}")
         self.update_succesful(
@@ -355,7 +354,7 @@ class AzurePublisher(CloudPublisher):
         )
 
     @override
-    async def publish(self):
+    async def publish(self) -> None:
         """
         Azure's update process has 2 steps:
         * first, we need to create a gallery image from the VM image which was pushed by packer

@@ -5,7 +5,6 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import sys
@@ -61,7 +60,7 @@ GEN_ID_COUNT = {"c": 0}
 def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:
     GEN_ID_COUNT["c"] = 0
 
-    def _gen_id():
+    def _gen_id() -> str:
         GEN_ID_COUNT["c"] += 1
         return str(GEN_ID_COUNT["c"])
 

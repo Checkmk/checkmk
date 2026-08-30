@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 
 import pytest
 from pytest_mock import MockerFixture
@@ -18,7 +17,7 @@ from cmk.ruleset_matcher import tags
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 
 
-def _tag_test_cfg():
+def _tag_test_cfg() -> Mapping[str, object]:
     return {
         "tag_groups": [
             {

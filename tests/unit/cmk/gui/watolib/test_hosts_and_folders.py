@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 import os
@@ -17,7 +16,7 @@ from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from itertools import count
-from typing import cast
+from typing import cast, Literal
 from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
 
@@ -37,7 +36,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import get_default_config, make_config_object
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.logged_in import LoggedInSuperUser
+from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.search.matchers import MatchItem
 from cmk.gui.utils.roles import UserPermissions
@@ -552,7 +551,11 @@ def fixture_patch_may(mocker: MagicMock) -> None:
 
     mocker.patch.object(hosts_and_folders.Folder, "_prefixed_title", prefixed_title)
 
-    def may(self_, _permission, _acting_user):
+    def may(
+        self_: hosts_and_folders.PermissionChecker,
+        _permission: Literal["read", "write"],
+        _acting_user: LoggedInUser,
+    ) -> bool:
         return getattr(self_, "_may_see", True)
 
     mocker.patch.object(hosts_and_folders.PermissionChecker, "may", may)
@@ -1047,7 +1050,7 @@ def _convert_folder_tree_to_all_folders(
 ) -> dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.Folder]:
     all_folders = {}
 
-    def parse_folder(folder):
+    def parse_folder(folder: hosts_and_folders.Folder) -> None:
         all_folders[folder.path()] = folder
         for subfolder in folder.subfolders():
             parse_folder(subfolder)
@@ -1223,16 +1226,16 @@ class MockRedisClient:
             def __init__(self, answers: list[list[list[str]]]) -> None:
                 self._answers = answers
 
-            def execute(self):
+            def execute(self) -> list[list[str]]:
                 return self._answers.pop(0)
 
-            def __getattr__(self, name):
+            def __getattr__(self, name: str) -> object:
                 return lambda *args, **kwargs: None  # noqa: ARG005
 
         self._fake_pipeline = FakePipeline(answers)
         self._answers = answers
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> object:
         if name == "pipeline":
             return lambda: self._fake_pipeline
 

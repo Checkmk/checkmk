@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorOptions
 from cmk.rulesets.internal.form_specs import DictionaryExtended
 from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary, String
 
 
-def test_dictionary_visitor_only_fills_required_prefill():
+def test_dictionary_visitor_only_fills_required_prefill() -> None:
     form_spec = Dictionary(
         elements={
             "required_el": DictElement(

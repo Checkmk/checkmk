@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Collection, Iterable
@@ -84,17 +83,17 @@ class SomeMainModule(ABCMainModule):
 
 
 @pytest.fixture(name="main_module_registry", scope="function", autouse=True)
-def fixture_main_module_registry(monkeypatch):
+def fixture_main_module_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_base, "main_module_registry", module_registry)
 
 
 class TestWatoMode:
     def test_breadcrumb_without_additions(
         self,
-        request_context,  # noqa: ARG002
-        main_module_registry,  # noqa: ARG002
+        request_context: None,  # noqa: ARG002
+        main_module_registry: None,  # noqa: ARG002
         test_edition: Edition,
-    ):
+    ) -> None:
         assert list(
             SomeWatoMode(test_edition, PageContext(config=Config(), request=request)).breadcrumb()
         ) == [
@@ -108,11 +107,11 @@ class TestWatoMode:
 
     def test_breadcrumb_with_additions(
         self,
-        monkeypatch,
-        request_context,  # noqa: ARG002
-        main_module_registry,  # noqa: ARG002
+        monkeypatch: pytest.MonkeyPatch,
+        request_context: None,  # noqa: ARG002
+        main_module_registry: None,  # noqa: ARG002
         test_edition: Edition,
-    ):
+    ) -> None:
         def additional_breadcrumb_items() -> Iterable[BreadcrumbItem]:
             yield BreadcrumbItem(
                 title="In between 1",

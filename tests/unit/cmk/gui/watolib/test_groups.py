@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+
+from pathlib import Path
 
 import pytest
 
@@ -15,7 +16,7 @@ from cmk.gui.wsgi.app import application_and_request_context
 
 
 @pytest.fixture(autouse=True)
-def patch_config_paths(monkeypatch, tmp_path):
+def patch_config_paths(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     cmk_confd = tmp_path / "check_mk" / "conf.d"
     monkeypatch.setattr(cmk.utils.paths, "check_mk_config_dir", cmk_confd)
     (cmk_confd / "wato").mkdir(parents=True)

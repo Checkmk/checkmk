@@ -13,7 +13,6 @@
 # those registrations.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator, Mapping
@@ -79,14 +78,14 @@ GEN_ID_COUNT = {"c": 0}
 def fixture_gen_id(monkeypatch: pytest.MonkeyPatch, request_context: None) -> None:
     GEN_ID_COUNT["c"] = 0
 
-    def _gen_id():
+    def _gen_id() -> str:
         GEN_ID_COUNT["c"] += 1
         return str(GEN_ID_COUNT["c"])
 
     monkeypatch.setattr(gui_rulesets_module, "gen_id", _gen_id)
 
 
-def test_rule_from_config_unhandled_format(tree: FolderTree):
+def test_rule_from_config_unhandled_format(tree: FolderTree) -> None:
     ruleset = _ruleset(RuleGroup.DiscoveryParameters("inventory_processes_rules"))
 
     with pytest.raises(MKGeneralException, match="Invalid rule"):

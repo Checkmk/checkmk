@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Iterable
 
@@ -21,7 +20,7 @@ from cmk.web.utils.html import HTML
 
 
 @pytest.fixture(name="tag_config")
-def fixture_tag_config():
+def fixture_tag_config() -> TagConfig:
     return TagConfig.from_config(
         {
             "aux_tags": [
@@ -97,7 +96,7 @@ def patch_tag_config(
 @pytest.fixture(name="folder_lookup")
 def fixture_folder_lookup(mocker: MockerFixture) -> None:
     class MockHost:
-        def edit_url(self):
+        def edit_url(self) -> str:
             return "cached_host_url"
 
     mocker.patch.object(

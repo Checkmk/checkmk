@@ -7,7 +7,6 @@
 Checkmk special agent for monitoring Jenkins.
 """
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import argparse
 import json
@@ -135,7 +134,7 @@ def agent_jenkins_main(args: argparse.Namespace) -> int:
     return 0
 
 
-def handle_request(args, sections):
+def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> object:
     url_base = f"{args.proto}://{args.hostname}:{args.port}"
     if args.path:
         url_base += f"/{args.path}"

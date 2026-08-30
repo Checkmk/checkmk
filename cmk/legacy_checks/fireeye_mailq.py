@@ -3,13 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.fireeye.lib import DETECT
-
-check_info = {}
 
 # .1.3.6.1.4.1.25597.13.1.44.0 0
 # .1.3.6.1.4.1.25597.13.1.45.0 603
@@ -18,29 +24,35 @@ check_info = {}
 # .1.3.6.1.4.1.25597.13.1.48.0 96
 # .1.3.6.1.4.1.25597.13.1.49.0 0
 
+Section = Mapping[str, str]
 
-def parse_fireeye_mailq(string_table):
+
+def parse_fireeye_mailq(string_table: StringTable) -> Section | None:
     if string_table:
         return dict(zip(["Deferred", "Hold", "Incoming", "Active", "Drop"], string_table[0]))
     return None
 
 
-def dicsover_fireeye_mailq(section):
-    yield None, {}
+def dicsover_fireeye_mailq(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-def check_fireeye_mailq(_no_item, params, parsed):
-    for queue, value in parsed.items():
-        yield check_levels(
+def check_fireeye_mailq(
+    params: Mapping[str, tuple[float, float] | None], section: Section
+) -> CheckResult:
+    for queue, value in section.items():
+        yield from check_levels(
             int(value),
-            "mail_queue_%s_length" % queue.lower(),
-            params.get(queue.lower()),
-            human_readable_func=str,
-            infoname="Mails in %s queue" % queue.lower(),
+            metric_name=f"mail_queue_{queue.lower()}_length",
+            levels_upper=("fixed", levels)
+            if (levels := params.get(queue.lower()))
+            else ("no_levels", None),
+            render_func=str,
+            label=f"Mails in {queue.lower()} queue",
         )
 
 
-check_info["fireeye_mailq"] = LegacyCheckDefinition(
+snmp_section_fireeye_mailq = SimpleSNMPSection(
     name="fireeye_mailq",
     detect=DETECT,
     fetch=SNMPTree(
@@ -48,6 +60,11 @@ check_info["fireeye_mailq"] = LegacyCheckDefinition(
         oids=["44", "45", "47", "48", "49"],
     ),
     parse_function=parse_fireeye_mailq,
+)
+
+
+check_plugin_fireeye_mailq = CheckPlugin(
+    name="fireeye_mailq",
     service_name="Mail Queues",
     discovery_function=dicsover_fireeye_mailq,
     check_function=check_fireeye_mailq,

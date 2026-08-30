@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
 from cmk.plugins.elasticsearch.agent_based.elasticsearch_cluster_health import (
     check_elasticsearch_cluster_health,
     check_elasticsearch_cluster_health_shards,
@@ -58,7 +59,9 @@ _FULL_STRING_TABLE: list[list[str]] = [
         ),
     ],
 )
-def test_check_function(parameters, info, expected_result):  # type: ignore[misc]
+def test_check_function(
+    parameters: Mapping[str, object], info: StringTable, expected_result: list[Result | Metric]
+) -> None:
     parsed = parse_elasticsearch_cluster_health(info)
     assert list(check_elasticsearch_cluster_health(parameters, parsed)) == expected_result
 
@@ -103,7 +106,9 @@ def test_check_function(parameters, info, expected_result):  # type: ignore[misc
         ),
     ],
 )
-def test_shards_check_function(parameters, info, expected_result):  # type: ignore[misc]
+def test_shards_check_function(
+    parameters: Mapping[str, object], info: StringTable, expected_result: list[Result | Metric]
+) -> None:
     parsed = parse_elasticsearch_cluster_health(info)
     assert list(check_elasticsearch_cluster_health_shards(parameters, parsed)) == expected_result
 
@@ -134,6 +139,8 @@ def test_shards_check_function(parameters, info, expected_result):  # type: igno
         ),
     ],
 )
-def test_tasks_check_function(parameters, info, expected_result):  # type: ignore[misc]
+def test_tasks_check_function(
+    parameters: Mapping[str, object], info: StringTable, expected_result: list[Result | Metric]
+) -> None:
     parsed = parse_elasticsearch_cluster_health(info)
     assert list(check_elasticsearch_cluster_health_tasks(parameters, parsed)) == expected_result

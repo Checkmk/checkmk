@@ -7,7 +7,6 @@
 CheckMK check for elasticsearch queries.
 """
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import argparse
 import sys
@@ -156,7 +155,7 @@ def handle_query(
     return _check_levels(response_data["count"], "Messages", "count", upper_levels, lower_levels)
 
 
-def parse_arguments(argv=None):
+def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     if argv is None:
         argv = sys.argv[1:]
 

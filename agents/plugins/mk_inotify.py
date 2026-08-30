@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 __version__ = "3.0.0b1"
@@ -35,7 +34,7 @@ except ImportError:
     sys.exit(1)
 
 
-def usage():
+def usage() -> None:
     sys.stdout.write("Usage: mk_inotify [-g]\n")
     sys.stdout.write("         -g: run in foreground\n\n")
 
@@ -67,7 +66,7 @@ stats_retention = config.getint("global", "stats_retention")
 config.remove_section("global")
 
 
-def output_data():
+def output_data() -> None:
     sys.stdout.write("<<<inotify:sep(9)>>>\n")
     if os.path.exists(configured_paths):
         with open(configured_paths) as opened_conf_paths:
@@ -159,7 +158,7 @@ folder_configs = {}  # type: dict[str, dict[str, Any]]  # type: ignore[explicit-
 output = []  # type: list[str]
 
 
-def get_watched_files():
+def get_watched_files() -> set[str]:
     files = set()
     for folder, attributes in folder_configs.items():
         for filenames in attributes["monitor_files"].values():
@@ -170,7 +169,7 @@ def get_watched_files():
     return files
 
 
-def wakeup_handler(signum, frame):
+def wakeup_handler(signum: int, frame: object) -> None:
     global output
     if output:
         if opt_foreground:
@@ -200,7 +199,7 @@ def wakeup_handler(signum, frame):
     signal.alarm(write_interval)
 
 
-def do_output(what, event):
+def do_output(what: str, event: pyinotify.Event) -> None:
     if event.dir:
         return  # Only monitor files
 
@@ -246,13 +245,13 @@ map_events = {
 
 
 class NotifyEventHandler(pyinotify.ProcessEvent):  # type: ignore[misc]
-    def process_IN_MOVED_TO(self, event):
+    def process_IN_MOVED_TO(self, event: pyinotify.Event) -> None:
         do_output("movedto", event)
 
-    def process_IN_MOVED_FROM(self, event):
+    def process_IN_MOVED_FROM(self, event: pyinotify.Event) -> None:
         do_output("movedfrom", event)
 
-    def process_IN_MOVE_SELF(self, event):
+    def process_IN_MOVE_SELF(self, event: pyinotify.Event) -> None:
         do_output("moveself", event)
 
     #    def process_IN_CLOSE_NOWRITE(self, event):
@@ -261,16 +260,16 @@ class NotifyEventHandler(pyinotify.ProcessEvent):  # type: ignore[misc]
     #    def process_IN_CLOSE_WRITE(self, event):
     #        print "CLOSE_WRITE event:", event.pathname
 
-    def process_IN_CREATE(self, event):
+    def process_IN_CREATE(self, event: pyinotify.Event) -> None:
         do_output("create", event)
 
-    def process_IN_DELETE(self, event):
+    def process_IN_DELETE(self, event: pyinotify.Event) -> None:
         do_output("delete", event)
 
-    def process_IN_MODIFY(self, event):
+    def process_IN_MODIFY(self, event: pyinotify.Event) -> None:
         do_output("modify", event)
 
-    def process_IN_OPEN(self, event):
+    def process_IN_OPEN(self, event: pyinotify.Event) -> None:
         do_output("open", event)
 
 
@@ -278,7 +277,7 @@ class NotifyEventHandler(pyinotify.ProcessEvent):  # type: ignore[misc]
 wm = pyinotify.WatchManager()
 
 
-def update_watched_folders():
+def update_watched_folders() -> None:
     for folder, attributes in folder_configs.items():
         if attributes.get("watch_descriptor"):
             if not wm.get_path(attributes["watch_descriptor"].get(folder)):
@@ -289,7 +288,7 @@ def update_watched_folders():
                 attributes["watch_descriptor"] = new_wd
 
 
-def main():
+def main() -> None:
     # Read config
 
     for section in config.sections():

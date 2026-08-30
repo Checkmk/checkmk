@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.ra32e_switch import (
     check_ra32e_switch,
     discover_ra32e_switch,
@@ -42,50 +40,49 @@ from cmk.legacy_checks.ra32e_switch import (
                 ]
             ],
             [
-                ("Sensor 01", None),
-                ("Sensor 02", None),
-                ("Sensor 03", None),
-                ("Sensor 04", None),
-                ("Sensor 05", None),
-                ("Sensor 06", None),
-                ("Sensor 07", None),
-                ("Sensor 08", None),
-                ("Sensor 09", None),
-                ("Sensor 10", None),
-                ("Sensor 11", None),
-                ("Sensor 12", None),
-                ("Sensor 13", None),
-                ("Sensor 14", None),
-                ("Sensor 15", None),
-                ("Sensor 16", None),
+                Service(item="Sensor 01"),
+                Service(item="Sensor 02"),
+                Service(item="Sensor 03"),
+                Service(item="Sensor 04"),
+                Service(item="Sensor 05"),
+                Service(item="Sensor 06"),
+                Service(item="Sensor 07"),
+                Service(item="Sensor 08"),
+                Service(item="Sensor 09"),
+                Service(item="Sensor 10"),
+                Service(item="Sensor 11"),
+                Service(item="Sensor 12"),
+                Service(item="Sensor 13"),
+                Service(item="Sensor 14"),
+                Service(item="Sensor 15"),
+                Service(item="Sensor 16"),
             ],
         )
     ],
 )
-def test_ra32e_switch_discovery(info: StringTable, result: Sequence[tuple[str, None]]) -> None:
-    assert list(discover_ra32e_switch(parse_ra32e_switch(info))) == result
+def test_ra32e_switch_discovery(info: StringTable, result: Sequence[Service]) -> None:
+    section = parse_ra32e_switch(info)
+    assert section is not None
+    assert list(discover_ra32e_switch(section)) == result
 
 
 def test_ra32e_switch_check_closed_no_rule() -> None:
-    state, summary, *_rest = check_ra32e_switch("Sensor 01", {"state": "ignore"}, [["1"]])
-
-    assert state == 0
-    assert summary.startswith("closed")
+    assert list(check_ra32e_switch("Sensor 01", {"state": "ignore"}, [["1"]])) == [
+        Result(state=State.OK, summary="closed")
+    ]
 
 
 def test_ra32e_switch_check_open_expected_close() -> None:
-    state, summary, *_rest = check_ra32e_switch(
-        "Sensor 03",
-        {"state": "closed"},
-        [["1", "1", "0", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1"]],
-    )
-
-    assert state == 2
-    assert summary.startswith("open")
-    assert "expected closed" in summary
+    assert list(
+        check_ra32e_switch(
+            "Sensor 03",
+            {"state": "closed"},
+            [["1", "1", "0", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1"]],
+        )
+    ) == [Result(state=State.CRIT, summary="open (expected closed)")]
 
 
 def test_ra32e_switch_check_no_input() -> None:
-    state, summary, *_rest = check_ra32e_switch("Sensor 01", {"state": "ignore"}, [[""]])
-
-    assert state == 3
+    assert list(check_ra32e_switch("Sensor 01", {"state": "ignore"}, [[""]])) == [
+        Result(state=State.UNKNOWN, summary="unknown status")
+    ]

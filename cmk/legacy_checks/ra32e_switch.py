@@ -3,39 +3,47 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.roomalert.lib import DETECT_RA32E
 
-check_info = {}
+
+def discover_ra32e_switch(section: StringTable) -> DiscoveryResult:
+    for index, _ in enumerate(section[0], start=1):
+        yield Service(item=f"Sensor {index:02}")
 
 
-def discover_ra32e_switch(info):
-    for index, _ in enumerate(info[0], start=1):
-        yield "Sensor %02d" % index, None
-
-
-def check_ra32e_switch(item, params, info):
-    index = int(item.split()[-1].lstrip("0")) - 1  # e.g. 'Sensor 08'
-    switch_state = {"0": "open", "1": "closed"}.get(info[0][index])
+def check_ra32e_switch(item: str, params: Mapping[str, str], section: StringTable) -> CheckResult:
+    index = int(item.rsplit(maxsplit=1)[-1].lstrip("0")) - 1  # e.g. 'Sensor 08'
+    switch_state = {"0": "open", "1": "closed"}.get(section[0][index])
     if not switch_state:
-        return 3, "unknown status"
+        yield Result(state=State.UNKNOWN, summary="unknown status")
+        return
 
-    state, infotext = 0, switch_state
+    state, infotext = State.OK, switch_state
     if params["state"] != "ignore" and switch_state != params["state"]:
-        state = 2
-        infotext += " (expected %s)" % params["state"]
+        state = State.CRIT
+        infotext += f" (expected {params['state']})"
 
-    return state, infotext
+    yield Result(state=state, summary=infotext)
 
 
 def parse_ra32e_switch(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-check_info["ra32e_switch"] = LegacyCheckDefinition(
+snmp_section_ra32e_switch = SimpleSNMPSection(
     name="ra32e_switch",
     parse_function=parse_ra32e_switch,
     detect=DETECT_RA32E,
@@ -60,6 +68,11 @@ check_info["ra32e_switch"] = LegacyCheckDefinition(
             "16",
         ],
     ),
+)
+
+
+check_plugin_ra32e_switch = CheckPlugin(
+    name="ra32e_switch",
     service_name="Switch %s",
     discovery_function=discover_ra32e_switch,
     check_function=check_ra32e_switch,

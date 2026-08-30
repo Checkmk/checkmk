@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 # ruff: noqa: ARG001
+
+from collections.abc import Iterator
 
 import pytest
 
@@ -14,7 +15,7 @@ from cmk.checkengine.plugins import InventoryPlugin, InventoryPluginName, Parsed
 from cmk.discover_plugins import PluginLocation
 
 
-def dummy_generator(section):
+def dummy_generator(section: object) -> Iterator[str]:
     yield "this will raise an exception, when encountered"
 
 
@@ -27,7 +28,7 @@ def test_create_inventory_plugin_missing_kwarg() -> None:
 
 
 def test_create_inventory_plugin_not_a_generator() -> None:
-    def dummy_function(section):
+    def dummy_function(section: object) -> None:
         pass
 
     with pytest.raises(TypeError):
@@ -39,7 +40,7 @@ def test_create_inventory_plugin_not_a_generator() -> None:
 
 
 def test_create_inventory_plugin_wrong_arg_name() -> None:
-    def dummy_generator(noitces):
+    def dummy_generator(noitces: object) -> Iterator[str]:
         return
         yield
 

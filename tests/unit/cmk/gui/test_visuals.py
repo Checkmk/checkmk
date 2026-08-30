@@ -6,9 +6,8 @@
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -44,7 +43,7 @@ def test_filters_allowed_for_infos() -> None:
     assert isinstance(allowed["service"], AjaxDropdownFilter)
 
 
-def _expected_visual_types():
+def _expected_visual_types() -> Mapping[str, Mapping[str, str | bool | None]]:
     return {
         "dashboards": {
             "add_visual_handler": "popup_add_dashlet",
@@ -153,7 +152,12 @@ def test_context_to_uri_vars(
         ),
     ],
 )
-def test_get_context_from_uri_vars(request_context, infos, uri_vars, expected_context):  # type: ignore[misc]
+def test_get_context_from_uri_vars(
+    request_context: None,
+    infos: SingleInfos,
+    uri_vars: Sequence[tuple[str, str]],
+    expected_context: VisualContext,
+) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)
 

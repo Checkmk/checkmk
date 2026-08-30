@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import json
+from collections.abc import Mapping
 
 import pytest
 
@@ -42,7 +42,7 @@ def test_custom_object_json_encoder() -> None:
         def __init__(self) -> None:
             self._a = 1
 
-        def to_json(self):
+        def to_json(self) -> Mapping[str, object]:
             return self.__dict__
 
     assert json.dumps(Ding(), cls=CustomObjectJSONEncoder) == '{"_a": 1}'

@@ -6,7 +6,6 @@
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from pathlib import Path
 from unittest.mock import patch
@@ -32,11 +31,11 @@ def fixture_omd_root(tmp_path: Path) -> Path:
     return tmp_path / "test_root"
 
 
-def _site_id():
-    return "test_site"
+def _site_id() -> SiteId:
+    return SiteId("test_site")
 
 
-def _dummy_certificate():
+def _dummy_certificate() -> str:
     return """-----BEGIN CERTIFICATE-----
 MIICRjCCAa+gAwIBAgIUIzp8u+4nxaYgZwyOUGJS8j/4yUAwDQYJKoZIhvcNAQEN
 BQAwOzEdMBsGA1UEAwwUU2l0ZSAndjI1MCcgbG9jYWwgQ0ExGjAYBgNVBAoMEUNo
@@ -54,7 +53,7 @@ eGAPlxJ2poGukdPO/ae6pEDcwK7zz6nA2PxmvcAZmm5/BAlxA7NYjJaXG/TPcOBh
 -----END CERTIFICATE-----"""
 
 
-def _dummy_key():
+def _dummy_key() -> str:
     return """-----BEGIN PRIVATE KEY-----
 MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAMn1UiDKNT3B/woi
 OEqV0nDpoZf6RND98UsFVf7QmzYnsRoSCKulFpJOmLLJqcZWnNhPPR+sAuFrOMC9

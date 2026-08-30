@@ -5,8 +5,6 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-# mypy: disable-error-code="no-untyped-def"
-
 from dataclasses import asdict
 
 import pytest
@@ -236,7 +234,7 @@ def test_load_config(request_context: None) -> None:
 
 
 @pytest.fixture()
-def local_config_plugin():
+def local_config_plugin() -> None:
     config_plugin = cmk.utils.paths.local_web_dir / "plugins" / "config" / "test.py"
     config_plugin.parent.mkdir(parents=True)
     with config_plugin.open("w") as f:

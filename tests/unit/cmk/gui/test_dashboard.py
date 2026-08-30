@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterator
@@ -23,17 +22,17 @@ class DummyDashletConfig(DashletConfig): ...
 class DummyDashlet(Dashlet[DummyDashletConfig]):
     @classmethod
     @override
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "dummy"
 
     @classmethod
     @override
-    def title(cls):
+    def title(cls) -> str:
         return "DUMMy"
 
     @classmethod
     @override
-    def description(cls):
+    def description(cls) -> str:
         return "duMMy"
 
     @classmethod

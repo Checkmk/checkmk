@@ -6,7 +6,6 @@
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 
 import typing
@@ -20,6 +19,7 @@ from werkzeug.test import create_environ
 
 import cmk.gui.watolib.password_store
 import cmk.utils.paths
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import http, login
@@ -284,9 +284,9 @@ def aut_user_auth_wsgi_app(
 
 @pytest.fixture()
 def with_host(
-    request_context,
-    with_admin_login,
-):
+    request_context: None,
+    with_admin_login: UserId,
+) -> Iterator[list[HostName]]:
     yield from create_test_hosts()
 
 

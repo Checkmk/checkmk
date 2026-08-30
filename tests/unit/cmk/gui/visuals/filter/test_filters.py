@@ -7,7 +7,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 from collections.abc import Sequence
@@ -34,7 +33,9 @@ from tests.testlib.unit.gui.filter_table_test_helper import (
 
 
 @pytest.fixture(name="live")
-def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
+def fixture_livestatus_test_config(
+    mock_livestatus: MockLiveStatusConnection, mock_wato_folders: None
+) -> MockLiveStatusConnection:
     live = mock_livestatus
     live.add_table(
         "hostgroups",
@@ -605,7 +606,7 @@ filter_tests = [
 ]
 
 
-def filter_test_id(t):
+def filter_test_id(t: FilterTest) -> str:
     return t.ident + ":" + ",".join(["=".join(p) for p in t.request_vars])
 
 
@@ -681,7 +682,7 @@ def test_filters_display_with_empty_request(
                 filt.display(dict.fromkeys(filt.htmlvars, ""))
 
 
-def _set_expected_queries(filt_ident, live):
+def _set_expected_queries(filt_ident: str, live: MockLiveStatusConnection) -> None:
     if filt_ident in ["hostgroups"]:
         live.expect_query("GET hostgroups\nCache: reload\nColumns: name alias\n")
         return

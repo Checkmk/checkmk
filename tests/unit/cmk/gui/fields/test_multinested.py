@@ -4,25 +4,44 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import random
+from collections.abc import Mapping, Sequence
+from typing import TypedDict, Unpack
 
 import pytest
-from marshmallow import fields, INCLUDE, post_load, ValidationError
+from marshmallow import fields, INCLUDE, post_load, types, ValidationError
 
 from cmk.gui.fields.base import BaseSchema, MultiNested
+
+
+class _SchemaKwargs(TypedDict, total=False):
+    only: types.StrSequenceOrSet | None
+    exclude: types.StrSequenceOrSet
+    many: bool | None
+    context: dict[str, object] | None
+    load_only: types.StrSequenceOrSet
+    dump_only: types.StrSequenceOrSet
+    partial: bool | types.StrSequenceOrSet | None
+    unknown: str | None
 
 
 class Schema(BaseSchema):
     cast_to_dict = True
 
-    def __init__(self, required, *args, **kwargs):
+    def __init__(
+        self, required: Sequence[str], *args: object, **kwargs: Unpack[_SchemaKwargs]
+    ) -> None:
         self.required = required
         super().__init__(*args, **kwargs)
 
     @post_load
-    def _validate(self, data, many=False, partial=None):  # type: ignore[misc]  # noqa: ARG002
+    def _validate(  # type: ignore[misc]
+        self,
+        data: Mapping[str, object],
+        many: bool = False,  # noqa: ARG002
+        partial: object | None = None,  # noqa: ARG002
+    ) -> Mapping[str, object]:
         for key in self.required:
             if key not in data:
                 raise ValidationError({key: f"Required for load: {key} ({data})/{self.required}"})
@@ -41,12 +60,12 @@ class MixedMerged(BaseSchema):
     field = MultiNested([NestedSchema, Schema(["required27"])], merged=True)
 
 
-def test_mixed_merged_concrete():
+def test_mixed_merged_concrete() -> None:
     schema = MixedMerged()
     schema.load({"field": {"sub": {"integer": 42}}})
 
 
-def test_mixed_merged_blank_schema():
+def test_mixed_merged_blank_schema() -> None:
     schema = MixedMerged()
     schema.load({"field": {"required27": "27"}})
 
@@ -56,31 +75,31 @@ class MergedSchema(BaseSchema):
     field = MultiNested([Schema(["required17"]), Schema(["required18"])], merged=True)
 
 
-def test_load_and_dump_blank_schema():
+def test_load_and_dump_blank_schema() -> None:
     schema = Schema(["required42"], unknown=INCLUDE)
     assert schema.load({"required42": "42"}) == {"required42": "42"}
     assert schema.dump({"required84": "84"}) == {}
 
 
-def test_load_merged_blank_schema():
+def test_load_merged_blank_schema() -> None:
     merged_blank = MergedSchema()
     data = {"field": {"required17": "17", "required18": "18"}}
     assert merged_blank.load(data) == data
 
 
-def test_dump_merged_blank_schema():
+def test_dump_merged_blank_schema() -> None:
     merged_blank = MergedSchema()
     data = {"field": {"required17": "17", "required18": "18"}}
     assert merged_blank.dump(data) == data
 
 
-def test_error_works_on_load_with_blank_schema():
+def test_error_works_on_load_with_blank_schema() -> None:
     merged_blank = MergedSchema()
     with pytest.raises(ValidationError):
         merged_blank.load({"field": {}})
 
 
-def test_load_only_concreate_schemas():
+def test_load_only_concreate_schemas() -> None:
     class SchemaA(BaseSchema):
         a = fields.Integer()
 
@@ -101,13 +120,18 @@ def test_load_only_concreate_schemas():
     assert concrete.load(data) == data
 
 
-def test_loading_data_invalid_in_all_schemas_fails():
+def test_loading_data_invalid_in_all_schemas_fails() -> None:
     class SchemaA(BaseSchema):
         a = fields.Integer()
 
     class SchemaB(BaseSchema):
         @post_load
-        def _post_load(self, data, many=False, partial=None):  # type: ignore[misc]  # noqa: ARG002
+        def _post_load(  # type: ignore[misc]
+            self,
+            data: Mapping[str, object],  # noqa: ARG002
+            many: bool = False,  # noqa: ARG002
+            partial: object | None = None,  # noqa: ARG002
+        ) -> Mapping[str, object]:
             raise ValidationError("B")
 
     class MixedMultiNestedSchema(BaseSchema):

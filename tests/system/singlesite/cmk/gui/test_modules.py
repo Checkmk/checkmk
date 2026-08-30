@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Iterator
 
@@ -53,7 +52,7 @@ def test_load_dashboard_plugin_omd_restart(request: pytest.FixtureRequest, site:
     # without loading the new plugin.
     site.omd("restart", "apache")
 
-    def file_created():
+    def file_created() -> bool:
         # Each request may be the one that hits a freshly started WSGI worker
         # which loads the plugin at startup and writes the marker file.
         requests.get(site.url_for_path("login.py"))

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Mapping, Sequence
@@ -1706,7 +1705,7 @@ def _compare_rulespec_groups(actual: object, expected: legacy_rulespecs.Rulespec
         raise NotImplementedError
 
 
-def test_generated_rulespec_group_single_registration():
+def test_generated_rulespec_group_single_registration() -> None:
     first_group = _convert_to_custom_group(
         legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
         api_v1.Title("test"),

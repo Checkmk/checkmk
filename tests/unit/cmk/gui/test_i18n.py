@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import gettext
 import subprocess
+from collections.abc import Mapping
 from pathlib import Path
 
 import flask
@@ -31,13 +31,13 @@ def locale_base_dir() -> Path:
 
 
 @pytest.fixture(autouse=True)
-def locale_paths(tmp_path, monkeypatch, locale_base_dir):
+def locale_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, locale_base_dir: Path) -> None:
     monkeypatch.setattr(cmk.utils.paths, "locale_dir", locale_base_dir)
     monkeypatch.setattr(cmk.utils.paths, "local_locale_dir", tmp_path / "locale")
 
 
 @pytest.fixture(autouse=True, scope="session")
-def compile_builtin_po_files(locale_base_dir):
+def compile_builtin_po_files(locale_base_dir: Path) -> None:
     builtin_dir = locale_base_dir / "de" / "LC_MESSAGES"
     po_file = builtin_dir / "multisite.po"
     mo_file = builtin_dir / "multisite.mo"
@@ -53,7 +53,7 @@ def local_translation() -> None:
     _add_local_translation("packages/pkg_name/de", "pkg_name German", texts={"pkg1": "lala"})
 
 
-def _add_local_translation(lang, alias, texts):
+def _add_local_translation(lang: str, alias: str, texts: Mapping[str, str]) -> None:
     local_dir = cmk.utils.paths.local_locale_dir / lang / "LC_MESSAGES"
     local_dir.mkdir(parents=True)
     po_file = local_dir / "multisite.po"

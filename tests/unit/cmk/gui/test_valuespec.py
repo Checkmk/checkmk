@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 from binascii import unhexlify
@@ -183,7 +182,7 @@ def test_email_validation(address: str) -> None:
     vs.EmailAddress().validate_value(address, "")
 
 
-def _example_image_data():
+def _example_image_data() -> bytes:
     """A tiny but valid PNG image"""
     return unhexlify(
         b"89504e470d0a1a0a0000000d494844520000000100"
@@ -301,10 +300,10 @@ def test_password_from_html_vars_not_set() -> None:
     ],
 )
 def test_default_value_in_cascading_dropdown(  # type: ignore[misc]
-    choices,
-    default_value,  # noqa: ARG001
-    expected_default,
-):
+    choices: vs.CascadingDropdownChoices,
+    default_value: vs.CascadingDropdownChoiceIdent,  # noqa: ARG001
+    expected_default: vs.CascadingDropdownChoiceValue | None,
+) -> None:
     assert vs.CascadingDropdown(choices=choices).default_value() == expected_default
 
 
@@ -332,10 +331,10 @@ def test_default_value_in_cascading_dropdown(  # type: ignore[misc]
     ],
 )
 def test_canonical_value_in_cascading_dropdown(  # type: ignore[misc]
-    choices,
-    default_value,  # noqa: ARG001
-    expected_canonical,
-):
+    choices: vs.CascadingDropdownChoices,
+    default_value: vs.CascadingDropdownChoiceIdent,  # noqa: ARG001
+    expected_canonical: vs.CascadingDropdownChoiceValue | None,
+) -> None:
     assert vs.CascadingDropdown(choices=choices).canonical_value() == expected_canonical
 
 
@@ -361,7 +360,7 @@ def test_canonical_value_in_cascading_dropdown(  # type: ignore[misc]
         ),
     ],
 )
-def test_mask_to_json(valuespec, value, expected):  # type: ignore[misc]
+def test_mask_to_json[T](valuespec: vs.ValueSpec[T], value: T, expected: object) -> None:
     masked = valuespec.mask(value)
     assert valuespec.value_to_json(masked) == expected
 

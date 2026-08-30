@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import traceback
 
@@ -36,7 +35,7 @@ def test_render_help_empty() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_html_form_context():  # type: ignore[misc]
+def test_html_form_context() -> None:
     with html.output_funnel.plugged():
         with html.form_context("foo", method="POST"):
             html.upload_file("bar")

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-untyped-def"
 
 import importlib.util
 import os
@@ -48,7 +47,9 @@ def test_wsgi_app(request_context: None) -> None:  # noqa: ARG001  # Unused fixt
     wsgi_app = imported.Application
     env = create_environ()
 
-    def start_response(status, response_headers, exc_info=None):
+    def start_response(
+        status: str, response_headers: list[tuple[str, str]], exc_info: object | None = None
+    ) -> None:
         pass
 
     assert wsgi_app.wsgi.config_loader.mode == "default"

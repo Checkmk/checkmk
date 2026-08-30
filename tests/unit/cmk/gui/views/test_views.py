@@ -6,8 +6,8 @@
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
 
 import pytest
 
@@ -30,7 +30,7 @@ from cmk.gui.painter.v0 import registry as painter_registry_module
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import painter_option_registry, PainterOptions
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.type_defs import ColumnSpec, SorterSpec
+from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
@@ -310,7 +310,7 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
     def render() -> None:
         pass
 
-    def action():
+    def action() -> None:
         pass
 
     command.register_legacy_command(
@@ -369,7 +369,7 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
 def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     monkeypatch.setattr(painter_registry_module, "painter_registry", PainterRegistry())
 
-    def rendr(row):
+    def rendr(row: Row) -> tuple[str, str]:
         return ("abc", "xyz")
 
     register_painter(
@@ -492,8 +492,8 @@ def test_view_page(
 ) -> None:
     wsgi_app = logged_in_admin_wsgi_app
 
-    def _prepend(prefix, dict_):
-        d = {}
+    def _prepend(prefix: str, dict_: Mapping[str, object]) -> dict[str, object]:
+        d: dict[str, object] = {}
         for key, value in dict_.items():
             d[key] = value
             d[prefix + key] = value

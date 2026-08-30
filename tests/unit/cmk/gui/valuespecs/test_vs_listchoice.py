@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
 from typing import override
@@ -36,7 +35,7 @@ def _load_elements(lc: vs.ListChoice) -> Sequence[vs.ListChoiceChoice]:
 
 
 class TestListChoice:
-    def test_load_elements(self):
+    def test_load_elements(self) -> None:
         assert _load_elements(_get_list_choice()) == CHOICES
         assert _load_elements(vs.ListChoice(choices=CHOICES)) == CHOICES
         assert _load_elements(vs.ListChoice(choices=lambda: CHOICES)) == CHOICES
@@ -49,14 +48,14 @@ class TestListChoice:
         with pytest.raises(ValueError, match="illegal type for choices"):
             _load_elements(vs.ListChoice(choices=123))  # type: ignore[arg-type]
 
-    def test_validate(self):
+    def test_validate(self) -> None:
         expect_validate_success(_get_list_choice(), [1, 2])
         expect_validate_success(_get_list_choice(), [])
         expect_validate_failure(_get_list_choice(allow_empty=False), [])
         expect_validate_failure(_get_list_choice(), ["zwei"])
         expect_validate_failure(_get_list_choice(), "not a list")
 
-    def test_json(self):
+    def test_json(self) -> None:
         assert _get_list_choice().value_to_json([1, 2]) == [1, 2]
         assert _get_list_choice().value_from_json([1, 2]) == [1, 2]
 
@@ -64,8 +63,8 @@ class TestListChoice:
         with request_var(l_0="on", l_2="on"):
             assert _get_list_choice().from_html_vars("l") == [1, 3]
 
-    def test_mask(self):
+    def test_mask(self) -> None:
         assert _get_list_choice().mask(["2"]) == ["2"]
 
-    def test_canonical_value(self):
+    def test_canonical_value(self) -> None:
         assert not _get_list_choice().canonical_value()

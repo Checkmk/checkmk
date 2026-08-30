@@ -3,14 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping, Sequence
+from typing import Literal
 
 import pytest
 
 import cmk.gui.views
 from cmk.gui.config import active_config
-from cmk.gui.type_defs import BuiltinIconVisibility, DynamicIconName, IconSpec
+from cmk.gui.type_defs import BuiltinIconVisibility, DynamicIconName, IconSpec, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import (
     Icon,
@@ -18,6 +19,8 @@ from cmk.gui.views.icon import (
     IconConfig,
 )
 from cmk.gui.views.icon import registry as icon_registry
+from cmk.gui.views.icon.base import IconSpec as IconSpecUnion
+from cmk.ruleset_matcher.tags import TagID
 
 
 def test_builtin_icons_and_actions() -> None:
@@ -134,8 +137,15 @@ def test_legacy_icon_plugin_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_register_icon_plugin_with_default_registry_works(monkeypatch: pytest.MonkeyPatch) -> None:
-    def render(what, row, tags, custom_vars, user_permissions, icon_config):  # noqa: ARG001
-        return "agents", "Title", "url"
+    def render(
+        what: Literal["host", "service"],  # noqa: ARG001
+        row: Row,  # noqa: ARG001
+        tags: Sequence[TagID],  # noqa: ARG001
+        custom_vars: Mapping[str, str],  # noqa: ARG001
+        user_permissions: UserPermissions,  # noqa: ARG001
+        icon_config: IconConfig,  # noqa: ARG001
+    ) -> tuple[IconSpecUnion, str, str]:
+        return DynamicIconName("agents"), "Title", "url"
 
     TestIcon = Icon(
         ident="test_icon",
@@ -180,8 +190,15 @@ def test_config_override_builtin_icons(monkeypatch: pytest.MonkeyPatch) -> None:
         icon_registry, "icon_and_action_registry", registry := icon_registry.IconRegistry()
     )
 
-    def render(what, row, tags, custom_vars, user_permissions, icon_config):  # noqa: ARG001
-        return "agents", "Title", "url"
+    def render(
+        what: Literal["host", "service"],  # noqa: ARG001
+        row: Row,  # noqa: ARG001
+        tags: Sequence[TagID],  # noqa: ARG001
+        custom_vars: Mapping[str, str],  # noqa: ARG001
+        user_permissions: UserPermissions,  # noqa: ARG001
+        icon_config: IconConfig,  # noqa: ARG001
+    ) -> tuple[IconSpecUnion, str, str]:
+        return DynamicIconName("agents"), "Title", "url"
 
     TestIcon = Icon(ident="test_icon", title="Test icon", sort_index=50, render=render)
 

@@ -5,8 +5,6 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-# mypy: disable-error-code="no-untyped-def"
-
 import time
 from collections.abc import Generator
 
@@ -24,7 +22,7 @@ def fixture_transaction_ids() -> list[str]:
 
 @pytest.fixture(name="tm")
 def fixture_tm(transaction_ids: list[str]) -> Generator[TransactionManager]:
-    def transids(lock=False):
+    def transids(lock: bool = False) -> list[str]:
         return transaction_ids
 
     def save_transids(transids: list[str]) -> None:

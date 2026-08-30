@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Mapping
 
 from cmk.agent_based.v2 import IgnoreResults, Result, State
 from cmk.plugins.postgres.agent_based.postgres_query_duration import (
@@ -14,7 +15,14 @@ from cmk.plugins.postgres.agent_based.postgres_query_duration import (
 
 
 # TODO: a named tuple would be nice
-def Query(seconds="", pid="", current_query="", usename="", client_addr="", state=""):
+def Query(
+    seconds: str = "",
+    pid: str = "",
+    current_query: str = "",
+    usename: str = "",
+    client_addr: str = "",
+    state: str = "",
+) -> Mapping[str, str]:
     return {
         "seconds": seconds,
         "pid": pid,

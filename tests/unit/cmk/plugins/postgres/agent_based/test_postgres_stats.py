@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.v2 import IgnoreResults, Result, Service, State
 from cmk.plugins.postgres.agent_based import postgres_stats
@@ -108,7 +107,7 @@ def test_check_postgres_stats_oldest_table() -> None:
     )
 
 
-def _test_never_checked_nothing():
+def _test_never_checked_nothing() -> None:
     value_store: dict[str, object] = {}
     assert list(postgres_stats._check_never_checked("", [], {}, value_store, NOW)) == [
         Result(state=State.OK, summary="No never checked tables"),
@@ -117,7 +116,7 @@ def _test_never_checked_nothing():
     assert value_store["item"] == NOW
 
 
-def _test_never_checked_tables_never_seen():
+def _test_never_checked_tables_never_seen() -> None:
     value_store: dict[str, object] = {}
     assert list(
         postgres_stats._check_never_checked(
@@ -138,7 +137,7 @@ def _test_never_checked_tables_never_seen():
     assert value_store["item"] == NOW
 
 
-def _test_never_checked_tables_warn():
+def _test_never_checked_tables_warn() -> None:
     value_store: dict[str, object] = {"item": NOW - 24.23 * 3600}
     assert list(
         postgres_stats._check_never_checked(

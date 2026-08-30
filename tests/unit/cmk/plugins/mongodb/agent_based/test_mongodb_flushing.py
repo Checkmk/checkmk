@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import Result
+from cmk.agent_based.v2 import Result, StringTable
 from cmk.plugins.mongodb.agent_based import mongodb_flushing
 from cmk.plugins.mongodb.agent_based.mongodb_flushing import (
     check_mongodb_flushing,
@@ -70,7 +71,11 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
-def test_check_function(info, expected_results, empty_value_store: None):  # type: ignore[misc]
+def test_check_function(
+    info: StringTable,
+    expected_results: Sequence[str],
+    empty_value_store: None,
+) -> None:
     """
     Test the MongoDB flushing check function with various input combinations.
     """

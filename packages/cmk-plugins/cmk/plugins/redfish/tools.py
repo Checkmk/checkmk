@@ -5,7 +5,8 @@
 """Tools used by all Redfish special agents"""
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Sequence
 
 from redfish.messages import (
     get_error_messages,
@@ -14,6 +15,7 @@ from redfish.messages import (
     RedfishPasswordChangeRequiredError,
     search_message,
 )
+from redfish.rest.v1 import HttpClient, RestResponse
 
 
 class RedfishCollectionNotFoundError(Exception):
@@ -28,7 +30,7 @@ class RedfishCollectionMemberNotFoundError(Exception):
     """
 
 
-def _verify_response(response):
+def _verify_response(response: RestResponse) -> None:
     """
     Verifies a response and raises an exception if there was a failure
 
@@ -50,7 +52,9 @@ def _verify_response(response):
         )
 
 
-def get_object_ids(context, object_dict, object_name):
+def get_object_ids(
+    context: HttpClient, object_dict: RestResponse, object_name: str
+) -> Sequence[str]:
     """
     Get all ids of an collection object
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.v2 import (
     check_levels,
@@ -22,12 +21,12 @@ from cmk.plugins.redfish.lib import (
 )
 
 
-def _fan_item_name(data):
+def _fan_item_name(data: RedfishAPIData) -> str | None:
     fan_name = data.get("Name", data.get("FanName", None))
     if fan_name:
         if fan_name.startswith("Fan"):
             fan_name = fan_name.lstrip("Fan").strip()
-        return fan_name
+        return str(fan_name)
     return None
 
 

@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import copy
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import pytest
@@ -1161,12 +1160,12 @@ def test_cluster_check_lnx_if(empty_value_store: None) -> None:
         ),
     ],
 )
-def test_lnx_if_regression(  # type: ignore[misc]
-    monkeypatch,
-    string_table,
-    discovery_results,
-    items_params_results,
-):
+def test_lnx_if_regression(
+    monkeypatch: pytest.MonkeyPatch,
+    string_table: StringTable,
+    discovery_results: Sequence[Service],
+    items_params_results: Sequence[tuple[str, Mapping[str, object], Sequence[Result]]],
+) -> None:
     section = lnx_if.parse_lnx_if(string_table)
 
     assert (

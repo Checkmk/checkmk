@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
@@ -29,7 +28,7 @@ NOW_SIMULATED = 581792400
 
 
 @pytest.fixture(name="value_store_patch")
-def value_store_fixture(monkeypatch):
+def value_store_fixture(monkeypatch: pytest.MonkeyPatch) -> Iterator[dict[str, object]]:
     value_store_patched = {
         "%s.delta" % "/ABCshare": [2000000, 30000000],
         "%s.trend" % "/ABCshare": [2000000 - 86400, 2000000, -5000.0],
@@ -252,13 +251,15 @@ def test_network_fs_mounts_check(
 
 
 @pytest.mark.usefixtures("value_store_patch")
-def test_network_fs_mount_scales_growth_and_trend_to_bytes_per_day(monkeypatch) -> None:  # type: ignore[misc]
+def test_network_fs_mount_scales_growth_and_trend_to_bytes_per_day(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """This check emits growth/trend (recorded in MB/day) directly rather than via a translation,
     so it must rescale them to bytes/day by MEGA, like fs_size. See SUP-29835."""
     captured_factors: dict[str, float] = {}
     original_scaled_metric = network_fs_mounts._scaled_metric
 
-    def _capture(new_name, metric, factor):
+    def _capture(new_name: str, metric: Metric, factor: float) -> Metric:
         captured_factors[new_name] = factor
         return original_scaled_metric(new_name, metric, factor)
 

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from typing import override
 
@@ -14,7 +13,7 @@ from cmk.gui.nagvis._php_formatter import format_php
 
 class _EvulToStr:
     @override
-    def __str__(self):
+    def __str__(self) -> str:
         return "' boom!"
 
 
@@ -42,5 +41,5 @@ class _EvulToStr:
         (_EvulToStr(), r"'\' boom!'"),
     ],
 )
-def test_format_php(python_data, expected):  # type: ignore[misc]
+def test_format_php(python_data: object, expected: str) -> None:
     assert format_php(python_data) == expected

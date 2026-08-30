@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import atexit
 import json
@@ -53,7 +52,7 @@ if cassette:
         # Enter the cassette for the lifetime of the process
         ctx.__enter__()
 
-        def exit_handler(*args):
+        def exit_handler(*args: object) -> None:
             print(
                 f"VCR cassette context exiting, saving to: {cassette_path}",
                 file=sys.stderr,

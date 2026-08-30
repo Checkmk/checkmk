@@ -4,15 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.fireeye.lib import DETECT, HEALTH_MAP, STATUS_MAP
-
-check_info = {}
 
 # .1.3.6.1.4.1.25597.11.4.1.3.1.1.1 1 --> FE-FIREEYE-MIB::feFanIndex.1
 # .1.3.6.1.4.1.25597.11.4.1.3.1.1.2 2 --> FE-FIREEYE-MIB::feFanIndex.2
@@ -48,27 +51,27 @@ check_info = {}
 # .1.3.6.1.4.1.25597.11.4.1.3.1.4.8 8281 --> FE-FIREEYE-MIB::feFanSpeed.8
 
 
-def check_fireeye_fans(item: str, params: object, info: StringTable) -> LegacyCheckResult:
-    for index, status, health, speed_str in info:
+def check_fireeye_fans(item: str, section: StringTable) -> CheckResult:
+    for index, status, health, speed_str in section:
         if index == item:
             state, state_readable = STATUS_MAP.get(status.lower(), (2, f"unknown: {status}"))
-            yield state, f"Status: {state_readable}"
+            yield Result(state=State(state), summary=f"Status: {state_readable}")
             state, state_readable = HEALTH_MAP.get(health, (2, f"unknown: {health}"))
-            yield state, f"Health: {state_readable}"
+            yield Result(state=State(state), summary=f"Health: {state_readable}")
 
-            yield 0, "Speed: %s RPM" % speed_str
+            yield Result(state=State.OK, summary=f"Speed: {speed_str} RPM")
 
 
 def parse_fireeye_fans(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def discover_fireeye_fans(info: StringTable) -> LegacyDiscoveryResult:
-    for line in info:
-        yield line[0], {}
+def discover_fireeye_fans(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        yield Service(item=line[0])
 
 
-check_info["fireeye_fans"] = LegacyCheckDefinition(
+snmp_section_fireeye_fans = SimpleSNMPSection(
     name="fireeye_fans",
     parse_function=parse_fireeye_fans,
     detect=DETECT,
@@ -76,6 +79,11 @@ check_info["fireeye_fans"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.25597.11.4.1.3.1",
         oids=["1", "2", "3", "4"],
     ),
+)
+
+
+check_plugin_fireeye_fans = CheckPlugin(
+    name="fireeye_fans",
     service_name="Fan %s",
     discovery_function=discover_fireeye_fans,
     check_function=check_fireeye_fans,

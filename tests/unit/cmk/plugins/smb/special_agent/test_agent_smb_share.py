@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -64,7 +63,7 @@ class MockSMBConnection:
         self.disallowed_paths = disallowed_paths if disallowed_paths else []
 
     @staticmethod
-    def connect(*args):
+    def connect(*args: object) -> bool:
         return True
 
     def listPath(self, shared_folder: str, path: str) -> list[SharedFile]:
@@ -85,7 +84,7 @@ class MockSMBConnection:
             return []
         return [MockShare(s) for s in self.shares]
 
-    def close(self):
+    def close(self) -> None:
         pass
 
 

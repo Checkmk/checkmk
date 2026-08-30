@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """agent_bi
@@ -117,11 +116,11 @@ class AggregationData:
         return self._bi_rawdata
 
     @property
-    def missing_aggr(self):
+    def missing_aggr(self) -> list:
         return self._missing_aggr
 
     @property
-    def missing_sites(self):
+    def missing_sites(self) -> list:
         return self._missing_sites
 
     @property
@@ -164,8 +163,8 @@ class AggregationData:
         return aggr_response["aggregations"]
 
     @classmethod
-    def parse_legacy_response(cls, rows):
-        result = {}
+    def parse_legacy_response(cls, rows: Sequence[Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
+        result: dict[str, dict[str, Any]] = {}
         for row in rows:
             tree = row["tree"]
             effective_state = tree["aggr_effective_state"]

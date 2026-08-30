@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 
@@ -12,7 +11,7 @@ from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.apache.agent_based import apache_status
 
 
-def make_agent_output_1():
+def make_agent_output_1() -> StringTable:
     return [
         ["127.0.0.1", "None", "127.0.0.1"],
         ["127.0.0.1", "None", "ServerVersion:", "Apache/2.4.29", "(Ubuntu)"],
@@ -65,7 +64,7 @@ def make_agent_output_1():
     ]
 
 
-def make_section_1():
+def make_section_1() -> dict[str, dict[str, float | str]]:
     return {
         "127.0.0.1": {
             "BusyWorkers": 1,
@@ -102,7 +101,7 @@ def make_section_1():
     }
 
 
-def make_agent_output_2():
+def make_agent_output_2() -> StringTable:
     return [
         ["127.0.0.1", "None", "MY CHECK MK", "127.0.0.1"],
         ["127.0.0.1", "None", "MY CHECK MK", "ServerVersion: Apache/2.4.29 (Ubuntu)"],

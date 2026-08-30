@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 
 import pytest
@@ -132,8 +131,8 @@ def test_sap_hana_data_volume_discovery() -> None:
 
 
 @pytest.fixture(name="value_store_patch")
-def value_store_fixture(monkeypatch):
-    value_store_patched = {
+def value_store_fixture(monkeypatch: pytest.MonkeyPatch) -> Iterator[dict[str, list[float]]]:
+    value_store_patched: dict[str, list[float]] = {
         "H62 10 - DATA 20.delta": [2000000, 30000000],
         "H62 10 - DATA 20.trend": [LAST_TIME_EPOCH - 86400, LAST_TIME_EPOCH, 4625.8],
     }

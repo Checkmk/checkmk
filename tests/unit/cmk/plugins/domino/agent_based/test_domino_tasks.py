@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import time
 
 import pytest
 
-from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Metric, Result, State
 from cmk.checkengine.specs.parameters import Parameters
 from cmk.plugins.domino.agent_based.domino_tasks import check_domino_tasks
 from cmk.plugins.lib import ps
@@ -93,11 +92,13 @@ SECTION_DOMINO_TASKS_DATA = (
         ),
     ],
 )
-def test_check_domino_tasks(params, expected_result, empty_value_store: None):  # type: ignore[misc]
+def test_check_domino_tasks(
+    params: Parameters, expected_result: CheckResult, empty_value_store: None
+) -> None:
     result = check_domino_tasks("mock_item", params, SECTION_DOMINO_TASKS_DATA, None)
     assert list(result) == expected_result
 
 
-def test_check_domino_tasks_no_domino_data_goes_stale():
+def test_check_domino_tasks_no_domino_data_goes_stale() -> None:
     with pytest.raises(IgnoreResultsError):
         list(check_domino_tasks("someitem", {}, None, {"somememstuff": 1}))

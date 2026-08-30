@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 from collections.abc import Mapping, Sequence
@@ -1324,13 +1323,13 @@ def test_check_job(
         assert list(job.check_job(item, params, section)) == expected_results
 
 
-def test_discover():
+def test_discover() -> None:
     assert list(job.discover_job(job.parse_job(STRING_TABLE_RUNNING))) == [
         Service(item="230-testing-funning")
     ]
 
 
-def test_parse_order():
+def test_parse_order() -> None:
     # The agent collects the files of this section with "find", which does not sort
     # them, so either order can turn up - and both must yield the same jobs.
     completed = job.CompletedJob(

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 from collections.abc import Mapping
@@ -652,7 +651,7 @@ def test_discovery() -> None:
 
 
 @pytest.fixture(name="fetcher_checker_counters", scope="module")
-def fixture_fetcher_checker_counters_list():
+def fixture_fetcher_checker_counters_list() -> CheckResult:
     return [
         Result(state=State.OK, notice="Fetcher helper usage: 0%"),
         Metric("helper_usage_fetcher", 0.0, levels=(80.0, 90.0), boundaries=(0.0, None)),

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import typing
 from collections.abc import Mapping, Sequence
@@ -19,6 +18,7 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
 from cmk.plugins.rittal.agent_based import (
     cmciii,
@@ -102,7 +102,7 @@ def test_sensor_id_temp_in_out() -> None:
     assert cmciii.sensor_id("temp_in_out", ["Air"], "Liquid_Cooling_Package") == "Air LCP"
 
 
-def _leakage_info(status, position):
+def _leakage_info(status: str, position: str) -> list[StringTable]:
     return [
         [["4", "CMCIII-LEAK", "CMCIII-LEAK", "2"]],
         [
@@ -156,7 +156,7 @@ def test_cmciii_leakage_sensors(status: str, position: str, expected: CheckResul
     )
 
 
-def _lcp_sensor():
+def _lcp_sensor() -> list[StringTable]:
     return [
         [["2", "LCP-I Flush 30kW", "Liquid Cooling Package", "2"]],
         [
@@ -286,7 +286,7 @@ def test_cmciii_lcp_check(item: str, expected: CheckResult) -> None:
     )
 
 
-def _phase_sensor():
+def _phase_sensor() -> list[StringTable]:
     return [
         [["1", "PDU-MET", "Master PDU", "2"]],
         [
@@ -492,7 +492,7 @@ def test_cmciii_phase_check(item: str, expected: CheckResult) -> None:
     )
 
 
-def _status_info(variable, status):
+def _status_info(variable: str, status: str) -> list[StringTable]:
     return [
         [["2", "CMCIII-DET-M", "DET-AC III Master", "2"]],
         [
@@ -556,7 +556,7 @@ def test_cmciii_status_sensors(variable: str, status: str, expected: CheckResult
     )
 
 
-def _access_info():
+def _access_info() -> list[StringTable]:
     return [
         [["3", "CMCIII-GRF", "Tuer GN-31-F", "2"]],
         [
@@ -593,7 +593,7 @@ def test_cmciii_access_check() -> None:
     ]
 
 
-def _generictest_cmciii():
+def _generictest_cmciii() -> list[StringTable]:
     return [
         [
             ["1", "CMCIII-PU", "CMC-PU", "2"],
@@ -1267,7 +1267,7 @@ def test_genericdataset_cmciii_check(
         assert list(plugin.check_function(item, params, section)) == expected
 
 
-def _generictest_cmciii_input_regression():
+def _generictest_cmciii_input_regression() -> list[StringTable]:
     return [
         [
             ["1", "CMCIII-PU", "CMCIII-PU", "2"],

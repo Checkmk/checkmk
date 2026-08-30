@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections import Counter
 from collections.abc import Iterable
@@ -30,7 +29,7 @@ from cmk.plugins.ciena_ces.lib import (
 )
 
 
-def test_ciena_health_does_not_provide_metrics():
+def test_ciena_health_does_not_provide_metrics() -> None:
     """
     You may wonder whether it is ok to change the type returned by check_ciena_health. The answer is
     no. The ciena_health plug-in accumulates a lot of different information (about fans, power

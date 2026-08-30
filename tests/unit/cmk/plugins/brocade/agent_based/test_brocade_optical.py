@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
 from cmk.plugins.brocade.agent_based import brocade_optical
 from cmk.plugins.lib import interfaces
 
@@ -946,12 +945,12 @@ def test_check_brocade_optical(
         ),
     ],
 )
-def test_regression(  # type: ignore[misc]
-    string_table,
-    discovery_results,
-    items_params_results,
+def test_regression(
+    string_table: Sequence[StringTable],
+    discovery_results: Sequence[Service],
+    items_params_results: Sequence[tuple[str, Mapping[str, object], CheckResult]],
     empty_value_store: None,
-):
+) -> None:
     section = brocade_optical.parse_brocade_optical(string_table)
 
     assert (

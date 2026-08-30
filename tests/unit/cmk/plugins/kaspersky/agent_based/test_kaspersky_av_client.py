@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -18,7 +17,7 @@ from cmk.rulesets.v1.form_specs import SimpleLevelsConfigModel
 
 
 @pytest.fixture(scope="module", autouse=True)
-def set_fixed_timezone():
+def set_fixed_timezone() -> Iterator[None]:
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         yield
 

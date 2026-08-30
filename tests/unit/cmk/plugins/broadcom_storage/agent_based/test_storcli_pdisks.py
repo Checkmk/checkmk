@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import re
 
@@ -145,7 +144,7 @@ def _to_string_table(raw: str) -> StringTable:
     return [list(re.split(" +", line.strip())) for line in raw.strip().split("\n") if line]
 
 
-def test_parse_v1():
+def test_parse_v1() -> None:
     assert parse_storcli_pdisks(_to_string_table(SECTION_V1)) == {
         "C0.8:0-15": StorcliPDisk(size=(953.343, "GB"), state="Onln"),
         "C0.8:1-23": StorcliPDisk(size=(953.343, "GB"), state="Onln"),
@@ -159,7 +158,7 @@ def test_parse_v1():
     }
 
 
-def test_parse_v2():
+def test_parse_v2() -> None:
     assert parse_storcli_pdisks(_to_string_table(SECTION_V2)) == {
         "C0.308:0-283": StorcliPDisk(state="Online", size=(223.062, "GiB")),
         "C0.308:4-287": StorcliPDisk(state="Online", size=(223.062, "GiB")),
@@ -170,7 +169,7 @@ def test_parse_v2():
     }
 
 
-def test_parse_v1_01():
+def test_parse_v1_01() -> None:
     assert parse_storcli_pdisks(_to_string_table(SECTION_V1_01)) == {
         "C0.8:0-10": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),
         "C0.8:1-15": StorcliPDisk(size=(10.914, "TB"), state="JBOD"),

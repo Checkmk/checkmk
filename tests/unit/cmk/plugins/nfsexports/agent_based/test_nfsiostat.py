@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 
@@ -13,7 +12,7 @@ from cmk.plugins.nfsexports.agent_based.nfsiostat import Section
 
 
 @pytest.fixture(name="section1", scope="module")
-def _section():
+def _section() -> Section:
     return nfsiostat.parse_nfsiostat(
         [
             [
@@ -68,7 +67,7 @@ def _section():
 
 
 @pytest.fixture(name="section2", scope="module")
-def _section2():
+def _section2() -> Section:
     return nfsiostat.parse_nfsiostat(
         [
             [
@@ -129,7 +128,7 @@ def _section2():
         pytest.param("section2", "'abcdef123-x01:/bud_win_redvol/root/Oracle/tnsnames',"),
     ],
 )
-def test_item(section, item, request):  # type: ignore[misc]
+def test_item(section: str, item: str, request: pytest.FixtureRequest) -> None:
     services = list(nfsiostat.discover_nfsiostat(request.getfixturevalue(section)))
     assert len(services) == 1
     assert services[0][0] == item
@@ -158,7 +157,7 @@ def test_nfsiostat_parse_old_nfsiostat_output(
     )
 
 
-def test_nfsiostat_parse_newer_nfsiostat_output_format():
+def test_nfsiostat_parse_newer_nfsiostat_output_format() -> None:
     # exe is the last value we report, avg queue and errors is not transported
     # read:  0.018 3 0.3 is not in the output
     # write: 0.077 4 0.4 is not in the output
@@ -298,7 +297,7 @@ def test_nfsiostat_check3(
     ]
 
 
-def test_mount_name_ends_with_number():
+def test_mount_name_ends_with_number() -> None:
     section = nfsiostat.parse_nfsiostat(
         [
             [
@@ -358,7 +357,7 @@ def test_mount_name_ends_with_number():
     assert results[0] == Result(state=State.OK, summary="Operations: 730.89/s")
 
 
-def test_mount_name_with_no_beginning_slash():
+def test_mount_name_with_no_beginning_slash() -> None:
     section = nfsiostat.parse_nfsiostat(
         [
             [

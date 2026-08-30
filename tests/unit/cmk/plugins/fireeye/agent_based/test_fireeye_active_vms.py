@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.fireeye_active_vms import (
+from cmk.plugins.fireeye.agent_based.fireeye_active_vms import (
     check_fireeye_active_vms,
     discover_fireeye_active_vms,
 )

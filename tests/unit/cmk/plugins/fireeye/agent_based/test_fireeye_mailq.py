@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.fireeye_mailq import (
+from cmk.plugins.fireeye.agent_based.fireeye_mailq import (
     check_fireeye_mailq,
     dicsover_fireeye_mailq,
     parse_fireeye_mailq,

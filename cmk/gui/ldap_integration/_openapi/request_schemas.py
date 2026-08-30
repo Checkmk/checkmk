@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 from typing import Any, override
 
 from marshmallow import INCLUDE, post_load, pre_load, ValidationError
@@ -45,8 +44,9 @@ class LDAPCheckboxSelector(OneOfSchema):
     type_field_remove = False
 
     @override
-    def get_obj_type(self, obj):
-        return obj["state"]
+    def get_obj_type(self, obj: Any) -> str:
+        state: str = obj["state"]
+        return state
 
 
 class LDAPGeneralPropertiesRequest(BaseSchema):
@@ -670,7 +670,7 @@ class LDAPSyncPluginGroupsToSyncSelector(OneOfSchema):
     }
 
     @override
-    def get_data_type(self, data):
+    def get_data_type(self, data: Mapping[str, str]) -> str:
         data_type = data.get(self.type_field)
         if data_type not in ("start_url", "disable_notifications"):
             return "all_others"

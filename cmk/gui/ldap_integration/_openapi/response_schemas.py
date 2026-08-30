@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 from typing import Any, override
 
@@ -511,8 +510,8 @@ class LDAPGroupsToSyncSelector(OneOfSchema):
     }
 
     @override
-    def get_obj_type(self, obj):
-        attribute_to_set = obj.get("attribute_to_set")
+    def get_obj_type(self, obj: Any) -> str:
+        attribute_to_set: str = obj.get("attribute_to_set")
         if attribute_to_set not in self.type_schemas:
             self.type_schemas[attribute_to_set] = LDAPGroupsToSyncAllOthers
         return attribute_to_set

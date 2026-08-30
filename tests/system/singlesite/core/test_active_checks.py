@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import logging
 from collections.abc import Iterator
@@ -98,7 +97,7 @@ def test_active_check_macros(site: Site) -> None:
         "$USER4$": site.root.as_posix(),
     }
 
-    def descr(var):
+    def descr(var: str) -> str:
         return "Macro %s" % var.strip("$")
 
     rule_ids = []

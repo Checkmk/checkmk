@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import json
 from pathlib import Path
@@ -182,18 +181,18 @@ class MockResponse:
     status_code = 200
     content = "non-empty"
 
-    def __init__(self, json_response):
+    def __init__(self, json_response: dict[str, object] | list[object]) -> None:
         self._response = json_response
 
     @staticmethod
-    def raise_for_status():
+    def raise_for_status() -> None:
         pass
 
-    def json(self) -> dict[str, object]:
+    def json(self) -> dict[str, object] | list[object]:
         return self._response
 
 
-def default_requests_mock_get(url, **kwargs):
+def default_requests_mock_get(url: str, **kwargs: object) -> MockResponse:
     if "tags" in url:
         return MockResponse(
             [
@@ -371,7 +370,7 @@ def test_bazel_cache_agent_output_has_no_minor_version(
     assert data["latest"]["minor"] is None
 
 
-def only_one_version_mock_get(url, **kwargs):
+def only_one_version_mock_get(url: str, **kwargs: object) -> MockResponse:
     if "tags" in url:
         return MockResponse(
             [
@@ -418,7 +417,7 @@ def test_bazel_cache_agent_output_has_no_latest_versions(
     assert data["latest"]["patch"] is None
 
 
-def no_version_mock_get(url, **kwargs):
+def no_version_mock_get(url: str, **kwargs: object) -> MockResponse:
     if "tags" in url:
         return MockResponse([])
     return MockResponse(

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from pathlib import Path
 
@@ -89,7 +88,7 @@ def test_body_templates(
     assert mail.body_templates(*args) == expected
 
 
-def mock_service_context():
+def mock_service_context() -> dict[str, str]:
     return {
         "CONTACTALIAS": "cmkadmin",
         "CONTACTEMAIL": "test@abc.de",
@@ -275,7 +274,7 @@ def test_mail_content_from_service_context(mocker: MockerFixture) -> None:  # no
         assert content.attachments == []
 
 
-def mock_host_context():
+def mock_host_context() -> dict[str, str]:
     return {
         "CONTACTALIAS": "cmkadmin",
         "CONTACTEMAIL": "test@abc.de",

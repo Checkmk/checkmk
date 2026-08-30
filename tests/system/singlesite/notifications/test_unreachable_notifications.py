@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import logging
 import subprocess
@@ -25,7 +24,7 @@ STATE_UNREACHABLE = 2
 logger = logging.getLogger(__name__)
 
 
-def get_test_id(unreachable_enabled):
+def get_test_id(unreachable_enabled: bool) -> str:
     return "unreachable_enabled" if unreachable_enabled else "unreachable_disabled"
 
 
@@ -108,7 +107,7 @@ def initial_state_fixture(
         inode_before = site.inode("var/check_mk/core/history")
         site.live.command("[%d] ROTATE_LOGFILE" % time.time())
 
-        def rotated_log():
+        def rotated_log() -> bool:
             try:
                 return inode_before != site.inode("var/check_mk/core/history")
             except subprocess.CalledProcessError:

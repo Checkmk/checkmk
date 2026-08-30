@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.ra32e_power import check_ra32e_power, discover_ra32e_power
+from cmk.plugins.roomalert.agent_based.ra32e_power import check_ra32e_power, discover_ra32e_power
 
 
 def test_ra32e_power_discover_nothing() -> None:

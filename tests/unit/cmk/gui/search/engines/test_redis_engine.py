@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import io
 import threading
@@ -262,7 +261,7 @@ class TestIndexBuilder:
     ) -> None:
         current_lang = "en"
 
-        def localize_with_memory(lang):
+        def localize_with_memory(lang: str) -> None:
             """Needed to remember currently set language"""
             nonlocal current_lang
             current_lang = lang
@@ -334,7 +333,7 @@ class TestIndexBuilderAndSearcher:
         Test if things can also be deleted from the index during an update
         """
 
-        def empty_match_item_gen(user_permissions: UserPermissions):
+        def empty_match_item_gen(user_permissions: UserPermissions) -> Iterator[MatchItem]:
             yield from ()
 
         index_builder.build_full_index(UserPermissions({}, {}, {}, []))

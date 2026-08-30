@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 
@@ -11,12 +10,12 @@ from cmk.plugins.lib.memory import SectionMemTotal
 from cmk.plugins.memory.agent_based.mem_total_sections import parse_mem_total_solaris
 
 
-def test_simple():
+def test_simple() -> None:
     assert parse_mem_total_solaris([["Memory size: 123904 Megabytes"]]) == SectionMemTotal(
         129922760704
     )
 
 
-def test_problem():
+def test_problem() -> None:
     with pytest.raises(ValueError, match=r"can not parse \[\['something'\]\]"):
         parse_mem_total_solaris([["something"]])

@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Sequence
-from typing import Protocol
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from typing import Protocol, TypedDict
 
 import pytest
 
@@ -33,12 +32,12 @@ from .agent_aws_fake_clients import (
 
 
 class PaginatorTables:
-    def paginate(self):
+    def paginate(self) -> Iterator[Mapping[str, list[str]]]:
         yield {"TableNames": ["TableName-0", "TableName-1", "TableName-2"]}
 
 
 class PaginatorTags:
-    def paginate(self, ResourceArn=None):
+    def paginate(self, ResourceArn: str | None = None) -> Iterator[Mapping[str, object]]:
         if ResourceArn == "TableArn-2":  # the third table has no tags
             tags = []
         else:
@@ -60,23 +59,23 @@ class FakeDynamoDBClient:
         self._tables = DynamoDBDescribeTableIB.create_instances(amount=3)
         self.exceptions = Exceptions()
 
-    def describe_limits(self):
+    def describe_limits(self) -> Mapping[str, object]:
         return DynamoDBDescribeLimitsIB.create_instances(amount=1)[0]
 
-    def describe_table(self, TableName=None):
+    def describe_table(self, TableName: str | None = None) -> Mapping[str, object]:
         if TableName not in ["TableName-0", "TableName-1", "TableName-2"]:
             raise self.exceptions.ResourceNotFoundException
         idx = int(TableName[-1])
         return {"Table": self._tables[idx]}
 
-    def get_paginator(self, operation_name):
+    def get_paginator(self, operation_name: str) -> PaginatorTables | PaginatorTags:
         if operation_name == "list_tables":
             return PaginatorTables()
         if operation_name == "list_tags_of_resource":
             return PaginatorTags()
         raise NotImplementedError
 
-    def list_tags_of_resource(self, ResourceArn=None):
+    def list_tags_of_resource(self, ResourceArn: str | None = None) -> Mapping[str, object]:
         if ResourceArn == "TableArn-2":  # the third table has no tags
             tags = []
         else:
@@ -176,7 +175,12 @@ dynamodb_params = [
 ]
 
 
-def _get_provisioned_table_names(tables):
+class _ProvisionedTableInfo(TypedDict):
+    TableName: str
+    ProvisionedThroughput: Mapping[str, int]
+
+
+def _get_provisioned_table_names(tables: Iterable[_ProvisionedTableInfo]) -> list[str]:
     return [
         table["TableName"]
         for table in tables
@@ -212,7 +216,10 @@ def test_agent_aws_dynamodb_limits(
             assert table_name in provisioned_table_names
 
 
-def _test_summary(dynamodb_summary, found_instances):
+def _test_summary(
+    dynamodb_summary: DynamoDBLimits | DynamoDBSummary | DynamoDBTable,
+    found_instances: Sequence[str],
+) -> None:
     dynamodb_summary_results = dynamodb_summary.run().results
 
     assert dynamodb_summary.cache_interval == 300
@@ -252,7 +259,10 @@ def test_agent_aws_dynamodb_summary_wo_limits(
     _test_summary(dynamodb_sections["dynamodb_summary"], found_instances)
 
 
-def _test_table(dynamodb_table, found_instances):
+def _test_table(
+    dynamodb_table: DynamoDBLimits | DynamoDBSummary | DynamoDBTable,
+    found_instances: Sequence[str],
+) -> None:
     dynamodb_table_results = dynamodb_table.run().results
 
     assert dynamodb_table.cache_interval == 300

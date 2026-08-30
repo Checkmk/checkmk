@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from typing import Protocol
 
 import pytest
@@ -40,10 +39,12 @@ from .agent_aws_fake_clients import (
 
 
 class FakeEC2Client:
-    def __init__(self, skip_entities: Mapping[str, object] | None = None) -> None:
-        self._skip_entities = skip_entities if skip_entities else {}
+    def __init__(self, skip_entities: Mapping[str, Collection[str]] | None = None) -> None:
+        self._skip_entities: Mapping[str, Collection[str]] = skip_entities if skip_entities else {}
 
-    def describe_instances(self, InstanceIds=None, Filters=None):
+    def describe_instances(
+        self, InstanceIds: object = None, Filters: object = None
+    ) -> Mapping[str, object]:
         instances = EC2DescribeInstancesIB.create_instances(
             amount=3, skip_entities=self._skip_entities.get("Instances")
         )
@@ -68,7 +69,7 @@ class FakeEC2Client:
             "NextToken": "string",
         }
 
-    def describe_reserved_instances(self):
+    def describe_reserved_instances(self) -> Mapping[str, object]:
         return {
             "ReservedInstances": EC2DescribeReservedInstancesIB.create_instances(
                 amount=3,
@@ -76,30 +77,32 @@ class FakeEC2Client:
             ),
         }
 
-    def describe_addresses(self):
+    def describe_addresses(self) -> Mapping[str, object]:
         return {
             "Addresses": EC2DescribeAddressesIB.create_instances(amount=3),
         }
 
-    def describe_security_groups(self, InstanceIds=None, Filters=None):
+    def describe_security_groups(
+        self, InstanceIds: object = None, Filters: object = None
+    ) -> Mapping[str, object]:
         return {
             "SecurityGroups": EC2DescribeSecurityGroupsIB.create_instances(amount=3),
             "NextToken": "string",
         }
 
-    def describe_network_interfaces(self):
+    def describe_network_interfaces(self) -> Mapping[str, object]:
         return {
             "NetworkInterfaces": EC2DescribeNetworkInterfacesIB.create_instances(amount=3),
             "NextToken": "string",
         }
 
-    def describe_spot_instance_requests(self):
+    def describe_spot_instance_requests(self) -> Mapping[str, object]:
         return {
             "SpotInstanceRequests": EC2DescribeSpotInstanceRequestsIB.create_instances(amount=3),
             "NextToken": "string",
         }
 
-    def describe_spot_fleet_requests(self):
+    def describe_spot_fleet_requests(self) -> Mapping[str, object]:
         return {
             "SpotFleetRequestConfigs": EC2DescribeSpotFleetRequestsIB.create_instances(amount=3),
             "NextToken": "string",
@@ -114,7 +117,7 @@ class EC2Sections(Protocol):
         self,
         names: object | None = None,
         tags: OverallTags = (None, None),
-        skip_entities: Mapping[str, object] | None = None,
+        skip_entities: Mapping[str, Collection[str]] | None = None,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
     ) -> EC2SectionsOut: ...
 
@@ -124,7 +127,7 @@ def get_ec2_sections() -> EC2Sections:
     def _create_ec2_sections(
         names: object | None = None,
         tags: OverallTags = (None, None),
-        skip_entities: Mapping[str, object] | None = None,
+        skip_entities: Mapping[str, Collection[str]] | None = None,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
     ) -> EC2SectionsOut:
         region = "region"
@@ -401,9 +404,14 @@ def test_agent_aws_ec2_without_limits(get_ec2_sections: EC2Sections) -> None:
         {"Instances": ["Tags"]},  # Fix for FEED-6986
     ],
 )
-def test_agent_aws_ec2_no_crash_when_keys_missing(  # type: ignore[misc]
-    get_ec2_sections, names, tags, found_ec2, found_ec2_with_labels, skip_entities
-):
+def test_agent_aws_ec2_no_crash_when_keys_missing(
+    get_ec2_sections: EC2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_ec2: int,
+    found_ec2_with_labels: int,
+    skip_entities: Mapping[str, Collection[str]],
+) -> None:
     ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
         names, tags, skip_entities=skip_entities
     )

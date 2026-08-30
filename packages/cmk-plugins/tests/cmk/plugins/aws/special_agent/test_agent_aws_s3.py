@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime as dt
 from typing import Protocol
 
@@ -32,7 +31,7 @@ from .agent_aws_fake_clients import FakeCloudwatchClient, S3BucketTaggingIB, S3L
 
 
 class FakeS3Client:
-    def list_buckets(self):
+    def list_buckets(self) -> Mapping[str, object]:
         return {
             "Buckets": S3ListBucketsIB.create_instances(amount=4),
             "Owner": {
@@ -41,14 +40,14 @@ class FakeS3Client:
             },
         }
 
-    def get_bucket_location(self, Bucket=""):
+    def get_bucket_location(self, Bucket: str = "") -> Mapping[str, object]:
         if Bucket in ["Name-0", "Name-1", "Name-2"]:
             return {
                 "LocationConstraint": "region",
             }
         return {}
 
-    def get_bucket_tagging(self, Bucket=""):
+    def get_bucket_tagging(self, Bucket: str = "") -> Mapping[str, object]:
         if Bucket == "Name-0":
             return {
                 "TagSet": S3BucketTaggingIB.create_instances(amount=1),

@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 from argparse import Namespace as Args
-from collections.abc import Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Literal, Protocol
 
 import pytest
@@ -198,24 +197,24 @@ TAGGING_PAGINATOR_RESULT = {
 
 
 class Paginator:
-    def paginate(self, *args, **kwargs):
+    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:
         yield PAGINATOR_RESULT
 
 
 class FakeCloudFrontClient:
-    def get_paginator(self, operation_name):
+    def get_paginator(self, operation_name: str) -> Paginator:
         if operation_name == "list_distributions":
             return Paginator()
         raise NotImplementedError
 
 
 class TaggingPaginator:
-    def paginate(self, *args, **kwargs):
+    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:
         yield TAGGING_PAGINATOR_RESULT
 
 
 class FakeTaggingClient:
-    def get_paginator(self, operation_name):
+    def get_paginator(self, operation_name: str) -> TaggingPaginator:
         if operation_name == "get_resources":
             return TaggingPaginator()
         raise NotImplementedError

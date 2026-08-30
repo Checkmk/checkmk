@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
 
@@ -14,7 +13,9 @@ from .agent_aws_fake_clients import CEGetCostsAndUsageIB
 
 
 class FakeCEClient:
-    def get_cost_and_usage(self, TimePeriod, Granularity, Metrics, GroupBy):
+    def get_cost_and_usage(
+        self, TimePeriod: object, Granularity: object, Metrics: object, GroupBy: object
+    ) -> dict[str, object]:
         return {
             "NextPageToken": "string",
             "GroupDefinitions": [

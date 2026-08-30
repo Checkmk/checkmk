@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -36,13 +35,13 @@ test_params: Mapping[str, Mapping] = {
 }
 
 
-def test_discover_aws_dynamodb_table_write_capacity():
+def test_discover_aws_dynamodb_table_write_capacity() -> None:
     inventory = list(discover_aws_dynamodb_table_read_capacity(test_section))
     assert len(inventory) == 1  # Always only one Service
     assert isinstance(inventory[0], Service)
 
 
-def test_check_aws_dynamodb_write_capacity():
+def test_check_aws_dynamodb_write_capacity() -> None:
     results = list(check_aws_dynamodb_read_capacity(test_params, test_section))
     assert len(results) == len(test_section) * 2  # one result and one metric per operation
     assert (
@@ -77,6 +76,6 @@ def test_check_aws_dynamodb_write_capacity():
     assert " RCU" in results[6].summary
 
 
-def test_check_aws_dynamodb_latency_no_data():
+def test_check_aws_dynamodb_latency_no_data() -> None:
     with pytest.raises(IgnoreResultsError):
         list(check_aws_dynamodb_read_capacity(test_params, {}))

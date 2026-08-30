@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Sequence
-from typing import NamedTuple, Protocol
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from typing import NamedTuple, Protocol, TypedDict
 
 import pytest
 
@@ -42,7 +41,7 @@ from .agent_aws_fake_clients import (
 
 
 class Paginator:
-    def paginate(self, Names=None):
+    def paginate(self, Names: Sequence[str] | None = None) -> Iterator[Mapping[str, object]]:
         load_balancers = ELBv2DescribeLoadBalancersIB.create_instances(amount=3)
         if Names is not None:
             load_balancers = [
@@ -57,43 +56,43 @@ class Paginator:
 
 
 class FakeELBv2Client:
-    def describe_tags(self, ResourceArns=None):
+    def describe_tags(self, ResourceArns: Sequence[str] | None = None) -> Mapping[str, object]:
         lbs = ELBDescribeTagsIB.create_instances(amount=3)  # 3 needed to get more than one tag each
         tagged_lbs = set(ResourceArns or []).intersection(
             {"LoadBalancerArn-0", "LoadBalancerArn-1"}
         )
         return {"TagDescriptions": [lb for lb in lbs if lb["LoadBalancerArn"] in tagged_lbs]}
 
-    def describe_target_groups(self, LoadBalancerArn=None):
+    def describe_target_groups(self, LoadBalancerArn: str | None = None) -> Mapping[str, object]:
         return {
             "TargetGroups": ELBv2DescribeTargetGroupsIB.create_instances(amount=1),
             "NextMarker": "string",
         }
 
-    def describe_listeners(self, LoadBalancerArn=None):
+    def describe_listeners(self, LoadBalancerArn: str | None = None) -> Mapping[str, object]:
         return {
             "Listeners": ELBv2DescribeListenersIB.create_instances(amount=1),
             "NextMarker": "string",
         }
 
-    def describe_rules(self, ListenerArn=None):
+    def describe_rules(self, ListenerArn: str | None = None) -> Mapping[str, object]:
         return {
             "Rules": ELBv2DescribeRulesIB.create_instances(amount=1),
             "NextMarker": "string",
         }
 
-    def describe_account_limits(self):
+    def describe_account_limits(self) -> Mapping[str, object]:
         return {
             "Limits": ELBv2DescribeAccountLimitsIB.create_instances(amount=1)[0]["Limits"],
             "NextMarker": "string",
         }
 
-    def describe_target_health(self, TargetGroupArn=None):
+    def describe_target_health(self, TargetGroupArn: str | None = None) -> Mapping[str, object]:
         return {
             "TargetHealthDescriptions": ELBv2DescribeTargetHealthIB.create_instances(amount=1),
         }
 
-    def get_paginator(self, operation_name):
+    def get_paginator(self, operation_name: str) -> Paginator:
         if operation_name == "describe_load_balancers":
             return Paginator()
         raise NotImplementedError
@@ -186,9 +185,17 @@ def get_elbv2_sections() -> ELBv2Sections:
     return _create_elbv2_sections
 
 
+class _SectionResultLike(Protocol):
+    piggyback_hostname: str
+    content: Sequence[Mapping[str, str]]
+
+
 def check_target_groups_results(
-    piggyback_hostname, target_group_name, target_groups_results, expected_length
-):
+    piggyback_hostname: str,
+    target_group_name: str,
+    target_groups_results: Iterable[_SectionResultLike],
+    expected_length: int,
+) -> None:
     for result in target_groups_results:
         entry_found = result.piggyback_hostname == piggyback_hostname
 
@@ -201,11 +208,22 @@ def check_target_groups_results(
             break
 
 
+class _TargetGroupInfo(TypedDict):
+    TargetType: str
+    TargetGroupName: str
+
+
+class _ELBv2SummaryContent(TypedDict):
+    Type: str
+    DNSName: str
+    TargetGroups: Sequence[_TargetGroupInfo]
+
+
 def check_target_group_errors_results(
-    elbv2_summary_content,
-    elbv2_application_target_groups_http_results,
-    elbv2_application_target_groups_lambda_results,
-):
+    elbv2_summary_content: Iterable[_ELBv2SummaryContent],
+    elbv2_application_target_groups_http_results: Sequence[_SectionResultLike],
+    elbv2_application_target_groups_lambda_results: Sequence[_SectionResultLike],
+) -> None:
     n_elbv2_application = 0
     n_tg_lambda = 0
     n_tg_instance_ip = 0

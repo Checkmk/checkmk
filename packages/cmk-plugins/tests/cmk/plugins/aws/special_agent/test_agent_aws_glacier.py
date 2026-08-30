@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Protocol
 
 import pytest
@@ -27,10 +26,10 @@ from .agent_aws_fake_clients import GlacierListTagsInstancesIB, GlacierListVault
 
 
 class FakeGlacierClient:
-    def list_vaults(self):
+    def list_vaults(self) -> Mapping[str, object]:
         return {"VaultList": GlacierListVaultsIB.create_instances(amount=4), "Marker": "string"}
 
-    def list_tags_for_vault(self, vaultName=""):
+    def list_tags_for_vault(self, vaultName: str = "") -> Mapping[str, object]:
         if vaultName == "VaultName-0":
             return {
                 "Tags": GlacierListTagsInstancesIB.create_instances(amount=1),

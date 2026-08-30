@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
 from collections.abc import Callable
@@ -65,9 +64,11 @@ cloudwatch_params: list[tuple[list[str] | None, int]] = [
 
 
 @pytest.mark.parametrize("alarm_names,amount_alarms", cloudwatch_params)
-def test_agent_aws_cloudwatch_alarms_limits(  # type: ignore[misc]
-    get_cloudwatch_alarms_sections, alarm_names, amount_alarms
-):
+def test_agent_aws_cloudwatch_alarms_limits(
+    get_cloudwatch_alarms_sections: CreateCloudwatchAlarmSections,
+    alarm_names: list[str] | None,
+    amount_alarms: int,
+) -> None:
     cloudwatch_alarms_limits, _cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
     cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results
 
@@ -108,9 +109,11 @@ def test_agent_aws_cloudwatch_alarms(
 
 
 @pytest.mark.parametrize("alarm_names,amount_alarms", cloudwatch_params)
-def test_agent_aws_cloudwatch_alarms_without_limits(  # type: ignore[misc]
-    get_cloudwatch_alarms_sections, alarm_names, amount_alarms
-):
+def test_agent_aws_cloudwatch_alarms_without_limits(
+    get_cloudwatch_alarms_sections: CreateCloudwatchAlarmSections,
+    alarm_names: list[str] | None,
+    amount_alarms: int,
+) -> None:
     _cloudwatch_alarms_limits, cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
     cloudwatch_alarms_results = cloudwatch_alarms.run().results
 

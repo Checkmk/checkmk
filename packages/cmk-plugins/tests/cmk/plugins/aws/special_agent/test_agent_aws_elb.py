@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Protocol
 
 import pytest
@@ -36,7 +35,9 @@ from .agent_aws_fake_clients import (
 
 
 class Paginator:
-    def paginate(self, LoadBalancerNames=None):
+    def paginate(
+        self, LoadBalancerNames: Sequence[str] | None = None
+    ) -> Iterator[Mapping[str, object]]:
         load_balancers = ELBDescribeLoadBalancersIB.create_instances(amount=3)
         if LoadBalancerNames is not None:
             load_balancers = [
@@ -51,23 +52,23 @@ class Paginator:
 
 
 class FakeELBClient:
-    def describe_account_limits(self):
+    def describe_account_limits(self) -> Mapping[str, object]:
         return {
             "Limits": ELBDescribeAccountLimitsIB.create_instances(amount=1)[0]["Limits"],
             "NextMarker": "string",
         }
 
-    def describe_tags(self, LoadBalancerNames=None):
+    def describe_tags(self, LoadBalancerNames: Sequence[str] | None = None) -> Mapping[str, object]:
         lbs = ELBDescribeTagsIB.create_instances(amount=3)  # 3 needed to get more than one tag each
         tagged_lbs = set(LoadBalancerNames or []).intersection(
             {"LoadBalancerName-0", "LoadBalancerName-1"}
         )
         return {"TagDescriptions": [lb for lb in lbs if lb["LoadBalancerName"] in tagged_lbs]}
 
-    def describe_instance_health(self, LoadBalancerName=None):
+    def describe_instance_health(self, LoadBalancerName: str | None = None) -> Mapping[str, object]:
         return {"InstanceStates": ELBDescribeInstanceHealthIB.create_instances(amount=1)}
 
-    def get_paginator(self, operation_name):
+    def get_paginator(self, operation_name: str) -> Paginator:
         if operation_name == "describe_load_balancers":
             return Paginator()
         raise NotImplementedError

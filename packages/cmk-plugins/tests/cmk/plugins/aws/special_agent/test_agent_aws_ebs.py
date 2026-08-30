@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Protocol
 
 import pytest
@@ -35,7 +34,9 @@ from .agent_aws_fake_clients import (
 
 
 class FakeEC2Client:
-    def describe_instances(self, Filters=None, InstanceIds=None):
+    def describe_instances(
+        self, Filters: object = None, InstanceIds: object = None
+    ) -> Mapping[str, object]:
         return {
             "Reservations": [
                 {
@@ -51,19 +52,23 @@ class FakeEC2Client:
             "NextToken": "string",
         }
 
-    def describe_snapshots(self, OwnerIds=None):
+    def describe_snapshots(self, OwnerIds: object = None) -> Mapping[str, object]:
         return {
             "Snapshots": EC2DescribeSnapshotsIB.create_instances(amount=3),
             "NextToken": "string",
         }
 
-    def describe_volumes(self, VolumeIds=None, Filters=None):
+    def describe_volumes(
+        self, VolumeIds: object = None, Filters: object = None
+    ) -> Mapping[str, object]:
         return {
             "Volumes": EC2DescribeVolumesIB.create_instances(amount=3),
             "NextToken": "string",
         }
 
-    def describe_volume_status(self, VolumeIds=None, Filters=None):
+    def describe_volume_status(
+        self, VolumeIds: object = None, Filters: object = None
+    ) -> Mapping[str, object]:
         return {
             "VolumeStatuses": EC2DescribeVolumeStatusIB.create_instances(amount=3),
             "NextToken": "string",

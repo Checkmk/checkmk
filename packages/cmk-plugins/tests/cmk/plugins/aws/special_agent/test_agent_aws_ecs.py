@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Final, Protocol
 
 import pytest
@@ -86,7 +85,7 @@ CLUSTERS_CLIENT_RESPONSE2: Final[Sequence[Mapping[str, object]]] = [
 
 
 class Paginator:
-    def paginate(self):
+    def paginate(self) -> Iterator[Mapping[str, object]]:
         yield {
             "clusterArns": [
                 "arn:aws:ecs:us-east-1:710145618630:cluster/cluster-test1",
@@ -108,7 +107,7 @@ class Paginator:
 
 
 class FakeECSClient:
-    def __init__(self, client_response):
+    def __init__(self, client_response: Sequence[Mapping[str, object]]) -> None:
         self.client_response = client_response
 
     def get_paginator(self, function: str) -> Paginator:

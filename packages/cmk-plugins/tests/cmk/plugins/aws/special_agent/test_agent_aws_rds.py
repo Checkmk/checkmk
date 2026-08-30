@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
-from collections.abc import Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Protocol
 
 import pytest
@@ -42,7 +41,7 @@ class Exceptions:
 
 
 class Paginator:
-    def paginate(self, DBInstanceIdentifier=None):
+    def paginate(self, DBInstanceIdentifier: str | None = None) -> Iterator[Mapping[str, object]]:
         db_instances = RDSDescribeDBInstancesIB.create_instances(amount=3)
         if DBInstanceIdentifier is not None:
             db_instances = [
@@ -60,21 +59,21 @@ class FakeRDSClient:
     def __init__(self) -> None:
         self.exceptions = Exceptions()
 
-    def describe_account_attributes(self):
+    def describe_account_attributes(self) -> Mapping[str, object]:
         return {
             "AccountQuotas": RDSDescribeAccountAttributesIB.create_instances(amount=1)[0][
                 "AccountQuotas"
             ],
         }
 
-    def list_tags_for_resource(self, ResourceName=None):
+    def list_tags_for_resource(self, ResourceName: str | None = None) -> Mapping[str, object]:
         if ResourceName == "DBInstanceArn-2":  # the third table has no tags
             tags = []
         else:
             tags = RDSListTagsForResourceIB.create_instances(amount=3)
         return {"TagList": tags}
 
-    def get_paginator(self, operation_name):
+    def get_paginator(self, operation_name: str) -> Paginator:
         if operation_name == "describe_db_instances":
             return Paginator()
         raise NotImplementedError

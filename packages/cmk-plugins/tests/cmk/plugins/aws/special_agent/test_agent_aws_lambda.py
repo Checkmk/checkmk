@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
@@ -287,7 +286,7 @@ def test_agent_aws_lambda_cloudwatch_insights(names: Sequence[str], tags: Overal
 
 def test_lambda_cloudwatch_insights_query_results_timeout() -> None:
     class CloudWatchLogsClientStub(CloudWatchLogsClient):
-        def __init__(self):
+        def __init__(self) -> None:
             pass
 
         @override

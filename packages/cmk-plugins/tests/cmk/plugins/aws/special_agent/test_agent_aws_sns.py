@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from argparse import Namespace as Args
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from typing import Protocol
 
 import pytest
@@ -84,12 +83,12 @@ class PaginatorSubscriptions:
 
 
 class TaggingPaginator:
-    def paginate(self, *args, **kwargs):
+    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:
         yield TAGGING_PAGINATOR_RESULT
 
 
 class FakeTaggingClient:
-    def get_paginator(self, operation_name):
+    def get_paginator(self, operation_name: str) -> TaggingPaginator:
         if operation_name == "get_resources":
             return TaggingPaginator()
         raise NotImplementedError
@@ -102,7 +101,7 @@ class FakeSNSClient:
             self._topics[-(idx + 1)]["TopicArn"] += ".fifo"
         self._subscriptions = SNSListSubscriptionsIB.create_instances(amount=n_subs)
 
-    def get_paginator(self, operation_name):
+    def get_paginator(self, operation_name: str) -> PaginatorTopics | PaginatorSubscriptions:
         if operation_name == "list_topics":
             return PaginatorTopics(self._topics)
         if operation_name == "list_subscriptions":

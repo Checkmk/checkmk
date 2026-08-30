@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
 from argparse import Namespace as Args
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Final, Protocol
 
 import pytest
@@ -311,7 +310,7 @@ class FakeElastiCacheClient:
 
 
 class TaggingPaginator:
-    def paginate(self, *args, **kwargs):
+    def paginate(self, *args: object, **kwargs: object) -> Iterator[Mapping[str, object]]:
         yield {
             "ResourceTagMappingList": [
                 {
@@ -330,7 +329,7 @@ class TaggingPaginator:
 
 
 class FakeTaggingClient:
-    def get_paginator(self, operation_name):
+    def get_paginator(self, operation_name: str) -> TaggingPaginator:
         if operation_name == "get_resources":
             return TaggingPaginator()
         raise NotImplementedError

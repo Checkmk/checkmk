@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 """Place for common code shared among different Check_MK special agents
 
@@ -24,7 +23,7 @@ from cmk.server_side_programs.v1_unstable import Storage
 LOGGER = logging.getLogger(__name__)
 
 
-def _datetime_serializer(obj):
+def _datetime_serializer(obj: object) -> str:
     """Custom serializer to pass to json dump functions"""
     if isinstance(obj, datetime.datetime):
         return str(obj)
@@ -82,7 +81,7 @@ class DataCache(abc.ABC):
     def cache_timestamp(self) -> float | None:
         return None if (read := self._read_storage()) is None else read[0]
 
-    def _cache_is_valid(self):
+    def _cache_is_valid(self) -> bool:
         mtime = self.cache_timestamp
         if mtime is None:
             return False
@@ -95,7 +94,7 @@ class DataCache(abc.ABC):
             LOGGER.info("Cache file from future considered invalid.")
         return False
 
-    def get_cached_data(self):
+    def get_cached_data(self) -> Any:
         if (read := self._read_storage()) is None:
             # raising here is silly, but I am refactoring and want to
             # keep the changes as small as possible.
@@ -109,7 +108,7 @@ class DataCache(abc.ABC):
             raise
         return content
 
-    def get_data(self, *args, **kwargs):
+    def get_data(self, *args: Any, **kwargs: Any) -> Any:
         use_cache = kwargs.pop("use_cache", True)
         if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
             try:
@@ -130,5 +129,5 @@ class DataCache(abc.ABC):
                 raise
         return live_data
 
-    def _write_to_cache(self, raw_content):
+    def _write_to_cache(self, raw_content: Any) -> None:
         self._write_storage(json.dumps(raw_content, default=_datetime_serializer))

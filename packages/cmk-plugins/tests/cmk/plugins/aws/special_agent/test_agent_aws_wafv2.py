@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from argparse import Namespace as Args
 from collections.abc import Mapping, Sequence
@@ -37,23 +36,27 @@ class FakeWAFV2Client:
     def __init__(self) -> None:
         self._web_acls = WAFV2GetWebACLIB.create_instances(amount=3)
 
-    def list_web_acls(self, Scope=None):
+    def list_web_acls(self, Scope: str | None = None) -> Mapping[str, object]:
         return {"WebACLs": WAFV2ListOperationIB.create_instances(amount=3)}
 
-    def list_rule_groups(self, Scope=None):
+    def list_rule_groups(self, Scope: str | None = None) -> Mapping[str, object]:
         return {"RuleGroups": WAFV2ListOperationIB.create_instances(amount=4)}
 
-    def list_ip_sets(self, Scope=None):
+    def list_ip_sets(self, Scope: str | None = None) -> Mapping[str, object]:
         return {"IPSets": WAFV2ListOperationIB.create_instances(amount=5)}
 
-    def list_regex_pattern_sets(self, Scope=None):
+    def list_regex_pattern_sets(self, Scope: str | None = None) -> Mapping[str, object]:
         return {"RegexPatternSets": WAFV2ListOperationIB.create_instances(amount=6)}
 
-    def get_web_acl(self, Name=None, Scope=None, Id=None):
+    def get_web_acl(
+        self, Name: str | None = None, Scope: str | None = None, Id: str | None = None
+    ) -> Mapping[str, object]:
+        assert Name is not None
         idx = int(Name[-1])
         return {"WebACL": self._web_acls[idx], "LockToken": "string"}
 
-    def list_tags_for_resource(self, ResourceARN=None):
+    def list_tags_for_resource(self, ResourceARN: str | None = None) -> Mapping[str, object]:
+        tags: Mapping[str, object]
         if ResourceARN == "ARN-2":  # the third Web ACL has no tags
             tags = {}
         else:
@@ -67,7 +70,9 @@ Wafv2Sections = Mapping[str, WAFV2Limits | WAFV2Summary | WAFV2WebACL]
 def test_search_string_bytes_handling_in_get_wafv2_web_acls() -> None:
     fake_wafv2_client = FakeWAFV2Client()
 
-    def get_response_content(response, key, dflt=None):
+    def get_response_content(
+        response: Mapping[str, object], key: str, dflt: object = None
+    ) -> object:
         if dflt is None:
             dflt = []
         if key in response:
@@ -221,7 +226,7 @@ def test_agent_aws_wafv2_regional_cloudfront() -> None:
     assert len(WAFV2WebACL(None, "us-east-1", config, False)._static_metric_dimensions) == 1  # noqa: SLF001
 
 
-def _test_limits(wafv2_sections):
+def _test_limits(wafv2_sections: Wafv2Sections) -> None:
     wafv2_limits = wafv2_sections["wafv2_limits"]
     wafv2_limits_results = wafv2_limits.run().results
 
@@ -247,7 +252,9 @@ def test_agent_aws_wafv2_limits(
         _test_limits(wafv2_sections)
 
 
-def _test_summary(wafv2_summary, found_instances):
+def _test_summary(
+    wafv2_summary: WAFV2Limits | WAFV2Summary | WAFV2WebACL, found_instances: Sequence[str]
+) -> None:
     wafv2_summary_results = wafv2_summary.run().results
 
     assert wafv2_summary.cache_interval == 300
@@ -287,7 +294,7 @@ def test_agent_aws_wafv2_summary_wo_limits(
         _test_summary(wafv2_sections["wafv2_summary"], found_instances)
 
 
-def _test_web_acl(wafv2_sections, found_instances):
+def _test_web_acl(wafv2_sections: Wafv2Sections, found_instances: Sequence[str]) -> None:
     _wafv2_summary_results = wafv2_sections["wafv2_summary"].run().results
     wafv2_web_acl = wafv2_sections["wafv2_web_acl"]
     wafv2_web_acl_results = wafv2_web_acl.run().results

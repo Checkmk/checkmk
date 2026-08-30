@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.fireeye_quarantine import (
+from cmk.plugins.fireeye.agent_based.fireeye_quarantine import (
     check_fireeye_quarantine,
     discover_fireeye_quarantine,
 )

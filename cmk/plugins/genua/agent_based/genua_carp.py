@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Sequence
 
@@ -45,7 +44,7 @@ def discover_genua_carp(section: Sequence[StringTable]) -> DiscoveryResult:
     yield from [Service(item=item, parameters=parameters) for (item, parameters) in inventory]
 
 
-def genua_linkstate(st):
+def genua_linkstate(st: str) -> str:
     names = {
         "0": "unknown",
         "1": "down",
@@ -56,7 +55,7 @@ def genua_linkstate(st):
     return names.get(st, st)
 
 
-def genua_carpstate(st):
+def genua_carpstate(st: str) -> str:
     names = {
         "0": "init",
         "1": "backup",

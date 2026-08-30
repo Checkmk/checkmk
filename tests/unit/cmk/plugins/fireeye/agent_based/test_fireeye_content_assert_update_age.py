@@ -12,7 +12,7 @@ import time
 from unittest.mock import patch
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.fireeye_content import (
+from cmk.plugins.fireeye.agent_based.fireeye_content import (
     check_fireeye_content,
     discover_fireeye_content,
     parse_fireeye_content,

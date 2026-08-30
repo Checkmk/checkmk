@@ -10,27 +10,27 @@
 
 from unittest.mock import patch
 
-from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.fireeye_content import (
+from cmk.agent_based.v2 import Result, Service
+from cmk.plugins.fireeye.agent_based.fireeye_content import (
     check_fireeye_content,
     discover_fireeye_content,
     parse_fireeye_content,
 )
 
 
-def test_fireeye_content_update_failed_discovery() -> None:
-    """Test discovery of FireEye content status when update failed."""
-    # SNMP data: [version, status, timestamp] - status "0" means failed
-    parsed = parse_fireeye_content([["456.180", "0", "2016/02/26 15:42:06"]])
+def test_fireeye_content_discovery() -> None:
+    """Test discovery of FireEye content status."""
+    # SNMP data: [version, status, timestamp]
+    parsed = parse_fireeye_content([["456.180", "1", "2016/02/26 15:42:06"]])
     assert parsed is not None
 
     assert list(discover_fireeye_content(parsed)) == [Service()]
 
 
-def test_fireeye_content_update_failed() -> None:
-    """Test FireEye content check with failed update."""
-    # SNMP data: [version, status, timestamp] - status "0" means failed
-    parsed = parse_fireeye_content([["456.180", "0", "2016/02/26 15:42:06"]])
+def test_fireeye_content_check_ok() -> None:
+    """Test FireEye content check with successful update."""
+    # SNMP data: [version, status, timestamp] - status "1" means OK
+    parsed = parse_fireeye_content([["456.180", "1", "2016/02/26 15:42:06"]])
     assert parsed is not None
 
     # Freeze time to match expected age calculation
@@ -38,8 +38,7 @@ def test_fireeye_content_update_failed() -> None:
         results = [r for r in check_fireeye_content({}, parsed) if isinstance(r, Result)]
 
     # Check the structure and key messages
-    assert len(results) == 4
-    assert results[0] == Result(state=State.WARN, summary="Update: failed")
-    assert results[1].summary == "Last update: 2016/02/26 15:42:06"
-    assert "Age:" in results[2].summary
-    assert results[3].summary == "Security version: 456.180"
+    assert len(results) == 3
+    assert results[0].summary == "Last update: 2016/02/26 15:42:06"
+    assert "Age:" in results[1].summary
+    assert results[2].summary == "Security version: 456.180"

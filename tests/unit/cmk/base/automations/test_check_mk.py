@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
@@ -65,21 +64,23 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
 
 class TestAutomationDiagHost:
     @pytest.fixture
-    def hostname(self):
+    def hostname(self) -> str:
         return "testhost"
 
     @pytest.fixture
-    def ipaddress(self):
+    def ipaddress(self) -> str:
         return "1.2.3.4"
 
     @pytest.fixture
-    def raw_data(self):
+    def raw_data(self) -> str:
         return "<<<check_mk>>>\nraw data"
 
     @pytest.fixture
-    def scenario(self, hostname, ipaddress, monkeypatch):
+    def scenario(
+        self, hostname: str, ipaddress: str, monkeypatch: pytest.MonkeyPatch
+    ) -> ConfigCache:
         ts = Scenario()
-        ts.add_host(hostname)
+        ts.add_host(HostName(hostname))
         ts.set_option("ipaddresses", {hostname: ipaddress})
         return ts.apply(monkeypatch).config_cache
 

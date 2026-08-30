@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import asyncio
 import logging
@@ -450,7 +449,7 @@ async def _wait_for_mock_delay(state: _MockDelayState, expected_call_count: int)
 
 
 class _LockWithCounter(asyncio.Lock):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.counter = 0
 

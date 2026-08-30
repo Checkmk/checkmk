@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 #########################################################################################
@@ -423,18 +422,18 @@ class LogwatchBlock:
     def __init__(self, header: str, reclassify_parameters: logwatch.ReclassifyParameters) -> None:
         self._timestamp = header.strip("<>").rsplit(None, 1)[0]
         self.worst = -1
-        self.lines: list = []
+        self.lines: list[str] = []
         self.saw_lines = False
         self.last_worst_line = ""
         self.states_counter: Counter[str] = Counter()  # lines with a certain state
         self._reclassify_parameters = reclassify_parameters
 
-    def finalize(self):
+    def finalize(self) -> list[str]:
         state_str = LogwatchBlock.STATE_TO_STR.get(self.worst, "CRIT")
         header = f"<<<{self._timestamp} {state_str}>>>\n"
         return [header] + self.lines
 
-    def add_line(self, line, reclassify):
+    def add_line(self, line: str, reclassify: bool) -> None:
         self.saw_lines = True
 
         try:

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import os
 import stat
@@ -22,7 +21,7 @@ from cmk.bakery.internal import (
 )
 
 
-def test_get_unix_agent_paths_keeper_multi_directory():
+def test_get_unix_agent_paths_keeper_multi_directory() -> None:
     agconf = {
         "agent_paths": {
             "bin": "/bin",
@@ -40,7 +39,7 @@ def test_get_unix_agent_paths_keeper_multi_directory():
     assert keeper.get_target_path(LogicalPath.VAR) == Path("/var")
 
 
-def test_get_unix_agent_paths_keeper_single_directory():
+def test_get_unix_agent_paths_keeper_single_directory() -> None:
     agconf = {
         "agent_paths": {
             "bin": "/irrelevant/bin",
@@ -57,7 +56,7 @@ def test_get_unix_agent_paths_keeper_single_directory():
     assert str(bin_path).startswith("/custom/agent/default/")
 
 
-def test_multi_directory_all_paths():
+def test_multi_directory_all_paths() -> None:
     agconf = {
         "agent_paths": {
             "bin": "/opt/cmk/bin",
@@ -77,7 +76,7 @@ def test_multi_directory_all_paths():
     assert provider.get_installdir() is None
 
 
-def test_single_directory_custom_install():
+def test_single_directory_custom_install() -> None:
     agconf = {
         "agent_paths": {
             "bin": "/irrelevant/bin",
@@ -110,7 +109,7 @@ def test_single_directory_custom_install():
         )
 
 
-def test_multi_directory_no_tmp():
+def test_multi_directory_no_tmp() -> None:
     agconf = {
         "agent_paths": {
             "bin": "/bin",
@@ -124,7 +123,7 @@ def test_multi_directory_no_tmp():
     assert provider.get_tmpdir() is None
 
 
-def test_single_directory_custom_tmpdir():
+def test_single_directory_custom_tmpdir() -> None:
     agconf = {
         "agent_paths": {
             "bin": "/bin",
@@ -141,13 +140,13 @@ def test_single_directory_custom_tmpdir():
     assert provider.get_tmpdir() == "/tmp/custom"
 
 
-def test_invalid_config_missing_agent_paths():
+def test_invalid_config_missing_agent_paths() -> None:
     agconf: AgentConfig = {}
     with pytest.raises(KeyError):
         TargetPathsProvider(agconf)
 
 
-def test_deployment_mode_provider_legacy_agent_user():
+def test_deployment_mode_provider_legacy_agent_user() -> None:
     agconf = {"agent_user": {"user": "legacyuser"}}
     provider = DeploymentModeProvider(agconf)
     assert provider.get_agent_user() == "legacyuser"
@@ -156,7 +155,7 @@ def test_deployment_mode_provider_legacy_agent_user():
     assert provider.get_agent_controller_gid() is None
 
 
-def test_deployment_mode_provider_new_agent_user():
+def test_deployment_mode_provider_new_agent_user() -> None:
     agconf = {"agent_user": {"user": "legacyuser"}}
     provider = DeploymentModeProvider(agconf)
     assert provider.get_agent_user() == "legacyuser"
@@ -165,7 +164,7 @@ def test_deployment_mode_provider_new_agent_user():
     assert provider.get_agent_controller_gid() is None
 
 
-def test_deployment_mode_provider_root_mode():
+def test_deployment_mode_provider_root_mode() -> None:
     agconf: AgentConfig = {}
     provider = DeploymentModeProvider(agconf)
     assert provider.get_agent_user() == "root"
@@ -174,7 +173,7 @@ def test_deployment_mode_provider_root_mode():
     assert provider.get_agent_controller_gid() is None
 
 
-def test_deployment_mode_provider_root_mode_custom_gid():
+def test_deployment_mode_provider_root_mode_custom_gid() -> None:
     agconf = {
         "customize_agent_package": {
             "deployment_mode": {
@@ -192,7 +191,7 @@ def test_deployment_mode_provider_root_mode_custom_gid():
     assert provider.get_agent_controller_gid() == 5678
 
 
-def test_deployment_mode_provider_non_root_mode():
+def test_deployment_mode_provider_non_root_mode() -> None:
     agconf = {
         "customize_agent_package": {
             "deployment_mode": {
@@ -209,7 +208,7 @@ def test_deployment_mode_provider_non_root_mode():
     assert provider.get_agent_controller_gid() == 1234
 
 
-def test_unix_single_directory_keeper_make_package_structure(tmp_path):
+def test_unix_single_directory_keeper_make_package_structure(tmp_path: Path) -> None:
     # For whatever reason, the umask is set to 0o007 by default in all our unit tests.
     # We need 0o022 here to see the expected permissions in the created directories.
     # When executed in the agent bakery, the umask is explicitly set to 0o022.
@@ -221,7 +220,7 @@ def test_unix_single_directory_keeper_make_package_structure(tmp_path):
         keeper.make_package_structure(tmp_path)
         base = tmp_path / "foo" / "bar" / "default"
 
-        def mode(path):
+        def mode(path: Path) -> int:
             return stat.S_IMODE(path.stat().st_mode)
 
         # Accessible for others (0o755)

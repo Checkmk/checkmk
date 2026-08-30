@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.ra32e_switch import (
+from cmk.plugins.roomalert.agent_based.ra32e_switch import (
     check_ra32e_switch,
     discover_ra32e_switch,
     parse_ra32e_switch,

@@ -3,41 +3,55 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.fireeye.lib import DETECT
 
-check_info = {}
 
-
-def discover_fireeye_lic_expiration(info):
-    for line in info:
+def discover_fireeye_lic_expiration(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if line[1]:
-            yield line[0], {}
+            yield Service(item=line[0])
 
 
-def check_fireeye_lic_expiration(item, params, info):
-    for feature, days in info:
+def check_fireeye_lic_expiration(
+    item: str, params: Mapping[str, tuple[int, int]], section: StringTable
+) -> CheckResult:
+    for feature, days in section:
         if feature == item:
-            warn, crit = params.get("days")
-            infotext = "Days remaining: %s" % days
+            warn, crit = params["days"]
+            infotext = f"Days remaining: {days}"
             seconds = int(days) * 24 * 60 * 60
-            perfdata = [("lifetime_remaining", seconds, warn, crit)]
             if int(days) > warn:
-                yield 0, infotext, perfdata
+                yield Result(state=State.OK, summary=infotext)
             elif int(days) > crit:
-                yield 1, infotext + " (warn/crit at %d/%d days)" % (warn, crit), perfdata
+                yield Result(
+                    state=State.WARN, summary=f"{infotext} (warn/crit at {warn}/{crit} days)"
+                )
             else:
-                yield 2, infotext + " (warn/crit at %d/%d days)" % (warn, crit), perfdata
+                yield Result(
+                    state=State.CRIT, summary=f"{infotext} (warn/crit at {warn}/{crit} days)"
+                )
+            yield Metric("lifetime_remaining", seconds, levels=(warn, crit))
 
 
 def parse_fireeye_lic_expiration(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["fireeye_lic_expiration"] = LegacyCheckDefinition(
+snmp_section_fireeye_lic_expiration = SimpleSNMPSection(
     name="fireeye_lic_expiration",
     parse_function=parse_fireeye_lic_expiration,
     detect=DETECT,
@@ -45,6 +59,11 @@ check_info["fireeye_lic_expiration"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.25597.11.5.1.16.1",
         oids=["1", "5"],
     ),
+)
+
+
+check_plugin_fireeye_lic_expiration = CheckPlugin(
+    name="fireeye_lic_expiration",
     service_name="License Expiration %s",
     discovery_function=discover_fireeye_lic_expiration,
     check_function=check_fireeye_lic_expiration,

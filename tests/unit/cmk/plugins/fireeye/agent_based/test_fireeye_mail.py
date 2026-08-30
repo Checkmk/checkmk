@@ -13,7 +13,7 @@ import time
 import pytest
 
 from cmk.agent_based.v2 import GetRateError, Metric, Result, Service, State, StringTable
-from cmk.legacy_checks import fireeye_mail
+from cmk.plugins.fireeye.agent_based import fireeye_mail
 
 
 @pytest.fixture(name="string_table")

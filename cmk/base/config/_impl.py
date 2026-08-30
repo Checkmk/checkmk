@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 
@@ -707,7 +706,7 @@ class SetFolderPathList(SetFolderPathAbstract, list):
 class SetFolderPathDict(SetFolderPathAbstract, dict):
     # TODO: How to annotate this?
     @override
-    def update(self, new_hosts):  # type: ignore[override]
+    def update(self, new_hosts: Mapping[str, object]) -> None:  # type: ignore[override]
         self._set_folder_paths(new_hosts)
         return super().update(new_hosts)
 

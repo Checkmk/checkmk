@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import signal
 import subprocess
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from types import FrameType
 from typing import Final, IO, Literal
 
 from tests.testlib.common.utils2 import ServiceInfo
@@ -114,7 +114,7 @@ def _timeout(seconds: int, error_msg: str) -> Iterator[None]:
         PBTimeoutError: when `seconds` amount of time has passed.
     """
 
-    def _raise_timeout(signum, frame):
+    def _raise_timeout(signum: int, frame: FrameType | None) -> None:
         raise PBTimeoutError(error_msg)
 
     alarm_handler = signal.signal(signal.SIGALRM, _raise_timeout)

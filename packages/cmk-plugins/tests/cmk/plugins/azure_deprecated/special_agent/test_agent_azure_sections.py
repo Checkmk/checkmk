@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Sequence
 
 import pytest
 
@@ -17,15 +18,15 @@ class TestSection:
         return "testsection"
 
     @pytest.fixture
-    def piggytargets(self):
+    def piggytargets(self) -> Sequence[str]:
         return ["one"]
 
     @pytest.fixture
-    def seperator(self):
+    def seperator(self) -> int:
         return 1
 
     @pytest.fixture
-    def options(self):
+    def options(self) -> Sequence[str]:
         return ["myopts"]
 
     @pytest.mark.parametrize(
@@ -35,15 +36,15 @@ class TestSection:
             (["piggy-back"], "<<<<piggy-back>>>>"),
         ],
     )
-    def test_piggytarget_header(  # type: ignore[misc]
+    def test_piggytarget_header(
         self,
-        name,
-        piggytarget,
-        expected_piggytarget_header,
-        seperator,
-        options,
-        capsys,
-    ):
+        name: str,
+        piggytarget: Sequence[str],
+        expected_piggytarget_header: str,
+        seperator: int,
+        options: Sequence[str],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
         section = Section(name, piggytarget, seperator, options)
         section.add("blah")
         section.write()
@@ -57,15 +58,15 @@ class TestSection:
             ("test-section", "<<<test_section:sep(1):myopts>>>"),
         ],
     )
-    def test_section_header(  # type: ignore[misc]
+    def test_section_header(
         self,
-        section_name,
-        expected_section_header,
-        piggytargets,
-        seperator,
-        options,
-        capsys,
-    ):
+        section_name: str,
+        expected_section_header: str,
+        piggytargets: Sequence[str],
+        seperator: int,
+        options: Sequence[str],
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
         section = Section(section_name, piggytargets, seperator, options)
         section.add("blah")
         section.write()

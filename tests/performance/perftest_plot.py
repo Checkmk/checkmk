@@ -49,14 +49,13 @@ Example:
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import argparse
 import json
 import logging
 import re
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import date, timedelta
 from datetime import datetime as Datetime
@@ -1281,7 +1280,7 @@ class PerftestPlot:
             list[str]: A sorted list of valid job names found on disk or in the database.
         """
 
-        def baseline_jobs(offset=0) -> list[str]:
+        def baseline_jobs(offset: int = 0) -> Sequence[str]:
             num_old_jobs = 4
             return [
                 (Datetime.today() - timedelta(days=offset + i)).strftime(
@@ -2064,7 +2063,7 @@ def parse_args() -> PerftestPlotArgs:
     return parser.parse_args(namespace=PerftestPlotArgs())
 
 
-def main():
+def main() -> None:
     """
     Runs the CLI application for performance test plotting.
 

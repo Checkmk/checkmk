@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from dataclasses import replace
 from pathlib import Path
-from typing import override
+from typing import Any, override
 
 import pytest
 
@@ -47,15 +46,15 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
 
 class TestModeDumpAgent:
     @pytest.fixture
-    def hostname(self):
-        return "testhost"
+    def hostname(self) -> HostName:
+        return HostName("testhost")
 
     @pytest.fixture
-    def ipaddress(self):
-        return "1.2.3.4"
+    def ipaddress(self) -> HostAddress:
+        return HostAddress("1.2.3.4")
 
     @pytest.fixture
-    def raw_data(self, hostname):
+    def raw_data(self, hostname: HostName) -> bytes:
         return b"<<<check_mk>>>\nraw data"
 
     @pytest.fixture
@@ -101,7 +100,9 @@ class TestModeDumpAgent:
         )
 
     @pytest.fixture
-    def scenario(self, hostname, ipaddress, monkeypatch):
+    def scenario(
+        self, hostname: HostName, ipaddress: HostAddress, monkeypatch: pytest.MonkeyPatch
+    ) -> Scenario:
         ts = Scenario()
         ts.add_host(hostname)
         ts.set_option("ipaddresses", {hostname: ipaddress})
@@ -212,7 +213,7 @@ class TestModeDumpAgentUseWalk:
         # Spy on make_backend to capture the backend it returns
         captured_backends: list = []
 
-        def spy_make_backend(*args, **kwargs):
+        def spy_make_backend(*args: Any, **kwargs: Any) -> object:
             backend = make_backend(*args, **kwargs)
             captured_backends.append(backend)
             return backend
@@ -223,7 +224,7 @@ class TestModeDumpAgentUseWalk:
         captured_sources: list = []
         original_snmp_source_init = SNMPSource.__init__
 
-        def capturing_snmp_source_init(self, *args, **kwargs):
+        def capturing_snmp_source_init(self: SNMPSource, *args: Any, **kwargs: Any) -> None:
             original_snmp_source_init(self, *args, **kwargs)
             captured_sources.append(self)
 

@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
 from random import randint
+from types import TracebackType
 from typing import Final
 
 import docker
@@ -393,10 +393,15 @@ class OracleDatabase:
         assert isinstance(output, bytes)  # stream/socket/demux not used above
         assert rc == 0, f"Error while creating a link to Perl: {output.decode('UTF-8')}"
 
-    def __enter__(self):
+    def __enter__(self) -> OracleDatabase:
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
         if is_cleanup_enabled():
             self.container.stop(timeout=30)
             self.container.remove(force=True)

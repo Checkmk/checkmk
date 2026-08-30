@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 
@@ -13,7 +12,7 @@ import logging
 import os
 import shutil
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Coroutine, Iterator
 from functools import partial
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -92,13 +91,15 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
             logger.debug("Stopped snmpsimd.")
 
 
-def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -> ProcessDef:
+def _define_process(
+    index: int, auth: list[str], tmp_path: Path, snmp_data_dir: Path, as_user: None | str
+) -> ProcessDef:
     port = 1337 + index
 
     proc_tmp_path = tmp_path / f"snmpsim{index}"
     proc_tmp_path.mkdir(parents=True, exist_ok=True)
 
-    command_prefix = []
+    command_prefix: list[str] = []
     if as_user:
         command_prefix = ["sudo", "-u", as_user]
         shutil.chown(proc_tmp_path, as_user, as_user)
@@ -132,7 +133,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -
                 "--agent-udpv4-endpoint=127.0.0.1:%s" % port,
                 "--agent-udpv6-endpoint=[::1]:%s" % port,
                 "--data-dir",
-                snmp_data_dir,
+                str(snmp_data_dir),
             ]
             + auth,
             close_fds=True,
@@ -145,7 +146,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -
     )
 
 
-def _create_auth_list():
+def _create_auth_list() -> list[list[str]]:
     return [
         [
             "--v3-user=authOnlyUser",
@@ -293,7 +294,7 @@ def _is_listening(process_def: ProcessDef) -> bool:
 
 
 # To help with async APIs from pysnmp.
-def wait_sync(coro):
+def wait_sync[T](coro: Coroutine[object, object, T]) -> T:
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:

@@ -6,7 +6,6 @@
 the desired Checkmk version"""
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import argparse
 import logging
@@ -36,7 +35,7 @@ CMK_INSTALL_ERROR = 22
 
 
 class InstallCmkArgs(argparse.Namespace):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.uninstall: bool = False
 
@@ -54,7 +53,7 @@ def parse_args() -> tuple[InstallCmkArgs, list[str]]:
     return parser.parse_known_args(namespace=InstallCmkArgs())
 
 
-def main():
+def main() -> int:
     args, _ = parse_args()
     operation = "uninstall" if args.uninstall else "install"
 

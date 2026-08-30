@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import contextlib
@@ -153,7 +152,7 @@ def host_labels_ps(
             yield from (HostLabel(*item) for item in spec.host_labels_explicit.items())
 
 
-def minn(a, b):
+def minn(a: float | None, b: float | None) -> float | None:
     if a is None:
         return b
     if b is None:
@@ -161,7 +160,7 @@ def minn(a, b):
     return min(a, b)
 
 
-def maxx(a, b):
+def maxx(a: float | None, b: float | None) -> float | None:
     if a is None:
         return b
     if b is None:
@@ -169,7 +168,9 @@ def maxx(a, b):
     return max(a, b)
 
 
-def replace_service_description(service_description, match_groups, pattern):
+def replace_service_description(
+    service_description: str, match_groups: Sequence[str | None], pattern: str | None
+) -> str:
     # New in 1.2.2b4: All %1, %2, etc. to be replaced with first, second, ...
     # group. This allows a reordering of the matched groups
     # replace all %1:
@@ -198,7 +199,7 @@ def replace_service_description(service_description, match_groups, pattern):
         )
 
 
-def match_attribute(attribute, pattern):
+def match_attribute(attribute: str | None, pattern: str | Literal[False] | None) -> bool:
     if not pattern:
         return True
 
@@ -211,7 +212,11 @@ def match_attribute(attribute, pattern):
     return pattern == attribute
 
 
-def process_attributes_match(process_info, userspec, cgroupspec):
+def process_attributes_match(
+    process_info: PsInfo,
+    userspec: str | Literal[False] | None,
+    cgroupspec: tuple[str | None, bool],
+) -> bool:
     cgroup_pattern, invert = cgroupspec
     return not (
         process_info.cgroup and match_attribute(process_info.cgroup, cgroup_pattern) is invert
@@ -328,7 +333,9 @@ def parse_ps_time(text: str) -> int:
     return 86400 * days + day_secs
 
 
-def cpu_rate(value_store, counter, now, lifetime):
+def cpu_rate(
+    value_store: MutableMapping[str, Any], counter: str, now: float, lifetime: float
+) -> float:
     try:
         return get_rate(value_store, counter, now, lifetime)
     except IgnoreResultsError:
@@ -363,7 +370,7 @@ class ProcessAggregator:
     def append(self, process: _Process) -> None:
         self.processes.append(process)
 
-    def core_weight(self, is_win):
+    def core_weight(self, is_win: bool) -> float:
         cpu_rescale_max = self.params["cpu_rescale_max"]
 
         if any(

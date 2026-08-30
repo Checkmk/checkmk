@@ -6,13 +6,12 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
-from typing import cast, Literal, NotRequired, Required, TypedDict
+from typing import cast, Literal, NotRequired, Required, Self, TypedDict
 
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 from cmk.events.notify_types import (
@@ -2167,7 +2166,7 @@ class BulkOutsideTimePeriod:
         return r
 
     @classmethod
-    def disabled(cls):
+    def disabled(cls) -> Self:
         return cls(
             state="disabled",
             subject_for_bulk_notifications=CheckboxWithStrValue(),

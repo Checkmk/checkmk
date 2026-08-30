@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 
 import os
 import shutil
 import tempfile
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 from subprocess import PIPE, Popen
 
@@ -25,7 +25,7 @@ artifact_location = Path("..\\..\\..\\..\\..\\artefacts")
 
 
 @pytest.fixture(scope="session", name="expected_version")
-def fixture_expected_version(pytestconfig):
+def fixture_expected_version(pytestconfig: pytest.Config) -> str:
     return pytestconfig.getoption("expected_version")
 
 
@@ -36,7 +36,7 @@ def fixture_expected_version(pytestconfig):
 # Above mentioned things must be done in fixture, while decompression process is quite expensive.
 # Also this give possibility to test literally everything
 @pytest.fixture(scope="session", name="regression_data")
-def fixture_regression_data(expected_version):
+def fixture_regression_data(expected_version: str) -> Mapping[str, bytes]:
     return {
         "python-3.cab": b"".join(
             [
@@ -54,7 +54,7 @@ client_module_root = b"C:\\ProgramData\\checkmk\\agent\\modules\\python-3"
 
 
 @pytest.fixture(scope="session", autouse=True, name="python_subdir")
-def fixture_python_subdir():
+def fixture_python_subdir() -> Iterator[Path]:
     tmpdir = tempfile.mkdtemp()
     subdir = os.path.join(tmpdir, "modules")
     os.makedirs(subdir)
@@ -74,7 +74,7 @@ def run_proc(command: list[str], *, cwd: Path | None = None) -> None:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def python_to_test(python_subdir, regression_data) -> Path:
+def python_to_test(python_subdir: Path, regression_data: Mapping[str, bytes]) -> Path:
     """This is quite complicated simulator to verify python module and prepare the module for
     testing. During deployment every step will be validated, not because it is required(this method
     also contradicts a bit to the TDD philosophy), but to prevent extremely strange errors during
@@ -109,7 +109,7 @@ def python_to_test(python_subdir, regression_data) -> Path:
             f.write(regression_data[str(python)].replace(client_module_root, bytes(work_dir)))
 
         # apply postinstall step to prepare the python
-        run_proc([work_dir / "postinstall.cmd"], cwd=work_dir)
+        run_proc([str(work_dir / "postinstall.cmd")], cwd=work_dir)
         assert (work_dir / "DLLs").exists()
 
     return python_subdir

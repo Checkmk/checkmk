@@ -15,13 +15,13 @@ the test.
 """
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import argparse
 import logging
 import os
 import sys
 import tempfile
+from collections.abc import Sequence
 from pathlib import Path
 
 # Make the tests.testlib available
@@ -39,7 +39,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(me
 logger = logging.getLogger()
 
 
-def main(raw_args):
+def main(raw_args: Sequence[str]) -> int:
     """Run tests in docker"""
     args, command = _parse_arguments(raw_args)
 
@@ -96,7 +96,7 @@ def _os_environ_get(key: str, default: str) -> str:
     return result
 
 
-def _parse_arguments(args: list[str]) -> tuple[argparse.Namespace, list[str]]:
+def _parse_arguments(args: Sequence[str]) -> tuple[argparse.Namespace, list[str]]:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument(
         "make_target",

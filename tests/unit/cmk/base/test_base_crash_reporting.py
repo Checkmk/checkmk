@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
 from pathlib import Path
 
 from cmk.base.errorhandling import CheckCrashReport, CheckDetails
@@ -13,8 +13,9 @@ from cmk.ccc.hostaddress import HostName
 from cmk.crash import make_crash_report_base_path, VersionInfo
 
 
-def _check_generic_crash_info(crash):
-    assert "details" in crash.crash_info
+def _check_generic_crash_info(crash: CheckCrashReport) -> None:
+    crash_info: Mapping[str, object] = crash.crash_info
+    assert "details" in crash_info
 
     for key, ty in {
         "crash_type": str,
@@ -28,9 +29,9 @@ def _check_generic_crash_info(crash):
         "exc_traceback": list,
         "local_vars": str,
     }.items():
-        assert key in crash.crash_info
-        assert isinstance(crash.crash_info[key], ty), (
-            f"Key {key!r} has an invalid type {type(crash.crash_info[key])!r}"
+        assert key in crash_info
+        assert isinstance(crash_info[key], ty), (
+            f"Key {key!r} has an invalid type {type(crash_info[key])!r}"
         )
 
 

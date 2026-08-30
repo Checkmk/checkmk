@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import socket
 from collections.abc import Mapping
@@ -13,6 +12,7 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.ccc.hostaddress import HostName
+from cmk.ruleset_matcher.tags import TagGroupID, TagID
 
 # No stub file
 from tests.testlib.unit.base_configuration_scenario import Scenario
@@ -103,9 +103,13 @@ def test_mgmt_disabled(monkeypatch: MonkeyPatch) -> None:
         ),
     ],
 )
-def test_mgmt_config_ruleset(  # type: ignore[misc]
-    monkeypatch, protocol, cred_attribute, credentials, ruleset_credentials
-):
+def test_mgmt_config_ruleset(
+    monkeypatch: MonkeyPatch,
+    protocol: str,
+    cred_attribute: str,
+    credentials: str | Mapping[str, str],
+    ruleset_credentials: str | Mapping[str, str],
+) -> None:
     ts = Scenario()
     ts.set_ruleset(
         "management_board_config",
@@ -149,9 +153,13 @@ def test_mgmt_config_ruleset(  # type: ignore[misc]
         ),
     ],
 )
-def test_mgmt_config_ruleset_order(  # type: ignore[misc]
-    monkeypatch, protocol, cred_attribute, folder_credentials, ruleset_credentials
-):
+def test_mgmt_config_ruleset_order(
+    monkeypatch: MonkeyPatch,
+    protocol: str,
+    cred_attribute: str,
+    folder_credentials: str | Mapping[str, str],
+    ruleset_credentials: str | Mapping[str, str],
+) -> None:
     ts = Scenario()
     ts.set_ruleset(
         "management_board_config",
@@ -201,9 +209,13 @@ def test_mgmt_config_ruleset_order(  # type: ignore[misc]
         ),
     ],
 )
-def test_mgmt_config_ruleset_overidden_by_explicit_setting(  # type: ignore[misc]
-    monkeypatch, protocol, cred_attribute, host_credentials, ruleset_credentials
-):
+def test_mgmt_config_ruleset_overidden_by_explicit_setting(
+    monkeypatch: MonkeyPatch,
+    protocol: str,
+    cred_attribute: str,
+    host_credentials: str | Mapping[str, str],
+    ruleset_credentials: str | Mapping[str, str],
+) -> None:
     ts = Scenario()
     ts.set_ruleset(
         "management_board_config",
@@ -421,17 +433,17 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(  # type: ignore[misc
         ),
     ],
 )
-def test_mgmt_board_ip_addresses(  # type: ignore[misc]
-    monkeypatch,
-    protocol,
-    cred_attribute,
-    credentials,
-    tags,
-    host_attributes,
-    ipaddresses,
-    ipv6addresses,
-    ip_address_result,
-):
+def test_mgmt_board_ip_addresses(
+    monkeypatch: MonkeyPatch,
+    protocol: str,
+    cred_attribute: str,
+    credentials: str | Mapping[str, str],
+    tags: dict[TagGroupID, TagID],
+    host_attributes: Mapping[str, str],
+    ipaddresses: Mapping[str, str],
+    ipv6addresses: Mapping[str, str],
+    ip_address_result: str | None,
+) -> None:
     hostname = HostName("mgmt-host")
 
     ts = Scenario()
@@ -445,7 +457,7 @@ def test_mgmt_board_ip_addresses(  # type: ignore[misc]
     config_cache = ts.apply(monkeypatch).config_cache
     ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] = (
         socket.AddressFamily.AF_INET6
-        if tags.get("address_family") == "ip-v6-only"
+        if tags.get(TagGroupID("address_family")) == "ip-v6-only"
         else socket.AddressFamily.AF_INET
     )
     assert config_cache.has_management_board(hostname)

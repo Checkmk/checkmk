@@ -13,7 +13,7 @@ from cmk.plugins.oracle.agent_based.oracle_sessions import (
 )
 
 
-def test_discover_oracle_sessions_fail():
+def test_discover_oracle_sessions_fail() -> None:
     assert not list(
         discover_oracle_sessions(parse_oracle_sessions([["foo", "FAILURE"], ["bar", "FAILURE"]]))
     )
@@ -23,22 +23,22 @@ _NORMAL = [["orcl", "97", "322", "105"]]
 _FAILURE = [["orcl", "FAILURE", "ORA-00942: table or view does not exist"]]
 
 
-def test_discover_oracle_sessions_normal():
+def test_discover_oracle_sessions_normal() -> None:
     assert list(discover_oracle_sessions(parse_oracle_sessions(_NORMAL))) == [Service(item="orcl")]
 
 
-def test_discover_oracle_sessions_skips_failure_only():
+def test_discover_oracle_sessions_skips_failure_only() -> None:
     assert not list(discover_oracle_sessions(parse_oracle_sessions(_FAILURE)))
 
 
-def test_check_oracle_sessions_normal():
+def test_check_oracle_sessions_normal() -> None:
     result = list(
         check_oracle_sessions("orcl", {"sessions_abs": (150, 300)}, parse_oracle_sessions(_NORMAL))
     )
     assert result[0] == Result(state=State.OK, summary="Sessions: 97")
 
 
-def test_check_oracle_sessions_surfaces_failure():
+def test_check_oracle_sessions_surfaces_failure() -> None:
     assert list(
         check_oracle_sessions("orcl", {"sessions_abs": (150, 300)}, parse_oracle_sessions(_FAILURE))
     ) == [Result(state=State.UNKNOWN, summary="ORA-00942: table or view does not exist")]

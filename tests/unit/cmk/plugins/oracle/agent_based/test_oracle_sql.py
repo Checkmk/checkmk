@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import datetime
+from collections.abc import Mapping, Sequence
 from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.oracle.agent_based.oracle_sql import (
     check_oracle_sql,
     discovery_oracle_sql,
@@ -214,7 +214,7 @@ AGENT_OUTPUT_SESSIONS_EMPTY_ELAPSED = [
         ),
     ],
 )
-def test_oracle_sql_parse(info, expected):  # type: ignore[misc]
+def test_oracle_sql_parse(info: StringTable, expected: Mapping[str, Instance]) -> None:
     assert parse_oracle_sql(info) == expected
 
 
@@ -250,7 +250,7 @@ def test_oracle_sql_parse(info, expected):  # type: ignore[misc]
         ),
     ],
 )
-def test_parse_metrics(line, expected):  # type: ignore[misc]
+def test_parse_metrics(line: str, expected: Sequence[Metric]) -> None:
     assert list(parse_metrics(line)) == expected
 
 
@@ -263,7 +263,7 @@ def test_parse_metrics(line, expected):  # type: ignore[misc]
         (AGENT_OUTPUT_SESSIONS_WITH_PERFDATA, [Service(item="YOBLE1 SQL NBA SESSIONS")]),
     ],
 )
-def test_oracle_sql_discovery(info, expected):  # type: ignore[misc]
+def test_oracle_sql_discovery(info: StringTable, expected: Sequence[Service]) -> None:
     assert list(discovery_oracle_sql(parse_oracle_sql(info))) == expected
 
 
@@ -323,7 +323,7 @@ def test_oracle_sql_discovery(info, expected):  # type: ignore[misc]
         ),
     ],
 )
-def test_oracle_sql_check(info, item, expected):  # type: ignore[misc]
+def test_oracle_sql_check(info: StringTable, item: str, expected: Sequence[Result]) -> None:
     result = list(check_oracle_sql(item, {}, parse_oracle_sql(info)))
     assert result == expected
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 
@@ -3976,7 +3975,7 @@ def test_parse_wmi_table(
     assert parse_wmi_table(string_table) == section
 
 
-def scale_counter_reference(measure, factor, base):
+def scale_counter_reference(measure: float, factor: float, base: float) -> float:
     # old, inefficient implementation
     # takes ages for the arguments: 18446744073664412644, 1, 15143722
     while (base * factor) < measure:
@@ -4015,6 +4014,6 @@ CRASH_TABLE = [
 ]
 
 
-def test_me():
+def test_me() -> None:
     wmi_table = WMITable("", CRASH_TABLE[0], "name", 0, None, CRASH_TABLE[1:])
     assert wmi_table.get("_total", "rpcaveragelatency") == "6"

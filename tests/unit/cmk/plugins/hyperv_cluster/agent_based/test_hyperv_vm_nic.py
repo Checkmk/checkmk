@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 # Example output from agent:
 # <<<hyperv_vm_nic:cached(1750083965,120)>>>
@@ -411,7 +410,12 @@ def test_parse_skip_nic_lines() -> None:
         ),
     ],
 )
-def test_check_hyperv_vm_nic_additional_cases(item, section, params, expected_results):  # type: ignore[misc]
+def test_check_hyperv_vm_nic_additional_cases(
+    item: str,
+    section: Section,
+    params: NicParams,
+    expected_results: list[tuple[str, State]],
+) -> None:
     results = list(check_hyperv_vm_nic(item, params, section))
     assert len(results) == len(expected_results)
     for result, (expected_summary, expected_state) in zip(results, expected_results):
@@ -420,7 +424,7 @@ def test_check_hyperv_vm_nic_additional_cases(item, section, params, expected_re
         assert result.state == expected_state
 
 
-def test_check_hyperv_vm_nic_empty_section():
+def test_check_hyperv_vm_nic_empty_section() -> None:
     empty_section: Section = {}
     params: NicParams = {
         "connection_state": {
@@ -436,7 +440,7 @@ def test_check_hyperv_vm_nic_empty_section():
     assert results[0].state == State.WARN
 
 
-def test_check_hyperv_vm_nic_with_default_params():
+def test_check_hyperv_vm_nic_with_default_params() -> None:
     from cmk.plugins.hyperv_cluster.agent_based.hyperv_vm_nic import hyperv_vm_nic_default_params
 
     section: Section = {
@@ -470,7 +474,7 @@ def test_check_hyperv_vm_nic_with_default_params():
     assert results[3].state == State.OK
 
 
-def test_check_hyperv_vm_nic_field_variations():
+def test_check_hyperv_vm_nic_field_variations() -> None:
     section: Section = {
         "variation-nic": {
             "nic.name": "Variation Adapter",

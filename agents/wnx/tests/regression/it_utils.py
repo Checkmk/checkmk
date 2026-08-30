@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import os
 import platform
@@ -30,29 +29,29 @@ def check_actual_input(name: str, lines: int, alone: bool, data: Sequence[str] |
     return True
 
 
-def safe_binary_remove(binary_path):
+def safe_binary_remove(binary_path: str) -> None:
     try:
         os.unlink(binary_path)
     except OSError as os_error:
         print("Error %s during file delete" % os_error.errno)
 
 
-def stop_ohm():
+def stop_ohm() -> None:
     # stopping all
     subprocess.call("taskkill /F /IM OpenhardwareMonitorCLI.exe")
     subprocess.call("net stop winring0_1_2_0")
 
 
-def remove_files(target_dir, binaries):
+def remove_files(target_dir: str, binaries: Sequence[str]) -> None:
     # removing all
     for f in binaries:
         safe_binary_remove(os.path.join(target_dir, f))
 
 
-def make_dir(directory):
+def make_dir(directory: str) -> None:
     if not os.path.exists(directory):
         os.mkdir(directory)
 
 
-def check_os():
+def check_os() -> bool:
     return platform.system() == "Windows"

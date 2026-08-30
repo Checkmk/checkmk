@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 # <<<ad_replication>>>
 # showrepl_COLUMNS,Destination DC Site,Destination DC,Naming Context,Source DC Site,Source DC,\
@@ -44,7 +43,7 @@ def _get_relative_date_human_readable(timestamp: float) -> str:
     return render.timespan(-seconds) + " ago"
 
 
-def parse_ad_replication_dates(s):
+def parse_ad_replication_dates(s: str) -> tuple[float | None, str]:
     if s in {"0", "(never)"}:
         return None, "unknown"
 
@@ -52,7 +51,7 @@ def parse_ad_replication_dates(s):
     return s_val, _get_relative_date_human_readable(s_val)
 
 
-def parse_ad_replication_info(info):
+def parse_ad_replication_info(info: StringTable) -> list[list[str]]:
     lines = []
     for line_parts in info:
         # Make lines split by , instead of spaces
@@ -121,8 +120,12 @@ def check_ad_replication(item: str, params: Mapping[str, Any], section: StringTa
 
         if line_type == "showrepl_INFO" and source_site + "/" + source_dc == item:
             found_line = True
-            time_last_failure, time_last_failure_txt = parse_ad_replication_dates(time_last_failure)
-            time_last_success, time_last_success_txt = parse_ad_replication_dates(time_last_success)
+            time_last_failure_val, time_last_failure_txt = parse_ad_replication_dates(
+                time_last_failure
+            )
+            time_last_success_val, time_last_success_txt = parse_ad_replication_dates(
+                time_last_success
+            )
 
             failure_count = int(num_failures)
 
@@ -154,9 +157,9 @@ def check_ad_replication(item: str, params: Mapping[str, Any], section: StringTa
                 )
 
             if (
-                time_last_failure is not None
-                and time_last_success is not None
-                and time_last_failure > time_last_success
+                time_last_failure_val is not None
+                and time_last_success_val is not None
+                and time_last_failure_val > time_last_success_val
             ):
                 status = 2
                 count_failures += 1

@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import logging
 import sys
+from collections.abc import Iterator
 
 import pytest
 
@@ -36,7 +36,7 @@ def test_parse_argument_site_id(capsys: pytest.CaptureFixture[str]) -> None:  # 
 
 
 @pytest.fixture
-def restore_root_logger_handlers():
+def restore_root_logger_handlers() -> Iterator[None]:
     logger = logging.getLogger()
     before_handlers = list(logger.handlers)
     yield

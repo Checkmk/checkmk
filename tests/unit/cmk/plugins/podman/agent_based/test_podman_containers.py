@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 
@@ -42,7 +41,7 @@ _STRING_TABLE_TWO_EXITED_NON_ZERO = [
 ]
 
 
-def test_discover_podman_containers():
+def test_discover_podman_containers() -> None:
     assert list(discover_podman_containers(parse_podman_containers(_STRING_TABLE_ALL_RUNNING))) == [
         Service()
     ]

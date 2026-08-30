@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 __version__ = "3.0.0b1"
 
@@ -34,9 +33,9 @@ import sys
 import time
 
 try:
-    from typing import Any
+    from typing import Any, Optional, Union
 
-    _ = Any  # make ruff happy
+    _ = Any, Optional, Union  # make ruff happy
 except ImportError:
     pass
 
@@ -52,12 +51,14 @@ debug = "-d" in sys.argv[2:] or "--debug" in sys.argv[1:]
 
 
 def ensure_str(s):
+    # type: (Union[bytes, str]) -> str
     if isinstance(s, bytes):
         return s.decode("utf-8")
     return s
 
 
 def read_config():
+    # type: () -> configparser.ConfigParser
     default_options = {
         "type": "icmp",
         "count": "10",
@@ -99,6 +100,7 @@ def read_config():
 # # HOST        |LASTTIME |HOPCOUNT|HOP1|Loss%|Snt|Last|Avg|Best|Wrst|StDev|HOP2|...|HOP8|...|StdDev
 # www.google.com|145122481|8|192.168.1.1|0.0%|10|32.6|3.6|0.3|32.6|10.2|192.168.0.1|...|9.8
 def read_status():
+    # type: () -> dict[str, dict[str, Any]]
     current_status = {}  # type: dict[str, dict[str, Any]]
     if not os.path.exists(status_filename):
         return current_status
@@ -133,6 +135,7 @@ def read_status():
 
 
 def save_status(current_status):
+    # type: (dict[str, dict[str, Any]]) -> None
     with open(status_filename, "w") as f:
         for host, hostdict in current_status.items():
             hopnum = len(hostdict["hops"].keys())
@@ -158,6 +161,7 @@ _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.:]+')
 
 
 def host_to_filename(host, delim="-"):
+    # type: (Union[bytes, str], str) -> str
     # Get rid of gibberish chars, stolen from Django
     """Generates an slightly worse ASCII-only slug."""
     return ensure_str(delim).join(
@@ -166,6 +170,7 @@ def host_to_filename(host, delim="-"):
 
 
 def check_mtr_pid(pid):
+    # type: (int) -> bool
     """Check for the existence of a unix pid and if the process matches."""
     try:
         os.kill(pid, 0)
@@ -182,6 +187,7 @@ def check_mtr_pid(pid):
 
 
 def parse_report(host, status):
+    # type: (str, dict[str, Any]) -> None
     reportfile = report_filepre + host_to_filename(host)
     if not os.path.exists(reportfile):
         if host not in status:
@@ -275,6 +281,7 @@ def parse_report(host, status):
 
 
 def output_report(host, status):
+    # type: (str, dict[str, Any]) -> None
     hostdict = status.get(host)
     if not hostdict:
         return
@@ -298,6 +305,7 @@ def output_report(host, status):
 
 
 def start_mtr(host, mtr_binary, config, status):
+    # type: (str, str, configparser.ConfigParser, dict[str, Any]) -> None
     options = [mtr_binary, "--report", "--report-wide"]
     pingtype = config.get(host, "type")
     count = config.getint(host, "count")
@@ -397,6 +405,7 @@ def _is_exe(fpath):
 
 
 def _which(program):
+    # type: (str) -> Optional[str]
     fpath, _fname = os.path.split(program)
     if fpath:
         if _is_exe(program):

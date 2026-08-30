@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Wrapper from marshmallow based NetApp-Python-Library pydantic Checkmk-NetApp-Protocol
@@ -410,16 +409,16 @@ class Version(BaseModel):
     major: int
     minor: int
 
-    def _tuple(self):
+    def _tuple(self) -> tuple[int, int, int]:
         return (self.generation, self.major, self.minor)
 
     # minimum set of used comparison methods
-    def __lt__(self, other):
+    def __lt__(self, other: object) -> bool:
         if not isinstance(other, Version):
             return NotImplemented
         return self._tuple() < other._tuple()
 
-    def __ge__(self, other):
+    def __ge__(self, other: object) -> bool:
         if not isinstance(other, Version):
             return NotImplemented
         return self._tuple() >= other._tuple()

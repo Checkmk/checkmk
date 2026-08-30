@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, Metric, Result, State
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.kube.agent_based import kube_pod_restarts
 from cmk.plugins.kube.schemata.section import PodContainers
 
@@ -30,12 +28,12 @@ RESTART_RATE_LEVELS = WARN * NUMBER_OF_CONTAINERS * 60, CRIT * NUMBER_OF_CONTAIN
 
 
 @pytest.fixture
-def restart_count():
+def restart_count() -> int:
     return OK
 
 
 @pytest.fixture
-def string_table_element(restart_count):
+def string_table_element(restart_count: int) -> Mapping[str, object]:
     return {
         "containers": {
             f"doge-{i}": {
@@ -53,19 +51,19 @@ def string_table_element(restart_count):
 
 
 @pytest.fixture
-def string_table(string_table_element):
+def string_table(string_table_element: Mapping[str, object]) -> StringTable:
     return [[json.dumps(string_table_element)]]
 
 
 @pytest.fixture
-def section(string_table):
+def section(string_table: StringTable) -> PodContainers | None:
     if not string_table:
         return None
     return PodContainers.model_validate_json(string_table[0][0])
 
 
 @pytest.fixture
-def params():
+def params() -> kube_pod_restarts.Params:
     return kube_pod_restarts.Params(
         restart_count=("levels", RESTART_COUNT_LEVELS),
         restart_rate=("levels", RESTART_RATE_LEVELS),
@@ -73,17 +71,21 @@ def params():
 
 
 @pytest.fixture
-def check_result(params, section, value_store):
+def check_result(
+    params: kube_pod_restarts.Params,
+    section: PodContainers,
+    value_store: MutableMapping[str, object],
+) -> CheckResult:
     return kube_pod_restarts._check(params, section, TIMESTAMP, value_store)  # noqa: SLF001
 
 
 @pytest.fixture
-def expired_values():
+def expired_values() -> int:
     return 1
 
 
 @pytest.fixture
-def current_values():
+def current_values() -> int:
     return ONE_HOUR // ONE_MINUTE - 1
 
 

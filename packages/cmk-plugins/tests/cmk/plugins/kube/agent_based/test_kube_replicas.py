@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 import json
 import time
@@ -614,10 +613,10 @@ def test_check_kube_replicas_not_ready_and_outdated(  # type: ignore[misc]
     expected_check_result: Sequence[Result | Metric],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def mock_value_store():
+    def mock_value_store() -> MutableMapping[str, Any]:
         return value_store
 
-    def mock_time():
+    def mock_time() -> float:
         return 800.0
 
     monkeypatch.setattr(kube_replicas, "get_value_store", mock_value_store)

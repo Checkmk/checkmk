@@ -3,41 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import json
 from collections.abc import Mapping
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_mock import MockerFixture
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
 from cmk.plugins.kube.agent_based import kube_node_container_count
+from cmk.plugins.kube.agent_based.kube_node_container_count import KubeContainersLevelsUpperLower
 from cmk.plugins.kube.schemata.section import ContainerCount
 
 
 @pytest.fixture
-def running():
+def running() -> int:
     return 8
 
 
 @pytest.fixture
-def waiting():
+def waiting() -> int:
     return 1
 
 
 @pytest.fixture
-def terminated():
+def terminated() -> int:
     return 0
 
 
 @pytest.fixture
-def string_table(running, waiting, terminated):
+def string_table(running: int, waiting: int, terminated: int) -> StringTable:
     return [[json.dumps({"running": running, "waiting": waiting, "terminated": terminated})]]
 
 
 @pytest.fixture
-def section(string_table):
+def section(string_table: StringTable) -> ContainerCount:
     return kube_node_container_count.parse(string_table)
 
 
@@ -71,7 +72,7 @@ def test_discovery_returns_an_iterable(string_table: StringTable) -> None:
 
 
 @pytest.fixture
-def params():
+def params() -> KubeContainersLevelsUpperLower:
     return {
         "running_upper": ("levels", (10, 15)),
         "running_lower": ("levels", (5, 2)),
@@ -85,7 +86,7 @@ def params():
 
 
 @pytest.fixture
-def check_result(section, params):
+def check_result(section: ContainerCount, params: KubeContainersLevelsUpperLower) -> CheckResult:
     return kube_node_container_count.check(params, section)
 
 
@@ -113,7 +114,7 @@ def test_check_all_metrics_values(check_result: CheckResult, section: ContainerC
 
 
 @pytest.fixture
-def check_levels(mocker, autouse=True):  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+def check_levels(mocker: MockerFixture, autouse: bool = True) -> MagicMock:  # noqa: ARG001  # Unused fixtures are needed for setup side effects
     return mocker.spy(kube_node_container_count, "check_levels_v1")
 
 

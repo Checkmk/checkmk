@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 
@@ -23,37 +22,39 @@ MINUTE = 60
 
 
 @pytest.fixture
-def num_of_containers():
+def num_of_containers() -> int:
     return 1
 
 
 @pytest.fixture
-def container_name(num_of_containers):
+def container_name(num_of_containers: int) -> str:
     return "doge" if num_of_containers == 1 else "doge-{}"
 
 
 @pytest.fixture
-def container_state():
+def container_state() -> str:
     return "running"
 
 
 @pytest.fixture
-def timespan():
+def timespan() -> float:
     return 0
 
 
 @pytest.fixture
-def start_time(timespan):
+def start_time(timespan: float) -> float:
     return TIMESTAMP - timespan
 
 
 @pytest.fixture
-def exit_code():
+def exit_code() -> int:
     return 0
 
 
 @pytest.fixture
-def container_state_dict(container_state, start_time, exit_code):
+def container_state_dict(
+    container_state: str, start_time: float, exit_code: int
+) -> Mapping[str, object] | None:
     if container_state == "running":
         return {"type": "running", "start_time": start_time}
     if container_state == "waiting":
@@ -99,22 +100,24 @@ def string_table(string_table_element: StringTableElem) -> StringTable:
 
 
 @pytest.fixture
-def section(string_table):
+def section(string_table: StringTable) -> PodContainers | None:
     return kube_pod_containers.parse(string_table)
 
 
 @pytest.fixture
-def failed_state():
+def failed_state() -> int:
     return int(State.CRIT)
 
 
 @pytest.fixture
-def params(failed_state):
+def params(failed_state: int) -> Mapping[str, int]:
     return {"failed_state": failed_state}
 
 
 @pytest.fixture
-def check_result(container_name, params, section):
+def check_result(
+    container_name: str, params: Mapping[str, int], section: PodContainers
+) -> CheckResult:
     return kube_pod_containers._check(TIMESTAMP, container_name, params, section)  # noqa: SLF001
 
 
@@ -220,10 +223,11 @@ def test_check_result_terminated_non_zero_exit_code_status(
 @pytest.mark.parametrize(
     "failed_state", [int(State.OK), int(State.WARN), int(State.CRIT), int(State.UNKNOWN)]
 )
-def test_check_result_terminated_non_zero_exit_code_status_specified_params(  # type: ignore[misc]
-    failed_state, check_result
-):
+def test_check_result_terminated_non_zero_exit_code_status_specified_params(
+    failed_state: int, check_result: CheckResult
+) -> None:
     result, _, _, _ = check_result
+    assert isinstance(result, Result)
     assert result.state == State(failed_state)
     assert result.summary == "Status: Failed (VeryReason: so detail)"
 

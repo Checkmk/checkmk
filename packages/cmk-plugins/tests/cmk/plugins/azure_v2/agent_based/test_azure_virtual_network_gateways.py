@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import time
 from collections.abc import Mapping, Sequence
@@ -659,7 +658,9 @@ def test_check_virtual_network_gateway_bgp(
         ),
     ],
 )
-def test_discover_virtual_network_gateway_peering(section, expected_discovery):  # type: ignore[misc]
+def test_discover_virtual_network_gateway_peering(
+    section: VNetGateway, expected_discovery: list[Service]
+) -> None:
     assert list(discover_virtual_network_gateway_peering(section)) == expected_discovery
 
 
@@ -690,7 +691,9 @@ def test_discover_virtual_network_gateway_peering(section, expected_discovery): 
         ),
     ],
 )
-def test_check_virtual_network_gateway_peering(section, item, expected_result):  # type: ignore[misc]
+def test_check_virtual_network_gateway_peering(
+    section: VNetGateway, item: str, expected_result: list[Result]
+) -> None:
     assert list(check_virtual_network_gateway_peering(item, section)) == expected_result
 
 

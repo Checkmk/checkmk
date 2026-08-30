@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping
 
@@ -145,7 +144,7 @@ def test_check_azure_storageaccounts(
     assert actual == results_expected
 
 
-def test_check_azure_storageaccounts_defaults():
+def test_check_azure_storageaccounts_defaults() -> None:
     resource = Resource(
         id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
         name="st0ragetestaccount",
@@ -212,7 +211,7 @@ def test_check_azure_storageaccounts_flow(
     assert actual == results_expected
 
 
-def test_check_azure_storageaccounts_flow_defaults():
+def test_check_azure_storageaccounts_flow_defaults() -> None:
     resource = Resource(
         id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
         name="st0ragetestaccount",
@@ -290,7 +289,7 @@ def test_check_plugin_azure_storageaccounts_performance(
     assert actual == results_expected
 
 
-def test_check_azure_storageaccounts_performance_defaults():
+def test_check_azure_storageaccounts_performance_defaults() -> None:
     resource = Resource(
         id="/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/BurningMan/providers/Microsoft.Storage/storageAccounts/st0ragetestaccount",
         name="st0ragetestaccount",
@@ -370,19 +369,19 @@ def _make_resource(metrics: Mapping[str, AzureMetric]) -> Resource:
     )
 
 
-def test_check_azure_storageaccounts_inactivity_all_missing():
+def test_check_azure_storageaccounts_inactivity_all_missing() -> None:
     resource = _make_resource({})
     result = list(check_azure_storage({}, resource))
     assert result == [INACTIVITY_RESULT]
 
 
-def test_check_azure_storageaccounts_flow_inactivity_all_missing():
+def test_check_azure_storageaccounts_flow_inactivity_all_missing() -> None:
     resource = _make_resource({})
     result = list(check_azure_storageaccounts_flow({}, resource))
     assert result == [INACTIVITY_RESULT]
 
 
-def test_check_azure_storageaccounts_flow_inactivity_partial():
+def test_check_azure_storageaccounts_flow_inactivity_partial() -> None:
     resource = _make_resource(
         {
             "total_Ingress": AzureMetric(
@@ -397,13 +396,13 @@ def test_check_azure_storageaccounts_flow_inactivity_partial():
     ]
 
 
-def test_check_azure_storageaccounts_performance_inactivity_all_missing():
+def test_check_azure_storageaccounts_performance_inactivity_all_missing() -> None:
     resource = _make_resource({})
     result = list(check_azure_storageaccounts_performance({}, resource))
     assert result == [INACTIVITY_RESULT]
 
 
-def test_check_azure_storageaccounts_performance_inactivity_partial():
+def test_check_azure_storageaccounts_performance_inactivity_partial() -> None:
     resource = _make_resource(
         {
             "average_Availability": AzureMetric(

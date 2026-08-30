@@ -3,19 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 import time
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_average, get_rate, get_value_store, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_average,
+    get_rate,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.fireeye.lib import DETECT
 
-check_info = {}
 
-
-def fireeye_counter_generic(value, what, average):
+def fireeye_counter_generic(value: int, what: str, average: int) -> CheckResult:
     this_time = time.time()
     # 'what' is the readable description of the checked counter
     # (e.g. 'Infected URL')
@@ -23,16 +33,15 @@ def fireeye_counter_generic(value, what, average):
     # (e.g. 'fireeye.infected.url')
     counter = "fireeye_mail.%s" % what.replace(" ", ".").lower()
     rate = get_rate(get_value_store(), counter, this_time, value, raise_overflow=True)
-    state = 0
-    if what == "Bypass" and rate > 0:
-        state = 2
+    state = State.CRIT if what == "Bypass" and rate > 0 else State.OK
+    if average:
+        avg = get_average(get_value_store(), f" {counter} avg", this_time, rate, average)
+        yield Result(state=state, summary=f"{what}: {avg * average:.2f} mails/{average} seconds")
+    else:
+        yield Result(state=state, summary=f"{what}: {rate:.2f} mails/s")
     # The perf-variable also uses the counter description as name
     # (e.g. 'infected_rate')
-    perfdata = [("%s_rate" % what.split(" ")[0].lower(), rate)]
-    if average:
-        avg = get_average(get_value_store(), " %s avg" % counter, this_time, rate, average)
-        return (state, "%s: %.2f mails/%d seconds" % (what, avg * average, average), perfdata)
-    return (state, f"{what}: {rate:.2f} mails/s", perfdata)
+    yield Metric(f"{what.split(' ', maxsplit=1)[0].lower()}_rate", rate)
 
 
 #   .--mail----------------------------------------------------------------.
@@ -57,22 +66,23 @@ def fireeye_counter_generic(value, what, average):
 # .1.3.6.1.4.1.25597.13.1.9.0 2134871
 
 
-def check_fireeye_mail(_no_item, params, info):
-    mail_info = info[0][0:3]
+def check_fireeye_mail(params: Mapping[str, int], section: StringTable) -> CheckResult:
+    mail_info = section[0][0:3]
     average = params.get("interval", 0)
     for index, mail_type in enumerate(["Total", "Infected", "Analyzed"]):
-        yield fireeye_counter_generic(int(mail_info[index]), mail_type, average)
+        yield from fireeye_counter_generic(int(mail_info[index]), mail_type, average)
 
 
 def parse_fireeye_mail(string_table: StringTable) -> StringTable:
     return string_table
 
 
-def discover_fireeye_mail(info):
-    yield from [(None, {})] if info else []
+def discover_fireeye_mail(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-check_info["fireeye_mail"] = LegacyCheckDefinition(
+snmp_section_fireeye_mail = SimpleSNMPSection(
     name="fireeye_mail",
     parse_function=parse_fireeye_mail,
     detect=DETECT,
@@ -97,10 +107,16 @@ check_info["fireeye_mail"] = LegacyCheckDefinition(
             "52",
         ],
     ),
+)
+
+
+check_plugin_fireeye_mail = CheckPlugin(
+    name="fireeye_mail",
     service_name="Received Mail Rates",
     discovery_function=discover_fireeye_mail,
     check_function=check_fireeye_mail,
     check_ruleset_name="fireeye_mail",
+    check_default_parameters={},
 )
 
 #   .--attachment----------------------------------------------------------.
@@ -125,26 +141,28 @@ check_info["fireeye_mail"] = LegacyCheckDefinition(
 # .1.3.6.1.4.1.25597.13.1.27.0 1942580
 
 
-def check_fireeye_attachment(_no_item, params, info):
-    mail_info = info[0][6:9]
+def check_fireeye_attachment(params: Mapping[str, int], section: StringTable) -> CheckResult:
+    mail_info = section[0][6:9]
     average = params.get("interval", 0)
     for index, attachment_type in enumerate(
         ["Total Attachment", "Infected Attachment", "Analyzed Attachment"]
     ):
-        yield fireeye_counter_generic(int(mail_info[index]), attachment_type, average)
+        yield from fireeye_counter_generic(int(mail_info[index]), attachment_type, average)
 
 
-def discover_fireeye_mail_attachment(info):
-    yield from [(None, {})] if info else []
+def discover_fireeye_mail_attachment(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-check_info["fireeye_mail.attachment"] = LegacyCheckDefinition(
+check_plugin_fireeye_mail_attachment = CheckPlugin(
     name="fireeye_mail_attachment",
     service_name="Mails Containing Attachment",
     sections=["fireeye_mail"],
     discovery_function=discover_fireeye_mail_attachment,
     check_function=check_fireeye_attachment,
     check_ruleset_name="fireeye_mail",
+    check_default_parameters={},
 )
 
 #   .--url-----------------------------------------------------------------.
@@ -168,24 +186,26 @@ check_info["fireeye_mail.attachment"] = LegacyCheckDefinition(
 # .1.3.6.1.4.1.25597.13.1.18.0 5619681
 
 
-def check_fireeye_url(_no_item, params, info):
-    mail_info = info[0][3:6]
+def check_fireeye_url(params: Mapping[str, int], section: StringTable) -> CheckResult:
+    mail_info = section[0][3:6]
     average = params.get("interval", 0)
     for index, url_type in enumerate(["Total URL", "Infected URL", "Analyzed URL"]):
-        yield fireeye_counter_generic(int(mail_info[index]), url_type, average)
+        yield from fireeye_counter_generic(int(mail_info[index]), url_type, average)
 
 
-def discover_fireeye_mail_url(info):
-    yield from [(None, {})] if info else []
+def discover_fireeye_mail_url(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-check_info["fireeye_mail.url"] = LegacyCheckDefinition(
+check_plugin_fireeye_mail_url = CheckPlugin(
     name="fireeye_mail_url",
     service_name="Mails Containing URL",
     sections=["fireeye_mail"],
     discovery_function=discover_fireeye_mail_url,
     check_function=check_fireeye_url,
     check_ruleset_name="fireeye_mail",
+    check_default_parameters={},
 )
 
 #   .--statistics----------------------------------------------------------.
@@ -212,8 +232,8 @@ check_info["fireeye_mail.url"] = LegacyCheckDefinition(
 # .1.3.6.1.4.1.25597.13.1.39.0 2007
 
 
-def check_fireeye_mail_statistics(_no_item, params, info):
-    statistics_info = info[0][9:13]
+def check_fireeye_mail_statistics(params: Mapping[str, int], section: StringTable) -> CheckResult:
+    statistics_info = section[0][9:13]
     average = params.get("interval", 0)
     value_store = get_value_store()
     for index, mail_containing in enumerate(
@@ -229,34 +249,30 @@ def check_fireeye_mail_statistics(_no_item, params, info):
         rate = get_rate(
             get_value_store(), counter, this_time, int(statistics_info[index]), raise_overflow=True
         )
-        perfdata = [(counter.replace(".", "_"), rate * 60)]
         if average:
             avg = get_average(value_store, f"{counter}.avg", this_time, rate, average)
-            yield (
-                0,
-                "%s: %.2f per %d minutes"
-                % (
-                    mail_containing,
-                    avg * 60 * average,
-                    average,
-                ),
-                perfdata,
+            yield Result(
+                state=State.OK,
+                summary=f"{mail_containing}: {avg * 60 * average:.2f} per {average} minutes",
             )
         else:
-            yield 0, f"{mail_containing}: {rate * 60:.2f} per minute", perfdata
+            yield Result(state=State.OK, summary=f"{mail_containing}: {rate * 60:.2f} per minute")
+        yield Metric(counter.replace(".", "_"), rate * 60)
 
 
-def discover_fireeye_mail_statistics(info):
-    yield from [(None, {})] if info else []
+def discover_fireeye_mail_statistics(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
+check_plugin_fireeye_mail_statistics = CheckPlugin(
     name="fireeye_mail_statistics",
     service_name="Mail Processing Statistics",
     sections=["fireeye_mail"],
     discovery_function=discover_fireeye_mail_statistics,
     check_function=check_fireeye_mail_statistics,
     check_ruleset_name="fireeye_mail",
+    check_default_parameters={},
 )
 
 #   .--received------------------------------------------------------------.
@@ -274,26 +290,29 @@ check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
 # .1.3.6.1.4.1.25597.13.1.52.0 4282
 
 
-def check_fireeye_mail_received(_no_item, params, info):
-    start, end, received = info[0][13:16]
-    yield 0, f"Mails received between {start} and {end}: {received}"
+def check_fireeye_mail_received(
+    params: Mapping[str, tuple[float, float] | None], section: StringTable
+) -> CheckResult:
+    start, end, received = section[0][13:16]
+    yield Result(state=State.OK, summary=f"Mails received between {start} and {end}: {received}")
     start_timestamp = time.mktime(time.strptime(start, "%m/%d/%y %H:%M:%S"))
     end_timestamp = time.mktime(time.strptime(end, "%m/%d/%y %H:%M:%S"))
     rate = float(received) / (end_timestamp - start_timestamp)
-    yield check_levels(
+    yield from check_levels(
         rate,
-        "mail_received_rate",
-        params.get("rate"),
-        human_readable_func=lambda x: f"{x:.2f}/s",
-        infoname="Rate",
+        metric_name="mail_received_rate",
+        levels_upper=("fixed", levels) if (levels := params.get("rate")) else ("no_levels", None),
+        render_func=lambda x: f"{x:.2f}/s",
+        label="Rate",
     )
 
 
-def discover_fireeye_mail_received(info):
-    yield from [(None, {})] if info else []
+def discover_fireeye_mail_received(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-check_info["fireeye_mail.received"] = LegacyCheckDefinition(
+check_plugin_fireeye_mail_received = CheckPlugin(
     name="fireeye_mail_received",
     service_name="Mails Received",
     sections=["fireeye_mail"],

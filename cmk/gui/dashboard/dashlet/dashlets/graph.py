@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 import abc
@@ -282,12 +281,12 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
 
     @classmethod
     @override
-    def title(cls):
+    def title(cls) -> str:
         return _("Time series graph")
 
     @classmethod
     @override
-    def description(cls):
+    def description(cls) -> str:
         return _("Displays a time series graph of a host or service.")
 
     @classmethod

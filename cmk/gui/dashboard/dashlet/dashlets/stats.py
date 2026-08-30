@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import abc
 from collections.abc import Sequence
@@ -185,7 +184,7 @@ class StatsElement:
     total: StatsPart
     parts: list[StatsPart]
 
-    def serialize(self):
+    def serialize(self) -> dict[str, object]:
         serialized = asdict(self)
         serialized["total"] = asdict(self.total)
         serialized["parts"] = [asdict(p) for p in self.parts]

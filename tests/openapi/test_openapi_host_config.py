@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 import contextlib
 import datetime
@@ -22,7 +21,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.openapi.endpoints._common.host_attribute_schemas import (
     BaseHostAttribute,
     BaseHostTagGroup,
@@ -539,7 +538,13 @@ def test_openapi_bulk_with_failed(
     monkeypatch: pytest.MonkeyPatch,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
-    def _raise(_self, _host_name, _attributes, *, acting_user):
+    def _raise(
+        _self: Folder,
+        _host_name: HostName,
+        _attributes: HostAttributes,
+        *,
+        acting_user: LoggedInUser,
+    ) -> HostAttributes:
         if _host_name == "foobar":
             raise MKUserError(None, "fail")
         return _attributes
@@ -1149,9 +1154,9 @@ def test_openapi_all_hosts_with_non_existing_site(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def mock_all_hosts_recursively(_cls):
+    def mock_all_hosts_recursively(_cls: Folder) -> dict[HostName, Host]:
         return {
-            "foo": Host(
+            HostName("foo"): Host(
                 folder=folder_tree().root_folder(),
                 host_name=HostName("foo"),
                 attributes=HostAttributes({"site": SiteId("a_non_existing_site")}),
@@ -1167,7 +1172,7 @@ def test_openapi_host_with_non_existing_site(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def mock_host(self, _hostname):
+    def mock_host(self: FolderTree, _hostname: HostName) -> Host:
         return Host(
             folder=folder_tree().root_folder(),
             host_name=HostName("foo"),

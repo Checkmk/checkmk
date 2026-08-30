@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Iterator
 
 import pytest
 
+from cmk.ccc.user import UserId
 from tests.testlib.gui.openapi_test_helper import (
     clear_app_instance_caches,
     create_api_client,
@@ -29,9 +29,9 @@ def api_client(
 @pytest.fixture()
 def with_groups(
     monkeypatch: pytest.MonkeyPatch,
-    request_context,
-    with_admin_login,
-    suppress_remote_automation_calls,
+    request_context: None,
+    with_admin_login: UserId,
+    suppress_remote_automation_calls: object,
 ) -> Iterator[None]:
     yield from create_test_groups(monkeypatch)
 

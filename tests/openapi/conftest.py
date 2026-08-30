@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 
 import logging
@@ -33,6 +32,7 @@ from flask import Flask  # noqa: E402
 from pytest_mock import MockerFixture  # noqa: E402
 
 import cmk.gui.watolib.password_store  # noqa: E402
+from cmk.ccc.hostaddress import HostName  # noqa: E402
 from cmk.ccc.user import UserId  # noqa: E402
 from cmk.gui import login  # noqa: E402
 from cmk.gui.config import Config  # noqa: E402
@@ -415,7 +415,7 @@ def aut_user_auth_wsgi_app(
 
 
 @pytest.fixture()
-def with_host(request_context, with_admin_login):
+def with_host(request_context: None, with_admin_login: UserId) -> Iterator[list[HostName]]:
     yield from create_test_hosts()
 
 
@@ -455,9 +455,9 @@ def api_client(
 @pytest.fixture()
 def with_groups(
     monkeypatch: pytest.MonkeyPatch,
-    request_context,
-    with_admin_login,
-    suppress_remote_automation_calls,
+    request_context: None,
+    with_admin_login: UserId,
+    suppress_remote_automation_calls: RemoteAutomation,
 ) -> Iterator[None]:
     yield from create_test_groups(monkeypatch)
 

@@ -6,7 +6,6 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import json
 import random
@@ -243,7 +242,7 @@ def test_openapi_group_values_are_links(group_client: GroupConfig, group_type: s
     assert response.json["value"][0]["links"][0]["domainType"] == "link"
 
 
-def _random_string(size):
+def _random_string(size: int) -> str:
     return "".join(random.choice(string.ascii_letters + string.digits) for _ in range(size))
 
 

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import pytest
 from marshmallow import Schema, ValidationError
@@ -13,7 +12,7 @@ from cmk.livestatus_client.tables import Hosts
 
 
 @pytest.fixture(name="schema", scope="module")
-def _schema():
+def _schema() -> Schema:
     class QuerySchema(Schema):
         q = fields.query_field(Hosts, required=True)
 

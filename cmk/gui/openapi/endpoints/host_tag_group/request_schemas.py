@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 import re
+from collections.abc import Callable, Collection, Mapping, Sequence
 from typing import override
 
 from cmk import fields
@@ -14,7 +14,7 @@ from cmk.ccc.regex import REGEX_ID
 from cmk.gui.fields import AuxTagIDField
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.watolib.tags import load_all_tag_config_read_only, tag_group_exists
-from cmk.ruleset_matcher.tags import TAG_GROUP_NAME_PATTERN, TagID
+from cmk.ruleset_matcher.tags import TAG_GROUP_NAME_PATTERN, TagGroupID, TagID
 
 
 class Tags(fields.List):
@@ -28,12 +28,12 @@ class Tags(fields.List):
 
     def __init__(
         self,
-        cls,
-        example,
-        required=True,
-        validate=None,
-        **kwargs,
-    ):
+        cls: fields.Field,
+        example: object,
+        required: bool = True,
+        validate: Callable[[object], bool] | Collection[Callable[[object], bool]] | None = None,
+        **kwargs: object,
+    ) -> None:
         super().__init__(
             cls_or_instance=cls,
             example=example,
@@ -43,13 +43,13 @@ class Tags(fields.List):
         )
 
     @override
-    def _validate(self, value):
+    def _validate(self, value: Sequence[Mapping[str, object]]) -> None:
         super()._validate(value)
 
         self._unique_ids(value)
         self._valid_none_tag(value)
 
-    def _valid_none_tag(self, value):
+    def _valid_none_tag(self, value: Sequence[Mapping[str, object]]) -> None:
         none_tag_exists = False
         for tag in value:
             tag_id = tag.get("id")
@@ -62,7 +62,7 @@ class Tags(fields.List):
 
                 none_tag_exists = True
 
-    def _unique_ids(self, tags):
+    def _unique_ids(self, tags: Sequence[Mapping[str, object]]) -> None:
         seen_ids = set()
         for tag in tags:
             tag_id = tag.get("id")
@@ -83,11 +83,11 @@ class HostTagGroupId(fields.String):
         super().__init__(**kwargs)
 
     @override
-    def _validate(self, value):
+    def _validate(self, value: str) -> None:
         super()._validate(value)
         if not (re.match(TAG_GROUP_NAME_PATTERN, value) and re.match(REGEX_ID, value)):
             raise self.make_error("pattern", value=value)
-        group_exists = tag_group_exists(value, builtin_included=True)
+        group_exists = tag_group_exists(TagGroupID(value), builtin_included=True)
         if group_exists:
             raise self.make_error("used", name=value)
 

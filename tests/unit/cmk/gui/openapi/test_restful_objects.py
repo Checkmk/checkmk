@@ -3,15 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import json
+from collections.abc import Sequence
 from typing import get_args
 
 import pytest
+from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
 import cmk.gui.openapi.restful_objects.decorators
+from cmk.ccc.hostaddress import HostName
 from cmk.gui.openapi.restful_objects import response_schemas
 from cmk.gui.openapi.restful_objects.constructors import (
     absolute_url,
@@ -24,6 +26,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
 from cmk.gui.openapi.restful_objects.type_defs import StatusCode, StatusCodeInt
 from cmk.gui.wsgi.app import application_and_request_context
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -204,12 +207,12 @@ def test_status_codes_match() -> None:
 
 
 def test_no_config_generation_on_certain_posts(
-    aut_user_auth_wsgi_app,
-    mock_livestatus,
-    with_host,
-    monkeypatch,
-    mocker,
-):
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    with_host: Sequence[HostName],
+    monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
+) -> None:
     """
     update_config_generation should not be called on certain posts: SUP-8793
     """

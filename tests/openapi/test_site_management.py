@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 from unittest.mock import MagicMock
 
@@ -175,7 +174,7 @@ def test_login_site_problem(
     monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
 
     class MockLoginException:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: object, **kwargs: object) -> None:
             raise Exception("There was a problem logging in.")
 
     monkeypatch.setattr(
@@ -212,7 +211,7 @@ def test_delete_site_connection_problem(
     monkeypatch: MonkeyPatch,
 ) -> None:
     class MockDeleteException:
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: object, **kwargs: object) -> None:
             raise MKUserError(varname=None, message="There was a problem deleting that site.")
 
     monkeypatch.setattr(

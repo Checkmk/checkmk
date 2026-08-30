@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping
@@ -97,7 +96,9 @@ class EventConsoleAlertsResponse(CheckboxOutput):
     values = fields.Nested(EventConsoleAlertAttrsResponse)
 
     @post_dump
-    def _post_dump(self, data, many, **kwargs):  # type: ignore[misc]
+    def _post_dump(  # type: ignore[misc]
+        self, data: dict[str, Any], many: bool, **kwargs: Any
+    ) -> dict[str, Any]:
         if data.get("values") == {}:
             del data["values"]
         return data
@@ -220,8 +221,8 @@ class TagGroupSelectorOutput(OneOfSchema):
     type_field_remove = False
 
     @override
-    def get_obj_type(self, obj):
-        operator = obj.get("operator")
+    def get_obj_type(self, obj: Any) -> str:
+        operator: str = obj.get("operator")
         if operator in self.type_schemas:
             return operator
 
@@ -237,8 +238,8 @@ class TagTypeSelectorOutput(OneOfSchema):
     type_field_remove = False
 
     @override
-    def get_obj_type(self, obj):
-        tag_type = obj.get("tag_type")
+    def get_obj_type(self, obj: Any) -> str:
+        tag_type: str = obj.get("tag_type")
         if tag_type in self.type_schemas:
             return tag_type
 

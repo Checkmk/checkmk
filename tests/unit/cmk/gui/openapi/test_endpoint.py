@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """
@@ -12,8 +11,9 @@ smth (needed for endpoint registration in test_openapi_endpoint_decorator_resets
 
 import base64
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from pathlib import Path
+from typing import NoReturn
 from unittest import mock
 
 import pytest
@@ -80,7 +80,7 @@ class SomeSchema(BaseSchema):
 
 
 @pytest.fixture(name="test_endpoint")
-def install_endpoint(fresh_app_instance):
+def install_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/unitest-endpoint-test-that-is-not-cleaned-up",
         method="post",
@@ -106,7 +106,7 @@ def install_endpoint(fresh_app_instance):
 
 
 @pytest.fixture(name="test_multiple_accept_endpoint")
-def install_multi_accept_endpoint(fresh_app_instance):
+def install_multi_accept_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/test_multiple_content_types",
         method="post",
@@ -135,7 +135,7 @@ def install_multi_accept_endpoint(fresh_app_instance):
 
 # This looks like a good template for a test
 @pytest.fixture(name="test_internal_endpoint")
-def install_reserved_endpoint(fresh_app_instance):
+def install_reserved_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/i_am_reserved",
         method="get",
@@ -192,7 +192,7 @@ def test_openapi_endpoint_decorator_resets_used_permissions(
 
 
 @pytest.fixture(name="test_endpoint_raise_status_code")
-def install_endpoint_raise(fresh_app_instance):
+def install_endpoint_raise(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/raise_exception",
         method="get",
@@ -213,7 +213,7 @@ def install_endpoint_raise(fresh_app_instance):
 
 
 @pytest.fixture(name="test_endpoint_accept_parameter")
-def accept_parameter_endpoint(fresh_app_instance):
+def accept_parameter_endpoint(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/test_accept_parameter",
         method="post",
@@ -359,7 +359,7 @@ def test_wato_disabled_exception(clients: ClientRegistry, set_config: SetConfig)
 
 # ========= Permission Validation =========
 def test_permission_exception(clients: ClientRegistry) -> None:
-    def validate(*args, **kwargs):
+    def validate(*args: object, **kwargs: object) -> bool:
         return False
 
     with mock.patch("cmk.web.utils.permission_verification.BasePerm.validate", validate):
@@ -382,7 +382,7 @@ def test_permission_exception(clients: ClientRegistry) -> None:
 
 
 @pytest.fixture(name="test_endpoint_raise_auth_exception")
-def install_endpoint_raise_auth_exception(fresh_app_instance):
+def install_endpoint_raise_auth_exception(fresh_app_instance: None) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/raise_auth_exception",
         method="get",
@@ -419,7 +419,9 @@ def test_openapi_endpoint_permission_denied_is_forbidden(
 
 
 @pytest.fixture(name="test_endpoint_raise_unauthenticated_exception")
-def install_endpoint_raise_unauthenticated_exception(fresh_app_instance):
+def install_endpoint_raise_unauthenticated_exception(
+    fresh_app_instance: None,
+) -> Iterator[WrappedEndpoint]:
     @Endpoint(
         path="/raise_unauthenticated_exception",
         method="get",
@@ -480,7 +482,7 @@ def test_crash_report_with_post(clients: ClientRegistry, monkeypatch: pytest.Mon
     exc_title = "The Wizard of Oz (1939)"
     exc_detail = "Toto, I've a feeling we're not in Kansas anymore."
 
-    def raise_an_exception():
+    def raise_an_exception() -> NoReturn:
         raise RestAPIResponseGeneralException(status=500, title=exc_title, detail=exc_detail)
 
     monkeypatch.setattr(

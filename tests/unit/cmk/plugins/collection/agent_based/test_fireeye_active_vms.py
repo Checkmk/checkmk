@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.fireeye_active_vms import (
     check_fireeye_active_vms,
     discover_fireeye_active_vms,
@@ -17,37 +18,25 @@ def test_discover_nothing() -> None:
 
 
 def test_discover_something() -> None:
-    assert list(discover_fireeye_active_vms(SECTION)) == [(None, {})]
+    assert list(discover_fireeye_active_vms(SECTION)) == [Service()]
 
 
 def test_check_ok() -> None:
-    result = list(check_fireeye_active_vms(None, {"vms": (50, 100)}, SECTION))
-    assert result == [
-        (
-            0,
-            "Active VMs: 42",
-            [("active_vms", 42.0, 50.0, 100.0)],
-        )
+    assert list(check_fireeye_active_vms({"vms": (50, 100)}, SECTION)) == [
+        Result(state=State.OK, summary="Active VMs: 42"),
+        Metric("active_vms", 42.0, levels=(50.0, 100.0)),
     ]
 
 
 def test_check_warn() -> None:
-    result = list(check_fireeye_active_vms(None, {"vms": (23, 50)}, SECTION))
-    assert result == [
-        (
-            1,
-            "Active VMs: 42 (warn/crit at 23/50)",
-            [("active_vms", 42.0, 23.0, 50.0)],
-        )
+    assert list(check_fireeye_active_vms({"vms": (23, 50)}, SECTION)) == [
+        Result(state=State.WARN, summary="Active VMs: 42 (warn/crit at 23/50)"),
+        Metric("active_vms", 42.0, levels=(23.0, 50.0)),
     ]
 
 
 def test_check_crit() -> None:
-    result = list(check_fireeye_active_vms(None, {"vms": (23, 36)}, SECTION))
-    assert result == [
-        (
-            2,
-            "Active VMs: 42 (warn/crit at 23/36)",
-            [("active_vms", 42.0, 23.0, 36.0)],
-        )
+    assert list(check_fireeye_active_vms({"vms": (23, 36)}, SECTION)) == [
+        Result(state=State.CRIT, summary="Active VMs: 42 (warn/crit at 23/36)"),
+        Metric("active_vms", 42.0, levels=(23.0, 36.0)),
     ]

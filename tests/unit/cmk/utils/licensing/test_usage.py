@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 import time
 from collections.abc import Mapping, Sequence
@@ -1065,7 +1064,7 @@ def test_history_add_sample() -> None:
 
 
 # This is nowhere near being a unit test of cmk.licensing.
-def test_cloud_service_prefixes_up_to_date():
+def test_cloud_service_prefixes_up_to_date() -> None:
     """Test if there are services that do not begin with the prefix indicating a cloud service based
     on the categorisation in their manpage. Either rename your service to conform to the given
      prefixes, update the prefix list or update the manpage catalog"""

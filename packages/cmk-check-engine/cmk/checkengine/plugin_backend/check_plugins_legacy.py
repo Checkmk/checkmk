@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 """Helper to register a new-style section based on config.check_info"""
@@ -135,12 +134,12 @@ def _create_signature_check_function(
     """Create the function for a check function with the required signature"""
     if requires_item:
 
-        def check_migration_wrapper_with_item(item, params, section):
+        def check_migration_wrapper_with_item(item: object, params: object, section: object) -> Any:
             return original_function(item, params, section)
 
         return check_migration_wrapper_with_item
 
-    def check_migration_wrapper_without_item(params, section):
+    def check_migration_wrapper_without_item(params: object, section: object) -> Any:
         return original_function(None, params, section)
 
     return check_migration_wrapper_without_item

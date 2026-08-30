@@ -4,18 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
 
 # ruff: noqa: ARG001
 # ruff: noqa: ARG005
 # ruff: noqa: SLF001
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
 import pytest
 
 from cmk.agent_based.v2 import (
     AgentSection,
+    HostLabelGenerator,
     matches,
     OIDEnd,
     SimpleSNMPSection,
@@ -43,11 +43,11 @@ from cmk.discover_plugins import PluginLocation
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 
 
-def _generator_function():
+def _generator_function() -> Iterator[None]:
     yield None
 
 
-def parse_dummy(string_table):
+def parse_dummy(string_table: object) -> None:
     return None
 
 
@@ -183,7 +183,7 @@ def test_create_metrics_section_plugin_defaults() -> None:
 
 
 def test_create_metrics_section_plugin_host_label_ruleset() -> None:
-    def host_labels(params, section):
+    def host_labels(params: object, section: object) -> HostLabelGenerator:
         yield from ()
 
     plugin = section_plugins.create_metrics_section_plugin(

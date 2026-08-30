@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-untyped-def"
 
 # ruff: noqa: SLF001
 # ruff: noqa: ARG001
@@ -743,17 +742,17 @@ def test__get_service_filter_func(
         ),
     ],
 )
-def test__get_service_filters_lists(  # type: ignore[misc]
-    parameters,
-    new_whitelist,
-    new_blacklist,
-    vanished_whitelist,
-    vanished_blacklist,
-    changed_labels_whitelist,
-    changed_labels_blacklist,
-    changed_params_whitelist,
-    changed_params_blacklist,
-):
+def test__get_service_filters_lists(
+    parameters: filters.RediscoveryParameters,
+    new_whitelist: list[str] | None,
+    new_blacklist: list[str] | None,
+    vanished_whitelist: list[str] | None,
+    vanished_blacklist: list[str] | None,
+    changed_labels_whitelist: list[str] | None,
+    changed_labels_blacklist: list[str] | None,
+    changed_params_whitelist: list[str] | None,
+    changed_params_blacklist: list[str] | None,
+) -> None:
     service_filter_lists = filters._get_service_filter_lists(parameters)
     assert service_filter_lists.new_whitelist == new_whitelist
     assert service_filter_lists.new_blacklist == new_blacklist

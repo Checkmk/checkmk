@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
 # ruff: noqa: ARG005
@@ -13,7 +12,7 @@
 import copy
 import itertools
 import time
-from collections.abc import Sequence
+from collections.abc import MutableMapping, Sequence
 from pathlib import Path
 from typing import override
 
@@ -55,11 +54,11 @@ class TestAgentParser:
         return HostName("testhost")
 
     @pytest.fixture
-    def store_path(self, tmp_path):
+    def store_path(self, tmp_path: Path) -> Path:
         return tmp_path / "store"
 
     @pytest.fixture
-    def store(self, store_path):
+    def store(self, store_path: Path) -> SectionStore[Sequence[AgentRawDataSectionElem]]:
         return SectionStore[Sequence[AgentRawDataSectionElem]](store_path)
 
     @pytest.fixture
@@ -711,8 +710,11 @@ class TestAgentParser:
         assert not store.load()
 
     def test_section_lines_are_correctly_ordered_with_different_separators_and_piggyback(
-        self, parser, store, monkeypatch
-    ):
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSectionElem]],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
         monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
 
@@ -997,11 +999,11 @@ class TestPiggybackMarker:
 
 class TestSNMPParser:
     @pytest.fixture
-    def hostname(self):
+    def hostname(self) -> str:
         return "hostname"
 
     @pytest.fixture
-    def parser(self):
+    def parser(self) -> SNMPParser:
         return SNMPParser()
 
     def test_empty_raw_data(self, parser: SNMPParser) -> None:
@@ -1013,7 +1015,7 @@ class TestSNMPParser:
         assert not host_sections.piggybacked_raw_data
 
     @pytest.fixture
-    def sections(self):
+    def sections(self) -> dict[SectionName, StringTable]:
         # See also the tests to HostSections.
         section_a = SectionName("section_a")
         content_a = [["first", "line"], ["second", "line"]]
@@ -1038,17 +1040,23 @@ class TestSNMPParser:
         assert ahs.piggybacked_raw_data == {}
 
 
-class MockStore(SectionStore):
-    def __init__(self, path: Path, sections: object) -> None:
+class MockStore(SectionStore[Sequence[Sequence[str]]]):
+    def __init__(
+        self,
+        path: Path,
+        sections: MutableMapping[SectionName, tuple[int, int, Sequence[Sequence[str]]]],
+    ) -> None:
         super().__init__(path)
         self._sections = sections
 
     @override
-    def store(self, sections):
+    def store(
+        self, sections: MutableMapping[SectionName, tuple[int, int, Sequence[Sequence[str]]]]
+    ) -> None:
         self._sections = copy.copy(sections)
 
     @override
-    def load(self):
+    def load(self) -> MutableMapping[SectionName, tuple[int, int, Sequence[Sequence[str]]]]:
         return copy.copy(self._sections)
 
 

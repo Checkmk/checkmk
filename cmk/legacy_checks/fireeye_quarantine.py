@@ -5,37 +5,39 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import (
+from cmk.agent_based.v2 import (
     check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
 )
-from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.fireeye.lib import DETECT
-
-check_info = {}
 
 # .1.3.6.1.4.1.25597.13.1.40.0 1
 
 type Section = StringTable
 
 
-def discover_fireeye_quarantine(section: Section) -> LegacyDiscoveryResult:
+def discover_fireeye_quarantine(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
 def check_fireeye_quarantine(
-    _no_item: None, params: Mapping[str, tuple[float, float] | None], info: Section
-) -> LegacyCheckResult:
-    usage = int(info[0][0])
-    yield check_levels(
+    params: Mapping[str, tuple[float, float] | None], section: Section
+) -> CheckResult:
+    usage = int(section[0][0])
+    yield from check_levels(
         usage,
-        "quarantine",
-        params["usage"],
-        human_readable_func=render.percent,
-        infoname="Usage",
+        metric_name="quarantine",
+        levels_upper=("fixed", levels) if (levels := params["usage"]) else ("no_levels", None),
+        render_func=render.percent,
+        label="Usage",
     )
 
 
@@ -43,7 +45,7 @@ def parse_fireeye_quarantine(string_table: StringTable) -> Section:
     return string_table
 
 
-check_info["fireeye_quarantine"] = LegacyCheckDefinition(
+snmp_section_fireeye_quarantine = SimpleSNMPSection(
     name="fireeye_quarantine",
     parse_function=parse_fireeye_quarantine,
     detect=DETECT,
@@ -51,6 +53,11 @@ check_info["fireeye_quarantine"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.25597.13.1.40",
         oids=["0"],
     ),
+)
+
+
+check_plugin_fireeye_quarantine = CheckPlugin(
+    name="fireeye_quarantine",
     service_name="Quarantine Usage",
     discovery_function=discover_fireeye_quarantine,
     check_function=check_fireeye_quarantine,

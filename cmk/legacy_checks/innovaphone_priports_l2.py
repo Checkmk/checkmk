@@ -3,79 +3,96 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import equals, SNMPTree, StringTable
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+
+_MODE_NAMES = {
+    1: "TE",
+    2: "NT",
+}
+
+_STATE_NAMES = {
+    1: "Down",
+    2: "UP",
+}
 
 
-def saveint(i: str) -> int:
-    """Tries to cast a string to an integer and return it. In case this
-    fails, it returns 0.
-
-    Advice: Please don't use this function in new code. It is understood as
-    bad style these days, because in case you get 0 back from this function,
-    you can not know whether it is really 0 or something went wrong."""
+def _saveint(value: str) -> int:
     try:
-        return int(i)
-    except TypeError, ValueError:
+        return int(value)
+    except ValueError:
         return 0
 
 
-def discover_innovaphone_priports_l2(info):
-    inventory = []
-    for line in info:
-        if line[1] != "1":
-            inventory.append((line[0], {"mode": saveint(line[2])}))
-    return inventory
+@dataclass(frozen=True, kw_only=True)
+class PriPort:
+    state: int
+    mode: int
 
 
-def check_innovaphone_priports_l2(item, params, info):
-    modes = {
-        1: "TE",
-        2: "NT",
+Section = Mapping[str, PriPort]
+
+
+def parse_innovaphone_priports_l2(string_table: StringTable) -> Section:
+    return {
+        item: PriPort(state=_saveint(state), mode=_saveint(mode))
+        for item, state, mode in string_table
     }
 
-    states = {
-        1: "Down",
-        2: "UP",
-    }
 
-    for line in info:
-        if line[0] == item:
-            state = 0
-            l2state, l2mode = map(saveint, line[1:])
-            state_label = ""
-            if l2state == 1:
-                state = 2
-                state_label = "(!!)"
-
-            mode_label = ""
-            if l2mode != params["mode"]:
-                state = 2
-                mode_label = "(!!)"
-
-            return (
-                state,
-                f"State: {states[l2state]}{state_label}, Mode: {modes[l2mode]}{mode_label}",
-            )
-    return 3, "Output not found"
+def discover_innovaphone_priports_l2(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=item, parameters={"mode": port.mode})
+        for item, port in section.items()
+        if port.state != 1
+    )
 
 
-def parse_innovaphone_priports_l2(string_table: StringTable) -> StringTable:
-    return string_table
+def check_innovaphone_priports_l2(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if (port := section.get(item)) is None:
+        return
+
+    yield Result(
+        state=State.CRIT if port.state == 1 else State.OK,
+        summary=f"State: {_STATE_NAMES[port.state]}",
+    )
+    yield Result(
+        state=State.CRIT if port.mode != params["mode"] else State.OK,
+        summary=f"Mode: {_MODE_NAMES[port.mode]}",
+    )
 
 
-check_info["innovaphone_priports_l2"] = LegacyCheckDefinition(
+snmp_section_innovaphone_priports_l2 = SimpleSNMPSection(
     name="innovaphone_priports_l2",
-    parse_function=parse_innovaphone_priports_l2,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6666"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6666.1.1.1",
         oids=["1", "2", "3"],
     ),
+    parse_function=parse_innovaphone_priports_l2,
+)
+
+
+check_plugin_innovaphone_priports_l2 = CheckPlugin(
+    name="innovaphone_priports_l2",
     service_name="Port L2 %s",
     discovery_function=discover_innovaphone_priports_l2,
     check_function=check_innovaphone_priports_l2,

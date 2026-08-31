@@ -74,7 +74,6 @@ def render_link(
         href=url,
         class_="link",
         target=target or "",
-        onfocus="if (this.blur) this.blur();",
         onclick=onclick or None,
         title=title,
     )

@@ -50,7 +50,6 @@ def top_heading(
         title=title,
         class_="title",
         href="#",
-        onfocus="if (this.blur) this.blur();",
         onclick="this.innerHTML='%s'; document.location.reload();" % _("Reloading..."),
     )
 

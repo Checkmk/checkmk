@@ -1491,7 +1491,6 @@ class HTMLGenerator(HTMLWriter):
             class_=classes,
             style=style,
             target=target if target else "",
-            onfocus="if (this.blur) this.blur();",
             onclick=onclick,
             download=download,
         )
@@ -1570,7 +1569,6 @@ class HTMLGenerator(HTMLWriter):
             href="javascript:void(0)",
             id_="more_%s" % id_,
             class_=["more", "has_text" if with_text else ""],
-            onfocus="if (this.blur) this.blur();",
             onclick="cmk.utils.toggle_more(this, %s, %d);%s"
             % (json.dumps(id_), dom_levels_up, additional_js),
         )

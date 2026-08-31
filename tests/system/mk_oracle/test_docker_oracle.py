@@ -879,7 +879,7 @@ def _assert_runtime_refused(
     )
     assert isinstance(output, bytes)  # stream/socket/demux not used above
     text = output.decode("utf-8")
-    assert "Execution is blocked because you try to load an unsafe Oracle client library" in text, (
+    assert "No Oracle client runtime found" in text, (
         f"Runtime {runtime_dir} was accepted as root but should not be:\n{text}"
     )
 

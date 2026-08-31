@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 // SPDX-License-Identifier: Apache-2.0
-use mk_oracle::ora_sql::detect::{dump_detected_sids, get_local_sid_names};
-use mk_oracle::{args::Args, config, emit, setup};
+use mk_oracle::ora_sql::detect::dump_detected_sids;
+use mk_oracle::{args::Args, config, setup};
 
 use clap::Parser;
 
@@ -77,24 +77,23 @@ async fn main() {
             // --runtime-ready and executes the actual monitoring. The re-run
             // is what makes the library search path take effect, since the
             // dynamic loader reads it once, when a process starts.
-            match setup::detect_runtime_env(&config) {
-                Err(e) => report_fatal_error(e),
-                Ok(runtime_env) => match setup::apply_runtime_env(&runtime_env, None, None) {
-                    None => report_fatal_error("No Oracle client runtime found"),
-                    Some(old_path) => {
-                        // old_path is the search path as it was before the runtime was
-                        // prepended; it is kept so that reset_env can restore it.
-                        log::info!(
-                            "Spawn new process {args:?}, previous {}={old_path:?}",
-                            setup::RUNTIME_PATH_ENV_VAR
-                        );
-                        setup::spawn_new_process(args, old_path)
-                    }
-                },
+            let runtime_env = setup::detect_runtime_env(&config);
+            if let Some(old_path) = setup::apply_runtime_env(&runtime_env, None, None) {
+                // old_path is the search path as it was before the runtime was
+                // prepended; it is kept so that reset_env can restore it.
+                log::info!(
+                    "Spawn new process {args:?}, previous {}={old_path:?}",
+                    setup::RUNTIME_PATH_ENV_VAR
+                );
+                setup::spawn_new_process(args, old_path)
+            } else {
+                setup::display_and_log("No Oracle client runtime found");
+                1
             }
         }
     } else {
-        report_fatal_error(result.err().unwrap())
+        setup::display_and_log(result.err().unwrap());
+        1
     };
     std::process::exit(code);
 }
@@ -110,13 +109,11 @@ fn run_utility_command(config: &config::OracleConfig, environment: &setup::Env) 
         print!("{}", dump_detected_sids());
         return 0;
     }
-    let runtime_env = match setup::detect_runtime_env(config) {
-        Ok(runtime_env) => runtime_env,
-        Err(e) => {
-            setup::display_and_log(e);
-            return 1;
-        }
-    };
+    let runtime_env = setup::detect_runtime_env(config);
+    if runtime_env.runtime_dir.is_none() {
+        setup::display_and_log("No Oracle client runtime found");
+        return 1;
+    }
     let current = std::env::var(setup::RUNTIME_PATH_ENV_VAR).unwrap_or_default();
     print!("{}", setup::format_runtime_env(&runtime_env, &current));
     0
@@ -138,15 +135,9 @@ async fn execute(config: config::OracleConfig, environment: setup::Env) -> i32 {
             log::info!("Successfully executed");
             0
         }
-        Err(e) => report_fatal_error(e),
+        Err(e) => {
+            setup::display_and_log(e);
+            1
+        }
     }
-}
-
-fn report_fatal_error(e: impl std::fmt::Display) -> i32 {
-    setup::display_and_log(&e);
-    print!(
-        "{}",
-        emit::fatal_error_section(&get_local_sid_names(), &e.to_string())
-    );
-    1
 }

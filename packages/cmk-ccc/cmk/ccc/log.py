@@ -27,6 +27,12 @@ class CMKFormatter(logging.Formatter):
     log can move onto this formatter without its lines changing::
 
         2026-06-26 14:32:45,123 [20] [cmk.web 12345] the message
+
+    The ``message_only=True`` mode renders just the bare message, with no
+    timestamp, level or logger name. It is meant for interactive command line
+    output, where the surrounding metadata would only be noise. Routing that
+    case through this formatter too keeps every handler on a single formatter
+    type. It takes precedence over the other flags.
     """
 
     def __init__(
@@ -35,11 +41,13 @@ class CMKFormatter(logging.Formatter):
         with_process: bool = False,
         with_thread: bool = False,
         legacy: bool = False,
+        message_only: bool = False,
     ) -> None:
         super().__init__()
         self._with_process = with_process
         self._with_thread = with_thread
         self._legacy = legacy
+        self._message_only = message_only
 
     def _ident(self, record: logging.LogRecord) -> str:
         fields = [record.name]
@@ -53,6 +61,8 @@ class CMKFormatter(logging.Formatter):
 
     @override
     def formatMessage(self, record: logging.LogRecord) -> str:
+        if self._message_only:
+            return record.message
         timestamp = self.formatTime(record)
         ident = self._ident(record)
         if self._legacy:

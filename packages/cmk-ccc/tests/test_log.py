@@ -98,3 +98,18 @@ def test_cmk_formatter_leaves_exception_rendering_to_the_base_formatter() -> Non
     assert line == "2026-06-26 14:32:45.123+02:00 [cmk.web cmk-worker(12345)] [INFO] the message"
     assert traceback.startswith("Traceback (most recent call last):")
     assert traceback.endswith("ValueError: boom")
+
+
+@time_machine.travel(_FROZEN)
+def test_cmk_formatter_message_only_renders_bare_message() -> None:
+    assert CMKFormatter(message_only=True).format(_record()) == "the message"
+
+
+@time_machine.travel(_FROZEN)
+def test_cmk_formatter_message_only_takes_precedence() -> None:
+    assert (
+        CMKFormatter(message_only=True, with_process=True, with_thread=True, legacy=True).format(
+            _record()
+        )
+        == "the message"
+    )

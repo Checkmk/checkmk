@@ -32,7 +32,9 @@ def setup_console_logging() -> None:
     This can be used for existing command line applications which were
     using sys.stdout.write() or print() before.
     """
-    _set_handler(logging.StreamHandler(stream=sys.stdout), logging.Formatter("%(message)s"))
+    handler = logging.StreamHandler(stream=sys.stdout)
+    handler.setFormatter(CMKFormatter(message_only=True))
+    _set_handler(handler)
 
 
 def setup_watched_file_logging_handler(logfile: str | Path) -> None:
@@ -41,7 +43,9 @@ def setup_watched_file_logging_handler(logfile: str | Path) -> None:
     logfile if it detects an inode change, e.g through logrotate.
 
     """
-    _set_handler(WatchedFileHandler(logfile))
+    handler = WatchedFileHandler(logfile)
+    handler.setFormatter(CMKFormatter())
+    _set_handler(handler)
 
 
 def setup_logging_handler(stream: IO[str]) -> None:
@@ -49,11 +53,12 @@ def setup_logging_handler(stream: IO[str]) -> None:
     stream file object. The messages are formatted in Check_MK standard
     logging format.
     """
-    _set_handler(logging.StreamHandler(stream=stream))
+    handler = logging.StreamHandler(stream=stream)
+    handler.setFormatter(CMKFormatter())
+    _set_handler(handler)
 
 
-def _set_handler(handler: logging.Handler, formatter: logging.Formatter | None = None) -> None:
-    handler.setFormatter(CMKFormatter() if formatter is None else formatter)
+def _set_handler(handler: logging.Handler) -> None:
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
 

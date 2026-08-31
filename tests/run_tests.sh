@@ -247,7 +247,7 @@ test-performance-docker() {
 test-performance-all() {
     local rc=0
     bazel test --test_output=streamed //tests/performance:bazel_performance || rc=$?
-    $UVENV "$(realpath "$SCRIPT_DIR/performance/perftest_upload.sh")" || return "$?"
+    $UVENV "$(realpath "$SCRIPT_DIR/performance/reporting/perftest_upload.sh")" || return "$?"
     return "$rc"
 }
 

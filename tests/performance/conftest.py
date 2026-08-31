@@ -16,9 +16,21 @@ from typing import Literal
 
 import pytest
 
-from tests.performance.sysmon import track_resources
-from tests.testlib.common.utils2 import is_containerized, run
-from tests.testlib.site import (
+# Has to precede the imports below: a module already imported cannot be rewritten, and it is
+# the scenarios that carry the assertions now - `perftest` holds only the state they share.
+pytest.register_assert_rewrite(
+    "tests.performance.activation.scenario",
+    "tests.performance.dcd.scenario",
+    "tests.performance.hosts.scenario",
+    "tests.performance.nagios.scenario",
+    "tests.performance.services.scenario",
+    "tests.performance.ui_response.scenario",
+)
+
+from tests.performance.perftest import PerformanceTest  # noqa: E402
+from tests.performance.sysmon import track_resources  # noqa: E402
+from tests.testlib.common.utils2 import is_containerized, run  # noqa: E402
+from tests.testlib.site import (  # noqa: E402
     connection,
     get_site_factory,
     GlobalSettingsUpdate,
@@ -29,9 +41,6 @@ from tests.testlib.site import (
 site_factory = get_site_factory(prefix="perf_")
 
 logger = logging.getLogger(__name__)
-
-# Rewrite assertions in helper modules
-pytest.register_assert_rewrite("tests.performance.perftest")
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -266,3 +275,22 @@ def browser_context_args() -> dict[str, dict[str, str]]:
             "Connection": "close",
         }
     }
+
+
+@pytest.fixture(name="perftest", scope="module")
+def _perftest(single_site: Site, pytestconfig: pytest.Config) -> PerformanceTest:
+    """The shared state of a scenario measured against one site."""
+    return PerformanceTest(single_site, remote_sites=None, pytestconfig=pytestconfig)
+
+
+@pytest.fixture(name="perftest_dist", scope="module")
+def _perftest_dist(
+    central_site: Site,
+    remote_site: Site,
+    remote_site_2: Site,
+    pytestconfig: pytest.Config,
+) -> PerformanceTest:
+    """The same, for a scenario that needs a central site with remotes attached."""
+    return PerformanceTest(
+        central_site, remote_sites=[remote_site, remote_site_2], pytestconfig=pytestconfig
+    )

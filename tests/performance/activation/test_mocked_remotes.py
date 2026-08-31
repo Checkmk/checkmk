@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-"""Performance test: Distributed setup with mocked remote sites (CMK-35259)
+"""Performance: activating a configuration change against mocked remote sites (CMK-35259)
 
 Benchmarks the central site's bulk change activation against a scalable number
 of mocked remote sites (default: 30, see --mocked-sites). The mock sites
@@ -21,10 +21,12 @@ of distributed piggyback at a realistic site count.
 
 import logging
 from collections.abc import Iterator
+from functools import partial
 
 import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 
+from tests.performance.activation import scenario
 from tests.performance.perftest import PerformanceTest
 from tests.testlib.site import Site
 
@@ -82,10 +84,10 @@ def test_performance_bulk_change_activation_mocked_remotes(
 ) -> None:
     """Bulk change activation against mocked remote sites, distributed piggyback disabled"""
     benchmark.pedantic(  # type: ignore[no-untyped-call]
-        perftest_mocked_dist.scenario_bulk_change_activation,
+        partial(scenario.scenario_bulk_change_activation, perftest_mocked_dist),
         args=[],
-        setup=perftest_mocked_dist.setup_bulk_change_activation,
-        teardown=perftest_mocked_dist.teardown_bulk_change_activation,
+        setup=partial(scenario.setup_bulk_change_activation, perftest_mocked_dist),
+        teardown=partial(scenario.teardown_bulk_change_activation, perftest_mocked_dist),
         rounds=perftest_mocked_dist.rounds,
         iterations=perftest_mocked_dist.iterations,
     )
@@ -99,10 +101,10 @@ def test_performance_bulk_change_activation_mocked_remotes_distributed_piggyback
 ) -> None:
     """Bulk change activation against mocked remote sites, distributed piggyback enabled"""
     benchmark.pedantic(  # type: ignore[no-untyped-call]
-        perftest_mocked_dist.scenario_bulk_change_activation,
+        partial(scenario.scenario_bulk_change_activation, perftest_mocked_dist),
         args=[],
-        setup=perftest_mocked_dist.setup_bulk_change_activation,
-        teardown=perftest_mocked_dist.teardown_bulk_change_activation,
+        setup=partial(scenario.setup_bulk_change_activation, perftest_mocked_dist),
+        teardown=partial(scenario.teardown_bulk_change_activation, perftest_mocked_dist),
         rounds=perftest_mocked_dist.rounds,
         iterations=perftest_mocked_dist.iterations,
     )

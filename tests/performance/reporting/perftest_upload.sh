@@ -12,7 +12,7 @@
 # upload each suite to its own performance database (performance_<suite>),
 # keeping the suites' scenarios and baselines separate.
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-REPO_PATH="$(dirname "$(dirname "${SCRIPT_DIR}")")"
+REPO_PATH="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel)"
 BRANCH="$(make --no-print-directory --file="${REPO_PATH}/defines.make" print-BRANCH_VERSION)"
 [ "${VERSION}" == "daily" ] && unset VERSION
 VERSION="${VERSION:-${BRANCH}-$(date '+%Y.%m.%d')}"

@@ -6,6 +6,9 @@ package(default_visibility = ["//tests:__subpackages__"])
 py_library(
     name = "performance",
     testonly = True,
+    # The scenarios live in a package each beside the tests that measure them. They carry no
+    # Bazel target of their own - `perftest.sh` runs them with pytest - so they are globbed in
+    # here to be linted and type-checked with everything else.
     srcs = glob(
         ["**/*.py"],
         exclude = [
@@ -63,9 +66,9 @@ test_suite(
 sh_library(
     name = "performance_sh",
     srcs = [
-        "database/mk_client_cert.sh",
-        "database/mk_server_cert.sh",
         "perftest.sh",
-        "perftest_upload.sh",
+        "reporting/database/mk_client_cert.sh",
+        "reporting/database/mk_server_cert.sh",
+        "reporting/perftest_upload.sh",
     ],
 )

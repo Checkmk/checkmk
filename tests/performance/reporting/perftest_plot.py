@@ -1776,7 +1776,7 @@ def parse_args() -> PerftestPlotArgs:
         argparse.ArgumentTypeError: If a job name does not match the required pattern.
     """
 
-    repo_root_dir = Path(__file__).parent.parent.parent
+    repo_root_dir = Path(__file__).parent.parent.parent.parent
 
     def job_name() -> Callable:
         pattern = r"[0-9](\.[0-9]){2}-[0-9]{4}(\.[0-9]{2}){2}\.[a-z]*"

@@ -44,12 +44,25 @@ export function visibleServiceFields(visibility: VisibilityState): ServiceOption
   return OPTIONAL_FIELD_COLUMNS.filter((field) => visibility[field] !== false)
 }
 
+export interface HostServicesColumnOptions {
+  /**
+   * Whether to offer the row-selection column. Only a user who may run a command on the
+   * selection gets it - without one, ticking a row would lead nowhere.
+   */
+  includeSelect: boolean
+}
+
 /**
  * The columns frozen to the edges of the table once it has to scroll
  * horizontally.
  */
-export function buildHostServicesColumnPinning(): ColumnPinningState {
-  return { left: ['select', 'state', 'modes', 'name'], right: ['actions'] }
+export function buildHostServicesColumnPinning({
+  includeSelect
+}: HostServicesColumnOptions): ColumnPinningState {
+  return {
+    left: [...(includeSelect ? ['select'] : []), 'state', 'modes', 'name'],
+    right: ['actions']
+  }
 }
 
 /** Picks a column filter offers before it refuses more, per the views-table design. */
@@ -57,7 +70,9 @@ const MAX_FILTER_CHOICES = 8
 
 type ServiceModeField = 'in_downtime' | 'acknowledged' | 'notifications_enabled'
 
-export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
+export function useHostServicesColumns({
+  includeSelect
+}: HostServicesColumnOptions): ColumnDef<HostServiceEntry>[] {
   const { _t } = usei18n()
 
   const stateFilter: CheckboxListWithFlagsFilter<'state', 'is_flapping' | 'stale'> = {
@@ -136,15 +151,19 @@ export function useHostServicesColumns(): ColumnDef<HostServiceEntry>[] {
   }
 
   return [
-    {
-      id: 'select',
-      header: '',
-      enableSorting: false,
-      enableHiding: false,
-      minSize: 36,
-      maxSize: 36,
-      meta: { selectColumn: true, justify: 'center' }
-    },
+    ...(includeSelect
+      ? [
+          {
+            id: 'select',
+            header: '',
+            enableSorting: false,
+            enableHiding: false,
+            minSize: 36,
+            maxSize: 36,
+            meta: { selectColumn: true, justify: 'center' }
+          } satisfies ColumnDef<HostServiceEntry>
+        ]
+      : []),
     {
       accessorKey: 'state',
       header: _t('State'),

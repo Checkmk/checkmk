@@ -5,6 +5,10 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, within } from '@testing-library/vue'
+import type {
+  MonitoringAction,
+  MonitoringHostServicesApp
+} from 'cmk-shared-typing/typescript/monitoring/host_services'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
@@ -63,9 +67,15 @@ function makeApiEntry(): ApiServiceEntry {
   }
 }
 
-function renderApp() {
+function renderApp(overrides: Partial<MonitoringHostServicesApp> = {}) {
   return render(HostServicesApp, {
-    props: { host: 'web-1', site: 'local', user_id: 'cmkadmin', edition: 'pro' }
+    props: {
+      host: 'web-1',
+      site: 'local',
+      user_id: 'cmkadmin',
+      edition: 'pro',
+      ...overrides
+    } satisfies MonitoringHostServicesApp
   })
 }
 
@@ -580,4 +590,34 @@ test('a column decision applied in the picker outlives the page', async () => {
       localStorage.getItem('monitoring-host-services-columns-local-cmkadmin-pro') ?? 'null'
     )
   ).toMatchObject({ labels: true })
+})
+
+/*
+ * The checkboxes are only worth showing where the selection can be acted on, so they follow the
+ * permitted actions the page is handed - the same list the action bar follows.
+ */
+
+const ACKNOWLEDGE: MonitoringAction = {
+  ident: 'acknowledge',
+  title: 'Acknowledge problems',
+  icon: 'acknowledge'
+}
+
+test('offers no row selection to a user permitted no action', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({ actions: [] })
+  await screen.findByRole('columnheader', { name: 'Service' })
+
+  expect(screen.queryByRole('checkbox', { name: 'Select all rows' })).not.toBeInTheDocument()
+  expect(
+    screen.queryByRole('toolbar', { name: 'Actions for selected services' })
+  ).not.toBeInTheDocument()
+})
+
+test('offers row selection once one action is permitted', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({ actions: [ACKNOWLEDGE] })
+
+  expect(await screen.findByRole('checkbox', { name: 'Select all rows' })).toBeInTheDocument()
+  expect(screen.getByRole('toolbar', { name: 'Actions for selected services' })).toBeInTheDocument()
 })

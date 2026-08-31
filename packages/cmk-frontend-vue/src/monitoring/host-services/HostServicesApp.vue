@@ -96,8 +96,12 @@ async function loadActionMenu(service: string): Promise<CellAction[]> {
   ]
 }
 
-const columns = useHostServicesColumns()
-const columnPinning = buildHostServicesColumnPinning()
+// Checkboxes only make sense where the selection can be acted on, so the permitted-action list
+// that decides the action bar decides the select column too.
+const mayActOnSelection = serviceActions.length > 0
+
+const columns = useHostServicesColumns({ includeSelect: mayActOnSelection })
+const columnPinning = buildHostServicesColumnPinning({ includeSelect: mayActOnSelection })
 
 const filterSchema = buildFilterUrlSchema(columns)
 const initialFilterState = readFilterUrlState(window.location.search, filterSchema)

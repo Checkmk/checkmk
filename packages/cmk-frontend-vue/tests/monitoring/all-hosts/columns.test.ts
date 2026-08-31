@@ -34,7 +34,13 @@ class HostColumnService extends MonitoringService<HostEntry> {
 
 /** The columns of a table without multi-tenancy, unless a test asks for something else. */
 function hostColumns(options: Partial<HostColumnOptions> = {}): ColumnDef<HostEntry>[] {
-  return buildHostColumns({ includeActions: true, showCustomer: false, sites: [], ...options })
+  return buildHostColumns({
+    includeSelect: true,
+    includeActions: true,
+    showCustomer: false,
+    sites: [],
+    ...options
+  })
 }
 
 function makeService(options: Partial<HostColumnOptions> = {}) {
@@ -56,7 +62,7 @@ afterEach(() => {
 })
 
 test('no pinned column is offered in the picker', () => {
-  const pinning = buildHostColumnPinning({ includeActions: true })
+  const pinning = buildHostColumnPinning({ includeSelect: true, includeActions: true })
   const offered = makeService().toggleableColumns.map((column) => column.id)
 
   const pinned = [...(pinning.left ?? []), ...(pinning.right ?? [])]
@@ -160,7 +166,18 @@ test('the fields of the fixed columns are never asked for, the API always sendin
 
 test('the actions column is neither rendered nor pinned when no row action is permitted', () => {
   expect(columnIds({ includeActions: false })).not.toContain('actions')
-  expect(buildHostColumnPinning({ includeActions: false }).right).toBeUndefined()
+  expect(
+    buildHostColumnPinning({ includeSelect: true, includeActions: false }).right
+  ).toBeUndefined()
+})
+
+test('the select column is neither rendered nor pinned when no action is permitted', () => {
+  expect(columnIds({ includeSelect: false })).not.toContain('select')
+  expect(buildHostColumnPinning({ includeSelect: false, includeActions: true }).left).toEqual([
+    'state',
+    'modes',
+    'name'
+  ])
 })
 
 test('the site column filter offers the configured sites as options', () => {

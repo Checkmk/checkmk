@@ -25,6 +25,11 @@ import type {
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export interface HostColumnOptions {
+  /**
+   * Whether to offer the row-selection column. Only a user who may run a command on the
+   * selection gets it - without one, ticking a row would lead nowhere.
+   */
+  includeSelect: boolean
   /** Whether to render the row-action column, which needs permitted actions. */
   includeActions: boolean
   /**
@@ -96,10 +101,11 @@ function fixUnlessHideable(column: ColumnDef<HostEntry>): ColumnDef<HostEntry> {
  * horizontally.
  */
 export function buildHostColumnPinning({
+  includeSelect,
   includeActions
-}: Pick<HostColumnOptions, 'includeActions'>): ColumnPinningState {
+}: Pick<HostColumnOptions, 'includeSelect' | 'includeActions'>): ColumnPinningState {
   return {
-    left: ['select', 'state', 'modes', 'name'],
+    left: [...(includeSelect ? ['select'] : []), 'state', 'modes', 'name'],
     ...(includeActions ? { right: ['actions'] } : {})
   }
 }
@@ -112,6 +118,7 @@ export function buildHostColumnPinning({
  * which defines the set shown on first use.
  */
 export function buildHostColumns({
+  includeSelect,
   includeActions,
   showCustomer,
   sites
@@ -238,14 +245,18 @@ export function buildHostColumns({
   }
 
   const columns: ColumnDef<HostEntry>[] = [
-    {
-      id: 'select',
-      header: '',
-      enableSorting: false,
-      minSize: 36,
-      maxSize: 36,
-      meta: { selectColumn: true, justify: 'center' }
-    },
+    ...(includeSelect
+      ? [
+          {
+            id: 'select',
+            header: '',
+            enableSorting: false,
+            minSize: 36,
+            maxSize: 36,
+            meta: { selectColumn: true, justify: 'center' }
+          } satisfies ColumnDef<HostEntry>
+        ]
+      : []),
     {
       accessorKey: 'state',
       header: _t('State'),

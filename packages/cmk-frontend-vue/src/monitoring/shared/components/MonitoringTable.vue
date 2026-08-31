@@ -60,6 +60,12 @@ const showEmptyState = computed(() => props.hasLoaded && props.rows.length === 0
 
 const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
 
+// The select column is the switch: a caller that does not offer one - because the user may run no
+// command on a selection - gets no selectable rows either, not even programmatically.
+const selectionEnabled = computed(() =>
+  props.columns.some((column) => column.meta?.selectColumn === true)
+)
+
 const table = useVueTable({
   // Server-side sort/filter — we bypass getRowModel() and slot rows directly.
   get data() {
@@ -86,7 +92,9 @@ const table = useVueTable({
     }
   },
   enableColumnPinning: true,
-  enableRowSelection: true,
+  get enableRowSelection() {
+    return selectionEnabled.value
+  },
   manualSorting: true,
   manualFiltering: true,
   // Filter values are opaque ColumnFilterNode objects resolved server-side, so

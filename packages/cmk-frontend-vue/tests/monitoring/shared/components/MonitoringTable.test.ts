@@ -7,6 +7,7 @@ import type {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
+  Row as TableRow,
   VisibilityState
 } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
@@ -61,6 +62,12 @@ const COLUMNS: ColumnDef<Row>[] = [
   { id: 'actions', header: 'Actions', enableSorting: false }
 ]
 
+/** The same table as {@link COLUMNS}, plus the column that turns row selection on. */
+const COLUMNS_WITH_SELECT: ColumnDef<Row>[] = [
+  { id: 'select', header: '', enableSorting: false, meta: { selectColumn: true } },
+  ...COLUMNS
+]
+
 function makeRows(count: number): Row[] {
   return Array.from({ length: count }, (_, i) => ({
     id: `row-${i}`,
@@ -98,6 +105,7 @@ function probedLayout(): string {
 
 function mountTable(overrides: {
   rows?: Row[]
+  columns?: ColumnDef<Row>[]
   fetchState?: FetchState
   hasLoaded?: boolean
   sortState?: SortingState
@@ -108,6 +116,7 @@ function mountTable(overrides: {
   getRowKey?: (row: Row, index: number) => string | number
 }) {
   const rows = overrides.rows ?? makeRows(3)
+  const columns = overrides.columns ?? COLUMNS
   const fetchState = overrides.fetchState ?? 'idle'
   const hasLoaded = overrides.hasLoaded ?? true
   const filterState = overrides.filterState ?? []
@@ -126,7 +135,7 @@ function mountTable(overrides: {
         components: { MonitoringTable },
         setup() {
           provide(MONITORING_SERVICE, mockService as unknown as MonitoringService<unknown>)
-          return { rows, fetchState, hasLoaded, filterState, onFilterUpdate, getRowKey }
+          return { rows, columns, fetchState, hasLoaded, filterState, onFilterUpdate, getRowKey }
         },
         render() {
           return h(
@@ -135,14 +144,23 @@ function mountTable(overrides: {
               rows: this.rows,
               fetchState: this.fetchState,
               hasLoaded: this.hasLoaded,
-              columns: COLUMNS,
+              columns: this.columns,
               filterState: this.filterState,
               ...(this.getRowKey ? { getRowKey: this.getRowKey } : {}),
               'onUpdate:filterState': this.onFilterUpdate
             },
             {
-              row: ({ row, index }: { row: Row; index: number }) => [
+              row: ({
+                row,
+                index,
+                tableRow
+              }: {
+                row: Row
+                index: number
+                tableRow: TableRow<Row>
+              }) => [
                 h('td', { 'data-testid': `row-${row.id}` }, `${index}:${row.name}`),
+                h('td', { 'data-testid': `can-select-${row.id}` }, String(tableRow.getCanSelect())),
                 h(layoutProbe)
               ],
               'empty-state': () => h('div', { 'data-testid': 'empty-state' }, 'nothing here')
@@ -377,4 +395,25 @@ test('consumes a reveal request for a row it does not list, rather than holding 
   await flushVirtualizer()
 
   expect(mockService.rowToReveal.value).toBeNull()
+})
+
+/*
+ * The select column is the switch for row selection: a table without it belongs to a user who may
+ * run no command, and must not offer a selection at all - not even to a programmatic caller.
+ */
+
+test('offers no row selection while no column declares itself the select column', async () => {
+  mountTable({})
+  await flushVirtualizer()
+
+  expect(screen.queryByRole('checkbox', { name: 'Select all rows' })).not.toBeInTheDocument()
+  expect(screen.getByTestId('can-select-row-0')).toHaveTextContent('false')
+})
+
+test('offers row selection once a column declares itself the select column', async () => {
+  mountTable({ columns: COLUMNS_WITH_SELECT })
+  await flushVirtualizer()
+
+  expect(screen.getByRole('checkbox', { name: 'Select all rows' })).toBeInTheDocument()
+  expect(screen.getByTestId('can-select-row-0')).toHaveTextContent('true')
 })

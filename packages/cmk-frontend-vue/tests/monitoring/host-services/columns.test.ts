@@ -8,7 +8,11 @@ import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
-import { useHostServicesColumns, visibleServiceFields } from '@/monitoring/host-services/columns'
+import {
+  buildHostServicesColumnPinning,
+  useHostServicesColumns,
+  visibleServiceFields
+} from '@/monitoring/host-services/columns'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
 import {
   MonitoringService,
@@ -28,8 +32,12 @@ class ServiceColumnService extends MonitoringService<HostServiceEntry> {
   }
 }
 
+function serviceColumns(includeSelect = true): ColumnDef<HostServiceEntry>[] {
+  return useHostServicesColumns({ includeSelect })
+}
+
 function makeService() {
-  const service = new ServiceColumnService(useHostServicesColumns(), makeKeyShortcutService())
+  const service = new ServiceColumnService(serviceColumns(), makeKeyShortcutService())
   service.stopPolling()
   return service
 }
@@ -75,9 +83,10 @@ test('the state column reads as the one in the hosts listing', () => {
     }
   }
 
-  expect(stateOf(useHostServicesColumns() as ColumnDef<never>[])).toEqual(
+  expect(stateOf(serviceColumns() as ColumnDef<never>[])).toEqual(
     stateOf(
       buildHostColumns({
+        includeSelect: true,
         includeActions: true,
         showCustomer: false,
         sites: []
@@ -87,7 +96,7 @@ test('the state column reads as the one in the hosts listing', () => {
 })
 
 test('the state column filter offers the state checkboxes plus flapping/stale flags', () => {
-  const stateColumn = useHostServicesColumns().find(
+  const stateColumn = serviceColumns().find(
     (column) => columnId(column as ColumnDef<never>) === 'state'
   )
 
@@ -108,7 +117,7 @@ test('the state column filter offers the state checkboxes plus flapping/stale fl
 })
 
 test('the mode column filter no longer offers flapping, which moved to the state column', () => {
-  const modesColumn = useHostServicesColumns().find(
+  const modesColumn = serviceColumns().find(
     (column) => columnId(column as ColumnDef<never>) === 'modes'
   )
 
@@ -120,6 +129,15 @@ test('the mode column filter no longer offers flapping, which moved to the state
       { field: 'notifications_enabled', title: 'Notifications enabled' }
     ]
   })
+})
+
+test('the select column is neither rendered nor pinned when no action is permitted', () => {
+  expect(serviceColumns(false).map(columnId)).not.toContain('select')
+  expect(buildHostServicesColumnPinning({ includeSelect: false }).left).toEqual([
+    'state',
+    'modes',
+    'name'
+  ])
 })
 
 test('the hidden columns stay on offer in the picker', () => {

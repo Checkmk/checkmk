@@ -3,8 +3,11 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render } from '@testing-library/vue'
-import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
+import { render, screen } from '@testing-library/vue'
+import type {
+  MonitoringAction,
+  MonitoringAllHostsApp
+} from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 
@@ -55,13 +58,17 @@ function mockHosts(hosts: HostEntry[]): void {
   } as never)
 }
 
-function renderApp(edition: MonitoringAllHostsApp['edition']) {
+function renderApp(
+  edition: MonitoringAllHostsApp['edition'],
+  overrides: Partial<MonitoringAllHostsApp> = {}
+) {
   return render(AllHostsApp, {
     props: {
       user_id: 'cmkadmin',
       site: 'local',
       sites: [{ id: 'local', alias: 'Local site' }],
-      edition
+      edition,
+      ...overrides
     } satisfies MonitoringAllHostsApp
   })
 }
@@ -98,4 +105,34 @@ test('never asks for the customer, the API deriving it from the site', async () 
   await vi.waitUntil(() => postSpy.mock.calls.length > 0)
 
   expect(postSpy.mock.lastCall![1].body.fields).not.toContain('customer')
+})
+
+/*
+ * The checkboxes are only worth showing where the selection can be acted on, so they follow the
+ * permitted actions the page is handed - the same list the action bar follows.
+ */
+
+const ACKNOWLEDGE: MonitoringAction = {
+  ident: 'acknowledge',
+  title: 'Acknowledge problems',
+  icon: 'acknowledge'
+}
+
+test('offers no row selection to a user permitted no action', async () => {
+  mockHosts([makeHost()])
+  renderApp('community', { actions: [] })
+  await screen.findByRole('columnheader', { name: 'Host' })
+
+  expect(screen.queryByRole('checkbox', { name: 'Select all rows' })).not.toBeInTheDocument()
+  expect(
+    screen.queryByRole('toolbar', { name: 'Actions for selected hosts' })
+  ).not.toBeInTheDocument()
+})
+
+test('offers row selection once one action is permitted', async () => {
+  mockHosts([makeHost()])
+  renderApp('community', { actions: [ACKNOWLEDGE] })
+
+  expect(await screen.findByRole('checkbox', { name: 'Select all rows' })).toBeInTheDocument()
+  expect(screen.getByRole('toolbar', { name: 'Actions for selected hosts' })).toBeInTheDocument()
 })

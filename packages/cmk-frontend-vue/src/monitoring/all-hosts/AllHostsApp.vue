@@ -90,6 +90,10 @@ const rowCommands: CellAction[] = (props.actions ?? [])
 
 const hasRowActions = rowActionButtons.length > 0 || rowCommands.length > 0
 
+// Checkboxes only make sense where the selection can be acted on, so the permitted-action list
+// that decides the action bar decides the select column too.
+const mayActOnSelection = hostActions.length > 0
+
 const actionMenuApi = new HostActionMenuApi()
 
 // Overflow-menu entries for a host: the immediate commands (reschedule) followed by the fetched
@@ -112,11 +116,15 @@ async function loadActionMenu(host: HostRef): Promise<CellAction[]> {
 const showCustomer = props.edition === 'ultimatemt'
 
 const columns = buildHostColumns({
+  includeSelect: mayActOnSelection,
   includeActions: hasRowActions,
   showCustomer,
   sites: props.sites
 })
-const columnPinning = buildHostColumnPinning({ includeActions: hasRowActions })
+const columnPinning = buildHostColumnPinning({
+  includeSelect: mayActOnSelection,
+  includeActions: hasRowActions
+})
 
 const schema = buildTableStateSchema({
   columns,

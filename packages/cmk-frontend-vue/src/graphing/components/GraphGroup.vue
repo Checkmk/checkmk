@@ -276,7 +276,7 @@ function onRetry(): void {
           :y-axis="props.graphs[panelSlot.index]!.options.y_axis"
           :title="panelSlot.graph.title"
           :show-title="true"
-          :show-timestamp="true"
+          :show-timestamp="props.graphs[panelSlot.index]?.options.header.show_graph_time ?? true"
           :show-consolidation="show_consolidation"
           :show-legend="show_legend"
           :interaction="props.graphs[panelSlot.index]!.interaction"

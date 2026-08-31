@@ -111,7 +111,7 @@ def host_service_graph_popup_cmk(
             size=Size(width=popup_size[0], height=popup_size[1], mode="fixed"),
             time_range=(start_time, end_time),
             interaction=_HOVER_INTERACTION,
-            show_graph_time=False,
+            show_graph_time=True,
             show_consolidation=False,
             show_legend=False,
             multi_column=True,

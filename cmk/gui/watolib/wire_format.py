@@ -27,7 +27,12 @@ def license_state_to_ping_string(license_state: LicenseState) -> LicenseWireStri
     # releasing parsing and emitting of new values in different Checkmk releases. See CMK-38586 for
     # the pending support for the new license states that will be added to support trial tracking.
     match license_state:
-        case LicenseState.TRIAL:
+        case (
+            LicenseState.TRIAL
+            | LicenseState.PENDING_TRIAL_VERIFICATION
+            | LicenseState.PENDING_LICENSE_VERIFICATION
+            | LicenseState.PENDING_SELECTION
+        ):
             return "TRIAL"
         case LicenseState.FREE:
             return "FREE"

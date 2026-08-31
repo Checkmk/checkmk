@@ -62,6 +62,9 @@ class LicensingHandlerMock(LicensingHandler):
         (LicenseState.FREE, "free"),
         (LicenseState.LICENSED, "licensed"),
         (LicenseState.UNLICENSED, "unlicensed"),
+        (LicenseState.PENDING_TRIAL_VERIFICATION, "unverified trial"),
+        (LicenseState.PENDING_LICENSE_VERIFICATION, "unverified licensed"),
+        (LicenseState.PENDING_SELECTION, "trial mode not selected"),
     ],
 )
 def test_license_state_readable(license_state: LicenseState, expected_readable: str) -> None:
@@ -75,6 +78,9 @@ def test_license_state_readable(license_state: LicenseState, expected_readable: 
         (LicenseState.FREE, 2),
         (LicenseState.LICENSED, 3),
         (LicenseState.UNLICENSED, 4),
+        (LicenseState.PENDING_TRIAL_VERIFICATION, 5),
+        (LicenseState.PENDING_LICENSE_VERIFICATION, 6),
+        (LicenseState.PENDING_SELECTION, 7),
     ],
 )
 def test_license_state_stable_value(license_state: LicenseState, value: int) -> None:
@@ -90,6 +96,9 @@ def test_license_state_stable_value(license_state: LicenseState, value: int) -> 
         (LicenseState.FREE, "0"),
         (LicenseState.LICENSED, "1"),
         (LicenseState.UNLICENSED, "0"),
+        (LicenseState.PENDING_TRIAL_VERIFICATION, "0"),
+        (LicenseState.PENDING_LICENSE_VERIFICATION, "0"),
+        (LicenseState.PENDING_SELECTION, "0"),
     ],
 )
 def test_write_licensed_file(
@@ -106,6 +115,7 @@ def test_license_state_properties_trial() -> None:
     assert LicenseState.TRIAL.is_connecting_to_remotes_enabled()
     assert LicenseState.TRIAL.is_adding_as_remote_enabled()
     assert not LicenseState.TRIAL.has_reduced_metric_series_limit()
+    assert LicenseState.TRIAL.has_remaining_trial_time()
 
 
 def test_license_state_properties_free() -> None:
@@ -113,6 +123,7 @@ def test_license_state_properties_free() -> None:
     assert not LicenseState.FREE.is_connecting_to_remotes_enabled()
     assert not LicenseState.FREE.is_adding_as_remote_enabled()
     assert LicenseState.FREE.has_reduced_metric_series_limit()
+    assert not LicenseState.FREE.has_remaining_trial_time()
 
 
 def test_license_state_properties_licensed() -> None:
@@ -120,6 +131,7 @@ def test_license_state_properties_licensed() -> None:
     assert LicenseState.LICENSED.is_connecting_to_remotes_enabled()
     assert LicenseState.LICENSED.is_adding_as_remote_enabled()
     assert not LicenseState.LICENSED.has_reduced_metric_series_limit()
+    assert not LicenseState.LICENSED.has_remaining_trial_time()
 
 
 def test_license_state_properties_unlicensed() -> None:
@@ -127,3 +139,28 @@ def test_license_state_properties_unlicensed() -> None:
     assert not LicenseState.UNLICENSED.is_connecting_to_remotes_enabled()
     assert LicenseState.UNLICENSED.is_adding_as_remote_enabled()
     assert not LicenseState.UNLICENSED.has_reduced_metric_series_limit()
+    assert not LicenseState.UNLICENSED.has_remaining_trial_time()
+
+
+def test_license_state_properties_pending_trial_verification() -> None:
+    assert not LicenseState.PENDING_TRIAL_VERIFICATION.blocks_distributed_setup_changes_free()
+    assert LicenseState.PENDING_TRIAL_VERIFICATION.is_connecting_to_remotes_enabled()
+    assert LicenseState.PENDING_TRIAL_VERIFICATION.is_adding_as_remote_enabled()
+    assert not LicenseState.PENDING_TRIAL_VERIFICATION.has_reduced_metric_series_limit()
+    assert LicenseState.PENDING_TRIAL_VERIFICATION.has_remaining_trial_time()
+
+
+def test_license_state_properties_pending_license_verification() -> None:
+    assert not LicenseState.PENDING_LICENSE_VERIFICATION.blocks_distributed_setup_changes_free()
+    assert LicenseState.PENDING_LICENSE_VERIFICATION.is_connecting_to_remotes_enabled()
+    assert LicenseState.PENDING_LICENSE_VERIFICATION.is_adding_as_remote_enabled()
+    assert not LicenseState.PENDING_LICENSE_VERIFICATION.has_reduced_metric_series_limit()
+    assert LicenseState.PENDING_LICENSE_VERIFICATION.has_remaining_trial_time()
+
+
+def test_license_state_properties_pending_selection() -> None:
+    assert not LicenseState.PENDING_SELECTION.blocks_distributed_setup_changes_free()
+    assert LicenseState.PENDING_SELECTION.is_connecting_to_remotes_enabled()
+    assert LicenseState.PENDING_SELECTION.is_adding_as_remote_enabled()
+    assert not LicenseState.PENDING_SELECTION.has_reduced_metric_series_limit()
+    assert LicenseState.PENDING_SELECTION.has_remaining_trial_time()

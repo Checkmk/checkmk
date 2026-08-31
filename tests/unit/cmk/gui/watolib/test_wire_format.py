@@ -10,6 +10,14 @@ from cmk.licensing.handler import LicenseState
 def test_license_state_to_ping_string() -> None:
     assert wire_format.license_state_to_ping_string(LicenseState.FREE) == "FREE"
     assert wire_format.license_state_to_ping_string(LicenseState.TRIAL) == "TRIAL"
+    assert (
+        wire_format.license_state_to_ping_string(LicenseState.PENDING_TRIAL_VERIFICATION) == "TRIAL"
+    )
+    assert (
+        wire_format.license_state_to_ping_string(LicenseState.PENDING_LICENSE_VERIFICATION)
+        == "TRIAL"
+    )
+    assert wire_format.license_state_to_ping_string(LicenseState.PENDING_SELECTION) == "TRIAL"
     assert wire_format.license_state_to_ping_string(LicenseState.LICENSED) == "LICENSED"
     assert wire_format.license_state_to_ping_string(LicenseState.UNLICENSED) == "UNLICENSED"
 

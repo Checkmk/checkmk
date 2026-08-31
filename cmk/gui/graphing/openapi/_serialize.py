@@ -2,27 +2,20 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import assert_never, Literal, NamedTuple, Protocol
+from typing import assert_never, NamedTuple, Protocol
 
 from cmk.graphing_engine import (
-    AutoPrecision,
     ConsolidationFunction,
-    DecimalNotation,
-    EngineeringScientificNotation,
     EvaluatedCurve,
     EvaluatedGraph,
-    IECNotation,
     SeriesAttributes,
-    SINotation,
-    StandardScientificNotation,
-    StrictPrecision,
-    TimeNotation,
     Unit,
 )
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
 
 from .._engine_source import FetchDiagnostics
+from .._engine_unit_format import notation_name, precision_kind
 from .models import (
     ApiConsolidation,
     ApiHorizontalLine,
@@ -164,35 +157,11 @@ def evaluated_to_response(
 
 
 def unit_to_api_unit_format(unit: Unit) -> ApiUnitFormat:
-    notation: Literal[
-        "decimal", "si", "iec", "standard_scientific", "engineering_scientific", "time"
-    ]
-    match unit.notation:
-        case DecimalNotation():
-            notation = "decimal"
-        case SINotation():
-            notation = "si"
-        case IECNotation():
-            notation = "iec"
-        case StandardScientificNotation():
-            notation = "standard_scientific"
-        case EngineeringScientificNotation():
-            notation = "engineering_scientific"
-        case TimeNotation():
-            notation = "time"
-        case _:
-            assert_never(unit.notation)
-
-    match unit.precision:
-        case AutoPrecision():
-            precision = ApiPrecision(type="auto", digits=unit.precision.digits)
-        case StrictPrecision():
-            precision = ApiPrecision(type="strict", digits=unit.precision.digits)
-        case _:
-            assert_never(unit.precision)
-
     # TODO: The engine ``Unit`` has no convertibility concept, so default to convertible (matches
     #  the shared unit-format default).
     return ApiUnitFormat(
-        notation=notation, symbol=unit.notation.symbol, precision=precision, convertible=True
+        notation=notation_name(unit),
+        symbol=unit.notation.symbol,
+        precision=ApiPrecision(type=precision_kind(unit), digits=unit.precision.digits),
+        convertible=True,
     )

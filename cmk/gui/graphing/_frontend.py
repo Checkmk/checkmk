@@ -6,20 +6,12 @@
 import json
 from collections.abc import Iterable, Sequence
 from dataclasses import asdict
-from typing import assert_never, Final, Literal
+from typing import Final
 
 from tzlocal import get_localzone_name
 
 from cmk.graphing_engine import (
-    AutoPrecision,
-    DecimalNotation,
-    EngineeringScientificNotation,
     Graph,
-    IECNotation,
-    SINotation,
-    StandardScientificNotation,
-    StrictPrecision,
-    TimeNotation,
     Unit,
 )
 from cmk.graphing_engine import HostName as EngineHostName
@@ -53,6 +45,7 @@ from . import _engine_plugins as engine_plugins
 from ._engine_dispatch import serialize_graphs
 from ._engine_source import RRDFetchMetricNames
 from ._engine_template_graphs import build_template_graphs
+from ._engine_unit_format import notation_name, precision_kind
 from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_specification import GraphSpecification
 from ._graph_templates import TemplateGraphSpecification
@@ -149,35 +142,11 @@ def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | 
 
 def unit_to_unit_format(unit: Unit) -> UnitFormat:
     """Translate an engine ``Unit`` into the shared ``UnitFormat`` the Vue graph already speaks."""
-    notation: Literal[
-        "decimal", "si", "iec", "standard_scientific", "engineering_scientific", "time"
-    ]
-    match unit.notation:
-        case DecimalNotation():
-            notation = "decimal"
-        case SINotation():
-            notation = "si"
-        case IECNotation():
-            notation = "iec"
-        case StandardScientificNotation():
-            notation = "standard_scientific"
-        case EngineeringScientificNotation():
-            notation = "engineering_scientific"
-        case TimeNotation():
-            notation = "time"
-        case _:
-            assert_never(unit.notation)
-
-    precision: Precision
-    match unit.precision:
-        case AutoPrecision():
-            precision = Precision(type="auto", digits=unit.precision.digits)
-        case StrictPrecision():
-            precision = Precision(type="strict", digits=unit.precision.digits)
-        case _:
-            assert_never(unit.precision)
-
-    return UnitFormat(notation=notation, symbol=unit.notation.symbol, precision=precision)
+    return UnitFormat(
+        notation=notation_name(unit),
+        symbol=unit.notation.symbol,
+        precision=Precision(type=precision_kind(unit), digits=unit.precision.digits),
+    )
 
 
 def y_axis_from_units(units: Iterable[Unit]) -> YAxis | None:

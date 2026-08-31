@@ -62,7 +62,7 @@ describe('buildCustomServiceDefinition', () => {
     const definition = buildCustomServiceDefinition(
       model({ consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 300 } })
     )
-    expect(definition.configuration.consolidation_lookback).toBe(300)
+    expect(definition.configuration.consolidation.lookback_seconds).toBe(300)
   })
 
   test('omits the attribute filter when none is configured', () => {
@@ -70,11 +70,15 @@ describe('buildCustomServiceDefinition', () => {
     expect('attribute_filter' in configuration).toBe(false)
   })
 
-  test('sends a parameterless consolidation as a bare consolidation', () => {
+  test('carries a parameterless consolidation through unchanged', () => {
     const definition = buildCustomServiceDefinition(
       model({ consolidation: { type: 'sum', function: 'sum_rate', lookback_seconds: 120 } })
     )
-    expect(definition.configuration.consolidation).toEqual({ type: 'sum_rate' })
+    expect(definition.configuration.consolidation).toEqual({
+      type: 'sum',
+      function: 'sum_rate',
+      lookback_seconds: 120
+    })
   })
 
   test('keeps the percentile of a histogram quantile', () => {
@@ -89,7 +93,9 @@ describe('buildCustomServiceDefinition', () => {
       })
     )
     expect(definition.configuration.consolidation).toEqual({
-      type: 'histogram_quantile',
+      type: 'histogram',
+      function: 'histogram_quantile',
+      lookback_seconds: 120,
       percentile: 99
     })
   })
@@ -107,7 +113,9 @@ describe('buildCustomServiceDefinition', () => {
       })
     )
     expect(definition.configuration.consolidation).toEqual({
-      type: 'histogram_fraction_between',
+      type: 'histogram',
+      function: 'histogram_fraction_between',
+      lookback_seconds: 120,
       lower_threshold: 10,
       upper_threshold: 50
     })
@@ -126,7 +134,9 @@ describe('buildCustomServiceDefinition', () => {
       })
     )
     expect(definition.configuration.consolidation).toEqual({
-      type: 'histogram_preserve_quantile',
+      type: 'histogram',
+      function: 'histogram_preserve_quantile',
+      lookback_seconds: 120,
       percentile: 95,
       group_by: [{ kind: 'resource', key: 'k8s.pod.name' }]
     })
@@ -144,7 +154,9 @@ describe('buildCustomServiceDefinition', () => {
       })
     )
     expect(definition.configuration.consolidation).toEqual({
-      type: 'histogram_fraction_below',
+      type: 'histogram',
+      function: 'histogram_fraction_below',
+      lookback_seconds: 120,
       threshold: 0.25
     })
   })
@@ -162,7 +174,9 @@ describe('buildCustomServiceDefinition', () => {
       })
     )
     expect(definition.configuration.consolidation).toEqual({
-      type: 'histogram_preserve_fraction_below',
+      type: 'histogram',
+      function: 'histogram_preserve_fraction_below',
+      lookback_seconds: 120,
       threshold: 0.5,
       group_by: [{ kind: 'data_point', key: 'pod' }]
     })
@@ -182,29 +196,12 @@ describe('buildCustomServiceDefinition', () => {
       })
     )
     expect(definition.configuration.consolidation).toEqual({
-      type: 'histogram_preserve_fraction_between',
+      type: 'histogram',
+      function: 'histogram_preserve_fraction_between',
+      lookback_seconds: 120,
       lower_threshold: 1,
       upper_threshold: 9,
       group_by: [{ kind: 'scope', key: 'otel.library.name' }]
-    })
-  })
-
-  test('never builds a threshold pair the endpoint would reject', () => {
-    const definition = buildCustomServiceDefinition(
-      model({
-        // Partial form state the user has not finished filling: the precise wire type
-        // requires both thresholds, but the runtime path fills defaults / validates.
-        consolidation: {
-          type: 'histogram',
-          function: 'histogram_fraction_between',
-          lookback_seconds: 120
-        } as ConsolidationFunction
-      })
-    )
-    expect(definition.configuration.consolidation).toEqual({
-      type: 'histogram_fraction_between',
-      lower_threshold: 0,
-      upper_threshold: 100
     })
   })
 

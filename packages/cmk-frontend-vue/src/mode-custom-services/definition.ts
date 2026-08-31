@@ -14,8 +14,6 @@ export type CustomServiceDefinition = NonNullable<
   paths[CreateCustomServicePath]['post']['requestBody']
 >['content']['application/json']
 
-type ApiConsolidation = NonNullable<CustomServiceDefinition['configuration']['consolidation']>
-
 export type AggregationProblem = 'thresholds_missing' | 'thresholds_out_of_order'
 
 export function aggregationProblem(
@@ -35,42 +33,6 @@ export function aggregationProblem(
     }
     default:
       return undefined
-  }
-}
-
-function apiConsolidationFor(consolidation: WireConsolidationFunction): ApiConsolidation {
-  switch (consolidation.function) {
-    case 'histogram_quantile':
-      return { type: 'histogram_quantile', percentile: consolidation.percentile }
-    case 'histogram_fraction_below':
-      return { type: 'histogram_fraction_below', threshold: consolidation.threshold ?? 0 }
-    case 'histogram_fraction_between':
-      return {
-        type: 'histogram_fraction_between',
-        lower_threshold: consolidation.lower_threshold ?? 0,
-        upper_threshold: consolidation.upper_threshold ?? 100
-      }
-    case 'histogram_preserve_quantile':
-      return {
-        type: 'histogram_preserve_quantile',
-        percentile: consolidation.percentile,
-        group_by: consolidation.group_by ?? []
-      }
-    case 'histogram_preserve_fraction_below':
-      return {
-        type: 'histogram_preserve_fraction_below',
-        threshold: consolidation.threshold ?? 0,
-        group_by: consolidation.group_by ?? []
-      }
-    case 'histogram_preserve_fraction_between':
-      return {
-        type: 'histogram_preserve_fraction_between',
-        lower_threshold: consolidation.lower_threshold ?? 0,
-        upper_threshold: consolidation.upper_threshold ?? 100,
-        group_by: consolidation.group_by ?? []
-      }
-    default:
-      return { type: consolidation.function }
   }
 }
 
@@ -102,8 +64,7 @@ export function buildCustomServiceDefinition(
       metric_name: model.metricName,
       service_name_template: model.serviceName,
       ...(model.attributeFilter === undefined ? {} : { attribute_filter: model.attributeFilter }),
-      consolidation: apiConsolidationFor(model.consolidation),
-      consolidation_lookback: model.consolidation.lookback_seconds
+      consolidation: model.consolidation
     }
   }
 }

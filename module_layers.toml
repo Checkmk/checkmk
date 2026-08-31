@@ -1820,6 +1820,7 @@ allows = [
   "cmk.otel_collector.gui",
   "cmk.ruleset_matcher.matcher",
   "cmk.shared_typing.attribute_filter",
+  "cmk.shared_typing.consolidation",
   "cmk.shared_typing.mode_custom_services",
   "cmk.shared_typing.vue_formspec_components",
   "cmk.telemetry.host_name_template",

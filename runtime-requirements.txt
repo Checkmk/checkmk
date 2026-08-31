@@ -151,7 +151,6 @@ annotated-types==0.8.0 \
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r non-free/packages/cmk-network-flow/requirements.in
-    #   -r non-free/packages/cmk-telemetry/requirements.in
     #   pydantic
 anyio==4.14.2 \
     --hash=sha256:9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494 \

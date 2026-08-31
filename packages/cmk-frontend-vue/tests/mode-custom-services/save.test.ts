@@ -81,8 +81,7 @@ describe('createCustomService', () => {
       configuration: {
         metric_name: 'otel.http.duration',
         service_name_template: 'HTTP duration',
-        consolidation: { type: 'gauge_last' },
-        consolidation_lookback: 120
+        consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 120 }
       }
     })
   })

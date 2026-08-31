@@ -189,8 +189,11 @@ const flippedUp = ref(false)
 const nonFloatingMaxHeight = supportsAnchorPositioning ? 'none' : `${PREFERRED_MIN_BELOW_PX}px`
 // Grace margin kept between the list and the viewport edge.
 const VIEWPORT_MARGIN_PX = 40
-const viewportMargin = `${VIEWPORT_MARGIN_PX}px`
 const floatingCollisionPadding = { top: VIEWPORT_MARGIN_PX, bottom: VIEWPORT_MARGIN_PX }
+
+// Height cap for the anchor-positioned list, set from JS on open (see updateNonFloatingPlacement);
+// this fallback keeps a long list scrollable until then.
+const listMaxBlockSize = ref<string>(`calc(100dvh - ${2 * VIEWPORT_MARGIN_PX}px)`)
 // reka-ui provides the collision-aware available height, already less the collision padding above.
 // The floor is what lets its flip still fire: a list capped to exactly the room it has never
 // collides, so without it the list stays below the button and shrinks to a sliver.
@@ -250,8 +253,12 @@ function updateNonFloatingPlacement(): void {
   const spaceAbove = anchorRect.top
   flippedUp.value = spaceBelow < PREFERRED_MIN_BELOW_PX && spaceAbove > spaceBelow
 
+  // Floored so a cramped side still yields a usable, scrollable list.
+  const availableInDirection = (flippedUp.value ? spaceAbove : spaceBelow) - VIEWPORT_MARGIN_PX
+  listMaxBlockSize.value = `${Math.max(PREFERRED_MIN_BELOW_PX, availableInDirection)}px`
+
   if (supportsAnchorPositioning) {
-    // From here the CSS positions and sizes the list, keyed on the flippedUp class.
+    // From here the CSS positions the list, keyed on the flippedUp class.
     return
   }
   if (flippedUp.value) {
@@ -409,8 +416,6 @@ const group = computed<ButtonVariants['group']>(() => {
 
 <style scoped>
 .cmk-dropdown {
-  --cmk-dropdown-viewport-margin: v-bind(viewportMargin);
-
   display: inline-block;
   position: relative;
   white-space: nowrap;
@@ -460,8 +465,8 @@ const group = computed<ButtonVariants['group']>(() => {
   min-width: var(--reka-popper-anchor-width);
 }
 
-/* Fill the list to the viewport edge (upward when flipped) less a grace margin, and scroll the
-   overflow. The layout engine keeps this correct on scroll, resize and zoom with no JS listener. */
+/* Anchor the list edge to its own button explicitly rather than via position-area, whose block
+   sizing fails to clamp once a transformed ancestor becomes the fixed containing block. */
 @supports (anchor-name: --x) and (anchor-scope: all) {
   .cmk-dropdown {
     anchor-name: --cmk-dropdown-anchor;
@@ -473,18 +478,15 @@ const group = computed<ButtonVariants['group']>(() => {
   .cmk-dropdown > .cmk-dropdown__suggestions {
     position: fixed;
     position-anchor: --cmk-dropdown-anchor;
-    position-area: block-end span-inline-end;
+    inset-block-start: anchor(bottom);
+    inset-inline-start: anchor(left);
     block-size: fit-content;
-
-    /* fit-content stops clamping once a transformed ancestor becomes the fixed containing block. */
-    max-block-size: calc(100dvh - (2 * var(--cmk-dropdown-viewport-margin)));
+    max-block-size: v-bind(listMaxBlockSize);
     min-width: anchor-size(width);
-    margin-block: 0 var(--cmk-dropdown-viewport-margin);
   }
 
   .cmk-dropdown > .cmk-dropdown__suggestions.cmk-dropdown__suggestions--flipped {
-    position-area: block-start span-inline-end;
-    margin-block: var(--cmk-dropdown-viewport-margin) 0;
+    inset-block: auto anchor(top);
   }
 }
 </style>

@@ -1146,8 +1146,8 @@ test('dropdown without a validation error is neither marked nor described', asyn
   expect(dropdown).toHaveAccessibleDescription('')
 })
 
-// Regression (CMK-38164): a refactor dropped this cap, letting the anchor-positioned list grow
-// unbounded and cover the search box. jsdom cannot exercise anchor positioning, so guard the source.
-test('the anchor-positioned suggestion list is capped to the viewport height', () => {
-  expect(cmkDropdownSource).toMatch(/max-block-size:\s*calc\(100dvh/)
+// Regression (CMK-38164): a dropped cap let the anchor-positioned list grow over the search box.
+// jsdom cannot exercise anchor positioning, so assert the source keeps the JS-driven height cap.
+test('the anchor-positioned suggestion list is capped in height', () => {
+  expect(cmkDropdownSource).toMatch(/max-block-size:\s*v-bind\(listMaxBlockSize\)/)
 })

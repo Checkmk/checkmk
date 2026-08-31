@@ -34,16 +34,14 @@ from ._engine_source import RRDFetchMetricNames
 from ._engine_template_graphs import build_template_graphs
 from ._from_api import graphs_from_api, metrics_from_api
 from ._graph_display_config import (
+    get_mm_per_ex,
     GraphDisplayConfigImage,
     GraphRenderOptions,
     GraphTitleFormat,
 )
-from ._graph_pdf import (
-    compute_pdf_graph_ranges,
-    get_mm_per_ex,
-)
 from ._graph_png import render_png
 from ._graph_specification import (
+    compute_graph_ranges_for_width,
     GraphEnvironment,
     GraphRanges,
 )
@@ -161,7 +159,7 @@ def compute_image_graph_ranges(
 ) -> GraphRanges:
     mm_per_ex = get_mm_per_ex(display_config.font_size)
     width_mm = display_config.size[0] * mm_per_ex
-    return compute_pdf_graph_ranges(width_mm, start_time, end_time)
+    return compute_graph_ranges_for_width(width_mm, start_time, end_time)
 
 
 def graph_image_render_options(

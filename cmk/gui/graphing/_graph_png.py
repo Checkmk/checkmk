@@ -573,8 +573,8 @@ def mm_per_ex(font_size_pt: float) -> SizeMM:
     render_png_graphs use internally.
 
     A caller translating a target physical width/height into `size` (ex) before calling
-    render_png*() must use this - not cmk.gui.graphing._graph_pdf.get_mm_per_ex(), a
-    differently-calibrated ex convention that only applies to the legacy vector PDF renderer -
+    render_png*() must use this - not cmk.gui.graphing._graph_display_config.get_mm_per_ex(), a
+    differently-calibrated ex convention used to estimate a graph's step from its width -
     or the resulting image will come out a few percent off the intended physical size.
     """
     return _ex_to_inches(1.0, font_size_pt) * _MM_PER_INCH

@@ -20,6 +20,7 @@ from pydantic import (
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.color import Color
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import SizeMM
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -221,6 +222,16 @@ class GraphRanges(BaseModel, frozen=True):
     # colon separated [step length]:[rrd point count]
     step: int | str
     vertical_range: tuple[float, float] | None = None
+
+
+def compute_graph_ranges_for_width(width: SizeMM, start_time: int, end_time: int) -> GraphRanges:
+    graph_offcut_width = 20.0
+    mm_per_step = 0.5
+
+    available_width = width - graph_offcut_width
+    number_of_steps = int(available_width / mm_per_step)
+    step = int((end_time - start_time) / number_of_steps / 2)
+    return GraphRanges(time_range=(start_time, end_time), step=step)
 
 
 class AdditionalGraphHTML(BaseModel, frozen=True):

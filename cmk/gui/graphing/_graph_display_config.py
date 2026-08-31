@@ -24,6 +24,10 @@ from cmk.gui.type_defs import (
 HTML_SIZE_PER_EX = 11.0
 
 
+def get_mm_per_ex(font_size: float) -> SizeMM:
+    return font_size / 3.0
+
+
 class GraphTitleFormat(BaseModel):
     plain: bool
     add_host_name: bool

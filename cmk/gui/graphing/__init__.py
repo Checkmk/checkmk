@@ -36,6 +36,7 @@ from ._frontend import (
     user_first_day_of_week,
 )
 from ._graph_display_config import (
+    get_mm_per_ex,
     GraphDisplayConfigHTML,
     GraphDisplayConfigImage,
     GraphRenderOptions,
@@ -49,13 +50,10 @@ from ._graph_metric_expressions import (
     GraphMetricOperation,
     LineType,
 )
-from ._graph_pdf import (
-    compute_pdf_graph_ranges,
-    get_mm_per_ex,
-    render_graph_pdf,
-)
+from ._graph_pdf import render_graph_pdf
 from ._graph_png import compute_png_size_mm, mm_per_ex, render_png_ex
 from ._graph_specification import (
+    compute_graph_ranges_for_width,
     GraphEnvironment,
     GraphMetric,
     GraphRanges,
@@ -163,7 +161,7 @@ __all__ = [
     "global_time_picker_refresh",
     "user_first_day_of_week",
     "iter_graph_artworks",
-    "compute_pdf_graph_ranges",
+    "compute_graph_ranges_for_width",
     "DrawnSegment",
     "drawn_segments",
     "evaluated_perfometer",

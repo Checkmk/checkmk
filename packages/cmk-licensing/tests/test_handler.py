@@ -69,6 +69,21 @@ def test_license_state_readable(license_state: LicenseState, expected_readable: 
 
 
 @pytest.mark.parametrize(
+    "license_state, value",
+    [
+        (LicenseState.TRIAL, 1),
+        (LicenseState.FREE, 2),
+        (LicenseState.LICENSED, 3),
+        (LicenseState.UNLICENSED, 4),
+    ],
+)
+def test_license_state_stable_value(license_state: LicenseState, value: int) -> None:
+    # Since the license states are persisted as their integer values, we need to make sure they
+    # never change.
+    assert license_state.value == value
+
+
+@pytest.mark.parametrize(
     "license_state, expected_file_content",
     [
         (LicenseState.TRIAL, "0"),

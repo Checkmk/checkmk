@@ -6,8 +6,6 @@
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComputedRef, type Ref, computed, nextTick, onMounted, ref, watch } from 'vue'
 
-import type { CustomPreset } from './useCustomPresets.ts'
-
 interface VisiblePresetCountArgs {
   /** Cumulative right edge of each chip within the row (gaps included), in render order. */
   chipRightEdges: number[]
@@ -43,17 +41,21 @@ export interface PresetOverflowRefs {
   overflowMeasureRef: Ref<HTMLElement | null>
 }
 
-export interface PresetOverflow {
-  visiblePresets: ComputedRef<CustomPreset[]>
-  overflowPresets: ComputedRef<CustomPreset[]>
+export interface PresetOverflow<T> {
+  visiblePresets: ComputedRef<T[]>
+  overflowPresets: ComputedRef<T[]>
   hasOverflow: ComputedRef<boolean>
 }
 
-/** Fit as many preset chips as the row allows, spilling the rest into an overflow control. */
-export function usePresetOverflow(
+/**
+ * Fit as many preset chips as the row allows, spilling the rest into an overflow control.
+ *
+ * The preset type is the caller's; the list is only ever sliced, never read into.
+ */
+export function usePresetOverflow<T>(
   refs: PresetOverflowRefs,
-  presets: () => CustomPreset[]
-): PresetOverflow {
+  presets: () => T[]
+): PresetOverflow<T> {
   const { rootRef, measureRef, overflowMeasureRef } = refs
 
   // Start all-visible so `recompute` only ever trims (no empty-then-expand flash).

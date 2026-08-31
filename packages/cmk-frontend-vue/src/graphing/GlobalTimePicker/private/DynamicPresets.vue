@@ -10,9 +10,10 @@ import { CmkTimeRangeTooltip } from 'cmk-ui-library/components/date-time'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
+import { usePresetOverflow } from '@/lib/usePresetOverflow'
+
 import TimeRangeChip from './TimeRangeChip.vue'
 import type { CustomPreset } from './useCustomPresets.ts'
-import { usePresetOverflow } from './usePresetOverflow.ts'
 
 const props = defineProps<{
   presets: CustomPreset[]

@@ -4,15 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { render } from '@testing-library/vue'
-import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { type Ref, defineComponent, h, nextTick, ref } from 'vue'
 
-import type { CustomPreset } from '@/graphing/GlobalTimePicker/private/useCustomPresets'
-import {
-  type PresetOverflow,
-  usePresetOverflow
-} from '@/graphing/GlobalTimePicker/private/usePresetOverflow'
+import { type PresetOverflow, usePresetOverflow } from '@/lib/usePresetOverflow'
 
 // jsdom has no ResizeObserver and does no layout, so stub the observer (its callback is the
 // composable's `recompute`, which we invoke directly) and feed every element its geometry by hand.
@@ -35,13 +30,13 @@ function stubGeometry(
   }
 }
 
-function makePresets(count: number): CustomPreset[] {
-  // Only identity/length matter here — the composable slices the list, never reads label/seconds.
-  return Array.from({ length: count }, (_, i) => ({
-    id: `p${i}`,
-    label: untranslated(`Preset ${i}`),
-    totalSeconds: (i + 1) * 3600
-  }))
+/** The composable is generic over the preset type and only slices the list, so an id suffices. */
+interface Preset {
+  id: string
+}
+
+function makePresets(count: number): Preset[] {
+  return Array.from({ length: count }, (_, i) => ({ id: `p${i}` }))
 }
 
 interface Geometry {
@@ -78,9 +73,9 @@ function setupOverflow(geo: Geometry, presetCount = geo.chipRightEdges.length) {
   const rootRef: Ref<HTMLElement | null> = ref(root)
   const measureRef: Ref<HTMLElement | null> = ref(measure)
   const overflowMeasureRef: Ref<HTMLElement | null> = ref(replica)
-  const presetsRef = ref<CustomPreset[]>(makePresets(presetCount))
+  const presetsRef = ref<Preset[]>(makePresets(presetCount))
 
-  let api!: PresetOverflow
+  let api!: PresetOverflow<Preset>
   const host = defineComponent({
     setup() {
       api = usePresetOverflow({ rootRef, measureRef, overflowMeasureRef }, () => presetsRef.value)

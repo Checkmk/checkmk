@@ -133,11 +133,13 @@ export function downtimeWindow(
 </script>
 
 <script setup lang="ts">
-import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
+import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
+import CmkChipSelect from 'cmk-ui-library/components/CmkChipSelect.vue'
 import CmkCollapsible from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsible.vue'
 import CmkCollapsibleTitle from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsibleTitle.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
+import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkTimeRangePicker from 'cmk-ui-library/components/date-time/CmkTimeRangePicker.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -145,6 +147,8 @@ import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequi
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, watch } from 'vue'
+
+import { usePresetOverflow } from '@/lib/usePresetOverflow'
 
 import type { ActionTargetKind } from '../types'
 
@@ -234,10 +238,47 @@ watch(model, (values) => emit('update:valid', isScheduleDowntimeValid(values)), 
   deep: true
 })
 
+function isSelected(id: DurationSelection): boolean {
+  return model.value.selection === id
+}
+
 function selectDuration(id: DurationSelection): void {
   model.value.selection = id
   if (id === 'custom') {
     customOpen.value = true
+  }
+}
+
+const chipRowRef = ref<HTMLElement | null>(null)
+const chipMeasureRef = ref<HTMLElement | null>(null)
+const overflowMeasureRef = ref<HTMLElement | null>(null)
+
+const {
+  visiblePresets: visibleChips,
+  overflowPresets: overflowChips,
+  hasOverflow
+} = usePresetOverflow(
+  { rootRef: chipRowRef, measureRef: chipMeasureRef, overflowMeasureRef },
+  () => durationChips
+)
+
+// The measure replica only needs the trigger width, so it carries no options.
+const EMPTY_OPTIONS: Suggestions = { type: 'fixed', suggestions: [] }
+
+const overflowOptions = computed<Suggestions>(() => ({
+  type: 'fixed',
+  suggestions: overflowChips.value.map((chip) => ({ name: chip.id, title: chip.label }))
+}))
+
+/** Mark the entry in the dropdown only while the selected duration is one it hides. */
+const overflowSelectedId = computed(() =>
+  overflowChips.value.some((chip) => isSelected(chip.id)) ? model.value.selection : null
+)
+
+function selectOverflow(id: string | null): void {
+  const chip = durationChips.find((candidate) => candidate.id === id)
+  if (chip) {
+    selectDuration(chip.id)
   }
 }
 </script>
@@ -268,16 +309,60 @@ function selectDuration(id: DurationSelection): void {
           <span class="monitoring-schedule-downtime-form__label">
             {{ _t('Duration') }}<CmkLabelRequired :show="true" space="before" />
           </span>
-          <div class="monitoring-schedule-downtime-form__chips">
-            <CmkButton
-              v-for="chip in durationChips"
-              :key="chip.id"
-              size="small"
-              :variant="model.selection === chip.id ? 'secondary' : 'optional'"
-              @click="selectDuration(chip.id)"
-            >
-              {{ chip.label }}
-            </CmkButton>
+          <div class="monitoring-schedule-downtime-form__durations">
+            <div ref="chipRowRef" class="monitoring-schedule-downtime-form__chips">
+              <!-- Every chip at natural width, off-screen: the fit is measured here, never on the
+                   live row, so trimming the row cannot feed back into the measurement. -->
+              <div
+                class="monitoring-schedule-downtime-form__chips-measure-clip"
+                aria-hidden="true"
+                inert
+              >
+                <div ref="chipMeasureRef" class="monitoring-schedule-downtime-form__chips-measure">
+                  <CmkChip
+                    v-for="chip in durationChips"
+                    :key="chip.id"
+                    class="monitoring-schedule-downtime-form__chip"
+                    variant="outline"
+                  >
+                    {{ chip.label }}
+                  </CmkChip>
+                  <div ref="overflowMeasureRef">
+                    <CmkChipSelect
+                      :model-value="null"
+                      :options="EMPTY_OPTIONS"
+                      :label="_t('More durations')"
+                      :input-hint="_t('More')"
+                      static-label
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <CmkChip
+                v-for="chip in visibleChips"
+                :key="chip.id"
+                type="button"
+                class="monitoring-schedule-downtime-form__chip"
+                :aria-pressed="isSelected(chip.id)"
+                :color="isSelected(chip.id) ? 'success' : 'others'"
+                :variant="isSelected(chip.id) ? 'fill' : 'outline'"
+                @click="selectDuration(chip.id)"
+              >
+                {{ chip.label }}
+              </CmkChip>
+
+              <div v-if="hasOverflow" class="monitoring-schedule-downtime-form__chips-overflow">
+                <CmkChipSelect
+                  :model-value="overflowSelectedId"
+                  :options="overflowOptions"
+                  :label="_t('More durations')"
+                  :input-hint="_t('More')"
+                  static-label
+                  @update:model-value="selectOverflow"
+                />
+              </div>
+            </div>
             <CmkLink
               v-if="presetsUrl"
               class="monitoring-schedule-downtime-form__presets-link"
@@ -403,10 +488,42 @@ function selectDuration(id: DurationSelection): void {
   gap: var(--spacing);
 }
 
-.monitoring-schedule-downtime-form__chips {
+.monitoring-schedule-downtime-form__durations {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: var(--dimension-3);
+}
+
+.monitoring-schedule-downtime-form__chips {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--dimension-3);
+  overflow: clip visible;
+  overflow-clip-margin: 2px;
+}
+
+.monitoring-schedule-downtime-form__chips-measure-clip {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: clip;
+}
+
+.monitoring-schedule-downtime-form__chips-measure {
+  display: flex;
+  width: max-content;
+  gap: var(--dimension-3);
+}
+
+.monitoring-schedule-downtime-form__chips-overflow {
+  flex: 0 0 auto;
+}
+
+.monitoring-schedule-downtime-form__chip {
+  white-space: nowrap;
 }
 
 .monitoring-schedule-downtime-form__presets-link {

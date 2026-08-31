@@ -6,7 +6,8 @@
 import { parseAbsolute, toZoned } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
-import { describe, expect, it, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import ScheduleDowntimeForm, {
   type DowntimeRecurrenceOption,
@@ -30,6 +31,47 @@ function mountForm(
     ...render(ScheduleDowntimeForm, { props: { modelValue, recurrences, presetsUrl } }),
     modelValue
   }
+}
+
+// jsdom has neither ResizeObserver nor layout, so stub the observer (its callback is the overflow
+// composable's recompute, invoked directly below) and hand the row its geometry by hand.
+class FakeResizeObserver {
+  static instances: FakeResizeObserver[] = []
+  constructor(public callback: ResizeObserverCallback) {
+    FakeResizeObserver.instances.push(this)
+  }
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+
+function stubGeometry(el: HTMLElement, props: Record<string, number>): void {
+  for (const [key, value] of Object.entries(props)) {
+    Object.defineProperty(el, key, { value, configurable: true })
+  }
+}
+
+/**
+ * Give every measured chip the same width and the row only enough of it for `visible` chips plus the
+ * dropdown trigger, then run a resize. Chip n's right edge is (n + 1) * CHIP, the trigger reserves
+ * one CHIP, so a row of (visible + 1) * CHIP admits exactly `visible` chips.
+ */
+function squeezeChipRow(container: Element, visible: number): void {
+  const CHIP = 100
+  const row = container.querySelector<HTMLElement>('.monitoring-schedule-downtime-form__chips')!
+  const measure = container.querySelector<HTMLElement>(
+    '.monitoring-schedule-downtime-form__chips-measure'
+  )!
+  const children = Array.from(measure.children) as HTMLElement[]
+  const chips = children.slice(0, -1)
+  chips.forEach((chip, index) =>
+    stubGeometry(chip, { offsetLeft: 0, offsetWidth: (index + 1) * CHIP })
+  )
+  stubGeometry(children.at(-1)!, { offsetLeft: chips.length * CHIP, offsetWidth: CHIP })
+  stubGeometry(row, { clientWidth: (visible + 1) * CHIP })
+
+  const observer = FakeResizeObserver.instances.at(-1)!
+  observer.callback([], observer as unknown as ResizeObserver)
 }
 
 test('is invalid until a comment is provided', async () => {
@@ -58,6 +100,16 @@ test("the immediate duration chip is named 'Now'", () => {
   expect(screen.queryByRole('button', { name: 'Ad hoc' })).not.toBeInTheDocument()
 })
 
+test('marks the selected duration chip as pressed', async () => {
+  mountForm({ comment: 'maintenance', selection: '4h' })
+
+  expect(screen.getByRole('button', { name: '4 h', pressed: true })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '24 h', pressed: false })).toBeInTheDocument()
+
+  await userEvent.click(screen.getByRole('button', { name: '24 h' }))
+  expect(screen.getByRole('button', { name: '24 h', pressed: true })).toBeInTheDocument()
+})
+
 test('links the duration presets only when the server offers the page', () => {
   const { unmount } = mountForm({ comment: 'maintenance' }, [], 'wato.py?mode=edit_configvar')
 
@@ -83,6 +135,45 @@ test('an until preset explains itself with the end date', () => {
   mountForm({ comment: 'maintenance', selection: 'today' })
 
   expect(screen.getByText(/Scheduled downtime, starting now and ending on/)).toBeInTheDocument()
+})
+
+describe('a row too narrow for every duration', () => {
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+  })
+
+  afterEach(() => {
+    FakeResizeObserver.instances = []
+    vi.unstubAllGlobals()
+  })
+
+  it('keeps the durations that fit on the row and drops the rest into the dropdown', async () => {
+    const { container } = mountForm({ comment: 'maintenance' })
+
+    // Wide enough for the row: every duration is a chip and there is nothing to spill.
+    expect(screen.getByRole('button', { name: 'This year' })).toBeInTheDocument()
+    expect(screen.queryByRole('combobox', { name: 'More durations' })).not.toBeInTheDocument()
+
+    squeezeChipRow(container, 2)
+    await nextTick()
+
+    expect(screen.getByRole('button', { name: 'Custom time range' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Now' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'This year' })).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'More durations' })).toBeInTheDocument()
+  })
+
+  it('applies a duration picked from the dropdown', async () => {
+    const { container, modelValue } = mountForm({ comment: 'maintenance' })
+
+    squeezeChipRow(container, 2)
+    await nextTick()
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'More durations' }))
+    await userEvent.click(screen.getByRole('option', { name: 'This year' }))
+
+    expect(modelValue.selection).toBe('year')
+  })
 })
 
 describe('isScheduleDowntimeValid', () => {

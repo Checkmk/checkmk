@@ -3,14 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.fan import check_fan
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.fujitsu.lib import DETECT_FSC_SC2
+from cmk.plugins.lib.fan import check_fan
 
-check_info = {}
+_STATUS_MAP = {
+    "1": (State.UNKNOWN, "Status is unknown"),
+    "2": (State.OK, "Status is disabled"),
+    "3": (State.OK, "Status is ok"),
+    "4": (State.CRIT, "Status is failed"),
+    "5": (State.WARN, "Status is prefailure-predicted"),
+    "6": (State.WARN, "Status is redundant-fan-failed"),
+    "7": (State.UNKNOWN, "Status is not-manageable"),
+    "8": (State.OK, "Status is not-present"),
+}
 
 
 def parse_fsc_sc2_fans(string_table: StringTable) -> StringTable:
@@ -40,37 +61,24 @@ def parse_fsc_sc2_fans(string_table: StringTable) -> StringTable:
 # .1.3.6.1.4.1.231.2.10.2.2.10.5.2.1.6.1.7 2400
 
 
-def discover_fsc_sc2_fans(info):
-    for line in info:
-        if line[1] not in ["8"]:
-            yield line[0], {}
+def discover_fsc_sc2_fans(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if line[1] != "8":
+            yield Service(item=line[0])
 
 
-def check_fsc_sc2_fans(item, params, info):
-    status_map = {
-        "1": (3, "Status is unknown"),
-        "2": (0, "Status is disabled"),
-        "3": (0, "Status is ok"),
-        "4": (2, "Status is failed"),
-        "5": (1, "Status is prefailure-predicted"),
-        "6": (1, "Status is redundant-fan-failed"),
-        "7": (3, "Status is not-manageable"),
-        "8": (0, "Status is not-present"),
-    }
-
-    if isinstance(params, tuple):
-        params = {"lower": params}
-
-    for designation, status, rpm in info:
+def check_fsc_sc2_fans(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    for designation, status, rpm in section:
         if designation == item:
-            yield status_map.get(status, (3, "Status is unknown"))
+            state, state_readable = _STATUS_MAP.get(status, (State.UNKNOWN, "Status is unknown"))
+            yield Result(state=state, summary=state_readable)
             if rpm:
-                yield check_fan(int(rpm), params)
+                yield from check_fan(int(rpm), params)
             else:
-                yield 0, "Device did not deliver RPM values"
+                yield Result(state=State.OK, summary="Device did not deliver RPM values")
 
 
-check_info["fsc_sc2_fans"] = LegacyCheckDefinition(
+snmp_section_fsc_sc2_fans = SimpleSNMPSection(
     name="fsc_sc2_fans",
     parse_function=parse_fsc_sc2_fans,
     detect=DETECT_FSC_SC2,
@@ -78,6 +86,11 @@ check_info["fsc_sc2_fans"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.5.2.1",
         oids=["3", "5", "6"],
     ),
+)
+
+
+check_plugin_fsc_sc2_fans = CheckPlugin(
+    name="fsc_sc2_fans",
     service_name="FSC %s",
     discovery_function=discover_fsc_sc2_fans,
     check_function=check_fsc_sc2_fans,

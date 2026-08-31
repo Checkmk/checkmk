@@ -2304,7 +2304,20 @@ class SiteFactory:
         logger.debug("Reused site %(site_id)s", {"site_id": site.id})
         return site
 
-    def restore_site_from_backup(self, backup_path: Path, name: str, reuse: bool = False) -> Site:
+    def restore_site_from_backup(
+        self,
+        backup_path: Path,
+        name: str,
+        reuse: bool = False,
+        check: bool = True,
+    ) -> Site:
+        """Restore a site from a backup.
+
+        Args:
+            check:  Fail if `omd restore` could not finalize the restored site. Pass False to
+                    handle that yourself: the site is then returned *stopped*, with an outdated
+                    core configuration and a closed livestatus port.
+        """
         self._base_ident = ""
         site = self._site_obj(name)
 
@@ -2336,9 +2349,20 @@ class SiteFactory:
             check=False,
         )
 
-        assert completed_process.returncode == 0, (
-            f"Restoring site from backup failed!\n{completed_process.stdout.strip()}"
-        )
+        if completed_process.returncode != 0:
+            assert not check, (
+                f"Restoring site from backup failed!\n{completed_process.stdout.strip()}"
+            )
+            logger.warning(
+                "'omd restore' could not finalize site '%(name)s'. Returning it stopped:\n"
+                "%(output)s",
+                {"name": name, "output": completed_process.stdout.strip()},
+            )
+            # 'omd restore' aborted before it could register the site with the system apache.
+            # Without that, the site is not reachable via HTTP once it is started.
+            _ = run(["omd", "update-apache-config", name], sudo=True)
+            restart_httpd()
+            return self.get_existing_site(site.id, start=False)
 
         site = self.get_existing_site(site.id)
         site.start()

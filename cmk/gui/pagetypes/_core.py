@@ -1233,7 +1233,7 @@ class ListPage[T: Overridable](Page):
                 table.cell(_("Actions"), css=["buttons visuals"])
 
                 # View
-                if isinstance(instance, PageRenderer):
+                if isinstance(instance, PageRenderer) and instance.list_shows_view_button():
                     html.icon_button(instance.view_url(), _("View"), self._type.type_icon())
 
                 # Edit
@@ -2083,6 +2083,11 @@ class PageRenderer[T_PageRendererConfig: PageRendererConfig](
         if not self.is_mine():
             http_vars.append(("owner", self.owner()))
         return makeuri_contextless(request, http_vars, filename="%s.py" % self.type_name())
+
+    @classmethod
+    def list_shows_view_button(cls) -> bool:
+        """Whether the list row offers a "View" button next to the linked title."""
+        return True
 
     @override
     def render_title(

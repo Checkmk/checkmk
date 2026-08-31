@@ -12,8 +12,8 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks import innovaphone_priports_l1
-from cmk.legacy_checks.innovaphone_priports_l1 import PriPort, Section
+from cmk.plugins.innovaphone.agent_based import innovaphone_priports_l1
+from cmk.plugins.innovaphone.agent_based.innovaphone_priports_l1 import PriPort, Section
 
 _STRING_TABLE = [
     ["Foo", "1", "0", "23"],  # item, state, sigloss, slip

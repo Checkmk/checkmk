@@ -3,14 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.fujitsu.lib import DETECT_FSC_SC2
 
-check_info = {}
+_MEM_STATUS = {
+    "1": (State.UNKNOWN, "unknown"),
+    "2": (State.UNKNOWN, "not-present"),
+    "3": (State.OK, "ok"),
+    "4": (State.OK, "disabled"),
+    "5": (State.CRIT, "error"),
+    "6": (State.CRIT, "failed"),
+    "7": (State.WARN, "prefailure-predicted"),
+    "11": (State.OK, "hidden"),
+}
 
 
 def parse_fsc_sc2_mem_status(string_table: StringTable) -> StringTable:
@@ -46,33 +61,21 @@ def parse_fsc_sc2_mem_status(string_table: StringTable) -> StringTable:
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.5.1.6.1.9 -1
 
 
-def discover_fsc_sc2_mem_status(info):
-    for line in info:
+def discover_fsc_sc2_mem_status(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if line[1] != "2":
-            yield line[0], None
+            yield Service(item=line[0])
 
 
-def check_fsc_sc2_mem_status(item, _no_params, info):
-    def get_mem_status(status):
-        return {
-            "1": (3, "unknown"),
-            "2": (3, "not-present"),
-            "3": (0, "ok"),
-            "4": (0, "disabled"),
-            "5": (2, "error"),
-            "6": (2, "failed"),
-            "7": (1, "prefailure-predicted"),
-            "11": (0, "hidden"),
-        }.get(status, (3, "unknown"))
-
-    for designation, status, capacity in info:
+def check_fsc_sc2_mem_status(item: str, section: StringTable) -> CheckResult:
+    for designation, status, capacity in section:
         if designation == item:
-            status_state, status_txt = get_mem_status(status)
-            return status_state, f"Status is {status_txt}, Size {capacity} MB"
-    return None
+            status_state, status_txt = _MEM_STATUS.get(status, (State.UNKNOWN, "unknown"))
+            yield Result(state=status_state, summary=f"Status is {status_txt}, Size {capacity} MB")
+            return
 
 
-check_info["fsc_sc2_mem_status"] = LegacyCheckDefinition(
+snmp_section_fsc_sc2_mem_status = SimpleSNMPSection(
     name="fsc_sc2_mem_status",
     parse_function=parse_fsc_sc2_mem_status,
     detect=DETECT_FSC_SC2,
@@ -80,6 +83,11 @@ check_info["fsc_sc2_mem_status"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.6.5.1",
         oids=["3", "4", "6"],
     ),
+)
+
+
+check_plugin_fsc_sc2_mem_status = CheckPlugin(
+    name="fsc_sc2_mem_status",
     service_name="FSC %s",
     discovery_function=discover_fsc_sc2_mem_status,
     check_function=check_fsc_sc2_mem_status,

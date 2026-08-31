@@ -927,7 +927,7 @@ def _make_service_description_cb(
 
 
 # TODO: Make this use the generic "rulesets" functions
-# a) This function has never been configurable via WATO (see https://mathias-kettner.de/checkmk_service_dependencies.html)
+# a) This function has never been configurable via WATO
 # b) It only affects the Nagios core - CMC does not implement service dependencies
 # c) This function implements some specific regex replacing match+replace which makes it incompatible to
 #    regular service rulesets. Therefore service_extra_conf() can not easily be used :-/

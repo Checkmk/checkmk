@@ -20,17 +20,17 @@ pytest "${SCRIPT_DIR}" \
 RC=$?
 if [ -n "${CI}" ]; then
     # update database; generate report and check weekly baseline
-    "${SCRIPT_DIR}/perftest_plot.py" --update --branch-version="${BRANCH}" \
+    "${SCRIPT_DIR}/reporting/perftest_plot.py" --update --branch-version="${BRANCH}" \
         --product-release="${VERSION}" \
         --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
         --validate-baselines --warn-only || exit 200
     # check monthly baseline
-    "${SCRIPT_DIR}/perftest_plot.py" --branch-version="${BRANCH}" \
+    "${SCRIPT_DIR}/reporting/perftest_plot.py" --branch-version="${BRANCH}" \
         --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
         --validate-baselines --warn-only \
         --skip-filesystem-writes --skip-database-writes --baseline-offset=30 || exit 200
     # check yearly baseline
-    "${SCRIPT_DIR}/perftest_plot.py" --branch-version="${BRANCH}" \
+    "${SCRIPT_DIR}/reporting/perftest_plot.py" --branch-version="${BRANCH}" \
         --root-dir="${ROOT_DIR}" --log-level=INFO --dbhost=qa.lan.checkmk.net --require-database \
         --validate-baselines --warn-only \
         --skip-filesystem-writes --skip-database-writes --baseline-offset=365 || exit 200

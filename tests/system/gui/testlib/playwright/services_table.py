@@ -35,3 +35,8 @@ class ServicesTable:
 
     def service_summary(self, host_name: str, service_name: str) -> Locator:
         return self.service_row(host_name, service_name).locator("td:nth-child(4)")
+
+    def service_graphs_icon(self, host_name: str, service_name: str) -> Locator:
+        return self.service_icons(host_name, service_name).locator(
+            "a[onmouseover*='show_hover_graphs']"
+        )

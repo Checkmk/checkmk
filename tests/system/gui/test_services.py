@@ -14,13 +14,15 @@ from tests.system.gui.testlib.api_helpers import LOCALHOST_IPV4
 from tests.system.gui.testlib.host_details import AgentAndApiIntegration, HostDetails, SNMP
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
+from tests.system.gui.testlib.playwright.pom.graphing.service_graphs_hover_popup import (
+    ServiceGraphsHoverPopup,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.combined_graph import (
     CombinedGraphsServiceSearch,
 )
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
-from tests.testlib.graphing import SKIP_PENDING_GRAPH_ENGINE
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +170,7 @@ def test_service_graphs_render_through_the_engine(
     assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
 
 
-def test_service_graphs_have_titles_and_legend_no_broken(
+def test_service_graphs_have_titles_and_legend_not_broken(
     service_graphs: ServiceGraphs, javascript_errors: list[str]
 ) -> None:
     """Each service graph has a title and a legend, and none reports a failed load.
@@ -272,20 +274,34 @@ def test_combined_graphs_over_all_services_have_no_broken_graphs(
     assert not javascript_errors, f"Rendering the graphs raised page errors: {javascript_errors}"
 
 
-# --- Graphing engine skeleton (CMK-35973): R1.3 Area 9 --------------------
-# Complete once the engine renders on this surface: reach the graph via
-# GraphAccessor.graph_root.
-
-
-@pytest.mark.skip(reason=SKIP_PENDING_GRAPH_ENGINE)
-def test_graph_hover_preview_renders_and_closes(
-    dashboard_page: MainDashboard, graph_hosts_with_varying_data: list[str]
+def test_graph_hover_preview_renders_its_expected_elements(
+    service_graphs_hover_popup: ServiceGraphsHoverPopup,
+    javascript_errors: list[str],
 ) -> None:
-    """HP-02 (R1.3 Area 9): the hover-preview popup renders content and closes cleanly.
-
-    Do: hover the graph icon of a service with known perfdata on the services-of-host
-    view; wait for the popup graph to finish loading.
-    Assert: canvas and SVG axes present in the popup component; no broken-graph; moving the
-    cursor away closes it cleanly.
+    """Upon hovering a service graphs icon on the "Services of host" view, a preview popup is
+    rendered showing the service's graphs. The rendering includes the graph title, time information
+    and plot (canvas + axes).
     """
-    pytest.fail("CMK-35973 skeleton: body not implemented")
+    panel = service_graphs_hover_popup.open().panel(0)
+
+    expect(panel.title, "The hover popup rendered a graph without a title").to_be_visible()
+    expect(panel.title, "The hover popup rendered an empty graph title").not_to_have_text("")
+    expect(panel.timestamp, "The hover popup rendered no time information").to_be_visible()
+    expect(panel.graph.canvas, "The hover popup rendered no plot").to_be_visible()
+    expect(
+        panel.graph.time_axis_labels, "The hover popup's plot drew no time axis"
+    ).not_to_have_count(0)
+    expect(
+        panel.graph.value_axis_labels, "The hover popup's plot drew no value axis"
+    ).not_to_have_count(0)
+    expect(
+        service_graphs_hover_popup.broken_graphs, "A graph in the hover popup failed to load"
+    ).to_have_count(0)
+
+    service_graphs_hover_popup.close()
+    expect(
+        service_graphs_hover_popup.popup,
+        "The hover popup stayed open after the pointer left the icon",
+    ).to_be_hidden()
+
+    assert not javascript_errors, f"The hover popup raised page errors: {javascript_errors}"

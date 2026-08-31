@@ -153,6 +153,17 @@ GRAPH_SURFACES: Final[tuple[GraphSurface, ...]] = (
         ),
         notes="Template/combined/custom graph widgets embedded in a dashboard.",
     ),
+    GraphSurface(
+        key="service_graphs_hover_popup",
+        title="Service graphs hover popup",
+        containment=GraphContainment.PAGE_DIRECT,
+        requires_pro=False,
+        page_object=(
+            "tests.system.gui.testlib.playwright.pom.graphing.service_graphs_hover_popup"
+            ":ServiceGraphsHoverPopup"
+        ),
+        notes="Popup containing service graphs opened when the service's graphs icon is hovered",
+    ),
 )
 
 

@@ -40,6 +40,7 @@ from tests.system.gui.testlib.playwright.pom.graphing.fixtures import (
     fixture_saved_custom_graph,
     fixture_scatterplot_widget,
     fixture_service_graphs,
+    fixture_service_graphs_hover_popup,
 )
 from tests.system.gui.testlib.playwright.pom.login import LoginPage
 from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
@@ -86,6 +87,7 @@ graphing_fixtures = [
     fixture_saved_custom_graph,
     fixture_scatterplot_widget,
     fixture_service_graphs,
+    fixture_service_graphs_hover_popup,
 ]
 
 

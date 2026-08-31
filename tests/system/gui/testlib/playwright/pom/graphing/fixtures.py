@@ -19,6 +19,9 @@ from tests.system.gui.testlib.playwright.pom.graphing.dashboard_graph_widget imp
     DashboardGraphWidget,
 )
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphSurface
+from tests.system.gui.testlib.playwright.pom.graphing.service_graphs_hover_popup import (
+    ServiceGraphsHoverPopup,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import ServiceGraphs
 from tests.system.gui.testlib.playwright.pom.monitor.combined_graph import (
     CombinedGraphsServiceSearch,
@@ -292,6 +295,23 @@ def fixture_service_graphs(
     before this navigates.
     """
     yield open_service_graphs(dashboard_page.page, graph_hosts_with_varying_data[0])
+
+
+@pytest.fixture(name="service_graphs_hover_popup")
+def fixture_service_graphs_hover_popup(
+    dashboard_page: MainDashboard,
+    graph_hosts_with_varying_data: list[str],
+    javascript_errors: list[str],
+    requested_urls: list[str],
+) -> Iterator[ServiceGraphsHoverPopup]:
+    """The graph hover popup off a service's graphs icon on the services-of-host view.
+
+    Depends on `javascript_errors` and `requested_urls` so their listeners are attached
+    before this navigates.
+    """
+    host_name = graph_hosts_with_varying_data[0]
+    services = ServicesOfHostPage(dashboard_page.page, host_name=host_name)
+    yield ServiceGraphsHoverPopup(services, host_name, SERVICE_WITH_GRAPHS)
 
 
 @pytest.fixture(name="scatterplot_widget")

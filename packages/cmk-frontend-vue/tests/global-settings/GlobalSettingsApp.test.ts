@@ -93,6 +93,17 @@ const booleanTopic: GlobalSettingsTopic = {
   ]
 }
 
+const resettableTopic: GlobalSettingsTopic = {
+  icon: 'users',
+  headline: 'Resettable settings',
+  subline: 'Everything in here was modified',
+  warning: null,
+  variables: [
+    { ...data.topics[0]!.variables[0]!, modified: true },
+    { ...booleanTopic.variables[0]!, value: true, modified: true }
+  ]
+}
+
 interface Recorded {
   method: string
   ifMatch: string | null
@@ -139,6 +150,11 @@ const server = setupServer(
       { varname: 'site_piggyback_hub', ...booleanServerValue },
       { headers: { ETag: '"b2"' } }
     )
+  }),
+  http.delete(BOOLEAN_SETTING_URL, ({ request }) => {
+    requests.push({ method: 'DELETE', ifMatch: request.headers.get('If-Match'), body: null })
+    booleanServerValue = { value: false, is_default: true }
+    return new HttpResponse(null, { status: 204 })
   })
 )
 
@@ -285,6 +301,62 @@ describe('GlobalSettingsApp', () => {
     expect(inlineSwitch).toHaveAttribute('aria-checked', 'false')
     expect(screen.queryByText('(modified)')).not.toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('resetting a topic deletes every modified value guarded by its etag', async () => {
+    render(GlobalSettingsApp, { props: { ...data, topics: [resettableTopic] } })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item Resettable settings' })
+    )
+    expect(screen.getAllByText('(modified)')).toHaveLength(2)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    const confirmation = screen.getByRole('alert')
+    expect(confirmation).toHaveTextContent('Remove all modifications in "Resettable settings"?')
+    await userEvent.click(within(confirmation).getByRole('button', { name: 'Remove' }))
+
+    await waitFor(() =>
+      expect(requests.map((r) => r.method)).toEqual([
+        'GET',
+        'DELETE',
+        'GET',
+        'GET',
+        'DELETE',
+        'GET'
+      ])
+    )
+    expect(requests[1]!.ifMatch).toBe('"v1"')
+    expect(requests[4]!.ifMatch).toBe('"b1"')
+    await waitFor(() => expect(screen.queryByText('(modified)')).not.toBeInTheDocument())
+    expect(screen.getByRole('switch', { name: 'Toggle Enable piggyback-hub' })).toHaveAttribute(
+      'aria-checked',
+      'false'
+    )
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  test('a rejected topic reset reports the server message and keeps the remaining values', async () => {
+    server.use(
+      http.delete(SETTING_URL, ({ request }) => {
+        requests.push({ method: 'DELETE', ifMatch: request.headers.get('If-Match'), body: null })
+        return HttpResponse.json(
+          { title: 'Precondition failed', detail: 'ETag mismatch' },
+          { status: 412 }
+        )
+      })
+    )
+    render(GlobalSettingsApp, { props: { ...data, topics: [resettableTopic] } })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item Resettable settings' })
+    )
+    expect(screen.getAllByText('(modified)')).toHaveLength(2)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    await userEvent.click(within(screen.getByRole('alert')).getByRole('button', { name: 'Remove' }))
+
+    expect(await screen.findByText(/ETag mismatch/)).toBeInTheDocument()
+    await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'DELETE']))
+    expect(screen.getAllByText('(modified)')).toHaveLength(2)
   })
 
   test('a rejected save keeps the editor open and shows the server message', async () => {

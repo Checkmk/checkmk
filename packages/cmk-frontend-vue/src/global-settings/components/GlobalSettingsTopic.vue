@@ -19,9 +19,16 @@ import GlobalSettingsVariableRow from './GlobalSettingsVariableRow.vue'
 
 const { _t, _tn } = usei18n()
 
-const props = defineProps<{ topic: GlobalSettingsTopic; value: string }>()
+const props = defineProps<{
+  topic: GlobalSettingsTopic
+  value: string
+  resetting: boolean
+}>()
 
-const emit = defineEmits<{ edit: [variable: GlobalSettingsVariable] }>()
+const emit = defineEmits<{
+  edit: [variable: GlobalSettingsVariable]
+  reset: []
+}>()
 
 const modifiedCount = computed(
   () => props.topic.variables.filter((variable) => variable.modified).length
@@ -61,7 +68,8 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
         size="small"
         :icon="{ name: 'reset', size: 'small' }"
         :title="_t('Reset all settings in this category to their factory defaults')"
-        :disabled="modifiedCount === 0"
+        :disabled="modifiedCount === 0 || resetting"
+        @click="emit('reset')"
       >
         {{ _t('Reset') }}
       </CmkButton>

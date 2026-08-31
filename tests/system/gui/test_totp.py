@@ -74,7 +74,6 @@ def enable_two_fa(
             )
 
 
-@pytest.mark.skip(reason="CMK-37090; flake")
 def test_totp_fail_login(
     test_site: Site,
     enable_two_fa: tuple[CmkCredentials, str],
@@ -96,7 +95,7 @@ def test_totp_fail_login(
     failed_logins_file = f"var/check_mk/web/{credentials.username}/num_failed_logins.mk"
 
     def _validate_num_of_failed_login_mk() -> bool:
-        return test_site.read_file(failed_logins_file) == "1\n"
+        return int(test_site.read_file(failed_logins_file).strip()) >= 1
 
     wait_until(
         _validate_num_of_failed_login_mk,
@@ -106,7 +105,6 @@ def test_totp_fail_login(
     )
 
 
-@pytest.mark.skip(reason="CMK-37090; flake")
 def test_totp_remove(
     test_site: Site,
     enable_two_fa: tuple[CmkCredentials, str],

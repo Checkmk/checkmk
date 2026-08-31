@@ -3,14 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.legacy_includes.fsc import DETECT_FSC_SC2
 
-check_info = {}
+_CPU_STATUS = {
+    "1": (State.UNKNOWN, "unknown"),
+    "2": (State.UNKNOWN, "not-present"),
+    "3": (State.OK, "ok"),
+    "4": (State.OK, "disabled"),
+    "5": (State.CRIT, "error"),
+    "6": (State.CRIT, "failed"),
+    "7": (State.WARN, "missing-termination"),
+    "8": (State.WARN, "prefailure-warning"),
+}
 
 
 def parse_fsc_sc2_cpu_status(string_table: StringTable) -> StringTable:
@@ -29,33 +44,24 @@ def parse_fsc_sc2_cpu_status(string_table: StringTable) -> StringTable:
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.4.1.13.1.2 0
 
 
-def discover_fsc_sc2_cpu_status(info):
-    for line in info:
+def discover_fsc_sc2_cpu_status(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if line[1] != "2":
-            yield line[0], None
+            yield Service(item=line[0])
 
 
-def check_fsc_sc2_cpu_status(item, _no_params, info):
-    def get_cpu_status(status):
-        return {
-            "1": (3, "unknown"),
-            "2": (3, "not-present"),
-            "3": (0, "ok"),
-            "4": (0, "disabled"),
-            "5": (2, "error"),
-            "6": (2, "failed"),
-            "7": (1, "missing-termination"),
-            "8": (1, "prefailure-warning"),
-        }.get(status, (3, "unknown"))
-
-    for designation, status, model, speed, cores in info:
+def check_fsc_sc2_cpu_status(item: str, section: StringTable) -> CheckResult:
+    for designation, status, model, speed, cores in section:
         if designation == item:
-            status_state, status_txt = get_cpu_status(status)
-            return status_state, f"Status is {status_txt}, {model}, {cores} cores @ {speed} MHz"
-    return None
+            status_state, status_txt = _CPU_STATUS.get(status, (State.UNKNOWN, "unknown"))
+            yield Result(
+                state=status_state,
+                summary=f"Status is {status_txt}, {model}, {cores} cores @ {speed} MHz",
+            )
+            return
 
 
-check_info["fsc_sc2_cpu_status"] = LegacyCheckDefinition(
+snmp_section_fsc_sc2_cpu_status = SimpleSNMPSection(
     name="fsc_sc2_cpu_status",
     parse_function=parse_fsc_sc2_cpu_status,
     detect=DETECT_FSC_SC2,
@@ -63,6 +69,11 @@ check_info["fsc_sc2_cpu_status"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.6.4.1",
         oids=["3", "4", "5", "8", "13"],
     ),
+)
+
+
+check_plugin_fsc_sc2_cpu_status = CheckPlugin(
+    name="fsc_sc2_cpu_status",
     service_name="FSC %s",
     discovery_function=discover_fsc_sc2_cpu_status,
     check_function=check_fsc_sc2_cpu_status,

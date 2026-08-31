@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
 from cmk.legacy_checks.fsc_sc2_cpu_status import (
     check_fsc_sc2_cpu_status,
     discover_fsc_sc2_cpu_status,
@@ -28,7 +26,7 @@ def test_parse_fsc_sc2_cpu_status_is_identity() -> None:
 
 
 def test_discover_fsc_sc2_cpu_status_skips_not_present() -> None:
-    assert list(discover_fsc_sc2_cpu_status(_SECTION_DISCOVERY)) == [("CPU1", None)]
+    assert list(discover_fsc_sc2_cpu_status(_SECTION_DISCOVERY)) == [Service(item="CPU1")]
 
 
 @pytest.mark.parametrize(
@@ -37,19 +35,19 @@ def test_discover_fsc_sc2_cpu_status_skips_not_present() -> None:
         pytest.param(
             _SECTION_OK,
             "CPU1",
-            (0, "Status is ok, Xeon Gold, 16 cores @ 2400 MHz"),
+            [Result(state=State.OK, summary="Status is ok, Xeon Gold, 16 cores @ 2400 MHz")],
             id="ok_status",
         ),
         pytest.param(
             _SECTION_FAILED,
             "CPU1",
-            (2, "Status is failed, Xeon Gold, 16 cores @ 2400 MHz"),
+            [Result(state=State.CRIT, summary="Status is failed, Xeon Gold, 16 cores @ 2400 MHz")],
             id="crit_failed_status",
         ),
         pytest.param(
             _SECTION_ERROR,
             "CPU1",
-            (2, "Status is error, Xeon Gold, 16 cores @ 2400 MHz"),
+            [Result(state=State.CRIT, summary="Status is error, Xeon Gold, 16 cores @ 2400 MHz")],
             id="crit_error_status",
         ),
     ],
@@ -57,6 +55,6 @@ def test_discover_fsc_sc2_cpu_status_skips_not_present() -> None:
 def test_check_fsc_sc2_cpu_status(
     section: StringTable,
     item: str,
-    expected: tuple[int, str],
+    expected: CheckResult,
 ) -> None:
-    assert check_fsc_sc2_cpu_status(item, None, section) == expected
+    assert list(check_fsc_sc2_cpu_status(item, section)) == expected

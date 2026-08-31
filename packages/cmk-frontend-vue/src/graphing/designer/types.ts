@@ -7,6 +7,7 @@ import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
 import type { ApiFormulaNodeInput } from './calculation/formula/convert'
 import type { Formula } from './calculation/formula/grammar'
+import type { DesignerConsolidationFunction } from './consolidation'
 
 /** Default `title` for every new item. */
 export const DEFAULT_TITLE_MACRO = '$DEFAULT_TITLE$'
@@ -17,7 +18,11 @@ export type ItemId = string
 // Item shapes are the REST API data-source schemas.
 export type RRDMetricItem = components['schemas']['CustomGraphRRDMetricDataSource']
 export type RRDQueryItem = components['schemas']['CustomGraphRRDQueryDataSource']
-export type MetricBackendItem = components['schemas']['CustomGraphMetricBackendDataSource']
+// consolidation_function carries the designer's flat shape, not the wire's.
+export type MetricBackendItem = Omit<
+  components['schemas']['CustomGraphMetricBackendDataSource'],
+  'consolidation_function'
+> & { consolidation_function: DesignerConsolidationFunction }
 export type ConstantItem = components['schemas']['CustomGraphConstantDataSource']
 export type ScalarItem = components['schemas']['CustomGraphScalarDataSource']
 /**

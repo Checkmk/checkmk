@@ -43,33 +43,66 @@ const componentId = useId()
 
 function storedConsolidation(stored: MetricBackendCustomQuery): WireConsolidationFunction {
   const fn = stored.consolidation_function
+  const lookbackSeconds = stored.aggregation_lookback
   switch (fn) {
     case 'gauge_last':
     case 'gauge_max':
     case 'gauge_avg':
     case 'gauge_min':
-      return { type: 'gauge', function: fn, lookback_seconds: stored.aggregation_lookback }
+      return { type: 'gauge', function: fn, lookback_seconds: lookbackSeconds }
     case 'sum_rate':
     case 'sum_last_raw':
     case 'sum_delta':
-      return { type: 'sum', function: fn, lookback_seconds: stored.aggregation_lookback }
-    case 'histogram_quantile':
+      return { type: 'sum', function: fn, lookback_seconds: lookbackSeconds }
     case 'histogram_count_delta':
     case 'histogram_count_rate':
     case 'histogram_sum_rate':
     case 'histogram_sum_delta':
     case 'histogram_sum_raw':
+      return { type: 'histogram', function: fn, lookback_seconds: lookbackSeconds }
+    case 'histogram_quantile':
+      return {
+        type: 'histogram',
+        function: fn,
+        lookback_seconds: lookbackSeconds,
+        percentile: stored.aggregation_histogram_percentile
+      }
     case 'histogram_fraction_below':
+      return {
+        type: 'histogram',
+        function: fn,
+        lookback_seconds: lookbackSeconds,
+        threshold: stored.aggregation_histogram_threshold_for_fraction_below
+      }
     case 'histogram_fraction_between':
+      return {
+        type: 'histogram',
+        function: fn,
+        lookback_seconds: lookbackSeconds,
+        lower_threshold: stored.aggregation_histogram_lower_threshold_for_fraction_between,
+        upper_threshold: stored.aggregation_histogram_upper_threshold_for_fraction_between
+      }
     case 'histogram_preserve_quantile':
+      return {
+        type: 'histogram',
+        function: fn,
+        lookback_seconds: lookbackSeconds,
+        percentile: stored.aggregation_histogram_percentile,
+        group_by: stored.aggregation_histogram_group_by
+      }
     case 'histogram_preserve_fraction_below':
+      return {
+        type: 'histogram',
+        function: fn,
+        lookback_seconds: lookbackSeconds,
+        threshold: stored.aggregation_histogram_threshold_for_fraction_below,
+        group_by: stored.aggregation_histogram_group_by
+      }
     case 'histogram_preserve_fraction_between':
       return {
         type: 'histogram',
         function: fn,
-        lookback_seconds: stored.aggregation_lookback,
-        percentile: stored.aggregation_histogram_percentile,
-        threshold: stored.aggregation_histogram_threshold_for_fraction_below,
+        lookback_seconds: lookbackSeconds,
         lower_threshold: stored.aggregation_histogram_lower_threshold_for_fraction_between,
         upper_threshold: stored.aggregation_histogram_upper_threshold_for_fraction_between,
         group_by: stored.aggregation_histogram_group_by
@@ -132,21 +165,24 @@ const consolidation = computed<WireConsolidationFunction>({
       aggregation_histogram_threshold_for_fraction_below:
         value.function === 'histogram_fraction_below' ||
         value.function === 'histogram_preserve_fraction_below'
-          ? (value.threshold ?? current.aggregation_histogram_threshold_for_fraction_below)
+          ? value.threshold
           : current.aggregation_histogram_threshold_for_fraction_below,
       aggregation_histogram_lower_threshold_for_fraction_between:
         value.function === 'histogram_fraction_between' ||
         value.function === 'histogram_preserve_fraction_between'
-          ? (value.lower_threshold ??
-            current.aggregation_histogram_lower_threshold_for_fraction_between)
+          ? value.lower_threshold
           : current.aggregation_histogram_lower_threshold_for_fraction_between,
       aggregation_histogram_upper_threshold_for_fraction_between:
         value.function === 'histogram_fraction_between' ||
         value.function === 'histogram_preserve_fraction_between'
-          ? (value.upper_threshold ??
-            current.aggregation_histogram_upper_threshold_for_fraction_between)
+          ? value.upper_threshold
           : current.aggregation_histogram_upper_threshold_for_fraction_between,
-      aggregation_histogram_group_by: 'group_by' in value ? value.group_by : []
+      aggregation_histogram_group_by:
+        value.function === 'histogram_preserve_quantile' ||
+        value.function === 'histogram_preserve_fraction_below' ||
+        value.function === 'histogram_preserve_fraction_between'
+          ? value.group_by
+          : []
     })
   }
 })

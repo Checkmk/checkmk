@@ -8,6 +8,7 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
+            "consolidation_wire.py",  # dedicated target :consolidation_wire (extra shared-typing dep)
             "fake_site.py",
         ],
     ),
@@ -76,6 +77,17 @@ py_library(
 )
 
 py_library(
+    name = "consolidation_wire",
+    testonly = True,
+    srcs = ["consolidation_wire.py"],
+    imports = ["../.."],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
+py_library(
     name = "fake_site",
     testonly = True,
     srcs = [
@@ -105,6 +117,7 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
+            "consolidation_wire.py",  # dedicated target :consolidation_wire (extra shared-typing dep)
             "fake_site.py",
             "unit/**",
         ],

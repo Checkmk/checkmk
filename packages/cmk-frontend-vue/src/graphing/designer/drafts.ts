@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { collectDirectRefs, fromApiAst, toApiAst } from './calculation/formula'
+import { consolidationFromWire, consolidationToWire } from './consolidation'
 import {
   type ApiDataSource,
   type ApiDataSourceInput,
@@ -42,7 +43,27 @@ export type DesignerItem =
 
 /** Converts a wire-format data source to a designer item; throws on an invalid formula ast. */
 export function fromApiDataSource(source: ApiDataSourceInput): GraphItem {
-  return source.type === 'rrd_formula' ? { ...source, ast: fromApiAst(source.ast) } : source
+  switch (source.type) {
+    case 'rrd_formula':
+      return { ...source, ast: fromApiAst(source.ast) }
+    case 'metric_backend':
+      return {
+        ...source,
+        consolidation_function: consolidationFromWire(source.consolidation_function)
+      }
+    default:
+      return source
+  }
+}
+
+function toApiDataSource(item: GraphItem): ApiDataSource {
+  if (isFormula(item)) {
+    return { ...item, ast: toApiAst(item.ast) }
+  }
+  if (item.type === 'metric_backend') {
+    return { ...item, consolidation_function: consolidationToWire(item.consolidation_function) }
+  }
+  return item
 }
 
 /**
@@ -66,7 +87,7 @@ export function toApiDataSources(items: readonly GraphItem[]): ApiDataSource[] {
     if (keptItem === undefined) {
       return []
     }
-    return [isFormula(keptItem) ? { ...keptItem, ast: toApiAst(keptItem.ast) } : keptItem]
+    return [toApiDataSource(keptItem)]
   })
 }
 

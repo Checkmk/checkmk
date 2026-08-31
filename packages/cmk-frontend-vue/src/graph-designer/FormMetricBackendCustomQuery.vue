@@ -112,7 +112,7 @@ const aggregationHistogramPercentile = computed<number>({
 const aggregationHistogramThresholdForFractionBelow = computed<number>({
   get: () =>
     consolidation.value.function === 'histogram_fraction_below'
-      ? (consolidation.value.threshold ?? DEFAULT_THRESHOLD_FOR_FRACTION_BELOW)
+      ? consolidation.value.threshold
       : DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
   set: (value) => {
     if (consolidation.value.function === 'histogram_fraction_below') {
@@ -124,7 +124,7 @@ const aggregationHistogramThresholdForFractionBelow = computed<number>({
 const aggregationHistogramLowerThresholdForFractionBetween = computed<number>({
   get: () =>
     consolidation.value.function === 'histogram_fraction_between'
-      ? (consolidation.value.lower_threshold ?? DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN)
+      ? consolidation.value.lower_threshold
       : DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
   set: (value) => {
     if (consolidation.value.function === 'histogram_fraction_between') {
@@ -136,7 +136,7 @@ const aggregationHistogramLowerThresholdForFractionBetween = computed<number>({
 const aggregationHistogramUpperThresholdForFractionBetween = computed<number>({
   get: () =>
     consolidation.value.function === 'histogram_fraction_between'
-      ? (consolidation.value.upper_threshold ?? DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN)
+      ? consolidation.value.upper_threshold
       : DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
   set: (value) => {
     if (consolidation.value.function === 'histogram_fraction_between') {
@@ -156,13 +156,13 @@ function storedGroupBy(): GroupByModel {
   switch (stored.function) {
     case 'histogram_preserve_fraction_below':
       return fractionBelowGroupBy({
-        threshold: stored.threshold ?? 0,
+        threshold: stored.threshold,
         group_by: stored.group_by
       })
     case 'histogram_preserve_fraction_between':
       return fractionBetweenGroupBy({
-        lower_threshold: stored.lower_threshold ?? 0,
-        upper_threshold: stored.upper_threshold ?? 0,
+        lower_threshold: stored.lower_threshold,
+        upper_threshold: stored.upper_threshold,
         group_by: stored.group_by
       })
     case 'histogram_preserve_quantile':

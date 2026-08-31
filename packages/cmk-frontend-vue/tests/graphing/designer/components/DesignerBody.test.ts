@@ -20,7 +20,7 @@ import { fromApiDataSource } from '@/graphing/designer/drafts'
 import type { ApiDataSource, ApiDataSourceInput, ItemId } from '@/graphing/designer/types'
 import type { RowIssue } from '@/graphing/designer/validation'
 
-import { filterDefinitions, metricBackendItem } from '../fixtures'
+import { filterDefinitions } from '../fixtures'
 
 vi.mock('cmk-ui-library/components/CmkSlideIn/CmkSlideIn.vue', () => ({
   default: defineComponent({
@@ -100,6 +100,29 @@ function rrdQuerySource(id: string): unknown {
     },
     metric_name: 'util',
     consolidation: 'avg'
+  }
+}
+
+// A metric_backend source in the API's nested wire shape, not the designer's flat one.
+function metricBackendSource(
+  id: string,
+  consolidationFunction: unknown = {
+    type: 'histogram',
+    function: 'histogram_quantile',
+    lookback_seconds: 300,
+    percentile: 95
+  }
+): unknown {
+  return {
+    type: 'metric_backend',
+    id,
+    title: id,
+    line_type: 'line',
+    mirrored: false,
+    visible: true,
+    metric_name: 'span.latency',
+    attribute_filter: { type: 'and', conjuncts: [] },
+    consolidation_function: consolidationFunction
   }
 }
 
@@ -272,8 +295,11 @@ test('view mode renders the legend beneath the preview, not the config tabs', as
 test('a source the rules reject is left out of the preview request', async () => {
   const postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue(fetchDataResponse())
-  const outOfRange = metricBackendItem('B', {
-    consolidation_function: { type: 'histogram_quantile', lookback_seconds: 300, percentile: 500 }
+  const outOfRange = metricBackendSource('B', {
+    type: 'histogram',
+    function: 'histogram_quantile',
+    lookback_seconds: 300,
+    percentile: 500
   })
   renderBody('edit', { graph: graphObject([rrdSource('A'), outOfRange]) })
 
@@ -598,7 +624,7 @@ test.each([
   { kind: 'an RRD query', source: () => rrdQuerySource('Q'), metricBackendAvailable: false },
   {
     kind: 'a metrics backend query',
-    source: () => ({ ...metricBackendItem('Q'), title: 'Q' }),
+    source: () => metricBackendSource('Q'),
     metricBackendAvailable: true
   }
 ])(

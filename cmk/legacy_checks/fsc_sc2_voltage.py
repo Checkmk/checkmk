@@ -3,16 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.elphase import check_elphase
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.fujitsu.lib import DETECT_FSC_SC2
-
-check_info = {}
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingState, ReadingWithState
 
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.3.1.1 "BATT 3.0V"
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.3.1.2 "STBY 12V"
@@ -60,7 +67,7 @@ check_info = {}
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.8.1.8 12900
 # .1.3.6.1.4.1.231.2.10.2.2.10.6.3.1.8.1.9 5420
 
-Section = Mapping[str, Mapping[str, float | tuple[int, str] | tuple[float, tuple[int, str]]]]
+type Section = Mapping[str, ElPhase]
 
 
 def parse_fsc_sc2_voltage(string_table: StringTable) -> Section:
@@ -80,7 +87,7 @@ def parse_fsc_sc2_voltage(string_table: StringTable) -> Section:
     # DESCRIPTION  "Voltage status"
     # ::= { sc2Voltages 4 }
 
-    parsed: dict[str, dict[str, float | tuple[int, str] | tuple[float, tuple[int, str]]]] = {}
+    parsed: dict[str, ElPhase] = {}
     for designation, dev_state, r_value, r_min_value, r_max_value in string_table:
         if dev_state == "2":
             continue
@@ -89,23 +96,37 @@ def parse_fsc_sc2_voltage(string_table: StringTable) -> Section:
             min_value = float(r_min_value) / 1000.0
             max_value = float(r_max_value) / 1000.0
         except ValueError:
-            parsed.setdefault(designation, {"device_state": (3, "Could not get all values")})
+            parsed.setdefault(
+                designation, ElPhase(device_state=(State.UNKNOWN, "Could not get all values"))
+            )
             continue
 
-        state_info: float | tuple[float, tuple[int, str]] = value
+        reading_state = None
         if value < min_value:
-            state_info = value, (2, "too low, deceeds %.2f V" % min_value)
+            reading_state = ReadingState(
+                state=State.CRIT, text=f"too low, deceeds {min_value:.2f} V"
+            )
         elif value >= max_value:
-            state_info = value, (2, "too high, exceeds %.2f V" % max_value)
-        parsed.setdefault(designation, {"voltage": state_info})
+            reading_state = ReadingState(
+                state=State.CRIT, text=f"too high, exceeds {max_value:.2f} V"
+            )
+        parsed.setdefault(
+            designation, ElPhase(voltage=ReadingWithState(value=value, state=reading_state))
+        )
     return parsed
 
 
-def discover_fsc_sc2_voltage(section):
-    yield from ((item, {}) for item in section)
+def discover_fsc_sc2_voltage(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["fsc_sc2_voltage"] = LegacyCheckDefinition(
+def check_fsc_sc2_voltage(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if (elphase := section.get(item)) is None:
+        return
+    yield from check_elphase(params, elphase)
+
+
+snmp_section_fsc_sc2_voltage = SimpleSNMPSection(
     name="fsc_sc2_voltage",
     detect=DETECT_FSC_SC2,
     fetch=SNMPTree(
@@ -113,8 +134,14 @@ check_info["fsc_sc2_voltage"] = LegacyCheckDefinition(
         oids=["3", "4", "5", "7", "8"],
     ),
     parse_function=parse_fsc_sc2_voltage,
+)
+
+
+check_plugin_fsc_sc2_voltage = CheckPlugin(
+    name="fsc_sc2_voltage",
     service_name="Voltage %s",
     discovery_function=discover_fsc_sc2_voltage,
-    check_function=check_elphase,
+    check_function=check_fsc_sc2_voltage,
     check_ruleset_name="el_inphase",
+    check_default_parameters={},
 )

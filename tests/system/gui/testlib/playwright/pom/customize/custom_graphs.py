@@ -82,7 +82,7 @@ class CreateCustomGraph(CmkPage):
 class BaseGraph(CmkPage):
     """Value cells of the former custom graph designer's legend.
 
-    ``custom_graph_design.py`` now serves the Vue designer, so these selectors match nothing;
+    ``custom_graph.py`` now serves the Vue designer, so these selectors match nothing;
     the cases using them are skipped on `SKIP_PENDING_ENGINE_CUSTOM_GRAPH_DESIGNER` until they
     are ported to `CustomGraphDesigner`.
     """
@@ -134,7 +134,7 @@ class DesignGraph(BaseGraph):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is 'Design graph' page")
-        _url_pattern = re.escape("custom_graph_design.py")
+        _url_pattern = r"(?<!edit_)custom_graph\.py"
         self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
         self.main_area.check_page_title(self.page_title)
 
@@ -157,7 +157,7 @@ class DesignGraph(BaseGraph):
         # Wait for the form POST to complete before returning. Without this, the caller
         # may navigate away before the server has processed the submission,
         # leaving the graph with no metrics saved.
-        with self.page.expect_response(re.compile(r"custom_graph_design\.py")):
+        with self.page.expect_response(re.compile(r"(?<!edit_)custom_graph\.py")):
             self.main_area.get_suggestion("Save").click()
 
     def open_slide_in_for_metric_backend_rule(self) -> None:

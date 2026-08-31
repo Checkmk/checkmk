@@ -388,7 +388,12 @@ def _single_entry(visuals: list[VisualMenuItem]) -> NavItemTopicEntry:
         pytest.param("reports", "monthly", "report.py?name=monthly", id="reports"),
         pytest.param("pages", "wato", "wato.py", id="pages_get_a_py_suffix"),
         pytest.param("pages", "wato.py", "wato.py", id="pages_keep_an_existing_py_suffix"),
-        pytest.param("custom_graph", "cpu", "custom_graph.py?name=cpu", id="custom_graph"),
+        pytest.param(
+            "custom_graph",
+            "cpu",
+            "custom_graph.py?name=cpu&owner=",
+            id="custom_graph_carries_the_owner",
+        ),
         pytest.param(
             "graph_collection", "cpu", "graph_collection.py?name=cpu", id="graph_collection"
         ),
@@ -399,6 +404,23 @@ def test_make_main_menu_builds_the_url_per_visual_type(
     visual_type_name: VisualMenuItemType, name: str, expected_url: str
 ) -> None:
     entry = _single_entry([VisualMenuItem(visual_type_name, VisualItem(name, _visual()))])
+
+    assert entry.url == expected_url
+
+
+@pytest.mark.parametrize(
+    "visual_type_name,expected_url",
+    [
+        pytest.param("dashboards", "dashboard.py?name=cpu&owner=harri", id="dashboards"),
+        pytest.param("custom_graph", "custom_graph.py?name=cpu&owner=harri", id="custom_graph"),
+    ],
+)
+def test_make_main_menu_builds_the_url_of_a_visual_owned_by_a_user(
+    visual_type_name: VisualMenuItemType, expected_url: str
+) -> None:
+    entry = _single_entry(
+        [VisualMenuItem(visual_type_name, VisualItem("cpu", _visual(owner=UserId("harri"))))]
+    )
 
     assert entry.url == expected_url
 

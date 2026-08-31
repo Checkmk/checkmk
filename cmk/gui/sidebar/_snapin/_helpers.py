@@ -252,7 +252,9 @@ def _visual_url(visual_type_name: VisualMenuItemType, name: str, visual: Visual)
             return name if name.endswith(".py") else f"{name}.py"
         case "reports":
             return f"report.py?name={name}"
-        case "custom_graph" | "graph_collection" | "forecast_graph":
+        case "custom_graph":
+            return f"custom_graph.py?name={name}&owner={visual['owner']}"
+        case "graph_collection" | "forecast_graph":
             # Handle page types
             return f"{visual_type_name}.py?name={name}"
         case other:

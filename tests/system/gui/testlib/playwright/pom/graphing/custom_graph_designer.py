@@ -5,9 +5,8 @@
 
 """Navigation page-object for the custom graph designer (Pro+).
 
-``custom_graph_designer.py`` serves both modes of the same Vue app: viewing a saved graph
-and editing its definition. The ``custom_graph.py`` and ``custom_graph_design.py`` pages
-render the same app, addressing it through the pagetype instead.
+``custom_graph.py`` serves both modes of the same Vue app: viewing a saved graph, and
+editing its definition with "mode=edit".
 
 This page takes the graph to show as a mandatory parameter, so it is reached by URL: even
 the "build a graph from scratch" cases need a saved graph to open.
@@ -63,15 +62,13 @@ class CustomGraphDesigner(CmkPage):
             self.graph_name,
             "edit" if self._edit else "view",
         )
-        self.goto(urljoin(self.page.url, f"custom_graph_designer.py?name={self.graph_name}{mode}"))
+        self.goto(urljoin(self.page.url, f"custom_graph.py?name={self.graph_name}{mode}"))
         self.validate_page()
 
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is the custom graph designer")
-        self.page.wait_for_url(
-            url=re.compile(re.escape("custom_graph_designer.py")), wait_until="load"
-        )
+        self.page.wait_for_url(url=re.compile(r"(?<!edit_)custom_graph\.py"), wait_until="load")
         # The app shows a loading icon until the graph definition and the filter
         # definitions have arrived; the body only mounts once both are in.
         expect(

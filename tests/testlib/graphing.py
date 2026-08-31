@@ -65,7 +65,7 @@ SKIP_PENDING_GRAPH_ENGINE: Final = (
     "accessibility behaviour they assert rather than the engine itself."
 )
 SKIP_PENDING_ENGINE_CUSTOM_GRAPH_DESIGNER: Final = (
-    "CMK-38108 skeleton: 'custom_graph_design.py' now serves the Vue designer, but these cases "
+    "CMK-38108 skeleton: 'custom_graph.py' now serves the Vue designer, but these cases "
     "drive the former designer's form POST and legend DOM. Port them once the new designer "
     "covers the metric backend source flow they need."
 )

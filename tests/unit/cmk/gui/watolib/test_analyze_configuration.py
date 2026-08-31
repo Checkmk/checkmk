@@ -36,7 +36,6 @@ def test_registered_ac_tests() -> None:
         "ACTestCheckMKCheckerUsage",
         "ACTestDeprecatedRuleSets",
         "ACTestUnknownCheckParameterRuleSets",
-        "ACTestDeprecatedCheckManpages",
         "ACTestDeprecatedGUIExtensions",
         "ACTestDeprecatedLegacyGUIExtensions",
         "ACTestDeprecatedPNPTemplates",

@@ -52,7 +52,6 @@ from cmk.livestatus_client import LocalConnection, SiteConfiguration, SiteConfig
 from cmk.ruleset_matcher.definition import RuleGroup, RuleGroupType
 from cmk.utils.paths import (
     local_gui_plugins_dir,
-    local_legacy_check_manpages_dir,
     local_pnp_templates_dir,
     local_web_dir,
 )
@@ -83,7 +82,6 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestBrokenGUIExtension)
     ac_test_registry.register(ACTestDeprecatedRuleSets)
     ac_test_registry.register(ACTestUnknownCheckParameterRuleSets)
-    ac_test_registry.register(ACTestDeprecatedCheckManpages)
     ac_test_registry.register(ACTestDeprecatedGUIExtensions)
     ac_test_registry.register(ACTestDeprecatedLegacyGUIExtensions)
     ac_test_registry.register(ACTestDeprecatedPNPTemplates)
@@ -1293,55 +1291,6 @@ class ACTestUnknownCheckParameterRuleSets(ACTest):
         yield ACSingleResult(
             state=ACResultState.OK,
             text=_("No unknown check parameter rule sets found."),
-            site_id=site_id,
-        )
-
-
-class ACTestDeprecatedCheckManpages(ACTest):
-    @override
-    def category(self) -> str:
-        return ACTestCategories.deprecations
-
-    @override
-    def title(self) -> str:
-        return _("Deprecated check manual pages")
-
-    @override
-    def help(self) -> str:
-        return _(
-            "Check manual pages in <tt>'%(manpages_dir)s'</tt> are marked as "
-            "'deprecated' and will be ignored in future Checkmk versions "
-            "(official deprecation timeline not decided yet)."
-        ) % {"manpages_dir": str(local_legacy_check_manpages_dir)}
-
-    def _get_files(self) -> Sequence[Path]:
-        try:
-            return list(local_legacy_check_manpages_dir.iterdir())
-        except FileNotFoundError:
-            return []
-
-    @override
-    def is_relevant(self) -> bool:
-        return True
-
-    @override
-    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if files := self._get_files():
-            for plugin_filepath in files:
-                yield compute_deprecation_result(
-                    version=__version__,
-                    deprecated_version="2.3.0",
-                    removed_version="2.4.0",
-                    title_entity=_("Check manual page"),
-                    title_api=_("legacy"),
-                    site_id=site_id,
-                    path=plugin_filepath,
-                )
-            return
-
-        yield ACSingleResult(
-            state=ACResultState.OK,
-            text=_("No check manual pages using the deprecated API"),
             site_id=site_id,
         )
 

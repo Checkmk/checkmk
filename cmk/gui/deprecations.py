@@ -371,7 +371,6 @@ def _find_ac_test_result_problems(
                     case (
                         "ACTestUnknownCheckParameterRuleSets"
                         | "ACTestDeprecatedBakeryPlugins"
-                        | "ACTestDeprecatedCheckManpages"
                         | "ACTestDeprecatedGUIExtensions"
                         | "ACTestDeprecatedLegacyGUIExtensions"
                         | "ACTestDeprecatedPNPTemplates"

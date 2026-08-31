@@ -38,6 +38,7 @@ from cmk.gui.exceptions import (
     MKUserError,
 )
 from cmk.gui.header import make_header
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import LEGACY_CONTENT_SECURITY_POLICY, request, Response, response
 from cmk.gui.i18n import _
@@ -144,29 +145,41 @@ def _render_exception(ctx: pages.PageContext, e: Exception, title: str) -> Respo
         )
 
     if not fail_silently():
-        make_header(
-            html,
-            title=title,
-            breadcrumb=Breadcrumb(),
-            debug=ctx.config.debug,
-            lang=user.language,
-            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-            load_frontend_vue=ctx.config.load_frontend_vue,
-            custom_style_sheet=ctx.config.custom_style_sheet,
-            screenshotmode=ctx.config.screenshotmode,
-            inline_help_as_text=user.inline_help_as_text,
-            hide_suggestions=not user.get_tree_state("suggestions", "all", True),
-            user_role_ids=user.role_ids,
-        )
-        html.open_ts_container(
-            container="div",
-            function_name="insert_before",
-            arguments={"targetElementId": "main_page_content"},
-        )
-        html.show_error(str(e))
-        html.close_div()
-        html.footer()
+        if html.output_format != "html":
+            # A machine-readable export (csv_export, json, ...) may already have set its
+            # own Content-Type/Content-Disposition and started writing its body before
+            # failing. Neither belongs on an error response, so take full ownership of it
+            # instead of leaving them stale.
+            response.set_content_type("text/html")
+            response.headers.pop("Content-Disposition", None)
+            response.set_data(b"")
+            html.write_html(HTMLWriter.render_div(str(e), class_="error"))
+        else:
+            make_header(
+                html,
+                title=title,
+                breadcrumb=Breadcrumb(),
+                debug=ctx.config.debug,
+                lang=user.language,
+                inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+                load_frontend_vue=ctx.config.load_frontend_vue,
+                custom_style_sheet=ctx.config.custom_style_sheet,
+                screenshotmode=ctx.config.screenshotmode,
+                inline_help_as_text=user.inline_help_as_text,
+                hide_suggestions=not user.get_tree_state("suggestions", "all", True),
+                user_role_ids=user.role_ids,
+            )
+            html.open_ts_container(
+                container="div",
+                function_name="insert_before",
+                arguments={"targetElementId": "main_page_content"},
+            )
+            html.show_error(str(e))
+            html.close_div()
+            html.footer()
 
+    if status_code is not None:
+        response.status_code = status_code
     return response
 
 

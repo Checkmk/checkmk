@@ -6,6 +6,7 @@ import logging
 import re
 from re import Pattern
 from typing import override
+from urllib.parse import quote_plus, urljoin
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -16,46 +17,31 @@ logger = logging.getLogger(__name__)
 
 
 class Ruleset(CmkPage):
-    """Represent any page with service ruleset.
-
-    TODO: remove `exact_rule`.
-    Present playwright <-> Checkmk UI interaction breaks the usage.
-    """
+    """Represent any page with service ruleset."""
 
     def __init__(
         self,
         page: Page,
         rule_name: str,
-        section_name: str | None = None,
-        exact_rule: bool = False,
+        varname: str,
         navigate_to_page: bool = True,
     ) -> None:
+        """
+        Args:
+            rule_name: Title of the ruleset, as shown in the page heading.
+            varname: Internal ruleset name, e.g. "checkgroup_parameters:diskstat".
+        """
         self.rule_name = rule_name
         self._escaped_rule_name = re.escape(rule_name).replace("/", r"\/")
-        self.section_name = section_name
-        self._exact = exact_rule
+        self._varname = varname
         super().__init__(page, navigate_to_page)
 
     @override
     def navigate(self) -> None:
         logger.info("Navigate to '%s' page", self.rule_name)
-        self.main_menu.global_searchbar.fill(self.rule_name)
-
-        popup = self.main_menu.active_side_menu_popup
-        if self.section_name:
-            # Search results are grouped by topic; section names appear as group
-            # headings rather than inside individual list items.
-            group_heading = popup.get_by_role("heading", level=4).filter(has_text=self.section_name)
-            results = group_heading.locator("xpath=following-sibling::div[1]").get_by_role(
-                role="listitem"
-            )
-        else:
-            results = popup.get_by_role(role="listitem")
-
-        rule_pattern = re.compile(f"{self._escaped_rule_name}$")
-        selection = results.get_by_role(role="link", name=rule_pattern, exact=self._exact)
-
-        selection.click()
+        # CmkPage.go() is unusable here: self._url is only set after navigate().
+        ruleset_url = f"wato.py?mode=edit_ruleset&varname={quote_plus(self._varname)}"
+        self.page.goto(urljoin(self.page.url, ruleset_url), wait_until="load")
         self.validate_page()
 
     @override

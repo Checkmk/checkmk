@@ -129,7 +129,7 @@ def test_add_new_notification_rule(
         filesystems_rules_page = Ruleset(
             dashboard_page.page,
             add_rule_filesystem_page.rule_name,
-            add_rule_filesystem_page.section_name,
+            add_rule_filesystem_page.varname,
             navigate_to_page=False,
         )
         filesystems_rules_page.check_rule_is_present(rule_id=filesystem_rule_description)

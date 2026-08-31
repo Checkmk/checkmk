@@ -27,13 +27,13 @@ class AddRuleCPULoad(CmkPage):
     """
 
     rule_name = "CPU load (not utilization!)"
-    section_name = "Service monitoring rules"
+    varname = "checkgroup_parameters:cpu_load"
     url_specific = "%3Acpu_load"
     url_pattern = "varname=checkgroup_parameters%s&mode=new_rule"
 
     @override
     def navigate(self) -> None:
-        service_rules_page = Ruleset(self.page, self.rule_name, self.section_name)
+        service_rules_page = Ruleset(self.page, self.rule_name, self.varname)
         logger.info("Navigate to 'Add rule: %s' page", self.rule_name)
         service_rules_page.add_rule_button.click()
         self.page.wait_for_url(

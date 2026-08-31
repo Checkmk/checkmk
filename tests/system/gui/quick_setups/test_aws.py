@@ -141,7 +141,7 @@ def test_minimal_configuration(aws_qs_config_page: AWSAddNewConfiguration, test_
 
     logger.info("Validate AWS rule is setup.")
     list_aws_rules_page = Ruleset(
-        list_hosts_page.page, "Amazon Web Services (AWS)", "VM, cloud, container", exact_rule=True
+        list_hosts_page.page, "Amazon Web Services (AWS)", "special_agents:aws"
     )
     expect(
         list_aws_rules_page.rule_source(rule_id=0),

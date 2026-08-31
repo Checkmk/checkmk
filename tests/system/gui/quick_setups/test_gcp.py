@@ -137,7 +137,7 @@ def test_minimal_configuration(gcp_qs_config_page: GCPAddNewConfiguration, test_
 
     logger.info("Validate GCP rule is setup.")
     list_gcp_rules_page = Ruleset(
-        list_hosts_page.page, "Google Cloud Platform (GCP)", "VM, cloud, container", exact_rule=True
+        list_hosts_page.page, "Google Cloud Platform (GCP)", "special_agents:gcp"
     )
     expect(
         list_gcp_rules_page.rule_source(rule_id=0),

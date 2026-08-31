@@ -578,10 +578,35 @@ pub struct RuntimeEnv {
     pub oracle_home: Option<PathBuf>,
 }
 
+/// Why no Oracle client runtime could be prepared.
+#[derive(Debug, PartialEq)]
+pub enum RuntimeError {
+    NoConfig,
+    NotFound,
+    Rejected { dir: PathBuf },
+}
+
+impl std::fmt::Display for RuntimeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NoConfig => write!(f, "No Config"),
+            Self::NotFound => write!(f, "No Oracle client runtime found"),
+            Self::Rejected { dir } => write!(
+                f,
+                "{dir:?} - Execution is blocked because you try to load an unsafe Oracle client \
+                 library as a privileged user. Please, disable write access to the files by \
+                 non-privileged users."
+            ),
+        }
+    }
+}
+
+impl std::error::Error for RuntimeError {}
+
 /// Detect the oracle client and the ORACLE_HOME that comes with it.
 /// ORACLE_HOME can be overridden by an inherited env var, while the client
 /// is always set based on the config and the search.
-pub fn detect_runtime_env(config: &OracleConfig) -> RuntimeEnv {
+pub fn detect_runtime_env(config: &OracleConfig) -> Result<RuntimeEnv, RuntimeError> {
     const LIB_DIR: &str = constants::environment::LIB_DIR_ENV_VAR;
     let lib_dir = std::env::var(LIB_DIR)
         .inspect_err(|_| log::warn!("{LIB_DIR} is not set"))
@@ -590,18 +615,20 @@ pub fn detect_runtime_env(config: &OracleConfig) -> RuntimeEnv {
     let inherited = std::env::var(ORACLE_HOME_ENV_VAR)
         .ok()
         .filter(|v| !v.is_empty());
-    let client = config.ora_sql().and_then(|ora_sql| {
-        detect_runtime(
-            ora_sql.options().use_host_client(),
-            lib_dir.as_deref(),
-            ora_sql.conn().grid(),
-        )
-        .filter(|runtime| runtime_permissions_ok(runtime, ora_sql.options()))
-    });
-    RuntimeEnv {
-        oracle_home: effective_oracle_home(client.as_ref(), inherited),
-        runtime_dir: client.map(|c| c.dir),
+    let ora_sql = config.ora_sql().ok_or(RuntimeError::NoConfig)?;
+    let client = detect_runtime(
+        ora_sql.options().use_host_client(),
+        lib_dir.as_deref(),
+        ora_sql.conn().grid(),
+    )
+    .ok_or(RuntimeError::NotFound)?;
+    if !runtime_permissions_ok(&client, ora_sql.options()) {
+        return Err(RuntimeError::Rejected { dir: client.dir });
     }
+    Ok(RuntimeEnv {
+        oracle_home: effective_oracle_home(Some(&client), inherited),
+        runtime_dir: Some(client.dir),
+    })
 }
 
 fn runtime_permissions_ok(runtime: &ClientRuntime, options: &Options) -> bool {

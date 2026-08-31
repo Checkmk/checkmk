@@ -216,6 +216,21 @@ fn test_detect_runtime_without_runtime() {
     assert!(path.is_none());
 }
 
+#[test]
+fn test_detect_runtime_env_reports_a_missing_client() {
+    use mk_oracle::setup::{detect_runtime_env, RuntimeError};
+
+    // Windows counts only a path with a drive prefix as absolute, and a
+    // non-absolute use_host_client falls back to `auto`.
+    #[cfg(not(windows))]
+    let missing = "/no-such-dir/instantclient";
+    #[cfg(windows)]
+    let missing = r"C:\no-such-dir\instantclient";
+
+    let cfg = OracleConfig::load_str(&make_config_with_use_host(missing)).unwrap();
+    assert_eq!(detect_runtime_env(&cfg), Err(RuntimeError::NotFound));
+}
+
 fn make_config_with_use_host(use_host: &str) -> String {
     format!(
         r#"

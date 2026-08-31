@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
-from cmk.legacy_checks.fsc_sc2_cpu_status import (
+from cmk.plugins.fujitsu.agent_based.fsc_sc2_cpu_status import (
     check_fsc_sc2_cpu_status,
     discover_fsc_sc2_cpu_status,
     parse_fsc_sc2_cpu_status,

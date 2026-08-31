@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.legacy_includes.fsc import DETECT_FSC_SC2
+from cmk.plugins.fujitsu.lib import DETECT_FSC_SC2
 
 _CPU_STATUS = {
     "1": (State.UNKNOWN, "unknown"),

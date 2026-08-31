@@ -7,8 +7,8 @@
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.fsc import DETECT_FSC_SC2
 from cmk.legacy_includes.temperature import check_temperature
+from cmk.plugins.fujitsu.lib import DETECT_FSC_SC2
 
 check_info = {}
 

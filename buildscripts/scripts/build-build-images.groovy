@@ -160,7 +160,7 @@ void main() {
             ],
             "minimal-alpine-python-checkmk": [
                 "tag_name": "minimal-alpine-python-checkmk-${safe_branch_name}",
-                "image_alias_name": "IMAGE_PYTHON_3_13",
+                "image_alias_name": "IMAGE_PYTHON_3_14",
                 "docker_file_path": "buildscripts/scripts/Dockerfile",
             ],
         ];

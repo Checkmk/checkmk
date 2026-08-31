@@ -3,12 +3,23 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { GlobalSettingsApp } from 'cmk-shared-typing/typescript/global_settings'
+import type {
+  GlobalSettingsApp,
+  GlobalSettingsVariable
+} from 'cmk-shared-typing/typescript/global_settings'
 import { CmkSimpleError } from 'cmk-ui-library/lib/error'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import type { InjectionKey } from 'vue'
 
 export type GlobalSettingsScope = GlobalSettingsApp['scope']
+
+export type ToggleSetting = (
+  variable: GlobalSettingsVariable,
+  value: boolean
+) => Promise<TranslatedString | null>
+
+export const GLOBAL_SETTINGS_TOGGLE: InjectionKey<ToggleSetting> = Symbol('GlobalSettingsToggle')
 
 export interface ReceivedValue {
   value: unknown

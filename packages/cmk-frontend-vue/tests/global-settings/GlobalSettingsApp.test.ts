@@ -34,6 +34,7 @@ vi.mock('cmk-ui-library/lib/rest-api-client/client', async (importOriginal) => {
 })
 
 const SETTING_URL = `${location.protocol}//${location.host}/api/internal/objects/global_setting/lock_on_logon_failures`
+const BOOLEAN_SETTING_URL = `${location.protocol}//${location.host}/api/internal/objects/global_setting/site_piggyback_hub`
 
 const data: GlobalSettingsAppData = {
   title: 'Global settings',
@@ -67,6 +68,31 @@ const data: GlobalSettingsAppData = {
   ]
 }
 
+const booleanTopic: GlobalSettingsTopic = {
+  icon: 'sites',
+  headline: 'Distributed monitoring',
+  subline: 'Configures distribution settings',
+  warning: null,
+  variables: [
+    {
+      name: 'site_piggyback_hub',
+      spec: {
+        type: 'boolean_choice',
+        title: 'Enable piggyback-hub',
+        help: '',
+        validators: [],
+        label: null,
+        text_on: 'on',
+        text_off: 'off'
+      },
+      value: false,
+      default_value: false,
+      modified: false,
+      site_overrides: []
+    }
+  ]
+}
+
 interface Recorded {
   method: string
   ifMatch: string | null
@@ -74,6 +100,7 @@ interface Recorded {
 }
 let requests: Recorded[] = []
 let serverValue: { value: number; is_default: boolean } = { value: 15, is_default: false }
+let booleanServerValue: { value: boolean; is_default: boolean } = { value: false, is_default: true }
 
 const server = setupServer(
   http.get(SETTING_URL, () => {
@@ -96,6 +123,22 @@ const server = setupServer(
     requests.push({ method: 'DELETE', ifMatch: request.headers.get('If-Match'), body: null })
     serverValue = { value: 10, is_default: true }
     return new HttpResponse(null, { status: 204 })
+  }),
+  http.get(BOOLEAN_SETTING_URL, () => {
+    requests.push({ method: 'GET', ifMatch: null, body: null })
+    return HttpResponse.json(
+      { varname: 'site_piggyback_hub', ...booleanServerValue },
+      { headers: { ETag: '"b1"' } }
+    )
+  }),
+  http.put(BOOLEAN_SETTING_URL, async ({ request }) => {
+    const body = (await request.json()) as { value: boolean }
+    requests.push({ method: 'PUT', ifMatch: request.headers.get('If-Match'), body })
+    booleanServerValue = { value: body.value, is_default: false }
+    return HttpResponse.json(
+      { varname: 'site_piggyback_hub', ...booleanServerValue },
+      { headers: { ETag: '"b2"' } }
+    )
   })
 )
 
@@ -103,6 +146,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
   requests = []
   serverValue = { value: 15, is_default: false }
+  booleanServerValue = { value: false, is_default: true }
   server.resetHandlers()
 })
 afterAll(() => server.close())
@@ -201,6 +245,46 @@ describe('GlobalSettingsApp', () => {
     expect(requests[1]!.ifMatch).toBe('"v1"')
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(screen.queryByText('(modified)')).not.toBeInTheDocument()
+  })
+
+  test('toggling a boolean setting saves the flipped value inline without a dialog', async () => {
+    render(GlobalSettingsApp, { props: { ...data, topics: [booleanTopic] } })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item Distributed monitoring' })
+    )
+    const inlineSwitch = screen.getByRole('switch', { name: 'Toggle Enable piggyback-hub' })
+    expect(inlineSwitch).toHaveAttribute('aria-checked', 'false')
+
+    await userEvent.click(inlineSwitch)
+
+    await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['PUT']))
+    expect(requests[0]).toMatchObject({ ifMatch: '*', body: { value: true } })
+    await waitFor(() => expect(inlineSwitch).toHaveAttribute('aria-checked', 'true'))
+    expect(screen.getByText('(modified)')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  test('a rejected toggle keeps the shown value and reports the server message on the row', async () => {
+    server.use(
+      http.put(BOOLEAN_SETTING_URL, () =>
+        HttpResponse.json(
+          { title: 'Precondition failed', detail: 'ETag mismatch' },
+          { status: 412 }
+        )
+      )
+    )
+    render(GlobalSettingsApp, { props: { ...data, topics: [booleanTopic] } })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Toggle accordion item Distributed monitoring' })
+    )
+    const inlineSwitch = screen.getByRole('switch', { name: 'Toggle Enable piggyback-hub' })
+
+    await userEvent.click(inlineSwitch)
+
+    expect(await screen.findByText(/ETag mismatch/)).toBeInTheDocument()
+    expect(inlineSwitch).toHaveAttribute('aria-checked', 'false')
+    expect(screen.queryByText('(modified)')).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   test('a rejected save keeps the editor open and shows the server message', async () => {

@@ -7,14 +7,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { GlobalSettingsVariable } from 'cmk-shared-typing/typescript/global_settings'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed } from 'vue'
 
 import FormReadonly from '@/form/FormReadonly.vue'
 
+import GlobalSettingsInlineToggle from './GlobalSettingsInlineToggle.vue'
+
 const { _t } = usei18n()
 
-defineProps<{ variable: GlobalSettingsVariable }>()
+const props = defineProps<{ variable: GlobalSettingsVariable }>()
 
 const emit = defineEmits<{ edit: [] }>()
+
+const isBooleanChoice = computed(() => props.variable.spec.type === 'boolean_choice')
 </script>
 
 <template>
@@ -25,7 +30,8 @@ const emit = defineEmits<{ edit: [] }>()
       </span>
     </div>
     <div class="global-settings-variable-row__value">
-      <FormReadonly :spec="variable.spec" :data="variable.value" :backend-validation="[]" />
+      <GlobalSettingsInlineToggle v-if="isBooleanChoice" :variable="variable" />
+      <FormReadonly v-else :spec="variable.spec" :data="variable.value" :backend-validation="[]" />
       <span v-if="variable.modified" class="global-settings-variable-row__modified">
         {{ _t('(modified)') }}
       </span>

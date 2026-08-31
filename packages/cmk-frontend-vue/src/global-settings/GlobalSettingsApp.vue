@@ -4,15 +4,22 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { GlobalSettingsApp } from 'cmk-shared-typing/typescript/global_settings'
+import type {
+  GlobalSettingsApp,
+  GlobalSettingsVariable
+} from 'cmk-shared-typing/typescript/global_settings'
 import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
-import { computed, inject, ref, toRaw } from 'vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { computed, inject, provide, ref, toRaw } from 'vue'
 
-import { GLOBAL_SETTINGS_SERVICE, globalSettingsService } from './api'
+import { GLOBAL_SETTINGS_SERVICE, GLOBAL_SETTINGS_TOGGLE, globalSettingsService } from './api'
 import ExpandCollapseToggle from './components/ExpandCollapseToggle.vue'
 import GlobalSettingsEditSlideIn from './components/GlobalSettingsEditSlideIn.vue'
 import GlobalSettingsTopic from './components/GlobalSettingsTopic.vue'
-import { useGlobalSettingsEditor } from './useGlobalSettingsEditor'
+import { applyReceived, describeError, useGlobalSettingsEditor } from './useGlobalSettingsEditor'
+
+const { _t } = usei18n()
 
 const props = defineProps<GlobalSettingsApp>()
 
@@ -23,6 +30,20 @@ const openedItems = ref<string[]>([])
 
 const editableTopics = ref(structuredClone(toRaw(props.topics)))
 const { session, openEditor, closeEditor } = useGlobalSettingsEditor(service, props.scope)
+
+async function toggleSetting(
+  variable: GlobalSettingsVariable,
+  value: boolean
+): Promise<TranslatedString | null> {
+  try {
+    applyReceived(variable, await service.save(props.scope, variable.name, value, '*'))
+    return null
+  } catch (cause: unknown) {
+    return describeError(cause, _t('Could not reach the server.'))
+  }
+}
+
+provide(GLOBAL_SETTINGS_TOGGLE, toggleSetting)
 </script>
 
 <template>

@@ -3,76 +3,96 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
 import time
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import equals, get_rate, get_value_store, SNMPTree
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    get_rate,
+    get_value_store,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
-check_info = {}
+_STATE_NAMES = {
+    1: "Down",
+    2: "UP",
+}
 
 
-def saveint(i: str) -> int:
-    """Tries to cast a string to an integer and return it. In case this
-    fails, it returns 0.
-
-    Advice: Please don't use this function in new code. It is understood as
-    bad style these days, because in case you get 0 back from this function,
-    you can not know whether it is really 0 or something went wrong."""
+def _saveint(value: str) -> int:
     try:
-        return int(i)
-    except TypeError, ValueError:
+        return int(value)
+    except ValueError:
         return 0
 
 
-def parse_innovaphone_priports_l1(string_table):
-    parsed = {}
-    for item, state_s, sigloss_s, slip_s in string_table:
-        parsed[item] = {
-            "state": saveint(state_s),
-            "sigloss": saveint(sigloss_s),
-            "slip": saveint(slip_s),
-        }
-    return parsed
+@dataclass(frozen=True, kw_only=True)
+class PriPort:
+    state: int
+    sigloss: int
+    slip: int
 
 
-def discover_innovaphone_priports_l1(parsed):
-    return [
-        (item, {"err_slip_count": data["slip"]})
-        for item, data in parsed.items()
-        if data["state"] != 1
-    ]
+Section = Mapping[str, PriPort]
 
 
-def check_innovaphone_priports_l1(item, params, parsed):
-    if not (data := parsed.get(item)):
-        return
-    states = {
-        1: "Down",
-        2: "UP",
+def parse_innovaphone_priports_l1(string_table: StringTable) -> Section:
+    return {
+        item: PriPort(
+            state=_saveint(state),
+            sigloss=_saveint(sigloss),
+            slip=_saveint(slip),
+        )
+        for item, state, sigloss, slip in string_table
     }
 
-    l1state = data["state"]
-    yield 0 if l1state == 2 else 2, "Current state is %s" % states[l1state]
 
-    l1sigloss = data["sigloss"]
-    siglos_per_sec = get_rate(
+def discover_innovaphone_priports_l1(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=item, parameters={"err_slip_count": port.slip})
+        for item, port in section.items()
+        if port.state != 1
+    )
+
+
+def check_innovaphone_priports_l1(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if (port := section.get(item)) is None:
+        return
+
+    yield Result(
+        state=State.OK if port.state == 2 else State.CRIT,
+        summary=f"Current state is {_STATE_NAMES[port.state]}",
+    )
+
+    sigloss_per_sec = get_rate(
         get_value_store(),
-        "innovaphone_priports_l1." + item,
+        f"innovaphone_priports_l1.{item}",
         time.time(),
-        l1sigloss,
+        port.sigloss,
         raise_overflow=True,
     )
-    if siglos_per_sec > 0:
-        yield 2, "Signal loss is %.2f/sec" % siglos_per_sec
+    if sigloss_per_sec > 0:
+        yield Result(state=State.CRIT, summary=f"Signal loss is {sigloss_per_sec:.2f}/sec")
 
-    l1slip = data["slip"]
-    if l1slip > params.get("err_slip_count", 0):
-        yield 2, "Slip error count at %d" % l1slip
+    if port.slip > params.get("err_slip_count", 0):
+        yield Result(state=State.CRIT, summary=f"Slip error count at {port.slip}")
 
 
-check_info["innovaphone_priports_l1"] = LegacyCheckDefinition(
+snmp_section_innovaphone_priports_l1 = SimpleSNMPSection(
     name="innovaphone_priports_l1",
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6666"),
     fetch=SNMPTree(
@@ -80,6 +100,11 @@ check_info["innovaphone_priports_l1"] = LegacyCheckDefinition(
         oids=["1", "2", "5", "9"],
     ),
     parse_function=parse_innovaphone_priports_l1,
+)
+
+
+check_plugin_innovaphone_priports_l1 = CheckPlugin(
+    name="innovaphone_priports_l1",
     service_name="Port L1 %s",
     discovery_function=discover_innovaphone_priports_l1,
     check_function=check_innovaphone_priports_l1,

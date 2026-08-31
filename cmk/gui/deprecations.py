@@ -370,9 +370,6 @@ def _find_ac_test_result_problems(
                 match ac_test_result.test_id:
                     case (
                         "ACTestUnknownCheckParameterRuleSets"
-                        | "ACTestDeprecatedV1CheckPlugins"
-                        | "ACTestDeprecatedCheckPlugins"
-                        | "ACTestDeprecatedInventoryPlugins"
                         | "ACTestDeprecatedBakeryPlugins"
                         | "ACTestDeprecatedCheckManpages"
                         | "ACTestDeprecatedGUIExtensions"

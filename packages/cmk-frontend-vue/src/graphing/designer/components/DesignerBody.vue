@@ -19,6 +19,10 @@ import { computed, ref, watch } from 'vue'
 import { useGlobalRefresh } from '../../GlobalTimePicker/globalTimeState'
 import GraphNotice from '../../components/GraphNotice.vue'
 import GraphPanel from '../../components/GraphPanel.vue'
+import {
+  clippedToNavigableTime,
+  navigableBounds
+} from '../../components/TimeSeriesGraph/interaction/timeBounds'
 import type { ConsolidationFn } from '../../components/consolidation'
 import GraphLegend from '../../components/legend/GraphLegend.vue'
 import { useBrushSnapshot } from '../../composables/useBrushSnapshot'
@@ -84,7 +88,8 @@ const brush = useBrushSnapshot<{ metrics: CustomGraphMetric[]; dataTimeRange: Ti
   getRequestedTimeRange: () => requestedTimeRange.value
 })
 
-function onPanelTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
+function onPanelTimeRange(requested: RequestedTimeRange, kind: TimeRangeCommitKind): void {
+  const range = clippedToNavigableTime(requested, navigableBounds())
   brush.onRangeCommitted(range, kind)
   setRequestedTimeRange(range)
 }

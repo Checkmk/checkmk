@@ -122,7 +122,8 @@ const brush = useBrushSnapshot<BrushOverview[]>({
   getRequestedTimeRange: () => requestedTimeRange.value
 })
 
-function onPanelTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
+function onPanelTimeRange(requested: RequestedTimeRange, kind: TimeRangeCommitKind): void {
+  const range = clippedToNavigableTime(requested, navigableBounds())
   brush.onRangeCommitted(range, kind)
   setRequestedTimeRange(range)
 }

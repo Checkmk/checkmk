@@ -245,10 +245,9 @@ def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float |
 def _vertical_range_bounds(graph: EvaluatedGraph) -> tuple[float | None, float | None]:
     """The bounds the Y-axis is pinned to: an explicit FIXED vertical_range always wins outright;
     MINIMAL - or no vertical_range at all, the common template-graph case - combines any soft
-    bounds with the drawn curves' own extent. Mirrors _compute_v_axis_min_max's data-fallback in
-    _artwork.py, so the axis matches the same data-derived "useful region" Vue's computeYDomain
-    (yAxis.ts) shows, and horizontal rules far outside it are clipped rather than stretching the
-    axis via autoscale.
+    bounds with the drawn curves' own extent, so the axis matches the same data-derived "useful
+    region" Vue's computeYDomain (yAxis.ts) shows, and horizontal rules far outside it are clipped
+    rather than stretching the axis via autoscale.
     """
     lower: float | None = None
     upper: float | None = None
@@ -267,9 +266,8 @@ def _y_axis_limits(
 ) -> tuple[float, float] | None:
     """The final (lower, upper) ylim, given the bounds from _vertical_range_bounds.
 
-    Mirrors _compute_v_axis_min_max's post-processing in _artwork.py: a mirrored graph's 0 line
-    sits exactly in the middle, and a graph with no vertical spread (e.g. flat at zero) is
-    widened so matplotlib has a non-degenerate range to draw.
+    A mirrored graph's 0 line sits exactly in the middle, and a graph with no vertical spread
+    (e.g. flat at zero) is widened so matplotlib has a non-degenerate range to draw.
     """
     if lower is None or upper is None:
         return None
@@ -346,8 +344,7 @@ def _mirrored_y_labels(
 ) -> Sequence[Label]:
     """Labels for a mirrored graph: the negative half displays the same (positive-looking) text
     as its mirror image above zero, since mirroring below zero is a display choice, not a sign
-    change in the underlying value. Mirrors _compute_labels_from_api's mirrored branch in
-    _artwork.py.
+    change in the underlying value.
     """
     lower, upper = ax.get_ylim()
     abs_limit = max(abs(lower), abs(upper))

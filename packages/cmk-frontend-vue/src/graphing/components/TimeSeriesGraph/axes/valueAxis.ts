@@ -4,8 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 // Value-axis (y) domain computation: the value extent the y-axis must cover, derived from the
-// buckets that will be drawn. computeYDomain mirrors the backend's _compute_v_axis_min_max in
-// cmk/gui/graphing/rendering/_artwork.py (faithful to its min/max and symmetric handling).
+// buckets that will be drawn.
 
 export interface DomainFlags {
   symmetric?: boolean

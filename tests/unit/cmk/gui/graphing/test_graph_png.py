@@ -240,9 +240,8 @@ def test_far_away_rule_is_clipped_and_does_not_stretch_the_axis() -> None:
 
 def test_vertical_range_bounds_use_the_stacked_top_not_each_members_own_max() -> None:
     """A stack's drawn top is the cumulative sum other members pile onto, so the Y-axis bounds
-    must follow that stacked geometry (matching _artwork._compute_min_max, which runs over the
-    layouted/stacked points) - not each member's own unstacked min/max (_CurveScalars, which is
-    legend-only). Regression test for a bug where a stack of members maxing 10 and 20 drew up to
+    must follow that stacked geometry - not each member's own unstacked min/max (_CurveScalars,
+    which is legend-only). Regression test for a bug where a stack of members maxing 10 and 20 drew up to
     30 but the axis was clipped at 20, and the area's zero baseline was lost entirely."""
     first = _curve("first", [10.0, 10.0, 10.0])
     second = _curve("second", [20.0, 20.0, 20.0])

@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._artwork import (
-    iter_graph_artworks,
-)
 from ._engine_dispatch import evaluate_built_graphs
 from ._engine_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
 from ._engine_perfometer_bars import (
@@ -50,7 +47,6 @@ from ._graph_metric_expressions import (
     GraphMetricOperation,
     LineType,
 )
-from ._graph_pdf import render_graph_pdf
 from ._graph_png import compute_png_size_mm, mm_per_ex, render_png_ex
 from ._graph_specification import (
     compute_graph_ranges_for_width,
@@ -160,7 +156,6 @@ __all__ = [
     "global_time_picker_props",
     "global_time_picker_refresh",
     "user_first_day_of_week",
-    "iter_graph_artworks",
     "compute_graph_ranges_for_width",
     "DrawnSegment",
     "drawn_segments",
@@ -200,7 +195,6 @@ __all__ = [
     "evaluated_to_graph_spec",
     "compute_png_size_mm",
     "mm_per_ex",
-    "render_graph_pdf",
     "render_png_ex",
     "render_engine_graph_group",
     "render_plain_graph_title",

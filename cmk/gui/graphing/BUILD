@@ -18,7 +18,6 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui:html_toolkit",
         "//cmk/gui:page_toolkit",
-        "//cmk/gui:pdf",
         "//cmk/gui/form_specs",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",

@@ -3,14 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-// Ported from cmk/gui/graphing/_artwork.py::_compute_graph_t_axis: the label-format bands, the
-// candidate step ladder and the calendar-aligned tick positions all follow the backend. The
-// timezone is injected (rather than read from the ambient local zone) so the axis is deterministic
-// and testable across zones.
-//
-// One deliberate divergence: the backend estimates how many labels fit from a per-format character
-// budget expressed in ex, calibrated against its fixed 11px-per-ex layout grid. Here the label
-// widths are measured instead, so tick density follows the text that is really drawn.
+// The timezone is injected (rather than read from the ambient local zone) so the axis is
+// deterministic and testable across zones. Label widths are measured, so tick density follows the
+// text that is really drawn.
 import {
   type ZonedDateTime,
   fromAbsolute,

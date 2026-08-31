@@ -77,8 +77,8 @@ function computeValueLabels(
       formatter.renderYLabels({ kind: 'negative', start: domainMin, end: domainMax }, targetCount)
     )
   }
-  // Split as _compute_labels_from_api does in cmk/gui/graphing/_artwork.py: each side sized by its
-  // share of the domain, and the negative half's zero dropped because the positive half carries one.
+  // Each side is sized by its share of the domain, and the negative half's zero is dropped
+  // because the positive half carries one.
   const negativeShare = -domainMin / (domainMax - domainMin)
   const negative = formatter.renderYLabels(
     { kind: 'negative', start: domainMin, end: 0 },

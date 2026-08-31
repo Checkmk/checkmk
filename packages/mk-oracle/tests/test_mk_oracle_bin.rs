@@ -1221,6 +1221,82 @@ missing () {{
     );
 }
 
+/// A `SQLS_PARAMETERS` written across several lines, as in the legacy
+/// documentation, must still be seen by the migration: the parameters cannot be
+/// migrated, so every section using them has to be reported.
+// windows ps1 legacy plugin doesn't support custom SQL sections
+#[cfg(not(windows))]
+#[test]
+fn test_migrate_warns_on_multiline_custom_sql_parameters() {
+    let tmp = tempfile::tempdir().unwrap();
+    let dir = tmp.path();
+    fs::write(dir.join("invalid_objects.sql"), "SELECT * FROM dual\n").unwrap();
+
+    let dir_str = dir.to_str().unwrap();
+    let cfg = dir.join("mk_oracle.cfg");
+    fs::write(
+        &cfg,
+        format!(
+            r#"DBUSER='user:pass'
+VAR_IFILE="/tmp/ifile.txt"
+SQLS_SECTIONS="multiline plain"
+multiline () {{
+    SQLS_DIR="{dir_str}"
+    SQLS_SQL="invalid_objects.sql"
+    SQLS_PARAMETERS="
+        DEFINE VAR_IFILE = \"${{VAR_IFILE}}\"
+    "
+}}
+plain () {{
+    SQLS_DIR="{dir_str}"
+    SQLS_SQL="invalid_objects.sql"
+}}
+"#
+        ),
+    )
+    .unwrap();
+
+    let output = run_bin().args(["-M", cfg.to_str().unwrap()]).ok().unwrap();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        stdout.contains("# WARNING: multiline: SQLS_PARAMETERS is not supported"),
+        "got: {stdout}"
+    );
+    assert!(
+        !stdout.contains("# WARNING: plain:"),
+        "a section without SQLS_PARAMETERS must not warn, got: {stdout}"
+    );
+    // the value is folded into one line, so its continuation lines cannot be
+    // mistaken for further variables
+    let extracted = stdout
+        .lines()
+        .find(|l| l.starts_with("# SQLS.multiline.SQLS_PARAMETERS "))
+        .unwrap_or_else(|| panic!("SQLS_PARAMETERS not extracted, got: {stdout}"));
+    assert!(
+        extracted.contains(r#"DEFINE VAR_IFILE = "/tmp/ifile.txt""#),
+        "the whole value belongs to one line, got: {extracted}"
+    );
+    assert!(
+        !stdout.contains("# DEFINE "),
+        "a continuation line must not become a variable of its own, got: {stdout}"
+    );
+    let config = mk_oracle::config::OracleConfig::load_str(&stdout)
+        .expect("migrated output must be valid YAML");
+    let ora = config.ora_sql().expect("must have oracle config");
+    let mut metrics: Vec<String> = ora
+        .all_sections()
+        .iter()
+        .filter(|s| s.is_custom_metric())
+        .map(|s| s.item_value().unwrap().as_str().to_string())
+        .collect();
+    metrics.sort();
+    assert_eq!(
+        metrics,
+        ["multiline", "plain"],
+        "the sections are migrated regardless"
+    );
+}
+
 #[test]
 fn test_migrate_reference_config_discovery() {
     let cfg = legacy_cfg_path();

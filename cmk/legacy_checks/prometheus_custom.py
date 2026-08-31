@@ -3,15 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
 import json
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_value_store
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+type Section = Mapping[str, Any]
+type _Levels = tuple[float, float] | None
 
 ERROR_DETAILS = {
     "query error": "does not produce a valid result",
@@ -20,8 +32,8 @@ ERROR_DETAILS = {
 }
 
 
-def parse_prometheus_custom(string_table):
-    parsed = {}
+def parse_prometheus_custom(string_table: StringTable) -> Section:
+    parsed: dict[str, Any] = {}
     for line in string_table:
         try:
             prometheus_data = json.loads(line[0])
@@ -31,7 +43,9 @@ def parse_prometheus_custom(string_table):
     return parsed
 
 
-def _check_for_invalid_result(metric_details, promql_expression):
+def _check_for_invalid_result(
+    metric_details: Mapping[str, Any], promql_expression: str
+) -> Result | None:
     """Produces the output including service status and infotext for a invalid/failed
        PromQL query (and therefore service metric)
 
@@ -43,8 +57,7 @@ def _check_for_invalid_result(metric_details, promql_expression):
                         in case the PromQL query has failed
         promql_expression: String expression of the failed/invalid PromQL query
 
-    Returns: Empty Tuple in case the query gave a valid output or a tuple containing the status and
-             infotext for the service to display
+    Returns: None in case the query gave a valid output, or a Result reporting the failure
 
     """
     value_store = get_value_store()
@@ -54,22 +67,22 @@ def _check_for_invalid_result(metric_details, promql_expression):
     if expression_is_valid_now:
         # Keep a record of the PromQL expressions which gave a valid result at least once
         value_store[promql_expression] = True
-        return ()
+        return None
 
     if expression_has_been_valid_before:
-        status = 1
+        state = State.WARN
         infotext = "previously valid is now invalid"
     else:
-        status = 2
+        state = State.CRIT
         infotext = ERROR_DETAILS[metric_details["invalid_info"]]
-    return status, f"PromQL expression ({promql_expression}) {infotext}", []
+    return Result(state=state, summary=f"PromQL expression ({promql_expression}) {infotext}")
 
 
 def _metric_levels(
-    metric_label,
-    datasource_levels,
-    service_levels,
-):
+    metric_label: str,
+    datasource_levels: Mapping[str, Any] | None,
+    service_levels: Sequence[Mapping[str, Any]],
+) -> tuple[_Levels, _Levels]:
     """Retrieve the relevant check levels for the relevant service metric value
 
     Levels for Prometheus custom can be defined at two WATO places:
@@ -89,28 +102,21 @@ def _metric_levels(
             The separate defined WATO levels for the current service metric value
 
     Returns:
-        The matching levels in Checkmk format
+        The matching upper and lower levels
 
     """
-    missing_levels = (None, None)
     for metric_entry in service_levels:
         if metric_entry["metric_label"] == metric_label:
             metric_levels = metric_entry.get("levels", {})
-            return (
-                *metric_levels.get("upper_levels", missing_levels),
-                *metric_levels.get("lower_levels", missing_levels),
-            )
+            return metric_levels.get("upper_levels"), metric_levels.get("lower_levels")
 
     if datasource_levels:
-        return (
-            *datasource_levels.get("upper_levels", missing_levels),
-            *datasource_levels.get("lower_levels", missing_levels),
-        )
-    return None
+        return datasource_levels.get("upper_levels"), datasource_levels.get("lower_levels")
+    return None, None
 
 
-def check_prometheus_custom(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_prometheus_custom(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     for metric_details in data["service_metrics"]:
         promql_expression = metric_details["promql_query"]
@@ -120,31 +126,36 @@ def check_prometheus_custom(item, params, parsed):
         if metric_name == "null":
             metric_name = None
 
-        invalid_result = _check_for_invalid_result(metric_details, promql_expression)
-        if invalid_result:
+        if invalid_result := _check_for_invalid_result(metric_details, promql_expression):
             yield invalid_result
             continue
 
-        levels = _metric_levels(
+        levels_upper, levels_lower = _metric_levels(
             metric_label,
             metric_details.get("levels"),
             params["metric_list"],
         )
-        yield check_levels(
+        yield from check_levels_v1(
             float(metric_details["value"]),
-            metric_name,
-            levels,
-            infoname=metric_label,
+            metric_name=metric_name,
+            levels_upper=levels_upper,
+            levels_lower=levels_lower,
+            label=metric_label,
         )
 
 
-def discover_prometheus_custom(section):
-    yield from ((item, {}) for item in section)
+def discover_prometheus_custom(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["prometheus_custom"] = LegacyCheckDefinition(
+agent_section_prometheus_custom = AgentSection(
     name="prometheus_custom",
     parse_function=parse_prometheus_custom,
+)
+
+
+check_plugin_prometheus_custom = CheckPlugin(
+    name="prometheus_custom",
     service_name="%s",
     discovery_function=discover_prometheus_custom,
     check_function=check_prometheus_custom,

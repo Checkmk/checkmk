@@ -8,7 +8,11 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.fsc_fans import check_fsc_fans, discover_fsc_fans, parse_fsc_fans
+from cmk.plugins.fujitsu.agent_based.fsc_fans import (
+    check_fsc_fans,
+    discover_fsc_fans,
+    parse_fsc_fans,
+)
 
 _STRING_TABLE = [
     ["NULL", "NULL"],  # invalid fan entry (filtered out)

@@ -114,6 +114,8 @@ COVERAGE_HTML_DIR="$RESULT_DIR/html"
 
 mkdir -p "$RESULT_DIR"
 
+section "Selecting the tests that cover $COMPONENT ..."
+
 # 1. Which files are measured at all? The same list the nightly uses, so a
 #    component's number stays comparable to the dashboard's.
 source_labels "$SOURCE_LABELS_QUERY" >"$SOURCE_LABELS" || exit 1
@@ -159,9 +161,13 @@ if [[ "$selected" -eq 0 ]]; then
 fi
 echo "Selected $selected test target(s) depending on $COMPONENT's code"
 
+section "Running the tests and measuring coverage ..."
+
 # 4. Measure. How the run is configured lives in common.sh, so a component
 #    number cannot be measured differently from the dashboard's.
 run_coverage "$SELECTED_TARGETS" "$COVERAGE_LOG" "$SOURCE_LABELS" || exit 1
+
+section "Building the report ..."
 
 # 5. Scope the tracefile to the component, by the same step and the same kind of
 #    list the repository-wide run uses.

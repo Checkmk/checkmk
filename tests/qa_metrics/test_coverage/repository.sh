@@ -119,6 +119,8 @@ RESULT_CSV="$RESULT_DIR/coverage.csv"
 mkdir -p "$RESULT_DIR"
 
 if [[ "$RUN" == true ]]; then
+    section "Selecting the tests to run and the files to measure ..."
+
     # The universe is used unrestricted: every test in it contributes to the
     # repository-wide number. Passed via --target_pattern_file, the list being
     # too long for the command line.
@@ -128,9 +130,13 @@ if [[ "$RUN" == true ]]; then
     # being derived from them.
     source_labels "$SOURCE_LABELS_QUERY" >"$SOURCE_LABELS" || exit 1
 
+    section "Running the tests and measuring coverage ..."
+
     # Every test in the universe contributes, and the run must be green: a
     # number from a suite that did not pass says nothing about what it covers.
     run_coverage "$PY_TEST_TARGETS" "$COVERAGE_LOG" "$SOURCE_LABELS" || exit 1
+
+    section "Scoping the report to the measured files ..."
 
     # The files the number is about. Enumerated once and used twice below, so
     # the records that survive and the files counted at 0% are the same set.
@@ -146,6 +152,8 @@ if [[ "$RUN" == true ]]; then
 fi
 
 if [[ "$GENERATE_HTML" == true ]]; then
+    section "Generating the HTML report ..."
+
     if [ ! -f "$SCOPED_DAT" ]; then
         echo "Error: Coverage data file not found at $SCOPED_DAT" >&2
         exit 1
@@ -155,6 +163,8 @@ if [[ "$GENERATE_HTML" == true ]]; then
 fi
 
 if [[ "$DO_UPLOAD" == true ]]; then
+    section "Uploading the results ..."
+
     if [ ! -f "$SCOPED_DAT" ]; then
         echo "Error: Coverage data file not found at $SCOPED_DAT" >&2
         exit 1

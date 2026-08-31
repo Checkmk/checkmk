@@ -24,6 +24,18 @@ COMBINED_DAT="$REPO_PATH/bazel-out/_coverage/_coverage_report.dat"
 # which stops after loading and never analyzes.
 EDITION_FLAG="--cmk_edition=ultimate"
 
+# Announce the phase a run has reached. A full measurement takes tens of minutes
+# and prints thousands of bazel lines, so the few points where it moves on are
+# worth marking.
+section() {
+    local message=$1 rule
+    printf -v rule '%*s' "${#message}" ''
+    echo
+    echo "${rule// /=}"
+    echo "$message"
+    echo "${rule// /=}"
+}
+
 # The measured source files, as Bazel labels: what a py rule compiles, minus what
 # Bazel marks as test support. `testonly` is enforced -- a non-testonly target may
 # not depend on a testonly one -- so a target claiming it has been checked by the

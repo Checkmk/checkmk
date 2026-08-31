@@ -5834,6 +5834,19 @@ class PainterLogOptions(Painter):
         return ("", row["log_options"])
 
 
+def _log_comment_min_fields(log_type: str) -> int:
+    """Minimum number of ";"-separated fields in a notification log line
+    before a trailing comment field is present.
+
+    Host notification log lines have one field fewer than service
+    notification log lines (they lack the ";<service>" segment), so the
+    threshold below which no comment field can be present differs between
+    the two. See cmk.events.log_to_history._format_notification_message,
+    which is the counterpart producing these log lines.
+    """
+    return 6 if "SERVICE" in log_type else 5
+
+
 class PainterLogComment(Painter):
     @property
     @override
@@ -5851,14 +5864,14 @@ class PainterLogComment(Painter):
     @property
     @override
     def columns(self) -> Sequence[ColumnName]:
-        return ["log_options"]
+        return ["log_options", "log_type"]
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         msg = row["log_options"]
         if ";" in msg:
             parts = msg.split(";")
-            if len(parts) > 6:
+            if len(parts) > _log_comment_min_fields(row.get("log_type", "")):
                 return ("", parts[-1])
         return ("", "")
 

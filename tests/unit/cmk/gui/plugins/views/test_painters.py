@@ -22,7 +22,7 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import all_painters
-from cmk.gui.painter.v0.painters import _paint_custom_notes
+from cmk.gui.painter.v0.painters import _log_comment_min_fields, _paint_custom_notes
 from cmk.gui.type_defs import ColumnSpec, DynamicIconName, Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
@@ -1655,3 +1655,47 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
     expected_string = str(HTML.without_escaping("<hr>".join(expected_notes)))
 
     assert expected_string == notes_as_string
+
+
+@pytest.mark.parametrize(
+    "log_type, log_options, expected_comment",
+    [
+        # Host notification log lines have no ";<service>" segment, so with
+        # a comment present they only ever reach 6 fields, not 7.
+        pytest.param(
+            "HOST NOTIFICATION RESULT",
+            "cmkadmin;myhost;CRITICAL;my_plugin;some output;the comment",
+            "the comment",
+            id="host-with-comment",
+        ),
+        pytest.param(
+            "HOST NOTIFICATION RESULT",
+            "cmkadmin;myhost;CRITICAL;my_plugin;some output",
+            "",
+            id="host-without-comment",
+        ),
+        pytest.param(
+            "SERVICE NOTIFICATION RESULT",
+            "cmkadmin;myhost;My Service;CRITICAL;my_plugin;some output;the comment",
+            "the comment",
+            id="service-with-comment",
+        ),
+        pytest.param(
+            "SERVICE NOTIFICATION RESULT",
+            "cmkadmin;myhost;My Service;CRITICAL;my_plugin;some output",
+            "",
+            id="service-without-comment",
+        ),
+    ],
+)
+def test_log_comment_field_count(
+    log_type: str, log_options: str, expected_comment: str
+) -> None:
+    # Regression test for the comment field being silently dropped for host
+    # notifications: PainterLogComment.render used a hardcoded threshold of
+    # 6 fields that only matches the (one field longer) service notification
+    # log line layout.
+    parts = log_options.split(";")
+    min_fields = _log_comment_min_fields(log_type)
+    actual_comment = parts[-1] if len(parts) > min_fields else ""
+    assert actual_comment == expected_comment

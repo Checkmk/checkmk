@@ -76,8 +76,6 @@ py_library(
     ),
     imports = [".."],
     deps = [
-        "//tests/testlib",
-        "//tests/testlib/common:utils",
         requirement("pytest"),
     ],
 )

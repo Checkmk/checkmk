@@ -6,7 +6,7 @@
 """Service root handling of the Redfish power special agent: rack PDUs must be
 found even when the service root does not advertise ``PowerEquipment``."""
 
-from typing import Any
+from collections.abc import Mapping
 
 import pytest
 
@@ -14,7 +14,7 @@ from cmk.plugins.redfish.special_agents import agent_redfish_power
 
 # Service root as served by a PANDUIT PDU (firmware 5.2.5): no `PowerEquipment`,
 # instead a non-standard `PowerDistribution` link straight to the PDU collection.
-PANDUIT_SERVICE_ROOT: dict[str, Any] = {
+PANDUIT_SERVICE_ROOT: Mapping[str, object] = {
     "@odata.id": "/redfish/v1",
     "@odata.type": "#ServiceRoot.v1_16_1.ServiceRoot",
     "Id": "RootService",
@@ -27,7 +27,7 @@ PANDUIT_SERVICE_ROOT: dict[str, Any] = {
     "SessionService": {"@odata.id": "/redfish/v1/SessionService"},
 }
 
-MANAGER_COLLECTION: dict[str, Any] = {
+MANAGER_COLLECTION: Mapping[str, object] = {
     "@odata.id": "/redfish/v1/Managers/",
     "@odata.type": "#ManagerCollection.ManagerCollection",
     "Name": "Manager Collection",
@@ -36,7 +36,7 @@ MANAGER_COLLECTION: dict[str, Any] = {
     "Members": [{"@odata.id": "/redfish/v1/Managers/manager"}],
 }
 
-MANAGER: dict[str, Any] = {
+MANAGER: Mapping[str, object] = {
     "@odata.id": "/redfish/v1/Managers/manager",
     "@odata.type": "#Manager.v1_19_0.Manager",
     "Id": "manager",
@@ -46,13 +46,13 @@ MANAGER: dict[str, Any] = {
     "Status": {"State": "Enabled", "Health": "OK"},
 }
 
-RACKPDU_COLLECTION: dict[str, Any] = {
+RACKPDU_COLLECTION: Mapping[str, object] = {
     "@odata.type": "#RackPDUCollection.RackPDUCollection",
     "Members@odata.count": 1,
     "Members": [{"@odata.id": "/redfish/v1/PowerEquipment/RackPDUs/1"}],
 }
 
-RACKPDU: dict[str, Any] = {
+RACKPDU: Mapping[str, object] = {
     "@odata.type": "#PowerDistribution.v1_2_2.PowerDistribution",
     "Id": "1",
     "Name": "PDU 1",
@@ -61,7 +61,7 @@ RACKPDU: dict[str, Any] = {
 
 
 class _Response:
-    def __init__(self, status: int, payload: Any) -> None:
+    def __init__(self, status: int, payload: object) -> None:
         self.status = status
         self.dict = payload
 
@@ -69,18 +69,18 @@ class _Response:
 class _FakeClient:
     """Minimal stand-in for redfish.rest.v1.HttpClient."""
 
-    def __init__(self, routes: dict[str, Any]) -> None:
+    def __init__(self, routes: Mapping[str, object]) -> None:
         self._routes = routes
         self.requested: list[str] = []
 
-    def get(self, url: str, _args: Any = None) -> _Response:
+    def get(self, url: str, _args: object = None) -> _Response:
         self.requested.append(url)
         if url not in self._routes:
             return _Response(404, {})
         return _Response(200, self._routes[url])
 
 
-def _panduit_routes() -> dict[str, Any]:
+def _panduit_routes() -> Mapping[str, object]:
     return {
         "/redfish/v1": PANDUIT_SERVICE_ROOT,
         "/redfish/v1/Managers": MANAGER_COLLECTION,
@@ -90,7 +90,7 @@ def _panduit_routes() -> dict[str, Any]:
     }
 
 
-POWER_EQUIPMENT: dict[str, Any] = {
+POWER_EQUIPMENT: Mapping[str, object] = {
     "@odata.id": "/redfish/v1/PowerEquipment",
     "@odata.type": "#PowerEquipment.v1_2_0.PowerEquipment",
     "Id": "PowerEquipment",
@@ -103,10 +103,12 @@ def test_advertised_power_equipment_link_is_followed(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """The advertised link is used verbatim, not a hardcoded standard path."""
-    routes = _panduit_routes()
-    routes["/redfish/v1"] = {
-        **{k: v for k, v in PANDUIT_SERVICE_ROOT.items() if k != "PowerDistribution"},
-        "PowerEquipment": {"@odata.id": "/redfish/v1/Oem/PowerEquipment"},
+    routes = {
+        **_panduit_routes(),
+        "/redfish/v1": {
+            **{k: v for k, v in PANDUIT_SERVICE_ROOT.items() if k != "PowerDistribution"},
+            "PowerEquipment": {"@odata.id": "/redfish/v1/Oem/PowerEquipment"},
+        },
     }
     routes["/redfish/v1/Oem/PowerEquipment"] = POWER_EQUIPMENT
     client = _FakeClient(routes)
@@ -146,8 +148,7 @@ def test_power_distribution_service_root_is_probed_for_power_equipment() -> None
 
 def test_probe_wins_over_power_distribution(capsys: pytest.CaptureFixture[str]) -> None:
     """Devices that serve PowerEquipment without advertising it use that resource."""
-    routes = _panduit_routes()
-    routes["/redfish/v1/PowerEquipment"] = POWER_EQUIPMENT
+    routes = {**_panduit_routes(), "/redfish/v1/PowerEquipment": POWER_EQUIPMENT}
     client = _FakeClient(routes)
 
     agent_redfish_power.get_information(client)
@@ -177,12 +178,14 @@ def test_empty_power_equipment_resource_emits_no_system_section(
 ) -> None:
     """A PowerEquipment resource served as an empty body has nothing to report -
     emitting it would discover a nameless service."""
-    routes = _panduit_routes()
-    routes["/redfish/v1"] = {
-        **{k: v for k, v in PANDUIT_SERVICE_ROOT.items() if k != "PowerDistribution"},
-        "PowerEquipment": {"@odata.id": "/redfish/v1/PowerEquipment"},
+    routes = {
+        **_panduit_routes(),
+        "/redfish/v1": {
+            **{k: v for k, v in PANDUIT_SERVICE_ROOT.items() if k != "PowerDistribution"},
+            "PowerEquipment": {"@odata.id": "/redfish/v1/PowerEquipment"},
+        },
+        "/redfish/v1/PowerEquipment": {},
     }
-    routes["/redfish/v1/PowerEquipment"] = {}
     client = _FakeClient(routes)
 
     assert agent_redfish_power.get_information(client) == 0
@@ -191,11 +194,13 @@ def test_empty_power_equipment_resource_emits_no_system_section(
 
 def test_empty_rackpdu_collection_does_not_crash(capsys: pytest.CaptureFixture[str]) -> None:
     """A PDU collection without members must not abort the run."""
-    routes = _panduit_routes()
-    routes["/redfish/v1/PowerEquipment/RackPDUs"] = {
-        "@odata.type": "#RackPDUCollection.RackPDUCollection",
-        "Members@odata.count": 0,
-        "Members": [],
+    routes = {
+        **_panduit_routes(),
+        "/redfish/v1/PowerEquipment/RackPDUs": {
+            "@odata.type": "#RackPDUCollection.RackPDUCollection",
+            "Members@odata.count": 0,
+            "Members": [],
+        },
     }
     client = _FakeClient(routes)
 
@@ -206,8 +211,9 @@ def test_empty_rackpdu_collection_does_not_crash(capsys: pytest.CaptureFixture[s
 def test_unreachable_rackpdu_collection_does_not_crash() -> None:
     """A PDU collection that cannot be fetched must not abort the run."""
     routes = _panduit_routes()
-    del routes["/redfish/v1/PowerEquipment/RackPDUs"]
-    client = _FakeClient(routes)
+    client = _FakeClient(
+        {k: v for k, v in routes.items() if k != "/redfish/v1/PowerEquipment/RackPDUs"}
+    )
 
     assert agent_redfish_power.get_information(client) == 0
 

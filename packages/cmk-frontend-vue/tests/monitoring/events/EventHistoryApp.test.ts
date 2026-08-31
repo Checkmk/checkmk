@@ -189,7 +189,7 @@ test('a list that fits is not announced as cut off', () => {
 test('the tab links to the legacy history view the API resolved for its subject', () => {
   mountTab({ events: [makeEvent()] })
 
-  const link = screen.getByRole('link', { name: /Open the full history view/ })
+  const link = screen.getByRole('link', { name: /Show all events/ })
 
   expect(link).toHaveAttribute('href', HISTORY_LINK)
   expect(link).toHaveAttribute('target', '_top')

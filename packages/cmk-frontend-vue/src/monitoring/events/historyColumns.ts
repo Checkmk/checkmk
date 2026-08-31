@@ -58,13 +58,13 @@ export function buildHistoryColumns(subject: HistorySubject): ColumnDef<EventEnt
   columns.push(
     {
       accessorKey: 'state_info',
-      header: _t('State information'),
+      header: _t('State info'),
       minSize: 100,
       maxSize: 180
     },
     {
       accessorKey: 'plugin_output',
-      header: _t('Output'),
+      header: _t('Summary'),
       minSize: 150
     }
   )

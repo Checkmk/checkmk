@@ -4,7 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -104,8 +103,7 @@ function iconsOf(event: EventEntry): MonitoringIcon[] {
         :href="data.meta.legacy_events_link"
         target="_top"
       >
-        <CmkIcon name="history" size="small" />
-        {{ _t('Open the full history view') }}
+        {{ _t('Show all events') }}
       </CmkLink>
     </div>
 

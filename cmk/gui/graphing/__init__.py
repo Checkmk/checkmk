@@ -4,9 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._artwork import (
-    compute_graph_artwork,
-    GraphArtwork,
-    GraphArtworkAnnotations,
     iter_graph_artworks,
 )
 from ._engine_dispatch import evaluate_built_graphs
@@ -51,12 +48,11 @@ from ._graph_pdf import (
     get_mm_per_ex,
     render_graph_pdf,
 )
-from ._graph_png import compute_png_size_mm, mm_per_ex, render_png, render_png_ex
+from ._graph_png import compute_png_size_mm, mm_per_ex, render_png_ex
 from ._graph_specification import (
     GraphEnvironment,
     GraphMetric,
     GraphRanges,
-    GraphRecipe,
     GraphRecipeWithOverrides,
     GraphSpecification,
     parse_graph_specification,
@@ -92,13 +88,10 @@ from ._rrd import (
     _reverse_translate_into_all_potentially_relevant_metrics_cached,
     all_rrd_columns_potentially_relevant_for_metric,
     fetch_graph_row,
-    HostGraphRow,
     make_graph_row,
-    ServiceGraphRow,
     translate_and_merge_rrd_columns,
 )
 from ._translated_metrics import (
-    compute_translated_metrics,
     lookup_metric_translations_for_check_command,
     parse_perf_data,
     ScalarBounds,
@@ -121,7 +114,6 @@ from ._valuespecs import (
     metrics_of_query,
     migrate_graph_render_options_title_format,
     migrate_graph_render_options_title_format_from_disk,
-    ValuesWithUnits,
     vs_graph_render_option_elements,
     vs_graph_render_options,
 )
@@ -133,8 +125,6 @@ __all__ = [
     "ExplicitGraphSpecification",
     "FetchTimeSeriesProtocol",
     "RRDFetchMetricNames",
-    "GraphArtwork",
-    "GraphArtworkAnnotations",
     "GraphConsolidationFunction",
     "GraphRanges",
     "GraphDestinations",
@@ -143,10 +133,7 @@ __all__ = [
     "GraphMetricExpression",
     "GraphMetricOperation",
     "GraphPluginChoice",
-    "GraphRecipe",
     "GraphRecipeWithOverrides",
-    "HostGraphRow",
-    "ServiceGraphRow",
     "GraphEnvironment",
     "GraphDisplayConfigHTML",
     "GraphDisplayConfigImage",
@@ -165,12 +152,9 @@ __all__ = [
     "ScalarBounds",
     "TranslatedMetric",
     "UserSpecificUnit",
-    "ValuesWithUnits",
     "_reverse_translate_into_all_potentially_relevant_metrics_cached",
     "all_rrd_columns_potentially_relevant_for_metric",
-    "compute_translated_metrics",
     "check_metrics",
-    "compute_graph_artwork",
     "default_time_range_seconds",
     "global_time_picker_props",
     "global_time_picker_refresh",
@@ -209,9 +193,7 @@ __all__ = [
     "compute_png_size_mm",
     "mm_per_ex",
     "render_graph_pdf",
-    "render_png",
     "render_png_ex",
-    "render_deferred_graphs_html",
     "render_engine_graph_group",
     "render_plain_graph_title",
     "resolve_graph_id_from_index",

@@ -28,6 +28,7 @@ import { drawnTimeRange } from '../utils/timeRange'
 import GraphNotice from './GraphNotice.vue'
 import GraphPanel from './GraphPanel.vue'
 import GraphSkeleton from './GraphSkeleton.vue'
+import { clippedToNavigableTime, navigableBounds } from './TimeSeriesGraph/interaction/timeBounds'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from './consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from './constants'
 
@@ -152,7 +153,10 @@ watch(overviewGraphs, (graphs) => {
   }
   brush.onOverviewFetched({
     requestedDomain: answered.requestedTimeRange,
-    drawnDomain: drawnTimeRange(answered.requestedTimeRange, answered.timeRange),
+    drawnDomain: clippedToNavigableTime(
+      drawnTimeRange(answered.requestedTimeRange, answered.timeRange),
+      navigableBounds()
+    ),
     data: graphs.map((graph) => ({ metrics: graph.metrics, dataTimeRange: graph.timeRange }))
   })
 })

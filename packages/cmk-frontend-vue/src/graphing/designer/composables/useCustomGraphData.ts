@@ -8,6 +8,10 @@ import { type Ref, onScopeDispose, readonly, ref, watch } from 'vue'
 import { useGlobalRefresh } from '../../GlobalTimePicker/globalTimeState'
 import { overviewStep } from '../../components/GraphBrush/overviewRange'
 import type { HorizontalLine, Metric, TimeRange } from '../../components/TimeSeriesGraph'
+import {
+  clippedToNavigableTime,
+  navigableBounds
+} from '../../components/TimeSeriesGraph/interaction/timeBounds'
 import type { ConsolidationFn } from '../../components/consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../../components/constants'
 import type { RequestedTimeRange, TimeInterval } from '../../types'
@@ -213,9 +217,9 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
           },
           metrics: [...overviewResponse.metrics],
           dataTimeRange: overviewResponse.time_range,
-          viewTimeRange: drawnTimeRange(
-            overviewBody.requested_time_range,
-            overviewResponse.time_range
+          viewTimeRange: clippedToNavigableTime(
+            drawnTimeRange(overviewBody.requested_time_range, overviewResponse.time_range),
+            navigableBounds()
           )
         }
         lastOverviewKey = overviewKey

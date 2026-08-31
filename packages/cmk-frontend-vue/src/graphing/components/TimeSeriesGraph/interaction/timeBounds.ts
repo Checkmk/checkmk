@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { TimeRange } from '../types'
+import type { TimeInterval } from '../../../types'
 
 const EARLIEST_NAVIGABLE_YEAR = 2008
 
@@ -38,17 +38,30 @@ export function navigableBounds(now: Date = new Date()): NavigableBounds {
  * comes to rest against that end. A span wider than the whole axis cannot keep it and is
  * trimmed to the axis instead.
  */
-export function withinNavigableTime(range: TimeRange, bounds: NavigableBounds): TimeRange {
-  const pastLatestEnd = Math.max(0, range.end - bounds.latestEnd)
-  // Measured after that slide, so a range long enough to hit both ends resolves to one shift.
-  const beforeEarliestStart = Math.max(0, bounds.earliestStart - (range.start - pastLatestEnd))
+export function withinNavigableTime<Interval extends TimeInterval>(
+  interval: Interval,
+  bounds: NavigableBounds
+): Interval {
+  const pastLatestEnd = Math.max(0, interval.end - bounds.latestEnd)
+  const beforeEarliestStart = Math.max(0, bounds.earliestStart - (interval.start - pastLatestEnd))
   const shiftSeconds = beforeEarliestStart - pastLatestEnd
   if (shiftSeconds === 0) {
-    return range
+    return interval
   }
   return {
-    ...range,
-    start: Math.max(bounds.earliestStart, range.start + shiftSeconds),
-    end: Math.min(bounds.latestEnd, range.end + shiftSeconds)
+    ...interval,
+    start: Math.max(bounds.earliestStart, interval.start + shiftSeconds),
+    end: Math.min(bounds.latestEnd, interval.end + shiftSeconds)
+  }
+}
+
+export function clippedToNavigableTime<Interval extends TimeInterval>(
+  interval: Interval,
+  bounds: NavigableBounds
+): Interval {
+  return {
+    ...interval,
+    start: Math.max(interval.start, bounds.earliestStart),
+    end: Math.min(interval.end, bounds.latestEnd)
   }
 }

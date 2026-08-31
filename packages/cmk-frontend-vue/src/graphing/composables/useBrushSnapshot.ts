@@ -10,6 +10,7 @@ import {
   overviewDomain,
   recenterOverviewDomain
 } from '../components/GraphBrush/overviewRange'
+import { EARLIEST_NAVIGABLE_SECONDS } from '../components/TimeSeriesGraph/interaction/timeBounds'
 import type { BrushSnapshot, RequestedTimeRange, TimeInterval, TimeRangeCommitKind } from '../types'
 import { sameRequestedTimeRange } from '../utils/timeRange'
 
@@ -61,7 +62,9 @@ export function useBrushSnapshot<TData>(options: {
   const edgeFraction = options.edgeFraction ?? DEFAULT_EDGE_FRACTION
 
   const initialRange = options.getRequestedTimeRange()
-  const requestedDomain = shallowRef<TimeInterval>(overviewDomain(initialRange, options.getNow()))
+  const requestedDomain = shallowRef<TimeInterval>(
+    overviewDomain(initialRange, options.getNow(), EARLIEST_NAVIGABLE_SECONDS)
+  )
   const pendingWindow = shallowRef<TimeInterval>({ ...initialRange })
   const answered = shallowRef<AnsweredSnapshot<TData> | null>(null)
 
@@ -83,8 +86,14 @@ export function useBrushSnapshot<TData>(options: {
   // grid, and feeding it back drifts the request by a step per translation.
   function nextRequestedDomain(window: TimeInterval, kind: TimeRangeCommitKind): TimeInterval {
     return kind === 'changed_timerange_span'
-      ? overviewDomain(window, options.getNow())
-      : recenterOverviewDomain(requestedDomain.value, window, options.getNow(), edgeFraction)
+      ? overviewDomain(window, options.getNow(), EARLIEST_NAVIGABLE_SECONDS)
+      : recenterOverviewDomain(
+          requestedDomain.value,
+          window,
+          options.getNow(),
+          edgeFraction,
+          EARLIEST_NAVIGABLE_SECONDS
+        )
   }
 
   function onRangeCommitted(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {

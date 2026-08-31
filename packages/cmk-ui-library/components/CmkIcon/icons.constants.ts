@@ -745,6 +745,7 @@ export const emblems = [
 
 export const oneColorIcons = [
   'burger-menu',
+  'cancel',
   'changes',
   'check-circle',
   'checkmark',

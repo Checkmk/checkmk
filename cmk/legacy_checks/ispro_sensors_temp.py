@@ -3,15 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.ispro import ispro_sensors_alarm_states
-from cmk.legacy_includes.temperature import check_temperature
-from cmk.plugins.ispro.lib import DETECT_ISPRO_SENSORS
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.ispro.lib import DETECT_ISPRO_SENSORS, sensors_alarm_states
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.1.1.2.1 "Temperature-R" --> ISPRO-MIB::isDeviceMonitorTemperatureName
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.1.1.3.1 2230 --> ISPRO-MIB::isDeviceMonitorTemperature
@@ -22,31 +25,32 @@ check_info = {}
 # .1.3.6.1.4.1.19011.1.3.2.1.3.2.2.1.6.1 3800 --> ISPRO-MIB::isDeviceConfigTemperatureHighCritical
 
 
-def discover_ispro_sensors_temp(info):
-    return [(line[0], {}) for line in info if line[2] not in ["1", "2"]]
+def discover_ispro_sensors_temp(section: StringTable) -> DiscoveryResult:
+    yield from (Service(item=line[0]) for line in section if line[2] not in ["1", "2"])
 
 
-def check_ispro_sensors_temp(item, params, info):
-    for name, reading_str, status, warn_low, crit_low, warn, crit in info:
+def check_ispro_sensors_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:
+    for name, reading_str, status, warn_low, crit_low, warn, crit in section:
         if item == name:
-            devstatus, devstatus_name = ispro_sensors_alarm_states(status)
-            return check_temperature(
+            devstatus, devstatus_name = sensors_alarm_states(status)
+            yield from check_temperature(
                 float(reading_str) / 100.0,
                 params,
-                "ispro_sensors_temp_%s" % item,
+                unique_name=f"ispro_sensors_temp_{item}",
+                value_store=get_value_store(),
                 dev_levels=(float(warn) / 100.0, float(crit) / 100.0),
                 dev_levels_lower=(float(warn_low) / 100.0, float(crit_low) / 100.0),
-                dev_status=devstatus,
+                dev_status=int(devstatus),
                 dev_status_name=devstatus_name,
             )
-    return None
+            return
 
 
 def parse_ispro_sensors_temp(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["ispro_sensors_temp"] = LegacyCheckDefinition(
+snmp_section_ispro_sensors_temp = SimpleSNMPSection(
     name="ispro_sensors_temp",
     parse_function=parse_ispro_sensors_temp,
     detect=DETECT_ISPRO_SENSORS,
@@ -54,8 +58,14 @@ check_info["ispro_sensors_temp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.19011.1.3.2.1.3",
         oids=["1.1.1.2", "1.1.1.3", "1.1.1.4", "2.2.1.3", "2.2.1.4", "2.2.1.5", "2.2.1.6"],
     ),
+)
+
+
+check_plugin_ispro_sensors_temp = CheckPlugin(
+    name="ispro_sensors_temp",
     service_name="Temperature %s",
     discovery_function=discover_ispro_sensors_temp,
     check_function=check_ispro_sensors_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )

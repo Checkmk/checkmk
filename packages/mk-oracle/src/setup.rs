@@ -21,13 +21,14 @@ use crate::config::options::Options;
 use crate::config::system::{Logging, SystemConfig};
 use crate::config::OracleConfig;
 use crate::constants::{get_user_config_file, RUNTIME_DIR};
-use crate::platform::get_local_instances;
-use crate::types::{EnvVarName, SectionFilter, UseHostClient};
+use crate::platform::{get_local_instances, home_key};
+use crate::types::{EnvVarName, LocalInstance, SectionFilter, UseHostClient};
 use crate::version::VERSION;
 use crate::{constants, setup};
 use anyhow::Result;
 use clap::Parser;
 use flexi_logger::{self, Cleanup, Criterion, DeferredNow, FileSpec, LogSpecification, Record};
+use std::collections::HashSet;
 use std::env::ArgsOs;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -1076,20 +1077,84 @@ pub fn display_and_log(e: impl std::fmt::Display) {
     eprintln!("Stop on error: `{e}`",);
 }
 
-pub fn spawn_new_process(args: Vec<String>, old_path: std::path::PathBuf) -> i32 {
+/// One child per local `ORACLE_HOME`, each taking that home's own targets, plus
+/// one keeping the parent's `ORACLE_HOME` and taking every other target.
+///
+/// The homes come from the locally detected instances, deduplicated by
+/// [`home_key`], so several SIDs sharing a home yield one child and the first
+/// spelling the source reported is the one passed on. A host with no local
+/// instance leaves only the last plan, which is what a single run has always
+/// done.
+fn plan_spawns(local_instances: &[LocalInstance]) -> Vec<Option<PathBuf>> {
+    let mut seen: HashSet<PathBuf> = HashSet::new();
+    let mut plans: Vec<Option<PathBuf>> = local_instances
+        .iter()
+        .filter(|instance| seen.insert(home_key(&instance.home)))
+        .map(|instance| Some(instance.home.clone()))
+        .collect();
+    // `None` overrides nothing: that child keeps the ORACLE_HOME the parent
+    // selected and takes every target no home of its own claims.
+    plans.push(None);
+    plans
+}
+
+/// Re-runs this program once per [`plan_spawns`] entry, each child seeing
+/// `--runtime-ready` and the environment of its plan.
+///
+/// The children run one after another: they write their sections to the same
+/// stdout, and concurrent writes would interleave them. A child that cannot be
+/// started is reported and the remaining ones still run, so one broken home does
+/// not cost the whole host its monitoring.
+///
+/// Returns the first non-zero exit code, or zero when every child succeeded.
+pub fn spawn_new_processes(args: Vec<String>, old_path: std::path::PathBuf) -> i32 {
+    let local_instances = get_local_instances().unwrap_or_else(|e| {
+        log::warn!("Cannot determine the local instances: {e}");
+        Vec::new()
+    });
+    let plans = plan_spawns(&local_instances);
+    let exe = std::env::current_exe().expect("Failed to get current exe");
     let mut new_args = args.clone();
     new_args.push("--runtime-ready".to_string());
-    let exe = std::env::current_exe().expect("Failed to get current exe");
-    let status = std::process::Command::new(exe)
-        .args(&new_args[1..]) // skip the old program name
-        .status()
-        .unwrap_or_else(|e| {
-            display_and_log(e);
-            setup::reset_env(&old_path, None);
-            std::process::exit(1);
-        });
+
+    let mut code = 0;
+    for plan in &plans {
+        // A child serving one home takes that home's targets; the one keeping
+        // the inherited home takes the rest.
+        let targets = if plan.is_some() { "yes" } else { "no" };
+        let mut command = std::process::Command::new(&exe);
+        command
+            .args(&new_args[1..]) // skip the old program name
+            .env(LOCAL_ORACLE_HOME_TARGETS_ENV_VAR, targets);
+        match plan {
+            Some(home) => {
+                log::info!(
+                    "Spawn for {ORACLE_HOME_ENV_VAR}={home:?} with \
+                     {LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}={targets}"
+                );
+                command.env(ORACLE_HOME_ENV_VAR, home);
+            }
+            None => log::info!(
+                "Spawn for the inherited {ORACLE_HOME_ENV_VAR} with \
+                 {LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}={targets}"
+            ),
+        }
+        match command.status() {
+            Ok(status) => {
+                if code == 0 {
+                    code = status.code().unwrap_or_default();
+                }
+            }
+            Err(e) => {
+                display_and_log(e);
+                if code == 0 {
+                    code = 1;
+                }
+            }
+        }
+    }
     setup::reset_env(&old_path, None);
-    status.code().unwrap_or_default()
+    code
 }
 
 #[cfg(test)]
@@ -1109,6 +1174,51 @@ mod tests {
         assert_eq!(parse_local_oracle_home_targets(Some("")), None);
         assert_eq!(parse_local_oracle_home_targets(Some("true")), None);
         assert_eq!(parse_local_oracle_home_targets(Some("1")), None);
+    }
+
+    fn local_instance(name: &str, home: &str) -> LocalInstance {
+        LocalInstance {
+            name: crate::types::InstanceName::from(name),
+            home: PathBuf::from(home),
+            base: None,
+        }
+    }
+
+    #[test]
+    fn test_plan_spawns() {
+        // No local instance: only the run that keeps the inherited home.
+        assert_eq!(plan_spawns(&[]), vec![None]);
+
+        // Two homes, one of them named twice: one child per home, then the
+        // inherited one. The spelling of the first sighting is passed on.
+        assert_eq!(
+            plan_spawns(&[
+                local_instance("XE", "/u01/dbhome_1"),
+                local_instance("FREE", "/u01/dbhome_1"),
+                local_instance("+ASM", "/u01/grid"),
+            ]),
+            vec![
+                Some(PathBuf::from("/u01/dbhome_1")),
+                Some(PathBuf::from("/u01/grid")),
+                None,
+            ]
+        );
+    }
+
+    /// Windows spells one directory in several cases, so it is one child there.
+    #[test]
+    fn test_plan_spawns_folds_the_home_case_on_windows() {
+        let plans = plan_spawns(&[
+            local_instance("XE", r"C:\app\dbhome_1"),
+            local_instance("FREE", r"c:\APP\dbhome_1"),
+        ]);
+
+        let expected_homes = if cfg!(windows) { 1 } else { 2 };
+        assert_eq!(plans.len(), expected_homes + 1, "{plans:?}");
+        assert_eq!(
+            plans.last().expect("the inherited plan is always last"),
+            &None
+        );
     }
 
     #[test]

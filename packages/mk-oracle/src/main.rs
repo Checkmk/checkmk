@@ -86,10 +86,10 @@ async fn main() {
                         // old_path is the search path as it was before the runtime was
                         // prepended; it is kept so that reset_env can restore it.
                         log::info!(
-                            "Spawn new process {args:?}, previous {}={old_path:?}",
+                            "Spawn new processes {args:?}, previous {}={old_path:?}",
                             setup::RUNTIME_PATH_ENV_VAR
                         );
-                        setup::spawn_new_process(args, old_path)
+                        setup::spawn_new_processes(args, old_path)
                     }
                 },
             }

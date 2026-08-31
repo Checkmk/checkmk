@@ -1151,3 +1151,8 @@ test('dropdown without a validation error is neither marked nor described', asyn
 test('the anchor-positioned suggestion list is capped in height', () => {
   expect(cmkDropdownSource).toMatch(/max-block-size:\s*v-bind\(listMaxBlockSize\)/)
 })
+
+// Regression (CMK-38164): the same list ran past the viewport edge sideways; assert the width cap.
+test('the anchor-positioned suggestion list is capped in width', () => {
+  expect(cmkDropdownSource).toMatch(/max-inline-size:\s*v-bind\(listMaxInlineSize\)/)
+})

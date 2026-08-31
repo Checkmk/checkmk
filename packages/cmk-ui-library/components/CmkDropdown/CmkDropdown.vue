@@ -191,9 +191,15 @@ const nonFloatingMaxHeight = supportsAnchorPositioning ? 'none' : `${PREFERRED_M
 const VIEWPORT_MARGIN_PX = 40
 const floatingCollisionPadding = { top: VIEWPORT_MARGIN_PX, bottom: VIEWPORT_MARGIN_PX }
 
-// Height cap for the anchor-positioned list, set from JS on open (see updateNonFloatingPlacement);
-// this fallback keeps a long list scrollable until then.
+// Mirrors CmkSuggestions' max-width, which our same-axis max-inline-size would otherwise override.
+const SUGGESTIONS_MAX_INLINE_SIZE_PX = 512
+
+// Height and width caps for the anchor-positioned list, updated from JS on open; these fallbacks
+// keep it scrollable and width-bounded until then.
 const listMaxBlockSize = ref<string>(`calc(100dvh - ${2 * VIEWPORT_MARGIN_PX}px)`)
+const listMaxInlineSize = ref<string>(
+  `min(${SUGGESTIONS_MAX_INLINE_SIZE_PX}px, calc(100dvw - ${2 * VIEWPORT_MARGIN_PX}px))`
+)
 // reka-ui provides the collision-aware available height, already less the collision padding above.
 // The floor is what lets its flip still fire: a list capped to exactly the room it has never
 // collides, so without it the list stays below the button and shrinks to a sliver.
@@ -256,6 +262,10 @@ function updateNonFloatingPlacement(): void {
   // Floored so a cramped side still yields a usable, scrollable list.
   const availableInDirection = (flippedUp.value ? spaceAbove : spaceBelow) - VIEWPORT_MARGIN_PX
   listMaxBlockSize.value = `${Math.max(PREFERRED_MIN_BELOW_PX, availableInDirection)}px`
+
+  // Cap to the room right of the button so a wide list never overflows and hides its scrollbar.
+  const roomRightOfButton = window.innerWidth - anchorRect.left - VIEWPORT_MARGIN_PX
+  listMaxInlineSize.value = `${Math.min(SUGGESTIONS_MAX_INLINE_SIZE_PX, roomRightOfButton)}px`
 
   if (supportsAnchorPositioning) {
     // From here the CSS positions the list, keyed on the flippedUp class.
@@ -483,6 +493,7 @@ const group = computed<ButtonVariants['group']>(() => {
     block-size: fit-content;
     max-block-size: v-bind(listMaxBlockSize);
     min-width: anchor-size(width);
+    max-inline-size: v-bind(listMaxInlineSize);
   }
 
   .cmk-dropdown > .cmk-dropdown__suggestions.cmk-dropdown__suggestions--flipped {

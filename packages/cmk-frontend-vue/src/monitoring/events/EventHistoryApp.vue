@@ -11,6 +11,7 @@ import { computed } from 'vue'
 
 import type { MonitoringIcon } from '@/monitoring/shared/api/types'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
+import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
@@ -90,6 +91,11 @@ function timeOf(event: EventEntry): string {
 function iconsOf(event: EventEntry): MonitoringIcon[] {
   return event.icon ? [event.icon] : []
 }
+
+// Undefined for an event of the host itself, which StringCell reads as "no link".
+function serviceLinkOf(event: EventEntry): CellLink | undefined {
+  return event.service_link ? { href: event.service_link, target: '_top' } : undefined
+}
 </script>
 
 <template>
@@ -129,6 +135,7 @@ function iconsOf(event: EventEntry): MonitoringIcon[] {
             column-id="service_name"
             :value="row.service_name ?? undefined"
             :empty-label="_t('Host')"
+            :linked-to="serviceLinkOf(row)"
           />
           <StringCell column-id="state_info" :value="row.state_info" />
           <StringCell column-id="plugin_output" :value="row.plugin_output" state-markers />

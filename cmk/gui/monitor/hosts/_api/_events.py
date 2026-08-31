@@ -72,9 +72,18 @@ class EventEntry:
         ),
         example=None,
     )
+    service_link: str | None = api_field(
+        description=(
+            "URL to the legacy view holding the event history of the service this event "
+            "belongs to. Null for an event of the host itself."
+        ),
+        example=(
+            "view.py?view_name=svcevents&site=local&host=web-server-01&service=CPU+utilization"
+        ),
+    )
 
     @classmethod
-    def from_domain(cls, event: Event) -> Self:
+    def from_domain(cls, event: Event, *, site_id: str, hostname: str) -> Self:
         return cls(
             time=event.time,
             event=event.type,
@@ -82,6 +91,16 @@ class EventEntry:
             state_info=event.state_information,
             plugin_output=event.plugin_output,
             icon=EventIcon.from_event(event),
+            service_link=(
+                service_view_link_by_id(
+                    "svcevents",
+                    site_id=site_id,
+                    hostname=hostname,
+                    service_name=event.service_name,
+                )
+                if event.service_name is not None
+                else None
+            ),
         )
 
 
@@ -194,7 +213,10 @@ def _handle_get_host_events(
     truncated = len(events) > limit
 
     return EventsResponse(
-        events=[EventEntry.from_domain(event) for event in shown_events],
+        events=[
+            EventEntry.from_domain(event, site_id=site_id, hostname=hostname)
+            for event in shown_events
+        ],
         meta=EventsMeta(
             limit=limit,
             truncated=truncated,

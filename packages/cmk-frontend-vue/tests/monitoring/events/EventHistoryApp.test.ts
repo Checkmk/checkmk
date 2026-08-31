@@ -31,6 +31,7 @@ afterAll(() => {
 })
 
 const HISTORY_LINK = 'view.py?view_name=hostsvcevents&site=local&host=web-1'
+const SERVICE_LINK = 'view.py?view_name=svcevents&site=local&host=web-1&service=CPU+load'
 
 const SECONDS_PER_DAY = 24 * 60 * 60
 
@@ -47,6 +48,7 @@ function makeEvent(overrides: Partial<EventEntry> = {}): EventEntry {
     state_info: 'OK - CRITICAL',
     plugin_output: 'CRIT - load average: 12.0',
     icon: { icon_name: 'alert-crit', title: 'Service alert' },
+    service_link: SERVICE_LINK,
     ...overrides
   }
 }
@@ -193,6 +195,27 @@ test('the tab links to the legacy history view the API resolved for its subject'
 
   expect(link).toHaveAttribute('href', HISTORY_LINK)
   expect(link).toHaveAttribute('target', '_top')
+})
+
+test('a service event links its service cell to the legacy service event history the API resolved', async () => {
+  mountTab({ events: [makeEvent()] })
+  await flushVirtualizer()
+
+  // The service name carries zero-width breaks (`useSoftBreak`), so it is matched via its
+  // `title` - as the other row tests do - rather than by role name.
+  const link = screen.getByTitle('CPU load').closest('a')
+
+  expect(link).toHaveAttribute('href', SERVICE_LINK)
+  expect(link).toHaveAttribute('target', '_top')
+})
+
+test('an event of the host itself is not linked: it has no service to navigate to', async () => {
+  mountTab({
+    events: [makeEvent({ event: 'HOST ALERT', service_name: null, service_link: null })]
+  })
+  await flushVirtualizer()
+
+  expect(screen.getByText('Host').closest('a')).not.toBeInTheDocument()
 })
 
 test('the explained window follows what the API applied, not a hard-coded eight days', () => {

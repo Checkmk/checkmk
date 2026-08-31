@@ -209,6 +209,30 @@ class TestEventsResponse:
             "view.py?view_name=svcevents&site=local&host=web-server-01&service=CPU+load"
         )
 
+    def test_a_service_event_links_to_the_legacy_service_event_history(self) -> None:
+        response = _handle_get_host_events(
+            get_fake_host_repository(hostnames=["web-server-01"]),
+            get_fake_event_repository([_event(service_name="CPU load")]),
+            hostname="web-server-01",
+            site_id="local",
+            since=_SINCE,
+        )
+
+        assert response.events[0].service_link == (
+            "view.py?view_name=svcevents&site=local&host=web-server-01&service=CPU+load"
+        )
+
+    def test_a_host_event_has_no_service_link(self) -> None:
+        response = _handle_get_host_events(
+            get_fake_host_repository(hostnames=["web-server-01"]),
+            get_fake_event_repository([_event(service_name=None, event_type="HOST ALERT")]),
+            hostname="web-server-01",
+            site_id="local",
+            since=_SINCE,
+        )
+
+        assert response.events[0].service_link is None
+
     def test_state_info_falls_back_to_the_state_type(self) -> None:
         response = _handle_get_host_events(
             get_fake_host_repository(hostnames=["web-server-01"]),

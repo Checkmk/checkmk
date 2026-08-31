@@ -1232,6 +1232,46 @@ No warning is emitted when the value cannot change anything: the section runs on
 one SID anyway, or it uses a custom `SQLS_SECTION_NAME`, for which the legacy plugin
 emits no item at all.
 
+##### `SQLS_PARAMETERS`
+
+The legacy plugin prepends `SQLS_PARAMETERS` to the SQL it pipes into `sqlplus`, which is
+how a SQL file gets the substitution variables (`&VAR`) it references `DEFINE`d. The
+value may be assembled by the section function itself:
+
+```bash
+my_section () {
+    SQLS_SQL=invalid_objects.sql
+    SQLS_PARAMETERS="
+        DEFINE VAR_IFILE = \"${VAR_IFILE}\"
+    "
+}
+```
+
+`DEFINE` is a SQL\*Plus command and `mk-oracle` runs the query through the OCI driver
+(see [Adapting Custom SQL Files](#adapting-custom-sql-files)), so **the parameters cannot
+be migrated**. The section is migrated without them, and the migration reports it:
+
+```
+# WARNING: my_section: SQLS_PARAMETERS is not supported and is not migrated; the SQL*Plus commands it prepends to the query are lost, so convert the substitution variables the SQL file uses into 'sql_params:' manually
+```
+
+Until such a section is converted its `&VAR` references stay undefined and the query
+fails at runtime. Port it to [`sql_params`](#sql-parameters-sql_params), which substitutes
+values textually just as the `DEFINE`s did: replace every `&VAR` in the SQL file by
+`${VAR}` and declare the value next to the entry.
+
+```yaml
+custom_metrics:
+  - my_section:
+      path: /etc/check_mk/ProdSQLs/invalid_objects.sql
+      sql_params:
+        VAR_IFILE: '/etc/check_mk/ifile.txt'
+```
+
+The value is a literal; only variables that really come from the environment of the
+plugin can be carried over as `'${VAR_IFILE}'`. A shell variable the legacy config
+computed is not available to `mk-oracle`.
+
 ### What Is Not Migrated
 
 The following variables are recognized but only preserved as comments in the output;
@@ -1240,7 +1280,7 @@ port them manually if you still need them:
 | Legacy variable                                       | Remark                                                                                                                   |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `SQLS_DBUSER`, `SQLS_DBPASSWORD`, `SQLS_DBSYSCONNECT` | Per-custom-SQL credentials; use per-instance `authentication:` overrides instead                                         |
-| `SQLS_PARAMETERS`                                     | SQL\*Plus parameter passing is not supported                                                                             |
+| `SQLS_PARAMETERS`                                     | SQL\*Plus parameter passing is not supported; port it to `sql_params:` (see [above](#sqls_parameters))                   |
 | `SQLS_ITEM_SID`                                       | The item always carries the name of the instance the section runs on (see [above](#sqls_item_sid))                       |
 | `EXCLUDE_<SID>="<section> ..."`                       | Per-SID exclusion of individual sections; only `EXCLUDE_<SID>="ALL"` is converted                                        |
 | `ORACLE_HOME`, `REMOTE_ORACLE_HOME`                   | The OCI runtime is located as described in [Options](#options) (`use_host_client`)                                       |

@@ -149,6 +149,10 @@ struct LegacyCustomSql {
     /// `SQLS_ITEM_SID`: the SID the legacy plugin puts into the output item.
     /// Not supported by the new plugin, only used to warn about it.
     item_sid: Option<String>,
+    /// `SQLS_PARAMETERS`: the SQL*Plus commands the legacy plugin prepends to
+    /// the SQL file, usually `DEFINE`s for the substitution variables the file
+    /// references. Not supported by the new plugin, only used to warn about it.
+    parameters: Option<String>,
 }
 
 impl LegacyCustomSql {
@@ -344,6 +348,14 @@ fn parse_custom_sqls(legacy: &str, variables: &HashMap<String, String>) -> Vec<L
                 // no global fallback: the legacy plugin unsets SQLS_ITEM_SID
                 // before each section
                 item_sid: section_var("SQLS_ITEM_SID").cloned(),
+                // global fallback like SQLS_DIR/SQLS_SQL: the legacy plugin
+                // saves the top level value and falls back to it
+                // (`${SQLS_PARAMETERS:-$custom_sqls_parameters}`). A blank value
+                // adds nothing to the query, so it counts as unset.
+                parameters: section_var("SQLS_PARAMETERS")
+                    .or_else(|| variables.get("SQLS_PARAMETERS"))
+                    .filter(|v| !v.trim().is_empty())
+                    .cloned(),
             })
         })
         .collect()
@@ -596,6 +608,29 @@ fn warn_custom_sql_item_sid(custom_sqls: &[LegacyCustomSql]) -> Vec<String> {
         .collect()
 }
 
+/// Warn about the custom SQL sections that use `SQLS_PARAMETERS`.
+///
+/// The legacy plugin prepends the value to the SQL it pipes into `sqlplus`,
+/// which is how a SQL file gets the substitution variables (`&VAR`) it
+/// references `DEFINE`d. `sqlplus` commands have no meaning for the OCI driver
+/// of the new plugin, so there is nothing to migrate the value to: the section
+/// is migrated, but its query runs without the parameters and either fails or
+/// returns something else than it did.
+fn warn_custom_sql_parameters(custom_sqls: &[LegacyCustomSql]) -> Vec<String> {
+    custom_sqls
+        .iter()
+        .filter(|custom| custom.parameters.is_some())
+        .map(|custom| {
+            format!(
+                "{}: SQLS_PARAMETERS is not supported and is not migrated; the SQL*Plus commands \
+                 it prepends to the query are lost, so convert the substitution variables the SQL \
+                 file uses into 'sql_params:' manually",
+                custom.name
+            )
+        })
+        .collect()
+}
+
 /// Collect raw `SQLS_SIDS=` assignments from the legacy config text, keyed by
 /// the enclosing function name (None = top level).
 fn collect_raw_sqls_sids(legacy: &str) -> HashMap<Option<String>, String> {
@@ -688,6 +723,7 @@ pub fn convert(
         &known_aliases(&dbuser, &dbuser_extras),
     ));
     warnings.extend(warn_custom_sql_item_sid(&custom_sqls));
+    warnings.extend(warn_custom_sql_parameters(&custom_sqls));
     warnings.extend(custom_sql_warnings(&custom_sqls));
     for warning in warnings {
         let warning = format!("# WARNING: {warning}\n");
@@ -1292,14 +1328,24 @@ fn build_posix_script(config_paths: &[PathBuf]) -> String {
         .collect::<Vec<_>>()
         .join("|");
     let section_vars = CUSTOM_SQL_SECTION_VARIABLES.join(" ");
+    // __emit is defined after sourcing the configs, so a config defining a
+    // function of the same name cannot take its place.
+    // Newlines are folded into spaces: one variable must be one output line,
+    // otherwise the reader takes the continuation lines for further variables
+    // and loses everything but the first line of the value (SQLS_PARAMETERS is
+    // regularly written across several lines).
     format!(
         r#"{source_configs}
+__emit() {{
+  [ -n "$2" ] || return 0
+  printf '%s %s\n' "$1" "$(printf '%s' "$2" | tr '\n' ' ')"
+}}
 for __n in {vars}; do
   eval "__v=\$$__n"
-  [ -n "$__v" ] && printf '%s %s\n' "$__n" "$__v"
+  __emit "$__n" "$__v"
 done
 set 2>/dev/null | while IFS='=' read -r __n __rest; do
-  case "$__n" in {prefixes}) eval "__v=\$$__n"; [ -n "$__v" ] && printf '%s %s\n' "$__n" "$__v";; esac
+  case "$__n" in {prefixes}) eval "__v=\$$__n"; __emit "$__n" "$__v";; esac
 done
 for __sec in $(echo "$SQLS_SECTIONS" | tr ',' ' '); do
   type "$__sec" >/dev/null 2>&1 || continue
@@ -1307,7 +1353,7 @@ for __sec in $(echo "$SQLS_SECTIONS" | tr ',' ' '); do
   "$__sec" >/dev/null 2>&1
   for __n in {section_vars}; do
     eval "__v=\$$__n"
-    [ -n "$__v" ] && printf '%s %s\n' "SQLS.$__sec.$__n" "$__v"
+    __emit "SQLS.$__sec.$__n" "$__v"
   done
 done
 true"#
@@ -1647,6 +1693,7 @@ mod tests {
                 header_name: None,
                 header_sep: None,
                 item_sid: None,
+                parameters: None,
             }]
         );
     }
@@ -1671,6 +1718,7 @@ mod tests {
                 header_name: None,
                 header_sep: None,
                 item_sid: None,
+                parameters: None,
             }]
         );
     }
@@ -2154,6 +2202,85 @@ sec2 () {
     }
 
     #[test]
+    fn test_parse_custom_sqls_parameters() {
+        let vars = HashMap::from([
+            ("SQLS_SECTIONS".into(), "sec1 sec2 sec3".into()),
+            ("SQLS_SQL".into(), "a.sql".into()),
+            ("SQLS_PARAMETERS".into(), "DEFINE GLOBAL = 1".into()),
+            (
+                "SQLS.sec1.SQLS_PARAMETERS".into(),
+                " DEFINE VAR_IFILE = \"/tmp/i.txt\" ".into(),
+            ),
+            ("SQLS.sec3.SQLS_PARAMETERS".into(), "  ".into()),
+        ]);
+        let result = parse_custom_sqls("", &vars);
+        assert_eq!(
+            result[0].parameters.as_deref(),
+            Some(" DEFINE VAR_IFILE = \"/tmp/i.txt\" ")
+        );
+        assert_eq!(
+            result[1].parameters.as_deref(),
+            Some("DEFINE GLOBAL = 1"),
+            "SQLS_PARAMETERS falls back to the global value"
+        );
+        assert!(
+            result[2].parameters.is_none(),
+            "a blank value adds nothing to the query"
+        );
+    }
+
+    #[test]
+    fn test_warn_custom_sql_parameters() {
+        let mut custom = make_custom_sql("sec1", None, "a.sql", &["PROD"]);
+        custom.parameters = Some("DEFINE VAR_IFILE = \"/tmp/i.txt\"".into());
+        assert_eq!(
+            warn_custom_sql_parameters(&[custom]),
+            vec![
+                "sec1: SQLS_PARAMETERS is not supported and is not migrated; the SQL*Plus commands \
+                 it prepends to the query are lost, so convert the substitution variables the SQL \
+                 file uses into 'sql_params:' manually"
+            ]
+        );
+    }
+
+    #[test]
+    fn test_warn_custom_sql_parameters_without_parameters() {
+        let custom = make_custom_sql("sec1", None, "a.sql", &["PROD"]);
+        assert!(warn_custom_sql_parameters(&[custom]).is_empty());
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn test_convert_warns_on_custom_sql_parameters() {
+        let legacy = "sec1 () {\n    SQLS_SIDS=\"PROD\"\n    SQLS_SQL=\"a.sql\"\n    \
+                      SQLS_PARAMETERS=\"\n        DEFINE VAR_IFILE = \\\"/tmp/i.txt\\\"\n    \"\n}\n";
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("SQLS_SECTIONS".into(), "sec1".into()),
+            ("SQLS.sec1.SQLS_SIDS".into(), "PROD".into()),
+            ("SQLS.sec1.SQLS_SQL".into(), "a.sql".into()),
+            (
+                "SQLS.sec1.SQLS_PARAMETERS".into(),
+                "         DEFINE VAR_IFILE = \"/tmp/i.txt\"     ".into(),
+            ),
+        ]);
+        let result = convert(legacy, "/test/cfg", &vars, TS).unwrap();
+        assert!(
+            result.contains("# WARNING: sec1: SQLS_PARAMETERS is not supported"),
+            "got: {result}"
+        );
+        assert!(
+            result.contains("          - sec1:\n              path: a.sql\n"),
+            "the section is migrated regardless, got: {result}"
+        );
+        let (_, yaml) = result.split_once("# --- Unified Config ---").unwrap();
+        assert!(
+            !yaml.contains("sql_params"),
+            "the parameters cannot be migrated automatically, got: {yaml}"
+        );
+    }
+
+    #[test]
     fn test_parse_custom_sqls_section_sep() {
         let vars = HashMap::from([
             ("SQLS_SECTIONS".into(), "sec1 sec2 sec3".into()),
@@ -2258,6 +2385,7 @@ sec3 () {
             header_name: None,
             header_sep: None,
             item_sid: None,
+            parameters: None,
         }
     }
 
@@ -3051,6 +3179,10 @@ sec3 () {
         assert!(script.contains("REMOTE_INSTANCE_"));
         assert!(script.contains("EXCLUDE_"));
         assert!(script.contains("SQLS.$__sec.$__n"));
+        assert!(
+            script.contains(r"tr '\n' ' '"),
+            "a value spanning several lines must be emitted as one line"
+        );
     }
 
     /// Several configs are sourced in the given order, like the legacy plugin

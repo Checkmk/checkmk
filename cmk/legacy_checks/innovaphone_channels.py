@@ -4,46 +4,89 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
-from cmk.agent_based.v2 import DiscoveryResult, Service, StringTable
-from cmk.legacy_includes.innovaphone import check_innovaphone
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+
+@dataclass(frozen=True, kw_only=True)
+class Channel:
+    link: str
+    physical: str
+    idle: float
+    total: float
+
+    @property
+    def is_up(self) -> bool:
+        return self.link == "Up" and self.physical == "Up"
 
 
-def discover_innovaphone_channels(string_table: StringTable) -> DiscoveryResult:
-    yield from (Service(item=x[0]) for x in string_table if x[1] == "Up" and x[2] == "Up")
+Section = Mapping[str, Channel]
+
+
+def parse_innovaphone_channels(string_table: StringTable) -> Section:
+    return {
+        item: Channel(
+            link=link,
+            physical=physical,
+            idle=float(idle),
+            total=float(total),
+        )
+        for item, link, physical, idle, total in string_table
+    }
+
+
+def discover_innovaphone_channels(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item, channel in section.items() if channel.is_up)
 
 
 def check_innovaphone_channels(
-    item: str, params: Mapping[str, Any], info: StringTable
-) -> LegacyCheckResult:
-    for line in info:
-        if line[0] == item:
-            link, physical = line[1:3]
-            if link != "Up" or physical != "Up":
-                yield 2, f"Link: {link}, Physical: {physical}"
-                return
-            idle, total = map(float, line[3:])
-            perc_used = (idle / total) * 100  # fixed: true-division
-            perc_free = 100 - perc_used
-            message = f"(used: {total - idle:.0f}, free: {idle:.0f}, total: {total:.0f})"
-            yield check_innovaphone(params["levels"], [[None, perc_free]], "%", message)
-            return
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if (channel := section.get(item)) is None:
+        return
+
+    if not channel.is_up:
+        yield Result(
+            state=State.CRIT, summary=f"Link: {channel.link}, Physical: {channel.physical}"
+        )
+        return
+
+    perc_used = 100 - (channel.idle / channel.total) * 100
+    used = int(perc_used)
+    warn, crit = params["levels"]
+
+    yield Result(
+        state=State.CRIT if used >= crit else State.WARN if used >= warn else State.OK,
+        summary=(
+            f"Current: {used}% (used: {channel.total - channel.idle:.0f},"
+            f" free: {channel.idle:.0f}, total: {channel.total:.0f})"
+        ),
+    )
+    yield Metric("usage", used, levels=(warn, crit), boundaries=(0, 100))
 
 
-def parse_innovaphone_channels(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["innovaphone_channels"] = LegacyCheckDefinition(
+agent_section_innovaphone_channels = AgentSection(
     name="innovaphone_channels",
     parse_function=parse_innovaphone_channels,
+)
+
+
+check_plugin_innovaphone_channels = CheckPlugin(
+    name="innovaphone_channels",
     service_name="Channel %s",
     discovery_function=discover_innovaphone_channels,
     check_function=check_innovaphone_channels,

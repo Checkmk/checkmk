@@ -24,7 +24,7 @@ from ._fetched import (
     PerformanceData,
     SeriesAttributes,
 )
-from ._from_api import build_curve, parse_graph_from_api, QuantityBuilderProtocol
+from ._from_api import build_curve, QuantityBuilderProtocol
 from ._graph import (
     Bound,
     Curve,
@@ -144,5 +144,4 @@ __all__ = [
     "constant_time_series",
     "evaluate_graphs",
     "metric_display_attributes",
-    "parse_graph_from_api",
 ]

@@ -22,7 +22,6 @@ from cmk.graphing_engine import (
     Line,
     MetricName,
     MinimalRange,
-    parse_graph_from_api,
     Product,
     QuantityProtocol,
     RRDMetric,
@@ -38,6 +37,7 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
+from cmk.graphing_engine._from_api import parse_graph_from_api
 
 
 def _id(s: str) -> str:

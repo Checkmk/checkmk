@@ -50,6 +50,11 @@ class PerformanceTest:
         self.central_site = central_site
         self.remote_sites = remote_sites or []
 
+        #: Host that pages needing a real one are pointed at. Overwritten by the fixture
+        #: that creates it and discovers its services; the placeholder keeps URL
+        #: substitution total for every page that does not care.
+        self.monitored_host = "dummy"
+
         #: The round count given on the command line. It overrides every scenario's own.
         self.rounds_option = (
             val if isinstance((val := pytestconfig.getoption("rounds")), int) else None

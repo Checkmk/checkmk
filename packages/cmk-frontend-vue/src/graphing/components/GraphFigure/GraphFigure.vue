@@ -78,7 +78,7 @@ const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphDa
   () => plotWidth.value,
   () => [DEFAULT_CONSOLIDATION_FN],
   () => props.combinationMode,
-  props.fetchGraph ?? fetchGraphDataByDefinition
+  { fetchGraph: props.fetchGraph ?? fetchGraphDataByDefinition }
 )
 const graph = computed(() => graphs.value[0] ?? null)
 

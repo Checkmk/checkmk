@@ -140,7 +140,8 @@ const { graphs: overviewGraphs, reload: reloadOverview } = useGraphData(
   () => brush.requestedDomain.value,
   () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
   () => consolidationFnPerPanel.value,
-  () => props.combination_mode
+  () => props.combination_mode,
+  { getFetchBounds: navigableBounds }
 )
 
 // Derived from the response that fills it, never from `brush.requestedDomain`, which by now may

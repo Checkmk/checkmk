@@ -10,6 +10,10 @@ import { type Ref, computed, readonly, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import type { HorizontalLine, Metric, TimeRange } from '../components/TimeSeriesGraph'
+import {
+  type NavigableBounds,
+  clippedToNavigableTime
+} from '../components/TimeSeriesGraph/interaction/timeBounds'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../components/consolidation'
 import type { RequestedTimeRange } from '../types'
 import { withEdgeNeighbours } from '../utils/timeRange'
@@ -113,13 +117,20 @@ function computeStep(start: number, end: number, canvasWidth: number): number {
 // receives the self-contained `internal` definitions via the initial page props
 // (see build_template_graphs -> to_cmk_time_series_graph in cmk/gui/views/graph.py). This
 // composable only re-fetches evaluated data for those definitions as the requested range changes.
+export interface GraphDataOptions {
+  /** Supplied by callers whose requested range is derived rather than chosen by the user, so the
+   *  neighbour steps a fetch adds may not reach outside the navigable axis. */
+  getFetchBounds?: () => NavigableBounds
+  fetchGraph?: GraphDataFetcher
+}
+
 export function useGraphData(
   getGraphs: () => GraphDataDefinition[],
   getRequestedTimeRange: () => RequestedTimeRange,
   getCanvasWidth: () => number,
   getConsolidationFnPerGraph: () => ConsolidationFn[],
   getCombinationMode: () => GraphCombinationMode | null = () => null,
-  fetchGraph: GraphDataFetcher = fetchGraphDataByDefinition
+  options: GraphDataOptions = {}
 ): {
   graphs: Readonly<Ref<ResolvedGraph[]>>
   isLoading: Readonly<Ref<boolean>>
@@ -129,6 +140,8 @@ export function useGraphData(
   warnings: Readonly<Ref<readonly string[]>>
   reload: () => void
 } {
+  const fetchGraph = options.fetchGraph ?? fetchGraphDataByDefinition
+
   const graphsRef = ref<ResolvedGraph[]>([])
   const errorRef = ref<string | null>(null)
   const diagnosticsPerGraphRef = ref<{ errors: string[]; warnings: string[] }[]>([])
@@ -178,8 +191,10 @@ export function useGraphData(
     const step = computeStep(range.start, range.end, getCanvasWidth())
     lastRequestedStep = step
     const requestedTimeRange = { start: range.start, end: range.end }
+    const padded = withEdgeNeighbours({ ...requestedTimeRange, step })
+    const bounds = options.getFetchBounds?.()
     return {
-      fetchWindow: withEdgeNeighbours({ ...requestedTimeRange, step }),
+      fetchWindow: bounds === undefined ? padded : clippedToNavigableTime(padded, bounds),
       requestedTimeRange
     }
   }

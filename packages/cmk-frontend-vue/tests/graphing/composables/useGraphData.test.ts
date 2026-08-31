@@ -182,7 +182,7 @@ function renderWithFetcher(
         () => 800,
         () => ['max'],
         () => null,
-        fetchGraph
+        { fetchGraph }
       )
       return () => h('div')
     }

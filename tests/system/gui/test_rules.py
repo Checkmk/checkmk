@@ -261,6 +261,7 @@ def test_periodic_service_discovery_rule(
     ruleset_page = Ruleset(
         add_periodic_service_discovery_page.page,
         "Periodic service discovery",
+        add_periodic_service_discovery_page.varname,
         navigate_to_page=False,
     )
     ruleset_page.main_area.check_success(ruleset_page.created_new_rule_message)
@@ -290,7 +291,9 @@ def test_periodic_service_discovery_rule(
     ), "Unexpected service discovery period after adding a new rule"
 
     logger.info("Delete the new rule")
-    ruleset_page = Ruleset(effective_parameters_page.page, "Periodic service discovery")
+    ruleset_page = Ruleset(
+        effective_parameters_page.page, "Periodic service discovery", "periodic_discovery"
+    )
     ruleset_page.delete_icon(rule_description).click()
     ruleset_page.delete_button.click()
 
@@ -320,6 +323,7 @@ def test_use_default_periodic_service_discovery_rule(
     ruleset_page = Ruleset(
         dashboard_page.page,
         "Periodic service discovery",
+        "periodic_discovery",
     )
     rules_count = ruleset_page.rule_rows.count()
     assert rules_count == 1, "Unexpected number of rules in the table"
@@ -360,7 +364,10 @@ def test_predictive_levels_with_default_values(
         is_rule_added = True
 
         service_rules_page = Ruleset(
-            dashboard_page.page, disk_io_levels_page.rule_name, navigate_to_page=False
+            dashboard_page.page,
+            disk_io_levels_page.rule_name,
+            disk_io_levels_page.varname,
+            navigate_to_page=False,
         )
         service_rules_page.main_area.check_success(service_rules_page.created_new_rule_message)
         assert service_rules_page.rule_rows.count() == 1, "Unexpected number of rules in the table"
@@ -389,8 +396,7 @@ def test_predictive_levels_with_default_values(
             service_rules_page = Ruleset(
                 dashboard_page.page,
                 disk_io_levels_page.rule_name,
-                disk_io_levels_page.section_name,
-                exact_rule=True,
+                disk_io_levels_page.varname,
             )
             service_rules_page.delete_rule(rule_id=0)
             service_rules_page.activate_changes(test_site)
@@ -447,7 +453,10 @@ def test_predictive_levels_with_custom_values(
         is_rule_added = True
 
         service_rules_page = Ruleset(
-            dashboard_page.page, cpu_load_page.rule_name, navigate_to_page=False
+            dashboard_page.page,
+            cpu_load_page.rule_name,
+            cpu_load_page.varname,
+            navigate_to_page=False,
         )
         service_rules_page.main_area.check_success(service_rules_page.created_new_rule_message)
         assert service_rules_page.rule_rows.count() == 1, "Unexpected number of rules in the table"
@@ -480,8 +489,7 @@ def test_predictive_levels_with_custom_values(
             service_rules_page = Ruleset(
                 dashboard_page.page,
                 cpu_load_page.rule_name,
-                cpu_load_page.section_name,
-                exact_rule=True,
+                cpu_load_page.varname,
             )
             service_rules_page.delete_rule(rule_id=0)
             service_rules_page.activate_changes(test_site)

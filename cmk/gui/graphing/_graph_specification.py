@@ -178,9 +178,6 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     def graph_type(self) -> str:
         return self.graph_type_name()
 
-    def url(self) -> str:
-        return ""
-
     @classmethod
     def add_visual_type(cls) -> str | None:
         return None

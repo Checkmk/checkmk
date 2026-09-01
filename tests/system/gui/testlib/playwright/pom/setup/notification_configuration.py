@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from typing import overload, override
+from typing import override
 
 from playwright.sync_api import expect, Locator
 
@@ -62,32 +62,21 @@ class NotificationConfiguration(CmkPage):
         """
         return self.main_area.get_confirmation_popup_button("clone & edit")
 
-    @overload
-    def _notification_rule_row(self, rule_id: str) -> Locator: ...
-
-    @overload
-    def _notification_rule_row(self, rule_id: int) -> Locator: ...
-
     def _notification_rule_row(self, rule_id: str | int) -> Locator:
         """Return a locator for the specific notification rule row.
 
         The rule can be identified by rule position, providing an integer input for this function
         or by rule description, providing a string input for this function.
         """
-        if isinstance(rule_id, str):
-            rule_row_locator = self.main_area.locator(
-                f"table[class*='data'] >> tr:has(td:text-is('{rule_id}'))"
-            )
-        elif isinstance(rule_id, int):
-            rule_row_locator = self.main_area.locator(
-                f"tr[class*='data']:has(td[class*='narrow']:text-is('{rule_id}'))"
-            )
-        else:
-            raise TypeError(
-                f"Unsupported rule_id type: {type(rule_id)}",
-                "Expected 'str' (rule description) or 'int' (rule position)!",
-            )
-        return rule_row_locator
+        match rule_id:
+            case str():
+                return self.main_area.locator(
+                    f"table[class*='data'] >> tr:has(td:text-is('{rule_id}'))"
+                )
+            case int():
+                return self.main_area.locator(
+                    f"tr[class*='data']:has(td[class*='narrow']:text-is('{rule_id}'))"
+                )
 
     def notification_rule_edit_button(self, rule_id: int | str) -> Locator:
         return self._notification_rule_row(rule_id).get_by_title("Edit this notification rule")

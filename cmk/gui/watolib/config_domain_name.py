@@ -35,6 +35,7 @@ from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.utils.config_warnings import ConfigurationWarnings
+from cmk.web.utils.flashed_messages import MsgType
 from cmk.web.utils.html import HTML
 
 ConfigDomainName = str
@@ -320,6 +321,7 @@ class ConfigVariable:
         allow_reset: bool = True,
         in_global_settings: bool = True,
         hint: Callable[[], HTML] = HTML.empty,
+        hint_type: MsgType = "warning",
         domain_hint: HTML | None = None,
     ) -> None:
         if (valuespec is None) == (form_spec is None):
@@ -335,6 +337,7 @@ class ConfigVariable:
         self._allow_reset = allow_reset
         self._in_global_settings = in_global_settings
         self._hint_func = hint
+        self._hint_type = hint_type
         self._domain_hint = domain_hint
         self._idents_of_affected_domains = [self._primary_domain_ident]
 
@@ -405,6 +408,9 @@ class ConfigVariable:
 
     def hint(self) -> HTML:
         return self._hint_func()
+
+    def hint_type(self) -> MsgType:
+        return self._hint_type
 
     def domain_hint(self) -> HTML:
         return self._domain_hint or self.primary_domain().hint() or HTML.empty()

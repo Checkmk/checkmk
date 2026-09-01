@@ -231,6 +231,9 @@ class HTMLWriter:
     def show_warning(self, msg: HTML | str) -> None:
         self._write(self._render_message(msg, "warning"))
 
+    def show_info(self, msg: HTML | str) -> None:
+        self._write(self._render_message(msg, "info"))
+
     def render_message(
         self,
         msg: HTML | str,

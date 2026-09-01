@@ -1,424 +1,86 @@
 #!/usr/bin/env python3
-# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping, Sequence
-
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.legacy_checks import ucs_c_rack_server_temp
 from cmk.legacy_checks.ucs_c_rack_server_temp import (
     check_ucs_c_rack_server_temp,
     discover_ucs_c_rack_server_temp,
     parse_ucs_c_rack_server_temp,
 )
 
-
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
+_SECTION = parse_ucs_c_rack_server_temp(
     [
-        (
-            [
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-1/env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 58.4",
-                ],
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-2/env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 60.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-1/dimm-env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 40.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-2/dimm-env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 61.4",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-1/board/temp-stats",
-                    "ambientTemp 40.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-2/board/temp-stats",
-                    "ambientTemp 60.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-            ],
-            [
-                ("Rack Unit 1 CPU 1", {}),
-                ("Rack Unit 1 CPU 2", {}),
-                ("Rack Unit 1 Memory Array 1 Memory DIMM 1", {}),
-                ("Rack Unit 1 Memory Array 1 Memory DIMM 2", {}),
-                ("Rack Unit 1 Motherboard", {}),
-                ("Rack Unit 2 Motherboard", {}),
-            ],
-        ),
-    ],
+        [
+            "processorEnvStats",
+            "dn sys/rack-unit-1/board/cpu-1/env-stats",
+            "id 1",
+            "description x",
+            "temperature 58.4",
+        ],
+        [
+            "memoryUnitEnvStats",
+            "dn sys/rack-unit-1/board/memarray-1/mem-1/dimm-env-stats",
+            "id 1",
+            "description x",
+            "temperature 40.4",
+        ],
+        [
+            "computeRackUnitMbTempStats",
+            "dn sys/rack-unit-1/board/temp-stats",
+            "ambientTemp 50.0",
+            "frontTemp 50.0",
+        ],
+        ["somethingElse", "dn sys/rack-unit-1/whatever", "id 1"],  # not a sensor, skipped
+    ]
 )
-def test_discover_ucs_c_rack_server_temp(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
-) -> None:
-    """Test discovery function for ucs_c_rack_server_temp check."""
-    parsed = parse_ucs_c_rack_server_temp(string_table)
-    result = list(discover_ucs_c_rack_server_temp(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
 
 
-@pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
-    [
-        (
-            "Rack Unit 1 CPU 1",
-            {},
-            [
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-1/env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 58.4",
-                ],
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-2/env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 60.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-1/dimm-env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 40.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-2/dimm-env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 61.4",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-1/board/temp-stats",
-                    "ambientTemp 40.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-2/board/temp-stats",
-                    "ambientTemp 60.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-            ],
-            [(0, "58.4 °C", [("temp", 58.4, None, None)])],
-        ),
-        (
-            "Rack Unit 1 CPU 2",
-            {},
-            [
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-1/env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 58.4",
-                ],
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-2/env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 60.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-1/dimm-env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 40.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-2/dimm-env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 61.4",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-1/board/temp-stats",
-                    "ambientTemp 40.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-2/board/temp-stats",
-                    "ambientTemp 60.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-            ],
-            [(0, "60.4 °C", [("temp", 60.4, None, None)])],
-        ),
-        (
-            "Rack Unit 1 Memory Array 1 Memory DIMM 1",
-            {},
-            [
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-1/env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 58.4",
-                ],
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-2/env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 60.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-1/dimm-env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 40.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-2/dimm-env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 61.4",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-1/board/temp-stats",
-                    "ambientTemp 40.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-2/board/temp-stats",
-                    "ambientTemp 60.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-            ],
-            [(0, "40.4 °C", [("temp", 40.4, None, None)])],
-        ),
-        (
-            "Rack Unit 1 Memory Array 1 Memory DIMM 2",
-            {},
-            [
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-1/env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 58.4",
-                ],
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-2/env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 60.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-1/dimm-env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 40.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-2/dimm-env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 61.4",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-1/board/temp-stats",
-                    "ambientTemp 40.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-2/board/temp-stats",
-                    "ambientTemp 60.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-            ],
-            [(0, "61.4 °C", [("temp", 61.4, None, None)])],
-        ),
-        (
-            "Rack Unit 1 Motherboard",
-            {},
-            [
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-1/env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 58.4",
-                ],
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-2/env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 60.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-1/dimm-env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 40.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-2/dimm-env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 61.4",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-1/board/temp-stats",
-                    "ambientTemp 40.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-2/board/temp-stats",
-                    "ambientTemp 60.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-            ],
-            [(0, "50.0 °C", [("temp", 50.0, None, None)])],
-        ),
-        (
-            "Rack Unit 2 Motherboard",
-            {},
-            [
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-1/env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 58.4",
-                ],
-                [
-                    "processorEnvStats",
-                    "dn sys/rack-unit-1/board/cpu-2/env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 60.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-1/dimm-env-stats",
-                    "id 1",
-                    "description blalub",
-                    "temperature 40.4",
-                ],
-                [
-                    "memoryUnitEnvStats",
-                    "dn sys/rack-unit-1/board/memarray-1/mem-2/dimm-env-stats",
-                    "id 2",
-                    "description blalub",
-                    "temperature 61.4",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-1/board/temp-stats",
-                    "ambientTemp 40.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-                [
-                    "computeRackUnitMbTempStats",
-                    "dn sys/rack-unit-2/board/temp-stats",
-                    "ambientTemp 60.0",
-                    "frontTemp 50.0",
-                    "ioh1Temp 50.0",
-                    "ioh2Temp 50.0",
-                    "rearTemp 50.0",
-                ],
-            ],
-            [(0, "50.0 °C", [("temp", 50.0, None, None)])],
-        ),
-    ],
-)
-def test_check_ucs_c_rack_server_temp(
-    item: str,
-    params: Mapping[str, object],
-    string_table: StringTable,
-    expected_results: Sequence[object],
-) -> None:
-    """Test check function for ucs_c_rack_server_temp check."""
-    parsed = parse_ucs_c_rack_server_temp(string_table)
-    result = list(check_ucs_c_rack_server_temp(item, params, parsed))
-    assert result == expected_results
+@pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
+def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Without previous readings the temperature helper reports no trends.
+    monkeypatch.setattr(ucs_c_rack_server_temp, "get_value_store", dict)
+
+
+def test_parse_ucs_c_rack_server_temp() -> None:
+    assert _SECTION == {
+        "Rack Unit 1 CPU 1": 58.4,
+        "Rack Unit 1 Memory Array 1 Memory DIMM 1": 40.4,
+        "Rack Unit 1 Motherboard": 50.0,
+    }
+
+
+def test_discover_ucs_c_rack_server_temp() -> None:
+    assert list(discover_ucs_c_rack_server_temp(_SECTION)) == [
+        Service(item="Rack Unit 1 CPU 1"),
+        Service(item="Rack Unit 1 Memory Array 1 Memory DIMM 1"),
+        Service(item="Rack Unit 1 Motherboard"),
+    ]
+
+
+def test_check_ucs_c_rack_server_temp_without_levels() -> None:
+    results = list(
+        check_ucs_c_rack_server_temp("Rack Unit 1 Memory Array 1 Memory DIMM 1", {}, _SECTION)
+    )
+    assert results[:2] == [
+        Metric("temp", 40.4),
+        Result(state=State.OK, summary="Temperature: 40.4 °C"),
+    ]
+
+
+def test_check_ucs_c_rack_server_temp_above_levels() -> None:
+    results = list(
+        check_ucs_c_rack_server_temp("Rack Unit 1 CPU 1", {"levels": (45.0, 55.0)}, _SECTION)
+    )
+    assert results[:2] == [
+        Metric("temp", 58.4, levels=(45.0, 55.0)),
+        Result(state=State.CRIT, summary="Temperature: 58.4 °C (warn/crit at 45.0 °C/55.0 °C)"),
+    ]
+
+
+def test_check_ucs_c_rack_server_temp_vanished_item() -> None:
+    assert not list(check_ucs_c_rack_server_temp("Rack Unit 2 CPU 1", {}, _SECTION))

@@ -3,13 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.legacy_includes.temperature import check_temperature
-
-check_info = {}
-
 # exemplary output of special agent agent_ucs_bladecenter (<TAB> is tabulator):
 #
 # <<<ucsc_server_temp:sep(9)>>>
@@ -21,7 +14,23 @@ check_info = {}
 # computeRackUnitMbTempStats<TAB>dn sys/rack-unit-2/board/temp-stats<TAB>ambientTemp 50.0<TAB>frontTemp 50.0<TAB>ioh1Temp 50.0<TAB>ioh2Temp 50.0<TAB>rearTemp 50.0
 
 
-def parse_ucs_c_rack_server_temp(string_table):
+from collections.abc import Mapping
+
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
+
+type Section = Mapping[str, float]
+
+
+def parse_ucs_c_rack_server_temp(string_table: StringTable) -> Section:
     """
     Returns dict with indexed processors, memory units and motherboards mapped to keys and
     temperature as value.
@@ -30,7 +39,7 @@ def parse_ucs_c_rack_server_temp(string_table):
     for line in string_table:
         key_value_pairs = [kv.split(" ", 1) for kv in line[1:]]
         if "cpu-" in key_value_pairs[0][1]:
-            cpu = (
+            item = (
                 key_value_pairs[0][1]
                 .replace("sys/", "")
                 .replace("rack-unit-", "Rack Unit ")
@@ -38,12 +47,9 @@ def parse_ucs_c_rack_server_temp(string_table):
                 .replace("/cpu-", " CPU ")
                 .replace("/env-stats", "")
             )
-            try:
-                parsed[cpu] = float(key_value_pairs[3][1])
-            except ValueError, KeyError:
-                continue  # skip potentially invalid agent output
+            temperature_index = 3
         elif "mem-" in key_value_pairs[0][1]:
-            mem = (
+            item = (
                 key_value_pairs[0][1]
                 .replace("sys/", "")
                 .replace("rack-unit-", "Rack Unit ")
@@ -52,43 +58,52 @@ def parse_ucs_c_rack_server_temp(string_table):
                 .replace("/mem-", " Memory DIMM ")
                 .replace("/dimm-env-stats", "")
             )
-            try:
-                parsed[mem] = float(key_value_pairs[3][1])
-            except ValueError, KeyError:
-                continue  # skip potentially invalid agent output
+            temperature_index = 3
         elif "board" in key_value_pairs[0][1]:
-            mb = (
+            item = (
                 key_value_pairs[0][1]
                 .replace("sys/", "")
                 .replace("rack-unit-", "Rack Unit ")
                 .replace("/board/temp-stats", " Motherboard")
             )
-            try:
-                parsed[mb] = float(key_value_pairs[2][1])
-            except ValueError, KeyError:
-                continue  # skip potentially invalid agent output
+            temperature_index = 2
         else:
+            continue  # skip potentially invalid agent output
+
+        try:
+            parsed[item] = float(key_value_pairs[temperature_index][1])
+        except ValueError, KeyError:
             continue  # skip potentially invalid agent output
     return parsed
 
 
-def check_ucs_c_rack_server_temp(item, params, parsed):
-    if (temperature := parsed.get(item)) is None:
+def discover_ucs_c_rack_server_temp(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_ucs_c_rack_server_temp(item: str, params: TempParamDict, section: Section) -> CheckResult:
+    if (temperature := section.get(item)) is None:
         return
-    yield check_temperature(
-        temperature, params, "ucs_c_rack_server_%s" % item.lower().replace(" ", "_")
+
+    yield from check_temperature(
+        temperature,
+        params,
+        unique_name="ucs_c_rack_server_%s" % item.lower().replace(" ", "_"),
+        value_store=get_value_store(),
     )
 
 
-def discover_ucs_c_rack_server_temp(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["ucs_c_rack_server_temp"] = LegacyCheckDefinition(
+agent_section_ucs_c_rack_server_temp = AgentSection(
     name="ucs_c_rack_server_temp",
     parse_function=parse_ucs_c_rack_server_temp,
+)
+
+
+check_plugin_ucs_c_rack_server_temp = CheckPlugin(
+    name="ucs_c_rack_server_temp",
     service_name="Temperature %s",
     discovery_function=discover_ucs_c_rack_server_temp,
     check_function=check_ucs_c_rack_server_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )

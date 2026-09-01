@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import get_value_store, IgnoreResultsError, StringTable
-from cmk.legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
+from cmk.plugins.ddn_s2a.lib import parse_ddn_s2a_api_response
 
 check_info = {}
 

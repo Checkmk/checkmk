@@ -10,7 +10,7 @@ from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
 from cmk.agent_based.v2 import StringTable
-from cmk.legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
+from cmk.plugins.ddn_s2a.lib import parse_ddn_s2a_api_response
 
 check_info = {}
 

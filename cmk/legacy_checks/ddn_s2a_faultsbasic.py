@@ -6,7 +6,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
+from cmk.plugins.ddn_s2a.lib import parse_ddn_s2a_api_response
 
 check_info = {}
 

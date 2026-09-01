@@ -727,7 +727,7 @@ allows = [
 ]
 
 [components."cmk.mcp"]
-allows = ["@ccc", "@trace"]
+allows = ["@ccc", "@trace", "@crash"]
 
 [components."cmk.messaging"]
 allows = ["@ccc"]

@@ -3,13 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping, Sequence
-
-import pytest
-
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.legacy_checks.ucs_c_rack_server_fans import (
     check_ucs_c_rack_server_fans,
     discover_ucs_c_rack_server_fans,
@@ -17,288 +11,53 @@ from cmk.legacy_checks.ucs_c_rack_server_fans import (
 )
 
 
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
-    [
-        (
-            [
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability bla",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-3",
-                    "id 3",
-                    "model ",
-                    "operability blub",
-                ],
-            ],
-            [
-                ("Rack Unit 1 Module 1-1 1", {}),
-                ("Rack Unit 1 Module 1-1 2", {}),
-                ("Rack Unit 2 Module 1-1 1", {}),
-                ("Rack Unit 2 Module 1-1 2", {}),
-                ("Rack Unit 2 Module 1-1 3", {}),
-            ],
-        ),
-    ],
-)
-def test_discover_ucs_c_rack_server_fans(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
-) -> None:
-    """Test discovery function for ucs_c_rack_server_fans check."""
-    parsed = parse_ucs_c_rack_server_fans(string_table)
-    result = list(discover_ucs_c_rack_server_fans(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+def _fan(rack: int, fan: int, operability: str) -> list[str]:
+    return [
+        "equipmentFan",
+        f"dn sys/rack-unit-{rack}/fan-module-1-1/fan-{fan}",
+        f"id {fan}",
+        "model ",
+        f"operability {operability}",
+    ]
 
 
-@pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+_SECTION = parse_ucs_c_rack_server_fans(
     [
-        (
-            "Rack Unit 1 Module 1-1 1",
-            {},
-            [
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability bla",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-3",
-                    "id 3",
-                    "model ",
-                    "operability blub",
-                ],
-            ],
-            [(0, "Operability Status is operable")],
-        ),
-        (
-            "Rack Unit 1 Module 1-1 2",
-            {},
-            [
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability bla",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-3",
-                    "id 3",
-                    "model ",
-                    "operability blub",
-                ],
-            ],
-            [(0, "Operability Status is operable")],
-        ),
-        (
-            "Rack Unit 2 Module 1-1 1",
-            {},
-            [
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability bla",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-3",
-                    "id 3",
-                    "model ",
-                    "operability blub",
-                ],
-            ],
-            [(0, "Operability Status is operable")],
-        ),
-        (
-            "Rack Unit 2 Module 1-1 2",
-            {},
-            [
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability bla",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-3",
-                    "id 3",
-                    "model ",
-                    "operability blub",
-                ],
-            ],
-            [(3, "Unknown Operability Status: bla")],
-        ),
-        (
-            "Rack Unit 2 Module 1-1 3",
-            {},
-            [
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-1/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-1",
-                    "id 1",
-                    "model ",
-                    "operability operable",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-2",
-                    "id 2",
-                    "model ",
-                    "operability bla",
-                ],
-                [
-                    "equipmentFan",
-                    "dn sys/rack-unit-2/fan-module-1-1/fan-3",
-                    "id 3",
-                    "model ",
-                    "operability blub",
-                ],
-            ],
-            [(3, "Unknown Operability Status: blub")],
-        ),
-    ],
+        _fan(1, 1, "operable"),
+        _fan(1, 2, "inoperable"),
+        _fan(2, 1, "unknown"),
+        _fan(2, 2, "bogus"),
+        ["equipmentFan", "dn sys/rack-unit-3/fan-module-1-1/fan-1"],  # incomplete, skipped
+    ]
 )
-def test_check_ucs_c_rack_server_fans(
-    item: str,
-    params: Mapping[str, object],
-    string_table: StringTable,
-    expected_results: Sequence[object],
-) -> None:
-    """Test check function for ucs_c_rack_server_fans check."""
-    parsed = parse_ucs_c_rack_server_fans(string_table)
-    result = list(check_ucs_c_rack_server_fans(item, params, parsed))
-    assert result == expected_results
+
+
+def test_discover_ucs_c_rack_server_fans() -> None:
+    assert list(discover_ucs_c_rack_server_fans(_SECTION)) == [
+        Service(item="Rack Unit 1 Module 1-1 1"),
+        Service(item="Rack Unit 1 Module 1-1 2"),
+        Service(item="Rack Unit 2 Module 1-1 1"),
+        Service(item="Rack Unit 2 Module 1-1 2"),
+    ]
+
+
+def test_check_ucs_c_rack_server_fans() -> None:
+    assert list(check_ucs_c_rack_server_fans("Rack Unit 1 Module 1-1 1", _SECTION)) == [
+        Result(state=State.OK, summary="Operability Status is operable")
+    ]
+    assert list(check_ucs_c_rack_server_fans("Rack Unit 1 Module 1-1 2", _SECTION)) == [
+        Result(state=State.CRIT, summary="Operability Status is inoperable")
+    ]
+    assert list(check_ucs_c_rack_server_fans("Rack Unit 2 Module 1-1 1", _SECTION)) == [
+        Result(state=State.UNKNOWN, summary="Operability Status is unknown")
+    ]
+
+
+def test_check_ucs_c_rack_server_fans_unmapped_value() -> None:
+    assert list(check_ucs_c_rack_server_fans("Rack Unit 2 Module 1-1 2", _SECTION)) == [
+        Result(state=State.UNKNOWN, summary="Unknown Operability Status: bogus")
+    ]
+
+
+def test_check_ucs_c_rack_server_fans_vanished_item() -> None:
+    assert not list(check_ucs_c_rack_server_fans("Rack Unit 3 Module 1-1 1", _SECTION))

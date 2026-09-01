@@ -3,12 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any
+
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.ddn_s2a.lib import parse_ddn_s2a_api_response
-
-check_info = {}
 
 #   .--Parse function------------------------------------------------------.
 #   |  ____                        __                  _   _               |
@@ -19,19 +34,35 @@ check_info = {}
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+_NON_UNIQUE_KEYS = (
+    "failed_avr_fan_ctrl_item",
+    "failed_avr_pwr_sup_item",
+    "failed_avr_temp_W_item",
+    "failed_avr_temp_C_item",
+    "failed_disk_item",
+)
 
-def parse_ddn_s2a_faultsbasic(string_table):
-    non_unique_keys = [
-        "failed_avr_fan_ctrl_item",
-        "failed_avr_pwr_sup_item",
-        "failed_avr_temp_W_item",
-        "failed_avr_temp_C_item",
-        "failed_disk_item",
-    ]
-    return {
-        key: value if key in non_unique_keys else value[0]
-        for key, value in parse_ddn_s2a_api_response(string_table).items()
-    }
+
+@dataclass(frozen=True, kw_only=True)
+class Section:
+    values: Mapping[str, str]
+    """Unique values, keyed by their API field name."""
+    failed_items: Mapping[str, Sequence[str]]
+    """Names of the failed components, keyed by their API field name."""
+
+
+def parse_ddn_s2a_faultsbasic(string_table: StringTable) -> Section:
+    parsed = parse_ddn_s2a_api_response(string_table)
+    return Section(
+        values={key: value[0] for key, value in parsed.items() if key not in _NON_UNIQUE_KEYS},
+        failed_items={key: value for key, value in parsed.items() if key in _NON_UNIQUE_KEYS},
+    )
+
+
+agent_section_ddn_s2a_faultsbasic = AgentSection(
+    name="ddn_s2a_faultsbasic",
+    parse_function=parse_ddn_s2a_faultsbasic,
+)
 
 
 # .
@@ -45,25 +76,25 @@ def parse_ddn_s2a_faultsbasic(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_faultsbasic_disks(parsed):
-    if "disk_failures_count" in parsed:
-        yield None, {}
+def discover_ddn_s2a_faultsbasic_disks(section: Section) -> DiscoveryResult:
+    if "disk_failures_count" in section.values:
+        yield Service()
 
 
-def check_ddn_s2a_faultsbasic_disks(_no_item, params, parsed):
-    yield check_levels(
-        int(parsed["disk_failures_count"]),
+def check_ddn_s2a_faultsbasic_disks(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from check_levels(
+        int(section.values["disk_failures_count"]),
         None,
         params["levels"],
         human_readable_func=str,
         infoname="Failures detected",
     )
 
-    if parsed.get("failed_disk_item"):
-        yield 0, "Failed disks: " + ", ".join(parsed["failed_disk_item"])
+    if failed_disks := section.failed_items.get("failed_disk_item"):
+        yield Result(state=State.OK, summary="Failed disks: " + ", ".join(failed_disks))
 
 
-check_info["ddn_s2a_faultsbasic.disks"] = LegacyCheckDefinition(
+check_plugin_ddn_s2a_faultsbasic_disks = CheckPlugin(
     name="ddn_s2a_faultsbasic_disks",
     service_name="DDN S2A Disks",
     sections=["ddn_s2a_faultsbasic"],
@@ -86,37 +117,32 @@ check_info["ddn_s2a_faultsbasic.disks"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_faultsbasic_temp(parsed):
-    if "avr_temp_W_failures_count" in parsed:
-        return [(None, None)]
-    return []
+def discover_ddn_s2a_faultsbasic_temp(section: Section) -> DiscoveryResult:
+    if "avr_temp_W_failures_count" in section.values:
+        yield Service()
 
 
-def check_ddn_s2a_faultsbasic_temp(_no_item, _no_params, parsed):
-    crit_failures = int(parsed["avr_temp_C_failures_count"])
-    warn_failures = int(parsed["avr_temp_W_failures_count"])
+def check_ddn_s2a_faultsbasic_temp(section: Section) -> CheckResult:
+    crit_failures = int(section.values["avr_temp_C_failures_count"])
+    warn_failures = int(section.values["avr_temp_W_failures_count"])
 
     if crit_failures:
-        status = 2
+        state = State.CRIT
     elif warn_failures:
-        status = 1
+        state = State.WARN
     else:
-        status = 0
+        state = State.OK
 
-    infotext = "%d critical failures, %d warnings" % (crit_failures, warn_failures)
+    summary = f"{crit_failures} critical failures, {warn_failures} warnings"
+    if crit_failures_items := section.failed_items.get("failed_avr_temp_C_item"):
+        summary += ". Critical failures: " + ", ".join(crit_failures_items)
+    if warn_failures_items := section.failed_items.get("failed_avr_temp_W_item"):
+        summary += ". Warnings: " + ", ".join(warn_failures_items)
 
-    crit_failures_items = parsed.get("failed_avr_temp_C_item")
-    if crit_failures_items:
-        infotext += ". Critical failures: " + ", ".join(crit_failures_items)
-
-    warn_failures_items = parsed.get("failed_avr_temp_W_item")
-    if warn_failures_items:
-        infotext += ". Warnings: " + ", ".join(warn_failures_items)
-
-    return status, infotext
+    yield Result(state=state, summary=summary)
 
 
-check_info["ddn_s2a_faultsbasic.temp"] = LegacyCheckDefinition(
+check_plugin_ddn_s2a_faultsbasic_temp = CheckPlugin(
     name="ddn_s2a_faultsbasic_temp",
     service_name="DDN S2A Temperature",
     sections=["ddn_s2a_faultsbasic"],
@@ -135,22 +161,23 @@ check_info["ddn_s2a_faultsbasic.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_faultsbasic_ps(parsed):
-    if "avr_pwr_sup_failures_count" in parsed:
-        return [(None, None)]
-    return []
+def discover_ddn_s2a_faultsbasic_ps(section: Section) -> DiscoveryResult:
+    if "avr_pwr_sup_failures_count" in section.values:
+        yield Service()
 
 
-def check_ddn_s2a_faultsbasic_ps(_no_item, _no_params, parsed):
-    ps_failures = int(parsed["avr_pwr_sup_failures_count"])
-    if ps_failures > 0:
-        infotext = "Power supply failure: "
-        infotext += ", ".join(parsed["failed_avr_pwr_sup_item"])
-        return 2, infotext
-    return 0, "No power supply failures detected"
+def check_ddn_s2a_faultsbasic_ps(section: Section) -> CheckResult:
+    if int(section.values["avr_pwr_sup_failures_count"]) > 0:
+        yield Result(
+            state=State.CRIT,
+            summary="Power supply failure: "
+            + ", ".join(section.failed_items["failed_avr_pwr_sup_item"]),
+        )
+    else:
+        yield Result(state=State.OK, summary="No power supply failures detected")
 
 
-check_info["ddn_s2a_faultsbasic.ps"] = LegacyCheckDefinition(
+check_plugin_ddn_s2a_faultsbasic_ps = CheckPlugin(
     name="ddn_s2a_faultsbasic_ps",
     service_name="DDN S2A Power Supplies",
     sections=["ddn_s2a_faultsbasic"],
@@ -169,15 +196,15 @@ check_info["ddn_s2a_faultsbasic.ps"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_faultsbasic_fans(parsed):
-    if "avr_fan_ctrl_failures_count" in parsed:
-        yield None, {}
+def discover_ddn_s2a_faultsbasic_fans(section: Section) -> DiscoveryResult:
+    if "avr_fan_ctrl_failures_count" in section.values:
+        yield Service()
 
 
-def check_ddn_s2a_faultsbasic_fans(_no_item, params, parsed):
-    fan_failures = int(parsed["avr_fan_ctrl_failures_count"])
+def check_ddn_s2a_faultsbasic_fans(params: Mapping[str, Any], section: Section) -> CheckResult:
+    fan_failures = int(section.values["avr_fan_ctrl_failures_count"])
 
-    yield check_levels(
+    yield from check_levels(
         fan_failures,
         None,
         params["levels"],
@@ -186,10 +213,13 @@ def check_ddn_s2a_faultsbasic_fans(_no_item, params, parsed):
     )
 
     if fan_failures:
-        yield from ((0, txt) for txt in parsed["failed_avr_fan_ctrl_item"])
+        yield from (
+            Result(state=State.OK, summary=txt)
+            for txt in section.failed_items["failed_avr_fan_ctrl_item"]
+        )
 
 
-check_info["ddn_s2a_faultsbasic.fans"] = LegacyCheckDefinition(
+check_plugin_ddn_s2a_faultsbasic_fans = CheckPlugin(
     name="ddn_s2a_faultsbasic_fans",
     service_name="DDN S2A Fans",
     sections=["ddn_s2a_faultsbasic"],
@@ -210,23 +240,21 @@ check_info["ddn_s2a_faultsbasic.fans"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_faultsbasic_pingfault(parsed):
-    if "ping_fault" in parsed:
-        return [(None, None)]
-    return []
+def discover_ddn_s2a_faultsbasic_pingfault(section: Section) -> DiscoveryResult:
+    if "ping_fault" in section.values:
+        yield Service()
 
 
-def check_ddn_s2a_faultsbasic_pingfault(_no_item, _no_params, parsed):
-    if parsed["ping_fault"] == "FALSE":
-        return 0, "No fault detected"
-    if "ping_fault_tag" in parsed:
-        return 1, "Ping Fault: " + parsed["ping_fault_tag"]
-    if parsed["ping_fault"] == "TRUE":
-        return 1, "Ping Fault"
-    return None
+def check_ddn_s2a_faultsbasic_pingfault(section: Section) -> CheckResult:
+    if section.values["ping_fault"] == "FALSE":
+        yield Result(state=State.OK, summary="No fault detected")
+    elif "ping_fault_tag" in section.values:
+        yield Result(state=State.WARN, summary="Ping Fault: " + section.values["ping_fault_tag"])
+    elif section.values["ping_fault"] == "TRUE":
+        yield Result(state=State.WARN, summary="Ping Fault")
 
 
-check_info["ddn_s2a_faultsbasic.pingfault"] = LegacyCheckDefinition(
+check_plugin_ddn_s2a_faultsbasic_pingfault = CheckPlugin(
     name="ddn_s2a_faultsbasic_pingfault",
     service_name="DDN S2A Ping Fault Status",
     sections=["ddn_s2a_faultsbasic"],
@@ -245,19 +273,19 @@ check_info["ddn_s2a_faultsbasic.pingfault"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_faultsbasic_bootstatus(parsed):
-    if "system_fully_booted" in parsed:
-        return [(None, None)]
-    return []
+def discover_ddn_s2a_faultsbasic_bootstatus(section: Section) -> DiscoveryResult:
+    if "system_fully_booted" in section.values:
+        yield Service()
 
 
-def check_ddn_s2a_faultsbasic_bootstatus(_no_item, _no_params, parsed):
-    if parsed["system_fully_booted"] == "TRUE":
-        return 0, "System fully booted"
-    return 1, "System not fully booted"
+def check_ddn_s2a_faultsbasic_bootstatus(section: Section) -> CheckResult:
+    if section.values["system_fully_booted"] == "TRUE":
+        yield Result(state=State.OK, summary="System fully booted")
+    else:
+        yield Result(state=State.WARN, summary="System not fully booted")
 
 
-check_info["ddn_s2a_faultsbasic.bootstatus"] = LegacyCheckDefinition(
+check_plugin_ddn_s2a_faultsbasic_bootstatus = CheckPlugin(
     name="ddn_s2a_faultsbasic_bootstatus",
     service_name="DDN S2A Boot Status",
     sections=["ddn_s2a_faultsbasic"],
@@ -281,30 +309,32 @@ check_info["ddn_s2a_faultsbasic.bootstatus"] = LegacyCheckDefinition(
 #   |                                                    |___/             |
 #   '----------------------------------------------------------------------'
 
-
-def discover_ddn_s2a_faultsbasic_cachecoh(parsed):
-    if "hstd1_online_failure" in parsed:
-        return [(None, None)]
-    return []
-
-
-def check_ddn_s2a_faultsbasic_cachecoh(_no_item, _no_params, parsed):
-    cache_coherency = parsed.get("cache_coherency")
-    if cache_coherency:
-        cache_coherency_states = {
-            "established": 0,
-            "not enabled": 1,
-            "not established": 2,
-        }
-
-        return cache_coherency_states.get(cache_coherency, 3), "Cache coherency: " + cache_coherency
-
-    # The value is only supplied in case of a failure. A missing value is an implicit OK
-    # according to the API documentation.
-    return 0, "Cache coherency: established"
+_CACHE_COHERENCY_STATES = {
+    "established": State.OK,
+    "not enabled": State.WARN,
+    "not established": State.CRIT,
+}
 
 
-check_info["ddn_s2a_faultsbasic.cachecoh"] = LegacyCheckDefinition(
+def discover_ddn_s2a_faultsbasic_cachecoh(section: Section) -> DiscoveryResult:
+    if "hstd1_online_failure" in section.values:
+        yield Service()
+
+
+def check_ddn_s2a_faultsbasic_cachecoh(section: Section) -> CheckResult:
+    if not (cache_coherency := section.values.get("cache_coherency")):
+        # The value is only supplied in case of a failure. A missing value is an implicit OK
+        # according to the API documentation.
+        yield Result(state=State.OK, summary="Cache coherency: established")
+        return
+
+    yield Result(
+        state=_CACHE_COHERENCY_STATES.get(cache_coherency, State.UNKNOWN),
+        summary="Cache coherency: " + cache_coherency,
+    )
+
+
+check_plugin_ddn_s2a_faultsbasic_cachecoh = CheckPlugin(
     name="ddn_s2a_faultsbasic_cachecoh",
     service_name="DDN S2A Cache Coherency",
     sections=["ddn_s2a_faultsbasic"],
@@ -323,25 +353,23 @@ check_info["ddn_s2a_faultsbasic.cachecoh"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_faultsbasic_dualcomm(parsed):
-    if "hstd1_online_failure" in parsed:
-        return [(None, None)]
-    return []
+def discover_ddn_s2a_faultsbasic_dualcomm(section: Section) -> DiscoveryResult:
+    if "hstd1_online_failure" in section.values:
+        yield Service()
 
 
-def check_ddn_s2a_faultsbasic_dualcomm(_no_item, _no_params, parsed):
-    dual_comm_established = parsed.get("dual_comm_established")
+def check_ddn_s2a_faultsbasic_dualcomm(section: Section) -> CheckResult:
+    dual_comm_established = section.values.get("dual_comm_established")
 
     # This value is only transmitted by the API in case of a failure.
     # Therefore, a non-existant value is an implicit "TRUE" here.
-    if dual_comm_established == "TRUE" or dual_comm_established is None:
-        return 0, "Dual comm established"
-    if dual_comm_established == "FALSE":
-        return 2, "Dual comm not established"
-    return None
+    if dual_comm_established in ("TRUE", None):
+        yield Result(state=State.OK, summary="Dual comm established")
+    elif dual_comm_established == "FALSE":
+        yield Result(state=State.CRIT, summary="Dual comm not established")
 
 
-check_info["ddn_s2a_faultsbasic.dualcomm"] = LegacyCheckDefinition(
+check_plugin_ddn_s2a_faultsbasic_dualcomm = CheckPlugin(
     name="ddn_s2a_faultsbasic_dualcomm",
     service_name="DDN S2A Dual Communication",
     sections=["ddn_s2a_faultsbasic"],
@@ -360,24 +388,23 @@ check_info["ddn_s2a_faultsbasic.dualcomm"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_faultsbasic_ethernet(parsed):
-    if "hstd1_online_failure" in parsed:
-        return [(None, None)]
-    return []
+def discover_ddn_s2a_faultsbasic_ethernet(section: Section) -> DiscoveryResult:
+    if "hstd1_online_failure" in section.values:
+        yield Service()
 
 
-def check_ddn_s2a_faultsbasic_ethernet(_no_item, _no_params, parsed):
-    ethernet_working = parsed.get("ethernet_working")
+def check_ddn_s2a_faultsbasic_ethernet(section: Section) -> CheckResult:
+    ethernet_working = section.values.get("ethernet_working")
 
     # This value is only transmitted by the API in case of a failure.
     # Therefore, a non-existant value is an implicit "established" here.
-    if ethernet_working == "established" or ethernet_working is None:
-        yield 0, "Ethernet connection established"
+    if ethernet_working in ("established", None):
+        yield Result(state=State.OK, summary="Ethernet connection established")
     else:
-        yield 1, "Ethernet " + ethernet_working
+        yield Result(state=State.WARN, summary=f"Ethernet {ethernet_working}")
 
 
-check_info["ddn_s2a_faultsbasic.ethernet"] = LegacyCheckDefinition(
+check_plugin_ddn_s2a_faultsbasic_ethernet = CheckPlugin(
     name="ddn_s2a_faultsbasic_ethernet",
     service_name="DDN S2A Ethernet",
     sections=["ddn_s2a_faultsbasic"],
@@ -396,28 +423,32 @@ check_info["ddn_s2a_faultsbasic.ethernet"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_faultsbasic(parsed):
-    for index in ["1", "2"]:
-        if "hstd%s_online_failure" % index in parsed:
-            yield index, None
+def discover_ddn_s2a_faultsbasic(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=index)
+        for index in ("1", "2")
+        if f"hstd{index}_online_failure" in section.values
+    )
 
 
-def check_ddn_s2a_faultsbasic(item, _no_params, parsed):
-    online_failure = parsed["hstd%s_online_failure" % item]
-    online_status = parsed.get("hstd%s_online_status" % item, "")
+def check_ddn_s2a_faultsbasic(item: str, section: Section) -> CheckResult:
+    if (online_failure := section.values.get(f"hstd{item}_online_failure")) is None:
+        return
+    online_status = section.values.get(f"hstd{item}_online_status", "")
 
     if online_failure == "TRUE":
-        if online_status.lower() in ["restarting", "not installed"]:
-            yield 1, "Unit " + online_status
+        if online_status.lower() in ("restarting", "not installed"):
+            yield Result(state=State.WARN, summary=f"Unit {online_status}")
         else:
-            yield 2, "Failure detected - Online status: " + online_status
+            yield Result(
+                state=State.CRIT, summary=f"Failure detected - Online status: {online_status}"
+            )
     elif online_failure == "FALSE":
-        yield 0, "No failure detected"
+        yield Result(state=State.OK, summary="No failure detected")
 
 
-check_info["ddn_s2a_faultsbasic"] = LegacyCheckDefinition(
+check_plugin_ddn_s2a_faultsbasic = CheckPlugin(
     name="ddn_s2a_faultsbasic",
-    parse_function=parse_ddn_s2a_faultsbasic,
     service_name="DDN S2A Unit %s",
     discovery_function=discover_ddn_s2a_faultsbasic,
     check_function=check_ddn_s2a_faultsbasic,

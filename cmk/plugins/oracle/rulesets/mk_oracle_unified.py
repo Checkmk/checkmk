@@ -642,7 +642,7 @@ def _oracle_client_library_options() -> Dictionary:
                         "Two sources are available: "
                         "the <b>agent-local client</b> — Oracle Instant Client libraries manually installed "
                         "alongside the Checkmk agent under "
-                        "<tt>$MK_LIBDIR/packages/mk-oracle/</tt> — "
+                        "<tt>$MK_LIBDIR/plugins/libexec/mk-oracle/</tt> — "
                         "and the <b>host client</b> — an Oracle installation already present on the monitored host. "
                         "Note: Checkmk does <b>not</b> deploy Oracle Instant Client automatically; "
                         "you must install it manually if you want to use the agent-local client. "

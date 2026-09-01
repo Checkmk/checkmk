@@ -52,7 +52,7 @@ pub mod platform {
             .map(PathBuf::from)
             .unwrap_or_else(|_| base_root.join("runtimes"))
             .join("plugins")
-            .join("packages")
+            .join("libexec")
             .join(RUNTIME_SUB_DIR)
             .join("runtime")
     }

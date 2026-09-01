@@ -8,7 +8,8 @@
 #   CFG=./t.yml call-ora
 
 ROOT=/opt/checkmk/agent/default/package/
-EXE=${ROOT}/plugins/packages/mk-oracle/mk-oracle
+SUBDIR=plugins/libexec
+EXE=${ROOT}/${SUBDIR}/mk-oracle/mk-oracle
 if [[ -f ${EXE} ]]; then
     if [[ -n "${CFG}" ]]; then
         CONFIG="${CFG}"
@@ -20,7 +21,7 @@ if [[ -f ${EXE} ]]; then
 fi
 
 ROOT=/usr/lib/check_mk_agent/
-EXE=${ROOT}/plugins/packages/mk-oracle/mk-oracle
+EXE=${ROOT}/${SUBDIR}/mk-oracle/mk-oracle
 if [[ -f ${EXE} ]]; then
     if [[ -n "${CFG}" ]]; then
         CONFIG="${CFG}"

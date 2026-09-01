@@ -23,7 +23,7 @@ failure() {
 # the CI endpoint is constructed from CI_ORA_TEST_PASSWORD.
 . "$(dirname "${BASH_SOURCE[0]}")/db-endpoint.sh"
 resolve_test_endpoint
-path_to_runtime="${PWD}/runtimes/plugins/packages/mk-oracle"
+path_to_runtime="${PWD}/runtimes/plugins/libexec/mk-oracle"
 export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
 export MK_CONFDIR="${PWD}"
 TNS_ADMIN=${PWD}/tests/files/tns MK_LIBDIR=${PWD}/runtimes/ cargo "$@"

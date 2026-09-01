@@ -131,7 +131,7 @@ class OracleDatabase:
         # New mk-oracle plugin
         self.new_plugin_binary_path: Path = mk_oracle_binary_path
         self.new_plugin_binary_name: Final[str] = self.new_plugin_binary_path.name
-        self.new_plugin_dir: Final[Path] = self.cmk_plugin_dir / "packages" / "mk-oracle"
+        self.new_plugin_dir: Final[Path] = self.cmk_plugin_dir / "libexec" / "mk-oracle"
         self.new_plugin: Final[Path] = self.new_plugin_dir / self.new_plugin_binary_name
         self.new_plugin_cfg: Final[Path] = self.cmk_cfg_dir / "mk-oracle.yml"
         self.new_plugin_credentials_cfg: Final[Path] = (

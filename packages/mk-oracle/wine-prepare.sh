@@ -6,9 +6,9 @@
 # rust_wine_test() prepare hook: the factory-runtime detection test
 # (setup::tests::test_detect_factory_runtime) points its runtime env var
 # at <cwd>/runtimes (its base dir falls back to the cwd with MK_CONFDIR
-# unset) and expects to find runtimes/plugins/packages/mk-oracle there;
+# unset) and expects to find runtimes/plugins/libexec/mk-oracle there;
 # give it a directory to find in the scratch cwd.
 
 set -euo pipefail
 
-mkdir -p "${SCRATCH}/runtimes/plugins/packages/mk-oracle"
+mkdir -p "${SCRATCH}/runtimes/plugins/libexec/mk-oracle"

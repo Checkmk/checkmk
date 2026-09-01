@@ -29,7 +29,7 @@ envsubst <"${MK_CONFDIR}/mk-oracle.yml.conf" >"${MK_CONFDIR}/mk-oracle.yml"
 
 # run
 if [[ -n "${RELEASE_BIN}" ]]; then
-    path_to_runtime="${SCRIPT_DIR}/runtimes/plugins/packages/mk-oracle"
+    path_to_runtime="${SCRIPT_DIR}/runtimes/plugins/libexec/mk-oracle"
     export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
     export TNS_ADMIN="${SCRIPT_DIR}/tests/files/tns"
     export MK_LIBDIR="${SCRIPT_DIR}/runtimes/"

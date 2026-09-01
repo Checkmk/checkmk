@@ -80,7 +80,7 @@ fn test_contains_oracle_client_lib() {
 #[test]
 fn test_detect_factory_runtime_without_client_lib() {
     let lib_dir = tempfile::tempdir().unwrap();
-    let runtime = lib_dir.path().join("plugins/packages/mk-oracle");
+    let runtime = lib_dir.path().join("plugins/libexec/mk-oracle");
     std::fs::create_dir_all(&runtime).unwrap();
     // the directory exists but has no client library -> rejected
     assert!(detect_factory_runtime(lib_dir.path()).is_none());
@@ -102,7 +102,7 @@ fn base_dir() -> std::path::PathBuf {
 /// Directory inside the test fixture tree that contains the Oracle client
 /// library (populated by the run script / run.ps1).
 fn client_runtime_dir() -> std::path::PathBuf {
-    let dir = base_dir().join("runtimes/plugins/packages/mk-oracle");
+    let dir = base_dir().join("runtimes/plugins/libexec/mk-oracle");
     if cfg!(windows) {
         dir.join("runtime")
     } else {

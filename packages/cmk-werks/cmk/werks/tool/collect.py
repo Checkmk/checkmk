@@ -164,7 +164,7 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
                     f"could not parse werk {werk_file.file_name} from "
                     f"branch {branch} of flavor {config.flavor}"
                 ) from e
-            if (werk_version := parsed.metadata["version"]) is None:
+            if (werk_version := parsed.metadata.get("version")) is None:
                 # if there is no version in the werk itself,
                 # we assume the werk will be released with the next release
                 werk_version = defines_make_version_by_branch[branch]
@@ -180,7 +180,7 @@ def main(config: Config, repo_path: Path, branches: Mapping[str, str]) -> None:
             raise RuntimeError(f"could not load werk {werk_id} from flavor {config.flavor}") from e
 
         werk_dict = {k: v for k, v in werk.to_json_dict().items() if v is not None}
-        werk_dict.pop("version")
+        werk_dict.pop("version", None)
         website_werk: WebsiteWerkV2 | WebsiteWerkV3
         if werk_dict["__version__"] == "2":
             website_werk = WebsiteWerkV2(

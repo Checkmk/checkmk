@@ -151,3 +151,29 @@ def test_state_file_corrupt(monkeypatch, tmp_path, content):  # type: ignore[mis
     state_file.write_text(content)
     monkeypatch.setattr(mk_sap, "STATE_FILE", str(state_file))
     assert mk_sap.load_state_file() == {}
+
+
+def test_host_prefix_applied_to_sap_and_logwatch(capsys):
+    mk_sap.write_piggyback_data(
+        host_prefix="S4H_",
+        sap_data={"SB1": ["ctx\t0\t  0\tpath\t-\t-\tdetails"]},
+        logs={"SB1": {"mylog": ["line1"]}},
+    )
+    text = capsys.readouterr().out
+
+    # both the sap and the logwatch section land on the same prefixed host
+    assert text.count("<<<<S4H_SB1>>>>\n") == 2
+    assert "<<<<SB1>>>>\n" not in text
+    assert "<<<sap:sep(9)>>>\n" in text
+    assert "<<<logwatch>>>\n" in text
+
+
+def test_no_host_prefix_uses_bare_sid(capsys):
+    mk_sap.write_piggyback_data(
+        host_prefix="",
+        sap_data={"SB1": ["ctx\t0\t  0\tpath\t-\t-\tdetails"]},
+        logs={"SB1": {"mylog": ["line1"]}},
+    )
+    text = capsys.readouterr().out
+
+    assert text.count("<<<<SB1>>>>\n") == 2

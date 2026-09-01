@@ -74,6 +74,17 @@ Map gerritGetAccess(String project, String auth_header) {
     return [status: http_status, body: body];
 }
 
+// @NonCPS: runs outside Jenkins CPS so HttpURLConnection (non-Serializable) is safe to hold.
+@NonCPS
+Map gerritGetChange(Map args) {
+    def conn = new URL("https://review.lan.tribe29.com/a/changes/${args.change_id}?o=LABELS").openConnection();
+    conn.setRequestMethod("GET");
+    conn.setRequestProperty("Authorization", args.auth_header);
+    def http_status = conn.responseCode;
+    def body = (http_status >= 200 && http_status < 300) ? conn.inputStream.text : (conn.errorStream?.text ?: "");
+    return [status: http_status, body: body];
+}
+
 // Matches Gerrit's three ref pattern styles: exact, wildcard (refs/heads/*), and regex (^refs/heads/.*).
 // Mirrors refPatternMatches() in gerrit/plugins/ci-block-banner/.../ci_block_banner.js.
 @NonCPS
@@ -121,6 +132,52 @@ Boolean isBranchSubmitBlocked(String project, String branch) {
         }
     }
     return is_blocked;
+}
+
+// Our chain rebase above resets Gerrit's "Verified" label and retriggers
+// the standard CV job, which runs in parallel with our own test cascade.
+// "Verified" has three states:
+// -1 (Fails) -> merge not possible, fail
+// 0 (No score) -> CV not done, wait
+// +1 (Verified) -> CV passed, merge when all have +1
+String gerritVerifiedState(Map args) {
+    def result = gerritGetChange(change_id: args.change_id, auth_header: args.auth_header);
+    if (result.status < 200 || result.status >= 300) {
+        error("Gerrit get-change failed (HTTP ${result.status}): ${result.body}");
+    }
+    // Strip Gitiles XSS protection prefix (5 bytes) before parsing.
+    def change_info = new groovy.json.JsonSlurper().parseText(result.body.drop(5));
+    def votes = (change_info.labels?.Verified?.all ?: []).collect { vote -> vote.value ?: 0 };
+    def has_failure = votes.any { vote -> vote < 0 };
+    def has_pass = votes.any { vote -> vote > 0 };
+    if (has_failure) {
+        return "FAILED";
+    }
+    return has_pass ? "PASSED" : "PENDING";
+}
+
+// Waits until "Verified" is no longer pending on every open (status NEW) change
+void waitForChainVerified(Map args) {
+    def pending = args.all_commits_in_chain.findAll { commit -> "${args.all_change_info.get(commit).status}" == "NEW" };
+    def deadline = System.currentTimeMillis() + args.timeout_minutes * 60 * 1000;
+    withGerritHttpCredentials {
+        def auth_header = "Basic " + "${GERRIT_USER}:${GERRIT_PASSWORD}".bytes.encodeBase64().toString();
+        while (true) {
+            pending = pending.findAll { commit ->
+                gerritVerifiedState(change_id: "${args.all_change_info.get(commit).id}", auth_header: auth_header) == "PENDING"
+            };
+            if (!pending) {
+                break;
+            }
+
+            if (System.currentTimeMillis() >= deadline) {
+                def pending_numbers = pending.collect { commit -> args.all_change_info.get(commit).number };
+                error("Timed out after ${args.timeout_minutes}min waiting for Gerrit CV on change(s) ${pending_numbers}.");
+            }
+
+            sleep(args.poll_interval_seconds);
+        }
+    }
 }
 
 // notify defaults to Gerrit's own default ("ALL") so callers only need to pass
@@ -329,6 +386,8 @@ void main() {
     def new_patchset_revision = effective_git_ref;
     def medium_chain_hashtag = "medium-chain-running";
     def gerrit_project = "check_mk";
+    def gerrit_verified_poll_interval_seconds = 30;
+    def gerrit_verified_wait_timeout_minutes = 30;
     /// In order to ensure a fixed order for stages executed in parallel,
     /// we wait an increasing amount of time (N * 1s).
     /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn
@@ -339,6 +398,7 @@ void main() {
         """
         |===== CONFIGURATION ===============================
         |branch_base_folder: │${branch_base_folder}│
+        |cv_verified_min:... │${gerrit_verified_wait_timeout_minutes}│
         |disable_cache:..... │${disable_cache}│
         |disable_signing:... │${disable_signing}│
         |do_automerge:...... │${do_automerge}│
@@ -534,14 +594,30 @@ void main() {
 
                         // Try submit; if submit fails roll back all votes to 0.
                         try {
-                            // Check right before submit: Gerrit's own submit rejection can't be
-                            // relied on here (see isBranchSubmitBlocked)
-                            // We want to vote but not submit.
+                            // Skip the CV wait entirely if the branch is already closed - we are
+                            // not going to submit anyway. We want to vote but not submit.
                             if (isBranchSubmitBlocked(gerrit_project, safe_branch_name)) {
                                 voteGerrit(vote: 2, submit: false, identifier: new_patchset_revision);
                                 println("NOT submitted: The branch is currently closed.");
                             } else {
-                                voteGerrit(vote: 2, submit: true, identifier: new_patchset_revision);
+                                // Our rebase reset Verified on every open change in the chain and
+                                // retriggered CV; wait for it to resolve before attempting submit,
+                                // rather than racing it (CMK-37686).
+                                waitForChainVerified(
+                                    all_commits_in_chain: all_commits_in_chain,
+                                    all_change_info: all_change_info,
+                                    poll_interval_seconds: gerrit_verified_poll_interval_seconds,
+                                    timeout_minutes: gerrit_verified_wait_timeout_minutes,
+                                );
+
+                                // Check again right before submit: the branch could have closed
+                                // while we were waiting for CV above (see isBranchSubmitBlocked).
+                                if (isBranchSubmitBlocked(gerrit_project, safe_branch_name)) {
+                                    voteGerrit(vote: 2, submit: false, identifier: new_patchset_revision);
+                                    println("NOT submitted: The branch is currently closed.");
+                                } else {
+                                    voteGerrit(vote: 2, submit: true, identifier: new_patchset_revision);
+                                }
                             }
                         } catch (e) {
                             for (commit in all_commits_in_chain) {

@@ -5,7 +5,10 @@
 
 import pytest
 
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.page_menu import (
+    inpage_search_form,
     make_external_link,
     make_form_submit_link,
     make_javascript_link,
@@ -107,3 +110,30 @@ def test_simple_page_menu() -> None:
     help_dropdown = pm.dropdowns[2]
     assert help_dropdown.name == "help"
     assert help_dropdown.topics[0].entries[0].name == "inline_help"
+
+
+@pytest.mark.parametrize(
+    "malicious_reset_url",
+    [
+        pytest.param("javascript:alert(1)", id="javascript scheme"),
+        pytest.param("https://evil.example/", id="cross-origin absolute url"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_inpage_search_form_rejects_unsafe_reset_url(malicious_reset_url: str) -> None:
+    request.set_var("reset_url", malicious_reset_url)
+    with html.output_funnel.plugged():
+        inpage_search_form()
+        output = html.output_funnel.drain()
+
+    assert malicious_reset_url not in output
+
+
+@pytest.mark.usefixtures("request_context")
+def test_inpage_search_form_keeps_safe_reset_url() -> None:
+    request.set_var("reset_url", "dashboard.py")
+    with html.output_funnel.plugged():
+        inpage_search_form()
+        output = html.output_funnel.drain()
+
+    assert 'value="dashboard.py"' in output

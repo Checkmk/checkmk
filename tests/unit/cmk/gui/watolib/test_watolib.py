@@ -363,10 +363,6 @@ def test_registered_configvar_groups() -> None:
             "Monitoring core",
             "ntopng (chargeable add-on)",
             "Telemetry",
-        ]
-
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.CLOUD:
-        expected_groups += [
             "AI features",
         ]
 

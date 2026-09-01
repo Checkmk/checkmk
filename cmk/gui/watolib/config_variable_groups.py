@@ -61,3 +61,9 @@ ConfigVariableGroupDeveloperTools = ConfigVariableGroup(
         "Any changes here will result in your Checkmk site no longer being officially supported."
     ),
 )
+
+
+ConfigVariableGroupAIFeatures = ConfigVariableGroup(
+    title=_l("AI features"),
+    sort_index=99,
+)

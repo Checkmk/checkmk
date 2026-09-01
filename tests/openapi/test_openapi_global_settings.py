@@ -5,10 +5,13 @@
 
 # mypy: disable-error-code="type-arg"
 
+from collections.abc import Iterator
+
 import pytest
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk.ccc.site import SiteId
+from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
 from cmk.gui.openapi.api_endpoints.site_management.models.config_example import (
     default_config_example,
 )
@@ -17,8 +20,19 @@ from cmk.gui.openapi.endpoints.global_settings.schemas import (
     FileUploadSchema,
     IconSchema,
 )
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain, get_config_domain, GUI
+from cmk.gui.watolib.audit_log import AuditLogStore
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_variable_registry,
+    ConfigVariable,
+    get_config_domain,
+    GUI,
+)
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupUserInterface
 from cmk.gui.watolib.site_changes import SiteChanges
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import BooleanChoice, FormSpec, Password
 from tests.testlib.rest_api_client import ClientRegistry
 
 LOCAL_SITE = "NO_SITE"
@@ -55,12 +69,23 @@ def sample_ca_certificates() -> None:
     )
 
 
+def _create_remote_site(clients: ClientRegistry, site_id: str, replicate_ec: bool) -> str:
+    config = default_config_example()
+    config["basic_settings"]["site_id"] = site_id
+    config["configuration_connection"]["replicate_event_console"] = replicate_ec
+    clients.SiteManagement.create(site_config=config)
+    return site_id
+
+
 @pytest.fixture(name="remote_site")
 def fixture_remote_site(clients: ClientRegistry) -> str:
     """The site scope needs a distributed setup, see the negative test below."""
-    config = default_config_example()
-    clients.SiteManagement.create(site_config=config)
-    return config["basic_settings"]["site_id"]
+    return _create_remote_site(clients, "site_id_1", replicate_ec=True)
+
+
+@pytest.fixture(name="site_without_event_console")
+def fixture_site_without_event_console(clients: ClientRegistry) -> str:
+    return _create_remote_site(clients, "site_without_ec", replicate_ec=False)
 
 
 @pytest.fixture(name="user_without_global_permission")
@@ -74,6 +99,49 @@ def fixture_user_without_global_permission(clients: ClientRegistry) -> None:
         auth_option={"auth_type": "password", "password": "supersecretish"},
     )
     clients.GlobalSetting.set_credentials("no_globals", "supersecretish")
+
+
+def _register_variable(
+    monkeypatch: pytest.MonkeyPatch,
+    varname: str,
+    domain: type[ABCConfigDomain],
+    form_spec: FormSpec,
+    default: object,
+) -> Iterator[str]:
+    defaults = ABCConfigDomain.get_all_default_globals()
+    monkeypatch.setattr(
+        ABCConfigDomain,
+        "get_all_default_globals",
+        classmethod(lambda cls: {**defaults, varname: default}),
+    )
+    config_variable_registry.register(
+        ConfigVariable(
+            group=ConfigVariableGroupUserInterface,
+            primary_domain=domain,
+            ident=varname,
+            form_spec=lambda context: form_spec,
+        )
+    )
+    yield varname
+    config_variable_registry.unregister(varname)
+
+
+@pytest.fixture(name="secret_var")
+def fixture_secret_var(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
+    yield from _register_variable(
+        monkeypatch, "test_secret", ConfigDomainGUI, Password(title=Title("Secret")), None
+    )
+
+
+@pytest.fixture(name="event_console_var")
+def fixture_event_console_var(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
+    yield from _register_variable(
+        monkeypatch,
+        "test_ec_setting",
+        ConfigDomainEventConsole,
+        BooleanChoice(title=Title("Event Console toggle")),
+        False,
+    )
 
 
 def test_show_factory_setting(clients: ClientRegistry) -> None:
@@ -154,6 +222,37 @@ def test_delete_records_a_pending_change(clients: ClientRegistry) -> None:
     assert _changes_of(LOCAL_SITE)[-1] == (
         f"Resetted configuration variable {INT_VAR} to its default."
     )
+
+
+def _audit_diffs() -> list[str | None]:
+    return [entry.diff_text for entry in AuditLogStore().read() if entry.action == "edit-configvar"]
+
+
+def test_update_records_the_audit_description_the_page_records(clients: ClientRegistry) -> None:
+    clients.GlobalSetting.update(INT_VAR, 42)
+    assert _audit_diffs() == [f'Attribute "{INT_VAR}" with value 42 added.']
+
+
+def test_a_further_update_reads_as_a_value_change(clients: ClientRegistry) -> None:
+    clients.GlobalSetting.update(INT_VAR, 42)
+    clients.GlobalSetting.update(INT_VAR, 7)
+    assert _audit_diffs()[-1] == f'Value of "{INT_VAR}" changed from 42 to 7.'
+
+
+def test_delete_records_the_audit_description_the_page_records(clients: ClientRegistry) -> None:
+    clients.GlobalSetting.update(INT_VAR, 42)
+    clients.GlobalSetting.delete(INT_VAR)
+    assert _audit_diffs()[-1] == f'Attribute "{INT_VAR}" with value 42 removed.'
+
+
+def test_a_secret_is_redacted_in_the_audit_description(
+    clients: ClientRegistry, secret_var: str
+) -> None:
+    clients.GlobalSetting.update(secret_var, ["explicit_password", "", "hunter2", False])
+    diff_text = _audit_diffs()[-1]
+    assert diff_text is not None
+    assert "hunter2" not in diff_text
+    assert "Redacted secrets changed." in diff_text
 
 
 def test_update_needs_a_matching_etag(clients: ClientRegistry) -> None:
@@ -315,6 +414,28 @@ def test_site_scope_is_unavailable_without_a_distributed_setup(clients: ClientRe
 
 def test_unknown_site_404(clients: ClientRegistry, remote_site: str) -> None:
     clients.GlobalSetting.get_site("no_such_site", INT_VAR, expect_ok=False).assert_status_code(404)
+
+
+def test_the_event_console_is_served_by_the_central_endpoints(
+    clients: ClientRegistry, event_console_var: str
+) -> None:
+    assert clients.GlobalSetting.get(event_console_var).json["value"] is False
+    assert clients.GlobalSetting.update(event_console_var, True).json["value"] is True
+
+
+def test_an_event_console_change_reaches_the_event_console_sites_only(
+    clients: ClientRegistry, site_without_event_console: str, event_console_var: str
+) -> None:
+    clients.GlobalSetting.update(event_console_var, True)
+    clients.GlobalSetting.update(INT_VAR, 42)
+
+    assert _changes_of(LOCAL_SITE) == [
+        f"Changed global configuration variable {event_console_var}.",
+        f"Changed global configuration variable {INT_VAR}.",
+    ]
+    assert _changes_of(site_without_event_console) == [
+        f"Changed global configuration variable {INT_VAR}."
+    ]
 
 
 @pytest.mark.parametrize(

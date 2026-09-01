@@ -6,6 +6,8 @@
 # Runs inside a plain ubuntu:24.04 container (see test.sh). Expects TARGET
 # and TARBALL_NAME in the environment, the tarball's directory bind-mounted
 # read-only at /input, and an output directory bind-mounted at /output.
+# GDB_TARBALL_NAME is also expected; its tarball is only staged if present
+# at /input/${GDB_TARBALL_NAME}.
 set -e -o pipefail
 
 apt-get update -qq
@@ -29,3 +31,7 @@ EOF
 "${toolchain_dir}/bin/${TARGET}-g++" --sysroot="${sysroot}" \
     -static-libstdc++ -static-libgcc \
     -o /output/hello_cpp hello.cpp
+
+if [ -f "/input/${GDB_TARBALL_NAME}" ]; then
+    tar xf "/input/${GDB_TARBALL_NAME}" -C /output
+fi

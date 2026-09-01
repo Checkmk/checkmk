@@ -3,6 +3,7 @@ FROM ubuntu:24.04
 ARG CTNG_UID=1000
 ARG CTNG_GID=1000
 ARG CTNG_VERSION=1.29.0
+ARG CTNG_SHA256=36e4d221088205ee08166d4f8f2f76965117d9f4e6661ec1030ee1e01c62e38c
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -48,6 +49,7 @@ USER ctng
 WORKDIR /home/ctng
 
 RUN wget -q "https://github.com/crosstool-ng/crosstool-ng/archive/refs/tags/crosstool-ng-${CTNG_VERSION}.tar.gz" \
+    && echo "${CTNG_SHA256}  crosstool-ng-${CTNG_VERSION}.tar.gz" | sha256sum -c - \
     && tar xzf "crosstool-ng-${CTNG_VERSION}.tar.gz" \
     && rm "crosstool-ng-${CTNG_VERSION}.tar.gz" \
     && mv "crosstool-ng-crosstool-ng-${CTNG_VERSION}" crosstool-ng \

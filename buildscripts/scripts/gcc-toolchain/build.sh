@@ -26,6 +26,7 @@ build_toolchain() {
         -v "${output_dir}:/output" \
         -e "TARGET=${TARGET}" \
         -e "TARBALL_NAME=${TARBALL_NAME}" \
+        -e "GDB_TARBALL_NAME=${GDB_TARBALL_NAME}" \
         "${IMAGE}" bash /input/build.sh
 }
 
@@ -39,6 +40,7 @@ main() {
     build_toolchain "${output_dir}"
 
     echo "Toolchain tarball: ${output_dir}/${TARBALL_NAME}"
+    echo "gdb tarball: ${output_dir}/${GDB_TARBALL_NAME}"
 }
 
 main "$@"

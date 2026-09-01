@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Runs inside the gcc-toolchain-builder image (see Dockerfile and build.sh).
-# Expects TARGET and TARBALL_NAME in the environment, the defconfig bind-mounted
-# at /input/defconfig, and an output directory bind-mounted at /output.
+# Expects TARGET, TARBALL_NAME, and GDB_TARBALL_NAME in the environment, the
+# defconfig bind-mounted at /input/defconfig, and an output directory
+# bind-mounted at /output.
 set -e -o pipefail
 
 # ct-ng only picks up a config at samples/<name>/crosstool.config relative to its cwd (its "local sample" mechanism).
@@ -20,3 +21,8 @@ tar --sort=name --owner=0 --group=0 --numeric-owner \
     --mtime='2026-01-01 00:00:00Z' \
     -C "$(dirname "${toolchain_dir}")" -cf - "${TARGET}" |
     xz -T0 -6 >"/output/${TARBALL_NAME}"
+
+tar --sort=name --owner=0 --group=0 --numeric-owner \
+    --mtime='2026-01-01 00:00:00Z' \
+    -C "${toolchain_dir}/bin" -cf - "${TARGET}-gdb" |
+    xz -T0 -6 >"/output/${GDB_TARBALL_NAME}"

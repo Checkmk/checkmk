@@ -177,3 +177,15 @@ def test_no_host_prefix_uses_bare_sid(capsys):
     text = capsys.readouterr().out
 
     assert text.count("<<<<SB1>>>>\n") == 2
+
+
+def test_host_prefix_and_suffix_wrap_the_sid(capsys):
+    mk_sap.write_piggyback_data(
+        host_prefix="ECC_",
+        host_suffix="_S4H",
+        sap_data={"SB1": ["ctx\t0\t  0\tpath\t-\t-\tdetails"]},
+        logs={"SB1": {"mylog": ["line1"]}},
+    )
+    text = capsys.readouterr().out
+
+    assert text.count("<<<<ECC_SB1_S4H>>>>\n") == 2

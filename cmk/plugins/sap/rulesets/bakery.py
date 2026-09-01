@@ -102,6 +102,11 @@ def _instance_form() -> Dictionary:
                     title=Title("Prefix for piggyback host name"),
                 ),
             ),
+            "host_suffix": DictElement(
+                parameter_form=String(
+                    title=Title("Suffix for piggyback host name"),
+                ),
+            ),
         },
     )
 

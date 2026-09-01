@@ -22,6 +22,7 @@ class Instance(BaseModel):
     trace: str
     lang: str
     host_prefix: str | None = None
+    host_suffix: str | None = None
 
 
 class _Config(BaseModel):
@@ -64,6 +65,8 @@ def _get_mk_sap_config(config: _Config) -> Iterator[str]:
         }
         if instance.host_prefix is not None:
             c["host_prefix"] = instance.host_prefix
+        if instance.host_suffix is not None:
+            c["host_suffix"] = instance.host_suffix
         cfgs.append(c)
     yield from f"cfg = {pformat(cfgs)}".split("\n")
     yield ""

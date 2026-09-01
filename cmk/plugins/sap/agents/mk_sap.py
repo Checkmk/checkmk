@@ -120,6 +120,7 @@ local_cfg = {
     "loglevel": "warn",
     # "lang": "EN",
     # "host_prefix": "FOOBAR_",
+    # "host_suffix": "_FOOBAR",
 }
 
 # A list of strings, while the string must match the full path to one or
@@ -497,6 +498,7 @@ def check(pyrfc, cfg_entry):
 
     write_piggyback_data(
         host_prefix=cfg_entry.get("host_prefix", ""),
+        host_suffix=cfg_entry.get("host_suffix", ""),
         sap_data=sap_data,
         logs=logs,
     )
@@ -505,15 +507,15 @@ def check(pyrfc, cfg_entry):
     conn.close()
 
 
-def write_piggyback_data(*, host_prefix, sap_data, logs):
+def write_piggyback_data(*, host_prefix, host_suffix="", sap_data, logs):
     for host, host_sap in sap_data.items():
-        sys.stdout.write("<<<<%s%s>>>>\n" % (host_prefix, host))
+        sys.stdout.write("<<<<%s%s%s>>>>\n" % (host_prefix, host, host_suffix))
         sys.stdout.write("<<<sap:sep(9)>>>\n")
         sys.stdout.write("%s\n" % "\n".join(host_sap))
     sys.stdout.write("<<<<>>>>\n")
 
     for host, host_logs in logs.items():
-        sys.stdout.write("<<<<%s%s>>>>\n" % (host_prefix, host))
+        sys.stdout.write("<<<<%s%s%s>>>>\n" % (host_prefix, host, host_suffix))
         sys.stdout.write("<<<logwatch>>>\n")
         for log, lines in host_logs.items():
             sys.stdout.write("[[[%s]]]\n" % log)

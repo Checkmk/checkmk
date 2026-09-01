@@ -38,7 +38,7 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
 
     switch (result_check_type) {
         case "BAZELFORMAT":
-            parserId = 'bazel-format';
+            parserId = 'bazelformat';
             update_custom_parser([
                 id: parserId, // ID
                 name: 'Bazel Format', // Name shown on left side menu

@@ -77,12 +77,13 @@ npm_link_all_packages(name = "node_modules")
 copy_to_directory(
     name = "werks_group",
     srcs = [
+        "defines.make",
         "//.werks",
         "//.werks:werks_config",
         "//.werks:werks_first_free",
     ],
     out = "werks_dir",
-    root_paths = [".werks"],
+    replace_prefixes = {".werks": "werks"},
     visibility = ["//:__subpackages__"],
 )
 

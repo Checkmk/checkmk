@@ -8,7 +8,7 @@ import argparse
 from collections.abc import Sequence
 from pathlib import Path
 
-from cmk.ccc.version import __version__, Version
+from cmk.ccc.version import Version
 from cmk.werks.tool.config import RuntimeConfiguration
 from cmk.werks.tool.models import EditionV2, EditionV3, WerkV3
 from cmk.werks.tool.utils import (
@@ -42,7 +42,12 @@ def main_precompile(args: argparse.Namespace) -> None:
 
     filter_by_edition = _get_filter(args.filter_by_edition)
 
-    current_version = Version.from_str(__version__)
+    current_version = Version.from_str(rtc.get_defines_make_version())
+
+    def _set_version(werk: WerkV3) -> WerkV3:
+        if werk.version is None:
+            return werk.model_copy(update={"version": rtc.get_defines_make_version()})
+        return werk
 
     def _filter(werk: WerkV3) -> bool:
         edition = werk.edition
@@ -52,7 +57,7 @@ def main_precompile(args: argparse.Namespace) -> None:
             Version.from_str(resolve_version(rtc, werk.version)).base == current_version.base
         )
 
-    werks = {werk.id: werk for werk in werks_list if _filter(werk)}
+    werks = {werk.id: _set_version(werk) for werk in werks_list if _filter(werk)}
 
     write_precompiled_werks(args.destination, werks)
 

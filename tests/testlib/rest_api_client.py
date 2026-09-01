@@ -3634,6 +3634,8 @@ class ServiceDiscoveryClient(RestApiClient):
     service_discovery_domain: DomainType = "service_discovery"
     discovery_run_domain: DomainType = "discovery_run"
     service_discovery_run_domain: DomainType = "service_discovery_run"
+    # `update_discovery_phase` is an action on the host object, not on a discovery domain.
+    host_domain: DomainType = "host"
 
     def bulk_discovery(
         self,
@@ -3704,6 +3706,28 @@ class ServiceDiscoveryClient(RestApiClient):
         return self.request(
             "get",
             url=f"/objects/{self.service_discovery_run_domain}/{host_name}",
+            expect_ok=expect_ok,
+        )
+
+    def update_service_phase(
+        self,
+        host_name: str,
+        *,
+        check_type: str,
+        service_item: str | None,
+        target_phase: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        # The body params are keyword-only on purpose: three of them are interchangeable strings
+        # to a type checker, and transposing two yields a puzzling 400 rather than an error here.
+        return self.request(
+            "put",
+            url=(f"/objects/{self.host_domain}/{host_name}/actions/update_discovery_phase/invoke"),
+            body={
+                "check_type": check_type,
+                "service_item": service_item,
+                "target_phase": target_phase,
+            },
             expect_ok=expect_ok,
         )
 

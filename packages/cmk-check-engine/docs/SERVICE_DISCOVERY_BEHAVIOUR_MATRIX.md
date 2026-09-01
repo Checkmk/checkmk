@@ -117,7 +117,7 @@ plus `"manual"` for enforced services, plus `active`/`ignored_active`
   sitting above that line was added later (`52fc5d43be2`, 2024) — it is the trace of the regression,
   not a design note. Everything downstream still expects the value: the GUI group _"Disabled clustered
   services - located on cluster host"_ with `show_bulk_actions=False`
-  (`wato/pages/services.py:2168-2178`, translated in 8 locales), the `Transition` literal, the
+  (`wato/pages/services.py:2166-2175`, translated in 8 locales), the `Transition` literal, the
   `DiscoveryReport.clustered_ignored` counter, `_case_clustered`'s match arm — and werk **19806.md:22**
   still asserts the transition's behaviour _"is unchanged"_, describing something that cannot occur.
 
@@ -139,7 +139,7 @@ other order. The GUI side was corrected only by werk **18136** / SUP-25574 (`726
 
 **Consequence while broken: the rows were dropped, not misfiled.** `_show_check_table` renders groups by
 looking up `by_group.get(entry.table_group, [])` over `_ordered_table_groups()`
-(`cmk/gui/wato/pages/services.py:1159-1160`), so a `check_source` with no matching `TableGroupEntry` is
+(`cmk/gui/wato/pages/services.py:1157-1158`), so a `check_source` with no matching `TableGroupEntry` is
 silently discarded. Across 2.1–2.4, disabling an active or custom check made its row disappear from
 service discovery entirely — werk 18136's own wording: _"causing these disabled services to be missing
 from the page"_.
@@ -215,7 +215,7 @@ pending change (`services.py:1196`). It has no column here because it is a **sec
 that never reaches `compute_discovery_transition` — which is exactly A3-F2, and the reason §6.3
 proposes decomposing it rather than carrying it over. `REFRESH`, by contrast, really does write
 nothing: it re-fetches from the host and recomputes the preview, its pre-gate is plain
-`wato.services` (`:802`), and it adds no pending change.
+`wato.services` (`:800`), and it adds no pending change.
 
 ### 2.3 The target axis is not a free choice
 
@@ -364,11 +364,11 @@ lists all 11.
 filter anywhere between the preview and `Discovery`:
 
 - `_get_effective_check_tables` returns the target host's table _verbatim_ and filters node tables
-  only by `found_on_nodes` (`services.py:595-631`); `check_source` is never inspected.
+  only by `found_on_nodes` (`services.py:593-629`); `check_source` is never inspected.
 - All four entry points pass the unfiltered `DiscoveryResult` — GUI
-  (`wato/pages/services.py:588-598`), REST `execute_service_discovery` (`:106-115`), REST
+  (`wato/pages/services.py:586-596`), REST `execute_service_discovery` (`:106-115`), REST
   `update_service_phase` (`:106-116`), quick setup (`_complete.py:527-546`).
-- The `DiscoveryState.is_discovered` filter at `wato/pages/services.py:724-726` is **not** the
+- The `DiscoveryState.is_discovered` filter at `wato/pages/services.py:722-724` is **not** the
   transition table. It lives inside `_get_status_message`, its only consumer is the `if not
 cmk_check_entries:` two lines below, and it runs _after_ the action has already executed.
   `cmk_check_entries` appears at exactly lines 724 and 731; `is_discovered` has one call site in the
@@ -417,14 +417,14 @@ but undocumented and untested. Ticket in §10.8.
 because the `update_source` filter their callers transmit is never applied.** ✅ _verified against the
 code, the werks and the commit history_
 
-Neither branch consults `selected_services` (`services.py:558-566`), so both actions retarget **every
+Neither branch consults `selected_services` (`services.py:556-564`), so both actions retarget **every
 entry in the table** to `update_target`. Both callers pass `unchanged` (GUI
-`wato/pages/services.py:2667, 2685`; REST `only_service_labels`). The `update_source="changed"` that
-both callers transmit is read **only** inside the `BULK_UPDATE` branch (`:574`), so the "changed
+`wato/pages/services.py:2665, 2683`; REST `only_service_labels`). The `update_source="changed"` that
+both callers transmit is read **only** inside the `BULK_UPDATE` branch (`:572`), so the "changed
 services only" intent is silently dropped.
 
 - **`new` → `unchanged` — this is where the damage is.** `_case_undecided(MONITORED)`
-  (`:992-994`) writes the service to autochecks. **"Update service labels" accepts every undecided
+  (`:990-992`) writes the service to autochecks. **"Update service labels" accepts every undecided
   service on the host.** Ticket in §10.5.
 - **`vanished` → `unchanged` — reachable, but harmless to the data.** A vanished service is _already_
   in autochecks (that is what makes it vanished: preexisting but not current), and for a vanished row
@@ -451,7 +451,7 @@ periodic equivalents are plain host-level booleans. What is missing is the **sou
   **all changed services** or a specific service."_
 - Werk **17710** (2.5.0b1): same promise for discovery parameters.
 - Both callers already transmit `update_source="changed"`, and the GUI even gates button enablement
-  on `has_changed_services` (`wato/pages/services.py:1361-1363`). The backend ignores both.
+  on `has_changed_services` (`wato/pages/services.py:1359-1361`). The backend ignores both.
 
 **Werk 17711 / CMK-22272 settles the intent** (`0f997886c9a0`, same author, classed **fix**):
 _"The 'Update service labels' action … used to move disabled services to monitored services. … Now,
@@ -462,12 +462,13 @@ bug** — and fixed it for the single source a customer reported, leaving `new`,
 `new → monitored` is the same failure mode as `ignored → monitored`, with worse consequences.
 
 Consequently the fix should key off `update_source`, not `selected_services`:
-`tests/unit/cmk/gui/watolib/test_services.py:2201-2235` currently _pins_ the selection-ignoring
-behaviour, so a `selected_services`-based fix breaks it while an `update_source`-based fix keeps it
-green. Ticket in §10.5.
+`test_cluster_discovery_removes_outdated_node_services_update_params` in
+`tests/unit/cmk/gui/watolib/test_services.py` currently _pins_ the selection-ignoring behaviour — it
+passes `selected_services=()` and still expects the update — so a `selected_services`-based fix
+breaks it while an `update_source`-based fix keeps it green. Ticket in §10.5.
 
 **Reachability differs by caller:** the GUI button is disabled unless the host has a changed service
-(`:1361-1363`, and disabled entries are `pointer-events: none`), so the GUI needs one changed service
+(`:1359-1361`, and disabled entries are `pointer-events: none`), so the GUI needs one changed service
 present. REST has no such gate — `only_service_labels` on a host with **only** undecided services
 accepts them all, making that mode a silent superset of mode `new` with a weaker pre-gate.
 
@@ -478,7 +479,7 @@ value adoption (§5) and the disabled-rule subtraction (§4.2).
 button titles; the defect is in the page-menu wiring beside it.** ✅ _verified against the code_
 
 `BULK_UPDATE` matches an entry when `check_source == update_source`, or when
-`check_source == changed and update_source == unchanged` (`services.py:571-581`).
+`check_source == changed and update_source == unchanged` (`services.py:569-579`).
 
 **`changed` genuinely is a subset of `monitored`, so the alias is sound.**
 `QualifiedDiscovery.changed` requires the
@@ -503,7 +504,7 @@ are what would be accepted. Behaviour matches the button title.
 **The alias is asymmetric** (`update_source=changed` does not match `unchanged`), and that asymmetry
 does bite — not in `_get_table_target`, where no caller passes `update_source=changed`, but in the
 page-menu wiring. `_toggle_bulk_action_page_menu_entries` handles `MONITORED | CHANGED` in one arm
-and enables `f"bulk_{table_source}_{target}"` (`wato/pages/services.py:1379-1383, 1404-1405`), so the
+and enables `f"bulk_{table_source}_{target}"` (`wato/pages/services.py:1377-1381, 1402-1403`), so the
 **Changed services** table emits `bulk_changed_new` / `bulk_changed_ignored` — **and no
 `PageMenuEntry` with those names exists** (`grep -rn "bulk_changed"` → nothing; the eight real names
 are all `bulk_{new,unchanged,ignored,vanished}_*`). `enable_page_menu_entry` resolves a null element
@@ -512,8 +513,8 @@ and silently does nothing. On a host where every monitored service is classified
 in §10.7.
 
 **One more trap for the rewrite:** `_perform_discovery_action` lists `UPDATE_SERVICES` in the
-combined `case` arm at `wato/pages/services.py:626-633`, which makes the dedicated
-`case DiscoveryAction.UPDATE_SERVICES:` at `:649-664` — the one that deliberately forces
+combined `case` arm at `wato/pages/services.py:624-631`, which makes the dedicated
+`case DiscoveryAction.UPDATE_SERVICES:` at `:647-662` — the one that deliberately forces
 `update_source=None, update_target=None` — **unreachable**. Inert today, but anyone deleting the
 "redundant" first arm during the rewrite changes behaviour.
 
@@ -628,10 +629,10 @@ still write the service when the target is `ignored`:
 | transition              | handler           | line                    | writes autochecks?                                 |
 | ----------------------- | ----------------- | ----------------------- | -------------------------------------------------- |
 | `ignored → ignored`     | `_case_ignored`   | `services.py:1077-1078` | no — **fixed**                                     |
-| `clustered_* → ignored` | `_case_clustered` | `services.py:1106-1108` | no — **fixed**                                     |
-| `unchanged → ignored`   | `_case_monitored` | `services.py:1027-1031` | **yes — gap**                                      |
-| `changed → ignored`     | `_case_changed`   | `services.py:1048-1053` | **yes — gap**                                      |
-| `vanished → ignored`    | `_case_vanished`  | `services.py:1010-1012` | **yes** — but an invalid transition, see **A2-F6** |
+| `clustered_* → ignored` | `_case_clustered` | `services.py:1104-1106` | no — **fixed**                                     |
+| `unchanged → ignored`   | `_case_monitored` | `services.py:1025-1029` | **yes — gap**                                      |
+| `changed → ignored`     | `_case_changed`   | `services.py:1046-1051` | **yes — gap**                                      |
+| `vanished → ignored`    | `_case_vanished`  | `services.py:1008-1010` | **yes** — but an invalid transition, see **A2-F6** |
 
 Nothing downstream filters it out: `_save_services` → `set_autochecks_v2` →
 `_automation_set_autochecks_v2` → `set_autochecks_for_effective_host`
@@ -697,14 +698,14 @@ informational, and the correct response to any operation on them is a rejection 
 
 | layer                               | behaviour                                                                                                                                                                                |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GUI table groups                    | all four clustered groups pass `show_bulk_actions=False` (`wato/pages/services.py:2068, 2141, 2154, 2169`), and three render collapsed by default (`isopen` excludes them, `:1181-1187`) |
+| GUI table groups                    | all four clustered groups pass `show_bulk_actions=False` (`wato/pages/services.py:2067, 2140, 2153, 2168`), and three render collapsed by default (`isopen` excludes them, `:1179-1185`) |
 | GUI row buttons                     | `_show_check_row`'s `match entry.check_source` has **no** `clustered_*` arm, so no per-row icon is emitted                                                                               |
 | `_verify_permissions`               | accepts `clustered_new` / `clustered_old` as targets (`to_monitored` arm)                                                                                                                |
 | `_apply_state_change`               | dispatches to `_case_clustered`, which **acts** rather than rejecting                                                                                                                    |
 | REST `update_service_phase`         | accepts any of the 17 `target_phase` values on a clustered row                                                                                                                           |
 | `FIX_ALL` / `UPDATE_SERVICE_LABELS` | retarget clustered rows along with everything else (A1-F1, A1-F2)                                                                                                                        |
 
-**What `_case_clustered` does** (`services.py:1091-1108`) — its default is to preserve, which is the
+**What `_case_clustered` does** (`services.py:1089-1106`) — its default is to preserve, which is the
 right instinct, but it is preservation-by-rewrite rather than rejection, and it has one exception:
 
 - every target except `ignored`: rewrites the same entry and adds to `saved_services`. Harmless to the
@@ -753,9 +754,9 @@ see §5.1 and the ticket in §10.4.
 Two further defects sit in the same area, both independent of the ruleset question:
 
 - **The GUI bulk pre-gate disagrees with the inner gate.** `has_discovery_action_specific_permissions`
-  for `BULK_UPDATE` (`services.py:811-815`) returns `may_all("to_monitored", "to_removed")` and
+  for `BULK_UPDATE` (`services.py:809-813`) returns `may_all("to_monitored", "to_removed")` and
   ignores `update_target` entirely, while `_toggle_bulk_action_page_menu_entries` enables each button
-  on its own target's permission (`wato/pages/services.py:1379-1383`). A user holding only
+  on its own target's permission (`wato/pages/services.py:1377-1381`). A user holding only
   `to_undecided` sees "Declare monitored services as undecided" **enabled**, and clicking it is
   rewritten to `DiscoveryAction.NONE` — the page refreshes and nothing happens, with no message.
   Fails closed, so not a security issue, but a silent dead end. Ticket in §10.6.
@@ -811,8 +812,8 @@ value-identical, so nothing is corrupted).
 
 | offered by                                       | code                                                                                                                    | gate                                                                                                                                                                                                          |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GUI bulk action **"Disable vanished services"**  | `BulkEntry(VANISHED, IGNORED, …)` at `wato/pages/services.py:2630-2637` → `PageMenuEntry(name="bulk_vanished_ignored")` | enabled by `_toggle_bulk_action_page_menu_entries`, `case DiscoveryState.VANISHED` (`:1392-1397`), for any user holding `to_ignored`. `is_shortcut=False, is_show_more=True`, so it renders under "Show more" |
-| GUI per-row **"Move to disabled services"** icon | `case DiscoveryState.VANISHED` → `_icon_button(VANISHED, …, IGNORED, "disabled", …)` (`:1815-1827`, helper at `:1889`)  | `has_modification_specific_permissions(UpdateType.IGNORED)`                                                                                                                                                   |
+| GUI bulk action **"Disable vanished services"**  | `BulkEntry(VANISHED, IGNORED, …)` at `wato/pages/services.py:2628-2636` → `PageMenuEntry(name="bulk_vanished_ignored")` | enabled by `_toggle_bulk_action_page_menu_entries`, `case DiscoveryState.VANISHED` (`:1390-1395`), for any user holding `to_ignored`. `is_shortcut=False, is_show_more=True`, so it renders under "Show more" |
+| GUI per-row **"Move to disabled services"** icon | `case DiscoveryState.VANISHED` → `_icon_button(VANISHED, …, IGNORED, "disabled", …)` (`:1813-1825`, helper at `:1887`)  | `has_modification_specific_permissions(UpdateType.IGNORED)`                                                                                                                                                   |
 | REST `update_service_phase`                      | `target_phase` ∈ `{ignored, undecided, monitored, …}` — 13 of 17 values (§10.3)                                         | the four blanket `to_*` permissions (P-F1)                                                                                                                                                                    |
 | indirectly, `UPDATE_SERVICE_LABELS`              | assigns `update_target=unchanged` to _every_ row including vanished (A1-F2)                                             | `wato.services`                                                                                                                                                                                               |
 
@@ -844,7 +845,7 @@ add_disabled_rule = add_disabled_rule - remove_disabled_rule - (saved_services -
   **`FIX_ALL` and `UPDATE_SERVICES` therefore compute different disabled-rule sets** on hosts with
   duplicate service descriptions. (A1-F3.)
 - **`selected_services` is overloaded, and this line is where the two meanings collide.** Everywhere
-  else it answers "which rows does this command apply to" (`_get_table_target:549`, `:580`, `:590`);
+  else it answers "which rows does this command apply to" (`_get_table_target:547`, `:578`, `:588`);
   here it answers "which services did the user name as services to _disable_". A whole-table action
   must pass `EVERYTHING` for the first question, and that answer is wrong for the second — which is
   not a corner case but every REST save and every checkbox-less GUI save. This is the whole of
@@ -1045,7 +1046,7 @@ services" reasonably expects discovery to be off-limits, and both the GUI and
 `has_modification_specific_permissions` encode that reading. Ticket in §10.4.
 
 **P-F2 — GUI degrades, REST rejects.** On pre-gate failure the GUI rewrites the action to
-`DiscoveryAction.NONE` and still returns a result (`wato/pages/services.py:411-416`) — the code even
+`DiscoveryAction.NONE` and still returns a result (`wato/pages/services.py:409-414`) — the code even
 says so: _"If the user has the wrong permissions, then we still return a discovery result which is
 different from the REST API behavior."_ `execute_service_discovery` raises `403`.
 
@@ -1141,10 +1142,10 @@ Four mechanics are needed to read the table. All four are things the rewrite has
 deliberately change, which is why they are here rather than left implicit:
 
 **1. There is a background job, it always runs on the site that owns the host, and it is public REST
-surface.** `ServiceDiscoveryBackgroundJob` (`services.py:1312`) is the only thing that calls
+surface.** `ServiceDiscoveryBackgroundJob` (`services.py:1310`) is the only thing that calls
 `local_discovery_preview`. Its docstring says it plainly: _"The background job is always executed on
 the site where the host is located on."_ Only two actions start it — `REFRESH` and `TABULA_RASA`
-(`execute_discovery_job`, `services.py:1275-1281`). Every other action reads whatever the job left
+(`execute_discovery_job`, `services.py:1273-1279`). Every other action reads whatever the job left
 behind.
 
 It is not merely a GUI mechanism. The job is exposed as its own REST domain type,
@@ -1163,7 +1164,7 @@ promises. What _can_ change is everything that depends on the job without needin
 `local_discovery_preview(..., prevent_fetching=True)` computes the check table from Checkmk's
 _cached_ agent output — fast, no network. `prevent_fetching=False` actually contacts the host.
 `ServiceDiscoveryBackgroundJob.discover` passes `prevent_fetching=False` only for `REFRESH` and
-`TABULA_RASA` (`services.py:1367-1370`); everything else gets `True`. This is why the docs say the
+`TABULA_RASA` (`services.py:1365-1368`); everything else gets `True`. This is why the docs say the
 non-job REST modes "only work with scanned data, so you may need to run `refresh` first" — and why
 a never-scanned host yields an empty table (the cold-cache hole that CMK-35050 owns).
 
@@ -1181,22 +1182,22 @@ means for the action.
 
 **5. Every read goes through the job object, whether or not a job runs.** There is no way to ask for
 the check table without constructing a `ServiceDiscoveryBackgroundJob` and calling `get_result`
-(`services.py:1309`, `:1419`) — including from REST, where `update_service_phase` and all five
+(`services.py:1307`, `:1417`) — including from REST, where `update_service_phase` and all five
 synchronous `execute_service_discovery` modes reach it via `get_check_table`. `get_result` has three
 branches:
 
 | condition               | table returned                                                                                                     |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | job active              | `self._pre_discovery_preview`                                                                                      |
-| a stored preview exists | `check_table.mk`, **read once and then deleted** (`_load_last_preview` unlinks in a `finally`, `services.py:1362`) |
+| a stored preview exists | `check_table.mk`, **read once and then deleted** (`_load_last_preview` unlinks in a `finally`, `services.py:1360`) |
 | otherwise               | a fresh `prevent_fetching=True` preview                                                                            |
 
 Two properties of that arrangement matter later. The stored preview is a _second_ cache layer on top
 of Checkmk's own fetcher cache, and a destructive one — yet it is not load-bearing, because
 `_perform_service_scan`'s docstring records that the scan also warms the internal cache, which is what
 makes the third branch fresh. And `_pre_discovery_preview` is only ever assigned inside `discover()`
-(`services.py:1367`), which runs in the _job_ process; in the requesting process the attribute keeps
-the empty value built by `__init__` (`services.py:1332`, `check_table=[]`). So the first branch
+(`services.py:1365`), which runs in the _job_ process; in the requesting process the attribute keeps
+the empty value built by `__init__` (`services.py:1330`, `check_table=[]`). So the first branch
 returns an empty table to whoever asked. That is B-F3.
 
 | action                                                                                                                                        | job started                | `local_discovery_preview` calls                                    | `local_discovery`                         | host labels written                                        | pending changes added                                                 | local vs remote                                                                 |
@@ -1214,7 +1215,7 @@ returns an empty table to whoever asked. That is B-F3.
 #### Where the branch is
 
 There is exactly **one** explicit local/remote branch in `services.py`, in `get_check_table`
-(`services.py:1209-1241`):
+(`services.py:1207-1239`):
 
 ```
 LocalAutomationConfig  → execute_discovery_job(host_name, action, …)   # run the job in-process
@@ -1224,7 +1225,7 @@ otherwise              → sync_changes_before_remote_automation(site)   # ⚠�
 ```
 
 On the remote side that HTTP call lands in `AutomationServiceDiscoveryJob.execute`
-(`wato/pages/services.py:369-378`), which calls the _same_ `execute_discovery_job` — so the remote
+(`wato/pages/services.py:367-373`), which calls the _same_ `execute_discovery_job` — so the remote
 path is the local path with a serialization hop and a second permission check in front of it.
 
 All the **write** paths dispatch differently: they take `automation_config` as a parameter and pass
@@ -1249,7 +1250,7 @@ This is the mechanism behind the AC's rule _"Tests do not monkeypatch `local_dis
 way that bypasses the local/remote dispatch branch"_, and it is how the hackathon PoC shipped an
 apply path that was unconditionally local — its tests could not have caught it. Both existing test
 suites do exactly this: `tests/unit/cmk/gui/watolib/test_services.py:116-120` and
-`tests/openapi/test_openapi_service_discovery.py:1632-1636`.
+`tests/openapi/test_openapi_service_discovery.py:1639-1643`.
 
 The fix for new tests is to patch one level lower, at the automation transport
 (`check_mk_local_automation_serialized` / `check_mk_remote_automation_serialized`, or
@@ -1262,26 +1263,26 @@ Each is stated with the user-visible consequence, because "local and remote diff
 actionable if you know what breaks.
 
 1. **The remote path activates pending changes first; the local path does not.**
-   `sync_changes_before_remote_automation` (`services.py:1218`) runs before the automation.
+   `sync_changes_before_remote_automation` (`services.py:1216`) runs before the automation.
    _Consequence:_ clicking "Rescan" on a remote host can activate an unrelated, half-finished
    configuration change that the admin had not intended to activate yet. On a local host the same
    click activates nothing.
 2. **`TABULA_RASA`'s pending change is recorded centrally, but the work happens remotely.**
    The `refresh-autochecks` change is added before the branch (`services.py:1196-1207`), while
    `_perform_automatic_refresh` runs `local_discovery` on the remote site and records nothing there —
-   an acknowledged `TODO` at `services.py:1398`: _"In distributed sites this must not add a change on
+   an acknowledged `TODO` at `services.py:1396`: _"In distributed sites this must not add a change on
    the remote site. We need to build the way back to the central site and show the information
    there."_
    _Consequence:_ the central change list says "Refreshed check configuration", but the audit trail
    for what actually changed on the remote is absent.
 3. **The wire format is version-truncated.** `DiscoveryResult.serialize(for_cmk_version)`
-   (`services.py:169-198`) sends only the first 10 fields to a peer `< 2.5.0b1` — dropping
+   (`services.py:167-196`) sends only the first 10 fields to a peer `< 2.5.0b1` — dropping
    `config_warnings` — and encodes `sources` as an index-keyed dict for a peer `< 3.0.0b1`.
    _Consequence:_ against an older remote, the discovery page silently shows no configuration
    warnings. Within the supported one-minor-version skew this is reachable, not theoretical.
 4. **Permissions are checked twice, with different sets.** Centrally:
    `has_discovery_action_specific_permissions` plus `_service_discovery_context`'s `wato.services`.
-   Remotely: `AutomationServiceDiscoveryJob._check_permissions` (`wato/pages/services.py:350-365`),
+   Remotely: `AutomationServiceDiscoveryJob._check_permissions` (`wato/pages/services.py:348-362`),
    which requires only `wato.hosts` and host `read`.
    _Consequence:_ the effective permission set for a remote host is the central one; the remote check
    is a weaker backstop, not an equivalent gate. Any new endpoint must not assume the remote
@@ -1310,7 +1311,7 @@ requesting process is the empty preview from `__init__`. So the write path recei
 `check_table=[]`, and the consequences follow mechanically:
 
 1. `compute_discovery_transition` iterates an empty table, so `apply_changes` is never set;
-2. `if not apply_changes: return None` (`services.py:393`);
+2. `if not apply_changes: return None` (`services.py:391`);
 3. `do_discovery` returns without writing anything;
 4. the endpoint answers **`204 No Content`**.
 
@@ -1348,7 +1349,7 @@ and if not, do `REFRESH` and `TABULA_RASA` warrant being special-cased?_
 | per-host mutual exclusion                                                   | no      | B-F3: the wrong lock, applied in one of two entry points. Superseded by a table-version precondition |
 
 **What is essential is a property of `prevent_fetching`, not of the two action names.** The action
-enum decides the boolean in two places (`services.py:1368`, and `discover`'s `if/elif/else` at `:1372-1381`),
+enum decides the boolean in two places (`services.py:1366`, and `discover`'s `if/elif/else` at `:1370-1379`),
 which is the whole of "`REFRESH` is special": it is the action for which fetching is on. Make the
 fetch policy an explicit parameter of a scan request and the special case has nothing left to attach
 to — no per-service operation needs to know the policy exists.
@@ -1364,7 +1365,7 @@ observes needs no pending change at all.
 
 **Two things follow for the read model.** `job_status` and `check_table_created` leave
 `DiscoveryResult` (they describe a scan, not a table — the conflation named in domain model §1), and
-with them goes the laundering in `_cleaned_up_status` (`services.py:1463`), which exists only because
+with them goes the laundering in `_cleaned_up_status` (`services.py:1461`), which exists only because
 a caller that started no job can otherwise be handed a previous job's exception. `NONE` becomes a
 plain read of the table and `STOP` becomes a call on the scan resource, so both leave the action
 vocabulary entirely.
@@ -1704,16 +1705,60 @@ because they have different subjects: the guard itself
 on the GUI path), the context manager's exit ordering (T2.13), and the endpoint that never enters it
 (T2.14).
 
-### Tier 3 — REST characterization (extend `tests/openapi/test_openapi_service_discovery.py`)
+### Tier 3 — REST characterization (extends `tests/openapi/test_openapi_service_discovery.py`)
 
-| #    | test                                                         | pins                                                                                                                                                                                                                                                                                                                              |
-| ---- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| T3.1 | `test_api_mode_matrix` — 7 modes                             | Per mode: resulting `check_table` phases, whether `set_autochecks_v2` was called and with what. Explicitly pins **`only_service_labels` accepting undecided services and keeping vanished ones** (A1-F2) and **`new`/`remove` not adopting new parameters** (A3-F1).                                                              |
-| T3.2 | `test_update_service_phase_target_matrix` — 17 target phases | §5.2 / A2-F1: the resulting autochecks for each accepted `target_phase`, incl. the `legacy`, `manual`, `active`, `custom` drop cells. Parametrize the source too, at least `unchanged` and `vanished`, so the pair-validity gap (A2-F6) is visible: the same `target_phase` deletes for one source and writes-back for the other. |
-| T3.3 | `test_update_service_phase_permissions`                      | The four blanket `need_permission` calls, and that `Discovery` itself adds none for the `other` targets.                                                                                                                                                                                                                          |
-| T3.4 | `test_execute_discovery_conflicts_with_running_job`          | `409` from `job_snapshot(...).is_active`.                                                                                                                                                                                                                                                                                         |
-| T3.5 | `test_refresh_and_tabula_rasa_redirect`                      | `303` to `wait-for-completion` instead of a result body.                                                                                                                                                                                                                                                                          |
-| T3.6 | `test_update_service_phase_during_active_job`                | B-F3: **`204` and no autochecks write** while a job is active — the asymmetry against T3.4's `409`. Becomes the assertion for §10.18 by changing the expected status.                                                                                                                                                             |
+**Implemented.** 14 test functions, 59 cases, driving real requests through the Flask app with
+`ClientRegistry`. Two helpers were added to `ServiceDiscoveryClient` in
+`tests/testlib/rest_api_client.py` — `get_discovery_result` and `update_service_phase` — which
+Tier 4 needs as well.
+
+**No `xfail(strict=True)` lives in this tier, and that is a decision rather than an omission.**
+Tiers 1 and 2 already carry a tripwire for eleven of the thirteen §10 tickets, each at the lowest
+layer that can see its divergence. A second tripwire for the same ticket here would give whoever
+fixes it two pairs to find instead of one, with the chance that only one of them flips. The rule of
+§7's Tier 2 notes sets a floor — a tripwire may not sit _below_ the code the ticket changes — and
+this tier is where the ceiling starts to bite: it sits above the endpoint registry, the request
+model, the permission decorators, versioning and a Flask app, so a strict xfail up here can also
+`XPASS` for a reason that has nothing to do with its ticket, announcing a fix that never happened.
+That is worse than silence, because it names a key.
+
+The divergences below are therefore pinned as plain characterization tests that name their ticket
+in the docstring. Each asserts a **status code or a service set that the fix must change**, so the
+fix cannot land without reddening this file — which is all a tripwire is for. The pair exists to
+solve one specific problem: a characterization test whose assertions stay _true_ after the fix
+(§7.0's A2-F2). Where today's behaviour and the fixed behaviour disagree on something the test
+already asserts, the characterization test _is_ the tripwire and a partner is redundant.
+
+Because the preview is patched, a re-read after a write returns the same canned table, so a
+response body's `check_table` cannot show the effect of an action. Every assertion is therefore on
+the services that reached `set_autochecks_v2`, and on the `AutocheckEntry` values written for them.
+The fixture's table carries one row per interesting source — `unchanged`, `changed`, `new`,
+`vanished`, `ignored` — with old and new parameters and labels that differ, so value adoption is
+observable per row.
+
+| #     | test                                                                            | cases | pins                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----- | ------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T3.1  | `test_api_mode_matrix`                                                          | 5     | The five modes that answer `200`, by the services the autochecks file holds afterwards. `only_host_labels` writes none.                                                                                                                                                                                                                                                                                                         |
+| T3.1a | `test_monitoring_an_undecided_service_does_not_adopt_its_new_values`            | 1     | **A3-F1**: `new` writes the service it just accepted with its _old_ parameters and labels, both of which sit in the same preview row.                                                                                                                                                                                                                                                                                           |
+| T3.1b | `test_fix_all_adopts_both_parameters_and_labels_of_a_changed_service`           | 1     | Matrix A3: "Accept all" is the mode that takes the new values — the control that makes T3.1a a divergence between modes and not a property of accepting.                                                                                                                                                                                                                                                                        |
+| T3.1c | `test_update_service_labels_adopts_labels_only_and_on_every_row_it_retargets`   | 1     | **§10.5 / CMK-38599** at the boundary: the mode takes new labels and leaves parameters alone (intended), but applies that to every row it retargets — adopting the undecided service and writing the vanished one back, on a host with nothing changed. The `unchanged` row is the control.                                                                                                                                     |
+| T3.2  | `test_update_service_phase_target_matrix`                                       | 34    | §5.2 / A2-F1 / **A2-F6**. All 17 phases accepted with `204` from both sources. Three outcomes each: the phase naming the source is a no-op; one phase is a real command; the other fifteen **delete** from `unchanged` and **keep** from `vanished` — one value, two opposite effects.                                                                                                                                          |
+| T3.2a | `test_the_request_model_and_the_phase_map_accept_the_same_seventeen_phases`     | 1     | The vocabulary is spelled out twice — the model's `Literal` and `SERVICE_DISCOVERY_PHASES` — and a phase in one but not the other reaches the handler as a `KeyError`. Pure; no HTTP.                                                                                                                                                                                                                                           |
+| T3.2b | `test_update_service_phase_rejects_an_unknown_phase`                            | 1     | An eighteenth value is a `400` from the model, before the handler runs.                                                                                                                                                                                                                                                                                                                                                         |
+| T3.2c | `test_update_service_phase_reports_success_for_a_service_that_does_not_exist`   | 4     | **New finding, §9.3.** A phase change for a service not in the table is answered `204` with no write — unknown plugin, unknown item, or both — while the same endpoint answers `404` for an unknown **host**. It names the thing to change with two identifiers and treats "it does not exist" as an error for one and success for the other.                                                                                   |
+| T3.3  | `test_update_service_phase_demands_all_four_transition_permissions`             | 4     | §5.1: the handler demands all four `to_*` before knowing what was asked for. The request is the no-op cell — monitored → monitored — which writes nothing and makes the transition's own guard demand nothing, so the four blanket calls are the only checks left to fail. Asking for `ignored` instead would leave that one case ambiguous: a mutation run confirmed it stays green when the blanket calls are removed.        |
+| T3.3a | `test_update_service_phase_writes_without_manage_services_or_edit_hosts`        | 2     | **§10.4 / CMK-38594** end-to-end: a role denied `wato.services` — or `wato.edit` — disables a service through this endpoint and is answered `204`, while the same write through `.../service_discovery_run` is correctly refused `403`. Tier 2 owns the tripwire (the _declared_ set).                                                                                                                                          |
+| T3.3b | `test_the_discovery_pre_gate_and_the_transition_refuse_with_different_messages` | 1     | **§10.6**: both routes end in `403` for a role denied `to_monitored`, but `fix_all` is refused by the pre-gate and `only_service_labels` by the demand inside the transition, and the message says which. Neither writes anything — confirming §10.6 has no data consequence.                                                                                                                                                   |
+| T3.4  | `test_execute_discovery_conflicts_with_running_job`                             | 1     | `409` from `job_snapshot(...).is_active`.                                                                                                                                                                                                                                                                                                                                                                                       |
+| T3.5  | `test_refresh_and_tabula_rasa_redirect`                                         | 2     | `303` to `wait-for-completion` instead of a result body, and no write from the request itself.                                                                                                                                                                                                                                                                                                                                  |
+| T3.6  | `test_update_service_phase_during_active_job`                                   | 1     | **§10.18 / CMK-38598**: `204` and no write while a job is active — the asymmetry against T3.4's `409`. Characterization only: the fix answers `409` for a request carrying a `check_table_created` precondition, a field the model does not have yet, so an xfail written now could only send a request without it and would go on failing silently after a correct fix. The status code here is the assertion the fix changes. |
+
+**Mutation-checked**, as Tier 2 was: 15 mutants — 5 tripwire ("does a correct fix redden this?"),
+9 regression ("does a broken guard get caught?"), 1 not-a-fix ("is a silently dropped write
+misreported as success?") — all behaving as expected. Two of them found real weaknesses the tests
+had hidden: T3.3 could not tell the endpoint's blanket `to_ignored` demand from the transition's
+own, and `only_host_labels` was pinned by absence alone, so a mutant turning it into a complete
+no-op passed. Harness in the session scratchpad, not committed.
 
 ### Tier 4 — remote-site parity (new file: `tests/system/multisite/cmk/gui/test_service_discovery_remote_parity.py`)
 
@@ -1747,15 +1792,18 @@ has no method for it either).
 | 1c   | 1 new (replaces `test_do_discovery.py`) | 3              | 227                                      | fast, pure — **implemented**                    |
 | —    | added to the check-engine suite         | 5              | 12, of which 3 are `xfail(strict=True)`  | fast, pure — **implemented**                    |
 | 2    | 1 new                                   | 29             | 97, of which 4 are `xfail(strict=True)`  | fast, mocked at the transport — **implemented** |
-| 3    | extend 1                                | 6              | ~36                                      | medium                                          |
+| 3    | extend 1 (+ 2 client helpers)           | 14             | 59, no `xfail`                           | medium — real requests, **implemented**         |
 | 4    | 1 new                                   | 7 (+ reserved) | ~20                                      | slow, real sites                                |
 
 Tier 1 totals 367 cases across the three test files — 334 passing and 33 strict-xfail — running
-in under five seconds. Run it with:
+in under five seconds. Tier 2 adds 97 and Tier 3 another 59, so the implemented tiers come to 523
+cases. Run them with:
 
 ```console
 $ bazel test //tests/unit/cmk/gui:setup_tests --test_arg=-k --test_arg=discovery_transition
+$ bazel test //tests/unit/cmk/gui:setup_tests --test_arg=-k --test_arg=services_dispatch
 $ bazel test //packages/cmk-check-engine:discovery-tests
+$ bazel test //tests/openapi:repo_community --test_arg=-k --test_arg=service_discovery
 ```
 
 ---
@@ -1835,9 +1883,10 @@ All items are folded into the sections above and, where confirmed, ticketed in �
 
 Everything else has been resolved. What remains:
 
-| ID            | Question                                                                                                                                                        |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| §10.14 step 3 | Whether to narrow the v1 request enum at the next major API version or leave it rejecting with `400` indefinitely — an API-ownership call, not a code question. |
+| ID                   | Question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| §10.14 step 3        | Whether to narrow the v1 request enum at the next major API version or leave it rejecting with `400` indefinitely — an API-ownership call, not a code question.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **New, from Tier 3** | `update_discovery_phase` answers `204` for a `check_type` / `service_item` that is **not in the check table** — unknown plugin, unknown item, or both. `selected_services` matches nothing, `apply_changes` stays false, the transition returns `None`, and the endpoint reports success without writing — no autochecks automation, no pending change, so no audit-log entry either. **The same endpoint answers `404` for an unknown host**, checked by the path parameter's `HostConverter` before the handler runs, so it already knows how to answer this for one of its two identifiers. Pinned as T3.2c. Same shape as §10.18 but a different cause, and §10.18's `check_table_created` precondition would not catch it: the table is fresh, the service is simply absent. **Needs a decision:** own §10 section and ticket, folded into §10.18's ticket, or accepted as REST-idempotent behaviour. |
 
 ### 9.4 Resolved — the `DiscoveryState` values with no producer
 
@@ -1869,6 +1918,8 @@ Only findings that survived verification appear here: each was checked against t
 history and the existing tests, and traced to a concrete, reproducible symptom. Items that turned out
 not to be defects (§9.2) are deliberately absent.
 
+**Pinned as T3.2a**: the vocabulary is spelled out twice — the request model's `Literal` and `SERVICE_DISCOVERY_PHASES` — and the test asserts the two sets are equal, so a phase added to one but not the other fails there instead of reaching the handler as a `KeyError`. Tier 1b pins the same 17/13 arithmetic purely; T3.2b pins that an eighteenth value is a `400` from the model rather than anything the handler sees.
+
 ### 10.1 Disabling a monitored service still writes it into the autochecks file
 
 **Verified:** code path, `git show 3b05a138153`, werks 19800 / 19801 / 19806 / 20035, and the
@@ -1881,8 +1932,8 @@ the autochecks file (werk 19800 gap for the `unchanged` and `changed` sources)_
 must never be written to the autochecks file, and werk 19800 (CMK-33299, commit `3b05a138153`)
 implemented it — but that commit's `services.py` diff changed only `_case_ignored` and
 `_case_clustered`. The three sibling handlers still add the entry to `autochecks_to_save` when the
-target is `ignored`: `_case_monitored` (`services.py:1027-1031`), `_case_changed`
-(`services.py:1048-1053`) and `_case_vanished` (`services.py:1010-1012`). The fix therefore covers
+target is `ignored`: `_case_monitored` (`services.py:1025-1029`), `_case_changed`
+(`services.py:1046-1051`) and `_case_vanished` (`services.py:1008-1010`). The fix therefore covers
 the rule-driven case — a service already classified `ignored` because a rule matched it — but not the
 ordinary user action of clicking "disable" on a currently monitored service, or
 `PUT /objects/host/{host}/actions/update_discovery_phase/invoke` with `target_phase: "ignored"`.
@@ -1898,7 +1949,7 @@ service a "Disabled services" rule matches — growing without bound on hosts wi
 what makes it surface as `vanished`, which werk 19801 designates as the cleanup signal. The
 classification is by design; the entry that triggers it is the bug.
 
-**Scope.** `_case_vanished` (`services.py:1010-1012`) writes on target `ignored` as well, but that
+**Scope.** `_case_vanished` (`services.py:1008-1010`) writes on target `ignored` as well, but that
 transition is invalid in the first place — `ignored` is not a state a not-discovered service can occupy
 — so it needs withdrawing rather than correcting. Separate ticket, §10.16. This ticket is the two cells
 where `ignored` is a legitimate target.
@@ -1908,13 +1959,28 @@ from the discovery page (source `unchanged` → target `ignored`). Confirm
 `var/check_mk/autochecks/<host>.mk` still contains it. Remove the service from the agent output and
 re-run discovery: it appears as `vanished` instead of disappearing.
 
-**Note for the fix commit.** The current behaviour is _pinned_ by
-`tests/unit/cmk/gui/watolib/test_do_discovery.py` — `(MONITORED, IGNORED)` at `:81-86` and
-`(CHANGED, IGNORED)` at `:339-344` — so both rows must change together with the fix (and
-`(VANISHED, IGNORED)` at `:116-121` with §10.16). `tests/unit/cmk/gui/watolib/test_services.py:1119`
-already drives the `unchanged → ignored` transition and needs only an assertion on
-`mock_set_autochecks.call_args.args[1].target_services`; today it requests the
-`mock_set_autochecks` fixture and never inspects it.
+**The fix direction is already settled in the code.** `_case_ignored` deliberately keeps a
+disabled service out of `autochecks_to_save`, and says why in a comment naming this very werk:
+_"disabled services must not be written to the autochecks file (CMK-33299)"_
+(`services.py:1077-1082`). `_case_monitored` and `_case_changed` write it anyway when the target
+is `IGNORED` (`:1025-1029`, `:1046-1051`). So the two handlers disagree about the same rule, and the
+one that already implements it names the ticket that decided it. Disabling a service that was
+monitored a moment ago leaves it in the file; disabling one that was already disabled keeps it out.
+
+**Note for the fix commit.** The current behaviour is pinned in three places, all of which must
+change together:
+
+- Tier 1b's `Divergence` rows `unchanged+disable` (T1b.1) and `changed+disable` (T1b.2) in
+  `tests/unit/cmk/gui/watolib/test_discovery_transition_quarantine.py`, each a strict-xfail plus a
+  characterization half — flip `in_autochecks` in `current` and delete both halves. The
+  `vanished+disable` row (T1b.3) belongs to §10.16 and moves with that ticket.
+- The `unchanged`/`ignored` cell of Tier 3's `test_update_service_phase_target_matrix`
+  (`tests/openapi/test_openapi_service_discovery.py`), where the disabled service is still in the
+  `set_autochecks_v2` payload. When this lands, that cell moves from the "keeps" group to the
+  "deletes" group.
+- `tests/unit/cmk/gui/watolib/test_services.py` drives the `unchanged → ignored` transition without
+  inspecting the write; an assertion on `mock_set_autochecks.call_args.args[1].target_services`
+  turns it into a regression test for the fix.
 
 ### 10.2 The `_apply_state_change` matrix test covers 120 of 225 cells — ✅ **RESOLVED, no ticket**
 
@@ -1995,6 +2061,8 @@ Repro: `PUT /objects/host/myhost/actions/update_discovery_phase/invoke`
 Fix: narrow the accepted set to the four meaningful phases (in `unstable`/v2, or return an explicit
 `400` in v1 since narrowing a published enum is breaking), and add a `case _: raise` default arm.
 
+**Pinned as T3.2**, 34 cases over all 17 phases and the two sources `unchanged` and `vanished`. Every phase is accepted with `204`. Fifteen of them delete the service when its source is `unchanged` and keep it when its source is `vanished` — the same `target_phase`, two opposite effects, chosen by a source the caller never sent. That is A2-F6 made concrete, and the reason the fix has to reject the _pair_ and not the value.
+
 ### 10.4 REST `update_discovery_phase` bypasses `wato.services` and `wato.edit`
 
 **Verified:** `may_edit_ruleset` definition; endpoint permission surface; framework validation order.
@@ -2019,12 +2087,19 @@ That is also what makes the declaration the right tripwire: T2.12's strict xfail
 `"wato.services" in UPDATE_PHASE_PERMISSIONS`, which no fix can leave untouched, rather than
 guessing which function will end up carrying the `need_permission` call.
 
+**T3.3a is the end-to-end symptom**: a role whose only difference from an admin is that it is denied
+`wato.services` — or `wato.edit` — disables a service through this endpoint and is answered `204`,
+while the same write asked for through `.../service_discovery_run/actions/start` is correctly
+refused `403`. So which permission a client needs depends on which of the two endpoints it happens
+to use. That test is characterization, not a second tripwire: T2.12 owns the tripwire, because the
+declared set is the one observation point no fix can avoid changing.
+
 ### 10.5 "Update service labels" / "Update discovery parameters" retarget every service on the host
 
 **Verified:** empirically, by running `compute_discovery_transition` over all 13 sources; plus werk
 and git archaeology. Source finding: A1-F2.
 
-Both branches of `_get_table_target` (`services.py:558-566`) ignore `update_source`, so every row is
+Both branches of `_get_table_target` (`services.py:556-564`) ignore `update_source`, so every row is
 retargeted to `update_target` (always `unchanged`). Werks 16466 and 17710 promise "all **changed**
 services or a specific service", and both callers already transmit `update_source="changed"` — read
 only inside the `BULK_UPDATE` branch, so it is dead here. Every `new` row therefore reaches
@@ -2041,17 +2116,24 @@ Repro (REST, works even with **no** changed services):
 GUI: Actions ▸ "Update service labels" on a host with one changed and one undecided service — and note
 the ticked checkboxes are ignored even though the menu topic is titled "On selected services".
 **Fix must key off `update_source`, not `selected_services`:**
-`tests/unit/cmk/gui/watolib/test_services.py:2201-2235` pins the selection-ignoring behaviour and
-stays green for the former, breaks for the latter.
+`test_cluster_discovery_removes_outdated_node_services_update_params` in
+`tests/unit/cmk/gui/watolib/test_services.py` drives `UPDATE_DISCOVERY_PARAMETERS` with
+`selected_services=()` and still expects the parameters to be updated, so it pins the
+selection-ignoring half deliberately. It stays green for a fix that filters on `update_source` and
+breaks for one that filters on `selected_services`.
+
+**Pinned as T3.1c** at the REST boundary. The tier-3 fixture's table carries one row per source, `changed` among them, and the mode reaches **four** of the five: it takes new labels and leaves parameters alone — correct, and the reason it is not `new` under another name — but it does that to `new` and `vanished` as well as to `changed`, adopting the undecided service and writing the vanished one back. The `unchanged` row is the control: it is the one row already at the target, so it is the one row left alone. The sharper form of the claim — that the mode fires on a host with **no** changed service at all — is the repro above; it is not what T3.1c drives, because that fixture deliberately includes a `changed` row to show the mode doing its intended job alongside the unintended one.
+
+**The guardrail this ticket needs is a Tier 1 conformance test, not a quarantine pair.** The fix keys off `update_source` in `_get_table_target` (`services.py:556-564`), which is Matrix A1 — Tier 1's own subject — while T3.1c only sees the symptom two layers up. Tier 1a deliberately excludes the two `UPDATE_*` value actions from `test_an_unselected_row_is_left_alone` and names §10.5 as the reason (`test_discovery_transition_matrix.py:825`), so the cells that would catch a regression here do not exist yet. Since this item is to be fixed _before_ the refactoring starts, there is nothing to quarantine: the fix should bring the missing `(action, update_source) → reached rows` cells with it.
 
 ### 10.6 Bulk-action pre-gate disagrees with the permission the action demands
 
 **Verified:** both gates read. Source finding: A2-F5 side-effect.
 
 `has_discovery_action_specific_permissions` grants `BULK_UPDATE` on `to_monitored ∧ to_removed` and
-ignores `update_target` entirely (`services.py:811-815`), while
+ignores `update_target` entirely (`services.py:809-813`), while
 `_toggle_bulk_action_page_menu_entries` enables each button on its own target's permission
-(`wato/pages/services.py:1379-1402`). A user holding only `to_undecided` sees "Declare monitored
+(`wato/pages/services.py:1377-1400`). A user holding only `to_undecided` sees "Declare monitored
 services as undecided" **enabled**; clicking it is rewritten to `DiscoveryAction.NONE` and the page
 silently refreshes with nothing done. The same mismatch exists for `UPDATE_SERVICE_LABELS` /
 `UPDATE_DISCOVERY_PARAMETERS`, pre-gated on `wato.services` alone but always demanding
@@ -2059,12 +2141,14 @@ silently refreshes with nothing done. The same mismatch exists for `UPDATE_SERVI
 Failure is clean in both cases: all permission checks run inside the pure
 `compute_discovery_transition` before any write.
 
+**Pinned as T3.3b**, and the two routes are distinguishable by their message: a role denied `to_monitored` gets the pre-gate's flat "You do not have the necessary permissions to execute this action" for `fix_all`, and the permission machinery's own "Move to monitored services" text for `only_service_labels`. Neither writes anything, which is the observation behind "failure is clean" above.
+
 ### 10.7 Bulk actions for the "Changed services" table are never enabled
 
 **Verified:** `grep -rn "bulk_changed"` → no matches anywhere in the repo.
 
 `_toggle_bulk_action_page_menu_entries` handles `MONITORED | CHANGED` in one arm and enables
-`f"bulk_{table_source}_{target}"` (`wato/pages/services.py:1379-1383`), so the Changed table emits
+`f"bulk_{table_source}_{target}"` (`wato/pages/services.py:1377-1381`), so the Changed table emits
 `bulk_changed_new` / `bulk_changed_ignored`. No `PageMenuEntry` with those names exists — the eight
 real entries are all `bulk_{new,unchanged,ignored,vanished}_*`. `enable_page_menu_entry` resolves a
 null element and silently does nothing. On a host where every monitored service is classified
@@ -2161,8 +2245,8 @@ caller up, which is why it needs T2.15 of its own.
 
 | Job              | Read at                                                                                                                           | Meaning                                                               |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Row eligibility  | `_get_table_target:549` (`UPDATE_SERVICES`), `:580` (`BULK_UPDATE`), `:590` (`SINGLE_UPDATE`, `SINGLE_UPDATE_SERVICE_PROPERTIES`) | "the rows this command applies to"                                    |
-| Guard subtrahend | `:405`, `saved_services - selected_services`                                                                                      | "the services the user named as services to **disable**" (werk 19062) |
+| Row eligibility  | `_get_table_target:547` (`UPDATE_SERVICES`), `:578` (`BULK_UPDATE`), `:588` (`SINGLE_UPDATE`, `SINGLE_UPDATE_SERVICE_PROPERTIES`) | "the rows this command applies to"                                    |
+| Guard subtrahend | `:403`, `saved_services - selected_services`                                                                                      | "the services the user named as services to **disable**" (werk 19062) |
 
 A whole-table action has no per-service selection, so it must pass `EVERYTHING` to satisfy job 1.
 Job 2 then reads the same value as "the user explicitly asked to disable every service on this
@@ -2176,8 +2260,8 @@ judgement. `EVERYTHING` is passed at four places:
 | ---------------------------------------------------------- | ----------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `execute_service_discovery.py:124` (`new`)                 | `BULK_UPDATE`           | `unchanged`     | no                                                                                                                                                                                                 |
 | `execute_service_discovery.py:140` (`remove`)              | `BULK_UPDATE`           | `removed`       | no                                                                                                                                                                                                 |
-| `execute_service_discovery.py:192` (`only_service_labels`) | `UPDATE_SERVICE_LABELS` | `unchanged`     | no — and this action never consults the selection for eligibility either (`:558`), so its `EVERYTHING` has no purpose at all                                                                       |
-| `wato/pages/services.py:677`                               | `UPDATE_SERVICES`       | —               | no — it is what `_resolve_selected_services` returns when checkboxes are _unavailable_, under the comment _"empty list can mean everything or nothing"_, i.e. "no explicit selection was possible" |
+| `execute_service_discovery.py:192` (`only_service_labels`) | `UPDATE_SERVICE_LABELS` | `unchanged`     | no — and this action never consults the selection for eligibility either (`:556`), so its `EVERYTHING` has no purpose at all                                                                       |
+| `wato/pages/services.py:675`                               | `UPDATE_SERVICES`       | —               | no — it is what `_resolve_selected_services` returns when checkboxes are _unavailable_, under the comment _"empty list can mean everything or nothing"_, i.e. "no explicit selection was possible" |
 
 None of them targets `ignored`. The one REST path that _can_ disable,
 `update_service_phase.py:104`, passes `((check_type, service_item),)` — the single service it was
@@ -2195,7 +2279,7 @@ means "accept all undecided services into monitoring":
 | `ignored` (SNMP) | `ignored` — source, so no permission is demanded (`_verify_permissions:435`) | `saved_services ∋ "CPU utilization"`, `add_disabled_rule ∋ "CPU utilization"` |
 | `new` (TCP)      | `unchanged`                                                                  | the autochecks entry, `saved_services ∋ "CPU utilization"`                    |
 
-`_case_undecided` is not even passed `remove_disabled_rule` (`services.py:983-996`), so nothing
+`_case_undecided` is not even passed `remove_disabled_rule` (`services.py:981-994`), so nothing
 cancels the first row. With the subtrahend collapsed, `add_disabled_rule = {"CPU utilization"}`.
 The TCP service is therefore **written into the autochecks and covered by a new
 `ignored_services` rule in the same transition**, and reads back as `ignored` on the next scan. The
@@ -2215,7 +2299,7 @@ provoked it, because it is host-pinned and unconditional on the plugin.
 On a host with no duplicate descriptions the same bug is only wasteful: the rule is redundant with
 whatever already disabled the service, but `EnabledDisabledServicesEditor` still costs one
 `get_services_labels` automation plus one rule-match per description (CMK-26792), and `need_sync`
-is computed _before_ the subtraction (`services.py:397-399`), so the pending change is created even
+is computed _before_ the subtraction (`services.py:395-397`), so the pending change is created even
 when the delta is empty. Idempotent after the first write.
 
 #### The fix
@@ -2276,7 +2360,7 @@ and does not list it at all once werks 19800/19806 stop disabled services being 
 (the steady state going forward).
 
 Everything needed for correct behaviour already exists and is unreachable: the `TableGroupEntry`
-_"Disabled clustered services - located on cluster host"_ (`cmk/gui/wato/pages/services.py:2168-2178`,
+_"Disabled clustered services - located on cluster host"_ (`cmk/gui/wato/pages/services.py:2166-2175`,
 `show_bulk_actions=False`, translated in 8 locales), the `Transition` literal, the
 `DiscoveryReport.clustered_ignored` counter, and `_case_clustered`'s match arm. All dead since
 **`692c918bf86`** (2021-02-05, _"discovery: towards `QualifiedDiscovery` 1"_) replaced
@@ -2401,7 +2485,7 @@ this is a core-dependent divergence in what "disabled" means.
 
 1. **"Disabled services" / "Disabled checks" are ignored.** The service keeps being checked and keeps
    notifying. Since werk 18136 (2.5.0b1) the discovery page files it under _"Disabled custom checks -
-   defined via rule"_ (`cmk/gui/wato/pages/services.py:2190-2200`), so the GUI now actively asserts
+   defined via rule"_ (`cmk/gui/wato/pages/services.py:2188-2198`), so the GUI now actively asserts
    something untrue.
 2. **The clustered redirection is ignored.** A custom check whose description a _Clustered services_ rule
    maps onto a cluster is still created on the node, because `host_name != effective_host(...)` is no
@@ -2460,12 +2544,12 @@ Nonetheless the transition is offered in three places:
 
 | offered by                                       | code                                                                                                                                                                                                          |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GUI bulk action **"Disable vanished services"**  | `BulkEntry(VANISHED, IGNORED, …)` at `wato/pages/services.py:2630-2637`, enabled by `_toggle_bulk_action_page_menu_entries`'s `case DiscoveryState.VANISHED` (`:1392-1397`) for any user holding `to_ignored` |
-| GUI per-row **"Move to disabled services"** icon | `case DiscoveryState.VANISHED` → `_icon_button(VANISHED, …, IGNORED, "disabled", …)` (`:1815-1827`)                                                                                                           |
+| GUI bulk action **"Disable vanished services"**  | `BulkEntry(VANISHED, IGNORED, …)` at `wato/pages/services.py:2628-2636`, enabled by `_toggle_bulk_action_page_menu_entries`'s `case DiscoveryState.VANISHED` (`:1390-1395`) for any user holding `to_ignored` |
+| GUI per-row **"Move to disabled services"** icon | `case DiscoveryState.VANISHED` → `_icon_button(VANISHED, …, IGNORED, "disabled", …)` (`:1813-1825`)                                                                                                           |
 | REST `update_service_phase`                      | `target_phase: "ignored"` / `"undecided"` / `"monitored"`, each returning `204`                                                                                                                               |
 
 **Symptom.** `_case_vanished`'s `IGNORED` branch adds the description to `add_disabled_rule` **and**
-writes the entry to `autochecks_to_save` (`services.py:1010-1012`). The service is therefore put back
+writes the entry to `autochecks_to_save` (`services.py:1008-1010`). The service is therefore put back
 into the autochecks file with a "Disabled services" rule attached — precisely the residue that werk
 19801's vanished-classification exists to eliminate (§10.1). It is also inescapable by repetition: the
 entry is preexisting and the service is still absent, so every subsequent preview classifies it
@@ -2507,8 +2591,8 @@ and silently un-monitors the service on the cluster_
 assigns the service to a cluster, the cluster owns it, and the responsibility for discovering it belongs
 to the cluster. `_case_clustered`'s comment says so — _"we do not allow any operation for this clustered
 service on the related node"_ — and the GUI implements it: all four clustered table groups pass
-`show_bulk_actions=False` (`wato/pages/services.py:2068, 2141, 2154, 2169`), three render collapsed
-(`:1181-1187`), and `_show_check_row`'s `match entry.check_source` emits no row buttons for them.
+`show_bulk_actions=False` (`wato/pages/services.py:2067, 2140, 2153, 2168`), three render collapsed
+(`:1179-1185`), and `_show_check_row`'s `match entry.check_source` emits no row buttons for them.
 
 The backend does not implement it. `_verify_permissions` accepts `clustered_new`/`clustered_old` as
 targets, `_apply_state_change` routes to `_case_clustered`, which acts instead of rejecting, and the
@@ -2521,7 +2605,7 @@ host-wide actions that retarget every row (A1-F1 `FIX_ALL`, A1-F2 `UPDATE_SERVIC
    change, but it forces the host-global `apply_changes`, producing a `set-autochecks` pending change and
    an automation round trip for a host where nothing changed.
 2. Target `ignored` **drops the entry from the node's autochecks and adds no disabled-services rule**
-   (`services.py:1106-1108`; `_case_clustered` has no `add_disabled_rule` parameter at all). Because
+   (`services.py:1104-1106`; `_case_clustered` has no `add_disabled_rule` parameter at all). Because
    cluster services are gathered from the nodes' autochecks filtered by `effective_host`, removing the
    node's entry removes the service from the **cluster's** monitoring — with no rule recording the
    decision and nothing on the cluster's page to explain it. The next discovery on the node re-adds it as
@@ -2577,18 +2661,23 @@ class `fix`, component `wato`, `compatible: yes`.
 **Verified:** `execute_discovery_job`, `ServiceDiscoveryBackgroundJob.get_result`,
 `compute_discovery_transition`'s `apply_changes` guard, and the absence of a job probe in
 `update_service_phase`. Source finding: B-F3 (§6.2). The mechanism is characterized as T2.11 in
-`tests/unit/cmk/gui/watolib/test_services_dispatch.py`; the tripwire is T3.6, because the refusal is
-a status code and the precondition is a request field, neither of which exists below the endpoint.
+`tests/unit/cmk/gui/watolib/test_services_dispatch.py`; the boundary behaviour is T3.6 in
+`tests/openapi/test_openapi_service_discovery.py`, because the refusal is a status code and the
+precondition is a request field, neither of which exists below the endpoint. T3.6 has **no `xfail`
+partner and needs none**: it asserts the `204`, the fix answers `409`, and the two cannot both hold,
+so the fix reddens it. An xfail would be actively wrong here — the fix makes `check_table_created` a
+required request field, and an xfail written today could only send a request without it, so after a
+correct fix it would be refused at validation, stay `XFAIL`, and never fire.
 
 **Proposed title:** _Service discovery: `update_discovery_phase` silently discards the change when a
 discovery background job is running for the host_
 
 **Summary.** `execute_service_discovery` refuses with `409` while a job is active
 (`execute_service_discovery.py:95-97`); `update_service_phase` does not check. While a job is active,
-`get_result` returns `self._pre_discovery_preview` (`services.py:1426-1427`), which in the requesting
-process is still the empty preview built by `__init__` (`:1332`) — the job's real pre-scan snapshot
+`get_result` returns `self._pre_discovery_preview` (`services.py:1424-1425`), which in the requesting
+process is still the empty preview built by `__init__` (`:1330`) — the job's real pre-scan snapshot
 exists only inside the job process. The write path therefore receives `check_table=[]`,
-`compute_discovery_transition` never sets `apply_changes`, returns `None` at `:393`, and the endpoint
+`compute_discovery_transition` never sets `apply_changes`, returns `None` at `:391`, and the endpoint
 answers `204 No Content` without writing anything.
 
 **Symptom.** A `PUT .../update_discovery_phase/invoke` issued during a rescan reports success and has
@@ -2741,8 +2830,8 @@ decides the label.
 
 Neither can be implemented correctly — each promises a state the next preview contradicts — so both must
 be **rejected** rather than made harmless. This holds for the **GUI as much as for REST**: the bulk
-action "Disable vanished services" (`wato/pages/services.py:2630-2637`) and the per-row "Move to disabled
-services" icon (`:1815-1827`) both offer `disable` today.
+action "Disable vanished services" (`wato/pages/services.py:2628-2636`) and the per-row "Move to disabled
+services" icon (`:1813-1825`) both offer `disable` today.
 
 **The `removed` target on a still-discovered service is the mirror-image defect.** Because `drop` is one
 command, `unchanged → removed`, `changed → removed`, `new → removed` and `ignored → removed` are all
@@ -2753,8 +2842,8 @@ rule in place, has nothing to drop from autochecks (per werk 19800 the entry sho
 still forces a host-wide rewrite.
 
 **The four non-autocheck origins admit nothing at all** — and that set is exactly what the existing
-predicate `DiscoveryState.is_discovered` excludes (`services.py:114-127`). That predicate is currently
-used in **one** place, to pick a status message (`wato/pages/services.py:725`). It should be the gate on
+predicate `DiscoveryState.is_discovered` excludes (`services.py:112-125`). That predicate is currently
+used in **one** place, to pick a status message (`wato/pages/services.py:723`). It should be the gate on
 every operation. Had it been, A1-F1 and A2-F1's `manual`/`active`/`custom` cells would not exist.
 
 **The clustered sources admit nothing on the node** — not because the operations are dangerous but
@@ -2809,8 +2898,8 @@ What _is_ a defect is that the `adopt=∅` case is executed as a change rather t
    scan (B-F3, §10.18, where `check_table_created` is `0`). This replaces the job-active probe rather
    than adding to it; see domain model §9.4 and its API-compatibility decision in §12.7.
 7. **A command carries its own subject; "which rows" and "which rows the user named" must not be one
-   parameter.** Today `selected_services` answers both questions (`_get_table_target:549`/`:580`/`:590`
-   for the first, the `add_disabled_rule` subtrahend at `:405` for the second), and a whole-table
+   parameter.** Today `selected_services` answers both questions (`_get_table_target:547`/`:578`/`:588`
+   for the first, the `add_disabled_rule` subtrahend at `:403` for the second), and a whole-table
    action has to answer the first with `EVERYTHING` — which is then read as an explicit request to
    disable every service on the host. That is R-F1 / §10.11, and it is not fixable by changing what
    the callers pass, because both readings are load-bearing. In the §11 model the overload cannot be

@@ -145,7 +145,7 @@ below retires a further 4 (the `clustered_*` family), leaving 5 states plus
 `removed`, which was never a state at all.
 
 `DiscoveryState.is_discovered()` already computes exactly this predicate. It has
-one production caller, `cmk/gui/wato/pages/services.py:725`, and it is used there
+one production caller, `cmk/gui/wato/pages/services.py:723`, and it is used there
 to pick a status message. Had it been the gate on operations instead, A1-F1 and the
 `manual`/`active`/`custom` target-phase cells of the current matrix would not exist.
 

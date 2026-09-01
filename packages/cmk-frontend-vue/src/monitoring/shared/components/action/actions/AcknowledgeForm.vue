@@ -49,7 +49,7 @@ const emit = defineEmits<{
   (event: 'update:valid', valid: boolean): void
 }>()
 
-const { _t } = usei18n()
+const { _t, _tp } = usei18n()
 
 const expireOnHelp = computed(() =>
   props.targetKind === 'service'
@@ -69,15 +69,28 @@ const stickyLabel = computed(() =>
     : _t('Ignore status changes until the host recovers (OK/UP)')
 )
 
-// The label passes through CmkCheckbox into CmkHtml, whose sanitizer keeps the anchor.
-const notifyLabel = computed(() =>
-  props.notificationRulesUrl
-    ? _t(
-        'Notify affected users if <a href="%{url}" target="_blank">notification rules</a> are in place (send notifications)',
-        { url: props.notificationRulesUrl }
-      )
-    : _t('Notify affected users if notification rules are in place (send notifications)')
+/**
+ * The link sits inside the sentence, so the sentence stays one msgid - split into
+ * fragments its word order could not survive translation - and the placeholder marks
+ * where the link goes, the way the classic form does it.
+ */
+const notifyLabelParts = computed(() =>
+  _tp(
+    '%{link} is a link to the notification rules page',
+    'Notify affected users if %{link} are in place (send notifications)'
+  ).split('%{link}')
 )
+
+/**
+ * The link sits inside the checkbox's own `<label>`, where a plain click would activate the
+ * control as its default action and silently flip the option. Cancelling the event is the only
+ * thing that stops that - stopping propagation does not, the activation is the default action,
+ * not a listener - so the navigation has to be made explicitly.
+ */
+function openNotificationRules(event: MouseEvent): void {
+  event.preventDefault()
+  window.open(props.notificationRulesUrl ?? '', '_blank', 'noopener')
+}
 
 watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
   immediate: true,
@@ -114,32 +127,41 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
         </CmkLink>
       </div>
 
-      <div class="monitoring-acknowledge-form__expire-row">
-        <CmkCheckbox
-          v-model="model.expireOnEnabled"
-          :label="_t('Expire on')"
-          :help="expireOnHelp"
-        />
+      <CmkCheckbox v-model="model.expireOnEnabled" :label="_t('Expire on')" :help="expireOnHelp">
         <CmkDateTimePicker
           v-if="model.expireOnEnabled"
           v-model="model.expireOn"
           :nullable="true"
           :label="_t('Choose an expiry date & time')"
         />
-      </div>
+      </CmkCheckbox>
 
-      <div class="monitoring-acknowledge-form__field">
-        <CmkCheckbox v-model="model.sticky" :label="stickyLabel" />
+      <CmkCheckbox v-model="model.sticky" :label="stickyLabel">
         <p class="monitoring-acknowledge-form__hint">
           <b>{{ _t('Example:') }}</b>
           {{ _t("Service was WARN and goes CRIT - acknowledgment doesn't expire.") }}
         </p>
-      </div>
+      </CmkCheckbox>
+
       <CmkCheckbox
         v-model="model.persistent"
         :label="_t('Keep comment after acknowledgment expires')"
       />
-      <CmkCheckbox v-model="model.notify" :label="notifyLabel" />
+
+      <CmkCheckbox v-model="model.notify">
+        <template #label>
+          {{ notifyLabelParts[0]
+          }}<CmkLink
+            v-if="notificationRulesUrl"
+            :href="notificationRulesUrl"
+            target="_blank"
+            rel="noopener"
+            @click="openNotificationRules"
+            >{{ _t('notification rules') }}</CmkLink
+          ><template v-else>{{ _t('notification rules') }}</template
+          >{{ notifyLabelParts[1] }}
+        </template>
+      </CmkCheckbox>
     </div>
   </div>
 </template>
@@ -182,13 +204,6 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
 .monitoring-acknowledge-form__presets-link {
   /* `.cmk-link` is `display: flex; width: 100%`, which would stretch the header row. */
   width: auto;
-}
-
-.monitoring-acknowledge-form__expire-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--dimension-3);
 }
 
 .monitoring-acknowledge-form__hint {

@@ -6,6 +6,7 @@
 import { getLocalTimeZone, now } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
+import { vi } from 'vitest'
 
 import AcknowledgeForm, {
   type AcknowledgeValues
@@ -90,6 +91,27 @@ test('the notify option links the notification rules when the server names them'
     'href',
     'wato.py?mode=notifications'
   )
+})
+
+test('following the notification rules link leaves the notify option alone', async () => {
+  // The link sits inside the checkbox's own <label>, where a click would otherwise reach the
+  // control and silently flip the option while the tab opens.
+  const { emitted } = mountForm({ notify: true }, 'host', {
+    notificationRulesUrl: 'wato.py?mode=notifications'
+  })
+
+  const openTab = vi.spyOn(window, 'open').mockReturnValue(null)
+  await userEvent.click(screen.getByRole('link', { name: 'notification rules' }))
+  // The navigation is scripted, because cancelling the click is what stops the toggle.
+  expect(openTab).toHaveBeenCalledWith('wato.py?mode=notifications', '_blank', 'noopener')
+  openTab.mockRestore()
+
+  expect(emitted('update:modelValue')).toBeUndefined()
+  expect(
+    screen.getByRole('checkbox', {
+      name: 'Notify affected users if notification rules are in place (send notifications)'
+    })
+  ).toBeChecked()
 })
 
 test('both setup links open in a new tab, so a half-filled form survives the detour', () => {

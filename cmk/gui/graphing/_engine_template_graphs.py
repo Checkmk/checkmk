@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Final, Self
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.hostaddress import HostName as GUIHostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing_engine import (
@@ -25,6 +26,7 @@ from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing._engine_codec import GraphCodec
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.i18n import _, translate_to_current_language
+from cmk.utils.servicename import ServiceName as GUIServiceName
 
 from ._engine_discovery import BuiltGraph, DiscoveredGraphs
 from ._engine_dispatch import (
@@ -162,3 +164,24 @@ def discover_template_graphs(
             }
         )
     return DiscoveredGraphs.found(graphs)
+
+
+def resolve_graph_id_from_index(
+    *,
+    site_id: SiteId | None,
+    host_name: GUIHostName,
+    service_name: GUIServiceName,
+    graph_index: int,
+    debug: bool,
+) -> str | None:
+    discovered = discover_template_graphs(
+        TemplateGraphSpecification(
+            site=site_id,
+            host_name=host_name,
+            service_description=service_name,
+        ),
+        debug=debug,
+    )
+    if not 0 <= graph_index < len(discovered.graphs):
+        return None
+    return legacy_graph_id(discovered.graphs[graph_index].graph, registered_graphs())

@@ -29,7 +29,6 @@ from cmk.gui.graphing import (
     get_temperature_unit,
     get_template_graph_specification,
     GraphDestinations,
-    GraphEnvironment,
     GraphFromAPI,
     GraphPluginChoice,
     graphs_from_api,
@@ -313,22 +312,11 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
             graph_id: str | None = configured_graph_id
         elif legacy_source is not None:
             graph_id = resolve_graph_id_from_index(
-                env=GraphEnvironment(
-                    registered_metrics=metrics_from_api,
-                    registered_graphs=graphs_from_api,
-                    user_permissions=UserPermissions.from_config(
-                        active_config, permission_registry
-                    ),
-                    temperature_unit=get_temperature_unit(
-                        user, active_config.default_temperature_unit
-                    ),
-                    backend_time_series_fetcher=None,
-                    debug=active_config.debug,
-                ),
                 site_id=site_id,
                 host_name=host,
                 service_name=service,
                 graph_index=legacy_source - 1,
+                debug=active_config.debug,
             )
         else:
             graph_id = None

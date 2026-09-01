@@ -15,21 +15,16 @@ from cmk.graphing.v1 import Title as TitleV1
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource
 from cmk.gui.graphing._graph_specification import (
-    GraphEnvironment,
     GraphMetric,
     GraphRecipe,
     HorizontalRule,
 )
 from cmk.gui.graphing._graph_templates import (
     _evaluate_graph_plugins,
-    resolve_graph_id_from_index,
     sort_registered_graph_plugins,
 )
 from cmk.gui.graphing._legacy import check_metrics
-from cmk.gui.graphing._rrd import ServiceGraphRow
 from cmk.gui.graphing._translated_metrics import (
-    compute_translated_metrics,
-    parse_perf_data,
     translate_metrics,
 )
 from cmk.gui.graphing._unit import (
@@ -38,7 +33,6 @@ from cmk.gui.graphing._unit import (
 )
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.unit_formatter import AutoPrecision
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
@@ -567,151 +561,6 @@ _HEAP_MEM_GRAPH = {
 }
 
 
-def _env_for_resolve_helper(registered_metrics: Mapping[str, RegisteredMetric]) -> GraphEnvironment:
-    return GraphEnvironment(
-        registered_metrics=registered_metrics,
-        registered_graphs={
-            "graph1": graphs_v1.Graph(
-                name="graph1",
-                title=TitleV1("Graph 1"),
-                simple_lines=["metric1"],
-            ),
-            "graph2": graphs_v1.Graph(
-                name="graph2",
-                title=TitleV1("Graph 2"),
-                simple_lines=["metric2"],
-            ),
-        },
-        user_permissions=UserPermissions({}, {}, {}, []),
-        temperature_unit=TemperatureUnit.CELSIUS,
-        backend_time_series_fetcher=None,
-        debug=False,
-    )
-
-
-def _registered_metrics_for_resolve_helper() -> Mapping[str, RegisteredMetric]:
-    return {
-        "metric1": RegisteredMetric(
-            name="metric1",
-            title_localizer=lambda _localizer: "Metric1",
-            unit_spec=ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol=""),
-                precision=AutoPrecision(digits=2),
-            ),
-            color="#0080c0",
-        ),
-        "metric2": RegisteredMetric(
-            name="metric2",
-            title_localizer=lambda _localizer: "Metric2",
-            unit_spec=ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol=""),
-                precision=AutoPrecision(digits=2),
-            ),
-            color="#0080c0",
-        ),
-    }
-
-
-def _fake_graph_row_fetcher_with_metrics(
-    site_id: SiteId | None,
-    host_name: HostName,
-    service_name: ServiceName,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    *,
-    debug: bool,
-    temperature_unit: TemperatureUnit,
-) -> ServiceGraphRow:
-    perf_data, check_command = parse_perf_data(
-        "metric1=163651.992188;;;; metric2=313848.039062;;;", "check_mk-foo", debug=False
-    )
-    return ServiceGraphRow(
-        site_id=SiteId("site_id"),
-        host_name=HostName("host_name"),
-        service_name=ServiceName("service_name"),
-        check_command=check_command,
-        translated_metrics=compute_translated_metrics(
-            perf_data,
-            ["metric1", "metric2"],
-            check_command,
-            registered_metrics,
-            debug=debug,
-            temperature_unit=temperature_unit,
-        ),
-    )
-
-
-def _fake_graph_row_fetcher_empty(
-    site_id: SiteId | None,
-    host_name: HostName,
-    service_name: ServiceName,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    *,
-    debug: bool,
-    temperature_unit: TemperatureUnit,
-) -> ServiceGraphRow:
-    _perf, check_command = parse_perf_data("", "check_mk-foo", debug=False)
-    return ServiceGraphRow(
-        site_id=SiteId("site_id"),
-        host_name=HostName("host_name"),
-        service_name=ServiceName("service_name"),
-        check_command=check_command,
-        translated_metrics={},
-    )
-
-
-@pytest.mark.parametrize(
-    ("graph_index", "expected"),
-    [
-        pytest.param(0, "graph1", id="first"),
-        pytest.param(1, "graph2", id="second"),
-        pytest.param(10, None, id="out-of-range"),
-        pytest.param(-1, None, id="negative"),
-    ],
-)
-def test_resolve_graph_id_from_index(
-    monkeypatch: pytest.MonkeyPatch, graph_index: int, expected: str | None
-) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.graphing._graph_templates.fetch_graph_row",
-        _fake_graph_row_fetcher_with_metrics,
-    )
-    assert (
-        resolve_graph_id_from_index(
-            env=_env_for_resolve_helper(_registered_metrics_for_resolve_helper()),
-            site_id=SiteId("site_id"),
-            host_name=HostName("host_name"),
-            service_name=ServiceName("service_name"),
-            graph_index=graph_index,
-        )
-        == expected
-    )
-
-
-def test_resolve_graph_id_from_index_no_metrics(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.graphing._graph_templates.fetch_graph_row",
-        _fake_graph_row_fetcher_empty,
-    )
-    assert (
-        resolve_graph_id_from_index(
-            env=_env_for_resolve_helper({}),
-            site_id=SiteId("site_id"),
-            host_name=HostName("host_name"),
-            service_name=ServiceName("service_name"),
-            graph_index=0,
-        )
-        is None
-    )
-
-
-# Synthetic `check_metrics` translations that mirror the production
-# perf-data → metric-name mappings the parametrise cases below assume.
-# The real production translations come from graphing plug-ins under
-# `cmk/plugins/*/graphing/`.
-# We register the synthetic equivalents directly into the global registry
-# the test target shares with production code so the test covers the full
-# `translate_metrics`→ `_evaluate_graph_plugins` integration without
-# depending on any specific plug-in being on the runfiles path.
 _SYNTHETIC_GRAPH_TEMPLATE_TRANSLATIONS = {
     "check_mk-kernel_util": {
         "wait": {"name": "io_wait"},

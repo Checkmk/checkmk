@@ -36,7 +36,6 @@ from ._graph_specification import (
     compute_warn_crit_rules_from_translated_metric,
     FixedVerticalRange,
     graph_specification_registry,
-    GraphEnvironment,
     GraphMetric,
     GraphRecipe,
     GraphSpecification,
@@ -44,7 +43,6 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._graphs_order import GRAPHS_ORDER
-from ._rrd import fetch_graph_row
 from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
@@ -298,43 +296,3 @@ def get_template_graph_specification(
             destination=destination,
         )
     raise TypeError(graph_specification)
-
-
-def resolve_graph_id_from_index(
-    *,
-    env: GraphEnvironment,
-    site_id: SiteId | None,
-    host_name: HostName,
-    service_name: ServiceName,
-    graph_index: int,
-) -> str | None:
-    """Resolve a 0-based positional graph index to its stable ``graph_id``.
-
-    Computes the recipes for the given (host, service) and returns the id at
-    ``graph_index`` position, or ``None`` when out of range / no metrics.
-    """
-    graph_row = fetch_graph_row(
-        site_id,
-        host_name,
-        service_name,
-        env.registered_metrics,
-        debug=env.debug,
-        temperature_unit=env.temperature_unit,
-    )
-    if not graph_row.translated_metrics:
-        return None
-    for i, (graph_id, _recipe) in enumerate(
-        _evaluate_graph_plugins(
-            env.registered_metrics,
-            sort_registered_graph_plugins(env.registered_graphs),
-            graph_row.site_id,
-            graph_row.host_name,
-            graph_row.service_name,
-            graph_row.translated_metrics,
-            consolidation_function="max",
-            temperature_unit=env.temperature_unit,
-        )
-    ):
-        if i == graph_index:
-            return graph_id
-    return None

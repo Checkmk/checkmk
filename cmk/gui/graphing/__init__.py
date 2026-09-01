@@ -17,7 +17,7 @@ from ._engine_perfometer_bars import (
 from ._engine_perfometers import evaluated_perfometer
 from ._engine_plugins import registered_metrics, registered_translations
 from ._engine_source import RRDFetchMetricNames
-from ._engine_template_graphs import build_template_graphs
+from ._engine_template_graphs import build_template_graphs, resolve_graph_id_from_index
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
     GraphFromAPI,
@@ -67,7 +67,6 @@ from ._graph_templates import (
     get_graph_plugin_choices,
     get_template_graph_specification,
     GraphPluginChoice,
-    resolve_graph_id_from_index,
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )

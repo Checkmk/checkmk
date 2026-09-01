@@ -5,16 +5,13 @@
 
 
 import stat
-from hashlib import sha256
 from pathlib import Path
 
 from pytest_mock import MockerFixture
 
 from omdlib.system_apache import (
-    apache_hook_version,
     create_apache_hook,
     delete_apache_hook,
-    is_apache_hook_up_to_date,
     register_with_system_apache,
     unregister_from_system_apache,
     write_apache_listen_conf,
@@ -33,15 +30,7 @@ def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> N
         version_info, apache_config, "unit", "127.0.0.1", "5000", True, False
     )
 
-    content = apache_config.read_bytes()
-    assert (
-        sha256(content).hexdigest()
-        == "e2381cd57d392f94582c70ffd70072e253b7abcb51f96752447b19f7e4147376"
-    ), (
-        "The content of [site].conf was changed. Have you updated the apache_hook_version()? The "
-        "number needs to be increased with every change to inform the user about an additional step "
-        "he has to make. After you did it, you may update the hash here."
-    )
+    assert apache_config.exists()
     reload_apache.assert_called_once_with(["/usr/sbin/apachectl", "graceful"])
 
 
@@ -49,7 +38,7 @@ def test_apache_hook_publishes_the_public_mcp_prm_route(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
 
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", apache_hook_version())
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000")
 
     content = apache_config.read_text()
     assert "/.well-known/oauth-protected-resource/unit/check_mk/mcp" in content
@@ -95,54 +84,17 @@ def test_delete_apache_hook_not_existing(tmp_path: Path) -> None:
     assert not apache_config.exists()
 
 
-def test_is_apache_hook_up_to_date(tmp_path: Path) -> None:
-    apache_config = tmp_path / "omd/apache/unit.conf"
-    apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", apache_hook_version())
-    assert apache_config.exists()
-
-    assert is_apache_hook_up_to_date(apache_config) is True
-
-
-def test_is_apache_hook_up_to_date_outdated(tmp_path: Path) -> None:
-    apache_config = tmp_path / "omd/apache/unit.conf"
-    apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", 0)
-    assert apache_config.exists()
-
-    assert is_apache_hook_up_to_date(apache_config) is False
-
-
-def test_has_old_apache_hook_in_site(tmp_path: Path) -> None:
-    apache_config = tmp_path / "omd/apache/unit.conf"
-    apache_config.parent.mkdir(parents=True)
-    with apache_config.open("w") as f:
-        f.write("Include /omd/sites/unit/etc/apache/mode.conf")
-
-    assert is_apache_hook_up_to_date(apache_config) is False
-
-
-def test_has_apache_hook_in_site(tmp_path: Path) -> None:
-    apache_config = tmp_path / "omd/apache/unit.conf"
-    apache_config.parent.mkdir(parents=True)
-    with apache_config.open("w") as f:
-        f.write("Include /omd/sites/unit/etc/apache/mode.conf")
-    assert apache_config.exists()
-
-    assert is_apache_hook_up_to_date(apache_config) is False
-
-
 def test_create_apache_hook_world_readable(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", 0)
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000")
     assert apache_config.stat().st_mode & stat.S_IROTH
 
 
 def test_create_apache_hook_well_known_oauth_authorization_server(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", apache_hook_version())
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000")
 
     content = apache_config.read_text()
     assert "<Location /.well-known/oauth-authorization-server/oauth-unit>" in content
@@ -152,7 +104,7 @@ def test_create_apache_hook_well_known_oauth_authorization_server(tmp_path: Path
 def test_create_apache_hook_oauth_authorization_server_endpoints(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", apache_hook_version())
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000")
 
     content = apache_config.read_text()
     assert "<Location /oauth-unit/authorize>" in content
@@ -166,7 +118,7 @@ def test_create_apache_hook_oauth_authorization_server_endpoints(tmp_path: Path)
 def test_create_apache_hook_denies_the_introspection_endpoint(tmp_path: Path) -> None:
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000", apache_hook_version())
+    create_apache_hook(apache_config, "unit", "127.0.0.1", "5000")
 
     content = apache_config.read_text()
     assert "<Location /unit/check_mk/oauth_introspect.py>\n    Require all denied" in content

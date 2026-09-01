@@ -40,9 +40,18 @@ export type InstallSpec =
   | { kind: 'unbaked-fallback'; intro: TranslatedString; blocks: CommandBlock[] }
   | { kind: 'external-doc'; msg: TranslatedString; link: DocLink }
 
+/** Content shown before the registration command, e.g. a config file. */
+export interface RegisterConfig {
+  code: { title?: TranslatedString; text: string }
+  doc?: DocLink
+}
+
 export interface RegisterSpec {
+  /** Replaces the generic trust-relationship explanation. */
+  intro?: TranslatedString
   /** The sentence directly above the command. */
   msg: TranslatedString
+  config?: RegisterConfig
   commands:
     | { kind: 'single'; block: CommandBlock }
     | { kind: 'shell-variants'; variants: CommandChoice[] }

@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
+from cmk.ccc.version import Version
 from cmk.gui.config import Config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
@@ -140,6 +141,31 @@ SOLARIS_REGISTRATION_CMD = """sudo cmk-agent-ctl register \\
     --server {{SERVER}} \\
     --site {{SITE}} \\
     --user agent_registration"""
+
+
+KUBERNETES_HELM_INSTALL_CMD = """helm install checkmk oci://ghcr.io/checkmk/charts/cmk-rustik \\
+  --version "{chart_version}" \\
+  --values values.yaml \\
+  --set push.registrationToken=[AGENT_REGISTRATION_OTT] \\
+  --set-file push.siteCaCertificate=/path/to/site-ca.pem \\
+  --namespace checkmk-monitoring \\
+  --create-namespace"""
+
+KUBERNETES_VALUES = (
+    'clusterName: "{{HOSTNAME}}"\n'
+    'clusterHostName: "{{HOSTNAME}}"\n'
+    "push:\n"
+    "  enabled: true\n"
+    '  url: "https://{{SERVER}}/{{SITE}}"'
+)
+
+
+def build_kubernetes_helm_cmd(version: str) -> str:
+    base = Version.from_str(version).base
+    # A tilde range lets Helm pick the newest x.y.z chart instead of a moving tag.
+    # Daily builds carry no major.minor; the chart publishes those under a fixed tag.
+    chart_version = f"~{base.major}.{base.minor}.0" if base is not None else "0.0.0-master"
+    return KUBERNETES_HELM_INSTALL_CMD.format(chart_version=chart_version)
 
 
 def build_agent_registration_cmds() -> AgentRegistrationCmds:
@@ -325,6 +351,13 @@ def get_agent_slideout(
         agent_registration_cmds=agent_registration_cls(**asdict(commands.registration_cmds())),
         agent_status_cmds=agent_status_cls(**asdict(commands.status_cmds())),
         legacy_agent_url=commands.legacy_agent_url(),
+        kubernetes_helm_command=build_kubernetes_helm_cmd(version),
+        kubernetes_values=KUBERNETES_VALUES,
+        kubernetes_doc_url=doc_reference_url(
+            user.language,
+            DocReferenceUtm(campaign="inline_help", content="setup.monitoring_kubernetes"),
+            DocReference.KUBERNETES,
+        ),
         save_host=save_host,
         host_exists=host_exists,
         unbaked_fallback=None if fallback is None else unbaked_fallback_cls(**asdict(fallback)),

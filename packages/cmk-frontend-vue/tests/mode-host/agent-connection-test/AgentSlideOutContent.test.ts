@@ -542,4 +542,20 @@ describe('AgentSlideOutContent', () => {
     ).not.toBeInTheDocument()
     expect(codeTexts().join('\n')).toContain('deb-install')
   })
+
+  test('offers a Kubernetes tab in push mode', () => {
+    renderContent({ isPushMode: true })
+
+    expect(screen.getByRole('tab', { name: 'Kubernetes' })).toBeInTheDocument()
+  })
+
+  test('hands out the Helm command with the generated registration token', async () => {
+    mockTokenGeneration('registration_token')
+    renderContent({ isPushMode: true })
+    await selectTab('Kubernetes')
+
+    await generateToken()
+
+    expect(codeTexts().join('\n')).toContain(`push.registrationToken=0:${TOKEN}`)
+  })
 })

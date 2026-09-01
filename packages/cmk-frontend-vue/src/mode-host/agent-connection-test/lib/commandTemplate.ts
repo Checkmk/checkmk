@@ -51,6 +51,12 @@ const DOWNLOAD_TOKEN_MACRO = '[AGENT_DOWNLOAD_OTT]'
  */
 const REGISTRATION_USER_FLAG = '--user agent_registration'
 
+/**
+ * A registration that is not done by `cmk-agent-ctl` (e.g. a Helm value) has no
+ * user flag to replace, so it carries this placeholder instead.
+ */
+const REGISTRATION_TOKEN_MACRO = '[AGENT_REGISTRATION_OTT]'
+
 export function substituteMacros(
   cmd: string | undefined,
   scope: CommandScope,
@@ -72,7 +78,7 @@ export function requiresToken(cmd: string | undefined, scope: CommandScope): boo
     return false
   }
   return scope === 'registration'
-    ? cmd.includes(REGISTRATION_USER_FLAG)
+    ? cmd.includes(REGISTRATION_USER_FLAG) || cmd.includes(REGISTRATION_TOKEN_MACRO)
     : cmd.includes(DOWNLOAD_TOKEN_MACRO)
 }
 
@@ -103,7 +109,9 @@ export function applyToken(
   // authorized downloads would otherwise keep the second placeholder.
   const text =
     scope === 'registration'
-      ? cmd.replaceAll(REGISTRATION_USER_FLAG, `--ott 0:${token}`)
+      ? cmd
+          .replaceAll(REGISTRATION_USER_FLAG, `--ott 0:${token}`)
+          .replaceAll(REGISTRATION_TOKEN_MACRO, `0:${token}`)
       : cmd.replaceAll(DOWNLOAD_TOKEN_MACRO, token)
   return { text, tokenState: 'ready' }
 }

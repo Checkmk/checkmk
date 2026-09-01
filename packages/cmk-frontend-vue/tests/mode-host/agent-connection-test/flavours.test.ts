@@ -5,18 +5,32 @@
  */
 import {
   type AgentSlideoutPayload,
+  type KubernetesPayload,
   buildFlavours
 } from '@/mode-host/agent-connection-test/lib/flavours'
 import type { AgentFlavour } from '@/mode-host/agent-connection-test/lib/types'
 
-import { installCmds, registrationCmds, statusCmds } from './fixtures'
+import {
+  installCmds,
+  kubernetesHelmCommand,
+  kubernetesValues,
+  registrationCmds,
+  statusCmds
+} from './fixtures'
 
 const payload: AgentSlideoutPayload = {
   installCmds,
   registrationCmds,
   statusCmds,
   legacyAgentUrl: undefined,
-  unbakedFallback: null
+  unbakedFallback: null,
+  kubernetes: null
+}
+
+const kubernetes: KubernetesPayload = {
+  helmCommand: kubernetesHelmCommand,
+  values: kubernetesValues,
+  docUrl: 'https://docs.example.test/kubernetes'
 }
 
 function flavour(id: string, overrides: Partial<AgentSlideoutPayload> = {}): AgentFlavour {
@@ -118,5 +132,28 @@ describe('buildFlavours', () => {
     for (const built of buildFlavours(payload)) {
       expect(built.register?.troubleshooting).toBe('registration-user')
     }
+  })
+
+  test('offers Kubernetes after the four platforms when the payload carries it', () => {
+    expect(buildFlavours({ ...payload, kubernetes }).map((f) => f.id)).toEqual([
+      'windows',
+      'linux',
+      'solaris',
+      'aix',
+      'kubernetes'
+    ])
+  })
+
+  test('registers Kubernetes without install, test connection or troubleshooting', () => {
+    const built = flavour('kubernetes', { kubernetes })
+    expect(built.install).toBeUndefined()
+    expect(built.status).toBeUndefined()
+    expect(built.register?.troubleshooting).toBeUndefined()
+  })
+
+  test('shows the values.yaml and the monitoring guide before the Helm command', () => {
+    const config = flavour('kubernetes', { kubernetes }).register?.config
+    expect(config?.code.text).toBe(kubernetes.values)
+    expect(config?.doc?.url).toBe(kubernetes.docUrl)
   })
 })

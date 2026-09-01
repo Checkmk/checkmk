@@ -5,9 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
+import CmkCode from 'cmk-ui-library/components/CmkCode.vue'
 import CmkCollapsible from 'cmk-ui-library/components/CmkCollapsible'
 import CmkCollapsibleTitle from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsibleTitle.vue'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
+import CmkLinkCard from 'cmk-ui-library/components/CmkLinkCard'
 import { CmkWizardButton } from 'cmk-ui-library/components/CmkWizard'
 import CmkWizardStep from 'cmk-ui-library/components/CmkWizard/CmkWizardStep.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
@@ -21,7 +23,8 @@ import {
   type TokenValue,
   isResolved,
   renderBlocks,
-  requiresToken
+  requiresToken,
+  substituteMacros
 } from '../../lib/commandTemplate'
 import type { CommandBlock, CommandChoice, RegisterSpec } from '../../lib/types'
 import CommandBlockList from '../CommandBlockList.vue'
@@ -67,6 +70,12 @@ const rendered = computed(() => renderBlocks(blocks.value, 'registration', props
 
 /** The same commands without a token, for the registration-user fallback. */
 const untokenised = computed(() => renderBlocks(blocks.value, 'registration', props.macros))
+
+const configCode = computed(() =>
+  props.spec.config === undefined
+    ? ''
+    : substituteMacros(props.spec.config.code.text, 'registration', props.macros)
+)
 
 /** Whether the token command can be shown as it stands. */
 const commandShown = computed(() => isResolved(rendered.value.tokenState))
@@ -121,6 +130,7 @@ function reset() {
         <div class="register-heading-row">
           <CmkParagraph>
             {{
+              spec.intro ??
               _t(
                 `Agent registration will establish trust between the Agent Controller
                     on the host and the Agent Receiver on the Checkmk server.`
@@ -128,6 +138,22 @@ function reset() {
             }}
           </CmkParagraph>
         </div>
+
+        <template v-if="spec.config">
+          <CmkLinkCard
+            v-if="spec.config.doc"
+            :title="spec.config.doc.title"
+            :url="spec.config.doc.url"
+            :icon-name="spec.config.doc.icon"
+            :open-in-new-tab="true"
+          />
+          <CmkCode
+            v-bind="spec.config.code.title === undefined ? {} : { title: spec.config.code.title }"
+            :code-text="configCode"
+            class="code"
+            width="fill"
+          />
+        </template>
 
         <GenerateToken
           v-if="needsToken"

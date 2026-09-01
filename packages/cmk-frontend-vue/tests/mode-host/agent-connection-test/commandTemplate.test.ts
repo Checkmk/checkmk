@@ -46,10 +46,12 @@ describe('requiresToken', () => {
     ['install without a token', 'download' as const, false],
     ['register --user agent_registration', 'registration' as const, true],
     ['register --ott 0:already-set', 'registration' as const, false],
+    ['helm --set token=[AGENT_REGISTRATION_OTT]', 'registration' as const, true],
     // The placeholder and the flag are scope specific: neither counts for the
     // other scope, so a command cannot accidentally demand the wrong token.
     ['register --user agent_registration', 'download' as const, false],
-    ['install --auth 0:[AGENT_DOWNLOAD_OTT]', 'registration' as const, false]
+    ['install --auth 0:[AGENT_DOWNLOAD_OTT]', 'registration' as const, false],
+    ['helm --set token=[AGENT_REGISTRATION_OTT]', 'download' as const, false]
   ])('%s in scope %s requires a token: %s', (cmd, scope, expected) => {
     expect(requiresToken(cmd, scope)).toBe(expected)
   })
@@ -70,6 +72,13 @@ describe('applyToken', () => {
   test('replaces the registration user flag with the token', () => {
     expect(applyToken('register --user agent_registration', 'registration', 'tok')).toEqual({
       text: 'register --ott 0:tok',
+      tokenState: 'ready'
+    })
+  })
+
+  test('substitutes the registration token placeholder', () => {
+    expect(applyToken('helm --set token=[AGENT_REGISTRATION_OTT]', 'registration', 'tok')).toEqual({
+      text: 'helm --set token=0:tok',
       tokenState: 'ready'
     })
   })

@@ -14,6 +14,9 @@
     "all_agents_url": { "type": "string" },
     "user_settings_url": { "type": "string" },
     "legacy_agent_url": { "type": "string" },
+    "kubernetes_helm_command": { "type": "string" },
+    "kubernetes_values": { "type": "string" },
+    "kubernetes_doc_url": { "type": "string" },
     "save_host": { "type": "boolean" },
     "host_exists": { "type": "boolean" },
     "unbaked_fallback": {
@@ -27,6 +30,9 @@
     "host_name",
     "all_agents_url",
     "user_settings_url",
+    "kubernetes_helm_command",
+    "kubernetes_values",
+    "kubernetes_doc_url",
     "save_host"
   ],
   "$defs": {

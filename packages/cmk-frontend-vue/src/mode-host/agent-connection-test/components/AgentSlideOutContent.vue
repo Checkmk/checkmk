@@ -23,6 +23,9 @@ const props = defineProps<{
   allAgentsUrl: string
   userSettingsUrl: string
   legacyAgentUrl: string | undefined
+  kubernetesHelmCommand: string
+  kubernetesValues: string
+  kubernetesDocUrl: string
   hostName: string
   siteId: string
   siteServer: string
@@ -75,7 +78,15 @@ const flavours = computed(() =>
     registrationCmds: props.agentRegistrationCmds,
     statusCmds: props.agentStatusCmds,
     legacyAgentUrl: props.legacyAgentUrl,
-    unbakedFallback: props.unbakedFallback
+    unbakedFallback: props.unbakedFallback,
+    // The Kubernetes agent can only push, so a pull-mode host gets no such flavour.
+    kubernetes: props.isPushMode
+      ? {
+          helmCommand: props.kubernetesHelmCommand,
+          values: props.kubernetesValues,
+          docUrl: props.kubernetesDocUrl
+        }
+      : null
   })
 )
 </script>

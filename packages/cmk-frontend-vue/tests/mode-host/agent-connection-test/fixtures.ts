@@ -51,6 +51,12 @@ export const statusCmds: AgentStatusCmds = {
   aix: 'aix-status'
 }
 
+/** Shaped like `build_kubernetes_helm_cmd()` and `KUBERNETES_VALUES` in the backend. */
+export const kubernetesHelmCommand =
+  'helm install checkmk cmk-rustik --version "~2.5.0" --set push.registrationToken=[AGENT_REGISTRATION_OTT]'
+export const kubernetesValues =
+  'clusterName: "{{HOSTNAME}}"\npush:\n  url: "https://{{SERVER}}/{{SITE}}"'
+
 /**
  * Props for `AgentSlideOutContent` — the seam both real consumers instantiate
  * (`AgentConnectionTest.vue` and `src/setup/AgentDownloadDialog.vue`).
@@ -61,6 +67,9 @@ export const contentProps: ContentProps = {
   allAgentsUrl: 'https://example.test/all-agents',
   userSettingsUrl: 'https://example.test/user-settings',
   legacyAgentUrl: undefined,
+  kubernetesHelmCommand,
+  kubernetesValues,
+  kubernetesDocUrl: 'https://docs.example.test/kubernetes',
   hostName: 'test-host',
   siteId: 'test-site',
   siteServer: 'https://monitoring.example.test',

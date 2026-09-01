@@ -20,12 +20,21 @@ import type { AgentFlavour, CommandBlock, InstallSpec } from './types'
  * consume, so a future payload of ready-made flavours would replace only this
  * module.
  */
+export interface KubernetesPayload {
+  helmCommand: string
+  /** The values.yaml the Helm command reads. */
+  values: string
+  docUrl: string
+}
+
 export interface AgentSlideoutPayload {
   installCmds: AgentInstallCmds
   registrationCmds: AgentRegistrationCmds
   statusCmds: AgentStatusCmds
   legacyAgentUrl: string | undefined
   unbakedFallback: UnbakedFallback | null
+  /** Null when the host cannot receive pushed data, so Kubernetes is not offered. */
+  kubernetes: KubernetesPayload | null
 }
 
 export function buildFlavours(payload: AgentSlideoutPayload): AgentFlavour[] {
@@ -254,5 +263,35 @@ export function buildFlavours(payload: AgentSlideoutPayload): AgentFlavour[] {
     status: { kind: 'single', command: payload.statusCmds.aix }
   }
 
-  return [windows, linux, solaris, aix]
+  function kubernetesFlavour(kubernetes: KubernetesPayload): AgentFlavour {
+    return {
+      id: 'kubernetes',
+      title: _t('Kubernetes'),
+      register: {
+        intro: _t(
+          'Agent registration will establish trust between the Checkmk monitoring in-cluster components and the Agent Receiver on the Checkmk server.'
+        ),
+        msg: _t(
+          'Save the configuration as values.yaml and adjust it as needed. On the selected Checkmk site, open Setup > Certificate overview and download the certificate with purpose "Signing the site certificate", then replace the site CA certificate path in this command.'
+        ),
+        config: {
+          doc: {
+            title: _t('Read the Kubernetes monitoring guide for all configuration options.'),
+            url: kubernetes.docUrl,
+            icon: 'learning-guide'
+          },
+          code: { title: _t('Minimal values.yaml'), text: kubernetes.values }
+        },
+        commands: { kind: 'single', block: { command: kubernetes.helmCommand } }
+      }
+    }
+  }
+
+  return [
+    windows,
+    linux,
+    solaris,
+    aix,
+    ...(payload.kubernetes ? [kubernetesFlavour(payload.kubernetes)] : [])
+  ]
 }

@@ -101,4 +101,29 @@ describe('AgentFlavourWizard', () => {
 
     expect(screen.queryByText(/Troubleshooting registration issues/)).not.toBeInTheDocument()
   })
+
+  test("shows the flavour's own registration explanation instead of the generic one", () => {
+    renderWizard({
+      ...registrationOnly,
+      register: { ...registrationOnly.register!, intro: 'Trust the in-cluster components.' }
+    })
+
+    expect(screen.getByText('Trust the in-cluster components.')).toBeInTheDocument()
+    expect(screen.queryByText(/Agent Controller/)).not.toBeInTheDocument()
+  })
+
+  test('shows a configuration block pointing at the agent receiver', () => {
+    renderWizard({
+      ...registrationOnly,
+      register: {
+        ...registrationOnly.register!,
+        config: { code: { title: 'values.yaml', text: 'url: https://{{SERVER}}/{{SITE}}' } }
+      }
+    })
+
+    expect(screen.getByText('values.yaml')).toBeInTheDocument()
+    expect(
+      screen.getByText('url: https://monitoring.example.test:8000/test-site')
+    ).toBeInTheDocument()
+  })
 })

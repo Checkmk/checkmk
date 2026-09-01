@@ -6,6 +6,7 @@
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { defineComponent } from 'vue'
 
 const submitHandler = vi.fn((e) => e.preventDefault())
@@ -118,4 +119,42 @@ test('CmkButton does not follow a link while the action it triggers runs', () =>
   })
 
   expect(container.querySelector('a')).not.toHaveAttribute('href')
+})
+
+test('CmkButton disables natively without a reason', () => {
+  render(CmkButton, { props: { disabled: true }, slots: { default: 'Save' } })
+  const button = screen.getByRole('button')
+  expect(button).toBeDisabled()
+  expect(button).toHaveAttribute('title', '')
+})
+
+test('CmkButton keeps a blocked button hoverable and titles it with the reason', () => {
+  render(CmkButton, {
+    props: { disabled: true, disabledReason: untranslated('Pick a metric first') },
+    slots: { default: 'Save' }
+  })
+  const button = screen.getByRole('button')
+  expect(button).toBeEnabled()
+  expect(button).toHaveAttribute('aria-disabled', 'true')
+  expect(button).toHaveAttribute('title', 'Pick a metric first')
+})
+
+test('CmkButton refuses the click of a blocked button', async () => {
+  const onClick = vi.fn()
+  render(CmkButton, {
+    props: { disabled: true, disabledReason: untranslated('Pick a metric first'), onClick },
+    slots: { default: 'Save' }
+  })
+
+  await userEvent.click(screen.getByRole('button'))
+
+  expect(onClick).not.toHaveBeenCalled()
+})
+
+test('CmkButton ignores a reason while the action is available', () => {
+  render(CmkButton, {
+    props: { disabledReason: untranslated('Pick a metric first'), title: 'Save the graph' },
+    slots: { default: 'Save' }
+  })
+  expect(screen.getByRole('button')).toHaveAttribute('title', 'Save the graph')
 })

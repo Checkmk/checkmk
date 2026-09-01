@@ -62,6 +62,12 @@ export const panelConfig = {
     title: 'Disabled',
     initialState: false
   },
+  disabledReason: {
+    type: 'string' as const,
+    title: 'Disabled reason',
+    initialState: '',
+    help: 'Renders the disabled button as aria-disabled with the reason as its title, so a hover still explains why the action is unavailable.'
+  },
   icon: {
     type: 'list' as const,
     title: 'Icon',
@@ -131,6 +137,7 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import type { ButtonIcon } from 'cmk-ui-library/components/CmkButton'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import UclCmkButtonDev from './UclCmkButtonDev.vue'
@@ -144,6 +151,10 @@ const icon = computed<ButtonIcon | undefined>(() =>
     ? undefined
     : { name: propState.value.icon, side: propState.value.iconSide }
 )
+
+const disabledReason = computed(() =>
+  propState.value.disabledReason ? untranslated(propState.value.disabledReason) : undefined
+)
 </script>
 
 <template>
@@ -155,6 +166,7 @@ const icon = computed<ButtonIcon | undefined>(() =>
         :variant="propState.variant"
         :size="propState.size"
         :disabled="propState.disabled"
+        :disabled-reason="disabledReason"
         :href="propState.href || undefined"
         :target="propState.target || undefined"
         :title="propState.title"

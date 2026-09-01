@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { type VariantProps, cva } from 'class-variance-authority'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { IconSizeNames, SimpleIcons } from '../CmkIcon/types'
 
@@ -53,6 +54,7 @@ export interface ButtonProps {
   variant?: ButtonVariants['variant']
   size?: ButtonVariants['size']
   disabled?: boolean | string | undefined
+  disabledReason?: TranslatedString | undefined
   title?: string | undefined
   href?: string | undefined
   target?: string | undefined

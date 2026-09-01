@@ -3,31 +3,48 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.ddn_s2a.lib import parse_ddn_s2a_api_response
 
-check_info = {}
+Section = Mapping[str, str]
 
 
-def parse_ddn_s2a_version(string_table):
+def parse_ddn_s2a_version(string_table: StringTable) -> Section:
     return {key: value[0] for key, value in parse_ddn_s2a_api_response(string_table).items()}
 
 
-def discover_ddn_s2a_version(parsed):
-    return [(None, None)]
+def discover_ddn_s2a_version(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-def check_ddn_s2a_version(_no_item, _no_params, parsed):
-    yield 0, "Platform: %s" % parsed["platform"]
-    yield 0, "Firmware Version: {} ({})".format(parsed["fw_version"], parsed["fw_date"])
-    yield 0, "Bootrom Version: %s" % parsed["bootrom_version"]
+def check_ddn_s2a_version(section: Section) -> CheckResult:
+    yield Result(state=State.OK, summary=f"Platform: {section['platform']}")
+    yield Result(
+        state=State.OK,
+        summary=f"Firmware Version: {section['fw_version']} ({section['fw_date']})",
+    )
+    yield Result(state=State.OK, summary=f"Bootrom Version: {section['bootrom_version']}")
 
 
-check_info["ddn_s2a_version"] = LegacyCheckDefinition(
+agent_section_ddn_s2a_version = AgentSection(
     name="ddn_s2a_version",
     parse_function=parse_ddn_s2a_version,
+)
+
+
+check_plugin_ddn_s2a_version = CheckPlugin(
+    name="ddn_s2a_version",
     service_name="DDN S2A Version",
     discovery_function=discover_ddn_s2a_version,
     check_function=check_ddn_s2a_version,

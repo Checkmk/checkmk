@@ -157,6 +157,14 @@ def parse_quantity(quantity: ApiQuantity, context: QuantityContext) -> QuantityP
             assert_never(quantity)
 
 
+def _display_of(
+    quantity: QuantityProtocol,
+    localizer: Callable[[str], str],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+) -> CurveAttributes:
+    return quantity.attributes(localizer, registered_metrics) or FALLBACK_ATTRIBUTES
+
+
 def build_curve(
     quantity: QuantityProtocol,
     localizer: Callable[[str], str],
@@ -164,5 +172,11 @@ def build_curve(
 ) -> Curve:
     return Curve(
         quantity=quantity,
-        attributes=quantity.attributes(localizer, registered_metrics) or FALLBACK_ATTRIBUTES,
+        attributes=_display_of(quantity, localizer, registered_metrics),
+    )
+
+
+def attributes_of_quantity(quantity: ApiQuantity, context: QuantityContext) -> CurveAttributes:
+    return _display_of(
+        parse_quantity(quantity, context), context.localizer, context.registered_metrics
     )

@@ -25,6 +25,7 @@ py_library(
         "cmk/graphing_engine/_graph_matching.py",
         "cmk/graphing_engine/_naming.py",
         "cmk/graphing_engine/_operations.py",
+        "cmk/graphing_engine/_perfometer_evaluate.py",
         "cmk/graphing_engine/_quantities.py",
         "cmk/graphing_engine/_quantity.py",
         "cmk/graphing_engine/_quantity_from_api.py",

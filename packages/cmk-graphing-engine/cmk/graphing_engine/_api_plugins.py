@@ -8,8 +8,10 @@ from typing import assert_never
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
+from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 
 from ._naming import MetricName
 
@@ -115,3 +117,60 @@ def drawn_metric_names_of_graph(
             for name in metric_names_in_quantity(quantity)
         )
     )
+
+
+type ApiPerfometer = (
+    perfometers_v1.Perfometer
+    | perfometers_v1.Bidirectional
+    | perfometers_v1.Stacked
+    | perfometers_v2_unstable.Perfometer
+    | perfometers_v2_unstable.Bidirectional
+    | perfometers_v2_unstable.Stacked
+)
+
+type ApiPerfometerBar = perfometers_v1.Perfometer | perfometers_v2_unstable.Perfometer
+
+
+def _bars_of_perfometer(perfometer: ApiPerfometer) -> Sequence[ApiPerfometerBar]:
+    match perfometer:
+        case perfometers_v1.Perfometer() | perfometers_v2_unstable.Perfometer():
+            return [perfometer]
+        case perfometers_v1.Bidirectional() | perfometers_v2_unstable.Bidirectional():
+            return [perfometer.left, perfometer.right]
+        case perfometers_v1.Stacked() | perfometers_v2_unstable.Stacked():
+            return [perfometer.lower, perfometer.upper]
+        case _:
+            assert_never(perfometer)
+
+
+def quantities_of_perfometer(perfometer: ApiPerfometer) -> Iterable[ApiQuantity]:
+    for bar in _bars_of_perfometer(perfometer):
+        yield from bar.segments
+        for bound in (bar.focus_range.lower, bar.focus_range.upper):
+            if not isinstance(bound.value, int | float):
+                yield bound.value
+
+
+def scalars_in_quantity(quantity: ApiQuantity) -> Iterable[ApiScalar]:
+    match quantity:
+        case str() | metrics_v1.Constant():
+            return
+        case (
+            metrics_v2_unstable.LowerWarningOf()
+            | metrics_v2_unstable.LowerCriticalOf()
+            | metrics_v1.WarningOf()
+            | metrics_v1.CriticalOf()
+            | metrics_v1.MinimumOf()
+            | metrics_v1.MaximumOf()
+        ):
+            yield quantity
+        case (
+            metrics_v1.Sum()
+            | metrics_v1.Product()
+            | metrics_v1.Difference()
+            | metrics_v1.Fraction()
+        ):
+            for operand in operands_of(quantity):
+                yield from scalars_in_quantity(operand)
+        case _:
+            assert_never(quantity)

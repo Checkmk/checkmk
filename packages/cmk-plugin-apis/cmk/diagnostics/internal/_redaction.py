@@ -145,6 +145,17 @@ REDACT_PATTERNS: list[RedactPattern] = [
         replace_regex=re.compile(r"('credentials': )(?:[\{\(][^)}]*[\}\)]|'.*?'|\".*?\")([,\}])"),
         replacement=r"\1'%s'\2" % REDACT_STRING,
     ),
+    # The flow aggregator's ClickHouse export target carries its password as the last
+    # field of the -F= line. Example of a string to be redacted:
+    #   network_flow.conf:-F=clickhouse;127.0.0.1@9000,9004;ntopng;network_flow;secret_PW_123!
+    RedactPattern(
+        affected_files=[
+            "network_flow.conf",
+        ],
+        outer_regex=None,
+        replace_regex=re.compile(r"(^-F=clickhouse(?:;[^;\n]*){3};).*$", flags=re.MULTILINE),
+        replacement=r"\1%s" % REDACT_STRING,
+    ),
     # There are keys and certificates stored in different places.
     # Examples of strings to be redacted:
     #   $ cat multisite.d/wato/agent_signature_keys.mk

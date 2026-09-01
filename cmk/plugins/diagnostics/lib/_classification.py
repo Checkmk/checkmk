@@ -442,6 +442,12 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Contains GUI related user properties.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "network_flow.d/wato/global.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="Contains the global settings of the flow monitoring.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     "otel_collector.d/otel_collector_prom_scrape.mk": CheckmkFileInfo(
         components=[],
         sensitivity=CheckmkFileSensitivity.sensitive,
@@ -598,6 +604,12 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         ],
         sensitivity=CheckmkFileSensitivity.sensitive,
         description="The current status of the notification spooler. This is primarily relevant for notifications in distributed environments.",
+        encryption=CheckmkFileEncryption.none,
+    ),
+    "network-flow.log": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.sensitive,
+        description="The log file of the flow aggregator.",
         encryption=CheckmkFileEncryption.none,
     ),
     "notify.log": CheckmkFileInfo(

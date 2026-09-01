@@ -102,6 +102,28 @@ describe('computeStackedSeries', () => {
     expect(areaSeries!.bands[0]!.anchorTime).toBe(3)
   })
 
+  // A column straddling two samples peaks on a different one per metric. Anchoring a band at
+  // the time of its own peak would give the layers of a stack different x positions for the same
+  // column, tearing the polygons apart.
+  test('layers of a stack share one anchor even when they peak on different samples', () => {
+    const straddling = (peakTime: number): M4Bucket => ({
+      ...makeBucket(5),
+      endTime: 10,
+      minValueTime: 2,
+      maxValueTime: peakTime,
+      firstValueTime: 2,
+      lastValueTime: 4,
+      sampleCount: 2,
+      valueSum: 10
+    })
+    const metrics = [makeMetric('g1'), makeMetric('g1')]
+
+    const [base, layer] = computeStackedSeries(metrics, [[straddling(2)], [straddling(4)]], 'max')
+
+    expect(base!.bands[0]!.anchorTime).toBe(layer!.bands[0]!.anchorTime)
+    expect(layer!.bands[0]!.lower).toBe(base!.bands[0]!.upper)
+  })
+
   test('a gap bucket in the base does not advance the cumulative sum', () => {
     const layerValue = 4
     const metrics = [makeMetric('g1'), makeMetric('g1')]

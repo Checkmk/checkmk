@@ -16,6 +16,7 @@ export interface StackedBand {
   gap: boolean
   startTime: number
   endTime: number
+  /** Where the band is drawn: the bucket's own anchor, which every layer of a stack agrees on. */
   anchorTime: number
 }
 

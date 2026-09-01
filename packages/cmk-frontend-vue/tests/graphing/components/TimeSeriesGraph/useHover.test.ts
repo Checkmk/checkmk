@@ -10,8 +10,10 @@ import { defineComponent, h, ref } from 'vue'
 
 import type { Metric } from '@/graphing/components/TimeSeriesGraph'
 import { downsampleToColumns, m4 } from '@/graphing/components/TimeSeriesGraph/decimation/decimate'
+import { invertBucket } from '@/graphing/components/TimeSeriesGraph/render/bucket'
 import { computeStackedSeries } from '@/graphing/components/TimeSeriesGraph/render/stacked'
 import { useHover } from '@/graphing/components/TimeSeriesGraph/useHover'
+import type { ConsolidationFn } from '@/graphing/components/consolidation'
 
 const UNIT: Metric['metadata']['unit'] = {
   notation: 'decimal',
@@ -32,6 +34,11 @@ function makeLineMetric(name: string, dataPoints: (number | null)[]): Metric {
   }
 }
 
+function makeInverseLineMetric(name: string, dataPoints: (number | null)[]): Metric {
+  const metric = makeLineMetric(name, dataPoints)
+  return { ...metric, render: { ...metric.render, inverse: true } }
+}
+
 function constantPoints(value: number | null): (number | null)[] {
   return Array.from({ length: 11 }, () => value)
 }
@@ -47,18 +54,33 @@ function pointAt(x: number, y: number): { x: number; y: number; clientX: number;
   return { x, y, clientX: PLOT_CLIENT_LEFT + x, clientY: PLOT_CLIENT_TOP + y }
 }
 
-function mountHover(metrics: Metric[], dataRange = TIME_RANGE): ReturnType<typeof useHover> {
+interface HoverOverrides {
+  consolidation?: ConsolidationFn
+  plotWidth?: number
+  /** Widen to cover the mirrored half of the plot when a metric is inverse. */
+  valueDomain?: [number, number]
+}
+
+function mountHover(
+  metrics: Metric[],
+  dataRange = TIME_RANGE,
+  overrides: HoverOverrides = {}
+): ReturnType<typeof useHover> {
+  const consolidation = overrides.consolidation ?? 'avg'
+  const plotWidth = overrides.plotWidth ?? PLOT_WIDTH
   const xScale = scaleTime()
     .domain([new Date(TIME_RANGE.start * 1000), new Date(TIME_RANGE.end * 1000)])
-    .range([0, PLOT_WIDTH])
-  const yScale = scaleLinear().domain([0, 100]).range([PLOT_HEIGHT, 0])
+    .range([0, plotWidth])
+  const yScale = scaleLinear()
+    .domain(overrides.valueDomain ?? [0, 100])
+    .range([PLOT_HEIGHT, 0])
   let api!: ReturnType<typeof useHover>
   const harness = defineComponent({
     setup() {
       api = useHover({
         metrics: () => metrics,
-        consolidation: () => 'avg',
-        plotWidth: ref(PLOT_WIDTH),
+        consolidation: () => consolidation,
+        plotWidth: ref(plotWidth),
         plotHeight: ref(PLOT_HEIGHT),
         xScale,
         yScale
@@ -67,14 +89,18 @@ function mountHover(metrics: Metric[], dataRange = TIME_RANGE): ReturnType<typeo
     }
   })
   render(harness)
+  // One column per plot pixel, the way the renderer composes them.
   const buckets = metrics.map((metric) =>
     downsampleToColumns(
       m4(metric.data_points, dataRange, 4000),
       [dataRange.start, dataRange.end],
-      PLOT_WIDTH
+      plotWidth
     )
   )
-  api.recordDrawnGeometry(buckets, computeStackedSeries(metrics, buckets, 'avg'))
+  const drawnBuckets = buckets.map((metricBuckets, i) =>
+    metrics[i]!.render.inverse ? metricBuckets.map(invertBucket) : metricBuckets
+  )
+  api.recordDrawnGeometry(buckets, computeStackedSeries(metrics, drawnBuckets, consolidation))
   return api
 }
 
@@ -218,6 +244,54 @@ describe('useHover — snapping to drawn points', () => {
     expect(state.snapTime).toBe(60)
     expect(state.snapX).toBe(60)
     expect(state.samples[0]).toMatchObject({ formattedValue: '60', pixelY: 40 })
+  })
+
+  // A plot width the sample step does not divide leaves one column per sample pair straddling
+  // both of them: the value consolidated over such a column belongs to one of the two samples,
+  // and reporting it at the midpoint between them would float the focus dot off the curve.
+  test('a column straddling two samples reports one of them, never the midpoint', () => {
+    const hover = mountHover(
+      [makeLineMetric('sloped', pointsValuedAtTheirOwnTimestamp())],
+      {
+        start: 0,
+        end: 100,
+        step: 10
+      },
+      { consolidation: 'max', plotWidth: 97 }
+    )
+
+    for (let x = 0; x <= 97; x++) {
+      hover.moveHoverTo(pointAt(x, 50))
+      const state = hover.hoverState.value!
+      const sample = state.samples[0]!
+      if (sample.pixelY === null) {
+        continue
+      }
+      // Every sample is valued at its own timestamp, so a reported point is only a point of
+      // the curve when its value and the time it is reported at agree.
+      expect(sample.formattedValue).toBe(String(state.snapTime))
+    }
+  })
+
+  // An inverse metric is drawn mirrored, so the top of its curve is the bucket's minimum. The
+  // hover reads the buckets as fetched, where that minimum is still the minimum.
+  test('an inverse metric reports the sample its mirrored curve peaks at', () => {
+    const hover = mountHover(
+      [makeInverseLineMetric('mirrored', pointsValuedAtTheirOwnTimestamp())],
+      { start: 0, end: 100, step: 10 },
+      { consolidation: 'max', plotWidth: 97, valueDomain: [-100, 100] }
+    )
+
+    for (let x = 0; x <= 97; x++) {
+      hover.moveHoverTo(pointAt(x, 50))
+      const sample = hover.hoverState.value!.samples[0]!
+      if (sample.pixelY === null) {
+        continue
+      }
+      // Every sample is valued at its own timestamp, and the dot is drawn at the negated value.
+      expect(sample.formattedValue).toBe(String(hover.hoverState.value!.snapTime))
+      expect(sample.pixelY).toBeCloseTo((100 + Number(sample.formattedValue)) / 2)
+    }
   })
 
   test('a cursor over a gap stays n/a instead of snapping to a neighbouring sample', () => {

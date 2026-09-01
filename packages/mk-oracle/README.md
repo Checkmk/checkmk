@@ -1004,6 +1004,8 @@ This workflow is useful when you have an existing Oracle configuration setup tha
 
 ## Migration from the Legacy `mk_oracle` Plugin
 
+For the Checkmk Oracle Bakery rule and its migration, please see [MIGRATION.md](MIGRATION.md).
+
 `mk-oracle` replaces the shell-based `mk_oracle` agent plugin (Linux/AIX) and the
 PowerShell `mk_oracle.ps1` plugin (Windows). The binary contains a built-in migration
 command that converts a legacy configuration file into the

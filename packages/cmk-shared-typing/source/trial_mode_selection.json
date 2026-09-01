@@ -5,7 +5,9 @@
   "properties": {
     "save_url": { "type": "string" },
     "logout_url": { "type": "string" },
+    "verify_online_url": { "type": "string" },
+    "verify_offline_url": { "type": "string" },
     "user_name": { "type": "string" }
   },
-  "required": ["save_url", "logout_url", "user_name"]
+  "required": ["save_url", "logout_url", "verify_online_url", "verify_offline_url", "user_name"]
 }

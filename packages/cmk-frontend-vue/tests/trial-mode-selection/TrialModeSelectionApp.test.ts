@@ -21,6 +21,8 @@ function renderApp() {
     props: {
       save_url: 'ajax_save_trial_mode_selection.py',
       logout_url: 'logout.py',
+      verify_online_url: 'wato.py?mode=licensing',
+      verify_offline_url: 'wato.py?mode=licensing',
       user_name: 'cmkadmin'
     }
   })

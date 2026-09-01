@@ -6,7 +6,6 @@
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
 # mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-call"
 
 import datetime
 from collections.abc import Sequence

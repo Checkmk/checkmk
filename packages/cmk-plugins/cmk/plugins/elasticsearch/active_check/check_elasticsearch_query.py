@@ -6,7 +6,6 @@
 
 CheckMK check for elasticsearch queries.
 """
-# mypy: disable-error-code="no-untyped-call"
 
 import argparse
 import sys

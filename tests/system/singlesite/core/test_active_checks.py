@@ -5,7 +5,6 @@
 
 # ruff: noqa: T201  # It's OK for test/script helpers to print()
 
-# mypy: disable-error-code="no-untyped-call"
 
 import logging
 from collections.abc import Iterator

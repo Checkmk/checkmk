@@ -5,7 +5,6 @@
 
 # ruff: noqa: T201  # It's OK for scripts to print()
 
-# mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
 import hashlib

@@ -5,7 +5,6 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-# mypy: disable-error-code="no-untyped-call"
 
 from pathlib import Path
 from unittest.mock import patch

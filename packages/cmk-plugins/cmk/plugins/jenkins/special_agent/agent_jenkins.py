@@ -6,7 +6,6 @@
 
 Checkmk special agent for monitoring Jenkins.
 """
-# mypy: disable-error-code="no-untyped-call"
 
 import argparse
 import json

@@ -14,8 +14,6 @@ Environment variables VERSION, EDITION, BRANCH affect the package used for
 the test.
 """
 
-# mypy: disable-error-code="no-untyped-call"
-
 import argparse
 import logging
 import os

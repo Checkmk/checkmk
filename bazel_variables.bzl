@@ -7,7 +7,6 @@ edition_python_deps = {
         "@//:gpl+nonfree_repo": [
             "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
             "//non-free/packages/cmk-metric-backend",
-            "//non-free/packages/cmk-mcp:cmk-gui-mcp",
             "//non-free/packages/cmk-mknotifyd",
             "//non-free/packages/cmk-otel-collector",
             "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
@@ -18,7 +17,6 @@ edition_python_deps = {
     ],
     "pro": select({
         "@//:gpl+nonfree_repo": [
-            "//non-free/packages/cmk-mcp:cmk-gui-mcp",
             "//non-free/packages/cmk-mknotifyd",
             "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
         ],
@@ -28,7 +26,6 @@ edition_python_deps = {
         "@//:gpl+nonfree_repo": [
             "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
             "//non-free/packages/cmk-metric-backend",
-            "//non-free/packages/cmk-mcp:cmk-gui-mcp",
             "//non-free/packages/cmk-mknotifyd",
             "//non-free/packages/cmk-otel-collector",
             "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
@@ -39,7 +36,6 @@ edition_python_deps = {
         "@//:gpl+nonfree_repo": [
             "//non-free/packages/cmk-core-helpers:relay-fetcher-trigger",
             "//non-free/packages/cmk-metric-backend",
-            "//non-free/packages/cmk-mcp:cmk-gui-mcp",
             "//non-free/packages/cmk-mknotifyd",
             "//non-free/packages/cmk-otel-collector",
             "//non-free/packages/cmk-update-agent:cmk-update-agent-py",

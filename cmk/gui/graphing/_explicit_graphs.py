@@ -8,15 +8,10 @@ from typing import Literal, override
 
 from ._graph_metric_expressions import GraphConsolidationFunction
 from ._graph_specification import (
-    FixedVerticalRange,
-    GraphEnvironment,
     GraphMetric,
-    GraphRecipe,
-    GraphRecipeWithOverrides,
     GraphSpecification,
     HorizontalRule,
 )
-from ._rrd import HostGraphRow, ServiceGraphRow
 from ._unit import ConvertibleUnitSpecification
 
 
@@ -34,35 +29,3 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     @override
     def graph_type_name() -> Literal["explicit"]:
         return "explicit"
-
-    def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
-        return []
-
-    def recipes(
-        self,
-        env: GraphEnvironment,
-        graph_rows: Sequence[HostGraphRow | ServiceGraphRow],
-        consolidation_function: GraphConsolidationFunction = "max",
-    ) -> Sequence[GraphRecipeWithOverrides]:
-        return [
-            GraphRecipeWithOverrides(
-                recipe=GraphRecipe(
-                    title=self.title,
-                    unit_spec=self.unit,
-                    explicit_vertical_range=(
-                        None
-                        if self.explicit_vertical_range is None
-                        else FixedVerticalRange(
-                            min=self.explicit_vertical_range[0],
-                            max=self.explicit_vertical_range[1],
-                        )
-                    ),
-                    omit_zero_metrics=self.omit_zero_metrics,
-                    horizontal_rules=self.horizontal_rules,
-                    metrics=self.metrics,
-                ),
-                specification=self,
-                consolidation_function=self.consolidation_function,
-                mark_requested_end_time=self.mark_requested_end_time,
-            )
-        ]

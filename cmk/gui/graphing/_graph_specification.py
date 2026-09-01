@@ -6,7 +6,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Annotated, final, Literal, override
 
 from pydantic import (
@@ -25,10 +25,8 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._from_api import GraphFromAPI, RegisteredMetric
-from ._graph_display_config import GraphRenderOptions
 from ._graph_metric_expressions import (
     AugmentedTimeSeries,
-    GraphConsolidationFunction,
     GraphMetricExpression,
     line_type_mirror,
     LineType,
@@ -234,11 +232,6 @@ def compute_graph_ranges_for_width(width: SizeMM, start_time: int, end_time: int
     return GraphRanges(time_range=(start_time, end_time), step=step)
 
 
-class AdditionalGraphHTML(BaseModel, frozen=True):
-    title: str
-    html: str
-
-
 class GraphRecipe(BaseModel, frozen=True):
     title: str
     unit_spec: ConvertibleUnitSpecification | NonConvertibleUnitSpecification = Field(
@@ -248,21 +241,3 @@ class GraphRecipe(BaseModel, frozen=True):
     horizontal_rules: Sequence[HorizontalRule]
     omit_zero_metrics: bool
     metrics: Sequence[GraphMetric]
-
-
-@dataclass(frozen=True)
-class GraphRecipeWithOverrides:
-    """Bundles a GraphRecipe with its per-recipe settings.
-
-    Keeps the core GraphRecipe (the serializable graph definition) separate
-    from its per-recipe settings (specification, ranges, render_options,
-    additional_html) without polluting the recipe itself.
-    """
-
-    recipe: GraphRecipe
-    specification: GraphSpecification
-    consolidation_function: GraphConsolidationFunction | None = None
-    ranges: GraphRanges | None = None
-    render_options: GraphRenderOptions = field(default_factory=GraphRenderOptions)
-    additional_html: AdditionalGraphHTML | None = None
-    mark_requested_end_time: bool = False

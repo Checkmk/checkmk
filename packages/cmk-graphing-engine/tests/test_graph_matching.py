@@ -874,8 +874,8 @@ def test_build_matched_graphs_needs_all_required_metrics_on_one_service() -> Non
 
     discovered = _discover_combined([plugin], fetch_data=fetch_data)
 
-    # No single service has both required metrics, so the plugin is not matched (per-service, like
-    # legacy combined discovery); each metric falls back to its own aggregated single-metric graph.
+    # No single service has both required metrics, so the plugin is not matched: matching is
+    # per-service, and each metric falls back to its own aggregated single-metric graph.
     assert {d.name for d in discovered} == {"cpu_user", "cpu_system"}
 
 

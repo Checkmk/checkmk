@@ -1,0 +1,8 @@
+{
+  "url": "https://ci-binary-artifacts-710145618630-eu-central-1-an.s3.eu-central-1.amazonaws.com/dl/gnu/gcc-toolchain/gcc14.4.0-glibc2.28/linux/x86_64/almalinux8/x86_64-checkmk-linux-gnu-gcc14.4.0-glibc2.28.tar.xz",
+  "integrity": "sha256-5v0XoHfWuwjt0f7TLjPXhf1yW+m7A7NZ8GCcgygELUo=",
+  "strip_prefix": "x86_64-checkmk-linux-gnu",
+  "overlay": {
+    "BUILD.bazel": "sha256-5lfEqXd9DUOyEnnoy2iWJwspInYHo8iuPfC0LkYYqhE="
+  }
+}

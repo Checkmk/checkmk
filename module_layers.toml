@@ -705,7 +705,6 @@ allows = [
   "cmk.checkengine.filecache",
   "cmk.checkengine.helper_interface",
   "cmk.checkengine.subclass_discovery",
-  "cmk.telemetry.fetcher.agent_otel",
   "cmk.relay_fetcher_trigger",
   "cmk.relay_trigger_protocol",
   "cmk.checkengine.snmplib",

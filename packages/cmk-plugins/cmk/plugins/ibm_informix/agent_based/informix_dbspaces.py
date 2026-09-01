@@ -66,6 +66,10 @@ def discovery_informix_dbspaces(section: ParsedSection) -> DiscoveryResult:
 
 def _get_pagesize(entry: Mapping[str, str]) -> tuple[int, int]:
     pagesize = int(entry["pagesize"])
+    if "system_pagesize" not in entry:
+        # mk_informix plugins older than werk 17873 report only the system
+        # page size, labeled "pagesize"
+        return pagesize, pagesize
     system_pagesize = int(entry["system_pagesize"])
     nfree_pagesize = pagesize if FLAG_BLOBSPACE & int(entry["chunk_flags"]) else system_pagesize
 
@@ -92,6 +96,14 @@ def check_informix_dbspaces(item: str, params: CheckParams, section: ParsedSecti
             )
 
         yield Result(state=State.OK, summary=f"Data files: {len(datafiles)}")
+        if any("system_pagesize" not in entry for entry in datafiles):
+            yield Result(
+                state=State.OK,
+                summary=(
+                    "Outdated mk_informix agent plugin, please update it: "
+                    "reported sizes may be wrong for blobspaces"
+                ),
+            )
         yield from check_levels(
             value=size,
             metric_name="tablespace_size",

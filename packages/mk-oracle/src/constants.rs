@@ -75,7 +75,7 @@ fn get_conf_dir() -> PathBuf {
 
 fn get_runtime_dir() -> PathBuf {
     Path::new(&get_env_value(environment::LIB_DIR_ENV_VAR, "."))
-        .join("plugins/libexec/mk-oracle")
+        .join("plugins/libexec/mk-oracle-v2")
         .to_owned()
 }
 

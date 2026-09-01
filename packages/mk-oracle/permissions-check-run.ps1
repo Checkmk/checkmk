@@ -44,7 +44,7 @@ while (!(Test-Path "$root_dir/.werks" -ErrorAction SilentlyContinue)) {
 Write-Host "Building $package_name..." -ForegroundColor White
 Push-Location $PSScriptRoot
 $temp_dir = Join-Path $env:TEMP "mk-oracle-perms-check-$([System.IO.Path]::GetRandomFileName())"
-$runtime_path = "$temp_dir/runtimes/plugins/libexec/mk-oracle/runtime"
+$runtime_path = "$temp_dir/runtimes/plugins/libexec/mk-oracle-v2/oic"
 $current_user_sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 New-Item -ItemType Directory -Path $temp_dir -Force | Out-Null
 try {
@@ -75,9 +75,9 @@ try {
 
     # Custom-metric SQL fixture: created unconditionally — the elevated check
     # needs an existing Users-writable SQL file to refuse reading.
-    $orasql_dir = "$temp_dir/runtimes/plugins/libexec/mk-oracle/orasql"
+    $orasql_dir = "$temp_dir/runtimes/plugins/libexec/mk-oracle-v2/orasql"
     New-Item -ItemType Directory -Path $orasql_dir -Force | Out-Null
-    Copy-Item -Path "runtimes/plugins/libexec/mk-oracle/orasql/simple_custom_metric.sql" -Destination (Join-Path $orasql_dir "simple_custom_metric.sql") -Force
+    Copy-Item -Path "runtimes/plugins/libexec/mk-oracle-v2/orasql/simple_custom_metric.sql" -Destination (Join-Path $orasql_dir "simple_custom_metric.sql") -Force
 
     if ($only_escalated) {
         Write-Host "--root: skipping current-user checks" -ForegroundColor Yellow

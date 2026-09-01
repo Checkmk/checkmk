@@ -37,7 +37,7 @@ LIN_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     [
         OraclePluginFile(
             source=Path("mk-oracle"),
-            target=Path("libexec", "mk-oracle", "mk-oracle"),
+            target=Path("libexec", "mk-oracle-v2", "mk-oracle"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_sync"),
@@ -56,7 +56,7 @@ WIN_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     [
         OraclePluginFile(
             source=Path("mk-oracle.exe"),
-            target=Path("libexec", "mk-oracle", "mk-oracle.exe"),
+            target=Path("libexec", "mk-oracle-v2", "mk-oracle.exe"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_sync.ps1"),
@@ -75,7 +75,7 @@ AIX_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     [
         OraclePluginFile(
             source=Path("mk-oracle.aix"),
-            target=Path("libexec", "mk-oracle", "mk-oracle.aix"),
+            target=Path("libexec", "mk-oracle-v2", "mk-oracle.aix"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_sync.aix"),
@@ -94,7 +94,7 @@ SOLARIS_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     [
         OraclePluginFile(
             source=Path("mk-oracle.solaris"),
-            target=Path("libexec", "mk-oracle", "mk-oracle.solaris"),
+            target=Path("libexec", "mk-oracle-v2", "mk-oracle.solaris"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_sync.solaris"),

@@ -18,7 +18,7 @@
 //!
 //! The plugin reads the bakery file (`$MK_CONFDIR/mk-oracle.yml`)
 //! first and then merges the optional user file
-//! (`$MK_LIBDIR/plugins/libexec/mk-oracle/user-mk-oracle.yml`) on top of it.
+//! (`$MK_LIBDIR/plugins/libexec/mk-oracle-v2/user-mk-oracle.yml`) on top of it.
 //!
 //! Merge rules, applied recursively to the YAML documents:
 //! - An empty user document (missing or blank file) never changes the bakery

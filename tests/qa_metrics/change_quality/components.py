@@ -3,371 +3,192 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Resolve source-code components via the canonical ``cmk-components`` tool.
+"""Resolve the source-code component a change belongs to.
 
-Replaces the earlier regex-based ``classify`` module. ``cmk-components`` is the
-authoritative source for component ownership; the trade-off is that it queries
-gerrit's REST API per path (cached locally by the tool itself) and only knows
-about paths that exist at HEAD.
+Ownership itself comes from :mod:`tests.qa_metrics.components`. Two things this
+module adds on top, both specific to walking history:
 
-Two-step flow used by ``push.py``:
+1. **Historical paths.** A path renamed since the commit that touched it is
+   translated to its HEAD name first, or commits older than the last
+   reorganisation classify as ``None`` for a source file that merely moved.
 
-1. Walk all commits, collect every unique non-test path → batch a single
-   ``cmk-components component --mode json`` invocation to populate a lookup.
-2. For each row, ``pick_component(files_changed, lookup)`` returns the majority
-   component for that change.
-
-Historical paths that have since been renamed are remapped to their HEAD name
-via a one-shot ``git log --diff-filter=R`` scan before being handed to
-cmk-components -- otherwise commits older than the last reorganisation of the
-codebase classify as ``None`` even when their source file simply moved.
+2. **One component per change.** A change touches several paths;
+   :func:`pick_component` reduces them to the one the row records.
 """
 
-import codecs
-import json
 import logging
 import os
-import re
 import subprocess
-import sys
-from collections.abc import Iterable, Mapping
+from collections import Counter
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Final
+
+from tests.qa_metrics.components import ComponentOwnership, load_ownership
 
 from .detect_test import is_test_path
 
 logger = logging.getLogger(__name__)
 
-# cmk-components validates each path against gerrit's *live* master, while we
-# decide which paths to query from the *local* working tree. When the two drift
-# -- a file moved/removed on gerrit master since this checkout, or gerrit master
-# advancing mid-run -- it exits non-zero with one or more "Not a valid path"
-# lines. Such a path is unclassifiable (like a deleted one), so we drop it to
-# None and retry the shrunken batch rather than aborting the whole run. Bounded
-# so a badly stale checkout (many skewed paths) still fails loudly instead of
-# grinding through retries. The path is printed with a leading slash we strip.
-_MAX_INVALID_PATH_RETRIES: Final = 3
-_INVALID_PATH_RE: Final = re.compile(r"Not a valid path in check_mk @ [^:]+:\s*(\S+)")
-
-# Cap on how many paths we hand to a single ``cmk-components`` invocation. The
-# OS imposes a hard limit on argv length (``ARG_MAX``, typically ~128 KiB on
-# Linux) -- a large refactor or vendored-deps commit can easily exceed that
-# when every changed file becomes one positional argument. Batch instead.
-_CMK_COMPONENTS_BATCH = 500
-
-# Streaming UTF-8 check reads the file in 64 KiB chunks: keeps memory bounded
-# even when a commit accidentally introduces a 50 MB binary, while still
-# scanning the entire file (which is what cmk-components itself does).
-_UTF8_DECODE_CHUNK = 65536
+# CI is headless -- no keyring, and no terminal for cwz to prompt on -- so it
+# passes the Gerrit credentials in these variables. Locally they are unset and
+# cwz falls back to ~/.netrc or the keyring.
+_GERRIT_USER_VAR: Final = "QA_GERRIT_USER"
+_GERRIT_TOKEN_VAR: Final = "QA_GERRIT_PASSWORD"
 
 
-def _is_utf8_decodable(path: Path) -> bool:
-    """Return True if ``path``'s contents decode cleanly as UTF-8.
+def lookup_components(paths: Iterable[str], repo: Path) -> dict[str, str | None]:
+    """Return ``{path: owning component(s)}``, co-owners ``", "``-joined.
 
-    Mirrors what ``cmk-components`` does: it fetches each file from gerrit
-    and decodes it as UTF-8 unconditionally (cwz/gerrit_utils/client.py).
-    Anything that fails here would crash the tool with a
-    ``UnicodeDecodeError`` and (by aborting the whole batch) lose results
-    for every other path. Catches binary files (PDFs, PNGs) AND
-    text-in-non-UTF-8 files (latin-1 PowerShell scripts, EBCDIC z/OS
-    agents, ...).
-
-    Reads incrementally so a large binary in the change set doesn't spike
-    memory just to be rejected.
-    """
-    decoder = codecs.getincrementaldecoder("utf-8")()
-    try:
-        with path.open("rb") as fh:
-            while chunk := fh.read(_UTF8_DECODE_CHUNK):
-                decoder.decode(chunk)
-            decoder.decode(b"", final=True)
-    except OSError, UnicodeDecodeError:
-        return False
-    return True
-
-
-def _build_rename_map(repo: Path) -> dict[str, str]:
-    """Return ``{historical_path: head_path}`` for paths renamed in HEAD's history.
-
-    Walks every rename event reachable from HEAD (single ``git log
-    --diff-filter=R --name-status`` invocation, oldest-first), then collapses
-    chains: a file renamed ``A -> B -> C`` produces both ``A -> C`` and
-    ``B -> C`` so any historical name resolves directly to its HEAD endpoint.
-
-    Used by :func:`lookup_components` to recover a HEAD name for paths that
-    don't exist under their historical name (and would otherwise classify as
-    ``None`` because ``cmk-components`` only knows ownership for HEAD). Cannot
-    recover deletions without a rename: ``git log --diff-filter=R`` skips
-    those.
-    """
-    proc = subprocess.run(
-        ["git", "log", "--reverse", "--diff-filter=R", "--name-status", "--format=", "HEAD"],
-        cwd=repo,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    direct: dict[str, str] = {}
-    for line in proc.stdout.splitlines():
-        if not line.strip() or "\t" not in line:
-            continue
-        parts = line.split("\t")
-        # Format: ``R<similarity>\t<old>\t<new>`` (e.g. ``R100\told.py\tnew.py``).
-        if len(parts) != 3 or not parts[0].startswith("R"):
-            continue
-        _, old, new = parts
-        direct[old] = new
-    # Collapse multi-step chains so every key points at its final HEAD name.
-    collapsed: dict[str, str] = {}
-    for start in direct:
-        if start in collapsed:
-            continue
-        chain: list[str] = []
-        cur = start
-        while cur in direct and cur not in chain:
-            chain.append(cur)
-            cur = direct[cur]
-        for p in chain:
-            collapsed[p] = cur
-    return collapsed
-
-
-def _parse_invalid_paths(stderr: str) -> set[str]:
-    """Repo-relative paths cmk-components rejected as absent from gerrit master.
-
-    The error prints each path with a leading slash (``/cmk/...``); strip it so
-    the result matches the paths we passed in.
-    """
-    return {m.group(1).lstrip("/") for m in _INVALID_PATH_RE.finditer(stderr)}
-
-
-def _query_components(
-    paths: list[str], cred_args: list[str]
-) -> tuple[dict[str, str | None], list[str]]:
-    """Resolve one batch, dropping paths gerrit's master no longer knows.
-
-    Returns ``(results, dropped)``: ``results`` maps each *surviving* path to
-    its component (or ``None``) as reported by ``cmk-components --mode json``;
-    ``dropped`` lists paths it rejected as "Not a valid path" (stale local files
-    moved/removed on gerrit master since this checkout -- unclassifiable, so the
-    caller resolves them to ``None``).
-
-    Retries up to :data:`_MAX_INVALID_PATH_RETRIES` times, shrinking the batch
-    by the rejected paths each round. Raises ``RuntimeError`` on a genuine
-    failure (a non-zero exit with no recognisable invalid-path line, or non-JSON
-    output), or if it is *still* rejecting paths after the retries are spent --
-    we never silently return partial data, since that lands NULLs in postgres.
-    """
-    remaining = list(paths)
-    dropped: list[str] = []
-    retries = 0
-    while remaining:
-        proc = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "cwz.cmk_components",
-                *cred_args,
-                "component",
-                "--mode",
-                "json",
-                *remaining,
-            ],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        if proc.returncode == 0:
-            # --mode json emits a single ``{path: component | null}`` object for
-            # the batch; ``null`` deserialises directly to Python ``None``.
-            try:
-                return json.loads(proc.stdout), dropped
-            except json.JSONDecodeError as e:
-                raise RuntimeError(
-                    f"cmk-components --mode json emitted non-JSON output: {e}. "
-                    f"stdout (first 500 chars):\n{proc.stdout[:500]}"
-                ) from e
-
-        invalid = _parse_invalid_paths(proc.stderr)
-        invalid_in_batch = [p for p in remaining if p in invalid]
-        if not invalid_in_batch:
-            # Non-zero exit we can't attribute to stale paths: a real failure.
-            raise RuntimeError(
-                f"cmk-components exited rc={proc.returncode}. "
-                f"Refusing to push partial data. stderr:\n{proc.stderr}"
-            )
-        if retries >= _MAX_INVALID_PATH_RETRIES:
-            raise RuntimeError(
-                f"cmk-components still rejecting paths after "
-                f"{_MAX_INVALID_PATH_RETRIES} retries (checkout too far behind "
-                f"gerrit master? sync it and re-run). Refusing to push partial "
-                f"data. Last stderr:\n{proc.stderr}"
-            )
-
-        retries += 1
-        logger.warning(
-            "cmk-components rejected %d path(s) not on gerrit master; dropping "
-            "and retrying (%d/%d): %s",
-            len(invalid_in_batch),
-            retries,
-            _MAX_INVALID_PATH_RETRIES,
-            invalid_in_batch[:5],
-        )
-        dropped.extend(invalid_in_batch)
-        drop_set = set(invalid_in_batch)
-        remaining = [p for p in remaining if p not in drop_set]
-
-    # Every path in the batch was rejected and dropped; all resolve to None.
-    return {}, dropped
-
-
-def lookup_components(
-    paths: Iterable[str],
-    repo: Path,
-    *,
-    batch_size: int = _CMK_COMPONENTS_BATCH,
-) -> dict[str, str | None]:
-    """Return ``{path: component_name_or_None}`` for ``paths``.
-
-    Resolution is keyed by the HEAD-equivalent of each input path:
-
-    * If ``path`` exists on disk in ``repo``, it's queried as-is.
-    * If ``path`` doesn't exist but was renamed (per ``git log --diff-filter=R``)
-      to a path that exists on HEAD, the renamed target is queried and the
-      result is mapped back to the original ``path``. Recovers historical paths
-      that simply moved (e.g. ``cmk/legacy_checks/*.py`` → ``cmk/plugins/*``).
-    * Otherwise ``path`` resolves to ``None`` -- ``cmk-components`` can't
-      classify it (deleted without rename / never on HEAD).
-
-    Resolved HEAD paths are batched into chunks of ``batch_size`` to stay under
-    the OS ``ARG_MAX`` limit and handed to ``cmk-components component --mode
-    json``; the JSON output's ``null`` deserialises directly to Python ``None``.
-    Additionally filtered to UTF-8-decodable files (cmk-components reads file
-    content from gerrit and decodes as UTF-8; binary files would otherwise
-    crash the whole batch).
-
-    Paths that are valid locally but that gerrit's live master no longer knows
-    (moved/removed upstream since this checkout -- common on a ``--full`` run
-    that enumerates every historical path) are dropped to ``None`` and the batch
-    is retried; see :func:`_query_components`. A genuine cmk-components failure,
-    or a checkout too far behind gerrit to reconcile within the retry budget,
-    still raises ``RuntimeError`` -- we never silently return partial data, since
-    that would land NULLs in postgres.
+    The value is ``None`` both when nothing owns the path and when the path has no
+    equivalent at HEAD -- both mean "cannot be attributed".
     """
     all_paths = sorted(set(paths))
     if not all_paths:
         return {}
 
-    on_head = {p for p in all_paths if (repo / p).is_file()}
-    stale = [p for p in all_paths if p not in on_head]
+    renames = _collapse_renames(_rename_log(repo)) if _any_path_missing(all_paths, repo) else {}
+    head_name_per_path = _head_paths(all_paths, repo, renames)
 
-    # Only build the rename map if we have stale paths to remap -- walking all
-    # of HEAD's history is multi-second work that's pure overhead when every
-    # input is already on HEAD (typical for incremental runs).
-    rename_map = _build_rename_map(repo) if stale else {}
-
-    def _head_name(p: str) -> str | None:
-        if p in on_head:
-            return p
-        candidate = rename_map.get(p)
-        if candidate is not None and (repo / candidate).is_file():
-            return candidate
-        return None
-
-    head_name_per_orig = {p: _head_name(p) for p in all_paths}
-    # Cache the UTF-8 check per unique HEAD path: ``_is_utf8_decodable`` streams
-    # the file contents to check decoding, and multiple originals can map to
-    # the same HEAD via rename collapsing or duplicate inputs. Classify each
-    # unique HEAD path once.
-    unique_heads = {hp for hp in head_name_per_orig.values() if hp is not None}
-    utf8_ok = {hp for hp in unique_heads if _is_utf8_decodable(repo / hp)}
-    queryable = sorted(utf8_ok)
-    skipped_unresolvable = sum(1 for hp in head_name_per_orig.values() if hp is None)
-    skipped_non_utf8 = sum(
-        1 for hp in head_name_per_orig.values() if hp is not None and hp not in utf8_ok
-    )
-
-    result: dict[str, str | None] = dict.fromkeys(all_paths)
-    if not queryable:
-        return result
+    to_query = _paths_to_query(head_name_per_path)
+    if not to_query:
+        logger.info("None of the %d path(s) exist at HEAD; nothing to resolve", len(all_paths))
+        return dict.fromkeys(all_paths)
 
     logger.info(
-        "Resolving components for %d unique HEAD paths via cmk-components "
-        "(from %d input paths; %d unresolvable on HEAD, %d non-UTF-8)",
-        len(queryable),
+        "Resolving components for %d unique HEAD path(s) (from %d input path(s))",
+        len(to_query),
         len(all_paths),
-        skipped_unresolvable,
-        skipped_non_utf8,
     )
-    head_results: dict[str, str | None] = dict.fromkeys(queryable)
-    answered: set[str] = set()
-    # cmk-components authenticates to Gerrit's code-owners REST API. In CI
-    # (headless, no keyring/DBus) we hand it credentials via env vars; when
-    # these are unset (local dev) we omit the flags and let the tool fall back
-    # to ~/.netrc or the keyring as before.
-    cred_args = (
-        ["--gerrit-username-var", "QA_GERRIT_USER", "--gerrit-api-token-var", "QA_GERRIT_PASSWORD"]
-        if os.getenv("QA_GERRIT_USER") and os.getenv("QA_GERRIT_PASSWORD")
-        else []
+    return _owning_components(
+        head_name_per_path,
+        load_ownership(to_query, credentials=_credentials(os.environ)),
     )
-    dropped_total: list[str] = []
-    for batch_start in range(0, len(queryable), batch_size):
-        batch = queryable[batch_start : batch_start + batch_size]
-        batch_results, dropped = _query_components(batch, cred_args)
-        # Dropped paths are stale locally / gone on gerrit master: unclassifiable,
-        # same as a deleted path. They stay ``None`` (the dict default) but count
-        # as answered so the completeness check below doesn't flag them.
-        answered.update(dropped)
-        dropped_total.extend(dropped)
-        for path, component in batch_results.items():
-            if path in head_results:
-                answered.add(path)
-                head_results[path] = component
-
-    if dropped_total:
-        logger.warning(
-            "Dropped %d path(s) rejected by cmk-components as absent from gerrit "
-            "master (stale local files moved/removed upstream since this "
-            "checkout); classified as None. Examples: %s",
-            len(dropped_total),
-            dropped_total[:5],
-        )
-
-    # rc=0 is not by itself a guarantee that every queried path was answered:
-    # cmk-components has been observed to silently omit lines for some paths
-    # mid-batch (e.g. an internal exception swallowed by the script driver).
-    # Treat that the same way as a non-zero exit -- fail loudly rather than
-    # let invisible NULLs land in postgres.
-    unanswered = sorted(set(head_results) - answered)
-    if unanswered:
-        raise RuntimeError(
-            f"cmk-components returned no line for {len(unanswered)} of "
-            f"{len(head_results)} queried paths (rc=0). Refusing to push "
-            f"partial data. First examples: {unanswered[:3]}"
-        )
-
-    for orig, head in head_name_per_orig.items():
-        result[orig] = None if head is None else head_results.get(head)
-    return result
 
 
 def pick_component(
-    files_changed: Iterable[str],
-    component_map: Mapping[str, str | None],
+    files_changed: Iterable[str], component_map: Mapping[str, str | None]
 ) -> str | None:
-    """Return the majority component across non-test paths in ``files_changed``.
+    """Return the majority component across the non-test paths in ``files_changed``.
 
     Test-only paths are excluded so test-heavy changes don't classify as
-    "tests/...". Ties are broken alphabetically. Returns ``None`` when no
-    path resolves to a component.
+    "tests/...". Ties are broken alphabetically, and ``None`` means no path
+    resolved to a component.
     """
-    counts: dict[str, int] = {}
-    for path in files_changed:
-        if is_test_path(path):
-            continue
-        if (component := component_map.get(path)) is None:
-            continue
-        counts[component] = counts.get(component, 0) + 1
+    counts = Counter(
+        component
+        for path in files_changed
+        if not is_test_path(path) and (component := component_map.get(path)) is not None
+    )
     if not counts:
         return None
-    return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
+    return min(counts, key=lambda component: (-counts[component], component))
+
+
+def _any_path_missing(paths: Iterable[str], repo: Path) -> bool:
+    """Whether resolving ``paths`` needs HEAD's rename history at all.
+
+    Walking every rename in HEAD's history takes seconds, and answers nothing on
+    an incremental run where every input is already at HEAD.
+    """
+    return any(not (repo / path).is_file() for path in paths)
+
+
+def _head_paths(
+    paths: Sequence[str], repo: Path, renames: Mapping[str, str]
+) -> dict[str, Path | None]:
+    """Map each path to its equivalent at HEAD, or ``None`` if it has none.
+
+    * a path that exists in ``repo`` maps to itself
+    * a path that ``renames`` moves to something that exists maps to the target,
+      so e.g. ``cmk/legacy_checks/*.py`` resolves through its move to
+      ``cmk/plugins/*``
+    * anything else maps to ``None``: deleted without a rename, renamed to a
+      target since deleted, or never on HEAD
+
+    The keys stay the strings the caller passed -- they key the rows this ends up
+    in -- while a HEAD name becomes a ``Path``, which is what ownership is keyed
+    and asked for by. ``renames`` is raw log text on both sides, since its keys
+    are looked up by those same input strings.
+    """
+
+    def head_name(path: str) -> Path | None:
+        if (repo / path).is_file():
+            return Path(path)
+        candidate = renames.get(path)
+        return Path(candidate) if candidate is not None and (repo / candidate).is_file() else None
+
+    return {path: head_name(path) for path in paths}
+
+
+def _paths_to_query(head_name_per_path: Mapping[str, Path | None]) -> list[Path]:
+    """The HEAD names worth asking about, sorted.
+
+    Fewer than the inputs in both directions: a path with no HEAD name is not
+    worth a query, and several inputs can share one HEAD name.
+    """
+    return sorted({head for head in head_name_per_path.values() if head is not None})
+
+
+def _owning_components(
+    head_name_per_path: Mapping[str, Path | None], ownership: ComponentOwnership
+) -> dict[str, str | None]:
+    """Answer each path with the components owning its HEAD name."""
+    return {
+        path: None if head is None else ", ".join(ownership.owners_of(head)) or None
+        for path, head in head_name_per_path.items()
+    }
+
+
+def _collapse_renames(name_status_lines: Iterable[str]) -> dict[str, str]:
+    """``{historical path: final path}`` from ``git log --name-status`` output.
+
+    Expects the ``--diff-filter=R --format=`` output of an oldest-first log, whose
+    rename lines read ``R<similarity>\\t<old>\\t<new>``. Anything else is ignored.
+
+    Chains are collapsed, so ``A -> B -> C`` yields both ``A -> C`` and ``B -> C``
+    and any historical name resolves in one lookup. A chain stops as soon as it
+    revisits a name, so a cycle terminates.
+    """
+    direct: dict[str, str] = {}
+    for line in name_status_lines:
+        parts = line.split("\t")
+        if len(parts) != 3 or not parts[0].startswith("R"):
+            continue
+        _similarity, old, new = parts
+        direct[old] = new
+
+    collapsed: dict[str, str] = {}
+    for start in direct:
+        if start in collapsed:
+            continue
+        chain: list[str] = []
+        current = start
+        while current in direct and current not in chain:
+            chain.append(current)
+            current = direct[current]
+        for path in chain:
+            collapsed[path] = current
+    return collapsed
+
+
+def _credentials(env: Mapping[str, str]) -> tuple[str, str] | None:
+    """The CI Gerrit credentials in ``env``, or ``None`` to let cwz resolve them.
+
+    Takes the environment rather than reading it, so a test settles which half
+    of the pair is the username.
+    """
+    user, token = env.get(_GERRIT_USER_VAR), env.get(_GERRIT_TOKEN_VAR)
+    return (user, token) if user and token else None
+
+
+def _rename_log(repo: Path) -> list[str]:
+    """Every rename reachable from HEAD, oldest first, as raw output lines."""
+    proc = subprocess.run(
+        ["git", "log", "--reverse", "--diff-filter=R", "--name-status", "--format=", "HEAD"],
+        cwd=repo,
+        stdout=subprocess.PIPE,
+        text=True,
+        check=True,
+    )
+    return proc.stdout.splitlines()

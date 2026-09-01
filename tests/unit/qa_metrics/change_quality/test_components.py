@@ -3,522 +3,472 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-import json
+import os
 import subprocess
-import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import pytest
 
+from tests.qa_metrics.change_quality import components
 from tests.qa_metrics.change_quality.components import (
-    _MAX_INVALID_PATH_RETRIES,
+    _any_path_missing,
+    _collapse_renames,
+    _credentials,
+    _GERRIT_TOKEN_VAR,
+    _GERRIT_USER_VAR,
+    _head_paths,
+    _owning_components,
+    _paths_to_query,
+    _rename_log,
     lookup_components,
     pick_component,
 )
+from tests.qa_metrics.components import ComponentOwnership, load_ownership
 
 
-def _touch(repo: Path, *paths: str) -> None:
-    for p in paths:
-        (repo / p).parent.mkdir(parents=True, exist_ok=True)
-        (repo / p).write_text("")
+def _touch(root: Path, *relative: str) -> None:
+    for path in relative:
+        (root / path).parent.mkdir(parents=True, exist_ok=True)
+        (root / path).write_text("x = 1\n")
 
 
-def _cmk_component_paths(args: Sequence[str]) -> list[str]:
-    """PATH positionals handed to ``cmk-components``, independent of the
-    invocation prefix (``python -m cwz.cmk_components`` and any ``--gerrit-*``
-    credential flags that precede the ``component`` subcommand)."""
-    # After "component" come "--mode" and "json", then the positional paths.
-    return list(args[args.index("component") + 3 :])
-
-
-def test_lookup_components_parses_json_output(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    _touch(
-        tmp_path,
-        "cmk/gui/main.py",
-        "cmk/base/config.py",
-        "cmk/plugins/aws/agent_based/check.py",
-    )
-    captured_args: list[str] = []
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        captured_args[:] = list(args)
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=0,
-            stdout=json.dumps(
-                {
-                    "cmk/gui/main.py": "ui_framework",
-                    "cmk/base/config.py": None,
-                    "cmk/plugins/aws/agent_based/check.py": "plugins_aws",
-                }
-            ),
-            stderr="",
-        )
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-
-    result = lookup_components(
-        ["cmk/gui/main.py", "cmk/base/config.py", "cmk/plugins/aws/agent_based/check.py"],
-        tmp_path,
+def _git(repo: Path, *args: str) -> None:
+    """Run git in ``repo`` with an identity, since the environment carries none."""
+    subprocess.run(
+        ["git", "-C", str(repo), *args],
+        check=True,
+        capture_output=True,
+        env={
+            "PATH": os.environ.get("PATH", ""),
+            "GIT_AUTHOR_NAME": "Test",
+            "GIT_AUTHOR_EMAIL": "test@example.com",
+            "GIT_COMMITTER_NAME": "Test",
+            "GIT_COMMITTER_EMAIL": "test@example.com",
+        },
     )
 
-    assert result == {
-        "cmk/gui/main.py": "ui_framework",
-        "cmk/base/config.py": None,
-        "cmk/plugins/aws/agent_based/check.py": "plugins_aws",
-    }
-    # Invoked as a module of the hermetic interpreter (no $PATH console script),
-    # with no credential flags when the QA_GERRIT_* env vars are unset.
-    assert captured_args[0] == sys.executable
-    assert captured_args[1:6] == ["-m", "cwz.cmk_components", "component", "--mode", "json"]
 
+def _repo_with_rename(root: Path) -> None:
+    """A repository whose history renames ``cmk/old.py`` to ``cmk/new.py``.
 
-def test_lookup_components_skips_paths_not_on_disk(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """Paths that no longer exist on HEAD and aren't renamed to a path that
-    does must be skipped before invocation, otherwise cmk-components 404s
-    and aborts the whole batch."""
-    _touch(tmp_path, "cmk/gui/main.py")  # only this one exists
-    captured_args: list[str] = []
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        if args[0] == "git":
-            return subprocess.CompletedProcess(args=list(args), returncode=0, stdout="", stderr="")
-        captured_args[:] = list(args)
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=0,
-            stdout=json.dumps({"cmk/gui/main.py": "ui_framework"}),
-            stderr="",
-        )
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-
-    result = lookup_components(["cmk/gui/main.py", ".werks/19703.md"], tmp_path)
-    assert result == {"cmk/gui/main.py": "ui_framework", ".werks/19703.md": None}
-    # Only the existing path was passed to cmk-components.
-    assert ".werks/19703.md" not in captured_args
-    assert "cmk/gui/main.py" in captured_args
-
-
-def test_lookup_components_skips_non_utf8_files(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """Files that fail UTF-8 decode crash cmk-components -- skip them.
-
-    Covers two real-world cases we've seen in master:
-      * binary files (PDF, PNG) -- raw bytes that aren't UTF-8
-      * text-in-non-UTF-8 (latin-1 PowerShell, EBCDIC z/OS agents)
+    Only the rename matters, so the file keeps its content across it -- that is
+    what makes `git log --diff-filter=R` report it as R100 rather than a
+    delete/add pair.
     """
-    (tmp_path / "cmk").mkdir()
-    (tmp_path / "cmk" / "ok.py").write_text("def f(): pass\n", encoding="utf-8")
-    (tmp_path / "cmk" / "blob.png").write_bytes(b"\x89PNG\r\n\x00\x00\x00\x0d")
-    # latin-1 file: 0xb4 (acute accent) is an invalid UTF-8 start byte
-    (tmp_path / "cmk" / "script.ps1").write_bytes(b"echo `\xb4hello`\n")
-    captured_args: list[str] = []
+    _git(root, "init", "--quiet")
+    (root / "cmk").mkdir()
+    (root / "cmk/old.py").write_text("x = 1\n")
+    _git(root, "add", "-A")
+    _git(root, "commit", "--quiet", "-m", "add")
+    _git(root, "mv", "cmk/old.py", "cmk/new.py")
+    _git(root, "commit", "--quiet", "-a", "-m", "rename")
 
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        captured_args[:] = list(args)
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=0,
-            stdout=json.dumps({"cmk/ok.py": "ui_framework"}),
-            stderr="",
-        )
 
-    monkeypatch.setattr(subprocess, "run", fake_run)
+# --- _collapse_renames: the parsing, exercised on the raw output --------------
 
-    result = lookup_components(["cmk/ok.py", "cmk/blob.png", "cmk/script.ps1"], tmp_path)
-    assert result == {
-        "cmk/ok.py": "ui_framework",
-        "cmk/blob.png": None,
-        "cmk/script.ps1": None,
+
+def test_collapse_renames_of_no_output_is_empty() -> None:
+    assert _collapse_renames([]) == {}
+
+
+def test_collapse_renames_reads_one_rename() -> None:
+    assert _collapse_renames(["R100\tcmk/old.py\tcmk/new.py"]) == {"cmk/old.py": "cmk/new.py"}
+
+
+def test_collapse_renames_keeps_independent_renames_apart() -> None:
+    assert _collapse_renames(["R100\ta.py\tb.py", "R090\tc.py\td.py"]) == {
+        "a.py": "b.py",
+        "c.py": "d.py",
     }
-    assert "cmk/blob.png" not in captured_args
-    assert "cmk/script.ps1" not in captured_args
 
 
-def test_lookup_components_aborts_on_nonzero_rc(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """A failing cmk-components invocation must raise, not silently NULL-fill."""
-    _touch(tmp_path, "cmk/ok.py")
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=1,
-            stdout="",
-            stderr="UnicodeDecodeError: invalid byte\n",
-        )
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-    with pytest.raises(RuntimeError, match=r"cmk-components exited rc=1"):
-        lookup_components(["cmk/ok.py"], tmp_path)
+def test_collapse_renames_follows_a_chain_to_its_end() -> None:
+    """A -> B -> C: every historical name must resolve to C in one lookup."""
+    assert _collapse_renames(["R100\ta.py\tb.py", "R100\tb.py\tc.py"]) == {
+        "a.py": "c.py",
+        "b.py": "c.py",
+    }
 
 
-def test_lookup_components_raises_on_non_json_output(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """rc=0 with malformed JSON (e.g. an upstream regression of the output
-    contract) must fail loudly, not be parsed as 'no answers'."""
-    _touch(tmp_path, "cmk/ok.py")
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=0,
-            stdout="cmk/ok.py: ui_framework\n",  # legacy --mode script output
-            stderr="",
-        )
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-    with pytest.raises(RuntimeError, match=r"non-JSON output"):
-        lookup_components(["cmk/ok.py"], tmp_path)
+def test_collapse_renames_follows_a_long_chain() -> None:
+    log = ["R100\ta.py\tb.py", "R100\tb.py\tc.py", "R100\tc.py\td.py"]
+    assert _collapse_renames(log) == {"a.py": "d.py", "b.py": "d.py", "c.py": "d.py"}
 
 
-def test_lookup_components_raises_on_partial_output(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """cmk-components may exit 0 yet silently omit some queried paths from
-    its output (e.g. an internal exception swallowed mid-batch). The whole
-    batch must fail loudly -- otherwise the omitted paths land in postgres
-    as invisible NULLs, the same failure mode the non-zero rc check already
-    defends against."""
+def test_collapse_renames_terminates_on_a_cycle() -> None:
+    """A file renamed away and back must not loop the chain walk forever.
+
+    Which name wins is not arbitrary. The log is oldest-first, so the walk enters
+    the cycle at the name renamed away first and comes back round to it -- and
+    that is the name the file carries at HEAD. Entering anywhere else would hand
+    :func:`_head_paths` a name it finds nowhere on disk, so the path would
+    resolve to nothing and its row would lose its component.
+    """
+    assert _collapse_renames(["R100\ta.py\tb.py", "R100\tb.py\ta.py"]) == {
+        "a.py": "a.py",
+        "b.py": "a.py",
+    }
+
+
+def test_collapse_renames_ignores_blank_lines() -> None:
+    assert _collapse_renames(["", "R100\ta.py\tb.py", "  ", ""]) == {"a.py": "b.py"}
+
+
+def test_collapse_renames_ignores_other_statuses() -> None:
+    """Only renames carry an old and a new name; M/A/D lines have one path."""
+    assert _collapse_renames(["M\ta.py", "A\tb.py", "D\tc.py"]) == {}
+
+
+def test_collapse_renames_ignores_a_line_with_too_few_fields() -> None:
+    assert _collapse_renames(["R100\tonly_one_path.py"]) == {}
+
+
+def test_collapse_renames_ignores_a_line_with_too_many_fields() -> None:
+    assert _collapse_renames(["R100\ta.py\tb.py\tc.py"]) == {}
+
+
+def test_collapse_renames_ignores_a_status_that_merely_starts_differently() -> None:
+    assert _collapse_renames(["C100\tcopied_from.py\tcopied_to.py"]) == {}
+
+
+def test_collapse_renames_reads_a_real_rename_log(tmp_path: Path) -> None:
+    """The one test that runs the git command the parsing above assumes.
+
+    Everything else feeds `_collapse_renames` hand-written lines, so a change to
+    the log's flags or format would go unnoticed without a real repository.
+    """
+    _repo_with_rename(tmp_path)
+    assert _collapse_renames(_rename_log(tmp_path)) == {"cmk/old.py": "cmk/new.py"}
+
+
+# --- _any_path_missing: whether the rename log is worth fetching ---------------
+
+
+def test_any_path_missing_is_false_when_every_path_exists(tmp_path: Path) -> None:
+    """Walking every rename in HEAD's history is multi-second work; skip it."""
+    _touch(tmp_path, "cmk/gui/main.py", "cmk/here.py")
+    assert not _any_path_missing(["cmk/gui/main.py", "cmk/here.py"], tmp_path)
+
+
+def test_any_path_missing_is_true_for_a_path_not_on_disk(tmp_path: Path) -> None:
+    _touch(tmp_path, "cmk/here.py")
+    assert _any_path_missing(["cmk/here.py", "cmk/gone.py"], tmp_path)
+
+
+# --- _head_paths: applying a rename map -------------------------------------
+
+
+def test_head_paths_maps_an_existing_path_to_itself(tmp_path: Path) -> None:
+    _touch(tmp_path, "cmk/gui/main.py")
+    assert _head_paths(["cmk/gui/main.py"], tmp_path, {}) == {
+        "cmk/gui/main.py": Path("cmk/gui/main.py")
+    }
+
+
+def test_head_paths_treats_a_directory_as_missing(tmp_path: Path) -> None:
+    """Only a file can be resolved to a component."""
+    (tmp_path / "cmk").mkdir()
+    assert _head_paths(["cmk"], tmp_path, {}) == {"cmk": None}
+
+
+def test_head_paths_follows_a_rename_to_an_existing_file(tmp_path: Path) -> None:
+    """Regression: paths missing from disk used to be dropped outright, so commits
+    older than the last reorganisation classified as no component at all even
+    when the source file had simply moved."""
+    _touch(tmp_path, "cmk/new/subdir/thing.py")
+    rename_map = {"cmk/old/thing.py": "cmk/new/subdir/thing.py"}
+    assert _head_paths(["cmk/old/thing.py"], tmp_path, rename_map) == {
+        "cmk/old/thing.py": Path("cmk/new/subdir/thing.py")
+    }
+
+
+def test_head_paths_yields_none_when_the_rename_target_is_gone(tmp_path: Path) -> None:
+    """A rename whose destination has since been deleted resolves to nothing."""
+    assert _head_paths(["cmk/a.py"], tmp_path, {"cmk/a.py": "cmk/b.py"}) == {"cmk/a.py": None}
+
+
+def test_head_paths_yields_none_for_a_missing_path_with_no_rename(tmp_path: Path) -> None:
+    assert _head_paths(["cmk/gone.py"], tmp_path, {}) == {"cmk/gone.py": None}
+
+
+def test_head_paths_prefers_the_file_on_disk_over_a_rename(tmp_path: Path) -> None:
+    """A path that still exists is its own HEAD name, even if a later rename
+    moved something of the same name elsewhere."""
     _touch(tmp_path, "cmk/a.py", "cmk/b.py")
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        if args[0] == "git":
-            return subprocess.CompletedProcess(args=list(args), returncode=0, stdout="", stderr="")
-        # Drop cmk/b.py silently -- emit only a.py's answer.
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=0,
-            stdout=json.dumps({"cmk/a.py": "ui_framework"}),
-            stderr="",
-        )
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-    with pytest.raises(RuntimeError, match=r"cmk-components returned no line for 1 of 2"):
-        lookup_components(["cmk/a.py", "cmk/b.py"], tmp_path)
+    assert _head_paths(["cmk/a.py"], tmp_path, {"cmk/a.py": "cmk/b.py"}) == {
+        "cmk/a.py": Path("cmk/a.py")
+    }
 
 
-def test_lookup_components_drops_path_absent_on_gerrit_master(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """A path valid on the local disk but gone on gerrit's live master (moved
-    upstream since this checkout) is dropped to None and the batch retried,
-    instead of aborting the whole run. This is the ``--full`` failure mode where
-    the local queryability gate and cmk-components' gerrit-master validation
-    disagree."""
-    _touch(tmp_path, "cmk/ok.py", "cmk/moved.py")
-    calls: list[list[str]] = []
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        calls.append(list(args))
-        positional = list(args[4:])
-        if "cmk/moved.py" in positional:
-            # gerrit master no longer has this path; note the leading slash.
-            return subprocess.CompletedProcess(
-                args=list(args),
-                returncode=1,
-                stdout="",
-                stderr="ERROR: Not a valid path in check_mk @ master: /cmk/moved.py\n",
-            )
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=0,
-            stdout=json.dumps(dict.fromkeys(positional, "ui_framework")),
-            stderr="",
-        )
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-
-    result = lookup_components(["cmk/ok.py", "cmk/moved.py"], tmp_path)
-    assert result == {"cmk/ok.py": "ui_framework", "cmk/moved.py": None}
-    assert len(calls) == 2  # initial call + one retry with the bad path dropped
+def test_head_paths_covers_every_input_path(tmp_path: Path) -> None:
+    _touch(tmp_path, "cmk/here.py")
+    assert _head_paths(["cmk/here.py", "cmk/gone.py"], tmp_path, {}) == {
+        "cmk/here.py": Path("cmk/here.py"),
+        "cmk/gone.py": None,
+    }
 
 
-def test_lookup_components_raises_after_retry_budget(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """A checkout so far behind gerrit that a *new* path is rejected every round
-    must fail loudly once the retry budget is spent -- never push partial data.
+def test_head_paths_resolves_a_file_that_is_not_utf_8(tmp_path: Path) -> None:
+    """No content is read, so a binary path votes instead of abstaining.
 
-    Derives its expectations from ``_MAX_INVALID_PATH_RETRIES`` so it survives a
-    change to that constant."""
-    budget = _MAX_INVALID_PATH_RETRIES
-    # One fresh rejection per call: initial call + `budget` retries = budget + 1
-    # calls, on the last of which the budget is exhausted and we raise.
-    reject_sequence = [f"cmk/p{i}.py" for i in range(budget + 1)]
-    _touch(tmp_path, *reject_sequence)
-    state = {"call": 0}
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        bad = reject_sequence[state["call"]]
-        state["call"] += 1
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=1,
-            stdout="",
-            stderr=f"ERROR: Not a valid path in check_mk @ master: /{bad}\n",
-        )
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-
-    with pytest.raises(RuntimeError, match=rf"after {budget} retries"):
-        lookup_components(list(reject_sequence), tmp_path)
-    assert state["call"] == budget + 1  # initial + `budget` retries, then raise
+    The pre-image filtered these out; the commit that dropped the filter says so,
+    and this is what would notice a content gate creeping back in.
+    """
+    (tmp_path / "agents").mkdir()
+    (tmp_path / "agents/blob.py").write_bytes(b"\xff\xfe not utf-8\n")
+    assert _head_paths(["agents/blob.py"], tmp_path, {}) == {
+        "agents/blob.py": Path("agents/blob.py")
+    }
 
 
-def test_lookup_components_nonzero_rc_without_invalid_path_is_not_retried(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """A non-zero exit that isn't a 'Not a valid path' rejection is a genuine
-    failure: raise immediately, do not burn retries."""
-    _touch(tmp_path, "cmk/ok.py")
-    calls: list[list[str]] = []
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        calls.append(list(args))
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=1,
-            stdout="",
-            stderr="Traceback: some internal cmk-components crash\n",
-        )
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-
-    with pytest.raises(RuntimeError, match=r"cmk-components exited rc=1"):
-        lookup_components(["cmk/ok.py"], tmp_path)
-    assert len(calls) == 1  # failed fast, no retry
+# --- _paths_to_query: what the ownership fetch is asked about -----------------
 
 
-def test_lookup_components_empty_input(tmp_path: Path) -> None:
+def test_paths_to_query_asks_about_the_head_name() -> None:
+    """A renamed path is resolved under the name it carries at HEAD.
+
+    Ownership comes from HEAD's OWNERS files, which know nothing of the old name.
+    """
+    assert _paths_to_query({"cmk/old.py": Path("cmk/new.py")}) == [Path("cmk/new.py")]
+
+
+def test_paths_to_query_asks_about_a_shared_head_name_once() -> None:
+    """Two inputs resolving to one file are one query, in a stable order."""
+    assert _paths_to_query({"cmk/b.py": Path("cmk/b.py"), "cmk/old_b.py": Path("cmk/b.py")}) == [
+        Path("cmk/b.py")
+    ]
+
+
+def test_paths_to_query_is_sorted() -> None:
+    assert _paths_to_query({"cmk/b.py": Path("cmk/b.py"), "cmk/a.py": Path("cmk/a.py")}) == [
+        Path("cmk/a.py"),
+        Path("cmk/b.py"),
+    ]
+
+
+def test_paths_to_query_skips_a_path_without_a_head_name() -> None:
+    """An unresolvable path is not worth a lookup."""
+    assert _paths_to_query({"cmk/here.py": Path("cmk/here.py"), "cmk/deleted.py": None}) == [
+        Path("cmk/here.py")
+    ]
+
+
+def test_paths_to_query_is_empty_when_nothing_has_a_head_name() -> None:
+    assert _paths_to_query({"cmk/deleted.py": None}) == []
+
+
+# --- _owning_components: attributing the fetched ownership -------------------
+
+
+def _ownership(owners_by_path: Mapping[str, Sequence[str]]) -> ComponentOwnership:
+    """Ownership as the fetch returns it, without fetching."""
+    return ComponentOwnership(
+        owners_by_path={Path(path): owners for path, owners in owners_by_path.items()},
+        component_ids=frozenset(
+            component for owners in owners_by_path.values() for component in owners
+        ),
+    )
+
+
+def test_owning_components_maps_a_path_to_its_owner() -> None:
+    assert _owning_components(
+        {"cmk/bi/trees.py": Path("cmk/bi/trees.py")},
+        _ownership({"cmk/bi/trees.py": ("business_intelligence",)}),
+    ) == {"cmk/bi/trees.py": "business_intelligence"}
+
+
+def test_owning_components_joins_the_owners_of_a_co_owned_path() -> None:
+    """The spelling the rows in cmk_change_tested already use."""
+    assert _owning_components(
+        {"cmk/shared.py": Path("cmk/shared.py")},
+        _ownership({"cmk/shared.py": ("business_intelligence", "ui_setup")}),
+    ) == {"cmk/shared.py": "business_intelligence, ui_setup"}
+
+
+def test_owning_components_keys_the_answer_by_the_input_path() -> None:
+    """Ownership comes back under the HEAD name; the caller asked about the old one."""
+    assert _owning_components(
+        {"cmk/old.py": Path("cmk/new.py")},
+        _ownership({"cmk/new.py": ("business_intelligence",)}),
+    ) == {"cmk/old.py": "business_intelligence"}
+
+
+def test_owning_components_maps_an_unowned_path_to_none() -> None:
+    assert _owning_components(
+        {"cmk/orphan.py": Path("cmk/orphan.py"), "cmk/bi/trees.py": Path("cmk/bi/trees.py")},
+        _ownership({"cmk/orphan.py": (), "cmk/bi/trees.py": ("business_intelligence",)}),
+    ) == {"cmk/orphan.py": None, "cmk/bi/trees.py": "business_intelligence"}
+
+
+def test_owning_components_maps_a_path_without_a_head_name_to_none() -> None:
+    """It was never asked about, so the ownership data has no entry for it."""
+    assert _owning_components(
+        {"cmk/deleted.py": None, "cmk/bi/trees.py": Path("cmk/bi/trees.py")},
+        _ownership({"cmk/bi/trees.py": ("business_intelligence",)}),
+    ) == {"cmk/deleted.py": None, "cmk/bi/trees.py": "business_intelligence"}
+
+
+def test_owning_components_accepts_a_batch_in_which_nothing_is_owned() -> None:
+    """A batch touching only unowned paths is a legitimate result.
+
+    It must resolve to None rather than abort the run, or an incremental run
+    whose commits happen to miss every OWNERS rule would fail instead of pushing
+    the honest answer.
+    """
+    assert _owning_components(
+        {"doc/notes.py": Path("doc/notes.py"), "doc/other.py": Path("doc/other.py")},
+        _ownership({"doc/notes.py": (), "doc/other.py": ()}),
+    ) == {"doc/notes.py": None, "doc/other.py": None}
+
+
+# --- lookup_components: the composition ---------------------------------------
+
+
+def test_lookup_components_of_no_path_is_empty(tmp_path: Path) -> None:
     assert lookup_components([], tmp_path) == {}
 
 
-def test_lookup_components_batches_to_avoid_arg_max(
+def test_lookup_components_maps_every_path_to_none_when_none_resolves_at_head(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Inputs above ``batch_size`` must split across multiple subprocess calls.
-
-    Real-world trigger: a single commit that touches thousands of files
-    (vendored dep update, mass refactor) would otherwise overflow OS argv
-    limits and crash the whole metric.
-    """
-    paths = [f"cmk/pkg{i}/main.py" for i in range(5)]
-    _touch(tmp_path, *paths)
-    calls: list[list[str]] = []
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        calls.append(list(args))
-        positional = _cmk_component_paths(args)
-        stdout = json.dumps(dict.fromkeys(positional, "stub"))
-        return subprocess.CompletedProcess(args=list(args), returncode=0, stdout=stdout, stderr="")
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-
-    result = lookup_components(paths, tmp_path, batch_size=2)
-
-    assert len(calls) == 3, calls  # 5 paths / batch=2 -> 2 + 2 + 1
-    assert {len(_cmk_component_paths(c)) for c in calls} == {1, 2}
-    assert result == dict.fromkeys(paths, "stub")
-
-
-def test_lookup_components_follows_renames(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """A historical path renamed to a name still on HEAD must classify via
-    its HEAD name instead of falling back to None.
-
-    Regression: ``lookup_components`` used to silently drop any path missing
-    from disk on HEAD, so commits older than the last reorganisation of the
-    codebase classified as ``source_component=None`` even when the source
-    file had simply moved.
-    """
-    _touch(tmp_path, "cmk/new/subdir/thing.py")
-    captured: dict[str, list[str]] = {}
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        if args[0] == "git":
-            return subprocess.CompletedProcess(
-                args=list(args),
-                returncode=0,
-                stdout="R100\tcmk/old/thing.py\tcmk/new/subdir/thing.py\n",
-                stderr="",
-            )
-        captured["cmk_args"] = list(args)
-        positional = _cmk_component_paths(args)
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=0,
-            stdout=json.dumps(dict.fromkeys(positional, "ui_framework")),
-            stderr="",
-        )
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-
-    result = lookup_components(["cmk/old/thing.py"], tmp_path)
-    assert result == {"cmk/old/thing.py": "ui_framework"}
-    # cmk-components is queried with the HEAD name, never the historical name.
-    assert "cmk/new/subdir/thing.py" in captured["cmk_args"]
-    assert "cmk/old/thing.py" not in captured["cmk_args"]
-
-
-def test_lookup_components_collapses_rename_chains(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """Multi-step renames A->B->C must resolve both A and B to C's component.
-    The rename map walks chains forward to their HEAD endpoint."""
-    _touch(tmp_path, "cmk/final.py")
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        if args[0] == "git":
-            return subprocess.CompletedProcess(
-                args=list(args),
-                returncode=0,
-                stdout=("R100\tcmk/a.py\tcmk/b.py\nR100\tcmk/b.py\tcmk/final.py\n"),
-                stderr="",
-            )
-        positional = _cmk_component_paths(args)
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=0,
-            stdout=json.dumps(dict.fromkeys(positional, "ui_framework")),
-            stderr="",
-        )
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-
-    # Both the original (A) and intermediate (B) names should resolve.
-    result = lookup_components(["cmk/a.py", "cmk/b.py"], tmp_path)
-    assert result == {"cmk/a.py": "ui_framework", "cmk/b.py": "ui_framework"}
-
-
-def test_lookup_components_returns_none_for_deleted_without_rename(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """A stale path with no rename to a still-existing HEAD path must
-    classify as None. The rename map can't recover deletions."""
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        if args[0] == "git":
-            return subprocess.CompletedProcess(args=list(args), returncode=0, stdout="", stderr="")
-        raise AssertionError(f"unexpected cmk-components call: {args}")
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-
-    result = lookup_components(["cmk/gone_forever.py"], tmp_path)
-    assert result == {"cmk/gone_forever.py": None}
-
-
-def test_lookup_components_skips_rename_lookup_when_all_paths_on_head(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """If every input path exists on HEAD, the rename map is wasted work --
-    skip the ``git log`` invocation entirely. Walking 12 years of HEAD
-    history just to confirm 'no stale paths' would dominate per-run cost
-    in the incremental path."""
-    _touch(tmp_path, "cmk/gui/main.py", "cmk/base/config.py")
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        if args[0] == "git":
-            raise AssertionError(f"git invoked but all paths are on HEAD: {args}")
-        positional = _cmk_component_paths(args)
-        return subprocess.CompletedProcess(
-            args=list(args),
-            returncode=0,
-            stdout=json.dumps(dict.fromkeys(positional, "ui_framework")),
-            stderr="",
-        )
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-
-    result = lookup_components(["cmk/gui/main.py", "cmk/base/config.py"], tmp_path)
-    assert result == {
-        "cmk/gui/main.py": "ui_framework",
-        "cmk/base/config.py": "ui_framework",
+    _repo_with_rename(tmp_path)
+    monkeypatch.setattr(
+        components,
+        load_ownership.__name__,
+        lambda *_, **__: pytest.fail("ownership fetched although nothing resolves at HEAD"),
+    )
+    assert lookup_components(["cmk/gone.py", "cmk/also_gone.py"], tmp_path) == {
+        "cmk/gone.py": None,
+        "cmk/also_gone.py": None,
     }
 
 
-def test_lookup_components_classifies_utf8_once_per_path(
+def test_lookup_components_asks_ownership_about_head_names_with_credentials(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """``_is_utf8_decodable`` streams the entire file (up to 64 KiB per read).
-    The old code ran it twice per HEAD path -- once to build the queryable
-    set, once to count ``skipped_non_utf8`` -- doubling I/O on every ``--full``
-    run for no benefit. Each unique HEAD path should be classified once.
-    """
-    from collections import Counter
+    """The HEAD name reaches the fetch, the answer comes back under the input name."""
+    _repo_with_rename(tmp_path)
+    monkeypatch.setenv(_GERRIT_USER_VAR, "user")
+    monkeypatch.setenv(_GERRIT_TOKEN_VAR, "token")
+    asked: list[tuple[Sequence[Path], object]] = []
 
-    from tests.qa_metrics.change_quality import components as comp_module
+    def fake_load_ownership(paths: Sequence[Path], **kwargs: object) -> ComponentOwnership:
+        asked.append((paths, kwargs.get("credentials")))
+        return _ownership({"cmk/new.py": ("business_intelligence",)})
 
-    _touch(tmp_path, "cmk/a.py", "cmk/b.py", "cmk/c.py")
+    monkeypatch.setattr(components, load_ownership.__name__, fake_load_ownership)
 
-    calls: Counter[Path] = Counter()
-    real = comp_module._is_utf8_decodable  # noqa: SLF001
-
-    def tracking(path: Path) -> bool:
-        calls[path] += 1
-        return real(path)
-
-    monkeypatch.setattr(comp_module, "_is_utf8_decodable", tracking)
-
-    def fake_run(args: Sequence[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
-        positional = _cmk_component_paths(args)
-        stdout = json.dumps(dict.fromkeys(positional, "stub"))
-        return subprocess.CompletedProcess(args=list(args), returncode=0, stdout=stdout, stderr="")
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-    lookup_components(["cmk/a.py", "cmk/b.py", "cmk/c.py"], tmp_path)
-
-    assert set(calls) == {
-        tmp_path / "cmk/a.py",
-        tmp_path / "cmk/b.py",
-        tmp_path / "cmk/c.py",
-    }
-    assert all(n == 1 for n in calls.values()), f"called more than once: {dict(calls)}"
+    assert lookup_components(["cmk/old.py"], tmp_path) == {"cmk/old.py": "business_intelligence"}
+    assert asked == [([Path("cmk/new.py")], ("user", "token"))]
 
 
-def test_pick_component_picks_majority() -> None:
-    files = ["cmk/gui/a.py", "cmk/gui/b.py", "cmk/base/c.py"]
-    component_map = {
-        "cmk/gui/a.py": "ui_framework",
-        "cmk/gui/b.py": "ui_framework",
-        "cmk/base/c.py": "automation_engine",
-    }
-    assert pick_component(files, component_map) == "ui_framework"
+def test_lookup_components_skips_the_rename_log_when_every_path_is_at_head(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Walking the history is the expensive part of an incremental run."""
+    _touch(tmp_path, "cmk/a.py")
+    monkeypatch.setattr(
+        components,
+        _rename_log.__name__,
+        lambda _repo: pytest.fail("rename log read although nothing is missing"),
+    )
+    monkeypatch.setattr(
+        components,
+        load_ownership.__name__,
+        lambda _paths, **_: _ownership({"cmk/a.py": ("checkmk",)}),
+    )
+
+    assert lookup_components(["cmk/a.py"], tmp_path) == {"cmk/a.py": "checkmk"}
+
+
+# --- pick_component ---------------------------------------------------------
+
+
+def test_pick_component_picks_the_majority() -> None:
+    assert (
+        pick_component(
+            ["cmk/gui/a.py", "cmk/gui/b.py", "cmk/base/c.py"],
+            {
+                "cmk/gui/a.py": "ui_framework",
+                "cmk/gui/b.py": "ui_framework",
+                "cmk/base/c.py": "automation_engine",
+            },
+        )
+        == "ui_framework"
+    )
 
 
 def test_pick_component_ignores_test_paths() -> None:
-    files = ["tests/unit/test_x.py", "tests/unit/test_y.py", "cmk/base/c.py"]
-    component_map = {
-        "tests/unit/test_x.py": "ui_framework",
-        "tests/unit/test_y.py": "ui_framework",
-        "cmk/base/c.py": "automation_engine",
-    }
-    assert pick_component(files, component_map) == "automation_engine"
+    assert (
+        pick_component(
+            ["tests/unit/test_x.py", "tests/unit/test_y.py", "cmk/base/c.py"],
+            {
+                "tests/unit/test_x.py": "ui_framework",
+                "tests/unit/test_y.py": "ui_framework",
+                "cmk/base/c.py": "automation_engine",
+            },
+        )
+        == "automation_engine"
+    )
 
 
-def test_pick_component_returns_none_when_all_paths_unmapped() -> None:
-    files = ["cmk/gui/main.py", "cmk/base/config.py"]
-    component_map: dict[str, str | None] = {
-        "cmk/gui/main.py": None,
-        "cmk/base/config.py": None,
-    }
-    assert pick_component(files, component_map) is None
+def test_pick_component_returns_none_when_no_path_resolves() -> None:
+    assert (
+        pick_component(
+            ["cmk/gui/main.py", "cmk/base/config.py"],
+            {"cmk/gui/main.py": None, "cmk/base/config.py": None},
+        )
+        is None
+    )
 
 
-def test_pick_component_tie_broken_alphabetically() -> None:
-    files = ["cmk/gui/main.py", "cmk/base/config.py"]
-    component_map = {
-        "cmk/gui/main.py": "ui_framework",
-        "cmk/base/config.py": "automation_engine",
-    }
-    # 1 vs 1 -> alphabetically smallest wins
-    assert pick_component(files, component_map) == "automation_engine"
+def test_pick_component_returns_none_for_paths_absent_from_the_map() -> None:
+    assert pick_component(["cmk/gui/main.py"], {}) is None
+
+
+def test_pick_component_breaks_ties_alphabetically() -> None:
+    assert (
+        pick_component(
+            ["cmk/gui/main.py", "cmk/base/config.py"],
+            {"cmk/gui/main.py": "ui_framework", "cmk/base/config.py": "automation_engine"},
+        )
+        == "automation_engine"
+    )
+
+
+def test_pick_component_counts_a_co_owned_path_as_one_value() -> None:
+    """The joined spelling is a value of its own, not a vote for each owner.
+
+    Two paths owned by ``automation_engine`` alone would otherwise be beaten by
+    nothing; here the single co-owned path stays a single vote and loses.
+    """
+    assert (
+        pick_component(
+            ["cmk/shared.py", "cmk/base/c.py", "cmk/base/d.py"],
+            {
+                "cmk/shared.py": "automation_engine, ui_framework",
+                "cmk/base/c.py": "automation_engine",
+                "cmk/base/d.py": "automation_engine",
+            },
+        )
+        == "automation_engine"
+    )
+
+
+def test_credentials_returns_the_user_before_the_token() -> None:
+    """The pair becomes (username, password); swapping it 401s every CI run."""
+    assert _credentials({_GERRIT_USER_VAR: "ci-user", _GERRIT_TOKEN_VAR: "secret"}) == (
+        "ci-user",
+        "secret",
+    )
+
+
+def test_credentials_of_a_half_configured_environment_are_none() -> None:
+    """Half a pair cannot authenticate, so let cwz try its own resolution."""
+    assert _credentials({_GERRIT_USER_VAR: "ci-user"}) is None
+    assert _credentials({_GERRIT_TOKEN_VAR: "secret"}) is None
+
+
+def test_credentials_of_an_unset_environment_are_none() -> None:
+    assert _credentials({}) is None

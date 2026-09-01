@@ -10,7 +10,7 @@ Intended as a cheap daily cron on a *full* clone. It answers one question:
 ``cmk_change_tested`` for this branch?" -- i.e. did the incremental nightly (or
 a too-shallow CI checkout) silently fall behind?
 
-Unlike ``push.py`` this does **no** component / gerrit / cmk-components work: it
+Unlike ``push.py`` this does **no** component / Gerrit ownership work: it
 only compares the *set of werk_ids* the pusher would derive against the set
 already stored. That keeps it fast and dependency-light (one git walk + one DB
 query), and -- because it reuses ``walk_werk_adds`` and the same ``.werks`` +

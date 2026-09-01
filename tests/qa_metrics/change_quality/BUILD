@@ -19,8 +19,8 @@ py_library(
     data = ["schema.sql"],
     imports = ["../../.."],
     deps = [
+        "//tests/qa_metrics/components",
         "//tests/qa_metrics/db",
-        requirement("cmk-werk-zeug"),
     ],
 )
 
@@ -32,6 +32,7 @@ py_binary(
     deps = [
         ":change_quality",
         "//packages/cmk-werks:tool",
+        "//tests/qa_metrics/components",
         "//tests/qa_metrics/db",
     ],
 )

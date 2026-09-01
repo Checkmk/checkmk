@@ -27,15 +27,17 @@ py_cmk_test(
     # importlib import mode: yields proper module-name nodeids in JUnit XML
     # instead of bazel-out runfiles paths (the no-sandbox tag below makes
     # pytest's default `prepend` mode anchor on the runfiles tree).
-    # test_walk.py shells out to git; depend on the host git binary by
-    # opting out of the bazel sandbox (same pattern as tests/code_quality/werks).
     imports = ["../../../.."],
+    # test_walk.py and test_components.py shell out to git against fixture
+    # repositories; depend on the host git binary by opting out of the bazel
+    # sandbox (same pattern as tests/code_quality/werks).
     tags = ["no-sandbox"],
     use_project_pytest_config = True,
     deps = [
         "//packages/cmk-werks:tool",
         "//tests/qa_metrics/change_quality",
         "//tests/qa_metrics/change_quality:check_gaps_lib",
+        "//tests/qa_metrics/components",
         "//tests/unit/qa_metrics",
         requirement("psycopg"),
     ],

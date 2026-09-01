@@ -57,5 +57,5 @@ bazel test //tests/unit/qa_metrics/test_coverage:tests              # code-cover
 ```
 
 The change-quality test target opts out of the bazel sandbox (`tags =
-["no-sandbox"]`) because `test_walk.py` shells out to the host `git` binary
-against a fixture repo built in `tmp_path`.
+["no-sandbox"]`) because `test_walk.py` and `test_components.py` shell out to
+the host `git` binary against fixture repos built in `tmp_path`.

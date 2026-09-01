@@ -40,7 +40,11 @@ from cmk.graphing_engine import (
     Unit,
     VerticalRangeKind,
 )
-from cmk.graphing_engine._evaluate import _evaluate_graph, _resolve_series_title, EvaluatedRule
+from cmk.graphing_engine._graph_evaluate import (
+    _evaluate_graph,
+    _resolve_series_title,
+    EvaluatedRule,
+)
 
 from ._fixtures import _data, _fetched, _metric, _time_series, _TR
 

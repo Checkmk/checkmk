@@ -10,54 +10,13 @@ from typing import assert_never, Protocol
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
-from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 
-from ._api_plugins import (
-    ApiQuantity,
-    ApiScalar,
-    is_scalar,
-    metric_names_in_quantity,
-    operands_of,
-)
-from ._display import (
-    FALLBACK_ATTRIBUTES,
-    metric_display_attributes,
-    parse_color,
-    parse_unit,
-)
-from ._graph import Bound, Curve, Graph, Line, MinimalRange, Rule, Stack
+from ._api_plugins import ApiQuantity, is_scalar, metric_names_in_quantity
+from ._graph import Graph, Line, MinimalRange, Rule, Stack
 from ._naming import Service
-from ._quantities import (
-    Constant,
-    Difference,
-    Fraction,
-    Product,
-    rrd_metric_of,
-    RRDMetric,
-    ScalarKind,
-    ScalarOf,
-    Sum,
-)
-from ._quantity import QuantityProtocol
-from ._units import CurveAttributes
-
-
-def scalar_kind_of(scalar: ApiScalar) -> ScalarKind:
-    match scalar:
-        case metrics_v1.WarningOf():
-            return ScalarKind.WARNING
-        case metrics_v1.CriticalOf():
-            return ScalarKind.CRITICAL
-        case metrics_v2_unstable.LowerWarningOf():
-            return ScalarKind.LOWER_WARNING
-        case metrics_v2_unstable.LowerCriticalOf():
-            return ScalarKind.LOWER_CRITICAL
-        case metrics_v1.MinimumOf():
-            return ScalarKind.MINIMUM
-        case metrics_v1.MaximumOf():
-            return ScalarKind.MAXIMUM
-        case _:
-            assert_never(scalar)
+from ._quantities import rrd_metric_of
+from ._quantity import Bound, Curve, QuantityProtocol
+from ._quantity_from_api import build_curve, parse_quantity, QuantityContext
 
 
 class QuantityBuilderProtocol(Protocol):
@@ -80,33 +39,21 @@ def drawn_quantity(
 
 
 @dataclass(frozen=True)
-class _ObjectContext:
-    """One of the objects a graph was matched on, to build what it draws for that object."""
-
-    service: Service
-    localizer: Callable[[str], str]
-    registered_metrics: Mapping[str, metrics_v1.Metric]
-
-    def metric(self, metric_name: str) -> RRDMetric:
-        return rrd_metric_of(self.service, metric_name)
-
-
-@dataclass(frozen=True)
 class _ParseContext:
     services: Sequence[Service]
     quantity_builder: QuantityBuilderProtocol
     localizer: Callable[[str], str]
     registered_metrics: Mapping[str, metrics_v1.Metric]
 
-    def _of(self, service: Service) -> _ObjectContext:
-        return _ObjectContext(service, self.localizer, self.registered_metrics)
+    def _of(self, service: Service) -> QuantityContext:
+        return QuantityContext(service, self.localizer, self.registered_metrics)
 
-    def single_object(self) -> _ObjectContext | None:
+    def single_object(self) -> QuantityContext | None:
         # A rule names one object's thresholds; over several matched ones there is none to name them
         # against, so no rule is built.
         return self._of(self.services[0]) if len(self.services) == 1 else None
 
-    def object_for(self, bound: ApiQuantity) -> _ObjectContext | None:
+    def object_for(self, bound: ApiQuantity) -> QuantityContext | None:
         # A bound naming a metric is read from one object; over several matched ones there is none, so
         # that end is left to auto-scale. A bound of constants alone is read without one.
         if any(metric_names_in_quantity(bound)):
@@ -117,105 +64,15 @@ class _ParseContext:
         # Built once per matched object and combined, so an operation only ever takes that object's
         # operands - never a quantity spanning the objects, which cannot be an operand.
         return self.quantity_builder(
-            [_parse_quantity(quantity, self._of(service)) for service in self.services]
+            [parse_quantity(quantity, self._of(service)) for service in self.services]
         )
-
-
-def _curve_display(quantity: ApiQuantity, context: _ObjectContext) -> CurveAttributes:
-    match quantity:
-        case str():
-            return metric_display_attributes(
-                quantity, context.localizer, context.registered_metrics
-            )
-        case metrics_v1.Constant():
-            return CurveAttributes(
-                title=quantity.title.localize(context.localizer),
-                unit=parse_unit(quantity.unit),
-                color=parse_color(quantity.color),
-            )
-        case (
-            metrics_v2_unstable.LowerWarningOf()
-            | metrics_v2_unstable.LowerCriticalOf()
-            | metrics_v1.WarningOf()
-            | metrics_v1.CriticalOf()
-        ):
-            return _curve_display(quantity.metric_name, context)
-        case metrics_v1.MinimumOf() | metrics_v1.MaximumOf():
-            attributes = _curve_display(quantity.metric_name, context)
-            return CurveAttributes(
-                title=attributes.title, unit=attributes.unit, color=parse_color(quantity.color)
-            )
-        case metrics_v1.Sum() | metrics_v1.Difference():
-            # A sum and a difference are in the unit of what they add up or take apart, so the API
-            # does not spell one out: it is the first operand's.
-            return CurveAttributes(
-                title=quantity.title.localize(context.localizer),
-                unit=_curve_display(operands_of(quantity)[0], context).unit,
-                color=parse_color(quantity.color),
-            )
-        case metrics_v1.Product() | metrics_v1.Fraction():
-            return CurveAttributes(
-                title=quantity.title.localize(context.localizer),
-                unit=parse_unit(quantity.unit),
-                color=parse_color(quantity.color),
-            )
-        case _:
-            assert_never(quantity)
-
-
-def _parse_quantity(quantity: ApiQuantity, context: _ObjectContext) -> QuantityProtocol:
-    match quantity:
-        case str():
-            return context.metric(quantity)
-        case metrics_v1.Constant():
-            return Constant(quantity.value, display=_curve_display(quantity, context))
-        case (
-            metrics_v2_unstable.LowerWarningOf()
-            | metrics_v2_unstable.LowerCriticalOf()
-            | metrics_v1.WarningOf()
-            | metrics_v1.CriticalOf()
-        ):
-            return ScalarOf(
-                metric=context.metric(quantity.metric_name),
-                scalar_kind=scalar_kind_of(quantity),
-            )
-        case metrics_v1.MinimumOf() | metrics_v1.MaximumOf():
-            return ScalarOf(
-                metric=context.metric(quantity.metric_name),
-                scalar_kind=scalar_kind_of(quantity),
-                color=parse_color(quantity.color),
-            )
-        case metrics_v1.Sum():
-            return Sum(
-                summands=[_parse_quantity(s, context) for s in quantity.summands],
-                display=_curve_display(quantity, context),
-            )
-        case metrics_v1.Product():
-            return Product(
-                factors=[_parse_quantity(f, context) for f in quantity.factors],
-                display=_curve_display(quantity, context),
-            )
-        case metrics_v1.Difference():
-            return Difference(
-                minuend=_parse_quantity(quantity.minuend, context),
-                subtrahend=_parse_quantity(quantity.subtrahend, context),
-                display=_curve_display(quantity, context),
-            )
-        case metrics_v1.Fraction():
-            return Fraction(
-                dividend=_parse_quantity(quantity.dividend, context),
-                divisor=_parse_quantity(quantity.divisor, context),
-                display=_curve_display(quantity, context),
-            )
-        case _:
-            assert_never(quantity)
 
 
 def _parse_bound(bound: int | float | ApiQuantity, context: _ParseContext) -> Bound | None:
     if isinstance(bound, int | float):
         return bound
     object_context = context.object_for(bound)
-    return None if object_context is None else _parse_quantity(bound, object_context)
+    return None if object_context is None else parse_quantity(bound, object_context)
 
 
 def _parse_range(
@@ -262,17 +119,6 @@ def _bidirectional_range(
     )
 
 
-def build_curve(
-    quantity: QuantityProtocol,
-    localizer: Callable[[str], str],
-    registered_metrics: Mapping[str, metrics_v1.Metric],
-) -> Curve:
-    return Curve(
-        quantity=quantity,
-        attributes=quantity.attributes(localizer, registered_metrics) or FALLBACK_ATTRIBUTES,
-    )
-
-
 def _parse_lines(
     graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
     context: _ParseContext,
@@ -294,7 +140,7 @@ def _parse_lines(
         ()
         if single_object is None
         else [
-            Rule(curve=_curve(_parse_quantity(q, single_object)), inverse=inverse)
+            Rule(curve=_curve(parse_quantity(q, single_object)), inverse=inverse)
             for q in (*graph.compound_lines, *graph.simple_lines)
             if is_scalar(q)
         ]

@@ -12,8 +12,8 @@ from typing import assert_never
 
 from ._fetch import fetch_evaluation_context, FetchDataProtocol
 from ._fetched import MACRO_SERIES_ID, SeriesAttributes
-from ._graph import Bound, Curve, FixedRange, Graph, MinimalRange, Rule, VerticalRange
-from ._quantity import EvaluationContext, first_value, QuantityProtocol
+from ._graph import FixedRange, Graph, MinimalRange, Rule, VerticalRange
+from ._quantity import Bound, Curve, EvaluationContext, first_value, QuantityProtocol
 from ._timeseries import ConsolidationFunction, TimeRange, TimeSeries
 from ._title import evaluate_title
 from ._units import CurveAttributes

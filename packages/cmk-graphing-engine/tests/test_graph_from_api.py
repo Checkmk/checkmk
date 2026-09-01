@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
@@ -39,8 +37,7 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
-from cmk.graphing_engine._api_plugins import ApiScalar
-from cmk.graphing_engine._from_api import parse_graph_from_api, scalar_kind_of
+from cmk.graphing_engine._graph_from_api import parse_graph_from_api
 
 
 def _id(s: str) -> str:
@@ -115,21 +112,6 @@ def _drule(quantity: QuantityProtocol) -> Rule:
 
 
 # --- parse_graph_from_api -> Graph (display resolved inline) ------------------------------
-
-
-@pytest.mark.parametrize(
-    "scalar, expected",
-    [
-        (metrics_v1.WarningOf("a"), ScalarKind.WARNING),
-        (metrics_v1.CriticalOf("a"), ScalarKind.CRITICAL),
-        (metrics_v2_unstable.LowerWarningOf("a"), ScalarKind.LOWER_WARNING),
-        (metrics_v2_unstable.LowerCriticalOf("a"), ScalarKind.LOWER_CRITICAL),
-        (metrics_v1.MinimumOf("a", color=metrics_v1.Color.BLUE), ScalarKind.MINIMUM),
-        (metrics_v1.MaximumOf("a", color=metrics_v1.Color.BLUE), ScalarKind.MAXIMUM),
-    ],
-)
-def test_scalar_kind_of(scalar: ApiScalar, expected: ScalarKind) -> None:
-    assert scalar_kind_of(scalar) == expected
 
 
 def test_parse_graph_from_api_collapses_compound_lines_into_single_stack_group() -> None:

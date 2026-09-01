@@ -83,3 +83,16 @@ class QuantityProtocol(Protocol):
 class MetricProtocol(QuantityProtocol, Hashable, Protocol):
     @property
     def metric_name(self) -> MetricName: ...
+
+
+# What a drawable is bounded by: a plain number, or a quantity to be evaluated.
+type Bound = int | float | QuantityProtocol
+
+
+@dataclass(frozen=True, kw_only=True)
+class Curve:
+    """A quantity dressed for drawing: what to evaluate, and how to title, scale and colour it."""
+
+    quantity: QuantityProtocol
+    attributes: CurveAttributes
+    source_id: str | None = None

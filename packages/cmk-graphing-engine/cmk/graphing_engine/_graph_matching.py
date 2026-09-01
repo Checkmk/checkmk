@@ -13,17 +13,17 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from ._api_plugins import drawn_metric_names_of_graph
 from ._display import metric_display_attributes
 from ._fetch import FetchMetricNamesProtocol
-from ._from_api import (
-    build_curve,
+from ._graph import Graph, Line, Rule, Stack
+from ._graph_from_api import (
     build_single_quantity,
     drawn_quantity,
     parse_graph_from_api,
     QuantityBuilderProtocol,
 )
-from ._graph import Graph, Line, Rule, Stack
 from ._naming import MetricName, Service
 from ._quantities import rrd_metric_of, RRDMetric, ScalarKind, ScalarOf
 from ._quantity import QuantityProtocol
+from ._quantity_from_api import build_curve
 
 _PREDICT_PREFIX = "predict_"
 _METRIC_PREFIX = "METRIC_"

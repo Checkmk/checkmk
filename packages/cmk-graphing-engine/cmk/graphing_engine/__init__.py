@@ -4,16 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._display import metric_display_attributes
-from ._evaluate import (
-    evaluate_graphs,
-    EvaluatedCurve,
-    EvaluatedGraph,
-    EvaluatedLine,
-    EvaluatedRule,
-    EvaluatedStack,
-    EvaluatedVerticalRange,
-    VerticalRangeKind,
-)
 from ._fetch import (
     FetchDataProtocol,
     FetchMetricNamesProtocol,
@@ -24,10 +14,7 @@ from ._fetched import (
     PerformanceData,
     SeriesAttributes,
 )
-from ._from_api import build_curve, QuantityBuilderProtocol
 from ._graph import (
-    Bound,
-    Curve,
     FixedRange,
     Graph,
     Line,
@@ -36,7 +23,18 @@ from ._graph import (
     Stack,
     VerticalRange,
 )
-from ._matching import (
+from ._graph_evaluate import (
+    evaluate_graphs,
+    EvaluatedCurve,
+    EvaluatedGraph,
+    EvaluatedLine,
+    EvaluatedRule,
+    EvaluatedStack,
+    EvaluatedVerticalRange,
+    VerticalRangeKind,
+)
+from ._graph_from_api import QuantityBuilderProtocol
+from ._graph_matching import (
     build_matched_graphs,
 )
 from ._naming import (
@@ -57,11 +55,14 @@ from ._quantities import (
     Sum,
 )
 from ._quantity import (
+    Bound,
+    Curve,
     EvaluatedQuantity,
     EvaluationContext,
     MetricProtocol,
     QuantityProtocol,
 )
+from ._quantity_from_api import build_curve
 from ._timeseries import (
     ConsolidationFunction,
     constant_time_series,

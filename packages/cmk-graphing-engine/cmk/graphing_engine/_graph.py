@@ -8,11 +8,8 @@ import itertools
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 
-from ._quantity import MetricProtocol, QuantityProtocol
+from ._quantity import Bound, Curve, MetricProtocol, QuantityProtocol
 from ._title import title_metrics
-from ._units import CurveAttributes
-
-type Bound = int | float | QuantityProtocol
 
 
 @dataclass(frozen=True)
@@ -28,13 +25,6 @@ class FixedRange:
 
 
 type VerticalRange = MinimalRange | FixedRange
-
-
-@dataclass(frozen=True, kw_only=True)
-class Curve:
-    quantity: QuantityProtocol
-    attributes: CurveAttributes
-    source_id: str | None = None
 
 
 @dataclass(frozen=True)

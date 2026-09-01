@@ -53,7 +53,7 @@ from .in_out_elements import (
     TTY_NORMAL,
     TTY_RED,
 )
-from .parse import WerkV3ParseResult
+from .parse import WerkMetadata, WerkV2ParseResult, WerkV3ParseResult
 from .schemas.werk import (
     Werk,
     WerkId,
@@ -318,13 +318,21 @@ def load_werk(werk_path: Path) -> Werk:
         file_content=werk_path.read_text(encoding="utf-8"), file_name=werk_path.name
     )
 
-    werk = Werk(
+    if "version" not in parsed.metadata:
+        metadata: WerkMetadata = {
+            **parsed.metadata,
+            "version": get_config().current_version,
+        }
+        if isinstance(parsed, WerkV2ParseResult):
+            parsed = WerkV2ParseResult(metadata, parsed.description)
+        else:
+            parsed = WerkV3ParseResult(metadata, parsed.description)
+
+    return Werk(
         path=werk_path,
         id=WerkId(int(werk_path.name.removesuffix(".md"))),
         content=parsed,
     )
-
-    return werk
 
 
 def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = None) -> None:

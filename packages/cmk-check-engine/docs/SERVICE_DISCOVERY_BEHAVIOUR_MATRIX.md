@@ -95,7 +95,11 @@ plus `"manual"` for enforced services, plus `active`/`ignored_active`
   ```python
   if config.service_ignored(clustername, ...):
       check_source = "ignored"
-  services[service.id()] = ("clustered_" + check_source, service, found_on_nodes)   # -> clustered_ignored
+  services[service.id()] = (
+      "clustered_" + check_source,
+      service,
+      found_on_nodes,
+  )  # -> clustered_ignored
   ```
 
   That ordering was deliberate — commit `dd74ccb1bab` (2019-03-21), **werk 7128** _"Display vanished
@@ -105,7 +109,7 @@ plus `"manual"` for enforced services, plus `active`/`ignored_active`
 
   ```python
   if config.service_ignored(cluster_name, ...):
-      return "ignored"          # <- prefix never applied
+      return "ignored"  # <- prefix never applied
   return "clustered_" + check_source
   ```
 
@@ -785,12 +789,12 @@ additionally creates a rule, and everything else falls into the catch-all `else`
 
 ```python
 if table_target == DiscoveryState.REMOVED:
-    return                                   # the only correct outcome
+    return  # the only correct outcome
 if table_target == DiscoveryState.IGNORED:
     add_disabled_rule.add(descr)
-    autochecks_to_save[key] = value          # entry + rule = werk 19801 residue
+    autochecks_to_save[key] = value  # entry + rule = werk 19801 residue
 else:
-    autochecks_to_save[key] = value          # entry kept, no rule
+    autochecks_to_save[key] = value  # entry kept, no rule
     saved_services.add(descr)
 ```
 
@@ -825,7 +829,7 @@ answer `400` for the pair. Ticket in §10.16.
 ### 4.2 Cross-cell arithmetic (not derivable per cell)
 
 ```python
-need_sync = bool(remove_disabled_rule or add_disabled_rule)          # computed BEFORE subtraction
+need_sync = bool(remove_disabled_rule or add_disabled_rule)  # computed BEFORE subtraction
 add_disabled_rule = add_disabled_rule - remove_disabled_rule - (saved_services - selected_services)
 ```
 

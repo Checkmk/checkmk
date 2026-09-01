@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 import cmk.ccc.version as cmk_version
 
 from cmk.utils import paths
+from cmk.utils.urls import is_allowed_url
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -903,13 +904,14 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
             required=True,
             title="",
         )
-        html.hidden_fields()
         if mode:
             html.hidden_field("mode", mode, add_var=True)
-        reset_url = request.get_ascii_input_mandatory(
-            "reset_url", makeuri(request, [], delvars=["filled_in", "search"])
-        )
+        default_reset_url = makeuri(request, [], delvars=["filled_in", "search"])
+        reset_url = request.get_ascii_input_mandatory("reset_url", default_reset_url)
+        if not is_allowed_url(reset_url):
+            reset_url = default_reset_url
         html.hidden_field("reset_url", reset_url, add_var=True)
+        html.hidden_fields()
         html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))
         html.button("submit", "", cssclass="submit", help_=_("Apply"))
     html.javascript(

@@ -973,7 +973,7 @@
     },
     "@@perl-modules+//:extensions.bzl%perl_modules": {
       "general": {
-        "bzlTransitiveDigest": "0N81OWmLbJkIaOhPdKTytfOZ9pBrTxSa9PAOUUZw7IQ=",
+        "bzlTransitiveDigest": "ZFYBxLk7OFs/ocr5QU/fWLq5QvhtMRz/Ev0GLrw+i2Q=",
         "usagesDigest": "PLGr3pcWDeDtaDHPBwNEWqjFUJCwtbC4FINr6gRb/Zo=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -1254,7 +1254,7 @@
             "attributes": {
               "sha256": "3507f72541f66a2dce850b9b56771e5fccda3d215c52f74946c6e370c0f4a4da",
               "urls": [
-                "https://mirror.sobukus.de/files/cpan/Scalar/Scalar-List-Utils-1.42.tar.gz",
+                "https://cpan.metacpan.org/authors/id/P/PE/PEVANS/Scalar-List-Utils-1.42.tar.gz",
                 "https://artifacts.lan.tribe29.com/repository/upstream-archives/Scalar-List-Utils-1.42.tar.gz"
               ]
             }
@@ -1524,7 +1524,7 @@
             "attributes": {
               "sha256": "b99b6a3d0bd1d3b2e4809da52835472f4ff149d81f88d9cc55cdeba80e9b80b3",
               "urls": [
-                "https://mirror.sobukus.de/files/cpan/ExtUtils/ExtUtils-CBuilder-0.280220.tar.gz",
+                "https://cpan.metacpan.org/authors/id/A/AM/AMBS/ExtUtils-CBuilder-0.280220.tar.gz",
                 "https://artifacts.lan.tribe29.com/repository/upstream-archives/ExtUtils-CBuilder-0.280220.tar.gz"
               ]
             }

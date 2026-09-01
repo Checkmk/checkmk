@@ -124,3 +124,10 @@ systemd
 testability
 tunable
 validators
+MCP
+uvicorn
+Starlette
+OAuth
+PRM
+introspection
+logrotate

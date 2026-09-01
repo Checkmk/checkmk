@@ -8,6 +8,14 @@ from ._artwork import (
 )
 from ._engine_dispatch import evaluate_built_graphs
 from ._engine_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
+from ._engine_perfometer_bars import (
+    drawn_segments,
+    DrawnSegment,
+    perfometer_label,
+    perfometer_sort_value,
+)
+from ._engine_perfometers import evaluated_perfometer
+from ._engine_plugins import registered_metrics, registered_translations
 from ._engine_source import RRDFetchMetricNames
 from ._engine_template_graphs import build_template_graphs
 from ._explicit_graphs import ExplicitGraphSpecification
@@ -158,7 +166,14 @@ __all__ = [
     "user_first_day_of_week",
     "iter_graph_artworks",
     "compute_pdf_graph_ranges",
+    "DrawnSegment",
+    "drawn_segments",
+    "evaluated_perfometer",
     "get_first_matching_perfometer",
+    "perfometer_label",
+    "perfometer_sort_value",
+    "registered_metrics",
+    "registered_translations",
     "fetch_graph_row",
     "make_graph_row",
     "get_graph_plugin_and_single_metric_choices",

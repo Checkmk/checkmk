@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from typing import override
 
 from cmk.gui.display_options import display_options
-from cmk.gui.graphing import metrics_from_api, perfometers_from_api
+from cmk.gui.graphing import perfometers_from_api, registered_metrics
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import response
 from cmk.gui.i18n import _
@@ -42,6 +42,8 @@ class PainterPerfometer(Painter):
     @override
     def columns(self) -> Sequence[ColumnName]:
         return [
+            "host_name",
+            "service_description",
             "service_staleness",
             "service_perf_data",
             "service_state",
@@ -59,7 +61,7 @@ class PainterPerfometer(Painter):
     def _compute_data(self, row: Row, cell: Cell, user: LoggedInUser) -> str:
         """Used for CSV/JSON/Python exports."""
         try:
-            title, _h = Perfometer(row, metrics_from_api, perfometers_from_api).render()
+            title, _h = Perfometer(row, registered_metrics(), perfometers_from_api).render()
         except Exception:
             logger.exception("error rendering perfometer")
             if self.config.debug:
@@ -76,7 +78,7 @@ class PainterPerfometer(Painter):
         try:
             title, h = Perfometer(
                 row,
-                metrics_from_api,
+                registered_metrics(),
                 perfometers_from_api,
             ).render()
             if title is None and h is None:

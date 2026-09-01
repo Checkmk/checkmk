@@ -505,6 +505,11 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         )
 
     @classmethod
+    def default_content(cls) -> Mapping[str, object]:
+        """The content a newly created page starts with, before its own editor fills it in."""
+        return {}
+
+    @classmethod
     @override
     def parameters(
         cls, mode: PageMode, user_permissions: UserPermissions
@@ -1408,7 +1413,7 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
                 if page_dict["public"] is None:
                     page_dict["public"] = False
             else:
-                page_dict = new_page_dict
+                page_dict = {**self._type.default_content(), **new_page_dict}
                 page_dict["owner"] = str(user.id)  # because is not in vs elements
 
             if not user_errors:

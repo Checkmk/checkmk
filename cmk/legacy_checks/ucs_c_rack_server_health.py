@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # exemplary output of special agent agent_ucs_bladecenter (<TAB> is tabulator):
 # storageControllerHealth<TAB>dn
 # sys/rack-unit-1/board/storage-SAS-SLOT-HBA/vd-0 <TAB>id SLOT-HBA<TAB>health Good
@@ -12,16 +10,38 @@
 # sys/rack-unit-2/board/storage-SAS-SLOT-HBA/vd-0 <TAB>id SLOT-HBA<TAB>health Good
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from collections.abc import Mapping
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+
+type Section = Mapping[str, str]
+
+# Keys are storage controller health strings provided via special agent -> XML API of servers.
+# For information about the data provided by the special agent "storageControllerHealth" refer
+# to Cisco C-Series Rack Server XML 2.0 Schema files:
+# [https://community.cisco.com/t5/unified-computing-system/cisco-ucs-c-series-standalone-xml-schema/ta-p/3646798]
+# Note: The possible string values are not defined/documented in the XML schema.
+# "Good" is the only value known from exemplary data output. The data is pre-processed to
+# lowercase only chars.
+_HEALTH_TO_STATE = {
+    "good": State.OK,
+}
 
 
-def parse_ucs_c_rack_server_health(string_table):
+def parse_ucs_c_rack_server_health(string_table: StringTable) -> Section:
     """
     Input: list of lists containing storage controller health data on a per rack basis.
-    Output: Returns dict with indexed Rack Units mapped to keys and lowercase health string mapped to value
-    'health' if rack server has racks attached or empty dict if not.
+    Output: Returns dict with indexed Rack Units mapped to keys and lowercase health string
+    mapped to value 'health' if rack server has racks attached or empty dict if not.
     """
     parsed = {}
     for _, dn, _id, health in string_table:
@@ -36,46 +56,32 @@ def parse_ucs_c_rack_server_health(string_table):
     return parsed
 
 
-def discover_ucs_c_rack_server_health(parsed):
+def discover_ucs_c_rack_server_health(section: Section) -> DiscoveryResult:
     """
-    Input: dict containing items as keys or empty dict.
-    Output: Yields indexed racks and storage controllers as items (e.g. Rack Unit 1 Storage SAS SLOT HBA vd 0) in case parsed contains items.
+    Yields indexed racks and storage controllers as items
+    (e.g. Rack Unit 1 Storage SAS SLOT HBA vd 0).
     """
-    for key in parsed:
-        yield key, {}
+    yield from (Service(item=item) for item in section)
 
 
-def check_ucs_c_rack_server_health(item, params, parsed):  # noqa: ARG001
-    """
-    Check function is called only in case parsed is a dict and item exists as key in parsed[item].
-    All other potential bad case conditions are handled by @get_parsed_item_data.
-    """
-    if not (health := parsed.get(item)):
+def check_ucs_c_rack_server_health(item: str, section: Section) -> CheckResult:
+    if not (health := section.get(item)):
         return
-    # Dict keys are storage controller health strings provided via special agent -> XML
-    # API of servers. Dict values are corresponding check status.
-    # For information about the data provided by the special agent
-    # "storageControllerHealth" refer to Cisco C-Series Rack Server XML 2.0 Schema files:
-    # [https://community.cisco.com/t5/unified-computing-system/cisco-ucs-c-series-standalone-xml-schema/ta-p/3646798]
-    # Note: The possible string values are not defined/documented in the XML schema.
-    # "Good" is the only value known from exemplary data output. Pre-process the
-    # data to lowercase only chars.
-    health_to_status_mapping = {
-        "good": 0,
-    }
 
-    try:
-        status = health_to_status_mapping[health]
-        status_readable = health
-    except KeyError:
-        status = 3
-        status_readable = "unknown[%s]" % health
-    yield status, "Status: %s" % status_readable
+    if (state := _HEALTH_TO_STATE.get(health)) is None:
+        yield Result(state=State.UNKNOWN, summary=f"Status: unknown[{health}]")
+    else:
+        yield Result(state=state, summary=f"Status: {health}")
 
 
-check_info["ucs_c_rack_server_health"] = LegacyCheckDefinition(
+agent_section_ucs_c_rack_server_health = AgentSection(
     name="ucs_c_rack_server_health",
     parse_function=parse_ucs_c_rack_server_health,
+)
+
+
+check_plugin_ucs_c_rack_server_health = CheckPlugin(
+    name="ucs_c_rack_server_health",
     service_name="Health %s",
     discovery_function=discover_ucs_c_rack_server_health,
     check_function=check_ucs_c_rack_server_health,

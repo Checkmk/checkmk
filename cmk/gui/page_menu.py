@@ -50,7 +50,13 @@ from cmk.web.utils.doc_references import (
     YouTubeReference,
 )
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import makeuri, requested_file_name, urlencode, urlencode_vars
+from cmk.web.utils.urls import (
+    is_allowed_url,
+    makeuri,
+    requested_file_name,
+    urlencode,
+    urlencode_vars,
+)
 
 
 @dataclass
@@ -1026,9 +1032,10 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
         )
         if mode:
             html.hidden_field("mode", mode, add_var=True)
-        reset_url = request.get_ascii_input_mandatory(
-            "reset_url", makeuri(request, [], delvars=["filled_in", "search"])
-        )
+        default_reset_url = makeuri(request, [], delvars=["filled_in", "search"])
+        reset_url = request.get_ascii_input_mandatory("reset_url", default_reset_url)
+        if not is_allowed_url(reset_url):
+            reset_url = default_reset_url
         html.hidden_field("reset_url", reset_url, add_var=True)
         html.form_vars.append("submit")  # prevent hidden_fields() from re-emitting it
         html.hidden_fields()

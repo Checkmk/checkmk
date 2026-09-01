@@ -6,10 +6,12 @@
 import pytest
 from werkzeug.test import create_environ
 
-from cmk.gui.http import Request
+from cmk.gui.htmllib.html import html
+from cmk.gui.http import Request, request
 from cmk.gui.page_menu import (
     _with_navigation,
     _without_navigation,
+    inpage_search_form,
     make_external_link,
     make_form_submit_link,
     make_javascript_link,
@@ -162,3 +164,30 @@ def test_without_navigation(query_string: str, expected_url: str) -> None:
     link = _without_navigation(_make_request(query_string=query_string))
     assert link.url == expected_url
     assert link.target == "_top"
+
+
+@pytest.mark.parametrize(
+    "malicious_reset_url",
+    [
+        pytest.param("javascript:alert(1)", id="javascript scheme"),
+        pytest.param("https://evil.example/", id="cross-origin absolute url"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_inpage_search_form_rejects_unsafe_reset_url(malicious_reset_url: str) -> None:
+    request.set_var("reset_url", malicious_reset_url)
+    with html.output_funnel.plugged():
+        inpage_search_form()
+        output = html.output_funnel.drain()
+
+    assert malicious_reset_url not in output
+
+
+@pytest.mark.usefixtures("request_context")
+def test_inpage_search_form_keeps_safe_reset_url() -> None:
+    request.set_var("reset_url", "dashboard.py")
+    with html.output_funnel.plugged():
+        inpage_search_form()
+        output = html.output_funnel.drain()
+
+    assert 'value="dashboard.py"' in output

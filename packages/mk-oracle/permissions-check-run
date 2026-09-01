@@ -23,7 +23,7 @@ bazel build //packages/mk-oracle:mk-oracle
 
 # 2. Download and unpack Oracle instant client
 bazel build //omd/packages/oci:oci_light_lin_x64
-runtime_dir="${PWD}/runtimes/plugins/packages/mk-oracle"
+runtime_dir="${PWD}/runtimes/plugins/libexec/mk-oracle"
 mkdir -p "${runtime_dir}"
 unzip -uoq "$(bazel info bazel-bin)/omd/packages/oci/oci_light_lin_x64.zip" -d "${runtime_dir}"
 libaio=$(ldconfig -p | grep libaio.so.1 | awk '{print $NF}')

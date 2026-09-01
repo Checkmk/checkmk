@@ -509,9 +509,9 @@ pub fn find_env_var_lib_runtime(env_var: &str) -> Option<PathBuf> {
 }
 
 /// The Oracle client shipped with the agent, below the agent's library
-/// directory at plugins/packages/mk-oracle. `lib_dir` is what MK_LIBDIR names.
+/// directory at plugins/libexec/mk-oracle. `lib_dir` is what MK_LIBDIR names.
 pub fn detect_factory_runtime(lib_dir: &Path) -> Option<PathBuf> {
-    let runtime_path = lib_dir.join("plugins/packages/mk-oracle");
+    let runtime_path = lib_dir.join("plugins/libexec/mk-oracle");
     let runtime_path = if cfg!(windows) && runtime_path.join("runtime").is_dir() {
         runtime_path.join("runtime")
     } else {
@@ -912,7 +912,7 @@ static PLUGIN_TEMPLATE_TEXT: LazyLock<String> = LazyLock::new(|| {
 
 CMK_VERSION="{}"
 
-"${{MK_LIBDIR}}/plugins/packages/mk-oracle/mk-oracle" -c "${{MK_CONFDIR}}/mk-oracle.yml" "#,
+"${{MK_LIBDIR}}/plugins/libexec/mk-oracle/mk-oracle" -c "${{MK_CONFDIR}}/mk-oracle.yml" "#,
         VERSION
     )
 });

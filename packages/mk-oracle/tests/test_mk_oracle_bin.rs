@@ -213,9 +213,9 @@ fn test_environment_info_is_logged_at_debug() {
 fn test_find_runtime_reports_environment() {
     let env = setup_test_env();
     // factory runtime layout under MK_LIBDIR:
-    // plugins/packages/mk-oracle on Unix, + /runtime on Windows
+    // plugins/libexec/mk-oracle on Unix, + /runtime on Windows
     let lib_dir = tempfile::tempdir().unwrap();
-    let package_dir = lib_dir.path().join("plugins/packages/mk-oracle");
+    let package_dir = lib_dir.path().join("plugins/libexec/mk-oracle");
     fs::create_dir_all(package_dir.join("runtime")).unwrap();
     let expected_dir = if cfg!(windows) {
         package_dir.join("runtime")
@@ -407,7 +407,7 @@ oracle:
     .unwrap();
 
     // User config in the runtime dir overrides cache_age.
-    let runtime_dir = lib_dir.join("plugins/packages/mk-oracle");
+    let runtime_dir = lib_dir.join("plugins/libexec/mk-oracle");
     fs::create_dir_all(&runtime_dir).unwrap();
     fs::write(
         runtime_dir.join("mk-oracle.user.yml"),

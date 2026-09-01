@@ -239,7 +239,7 @@ run_check_format() {
 }
 
 setup_tests() {
-    path_to_runtime="${PWD}/runtimes/plugins/packages/mk-oracle"
+    path_to_runtime="${PWD}/runtimes/plugins/libexec/mk-oracle"
     mkdir -p "${path_to_runtime}"
     INSTANTCLIENT_ARCHIVE="${PWD}/runtimes/downloads/instantclient_19_28.tar.gz"
     export INSTANTCLIENT_ARCHIVE
@@ -352,9 +352,9 @@ run_test_component_remote_host() {
     # shellcheck disable=SC2086,SC2087,SC2029
     ssh $SSH_ARGS "${HOST_ADDRESS}" <<EOF
         set -e
-        mkdir -p "${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/packages/mk-oracle"
+        mkdir -p "${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/libexec/mk-oracle"
         mkdir -p "${TEST_BINARY_REMOTE_PATH}/tests"
-        : >"${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/packages/mk-oracle/libclntsh.so"
+        : >"${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/libexec/mk-oracle/libclntsh.so"
 EOF
     # copy Oracle DB plug-in test binaries and test data to the remote-host
     # shellcheck disable=SC2086

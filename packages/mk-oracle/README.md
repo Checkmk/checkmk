@@ -70,19 +70,19 @@ Choose one of the following options:
 2. In Agent Installation (recommended)
 
 ```
-    sudo unzip -j instantclient-basiclite-linux.x64-21.19.0.0.0dbru.zip -d /path/to/agent/plugins/packages/mk-oracle
+    sudo unzip -j instantclient-basiclite-linux.x64-21.19.0.0.0dbru.zip -d /path/to/agent/plugins/libexec/mk-oracle
 ```
 
 The default _legacy deployment_ plugins path for the Checkmk agent on Linux is `/usr/lib/check_mk_agent/plugins/`
 
 ```
-sudo unzip -j /home/$USER/Downloads/instantclient-basic-linux.x64-21.20.0.0.0dbru.zip -d /usr/lib/check_mk_agent/plugins/packages/mk-oracle/
+sudo unzip -j /home/$USER/Downloads/instantclient-basic-linux.x64-21.20.0.0.0dbru.zip -d /usr/lib/check_mk_agent/plugins/libexec/mk-oracle/
 ```
 
 The default _single directory deployment_ plugins path for the Checkmk agent on Linux is `/opt/checkmk/agent/default/package/plugins`
 
 ```
-sudo unzip -j /home/$USER/Downloads/instantclient-basic-linux.x64-21.20.0.0.0dbru.zip -d /opt/checkmk/agent/default/package/plugins/packages/mk-oracle/
+sudo unzip -j /home/$USER/Downloads/instantclient-basic-linux.x64-21.20.0.0.0dbru.zip -d /opt/checkmk/agent/default/package/plugins/libexec/mk-oracle/
 ```
 
 You may determine the path to the agent installation by running the following command:
@@ -113,7 +113,7 @@ Choose one of the following options:
    `PATH` must contain the path to the folder where DLLs are stored.
    For example: `C:\oracle\instantclient_21_3`
 2. In Agent Installation (recommended)
-   Unzip \*.dll files to the `%PROGRAMDATA%/checkmk/agent/plugins/packages/mk-oracle` folder.
+   Unzip \*.dll files to the `%PROGRAMDATA%/checkmk/agent/plugins/libexec/mk-oracle` folder.
 
 ### Other Options
 
@@ -621,7 +621,7 @@ custom_metrics:
   - heavy_query:
       path: '/opt/checkmk/sql/heavy_query.sql'
 
-  # 2. Relative file path — searched in MK_LIBDIR/plugins/packages/mk-oracle/orasql/ first,
+  # 2. Relative file path — searched in MK_LIBDIR/plugins/libexec/mk-oracle/orasql/ first,
   #    then in MK_CONFDIR/orasql/.
   - product_price:
       path: 'queries/product_price.sql'
@@ -640,7 +640,7 @@ custom_metrics:
 
 Resolution rules:
 
-- **Absolute vs. relative.** Absolute paths are used as-is. Relative paths are searched first in **`MK_LIBDIR/plugins/packages/mk-oracle/orasql/`** and then in **`MK_CONFDIR/orasql/`**. When the same relative path resolves in both, the **`MK_LIBDIR/plugins/packages/mk-oracle/orasql/`** copy wins.
+- **Absolute vs. relative.** Absolute paths are used as-is. Relative paths are searched first in **`MK_LIBDIR/plugins/libexec/mk-oracle/orasql/`** and then in **`MK_CONFDIR/orasql/`**. When the same relative path resolves in both, the **`MK_LIBDIR/plugins/libexec/mk-oracle/orasql/`** copy wins.
 - **File vs. directory.** A `path:` may point at a file (with or without the `.sql` extension) or at a directory. In the directory case the file name is derived from the **item name** for `custom_metrics`, or from the **section name** for predefined `sections`.
 - **Version variants.** Alongside the base `<stem>.sql`, you may provide Oracle-version-specific variants named `<stem>@<min_version>.sql` (e.g. `sessions@19000000.sql`). The plugin picks the file with the highest `min_version` that is still less than or equal to the connected instance's version. The version is the 8-digit numeric form `MMmmRRSSSS` (major / minor / release / patch), e.g. `12.1.0.2` → `12010002`.
 - **Fallback chain.** Resolution order for a section is: `path:` → inline `sql:` → bundled (for predefined sections only). If `path:` is set but no file matches the instance version and no inline `sql:` is provided, the section yields no output.
@@ -653,7 +653,7 @@ $MK_CONFDIR/orasql/
 ├── product_price@19000000.sql       # picked for Oracle >= 19.0.0.0
 └── product_price@23000000.sql       # picked for Oracle >= 23.0.0.0
 
-$MK_LIBDIR/plugins/packages/mk-oracle/orasql/
+$MK_LIBDIR/plugins/libexec/mk-oracle/orasql/
 └── product_price.sql                    # overrides the MK_CONFDIR copy
 ```
 
@@ -758,10 +758,10 @@ details:...
 
 The plugin merges configuration from **two** files:
 
-| File          | Path                                                       |
-| ------------- | ---------------------------------------------------------- |
-| Bakery config | `$MK_CONFDIR/mk-oracle.yml`                                |
-| User config   | `$MK_LIBDIR/plugins/packages/mk-oracle/mk-oracle.user.yml` |
+| File          | Path                                                      |
+| ------------- | --------------------------------------------------------- |
+| Bakery config | `$MK_CONFDIR/mk-oracle.yml`                               |
+| User config   | `$MK_LIBDIR/plugins/libexec/mk-oracle/mk-oracle.user.yml` |
 
 The user file lets an user extend or override the configuration without
 editing the bakery file, and conversely lets the bakery redeploy
@@ -769,7 +769,7 @@ its file without clobbering the user's changes.
 The path is the same on Linux and Windows.
 
 Custom SQL files referenced by a relative `path:` are likewise searched in both
-`$MK_LIBDIR/plugins/packages/mk-oracle/orasql/` (user, searched first) and
+`$MK_LIBDIR/plugins/libexec/mk-oracle/orasql/` (user, searched first) and
 `$MK_CONFDIR/orasql/` (bakery), so user SQL wins on a name collision.
 
 The user file is **fully optional** and uses the **same syntax** as the bakery

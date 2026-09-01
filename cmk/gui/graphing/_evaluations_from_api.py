@@ -3,12 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, Literal
-
-from pydantic import BaseModel
+from typing import Literal
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Error, OK, Result
@@ -19,7 +16,6 @@ from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
 from ._from_api import GraphFromAPI, parse_unit_from_api, RegisteredMetric
@@ -33,13 +29,10 @@ from ._graph_metric_expressions import (
 )
 from ._graph_specification import (
     GraphMetric,
-    HorizontalRule,
-    MinimalVerticalRange,
-    sort_horizontal_rules_in_decending_order,
 )
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
-from ._unit import ConvertibleUnitSpecification, user_specific_unit
+from ._unit import ConvertibleUnitSpecification
 
 type Quantity = (
     str
@@ -405,144 +398,6 @@ def _create_quantity_id(
             return f"Fraction({_create_quantity_id(quantity.dividend, consolidation_function)},{_create_quantity_id(quantity.divisor, consolidation_function)})"
 
 
-def _extract_raw_expressions_from_graph_title(title: str) -> list[str]:
-    return re.findall(r"_EXPRESSION:\{.*?\}", title)
-
-
-class _GraphTitleExpression(BaseModel, frozen=True):
-    metric: str
-    scalar: Literal["warn", "crit", "warn_lower", "crit_lower", "min", "max"]
-
-
-def _parse_graph_title_expression(
-    expression: _GraphTitleExpression,
-) -> (
-    metrics_v1.WarningOf
-    | metrics_v1.CriticalOf
-    | metrics_v2_unstable.LowerWarningOf
-    | metrics_v2_unstable.LowerCriticalOf
-    | metrics_v1.MinimumOf
-    | metrics_v1.MaximumOf
-):
-    match expression.scalar:
-        case "warn":
-            return metrics_v1.WarningOf(expression.metric)
-        case "crit":
-            return metrics_v1.CriticalOf(expression.metric)
-        case "warn_lower":
-            return metrics_v2_unstable.LowerWarningOf(expression.metric)
-        case "crit_lower":
-            return metrics_v2_unstable.LowerCriticalOf(expression.metric)
-        case "min":
-            return metrics_v1.MinimumOf(expression.metric, color=metrics_v1.Color.BLACK)
-        case "max":
-            return metrics_v1.MaximumOf(expression.metric, color=metrics_v1.Color.BLACK)
-        case _:
-            assert_never(expression.scalar)
-
-
-def evaluate_graph_plugin_title(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    title: str,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> str:
-    for raw in _extract_raw_expressions_from_graph_title(title):
-        if (
-            result := _evaluate_quantity(
-                registered_metrics,
-                _parse_graph_title_expression(
-                    _GraphTitleExpression.model_validate_json(raw[len("_EXPRESSION:") :]),
-                ),
-                translated_metrics,
-            )
-        ).is_ok():
-            title = title.replace(
-                raw,
-                # rendering as an integer is hard-coded because it is all we need for now
-                str(int(result.ok.value)),
-                1,
-            )
-        else:
-            return title.split("-")[0].strip()
-    return title
-
-
-def _evaluate_boundary(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    boundary: int | float | Quantity,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> Result[int | float, EvaluationError]:
-    if isinstance(boundary, int | float):
-        return OK(boundary)
-    if (result := _evaluate_quantity(registered_metrics, boundary, translated_metrics)).is_error():
-        return Error(result.error)
-    return OK(result.ok.value)
-
-
-def _evaluate_graph_range(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> MinimalVerticalRange | None:
-    if graph.minimal_range is None:
-        return None
-    return MinimalVerticalRange(
-        min=(
-            None
-            if (
-                r := _evaluate_boundary(
-                    registered_metrics, graph.minimal_range.lower, translated_metrics
-                )
-            ).is_error()
-            else r.ok
-        ),
-        max=(
-            None
-            if (
-                r := _evaluate_boundary(
-                    registered_metrics, graph.minimal_range.upper, translated_metrics
-                )
-            ).is_error()
-            else r.ok
-        ),
-    )
-
-
-def evaluate_graph_plugin_range(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    graph_plugin: GraphFromAPI,
-    translated_metrics: Mapping[str, TranslatedMetric],
-) -> MinimalVerticalRange | None:
-    match graph_plugin:
-        case graphs_v1.Graph() | graphs_v2_unstable.Graph():
-            return _evaluate_graph_range(registered_metrics, graph_plugin, translated_metrics)
-        case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
-            min_ranges = []
-            max_ranges = []
-            if lower_range := _evaluate_graph_range(
-                registered_metrics, graph_plugin.lower, translated_metrics
-            ):
-                if lower_range.min is not None:
-                    min_ranges.append(lower_range.min)
-                if lower_range.max is not None:
-                    max_ranges.append(lower_range.max)
-            if upper_range := _evaluate_graph_range(
-                registered_metrics, graph_plugin.upper, translated_metrics
-            ):
-                if upper_range.min is not None:
-                    min_ranges.append(upper_range.min)
-                if upper_range.max is not None:
-                    max_ranges.append(upper_range.max)
-            return (
-                MinimalVerticalRange(
-                    min=min(min_ranges) if min_ranges else None,
-                    max=max(max_ranges) if max_ranges else None,
-                )
-                if min_ranges and max_ranges
-                else None
-            )
-
-
 def _is_scalar(quantity: Quantity) -> bool:
     match quantity:
         case str():
@@ -565,80 +420,6 @@ def _is_scalar(quantity: Quantity) -> bool:
             return _is_scalar(quantity.minuend) and _is_scalar(quantity.subtrahend)
         case metrics_v1.Fraction():
             return _is_scalar(quantity.dividend) and _is_scalar(quantity.divisor)
-
-
-def _evaluate_graph_scalars(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    *,
-    factor: Literal[1, -1],
-    temperature_unit: TemperatureUnit,
-) -> Sequence[HorizontalRule]:
-    horizontal_lines = []
-    for quantity in list(graph.compound_lines) + list(graph.simple_lines):
-        if not _is_scalar(quantity):
-            continue
-        if (
-            result := _evaluate_quantity(registered_metrics, quantity, translated_metrics)
-        ).is_error():
-            # Scalar value like min and max are always optional. This makes configuration
-            # of graphs easier.
-            if result.error.metric_name:
-                continue
-            return []
-        horizontal_lines.append(
-            HorizontalRule(
-                value=result.ok.value * factor,
-                rendered_value=user_specific_unit(
-                    result.ok.unit, temperature_unit
-                ).formatter.render(result.ok.value),
-                color=result.ok.color,
-                title=result.ok.title,
-            )
-        )
-    return sort_horizontal_rules_in_decending_order(horizontal_lines)
-
-
-def evaluate_graph_plugin_scalars(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    graph_plugin: GraphFromAPI,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    *,
-    temperature_unit: TemperatureUnit,
-) -> Sequence[HorizontalRule]:
-    match graph_plugin:
-        case graphs_v1.Graph() | graphs_v2_unstable.Graph():
-            return _evaluate_graph_scalars(
-                registered_metrics,
-                graph_plugin,
-                translated_metrics,
-                factor=1,
-                temperature_unit=temperature_unit,
-            )
-        case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
-            # A bidirectional graph splits the y-axis into a non-negative upper
-            # half and a non-positive lower half (the lower half's source values
-            # are mirrored through factor=-1). A horizontal rule whose value
-            # falls outside its half cannot be drawn — typically a lower-level
-            # threshold whose source value is itself negative.
-            upper_rules = _evaluate_graph_scalars(
-                registered_metrics,
-                graph_plugin.upper,
-                translated_metrics,
-                factor=1,
-                temperature_unit=temperature_unit,
-            )
-            lower_rules = _evaluate_graph_scalars(
-                registered_metrics,
-                graph_plugin.lower,
-                translated_metrics,
-                factor=-1,
-                temperature_unit=temperature_unit,
-            )
-            return [r for r in upper_rules if r.value >= 0] + [
-                r for r in lower_rules if r.value <= 0
-            ]
 
 
 def _to_graph_metric_expression(

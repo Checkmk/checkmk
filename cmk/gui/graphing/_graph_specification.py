@@ -7,12 +7,11 @@
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Annotated, final, Literal, override
+from typing import Annotated, final, override
 
 from pydantic import (
     BaseModel,
     computed_field,
-    Field,
     PlainValidator,
     SerializeAsAny,
 )
@@ -36,7 +35,6 @@ from ._metric_backend_registry import FetchTimeSeriesProtocol
 from ._translated_metrics import TranslatedMetric
 from ._unit import (
     ConvertibleUnitSpecification,
-    NonConvertibleUnitSpecification,
     UserSpecificUnit,
 )
 
@@ -202,18 +200,6 @@ def parse_graph_specification(graph_specification: object) -> GraphSpecification
     raise TypeError(graph_specification)
 
 
-class FixedVerticalRange(BaseModel, frozen=True):
-    type: Literal["fixed"] = "fixed"
-    min: float | None
-    max: float | None
-
-
-class MinimalVerticalRange(BaseModel, frozen=True):
-    type: Literal["minimal"] = "minimal"
-    min: float | None
-    max: float | None
-
-
 class GraphRanges(BaseModel, frozen=True):
     time_range: tuple[int, int]
     # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
@@ -230,14 +216,3 @@ def compute_graph_ranges_for_width(width: SizeMM, start_time: int, end_time: int
     number_of_steps = int(available_width / mm_per_step)
     step = int((end_time - start_time) / number_of_steps / 2)
     return GraphRanges(time_range=(start_time, end_time), step=step)
-
-
-class GraphRecipe(BaseModel, frozen=True):
-    title: str
-    unit_spec: ConvertibleUnitSpecification | NonConvertibleUnitSpecification = Field(
-        discriminator="type"
-    )
-    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
-    horizontal_rules: Sequence[HorizontalRule]
-    omit_zero_metrics: bool
-    metrics: Sequence[GraphMetric]

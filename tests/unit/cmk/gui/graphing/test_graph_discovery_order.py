@@ -3,22 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""The engine must discover a service's graphs in the order the legacy path did.
-
-resolve_graph_id_from_index() maps a stored positional graph index - written by
-pre-CMK-7308 dashlet and report configs - onto a stable graph id. Moving it onto the
-engine is only safe while both paths agree on the sequence, not merely the set: a
-divergence silently resolves a stored index to a different graph.
-
-These tests are the licence for that move, and they go with the legacy path.
-"""
 
 from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.site import SiteId
+from cmk.ccc.hostaddress import HostAddress
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
@@ -29,16 +19,11 @@ from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui.graphing._engine_dispatch import legacy_graph_id
 from cmk.gui.graphing._engine_plugins import registered_graphs as engine_registered_graphs
 from cmk.gui.graphing._engine_template_graphs import build_template_graphs
-from cmk.gui.graphing._from_api import graphs_from_api, parse_metric_from_api
+from cmk.gui.graphing._from_api import graphs_from_api
 from cmk.gui.graphing._graph_templates import (
-    _evaluate_graph_plugins,
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._translated_metrics import translate_metrics
-from cmk.gui.type_defs import PerfDataTuple
-from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.utils.servicename import ServiceName
 
 _HOST = "host_name"
 _SERVICE = "service_name"
@@ -65,39 +50,6 @@ class _FetchMetricNames:
         }
 
 
-def _legacy_ids(
-    metric_names: Sequence[str],
-    registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
-    api_metrics: Mapping[str, metrics_v1.Metric],
-) -> list[str]:
-    # The legacy path reads the GUI's parsed metrics, the engine the plug-in API ones.
-    registered_metrics = {
-        name: parse_metric_from_api(metric) for name, metric in api_metrics.items()
-    }
-    translated = translate_metrics(
-        [
-            PerfDataTuple(metric_name=n, lookup_metric_name=n, value=0, unit_name="")
-            for n in metric_names
-        ],
-        "check_command",
-        registered_metrics,
-        temperature_unit=TemperatureUnit.CELSIUS,
-    )
-    return [
-        graph_id
-        for graph_id, _recipe in _evaluate_graph_plugins(
-            registered_metrics,
-            sort_registered_graph_plugins(registered_graphs),
-            SiteId("site_id"),
-            HostName(_HOST),
-            ServiceName(_SERVICE),
-            translated,
-            consolidation_function="max",
-            temperature_unit=TemperatureUnit.CELSIUS,
-        )
-    ]
-
-
 def _engine_ids(
     metric_names: Sequence[str],
     registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
@@ -116,11 +68,25 @@ def _engine_ids(
 
 
 @pytest.mark.parametrize(
-    "metric_names,registered_graphs",
+    "metric_names,registered_graphs,expected",
     [
-        pytest.param(["cpu_user", "cpu_system"], {}, id="fallbacks-only-two"),
         pytest.param(
-            ["util", "if_in", "extra", "cpu_user", "if_out"], {}, id="fallbacks-only-five"
+            ["cpu_user", "cpu_system"],
+            {},
+            ["METRIC_cpu_system", "METRIC_cpu_user"],
+            id="fallbacks-are-alphabetical",
+        ),
+        pytest.param(
+            ["util", "if_in", "extra", "cpu_user", "if_out"],
+            {},
+            [
+                "METRIC_cpu_user",
+                "METRIC_extra",
+                "METRIC_if_in",
+                "METRIC_if_out",
+                "METRIC_util",
+            ],
+            id="fallbacks-are-alphabetical-not-insertion-ordered",
         ),
         pytest.param(
             ["cpu_user", "cpu_system"],
@@ -129,7 +95,8 @@ def _engine_ids(
                     name="cpu", title=Title("CPU"), simple_lines=["cpu_user", "cpu_system"]
                 )
             },
-            id="one-plugin-claims-both",
+            ["cpu"],
+            id="a-plugin-claims-its-metrics",
         ),
         pytest.param(
             ["cpu_user", "cpu_system", "extra", "util"],
@@ -138,7 +105,8 @@ def _engine_ids(
                     name="cpu", title=Title("CPU"), simple_lines=["cpu_user", "cpu_system"]
                 )
             },
-            id="plugin-then-fallbacks",
+            ["cpu", "METRIC_extra", "METRIC_util"],
+            id="plugins-come-before-fallbacks",
         ),
         pytest.param(
             ["cpu_user", "extra"],
@@ -150,26 +118,24 @@ def _engine_ids(
                     name="a_graph", title=Title("A"), simple_lines=["extra"]
                 ),
             },
-            id="two-plugins-registration-order",
+            ["b_graph", "a_graph"],
+            id="plugins-keep-their-registration-order",
         ),
     ],
 )
-def test_the_engine_discovers_a_services_graphs_in_the_legacy_order(
+def test_the_engine_discovers_a_services_graphs_in_a_pinned_order(
     metric_names: Sequence[str],
     registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
+    expected: Sequence[str],
     request_context: None,
     load_plugins: None,
 ) -> None:
     registered_metrics = {name: _metric(name) for name in metric_names}
 
-    assert _engine_ids(metric_names, registered_graphs, registered_metrics) == _legacy_ids(
-        metric_names, registered_graphs, registered_metrics
-    )
+    assert _engine_ids(metric_names, registered_graphs, registered_metrics) == expected
 
 
 def test_the_engine_registered_graphs_keep_the_legacy_plugin_order(load_plugins: None) -> None:
-    # resolve_graph_id_from_index() indexes into this sequence, so the engine's own plug-in
-    # source has to hand them over in sort_registered_graph_plugins() order too.
     assert [plugin.name for plugin in engine_registered_graphs()] == [
         name for name, _plugin in sort_registered_graph_plugins(graphs_from_api)
     ]

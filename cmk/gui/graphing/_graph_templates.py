@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal, override
 
@@ -17,34 +17,21 @@ from cmk.graphing.v1 import Title as TitleV1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
 from ._evaluations_from_api import (
     evaluate_graph_plugin_metrics,
-    evaluate_graph_plugin_range,
-    evaluate_graph_plugin_scalars,
-    evaluate_graph_plugin_title,
 )
 from ._from_api import GraphFromAPI, RegisteredMetric
 from ._graph_metric_expressions import (
     AnnotatedHostName,
-    create_graph_metric_expression_from_translated_metric,
-    GraphConsolidationFunction,
 )
 from ._graph_specification import (
-    compute_warn_crit_rules_from_translated_metric,
-    FixedVerticalRange,
     graph_specification_registry,
-    GraphMetric,
-    GraphRecipe,
     GraphSpecification,
-    HorizontalRule,
-    MinimalVerticalRange,
 )
 from ._graphs_order import GRAPHS_ORDER
 from ._translated_metrics import TranslatedMetric
-from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
 tracer = trace.get_tracer()
 
@@ -147,116 +134,6 @@ def get_graph_plugin_and_single_metric_choices(
                 )
             )
     return graph_plugin_choices, single_metric_choices
-
-
-def _create_graph_recipe(
-    *,
-    title: str,
-    graph_metrics: Sequence[GraphMetric],
-    explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
-    horizontal_rules: Sequence[HorizontalRule],
-) -> GraphRecipe:
-    units = {m.unit for m in graph_metrics}
-
-    # We cannot validate the hypothetical case of a mixture of metrics from the legacy and the new API
-    if (
-        all(isinstance(m.unit, str) for m in graph_metrics)
-        or all(isinstance(m.unit, ConvertibleUnitSpecification) for m in graph_metrics)
-    ) and len(units) > 1:
-        raise MKGeneralException(
-            _("Cannot create graph with metrics of different units '%(units)s'")
-            % {"units": ", ".join(repr(unit) for unit in units)}
-        )
-
-    if not title:
-        title = next((m.title for m in graph_metrics), "")
-
-    return GraphRecipe(
-        title=title,
-        metrics=graph_metrics,
-        unit_spec=units.pop(),
-        explicit_vertical_range=explicit_vertical_range,
-        horizontal_rules=horizontal_rules,
-        omit_zero_metrics=False,
-    )
-
-
-def _evaluate_graph_plugins(
-    registered_metrics: Mapping[str, RegisteredMetric],
-    sorted_graph_plugins: Sequence[tuple[str, GraphFromAPI]],
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    translated_metrics: Mapping[str, TranslatedMetric],
-    *,
-    consolidation_function: GraphConsolidationFunction,
-    temperature_unit: TemperatureUnit,
-) -> Iterator[tuple[str, GraphRecipe]]:
-    already_graphed_metrics: set[str] = set()
-    for graph_id, graph_plugin in sorted_graph_plugins:
-        if (
-            graphed_metrics := evaluate_graph_plugin_metrics(
-                registered_metrics,
-                site_id,
-                host_name,
-                service_name,
-                consolidation_function,
-                graph_plugin,
-                translated_metrics,
-            )
-        ).graph_metrics:
-            already_graphed_metrics.update(graphed_metrics.metric_names)
-            yield (
-                graph_id,
-                _create_graph_recipe(
-                    title=evaluate_graph_plugin_title(
-                        registered_metrics,
-                        graph_plugin.title.localize(translate_to_current_language),
-                        translated_metrics,
-                    ),
-                    graph_metrics=graphed_metrics.graph_metrics,
-                    explicit_vertical_range=evaluate_graph_plugin_range(
-                        registered_metrics,
-                        graph_plugin,
-                        translated_metrics,
-                    ),
-                    horizontal_rules=evaluate_graph_plugin_scalars(
-                        registered_metrics,
-                        graph_plugin,
-                        translated_metrics,
-                        temperature_unit=temperature_unit,
-                    ),
-                ),
-            )
-
-    for metric_name, translated_metric in sorted(translated_metrics.items()):
-        if translated_metric.auto_graph and metric_name not in already_graphed_metrics:
-            yield (
-                metric_name if metric_name.startswith("METRIC_") else f"METRIC_{metric_name}",
-                _create_graph_recipe(
-                    title="",
-                    graph_metrics=[
-                        GraphMetric(
-                            title=translated_metric.title,
-                            line_type="area",
-                            operation=create_graph_metric_expression_from_translated_metric(
-                                site_id,
-                                host_name,
-                                service_name,
-                                translated_metric,
-                                consolidation_function,
-                            ),
-                            unit=translated_metric.unit_spec,
-                            color=translated_metric.color,
-                        )
-                    ],
-                    explicit_vertical_range=None,
-                    horizontal_rules=compute_warn_crit_rules_from_translated_metric(
-                        user_specific_unit(translated_metric.unit_spec, temperature_unit),
-                        translated_metric,
-                    ),
-                ),
-            )
 
 
 class TemplateGraphSpecification(GraphSpecification, frozen=True):

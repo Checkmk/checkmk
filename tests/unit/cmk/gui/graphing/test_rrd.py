@@ -14,15 +14,12 @@ from cmk.ccc.site import SiteId
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import (
     GraphConsolidationFunction,
-    GraphMetricRRDSource,
     QueryData,
     QueryDataError,
     RRDDataKey,
 )
 from cmk.gui.graphing._graph_specification import (
-    GraphMetric,
     GraphRanges,
-    GraphRecipe,
 )
 from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
 from cmk.gui.graphing._rrd import (
@@ -73,35 +70,6 @@ ColumnHeaders: off
         )
         yield
 
-
-_GRAPH_RECIPE = GraphRecipe(
-    title="Temperature",
-    metrics=[
-        GraphMetric(
-            title="Temperature",
-            line_type="area",
-            operation=GraphMetricRRDSource(
-                site_id=SiteId("NO_SITE"),
-                host_name=HostName("my-host"),
-                service_name="Temperature Zone 6",
-                metric_name="temp",
-                consolidation_func_name="max",
-                scale=1,
-            ),
-            color="#ffa000",
-            unit=ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol="°C"), precision=AutoPrecision(digits=2)
-            ),
-        )
-    ],
-    unit_spec=ConvertibleUnitSpecification(
-        notation=DecimalNotation(symbol="°C"),
-        precision=AutoPrecision(digits=2),
-    ),
-    explicit_vertical_range=None,
-    horizontal_rules=[],
-    omit_zero_metrics=False,
-)
 
 _GRAPH_RANGES = GraphRanges(time_range=(1681985455, 1681999855), step=20)
 

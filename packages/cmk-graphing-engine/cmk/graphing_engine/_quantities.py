@@ -243,8 +243,7 @@ class ScalarOf:
     ) -> CurveAttributes:
         attributes = self.metric.attributes(localizer, registered_metrics)
         # A threshold names the metric it is a threshold of: several of them can be drawn in one
-        # graph, and "Warning" alone would not say which curve it belongs to (as the legacy titles
-        # spell it out too).
+        # graph, and "Warning" alone would not say which curve it belongs to.
         label: str
         type_color: str | None
         match self.scalar_kind:

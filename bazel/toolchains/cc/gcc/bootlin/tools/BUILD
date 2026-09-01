@@ -18,6 +18,9 @@ cc_tool_map(
     visibility = ["//visibility:public"],
 )
 
+# No --sysroot flag: gcc resolves its own relocatable default sysroot, and
+# rules_foreign_cc folds the compiler into a single $CC word, which breaks
+# if --sysroot is appended separately.
 cc_tool(
     name = "gcc",
     src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-gcc",
@@ -25,6 +28,7 @@ cc_tool(
         "@gcc_toolchain//:builtin_headers",
         "@gcc_toolchain//:linker_buildroot",
         "@gcc_toolchain//:multicall_support_files",
+        "@gcc_toolchain//:sysroot",
     ],
     tags = ["manual"],
 )
@@ -35,6 +39,7 @@ cc_tool(
     data = [
         "@gcc_toolchain//:builtin_headers",
         "@gcc_toolchain//:multicall_support_files",
+        "@gcc_toolchain//:sysroot",
     ],
     tags = ["manual"],
 )

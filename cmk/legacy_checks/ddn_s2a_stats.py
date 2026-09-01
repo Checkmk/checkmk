@@ -3,21 +3,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any
+
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.ddn_s2a.lib import parse_ddn_s2a_api_response
 
-check_info = {}
+
+@dataclass(frozen=True, kw_only=True)
+class Section:
+    totals: Mapping[str, str]
+    """Values aggregated over all ports, keyed without the "All_ports_" prefix."""
+    per_port: Mapping[str, Sequence[str]]
+    """Per port values, one entry per port."""
 
 
-def parse_ddn_s2a_stats(string_table):
-    return {
-        key: value[0] if key.startswith("All_ports") else value
-        for key, value in parse_ddn_s2a_api_response(string_table).items()
-    }
+def parse_ddn_s2a_stats(string_table: StringTable) -> Section:
+    parsed = parse_ddn_s2a_api_response(string_table)
+    return Section(
+        totals={
+            key.removeprefix("All_ports_"): value[0]
+            for key, value in parsed.items()
+            if key.startswith("All_ports_")
+        },
+        per_port={key: value for key, value in parsed.items() if not key.startswith("All_ports_")},
+    )
 
 
 #   .--Read hits-----------------------------------------------------------.
@@ -30,20 +58,17 @@ def parse_ddn_s2a_stats(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_stats_readhits(parsed):
-    if "All_ports_Read_Hits" in parsed:
-        yield "Total", {}
-    for nr, _ in enumerate(parsed.get("Read_Hits", [])):
-        yield "%d" % (nr + 1), {}
+def discover_ddn_s2a_stats_readhits(section: Section) -> DiscoveryResult:
+    yield from _discover_ports(section, "Read_Hits")
 
 
-def check_ddn_s2a_stats_readhits(item, params, parsed):
-    if item == "Total":
-        read_hits = float(parsed["All_ports_Read_Hits"])
-    else:
-        read_hits = float(parsed["Read_Hits"][int(item) - 1])
+def check_ddn_s2a_stats_readhits(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if (read_hits := _port_value(section, item, "Read_Hits")) is None:
+        return
 
-    return check_levels(
+    yield from check_levels(
         read_hits,
         "read_hits",
         (None, None) + params["levels_lower"],
@@ -51,7 +76,7 @@ def check_ddn_s2a_stats_readhits(item, params, parsed):
     )
 
 
-check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
+check_plugin_ddn_s2a_stats_readhits = CheckPlugin(
     name="ddn_s2a_stats_readhits",
     service_name="DDN S2A Read Hits %s",
     sections=["ddn_s2a_stats"],
@@ -80,49 +105,22 @@ check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_stats_io(parsed):
-    if "All_ports_Read_IOs" in parsed:
-        yield "Total", {}
-    for nr, _ in enumerate(parsed.get("Read_IOs", [])):
-        yield "%d" % (nr + 1), {}
+def discover_ddn_s2a_stats_io(section: Section) -> DiscoveryResult:
+    yield from _discover_ports(section, "Read_IOs")
 
 
-def check_ddn_s2a_stats_io(item, params, parsed):
-    def check_io_levels(value, levels, infotext_formatstring, perfname=None):
-        infotext = infotext_formatstring % value
-        if levels is None:
-            return (0, infotext) if perfname is None else (0, infotext, [(perfname, value)])
+def check_ddn_s2a_stats_io(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    read_ios_s = _port_value(section, item, "Read_IOs")
+    write_ios_s = _port_value(section, item, "Write_IOs")
+    if read_ios_s is None or write_ios_s is None:
+        return
 
-        warn, crit = levels
-        perfdata = [(perfname, value, warn, crit)]
-        levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} 1/s)"
-        if value >= crit:
-            status = 2
-            infotext += levelstext
-        elif value >= warn:
-            status = 1
-            infotext += levelstext
-        else:
-            status = 0
-
-        if perfname is None:
-            return status, infotext
-        return status, infotext, perfdata
-
-    if item == "Total":
-        read_ios_s = float(parsed["All_ports_Read_IOs"])
-        write_ios_s = float(parsed["All_ports_Write_IOs"])
-    else:
-        read_ios_s = float(parsed["Read_IOs"][int(item) - 1])
-        write_ios_s = float(parsed["Write_IOs"][int(item) - 1])
-    total_ios_s = read_ios_s + write_ios_s
-
-    yield check_io_levels(read_ios_s, params.get("read"), "Read: %.2f 1/s", "disk_read_ios")
-    yield check_io_levels(write_ios_s, params.get("write"), "Write: %.2f 1/s", "disk_write_ios")
-    yield check_io_levels(total_ios_s, params.get("total"), "Total: %.2f 1/s")
+    yield from _check_io_levels("Read", read_ios_s, params.get("read"), "disk_read_ios")
+    yield from _check_io_levels("Write", write_ios_s, params.get("write"), "disk_write_ios")
+    yield from _check_io_levels("Total", read_ios_s + write_ios_s, params.get("total"), None)
 
 
-check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
+check_plugin_ddn_s2a_stats_io = CheckPlugin(
     name="ddn_s2a_stats_io",
     service_name="DDN S2A IO %s",
     sections=["ddn_s2a_stats"],
@@ -145,59 +143,82 @@ check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ddn_s2a_stats(parsed):
-    if "All_ports_Read_MBs" in parsed:
-        yield "Total", {}
-    for nr, _value in enumerate(parsed.get("Read_MBs", [])):
-        yield "%d" % (nr + 1), {}
+def discover_ddn_s2a_stats(section: Section) -> DiscoveryResult:
+    yield from _discover_ports(section, "Read_MBs")
 
 
-def check_ddn_s2a_stats(item, params, parsed):
-    def check_datarate_levels(value, value_mb, levels, infotext_formatstring, perfname=None):
-        infotext = infotext_formatstring % value_mb
-        if levels is None:
-            return (0, infotext) if perfname is None else (0, infotext, [(perfname, value)])
+def check_ddn_s2a_stats(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    read_mb_s = _port_value(section, item, "Read_MBs")
+    write_mb_s = _port_value(section, item, "Write_MBs")
+    if read_mb_s is None or write_mb_s is None:
+        return
 
-        warn, crit = levels
-        warn_mb, crit_mb = (x / (1024 * 1024.0) for x in levels)
-        perfdata = [(perfname, value, warn, crit)]
-        levelstext = f" (warn/crit at {warn_mb:.2f}/{crit_mb:.2f} MB/s)"
-        if value >= crit:
-            status = 2
-            infotext += levelstext
-        elif value >= warn:
-            status = 1
-            infotext += levelstext
-        else:
-            status = 0
+    yield from _check_datarate_levels("Read", read_mb_s, params.get("read"), "disk_read_throughput")
+    yield from _check_datarate_levels(
+        "Write", write_mb_s, params.get("write"), "disk_write_throughput"
+    )
+    yield from _check_datarate_levels("Total", read_mb_s + write_mb_s, params.get("total"), None)
 
-        if perfname is None:
-            return status, infotext
-        return status, infotext, perfdata
 
+def _discover_ports(section: Section, key: str) -> DiscoveryResult:
+    if key in section.totals:
+        yield Service(item="Total")
+    yield from (Service(item=str(nr + 1)) for nr, _ in enumerate(section.per_port.get(key, ())))
+
+
+def _port_value(section: Section, item: str, key: str) -> float | None:
     if item == "Total":
-        read_mb_s = float(parsed["All_ports_Read_MBs"])
-        write_mb_s = float(parsed["All_ports_Write_MBs"])
+        raw_value = section.totals.get(key)
     else:
-        read_mb_s = float(parsed["Read_MBs"][int(item) - 1])
-        write_mb_s = float(parsed["Write_MBs"][int(item) - 1])
-    total_mb_s = read_mb_s + write_mb_s
-    read = read_mb_s * 1024 * 1024
-    write = write_mb_s * 1024 * 1024
-    total = total_mb_s * 1024 * 1024
-
-    yield check_datarate_levels(
-        read, read_mb_s, params.get("read"), "Read: %.2f MB/s", "disk_read_throughput"
-    )
-    yield check_datarate_levels(
-        write, write_mb_s, params.get("write"), "Write: %.2f MB/s", "disk_write_throughput"
-    )
-    yield check_datarate_levels(total, total_mb_s, params.get("total"), "Total: %.2f MB/s")
+        per_port = section.per_port.get(key, ())
+        index = int(item) - 1
+        raw_value = per_port[index] if 0 <= index < len(per_port) else None
+    return None if raw_value is None else float(raw_value)
 
 
-check_info["ddn_s2a_stats"] = LegacyCheckDefinition(
+def _levels_state(value: float, levels: tuple[float, float] | None) -> State:
+    if levels is None:
+        return State.OK
+    warn, crit = levels
+    if value >= crit:
+        return State.CRIT
+    return State.WARN if value >= warn else State.OK
+
+
+def _check_io_levels(
+    label: str, value: float, levels: tuple[float, float] | None, metric_name: str | None
+) -> CheckResult:
+    summary = f"{label}: {value:.2f} 1/s"
+    if (state := _levels_state(value, levels)) is not State.OK and levels is not None:
+        summary += f" (warn/crit at {levels[0]:.2f}/{levels[1]:.2f} 1/s)"
+
+    yield Result(state=state, summary=summary)
+    if metric_name is not None:
+        yield Metric(metric_name, value, levels=levels)
+
+
+def _check_datarate_levels(
+    label: str, value_mb: float, levels: tuple[float, float] | None, metric_name: str | None
+) -> CheckResult:
+    # The levels are configured in bytes per second, but we report megabytes per second.
+    value = value_mb * 1024 * 1024
+    summary = f"{label}: {value_mb:.2f} MB/s"
+    if (state := _levels_state(value, levels)) is not State.OK and levels is not None:
+        summary += f" (warn/crit at {levels[0] / 1024**2:.2f}/{levels[1] / 1024**2:.2f} MB/s)"
+
+    yield Result(state=state, summary=summary)
+    if metric_name is not None:
+        yield Metric(metric_name, value, levels=levels)
+
+
+agent_section_ddn_s2a_stats = AgentSection(
     name="ddn_s2a_stats",
     parse_function=parse_ddn_s2a_stats,
+)
+
+
+check_plugin_ddn_s2a_stats = CheckPlugin(
+    name="ddn_s2a_stats",
     service_name="DDN S2A Data Rate %s",
     discovery_function=discover_ddn_s2a_stats,
     check_function=check_ddn_s2a_stats,

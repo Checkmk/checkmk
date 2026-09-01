@@ -13,18 +13,14 @@ from cmk.ccc.resulttype import OK, Result
 from cmk.ccc.site import SiteId
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import (
-    GraphConsolidationFunction,
     QueryData,
     QueryDataError,
-    RRDDataKey,
 )
 from cmk.gui.graphing._graph_specification import (
     GraphRanges,
 )
 from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
 from cmk.gui.graphing._rrd import (
-    _fetch_time_series_of_service,
-    _metric_props_by_service,
     _reverse_translate_into_all_potentially_relevant_metrics,
     _rrd_columns,
     make_graph_row,
@@ -257,61 +253,6 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
     )
 
 
-@pytest.mark.parametrize(
-    ["key_cf", "graph_cf", "expected_effective_cf", "expected_key_cf"],
-    [
-        pytest.param(
-            "min",
-            "average",
-            "average",
-            "min",
-            id="graph CF takes precedence over key CF",
-        ),
-        pytest.param(
-            "min",
-            None,
-            "min",
-            "min",
-            id="key CF is used when graph CF is None",
-        ),
-        pytest.param(
-            None,
-            "average",
-            "average",
-            None,
-            id="graph CF is used when key CF is None",
-        ),
-        pytest.param(
-            None,
-            None,
-            "max",
-            None,
-            id="defaults to max when both are None",
-        ),
-    ],
-)
-def test_metric_props_by_service_consolidation_function_priority(
-    key_cf: GraphConsolidationFunction | None,
-    graph_cf: GraphConsolidationFunction | None,
-    expected_effective_cf: GraphConsolidationFunction,
-    expected_key_cf: GraphConsolidationFunction | None,
-) -> None:
-    key = RRDDataKey(
-        SiteId("NO_SITE"),
-        HostName("my-host"),
-        ServiceName("my-service"),
-        "my_metric",
-        key_cf,
-        1.0,
-    )
-    by_service = _metric_props_by_service([key], graph_cf)
-    props = next(iter(by_service.values()))
-    assert len(props) == 1
-    prop = next(iter(props))
-    assert prop.consolidation_function == expected_effective_cf
-    assert prop.key_consolidation_function == expected_key_cf
-
-
 def test_rrd_columns_uses_effective_consolidation_function_in_rpn() -> None:
     """The RPN query must use the effective (graph-level) consolidation function,
     not the original key consolidation function."""
@@ -481,42 +422,3 @@ def test_make_graph_row_applies_pnp_suffix_check_command_to_translation(
     assert rta.value == pytest.approx(0.0068)
     assert rta.scalar.warn == pytest.approx(0.3)
     assert rta.scalar.crit == pytest.approx(0.5)
-
-
-def test_fetch_time_series_of_host(
-    mock_livestatus: MockLiveStatusConnection, request_context: None
-) -> None:
-    """The _HOST_ service is queried via the hosts table with an unprefixed name filter."""
-    prop = MetricProperties(metric_name="temp", consolidation_function="max", scale=1.0)
-    with mock_livestatus(expect_status_query=True) as live:
-        live.add_table(
-            "hosts",
-            [
-                {
-                    "name": "my-host",
-                    "rrddata:temp:temp.max:1681985455:1681999855:20": [1, 2, 3, 4, 5, None],
-                }
-            ],
-        )
-        live.expect_query(
-            """GET hosts
-Columns: rrddata:temp:temp.max:1681985455:1681999855:20
-Filter: name = my-host
-ColumnHeaders: off
-
-            """,
-            sites=["NO_SITE"],
-        )
-        result = _fetch_time_series_of_service(
-            SiteId("NO_SITE"),
-            HostName("my-host"),
-            ServiceName("_HOST_"),
-            {prop},
-            lambda v: v,
-            start_time=1681985455,
-            end_time=1681999855,
-            step=20,
-        )
-    assert result == [
-        (prop, TimeSeries(start=1, end=2, step=3, values=[4, 5, None])),
-    ]

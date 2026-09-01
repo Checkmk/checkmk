@@ -6,15 +6,11 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
-import collections
-import contextlib
-import time
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 
 import cmk.ccc.version as cmk_version
-import cmk.livestatus_client as livestatus
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -25,9 +21,6 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.livestatus_client import livestatus_lql
-from cmk.livestatus_client.expressions import And
-from cmk.livestatus_client.queries import Query
-from cmk.livestatus_client.tables.hosts import Hosts
 from cmk.livestatus_client.tables.services import Services
 from cmk.livestatus_client.types import Column, DynamicColumn
 from cmk.utils.metrics import MetricName
@@ -37,8 +30,6 @@ from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     GraphConsolidationFunction,
     op_func_wrapper,
-    RRDData,
-    RRDDataKey,
     time_series_operators,
 )
 from ._legacy import (
@@ -165,27 +156,6 @@ class MetricProperties:
     scale: float
 
 
-def _metric_props_by_service(
-    keys: Sequence[RRDDataKey],
-    consolidation_function: GraphConsolidationFunction | None,
-) -> Mapping[tuple[SiteId, HostName, ServiceName], set[MetricProperties]]:
-    by_service: dict[tuple[SiteId, HostName, ServiceName], set[MetricProperties]] = (
-        collections.defaultdict(set)
-    )
-    for key in keys:
-        by_service[(key.site_id, key.host_name, key.service_name)].add(
-            MetricProperties(
-                metric_name=key.metric_name,
-                consolidation_function=(
-                    consolidation_function or key.consolidation_function or "max"
-                ),
-                key_consolidation_function=key.consolidation_function,
-                scale=key.scale,
-            )
-        )
-    return by_service
-
-
 def _rrd_columns(
     rrddata: DynamicColumn,
     metric_props: Iterable[MetricProperties],
@@ -203,188 +173,6 @@ def _rrd_columns(
             rpn += ",%f,*" % metric_prop.scale
         # `step` may be a preformatted, colon separated step length & point count
         yield rrddata.dynamic(metric_prop.metric_name, rpn, start_time, end_time, step)
-
-
-def _fetch_time_series_of_service(
-    site_id: SiteId,
-    host_name: HostName,
-    service_description: ServiceName,
-    metric_props: set[MetricProperties],
-    conversion: Callable[[float], float],
-    *,
-    start_time: float,
-    end_time: float,
-    step: int | str,
-) -> list[tuple[MetricProperties, TimeSeries]]:
-    # assumes str step is well formatted, colon separated step length & rrd point count
-    if not isinstance(step, str):
-        step = max(1, step)
-
-    if service_description == "_HOST_":
-        query = Query(
-            list(
-                _rrd_columns(
-                    Hosts.rrddata,
-                    metric_props,
-                    start_time=start_time,
-                    end_time=end_time,
-                    step=step,
-                )
-            ),
-            Hosts.name == host_name,
-        )
-    else:
-        query = Query(
-            list(
-                _rrd_columns(
-                    Services.rrddata,
-                    metric_props,
-                    start_time=start_time,
-                    end_time=end_time,
-                    step=step,
-                )
-            ),
-            And(
-                Services.host_name == host_name,
-                Services.description == service_description,
-            ),
-        )
-
-    with sites.only_sites(site_id):
-        data = sites.live().query_row(query)
-
-    return list(
-        zip(
-            metric_props,
-            [
-                TimeSeries(
-                    start=int(d[0]),
-                    end=int(d[1]),
-                    step=int(d[2]),
-                    values=d[3:],
-                    conversion=conversion,
-                )
-                for d in data
-            ],
-        )
-    )
-
-
-def _align_and_resample_rrds(
-    rrd_data: RRDData,
-    *,
-    consolidation_function: GraphConsolidationFunction,
-    target_start: int,
-    target_end: int,
-    target_step: int,
-) -> None:
-    """RRDTool aligns start/end/step to its internal precision.
-
-    This is returned as first 3 values in each RRD data row. Using that
-    info resampling and alignment is done in reference to the first metric.
-
-    TimeSeries are mutated in place, argument rrd_data is thus mutated"""
-    for key, time_series in rrd_data.items():
-        if not time_series:
-            spec_title = f"{key.host_name}/{key.service_name}/{key.metric_name}"
-            raise MKGeneralException(
-                _("Cannot get RRD data for %(spec_title)s") % {"spec_title": spec_title}
-            )
-
-        time_series.values = (
-            time_series.downsample(
-                start=target_start,
-                end=target_end,
-                step=target_step,
-                cf=consolidation_function,
-            )
-            if target_step >= time_series.step
-            else time_series.forward_fill_resample(
-                start=target_start,
-                end=target_end,
-                step=target_step,
-            )
-        )
-
-
-def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
-    for data in rrd_data.values():
-        data.values = data.values[:-1]
-        data.end -= step
-
-
-# The idea is to omit the empty last step of graphs which are showing the
-# last data which ends now (at the current time) where there is not yet
-# data available for the current RRD step. Showing an empty space on the
-# right of the graph seems a bit odd, so strip of the last (empty) step.
-#
-# This makes only sense for graphs which are ending "now". So disable this
-# for the other graphs.
-def _chop_last_empty_step(end_time: float, rrd_data: RRDData) -> None:
-    sample_data = next(iter(rrd_data.values()))
-    step = sample_data.step
-    # Disable graph chop for graphs which do not end within the current step
-    if abs(time.time() - end_time) > step:
-        return
-
-    # To avoid a gap when querying:
-    # Chop one step from the end of the graph
-    # `if` that is None for *all* curves(TimeSeries or graphs).
-    if all(len(graph) and graph[-1] is None for graph in rrd_data.values()):
-        _chop_end_of_the_curve(rrd_data, step)
-
-
-@tracer.instrument("graphing.fetch_time_series_rrd")
-def fetch_time_series_rrd(
-    keys: Sequence[RRDDataKey],
-    consolidation_function: GraphConsolidationFunction | None,
-    conversion: Callable[[float], float],
-    *,
-    start_time: float,
-    end_time: float,
-    step: int | str,
-) -> RRDData:
-    rrd_data: dict[RRDDataKey, TimeSeries] = {}
-    for (site_id, host_name, service_description), metrics in _metric_props_by_service(
-        keys, consolidation_function
-    ).items():
-        with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
-            for metric_props, time_series in _fetch_time_series_of_service(
-                site_id,
-                host_name,
-                service_description,
-                metrics,
-                conversion,
-                start_time=start_time,
-                end_time=end_time,
-                step=step,
-            ):
-                rrd_data[
-                    RRDDataKey(
-                        site_id,
-                        host_name,
-                        service_description,
-                        metric_props.metric_name,
-                        metric_props.key_consolidation_function,
-                        metric_props.scale,
-                    )
-                ] = time_series
-
-    if rrd_data:
-        first_rrd_series = next(iter(rrd_data.values()))
-        target_start = first_rrd_series.start
-        target_end = first_rrd_series.end
-        target_step = first_rrd_series.step
-        _align_and_resample_rrds(
-            rrd_data,
-            consolidation_function=consolidation_function or "max",
-            target_start=target_start,
-            target_end=target_end,
-            target_step=target_step,
-        )
-        _chop_last_empty_step(end_time, rrd_data)
-
-    return rrd_data
 
 
 def _reverse_translate_into_all_potentially_relevant_metrics(

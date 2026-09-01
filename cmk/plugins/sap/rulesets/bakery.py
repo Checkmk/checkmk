@@ -172,6 +172,20 @@ def _valuespec_agent_config_mk_sap() -> Dictionary:
                     element_template=String(),
                 ),
             ),
+            "exclude_paths": DictElement(
+                parameter_form=List(
+                    title=Title("CCMS paths to exclude from monitoring"),
+                    help_text=Help(
+                        "Paths excluded from monitoring even when matched by the paths above,"
+                        " using the same patterns. Path segments come from the 40 character SAP"
+                        " field MTNAMESHRT, so long names arrive truncated and patterns must match"
+                        " the truncated name. A pattern that matches the 'monitor set/monitor'"
+                        " path of a monitor excludes that monitor entirely; its tree is then not"
+                        " queried at all."
+                    ),
+                    element_template=String(),
+                ),
+            ),
         },
         migrate=migrate,
     )

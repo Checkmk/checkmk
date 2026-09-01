@@ -138,6 +138,9 @@ monitor_paths = [
     "SAP CCMS Monitor Templates/Dialog Overview/*",
 ]
 monitor_types = []  # type: list[str]
+
+# Matches here override monitor_paths.
+exclude_paths = []  # type: list[str]
 config_file = MK_CONFDIR + "/sap.cfg"
 
 cfg = {}  # type: list[dict[Any, Any]] | dict[Any, Any]
@@ -210,6 +213,12 @@ class SapError(Exception):
 
 
 def to_be_monitored(path, toplevel_match=False):
+    # Never shortened for toplevel matching: shortening a subtree rule
+    # would exclude the whole monitor.
+    for rule in exclude_paths:
+        if fnmatch.fnmatch(path, rule):
+            return False
+
     for rule in monitor_paths:
         if toplevel_match and rule.count("/") > 1:
             rule = "/".join(rule.split("/")[:2])

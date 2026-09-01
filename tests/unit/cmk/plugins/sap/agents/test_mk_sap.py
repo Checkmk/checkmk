@@ -104,6 +104,64 @@ def test_recursion(monkeypatch):
         assert "01" in str(exception.value)
 
 
+_CRITICAL_NUMBER_RANGES = (
+    "SAP CCMS Technical Expert Monitors/All Monitoring Contexts/Critical Number Ranges"
+)
+_ALL_CLIENTS = _CRITICAL_NUMBER_RANGES + "/Critical Number Ranges All Clients"
+_EXCLUDE_CLIENT_000 = _ALL_CLIENTS + "/Client 000 Alert Messages for Number Ran*"
+
+
+@pytest.mark.parametrize(
+    "monitor, exclude, path, toplevel_match, expected",
+    [
+        pytest.param(
+            ["SAP CCMS Monitor Templates/Dialog Overview/*"],
+            [],
+            "SAP CCMS Monitor Templates/Other/Foo",
+            False,
+            False,
+            id="nothing matches",
+        ),
+        pytest.param(
+            [_CRITICAL_NUMBER_RANGES + "/*"],
+            [_EXCLUDE_CLIENT_000],
+            _ALL_CLIENTS + "/Client 000 Alert Messages for Number Ran",
+            False,
+            False,
+            id="exclude wins over a matching monitor rule (last segment truncated to 40 chars)",
+        ),
+        pytest.param(
+            [_CRITICAL_NUMBER_RANGES + "/*"],
+            [_EXCLUDE_CLIENT_000],
+            _ALL_CLIENTS + "/Client 100 Alert Messages for Number Ran",
+            False,
+            True,
+            id="a sibling not matching the exclude rule stays monitored",
+        ),
+        pytest.param(
+            [_CRITICAL_NUMBER_RANGES + "/*"],
+            [_EXCLUDE_CLIENT_000],
+            "SAP CCMS Technical Expert Monitors/All Monitoring Contexts",
+            True,
+            True,
+            id="subtree exclude is not shortened, so toplevel matching keeps the monitor",
+        ),
+        pytest.param(
+            ["*"],
+            ["SAP CCMS Monitor Templates/Dialog Overview*"],
+            "SAP CCMS Monitor Templates/Dialog Overview",
+            True,
+            False,
+            id="exclude matching the toplevel path skips the whole monitor",
+        ),
+    ],
+)
+def test_to_be_monitored(monkeypatch, monitor, exclude, path, toplevel_match, expected):  # type: ignore[misc]
+    monkeypatch.setattr(mk_sap, "monitor_paths", monitor)
+    monkeypatch.setattr(mk_sap, "exclude_paths", exclude)
+    assert mk_sap.to_be_monitored(path, toplevel_match) is expected
+
+
 STATES = {
     ("PRD", "Other/SAP CCMS Monitor Templates/Dialog Overview/Syslog"): datetime.datetime(
         2026, 6, 10, 9, 30, 0

@@ -766,3 +766,63 @@ when present keeps v1 clients working and leaves them with today's failure mode
 autochecks mtime, which needs no client cooperation but rejects fewer real conflicts.
 **Recommendation:** optional-when-present in v1, required in the next version. This
 is an API-ownership call, not a modelling one.
+
+**12.8 What the autochecks file contains.** The file holds entries for services whose
+monitoring nothing derives from those entries. For an **enforced** service the check
+table overwrites the autochecks entry outright — `_aggregate_check_table_services`
+yields autochecks first and enforced second into a `{service_id: service}` dict
+(`cmk/base/config/_impl.py:302-308`, `:194`) — and
+`EnforcedServicesTable._make_configured_service` (`:3352`) builds the replacement with
+`discovered_parameters={}` and `discovered_labels={}`, commenting that _"Enforced
+services have no discovered labels, but the 'Service labels' ruleset still applies."_
+So a shadowed entry contributes nothing to what runs, nothing to the parameters, and
+nothing to label-based rule matching. It is residue by exactly the definition werk
+19801 applied to disabled services.
+
+The discriminator that covers all three cases is **whether anything reads the entry**,
+not whether the service is monitored:
+
+| origin                   | who reads the node's autochecks entry                                            | entry                         |
+| ------------------------ | -------------------------------------------------------------------------------- | ----------------------------- |
+| disabled by rule         | nobody                                                                           | residue — decided, werk 19801 |
+| enforced by rule         | nobody; the check table overwrites it                                            | residue — **undecided**       |
+| clustered onto a cluster | the cluster, via `_get_clustered_services` → `get_autochecks(node)` (`:473-478`) | load-bearing — §6.1           |
+
+That reading makes werk 19801's "drop the entry when a rule disables it" and this
+model's "keep the node's entry when the service is clustered" one rule rather than two,
+and it is why dropping a clustered node's entry is data loss (behaviour matrix §10.17)
+while dropping a disabled service's entry is a fix.
+
+**Only the enforced row is undecided, and today's behaviour is not an answer to it.**
+The entry survives indefinitely until someone clicks "Accept all", at which point it is
+deleted by fall-through, because the shadowed row is re-added as `manual` and
+`_apply_state_change` has no `manual` case (behaviour matrix §10.8). Two identically
+configured hosts therefore differ by button-press history, and they diverge again when
+the enforced rule is withdrawn: one reverts to monitored, the other goes undecided
+until a rediscovery. The nondeterminism is a defect under either answer; what has to be
+decided is which state to converge on.
+
+**Recommendation:** treat an enforced service's autochecks entry as residue and drop it
+deliberately — in the write path every writer goes through, not in the GUI's transition
+layer. A contract about the file's contents implemented in one handler and not its
+siblings is precisely how werk 19800 shipped with a gap (behaviour matrix §10.1). Two
+conditions:
+
+1. The drop must be conditional on nothing reading the entry, `effective_host`
+   included. A node carrying both an enforced-services rule and a clustered-services
+   rule for the same service would otherwise lose it from the cluster's table — the
+   §10.17 harm from the other direction. The mechanism is confirmed; whether a real
+   configuration produces that overlap is not, and it needs a cluster-fixture test
+   either way.
+2. The withdrawal gap must be accepted explicitly: removing the enforced rule leaves
+   the service undecided until a rediscovery. That price was already paid for disabled
+   services after werk 19801, so this is consistency rather than a new cost.
+
+Migration needs nothing. The entry is inert while the rule matches, so the next
+discovery on each host cleans it up.
+
+**Why this is a decision and not a ticket.** Nothing in the code says whether today's
+behaviour was chosen. `manual` having no `_apply_state_change` case is indistinguishable
+from an omission, and the deletion it causes is indistinguishable from an intended
+cleanup. Recording the answer here is what makes the next reader able to tell the
+difference — which is the same reason §11 exists.

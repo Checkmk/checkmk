@@ -2081,12 +2081,27 @@ rather than silent inheritance by the new UI._
 host-global flag derived from a raw `check_source != table_target` string comparison — is always set on
 any host with an active check, a custom check, an enforced service, or cluster membership. Each "Accept
 all" click then costs one `set-autochecks` pending change **with an empty diff**, one audit entry, one
-`set-autochecks-v2` automation round trip and one autochecks rewrite. Worse than cosmetic in one case:
-where an "Enforced services" rule shadows a previously discovered service, the shadowed entry is
-dropped from the transition table upstream and re-added as `manual`, which has no
-`_apply_state_change` case — so a nothing-to-do `FIX_ALL` **silently deletes that autochecks entry**.
-The guarding comment `# entry.check_source in [MONITORED, UNDECIDED]` has been false since the file was
-created in 2020.
+`set-autochecks-v2` automation round trip and one autochecks rewrite. The guarding comment
+`# entry.check_source in [MONITORED, UNDECIDED]` has been false since the file was created in 2020.
+
+**The enforced-service cell is a separate question, and this section overstated its harm.** Where an
+"Enforced services" rule shadows a previously discovered service, the shadowed row is re-added as
+`manual`, which has no `_apply_state_change` case, so a nothing-to-do `FIX_ALL` deletes the autochecks
+entry by fall-through. That was recorded here as silent data loss. It is not: the check table
+overwrites a shadowed entry with the enforced one and builds the replacement with
+`discovered_parameters={}` and `discovered_labels={}`, so while the rule matches the entry feeds
+nothing — not the check, not the parameters, not label-based rule matching. Deleting it costs nothing
+a rediscovery cannot restore.
+
+What _is_ defective is that the entry's fate depends on an unrelated user action. It survives
+indefinitely until someone clicks "Accept all", so two identically configured hosts end up in
+different states, and they diverge again when the enforced rule is withdrawn: one reverts to
+`unchanged`, the other goes `new` until a rediscovery. That is a defect under either answer to the
+underlying question, and the question — whether the autochecks file should hold an entry nothing reads
+— is a statement about the file's contents, wider than this document's subject. It is recorded as
+**domain model §12.8**, with the recommendation to drop such entries deliberately in the shared write
+path. Until that decision lands, **this ticket carries only the empty-diff churn**; the `manual` cell
+waits for §12.8.
 
 ### 10.9 Two defects around the `inventory_failed` host flag
 
@@ -2814,7 +2829,7 @@ What _is_ a defect is that the `adopt=∅` case is executed as a change rather t
 | 3   | `vanished + drop` drops the entry, whichever label the caller used                 | only the `removed` label drops; `new` and `unchanged` keep it                                                                                | A2-F6, §10.16                     |
 | 4   | `monitor` with `adopt`=∅ on a `changed` row writes nothing — it is a no-op         | executed as a change: value-identical write, `to_monitored` demanded, pending change, host-wide autochecks rebuild                           | A3-F1 residue, §10.8 family       |
 | 5   | `{unchanged, changed} + disable` → absent from autochecks                          | writes it                                                                                                                                    | §10.1                             |
-| 6   | non-autocheck origins reject everything                                            | `FIX_ALL` retargets them to `monitored`; REST admits every target                                                                            | §10.8, §10.3                      |
+| 6   | non-autocheck origins reject everything                                            | `FIX_ALL` retargets them to `monitored`; REST admits every target                                                                            | §10.8, §10.3, DM §12.8            |
 | 7   | clustered sources reject everything on the node                                    | every target except `ignored` rewrites the entry; `ignored` drops it and un-monitors the service on the cluster                              | A2-F7, §10.17                     |
 | 8   | `ignored + drop` removes the disabled rule                                         | the `removed` label leaves the rule in place — the one `drop` cell `_case_ignored` treats differently                                        | §11.3, §10.3                      |
 | 9   | the `removed` label is rejected on any still-discovered source                     | accepted and handled as `drop`, with a different permission                                                                                  | §11.3                             |

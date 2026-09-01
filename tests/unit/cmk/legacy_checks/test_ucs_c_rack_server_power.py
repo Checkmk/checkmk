@@ -1,15 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping, Sequence
-
-import pytest
-
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.ucs_c_rack_server_power import (
     check_ucs_c_rack_server_power,
     discover_ucs_c_rack_server_power,
@@ -17,101 +11,48 @@ from cmk.legacy_checks.ucs_c_rack_server_power import (
 )
 
 
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
-    [
-        (
-            [
-                [
-                    "computeMbPowerStats",
-                    "dn sys/rack-unit-1/board/power-stats",
-                    "consumedPower 88",
-                    "inputCurrent 6.00",
-                    "inputVoltage 12.100",
-                ],
-                [
-                    "computeMbPowerStats",
-                    "dn sys/rack-unit-2/board/power-stats",
-                    "consumedPower 90",
-                    "inputCurrent 7.00",
-                    "inputVoltage 12.100",
-                ],
-            ],
-            [("Rack Unit 1", {}), ("Rack Unit 2", {})],
-        ),
-    ],
-)
-def test_discover_ucs_c_rack_server_power(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
-) -> None:
-    """Test discovery function for ucs_c_rack_server_power check."""
-    parsed = parse_ucs_c_rack_server_power(string_table)
-    result = list(discover_ucs_c_rack_server_power(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+def _power(rack: int, consumed: str) -> list[str]:
+    return [
+        "computeMbPowerStats",
+        f"dn sys/rack-unit-{rack}/board/power-stats",
+        f"consumedPower {consumed}",
+        "inputCurrent 6.00",
+        "inputVoltage 12.100",
+    ]
 
 
-@pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
-    [
-        (
-            "Rack Unit 1",
-            {"power_upper_levels": (90, 100)},
-            [
-                [
-                    "computeMbPowerStats",
-                    "dn sys/rack-unit-1/board/power-stats",
-                    "consumedPower 88",
-                    "inputCurrent 6.00",
-                    "inputVoltage 12.100",
-                ],
-                [
-                    "computeMbPowerStats",
-                    "dn sys/rack-unit-2/board/power-stats",
-                    "consumedPower 90",
-                    "inputCurrent 7.00",
-                    "inputVoltage 12.100",
-                ],
-            ],
-            [
-                (0, "Power: 88.0 W", [("power", 88.0, 90, 100)]),
-                (0, "Current: 6.0 A"),
-                (0, "Voltage: 12.1 V"),
-            ],
-        ),
-        (
-            "Rack Unit 2",
-            {"power_upper_levels": (90, 100)},
-            [
-                [
-                    "computeMbPowerStats",
-                    "dn sys/rack-unit-1/board/power-stats",
-                    "consumedPower 88",
-                    "inputCurrent 6.00",
-                    "inputVoltage 12.100",
-                ],
-                [
-                    "computeMbPowerStats",
-                    "dn sys/rack-unit-2/board/power-stats",
-                    "consumedPower 90",
-                    "inputCurrent 7.00",
-                    "inputVoltage 12.100",
-                ],
-            ],
-            [
-                (1, "Power: 90.0 W (warn/crit at 90.0 W/100.0 W)", [("power", 90.0, 90, 100)]),
-                (0, "Current: 7.0 A"),
-                (0, "Voltage: 12.1 V"),
-            ],
-        ),
-    ],
-)
-def test_check_ucs_c_rack_server_power(
-    item: str,
-    params: Mapping[str, object],
-    string_table: StringTable,
-    expected_results: Sequence[object],
-) -> None:
-    """Test check function for ucs_c_rack_server_power check."""
-    parsed = parse_ucs_c_rack_server_power(string_table)
-    result = list(check_ucs_c_rack_server_power(item, params, parsed))
-    assert result == expected_results
+_SECTION = parse_ucs_c_rack_server_power([_power(1, "88"), _power(2, "95"), _power(3, "120")])
+_PARAMS = {"power_upper_levels": (90, 100)}
+
+
+def test_parse_ucs_c_rack_server_power_skips_uncastable_values() -> None:
+    section = parse_ucs_c_rack_server_power([_power(1, "not-a-number")])
+    assert section["Rack Unit 1"] == {"inputCurrent": 6.0, "inputVoltage": 12.1}
+
+
+def test_discover_ucs_c_rack_server_power() -> None:
+    assert list(discover_ucs_c_rack_server_power(_SECTION)) == [
+        Service(item="Rack Unit 1"),
+        Service(item="Rack Unit 2"),
+        Service(item="Rack Unit 3"),
+    ]
+
+
+def test_check_ucs_c_rack_server_power() -> None:
+    assert list(check_ucs_c_rack_server_power("Rack Unit 1", _PARAMS, _SECTION)) == [
+        Result(state=State.OK, summary="Power: 88.0 W"),
+        Metric("power", 88.0, levels=(90.0, 100.0)),
+        Result(state=State.OK, summary="Current: 6.0 A"),
+        Result(state=State.OK, summary="Voltage: 12.1 V"),
+    ]
+
+
+def test_check_ucs_c_rack_server_power_above_levels() -> None:
+    assert list(check_ucs_c_rack_server_power("Rack Unit 3", _PARAMS, _SECTION))[:2] == [
+        Result(state=State.CRIT, summary="Power: 120.0 W (warn/crit at 90.0 W/100.0 W)"),
+        Metric("power", 120.0, levels=(90.0, 100.0)),
+    ]
+
+
+def test_check_ucs_c_rack_server_power_vanished_item() -> None:
+    assert not list(check_ucs_c_rack_server_power("Rack Unit 4", _PARAMS, _SECTION))

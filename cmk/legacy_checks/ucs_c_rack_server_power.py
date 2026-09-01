@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
 # exemplary output of special agent agent_ucs_bladecenter (separator is <TAB> and means tabulator):
 #
@@ -17,13 +17,28 @@
 
 
 import contextlib
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+type Section = Mapping[str, Mapping[str, float]]
 
 
-def parse_ucs_c_rack_server_power(string_table):
+def parse_ucs_c_rack_server_power(string_table: StringTable) -> Section:
     """
     Returns dict with indexed rack motherboards mapped to keys and consumed power,
     input current status and input voltage status as value.
@@ -31,8 +46,7 @@ def parse_ucs_c_rack_server_power(string_table):
     parsed: dict[str, dict[str, float]] = {}
     # The element count of string_table lines is under our control (agent output) and
     # ensured to have expected length. It is ensured that elements contain a
-    # string. Handles invalid values provided by the XML API which cannot be
-    # casted by setting corresponding values to None.
+    # string. Values which the XML API reports in a form we cannot cast are left out.
     for _, dn, power, current, voltage in string_table:
         motherboard = (
             dn.replace("dn ", "")
@@ -42,41 +56,45 @@ def parse_ucs_c_rack_server_power(string_table):
             .replace("/power-stats", "")
         )
         parsed.setdefault(motherboard, {})
-        for ds_key, ds, cast_function in (
-            ("consumedPower", power, float),  # consumedPower is no longer int but float instead!!
-            ("inputCurrent", current, float),
-            ("inputVoltage", voltage, float),
+        for ds_key, ds in (
+            ("consumedPower", power),  # consumedPower is no longer int but float instead!!
+            ("inputCurrent", current),
+            ("inputVoltage", voltage),
         ):
-            # The default value set by setdefault is None. These values are handled in the
-            # check function appropriatelly.
             with contextlib.suppress(ValueError):
-                # Power values are of type int. Current and voltage values are of type float but
-                # converted to int. Hogher accuracy of float is not required.
-                parsed[motherboard][ds_key] = cast_function(ds.replace(ds_key + " ", ""))
+                parsed[motherboard][ds_key] = float(ds.replace(ds_key + " ", ""))
     return parsed
 
 
-def check_ucs_c_rack_server_power(item, params, parsed):
-    if not (data := parsed.get(item)):
+def discover_ucs_c_rack_server_power(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_ucs_c_rack_server_power(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    yield check_levels(
+
+    yield from check_levels(
         data["consumedPower"],
         "power",
         params["power_upper_levels"],
         human_readable_func=lambda x: f"{x:.1f} W",
         infoname="Power",
     )
-    yield 0, "Current: %s A" % data["inputCurrent"]
-    yield 0, "Voltage: %s V" % data["inputVoltage"]
+    yield Result(state=State.OK, summary=f"Current: {data['inputCurrent']} A")
+    yield Result(state=State.OK, summary=f"Voltage: {data['inputVoltage']} V")
 
 
-def discover_ucs_c_rack_server_power(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["ucs_c_rack_server_power"] = LegacyCheckDefinition(
+agent_section_ucs_c_rack_server_power = AgentSection(
     name="ucs_c_rack_server_power",
     parse_function=parse_ucs_c_rack_server_power,
+)
+
+
+check_plugin_ucs_c_rack_server_power = CheckPlugin(
+    name="ucs_c_rack_server_power",
     service_name="Motherboard Power Statistics %s",
     discovery_function=discover_ucs_c_rack_server_power,
     check_function=check_ucs_c_rack_server_power,

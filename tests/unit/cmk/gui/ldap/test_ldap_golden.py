@@ -47,13 +47,18 @@ from cmk.gui.user_connection_config_types import (
     SyncAttribute,
     UserConnectionConfig,
 )
-from cmk.gui.userdb import get_user_attributes, UserAttribute
+from cmk.gui.userdb import (
+    get_user_attributes,
+    load_users,
+    UserAttribute,
+    UserConnectionConfigFile,
+)
 from cmk.gui.userdb.user_attributes import (
     StartURLUserAttribute,
     TemperatureUnitUserAttribute,
 )
 from cmk.gui.utils.security_log_events import UserManagementEvent
-from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.gui.web_test_app import SetConfig, WebTestAppForCMK
 
 
 @pytest.fixture(name="mock_ldap")
@@ -334,6 +339,36 @@ def test_check_credentials_valid(
             "carol", "hunter2"
         )
         assert result == UserId("carol_id")
+
+
+def test_login_of_an_unknown_ldap_user_syncs_it(
+    mocker: MockerFixture,
+    mock_ldap: MagicMock,
+    wsgi_app: WebTestAppForCMK,
+) -> None:
+    """Flask opens the session while pushing the request context, so the sync that runs
+    while authenticating cannot consult it (CMK-19466)."""
+    UserConnectionConfigFile().save([_test_config], pprint_value=False)
+    mocker.patch("cmk.utils.password_store.extract", return_value="hunter2")
+    mocker.patch.object(
+        LDAPUserConnector,
+        "_get_user",
+        return_value=FetchedLDAPUser(
+            dn="cn=carol,ou=People,dc=ldap_golden,dc=unit_tests,dc=local",
+            ldap_user_name="carol",
+            ldap_user_spec={"uid": ["carol"]},
+        ),
+    )
+    mocker.patch.object(LDAPUserConnector, "_bind_single_ldap_user", return_value=True)
+
+    wsgi_app.set_authorization(("Bearer", "carol hunter2"))
+    wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version",
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+
+    assert UserId("carol") in load_users()
 
 
 def test_check_credentials_invalid(mocker: MockerFixture, mock_ldap: MagicMock) -> None:

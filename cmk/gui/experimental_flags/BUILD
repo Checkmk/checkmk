@@ -2,7 +2,7 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
-    name = "release_flags",
+    name = "experimental_flags",
     srcs = glob(["**/*.py"]),
     imports = ["../../.."],
     visibility = [

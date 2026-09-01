@@ -66,8 +66,8 @@ def _expected_replication_paths() -> list[ReplicationPath]:
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.FILE,
-            ident="release_flags",
-            site_path="etc/check_mk/release_flag.json",
+            ident="experimental_flags",
+            site_path="etc/check_mk/experimental_flag.json",
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,

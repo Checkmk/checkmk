@@ -288,6 +288,24 @@ def test_build_matched_graphs_emits_default_graph_for_unclaimed_metrics() -> Non
     assert fallback == _fallback(extra)
 
 
+def test_build_matched_graphs_emits_fallback_graphs_in_metric_name_order() -> None:
+    service = _service()
+    unclaimed = [
+        MetricName("util"),
+        MetricName("if_in"),
+        MetricName("extra"),
+        MetricName("cpu_user"),
+        MetricName("if_out"),
+    ]
+    fetch_data = _FakeRRDFetchData(
+        performance_response={service: _perf_data(*(_perf(name) for name in unclaimed))}
+    )
+
+    graphs = _discover([], fetch_data=fetch_data)
+
+    assert [graph.name for graph in graphs] == sorted(unclaimed)
+
+
 def test_build_matched_graphs_filters_to_the_requested_graph_name() -> None:
     service = _service()
     cpu_user = MetricName("cpu_user")

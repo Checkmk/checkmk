@@ -239,7 +239,7 @@ def build_matched_graphs(
             )
         )
 
-    for name in available:
+    for name in sorted(available):
         if name in claimed or name.startswith(_PREDICT_PREFIX):
             continue
         _collect(_single_metric_graph(name))

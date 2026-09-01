@@ -99,10 +99,10 @@ def drawn_metric_names_of_graph(
     graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
 ) -> Sequence[MetricName]:
     return list(
-        {
+        dict.fromkeys(
             name
             for quantity in (*graph.compound_lines, *graph.simple_lines)
             if not is_scalar(quantity)
             for name in metric_names_in_quantity(quantity)
-        }
+        )
     )

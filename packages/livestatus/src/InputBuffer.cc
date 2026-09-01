@@ -87,7 +87,12 @@ InputBuffer::Result InputBuffer::readRequest() {
     // _read_index points to the place in the buffer, where the
     // next valid data begins. This data ends at _write_index.
     // That data might have been read while reading the previous
-    // request.
+    // request. The usable part of the buffer is given by its size(),
+    // *not* by its capacity(): the elements in [size(), capacity())
+    // do not exist, so accessing them is undefined behavior. Hence the
+    // invariant below, which every branch has to maintain:
+    //
+    //     0 <= _read_index <= r <= _write_index <= _readahead_buffer.size()
 
     // r is used to find the end of the line
     size_t r = _read_index;
@@ -104,7 +109,7 @@ InputBuffer::Result InputBuffer::readRequest() {
         if (r == _write_index) {
             // Is there still space left in the buffer => read in
             // further data into the buffer.
-            if (_write_index < _readahead_buffer.capacity()) {
+            if (_write_index < _readahead_buffer.size()) {
                 const Result rd =
                     readData();  // tries to read in further data into buffer
                 if (rd == Result::timeout) {
@@ -155,20 +160,21 @@ InputBuffer::Result InputBuffer::readRequest() {
                     return rd;
                 }
             }
-            // OK. So no space is left in the buffer. But maybe at the
-            // *beginning* of the buffer is space left again. This is
-            // very probable if _write_index == _readahead_buffer.capacity().
-            // Most
-            // of the buffer's content is already processed. So we simply
-            // shift the yet unprocessed data to the very left of the buffer.
+            // OK. So no space is left in the buffer, i.e. we know that
+            // _write_index == _readahead_buffer.size(). But maybe at the
+            // *beginning* of the buffer is space left again. This is very
+            // probable, because most of the buffer's content is already
+            // processed. So we simply shift the yet unprocessed data to the
+            // very left of the buffer.
             else if (_read_index > 0) {
                 const size_t shift_by =
                     _read_index;  // distance to beginning of buffer
-                const size_t size =
-                    _write_index - _read_index;  // amount of data to shift
-                std::move(&_readahead_buffer[_read_index],
-                          &_readahead_buffer[_read_index + size],
-                          _readahead_buffer.data());
+                std::move(
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+                    _readahead_buffer.data() + _read_index,
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+                    _readahead_buffer.data() + _write_index,
+                    _readahead_buffer.data());
                 _read_index = 0;  // unread data is now at the beginning
                 _write_index -= shift_by;  // write pointer shifted to the left
                 r -= shift_by;  // current scan position also shift left
@@ -177,13 +183,13 @@ InputBuffer::Result InputBuffer::readRequest() {
             }
             // buffer is full, but still no end of line found
             else {
-                const size_t new_capacity = _readahead_buffer.capacity() * 2;
-                if (new_capacity > maximum_buffer_size) {
+                const size_t new_size = _readahead_buffer.size() * 2;
+                if (new_size > maximum_buffer_size) {
                     Informational(_logger)
                         << "Error: maximum length of request line exceeded";
                     return Result::line_too_long;
                 }
-                _readahead_buffer.resize(new_capacity);
+                _readahead_buffer.resize(new_size);
             }
         } else  // end of line found
         {
@@ -197,10 +203,15 @@ InputBuffer::Result InputBuffer::readRequest() {
 
             }  // non-empty line: belongs to current request
             size_t length = r - _read_index;
+            // Note the cast: a request line may contain UTF-8, so the bytes we
+            // look at are routinely negative when char is signed. Handing such
+            // a value to the <cctype> functions is undefined behavior, they are
+            // only defined for unsigned char values and EOF.
             for (size_t end = r;
                  end > _read_index &&
-                 // NOLINTNEXTLINE(bugprone-inc-dec-in-conditions)
-                 (isspace(_readahead_buffer[--end]) != 0);) {
+                 (std::isspace(static_cast<unsigned char>(
+                      // NOLINTNEXTLINE(bugprone-inc-dec-in-conditions)
+                      _readahead_buffer[--end])) != 0);) {
                 length--;
             }
             if (length > 0) {
@@ -237,8 +248,11 @@ InputBuffer::Result InputBuffer::readData() {
             }
             break;
         }
-        const ssize_t r = ::read(_fd, &_readahead_buffer[_write_index],
-                                 _readahead_buffer.capacity() - _write_index);
+        const ssize_t r = ::read(
+            _fd,
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            _readahead_buffer.data() + _write_index,
+            _readahead_buffer.size() - _write_index);
         if (r < 0) {
             return Result::eof;
         }

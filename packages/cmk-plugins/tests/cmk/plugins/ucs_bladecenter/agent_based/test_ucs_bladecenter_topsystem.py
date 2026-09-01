@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.ucs_bladecenter_topsystem import (
+from cmk.plugins.ucs_bladecenter.agent_based.ucs_bladecenter_topsystem import (
     check_ucs_bladecenter_topsystem,
     discover_ucs_bladecenter_topsystem,
     parse_ucs_bladecenter_topsystem,

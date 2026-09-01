@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.ucs_c_rack_server_health import (
+from cmk.plugins.ucs_bladecenter.agent_based.ucs_c_rack_server_health import (
     check_ucs_c_rack_server_health,
     discover_ucs_c_rack_server_health,
     parse_ucs_c_rack_server_health,

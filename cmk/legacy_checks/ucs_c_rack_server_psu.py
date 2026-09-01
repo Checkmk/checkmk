@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # exemplary output of special agent agent_ucs_bladecenter (<TAB> is tabulator):
 #
 # <<<ucs_c_rack_server_psu:sep(9)>>>
@@ -12,48 +10,105 @@
 # equipmentPsu<TAB>dn sys/rack-unit-1/psu-2 <TAB>id 2<TAB>model blabla<TAB>operability inoperable<TAB>voltage ok
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from collections.abc import Mapping
+from dataclasses import dataclass
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
-def parse_ucs_c_rack_server_psu(string_table):
+@dataclass(frozen=True, kw_only=True)
+class Psu:
+    operability: str
+    voltage: str
+    model: str
+
+
+type Section = Mapping[str, Psu]
+
+# maps XML API v2.0 XML entity values to check function states
+_OPERABILITY_TO_STATE = {
+    "unknown": State.UNKNOWN,
+    "operable": State.OK,
+    "inoperable": State.CRIT,
+    "degraded": State.CRIT,
+    "powered-off": State.WARN,
+    "power-problem": State.CRIT,
+    "removed": State.WARN,
+    "voltage-problem": State.CRIT,
+    "thermal-problem": State.CRIT,
+    "performance-problem": State.CRIT,
+    "accessibility-problem": State.CRIT,
+    "identity-unestablishable": State.WARN,
+    "bios-post-timeout": State.WARN,
+    "disabled": State.WARN,
+    "malformed-fru": State.WARN,
+    "fabric-conn-problem": State.CRIT,
+    "fabric-unsupported-conn": State.WARN,
+    "config": State.WARN,
+    "equipment-problem": State.CRIT,
+    "decomissioning": State.WARN,
+    "chassis-limit-exceeded": State.WARN,
+    "not-supported": State.WARN,
+    "discovery": State.WARN,
+    "discovery-failed": State.WARN,
+    "identify": State.WARN,
+    "post-failure": State.WARN,
+    "upgrade-problem": State.WARN,
+    "peer-comm-problem": State.CRIT,
+    "auto-upgrade": State.WARN,
+}
+
+# maps XML API v2.0 XML entity values to check function states
+_VOLTAGE_TO_STATE = {
+    "unknown": State.UNKNOWN,
+    "ok": State.OK,
+    "upper-non-recoverable": State.CRIT,
+    "upper-critical": State.CRIT,
+    "upper-non-critical": State.WARN,
+    "lower-non-critical": State.WARN,
+    "lower-critical": State.CRIT,
+    "lower-non-recoverable": State.CRIT,
+    "not-supported": State.WARN,
+}
+
+
+def parse_ucs_c_rack_server_psu(string_table: StringTable) -> Section:
     """
-    Returns dict with indexed PSUs mapped to keys and operability, voltage values mapped to dicts.
+    Returns dict with indexed PSUs mapped to keys and operability, voltage and model as value.
     """
     parsed = {}
     for psu in string_table:
         try:
             key_value_pairs = [kv.split(" ", 1) for kv in psu[1:]]
-            psu = (
+            item = (
                 key_value_pairs[0][1]
                 .replace("sys/", "")
                 .replace("rack-unit-", "Rack Unit ")
                 .replace("/psu-", " PSU ")
             )
-            parsed[psu] = {
-                "operability": key_value_pairs[3][1],
-                "voltage": key_value_pairs[4][1],
-                "model": key_value_pairs[2][1],
-            }
+            parsed[item] = Psu(
+                operability=key_value_pairs[3][1],
+                voltage=key_value_pairs[4][1],
+                model=key_value_pairs[2][1],
+            )
         except IndexError:
             continue  # skip string_table line in case agent output is incomplete or invalid
     return parsed
 
 
-def discover_ucs_c_rack_server_psu_voltage(parsed):
-    for key, value in parsed.items():
-        if value.get("voltage") == "unknown" and value.get("model", "").startswith("UCS-"):
-            continue  # see SUP-11285
-        yield key, {}
-
-
-def discover_ucs_c_rack_server_psu(parsed):
-    """
-    Yields indexed PSUs as items (e.g. Rack Unit 1 PSU 1).
-    """
-    for key in parsed:
-        yield key, {}
+agent_section_ucs_c_rack_server_psu = AgentSection(
+    name="ucs_c_rack_server_psu",
+    parse_function=parse_ucs_c_rack_server_psu,
+)
 
 
 #########################
@@ -61,54 +116,25 @@ def discover_ucs_c_rack_server_psu(parsed):
 #########################
 
 
-def check_ucs_c_rack_server_psu(item, _no_params, parsed):
-    if not (data := parsed.get(item)):
+def discover_ucs_c_rack_server_psu(section: Section) -> DiscoveryResult:
+    """
+    Yields indexed PSUs as items (e.g. Rack Unit 1 PSU 1).
+    """
+    yield from (Service(item=item) for item in section)
+
+
+def check_ucs_c_rack_server_psu(item: str, section: Section) -> CheckResult:
+    if (psu := section.get(item)) is None:
         return
-    # maps XML API v2.0 XML entity values to check function status values
-    operability_to_status_mapping = {
-        "unknown": 3,
-        "operable": 0,
-        "inoperable": 2,
-        "degraded": 2,
-        "powered-off": 1,
-        "power-problem": 2,
-        "removed": 1,
-        "voltage-problem": 2,
-        "thermal-problem": 2,
-        "performance-problem": 2,
-        "accessibility-problem": 2,
-        "identity-unestablishable": 1,
-        "bios-post-timeout": 1,
-        "disabled": 1,
-        "malformed-fru": 1,
-        "fabric-conn-problem": 2,
-        "fabric-unsupported-conn": 1,
-        "config": 1,
-        "equipment-problem": 2,
-        "decomissioning": 1,
-        "chassis-limit-exceeded": 1,
-        "not-supported": 1,
-        "discovery": 1,
-        "discovery-failed": 1,
-        "identify": 1,
-        "post-failure": 1,
-        "upgrade-problem": 1,
-        "peer-comm-problem": 2,
-        "auto-upgrade": 1,
-    }
-    operability = data["operability"]
-    try:
-        status = operability_to_status_mapping[operability]
-        status_readable = operability
-    except KeyError:
-        status = 3
-        status_readable = "unknown[%s]" % operability
-    yield status, "Status: %s" % status_readable
+
+    if (state := _OPERABILITY_TO_STATE.get(psu.operability)) is None:
+        yield Result(state=State.UNKNOWN, summary=f"Status: unknown[{psu.operability}]")
+    else:
+        yield Result(state=state, summary=f"Status: {psu.operability}")
 
 
-check_info["ucs_c_rack_server_psu"] = LegacyCheckDefinition(
+check_plugin_ucs_c_rack_server_psu = CheckPlugin(
     name="ucs_c_rack_server_psu",
-    parse_function=parse_ucs_c_rack_server_psu,
     service_name="Output Power %s",
     discovery_function=discover_ucs_c_rack_server_psu,
     check_function=check_ucs_c_rack_server_psu,
@@ -119,32 +145,24 @@ check_info["ucs_c_rack_server_psu"] = LegacyCheckDefinition(
 #################################
 
 
-def check_ucs_c_rack_server_psu_voltage(item, _no_params, parsed):
-    if not (data := parsed.get(item)):
+def discover_ucs_c_rack_server_psu_voltage(section: Section) -> DiscoveryResult:
+    for item, psu in section.items():
+        if psu.voltage == "unknown" and psu.model.startswith("UCS-"):
+            continue  # see SUP-11285
+        yield Service(item=item)
+
+
+def check_ucs_c_rack_server_psu_voltage(item: str, section: Section) -> CheckResult:
+    if (psu := section.get(item)) is None:
         return
-    # maps XML API v2.0 XML entity values to check function status values
-    voltage_to_status_mapping = {
-        "unknown": 3,
-        "ok": 0,
-        "upper-non-recoverable": 2,
-        "upper-critical": 2,
-        "upper-non-critical": 1,
-        "lower-non-critical": 1,
-        "lower-critical": 2,
-        "lower-non-recoverable": 2,
-        "not-supported": 1,
-    }
-    voltage_status = data["voltage"]
-    try:
-        status = voltage_to_status_mapping[voltage_status]
-        status_readable = voltage_status
-    except KeyError:
-        status = 3
-        status_readable = "unknown[%s]" % voltage_status
-    yield status, "Status: %s" % status_readable
+
+    if (state := _VOLTAGE_TO_STATE.get(psu.voltage)) is None:
+        yield Result(state=State.UNKNOWN, summary=f"Status: unknown[{psu.voltage}]")
+    else:
+        yield Result(state=state, summary=f"Status: {psu.voltage}")
 
 
-check_info["ucs_c_rack_server_psu.voltage"] = LegacyCheckDefinition(
+check_plugin_ucs_c_rack_server_psu_voltage = CheckPlugin(
     name="ucs_c_rack_server_psu_voltage",
     service_name="Output Voltage %s",
     sections=["ucs_c_rack_server_psu"],

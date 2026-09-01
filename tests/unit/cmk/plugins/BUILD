@@ -20,7 +20,6 @@ py_cmk_test(
     deps = [
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/watolib",
-        "//cmk/legacy_checks",
         "//cmk/plugins",
         "//cmk/plugins/diagnostics/cli",
         "//packages/cmk-check-engine:specs",

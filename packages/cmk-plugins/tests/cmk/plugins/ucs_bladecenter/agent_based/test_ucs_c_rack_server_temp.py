@@ -6,8 +6,8 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks import ucs_c_rack_server_temp
-from cmk.legacy_checks.ucs_c_rack_server_temp import (
+from cmk.plugins.ucs_bladecenter.agent_based import ucs_c_rack_server_temp
+from cmk.plugins.ucs_bladecenter.agent_based.ucs_c_rack_server_temp import (
     check_ucs_c_rack_server_temp,
     discover_ucs_c_rack_server_temp,
     parse_ucs_c_rack_server_temp,

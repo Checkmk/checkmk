@@ -20,61 +20,61 @@ cc_tool_map(
 
 cc_tool(
     name = "gcc",
-    src = "@gcc-linux-x86_64//:bin/x86_64-linux-gcc.br_real",
+    src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-gcc",
     data = [
-        "@gcc-linux-x86_64//:builtin_headers",
-        "@gcc-linux-x86_64//:linker_buildroot",
-        "@gcc-linux-x86_64//:multicall_support_files",
+        "@gcc_toolchain//:builtin_headers",
+        "@gcc_toolchain//:linker_buildroot",
+        "@gcc_toolchain//:multicall_support_files",
     ],
     tags = ["manual"],
 )
 
 cc_tool(
     name = "g++",
-    src = "@gcc-linux-x86_64//:bin/x86_64-linux-g++.br_real",
+    src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-g++",
     data = [
-        "@gcc-linux-x86_64//:builtin_headers",
-        "@gcc-linux-x86_64//:multicall_support_files",
+        "@gcc_toolchain//:builtin_headers",
+        "@gcc_toolchain//:multicall_support_files",
     ],
     tags = ["manual"],
 )
 
 cc_tool(
     name = "ld",
-    src = "@gcc-linux-x86_64//:bin/x86_64-linux-g++.br_real",
+    src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-g++",
     data = [
-        "@gcc-linux-x86_64//:linker_builtins",
-        "@gcc-linux-x86_64//:multicall_support_files",
+        "@gcc_toolchain//:linker_builtins",
+        "@gcc_toolchain//:multicall_support_files",
     ],
     tags = ["manual"],
 )
 
 cc_tool(
     name = "ar",
-    src = "@gcc-linux-x86_64//:bin/x86_64-linux-ar",
+    src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-ar",
     tags = ["manual"],
 )
 
 cc_tool(
     name = "objcopy",
-    src = "@gcc-linux-x86_64//:bin/x86_64-linux-objcopy",
+    src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-objcopy",
     tags = ["manual"],
 )
 
 cc_tool(
     name = "objdump",
-    src = "@gcc-linux-x86_64//:bin/x86_64-linux-objdump",
+    src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-objdump",
     tags = ["manual"],
 )
 
 cc_tool(
     name = "gcov",
-    src = "@gcc-linux-x86_64//:bin/x86_64-linux-gcov",
+    src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-gcov",
     tags = ["manual"],
 )
 
 cc_tool(
     name = "strip",
-    src = "@gcc-linux-x86_64//:bin/x86_64-linux-strip",
+    src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-strip",
     tags = ["manual"],
 )

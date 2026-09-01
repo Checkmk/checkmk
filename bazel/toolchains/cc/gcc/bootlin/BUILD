@@ -13,7 +13,7 @@ cc_toolchain(
     ],
     compiler = "gcc",
     dynamic_runtime_lib = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:dynamic_runtime_lib",
+        "//bazel/platforms:linux_x86_64": "@gcc_toolchain//:dynamic_runtime_lib",
     }),
     enabled_features = [
         "@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features",
@@ -29,7 +29,7 @@ cc_toolchain(
         "//bazel/toolchains/cc/feature/optimize:max_optimization",
     ] + ["//bazel/toolchains/cc/feature/std:" + std for std in STANDARDS_FEATURES],
     static_runtime_lib = select({
-        "//bazel/platforms:linux_x86_64": "@gcc-linux-x86_64//:static_runtime_lib",
+        "//bazel/platforms:linux_x86_64": "@gcc_toolchain//:static_runtime_lib",
     }),
     tags = ["manual"],
     tool_map = "//bazel/toolchains/cc/gcc/bootlin/tools",

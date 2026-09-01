@@ -1,82 +1,60 @@
 #!/usr/bin/env python3
-# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping, Sequence
-
-import pytest
-
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.legacy_checks.ucs_c_rack_server_topsystem import (
     check_ucs_c_rack_server_topsystem,
     discover_ucs_c_rack_server_topsystem,
     parse_ucs_c_rack_server_topsystem,
 )
 
-
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
+_SECTION = parse_ucs_c_rack_server_topsystem(
     [
-        (
-            [
-                [
-                    "topSystem",
-                    "dn sys",
-                    "address 192.168.1.1",
-                    "currentTime Wed Feb  6 09:12:12 2019",
-                    "mode stand-alone",
-                    "name CIMC-istreamer2a-etn",
-                ]
-            ],
-            [(None, None)],
-        ),
-    ],
+        [
+            "topSystem",
+            "dn sys",
+            "address 192.168.1.1",
+            "currentTime Wed Feb  6 09:12:12 2019",
+            "mode stand-alone",
+            "name CIMC-istreamer2a-etn",
+        ]
+    ]
 )
-def test_discover_ucs_c_rack_server_topsystem(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, object]]]
-) -> None:
-    """Test discovery function for ucs_c_rack_server_topsystem check."""
-    parsed = parse_ucs_c_rack_server_topsystem(string_table)
-    result = list(discover_ucs_c_rack_server_topsystem(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
 
 
-@pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
-    [
-        (
-            None,
-            {},
+def test_discover_ucs_c_rack_server_topsystem() -> None:
+    assert list(discover_ucs_c_rack_server_topsystem(_SECTION)) == [Service()]
+
+
+def test_discover_ucs_c_rack_server_topsystem_without_data() -> None:
+    assert not list(discover_ucs_c_rack_server_topsystem(parse_ucs_c_rack_server_topsystem([])))
+
+
+def test_check_ucs_c_rack_server_topsystem() -> None:
+    assert list(check_ucs_c_rack_server_topsystem(_SECTION)) == [
+        Result(state=State.OK, summary="DN: sys"),
+        Result(state=State.OK, summary="IP: 192.168.1.1"),
+        Result(state=State.OK, summary="Mode: stand-alone"),
+        Result(state=State.OK, summary="Name: CIMC-istreamer2a-etn"),
+        Result(state=State.OK, summary="Date and time: 2019-02-06 09:12:12"),
+    ]
+
+
+def test_check_ucs_c_rack_server_topsystem_unparsable_time() -> None:
+    section = parse_ucs_c_rack_server_topsystem(
+        [
             [
-                [
-                    "topSystem",
-                    "dn sys",
-                    "address 192.168.1.1",
-                    "currentTime Wed Feb  6 09:12:12 2019",
-                    "mode stand-alone",
-                    "name CIMC-istreamer2a-etn",
-                ]
-            ],
-            [
-                (0, "DN: sys"),
-                (0, "IP: 192.168.1.1"),
-                (0, "Mode: stand-alone"),
-                (0, "Name: CIMC-istreamer2a-etn"),
-                (0, "Date and time: 2019-02-06 09:12:12"),
-            ],
-        ),
-    ],
-)
-def test_check_ucs_c_rack_server_topsystem(
-    item: str,
-    params: Mapping[str, object],
-    string_table: StringTable,
-    expected_results: Sequence[object],
-) -> None:
-    """Test check function for ucs_c_rack_server_topsystem check."""
-    parsed = parse_ucs_c_rack_server_topsystem(string_table)
-    result = list(check_ucs_c_rack_server_topsystem(item, params, parsed))
-    assert result == expected_results
+                "topSystem",
+                "dn sys",
+                "address 192.168.1.1",
+                "currentTime nonsense",
+                "mode stand-alone",
+                "name CIMC-istreamer2a-etn",
+            ]
+        ]
+    )
+    assert list(check_ucs_c_rack_server_topsystem(section))[-1] == Result(
+        state=State.OK, summary="Date and time: unknown[entTime nonsense]"
+    )

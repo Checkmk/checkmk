@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 # exemplary output of the special agent ucs_bladecenter (separator is <TAB> and means tabulator):
 #
 # <<<ucsc_topsystem:sep(9)>>>
@@ -13,34 +10,34 @@
 
 
 import time
+from collections.abc import Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+type Section = Sequence[tuple[str, str]]
 
 
-def parse_ucs_c_rack_server_topsystem(string_table):
+def parse_ucs_c_rack_server_topsystem(string_table: StringTable) -> Section:
     """
     Input: Single line string_table with a rack server topsystem information.
-    Output: Returns dict with dn, address, current time, mode and name as keys (with corresponding values).
+    Output: Returns the dn, address, current time, mode and name as title/value pairs.
     """
-
-    def format_data_and_time(date_and_time):
-        """Converts date and time and returns in time format.
-
-        E.g. Wed Feb  6 09:12:12 2019 -> 2019-02-06 09:12:12
-        """
-        # time.strptime('Jun 1 2005  1:33PM', '%b %d %Y %I:%M%p')
-        struct_time = time.strptime(date_and_time[4:], "%b %d %H:%M:%S %Y")
-        return time.strftime("%Y-%m-%d %H:%M:%S", struct_time)
-
     parsed = []
     # The element count of string_table lines is under our control (agent output) and
     # ensured to have expected length. It is ensured that elements contain a
     # string. No bad case handling required here.
     for _, dn, ip, date_and_time, mode, name in string_table:
-        # If more than one string_table line given or in case of unexpected string_table list element format the
-        # parsed dict will be empty.
+        # If more than one string_table line given or in case of unexpected string_table list
+        # element format the parsed list will be empty.
         parsed.extend(
             [
                 ("DN", dn.replace("dn ", "")),
@@ -49,30 +46,39 @@ def parse_ucs_c_rack_server_topsystem(string_table):
                 ("Name", name.replace("name ", "")),
             ]
         )
-        try:
-            date_time_value = format_data_and_time(date_and_time.replace("currentTime ", ""))
-        except ValueError:
-            # indicate date and time format not supported
-            date_time_value = "unknown[%s]" % date_and_time[4:]
-        parsed.append(("Date and time", date_time_value))
+        parsed.append(("Date and time", _format_date_and_time(date_and_time)))
     return parsed
 
 
-def discover_ucs_c_rack_server_topsystem(parsed):
-    if parsed:
-        return [(None, None)]
-    return []
+def discover_ucs_c_rack_server_topsystem(section: Section) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-# @get_parsed_item_data
-def check_ucs_c_rack_server_topsystem(item, _no_params, data):  # noqa: ARG001
-    for title, value in data:
-        yield 0, f"{title}: {value}"
+def check_ucs_c_rack_server_topsystem(section: Section) -> CheckResult:
+    for title, value in section:
+        yield Result(state=State.OK, summary=f"{title}: {value}")
 
 
-check_info["ucs_c_rack_server_topsystem"] = LegacyCheckDefinition(
+def _format_date_and_time(date_and_time: str) -> str:
+    """Convert the reported date and time, e.g. Wed Feb  6 09:12:12 2019 -> 2019-02-06 09:12:12"""
+    raw_value = date_and_time.replace("currentTime ", "")
+    try:
+        struct_time = time.strptime(raw_value[4:], "%b %d %H:%M:%S %Y")
+    except ValueError:
+        # indicate date and time format not supported
+        return "unknown[%s]" % date_and_time[4:]
+    return time.strftime("%Y-%m-%d %H:%M:%S", struct_time)
+
+
+agent_section_ucs_c_rack_server_topsystem = AgentSection(
     name="ucs_c_rack_server_topsystem",
     parse_function=parse_ucs_c_rack_server_topsystem,
+)
+
+
+check_plugin_ucs_c_rack_server_topsystem = CheckPlugin(
+    name="ucs_c_rack_server_topsystem",
     service_name="UCS C-Series Rack Server TopSystem Info",
     discovery_function=discover_ucs_c_rack_server_topsystem,
     check_function=check_ucs_c_rack_server_topsystem,

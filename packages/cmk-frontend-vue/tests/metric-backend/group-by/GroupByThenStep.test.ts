@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { userEvent } from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
 import GroupByThenStep from '@/metric-backend/group-by/GroupByThenStep.vue'
@@ -90,4 +90,16 @@ test('the key picker is restricted to the preceding step keys and derives the ki
   await userEvent.click(screen.getByRole('option', { name: 'http.route' }))
   await waitFor(() => expect(model.value.keys[0]!.attributeKey).toBe('http.route'))
   expect(model.value.keys[0]!.attributeKind).toBe('data_point')
+})
+
+test('the collapsed chip is a tab stop wrapping the chip and the remove X, opening on Enter', async () => {
+  renderStep({ function: 'avg', keys: [] })
+
+  await userEvent.tab()
+  const stop = within(document.activeElement as HTMLElement)
+  expect(stop.getByRole('button', { name: /Edit then step/ })).toBeInTheDocument()
+  expect(stop.getByRole('button', { name: 'Remove then step' })).toBeInTheDocument()
+
+  await userEvent.keyboard('{Enter}')
+  expect(screen.getByRole('combobox', { name: 'Aggregation function' })).toBeVisible()
 })

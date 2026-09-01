@@ -174,7 +174,6 @@ function canLeaveEdit(): boolean {
     <CmkInlineValidation :validation="validationMessages" />
     <InlineEditPill
       :editing="editing"
-      :tab-focusable="false"
       :removable="model.function !== 'none' && !editing"
       :can-leave="canLeaveEdit"
       :aria-label="ariaLabel ?? summary"

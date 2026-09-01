@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { userEvent } from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { defineComponent, nextTick, ref } from 'vue'
 
 import FormConsolidation from '@/metric-backend/consolidation/FormConsolidation.vue'
@@ -395,4 +395,18 @@ test('resolved types without the current type keep the pick and still offer it',
   await openFunctionDropdown()
   expect(await screen.findByText('Treat as Sum')).toBeVisible()
   expect(screen.getByText('Treat as Gauge')).toBeVisible()
+})
+
+test('the collapsed chip is a tab stop that opens on Enter', async () => {
+  renderWidget()
+  const collapsed = chip()
+
+  await userEvent.tab()
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'outside' }))
+
+  await userEvent.tab()
+  expect(within(document.activeElement as HTMLElement).getByRole('button')).toBe(collapsed)
+
+  await userEvent.keyboard('{Enter}')
+  expect(screen.getByRole('combobox', { name: 'Consolidation function' })).toBeVisible()
 })

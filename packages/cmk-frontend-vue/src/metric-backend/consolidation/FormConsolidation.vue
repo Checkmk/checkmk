@@ -179,7 +179,6 @@ const editAriaLabel = computed(
     <CmkInlineValidation :validation="validationMessages" />
     <InlineEditPill
       :editing="editing"
-      :tab-focusable="false"
       :can-leave="canLeaveEdit"
       :aria-label="label"
       :edit-aria-label="editAriaLabel"

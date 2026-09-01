@@ -305,3 +305,18 @@ test('a committed key can be removed', async () => {
   await userEvent.click(await screen.findByRole('button', { name: 'Remove group key' }))
   await waitFor(() => expect(model.value.keys).toHaveLength(0))
 })
+
+test('the collapsed chip is a tab stop wrapping the chip and the remove X, opening on Enter', async () => {
+  renderWidget({ function: 'avg', keys: [] })
+
+  await userEvent.tab()
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'outside' }))
+
+  await userEvent.tab()
+  const stop = within(document.activeElement as HTMLElement)
+  expect(stop.getByRole('button', { name: /Edit group by/ })).toBeInTheDocument()
+  expect(stop.getByRole('button', { name: 'Remove grouping' })).toBeInTheDocument()
+
+  await userEvent.keyboard('{Enter}')
+  expect(screen.getByRole('combobox', { name: 'Grouping function' })).toBeVisible()
+})

@@ -122,7 +122,6 @@ function canLeaveEdit(): boolean {
 <template>
   <InlineEditPill
     :editing="editing"
-    :tab-focusable="false"
     :removable="!editing"
     :can-leave="canLeaveEdit"
     :aria-label="summary"

@@ -47,20 +47,16 @@ const closeSlideIn = () => {
 }
 
 const handleUpdate = () => {
-  if (graphOptions.graphOptions.value === null) {
-    return
-  }
-
   validationErrors.value = {}
 
-  const { isValid, errors } = graphOptions.validate()
+  const result = graphOptions.validate()
 
-  if (!isValid) {
-    validationErrors.value = errors
+  if (!result.isValid) {
+    validationErrors.value = result.errors
     return
   }
 
-  emit('updateSettings', graphOptions.graphOptions.value)
+  emit('updateSettings', result.graphOptions)
 }
 </script>
 
@@ -88,47 +84,45 @@ const handleUpdate = () => {
         >
       </div>
 
-      <template v-if="!!graphOptions">
-        <div class="graphing-designer-settings__block">
-          <CmkHeading type="h2">{{ _t('Graph options') }}</CmkHeading>
-          <TableForm class="graphing-designer-settings__fields">
-            <TableFormRow>
-              <FieldDescription>{{ _t('Unit') }}</FieldDescription>
-              <FieldComponent>
-                <UnitSettings
-                  v-model:unit-type="graphOptions.unitType.value"
-                  v-model:notation="graphOptions.notation.value"
-                  v-model:symbol="graphOptions.symbol.value"
-                  v-model:rounding-mode="graphOptions.roundingMode.value"
-                  v-model:rounding-digits="graphOptions.roundingDigits.value"
-                  :digit-error="validationErrors.precision_digits ?? null"
-                />
-              </FieldComponent>
-            </TableFormRow>
-            <TableFormRow>
-              <FieldDescription>{{ _t('Explicit range') }}</FieldDescription>
-              <FieldComponent>
-                <VerticalRangeSettings
-                  v-model:vertical-range-type="graphOptions.verticalRangeType.value"
-                  v-model:lower-bound="graphOptions.lowerVerticalRange.value"
-                  v-model:upper-bound="graphOptions.upperVerticalRange.value"
-                  :lower-bound-error="validationErrors.lower_range ?? null"
-                  :upper-bound-error="validationErrors.upper_range ?? null"
-                />
-              </FieldComponent>
-            </TableFormRow>
-            <TableFormRow>
-              <FieldDescription>{{ _t('Metric visibility') }}</FieldDescription>
-              <FieldComponent>
-                <CmkCheckbox
-                  v-model="graphOptions.showZeroValues.value"
-                  :label="_t('Show zero values')"
-                />
-              </FieldComponent>
-            </TableFormRow>
-          </TableForm>
-        </div>
-      </template>
+      <div class="graphing-designer-settings__block">
+        <CmkHeading type="h2">{{ _t('Graph options') }}</CmkHeading>
+        <TableForm class="graphing-designer-settings__fields">
+          <TableFormRow>
+            <FieldDescription>{{ _t('Unit') }}</FieldDescription>
+            <FieldComponent>
+              <UnitSettings
+                v-model:unit-type="graphOptions.unitType.value"
+                v-model:notation="graphOptions.notation.value"
+                v-model:symbol="graphOptions.symbol.value"
+                v-model:rounding-mode="graphOptions.roundingMode.value"
+                v-model:rounding-digits="graphOptions.roundingDigits.value"
+                :digit-error="validationErrors.precision_digits ?? null"
+              />
+            </FieldComponent>
+          </TableFormRow>
+          <TableFormRow>
+            <FieldDescription>{{ _t('Explicit range') }}</FieldDescription>
+            <FieldComponent>
+              <VerticalRangeSettings
+                v-model:vertical-range-type="graphOptions.verticalRangeType.value"
+                v-model:lower-bound="graphOptions.lowerVerticalRange.value"
+                v-model:upper-bound="graphOptions.upperVerticalRange.value"
+                :lower-bound-error="validationErrors.lower_range ?? null"
+                :upper-bound-error="validationErrors.upper_range ?? null"
+              />
+            </FieldComponent>
+          </TableFormRow>
+          <TableFormRow>
+            <FieldDescription>{{ _t('Metric visibility') }}</FieldDescription>
+            <FieldComponent>
+              <CmkCheckbox
+                v-model="graphOptions.showZeroValues.value"
+                :label="_t('Show zero values')"
+              />
+            </FieldComponent>
+          </TableFormRow>
+        </TableForm>
+      </div>
     </div>
   </CmkSlideIn>
 </template>

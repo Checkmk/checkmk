@@ -12,6 +12,8 @@ credentials or ``", "``-joined component strings.
 
 Ownership comes from ``branch`` on the Gerrit server, not from the local
 checkout: a source file added on a feature branch is unowned until it is merged.
+Data that loaded but attributes nothing is refused rather than returned, so no
+caller has to tell a failed fetch from an empty repository.
 
 It is the only place touching ``cwz``'s library API, which is not stable across
 releases -- 0.3.8 renamed both the credential helper and the data-loading method
@@ -32,6 +34,10 @@ from cwz.gerrit_utils.client import (
     DEFAULT_PROJECT_NAME,
     GerritClient,
 )
+
+
+class OwnershipUnavailableError(RuntimeError):
+    """Ownership data that loaded but cannot attribute a single path."""
 
 
 class UnknownComponentError(LookupError):
@@ -84,9 +90,14 @@ def load_ownership(
 ) -> ComponentOwnership:
     """Resolve ``paths`` (repository-relative) to their owning components.
 
+    Raises :exc:`OwnershipUnavailableError` when the fetched data attributes
+    nothing, which would otherwise read as a repository owned by no one.
+
     ``credentials`` is a ``(username, api_token)`` pair. Passing it explicitly
     keeps a headless caller's environment variable names out of this module;
-    without it ``cwz`` resolves them from ``~/.netrc`` or the keyring.
+    without it ``cwz`` resolves them from ``~/.netrc`` or the keyring -- and
+    failing that prompts, or exits the process outright when stdout is not a
+    tty. A headless caller therefore passes them.
     """
     return asyncio.run(
         _resolve(
@@ -119,13 +130,33 @@ async def _resolve(
         CodeOwnersClient(gerrit_client, project, branch) as owners_client,
     ):
         await owners_client.initialize_data(cache_mode="auto")
-        # The entries are loaded by now, so component_for_path costs no request.
+        components = await owners_client.all_components_info(with_code_locations=True)
+        _assert_usable(
+            component_count=len(components),
+            rule_count=sum(len(component.code_location or ()) for component in components.values()),
+        )
+        # with_code_locations loaded the OWNERS entries, so component_for_path, which
+        # would otherwise fetch every OWNERS file on its first call, costs no request.
         return ComponentOwnership(
             owners_by_path={
                 path: _owner_ids(await owners_client.component_for_path(str(path)))
                 for path in paths
             },
-            component_ids=frozenset(await owners_client.all_components_info()),
+            component_ids=frozenset(components),
+        )
+
+
+def _assert_usable(*, component_count: int, rule_count: int) -> None:
+    """Refuse ownership data that would answer "unowned" for every path."""
+    if not component_count:
+        raise OwnershipUnavailableError(
+            "The ownership data defines no component at all, so every path would resolve to "
+            "unowned."
+        )
+    if not rule_count:
+        raise OwnershipUnavailableError(
+            f"The ownership data defines {component_count} component(s) but not one OWNERS rule, "
+            "so every path would resolve to unowned."
         )
 
 

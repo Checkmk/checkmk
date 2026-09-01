@@ -10,7 +10,8 @@ push the result to the QA Metabase postgres for dashboarding.
   row dataclass to postgres table. Every metric depends on this.
 - `components/` — shared library: resolves repository paths to the components
   that own them, reading the `OWNERS` files through Gerrit's code-owners API.
-  Ownership reflects the remote branch, not the local checkout.
+  Ownership reflects the remote branch, not the local checkout, and data that
+  attributes nothing is refused rather than returned.
 - `change_quality/` — first metric. Per-werk row of "did the introducing
   commit include a test?", written to `cmk_change_tested`.
 - `test_coverage/` — Python test coverage. Uploads overall coverage history to

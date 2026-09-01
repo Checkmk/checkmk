@@ -22,18 +22,25 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from tests.qa_metrics.components import load_ownership, UnknownComponentError
+from tests.qa_metrics.components import (
+    load_ownership,
+    OwnershipUnavailableError,
+    UnknownComponentError,
+)
 from tests.qa_metrics.test_coverage._file_lists import source_paths, tracked_files
 
 
 def main() -> None:
     args = _parse_args()
 
-    ownership = load_ownership(_tracked_python_files(args.repo_root))
+    try:
+        ownership = load_ownership(_tracked_python_files(args.repo_root))
+    except OwnershipUnavailableError as exc:
+        raise SystemExit(str(exc))
     try:
         owned = ownership.paths_owned_by(args.component)
     except UnknownComponentError as exc:
-        raise SystemExit(str(exc)) from None
+        raise SystemExit(str(exc))
     measured = set(source_paths(args.source_labels, args.repo_root))
     present = [path for path in owned if path in measured]
     if not present:

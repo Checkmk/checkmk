@@ -7,8 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from tests.qa_metrics.components import ComponentOwnership, UnknownComponentError
-from tests.qa_metrics.components._ownership import _owner_ids
+from tests.qa_metrics.components import (
+    ComponentOwnership,
+    OwnershipUnavailableError,
+    UnknownComponentError,
+)
+from tests.qa_metrics.components._ownership import _assert_usable, _owner_ids
 
 
 def _ownership() -> ComponentOwnership:
@@ -84,3 +88,17 @@ def test_paths_owned_by_unknown_component_raises() -> None:
 def test_unknown_component_error_suggests_close_match() -> None:
     with pytest.raises(UnknownComponentError, match="Did you mean.*ui_setup"):
         _ownership().paths_owned_by("ui_setups")
+
+
+def test_assert_usable_accepts_components_with_rules() -> None:
+    _assert_usable(component_count=1, rule_count=1)
+
+
+def test_assert_usable_rejects_ownership_without_any_component() -> None:
+    with pytest.raises(OwnershipUnavailableError, match="no component at all"):
+        _assert_usable(component_count=0, rule_count=0)
+
+
+def test_assert_usable_rejects_components_without_any_rule() -> None:
+    with pytest.raises(OwnershipUnavailableError, match="not one OWNERS rule"):
+        _assert_usable(component_count=2, rule_count=0)

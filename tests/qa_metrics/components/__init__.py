@@ -8,10 +8,16 @@
 See tests/qa_metrics/README.md for a tree-level overview.
 """
 
-from ._ownership import ComponentOwnership, load_ownership, UnknownComponentError
+from ._ownership import (
+    ComponentOwnership,
+    load_ownership,
+    OwnershipUnavailableError,
+    UnknownComponentError,
+)
 
 __all__ = [
     "ComponentOwnership",
+    "OwnershipUnavailableError",
     "UnknownComponentError",
     "load_ownership",
 ]

@@ -9,6 +9,7 @@ cc_toolchain(
         "//bazel/toolchains/cc/args:optimizations",
         "//bazel/toolchains/cc/args:pic_flags",
         "//bazel/toolchains/cc/args:reproducible_compile_args",
+        "//bazel/toolchains/cc/feature/sanitize_pwd:sanitize_pwd_link_args",
     ],
     compiler = "gcc",
     dynamic_runtime_lib = select({

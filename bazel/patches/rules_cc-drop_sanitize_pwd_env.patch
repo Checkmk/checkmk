@@ -1,0 +1,16 @@
+diff --git a/cc/toolchains/args/sanitize_pwd/BUILD b/cc/toolchains/args/sanitize_pwd/BUILD
+index a280c17..d4c3580 100644
+--- a/cc/toolchains/args/sanitize_pwd/BUILD
++++ b/cc/toolchains/args/sanitize_pwd/BUILD
+@@ -17,8 +17,7 @@ cc_args(
+         "//cc/toolchains/actions:link_actions",
+         "//cc/toolchains/actions:objc_fully_link",
+     ],
+-    env = select({
+-        "//cc/settings:apple_constraint": {},
+-        "//conditions:default": {"PWD": "/proc/self/cwd"},
+-    }),
++    # Recursive mkdir -p through /proc/self/cwd fails (a coreutils quirk).
++    # This breaks rules_foreign_cc's PWD-based EXT_BUILD_ROOT=$(pwd).
++    env = {},
+ )

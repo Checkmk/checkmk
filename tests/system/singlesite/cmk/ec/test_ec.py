@@ -303,7 +303,6 @@ def _enable_snmp_trap_translation(site: Site) -> Iterator[None]:
     _activate_ec_changes(site)
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")  # reason="EC is disabled in the SaaS edition"
 def test_ec_rule_match_events_pipe(site: Site, setup_ec: Iterator) -> None:  # type: ignore[misc]
     """Generate a message via the events pipe matching an EC rule and assert an event is created"""

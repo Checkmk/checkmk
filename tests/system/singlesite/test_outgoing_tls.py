@@ -27,7 +27,6 @@ def site_tmp(site: Site) -> Iterator[str]:
     yield from site.system_temp_dir()
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skipif(
     os.getenv("DISTRO") == "almalinux-8",
     reason="Calling 'su' with '--whitelist-environment' is not supported",

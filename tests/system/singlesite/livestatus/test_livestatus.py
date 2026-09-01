@@ -115,7 +115,6 @@ def test_host_table_host_equal_filter(site: Site) -> None:
     assert rows == results[site.core_name()]
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.usefixtures("default_cfg")
 def test_service_table(site: Site) -> None:
     rows = site.live.query(

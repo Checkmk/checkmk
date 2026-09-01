@@ -35,7 +35,6 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")  # active checks not supported in SaaS
 @pytest.mark.usefixtures("web")
 def test_active_check_execution(site: Site) -> None:

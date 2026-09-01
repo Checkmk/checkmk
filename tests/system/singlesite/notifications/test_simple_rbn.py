@@ -81,7 +81,6 @@ def fixture_host(site: Site) -> Iterator[HostName]:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.usefixtures("fake_sendmail")
 @pytest.mark.usefixtures("test_user")
 @pytest.mark.usefixtures("fake_notification_rule")

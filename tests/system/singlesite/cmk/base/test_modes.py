@@ -542,7 +542,6 @@ def test_check_discovery(execute: Execute) -> None:
 #   '----------------------------------------------------------------------'
 
 
-@pytest.mark.medium_test_chain
 def test_check(execute: Execute) -> None:
     opts: list[list[str]] = [["--check"], []]
     for opt in opts:

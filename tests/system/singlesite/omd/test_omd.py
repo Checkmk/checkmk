@@ -162,7 +162,6 @@ def test_run_omd_status_bare(site: Site) -> None:
         raise excp
 
 
-@pytest.mark.medium_test_chain
 def test_run_omd_reload(site: Site) -> None:
     """
     Test the 'omd reload' command for the current site.

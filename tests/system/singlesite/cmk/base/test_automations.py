@@ -168,7 +168,6 @@ def test_automation_discovery_no_host(site: Site) -> None:
     assert p.returncode == 1
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.usefixtures("test_cfg")
 def test_automation_discovery_single_host(site: Site) -> None:
     result = _execute_automation(

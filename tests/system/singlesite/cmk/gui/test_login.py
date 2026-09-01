@@ -294,7 +294,6 @@ def test_failed_login_counter_automation(with_automation_user: tuple[str, str], 
         assert _get_failed_logins(site, username) == 0
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")
 def test_local_secret_no_sessions(site: Site) -> None:
     """test authenticated request with the site internal secret

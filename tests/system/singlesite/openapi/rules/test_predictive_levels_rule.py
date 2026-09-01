@@ -113,7 +113,6 @@ def test_predictive_levels_bounds(site: Site, config: BoundConfig) -> None:
         logger.info("Successfully tested %s", config.description)
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_edition("cloud")
 def test_update_predictive_levels_rule(site: Site) -> None:
     """Test updating predictive levels rules via REST API."""

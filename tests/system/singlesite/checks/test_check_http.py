@@ -53,7 +53,6 @@ def _check_http(site: Site) -> Iterator[tuple[str, dict[str, ServiceInfo]]]:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.medium_test_chain
 def test_check_http(site: Site, check_http: tuple[str, dict[str, ServiceInfo]]) -> None:
     rule_id, host_services = check_http
     service_name = "HTTP check_http"

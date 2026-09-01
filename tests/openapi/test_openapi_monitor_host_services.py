@@ -10,9 +10,8 @@ import pytest
 import time_machine
 
 from cmk.ccc.user import UserId
-from cmk.graphing.v1 import metrics, perfometers, Title
-from cmk.gui.graphing import metrics_from_api, perfometers_from_api
-from cmk.gui.graphing._from_api import parse_metric_from_api
+from cmk.graphing.v1 import perfometers
+from cmk.gui.graphing import perfometers_from_api
 from cmk.gui.monitor.services._api._list_host_services import _MAX_HOST_SVC_LIMIT
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.rest_api_client import ClientRegistry
@@ -20,16 +19,6 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 @pytest.fixture(name="registered_perfometer")
 def fixture_registered_perfometer() -> Iterator[None]:
-    metrics_from_api.register(
-        parse_metric_from_api(
-            metrics.Metric(
-                name="test_metric",
-                title=Title("Test metric"),
-                unit=metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(0)),
-                color=metrics.Color.BLUE,
-            )
-        )
-    )
     perfometers_from_api.register(
         perfometers.Perfometer(
             name="test_perfometer",
@@ -40,7 +29,6 @@ def fixture_registered_perfometer() -> Iterator[None]:
     try:
         yield
     finally:
-        metrics_from_api.unregister("test_metric")
         perfometers_from_api.unregister("test_perfometer")
 
 
@@ -804,7 +792,7 @@ class TestMonitorHostServices:
             "value": 42.0,
             "value_range": {"min": 0.0, "max": 100.0},
             "formatted": "42",
-            "color": "#28a2f3",
+            "color": "#8c8c8c",
         }
 
     def test_service_without_performance_data_has_no_perfometer(

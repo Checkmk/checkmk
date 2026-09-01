@@ -140,7 +140,12 @@ class HostServiceEntry:
             contact_groups=service.contact_groups
             if service.contact_groups is not None
             else ApiOmitted(),
-            perfometer=ServicePerfometer.from_perf_data(service.perf_data, service.check_command)
+            perfometer=ServicePerfometer.from_perf_data(
+                service.perf_data,
+                service.check_command,
+                host_name=hostname,
+                service_name=service.name,
+            )
             or ApiOmitted(),
         )
 

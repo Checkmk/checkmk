@@ -589,11 +589,11 @@ def test_node_service_source_emits_exactly_eight_of_the_nine_transitions() -> No
 
 @pytest.mark.xfail(
     strict=True,
-    reason="§10.13 -- a disabled clustered service must be classified as `clustered_ignored` so "
-    "that it is filed under 'Disabled clustered services' on the node (no bulk actions) and shown "
-    "on the cluster, which is the host that actually manages it. Today it lands in the generic "
-    "'Disabled services' group with bulk actions enabled, and re-enabling it from the node writes "
-    "a node-scoped rule that has no effect while reporting success",
+    reason="CMK-38591 (§10.13) -- a disabled clustered service must be classified as "
+    "`clustered_ignored` so that it is filed under 'Disabled clustered services' on the node (no "
+    "bulk actions) and shown on the cluster, which is the host that actually manages it. Today it "
+    "lands in the generic 'Disabled services' group with bulk actions enabled, and re-enabling it "
+    "from the node writes a node-scoped rule that has no effect while reporting success",
 )
 @pytest.mark.parametrize("check_source", ["new", "unchanged", "changed"])
 def test_disabled_clustered_service_is_classified_as_clustered_ignored(

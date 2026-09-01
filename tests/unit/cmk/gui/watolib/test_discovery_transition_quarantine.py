@@ -94,9 +94,9 @@ _DIVERGENCES: Sequence[Divergence] = (
             need_sync=True,
             permissions=("wato.service_discovery_to_ignored",),
         ),
-        ticket="§10.1 -- werk 19800 fixed the `ignored` and `clustered_*` sources only, so a "
-        "monitored service disabled from the GUI still ends up in the autochecks file, which is "
-        "the residue werk 19801 exists to remove",
+        ticket="CMK-38587 (§10.1) -- werk 19800 fixed the `ignored` and `clustered_*` sources "
+        "only, so a monitored service disabled from the GUI still ends up in the autochecks file, "
+        "which is the residue werk 19801 exists to remove",
     ),
     Divergence(
         # T1b.2
@@ -120,7 +120,8 @@ _DIVERGENCES: Sequence[Divergence] = (
             need_sync=True,
             permissions=("wato.service_discovery_to_ignored",),
         ),
-        ticket="§10.1 -- same gap as `unchanged + disable`, reached through `_case_changed`",
+        ticket="CMK-38587 (§10.1) -- same gap as `unchanged + disable`, reached through "
+        "`_case_changed`",
     ),
     Divergence(
         # T1b.3
@@ -138,9 +139,9 @@ _DIVERGENCES: Sequence[Divergence] = (
             need_sync=True,
             permissions=("wato.service_discovery_to_ignored",),
         ),
-        ticket="§10.16 -- a not-discovered service cannot become `ignored`: the classifier never "
-        "produces that state for it, so the write creates an autochecks entry plus a matching "
-        "rule, which is residue no discovery run can clean up",
+        ticket="CMK-38592 (§10.16) -- a not-discovered service cannot become `ignored`: the "
+        "classifier never produces that state for it, so the write creates an autochecks entry "
+        "plus a matching rule, which is residue no discovery run can clean up",
     ),
     Divergence(
         # T1b.4
@@ -156,8 +157,8 @@ _DIVERGENCES: Sequence[Divergence] = (
             labels=OLD_LABELS,
             permissions=("wato.service_discovery_to_monitored",),
         ),
-        ticket="§10.16 -- monitoring a service that is not there yields a stale check that "
-        "re-vanishes on the next scan",
+        ticket="CMK-38592 (§10.16) -- monitoring a service that is not there yields a stale check "
+        "that re-vanishes on the next scan",
     ),
     Divergence(
         # T1b.5
@@ -177,9 +178,9 @@ _DIVERGENCES: Sequence[Divergence] = (
             labels=OLD_LABELS,
             permissions=("wato.service_discovery_to_undecided",),
         ),
-        ticket="§10.16 -- `drop` is one command with two labels (§11.3), so both spellings must "
-        "clean up; `_case_vanished`'s catch-all `else` keeps the service for every target except "
-        "`removed`",
+        ticket="CMK-38592 (§10.16) -- `drop` is one command with two labels (§11.3), so both "
+        "spellings must clean up; `_case_vanished`'s catch-all `else` keeps the service for every "
+        "target except `removed`",
     ),
     Divergence(
         # T1b.6
@@ -199,8 +200,8 @@ _DIVERGENCES: Sequence[Divergence] = (
             in_autochecks=False,
             permissions=("wato.service_discovery_to_removed",),
         ),
-        ticket="§11.3 -- the same command via the other label leaves the disabled-services rule "
-        "in place, so the service reappears as `ignored` instead of `new`",
+        ticket="CMK-38592 (§11.3) -- the same command via the other label leaves the "
+        "disabled-services rule in place, so the service reappears as `ignored` instead of `new`",
     ),
     Divergence(
         # T1b.8 (T1b.7 needs no transition and is asserted separately below)
@@ -220,11 +221,10 @@ _DIVERGENCES: Sequence[Divergence] = (
             labels=OLD_LABELS,
             permissions=("wato.service_discovery_to_monitored",),
         ),
-        ticket="A3-F1 residue / §10.8 family -- `monitor(adopt=∅)` on a `changed` row is a no-op, "
-        "but `apply_changes` compares `check_source != table_target`, i.e. the observation "
-        '"changed" against the command spelled "unchanged". So the no-op is executed as a change: '
-        "value-identical write, `to_monitored` demanded, pending change, host-wide autochecks "
-        "rebuild",
+        ticket="CMK-38589 (A3-F1 residue, §10.8 family) -- `monitor(adopt=∅)` on a `changed` row "
+        "is a no-op, but `apply_changes` compares `check_source != table_target`, i.e. the "
+        "observation changedunchangedvalue-identical write, `to_monitored` demanded, pending "
+        "change, host-wide autochecks rebuild",
     ),
 )
 
@@ -270,9 +270,9 @@ def test_current_outcome(divergence: Divergence) -> None:
 
 @pytest.mark.xfail(
     strict=True,
-    reason="§11.3 -- `removed` is the label `drop` takes on a *vanished* row. On an undecided "
-    "row it is the wrong label and must be refused, rather than being accepted as a no-op that "
-    "demands a permission",
+    reason="CMK-38592 (§11.3) -- `removed` is the label `drop` takes on a *vanished* row. On an "
+    "undecided row it is the wrong label and must be refused, rather than being accepted as a "
+    "no-op that demands a permission",
 )
 def test_removed_on_an_undecided_service_is_rejected() -> None:
     with pytest.raises(Exception):  # noqa: B017  # the rejection type is not decided yet
@@ -311,8 +311,9 @@ _NOT_ELIGIBLE_SOURCES = (
 @pytest.mark.parametrize("source", _NOT_ELIGIBLE_SOURCES)
 @pytest.mark.xfail(
     strict=True,
-    reason="§10.8 / §10.17 -- a row whose origin is not `discovered`, or whose effective host is "
-    "a cluster, admits no command at all: there is no autochecks entry the node may write",
+    reason="CMK-38589 (§10.8) / CMK-38593 (§10.17) -- a row whose origin is not `discovered`, or "
+    "whose effective host is a cluster, admits no command at all: there is no autochecks entry the "
+    "node may write",
 )
 def test_ineligible_row_rejects_every_command(source: str) -> None:
     for target in (DiscoveryState.MONITORED, DiscoveryState.IGNORED, DiscoveryState.UNDECIDED):
@@ -384,8 +385,8 @@ def test_the_non_command_targets_are_every_phase_but_the_four_commands() -> None
 @pytest.mark.parametrize("target", _NON_COMMAND_TARGETS)
 @pytest.mark.xfail(
     strict=True,
-    reason="§10.3 -- only `monitor`, `disable` and `drop` are commands; every other value names "
-    "a state the caller cannot ask for and must be refused with a 400",
+    reason="CMK-38588 (§10.3) -- only `monitor`, `disable` and `drop` are commands; every other "
+    "value names a state the caller cannot ask for and must be refused with a 400",
 )
 def test_non_command_target_is_rejected(target: str) -> None:
     with pytest.raises(Exception):  # noqa: B017  # the rejection type is not decided yet
@@ -487,9 +488,9 @@ def _accept_everything(
 @pytest.mark.parametrize("table, _disabled_description", _GUARDED_TABLES)
 @pytest.mark.xfail(
     strict=True,
-    reason="§10.11 -- `EVERYTHING` means 'this action applies to the whole table', not 'the user "
-    "named these services as services to disable'. Reading it as the latter defeats werk 6708's "
-    "guard on every whole-table save",
+    reason="CMK-38590 (§10.11) -- `EVERYTHING` means 'this action applies to the whole table', not "
+    "'the user named these services as services to disable'. Reading it as the latter defeats werk "
+    "6708's guard on every whole-table save",
 )
 def test_accepting_every_service_writes_the_same_rules_as_fix_all(
     action: DiscoveryAction,

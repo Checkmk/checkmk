@@ -1322,8 +1322,8 @@ def test_update_service_phase_writes_without_asking_for_manage_services(
 
 @pytest.mark.xfail(
     strict=True,
-    reason="§10.4: update_discovery_phase bypasses wato.services and wato.edit, so a role denied "
-    "'Manage services' can still write ignored_services rules and delete services",
+    reason="CMK-38594 (§10.4): update_discovery_phase bypasses wato.services and wato.edit, so a "
+    "role denied 'Manage services' can still write ignored_services rules and delete services",
 )
 def test_update_service_phase_requires_manage_services() -> None:
     assert "wato.services" in UPDATE_PHASE_PERMISSIONS
@@ -1375,9 +1375,9 @@ def test_clearing_the_discovery_failed_flag_can_fail_after_the_autochecks_were_w
 
 @pytest.mark.xfail(
     strict=True,
-    reason="§10.9(a): clear_discovery_failed reaches Folder.save_hosts, which needs folder write, "
-    "on context-manager exit -- so a permission the page never required fails the request after "
-    "the autochecks and the pending change are already committed",
+    reason="CMK-38595 (§10.9a): clear_discovery_failed reaches Folder.save_hosts, which needs "
+    "folder write, on context-manager exit -- so a permission the page never required fails the "
+    "request after the autochecks and the pending change are already committed",
 )
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_a_failing_flag_clear_leaves_no_half_finished_discovery(
@@ -1434,9 +1434,9 @@ def test_update_service_phase_leaves_the_discovery_failed_flag_set(
 
 @pytest.mark.xfail(
     strict=True,
-    reason="§10.9(b): update_service_phase bypasses _service_discovery_context, so it never "
-    "clears inventory_failed -- bulk discovery's 'only hosts that failed previously' set never "
-    "converges for a client that only uses this endpoint",
+    reason="CMK-38595 (§10.9b): update_service_phase bypasses _service_discovery_context, so it "
+    "never clears inventory_failed -- bulk discovery's 'only hosts that failed previously' set "
+    "never converges for a client that only uses this endpoint",
 )
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_update_service_phase_clears_the_discovery_failed_flag(
@@ -1508,8 +1508,8 @@ def test_quick_setup_reads_remotely_and_writes_locally(
 
 @pytest.mark.xfail(
     strict=True,
-    reason="§10.10: quick setup derives the right automation config, uses it for the read, and "
-    "then passes LocalAutomationConfig() to perform_fix_all -- so a remote-site bundle's "
+    reason="CMK-38596 (§10.10): quick setup derives the right automation config, uses it for the "
+    "read, and then passes LocalAutomationConfig() to perform_fix_all -- so a remote-site bundle's "
     "autochecks land in the central site's var/check_mk/autochecks/",
 )
 @pytest.mark.usefixtures("inline_background_jobs")

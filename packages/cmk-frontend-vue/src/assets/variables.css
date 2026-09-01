@@ -29,6 +29,20 @@
   --popup-dialog-info: var(--color-light-blue-50);
   --border-color-purple: rgb(105 102 229);
 
+  /* Monitoring state palette, mirroring the themes' $color-state-*-background
+     SCSS values. */
+  --color-state-ok: var(--success);
+  --color-state-warning: var(--color-yellow-50);
+
+  /* A literal in the theme SCSS too — the closest palette entry,
+     --color-dark-red-50, is rgb(196 49 49) and would shift the colour. */
+  --color-state-critical: rgb(200 50 50);
+  --color-state-unknown: var(--color-orange-50);
+  --color-state-pending: var(--color-mist-grey-50);
+  --color-state-up: var(--color-state-ok);
+  --color-state-down: var(--color-state-critical);
+  --color-state-unreachable: var(--color-state-unknown);
+
   /* Fonts */
   --font-size-xxlarge: 18px;
   --font-size-xlarge: 16px;

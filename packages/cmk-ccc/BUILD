@@ -1,5 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -85,6 +86,13 @@ py_library(
 py_library(
     name = "i18n",
     srcs = ["cmk/ccc/i18n.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
+    name = "log",
+    srcs = ["cmk/ccc/log.py"],
     imports = ["."],
     visibility = ["//visibility:public"],
 )
@@ -227,6 +235,7 @@ _ALL = [
     "hostaddress",
     "i18n",
     "inotify",
+    "log",
     "observer",
     "plugin-registry",
     "profile",
@@ -382,6 +391,18 @@ py_cmk_test(
     ],
     deps = [
         "observer",
+    ],
+)
+
+py_cmk_test(
+    name = "log-tests",
+    size = "small",
+    srcs = [
+        "tests/test_log.py",
+    ],
+    deps = [
+        "log",
+        requirement("time-machine"),
     ],
 )
 

@@ -1670,7 +1670,7 @@ allows = [
 allows = ["@crypto", "cmk.ccc.store", "cmk.ccc.user", "cmk.utils.paths"]
 
 [components."cmk.utils.log"]
-allows = ["cmk.ccc.tty", "cmk.utils.jsontype", "cmk.utils.paths"]
+allows = ["cmk.ccc.log", "cmk.ccc.tty", "cmk.utils.jsontype", "cmk.utils.paths"]
 
 [components."cmk.utils.macros"]
 allows = []

@@ -9,6 +9,8 @@ from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from typing import IO
 
+from cmk.ccc.log import CMKFormatter
+
 from ._level import VERBOSE
 
 __all__ = [
@@ -51,11 +53,7 @@ def setup_logging_handler(stream: IO[str]) -> None:
 
 
 def _set_handler(handler: logging.Handler, formatter: logging.Formatter | None = None) -> None:
-    handler.setFormatter(
-        logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s")
-        if formatter is None
-        else formatter
-    )
+    handler.setFormatter(CMKFormatter() if formatter is None else formatter)
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
 

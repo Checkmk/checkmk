@@ -7,10 +7,10 @@ cc_sysroot(
         "@rules_cc//cc/toolchains/actions:compile_actions",
     ],
     data = [
-        "@gcc-linux-x86_64//:include-x86_64-buildroot-linux-gnu",
-        "@gcc-linux-x86_64//:lib-gcc-include",
-        "@gcc-linux-x86_64//:sysroot",
+        "@gcc_toolchain//:include-x86_64-checkmk-linux-gnu",
+        "@gcc_toolchain//:lib-gcc-include",
+        "@gcc_toolchain//:sysroot",
     ],
-    sysroot = "@gcc-linux-x86_64//:sysroot",
+    sysroot = "@gcc_toolchain//:sysroot",
     visibility = ["//visibility:public"],
 )

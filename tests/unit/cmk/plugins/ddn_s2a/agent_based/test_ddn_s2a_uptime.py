@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.ddn_s2a_uptime import (
+from cmk.plugins.ddn_s2a.agent_based.ddn_s2a_uptime import (
     check_ddn_s2a_uptime,
     discover_ddn_s2a_uptime,
     parse_ddn_s2a_uptime,

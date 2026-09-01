@@ -58,7 +58,7 @@ const {
   formula,
   transformation,
   successAlert,
-  isItemDisabled,
+  itemBlockReason,
   switchMode,
   startEdit,
   insertRef,
@@ -242,7 +242,7 @@ function itemActionLabel(id: ItemId): TranslatedString {
           :items="items"
           :domain="DOMAIN"
           :action-label="itemActionLabel"
-          :is-item-disabled="isItemDisabled"
+          :item-block-reason="itemBlockReason"
           :alert="alert"
           @insert-id="onInsertId"
           @edit="onEdit"

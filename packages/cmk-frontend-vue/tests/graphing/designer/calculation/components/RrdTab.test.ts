@@ -9,7 +9,7 @@ import { fireEvent, render, screen } from '@testing-library/vue'
 import RrdTab from '@/graphing/designer/calculation/components/RrdTab.vue'
 import { DEFAULT_TITLE_MACRO, type GraphItem } from '@/graphing/designer/types'
 
-import { formulaItem, items } from '../../fixtures'
+import { formulaItem, items, rrdQueryItem } from '../../fixtures'
 
 const NEXT_ID = 'F'
 const NEXT_COLOR = '#ffd703'
@@ -138,6 +138,26 @@ test('in transformation mode a badge click selects the metric', async () => {
   ])
 })
 
+test('a query says why it cannot be transformed, in the list and in the dropdown', async () => {
+  const user = userEvent.setup()
+  renderTab([rrdQueryItem('A')])
+  await fireEvent.click(screen.getByRole('button', { name: 'Toggle Transformation' }))
+
+  expect(screen.getByRole('button', { name: 'Select A for the transformation' })).toHaveAttribute(
+    'title',
+    'A percentile needs one metric. This query selects several. Aggregate it in a calculation first.'
+  )
+
+  const metric = screen.getByRole('combobox', { name: 'Metric' })
+  await user.click(metric)
+  expect(
+    await screen.findByText(
+      'A percentile needs one metric. Add a single metric, or aggregate a query in a calculation first.'
+    )
+  ).toBeInTheDocument()
+  expect(metric).toHaveTextContent('No metric available')
+})
+
 test('editing a formula seeds the operations editor and commits an update', async () => {
   const { emitted } = renderTab()
   await fireEvent.click(screen.getByRole('button', { name: 'Edit D' }))
@@ -225,12 +245,18 @@ test('a newly added item gets the success alert once it appears', async () => {
   expect(screen.getByText('Calculation added')).toBeInTheDocument()
 })
 
-test('while editing, dynamic and cycle-back rows are disabled', async () => {
+test('while editing, dynamic and cycle-back rows say why they block', async () => {
   const dependent = formulaItem('F', { ast: { op: 'ref', id: 'D' } })
   renderTab([...items, dependent])
   await fireEvent.click(screen.getByRole('button', { name: 'Edit D' }))
-  expect(screen.getByRole('button', { name: 'Insert D into the formula' })).toBeDisabled()
-  expect(screen.getByRole('button', { name: 'Insert F into the formula' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Insert D into the formula' })).toHaveAttribute(
+    'title',
+    'This calculation is currently being edited.'
+  )
+  expect(screen.getByRole('button', { name: 'Insert F into the formula' })).toHaveAttribute(
+    'title',
+    'This calculation refers to the one being edited. A reference back would create a cycle.'
+  )
   expect(screen.getByRole('button', { name: 'Insert A into the formula' })).toBeEnabled()
 })
 

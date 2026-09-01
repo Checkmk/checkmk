@@ -48,6 +48,12 @@ const percentile = defineModel<string | null>('percentile', { required: true })
       :options="metricOptions"
       :label="_t('Metric')"
       :input-hint="_t('Select one metric')"
+      :no-elements-text="_t('No metric available')"
+      :no-results-hint="
+        _t(
+          'A percentile needs one metric. Add a single metric, or aggregate a query in a calculation first.'
+        )
+      "
     />
     <CmkDropdown
       v-model="percentile"

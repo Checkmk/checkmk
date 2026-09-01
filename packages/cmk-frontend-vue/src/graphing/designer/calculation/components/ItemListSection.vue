@@ -32,7 +32,7 @@ const {
   emptyText,
   items,
   actionLabel,
-  isItemDisabled,
+  itemBlockReason,
   showActions = false,
   alert = null
 } = defineProps<{
@@ -40,7 +40,7 @@ const {
   emptyText: TranslatedString
   items: readonly GraphItem[]
   actionLabel: (id: ItemId) => TranslatedString
-  isItemDisabled?: ((item: GraphItem) => boolean) | undefined
+  itemBlockReason?: ((item: GraphItem) => TranslatedString | null) | undefined
   /** Render edit/delete actions on each row (calculations only). */
   showActions?: boolean
   /** Success alert shown inline in the matching row, just before the actions. */
@@ -75,7 +75,7 @@ function onAlertOpenChange(open: boolean): void {
           :id="item.id"
           :color="isSingleLine(item) ? item.color : undefined"
           :label="actionLabel(item.id)"
-          :disabled="isItemDisabled?.(item)"
+          :block-reason="itemBlockReason?.(item) ?? null"
           @click="emit('insertId', item.id)"
         />
         <span class="graphing-item-list-section__title">

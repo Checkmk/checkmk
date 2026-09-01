@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
 
 from cmk.plugins.diagnostics.lib._classification import (
     CheckmkFileSensitivity,
+    FILE_MAP_LOG,
     get_checkmk_file_info,
     OPT_COMP_BUSINESS_INTELLIGENCE,
     OPT_COMP_GLOBAL_SETTINGS,
@@ -154,3 +156,19 @@ def test_diagnostics_file_info_of_comp_notifications(
     rel_filepath: str, sensitivity: CheckmkFileSensitivity
 ) -> None:
     assert get_checkmk_file_info(rel_filepath, None).sensitivity.value == sensitivity.value
+
+
+@pytest.mark.parametrize(
+    "file_name, keep",
+    [
+        ("network-flow.log", True),
+        ("network-flow.log.1", True),
+        ("network-flow.log.2.gz", True),
+        ("apache/access_log.1", True),
+        ("mknotifyd.state", True),
+        ("update.log.2.gz", True),
+        ("network-flow.pid", False),
+    ],
+)
+def test_diagnostics_log_file_map_keeps_rotations(file_name: str, keep: bool) -> None:
+    assert FILE_MAP_LOG.keep(Path(file_name)) is keep

@@ -59,12 +59,25 @@ export class CmkSimpleError extends CmkError {
 export class CmkApiError extends CmkError {
   context: string
   readonly statusCode: number
+  /**
+   * The parsed error body, for a caller that has to act on its structure rather
+   * than show it — routing a validation failure back onto the field that caused
+   * it, for instance. Undefined when the response carried no body.
+   */
+  readonly body: unknown
 
-  constructor(message: string, cause: Error | null, context: string, statusCode: number) {
+  constructor(
+    message: string,
+    cause: Error | null,
+    context: string,
+    statusCode: number,
+    body?: unknown
+  ) {
     super(message, cause)
     this.name = 'CmkApiError'
     this.context = context
     this.statusCode = statusCode
+    this.body = body
   }
 
   override getContext(): string {

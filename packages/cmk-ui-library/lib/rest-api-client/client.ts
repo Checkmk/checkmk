@@ -46,7 +46,7 @@ export function unwrap<T>(result: { data?: T; error?: unknown; response: Respons
       }
     }
 
-    throw new CmkApiError(message, null, context.join('\n\n'), result.response.status)
+    throw new CmkApiError(message, null, context.join('\n\n'), result.response.status, parsedJson)
   }
 
   // Reference: https://github.com/openapi-ts/openapi-typescript/discussions/1869

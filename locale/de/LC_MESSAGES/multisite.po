@@ -71264,6 +71264,12 @@ msgstr ""
 "organisieren zu können. Das Präfix ist statisch und lautet CERT. Alternativ "
 "können Sie die Präfix-Option auch nicht verwenden."
 
+#, python-format
+msgid ""
+"The presented token scope was not granted the permission for this operation: "
+"'<b>%s</b>'."
+msgstr ""
+
 msgid ""
 "The problems above might be caused by missing caches. Please trigger a "
 "rescan."
@@ -83938,6 +83944,14 @@ msgstr ""
 
 msgid "Use any network address"
 msgstr "Beliebige Netzwerkadresse verwenden"
+
+#, fuzzy
+msgid ""
+"Use at most 63 letters, digits, underscores and hyphens, and do not start "
+"with a hyphen."
+msgstr ""
+"Metriknamen dürfen nur Buchstaben, Zahlen und Unterstriche enthalten und "
+"müssen mit einem Buchstaben oder einer Zahl beginnen."
 
 msgid "Use attribute value"
 msgstr "Attribut-Wert verwenden"

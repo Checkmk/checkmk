@@ -73775,6 +73775,12 @@ msgstr ""
 "poterli organizzare. Il prefisso è statico e sarà CERT. In alternativa, puoi "
 "scegliere di non usare l'opzione del prefisso."
 
+#, python-format
+msgid ""
+"The presented token scope was not granted the permission for this operation: "
+"'<b>%s</b>'."
+msgstr ""
+
 msgid ""
 "The problems above might be caused by missing caches. Please trigger a "
 "rescan."
@@ -87013,6 +87019,14 @@ msgstr ""
 
 msgid "Use any network address"
 msgstr "Utilizzare qualsiasi indirizzo di rete"
+
+#, fuzzy
+msgid ""
+"Use at most 63 letters, digits, underscores and hyphens, and do not start "
+"with a hyphen."
+msgstr ""
+"I nomi delle metriche devono essere composti solo da lettere, cifre e "
+"sottolineature e devono iniziare con una lettera."
 
 msgid "Use attribute value"
 msgstr "Utilizzare il valore dell'attributo"

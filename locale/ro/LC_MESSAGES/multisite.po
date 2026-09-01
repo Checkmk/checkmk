@@ -74249,6 +74249,12 @@ msgid ""
 "choose not to use the prefix option."
 msgstr ""
 
+#, python-format
+msgid ""
+"The presented token scope was not granted the permission for this operation: "
+"'<b>%s</b>'."
+msgstr ""
+
 msgid ""
 "The problems above might be caused by missing caches. Please trigger a "
 "rescan."
@@ -87520,6 +87526,14 @@ msgstr ""
 
 msgid "Use any network address"
 msgstr "Utilizați orice adresă de rețea"
+
+#, fuzzy
+msgid ""
+"Use at most 63 letters, digits, underscores and hyphens, and do not start "
+"with a hyphen."
+msgstr ""
+"Denumirile metrice trebuie să fie formate numai din litere, cifre și "
+"caractere de subliniere și trebuie să înceapă cu o literă."
 
 msgid "Use attribute value"
 msgstr "Utilizați valoarea atributului"

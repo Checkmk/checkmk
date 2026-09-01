@@ -5,117 +5,107 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Generator, Iterable, Mapping
+from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.ddn_s2a.lib import parse_ddn_s2a_api_response
 
-check_info = {}
+# The counter names as reported by the API, mapped to the parameter key and the label we use.
+_COUNTERS = (
+    ("link_failure_errs", "link_failure_errs", "Link failure errors"),
+    ("lost_sync_errs", "lost_sync_errs", "Lost sync errors"),
+    ("loss_of_sig_errs", "loss_of_signal_errs", "Loss of signal errors"),
+    ("prim_seq_errs", "prim_seq_errs", "PrimSeq errors"),  # TODO: What is this?
+    ("CRC_errs", "crc_errs", "CRC errors"),
+    ("receive_errs", "receive_errs", "Receive errors"),
+    ("CTIO_timeouts", "ctio_timeouts", "CTIO timeouts"),
+    ("CTIO_xmit_errs", "ctio_xmit_errs", "CTIO transmission errors"),
+    ("CTIO_other_errs", "ctio_other_errs", "CTIO other errors"),
+)
 
 
-def parse_ddn_s2a_errors(string_table: StringTable) -> dict[str, Any]:
+@dataclass(frozen=True, kw_only=True)
+class Port:
+    port_type: str
+    error_counts: Mapping[str, int]
+
+
+Section = Mapping[str, Port]
+
+
+def parse_ddn_s2a_errors(string_table: StringTable) -> Section:
     preparsed = parse_ddn_s2a_api_response(string_table)
     return {
-        "port_type": preparsed["port_type"],
-        "link_failure_errs": list(map(int, preparsed["link_failure_errs"])),
-        "lost_sync_errs": list(map(int, preparsed["lost_sync_errs"])),
-        "loss_of_signal_errs": list(map(int, preparsed["loss_of_sig_errs"])),
-        "prim_seq_errs": list(map(int, preparsed["prim_seq_errs"])),
-        "crc_errs": list(map(int, preparsed["CRC_errs"])),
-        "receive_errs": list(map(int, preparsed["receive_errs"])),
-        "ctio_timeouts": list(map(int, preparsed["CTIO_timeouts"])),
-        "ctio_xmit_errs": list(map(int, preparsed["CTIO_xmit_errs"])),
-        "ctio_other_errs": list(map(int, preparsed["CTIO_other_errs"])),
+        str(nr + 1): Port(
+            port_type=port_type,
+            error_counts={key: int(preparsed[api_name][nr]) for api_name, key, _label in _COUNTERS},
+        )
+        for nr, port_type in enumerate(preparsed["port_type"])
     }
 
 
-def discover_ddn_s2a_errors(
-    parsed: dict[str, Any],
-) -> Iterable[tuple[str, dict[str, tuple[int, int]]]]:
-    def value_to_levels(value: int) -> tuple[int, int]:
-        # As the values in this check are all error counters since last reset,
-        # we calculate default levels according to the current counter state,
-        # so we'll be warned if an error occurs.
-        return (value + 1, value + 5)
-
-    for nr, port_type in enumerate(parsed["port_type"]):
+def discover_ddn_s2a_errors(section: Section) -> DiscoveryResult:
+    for item, port in section.items():
         # Note: The API command returning the port errors that we evaluate
         #       in this check differentiates between FC and IB ports, providing
         #       different values according to port type. As we have no example
         #       for the IB ports at this time, we only implement logic for what
         #       we can test.
-        if port_type == "FC":
-            yield (
-                "%d" % (nr + 1),
-                {
-                    "link_failure_errs": value_to_levels(parsed["link_failure_errs"][nr]),
-                    "lost_sync_errs": value_to_levels(parsed["lost_sync_errs"][nr]),
-                    "loss_of_signal_errs": value_to_levels(parsed["loss_of_signal_errs"][nr]),
-                    "prim_seq_errs": value_to_levels(parsed["prim_seq_errs"][nr]),
-                    "crc_errs": value_to_levels(parsed["crc_errs"][nr]),
-                    "receive_errs": value_to_levels(parsed["receive_errs"][nr]),
-                    "ctio_timeouts": value_to_levels(parsed["ctio_timeouts"][nr]),
-                    "ctio_xmit_errs": value_to_levels(parsed["ctio_xmit_errs"][nr]),
-                    "ctio_other_errs": value_to_levels(parsed["ctio_other_errs"][nr]),
-                },
-            )
+        if port.port_type != "FC":
+            continue
+        # As the values in this check are all error counters since last reset,
+        # we calculate default levels according to the current counter state,
+        # so we'll be warned if an error occurs.
+        yield Service(
+            item=item,
+            parameters={key: (count + 1, count + 5) for key, count in port.error_counts.items()},
+        )
 
 
-def check_ddn_s2a_errors(
-    item: str, params: Mapping[str, Any], parsed: dict[str, Any]
-) -> Generator[LegacyResult]:
-    def check_errors(
-        value: int, levels: tuple[int, int] | None, infotext_formatstring: str
-    ) -> tuple[int, str]:
-        infotext = infotext_formatstring % value
-        if levels is None:
-            return 0, infotext
+def check_ddn_s2a_errors(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if (port := section.get(item)) is None:
+        return
 
-        warn, crit = levels
-        levelstext = " (warn/crit at %d/%d errors)" % (warn, crit)
-        if value >= crit:
-            status = 2
-            infotext += levelstext
-        elif value >= warn:
-            status = 1
-            infotext += levelstext
-        else:
-            status = 0
-        return status, infotext
-
-    nr = int(item) - 1
-    link_failure_errs = parsed["link_failure_errs"][nr]
-    lost_sync_errs = parsed["lost_sync_errs"][nr]
-    loss_of_signal_errs = parsed["loss_of_signal_errs"][nr]
-    prim_seq_errs = parsed["prim_seq_errs"][nr]
-    crc_errs = parsed["crc_errs"][nr]
-    receive_errs = parsed["receive_errs"][nr]
-    ctio_timeouts = parsed["ctio_timeouts"][nr]
-    ctio_xmit_errs = parsed["ctio_xmit_errs"][nr]
-    ctio_other_errs = parsed["ctio_other_errs"][nr]
-
-    yield check_errors(link_failure_errs, params["link_failure_errs"], "Link failure errors: %d")
-    yield check_errors(lost_sync_errs, params["lost_sync_errs"], "Lost sync errors: %d")
-    yield check_errors(
-        loss_of_signal_errs, params["loss_of_signal_errs"], "Loss of signal errors: %d"
-    )
-    yield check_errors(
-        prim_seq_errs, params["prim_seq_errs"], "PrimSeq errors: %d"
-    )  # TODO: What is this?
-    yield check_errors(crc_errs, params["crc_errs"], "CRC errors: %d")
-    yield check_errors(receive_errs, params["receive_errs"], "Receive errors: %d")
-    yield check_errors(ctio_timeouts, params["ctio_timeouts"], "CTIO timeouts: %d")
-    yield check_errors(ctio_xmit_errs, params["ctio_xmit_errs"], "CTIO transmission errors: %d")
-    yield check_errors(ctio_other_errs, params["ctio_other_errs"], "CTIO other errors: %d")
+    for _api_name, key, label in _COUNTERS:
+        yield _check_error_count(port.error_counts[key], params[key], label)
 
 
-check_info["ddn_s2a_errors"] = LegacyCheckDefinition(
+def _check_error_count(count: int, levels: tuple[int, int] | None, label: str) -> Result:
+    if levels is None:
+        return Result(state=State.OK, summary=f"{label}: {count}")
+
+    warn, crit = levels
+    if count >= crit:
+        state = State.CRIT
+    elif count >= warn:
+        state = State.WARN
+    else:
+        return Result(state=State.OK, summary=f"{label}: {count}")
+    return Result(state=state, summary=f"{label}: {count} (warn/crit at {warn}/{crit} errors)")
+
+
+agent_section_ddn_s2a_errors = AgentSection(
     name="ddn_s2a_errors",
     parse_function=parse_ddn_s2a_errors,
+)
+
+
+check_plugin_ddn_s2a_errors = CheckPlugin(
+    name="ddn_s2a_errors",
     service_name="DDN S2A Port Errors %s",
     discovery_function=discover_ddn_s2a_errors,
     check_function=check_ddn_s2a_errors,
     check_ruleset_name="ddn_s2a_port_errors",
+    check_default_parameters={},
 )

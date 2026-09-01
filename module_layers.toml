@@ -217,6 +217,10 @@ allows = [
   "cmk.utils.paths",
 ]
 
+[plugin_families.violations.custom_service]
+# MetricBackendCustomQuery FormSpec
+allows = ["cmk.metric_backend.gui"]
+
 [plugin_families.violations.datadog]
 allows = [
   "cmk.ccc.store",

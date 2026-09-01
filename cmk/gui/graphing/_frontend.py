@@ -27,9 +27,7 @@ from cmk.shared_typing.cmk_time_series_graph import (
     GraphHeader,
     GraphOptions,
     Interaction,
-    Precision,
     Size,
-    UnitFormat,
     XAxis,
     YAxis,
 )
@@ -45,7 +43,7 @@ from . import _engine_plugins as engine_plugins
 from ._engine_dispatch import serialize_graphs
 from ._engine_source import RRDFetchMetricNames
 from ._engine_template_graphs import build_template_graphs
-from ._engine_unit_format import notation_name, precision_kind
+from ._engine_unit_format import unit_to_unit_format
 from ._graph_display_config import HTML_SIZE_PER_EX
 from ._graph_specification import GraphSpecification
 from ._graph_templates import TemplateGraphSpecification
@@ -138,15 +136,6 @@ def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | 
     if specification is None or (add_type := specification.add_visual_type()) is None:
         return None
     return AddTo(type=add_type, specification=specification.model_dump(), internal=internal)
-
-
-def unit_to_unit_format(unit: Unit) -> UnitFormat:
-    """Translate an engine ``Unit`` into the shared ``UnitFormat`` the Vue graph already speaks."""
-    return UnitFormat(
-        notation=notation_name(unit),
-        symbol=unit.notation.symbol,
-        precision=Precision(type=precision_kind(unit), digits=unit.precision.digits),
-    )
 
 
 def y_axis_from_units(units: Iterable[Unit]) -> YAxis | None:

@@ -16,6 +16,7 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
+from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
 
 type NotationName = Literal[
     "decimal", "si", "iec", "standard_scientific", "engineering_scientific", "time"
@@ -49,3 +50,11 @@ def precision_kind(unit: Unit) -> PrecisionKind:
             return "strict"
         case _:
             assert_never(unit.precision)
+
+
+def unit_to_unit_format(unit: Unit) -> UnitFormat:
+    return UnitFormat(
+        notation=notation_name(unit),
+        symbol=unit.notation.symbol,
+        precision=Precision(type=precision_kind(unit), digits=unit.precision.digits),
+    )

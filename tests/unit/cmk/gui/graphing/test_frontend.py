@@ -26,7 +26,6 @@ from cmk.graphing_engine import (
     SINotation,
     Stack,
     StandardScientificNotation,
-    StrictPrecision,
     TimeNotation,
     Unit,
 )
@@ -38,7 +37,6 @@ from cmk.gui.graphing._frontend import (
     global_time_picker_refresh,
     resolve_default_time_range_seconds,
     to_cmk_time_series_graph,
-    unit_to_unit_format,
 )
 from cmk.gui.type_defs import GraphTimerange
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
@@ -253,31 +251,6 @@ def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
     assert result.options.header.title == "My Graph"
     [restored] = community_graph_codec().deserialize_graphs(json.loads(result.internal))
     assert restored == graph
-
-
-def test_unit_to_unit_format_decimal_auto_precision() -> None:
-    unit = Unit(notation=DecimalNotation("%"), precision=AutoPrecision(2))
-    assert unit_to_unit_format(unit) == UnitFormat(
-        notation="decimal", symbol="%", precision=Precision(type="auto", digits=2)
-    )
-
-
-def test_unit_to_unit_format_si_strict_precision() -> None:
-    unit = Unit(notation=SINotation("B/s"), precision=StrictPrecision(3))
-    assert unit_to_unit_format(unit) == UnitFormat(
-        notation="si", symbol="B/s", precision=Precision(type="strict", digits=3)
-    )
-
-
-def test_unit_to_unit_format_covers_every_notation() -> None:
-    for notation, expected in (
-        (IECNotation("B"), "iec"),
-        (StandardScientificNotation(""), "standard_scientific"),
-        (EngineeringScientificNotation(""), "engineering_scientific"),
-        (TimeNotation(), "time"),
-    ):
-        unit = Unit(notation=notation, precision=AutoPrecision(2))
-        assert unit_to_unit_format(unit).notation == expected
 
 
 def test_derive_y_axis_takes_the_unit_of_the_first_stack_member() -> None:

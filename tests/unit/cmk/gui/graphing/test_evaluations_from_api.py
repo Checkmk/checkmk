@@ -15,11 +15,11 @@ from cmk.graphing.v1 import Title as TitleV1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.graphing._evaluations_from_api import (
+    _evaluate_quantity,
     evaluate_graph_plugin_metrics,
     evaluate_graph_plugin_range,
     evaluate_graph_plugin_scalars,
     evaluate_graph_plugin_title,
-    evaluate_quantity,
     GraphedMetrics,
 )
 from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource
@@ -988,6 +988,6 @@ def test_evaluate_quantity(
     translated_metrics: Mapping[str, TranslatedMetric],
     expected_value: float,
 ) -> None:
-    result = evaluate_quantity({}, quantity, translated_metrics)
+    result = _evaluate_quantity({}, quantity, translated_metrics)
     assert result.is_ok()
     assert result.ok.value == expected_value

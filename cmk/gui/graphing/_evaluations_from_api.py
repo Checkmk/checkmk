@@ -71,7 +71,7 @@ class EvaluationError:
     metric_name: str
 
 
-def evaluate_quantity(
+def _evaluate_quantity(
     registered_metrics: Mapping[str, RegisteredMetric],
     quantity: Quantity,
     translated_metrics: Mapping[str, TranslatedMetric],
@@ -118,7 +118,7 @@ def evaluate_quantity(
                     )
                 )
             if (
-                result := evaluate_quantity(
+                result := _evaluate_quantity(
                     registered_metrics, quantity.metric_name, translated_metrics
                 )
             ).is_error():
@@ -150,7 +150,7 @@ def evaluate_quantity(
                     )
                 )
             if (
-                result := evaluate_quantity(
+                result := _evaluate_quantity(
                     registered_metrics, quantity.metric_name, translated_metrics
                 )
             ).is_error():
@@ -182,7 +182,7 @@ def evaluate_quantity(
                     )
                 )
             if (
-                result := evaluate_quantity(
+                result := _evaluate_quantity(
                     registered_metrics, quantity.metric_name, translated_metrics
                 )
             ).is_error():
@@ -214,7 +214,7 @@ def evaluate_quantity(
                     )
                 )
             if (
-                result := evaluate_quantity(
+                result := _evaluate_quantity(
                     registered_metrics, quantity.metric_name, translated_metrics
                 )
             ).is_error():
@@ -246,7 +246,7 @@ def evaluate_quantity(
                     )
                 )
             if (
-                result := evaluate_quantity(
+                result := _evaluate_quantity(
                     registered_metrics, quantity.metric_name, translated_metrics
                 )
             ).is_error():
@@ -278,7 +278,7 @@ def evaluate_quantity(
                     )
                 )
             if (
-                result := evaluate_quantity(
+                result := _evaluate_quantity(
                     registered_metrics, quantity.metric_name, translated_metrics
                 )
             ).is_error():
@@ -298,7 +298,7 @@ def evaluate_quantity(
             results = []
             for summand in quantity.summands:
                 if (
-                    result := evaluate_quantity(registered_metrics, summand, translated_metrics)
+                    result := _evaluate_quantity(registered_metrics, summand, translated_metrics)
                 ).is_error():
                     return result
                 results.append(result.ok)
@@ -314,7 +314,7 @@ def evaluate_quantity(
             results = []
             for factor in quantity.factors:
                 if (
-                    result := evaluate_quantity(registered_metrics, factor, translated_metrics)
+                    result := _evaluate_quantity(registered_metrics, factor, translated_metrics)
                 ).is_error():
                     return result
                 results.append(result.ok)
@@ -331,13 +331,13 @@ def evaluate_quantity(
             )
         case metrics_v1.Difference():
             if (
-                result_minuend := evaluate_quantity(
+                result_minuend := _evaluate_quantity(
                     registered_metrics, quantity.minuend, translated_metrics
                 )
             ).is_error():
                 return result_minuend
             if (
-                result_subtrahend := evaluate_quantity(
+                result_subtrahend := _evaluate_quantity(
                     registered_metrics, quantity.subtrahend, translated_metrics
                 )
             ).is_error():
@@ -352,13 +352,13 @@ def evaluate_quantity(
             )
         case metrics_v1.Fraction():
             if (
-                result_dividend := evaluate_quantity(
+                result_dividend := _evaluate_quantity(
                     registered_metrics, quantity.dividend, translated_metrics
                 )
             ).is_error():
                 return result_dividend
             if (
-                result_divisor := evaluate_quantity(
+                result_divisor := _evaluate_quantity(
                     registered_metrics, quantity.divisor, translated_metrics
                 )
             ).is_error():
@@ -405,7 +405,7 @@ def _create_quantity_id(
             return f"Fraction({_create_quantity_id(quantity.dividend, consolidation_function)},{_create_quantity_id(quantity.divisor, consolidation_function)})"
 
 
-def extract_raw_expressions_from_graph_title(title: str) -> list[str]:
+def _extract_raw_expressions_from_graph_title(title: str) -> list[str]:
     return re.findall(r"_EXPRESSION:\{.*?\}", title)
 
 
@@ -446,9 +446,9 @@ def evaluate_graph_plugin_title(
     title: str,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> str:
-    for raw in extract_raw_expressions_from_graph_title(title):
+    for raw in _extract_raw_expressions_from_graph_title(title):
         if (
-            result := evaluate_quantity(
+            result := _evaluate_quantity(
                 registered_metrics,
                 _parse_graph_title_expression(
                     _GraphTitleExpression.model_validate_json(raw[len("_EXPRESSION:") :]),
@@ -474,7 +474,7 @@ def _evaluate_boundary(
 ) -> Result[int | float, EvaluationError]:
     if isinstance(boundary, int | float):
         return OK(boundary)
-    if (result := evaluate_quantity(registered_metrics, boundary, translated_metrics)).is_error():
+    if (result := _evaluate_quantity(registered_metrics, boundary, translated_metrics)).is_error():
         return Error(result.error)
     return OK(result.ok.value)
 
@@ -567,24 +567,6 @@ def _is_scalar(quantity: Quantity) -> bool:
             return _is_scalar(quantity.dividend) and _is_scalar(quantity.divisor)
 
 
-def _collect_graph_metrics(graph: graphs_v1.Graph | graphs_v2_unstable.Graph) -> Sequence[Quantity]:
-    return [q for q in graph.compound_lines if not _is_scalar(q)] + [
-        q for q in graph.simple_lines if not _is_scalar(q)
-    ]
-
-
-def collect_graph_plugin_metrics(
-    graph_plugin: GraphFromAPI,
-) -> Sequence[Quantity]:
-    match graph_plugin:
-        case graphs_v1.Graph() | graphs_v2_unstable.Graph():
-            return _collect_graph_metrics(graph_plugin)
-        case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
-            return list(_collect_graph_metrics(graph_plugin.upper)) + list(
-                _collect_graph_metrics(graph_plugin.lower)
-            )
-
-
 def _evaluate_graph_scalars(
     registered_metrics: Mapping[str, RegisteredMetric],
     graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
@@ -598,7 +580,7 @@ def _evaluate_graph_scalars(
         if not _is_scalar(quantity):
             continue
         if (
-            result := evaluate_quantity(registered_metrics, quantity, translated_metrics)
+            result := _evaluate_quantity(registered_metrics, quantity, translated_metrics)
         ).is_error():
             # Scalar value like min and max are always optional. This makes configuration
             # of graphs easier.
@@ -692,7 +674,7 @@ def _to_graph_metric_expression(
             return (
                 GraphMetricConstant(value=result.ok.value)
                 if (
-                    result := evaluate_quantity(registered_metrics, quantity, translated_metrics)
+                    result := _evaluate_quantity(registered_metrics, quantity, translated_metrics)
                 ).is_ok()
                 else GraphMetricConstantNA()
             )
@@ -836,7 +818,7 @@ def _evaluate_graph_lines(
         if _is_scalar(quantity):
             continue
         if (
-            result := evaluate_quantity(registered_metrics, quantity, translated_metrics)
+            result := _evaluate_quantity(registered_metrics, quantity, translated_metrics)
         ).is_error():
             if result.error.metric_name and result.error.metric_name in optional:
                 continue
@@ -885,7 +867,7 @@ def _evaluate_predictive_metrics(
     for metric_name in metric_names:
         for predictive_metric_name in (f"predict_{metric_name}", f"predict_lower_{metric_name}"):
             if (
-                result := evaluate_quantity(
+                result := _evaluate_quantity(
                     registered_metrics, predictive_metric_name, translated_metrics
                 )
             ).is_ok():

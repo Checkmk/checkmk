@@ -36,6 +36,7 @@ Options:
     --dbport                 Database port (default: 5432).
     --validate-baselines     Whether to perform baseline validation.
     --alert-on-failure       Whether to alert on failed baseline validation.
+    --warn-only              Report failed baseline validation without a non-zero exit code.
     --log-level              Set the log level for the application.
     --branch-version         Set the default branch-version.
     --edition                Set the default edition.
@@ -745,6 +746,7 @@ class PerftestPlotArgs(argparse.Namespace):
         dbcheck (bool): If True, DB connection is checked only (nothing else is done).
         validate_baselines (bool): Enable performance baseline validation.
         alert_on_failure (bool): Enable Jira alerter on baseline validation failure.
+        warn_only (bool): Report a failed baseline validation without exiting non-zero.
         sslmode (SslMode): The SSL mode for the Postgres authentication.
         sslrootcert (Path): The path of the root certificate.
         sslcert (Path): The path of the Postgres certificate.
@@ -779,6 +781,7 @@ class PerftestPlotArgs(argparse.Namespace):
     dbcheck: bool
     validate_baselines: bool
     alert_on_failure: bool
+    warn_only: bool
     sslmode: SslMode
     sslrootcert: Path
     sslcert: Path
@@ -868,6 +871,7 @@ class PerftestPlot:
         self.validate_baselines = (
             self.args.validate_baselines or self.alert_on_failure
         ) and not self.purge_db
+        self.warn_only = self.args.warn_only
         self.job_names = self._read_job_names()
         self.scenario_names = self._read_scenario_names()
         self.jobs = self.read_performance_data()
@@ -1915,6 +1919,13 @@ def parse_args() -> PerftestPlotArgs:
         help="Enable Jira alerter on baseline validation failure (default: %(default)s).",
     )
     parser.add_argument(
+        "--warn-only",
+        action=argparse.BooleanOptionalAction,
+        dest="warn_only",
+        default=False,
+        help="Report a failed baseline validation without exiting non-zero (default: %(default)s).",
+    )
+    parser.add_argument(
         "--sslrootcert",
         dest="sslrootcert",
         type=Path,
@@ -2092,7 +2103,9 @@ def main():
         failures = [alert for alert in alerts if alert.is_failure]
         if app.alert_on_failure and failures:
             app.create_ticket(summary=summary, description=description)
-        if failures:
+        if failures and app.warn_only:
+            print("Baseline validation failed, but --warn-only was given: not failing the job.")
+        elif failures:
             rc = 2
 
     print(app.output_dir)

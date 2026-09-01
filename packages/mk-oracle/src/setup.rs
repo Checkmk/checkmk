@@ -113,7 +113,12 @@ impl Env {
     /// An `Env` that only carries `ORACLE_HOME` and `LOCAL_ORACLE_HOME_TARGETS`, for
     /// tests that need their states without mutating the process environment,
     /// which is global and would race between parallel tests.
-    #[cfg(test)]
+    ///
+    /// `pub` rather than `#[cfg(test)]` so the component tests in `tests/` can
+    /// reach it: they are a separate crate, compiled against the library built
+    /// without `cfg(test)`. Hidden from the documented API - it builds a
+    /// partially initialised `Env`, which only a test has any business doing.
+    #[doc(hidden)]
     pub fn with_oracle_home(
         oracle_home: Option<&str>,
         local_oracle_home_targets: Option<bool>,

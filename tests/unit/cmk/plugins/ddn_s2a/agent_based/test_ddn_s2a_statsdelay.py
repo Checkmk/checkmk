@@ -6,8 +6,8 @@
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
-from cmk.legacy_checks import ddn_s2a_statsdelay
-from cmk.legacy_checks.ddn_s2a_statsdelay import (
+from cmk.plugins.ddn_s2a.agent_based import ddn_s2a_statsdelay
+from cmk.plugins.ddn_s2a.agent_based.ddn_s2a_statsdelay import (
     check_ddn_s2a_statsdelay,
     discover_ddn_s2a_statsdelay,
     parse_ddn_s2a_statsdelay,

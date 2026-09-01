@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.ddn_s2a_faultsbasic import (
+from cmk.plugins.ddn_s2a.agent_based.ddn_s2a_faultsbasic import (
     check_ddn_s2a_faultsbasic,
     check_ddn_s2a_faultsbasic_bootstatus,
     check_ddn_s2a_faultsbasic_cachecoh,

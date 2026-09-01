@@ -19,6 +19,7 @@ from cmk.gui.graphing._evaluations_from_api import (
     evaluate_graph_plugin_range,
     evaluate_graph_plugin_scalars,
     evaluate_graph_plugin_title,
+    evaluate_quantity,
     GraphedMetrics,
 )
 from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource
@@ -36,6 +37,8 @@ from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
+
+UNIT = metrics_v1.Unit(metrics_v1.DecimalNotation(""))
 
 
 @pytest.mark.parametrize(
@@ -666,3 +669,325 @@ def test_evaluate_graph_plugin_metrics(
         )
         == expected
     )
+
+
+def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric:
+    return TranslatedMetric(
+        originals=[Original(name, 1.0)],
+        value=10.0,
+        scalar=scalar,
+        auto_graph=False,
+        title="Title 1",
+        unit_spec=ConvertibleUnitSpecification(
+            notation=DecimalNotation(symbol=""),
+            precision=AutoPrecision(digits=2),
+        ),
+        color="#123456",
+    )
+
+
+@pytest.mark.parametrize(
+    "quantity, translated_metrics, expected_value",
+    [
+        pytest.param(
+            "name",
+            {
+                "name": TranslatedMetric(
+                    originals=[Original("name", 1.0)],
+                    value=10.0,
+                    scalar=ScalarBounds(),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+            },
+            10.0,
+            id="metric-name",
+        ),
+        pytest.param(
+            metrics_v1.Constant(
+                TitleV1("Title"),
+                UNIT,
+                metrics_v1.Color.BLUE,
+                5.0,
+            ),
+            {
+                "name": TranslatedMetric(
+                    originals=[Original("name", 1.0)],
+                    value=10.0,
+                    scalar=ScalarBounds(),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+            },
+            5.0,
+            id="metrics_v1.Constant",
+        ),
+        pytest.param(
+            metrics_v1.WarningOf("name"),
+            {
+                "name": TranslatedMetric(
+                    originals=[Original("name", 1.0)],
+                    value=10.0,
+                    scalar=ScalarBounds(warn=5.0),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+            },
+            5.0,
+            id="metrics_v1.WarningOf",
+        ),
+        pytest.param(
+            metrics_v1.CriticalOf("name"),
+            {
+                "name": TranslatedMetric(
+                    originals=[Original("name", 1.0)],
+                    value=10.0,
+                    scalar=ScalarBounds(crit=5.0),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+            },
+            5.0,
+            id="metrics_v1.CriticalOf",
+        ),
+        pytest.param(
+            metrics_v1.MinimumOf("name", metrics_v1.Color.BLUE),
+            {
+                "name": TranslatedMetric(
+                    originals=[Original("name", 1.0)],
+                    value=10.0,
+                    scalar=ScalarBounds(min_=5.0),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+            },
+            5.0,
+            id="metrics_v1.MinimumOf",
+        ),
+        pytest.param(
+            metrics_v1.MaximumOf("name", metrics_v1.Color.BLUE),
+            {
+                "name": TranslatedMetric(
+                    originals=[Original("name", 1.0)],
+                    value=10.0,
+                    scalar=ScalarBounds(max_=5.0),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+            },
+            5.0,
+            id="metrics_v1.MaximumOf",
+        ),
+        pytest.param(
+            metrics_v1.Sum(
+                TitleV1("Title"),
+                metrics_v1.Color.BLUE,
+                ["name1", "name2"],
+            ),
+            {
+                "name1": TranslatedMetric(
+                    originals=[Original("name1", 1.0)],
+                    value=10.0,
+                    scalar=ScalarBounds(),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+                "name2": TranslatedMetric(
+                    originals=[Original("name2", 1.0)],
+                    value=5.0,
+                    scalar=ScalarBounds(),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+            },
+            15.0,
+            id="metrics_v1.Sum",
+        ),
+        pytest.param(
+            metrics_v1.Product(
+                TitleV1("Title"),
+                UNIT,
+                metrics_v1.Color.BLUE,
+                ["name1", "name2"],
+            ),
+            {
+                "name1": TranslatedMetric(
+                    originals=[Original("name1", 1.0)],
+                    value=10.0,
+                    scalar=ScalarBounds(),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+                "name2": TranslatedMetric(
+                    originals=[Original("name2", 1.0)],
+                    value=5.0,
+                    scalar=ScalarBounds(),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+            },
+            50.0,
+            id="metrics_v1.Product",
+        ),
+        pytest.param(
+            metrics_v1.Difference(
+                TitleV1("Title"),
+                metrics_v1.Color.BLUE,
+                minuend="name1",
+                subtrahend="name2",
+            ),
+            {
+                "name1": TranslatedMetric(
+                    originals=[Original("name1", 1.0)],
+                    value=10.0,
+                    scalar=ScalarBounds(),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+                "name2": TranslatedMetric(
+                    originals=[Original("name2", 1.0)],
+                    value=3.0,
+                    scalar=ScalarBounds(),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+            },
+            7.0,
+            id="metrics_v1.Difference",
+        ),
+        pytest.param(
+            metrics_v1.Fraction(
+                TitleV1("Title"),
+                UNIT,
+                metrics_v1.Color.BLUE,
+                dividend="name1",
+                divisor="name2",
+            ),
+            {
+                "name1": TranslatedMetric(
+                    originals=[Original("name1", 1.0)],
+                    value=10.0,
+                    scalar=ScalarBounds(),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+                "name2": TranslatedMetric(
+                    originals=[Original("name2", 1.0)],
+                    value=5.0,
+                    scalar=ScalarBounds(),
+                    auto_graph=False,
+                    title="Title 1",
+                    unit_spec=ConvertibleUnitSpecification(
+                        notation=DecimalNotation(symbol=""),
+                        precision=AutoPrecision(digits=2),
+                    ),
+                    color="#123456",
+                ),
+            },
+            2.0,
+            id="metrics_v1.Fraction",
+        ),
+        pytest.param(
+            metrics_v2_unstable.LowerWarningOf("name"),
+            {
+                "name": _make_translated_metric("name", ScalarBounds(warn=99.0, warn_lower=3.0)),
+            },
+            3.0,
+            id="metrics_v2_unstable.LowerWarningOf",
+        ),
+        pytest.param(
+            metrics_v2_unstable.LowerCriticalOf("name"),
+            {
+                "name": _make_translated_metric("name", ScalarBounds(crit=99.0, crit_lower=2.0)),
+            },
+            2.0,
+            id="metrics_v2_unstable.LowerCriticalOf",
+        ),
+    ],
+)
+def test_evaluate_quantity(
+    quantity: (
+        str
+        | metrics_v1.Constant
+        | metrics_v1.WarningOf
+        | metrics_v1.CriticalOf
+        | metrics_v1.MinimumOf
+        | metrics_v1.MaximumOf
+        | metrics_v1.Sum
+        | metrics_v1.Product
+        | metrics_v1.Difference
+        | metrics_v1.Fraction
+        | metrics_v2_unstable.LowerWarningOf
+        | metrics_v2_unstable.LowerCriticalOf
+    ),
+    translated_metrics: Mapping[str, TranslatedMetric],
+    expected_value: float,
+) -> None:
+    result = evaluate_quantity({}, quantity, translated_metrics)
+    assert result.is_ok()
+    assert result.ok.value == expected_value

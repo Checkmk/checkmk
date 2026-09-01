@@ -88,7 +88,6 @@ from ._metrics import (
     MetricSpec,
     registered_metric_ids_and_titles,
 )
-from ._perfometer import get_first_matching_perfometer
 from ._rrd import (
     _reverse_translate_into_all_potentially_relevant_metrics_cached,
     all_rrd_columns_potentially_relevant_for_metric,
@@ -169,7 +168,6 @@ __all__ = [
     "DrawnSegment",
     "drawn_segments",
     "evaluated_perfometer",
-    "get_first_matching_perfometer",
     "perfometer_label",
     "perfometer_sort_value",
     "registered_metrics",

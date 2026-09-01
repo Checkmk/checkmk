@@ -490,7 +490,7 @@ def try_relative_site_path(site_id: SiteId, abs_path: Path) -> Path:
         return abs_path
 
 
-class ABCACTestOutdatedPluginAPIs(ACTest):
+class ABCACTestPluginAPIs(ACTest):
     """An API which is superseded by a newer one"""
 
     @property

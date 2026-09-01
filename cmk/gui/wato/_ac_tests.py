@@ -33,7 +33,7 @@ from cmk.gui.site_config import (
 from cmk.gui.type_defs import Users
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.analyze_configuration import (
-    ABCACTestOutdatedPluginAPIs,
+    ABCACTestPluginAPIs,
     ACResultState,
     ACSingleResult,
     ACTest,
@@ -84,10 +84,10 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestDeprecatedGUIExtensions)
     ac_test_registry.register(ACTestDeprecatedLegacyGUIExtensions)
     ac_test_registry.register(ACTestDeprecatedPNPTemplates)
-    ac_test_registry.register(ACTestOutdatedSpecialAgentsAPI)
-    ac_test_registry.register(ACTestOutdatedPasswordStoreAPI)
-    ac_test_registry.register(ACTestOutdatedHaSIAPI)
-    ac_test_registry.register(ACTestOutdatedBakeryAPI)
+    ac_test_registry.register(ACTestSpecialAgentsAPI)
+    ac_test_registry.register(ACTestPasswordStoreAPI)
+    ac_test_registry.register(ACTestHaSIAPI)
+    ac_test_registry.register(ACTestBakeryAPI)
     ac_test_registry.register(ACTestUnexpectedAllowedIPRanges)
     ac_test_registry.register(ACTestCheckMKCheckerNumber)
     ac_test_registry.register(ACTestAutomationUserSecret)
@@ -1474,7 +1474,7 @@ class ACTestDeprecatedPNPTemplates(ACTest):
         )
 
 
-class ACTestOutdatedSpecialAgentsAPI(ABCACTestOutdatedPluginAPIs):
+class ACTestSpecialAgentsAPI(ABCACTestPluginAPIs):
     @property
     @override
     def api_name(self) -> str:
@@ -1506,7 +1506,7 @@ class ACTestOutdatedSpecialAgentsAPI(ABCACTestOutdatedPluginAPIs):
         return ()
 
 
-class ACTestOutdatedPasswordStoreAPI(ABCACTestOutdatedPluginAPIs):
+class ACTestPasswordStoreAPI(ABCACTestPluginAPIs):
     @property
     @override
     def api_name(self) -> str:
@@ -1538,7 +1538,7 @@ class ACTestOutdatedPasswordStoreAPI(ABCACTestOutdatedPluginAPIs):
         return ()
 
 
-class ACTestOutdatedHaSIAPI(ABCACTestOutdatedPluginAPIs):
+class ACTestHaSIAPI(ABCACTestPluginAPIs):
     @property
     @override
     def api_name(self) -> str:
@@ -1570,7 +1570,7 @@ class ACTestOutdatedHaSIAPI(ABCACTestOutdatedPluginAPIs):
         return ("inventory_displayhints.update",)
 
 
-class ACTestOutdatedBakeryAPI(ABCACTestOutdatedPluginAPIs):
+class ACTestBakeryAPI(ABCACTestPluginAPIs):
     @property
     @override
     def api_name(self) -> str:

@@ -18,14 +18,14 @@ from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato._ac_tests import (
     ACTestAutomationUserSecret,
+    ACTestBakeryAPI,
     ACTestGenericCheckHelperUsage,
-    ACTestOutdatedBakeryAPI,
-    ACTestOutdatedHaSIAPI,
-    ACTestOutdatedPasswordStoreAPI,
-    ACTestOutdatedSpecialAgentsAPI,
+    ACTestHaSIAPI,
+    ACTestPasswordStoreAPI,
+    ACTestSpecialAgentsAPI,
 )
 from cmk.gui.watolib.analyze_configuration import (
-    ABCACTestOutdatedPluginAPIs,
+    ABCACTestPluginAPIs,
     ACResultState,
     ACSingleResult,
     local_plugin_roots,
@@ -123,17 +123,15 @@ def _write_plugin_file(plugin_root: Path, rel_path: str, content: str) -> Path:
 
 
 # Every API is checked by its own test, so a plug-in folder is scanned once per API.
-_OUTDATED_API_TESTS: Sequence[type[ABCACTestOutdatedPluginAPIs]] = (
-    ACTestOutdatedSpecialAgentsAPI,
-    ACTestOutdatedPasswordStoreAPI,
-    ACTestOutdatedHaSIAPI,
-    ACTestOutdatedBakeryAPI,
+_OUTDATED_API_TESTS: Sequence[type[ABCACTestPluginAPIs]] = (
+    ACTestSpecialAgentsAPI,
+    ACTestPasswordStoreAPI,
+    ACTestHaSIAPI,
+    ACTestBakeryAPI,
 )
 
 
-def _results(
-    test: type[ABCACTestOutdatedPluginAPIs], plugin_root: Path
-) -> Sequence[ACSingleResult]:
+def _results(test: type[ABCACTestPluginAPIs], plugin_root: Path) -> Sequence[ACSingleResult]:
     return test().make_outdated_plugin_api_results(SiteId("NO_SITE"), [plugin_root])
 
 
@@ -149,7 +147,7 @@ def _reported(plugin_root: Path) -> Sequence[ACSingleResult]:
 
 @pytest.mark.parametrize("test", _OUTDATED_API_TESTS, ids=lambda t: t.__name__)
 def test_outdated_plugin_apis_without_plugins(
-    test: type[ABCACTestOutdatedPluginAPIs], tmp_path: Path
+    test: type[ABCACTestPluginAPIs], tmp_path: Path
 ) -> None:
     assert _results(test, tmp_path) == [
         ACSingleResult(
@@ -164,7 +162,7 @@ def test_outdated_plugin_apis_without_plugins(
     "test, rel_path, content, expected_api",
     [
         pytest.param(
-            ACTestOutdatedSpecialAgentsAPI,
+            ACTestSpecialAgentsAPI,
             # Special agents are executables, ie. they usually have no suffix at all.
             "foo/libexec/agent_foo",
             "#!/usr/bin/env python3\nfrom cmk.special_agents.v0_unstable import agent_common\n",
@@ -172,14 +170,14 @@ def test_outdated_plugin_apis_without_plugins(
             id="special-agent-without-suffix",
         ),
         pytest.param(
-            ACTestOutdatedPasswordStoreAPI,
+            ACTestPasswordStoreAPI,
             "foo/lib/util.py",
             "import cmk.utils.password_store.hack\n",
             "cmk.utils.password_store",
             id="password-store-submodule",
         ),
         pytest.param(
-            ACTestOutdatedPasswordStoreAPI,
+            ACTestPasswordStoreAPI,
             # A module is commonly imported from its parent package.
             "foo/lib/util.py",
             "from cmk.utils import password_store\n",
@@ -187,21 +185,21 @@ def test_outdated_plugin_apis_without_plugins(
             id="password-store-from-parent-package",
         ),
         pytest.param(
-            ACTestOutdatedBakeryAPI,
+            ACTestBakeryAPI,
             "foo/bakery/bakery_foo.py",
             "from cmk.bakery.v1 import Plugin\n",
             "cmk.bakery.v1",
             id="bakery-v1",
         ),
         pytest.param(
-            ACTestOutdatedBakeryAPI,
+            ACTestBakeryAPI,
             "bakery_foo.py",
             "from cmk.base.cee.plugins.bakery.bakery_api.v1 import register\n",
             "cmk.base.cee.plugins.bakery.bakery_api",
             id="legacy-bakery-api-cee",
         ),
         pytest.param(
-            ACTestOutdatedBakeryAPI,
+            ACTestBakeryAPI,
             "bakery_foo.py",
             "from cmk.base.plugins.bakery.bakery_api.v1 import register\n",
             "cmk.base.plugins.bakery.bakery_api",
@@ -209,21 +207,21 @@ def test_outdated_plugin_apis_without_plugins(
         ),
         pytest.param(
             # Bakery plug-ins in the legacy folder import the API relatively.
-            ACTestOutdatedBakeryAPI,
+            ACTestBakeryAPI,
             "bakery_foo.py",
             "from .bakery_api.v1 import FileGenerator, register\n",
             ".bakery_api",
             id="legacy-bakery-api-relative",
         ),
         pytest.param(
-            ACTestOutdatedBakeryAPI,
+            ACTestBakeryAPI,
             "bakery_foo.py",
             "from . import bakery_api\n",
             ".bakery_api",
             id="legacy-bakery-api-relative-package",
         ),
         pytest.param(
-            ACTestOutdatedBakeryAPI,
+            ACTestBakeryAPI,
             "bakery_foo.py",
             "from cmk.base.cee.plugins.bakery import bakery_api\n",
             "cmk.base.cee.plugins.bakery.bakery_api",
@@ -232,7 +230,7 @@ def test_outdated_plugin_apis_without_plugins(
     ],
 )
 def test_outdated_plugin_apis_reports_outdated_import(
-    test: type[ABCACTestOutdatedPluginAPIs],
+    test: type[ABCACTestPluginAPIs],
     tmp_path: Path,
     rel_path: str,
     content: str,
@@ -251,26 +249,26 @@ def test_outdated_plugin_apis_reports_outdated_import(
     "test, content, expected_api",
     [
         pytest.param(
-            ACTestOutdatedSpecialAgentsAPI,
+            ACTestSpecialAgentsAPI,
             "import cmk.special_agents.v0_unstable\n",
             "cmk.special_agents",
             id="fallback-import-module",
         ),
         pytest.param(
-            ACTestOutdatedPasswordStoreAPI,
+            ACTestPasswordStoreAPI,
             "from cmk.utils.password_store import extract\n",
             "cmk.utils.password_store",
             id="fallback-from-module-import",
         ),
         pytest.param(
-            ACTestOutdatedPasswordStoreAPI,
+            ACTestPasswordStoreAPI,
             # A module is commonly imported from its parent package.
             "from cmk.utils import password_store\n",
             "cmk.utils.password_store",
             id="fallback-from-parent-package",
         ),
         pytest.param(
-            ACTestOutdatedPasswordStoreAPI,
+            ACTestPasswordStoreAPI,
             "import cmk.utils.password_store, os\n",
             "cmk.utils.password_store",
             id="fallback-import-several-modules",
@@ -278,7 +276,7 @@ def test_outdated_plugin_apis_reports_outdated_import(
     ],
 )
 def test_outdated_plugin_apis_falls_back_to_textual_search(
-    test: type[ABCACTestOutdatedPluginAPIs],
+    test: type[ABCACTestPluginAPIs],
     tmp_path: Path,
     content: str,
     expected_api: str,
@@ -302,7 +300,7 @@ def test_outdated_plugin_apis_reports_outdated_content(tmp_path: Path) -> None:
         'inventory_displayhints.update({".hardware.foo:": {"title": _("Foo")}})\n',
     )
 
-    results = _results(ACTestOutdatedHaSIAPI, tmp_path)
+    results = _results(ACTestHaSIAPI, tmp_path)
 
     # Only the detection is under test here, the state depends on the API's timeline.
     assert [r.path for r in results] == [path]
@@ -360,7 +358,7 @@ def test_outdated_plugin_apis_skips_compiled_and_hidden_files(
 
 @pytest.mark.parametrize("test", _OUTDATED_API_TESTS, ids=lambda t: t.__name__)
 def test_outdated_plugin_apis_without_plugin_folder(
-    test: type[ABCACTestOutdatedPluginAPIs], tmp_path: Path
+    test: type[ABCACTestPluginAPIs], tmp_path: Path
 ) -> None:
     """Most of the searched folders do not exist on a site without local plug-ins"""
     assert _results(test, tmp_path / "does-not-exist") == [
@@ -407,9 +405,9 @@ def test_outdated_plugin_apis_are_reported_by_the_test_of_their_own_api(tmp_path
         "import cmk.special_agents.v0_unstable\nfrom cmk.utils import password_store\n",
     )
 
-    special_agents = _results(ACTestOutdatedSpecialAgentsAPI, tmp_path)
-    password_store = _results(ACTestOutdatedPasswordStoreAPI, tmp_path)
-    hasi = _results(ACTestOutdatedHaSIAPI, tmp_path)
+    special_agents = _results(ACTestSpecialAgentsAPI, tmp_path)
+    password_store = _results(ACTestPasswordStoreAPI, tmp_path)
+    hasi = _results(ACTestHaSIAPI, tmp_path)
 
     assert [r.path for r in special_agents] == [path]
     assert "cmk.special_agents" in special_agents[0].text
@@ -425,7 +423,7 @@ def test_outdated_plugin_apis_are_reported_by_the_test_of_their_own_api(tmp_path
     ]
 
 
-class _OutdatedAPITest(ABCACTestOutdatedPluginAPIs):
+class _OutdatedAPITest(ABCACTestPluginAPIs):
     """An outdated API with a timeline the test controls"""
 
     def __init__(self, deprecated_version: str, removed_version: str) -> None:
@@ -530,7 +528,7 @@ def test_outdated_plugin_apis_follow_the_timeline(
 
 
 @pytest.mark.parametrize("test", _OUTDATED_API_TESTS, ids=lambda t: t.__name__)
-def test_outdated_plugin_apis_help_renders(test: type[ABCACTestOutdatedPluginAPIs]) -> None:
+def test_outdated_plugin_apis_help_renders(test: type[ABCACTestPluginAPIs]) -> None:
     instance = test()
 
     assert instance.api_name in instance.title()
@@ -562,7 +560,7 @@ def test_outdated_plugin_apis_reports_one_result_per_api(tmp_path: Path) -> None
         "from .bakery_api.v1 import FileGenerator\n",
     )
 
-    results = _results(ACTestOutdatedBakeryAPI, tmp_path)
+    results = _results(ACTestBakeryAPI, tmp_path)
 
     # Only the detection is under test here, the state follows the timeline.
     assert [r.path for r in results] == [path]

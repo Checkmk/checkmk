@@ -156,6 +156,20 @@ openapi_typescript.openapi_typescript(
     ],
 )
 
+# The Maps daemon is a FastAPI app of its own, so its schema comes ready-made
+# from //packages/cmk-maps instead of the GUI spec generator; from here on it
+# takes the same route as the REST API's types.
+openapi_typescript.openapi_typescript(
+    name = "maps_openapi_ts_file",
+    srcs = ["//packages/cmk-maps:openapi_spec"],
+    outs = ["typescript/maps_openapi.d.ts"],
+    args = [
+        "$(rootpath //packages/cmk-maps:openapi_spec)",
+        "-o",
+        "$(rootpath typescript/maps_openapi.d.ts)",
+    ],
+)
+
 js_library(
     name = "cmk_shared_typing_ts",
     srcs = [
@@ -164,6 +178,7 @@ js_library(
         ":cmk_shared_typing_ts_lib",
         ":empty_index_ts",
         ":generated_ts_files",
+        ":maps_openapi_ts_file",
         ":openapi_internal_ts_file",
     ],
     visibility = ["//packages:__subpackages__"],

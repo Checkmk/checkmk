@@ -33,7 +33,7 @@ from ..config import (
 )
 from ..format import format_as_markdown_werk
 from ..models import EditionV2, EditionV3
-from ..parse import WerkMetadata, WerkV3ParseResult
+from ..parse import WerkMetadata, WerkV2ParseResult, WerkV3ParseResult
 from ..utils import resolve_version
 from .id_pool import (
     add_id_to_stash,
@@ -405,6 +405,16 @@ def load_werk(werk_path: Path) -> Werk:
     parsed = parse_werk(
         file_content=werk_path.read_text(encoding="utf-8"), file_name=werk_path.name
     )
+
+    if "version" not in parsed.metadata:
+        metadata: WerkMetadata = {
+            **parsed.metadata,
+            "version": get_config().current_version,
+        }
+        if isinstance(parsed, WerkV2ParseResult):
+            parsed = WerkV2ParseResult(metadata, parsed.description)
+        else:
+            parsed = WerkV3ParseResult(metadata, parsed.description)
 
     return Werk(
         path=werk_path,

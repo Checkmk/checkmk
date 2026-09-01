@@ -12,7 +12,13 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 
-from ._api_plugins import ApiQuantity, is_scalar, metric_names_in_quantity, operands_of
+from ._api_plugins import (
+    ApiQuantity,
+    ApiScalar,
+    is_scalar,
+    metric_names_in_quantity,
+    operands_of,
+)
 from ._display import (
     FALLBACK_ATTRIBUTES,
     metric_display_attributes,
@@ -34,6 +40,24 @@ from ._quantities import (
 )
 from ._quantity import QuantityProtocol
 from ._units import CurveAttributes
+
+
+def scalar_kind_of(scalar: ApiScalar) -> ScalarKind:
+    match scalar:
+        case metrics_v1.WarningOf():
+            return ScalarKind.WARNING
+        case metrics_v1.CriticalOf():
+            return ScalarKind.CRITICAL
+        case metrics_v2_unstable.LowerWarningOf():
+            return ScalarKind.LOWER_WARNING
+        case metrics_v2_unstable.LowerCriticalOf():
+            return ScalarKind.LOWER_CRITICAL
+        case metrics_v1.MinimumOf():
+            return ScalarKind.MINIMUM
+        case metrics_v1.MaximumOf():
+            return ScalarKind.MAXIMUM
+        case _:
+            assert_never(scalar)
 
 
 class QuantityBuilderProtocol(Protocol):
@@ -145,34 +169,20 @@ def _parse_quantity(quantity: ApiQuantity, context: _ObjectContext) -> QuantityP
             return context.metric(quantity)
         case metrics_v1.Constant():
             return Constant(quantity.value, display=_curve_display(quantity, context))
-        case metrics_v2_unstable.LowerWarningOf():
+        case (
+            metrics_v2_unstable.LowerWarningOf()
+            | metrics_v2_unstable.LowerCriticalOf()
+            | metrics_v1.WarningOf()
+            | metrics_v1.CriticalOf()
+        ):
             return ScalarOf(
                 metric=context.metric(quantity.metric_name),
-                scalar_kind=ScalarKind.LOWER_WARNING,
+                scalar_kind=scalar_kind_of(quantity),
             )
-        case metrics_v2_unstable.LowerCriticalOf():
+        case metrics_v1.MinimumOf() | metrics_v1.MaximumOf():
             return ScalarOf(
                 metric=context.metric(quantity.metric_name),
-                scalar_kind=ScalarKind.LOWER_CRITICAL,
-            )
-        case metrics_v1.WarningOf():
-            return ScalarOf(
-                metric=context.metric(quantity.metric_name), scalar_kind=ScalarKind.WARNING
-            )
-        case metrics_v1.CriticalOf():
-            return ScalarOf(
-                metric=context.metric(quantity.metric_name), scalar_kind=ScalarKind.CRITICAL
-            )
-        case metrics_v1.MinimumOf():
-            return ScalarOf(
-                metric=context.metric(quantity.metric_name),
-                scalar_kind=ScalarKind.MINIMUM,
-                color=parse_color(quantity.color),
-            )
-        case metrics_v1.MaximumOf():
-            return ScalarOf(
-                metric=context.metric(quantity.metric_name),
-                scalar_kind=ScalarKind.MAXIMUM,
+                scalar_kind=scalar_kind_of(quantity),
                 color=parse_color(quantity.color),
             )
         case metrics_v1.Sum():

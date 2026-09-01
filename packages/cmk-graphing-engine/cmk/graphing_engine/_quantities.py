@@ -13,7 +13,7 @@ from typing import assert_never
 from cmk.graphing.v1 import metrics as metrics_v1
 
 from ._display import metric_display_attributes
-from ._fetched import SeriesAttributes
+from ._fetched import PerformanceData, SeriesAttributes
 from ._naming import HostName, MetricName, Service, ServiceName, SiteID
 from ._quantity import (
     EvaluatedQuantity,
@@ -247,6 +247,24 @@ class ScalarKind(enum.StrEnum):
     MAXIMUM = "maximum"
 
 
+def value_of(data: PerformanceData, scalar_kind: ScalarKind) -> float | None:
+    match scalar_kind:
+        case ScalarKind.WARNING:
+            return data.warning
+        case ScalarKind.CRITICAL:
+            return data.critical
+        case ScalarKind.LOWER_WARNING:
+            return data.lower_warning
+        case ScalarKind.LOWER_CRITICAL:
+            return data.lower_critical
+        case ScalarKind.MINIMUM:
+            return data.minimum
+        case ScalarKind.MAXIMUM:
+            return data.maximum
+        case _:
+            assert_never(scalar_kind)
+
+
 @dataclass(frozen=True)
 class ScalarOf:
     metric: RRDMetric
@@ -265,21 +283,7 @@ class ScalarOf:
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
         if (data := context.data_of(self.metric)) is None:
             return []
-        match self.scalar_kind:
-            case ScalarKind.WARNING:
-                value = data.warning
-            case ScalarKind.CRITICAL:
-                value = data.critical
-            case ScalarKind.LOWER_WARNING:
-                value = data.lower_warning
-            case ScalarKind.LOWER_CRITICAL:
-                value = data.lower_critical
-            case ScalarKind.MINIMUM:
-                value = data.minimum
-            case ScalarKind.MAXIMUM:
-                value = data.maximum
-            case _:
-                assert_never(self.scalar_kind)
+        value = value_of(data, self.scalar_kind)
         return [
             EvaluatedQuantity(
                 value=value, time_series=constant_time_series(value, context.time_range)

@@ -28,6 +28,15 @@ type ApiQuantity = (
     | metrics_v1.Fraction
 )
 
+type ApiScalar = (
+    metrics_v1.WarningOf
+    | metrics_v1.CriticalOf
+    | metrics_v2_unstable.LowerWarningOf
+    | metrics_v2_unstable.LowerCriticalOf
+    | metrics_v1.MinimumOf
+    | metrics_v1.MaximumOf
+)
+
 
 def operands_of(quantity: ApiQuantity) -> Sequence[ApiQuantity]:
     match quantity:

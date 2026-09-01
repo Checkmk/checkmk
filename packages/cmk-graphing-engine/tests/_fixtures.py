@@ -28,8 +28,25 @@ def _metric(name: str) -> RRDMetric:
     )
 
 
-def _data(*, value: float | None, warning: float | None = None) -> PerformanceData:
-    return PerformanceData(value=value, warning=warning)
+def _data(
+    *,
+    value: float | None,
+    warning: float | None = None,
+    critical: float | None = None,
+    lower_warning: float | None = None,
+    lower_critical: float | None = None,
+    minimum: float | None = None,
+    maximum: float | None = None,
+) -> PerformanceData:
+    return PerformanceData(
+        value=value,
+        warning=warning,
+        critical=critical,
+        lower_warning=lower_warning,
+        lower_critical=lower_critical,
+        minimum=minimum,
+        maximum=maximum,
+    )
 
 
 def _time_series(*values: float | None) -> TimeSeries:

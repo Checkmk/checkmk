@@ -207,7 +207,7 @@ def logged_in_user_id() -> UserId | None:
     is created which would cause a crash when trying to get the logged in user id."""
     try:
         return logged_in_user.id
-    except AttributeError:
+    except (AttributeError, AssertionError):
         return None
 
 
@@ -1855,10 +1855,12 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 active_config.wato_use_git,
                 active_config.debug,
             )
-        except AttributeError:
-            # The hooks can fail if a user is created on login via the REST-API and is then
-            # modified by the ldap sync process but the user has been updated correctly.
-            pass
+        except (AttributeError, AssertionError):
+            # This sync also runs while a user is being authenticated, i.e. before flask has
+            # opened the session. Hooks that need a user context cannot work that early,
+            # see logged_in_user_id(). The users are synced correctly at this point, so
+            # don't fail just log.
+            self._logger.debug("Skipped the ldap-sync-finished hook", exc_info=True)
 
         duration = time.time() - sync_users_result.sync_start_time
         self._logger.info(

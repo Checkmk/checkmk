@@ -376,12 +376,19 @@ fn make_log_file_spec(log_dir: &Path) -> FileSpec {
         .basename("mk-oracle")
 }
 
-pub const RUNTIME_SUB_DIR: &str = "mk-oracle";
+pub const RUNTIME_SUB_DIR: &str = "mk-oracle-v2";
 
 #[cfg(unix)]
 pub const CLIENT_LIB_NAME: &str = "libclntsh.so";
 #[cfg(windows)]
 pub const CLIENT_LIB_NAME: &str = "oci.dll";
+
+/// Oracle client library subdirectory under an Oracle home: `lib` on Unix
+/// (shared objects), `bin` on Windows (DLLs).
+#[cfg(unix)]
+const CLIENT_LIB_SUBDIR: &str = "lib";
+#[cfg(windows)]
+const CLIENT_LIB_SUBDIR: &str = "bin";
 
 /// The directory contains an Oracle client library: libclntsh.so* on Unix
 /// (installations may ship only the versioned file without the unversioned
@@ -422,8 +429,7 @@ pub fn detect_host_runtime() -> Option<ClientRuntime> {
                     local.name,
                     local.home
                 );
-                // shared libraries live in lib on Unix, DLLs in bin on Windows
-                let candidate = local.home.join(if cfg!(windows) { "bin" } else { "lib" });
+                let candidate = local.home.join(CLIENT_LIB_SUBDIR);
                 if !candidate.is_dir() {
                     log::warn!(
                         "Oracle home {:?} is not suitable: {:?} is not a directory",
@@ -480,6 +486,10 @@ fn find_std_env_var_runtime() -> Option<ClientRuntime> {
     }
 }
 
+/// The client directory of the Oracle home that `env_var` names, `None` when the
+/// variable is unset or the directory holds no client library.
+///
+/// A full Oracle home keeps that library in the `CLIENT_LIB_SUBDIR` of the home.
 pub fn find_env_var_lib_runtime(env_var: &str) -> Option<PathBuf> {
     let oracle_home = match std::env::var(env_var) {
         Ok(path) => path,
@@ -489,7 +499,7 @@ pub fn find_env_var_lib_runtime(env_var: &str) -> Option<PathBuf> {
         }
     };
 
-    let candidate = PathBuf::from(oracle_home).join("lib");
+    let candidate = PathBuf::from(oracle_home).join(CLIENT_LIB_SUBDIR);
 
     if !candidate.is_dir() {
         log::warn!("{} path {:?} is not a directory", env_var, candidate);
@@ -508,15 +518,12 @@ pub fn find_env_var_lib_runtime(env_var: &str) -> Option<PathBuf> {
     Some(candidate)
 }
 
-/// The Oracle client shipped with the agent, below the agent's library
-/// directory at plugins/libexec/mk-oracle. `lib_dir` is what MK_LIBDIR names.
+/// The Oracle client deployed with the agent, in the `oic` subdirectory - Oracle
+/// Instant Client - of the plug-in's directory below `lib_dir`, which is what
+/// MK_LIBDIR names. The subdirectory keeps the client apart from the plug-in's
+/// own files, which sit one level up: the user config and `orasql/`.
 pub fn detect_factory_runtime(lib_dir: &Path) -> Option<PathBuf> {
-    let runtime_path = lib_dir.join("plugins/libexec/mk-oracle");
-    let runtime_path = if cfg!(windows) && runtime_path.join("runtime").is_dir() {
-        runtime_path.join("runtime")
-    } else {
-        runtime_path
-    };
+    let runtime_path = lib_dir.join("plugins/libexec/mk-oracle-v2/oic");
     if !runtime_path.is_dir() {
         log::error!("{:?} is not a directory", runtime_path);
         return None;
@@ -550,7 +557,7 @@ impl ClientRuntime {
     /// The client of a full Oracle home, whose location the caller already knows.
     fn in_home(home: PathBuf) -> Self {
         Self {
-            dir: home.join(if cfg!(windows) { "bin" } else { "lib" }),
+            dir: home.join(CLIENT_LIB_SUBDIR),
             home: Some(home),
         }
     }
@@ -874,7 +881,7 @@ static PLUGIN_TEMPLATE_TEXT: LazyLock<String> = LazyLock::new(|| {
 
 $CMK_VERSION = "{}"
 
-& $env:MK_PLUGINSDIR\packages\mk-oracle\mk-oracle.exe -c $env:MK_CONFDIR/mk-oracle.yml "#,
+& $env:MK_PLUGINSDIR\libexec\mk-oracle-v2\mk-oracle.exe -c $env:MK_CONFDIR/mk-oracle.yml "#,
         VERSION
     )
 });
@@ -912,7 +919,7 @@ static PLUGIN_TEMPLATE_TEXT: LazyLock<String> = LazyLock::new(|| {
 
 CMK_VERSION="{}"
 
-"${{MK_LIBDIR}}/plugins/libexec/mk-oracle/mk-oracle" -c "${{MK_CONFDIR}}/mk-oracle.yml" "#,
+"${{MK_LIBDIR}}/plugins/libexec/mk-oracle-v2/mk-oracle" -c "${{MK_CONFDIR}}/mk-oracle.yml" "#,
         VERSION
     )
 });

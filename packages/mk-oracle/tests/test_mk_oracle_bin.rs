@@ -18,7 +18,7 @@ use assert_cmd::Command;
 use mk_oracle::config::merge::{merge_configs, MergedConfig};
 use mk_oracle::config::OracleConfig;
 use mk_oracle::ora_sql::detect::parse_tns_names_ora;
-use mk_oracle::setup::CLIENT_LIB_NAME;
+use mk_oracle::setup::{CLIENT_LIB_NAME, RUNTIME_PATH_ENV_VAR};
 use mk_oracle::version::VERSION;
 use std::ffi::OsString;
 use std::fs;
@@ -213,15 +213,10 @@ fn test_environment_info_is_logged_at_debug() {
 fn test_find_runtime_reports_environment() {
     let env = setup_test_env();
     // factory runtime layout under MK_LIBDIR:
-    // plugins/libexec/mk-oracle on Unix, + /runtime on Windows
+    // plugins/libexec/mk-oracle-v2/oic
     let lib_dir = tempfile::tempdir().unwrap();
-    let package_dir = lib_dir.path().join("plugins/libexec/mk-oracle");
-    fs::create_dir_all(package_dir.join("runtime")).unwrap();
-    let expected_dir = if cfg!(windows) {
-        package_dir.join("runtime")
-    } else {
-        package_dir
-    };
+    let expected_dir = lib_dir.path().join("plugins/libexec/mk-oracle-v2/oic");
+    fs::create_dir_all(&expected_dir).unwrap();
     // runtime detection requires the client library to be present
     fs::File::create(expected_dir.join(CLIENT_LIB_NAME)).unwrap();
 
@@ -234,11 +229,7 @@ fn test_find_runtime_reports_environment() {
         .unwrap();
     assert!(output.status.success(), "--find-runtime must succeed");
     let stdout = String::from_utf8(output.stdout).unwrap();
-    let path_var = if cfg!(windows) {
-        "PATH"
-    } else {
-        "LD_LIBRARY_PATH"
-    };
+    let path_var = RUNTIME_PATH_ENV_VAR;
     let first_line = stdout.lines().next().unwrap_or_default();
     assert!(
         first_line.starts_with(&format!("{path_var}={}", expected_dir.display())),
@@ -407,7 +398,7 @@ oracle:
     .unwrap();
 
     // User config in the runtime dir overrides cache_age.
-    let runtime_dir = lib_dir.join("plugins/libexec/mk-oracle");
+    let runtime_dir = lib_dir.join("plugins/libexec/mk-oracle-v2");
     fs::create_dir_all(&runtime_dir).unwrap();
     fs::write(
         runtime_dir.join("mk-oracle.user.yml"),

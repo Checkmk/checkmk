@@ -54,7 +54,7 @@ pub mod platform {
             .join("plugins")
             .join("libexec")
             .join(RUNTIME_SUB_DIR)
-            .join("runtime")
+            .join("oic")
     }
 
     pub fn clean_path() -> String {

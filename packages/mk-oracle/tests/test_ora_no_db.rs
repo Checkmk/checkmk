@@ -71,7 +71,7 @@ fn test_contains_oracle_client_lib() {
 #[test]
 fn test_detect_factory_runtime_without_client_lib() {
     let lib_dir = tempfile::tempdir().unwrap();
-    let runtime = lib_dir.path().join("plugins/libexec/mk-oracle");
+    let runtime = lib_dir.path().join("plugins/libexec/mk-oracle-v2/oic");
     std::fs::create_dir_all(&runtime).unwrap();
     // the directory exists but has no client library -> rejected
     assert!(detect_factory_runtime(lib_dir.path()).is_none());
@@ -93,12 +93,7 @@ fn base_dir() -> std::path::PathBuf {
 /// Directory inside the test fixture tree that contains the Oracle client
 /// library (populated by the run script / run.ps1).
 fn client_runtime_dir() -> std::path::PathBuf {
-    let dir = base_dir().join("runtimes/plugins/libexec/mk-oracle");
-    if cfg!(windows) {
-        dir.join("runtime")
-    } else {
-        dir
-    }
+    base_dir().join("runtimes/plugins/libexec/mk-oracle-v2/oic")
 }
 
 #[test]
@@ -445,9 +440,13 @@ fn test_find_current_instance_runtime() {
         std::env::set_var(temp_var, db_location.path());
     }
     assert!(find_env_var_lib_runtime(temp_var).is_none());
-    let lib_path = db_location.path().join("lib");
+    // A full Oracle home keeps the client library in `bin` on Windows and in
+    // `lib` on Unix, so the test has to create the one the function looks in.
+    let lib_path = db_location
+        .path()
+        .join(if cfg!(windows) { "bin" } else { "lib" });
     std::fs::create_dir_all(&lib_path).unwrap();
-    // a lib dir without a client library is rejected
+    // the directory without a client library is rejected
     assert!(find_env_var_lib_runtime(temp_var).is_none());
     let lib_file = if cfg!(windows) {
         "oci.dll"

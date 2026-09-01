@@ -53,13 +53,13 @@ def _source(base_os: OS) -> Path:
 def _target(base_os: OS) -> Path:
     match base_os:
         case OS.LINUX:
-            return Path("libexec", "mk-oracle", "mk-oracle")
+            return Path("libexec", "mk-oracle-v2", "mk-oracle")
         case OS.WINDOWS:
-            return Path("libexec", "mk-oracle", "mk-oracle.exe")
+            return Path("libexec", "mk-oracle-v2", "mk-oracle.exe")
         case OS.AIX:
-            return Path("libexec", "mk-oracle", "mk-oracle.aix")
+            return Path("libexec", "mk-oracle-v2", "mk-oracle.aix")
         case OS.SOLARIS:
-            return Path("libexec", "mk-oracle", "mk-oracle.solaris")
+            return Path("libexec", "mk-oracle-v2", "mk-oracle.solaris")
         case _:
             raise ValueError(f"Unsupported OS: {base_os}")
 
@@ -68,7 +68,7 @@ linux_files: list[Plugin] = [
     Plugin(
         base_os=OS.LINUX,
         source=Path("mk-oracle"),
-        target=Path("libexec", "mk-oracle", "mk-oracle"),
+        target=Path("libexec", "mk-oracle-v2", "mk-oracle"),
     ),
     Plugin(
         base_os=OS.LINUX,
@@ -87,7 +87,7 @@ windows_files: list[Plugin] = [
     Plugin(
         base_os=OS.WINDOWS,
         source=Path("mk-oracle.exe"),
-        target=Path("libexec", "mk-oracle", "mk-oracle.exe"),
+        target=Path("libexec", "mk-oracle-v2", "mk-oracle.exe"),
     ),
     Plugin(
         base_os=OS.WINDOWS,
@@ -106,7 +106,7 @@ aix_files: list[Plugin] = [
     Plugin(
         base_os=OS.AIX,
         source=Path("mk-oracle.aix"),
-        target=Path("libexec", "mk-oracle", "mk-oracle.aix"),
+        target=Path("libexec", "mk-oracle-v2", "mk-oracle.aix"),
     ),
     Plugin(
         base_os=OS.AIX,
@@ -125,7 +125,7 @@ solaris_files: list[Plugin] = [
     Plugin(
         base_os=OS.SOLARIS,
         source=Path("mk-oracle.solaris"),
-        target=Path("libexec", "mk-oracle", "mk-oracle.solaris"),
+        target=Path("libexec", "mk-oracle-v2", "mk-oracle.solaris"),
     ),
     Plugin(
         base_os=OS.SOLARIS,

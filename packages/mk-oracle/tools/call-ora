@@ -9,7 +9,7 @@
 
 ROOT=/opt/checkmk/agent/default/package/
 SUBDIR=plugins/libexec
-EXE=${ROOT}/${SUBDIR}/mk-oracle/mk-oracle
+EXE=${ROOT}/${SUBDIR}/mk-oracle-v2/mk-oracle
 if [[ -f ${EXE} ]]; then
     if [[ -n "${CFG}" ]]; then
         CONFIG="${CFG}"
@@ -21,7 +21,7 @@ if [[ -f ${EXE} ]]; then
 fi
 
 ROOT=/usr/lib/check_mk_agent/
-EXE=${ROOT}/${SUBDIR}/mk-oracle/mk-oracle
+EXE=${ROOT}/${SUBDIR}/mk-oracle-v2/mk-oracle
 if [[ -f ${EXE} ]]; then
     if [[ -n "${CFG}" ]]; then
         CONFIG="${CFG}"

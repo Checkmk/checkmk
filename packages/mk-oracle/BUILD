@@ -135,13 +135,13 @@ build_test(
 genrule(
     name = "test-runtime-dir",
     outs = [
-        "runtimes/plugins/libexec/mk-oracle/.marker",
+        "runtimes/plugins/libexec/mk-oracle-v2/oic/.marker",
         # fake client libraries: runtime detection accepts a directory only
         # if it contains one
-        "runtimes/plugins/libexec/mk-oracle/libclntsh.so",
-        "runtimes/plugins/libexec/mk-oracle/oci.dll",
+        "runtimes/plugins/libexec/mk-oracle-v2/oic/libclntsh.so",
+        "runtimes/plugins/libexec/mk-oracle-v2/oic/oci.dll",
     ],
-    cmd = "mkdir -p $(RULEDIR)/runtimes/plugins/libexec/mk-oracle && touch $(OUTS)",
+    cmd = "mkdir -p $(RULEDIR)/runtimes/plugins/libexec/mk-oracle-v2/oic && touch $(OUTS)",
 )
 
 rust_test(

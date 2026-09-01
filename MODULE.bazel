@@ -368,10 +368,14 @@ http_archive(
 
 http_archive(
     name = "oci-basic-light-win-x64",
+    # The archive holds one instantclient_<version> directory. Globbing it with
+    # ** rather than naming it keeps a version bump to the url and the checksum:
+    # a stale directory name would match nothing and produce an empty package
+    # instead of an error.
     build_file_content = """
 filegroup(
     name = "srcs",
-    srcs = glob(["instantclient_21_18/*.dll"]),
+    srcs = glob(["**/*.dll"]),
     visibility = ["//visibility:public"],
 )
 """,

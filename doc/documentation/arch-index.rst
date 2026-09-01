@@ -60,6 +60,7 @@ Components
    arch-comp-otel-monitoring-dcd.rst
    arch-comp-otel-monitoring-custom-query.rst
    arch-comp-mcp.rst
+   arch-comp-oauth.rst
 
    arch-comp-agent-abstract.rst
    arch-comp-agent-linux.rst

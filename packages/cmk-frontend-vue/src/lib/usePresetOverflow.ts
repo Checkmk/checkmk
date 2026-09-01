@@ -13,22 +13,26 @@ interface VisiblePresetCountArgs {
   available: number
   /** Width to keep free for the overflow dropdown trigger (including its leading gap). */
   overflowReserve: number
+  /** Hard cap on the count, applied on top of the fit. */
+  maxVisible: number
 }
 
 function visiblePresetCount(args: VisiblePresetCountArgs): number {
-  const { chipRightEdges, available, overflowReserve } = args
+  const { chipRightEdges, available, overflowReserve, maxVisible } = args
 
   if (chipRightEdges.length === 0) {
     return 0
   }
 
+  // A count cap puts the overflow control on the row even when every chip would fit, so its
+  // reserve has to be honoured in that case too.
   const naturalWidth = chipRightEdges[chipRightEdges.length - 1]!
-  if (naturalWidth <= available) {
+  if (chipRightEdges.length <= maxVisible && naturalWidth <= available) {
     return chipRightEdges.length
   }
 
   const budget = available - overflowReserve
-  return chipRightEdges.filter((rightEdge) => rightEdge <= budget).length
+  return Math.min(chipRightEdges.filter((rightEdge) => rightEdge <= budget).length, maxVisible)
 }
 
 export interface PresetOverflowRefs {
@@ -47,6 +51,11 @@ export interface PresetOverflow<T> {
   hasOverflow: ComputedRef<boolean>
 }
 
+export interface PresetOverflowOptions {
+  /** Hard cap on visible chips; the rest go to the overflow control however wide the row is. */
+  maxVisible?: number
+}
+
 /**
  * Fit as many preset chips as the row allows, spilling the rest into an overflow control.
  *
@@ -54,12 +63,15 @@ export interface PresetOverflow<T> {
  */
 export function usePresetOverflow<T>(
   refs: PresetOverflowRefs,
-  presets: () => T[]
+  presets: () => T[],
+  options: PresetOverflowOptions = {}
 ): PresetOverflow<T> {
   const { rootRef, measureRef, overflowMeasureRef } = refs
+  const { maxVisible = Number.POSITIVE_INFINITY } = options
 
-  // Start all-visible so `recompute` only ever trims (no empty-then-expand flash).
-  const visibleCount = ref(Number.POSITIVE_INFINITY)
+  // Start at the cap so `recompute` only ever trims (no empty-then-expand flash, and no first
+  // frame showing more chips than the cap allows).
+  const visibleCount = ref(maxVisible)
 
   const visiblePresets = computed(() => presets().slice(0, visibleCount.value))
   const overflowPresets = computed(() => presets().slice(visibleCount.value))
@@ -82,7 +94,8 @@ export function usePresetOverflow<T>(
     visibleCount.value = visiblePresetCount({
       chipRightEdges,
       available: root.clientWidth,
-      overflowReserve
+      overflowReserve,
+      maxVisible
     })
   }
 

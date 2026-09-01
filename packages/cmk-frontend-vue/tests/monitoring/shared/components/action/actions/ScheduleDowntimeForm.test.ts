@@ -45,6 +45,19 @@ class FakeResizeObserver {
   disconnect(): void {}
 }
 
+/** Every duration the form offers, in render order, to tell chips from the form's other buttons. */
+const DURATION_LABELS = [
+  'Custom',
+  'Now',
+  '4 h',
+  '24 h',
+  '10 d',
+  'Today',
+  'This week',
+  'This month',
+  'This year'
+]
+
 function stubGeometry(el: HTMLElement, props: Record<string, number>): void {
   for (const [key, value] of Object.entries(props)) {
     Object.defineProperty(el, key, { value, configurable: true })
@@ -147,19 +160,16 @@ describe('a row too narrow for every duration', () => {
     vi.unstubAllGlobals()
   })
 
-  it('keeps the durations that fit on the row and drops the rest into the dropdown', async () => {
+  it('narrows the row further than the count cap already does', async () => {
     const { container } = mountForm({ comment: 'maintenance' })
 
-    // Wide enough for the row: every duration is a chip and there is nothing to spill.
-    expect(screen.getByRole('button', { name: 'This year' })).toBeInTheDocument()
-    expect(screen.queryByRole('combobox', { name: 'More durations' })).not.toBeInTheDocument()
-
+    // The cap alone leaves seven chips (see the count test below); squeezing leaves two.
     squeezeChipRow(container, 2)
     await nextTick()
 
-    expect(screen.getByRole('button', { name: 'Custom time range' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Custom' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Now' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'This year' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '4 h' })).not.toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: 'More durations' })).toBeInTheDocument()
   })
 
@@ -174,6 +184,22 @@ describe('a row too narrow for every duration', () => {
 
     expect(modelValue.selection).toBe('year')
   })
+})
+
+test('shows seven durations and hides the rest behind the dropdown', async () => {
+  mountForm({ comment: 'maintenance' })
+
+  const chips = screen
+    .getAllByRole('button')
+    .map((chip) => chip.textContent?.trim())
+    .filter((label) => DURATION_LABELS.includes(label!))
+  expect(chips).toEqual(['Custom', 'Now', '4 h', '24 h', '10 d', 'Today', 'This week'])
+
+  await userEvent.click(screen.getByRole('combobox', { name: 'More durations' }))
+  expect(screen.getAllByRole('option').map((option) => option.textContent?.trim())).toEqual([
+    'This month',
+    'This year'
+  ])
 })
 
 describe('isScheduleDowntimeValid', () => {

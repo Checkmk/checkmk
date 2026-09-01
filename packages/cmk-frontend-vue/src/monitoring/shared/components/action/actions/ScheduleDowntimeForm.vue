@@ -133,10 +133,9 @@ export function downtimeWindow(
 </script>
 
 <script setup lang="ts">
+import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
 import CmkChipSelect from 'cmk-ui-library/components/CmkChipSelect.vue'
-import CmkCollapsible from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsible.vue'
-import CmkCollapsibleTitle from 'cmk-ui-library/components/CmkCollapsible/CmkCollapsibleTitle.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
@@ -177,15 +176,13 @@ const { _t } = usei18n()
 const timeZone = getLocalTimeZone()
 
 const customOpen = ref(false)
-const durationOpen = ref(true)
-const advancedOpen = ref(false)
 
 const durationChips: {
   id: DurationSelection
   label: TranslatedString
   duration?: TranslatedString
 }[] = [
-  { id: 'custom', label: _t('Custom time range') },
+  { id: 'custom', label: _t('Custom') },
   { id: 'adhoc', label: _t('Now') },
   { id: '4h', label: _t('4 h'), duration: _t('4 hours') },
   { id: '24h', label: _t('24 h'), duration: _t('24 hours') },
@@ -249,6 +246,13 @@ function selectDuration(id: DurationSelection): void {
   }
 }
 
+/**
+ * Chips past this one go to the dropdown however wide the row is. Seven is what the design shows:
+ * 'Custom' and 'Now' plus the five presets a site configures by default (CMK-38358). Today's list
+ * is hard-coded and longer, so two chips start out in the dropdown.
+ */
+const MAX_VISIBLE_DURATIONS = 7
+
 const chipRowRef = ref<HTMLElement | null>(null)
 const chipMeasureRef = ref<HTMLElement | null>(null)
 const overflowMeasureRef = ref<HTMLElement | null>(null)
@@ -259,7 +263,8 @@ const {
   hasOverflow
 } = usePresetOverflow(
   { rootRef: chipRowRef, measureRef: chipMeasureRef, overflowMeasureRef },
-  () => durationChips
+  () => durationChips,
+  { maxVisible: MAX_VISIBLE_DURATIONS }
 )
 
 // The measure replica only needs the trigger width, so it carries no options.
@@ -298,158 +303,144 @@ function selectOverflow(id: string | null): void {
       </label>
     </div>
 
-    <section class="monitoring-schedule-downtime-form__section">
-      <CmkCollapsibleTitle
-        :title="_t('Duration')"
-        :open="durationOpen"
-        @toggle-open="durationOpen = !durationOpen"
-      />
-      <CmkCollapsible :open="durationOpen">
-        <div class="monitoring-schedule-downtime-form__section-body">
-          <span class="monitoring-schedule-downtime-form__label">
-            {{ _t('Duration') }}<CmkLabelRequired :show="true" space="before" />
-          </span>
-          <div class="monitoring-schedule-downtime-form__durations">
-            <div ref="chipRowRef" class="monitoring-schedule-downtime-form__chips">
-              <!-- Every chip at natural width, off-screen: the fit is measured here, never on the
-                   live row, so trimming the row cannot feed back into the measurement. -->
-              <div
-                class="monitoring-schedule-downtime-form__chips-measure-clip"
-                aria-hidden="true"
-                inert
-              >
-                <div ref="chipMeasureRef" class="monitoring-schedule-downtime-form__chips-measure">
-                  <CmkChip
-                    v-for="chip in durationChips"
-                    :key="chip.id"
-                    class="monitoring-schedule-downtime-form__chip"
-                    variant="outline"
-                  >
-                    {{ chip.label }}
-                  </CmkChip>
-                  <div ref="overflowMeasureRef">
-                    <CmkChipSelect
-                      :model-value="null"
-                      :options="EMPTY_OPTIONS"
-                      :label="_t('More durations')"
-                      :input-hint="_t('More')"
-                      static-label
-                    />
-                  </div>
+    <CmkCatalogPanel :title="_t('Duration')" :open="true">
+      <div class="monitoring-schedule-downtime-form__section-body">
+        <span class="monitoring-schedule-downtime-form__label">
+          {{ _t('Duration') }}<CmkLabelRequired :show="true" space="before" />
+        </span>
+        <div class="monitoring-schedule-downtime-form__durations">
+          <div ref="chipRowRef" class="monitoring-schedule-downtime-form__chips">
+            <!-- Every chip at natural width, off-screen: the fit is measured here, never on the
+                 live row, so trimming the row cannot feed back into the measurement. -->
+            <div
+              class="monitoring-schedule-downtime-form__chips-measure-clip"
+              aria-hidden="true"
+              inert
+            >
+              <div ref="chipMeasureRef" class="monitoring-schedule-downtime-form__chips-measure">
+                <CmkChip
+                  v-for="chip in durationChips"
+                  :key="chip.id"
+                  class="monitoring-schedule-downtime-form__chip"
+                  variant="outline"
+                >
+                  {{ chip.label }}
+                </CmkChip>
+                <div ref="overflowMeasureRef">
+                  <CmkChipSelect
+                    :model-value="null"
+                    :options="EMPTY_OPTIONS"
+                    :label="_t('More durations')"
+                    :input-hint="_t('More')"
+                    static-label
+                  />
                 </div>
               </div>
-
-              <CmkChip
-                v-for="chip in visibleChips"
-                :key="chip.id"
-                type="button"
-                class="monitoring-schedule-downtime-form__chip"
-                :aria-pressed="isSelected(chip.id)"
-                :color="isSelected(chip.id) ? 'success' : 'others'"
-                :variant="isSelected(chip.id) ? 'fill' : 'outline'"
-                @click="selectDuration(chip.id)"
-              >
-                {{ chip.label }}
-              </CmkChip>
-
-              <div v-if="hasOverflow" class="monitoring-schedule-downtime-form__chips-overflow">
-                <CmkChipSelect
-                  :model-value="overflowSelectedId"
-                  :options="overflowOptions"
-                  :label="_t('More durations')"
-                  :input-hint="_t('More')"
-                  static-label
-                  @update:model-value="selectOverflow"
-                />
-              </div>
             </div>
-            <CmkLink
-              v-if="presetsUrl"
-              class="monitoring-schedule-downtime-form__presets-link"
-              :href="presetsUrl"
-              target="_blank"
-              rel="noopener"
+
+            <CmkChip
+              v-for="chip in visibleChips"
+              :key="chip.id"
+              type="button"
+              class="monitoring-schedule-downtime-form__chip"
+              :aria-pressed="isSelected(chip.id)"
+              :color="isSelected(chip.id) ? 'success' : 'others'"
+              :variant="isSelected(chip.id) ? 'fill' : 'outline'"
+              @click="selectDuration(chip.id)"
             >
-              {{ _t('(edit presets)') }}
-            </CmkLink>
-          </div>
+              {{ chip.label }}
+            </CmkChip>
 
-          <CmkTimeRangePicker
-            v-if="model.selection === 'custom'"
-            v-model="model.customRange"
-            v-model:open="customOpen"
-            :time-zone="timeZone"
-            :label="_t('Downtime time range')"
-          />
-          <div
-            v-else-if="model.selection === 'adhoc'"
-            class="monitoring-schedule-downtime-form__adhoc"
+            <div v-if="hasOverflow" class="monitoring-schedule-downtime-form__chips-overflow">
+              <CmkChipSelect
+                :model-value="overflowSelectedId"
+                :options="overflowOptions"
+                :label="_t('More durations')"
+                :input-hint="_t('More')"
+                static-label
+                @update:model-value="selectOverflow"
+              />
+            </div>
+          </div>
+          <CmkLink
+            v-if="presetsUrl"
+            class="monitoring-schedule-downtime-form__presets-link"
+            :href="presetsUrl"
+            target="_blank"
+            rel="noopener"
           >
-            <span>{{ _t('From now, for') }}</span>
-            <CmkInput
-              v-model="model.adhocHours"
-              type="number"
-              field-size="small"
-              :unit="_t('hours')"
-            />
-            <CmkInput
-              v-model="model.adhocMinutes"
-              type="number"
-              field-size="small"
-              :unit="_t('minutes')"
-            />
-          </div>
-          <p v-else-if="untilEndDate" class="monitoring-schedule-downtime-form__preset-hint">
-            {{
-              _t('Scheduled downtime, starting now and ending on %{date}.', {
-                date: untilEndDate
-              })
-            }}
-          </p>
-          <p v-else class="monitoring-schedule-downtime-form__preset-hint">
-            {{
-              _t('Scheduled downtime, starting now with a duration of %{duration}.', {
-                duration: presetDuration
-              })
-            }}
-          </p>
-
-          <label class="monitoring-schedule-downtime-form__field">
-            <span class="monitoring-schedule-downtime-form__label">{{ _t('Repeat') }}</span>
-            <CmkDropdown v-model="repeat" :options="repeatOptions" :label="_t('Repeat')" />
-          </label>
-          <p v-if="monthDayHint" class="monitoring-schedule-downtime-form__preset-hint">
-            {{ monthDayHint }}
-          </p>
+            {{ _t('(edit presets)') }}
+          </CmkLink>
         </div>
-      </CmkCollapsible>
-    </section>
 
-    <section class="monitoring-schedule-downtime-form__section">
-      <CmkCollapsibleTitle
-        :title="_t('Advanced option')"
-        :open="advancedOpen"
-        @toggle-open="advancedOpen = !advancedOpen"
-      />
-      <CmkCollapsible :open="advancedOpen">
-        <div class="monitoring-schedule-downtime-form__section-body">
-          <CmkCheckbox
-            v-if="props.targetKind === 'host'"
-            v-model="model.includeChildHosts"
-            :label="_t('Only for hosts: Set child hosts in downtime.')"
+        <CmkTimeRangePicker
+          v-if="model.selection === 'custom'"
+          v-model="model.customRange"
+          v-model:open="customOpen"
+          :time-zone="timeZone"
+          :label="_t('Downtime time range')"
+        />
+        <div
+          v-else-if="model.selection === 'adhoc'"
+          class="monitoring-schedule-downtime-form__adhoc"
+        >
+          <span>{{ _t('From now, for') }}</span>
+          <CmkInput
+            v-model="model.adhocHours"
+            type="number"
+            field-size="small"
+            :unit="_t('hours')"
           />
-          <CmkCheckbox
-            v-model="model.flexible"
-            :label="
-              _t(
-                'Only start downtime if host/service goes DOWN/UNREACH within the defined start ' +
-                  'and end time (flexible).'
-              )
-            "
+          <CmkInput
+            v-model="model.adhocMinutes"
+            type="number"
+            field-size="small"
+            :unit="_t('minutes')"
           />
         </div>
-      </CmkCollapsible>
-    </section>
+        <p v-else-if="untilEndDate" class="monitoring-schedule-downtime-form__preset-hint">
+          {{
+            _t('Scheduled downtime, starting now and ending on %{date}.', {
+              date: untilEndDate
+            })
+          }}
+        </p>
+        <p v-else class="monitoring-schedule-downtime-form__preset-hint">
+          {{
+            _t('Scheduled downtime, starting now with a duration of %{duration}.', {
+              duration: presetDuration
+            })
+          }}
+        </p>
+
+        <label class="monitoring-schedule-downtime-form__field">
+          <span class="monitoring-schedule-downtime-form__label">{{ _t('Repeat') }}</span>
+          <CmkDropdown v-model="repeat" :options="repeatOptions" :label="_t('Repeat')" />
+        </label>
+        <p v-if="monthDayHint" class="monitoring-schedule-downtime-form__preset-hint">
+          {{ monthDayHint }}
+        </p>
+      </div>
+    </CmkCatalogPanel>
+
+    <CmkCatalogPanel :title="_t('Advanced option')" :open="false">
+      <div class="monitoring-schedule-downtime-form__section-body">
+        <CmkCheckbox
+          v-if="props.targetKind === 'host'"
+          v-model="model.includeChildHosts"
+          :label="_t('Only for hosts: Set child hosts in downtime.')"
+        />
+        <CmkCheckbox
+          v-model="model.flexible"
+          :label="
+            _t(
+              'Only start downtime if host/service goes DOWN/UNREACH within the defined start ' +
+                'and end time (flexible).'
+            )
+          "
+        />
+      </div>
+    </CmkCatalogPanel>
   </div>
 </template>
 

@@ -56,7 +56,11 @@ interface Geometry {
  * geometry. `fire()` re-runs the observer callback (i.e. a resize); `setReplica`/`setPresets` mutate
  * inputs for the dynamic cases.
  */
-function setupOverflow(geo: Geometry, presetCount = geo.chipRightEdges.length) {
+function setupOverflow(
+  geo: Geometry,
+  presetCount = geo.chipRightEdges.length,
+  maxVisible?: number
+) {
   const root = document.createElement('div')
   stubGeometry(root, { clientWidth: geo.rootWidth })
 
@@ -78,7 +82,11 @@ function setupOverflow(geo: Geometry, presetCount = geo.chipRightEdges.length) {
   let api!: PresetOverflow<Preset>
   const host = defineComponent({
     setup() {
-      api = usePresetOverflow({ rootRef, measureRef, overflowMeasureRef }, () => presetsRef.value)
+      api = usePresetOverflow(
+        { rootRef, measureRef, overflowMeasureRef },
+        () => presetsRef.value,
+        maxVisible === undefined ? {} : { maxVisible }
+      )
       return () => h('div')
     }
   })
@@ -186,6 +194,38 @@ describe('usePresetOverflow', () => {
     expect(ids()).toEqual({ visible: ['p0'], overflow: ['p1', 'p2', 'p3'] })
     fire()
     expect(ids()).toEqual({ visible: ['p0'], overflow: ['p1', 'p2', 'p3'] })
+  })
+
+  test('a count cap trims a row every chip would otherwise fit on', () => {
+    // Natural width (150) fits the root (400), so width alone would show all three. The cap still
+    // spills the third, and the trigger it puts on the row has its reserve honoured.
+    const { ids, api } = setupOverflow(
+      { rootWidth: 400, chipRightEdges: [50, 100, 150], replicaLeft: 160, replicaWidth: 60 },
+      3,
+      2
+    )
+    expect(ids()).toEqual({ visible: ['p0', 'p1'], overflow: ['p2'] })
+    expect(api.hasOverflow.value).toBe(true)
+  })
+
+  test('a cap at or above the preset count changes nothing', () => {
+    const { ids, api } = setupOverflow(
+      { rootWidth: 400, chipRightEdges: [50, 100, 150], replicaLeft: 160, replicaWidth: 60 },
+      3,
+      3
+    )
+    expect(ids()).toEqual({ visible: ['p0', 'p1', 'p2'], overflow: [] })
+    expect(api.hasOverflow.value).toBe(false)
+  })
+
+  test('the narrower of the cap and the fit wins', () => {
+    // budget = 180 − reserve(80) = 100 → two chips fit, which is fewer than the cap of 3.
+    const { ids } = setupOverflow(
+      { rootWidth: 180, chipRightEdges: [50, 100, 150, 200], replicaLeft: 215, replicaWidth: 65 },
+      4,
+      3
+    )
+    expect(ids()).toEqual({ visible: ['p0', 'p1'], overflow: ['p2', 'p3'] })
   })
 
   test('recomputes when the preset list changes', async () => {

@@ -32,7 +32,7 @@ py_binary(
     outs = ["werks_precompiled_" + edition],
     args = [
         "precompile",
-        "$(location //:werks_group)",
+        "$(location //:werks_group)/werks",
         "--filter-by-edition",
         edition,
         "$(location werks_precompiled_%s)" % edition,

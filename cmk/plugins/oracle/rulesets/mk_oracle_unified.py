@@ -414,7 +414,7 @@ def _oracle_id() -> CascadingSingleChoice:
     )
 
 
-def _connection_options() -> Dictionary:
+def _connection_options(*, include_tns_admin: bool) -> Dictionary:
     base: dict[str, DictElement[str] | DictElement[int]] = {
         "host": DictElement(
             parameter_form=String(
@@ -437,7 +437,12 @@ def _connection_options() -> Dictionary:
             ),
             required=False,
         ),
-        "tns_admin": DictElement(
+    }
+    # TNS_ADMIN is honored only for the default (main) connection. A per-instance
+    # override is reserved and currently ignored by the plug-in, so the field is
+    # offered on the main connection only.
+    if include_tns_admin:
+        base["tns_admin"] = DictElement(
             parameter_form=String(
                 title=Title("TNS_ADMIN directory path"),
                 help_text=Help(
@@ -453,29 +458,28 @@ def _connection_options() -> Dictionary:
                 ),
             ),
             required=False,
-        ),
-        "oracle_local_registry": DictElement(
-            parameter_form=String(
-                title=Title("Oracle local registry path"),
-                help_text=Help(
-                    "Path to the olr.loc file of Oracle Grid Infrastructure, which "
-                    "covers both Oracle Clusterware and Oracle Restart. If not "
-                    "specified, /etc/oracle/olr.loc and /var/opt/oracle/olr.loc are "
-                    "probed in that order. Once the Grid home named in that file is "
-                    "found, the plug-in connects to this node by its own name instead "
-                    "of localhost, because a listener under Grid Infrastructure binds "
-                    "the node address. The Grid home is also used as the last "
-                    "candidate for ORACLE_HOME, since Grid Infrastructure stops "
-                    "maintaining oratab from version 12.2 on. Set this to a path that "
-                    "does not exist to switch the behavior off."
-                ),
-                custom_validate=(
-                    validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
-                ),
+        )
+    base["oracle_local_registry"] = DictElement(
+        parameter_form=String(
+            title=Title("Oracle local registry path"),
+            help_text=Help(
+                "Path to the olr.loc file of Oracle Grid Infrastructure, which "
+                "covers both Oracle Clusterware and Oracle Restart. If not "
+                "specified, /etc/oracle/olr.loc and /var/opt/oracle/olr.loc are "
+                "probed in that order. Once the Grid home named in that file is "
+                "found, the plug-in connects to this node by its own name instead "
+                "of localhost, because a listener under Grid Infrastructure binds "
+                "the node address. The Grid home is also used as the last "
+                "candidate for ORACLE_HOME, since Grid Infrastructure stops "
+                "maintaining oratab from version 12.2 on. Set this to a path that "
+                "does not exist to switch the behavior off."
             ),
-            required=False,
+            custom_validate=(
+                validators.MatchRegex("^/.*", Message("Please enter an absolute path.")),
+            ),
         ),
-    }
+        required=False,
+    )
     return Dictionary(
         title=Title("Connection options"),
         elements=base,
@@ -740,7 +744,7 @@ def _endpoint(
             required=is_main_entry,
         ),
         "connection": DictElement(
-            parameter_form=_connection_options(),
+            parameter_form=_connection_options(include_tns_admin=is_main_entry),
             required=is_main_entry,
         ),
     }

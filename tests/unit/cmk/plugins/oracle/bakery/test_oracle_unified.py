@@ -278,6 +278,7 @@ oracle_config_full: GuiConfig = GuiConfig(
                 host="dbhost2",
                 port=1522,
                 timeout=20,
+                # per-instance tns_admin is reserved and dropped by the bakery (main-only)
                 tns_admin="/etc/oracle/tns2",
             ),
         ),
@@ -320,7 +321,6 @@ expected_yaml_lines_full = [
     "        hostname: dbhost2",
     "        port: 1522",
     "        timeout: 20",
-    "        tns_admin: /etc/oracle/tns2",
     "      instance_name: Instance_Name_2",
     "      service_name: Service_Name_2",
     "    options:",
@@ -512,6 +512,7 @@ oracle_config_discovery_instances: GuiConfig = GuiConfig(
                 host="hostb",
                 port=1522,
                 timeout=10,
+                # per-instance tns_admin is reserved and dropped by the bakery (main-only)
                 tns_admin="/etc/oracle/tnsb",
             ),
         ),
@@ -545,7 +546,6 @@ expected_yaml_lines_discovery_instances = [
     "        hostname: hostb",
     "        port: 1522",
     "        timeout: 10",
-    "        tns_admin: /etc/oracle/tnsb",
     "      instance_name: SID_B",
 ]
 

@@ -82,7 +82,9 @@ oracle:
         sid: "INST1" # optional
         alias: myservicename # optional
         authentication: # optional, if absent will use main
-        connection: # optional, is absent will use main
+        connection: # optional, if absent will use main
+          # tns_admin: reserved, not used per-instance right now. Only the main
+          # connection's tns_admin is applied to all instances.
         piggyback: # optional
           hostname: "mypiggybackhost" # mandatory
           sections: # optional, if absent will use main

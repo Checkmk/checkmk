@@ -5,7 +5,6 @@
 
 import enum
 import itertools
-import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import assert_never
@@ -15,6 +14,14 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from ._display import metric_display_attributes
 from ._fetched import PerformanceData, SeriesAttributes
 from ._naming import HostName, MetricName, Service, ServiceName, SiteID
+from ._operations import (
+    apply_operator,
+    op_difference,
+    op_fraction,
+    op_product,
+    op_sum,
+    Operator,
+)
 from ._quantity import (
     EvaluatedQuantity,
     EvaluationContext,
@@ -23,39 +30,6 @@ from ._quantity import (
 )
 from ._timeseries import ConsolidationFunction, constant_time_series, TimeSeries
 from ._units import CurveAttributes
-
-type _Operator = Callable[[Sequence[float | None]], float | None]
-
-
-def _op_sum(point: Sequence[float | None]) -> float | None:
-    return sum(value for value in point if value is not None)
-
-
-def _op_product(point: Sequence[float | None]) -> float | None:
-    present = [value for value in point if value is not None]
-    if len(present) != len(point):
-        return None
-    return math.prod(present)
-
-
-def _op_difference(point: Sequence[float | None]) -> float | None:
-    minuend, subtrahend = point
-    if minuend is None or subtrahend is None:
-        return None
-    return minuend - subtrahend
-
-
-def _op_fraction(point: Sequence[float | None]) -> float | None:
-    dividend, divisor = point
-    if dividend is None or divisor is None or divisor == 0:
-        return None
-    return dividend / divisor
-
-
-def _apply(operator: _Operator, point: Sequence[float | None]) -> float | None:
-    if all(value is None for value in point):
-        return None
-    return operator(point)
 
 
 def _operand_label_macros(operands: Sequence[EvaluatedQuantity]) -> Mapping[str, str]:
@@ -77,23 +51,23 @@ def _operand_series_attributes(operands: Sequence[EvaluatedQuantity]) -> SeriesA
     return attributes
 
 
-def _apply_operator(
-    operator: _Operator,
+def _apply_to_operands(
+    operator: Operator,
     operands: Sequence[EvaluatedQuantity],
     context: EvaluationContext,
 ) -> EvaluatedQuantity:
-    # The scalar value and every series point run through the same _apply, so an operator's None
+    # The scalar value and every series point run through the same apply_operator, so an operator's None
     # handling (Sum folds present values, Product / Difference / Fraction null on a gap) is identical
     # at both levels.
     return EvaluatedQuantity(
-        value=_apply(operator, [operand.value for operand in operands]),
+        value=apply_operator(operator, [operand.value for operand in operands]),
         time_series=TimeSeries(
             time_range=context.time_range,
             values=[
-                _apply(operator, point)
+                apply_operator(operator, point)
                 # Operands are normally on one grid, but a fetch that snapped a series differently
                 # can make them differ in length. Pad the short ones rather than truncate the whole
-                # curve to the shortest: a missing point is a gap, which _apply already handles.
+                # curve to the shortest: a missing point is a gap, which apply_operator already handles.
                 for point in itertools.zip_longest(
                     *(operand.time_series.values for operand in operands), fillvalue=None
                 )
@@ -121,7 +95,7 @@ def _collapse_operands(
 ) -> Sequence[EvaluatedQuantity] | None:
     # An operation is absent unless it has operands and every one of them is present: an empty
     # operation and any absent operand alike make the whole operation absent (value and series). Gaps
-    # within present operands are handled point-wise by _apply.
+    # within present operands are handled point-wise by apply_operator.
     operands = [_collapse(result) for result in results]
     present = [operand for operand in operands if operand is not None]
     if not operands or len(present) != len(operands):
@@ -139,13 +113,13 @@ def _operation_metrics(operands: Sequence[QuantityProtocol]) -> Iterable[MetricP
 
 
 def _evaluate_operation(
-    operator: _Operator,
+    operator: Operator,
     operands: Sequence[QuantityProtocol],
     context: EvaluationContext,
 ) -> Sequence[EvaluatedQuantity]:
     if (collapsed := _collapse_operands([o.evaluate(context) for o in operands])) is None:
         return []
-    return [_apply_operator(operator, collapsed, context)]
+    return [_apply_to_operands(operator, collapsed, context)]
 
 
 @dataclass(frozen=True)
@@ -338,7 +312,7 @@ class Sum:
         return _operation_metrics(self.summands)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(_op_sum, self.summands, context)
+        return _evaluate_operation(op_sum, self.summands, context)
 
     def attributes(
         self,
@@ -363,7 +337,7 @@ class Product:
         return _operation_metrics(self.factors)
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(_op_product, self.factors, context)
+        return _evaluate_operation(op_product, self.factors, context)
 
     def attributes(
         self,
@@ -389,7 +363,7 @@ class Difference:
         return _operation_metrics((self.minuend, self.subtrahend))
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(_op_difference, (self.minuend, self.subtrahend), context)
+        return _evaluate_operation(op_difference, (self.minuend, self.subtrahend), context)
 
     def attributes(
         self,
@@ -415,7 +389,7 @@ class Fraction:
         return _operation_metrics((self.dividend, self.divisor))
 
     def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
-        return _evaluate_operation(_op_fraction, (self.dividend, self.divisor), context)
+        return _evaluate_operation(op_fraction, (self.dividend, self.divisor), context)
 
     def attributes(
         self,

@@ -653,9 +653,18 @@ def test_write_paths_use_the_given_automation_config(
     assert observed == WRITE_COMMANDS, (
         f"the scenario no longer exercises every write path: {sorted(observed)}"
     )
+    # Rule matching is a question about the *central* configuration and is not a write path:
+    # `analyze_service_rule_matches` hard-codes `LocalAutomationConfig()`, and that is correct
+    # rather than a missed parameter, so do not "fix" it into a dispatched call. What the
+    # correctness rests on is that the remote host is in the central site's `all_hosts` -- WATO
+    # writes every host of the folder tree there with no site filter -- so it survives the
+    # `intersection_update(_all_configured_hosts)` inside `set_all_processed_hosts` instead of
+    # landing in no candidate set and matching nothing at all. Beyond that: folder path, tags and
+    # explicit labels are central data, and the service labels arrive as an argument that
+    # `get_services_labels` already fetched from the owning site. Full reasoning, including the two
+    # genuinely per-site inputs and what was decided about each, in the behaviour matrix's §6.1
+    # "Not an asymmetry: rule matching is central by design" (B-F4).
     assert [call.command for call in transport.calls if call.site is None] == [
-        # Rule matching is a question about the *central* configuration and is deliberately local
-        # even for a remote host; it is not a write path.
         "analyze-service-rule-matches"
     ]
 

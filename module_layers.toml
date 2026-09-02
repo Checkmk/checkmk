@@ -1857,6 +1857,7 @@ allows = [
   "@livestatus_client",
   "@plugin_apis",
   "cmk.ccc.exceptions",
+  "cmk.ccc.hostaddress",
   "cmk.ccc.site",
   "cmk.ccc.version",
   "cmk.dcd.gui",

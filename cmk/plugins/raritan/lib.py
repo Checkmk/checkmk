@@ -7,7 +7,7 @@ from typing import ClassVar, Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cmk.agent_based.v2 import equals
+from cmk.agent_based.v2 import equals, State
 
 DETECT_RARITAN = equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6")
 
@@ -65,6 +65,23 @@ UNIT_MAPPING = {
     "17": " cm",
     "18": " m",
     "19": " RPM",
+}
+
+# SensorStateEnumeration (EMD-, PDU2, LHX-MIB)
+STATE_MAPPING = {
+    "-1": (State.CRIT, "unavailable"),
+    "0": (State.WARN, "open"),
+    "1": (State.OK, "closed"),
+    "2": (State.CRIT, "below lower critical"),
+    "3": (State.WARN, "below lower warning"),
+    "4": (State.OK, "normal"),
+    "5": (State.WARN, "above upper warning"),
+    "6": (State.CRIT, "above upper critical"),
+    "7": (State.OK, "on"),
+    "8": (State.CRIT, "off"),
+    "9": (State.OK, "detected"),
+    "10": (State.CRIT, "not detected"),
+    "11": (State.CRIT, "alarmed"),
 }
 
 

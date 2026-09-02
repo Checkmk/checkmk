@@ -8,7 +8,7 @@ import time
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks import saprouter_cert
+from cmk.plugins.sap.agent_based import saprouter_cert
 
 _VALID_STRING_TABLE: StringTable = [
     ["SSO", "for", "USER", '"prdadm"'],

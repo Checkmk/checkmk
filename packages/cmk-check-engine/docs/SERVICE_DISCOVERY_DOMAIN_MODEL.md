@@ -145,7 +145,7 @@ below retires a further 4 (the `clustered_*` family), leaving 5 states plus
 `removed`, which was never a state at all.
 
 `DiscoveryState.is_discovered()` already computes exactly this predicate. It has
-one production caller, `cmk/gui/wato/pages/services.py:723`, and it is used there
+one production caller, `cmk/gui/wato/pages/services.py:ModeAjaxServiceDiscovery._get_status_message`, and it is used there
 to pick a status message. Had it been the gate on operations instead, A1-F1 and the
 `manual`/`active`/`custom` target-phase cells of the current matrix would not exist.
 
@@ -243,9 +243,9 @@ state, not a domain concept.
 
 Crucially, a scan **produces an observation and nothing else**. It does not write
 configuration. Today `TABULA_RASA` violates this: the job body calls
-`local_discovery(...)` and mutates autochecks (`services.py:1396-1412`), which is
+`local_discovery(...)` and mutates autochecks (`services.py:ServiceDiscoveryBackgroundJob._perform_automatic_refresh`), which is
 why it needs its own pending-changes entry added _before_ the job starts
-(`services.py:1196`) and why the code carries the TODO about adding a change on the
+(`services.py:get_check_table`) and why the code carries the TODO about adding a change on the
 wrong site.
 
 **This context keeps a background job, and it is the only one that needs one.** A
@@ -528,7 +528,7 @@ The interactive path re-invented the same domain as 15 target strings and 12 act
 
 The convergence is not hypothetical: `TABULA_RASA`'s job body _already_ builds a
 `DiscoverySettings` with all five flags true and routes through the engine path
-(`services.py:1396-1412`). One of the twelve interactive actions is already
+(`services.py:ServiceDiscoveryBackgroundJob._perform_automatic_refresh`). One of the twelve interactive actions is already
 expressed in the target model.
 
 So the target architecture is: **one plan type, two front ends.** The interactive

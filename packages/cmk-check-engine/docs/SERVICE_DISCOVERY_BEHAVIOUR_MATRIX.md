@@ -3,12 +3,12 @@
 **Purpose:** written statement of _today's_ behaviour of `cmk/gui/watolib/services.py`, so that
 "no behaviour change" during CMK-32255 / CMK-37497 is verifiable rather than assumed.
 
-**Status:** derived from the code at `68bd2fd4651` (branch `cmk-34150`). **Tier 1 of §7 is
-implemented** — 352 pure cases pinning the transition matrix, of which 31 are strict-xfail
-quarantine tests carrying a ticket each; Tiers 2–4 remain proposals. §1–§6 are descriptive (current
-behaviour, verified) with two exceptions: §6.3 and §11 are **prescriptive** — §6.3 states what
-follows for the rewrite from §6's mechanics, §11 states the intended per-state semantics. Both are
-for review.
+**Status:** derived from the code at `68bd2fd4651` (branch `cmk-34150`). **Tiers 1–3 of §7 are
+implemented** — 523 cases across the GUI and REST suites plus 12 added to the check-engine suite, of which 40 are
+strict-xfail quarantine tests carrying a ticket each; Tier 4 (remote-site parity, real sites) remains
+a proposal. §1–§6 are descriptive (current behaviour, verified) with two exceptions: §6.3 and §11 are
+**prescriptive** — §6.3 states what follows for the rewrite from §6's mechanics, §11 states the
+intended per-state semantics. Both are for review.
 
 **Scope:** `cmk/gui/watolib/services.py` + the automation boundary in
 `cmk/gui/watolib/check_mk_automations.py`. The AJAX transport (`ModeAjaxServiceDiscovery`,
@@ -27,6 +27,29 @@ for review.
 >
 > The companion `SERVICE_DISCOVERY_DOMAIN_MODEL.md` holds the target model; its §6.3a reconciles that
 > document's rejection classes with §11.2a's four rules and maps the vocabularies.
+>
+> **How code is cited.** Wherever a reference has been checked against the code, it names a
+> **symbol** in one of three forms: `` `services.py:_case_monitored` `` with the file; just the file,
+> ``(`services.py`)``, where the sentence has already named the symbol; or just the symbol, where
+> the sentence has already named the file. That covers every citation into
+> `cmk/gui/watolib/services.py` and `cmk/gui/wato/pages/services.py`, plus the few elsewhere that a
+> section verified while it was being written. The remaining citations are **line numbers**, and
+> should be treated as approximate: they were correct when written and nothing has re-verified them
+> since.
+>
+> A symbol cited more than once in the same sentence is a sign the sentence needs prose, not a
+> citation: `Discovery._get_table_target` and
+> `ModeAjaxServiceDiscovery._perform_discovery_action` are each about a particular `case` arm, and
+> naming the function three times locates none of them. Say "three arms of", or name the arm, and
+> lean on whatever the code itself marks — a `# type: ignore[unreachable]`, a distinctive literal.
+> The same applies when the audit reaches the remaining files.
+>
+> The distinction is not cosmetic. Deleting a single line near the top of a file shifts every line
+> number below it, which has happened twice to each of the two files above — so their numbers were
+> individually re-checked against the construct each one names, and then replaced by symbols that
+> cannot drift. Doing the same to an unverified number would be worse than leaving it: a wrong line
+> number is visibly wrong the moment someone opens the file, while a wrong symbol name reads as
+> authoritative. Convert the rest only after auditing it.
 
 ---
 
@@ -117,7 +140,7 @@ plus `"manual"` for enforced services, plus `active`/`ignored_active`
   sitting above that line was added later (`52fc5d43be2`, 2024) — it is the trace of the regression,
   not a design note. Everything downstream still expects the value: the GUI group _"Disabled clustered
   services - located on cluster host"_ with `show_bulk_actions=False`
-  (`wato/pages/services.py:2166-2175`, translated in 8 locales), the `Transition` literal, the
+  (`wato/pages/services.py:DiscoveryPageRenderer._ordered_table_groups`, translated in 8 locales), the `Transition` literal, the
   `DiscoveryReport.clustered_ignored` counter, `_case_clustered`'s match arm — and werk **19806.md:22**
   still asserts the transition's behaviour _"is unchanged"_, describing something that cannot occur.
 
@@ -137,9 +160,9 @@ plus `"manual"` for enforced services, plus `active`/`ignored_active`
 other order. The GUI side was corrected only by werk **18136** / SUP-25574 (`72629e907d3`, 2025-10-09,
 2.5.0b1), whose entire diff is those two string literals.
 
-**Consequence while broken: the rows were dropped, not misfiled.** `_show_check_table` renders groups by
+**Consequence while broken: the rows were dropped, not misfiled.** The renderer builds groups by
 looking up `by_group.get(entry.table_group, [])` over `_ordered_table_groups()`
-(`cmk/gui/wato/pages/services.py:1157-1158`), so a `check_source` with no matching `TableGroupEntry` is
+(`cmk/gui/wato/pages/services.py:DiscoveryPageRenderer._show_discovery_details`), so a `check_source` with no matching `TableGroupEntry` is
 silently discarded. Across 2.1–2.4, disabling an active or custom check made its row disappear from
 service discovery entirely — werk 18136's own wording: _"causing these disabled services to be missing
 from the page"_.
@@ -210,12 +233,14 @@ uniform-column cells.
 
 "Uniform column" is not the same as "changes nothing", and `TABULA_RASA` is the exception that
 matters: `_perform_automatic_refresh` calls `local_discovery` with all five `DiscoverySettings`
-flags set, so it adds, removes and re-parameterises services and records a `refresh-autochecks`
-pending change (`services.py:1196`). It has no column here because it is a **second write path**
+flags set, so it adds, removes and re-parameterises services. It records no change itself — that is
+what the `TODO` in it is about; the `refresh-autochecks` pending change is added by
+`services.py:get_check_table`, on the `TABULA_RASA` path and before the local/remote branch. It has
+no column here because it is a **second write path**
 that never reaches `compute_discovery_transition` — which is exactly A3-F2, and the reason §6.3
 proposes decomposing it rather than carrying it over. `REFRESH`, by contrast, really does write
 nothing: it re-fetches from the host and recomputes the preview, its pre-gate is plain
-`wato.services` (`:800`), and it adds no pending change.
+`wato.services` (`has_discovery_action_specific_permissions`), and it adds no pending change.
 
 ### 2.3 The target axis is not a free choice
 
@@ -364,11 +389,11 @@ lists all 11.
 filter anywhere between the preview and `Discovery`:
 
 - `_get_effective_check_tables` returns the target host's table _verbatim_ and filters node tables
-  only by `found_on_nodes` (`services.py:593-629`); `check_source` is never inspected.
+  only by `found_on_nodes` (`services.py:Discovery._get_effective_check_tables`); `check_source` is never inspected.
 - All four entry points pass the unfiltered `DiscoveryResult` — GUI
-  (`wato/pages/services.py:586-596`), REST `execute_service_discovery` (`:106-115`), REST
+  (`wato/pages/services.py:ModeAjaxServiceDiscovery._perform_discovery_action`), REST `execute_service_discovery` (`:106-115`), REST
   `update_service_phase` (`:106-116`), quick setup (`_complete.py:527-546`).
-- The `DiscoveryState.is_discovered` filter at `wato/pages/services.py:722-724` is **not** the
+- The `DiscoveryState.is_discovered` filter at `wato/pages/services.py:ModeAjaxServiceDiscovery._get_status_message` is **not** the
   transition table. It lives inside `_get_status_message`, its only consumer is the `if not
 cmk_check_entries:` two lines below, and it runs _after_ the action has already executed.
   `cmk_check_entries` appears at exactly lines 724 and 731; `is_discovered` has one call site in the
@@ -417,14 +442,14 @@ but undocumented and untested. Ticket in §10.8.
 because the `update_source` filter their callers transmit is never applied.** ✅ _verified against the
 code, the werks and the commit history_
 
-Neither branch consults `selected_services` (`services.py:556-564`), so both actions retarget **every
+Neither branch consults `selected_services` (`services.py:Discovery._get_table_target`), so both actions retarget **every
 entry in the table** to `update_target`. Both callers pass `unchanged` (GUI
-`wato/pages/services.py:2665, 2683`; REST `only_service_labels`). The `update_source="changed"` that
-both callers transmit is read **only** inside the `BULK_UPDATE` branch (`:572`), so the "changed
+`wato/pages/services.py:_page_menu_selected_services_entries`; REST `only_service_labels`). The `update_source="changed"` that
+both callers transmit is read **only** inside that function's `BULK_UPDATE` arm, so the "changed
 services only" intent is silently dropped.
 
-- **`new` → `unchanged` — this is where the damage is.** `_case_undecided(MONITORED)`
-  (`:990-992`) writes the service to autochecks. **"Update service labels" accepts every undecided
+- **`new` → `unchanged` — this is where the damage is.**
+  `services.py:_case_undecided`, on target `MONITORED`, writes the service to autochecks. **"Update service labels" accepts every undecided
   service on the host.** Ticket in §10.5.
 - **`vanished` → `unchanged` — reachable, but harmless to the data.** A vanished service is _already_
   in autochecks (that is what makes it vanished: preexisting but not current), and for a vanished row
@@ -451,7 +476,7 @@ periodic equivalents are plain host-level booleans. What is missing is the **sou
   **all changed services** or a specific service."_
 - Werk **17710** (2.5.0b1): same promise for discovery parameters.
 - Both callers already transmit `update_source="changed"`, and the GUI even gates button enablement
-  on `has_changed_services` (`wato/pages/services.py:1359-1361`). The backend ignores both.
+  on `has_changed_services` (`wato/pages/services.py:DiscoveryPageRenderer._toggle_action_page_menu_entries`). The backend ignores both.
 
 **Werk 17711 / CMK-22272 settles the intent** (`0f997886c9a0`, same author, classed **fix**):
 _"The 'Update service labels' action … used to move disabled services to monitored services. … Now,
@@ -468,7 +493,7 @@ passes `selected_services=()` and still expects the update — so a `selected_se
 breaks it while an `update_source`-based fix keeps it green. Ticket in §10.5.
 
 **Reachability differs by caller:** the GUI button is disabled unless the host has a changed service
-(`:1359-1361`, and disabled entries are `pointer-events: none`), so the GUI needs one changed service
+(`DiscoveryPageRenderer._toggle_action_page_menu_entries`, and disabled entries are `pointer-events: none`), so the GUI needs one changed service
 present. REST has no such gate — `only_service_labels` on a host with **only** undecided services
 accepts them all, making that mode a silent superset of mode `new` with a weaker pre-gate.
 
@@ -479,7 +504,7 @@ value adoption (§5) and the disabled-rule subtraction (§4.2).
 button titles; the defect is in the page-menu wiring beside it.** ✅ _verified against the code_
 
 `BULK_UPDATE` matches an entry when `check_source == update_source`, or when
-`check_source == changed and update_source == unchanged` (`services.py:569-579`).
+`check_source == changed and update_source == unchanged` (`services.py:Discovery._get_table_target`).
 
 **`changed` genuinely is a subset of `monitored`, so the alias is sound.**
 `QualifiedDiscovery.changed` requires the
@@ -504,7 +529,7 @@ are what would be accepted. Behaviour matches the button title.
 **The alias is asymmetric** (`update_source=changed` does not match `unchanged`), and that asymmetry
 does bite — not in `_get_table_target`, where no caller passes `update_source=changed`, but in the
 page-menu wiring. `_toggle_bulk_action_page_menu_entries` handles `MONITORED | CHANGED` in one arm
-and enables `f"bulk_{table_source}_{target}"` (`wato/pages/services.py:1377-1381, 1402-1403`), so the
+and enables `f"bulk_{source}_{target}"` (`wato/pages/services.py:DiscoveryPageRenderer._toggle_bulk_action_page_menu_entries`, `DiscoveryPageRenderer._enable_bulk_button`), so the
 **Changed services** table emits `bulk_changed_new` / `bulk_changed_ignored` — **and no
 `PageMenuEntry` with those names exists** (`grep -rn "bulk_changed"` → nothing; the eight real names
 are all `bulk_{new,unchanged,ignored,vanished}_*`). `enable_page_menu_entry` resolves a null element
@@ -512,10 +537,11 @@ and silently does nothing. On a host where every monitored service is classified
 `unchanged` table is rendered, both "including changed" buttons stay permanently greyed out. Ticket
 in §10.7.
 
-**One more trap for the rewrite:** `_perform_discovery_action` lists `UPDATE_SERVICES` in the
-combined `case` arm at `wato/pages/services.py:624-631`, which makes the dedicated
-`case DiscoveryAction.UPDATE_SERVICES:` at `:647-662` — the one that deliberately forces
-`update_source=None, update_target=None` — **unreachable**. Inert today, but anyone deleting the
+**One more trap for the rewrite:** `wato/pages/services.py:ModeAjaxServiceDiscovery._perform_discovery_action`
+has two arms for `UPDATE_SERVICES`. The combined `case` lists it alongside the five other write
+actions, which makes the dedicated `case DiscoveryAction.UPDATE_SERVICES:` below it — the one that
+deliberately forces `update_source=None, update_target=None` — **unreachable**, and mypy says so:
+that arm's body carries `# type: ignore[unreachable]`. Inert today, but anyone deleting the
 "redundant" first arm during the rewrite changes behaviour.
 
 ---
@@ -626,13 +652,13 @@ written into autochecks"_. Werk 19800 / CMK-33299 (`3b05a138153`) implemented it
 The three sibling handlers still carry their January-2024 code (`git blame` → `89d6c5d92c9`) and
 still write the service when the target is `ignored`:
 
-| transition              | handler           | line                    | writes autochecks?                                 |
-| ----------------------- | ----------------- | ----------------------- | -------------------------------------------------- |
-| `ignored → ignored`     | `_case_ignored`   | `services.py:1077-1078` | no — **fixed**                                     |
-| `clustered_* → ignored` | `_case_clustered` | `services.py:1104-1106` | no — **fixed**                                     |
-| `unchanged → ignored`   | `_case_monitored` | `services.py:1025-1029` | **yes — gap**                                      |
-| `changed → ignored`     | `_case_changed`   | `services.py:1046-1051` | **yes — gap**                                      |
-| `vanished → ignored`    | `_case_vanished`  | `services.py:1008-1010` | **yes** — but an invalid transition, see **A2-F6** |
+| transition              | handler (all in `services.py`) | writes autochecks?                                 |
+| ----------------------- | ------------------------------ | -------------------------------------------------- |
+| `ignored → ignored`     | `_case_ignored`                | no — **fixed**                                     |
+| `clustered_* → ignored` | `_case_clustered`              | no — **fixed**                                     |
+| `unchanged → ignored`   | `_case_monitored`              | **yes — gap**                                      |
+| `changed → ignored`     | `_case_changed`                | **yes — gap**                                      |
+| `vanished → ignored`    | `_case_vanished`               | **yes** — but an invalid transition, see **A2-F6** |
 
 Nothing downstream filters it out: `_save_services` → `set_autochecks_v2` →
 `_automation_set_autochecks_v2` → `set_autochecks_for_effective_host`
@@ -696,16 +722,16 @@ informational, and the correct response to any operation on them is a rejection 
 
 **The GUI already implements this; the backend does not.**
 
-| layer                               | behaviour                                                                                                                                                                                |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GUI table groups                    | all four clustered groups pass `show_bulk_actions=False` (`wato/pages/services.py:2067, 2140, 2153, 2168`), and three render collapsed by default (`isopen` excludes them, `:1179-1185`) |
-| GUI row buttons                     | `_show_check_row`'s `match entry.check_source` has **no** `clustered_*` arm, so no per-row icon is emitted                                                                               |
-| `_verify_permissions`               | accepts `clustered_new` / `clustered_old` as targets (`to_monitored` arm)                                                                                                                |
-| `_apply_state_change`               | dispatches to `_case_clustered`, which **acts** rather than rejecting                                                                                                                    |
-| REST `update_service_phase`         | accepts any of the 17 `target_phase` values on a clustered row                                                                                                                           |
-| `FIX_ALL` / `UPDATE_SERVICE_LABELS` | retarget clustered rows along with everything else (A1-F1, A1-F2)                                                                                                                        |
+| layer                               | behaviour                                                                                                                                                                                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GUI table groups                    | all four clustered groups pass `show_bulk_actions=False` (`wato/pages/services.py:DiscoveryPageRenderer._ordered_table_groups`), and three render collapsed by default (`isopen` excludes them, `DiscoveryPageRenderer._show_discovery_details`) |
+| GUI row buttons                     | `_show_check_row`'s `match entry.check_source` has **no** `clustered_*` arm, so no per-row icon is emitted                                                                                                                                       |
+| `_verify_permissions`               | accepts `clustered_new` / `clustered_old` as targets (`to_monitored` arm)                                                                                                                                                                        |
+| `_apply_state_change`               | dispatches to `_case_clustered`, which **acts** rather than rejecting                                                                                                                                                                            |
+| REST `update_service_phase`         | accepts any of the 17 `target_phase` values on a clustered row                                                                                                                                                                                   |
+| `FIX_ALL` / `UPDATE_SERVICE_LABELS` | retarget clustered rows along with everything else (A1-F1, A1-F2)                                                                                                                                                                                |
 
-**What `_case_clustered` does** (`services.py:1089-1106`) — its default is to preserve, which is the
+**What `_case_clustered` does** (`services.py`) — its default is to preserve, which is the
 right instinct, but it is preservation-by-rewrite rather than rejection, and it has one exception:
 
 - every target except `ignored`: rewrites the same entry and adds to `saved_services`. Harmless to the
@@ -754,9 +780,9 @@ see §5.1 and the ticket in §10.4.
 Two further defects sit in the same area, both independent of the ruleset question:
 
 - **The GUI bulk pre-gate disagrees with the inner gate.** `has_discovery_action_specific_permissions`
-  for `BULK_UPDATE` (`services.py:809-813`) returns `may_all("to_monitored", "to_removed")` and
+  for `BULK_UPDATE` (`services.py:has_discovery_action_specific_permissions`) returns `may_all("to_monitored", "to_removed")` and
   ignores `update_target` entirely, while `_toggle_bulk_action_page_menu_entries` enables each button
-  on its own target's permission (`wato/pages/services.py:1377-1381`). A user holding only
+  on its own target's permission (`wato/pages/services.py:DiscoveryPageRenderer._toggle_bulk_action_page_menu_entries`). A user holding only
   `to_undecided` sees "Declare monitored services as undecided" **enabled**, and clicking it is
   rewritten to `DiscoveryAction.NONE` — the page refreshes and nothing happens, with no message.
   Fails closed, so not a security issue, but a silent dead end. Ticket in §10.6.
@@ -810,12 +836,12 @@ value-identical, so nothing is corrupted).
 **Where the invalid transitions are offered.** Not a REST-only over-permissiveness — the GUI offers
 `ignored` in two places:
 
-| offered by                                       | code                                                                                                                    | gate                                                                                                                                                                                                          |
-| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GUI bulk action **"Disable vanished services"**  | `BulkEntry(VANISHED, IGNORED, …)` at `wato/pages/services.py:2628-2636` → `PageMenuEntry(name="bulk_vanished_ignored")` | enabled by `_toggle_bulk_action_page_menu_entries`, `case DiscoveryState.VANISHED` (`:1390-1395`), for any user holding `to_ignored`. `is_shortcut=False, is_show_more=True`, so it renders under "Show more" |
-| GUI per-row **"Move to disabled services"** icon | `case DiscoveryState.VANISHED` → `_icon_button(VANISHED, …, IGNORED, "disabled", …)` (`:1813-1825`, helper at `:1887`)  | `has_modification_specific_permissions(UpdateType.IGNORED)`                                                                                                                                                   |
-| REST `update_service_phase`                      | `target_phase` ∈ `{ignored, undecided, monitored, …}` — 13 of 17 values (§10.3)                                         | the four blanket `to_*` permissions (P-F1)                                                                                                                                                                    |
-| indirectly, `UPDATE_SERVICE_LABELS`              | assigns `update_target=unchanged` to _every_ row including vanished (A1-F2)                                             | `wato.services`                                                                                                                                                                                               |
+| offered by                                       | code                                                                                                                                                                         | gate                                                                                                                                                                                                                                                           |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GUI bulk action **"Disable vanished services"**  | `BulkEntry(VANISHED, IGNORED, …)` at `wato/pages/services.py:_page_menu_selected_services_entries` → `PageMenuEntry(name="bulk_vanished_ignored")`                           | enabled by `_toggle_bulk_action_page_menu_entries`, `case DiscoveryState.VANISHED` (`DiscoveryPageRenderer._toggle_bulk_action_page_menu_entries`), for any user holding `to_ignored`. `is_shortcut=False, is_show_more=True`, so it renders under "Show more" |
+| GUI per-row **"Move to disabled services"** icon | `case DiscoveryState.VANISHED` → `_icon_button(VANISHED, …, IGNORED, "disabled", …)` (`DiscoveryPageRenderer._show_actions`, helper at `DiscoveryPageRenderer._icon_button`) | `has_modification_specific_permissions(UpdateType.IGNORED)`                                                                                                                                                                                                    |
+| REST `update_service_phase`                      | `target_phase` ∈ `{ignored, undecided, monitored, …}` — 13 of 17 values (§10.3)                                                                                              | the four blanket `to_*` permissions (P-F1)                                                                                                                                                                                                                     |
+| indirectly, `UPDATE_SERVICE_LABELS`              | assigns `update_target=unchanged` to _every_ row including vanished (A1-F2)                                                                                                  | `wato.services`                                                                                                                                                                                                                                                |
 
 The GUI does **not** offer `vanished → new` per row; `_icon_button`'s VANISHED arm emits only `removed`
 and `ignored`. That target is reachable through REST, which the endpoint's own HATEOAS links advertise
@@ -845,7 +871,7 @@ add_disabled_rule = add_disabled_rule - remove_disabled_rule - (saved_services -
   **`FIX_ALL` and `UPDATE_SERVICES` therefore compute different disabled-rule sets** on hosts with
   duplicate service descriptions. (A1-F3.)
 - **`selected_services` is overloaded, and this line is where the two meanings collide.** Everywhere
-  else it answers "which rows does this command apply to" (`_get_table_target:547`, `:578`, `:588`);
+  else it answers "which rows does this command apply to" (three arms of `Discovery._get_table_target`);
   here it answers "which services did the user name as services to _disable_". A whole-table action
   must pass `EVERYTHING` for the first question, and that answer is wrong for the second — which is
   not a corner case but every REST save and every checkbox-less GUI save. This is the whole of
@@ -1046,7 +1072,7 @@ services" reasonably expects discovery to be off-limits, and both the GUI and
 `has_modification_specific_permissions` encode that reading. Ticket in §10.4.
 
 **P-F2 — GUI degrades, REST rejects.** On pre-gate failure the GUI rewrites the action to
-`DiscoveryAction.NONE` and still returns a result (`wato/pages/services.py:409-414`) — the code even
+`DiscoveryAction.NONE` and still returns a result (`wato/pages/services.py:ModeAjaxServiceDiscovery.page`) — the code even
 says so: _"If the user has the wrong permissions, then we still return a discovery result which is
 different from the REST API behavior."_ `execute_service_discovery` raises `403`.
 
@@ -1142,10 +1168,10 @@ Four mechanics are needed to read the table. All four are things the rewrite has
 deliberately change, which is why they are here rather than left implicit:
 
 **1. There is a background job, it always runs on the site that owns the host, and it is public REST
-surface.** `ServiceDiscoveryBackgroundJob` (`services.py:1310`) is the only thing that calls
+surface.** `ServiceDiscoveryBackgroundJob` (`services.py`) is the only thing that calls
 `local_discovery_preview`. Its docstring says it plainly: _"The background job is always executed on
 the site where the host is located on."_ Only two actions start it — `REFRESH` and `TABULA_RASA`
-(`execute_discovery_job`, `services.py:1273-1279`). Every other action reads whatever the job left
+(`execute_discovery_job` in `services.py`). Every other action reads whatever the job left
 behind.
 
 It is not merely a GUI mechanism. The job is exposed as its own REST domain type,
@@ -1164,7 +1190,7 @@ promises. What _can_ change is everything that depends on the job without needin
 `local_discovery_preview(..., prevent_fetching=True)` computes the check table from Checkmk's
 _cached_ agent output — fast, no network. `prevent_fetching=False` actually contacts the host.
 `ServiceDiscoveryBackgroundJob.discover` passes `prevent_fetching=False` only for `REFRESH` and
-`TABULA_RASA` (`services.py:1365-1368`); everything else gets `True`. This is why the docs say the
+`TABULA_RASA` (`services.py:ServiceDiscoveryBackgroundJob.discover`); everything else gets `True`. This is why the docs say the
 non-job REST modes "only work with scanned data, so you may need to run `refresh` first" — and why
 a never-scanned host yields an empty table (the cold-cache hole that CMK-35050 owns).
 
@@ -1182,22 +1208,23 @@ means for the action.
 
 **5. Every read goes through the job object, whether or not a job runs.** There is no way to ask for
 the check table without constructing a `ServiceDiscoveryBackgroundJob` and calling `get_result`
-(`services.py:1307`, `:1417`) — including from REST, where `update_service_phase` and all five
+(`services.py:execute_discovery_job`, `ServiceDiscoveryBackgroundJob.get_result`) — including from REST, where `update_service_phase` and all five
 synchronous `execute_service_discovery` modes reach it via `get_check_table`. `get_result` has three
 branches:
 
-| condition               | table returned                                                                                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| job active              | `self._pre_discovery_preview`                                                                                      |
-| a stored preview exists | `check_table.mk`, **read once and then deleted** (`_load_last_preview` unlinks in a `finally`, `services.py:1360`) |
-| otherwise               | a fresh `prevent_fetching=True` preview                                                                            |
+| condition               | table returned                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------- |
+| job active              | `self._pre_discovery_preview`                                                                                 |
+| a stored preview exists | `check_table.mk`, **read once and then deleted** (`_load_last_preview` unlinks in a `finally`, `services.py`) |
+| otherwise               | a fresh `prevent_fetching=True` preview                                                                       |
 
 Two properties of that arrangement matter later. The stored preview is a _second_ cache layer on top
 of Checkmk's own fetcher cache, and a destructive one — yet it is not load-bearing, because
 `_perform_service_scan`'s docstring records that the scan also warms the internal cache, which is what
 makes the third branch fresh. And `_pre_discovery_preview` is only ever assigned inside `discover()`
-(`services.py:1365`), which runs in the _job_ process; in the requesting process the attribute keeps
-the empty value built by `__init__` (`services.py:1330`, `check_table=[]`). So the first branch
+(`services.py:ServiceDiscoveryBackgroundJob.discover`), which runs in the _job_ process; in the requesting process the attribute keeps
+the empty value built by `services.py:ServiceDiscoveryBackgroundJob.__init__`
+(`check_table=[]`). So the first branch
 returns an empty table to whoever asked. That is B-F3.
 
 | action                                                                                                                                        | job started                | `local_discovery_preview` calls                                    | `local_discovery`                         | host labels written                                        | pending changes added                                                 | local vs remote                                                                 |
@@ -1215,7 +1242,7 @@ returns an empty table to whoever asked. That is B-F3.
 #### Where the branch is
 
 There is exactly **one** explicit local/remote branch in `services.py`, in `get_check_table`
-(`services.py:1207-1239`):
+(`services.py:get_check_table`):
 
 ```
 LocalAutomationConfig  → execute_discovery_job(host_name, action, …)   # run the job in-process
@@ -1225,7 +1252,7 @@ otherwise              → sync_changes_before_remote_automation(site)   # ⚠�
 ```
 
 On the remote side that HTTP call lands in `AutomationServiceDiscoveryJob.execute`
-(`wato/pages/services.py:367-373`), which calls the _same_ `execute_discovery_job` — so the remote
+(`wato/pages/services.py:AutomationServiceDiscoveryJob.execute`), which calls the _same_ `execute_discovery_job` — so the remote
 path is the local path with a serialization hop and a second permission check in front of it.
 
 All the **write** paths dispatch differently: they take `automation_config` as a parameter and pass
@@ -1263,26 +1290,26 @@ Each is stated with the user-visible consequence, because "local and remote diff
 actionable if you know what breaks.
 
 1. **The remote path activates pending changes first; the local path does not.**
-   `sync_changes_before_remote_automation` (`services.py:1216`) runs before the automation.
+   `sync_changes_before_remote_automation` (`services.py:get_check_table`) runs before the automation.
    _Consequence:_ clicking "Rescan" on a remote host can activate an unrelated, half-finished
    configuration change that the admin had not intended to activate yet. On a local host the same
    click activates nothing.
 2. **`TABULA_RASA`'s pending change is recorded centrally, but the work happens remotely.**
-   The `refresh-autochecks` change is added before the branch (`services.py:1196-1207`), while
+   The `refresh-autochecks` change is added before the branch (`services.py:get_check_table`), while
    `_perform_automatic_refresh` runs `local_discovery` on the remote site and records nothing there —
-   an acknowledged `TODO` at `services.py:1396`: _"In distributed sites this must not add a change on
+   an acknowledged `TODO` at `services.py:ServiceDiscoveryBackgroundJob._perform_automatic_refresh`: _"In distributed sites this must not add a change on
    the remote site. We need to build the way back to the central site and show the information
    there."_
    _Consequence:_ the central change list says "Refreshed check configuration", but the audit trail
    for what actually changed on the remote is absent.
 3. **The wire format is version-truncated.** `DiscoveryResult.serialize(for_cmk_version)`
-   (`services.py:167-196`) sends only the first 10 fields to a peer `< 2.5.0b1` — dropping
+   (`services.py:DiscoveryResult.serialize`) sends only the first 10 fields to a peer `< 2.5.0b1` — dropping
    `config_warnings` — and encodes `sources` as an index-keyed dict for a peer `< 3.0.0b1`.
    _Consequence:_ against an older remote, the discovery page silently shows no configuration
    warnings. Within the supported one-minor-version skew this is reachable, not theoretical.
 4. **Permissions are checked twice, with different sets.** Centrally:
    `has_discovery_action_specific_permissions` plus `_service_discovery_context`'s `wato.services`.
-   Remotely: `AutomationServiceDiscoveryJob._check_permissions` (`wato/pages/services.py:348-362`),
+   Remotely: `AutomationServiceDiscoveryJob._check_permissions` (`wato/pages/services.py`),
    which requires only `wato.hosts` and host `read`.
    _Consequence:_ the effective permission set for a remote host is the central one; the remote check
    is a weaker backstop, not an equivalent gate. Any new endpoint must not assume the remote
@@ -1311,7 +1338,7 @@ requesting process is the empty preview from `__init__`. So the write path recei
 `check_table=[]`, and the consequences follow mechanically:
 
 1. `compute_discovery_transition` iterates an empty table, so `apply_changes` is never set;
-2. `if not apply_changes: return None` (`services.py:391`);
+2. `if not apply_changes: return None` (`services.py:Discovery.compute_discovery_transition`);
 3. `do_discovery` returns without writing anything;
 4. the endpoint answers **`204 No Content`**.
 
@@ -1349,7 +1376,8 @@ and if not, do `REFRESH` and `TABULA_RASA` warrant being special-cased?_
 | per-host mutual exclusion                                                   | no      | B-F3: the wrong lock, applied in one of two entry points. Superseded by a table-version precondition |
 
 **What is essential is a property of `prevent_fetching`, not of the two action names.** The action
-enum decides the boolean in two places (`services.py:1366`, and `discover`'s `if/elif/else` at `:1370-1379`),
+enum decides the boolean in two places, both inside `services.py:ServiceDiscoveryBackgroundJob.discover`
+— the `prevent_fetching` argument it computes and the `if/elif/else` below it —
 which is the whole of "`REFRESH` is special": it is the action for which fetching is on. Make the
 fetch policy an explicit parameter of a scan request and the special case has nothing left to attach
 to — no per-service operation needs to know the policy exists.
@@ -1365,7 +1393,7 @@ observes needs no pending change at all.
 
 **Two things follow for the read model.** `job_status` and `check_table_created` leave
 `DiscoveryResult` (they describe a scan, not a table — the conflation named in domain model §1), and
-with them goes the laundering in `_cleaned_up_status` (`services.py:1461`), which exists only because
+with them goes the laundering in `_cleaned_up_status` (`services.py`), which exists only because
 a caller that started no job can otherwise be handed a previous job's exception. `NONE` becomes a
 plain read of the table and `STOP` becomes a call on the scan resource, so both leave the action
 vocabulary entirely.
@@ -1384,8 +1412,8 @@ asynchronous.
 ## 7. Proposed tests
 
 Four tiers. Tiers 1–2 are bazel unit targets under `//tests/unit/cmk/gui/watolib`; tier 3 is
-`tests/openapi/` (runs via `tests/run_tests.sh`, **not** bazel); tier 4 is
-`tests/run_tests.sh test-system-multisite`.
+`tests/openapi/`, the bazel target `//tests/openapi:repo_community`; tier 4 is
+`tests/run_tests.sh test-system-multisite` and is the only one that needs real sites.
 
 ### 7.0 Existing coverage — and why it did not catch A2-F2
 
@@ -1932,8 +1960,8 @@ the autochecks file (werk 19800 gap for the `unchanged` and `changed` sources)_
 must never be written to the autochecks file, and werk 19800 (CMK-33299, commit `3b05a138153`)
 implemented it — but that commit's `services.py` diff changed only `_case_ignored` and
 `_case_clustered`. The three sibling handlers still add the entry to `autochecks_to_save` when the
-target is `ignored`: `_case_monitored` (`services.py:1025-1029`), `_case_changed`
-(`services.py:1046-1051`) and `_case_vanished` (`services.py:1008-1010`). The fix therefore covers
+target is `ignored`: `_case_monitored`, `_case_changed` and `_case_vanished`, all in
+`services.py`. The fix therefore covers
 the rule-driven case — a service already classified `ignored` because a rule matched it — but not the
 ordinary user action of clicking "disable" on a currently monitored service, or
 `PUT /objects/host/{host}/actions/update_discovery_phase/invoke` with `target_phase: "ignored"`.
@@ -1949,7 +1977,7 @@ service a "Disabled services" rule matches — growing without bound on hosts wi
 what makes it surface as `vanished`, which werk 19801 designates as the cleanup signal. The
 classification is by design; the entry that triggers it is the bug.
 
-**Scope.** `_case_vanished` (`services.py:1008-1010`) writes on target `ignored` as well, but that
+**Scope.** `_case_vanished` (`services.py`) writes on target `ignored` as well, but that
 transition is invalid in the first place — `ignored` is not a state a not-discovered service can occupy
 — so it needs withdrawing rather than correcting. Separate ticket, §10.16. This ticket is the two cells
 where `ignored` is a legitimate target.
@@ -1962,8 +1990,8 @@ re-run discovery: it appears as `vanished` instead of disappearing.
 **The fix direction is already settled in the code.** `_case_ignored` deliberately keeps a
 disabled service out of `autochecks_to_save`, and says why in a comment naming this very werk:
 _"disabled services must not be written to the autochecks file (CMK-33299)"_
-(`services.py:1077-1082`). `_case_monitored` and `_case_changed` write it anyway when the target
-is `IGNORED` (`:1025-1029`, `:1046-1051`). So the two handlers disagree about the same rule, and the
+(`services.py:_case_ignored`). `_case_monitored` and `_case_changed` write it anyway when the target
+is `IGNORED` (`_case_monitored`, `_case_changed`). So the two handlers disagree about the same rule, and the
 one that already implements it names the ticket that decided it. Disabling a service that was
 monitored a moment ago leaves it in the file; disabling one that was already disabled keeps it out.
 
@@ -2099,7 +2127,7 @@ declared set is the one observation point no fix can avoid changing.
 **Verified:** empirically, by running `compute_discovery_transition` over all 13 sources; plus werk
 and git archaeology. Source finding: A1-F2.
 
-Both branches of `_get_table_target` (`services.py:556-564`) ignore `update_source`, so every row is
+Both branches of `_get_table_target` (`services.py`) ignore `update_source`, so every row is
 retargeted to `update_target` (always `unchanged`). Werks 16466 and 17710 promise "all **changed**
 services or a specific service", and both callers already transmit `update_source="changed"` — read
 only inside the `BULK_UPDATE` branch, so it is dead here. Every `new` row therefore reaches
@@ -2124,16 +2152,16 @@ breaks for one that filters on `selected_services`.
 
 **Pinned as T3.1c** at the REST boundary. The tier-3 fixture's table carries one row per source, `changed` among them, and the mode reaches **four** of the five: it takes new labels and leaves parameters alone — correct, and the reason it is not `new` under another name — but it does that to `new` and `vanished` as well as to `changed`, adopting the undecided service and writing the vanished one back. The `unchanged` row is the control: it is the one row already at the target, so it is the one row left alone. The sharper form of the claim — that the mode fires on a host with **no** changed service at all — is the repro above; it is not what T3.1c drives, because that fixture deliberately includes a `changed` row to show the mode doing its intended job alongside the unintended one.
 
-**The guardrail this ticket needs is a Tier 1 conformance test, not a quarantine pair.** The fix keys off `update_source` in `_get_table_target` (`services.py:556-564`), which is Matrix A1 — Tier 1's own subject — while T3.1c only sees the symptom two layers up. Tier 1a deliberately excludes the two `UPDATE_*` value actions from `test_an_unselected_row_is_left_alone` and names §10.5 as the reason (`test_discovery_transition_matrix.py:825`), so the cells that would catch a regression here do not exist yet. Since this item is to be fixed _before_ the refactoring starts, there is nothing to quarantine: the fix should bring the missing `(action, update_source) → reached rows` cells with it.
+**The guardrail this ticket needs is a Tier 1 conformance test, not a quarantine pair.** The fix keys off `update_source` in `_get_table_target` (`services.py`), which is Matrix A1 — Tier 1's own subject — while T3.1c only sees the symptom two layers up. Tier 1a deliberately excludes the two `UPDATE_*` value actions from `test_an_unselected_row_is_left_alone` and names §10.5 as the reason (`test_discovery_transition_matrix.py:825`), so the cells that would catch a regression here do not exist yet. Since this item is to be fixed _before_ the refactoring starts, there is nothing to quarantine: the fix should bring the missing `(action, update_source) → reached rows` cells with it.
 
 ### 10.6 Bulk-action pre-gate disagrees with the permission the action demands
 
 **Verified:** both gates read. Source finding: A2-F5 side-effect.
 
 `has_discovery_action_specific_permissions` grants `BULK_UPDATE` on `to_monitored ∧ to_removed` and
-ignores `update_target` entirely (`services.py:809-813`), while
+ignores `update_target` entirely (`services.py:has_discovery_action_specific_permissions`), while
 `_toggle_bulk_action_page_menu_entries` enables each button on its own target's permission
-(`wato/pages/services.py:1377-1400`). A user holding only `to_undecided` sees "Declare monitored
+(`wato/pages/services.py:DiscoveryPageRenderer._toggle_bulk_action_page_menu_entries`). A user holding only `to_undecided` sees "Declare monitored
 services as undecided" **enabled**; clicking it is rewritten to `DiscoveryAction.NONE` and the page
 silently refreshes with nothing done. The same mismatch exists for `UPDATE_SERVICE_LABELS` /
 `UPDATE_DISCOVERY_PARAMETERS`, pre-gated on `wato.services` alone but always demanding
@@ -2148,7 +2176,7 @@ Failure is clean in both cases: all permission checks run inside the pure
 **Verified:** `grep -rn "bulk_changed"` → no matches anywhere in the repo.
 
 `_toggle_bulk_action_page_menu_entries` handles `MONITORED | CHANGED` in one arm and enables
-`f"bulk_{table_source}_{target}"` (`wato/pages/services.py:1377-1381`), so the Changed table emits
+`f"bulk_{source}_{target}"` (`wato/pages/services.py:DiscoveryPageRenderer._toggle_bulk_action_page_menu_entries`), so the Changed table emits
 `bulk_changed_new` / `bulk_changed_ignored`. No `PageMenuEntry` with those names exists — the eight
 real entries are all `bulk_{new,unchanged,ignored,vanished}_*`. `enable_page_menu_entry` resolves a
 null element and silently does nothing. On a host where every monitored service is classified
@@ -2243,10 +2271,10 @@ caller up, which is why it needs T2.15 of its own.
 
 `selected_services` does two unrelated jobs:
 
-| Job              | Read at                                                                                                                           | Meaning                                                               |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Row eligibility  | `_get_table_target:547` (`UPDATE_SERVICES`), `:578` (`BULK_UPDATE`), `:588` (`SINGLE_UPDATE`, `SINGLE_UPDATE_SERVICE_PROPERTIES`) | "the rows this command applies to"                                    |
-| Guard subtrahend | `:403`, `saved_services - selected_services`                                                                                      | "the services the user named as services to **disable**" (werk 19062) |
+| Job              | Read at                                                                                                                                   | Meaning                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Row eligibility  | `Discovery._get_table_target`, one arm each for `UPDATE_SERVICES`, `BULK_UPDATE` and `SINGLE_UPDATE` / `SINGLE_UPDATE_SERVICE_PROPERTIES` | "the rows this command applies to"                                    |
+| Guard subtrahend | `Discovery.compute_discovery_transition`, `saved_services - selected_services`                                                            | "the services the user named as services to **disable**" (werk 19062) |
 
 A whole-table action has no per-service selection, so it must pass `EVERYTHING` to satisfy job 1.
 Job 2 then reads the same value as "the user explicitly asked to disable every service on this
@@ -2260,8 +2288,8 @@ judgement. `EVERYTHING` is passed at four places:
 | ---------------------------------------------------------- | ----------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `execute_service_discovery.py:124` (`new`)                 | `BULK_UPDATE`           | `unchanged`     | no                                                                                                                                                                                                 |
 | `execute_service_discovery.py:140` (`remove`)              | `BULK_UPDATE`           | `removed`       | no                                                                                                                                                                                                 |
-| `execute_service_discovery.py:192` (`only_service_labels`) | `UPDATE_SERVICE_LABELS` | `unchanged`     | no — and this action never consults the selection for eligibility either (`:556`), so its `EVERYTHING` has no purpose at all                                                                       |
-| `wato/pages/services.py:675`                               | `UPDATE_SERVICES`       | —               | no — it is what `_resolve_selected_services` returns when checkboxes are _unavailable_, under the comment _"empty list can mean everything or nothing"_, i.e. "no explicit selection was possible" |
+| `execute_service_discovery.py:192` (`only_service_labels`) | `UPDATE_SERVICE_LABELS` | `unchanged`     | no — and this action never consults the selection for eligibility either (`Discovery._get_table_target`), so its `EVERYTHING` has no purpose at all                                                |
+| `wato/pages/services.py`                                   | `UPDATE_SERVICES`       | —               | no — it is what `_resolve_selected_services` returns when checkboxes are _unavailable_, under the comment _"empty list can mean everything or nothing"_, i.e. "no explicit selection was possible" |
 
 None of them targets `ignored`. The one REST path that _can_ disable,
 `update_service_phase.py:104`, passes `((check_type, service_item),)` — the single service it was
@@ -2279,7 +2307,7 @@ means "accept all undecided services into monitoring":
 | `ignored` (SNMP) | `ignored` — source, so no permission is demanded (`_verify_permissions:435`) | `saved_services ∋ "CPU utilization"`, `add_disabled_rule ∋ "CPU utilization"` |
 | `new` (TCP)      | `unchanged`                                                                  | the autochecks entry, `saved_services ∋ "CPU utilization"`                    |
 
-`_case_undecided` is not even passed `remove_disabled_rule` (`services.py:981-994`), so nothing
+`_case_undecided` is not even passed `remove_disabled_rule` (`services.py`), so nothing
 cancels the first row. With the subtrahend collapsed, `add_disabled_rule = {"CPU utilization"}`.
 The TCP service is therefore **written into the autochecks and covered by a new
 `ignored_services` rule in the same transition**, and reads back as `ignored` on the next scan. The
@@ -2299,7 +2327,7 @@ provoked it, because it is host-pinned and unconditional on the plugin.
 On a host with no duplicate descriptions the same bug is only wasteful: the rule is redundant with
 whatever already disabled the service, but `EnabledDisabledServicesEditor` still costs one
 `get_services_labels` automation plus one rule-match per description (CMK-26792), and `need_sync`
-is computed _before_ the subtraction (`services.py:395-397`), so the pending change is created even
+is computed _before_ the subtraction (`services.py:Discovery.compute_discovery_transition`), so the pending change is created even
 when the delta is empty. Idempotent after the first write.
 
 #### The fix
@@ -2360,7 +2388,7 @@ and does not list it at all once werks 19800/19806 stop disabled services being 
 (the steady state going forward).
 
 Everything needed for correct behaviour already exists and is unreachable: the `TableGroupEntry`
-_"Disabled clustered services - located on cluster host"_ (`cmk/gui/wato/pages/services.py:2166-2175`,
+_"Disabled clustered services - located on cluster host"_ (`cmk/gui/wato/pages/services.py:DiscoveryPageRenderer._ordered_table_groups`,
 `show_bulk_actions=False`, translated in 8 locales), the `Transition` literal, the
 `DiscoveryReport.clustered_ignored` counter, and `_case_clustered`'s match arm. All dead since
 **`692c918bf86`** (2021-02-05, _"discovery: towards `QualifiedDiscovery` 1"_) replaced
@@ -2485,7 +2513,7 @@ this is a core-dependent divergence in what "disabled" means.
 
 1. **"Disabled services" / "Disabled checks" are ignored.** The service keeps being checked and keeps
    notifying. Since werk 18136 (2.5.0b1) the discovery page files it under _"Disabled custom checks -
-   defined via rule"_ (`cmk/gui/wato/pages/services.py:2188-2198`), so the GUI now actively asserts
+   defined via rule"_ (`cmk/gui/wato/pages/services.py:DiscoveryPageRenderer._ordered_table_groups`), so the GUI now actively asserts
    something untrue.
 2. **The clustered redirection is ignored.** A custom check whose description a _Clustered services_ rule
    maps onto a cluster is still created on the node, because `host_name != effective_host(...)` is no
@@ -2542,14 +2570,14 @@ action wrote. For `ignored` this is asserted deliberately in the check engine �
 
 Nonetheless the transition is offered in three places:
 
-| offered by                                       | code                                                                                                                                                                                                          |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GUI bulk action **"Disable vanished services"**  | `BulkEntry(VANISHED, IGNORED, …)` at `wato/pages/services.py:2628-2636`, enabled by `_toggle_bulk_action_page_menu_entries`'s `case DiscoveryState.VANISHED` (`:1390-1395`) for any user holding `to_ignored` |
-| GUI per-row **"Move to disabled services"** icon | `case DiscoveryState.VANISHED` → `_icon_button(VANISHED, …, IGNORED, "disabled", …)` (`:1813-1825`)                                                                                                           |
-| REST `update_service_phase`                      | `target_phase: "ignored"` / `"undecided"` / `"monitored"`, each returning `204`                                                                                                                               |
+| offered by                                       | code                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GUI bulk action **"Disable vanished services"**  | `BulkEntry(VANISHED, IGNORED, …)` at `wato/pages/services.py:_page_menu_selected_services_entries`, enabled by `_toggle_bulk_action_page_menu_entries`'s `case DiscoveryState.VANISHED` (`DiscoveryPageRenderer._toggle_bulk_action_page_menu_entries`) for any user holding `to_ignored` |
+| GUI per-row **"Move to disabled services"** icon | `case DiscoveryState.VANISHED` → `_icon_button(VANISHED, …, IGNORED, "disabled", …)` (`DiscoveryPageRenderer._show_actions`)                                                                                                                                                              |
+| REST `update_service_phase`                      | `target_phase: "ignored"` / `"undecided"` / `"monitored"`, each returning `204`                                                                                                                                                                                                           |
 
 **Symptom.** `_case_vanished`'s `IGNORED` branch adds the description to `add_disabled_rule` **and**
-writes the entry to `autochecks_to_save` (`services.py:1008-1010`). The service is therefore put back
+writes the entry to `autochecks_to_save` (`services.py:_case_vanished`). The service is therefore put back
 into the autochecks file with a "Disabled services" rule attached — precisely the residue that werk
 19801's vanished-classification exists to eliminate (§10.1). It is also inescapable by repetition: the
 entry is preexisting and the service is still absent, so every subsequent preview classifies it
@@ -2598,8 +2626,8 @@ and silently un-monitors the service on the cluster_
 assigns the service to a cluster, the cluster owns it, and the responsibility for discovering it belongs
 to the cluster. `_case_clustered`'s comment says so — _"we do not allow any operation for this clustered
 service on the related node"_ — and the GUI implements it: all four clustered table groups pass
-`show_bulk_actions=False` (`wato/pages/services.py:2067, 2140, 2153, 2168`), three render collapsed
-(`:1179-1185`), and `_show_check_row`'s `match entry.check_source` emits no row buttons for them.
+`show_bulk_actions=False` (`wato/pages/services.py:DiscoveryPageRenderer._ordered_table_groups`), three render collapsed
+(`DiscoveryPageRenderer._show_discovery_details`), and `_show_check_row`'s `match entry.check_source` emits no row buttons for them.
 
 The backend does not implement it. `_verify_permissions` accepts `clustered_new`/`clustered_old` as
 targets, `_apply_state_change` routes to `_case_clustered`, which acts instead of rejecting, and the
@@ -2612,7 +2640,7 @@ host-wide actions that retarget every row (A1-F1 `FIX_ALL`, A1-F2 `UPDATE_SERVIC
    change, but it forces the host-global `apply_changes`, producing a `set-autochecks` pending change and
    an automation round trip for a host where nothing changed.
 2. Target `ignored` **drops the entry from the node's autochecks and adds no disabled-services rule**
-   (`services.py:1104-1106`; `_case_clustered` has no `add_disabled_rule` parameter at all). Because
+   (`services.py`; `_case_clustered` has no `add_disabled_rule` parameter at all). Because
    cluster services are gathered from the nodes' autochecks filtered by `effective_host`, removing the
    node's entry removes the service from the **cluster's** monitoring — with no rule recording the
    decision and nothing on the cluster's page to explain it. The next discovery on the node re-adds it as
@@ -2687,10 +2715,10 @@ discovery background job is running for the host_
 
 **Summary.** `execute_service_discovery` refuses with `409` while a job is active
 (`execute_service_discovery.py:95-97`); `update_service_phase` does not check. While a job is active,
-`get_result` returns `self._pre_discovery_preview` (`services.py:1424-1425`), which in the requesting
-process is still the empty preview built by `__init__` (`:1330`) — the job's real pre-scan snapshot
+`get_result` returns `self._pre_discovery_preview` (`services.py`), which in the requesting
+process is still the empty preview built by `__init__` (`ServiceDiscoveryBackgroundJob.__init__`) — the job's real pre-scan snapshot
 exists only inside the job process. The write path therefore receives `check_table=[]`,
-`compute_discovery_transition` never sets `apply_changes`, returns `None` at `:391`, and the endpoint
+`compute_discovery_transition` never sets `apply_changes`, returns `None` at `Discovery.compute_discovery_transition`, and the endpoint
 answers `204 No Content` without writing anything.
 
 **Symptom.** A `PUT .../update_discovery_phase/invoke` issued during a rescan reports success and has
@@ -2744,8 +2772,9 @@ every row keeps its own `check_source`, `apply_changes` is never set,
 holds. The table the handler fetched is **not** `make_table`'s `ServicesTable`, and the difference runs both ways:
 `get_host_services_by_host_name` drops the rows shadowed by enforced services before returning, and the preview
 then adds rows `make_table` never produced — enforced services back as `check_source="manual"`
-(`preview.py`, whose own comment reads `# "enforced" would be nicer`), active checks as `active` /
-`ignored_active` (`check_mk.py`), custom checks as `custom` / `custom_ignored`. So "in autochecks or
+(`preview.py:get_check_preview`, whose own comment reads `# "enforced" would be nicer`), active
+checks as `active` / `ignored_active` (`check_mk.py:make_check_source`), custom checks as `custom` /
+`custom_ignored`. So "in autochecks or
 currently discovered" is neither what `make_table` holds nor what the endpoint receives.
 
 The right set is narrower than the table, and this document already names it: the rows
@@ -2937,8 +2966,8 @@ decides the label.
 
 Neither can be implemented correctly — each promises a state the next preview contradicts — so both must
 be **rejected** rather than made harmless. This holds for the **GUI as much as for REST**: the bulk
-action "Disable vanished services" (`wato/pages/services.py:2628-2636`) and the per-row "Move to disabled
-services" icon (`:1813-1825`) both offer `disable` today.
+action "Disable vanished services" (`wato/pages/services.py:_page_menu_selected_services_entries`) and the per-row "Move to disabled
+services" icon (`DiscoveryPageRenderer._show_actions`) both offer `disable` today.
 
 **The `removed` target on a still-discovered service is the mirror-image defect.** Because `drop` is one
 command, `unchanged → removed`, `changed → removed`, `new → removed` and `ignored → removed` are all
@@ -2949,8 +2978,8 @@ rule in place, has nothing to drop from autochecks (per werk 19800 the entry sho
 still forces a host-wide rewrite.
 
 **The four non-autocheck origins admit nothing at all** — and that set is exactly what the existing
-predicate `DiscoveryState.is_discovered` excludes (`services.py:112-125`). That predicate is currently
-used in **one** place, to pick a status message (`wato/pages/services.py:723`). It should be the gate on
+predicate `DiscoveryState.is_discovered` excludes (`services.py`). That predicate is currently
+used in **one** place, to pick a status message (`wato/pages/services.py:ModeAjaxServiceDiscovery._get_status_message`). It should be the gate on
 every operation. Had it been, A1-F1 and A2-F1's `manual`/`active`/`custom` cells would not exist.
 
 **The clustered sources admit nothing on the node** — not because the operations are dangerous but
@@ -3005,8 +3034,8 @@ What _is_ a defect is that the `adopt=∅` case is executed as a change rather t
    scan (B-F3, §10.18, where `check_table_created` is `0`). This replaces the job-active probe rather
    than adding to it; see domain model §9.4 and its API-compatibility decision in §12.7.
 7. **A command carries its own subject; "which rows" and "which rows the user named" must not be one
-   parameter.** Today `selected_services` answers both questions (`_get_table_target:547`/`:578`/`:588`
-   for the first, the `add_disabled_rule` subtrahend at `:403` for the second), and a whole-table
+   parameter.** Today `selected_services` answers both questions (all three arms of `Discovery._get_table_target`
+   for the first, the `add_disabled_rule` subtrahend at `Discovery.compute_discovery_transition` for the second), and a whole-table
    action has to answer the first with `EVERYTHING` — which is then read as an explicit request to
    disable every service on the host. That is R-F1 / §10.11, and it is not fixable by changing what
    the callers pass, because both readings are load-bearing. In the §11 model the overload cannot be

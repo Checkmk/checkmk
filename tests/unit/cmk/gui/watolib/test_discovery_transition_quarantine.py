@@ -563,10 +563,11 @@ def test_accepting_every_service_disables_the_sibling_it_just_accepted(
         action, update_source, update_target, two_plugins_one_description
     )
     assert transition.add_disabled_rule == {SHARED_DESCRIPTION}
-    # Which *values* get written on these two paths is A3's separate question -- neither adopts
-    # the new ones (`services.py:474-491`), which is quarantined as T1b.8. Asserting them here
-    # would make this test fail when that is fixed, so only the identity is pinned: the one
-    # autochecks slot the shared description has is occupied by the service being suppressed.
+    # Which *values* get written on these two paths is A3's separate question -- neither adopts the
+    # new ones (`services.py:Discovery._get_autochecks_values`), which is quarantined as T1b.8.
+    # Asserting them here would make this test fail when that is fixed, so only the identity is
+    # pinned: the one autochecks slot the shared description has is occupied by the service being
+    # suppressed.
     written = transition.new_autochecks.target_services
     assert set(written) == {SHARED_DESCRIPTION}
     assert str(written[SHARED_DESCRIPTION].check_plugin_name) == TCP_PLUGIN

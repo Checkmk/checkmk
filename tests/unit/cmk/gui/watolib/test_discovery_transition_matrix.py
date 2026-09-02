@@ -578,17 +578,19 @@ _ACTIONS_COMPUTING_A_TRANSITION = {
 _ACTIONS_NOT_COMPUTING_A_TRANSITION = {
     # Read-only: `NONE` renders the cached preview, `STOP` cancels the job, `REFRESH` re-fetches
     # from the host and recomputes the preview without writing anything (its pre-gate is plain
-    # `wato.services`, `services.py:802`, and it adds no pending change).
+    # `wato.services` in
+    # `services.py:has_discovery_action_specific_permissions`, and it adds no pending change).
     DiscoveryAction.NONE,
     DiscoveryAction.STOP,
     DiscoveryAction.REFRESH,
     # Writes host labels, not services.
     DiscoveryAction.UPDATE_HOST_LABELS,
     # **Writes services** -- `_perform_automatic_refresh` calls `local_discovery` with all five
-    # `DiscoverySettings` flags set, so it adds, removes and re-parameterises services and adds a
-    # `refresh-autochecks` pending change (`services.py:1196`). It is here because that is a
-    # *second write path* that never reaches `compute_discovery_transition`, which is A3-F2 and the
-    # reason §6.3 proposes decomposing it into the primitives the transition already has.
+    # `DiscoverySettings` flags set, so it adds, removes and re-parameterises services. The
+    # `refresh-autochecks` pending change is added by `services.py:get_check_table`, not by the
+    # refresh itself. It is here because that is a *second write path* that never reaches
+    # `compute_discovery_transition`, which is A3-F2 and the reason §6.3 proposes decomposing it
+    # into the primitives the transition already has.
     DiscoveryAction.TABULA_RASA,
 }
 
@@ -797,7 +799,10 @@ def test_bulk_update_reaches_exactly_the_rows_of_its_update_source(
 
 
 #: The four actions that consult `selected_services`, with the `update_source` / `update_target`
-#: their real call sites transmit (`wato/pages/services.py:647`, `execute_service_discovery.py`).
+#: their real call sites transmit. For `UPDATE_SERVICES` that is the "Accept all" page-menu entry
+#: (`wato/pages/services.py:_page_menu_selected_services_entries`), which passes no request vars, so
+#: both arrive `None` -- not the dedicated `case` arm in `_perform_discovery_action`, which §4.4
+#: shows is unreachable. The REST modes come from `execute_service_discovery.py`.
 _SELECTION_HONOURING_ACTIONS: Sequence[tuple[DiscoveryAction, str | None, str | None]] = (
     (DiscoveryAction.UPDATE_SERVICES, None, None),
     (DiscoveryAction.BULK_UPDATE, DiscoveryState.UNDECIDED, DiscoveryState.MONITORED),

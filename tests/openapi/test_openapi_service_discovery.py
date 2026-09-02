@@ -2658,10 +2658,10 @@ def test_update_service_phase_writes_without_manage_services_or_edit_hosts(
     inside `_service_discovery_context`. (Not in its pre-gate:
     `has_discovery_action_specific_permissions` only ever looks at the four `to_*` permissions --
     T3.3b is about that distinction.) Only this endpoint demands neither, so the permission a
-    client needs depends on which endpoint it happens to use. Tier 2 owns this ticket's tripwire -- on the permissions the endpoint
-    *declares*, which is the one observation point no fix can avoid changing
-    (`test_services_dispatch.py`, T2.12). This test is the end-to-end symptom: when CMK-38594
-    lands, the expectation here becomes `403`.
+    client needs depends on which endpoint it happens to use. Tier 2 owns this ticket's tripwire --
+    on the permissions the endpoint *declares*, which is the one observation point no fix can avoid
+    changing (`test_services_dispatch.py`, T2.12). This test is the end-to-end symptom: when
+    CMK-38594 lands, the expectation here becomes `403`.
     """
     denied_permission(permission)
 

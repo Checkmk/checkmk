@@ -257,7 +257,7 @@ def _name_and_scale(old_name: MetricName, spec: _TranslationSpec) -> tuple[Metri
             assert_never(spec)
 
 
-def _split_predict_prefix(metric_name: str) -> tuple[str, str]:
+def split_predict_prefix(metric_name: str) -> tuple[str, str]:
     for prefix in _PREDICT_PREFIXES:
         if metric_name.startswith(prefix):
             return prefix, metric_name[len(prefix) :]
@@ -312,7 +312,7 @@ def _deprecated_originals(
     specs: Mapping[str, _TranslationSpec],
     present: Collection[MetricName],
 ) -> Iterator[RRDOriginal]:
-    prefix, bare_name = _split_predict_prefix(metric_name)
+    prefix, bare_name = split_predict_prefix(metric_name)
     for old_name, scale in _reverse_names(MetricName(bare_name), specs).items():
         if (column := MetricName(f"{prefix}{old_name}")) not in present:
             yield RRDOriginal(metric_name=column, scale=scale)
@@ -330,7 +330,7 @@ def _translated_columns(
 ) -> Mapping[MetricName, Sequence[_TranslatedColumn]]:
     columns: dict[MetricName, list[_TranslatedColumn]] = {}
     for original_name, raw_value in raw_values.items():
-        prefix, bare_name = _split_predict_prefix(original_name)
+        prefix, bare_name = split_predict_prefix(original_name)
         name, scale = _find_name_and_scale(MetricName(bare_name), specs)
         columns.setdefault(MetricName(f"{prefix}{name}"), []).append(
             _TranslatedColumn(
@@ -371,7 +371,7 @@ def translated_names_and_scales(
     specs = _specs_for_command(check_command, registered_translations)
     mapping: dict[MetricName, tuple[MetricName, float]] = {}
     for raw_metric_name in raw_metric_names:
-        prefix, bare_name = _split_predict_prefix(raw_metric_name)
+        prefix, bare_name = split_predict_prefix(raw_metric_name)
         name, scale = _find_name_and_scale(MetricName(bare_name), specs)
         mapping[raw_metric_name] = (MetricName(f"{prefix}{name}"), scale)
     return mapping

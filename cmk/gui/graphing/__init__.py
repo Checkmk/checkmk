@@ -158,6 +158,7 @@ from ._metric_data import (
     RawPerformanceData,
     reverse_translated_names,
     rrd_column_names,
+    split_predict_prefix,
     timestamps,
     translate_metric_names,
 )
@@ -377,6 +378,7 @@ __all__ = [
     "serialize_drawn_curves",
     "SINotation",
     "sort_registered_graph_plugins",
+    "split_predict_prefix",
     "StandardScientificNotation",
     "STATIC_INTERACTION",
     "stored_time_range_seconds",

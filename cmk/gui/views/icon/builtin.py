@@ -10,6 +10,7 @@ from typing import Literal
 
 import cmk.utils.render
 from cmk.gui.display_options import display_options
+from cmk.gui.graphing import split_predict_prefix
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -480,27 +481,24 @@ def _render_prediction_icon(
     | tuple[StaticIcon | DynamicIcon, str]
     | tuple[StaticIcon | DynamicIcon, str, str]
 ):
-    # TODO: At least for interfaces we have 2 predictive values. But this icon
-    # only creates a link to the first one. Add multiple icons or add a navigation
-    # element to the prediction page.
-    if what == "service":
-        parts = row[what + "_perf_data"].split()
-        for p in parts:
-            if p.startswith("predict_"):
-                varname, _value = p.split("=")
-                dsname = varname[8:]
-                urlvars = [
-                    ("site", row["site"]),
-                    ("host", row["host_name"]),
-                    ("service", row["service_description"]),
-                    ("dsname", dsname),
-                ]
-                return (
-                    StaticIcon(IconNames.prediction),
-                    _("Analyse predictive monitoring for this service"),
-                    makeuri_contextless(request, urlvars, "prediction_graph.py"),
-                )
-    return None
+    if what != "service" or not _has_predictive_metric(row[what + "_perf_data"]):
+        return None
+    urlvars = [
+        ("site", row["site"]),
+        ("host", row["host_name"]),
+        ("service", row["service_description"]),
+    ]
+    return (
+        StaticIcon(IconNames.prediction),
+        _("Analyse predictive monitoring for this service"),
+        makeuri_contextless(request, urlvars, "prediction_graph.py"),
+    )
+
+
+def _has_predictive_metric(perf_data: str) -> bool:
+    return any(
+        split_predict_prefix(entry.split("=")[0])[0] for entry in perf_data.split() if "=" in entry
+    )
 
 
 PredictionIcon = Icon(

@@ -23,6 +23,7 @@ from cmk.gui.graphing import (
     RawPerformanceData,
     reverse_translated_names,
     rrd_column_names,
+    split_predict_prefix,
     translate_metric_names,
 )
 from cmk.gui.graphing._metric_data import (
@@ -508,3 +509,19 @@ def test_a_pnp_suffix_names_the_check_command_the_translation_is_looked_up_with(
         (name, metric.performance_data.value, metric.performance_data.warning)
         for name, metric in evaluated.items()
     ] == [(MetricName("used"), 0.0068, 0.3)]
+
+
+def test_a_metric_carries_no_predictive_prefix() -> None:
+    assert split_predict_prefix("util") == ("", "util")
+
+
+def test_an_upper_prediction_splits_off_its_prefix() -> None:
+    assert split_predict_prefix("predict_util") == ("predict_", "util")
+
+
+def test_a_lower_prediction_splits_off_the_longer_prefix() -> None:
+    assert split_predict_prefix("predict_lower_util") == ("predict_lower_", "util")
+
+
+def test_a_name_merely_starting_like_a_prediction_keeps_it_all() -> None:
+    assert split_predict_prefix("predictions_total") == ("", "predictions_total")

@@ -75,7 +75,6 @@ sh_library(
         "mk_sap_hana",
         "mk_scaleio",
         "mk_site_object_counts",
-        "mk_tsm",
         "runas",
         "zorp",
         "//agents/cfg_examples:agents_cfg_examples_sh",

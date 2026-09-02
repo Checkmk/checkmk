@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# shellcheck source=agents/plugins/mk_tsm
-MK_SOURCE_ONLY=true source "${UNIT_SH_PLUGINS_DIR}/mk_tsm"
+# shellcheck source=cmk/plugins/tsm/agents/mk_tsm
+MK_SOURCE_ONLY=true source "${UNIT_SH_REPO_PATH}/cmk/plugins/tsm/agents/mk_tsm"
 
 test_export_env_resilient_against_command_injection() {
 

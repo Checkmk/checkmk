@@ -1666,22 +1666,6 @@ translation_tcp_tcp_ldap_host_tcp = translations.Translation(
     translations={"time": translations.RenameTo("response_time")},
 )
 
-translation_tsm_stagingpools = translations.Translation(
-    name="tsm_stagingpools",
-    check_commands=[translations.PassiveCheck("tsm_stagingpools")],
-    translations={
-        "free": translations.RenameTo("tapes_free"),
-        "tapes": translations.RenameTo("tapes_total"),
-        "util": translations.RenameTo("tapes_util"),
-    },
-)
-
-translation_tsm_storagepools = translations.Translation(
-    name="tsm_storagepools",
-    check_commands=[translations.PassiveCheck("tsm_storagepools")],
-    translations={"used": translations.RenameTo("used_space")},
-)
-
 translation_ups_capacity = translations.Translation(
     name="ups_capacity",
     check_commands=[translations.PassiveCheck("ups_capacity")],

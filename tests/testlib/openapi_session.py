@@ -2324,16 +2324,15 @@ class CustomGraphAPI(BaseAPI):
     The data endpoint is also the only way to graph metric-backend (OTel) data.
     """
 
-    # Every field is mandatory in the API model, but no caller here varies them.
-    _DEFAULT_METADATA: Final[Mapping[str, Any]] = {
+    # Every field is mandatory in the API model; only the visibility is varied by a caller.
+    _DEFAULT_METADATA: Final[Mapping[str, object]] = {
         "description": "",
         "topic": "my_workplace",
         "sort_index": 99,
         "hidden": False,
         "is_show_more": False,
-        "public": {"type": "private"},
     }
-    DEFAULT_GRAPH_OPTIONS: Final[Mapping[str, Any]] = {
+    DEFAULT_GRAPH_OPTIONS: Final[Mapping[str, object]] = {
         "unit": {"type": "first_entry_with_unit"},
         "explicit_vertical_range": {"type": "auto"},
         "omit_zero_metrics": False,
@@ -2346,7 +2345,7 @@ class CustomGraphAPI(BaseAPI):
         service_name: str,
         metric_name: str,
         color: str = "#28a2f3",
-    ) -> dict[str, Any]:
+    ) -> dict[str, object]:
         """One RRD metric of a monitored service, as the graph's data source."""
         return {
             "type": "rrd_metric",
@@ -2366,14 +2365,19 @@ class CustomGraphAPI(BaseAPI):
         self,
         name: str,
         title: str,
-        data_sources: Sequence[Mapping[str, Any]] = (),
-    ) -> dict[str, Any]:
+        data_sources: Sequence[Mapping[str, object]] = (),
+        *,
+        public: bool = False,
+    ) -> dict[str, object]:
         return self._post_internal_action(
             "domain-types/custom_graph/collections/all",
             {
                 "name": name,
                 "title": title,
-                "metadata": self._DEFAULT_METADATA,
+                "metadata": {
+                    **self._DEFAULT_METADATA,
+                    "public": {"type": "all_users"} if public else {"type": "private"},
+                },
                 "content": {
                     "graph_options": self.DEFAULT_GRAPH_OPTIONS,
                     "data_sources": data_sources,
@@ -2392,8 +2396,8 @@ class CustomGraphAPI(BaseAPI):
 
     def fetch_data(
         self,
-        data_sources: Sequence[Mapping[str, Any]],
-        graph_options: Mapping[str, Any],
+        data_sources: Sequence[Mapping[str, object]],
+        graph_options: Mapping[str, object],
         requested_time_range: Mapping[str, int],
         consolidation_function: Consolidation,
     ) -> dict[str, Any]:

@@ -26,7 +26,6 @@ from cmk.gui import (
     notifications,
     pagetypes,
     painter_options,
-    prediction,
     product_usage_analytics,
     release_flags,
     rulespec,
@@ -48,6 +47,7 @@ from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.form_specs import registration as vue_registration
+from cmk.gui.graphing import registration as graphing_registration
 from cmk.gui.graphing.openapi import register as register_graphing_openapi_endpoints
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
@@ -80,6 +80,7 @@ from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
 from cmk.gui.userdb import UserConnectorRegistry
 from cmk.gui.userdb._user_attribute._registry import UserAttributeRegistry
+from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 from cmk.gui.views import registration as views_registration
 from cmk.gui.views.command import CommandGroupRegistry, CommandRegistry
 from cmk.gui.views.icon import IconRegistry
@@ -346,7 +347,6 @@ def register(
     message.register(page_registry, cron_job_registry)
     cmk.gui.help.register(page_registry)
     main.register(page_registry)
-    prediction.register(page_registry)
     product_usage_analytics.register(
         page_registry,
         permission_registry,
@@ -430,6 +430,7 @@ def register(
         mode_registry, page_registry, main_module_registry, permission_registry
     )
     _pre_21_plugin_api.register()
+    graphing_registration.register(page_registry, make_service_breadcrumb)
     register_graphing_openapi_endpoints(versioned_endpoint_registry, endpoint_family_registry)
 
 

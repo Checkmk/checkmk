@@ -2,7 +2,7 @@ set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/basic_python_functionality/OWNERS_DEFINITION
 
-per-file metrics.py=file:/component_owners/performance_data_and_metrics/OWNERS_DEFINITION
+per-file metrics.py=file:/component_owners/graphing_and_metrics/OWNERS_DEFINITION
 per-file metrics.py=set noparent
 per-file notify.py=file:/component_owners/notifications/OWNERS_DEFINITION
 per-file notify.py=set noparent

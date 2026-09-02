@@ -1,6 +1,6 @@
 type = "Component"
-display_name = "Performance Data & Metrics"
-previous_name = "Graphing & Metrics"
+display_name = "Graphing & Metrics"
+previous_name = "Performance Data & Metrics"
 has_support_component = true
 members_required = 2
 tier = 1
@@ -23,8 +23,8 @@ Belongs here:
 
 Goes elsewhere:
 - A graph does not render, stays empty or does not refresh in the browser
-  → Graphs
-- The REST API endpoints that serve graphs to the frontend → Graphs
+  → Graph Display
+- The REST API endpoints that serve graphs to the frontend → Graph Display
 - The stored metric data itself and the ClickHouse metric store → Metric Backend
 - Checkmk itself is slow or does not scale → Performance
 """

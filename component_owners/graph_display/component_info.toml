@@ -1,5 +1,6 @@
 type = "Component"
-display_name = "Graphs"
+display_name = "Graph Display"
+previous_name = "Graphs"
 has_support_component = true
 members_required = 3
 tier = 1
@@ -19,9 +20,9 @@ Belongs here:
 
 Goes elsewhere:
 - The plotted values, units or colors are wrong, i.e. the metric data itself is
-  off → Performance Data & Metrics
-- Graph images in PDF reports → Performance Data & Metrics
+  off → Graphing & Metrics
+- Graph images in PDF reports → Graphing & Metrics
 - Everything behind the REST API: graph engines, time series retrieval and the
-  persistence of graph types → Performance Data & Metrics
+  persistence of graph types → Graphing & Metrics
 - The graph is broken only inside a dashboard → Dashboards
 """

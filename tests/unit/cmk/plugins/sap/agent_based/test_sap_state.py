@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks import sap_state
+from cmk.plugins.sap.agent_based import sap_state
 
 _STRING_TABLE: StringTable = [
     ["SID1", "OK"],

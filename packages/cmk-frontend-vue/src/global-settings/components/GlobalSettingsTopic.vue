@@ -58,7 +58,6 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
         :title="modifiedCountLabel"
       />
       <CmkButton
-        variant="secondary"
         size="small"
         :icon="{ name: 'reset', size: 'small' }"
         :title="_t('Reset all settings in this category to their factory defaults')"

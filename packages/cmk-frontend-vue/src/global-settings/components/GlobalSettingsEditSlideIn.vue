@@ -4,21 +4,21 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkAccordion from 'cmk-ui-library/components/CmkAccordion/CmkAccordion.vue'
-import CmkAccordionItem from 'cmk-ui-library/components/CmkAccordion/CmkAccordionItem.vue'
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
-import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
+import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, ref, toRaw, watch } from 'vue'
 
 import FormEdit from '@/form/FormEdit.vue'
 import FormReadonly from '@/form/FormReadonly.vue'
+import FormHelp from '@/form/private/FormHelp.vue'
 
 import type { EditorSession } from '../useGlobalSettingsEditor'
+import GlobalSettingsRow from './GlobalSettingsRow.vue'
 
 const { _t } = usei18n()
 
@@ -31,16 +31,12 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const CURRENT_SECTION = 'current-setting'
-const FACTORY_SECTION = 'factory-settings'
-const SITE_OVERRIDES_SECTION = 'site-overrides'
-
 const variable = computed(() => props.session.variable)
 const error = computed(() => props.session.error)
+const specWithoutTopLevelHelp = computed(() => ({ ...variable.value.spec, help: '' }))
 
 const draft = ref<unknown>(structuredClone(toRaw(props.session.variable.value)))
 const confirmResetOpen = ref(false)
-const openedSections = ref<string[]>([CURRENT_SECTION, FACTORY_SECTION])
 
 watch(
   () => props.session.variable.value,
@@ -168,82 +164,59 @@ const currentStateText = computed<TranslatedString>(() =>
         }}
       </CmkAlertBox>
 
-      <CmkAccordion v-model="openedSections" :min-open="0" :max-open="0">
-        <CmkAccordionItem :value="CURRENT_SECTION">
-          <template #header>
-            <span class="global-settings-edit-slide-in__section-title">{{
-              variable.spec.title
-            }}</span>
-          </template>
-          <template v-if="variable.spec.help" #header-right>
-            <CmkHelpText :help="variable.spec.help as TranslatedString" />
-          </template>
-          <template #content>
-            <div class="global-settings-edit-slide-in__row">
-              <span class="global-settings-edit-slide-in__label">
-                <span>{{ _t('Current setting') }}</span>
-                <span class="global-settings-edit-slide-in__leader"></span>
-              </span>
-              <FormEdit v-model:data="draft" :spec="variable.spec" :backend-validation="[]" />
-            </div>
-          </template>
-        </CmkAccordionItem>
+      <FormHelp :help="variable.spec.help" />
 
-        <CmkAccordionItem :value="FACTORY_SECTION">
-          <template #header>
-            <span class="global-settings-edit-slide-in__section-title">
-              {{ _t('Factory settings') }}
-            </span>
-          </template>
-          <template #content>
-            <div class="global-settings-edit-slide-in__row">
-              <span class="global-settings-edit-slide-in__label">
-                <span>{{ _t('Factory setting') }}</span>
-                <span class="global-settings-edit-slide-in__leader"></span>
-              </span>
-              <FormReadonly
-                :spec="variable.spec"
-                :data="variable.default_value"
-                :backend-validation="[]"
-              />
-            </div>
-            <div class="global-settings-edit-slide-in__row">
-              <span class="global-settings-edit-slide-in__label">
-                <span>{{ _t('Current state') }}</span>
-                <span class="global-settings-edit-slide-in__leader"></span>
-              </span>
-              <span>{{ currentStateText }}</span>
-            </div>
-          </template>
-        </CmkAccordionItem>
+      <div class="global-settings-edit-slide-in__sections">
+        <CmkCatalogPanel :title="untranslated(variable.spec.title)">
+          <GlobalSettingsRow
+            :label="_t('Current setting')"
+            :help="untranslated(variable.spec.help)"
+          >
+            <FormEdit
+              v-model:data="draft"
+              :spec="specWithoutTopLevelHelp"
+              :backend-validation="[]"
+            />
+          </GlobalSettingsRow>
+        </CmkCatalogPanel>
 
-        <CmkAccordionItem v-if="variable.site_overrides.length > 0" :value="SITE_OVERRIDES_SECTION">
-          <template #header>
-            <span class="global-settings-edit-slide-in__section-title">
-              {{ _t('Site overrides') }}
-            </span>
-          </template>
-          <template #content>
-            <p class="global-settings-edit-slide-in__overrides-intro">
-              {{ _t('This setting is overridden by the following sites:') }}
-            </p>
-            <ul class="global-settings-edit-slide-in__overrides">
-              <li
-                v-for="override in variable.site_overrides"
-                :key="override.site_id"
-                class="global-settings-edit-slide-in__override"
-              >
-                <span class="global-settings-edit-slide-in__override-title">
-                  {{ override.title }}
-                </span>
-                <CmkLink :href="override.url" class="global-settings-edit-slide-in__override-link">
-                  {{ _t('Open site settings') }}
-                </CmkLink>
-              </li>
-            </ul>
-          </template>
-        </CmkAccordionItem>
-      </CmkAccordion>
+        <CmkCatalogPanel :title="_t('Factory settings')">
+          <GlobalSettingsRow :label="_t('Factory setting')">
+            <FormReadonly
+              :spec="variable.spec"
+              :data="variable.default_value"
+              :backend-validation="[]"
+            />
+          </GlobalSettingsRow>
+          <GlobalSettingsRow :label="_t('Current state')">
+            {{ currentStateText }}
+          </GlobalSettingsRow>
+        </CmkCatalogPanel>
+
+        <CmkCatalogPanel
+          v-if="variable.site_overrides.length > 0"
+          :title="_t('Site overrides')"
+          :open="false"
+        >
+          <p class="global-settings-edit-slide-in__overrides-intro">
+            {{ _t('This setting is overridden by the following sites:') }}
+          </p>
+          <ul class="global-settings-edit-slide-in__overrides">
+            <li
+              v-for="override in variable.site_overrides"
+              :key="override.site_id"
+              class="global-settings-edit-slide-in__override"
+            >
+              <span class="global-settings-edit-slide-in__override-title">
+                {{ override.title }}
+              </span>
+              <CmkLink :href="override.url" class="global-settings-edit-slide-in__override-link">
+                {{ _t('Open site settings') }}
+              </CmkLink>
+            </li>
+          </ul>
+        </CmkCatalogPanel>
+      </div>
     </div>
   </CmkSlideInDialog>
 </template>
@@ -261,36 +234,14 @@ const currentStateText = computed<TranslatedString>(() =>
   gap: 8px;
 }
 
-.global-settings-edit-slide-in__section-title {
-  font-weight: bold;
+.global-settings-edit-slide-in__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .global-settings-edit-slide-in__error {
   white-space: pre-wrap;
-}
-
-.global-settings-edit-slide-in__row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 4px 0;
-}
-
-.global-settings-edit-slide-in__label {
-  display: flex;
-  flex: 0 0 140px;
-  align-items: center;
-  gap: 4px;
-  height: 16px;
-  overflow: hidden;
-  color: var(--font-color-dimmed);
-}
-
-.global-settings-edit-slide-in__leader {
-  flex: 1 1 auto;
-  min-width: 1px;
-  height: 1em;
-  border-bottom: 1px dotted var(--font-color-dimmed);
 }
 
 .global-settings-edit-slide-in__overrides-intro {

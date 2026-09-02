@@ -6,12 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { GlobalSettingsVariable } from 'cmk-shared-typing/typescript/global_settings'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import FormReadonly from '@/form/FormReadonly.vue'
 
 import GlobalSettingsInlineToggle from './GlobalSettingsInlineToggle.vue'
+import GlobalSettingsRow from './GlobalSettingsRow.vue'
 
 const { _t } = usei18n()
 
@@ -24,18 +25,23 @@ const isBooleanChoice = computed(() => props.variable.spec.type === 'boolean_cho
 
 <template>
   <div class="global-settings-variable-row" @click="emit('edit')">
-    <div class="global-settings-variable-row__label">
-      <span class="global-settings-variable-row__title" :title="variable.spec.title">
-        {{ variable.spec.title }}
-      </span>
-    </div>
-    <div class="global-settings-variable-row__value">
-      <GlobalSettingsInlineToggle v-if="isBooleanChoice" :variable="variable" />
-      <FormReadonly v-else :spec="variable.spec" :data="variable.value" :backend-validation="[]" />
-      <span v-if="variable.modified" class="global-settings-variable-row__modified">
-        {{ _t('(modified)') }}
-      </span>
-    </div>
+    <GlobalSettingsRow
+      :label="untranslated(variable.spec.title)"
+      class="global-settings-variable-row__row"
+    >
+      <div class="global-settings-variable-row__value">
+        <GlobalSettingsInlineToggle v-if="isBooleanChoice" :variable="variable" />
+        <FormReadonly
+          v-else
+          :spec="variable.spec"
+          :data="variable.value"
+          :backend-validation="[]"
+        />
+        <span v-if="variable.modified" class="global-settings-variable-row__modified">
+          {{ _t('(modified)') }}
+        </span>
+      </div>
+    </GlobalSettingsRow>
     <CmkIconButton
       name="edit"
       size="small"
@@ -48,11 +54,13 @@ const isBooleanChoice = computed(() => props.variable.spec.type === 'boolean_cho
 
 <style scoped>
 .global-settings-variable-row {
+  --global-settings-row-label-width: 400px;
+
   display: flex;
   align-items: flex-start;
   gap: 8px;
   width: 100%;
-  padding: 8px 12px;
+  padding: 4px 12px;
   border-radius: 2px;
   cursor: pointer;
 
@@ -62,32 +70,13 @@ const isBooleanChoice = computed(() => props.variable.spec.type === 'boolean_cho
   }
 }
 
-.global-settings-variable-row__label {
-  display: flex;
-  flex: 0 1 400px;
-  align-items: baseline;
-  gap: 4px;
+.global-settings-variable-row__row {
+  flex: 1 1 auto;
   min-width: 0;
-
-  &::after {
-    content: '';
-    flex: 1 1 auto;
-    min-width: 8px;
-    border-bottom: 1px dotted var(--font-color-dimmed);
-  }
-}
-
-.global-settings-variable-row__title {
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .global-settings-variable-row__value {
   display: flex;
-  flex: 1 1 auto;
   align-items: flex-start;
   gap: 4px;
 }

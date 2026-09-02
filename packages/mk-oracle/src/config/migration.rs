@@ -660,6 +660,16 @@ fn parse_custom_sqls_function_def(line: &str) -> Option<String> {
         .then(|| name.to_string())
 }
 
+fn warn_remote_oracle_home(variables: &HashMap<String, String>) -> Vec<String> {
+    match variables.get("REMOTE_ORACLE_HOME") {
+        Some(value) if !value.trim().is_empty() => vec![format!(
+            "REMOTE_ORACLE_HOME '{value}' is not supported and is not migrated; \
+             the unified plug-in resolves ORACLE_HOME on its own"
+        )],
+        _ => vec![],
+    }
+}
+
 pub fn convert(
     legacy: &str,
     source_path: &str,
@@ -725,6 +735,7 @@ pub fn convert(
     warnings.extend(warn_custom_sql_item_sid(&custom_sqls));
     warnings.extend(warn_custom_sql_parameters(&custom_sqls));
     warnings.extend(custom_sql_warnings(&custom_sqls));
+    warnings.extend(warn_remote_oracle_home(variables));
     for warning in warnings {
         let warning = format!("# WARNING: {warning}\n");
         print!("{warning}");
@@ -1509,6 +1520,25 @@ mod tests {
             ms.conn().oracle_local_registry(),
             Some(&std::path::PathBuf::from("/etc/oracle/olr.loc"))
         );
+    }
+
+    #[test]
+    fn test_convert_remote_oracle_home_is_dropped_with_warning() {
+        let vars = HashMap::from([
+            ("DBUSER".into(), "checkmk:secret::::".into()),
+            ("REMOTE_ORACLE_HOME".into(), "/opt/oracle/remote".into()),
+        ]);
+        let result = convert("", "/test/cfg", &vars, TS).unwrap();
+        // The dropped variable is reported ...
+        assert!(result.contains("# WARNING: REMOTE_ORACLE_HOME"));
+        // ... and never reaches the migrated config body.
+        let unified = result
+            .split_once("# --- Unified Config ---")
+            .expect("unified section present")
+            .1;
+        assert!(!unified.to_lowercase().contains("oracle_home"));
+        assert!(!unified.contains("/opt/oracle/remote"));
+        super::super::OracleConfig::load_str(&result).expect("generated YAML must be loadable");
     }
 
     #[cfg(not(windows))]

@@ -7,7 +7,20 @@
     "logout_url": { "type": "string" },
     "verify_online_url": { "type": "string" },
     "verify_offline_url": { "type": "string" },
-    "user_name": { "type": "string" }
+    "user_name": { "type": "string" },
+    "edition_title": { "type": "string" },
+    "trial_end_timestamp": {
+      "type": "number",
+      "description": "Unix timestamp in seconds."
+    }
   },
-  "required": ["save_url", "logout_url", "verify_online_url", "verify_offline_url", "user_name"]
+  "required": [
+    "save_url",
+    "logout_url",
+    "verify_online_url",
+    "verify_offline_url",
+    "user_name",
+    "edition_title",
+    "trial_end_timestamp"
+  ]
 }

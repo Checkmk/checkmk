@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 # Valid
 # <<<saprouter_cert>>>
 # SSO for USER "prdadm"
@@ -25,84 +22,111 @@
 # <<<saprouter_cert>>>
 # get_my_name: Couldn't open PSE "/usr/users/prdadm/saprouter/local.pse" (Decoding error)
 
-# Suggested by customer
-
-
 import time
+from collections.abc import Mapping, Sequence
+from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+
+class Validity(TypedDict, total=False):
+    not_before: tuple[float, str]
+    not_after: tuple[float, str]
 
 
-def parse_saprouter_cert(string_table):
-    def parse_date(list_):
-        time_struct = time.strptime(" ".join(list_), "%b %d %H:%M:%S %Y")
+class Section(TypedDict, total=False):
+    sso_user: str
+    pse_file: str
+    valid: Validity
+    failed: list[str]
+
+
+def parse_saprouter_cert(string_table: StringTable) -> Section:
+    def parse_date(tokens: Sequence[str]) -> tuple[float, str]:
+        time_struct = time.strptime(" ".join(tokens), "%b %d %H:%M:%S %Y")
         return time.mktime(time_struct), "%s-%s-%s" % time_struct[:3]
 
-    parsed: dict[str, object] = {}
-    valid: dict[str, tuple[float, str]] = {}
+    section: Section = {}
+    valid: Validity = {}
     failed: list[str] = []
-    validity = None
+    in_validity = False
     for line in string_table:
         if line[0] == "Validity":
-            validity = "valid"
-            parsed.setdefault(validity, valid)
+            in_validity = True
+            section.setdefault("valid", valid)
 
-        if validity and "NotBefore:" in line:
+        if in_validity and "NotBefore:" in line:
             valid.setdefault("not_before", parse_date(line[-5:-1]))
 
-        elif validity and ("NotAfter:" in line or "NotAfter" in line):
+        elif in_validity and ("NotAfter:" in line or "NotAfter" in line):
             valid.setdefault("not_after", parse_date(line[-5:-1]))
 
         elif " ".join(line[:3]).lower() == "sso for user":
-            parsed.setdefault("sso_user", line[-1].replace('"', ""))
+            section.setdefault("sso_user", line[-1].replace('"', ""))
 
         elif " ".join(line[:3]).lower() == "with pse file":
-            parsed.setdefault("pse_file", line[-1].replace('"', ""))
+            section.setdefault("pse_file", line[-1].replace('"', ""))
 
-        elif not validity:
-            parsed.setdefault("failed", failed)
+        elif not in_validity:
+            section.setdefault("failed", failed)
             failed.append(" ".join(line))
 
-    return parsed
+    return section
 
 
-def discover_saprouter_cert(parsed):
-    if parsed:
-        return [(None, None)]
-    return []
+agent_section_saprouter_cert = AgentSection(
+    name="saprouter_cert",
+    parse_function=parse_saprouter_cert,
+)
 
 
-def check_saprouter_cert(_no_item, params, parsed):
-    if "valid" in parsed:
-        _not_before, not_before_readable = parsed["valid"]["not_before"]
-        not_after, not_after_readable = parsed["valid"]["not_after"]
+def discover_saprouter_cert(section: Section) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
+def check_saprouter_cert(
+    params: Mapping[str, tuple[float, float]], section: Section
+) -> CheckResult:
+    if "valid" in section:
+        _not_before, not_before_readable = section["valid"]["not_before"]
+        not_after, not_after_readable = section["valid"]["not_after"]
         validity_age = not_after - time.time()
 
         warn, crit = params["validity_age"]
-        infotext = f"Valid from {not_before_readable} to {not_after_readable}, {render.timespan(validity_age)} to go"
+        infotext = (
+            f"Valid from {not_before_readable} to {not_after_readable}, "
+            f"{render.timespan(validity_age)} to go"
+        )
 
-        state = 0
+        state = State.OK
         if validity_age < crit:
-            state = 2
+            state = State.CRIT
         elif validity_age < warn:
-            state = 1
+            state = State.WARN
 
-        if state:
+        if state is not State.OK:
             infotext += f" (warn/crit below {render.timespan(warn)}/{render.timespan(crit)})"
 
-        return state, infotext
+        yield Result(state=state, summary=infotext)
+        return
 
-    if "failed" in parsed:
-        return 3, " - ".join(parsed["failed"])
-    return None
+    if "failed" in section:
+        yield Result(state=State.UNKNOWN, summary=" - ".join(section["failed"]))
 
 
-check_info["saprouter_cert"] = LegacyCheckDefinition(
+check_plugin_saprouter_cert = CheckPlugin(
     name="saprouter_cert",
-    parse_function=parse_saprouter_cert,
     service_name="SAP router certificate",
     discovery_function=discover_saprouter_cert,
     check_function=check_saprouter_cert,

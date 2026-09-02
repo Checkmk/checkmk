@@ -437,7 +437,9 @@ def _get_oracle_authentication(auth_config: GuiAuthConf | None) -> OracleAuth | 
     )
 
 
-def _get_oracle_connection(conn: GuiConnectionConf | None) -> OracleConnection | None:
+def _get_oracle_connection(
+    conn: GuiConnectionConf | None, *, include_tns_admin: bool = True
+) -> OracleConnection | None:
     if conn is None:
         return None
 
@@ -445,7 +447,9 @@ def _get_oracle_connection(conn: GuiConnectionConf | None) -> OracleConnection |
         hostname=conn.host,
         port=conn.port,
         timeout=conn.timeout,
-        tns_admin=conn.tns_admin,
+        # tns_admin applies to the main connection only; per-instance it is
+        # reserved and ignored by the plug-in, so it is never baked.
+        tns_admin=conn.tns_admin if include_tns_admin else None,
         oracle_local_registry=conn.oracle_local_registry,
     )
     # An entirely empty block would say nothing that the plug-in does not
@@ -553,7 +557,7 @@ def _get_oracle_instances(instances: list[GuiInstanceConf] | None) -> list[Oracl
             sid=oracle_id.sid,
             alias=oracle_id.alias,
             authentication=_get_oracle_authentication(instance.auth),
-            connection=_get_oracle_connection(instance.connection),
+            connection=_get_oracle_connection(instance.connection, include_tns_admin=False),
             piggyback=OraclePiggyback(hostname=instance.piggyback_host)
             if instance.piggyback_host
             else None,

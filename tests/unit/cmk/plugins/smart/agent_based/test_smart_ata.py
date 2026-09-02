@@ -364,3 +364,72 @@ def test_check_smart_ata_configured() -> None:
         Result(state=State.WARN, summary="UDMA CRC errors: 0 (warn/crit at 0/1)"),
         Metric("harddrive_udma_crc_errors", 0.0, levels=(0.0, 1.0)),
     ]
+
+
+SECTION_RAW16_OPT_RAW16 = Section(
+    devices={
+        "ST500LT012-9WS142 XXXATA": ATAAll(
+            device=ATADevice(protocol="ATA", name="/dev/sda"),
+            model_name="ST500LT012-9WS142",
+            serial_number="XXXATA",
+            ata_smart_attributes=ATATable(
+                table=[
+                    ATATableEntry(
+                        id=5,
+                        name="Reallocated_Sector_Ct",
+                        value=100,
+                        thresh=36,
+                        raw=ATARawValue(value=32),
+                    ),
+                    ATATableEntry(
+                        id=196,
+                        name="Reallocated_Event_Count",
+                        value=79,
+                        thresh=0,
+                        raw=ATARawValue(value=205355271342909),
+                    ),
+                ]
+            ),
+        )
+    },
+    failures=[],
+)
+
+
+def test_discover_smart_ata_raw16_opt_raw16() -> None:
+    service = list(
+        discover_smart_ata(
+            SECTION_RAW16_OPT_RAW16,
+            SECTION_RAW16_OPT_RAW16,
+        )
+    )[0]
+    assert service.parameters == {
+        "id_5": 32,
+        "id_10": None,
+        "id_184": None,
+        "id_187": None,
+        "id_188": None,
+        "id_196": 205355271342909,
+        "id_197": None,
+        "id_199": None,
+    }
+
+
+def test_check_smart_ata_raw16_opt_raw16() -> None:
+    ata_params: AtaParams = DEFAULT_PARAMS  # type: ignore[assignment]
+    assert list(
+        _check_smart_ata(
+            "ST500LT012-9WS142 XXXATA",
+            ata_params,
+            SECTION_RAW16_OPT_RAW16,
+            None,
+            {},
+            0,
+        )
+    ) == [
+        Result(state=State.OK, summary="Reallocated sectors: 32"),
+        Metric("harddrive_reallocated_sectors", 32.0),
+        Result(state=State.OK, summary="Reallocated events: 205355271342909"),
+        Metric("harddrive_reallocated_events", 205355271342909.0),
+        Result(state=State.OK, summary="Normalized value: 79.00"),
+    ]

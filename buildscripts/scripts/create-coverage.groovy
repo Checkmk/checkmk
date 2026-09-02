@@ -39,9 +39,10 @@ tests/qa_metrics/test_coverage/repository.sh --run --generate-html --upload-tota
         ) {
             container(container_name) {
                 withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+                    // html/. instead of html/*: the glob skips dot-prefixed .ide folders
                     sh("""
                         scp -r -o StrictHostKeyChecking=accept-new -i ${RELEASE_KEY} \
-                        results/test_coverage/repository/html/* ${DEV_DOCS_URL}/test_coverage
+                        results/test_coverage/repository/html/. ${DEV_DOCS_URL}/test_coverage
                     """);
                 }
             }

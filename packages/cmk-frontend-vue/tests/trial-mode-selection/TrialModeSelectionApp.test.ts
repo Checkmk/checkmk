@@ -24,7 +24,10 @@ function renderApp() {
       logout_url: 'logout.py',
       verify_online_url: 'wato.py?mode=edit_licensing_settings&online=1',
       verify_offline_url: 'wato.py?mode=licensing_offline_verification',
-      user_name: 'cmkadmin'
+      user_name: 'cmkadmin',
+      edition_title: 'Checkmk Ultimate',
+      // 2026-08-13 12:00:00 UTC
+      trial_end_timestamp: 1786622400
     }
   })
 }

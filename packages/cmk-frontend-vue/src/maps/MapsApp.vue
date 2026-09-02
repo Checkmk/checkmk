@@ -32,6 +32,7 @@ import { provideMapsPageLinks } from '@/maps/shared/pageLinks'
 // Lazy, so the heavy views (leaflet, d3) stay in their own chunks and load only
 // when one is actually opened.
 const homeView = defineAsyncComponent(() => import('@/maps/home/HomeView.vue'))
+const mapView = defineAsyncComponent(() => import('@/maps/map/MapView.vue'))
 const imagesView = defineAsyncComponent(() => import('@/maps/image-library/ImagesView.vue'))
 
 const props = defineProps<MapsApp>()
@@ -60,10 +61,7 @@ void settings.load()
 
 const VIEWS: Record<NavState['view'], Component> = {
   home: homeView,
-  // The map view itself lands with the commit that adds it; a ``?name=`` URL
-  // shows the listing until then. Nothing reaches either yet — the page is only
-  // exposed once the app is complete.
-  map: homeView,
+  map: mapView,
   admin: imagesView
 }
 

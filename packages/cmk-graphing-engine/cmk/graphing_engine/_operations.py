@@ -10,7 +10,8 @@ type Operator = Callable[[Sequence[float | None]], float | None]
 
 
 def op_sum(values: Sequence[float | None]) -> float | None:
-    return sum(value for value in values if value is not None)
+    present = [value for value in values if value is not None]
+    return sum(present) if present else None
 
 
 def op_product(values: Sequence[float | None]) -> float | None:

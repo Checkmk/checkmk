@@ -430,7 +430,7 @@ def register(
         mode_registry, page_registry, main_module_registry, permission_registry
     )
     _pre_21_plugin_api.register()
-    graphing_registration.register(page_registry, make_service_breadcrumb)
+    graphing_registration.register_prediction_page(page_registry, make_service_breadcrumb)
     register_graphing_openapi_endpoints(versioned_endpoint_registry, endpoint_family_registry)
 
 

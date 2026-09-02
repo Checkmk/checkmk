@@ -8,7 +8,7 @@ from collections.abc import MutableMapping
 import pytest
 
 from cmk.agent_based.v2 import GetRateError, Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.sophos_messages import (
+from cmk.plugins.sophos.agent_based.sophos_messages import (
     _check_sophos_messages,
     discover_sophos_messages,
     parse_sophos_messages,

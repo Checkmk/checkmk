@@ -40,6 +40,7 @@ from cmk.shared_typing.global_time_picker import (
 from cmk.web.utils.html import HTML
 
 from . import _engine_plugins as engine_plugins
+from ._engine_discovery import BuiltGraph
 from ._engine_dispatch import serialize_graphs
 from ._engine_source import RRDFetchMetricNames
 from ._engine_template_graphs import build_template_graphs
@@ -176,21 +177,16 @@ def derive_y_axis(graph: Graph) -> YAxis | None:
 
 
 def to_cmk_time_series_graph(
-    graph: Graph,
+    built: BuiltGraph,
     *,
     size: Size,
     interaction: Interaction = _DEFAULT_INTERACTION,
     font_size_pt: float = 8.0,
     show_graph_time: bool = True,
     x_axis: XAxis | None = None,
-    y_axis: YAxis | None = None,
-    add_to_specification: GraphSpecification | None = None,
 ) -> CmkTimeSeriesGraph:
-    """Translate an engine graph definition into the shared ``CmkTimeSeriesGraph``.
-
-    ``y_axis`` defaults to ``derive_y_axis(graph)`` so every caller - the Vue graph group and
-    the PNG renderer alike - gets the same server-derived axis without re-deriving it.
-    """
+    """Translate a built graph into the shared ``CmkTimeSeriesGraph`` the Vue renderer takes."""
+    graph = built.graph
     internal = json.dumps(serialize_graphs([graph]))
     return CmkTimeSeriesGraph(
         size=size,
@@ -198,12 +194,12 @@ def to_cmk_time_series_graph(
             header=GraphHeader(title=graph.title, show_graph_time=show_graph_time),
             name=graph.name,
             x_axis=x_axis,
-            y_axis=y_axis if y_axis is not None else derive_y_axis(graph),
+            y_axis=derive_y_axis(graph),
             font_size_pt=font_size_pt,
         ),
         interaction=interaction,
         internal=internal,
-        add_to=_add_to(add_to_specification, internal),
+        add_to=_add_to(built.specification, internal),
     )
 
 
@@ -330,11 +326,10 @@ def render_engine_graph_group(
     vue_graphs = [
         asdict(
             to_cmk_time_series_graph(
-                built.graph,
+                built,
                 size=size,
                 interaction=interaction,
                 show_graph_time=show_graph_time,
-                add_to_specification=built.specification,
             )
         )
         for built in engine_graphs

@@ -30,6 +30,7 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.gui.graphing._engine_codec import community_graph_codec
+from cmk.gui.graphing._engine_discovery import BuiltGraph
 from cmk.gui.graphing._engine_dispatch import serialize_graphs
 from cmk.gui.graphing._frontend import (
     derive_y_axis,
@@ -94,7 +95,7 @@ def test_to_cmk_time_series_graph_shell() -> None:
             )
         ],
     )
-    result = to_cmk_time_series_graph(graph, size=_SIZE)
+    result = to_cmk_time_series_graph(BuiltGraph(graph=graph, specification=None), size=_SIZE)
 
     assert result.size == _SIZE
     assert result.options == GraphOptions(
@@ -316,7 +317,7 @@ def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
             )
         ],
     )
-    result = to_cmk_time_series_graph(graph, size=_SIZE)
+    result = to_cmk_time_series_graph(BuiltGraph(graph=graph, specification=None), size=_SIZE)
 
     assert result.options.header.title == "My Graph"
     [restored] = community_graph_codec().deserialize_graphs(json.loads(result.internal))

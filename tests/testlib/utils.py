@@ -10,6 +10,7 @@ Note: this module can be used both in unit and system-level tests.
 
 import dataclasses
 import enum
+import errno
 import logging
 import os
 import re
@@ -516,7 +517,14 @@ def read_file(
     sudo: bool = True,
     substitute_user: str | None = None,
 ) -> str | bytes:
-    """Read a file as root or another user."""
+    """Read a file as root or another user.
+
+    Raises:
+        FileNotFoundError: if the file could not be read. The file usually lives inside a
+            site and is read through "cat", so its exit code is all there is to go on: any
+            non-zero exit is reported as a missing file. The underlying error is kept as the
+            cause, so the exit code and stderr are not lost.
+    """
     try:
         return run(
             ["cat", Path(path).as_posix()],
@@ -526,8 +534,11 @@ def read_file(
             substitute_user=substitute_user,
         ).stdout
     except subprocess.CalledProcessError as excp:
-        excp.add_note(f"Failed to read file '{path}'!")
-        raise excp
+        raise FileNotFoundError(
+            errno.ENOENT,
+            f"Reading the file failed (exit code {excp.returncode})",
+            Path(path).as_posix(),
+        ) from excp
 
 
 def write_file(

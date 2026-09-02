@@ -89,11 +89,15 @@ const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modif
 }
 
 .global-settings-topic__headline {
-  font-weight: bold;
+  color: var(--global-settings-topic-headline-color);
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-bold);
 }
 
 .global-settings-topic__subline {
-  color: var(--font-color-dimmed);
+  color: var(--global-settings-topic-subline-color);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-default);
 }
 
 .global-settings-topic__count {

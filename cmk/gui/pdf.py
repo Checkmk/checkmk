@@ -533,6 +533,20 @@ class Document:
         # in total.
         return margin_mm + (self.lineskip() * zoom * 2.5) / mm
 
+    def reserve_for_table_rows(self, rows: int = 2) -> SizeMM:
+        """Conservative estimate of the vertical space (mm) `rows` table rows will occupy at
+        the current font size.
+
+        A table's real row height depends on column-width layout computed deep inside
+        add_table() itself, so unlike reserve_for_heading() this can only ever be an
+        estimate - deliberately on the generous side, since overestimating only wastes a
+        little page space, while underestimating would defeat the point of reserving at
+        all. Use together with check_pagebreak() before adding a heading that is
+        immediately followed by a table, so at least its header row and one data row stay
+        with the heading instead of being pushed to the next page while it is left behind.
+        """
+        return rows * ((self.lineskip() / mm) + 2)
+
     def headings(self) -> Sequence[tuple[str, int]]:
         return self._heading_entries
 

@@ -9,14 +9,12 @@ from cmk.graphing_engine import (
     EvaluatedCurve,
     EvaluatedGraph,
     SeriesAttributes,
-    Unit,
 )
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
 
 from .._engine_curves import DrawnCurve, serialize_drawn_curves
 from .._engine_source import FetchDiagnostics
-from .._engine_unit_format import notation_name, precision_kind
 from .models import (
     ApiConsolidation,
     ApiHorizontalLine,
@@ -24,7 +22,6 @@ from .models import (
     ApiMetricAttribute,
     ApiMetricMetadata,
     ApiMetricRender,
-    ApiPrecision,
     ApiTimeRange,
     ApiUnitFormat,
     GraphFetchResponse,
@@ -56,7 +53,7 @@ def horizontal_lines_to_api(evaluated: EvaluatedGraph) -> list[ApiHorizontalLine
             name=rule.id,
             title=rule.attributes.title,
             value=-rule.value if rule.inverse else rule.value,
-            unit=unit_to_api_unit_format(rule.attributes.unit),
+            unit=ApiUnitFormat.from_engine_unit(rule.attributes.unit),
             color=rule.attributes.color,
         )
         for rule in evaluated.rules
@@ -79,7 +76,7 @@ def curve_to_api_metric(drawn: DrawnCurve[EvaluatedCurve]) -> ApiMetric:
         metadata=ApiMetricMetadata(
             name=curve.id,
             title=curve.attributes.title,
-            unit=unit_to_api_unit_format(curve.attributes.unit),
+            unit=ApiUnitFormat.from_engine_unit(curve.attributes.unit),
             color=curve.attributes.color,
             attributes=_series_attributes_to_api(curve.series_attributes),
         ),
@@ -118,15 +115,4 @@ def evaluated_to_response(
         horizontal_lines=horizontal_lines_to_api(evaluated),
         warnings=diagnostics_to_warnings(diagnostics),
         errors=list(diagnostics.errors),
-    )
-
-
-def unit_to_api_unit_format(unit: Unit) -> ApiUnitFormat:
-    # TODO: The engine ``Unit`` has no convertibility concept, so default to convertible (matches
-    #  the shared unit-format default).
-    return ApiUnitFormat(
-        notation=notation_name(unit),
-        symbol=unit.notation.symbol,
-        precision=ApiPrecision(type=precision_kind(unit), digits=unit.precision.digits),
-        convertible=True,
     )

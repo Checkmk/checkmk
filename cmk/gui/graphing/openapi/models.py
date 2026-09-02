@@ -10,12 +10,14 @@ from typing import Annotated, Literal, Self
 from annotated_types import Interval
 from pydantic import Json
 
+from cmk.graphing_engine import Unit
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
 from cmk.gui.type_defs import IconNames
 
 from .._engine_discovery import BuiltGraph, DiscoveredGraphs
 from .._engine_dispatch import serialize_graphs
+from .._engine_unit_format import notation_name, precision_kind
 
 type ApiConsolidation = Literal["min", "max", "avg"]
 
@@ -42,6 +44,17 @@ class ApiUnitFormat:
     symbol: str = api_field(description="The unit symbol.", example="B")
     precision: ApiPrecision = api_field(description="The unit precision.")
     convertible: bool = api_field(description="Whether the unit is auto-convertible.", example=True)
+
+    @classmethod
+    def from_engine_unit(cls, unit: Unit) -> Self:
+        # TODO: The engine ``Unit`` has no convertibility concept, so default to convertible
+        #  (matches the shared unit-format default).
+        return cls(
+            notation=notation_name(unit),
+            symbol=unit.notation.symbol,
+            precision=ApiPrecision(type=precision_kind(unit), digits=unit.precision.digits),
+            convertible=True,
+        )
 
 
 @api_model

@@ -455,7 +455,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
 
     # we os.chdir to the .werks folder quite early on
     # but in this case we need the repo root:
-    rtc = RuntimeConfiguration(Path(".").parent)
+    rtc = RuntimeConfiguration(Path(".."))
 
     werks: list[Werk] = list(load_werks().values())
     versions = sorted({resolve_version(rtc, werk.content.metadata["version"]) for werk in werks})

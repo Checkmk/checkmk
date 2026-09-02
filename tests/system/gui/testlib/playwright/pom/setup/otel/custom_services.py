@@ -47,3 +47,13 @@ class CustomServices(CmkPage):
     @property
     def add_custom_service_button(self) -> Locator:
         return self.main_area.get_suggestion("Add custom service")
+
+    @property
+    def services_table(self) -> Locator:
+        return self.main_area.locator("table.data")
+
+    def service_row(self, service_name: str) -> Locator:
+        return self.services_table.locator("tr.data", has_text=service_name)
+
+    def disabled_action_buttons(self, service_name: str) -> Locator:
+        return self.service_row(service_name).locator("td.buttons a.disabled")

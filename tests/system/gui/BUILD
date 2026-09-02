@@ -36,6 +36,7 @@ py_library(
             "//non-free/tests/testlib/system:metric_backend",
             "//non-free/tests/testlib/system/cloud",
             "//non-free/tests/testlib/system/licensing",
+            "//tests/testlib:consolidation_wire",
         ],
         "//:gpl_repo": [],
     }),

@@ -17,6 +17,7 @@ import type {
   GroupMember,
   MapConfig,
   MapElement,
+  MapRead,
   ObjectState,
   TopologyNode
 } from '@/maps/types/api'
@@ -59,6 +60,31 @@ export function aMap(overrides: Partial<MapConfig> = {}): MapConfig {
     version: 0,
     view: newMapView('static'),
     objects: [],
+    ...overrides
+  }
+}
+
+/**
+ * A map as the list sees it: the REST read model, with the fields a listing
+ * shows. Everything a case does not care about carries a sane default, so a
+ * test only spells out what it is about.
+ */
+export function aListedMap(overrides: Partial<MapRead> = {}): MapRead {
+  return {
+    name: 'test',
+    alias: 'Test',
+    connection_id: 'live_1',
+    icon_size: 30,
+    view_type: 'static',
+    view: newMapView('static'),
+    object_count: 0,
+    rotation_interval: 0,
+    sort_order: 0,
+    click_action: 'link',
+    render_mode: 'default',
+    show_in_lists: true,
+    readonly: false,
+    owner: 'me',
     ...overrides
   }
 }

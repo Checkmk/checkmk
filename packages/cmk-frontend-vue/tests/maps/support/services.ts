@@ -12,6 +12,8 @@
  * empty, so a component can never reach a real endpoint from a test.
  */
 import { render } from '@testing-library/vue'
+import type { MapsPageLinks } from 'cmk-shared-typing/typescript/maps'
+import type { BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 import { vi } from 'vitest'
 import { defineComponent, h, provide } from 'vue'
 
@@ -32,7 +34,11 @@ import { ConnectionsService } from '@/maps/services/ConnectionsService'
 import { MapService } from '@/maps/services/MapService'
 import { MapStatesService } from '@/maps/services/MapStatesService'
 import { MapsAuthService } from '@/maps/services/MapsAuthService'
+import { NavigationService } from '@/maps/services/NavigationService'
+import { ToastService } from '@/maps/services/ToastService'
 import { MAPS_SERVICES, type MapsApis, type MapsServices } from '@/maps/services/context'
+import { MAPS_BREADCRUMB_ROOT } from '@/maps/shared/breadcrumb'
+import { MAPS_PAGE_LINKS } from '@/maps/shared/pageLinks'
 
 /** Capabilities of a user who may do everything, as a starting point. */
 export function fullCapabilities(overrides: Partial<MapsCapabilities> = {}): MapsCapabilities {
@@ -156,6 +162,8 @@ export function fakeMapsServices(
   }
   return {
     auth,
+    nav: new NavigationService(),
+    toasts: new ToastService(),
     maps,
     states: new MapStatesService(mapStates, connectionsApi, objects, auth, maps),
     connections: new ConnectionsService(connectionsApi),
@@ -199,6 +207,15 @@ export function mountWithServices<T>(
   return { result, unmount }
 }
 
+/** The Checkmk URLs ``maps.py`` hands the app, as the page emits them. */
+export function aPageLinks(overrides: Partial<MapsPageLinks> = {}): MapsPageLinks {
+  return {
+    authoring_settings: 'wato.py?mode=maps_authoring_settings',
+    daemon_settings: 'wato.py?mode=maps_daemon_settings',
+    ...overrides
+  }
+}
+
 /**
  * The ``global`` render option for a component under test: the services it
  * injects, plus whatever the case stubs out.
@@ -207,12 +224,30 @@ export function mapsGlobal(stubs = {}, services: MapsServices = fakeMapsServices
   return { ...provideServices(services).global, stubs }
 }
 
+/** The breadcrumb levels above the SPA, as ``maps.py`` emits them. */
+export function aBreadcrumbRoot(): BreadcrumbItem[] {
+  return [{ title: 'Customize', link: null }]
+}
+
 /**
- * ``global`` options that provide the services, to spread into a render call:
+ * ``global`` options that provide what ``MapsApp`` provides -- the services, the
+ * page's links and the breadcrumb root -- to spread into a render call:
  * ``render(Component, { ...provideServices(services) })``.
  */
-export function provideServices(services: MapsServices): {
-  global: { provide: Record<symbol, MapsServices> }
+export function provideServices(
+  services: MapsServices,
+  links: MapsPageLinks = aPageLinks(),
+  breadcrumbRoot: BreadcrumbItem[] = aBreadcrumbRoot()
+): {
+  global: { provide: Record<symbol, MapsServices | MapsPageLinks | BreadcrumbItem[]> }
 } {
-  return { global: { provide: { [MAPS_SERVICES as symbol]: services } } }
+  return {
+    global: {
+      provide: {
+        [MAPS_SERVICES as symbol]: services,
+        [MAPS_PAGE_LINKS as symbol]: links,
+        [MAPS_BREADCRUMB_ROOT as symbol]: breadcrumbRoot
+      }
+    }
+  }
 }

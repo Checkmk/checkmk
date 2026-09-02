@@ -21,7 +21,7 @@ import { LINE_STYLES } from '@/maps/utils/objectOptions'
  * ``_t('…')`` call sites, so a helper takes the translator rather than
  * translating a dynamic key itself.
  */
-type TranslateFn = ReturnType<typeof usei18n>['_t']
+export type TranslateFn = ReturnType<typeof usei18n>['_t']
 
 // Maps backend ``name`` → translated title. The backend ships english
 // titles too (used for FormSpec dropdowns where translations don't run),

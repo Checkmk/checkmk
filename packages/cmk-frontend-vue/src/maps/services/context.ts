@@ -31,6 +31,8 @@ import { ConnectionsService } from '@/maps/services/ConnectionsService'
 import { MapService } from '@/maps/services/MapService'
 import { MapStatesService } from '@/maps/services/MapStatesService'
 import { MapsAuthService } from '@/maps/services/MapsAuthService'
+import { NavigationService } from '@/maps/services/NavigationService'
+import { ToastService } from '@/maps/services/ToastService'
 
 /**
  * The endpoint bindings, kept apart from the services on purpose: a surface
@@ -51,6 +53,8 @@ export interface MapsApis {
 /** Everything a Maps surface can ask for. */
 export interface MapsServices {
   auth: MapsAuthService
+  nav: NavigationService
+  toasts: ToastService
   maps: MapService
   states: MapStatesService
   connections: ConnectionsService
@@ -80,6 +84,8 @@ export function createMapsServices(): MapsServices {
   const maps = new MapService(mapConfig, mapStates)
   return {
     auth,
+    nav: new NavigationService(),
+    toasts: new ToastService(),
     maps,
     states: new MapStatesService(mapStates, connectionsApi, objects, auth, maps),
     connections: new ConnectionsService(connectionsApi),
@@ -99,6 +105,23 @@ export function createMapsServices(): MapsServices {
 
 export function provideMapsServices(services: MapsServices): void {
   provide(MAPS_SERVICES, services)
+}
+
+/**
+ * Takes the app's services down with it.
+ *
+ * The SPA is a custom element: it can be disconnected and reconnected, and every
+ * listener, timer and stream a service holds has to end with the instance that
+ * opened it, or the next one runs alongside the last. Every service therefore
+ * has a ``dispose()`` and this calls all of them -- a hand-kept list would go
+ * stale the moment a service grows a timer, and the type error a missing
+ * ``dispose()`` raises here is the only thing that catches that.
+ */
+export function disposeMapsServices(services: MapsServices): void {
+  const { apis: _apis, ...disposables } = services
+  for (const service of Object.values(disposables)) {
+    service.dispose()
+  }
 }
 
 export function useMapsServices(): MapsServices {
@@ -131,4 +154,12 @@ export function useConnections(): ConnectionsService {
 
 export function useSettings(): AuthoringSettingsService {
   return useMapsServices().settings
+}
+
+export function useNavigation(): NavigationService {
+  return useMapsServices().nav
+}
+
+export function useToast(): ToastService {
+  return useMapsServices().toasts
 }

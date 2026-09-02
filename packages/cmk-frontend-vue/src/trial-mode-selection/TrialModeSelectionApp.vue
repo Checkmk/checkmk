@@ -62,7 +62,7 @@ function startTrial(): Promise<void> {
 
 function verifyNow(mode: 'online' | 'offline'): Promise<void> {
   return persist(
-    { selection: 'customer' },
+    { selection: 'customer', verification_mode: mode },
     mode === 'online' ? props.verify_online_url : props.verify_offline_url
   )
 }

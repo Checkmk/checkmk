@@ -35,9 +35,10 @@ function goToVerificationStep() {
   return screen.findByText('Verify your license')
 }
 
-function expectCustomerSelectionSaved() {
+function expectCustomerSelectionSaved(verificationMode?: 'online' | 'offline') {
   expect(mockCmkAjax).toHaveBeenCalledWith('ajax_save_trial_mode_selection.py', {
     selection: 'customer',
+    ...(verificationMode ? { verification_mode: verificationMode } : {}),
     _csrf_token: 'the-csrf-token'
   })
 }
@@ -147,7 +148,7 @@ describe('TrialModeSelectionApp', () => {
       await goToVerificationStep()
       screen.getByText('Verify online').click()
       await waitFor(() => {
-        expectCustomerSelectionSaved()
+        expectCustomerSelectionSaved('online')
         expect(mockLocationAssign).toHaveBeenCalledWith(
           'wato.py?mode=edit_licensing_settings&online=1'
         )
@@ -158,7 +159,7 @@ describe('TrialModeSelectionApp', () => {
       await goToVerificationStep()
       screen.getByText('Verify offline').click()
       await waitFor(() => {
-        expectCustomerSelectionSaved()
+        expectCustomerSelectionSaved('offline')
         expect(mockLocationAssign).toHaveBeenCalledWith(
           'wato.py?mode=licensing_offline_verification'
         )

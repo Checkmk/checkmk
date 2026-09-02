@@ -12,6 +12,7 @@ from ._fetched import (
     FetchedData,
     MACRO_SERIES_ID,
     PerformanceData,
+    ScalarKind,
     SeriesAttributes,
 )
 from ._graph import (
@@ -50,7 +51,6 @@ from ._quantities import (
     Fraction,
     Product,
     RRDMetric,
-    ScalarKind,
     ScalarOf,
     Sum,
 )

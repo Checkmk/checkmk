@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import enum
 import itertools
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -12,7 +11,7 @@ from typing import assert_never
 from cmk.graphing.v1 import metrics as metrics_v1
 
 from ._display import metric_display_attributes
-from ._fetched import PerformanceData, SeriesAttributes
+from ._fetched import ScalarKind, SeriesAttributes, value_of
 from ._naming import HostName, MetricName, Service, ServiceName, SiteID
 from ._operations import (
     apply_operator,
@@ -210,33 +209,6 @@ def rrd_metric_of(service: Service, metric_name: str) -> RRDMetric:
         service_name=service.service_name,
         metric_name=MetricName(metric_name),
     )
-
-
-class ScalarKind(enum.StrEnum):
-    WARNING = "warning"
-    CRITICAL = "critical"
-    LOWER_WARNING = "lower_warning"
-    LOWER_CRITICAL = "lower_critical"
-    MINIMUM = "minimum"
-    MAXIMUM = "maximum"
-
-
-def value_of(data: PerformanceData, scalar_kind: ScalarKind) -> float | None:
-    match scalar_kind:
-        case ScalarKind.WARNING:
-            return data.warning
-        case ScalarKind.CRITICAL:
-            return data.critical
-        case ScalarKind.LOWER_WARNING:
-            return data.lower_warning
-        case ScalarKind.LOWER_CRITICAL:
-            return data.lower_critical
-        case ScalarKind.MINIMUM:
-            return data.minimum
-        case ScalarKind.MAXIMUM:
-            return data.maximum
-        case _:
-            assert_never(scalar_kind)
 
 
 @dataclass(frozen=True)

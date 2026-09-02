@@ -21,6 +21,7 @@ from ._display import (
     parse_color,
     parse_unit,
 )
+from ._fetched import ScalarKind
 from ._naming import Service
 from ._quantities import (
     Constant,
@@ -29,7 +30,6 @@ from ._quantities import (
     Product,
     rrd_metric_of,
     RRDMetric,
-    ScalarKind,
     ScalarOf,
     Sum,
 )

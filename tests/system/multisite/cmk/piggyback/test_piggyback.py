@@ -282,7 +282,7 @@ def _check_config_redistributed(
         config_mtimes_ms[site.id] = current_mtime_ms
 
 
-@pytest.mark.skip(reason="CMK-35803; flake")
+@pytest.mark.xfail(raises=TimeoutError, strict=False, reason="CMK-37535; flake")
 @pytest.mark.skip_if_not_edition("ultimatemt")
 def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site: Site) -> None:
     """

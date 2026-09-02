@@ -6,17 +6,22 @@
 # mypy: disable-error-code="explicit-any"
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import equals, SNMPTree, StringTable
-from cmk.legacy_includes.elphase import check_elphase
-
-check_info = {}
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
 
 # .1.3.6.1.4.1.13742.4.1.2.2.1.1.1 1 --> PDU-MIB::outletIndex.1
 # .1.3.6.1.4.1.13742.4.1.2.2.1.1.3 3 --> PDU-MIB::outletIndex.3
@@ -43,14 +48,24 @@ check_info = {}
 # .1.3.6.1.4.1.13742.4.1.2.2.1.31.3 0 --> PDU-MIB::outletWattHours.3
 # .1.3.6.1.4.1.13742.4.1.2.2.1.31.4 0 --> PDU-MIB::outletWattHours.4
 
+_STATE_MAPPING = {
+    "-1": (State.CRIT, "error"),
+    "0": (State.CRIT, "off"),
+    "1": (State.OK, "on"),
+    "2": (State.OK, "cycling"),
+}
 
-def parse_raritan_px_outlets(string_table: StringTable) -> dict[str, Any]:
-    map_state = {
-        "-1": (2, "error"),
-        "0": (2, "off"),
-        "1": (0, "on"),
-        "2": (0, "cycling"),
-    }
+
+@dataclass(frozen=True, kw_only=True)
+class Outlet:
+    label: str
+    elphase: ElPhase
+
+
+type Section = Mapping[str, Outlet]
+
+
+def parse_raritan_px_outlets(string_table: StringTable) -> Section:
     parsed = {}
     for (
         index,
@@ -62,33 +77,36 @@ def parse_raritan_px_outlets(string_table: StringTable) -> dict[str, Any]:
         appower_str,
         energy_str,
     ) in string_table:
-        parsed[index] = {
-            "device_state": map_state.get(state, (3, "unknown")),
-            "label": label,
-            "current": float(current_str) / 1000,
-            "voltage": float(voltage_str) / 1000,
-            "power": float(power_str),
-            "appower": float(appower_str),
-            "energy": float(energy_str),
-        }
+        parsed[index] = Outlet(
+            label=label,
+            elphase=ElPhase(
+                device_state=_STATE_MAPPING.get(state, (State.UNKNOWN, "unknown")),
+                current=ReadingWithState(value=float(current_str) / 1000),
+                voltage=ReadingWithState(value=float(voltage_str) / 1000),
+                power=ReadingWithState(value=float(power_str)),
+                appower=ReadingWithState(value=float(appower_str)),
+                energy=ReadingWithState(value=float(energy_str)),
+            ),
+        )
 
     return parsed
 
 
-def discover_raritan_px_outlets(parsed: dict[str, Any]) -> LegacyDiscoveryResult:
-    return [(index, {}) for index, values in parsed.items() if values["device_state"][1] == "on"]
+def discover_raritan_px_outlets(section: Section) -> DiscoveryResult:
+    for index, outlet in section.items():
+        if outlet.elphase.device_state is not None and outlet.elphase.device_state[1] == "on":
+            yield Service(item=index)
 
 
-def check_raritan_px_outlets(
-    item: str, params: Mapping[str, Any], parsed: dict[str, Any]
-) -> LegacyCheckResult:
-    if item in parsed:
-        if parsed[item]["label"]:
-            yield 0, "[%s]" % parsed[item]["label"]
-        yield from check_elphase(item, params, parsed)
+def check_raritan_px_outlets(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if (outlet := section.get(item)) is None:
+        return
+    if outlet.label:
+        yield Result(state=State.OK, summary=f"[{outlet.label}]")
+    yield from check_elphase(params, outlet.elphase)
 
 
-check_info["raritan_px_outlets"] = LegacyCheckDefinition(
+snmp_section_raritan_px_outlets = SimpleSNMPSection(
     name="raritan_px_outlets",
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.4"),
     fetch=SNMPTree(
@@ -96,8 +114,14 @@ check_info["raritan_px_outlets"] = LegacyCheckDefinition(
         oids=["1", "2", "3", "4", "6", "7", "8", "31"],
     ),
     parse_function=parse_raritan_px_outlets,
+)
+
+
+check_plugin_raritan_px_outlets = CheckPlugin(
+    name="raritan_px_outlets",
     service_name="Outlet %s",
     discovery_function=discover_raritan_px_outlets,
     check_function=check_raritan_px_outlets,
     check_ruleset_name="el_inphase",
+    check_default_parameters={},
 )

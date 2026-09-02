@@ -17,7 +17,7 @@ _bootlin_symlink_targets = create_symlink_targets("bootlin", bootlin_mappings)
 set_runpath(
     name = "set_runpath",
     srcs = select({
-        "//bazel/platforms:is_hermetic": ["@gcc-linux-x86_64//:cpp_libs_elf"],
+        "//bazel/platforms:is_hermetic": ["@gcc_toolchain//:cpp_libs_elf"],
         "//conditions:default": ["//bazel/toolchains/cc/gcc/local:cpp_libs_elf"],
     }),
     tags = ["manual"],
@@ -27,7 +27,7 @@ set_runpath(
 pkg_files(
     name = "patched_elf_files_pkg",
     srcs = [":set_runpath"] + select({
-        "//bazel/platforms:is_hermetic": ["@gcc-linux-x86_64//:cpp_libs_files"],
+        "//bazel/platforms:is_hermetic": ["@gcc_toolchain//:cpp_libs_files"],
         "//bazel/toolchains/cc/gcc/local:opt": ["@cpp_libs_opt//:cpp_libs_files"],
         "//conditions:default": ["@cpp_libs_usr//:cpp_libs_files"],
     }),
@@ -37,13 +37,14 @@ pkg_files(
 
 # Package everything into tarball
 # Note: For local toolchain, symlinks are created from repository mappings above
-# For hermetic Bootlin toolchain, symlinks are defined in BUILD.bootlin.bazel
+# For the hermetic gcc_toolchain, symlinks come from bootlin_mappings (loaded
+# above from //bazel/toolchains/cc/gcc/bootlin:symlink_mappings.bzl)
 pkg_tar(
     name = "cpp-libs",
     srcs = [
         ":patched_elf_files_pkg",
     ] + select({
-        # Bootlin symlinks (hermetic) - created from mappings above
+        # Hermetic symlinks - created from bootlin_mappings above
         "//bazel/platforms:is_hermetic": _bootlin_symlink_targets,
         # Local symlinks - select between opt and usr based on gcc_path flag
         "//bazel/toolchains/cc/gcc/local:opt": _opt_symlink_targets,

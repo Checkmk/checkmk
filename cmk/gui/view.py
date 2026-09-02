@@ -10,7 +10,12 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._frontend import renders_engine_graphs
+from cmk.gui.graphing._frontend import (
+    default_time_range_seconds,
+    ENGINE_GRAPH_PAINTER_IDENTS,
+    renders_engine_graphs,
+    stored_time_range_seconds,
+)
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import all_painters, Cell, JoinCell, Painter
@@ -289,6 +294,23 @@ class View:
         return renders_engine_graphs(
             cell.painter_name() for cell in self.group_cells + self.row_cells
         )
+
+    @property
+    def engine_graph_time_range_seconds(self) -> int:
+        """The range the global time picker opens on. It publishes to every graph on the page,
+        so it starts where this view's graph painters render: the first painter configuring
+        "Set default time range" decides, else the user's or the site's default."""
+        for cell in self.group_cells + self.row_cells:
+            if cell.painter_name() not in ENGINE_GRAPH_PAINTER_IDENTS:
+                continue
+            if (
+                duration := stored_time_range_seconds(
+                    painter_parameters=cell.painter_parameters(),
+                    stored_by_the_view=cell.has_painter_params(),
+                )
+            ) is not None:
+                return duration
+        return default_time_range_seconds()
 
     @property
     def missing_single_infos(self) -> set[FilterName]:

@@ -23,7 +23,6 @@ from cmk.gui.data_source import row_id
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing._frontend import (
-    default_time_range_seconds,
     global_time_picker_refresh,
     render_global_time_picker,
 )
@@ -825,7 +824,7 @@ class GUIViewRenderer(ABCViewRenderer):
         browser_reload = self.view.spec.get("browser_reload") or None
         render_global_time_picker(
             active_config.graph_timeranges,
-            default_time_range_seconds=default_time_range_seconds(),
+            default_time_range_seconds=self.view.engine_graph_time_range_seconds,
             refresh=global_time_picker_refresh(
                 interval_seconds=browser_reload,
                 starts_live=browser_reload is not None,

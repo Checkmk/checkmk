@@ -3,14 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from dataclasses import dataclass
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
-from cmk.legacy_includes.elphase import check_elphase
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.intel.lib import DETECT_INTEL_TRUE_SCALE
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
 
-check_info = {}
+
+@dataclass(frozen=True)
+class Psu:
+    state: State
+    state_readable: str
+    source: str
+    voltage: float
+    power: float
+
+
+Section = Mapping[str, Psu]
 
 # .1.3.6.1.4.1.10222.2.1.4.7.1.2.2.1 Power Supply 201 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription.2.1
 # .1.3.6.1.4.1.10222.2.1.4.7.1.2.3.2 Power Supply 202 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyDescription.3.2
@@ -34,16 +54,16 @@ check_info = {}
 # .1.3.6.1.4.1.10222.2.1.4.7.1.6.5.4 0 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyOutputPower.5.4
 
 
-def parse_intel_true_scale_psus(string_table):
+def parse_intel_true_scale_psus(string_table: StringTable) -> Section:
     map_states = {
-        "1": (3, "unknown"),
-        "2": (3, "disabled"),
-        "3": (2, "failed"),
-        "4": (1, "warning"),
-        "5": (0, "standby"),
-        "6": (0, "engaged"),
-        "7": (0, "redundant"),
-        "8": (3, "not present"),
+        "1": (State.UNKNOWN, "unknown"),
+        "2": (State.UNKNOWN, "disabled"),
+        "3": (State.CRIT, "failed"),
+        "4": (State.WARN, "warning"),
+        "5": (State.OK, "standby"),
+        "6": (State.OK, "engaged"),
+        "7": (State.OK, "redundant"),
+        "8": (State.UNKNOWN, "not present"),
     }
     map_sources = {
         "0": "invalid",
@@ -53,41 +73,52 @@ def parse_intel_true_scale_psus(string_table):
         "4": "unknown",
     }
 
-    parsed: dict[str, dict[str, float | tuple[int, str] | str]] = {}
+    parsed: dict[str, Psu] = {}
     for descr, operstate, source, voltage_str, power_str in string_table:
         name = descr.replace("Power Supply", "").strip()
+        state, state_readable = map_states[operstate]
 
         parsed.setdefault(
             name,
-            {
-                "voltage": float(voltage_str),
-                "power": float(power_str),
-                "state": map_states[operstate],
-                "source": map_sources[source],
-            },
+            Psu(
+                state=state,
+                state_readable=state_readable,
+                source=map_sources[source],
+                voltage=float(voltage_str),
+                power=float(power_str),
+            ),
         )
 
     return parsed
 
 
-def discover_intel_true_scale_psus(parsed):
-    for psu in parsed:
-        if parsed[psu]["state"][-1] not in ["not present", "disabled"]:
-            yield psu, {}
+def discover_intel_true_scale_psus(section: Section) -> DiscoveryResult:
+    for psu, values in section.items():
+        if values.state_readable not in ["not present", "disabled"]:
+            yield Service(item=psu)
 
 
-def check_intel_true_scale_psus(item, params, parsed):
-    if item in parsed:
-        state, state_readable = parsed[item]["state"]
-        yield (
-            state,
-            "Operational status: {}, Source: {}".format(state_readable, parsed[item]["source"]),
-        )
+def check_intel_true_scale_psus(
+    item: str, params: Mapping[str, object], section: Section
+) -> CheckResult:
+    if (data := section.get(item)) is None:
+        return
 
-        yield from check_elphase(item, params, parsed)
+    yield Result(
+        state=data.state,
+        summary=f"Operational status: {data.state_readable}, Source: {data.source}",
+    )
+
+    yield from check_elphase(
+        params,
+        ElPhase(
+            voltage=ReadingWithState(value=data.voltage),
+            power=ReadingWithState(value=data.power),
+        ),
+    )
 
 
-check_info["intel_true_scale_psus"] = LegacyCheckDefinition(
+snmp_section_intel_true_scale_psus = SimpleSNMPSection(
     name="intel_true_scale_psus",
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=SNMPTree(
@@ -95,8 +126,14 @@ check_info["intel_true_scale_psus"] = LegacyCheckDefinition(
         oids=["2", "3", "4", "5", "6"],
     ),
     parse_function=parse_intel_true_scale_psus,
+)
+
+
+check_plugin_intel_true_scale_psus = CheckPlugin(
+    name="intel_true_scale_psus",
     service_name="Power supply %s",
     discovery_function=discover_intel_true_scale_psus,
     check_function=check_intel_true_scale_psus,
     check_ruleset_name="el_inphase",
+    check_default_parameters={},
 )

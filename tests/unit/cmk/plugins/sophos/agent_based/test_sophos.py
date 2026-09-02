@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.sophos import check_sophos, discover_sophos, parse_sophos
+from cmk.plugins.sophos.agent_based.sophos import check_sophos, discover_sophos, parse_sophos
 
 # synthetic data
 STRING_TABLE: StringTable = [

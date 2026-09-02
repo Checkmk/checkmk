@@ -3,11 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-
-
-from collections.abc import Iterable, Mapping
-from typing import Any
 
 #   .--binary--------------------------------------------------------------.
 #   |                   _     _                                            |
@@ -19,27 +14,29 @@ from typing import Any
 #   +----------------------------------------------------------------------+
 #   |                             main check                               |
 #   '----------------------------------------------------------------------'
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree
-from cmk.legacy_includes.raritan import (
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    DiscoveryResult,
+    equals,
+    OIDEnd,
+    SimpleSNMPSection,
+    SNMPTree,
+)
+from cmk.plugins.raritan.lib import (
     check_raritan_sensors,
     check_raritan_sensors_binary,
     check_raritan_sensors_temp,
-    inventory_raritan_sensors,
-    inventory_raritan_sensors_temp,
+    discover_raritan_sensors,
     parse_raritan_sensors,
+    SensorSection,
 )
 
-check_info = {}
+
+def discover_raritan_emx_sensors(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "binary")
 
 
-def discover_raritan_emx_sensors(
-    parsed: Mapping[str, Mapping[str, Any]],
-) -> Iterable[tuple[str, None]]:
-    return inventory_raritan_sensors(parsed, "binary")
-
-
-check_info["raritan_emx_sensors"] = LegacyCheckDefinition(
+snmp_section_raritan_emx_sensors = SimpleSNMPSection(
     name="raritan_emx_sensors",
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.8"),
     fetch=SNMPTree(
@@ -60,16 +57,19 @@ check_info["raritan_emx_sensors"] = LegacyCheckDefinition(
         ],
     ),
     parse_function=parse_raritan_sensors,
+)
+
+
+check_plugin_raritan_emx_sensors = CheckPlugin(
+    name="raritan_emx_sensors",
     service_name="Contact %s",
     discovery_function=discover_raritan_emx_sensors,
     check_function=check_raritan_sensors_binary,
 )
 
 
-def discover_raritan_emx_sensors_temp(
-    parsed: Mapping[str, Mapping[str, Any]],
-) -> Iterable[tuple[str, Mapping[str, Any]]]:
-    return inventory_raritan_sensors_temp(parsed, "temp")
+def discover_raritan_emx_sensors_temp(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "temp")
 
 
 # .
@@ -82,20 +82,19 @@ def discover_raritan_emx_sensors_temp(
 #   |                       |_|                                            |
 #   +----------------------------------------------------------------------+
 
-check_info["raritan_emx_sensors.temp"] = LegacyCheckDefinition(
+check_plugin_raritan_emx_sensors_temp = CheckPlugin(
     name="raritan_emx_sensors_temp",
     service_name="Temperature %s",
     sections=["raritan_emx_sensors"],
     discovery_function=discover_raritan_emx_sensors_temp,
     check_function=check_raritan_sensors_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )
 
 
-def discover_raritan_emx_sensors_airflow(
-    parsed: Mapping[str, Mapping[str, Any]],
-) -> Iterable[tuple[str, None]]:
-    return inventory_raritan_sensors(parsed, "airflow")
+def discover_raritan_emx_sensors_airflow(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "airflow")
 
 
 # .
@@ -108,7 +107,7 @@ def discover_raritan_emx_sensors_airflow(
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-check_info["raritan_emx_sensors.airflow"] = LegacyCheckDefinition(
+check_plugin_raritan_emx_sensors_airflow = CheckPlugin(
     name="raritan_emx_sensors_airflow",
     service_name="Air flow %s",
     sections=["raritan_emx_sensors"],
@@ -117,10 +116,8 @@ check_info["raritan_emx_sensors.airflow"] = LegacyCheckDefinition(
 )
 
 
-def discover_raritan_emx_sensors_humidity(
-    parsed: Mapping[str, Mapping[str, Any]],
-) -> Iterable[tuple[str, None]]:
-    return inventory_raritan_sensors(parsed, "humidity")
+def discover_raritan_emx_sensors_humidity(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "humidity")
 
 
 # .
@@ -133,7 +130,7 @@ def discover_raritan_emx_sensors_humidity(
 #   |                                                  |___/               |
 #   +----------------------------------------------------------------------+
 
-check_info["raritan_emx_sensors.humidity"] = LegacyCheckDefinition(
+check_plugin_raritan_emx_sensors_humidity = CheckPlugin(
     name="raritan_emx_sensors_humidity",
     service_name="Humidity %s",
     sections=["raritan_emx_sensors"],
@@ -142,10 +139,8 @@ check_info["raritan_emx_sensors.humidity"] = LegacyCheckDefinition(
 )
 
 
-def discover_raritan_emx_sensors_pressure(
-    parsed: Mapping[str, Mapping[str, Any]],
-) -> Iterable[tuple[str, None]]:
-    return inventory_raritan_sensors(parsed, "pressure")
+def discover_raritan_emx_sensors_pressure(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "pressure")
 
 
 # .
@@ -158,7 +153,7 @@ def discover_raritan_emx_sensors_pressure(
 #   |              |_|                                                     |
 #   +----------------------------------------------------------------------+
 
-check_info["raritan_emx_sensors.pressure"] = LegacyCheckDefinition(
+check_plugin_raritan_emx_sensors_pressure = CheckPlugin(
     name="raritan_emx_sensors_pressure",
     service_name="Pressure %s",
     sections=["raritan_emx_sensors"],

@@ -2,12 +2,24 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import ClassVar, Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cmk.agent_based.v2 import equals, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 DETECT_RARITAN = equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6")
 
@@ -83,6 +95,151 @@ STATE_MAPPING = {
     "10": (State.CRIT, "not detected"),
     "11": (State.CRIT, "alarmed"),
 }
+
+# SensorStateEnumeration (EMD-, PDU2, LHX-MIB) - simplified for plugs (on/off)
+PLUG_STATE_MAPPING = {
+    "7": "on",
+    "8": "off",
+}
+
+
+@dataclass(frozen=True, kw_only=True)
+class RaritanSensor:
+    availability: str
+    state: tuple[State, str]
+    sensor_type: str
+    sensor_data: Sequence[float]
+    sensor_unit: str
+
+
+type SensorSection = Mapping[str, RaritanSensor]
+
+# The string table must be of the form:
+# "X.Y.Z",  # IsAvailable -> True/False (1/0)
+# "X.Y.Z",  # Number
+# "X.Y.Z",  # Name
+# "X.Y.Z",  # Type
+# "X.Y.Z",  # State
+# "X.Y.Z",  # Units
+# "X.Y.Z",  # DecimalDigits -> for scaling the values
+# "X.Y.Z",  # Value
+# "X.Y.Z",  # LowerCriticalThreshold
+# "X.Y.Z",  # LowerWarningThreshold
+# "X.Y.Z",  # UpperCriticalThreshold
+# "X.Y.Z",  # UpperWarningThreshold
+
+
+def parse_raritan_sensors(string_table: StringTable) -> SensorSection:
+    parsed = {}
+    for (
+        availability,
+        sensor_id,
+        sensor_name,
+        sensor_type,
+        sensor_state,
+        sensor_unit,
+        sensor_exponent,
+        sensor_value_str,
+        sensor_lower_crit_str,
+        sensor_lower_warn_str,
+        sensor_upper_crit_str,
+        sensor_upper_warn_str,
+    ) in string_table:
+        sensor_type, sensor_type_readable = TYPE_MAPPING.get(sensor_type, ("", "Other"))
+
+        extra_name = ""
+        if sensor_type_readable != "":
+            extra_name += " " + sensor_type_readable
+
+        sensor_name = (f"Sensor {sensor_id}{extra_name} {sensor_name}").strip()
+
+        sensor_unit = UNIT_MAPPING.get(sensor_unit, " Other")
+
+        # binary sensors don't have any values or levels
+        if sensor_type in ["binary", ""]:
+            sensor_data = []
+        else:
+            # 1 m/s = 8.11 l/s
+            if sensor_unit == " m/s":
+                sensor_unit = " l/s"
+                factor = 8.11
+            else:
+                factor = 1
+            # if the value is 5 and unitSensorDecimalDigits is 2
+            # then actual value is 0.05
+            sensor_data = [
+                factor * float(x) / pow(10, int(sensor_exponent))
+                for x in [
+                    sensor_value_str,
+                    sensor_lower_crit_str,
+                    sensor_lower_warn_str,
+                    sensor_upper_crit_str,
+                    sensor_upper_warn_str,
+                ]
+            ]
+
+        parsed[sensor_name] = RaritanSensor(
+            availability=availability,
+            state=STATE_MAPPING.get(sensor_state, (State.UNKNOWN, "unhandled state")),
+            sensor_type=sensor_type,
+            sensor_data=sensor_data,
+            sensor_unit=sensor_unit,
+        )
+
+    return parsed
+
+
+def discover_raritan_sensors(section: SensorSection, sensor_type: str) -> DiscoveryResult:
+    for key, sensor in section.items():
+        if sensor.availability == "1" and sensor.sensor_type == sensor_type:
+            yield Service(item=key)
+
+
+def check_raritan_sensors(item: str, section: SensorSection) -> CheckResult:
+    if (sensor := section.get(item)) is None:
+        return
+
+    state, state_readable = sensor.state
+    unit = sensor.sensor_unit
+    reading, _crit_lower, warn_lower, crit, warn = sensor.sensor_data
+    infotext = f"{reading}{unit}, status: {state_readable}"
+
+    if state is not State.OK and reading >= warn:
+        infotext += f" (device warn/crit at {warn:.1f}{unit}/{crit:.1f}{unit})"
+    elif state is not State.OK and reading < warn_lower:
+        infotext += f" (device warn/crit below {warn_lower:.1f}{unit}/{warn_lower:.1f}{unit})"
+
+    yield Result(state=state, summary=infotext)
+    yield Metric(sensor.sensor_type, reading, levels=(warn, crit))
+
+
+def check_raritan_sensors_binary(item: str, section: SensorSection) -> CheckResult:
+    if (sensor := section.get(item)) is None:
+        return
+
+    state, state_readable = sensor.state
+    yield Result(state=state, summary=f"Status: {state_readable}")
+
+
+def check_raritan_sensors_temp(
+    item: str, params: TempParamType, section: SensorSection
+) -> CheckResult:
+    if (sensor := section.get(item)) is None:
+        return
+
+    state, state_readable = sensor.state
+    reading, crit_lower, warn_lower, crit, warn = sensor.sensor_data
+    yield from check_temperature(
+        reading,
+        params,
+        unique_name=f"raritan_sensors_{item}",
+        value_store=get_value_store(),
+        dev_unit=sensor.sensor_unit,
+        dev_levels=(warn, crit),
+        dev_levels_lower=(warn_lower, crit_lower),
+        dev_status=int(state),
+        dev_status_name=state_readable,
+    )
 
 
 class SnmpBitsModel(BaseModel):

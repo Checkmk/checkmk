@@ -3,17 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
 import time
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.legacy_includes.humidity import check_humidity
-from cmk.legacy_includes.temperature import check_temperature
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.humidity import check_humidity
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
-check_info = {}
+type Section = Mapping[str, Mapping[str, Sequence[str]]]
 
 # <<<tinkerforge:sep(44)>>>
 # temperature,6QHSgJ.a.tiq,2181
@@ -21,11 +33,11 @@ check_info = {}
 # ambient,6JLy11.c.uKA,124
 
 
-def parse_tinkerforge(string_table):
+def parse_tinkerforge(string_table: StringTable) -> Section:
     # biggest trouble here is generating sensible item names as tho ones
     # provided to us are simply random-generated
 
-    def gen_pos(parent, pos):
+    def gen_pos(parent: str, pos: str) -> str:
         return "" if parent == "0" else f"{gen_pos(*master_index[parent])}{pos}"
 
     # first, go through all readings and group them by brick(let) type.
@@ -65,49 +77,67 @@ def parse_tinkerforge(string_table):
     return res
 
 
-def inventory_tinkerforge(brick_type, parsed):
-    for path in parsed.get(brick_type, {}):
-        yield path, {}
+agent_section_tinkerforge = AgentSection(
+    name="tinkerforge",
+    parse_function=parse_tinkerforge,
+)
 
 
-def check_tinkerforge_master(item, params, parsed):
-    if "master" in parsed and item in parsed["master"]:
+def _discover_bricks(brick_type: str, section: Section) -> DiscoveryResult:
+    yield from (Service(item=path) for path in section.get(brick_type, {}))
+
+
+def check_tinkerforge_master(item: str, section: Section) -> CheckResult:
+    if "master" in section and item in section["master"]:
         try:
-            voltage, current, chip_temp = parsed["master"][item]
-            yield 0, "%.1f mV" % float(voltage)
-            yield 0, "%.1f mA" % float(current)
-            yield check_temperature(float(chip_temp) / 10.0, params, "tinkerforge_%s" % item)
+            voltage, current, chip_temp = section["master"][item]
+            yield Result(state=State.OK, summary="%.1f mV" % float(voltage))
+            yield Result(state=State.OK, summary="%.1f mA" % float(current))
+            yield from check_temperature(
+                float(chip_temp) / 10.0,
+                {},
+                unique_name=f"tinkerforge_{item}",
+                value_store=get_value_store(),
+            )
         except Exception:
-            yield 2, parsed["master"][item][0], []
+            yield Result(state=State.CRIT, summary=section["master"][item][0])
 
 
-def check_tinkerforge_temperature(item, params, parsed):
-    if "temperature" in parsed and item in parsed["temperature"]:
-        reading = float(parsed["temperature"][item][0]) / 100.0
-        return check_temperature(reading, params, "tinkerforge_%s" % item)
-    return None
-
-
-def check_tinkerforge_ambient(item, params, parsed):
-    if "ambient" in parsed and item in parsed["ambient"]:
-        reading = float(parsed["ambient"][item][0]) / 100.0
-        return check_levels(
+def check_tinkerforge_temperature(
+    item: str, params: TempParamType, section: Section
+) -> CheckResult:
+    if "temperature" in section and item in section["temperature"]:
+        reading = float(section["temperature"][item][0]) / 100.0
+        yield from check_temperature(
             reading,
-            "brightness",
-            params["levels"],
-            human_readable_func=lambda x: f"{x:.1f} lx",
-            infoname="Brightness",
+            params,
+            unique_name=f"tinkerforge_{item}",
+            value_store=get_value_store(),
         )
-    return None
 
 
-def check_tinkerforge_humidity(item, params, parsed):
-    if "humidity" in parsed and item in parsed["humidity"]:
-        return check_humidity(float(parsed["humidity"][item][0]) / 10.0, params)
-    return None
+def check_tinkerforge_ambient(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if "ambient" in section and item in section["ambient"]:
+        reading = float(section["ambient"][item][0]) / 100.0
+        yield from check_levels_v1(
+            reading,
+            metric_name="brightness",
+            levels_upper=params["levels"],
+            render_func=lambda x: f"{x:.1f} lx",
+            label="Brightness",
+        )
 
 
-def check_tinkerforge_motion(item, params, parsed):
+def check_tinkerforge_humidity(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if "humidity" in section and item in section["humidity"]:
+        yield from check_humidity(float(section["humidity"][item][0]) / 10.0, params)
+
+
+def check_tinkerforge_motion(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     def test_in_period(
         time_tuple: tuple[int, int],
         periods: Sequence[tuple[tuple[int, int], tuple[int, int]]],
@@ -121,52 +151,55 @@ def check_tinkerforge_motion(item, params, parsed):
         return False
 
     weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-    if "motion" in parsed and item in parsed["motion"]:
+    if "motion" in section and item in section["motion"]:
         today = time.localtime()
         if "time_periods" in params:
             periods = params["time_periods"][weekdays[today.tm_wday]]
         else:
             periods = [((0, 0), (24, 0))]
-        reading = int(parsed["motion"][item][0])
+        reading = int(section["motion"][item][0])
         if reading == 1:
-            status = 1 if test_in_period((today.tm_hour, today.tm_min), periods) else 0
-            return status, "Motion detected", [("motion", reading)]
-        return 0, "No motion detected", [("motion", reading)]
-    return None
+            state = (
+                State.WARN if test_in_period((today.tm_hour, today.tm_min), periods) else State.OK
+            )
+            yield Result(state=state, summary="Motion detected")
+        else:
+            yield Result(state=State.OK, summary="No motion detected")
+        yield Metric("motion", reading)
 
 
-def discover_tinkerforge(parsed):
-    return inventory_tinkerforge("master", parsed)
+def discover_tinkerforge(section: Section) -> DiscoveryResult:
+    yield from _discover_bricks("master", section)
 
 
-check_info["tinkerforge"] = LegacyCheckDefinition(
+check_plugin_tinkerforge = CheckPlugin(
     name="tinkerforge",
-    parse_function=parse_tinkerforge,
     service_name="Master %s",
     discovery_function=discover_tinkerforge,
     check_function=check_tinkerforge_master,
 )
 
 
-def discover_tinkerforge_temperature(parsed):
-    return inventory_tinkerforge("temperature", parsed)
+def discover_tinkerforge_temperature(section: Section) -> DiscoveryResult:
+    yield from _discover_bricks("temperature", section)
 
 
-check_info["tinkerforge.temperature"] = LegacyCheckDefinition(
+check_plugin_tinkerforge_temperature = CheckPlugin(
     name="tinkerforge_temperature",
     service_name="Temperature %s",
     sections=["tinkerforge"],
     discovery_function=discover_tinkerforge_temperature,
     check_function=check_tinkerforge_temperature,
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )
 
 
-def discover_tinkerforge_ambient(parsed):
-    return inventory_tinkerforge("ambient", parsed)
+def discover_tinkerforge_ambient(section: Section) -> DiscoveryResult:
+    yield from _discover_bricks("ambient", section)
 
 
-check_info["tinkerforge.ambient"] = LegacyCheckDefinition(
+check_plugin_tinkerforge_ambient = CheckPlugin(
     name="tinkerforge_ambient",
     service_name="Ambient Light %s",
     sections=["tinkerforge"],
@@ -177,11 +210,11 @@ check_info["tinkerforge.ambient"] = LegacyCheckDefinition(
 )
 
 
-def discover_tinkerforge_humidity(parsed):
-    return inventory_tinkerforge("humidity", parsed)
+def discover_tinkerforge_humidity(section: Section) -> DiscoveryResult:
+    yield from _discover_bricks("humidity", section)
 
 
-check_info["tinkerforge.humidity"] = LegacyCheckDefinition(
+check_plugin_tinkerforge_humidity = CheckPlugin(
     name="tinkerforge_humidity",
     service_name="Humidity %s",
     sections=["tinkerforge"],
@@ -196,15 +229,16 @@ check_info["tinkerforge.humidity"] = LegacyCheckDefinition(
 )
 
 
-def discover_tinkerforge_motion(parsed):
-    return inventory_tinkerforge("motion", parsed)
+def discover_tinkerforge_motion(section: Section) -> DiscoveryResult:
+    yield from _discover_bricks("motion", section)
 
 
-check_info["tinkerforge.motion"] = LegacyCheckDefinition(
+check_plugin_tinkerforge_motion = CheckPlugin(
     name="tinkerforge_motion",
     service_name="Motion Detector %s",
     sections=["tinkerforge"],
     discovery_function=discover_tinkerforge_motion,
     check_function=check_tinkerforge_motion,
     check_ruleset_name="motion",
+    check_default_parameters={},
 )

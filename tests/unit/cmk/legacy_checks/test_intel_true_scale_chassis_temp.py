@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.intel_true_scale_chassis_temp import (
     check_intel_true_scale_chassis_temp,
     discover_intel_true_scale_chassis_temp,
@@ -18,16 +16,20 @@ from cmk.legacy_checks.intel_true_scale_chassis_temp import (
 @pytest.mark.parametrize(
     "string_table, expected_discovery",
     [
-        pytest.param([["1", "0"]], [(None, None)], id="sensor_present"),
+        pytest.param([["1", "0"]], [Service()], id="sensor_present"),
         pytest.param([["6", "0"]], [], id="no_sensor_is_not_discovered"),
         pytest.param([], [], id="empty_section"),
     ],
 )
 def test_discover_intel_true_scale_chassis_temp(
-    string_table: StringTable, expected_discovery: list[tuple[None, None]]
+    string_table: StringTable, expected_discovery: list[Service]
 ) -> None:
     assert (
-        discover_intel_true_scale_chassis_temp(parse_intel_true_scale_chassis_temp(string_table))
+        list(
+            discover_intel_true_scale_chassis_temp(
+                parse_intel_true_scale_chassis_temp(string_table)
+            )
+        )
         == expected_discovery
     )
 
@@ -35,34 +37,57 @@ def test_discover_intel_true_scale_chassis_temp(
 @pytest.mark.parametrize(
     "status, expected_result",
     [
-        pytest.param("1", (0, "Status: normal, Warning configuration: unspecified"), id="normal"),
-        pytest.param("2", (1, "Status: high, Warning configuration: unspecified"), id="high"),
+        pytest.param(
+            "1",
+            Result(state=State.OK, summary="Status: normal, Warning configuration: unspecified"),
+            id="normal",
+        ),
+        pytest.param(
+            "2",
+            Result(state=State.WARN, summary="Status: high, Warning configuration: unspecified"),
+            id="high",
+        ),
         pytest.param(
             "3",
-            (2, "Status: excessively high, Warning configuration: unspecified"),
+            Result(
+                state=State.CRIT,
+                summary="Status: excessively high, Warning configuration: unspecified",
+            ),
             id="excessively_high",
         ),
-        pytest.param("4", (1, "Status: low, Warning configuration: unspecified"), id="low"),
+        pytest.param(
+            "4",
+            Result(state=State.WARN, summary="Status: low, Warning configuration: unspecified"),
+            id="low",
+        ),
         pytest.param(
             "5",
-            (2, "Status: excessively low, Warning configuration: unspecified"),
+            Result(
+                state=State.CRIT,
+                summary="Status: excessively low, Warning configuration: unspecified",
+            ),
             id="excessively_low",
         ),
         pytest.param(
-            "6", (3, "Status: no sensor, Warning configuration: unspecified"), id="no_sensor"
+            "6",
+            Result(
+                state=State.UNKNOWN, summary="Status: no sensor, Warning configuration: unspecified"
+            ),
+            id="no_sensor",
         ),
-        pytest.param("7", (3, "Status: unknown, Warning configuration: unspecified"), id="unknown"),
+        pytest.param(
+            "7",
+            Result(
+                state=State.UNKNOWN, summary="Status: unknown, Warning configuration: unspecified"
+            ),
+            id="unknown",
+        ),
     ],
 )
-def test_check_intel_true_scale_chassis_temp_status(
-    status: str, expected_result: tuple[int, str]
-) -> None:
-    assert (
-        check_intel_true_scale_chassis_temp(
-            None, None, parse_intel_true_scale_chassis_temp([[status, "0"]])
-        )
-        == expected_result
-    )
+def test_check_intel_true_scale_chassis_temp_status(status: str, expected_result: Result) -> None:
+    assert list(
+        check_intel_true_scale_chassis_temp(parse_intel_true_scale_chassis_temp([[status, "0"]]))
+    ) == [expected_result]
 
 
 @pytest.mark.parametrize(
@@ -77,6 +102,13 @@ def test_check_intel_true_scale_chassis_temp_status(
 def test_check_intel_true_scale_chassis_temp_warning_configuration(
     warn_config: str, expected_readable: str
 ) -> None:
-    assert check_intel_true_scale_chassis_temp(
-        None, None, parse_intel_true_scale_chassis_temp([["1", warn_config]])
-    ) == (0, f"Status: normal, Warning configuration: {expected_readable}")
+    assert list(
+        check_intel_true_scale_chassis_temp(
+            parse_intel_true_scale_chassis_temp([["1", warn_config]])
+        )
+    ) == [
+        Result(
+            state=State.OK,
+            summary=f"Status: normal, Warning configuration: {expected_readable}",
+        )
+    ]

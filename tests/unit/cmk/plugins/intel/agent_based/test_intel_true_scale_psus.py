@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.intel_true_scale_psus import (
+from cmk.plugins.intel.agent_based.intel_true_scale_psus import (
     check_intel_true_scale_psus,
     discover_intel_true_scale_psus,
     parse_intel_true_scale_psus,

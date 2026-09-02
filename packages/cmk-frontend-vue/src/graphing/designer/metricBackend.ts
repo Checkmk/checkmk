@@ -13,7 +13,9 @@ import {
   DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
   DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN
 } from '@/metric-backend/histogram-params'
+import type { ServiceModel } from '@/mode-custom-services/types'
 
+import { consolidationToWire } from './consolidation'
 import { DEFAULT_TITLE_MACRO, type MetricBackendItem } from './types'
 
 /** One query of the `special_agents:custom_query_metric_backend` rule value. */
@@ -59,5 +61,18 @@ export function metricBackendRuleQuery(
         ? consolidation.upper_threshold
         : DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
     service_name_template: item.title.replaceAll(DEFAULT_TITLE_MACRO, defaultTitle)
+  }
+}
+
+/** The custom-service model prefilled from a designer row, with the row's title as the service name. */
+export function customServiceModelFor(item: MetricBackendItem, defaultTitle: string): ServiceModel {
+  return {
+    metricName: item.metric_name,
+    metricTypes: [],
+    attributeFilter: item.attribute_filter,
+    consolidation: consolidationToWire(item.consolidation_function),
+    aggregator: item.aggregator ?? undefined,
+    serviceName: item.title.replaceAll(DEFAULT_TITLE_MACRO, defaultTitle),
+    hostName: null
   }
 }

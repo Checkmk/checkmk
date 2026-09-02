@@ -3,13 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.intel.lib import DETECT_INTEL_TRUE_SCALE
-
-check_info = {}
 
 # .1.3.6.1.4.1.10222.2.1.6.5.1.2.6.1 Fan 201 --> ICS-CHASSIS-MIB::icsChassisFanDescription.6.1
 # .1.3.6.1.4.1.10222.2.1.6.5.1.2.7.1 Fan 202 --> ICS-CHASSIS-MIB::icsChassisFanDescription.7.1
@@ -45,52 +50,57 @@ check_info = {}
 # .1.3.6.1.4.1.10222.2.1.6.5.1.5.13.1 0 --> ICS-CHASSIS-MIB::icsChassisFanNonFatalErrors.13.1
 
 
-def discover_intel_true_scale_fans(info):
-    return [
-        (fan_name.replace("Fan", "").strip(), None)
-        for fan_name, operstate, _speed_state in info
+def discover_intel_true_scale_fans(section: StringTable) -> DiscoveryResult:
+    yield from (
+        Service(item=fan_name.replace("Fan", "").strip())
+        for fan_name, operstate, _speed_state in section
         if operstate != "4"
-    ]
+    )
 
 
-def check_intel_true_scale_fans(item, _no_params, info):
+def check_intel_true_scale_fans(item: str, section: StringTable) -> CheckResult:
     map_states = {
         "operational": {
-            "1": (0, "online"),
-            "2": (0, "operational"),
-            "3": (2, "failed"),
-            "4": (1, "offline"),
+            "1": (State.OK, "online"),
+            "2": (State.OK, "operational"),
+            "3": (State.CRIT, "failed"),
+            "4": (State.WARN, "offline"),
         },
         "speed": {
-            "1": (2, "low"),
-            "2": (0, "normal"),
-            "3": (2, "high"),
-            "4": (3, "unknown"),
+            "1": (State.CRIT, "low"),
+            "2": (State.OK, "normal"),
+            "3": (State.CRIT, "high"),
+            "4": (State.UNKNOWN, "unknown"),
         },
     }
 
-    for fan_name, operstate, speedstate in info:
+    for fan_name, operstate, speedstate in section:
         if item == fan_name.replace("Fan", "").strip():
             for what, what_descr, what_mapping in [
                 (operstate, "Operational", "operational"),
                 (speedstate, "Speed", "speed"),
             ]:
                 state, state_readable = map_states[what_mapping][what]
-                yield state, f"{what_descr} status: {state_readable}"
+                yield Result(state=state, summary=f"{what_descr} status: {state_readable}")
 
 
 def parse_intel_true_scale_fans(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["intel_true_scale_fans"] = LegacyCheckDefinition(
+snmp_section_intel_true_scale_fans = SimpleSNMPSection(
     name="intel_true_scale_fans",
-    parse_function=parse_intel_true_scale_fans,
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.10222.2.1.6.5.1",
         oids=["2", "3", "4"],
     ),
+    parse_function=parse_intel_true_scale_fans,
+)
+
+
+check_plugin_intel_true_scale_fans = CheckPlugin(
+    name="intel_true_scale_fans",
     service_name="Fan %s",
     discovery_function=discover_intel_true_scale_fans,
     check_function=check_intel_true_scale_fans,

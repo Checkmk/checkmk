@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.intel_true_scale_fans import (
     check_intel_true_scale_fans,
     discover_intel_true_scale_fans,
@@ -25,11 +23,11 @@ STRING_TABLE: StringTable = [
 
 
 def test_discover_intel_true_scale_fans_strips_prefix_and_skips_offline() -> None:
-    assert discover_intel_true_scale_fans(parse_intel_true_scale_fans(STRING_TABLE)) == [
-        ("201", None),
-        ("202", None),
-        ("203", None),
-        ("205", None),
+    assert list(discover_intel_true_scale_fans(parse_intel_true_scale_fans(STRING_TABLE))) == [
+        Service(item="201"),
+        Service(item="202"),
+        Service(item="203"),
+        Service(item="205"),
     ]
 
 
@@ -38,34 +36,49 @@ def test_discover_intel_true_scale_fans_strips_prefix_and_skips_offline() -> Non
     [
         pytest.param(
             "201",
-            [(0, "Operational status: online"), (0, "Speed status: normal")],
+            [
+                Result(state=State.OK, summary="Operational status: online"),
+                Result(state=State.OK, summary="Speed status: normal"),
+            ],
             id="online_and_normal",
         ),
         pytest.param(
             "202",
-            [(0, "Operational status: operational"), (2, "Speed status: low")],
+            [
+                Result(state=State.OK, summary="Operational status: operational"),
+                Result(state=State.CRIT, summary="Speed status: low"),
+            ],
             id="operational_and_low",
         ),
         pytest.param(
             "203",
-            [(2, "Operational status: failed"), (2, "Speed status: high")],
+            [
+                Result(state=State.CRIT, summary="Operational status: failed"),
+                Result(state=State.CRIT, summary="Speed status: high"),
+            ],
             id="failed_and_high",
         ),
         pytest.param(
             "204",
-            [(1, "Operational status: offline"), (0, "Speed status: normal")],
+            [
+                Result(state=State.WARN, summary="Operational status: offline"),
+                Result(state=State.OK, summary="Speed status: normal"),
+            ],
             id="offline_stays_checkable",
         ),
         pytest.param(
             "205",
-            [(0, "Operational status: operational"), (3, "Speed status: unknown")],
+            [
+                Result(state=State.OK, summary="Operational status: operational"),
+                Result(state=State.UNKNOWN, summary="Speed status: unknown"),
+            ],
             id="operational_and_unknown_speed",
         ),
         pytest.param("101", [], id="unknown_item"),
     ],
 )
-def test_check_intel_true_scale_fans(item: str, expected_results: list[tuple[int, str]]) -> None:
+def test_check_intel_true_scale_fans(item: str, expected_results: list[Result]) -> None:
     assert (
-        list(check_intel_true_scale_fans(item, None, parse_intel_true_scale_fans(STRING_TABLE)))
+        list(check_intel_true_scale_fans(item, parse_intel_true_scale_fans(STRING_TABLE)))
         == expected_results
     )

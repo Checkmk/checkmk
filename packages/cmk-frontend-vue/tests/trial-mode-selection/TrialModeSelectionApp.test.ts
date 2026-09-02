@@ -22,8 +22,8 @@ function renderApp() {
     props: {
       save_url: 'ajax_save_trial_mode_selection.py',
       logout_url: 'logout.py',
-      verify_online_url: 'wato.py?mode=licensing',
-      verify_offline_url: 'wato.py?mode=licensing',
+      verify_online_url: 'wato.py?mode=edit_licensing_settings&online=1',
+      verify_offline_url: 'wato.py?mode=licensing_offline_verification',
       user_name: 'cmkadmin'
     }
   })
@@ -148,7 +148,9 @@ describe('TrialModeSelectionApp', () => {
       screen.getByText('Verify online').click()
       await waitFor(() => {
         expectCustomerSelectionSaved()
-        expect(mockLocationAssign).toHaveBeenCalledWith('wato.py?mode=licensing')
+        expect(mockLocationAssign).toHaveBeenCalledWith(
+          'wato.py?mode=edit_licensing_settings&online=1'
+        )
       })
     })
 
@@ -157,7 +159,9 @@ describe('TrialModeSelectionApp', () => {
       screen.getByText('Verify offline').click()
       await waitFor(() => {
         expectCustomerSelectionSaved()
-        expect(mockLocationAssign).toHaveBeenCalledWith('wato.py?mode=licensing')
+        expect(mockLocationAssign).toHaveBeenCalledWith(
+          'wato.py?mode=licensing_offline_verification'
+        )
       })
     })
 

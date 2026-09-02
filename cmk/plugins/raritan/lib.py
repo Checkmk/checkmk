@@ -19,6 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.plugins.lib.elphase import ElPhase, ReadingWithState
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 DETECT_RARITAN = equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6")
@@ -101,6 +102,24 @@ PLUG_STATE_MAPPING = {
     "7": "on",
     "8": "off",
 }
+
+
+def elphase_from_readings(readings: Mapping[str, ReadingWithState]) -> ElPhase:
+    """Build an ElPhase from readings keyed by the names used in TYPE_MAPPING.
+
+    Readings the electrical phase check does not know about are dropped.
+    """
+    return ElPhase(
+        voltage=readings.get("voltage"),
+        current=readings.get("current"),
+        output_load=readings.get("output_load"),
+        power=readings.get("power"),
+        appower=readings.get("appower"),
+        energy=readings.get("energy"),
+        frequency=readings.get("frequency"),
+        differential_current_ac=readings.get("differential_current_ac"),
+        differential_current_dc=readings.get("differential_current_dc"),
+    )
 
 
 @dataclass(frozen=True, kw_only=True)

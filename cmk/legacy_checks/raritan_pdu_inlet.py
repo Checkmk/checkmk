@@ -3,49 +3,67 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree
-from cmk.legacy_includes.elphase import check_elphase
-from cmk.legacy_includes.raritan import raritan_map_state, raritan_map_type
-from cmk.plugins.raritan.lib import DETECT_RARITAN
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingState, ReadingWithState
+from cmk.plugins.raritan.lib import (
+    DETECT_RARITAN,
+    elphase_from_readings,
+    STATE_MAPPING,
+    TYPE_MAPPING,
+)
+
+type Section = Mapping[str, ElPhase]
 
 
-def parse_raritan_pdu_inlet(string_table):
+def parse_raritan_pdu_inlet(string_table: Sequence[StringTable]) -> Section:
     precisions = {oid_end: int(decimals) for oid_end, decimals in string_table[0]}
-    parsed: dict[str, dict[str, tuple[str, tuple | None]]] = {}
-    for oid_end, availability, sensor_state, value in string_table[1]:
-        if availability == "1":
-            phase_id, sensor_type = oid_end.split(".")[2:4]
-            phase = "Phase " + phase_id
-            if sensor_type in raritan_map_type:
-                parsed.setdefault(phase, {})
-                key, _key_info = raritan_map_type[sensor_type]  # get key for elphase.include
-                value = float(value) / 10 ** precisions[oid_end]
-                state, state_info = raritan_map_state[sensor_state]
+    readings: dict[str, dict[str, ReadingWithState]] = {}
+    for oid_end, availability, sensor_state, value_str in string_table[1]:
+        if availability != "1":
+            continue
+        phase_id, sensor_type = oid_end.split(".")[2:4]
+        if sensor_type not in TYPE_MAPPING:
+            continue
+        key, _key_info = TYPE_MAPPING[sensor_type]
+        value = float(value_str) / 10 ** precisions[oid_end]
+        state, state_readable = STATE_MAPPING[sensor_state]
+        readings.setdefault(f"Phase {phase_id}", {})[key] = ReadingWithState(
+            value=value,
+            state=None if state is State.OK else ReadingState(state=state, text=state_readable),
+        )
+    return {
+        phase: elphase_from_readings(phase_readings) for phase, phase_readings in readings.items()
+    }
 
-                if state > 0:
-                    parsed[phase][key] = (value, (state, state_info))
-                else:
-                    parsed[phase][key] = (value, None)
-    return parsed
 
-
-def check_raritan_pdu_inlet(item, params, info):
+def check_raritan_pdu_inlet(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if not item.startswith("Phase"):
-        item = "Phase %s" % item
-    yield from check_elphase(item, params, info)
+        item = f"Phase {item}"
+    if (elphase := section.get(item)) is None:
+        return
+    yield from check_elphase(params, elphase)
 
 
-def discover_raritan_pdu_inlet(section):
-    yield from ((item, {}) for item in section)
+def discover_raritan_pdu_inlet(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["raritan_pdu_inlet"] = LegacyCheckDefinition(
+snmp_section_raritan_pdu_inlet = SNMPSection(
     name="raritan_pdu_inlet",
     detect=DETECT_RARITAN,
     fetch=[
@@ -59,8 +77,14 @@ check_info["raritan_pdu_inlet"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_raritan_pdu_inlet,
+)
+
+
+check_plugin_raritan_pdu_inlet = CheckPlugin(
+    name="raritan_pdu_inlet",
     service_name="Input %s",
     discovery_function=discover_raritan_pdu_inlet,
     check_function=check_raritan_pdu_inlet,
     check_ruleset_name="el_inphase",
+    check_default_parameters={},
 )

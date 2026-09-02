@@ -52,12 +52,12 @@ def register(page_registry: PageRegistry) -> None:
 _TOPICS: list[tuple[ConfigVariableGroup, IconNames, str]] = [
     (
         ConfigVariableGroupSiteManagement,
-        IconNames.configuration,
+        IconNames.sites,
         "Settings that control the behavior of this site",
     ),
     (
         ConfigVariableGroupDeveloperTools,
-        IconNames.development,
+        IconNames.developer_resources,
         "Settings for developing Checkmk",
     ),
 ]

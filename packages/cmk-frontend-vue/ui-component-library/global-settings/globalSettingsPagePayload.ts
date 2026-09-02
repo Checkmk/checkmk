@@ -13,7 +13,7 @@ export const globalSettingsPagePayload = {
   },
   topics: [
     {
-      icon: 'configuration',
+      icon: 'sites',
       headline: 'Site management',
       subline: 'Settings that control the behavior of this site',
       warning: null,
@@ -1127,7 +1127,7 @@ export const globalSettingsPagePayload = {
       ]
     },
     {
-      icon: 'development',
+      icon: 'developer-resources',
       headline: 'Developer tools',
       subline: 'Settings for developing Checkmk',
       warning:

@@ -40,7 +40,7 @@ const stepHeading = ref<ComponentPublicInstance | null>(null)
 /*
  * Persists the decision and only then leaves the page.
  */
-async function decide(selection: 'trial' | 'customer', target: string): Promise<void> {
+async function persist(request: Record<string, string>, target: string): Promise<void> {
   if (saving.value) {
     return
   }
@@ -48,7 +48,7 @@ async function decide(selection: 'trial' | 'customer', target: string): Promise<
   error.value = false
   try {
     await cmkAjax(props.save_url, {
-      selection,
+      ...request,
       _csrf_token: global_csrf_token
     })
     window.location.assign(target)
@@ -57,6 +57,21 @@ async function decide(selection: 'trial' | 'customer', target: string): Promise<
     error.value = true
     console.error(e)
   }
+}
+
+function startTrial(): Promise<void> {
+  return persist({ selection: 'trial' }, 'index.py')
+}
+
+function verifyNow(mode: 'online' | 'offline'): Promise<void> {
+  return persist(
+    { selection: 'customer' },
+    mode === 'online' ? props.verify_online_url : props.verify_offline_url
+  )
+}
+
+function verifyLater(): Promise<void> {
+  return persist({ selection: 'customer' }, 'index.py')
 }
 
 async function goToStep(next: 'mode' | 'verification'): Promise<void> {
@@ -118,7 +133,7 @@ async function goToStep(next: 'mode' | 'verification'): Promise<void> {
           :subtitle="_t('Try all features of Checkmk free for 30 days.')"
           :open-in-new-tab="false"
           :disabled="saving"
-          :callback="() => decide('trial', 'index.py')"
+          :callback="startTrial"
         />
         <CmkLinkCard
           icon-name="signature-key"
@@ -136,7 +151,7 @@ async function goToStep(next: 'mode' | 'verification'): Promise<void> {
           :subtitle="_t('Validate automatically against the Checkmk license server.')"
           :open-in-new-tab="false"
           :disabled="saving"
-          :callback="() => decide('customer', props.verify_online_url)"
+          :callback="() => verifyNow('online')"
         />
         <CmkLinkCard
           icon-name="upload"
@@ -144,7 +159,7 @@ async function goToStep(next: 'mode' | 'verification'): Promise<void> {
           :subtitle="_t('Upload a verification file exported from the customer portal.')"
           :open-in-new-tab="false"
           :disabled="saving"
-          :callback="() => decide('customer', props.verify_offline_url)"
+          :callback="() => verifyNow('offline')"
         />
       </template>
     </div>
@@ -158,7 +173,7 @@ async function goToStep(next: 'mode' | 'verification'): Promise<void> {
       >
         {{ _t('Back') }}
       </CmkButton>
-      <CmkButton variant="optional" :running="saving" @click="decide('customer', 'index.py')">
+      <CmkButton variant="optional" :running="saving" @click="verifyLater">
         {{ _t('Verify later') }}
       </CmkButton>
     </div>

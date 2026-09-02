@@ -1455,6 +1455,10 @@ msgstr ""
 "correspondiente. De lo contrario, pueden producirse colisiones de nombres si "
 "existen contenedores con el mismo nombre en más de un nodo Docker."
 
+#, python-format
+msgid "<b>%(client_name)s</b> is requesting access to this Checkmk site."
+msgstr ""
+
 msgid ""
 "<b>Beware:</b> Deleting this key means that you will not be able to create "
 "signatures with the key. Already deployed agents might not be able to update "
@@ -7789,6 +7793,9 @@ msgstr "Solicitar a"
 msgid "Apply to combined graphs"
 msgstr "Aplicar a los gráficos combinados"
 
+msgid "Approve"
+msgstr ""
+
 #, python-format
 msgid "Approximately finishes in %.1f seconds"
 msgstr "Aproximadamente termina en %.1f segundos"
@@ -8431,12 +8438,8 @@ msgid "Authorizations per DB security group"
 msgstr "Autorizaciones por grupo de seguridad de la BD"
 
 #, fuzzy
-msgid "Authorize"
-msgstr "Autor"
-
-#, fuzzy
-msgid "Authorize access"
-msgstr "Sitios autorizados"
+msgid "Authorize application"
+msgstr "Autorización"
 
 #, fuzzy
 msgid "Authorized user"
@@ -30032,6 +30035,10 @@ msgstr "Período de servicio para los hosts"
 msgid "Gracefully finishing"
 msgstr "Terminar con elegancia"
 
+#, python-format
+msgid "Granting access as <b>%(user)s</b> on site <b>%(site)s</b>."
+msgstr ""
+
 msgid "Grants modify access to all maps the user is contact for."
 msgstr ""
 "Concede acceso de modificación a todos los mapas para los que el usuario es "
@@ -39195,9 +39202,6 @@ msgstr ""
 "Se recomienda habilitar TLS lo antes posible ejecutando el comando "
 "`register` de la utilidad `cmk-agent-ctl` en el host monitorizado."
 
-msgid "It is requesting these permissions:"
-msgstr ""
-
 msgid "It is still in use by"
 msgstr "Sigue siendo utilizado por"
 
@@ -44469,10 +44473,6 @@ msgstr "Máximo número de solicitudes concurrentes de Checkmk"
 msgid "Maximum concurrent real-time checks"
 msgstr "Máximas comprobaciones simultáneas en tiempo real"
 
-#, fuzzy
-msgid "Maximum connections"
-msgstr "% máximo de conexiones"
-
 msgid "Maximum connections per second"
 msgstr "Máximo de conexiones por segundo"
 
@@ -44612,10 +44612,6 @@ msgstr "Número máximo de conexiones o receptores"
 #, fuzzy
 msgid "Maximum number of data streams"
 msgstr "Número máximo de hilos"
-
-#, fuzzy
-msgid "Maximum number of database connections to open."
-msgstr "Número máximo de conexiones o receptores"
 
 msgid "Maximum number of delivery attempts"
 msgstr "Número máximo de intentos de entrega"
@@ -54700,6 +54696,10 @@ msgstr "Problema de permisos: Ruta no escribible %s"
 
 msgid "Permissions"
 msgstr "Permisos"
+
+#, fuzzy
+msgid "Permissions requested"
+msgstr "Permiso denegado"
 
 msgid "Permit X11 forwarding"
 msgstr "Permitir el reenvío de X11"
@@ -71538,11 +71538,6 @@ msgid ""
 msgstr ""
 "Los títulos de agregación no son únicos. \"%s\" es creado por la agregación "
 "<b>%s</b> y <b>%s</b>"
-
-#, python-format
-msgid ""
-"The application \"%(client_id)s\" is requesting access to this Checkmk site."
-msgstr ""
 
 msgid "The aspect of the image is preserved."
 msgstr "El aspecto de la imagen se conserva."
@@ -103076,6 +103071,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Authorize"
+#~ msgstr "Autor"
+
+#, fuzzy
+#~ msgid "Authorize access"
+#~ msgstr "Sitios autorizados"
+
+#, fuzzy
+#~ msgid "Maximum connections"
+#~ msgstr "% máximo de conexiones"
+
+#, fuzzy
+#~ msgid "Maximum number of database connections to open."
+#~ msgstr "Número máximo de conexiones o receptores"
 
 #~ msgid "The site id must consist only of letters, digit and the underscore."
 #~ msgstr ""

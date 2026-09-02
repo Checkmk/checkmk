@@ -1475,6 +1475,10 @@ msgstr ""
 "contrar, pot apărea coliziuni de nume dacă există containere cu același nume "
 "pe mai multe noduri Docker."
 
+#, python-format
+msgid "<b>%(client_name)s</b> is requesting access to this Checkmk site."
+msgstr ""
+
 msgid ""
 "<b>Beware:</b> Deleting this key means that you will not be able to create "
 "signatures with the key. Already deployed agents might not be able to update "
@@ -7755,6 +7759,9 @@ msgstr "Aplicați la"
 msgid "Apply to combined graphs"
 msgstr "Se aplică la grafice combinate"
 
+msgid "Approve"
+msgstr ""
+
 #, python-format
 msgid "Approximately finishes in %.1f seconds"
 msgstr "Se termină aproximativ în %.1f secunde"
@@ -8387,12 +8394,8 @@ msgid "Authorizations per DB security group"
 msgstr "Autorizații per grup de securitate DB"
 
 #, fuzzy
-msgid "Authorize"
-msgstr "Autor"
-
-#, fuzzy
-msgid "Authorize access"
-msgstr "Site-uri autorizate"
+msgid "Authorize application"
+msgstr "Autorizare"
 
 #, fuzzy
 msgid "Authorized user"
@@ -29933,6 +29936,10 @@ msgstr "Perioada de grație înainte de începerea programatorului"
 msgid "Gracefully finishing"
 msgstr "Finalizarea cu grație"
 
+#, python-format
+msgid "Granting access as <b>%(user)s</b> on site <b>%(site)s</b>."
+msgstr ""
+
 msgid "Grants modify access to all maps the user is contact for."
 msgstr ""
 "Acordă acces de modificare la toate hărțile pentru care utilizatorul este "
@@ -39092,9 +39099,6 @@ msgstr ""
 "Se recomandă să activați TLS cât mai curând posibil prin rularea comenzii "
 "`register` a utilitarului `cmk-agent-ctl` pe gazda monitorizată."
 
-msgid "It is requesting these permissions:"
-msgstr ""
-
 msgid "It is still in use by"
 msgstr "Acesta este încă folosit de"
 
@@ -44298,10 +44302,6 @@ msgstr "Numărul maxim de recuperatori simultani Checkmk"
 msgid "Maximum concurrent real-time checks"
 msgstr "Număr maxim de verificări simultane în timp real"
 
-#, fuzzy
-msgid "Maximum connections"
-msgstr "% din numărul maxim de conexiuni"
-
 msgid "Maximum connections per second"
 msgstr "Conexiuni maxime pe secundă"
 
@@ -44440,10 +44440,6 @@ msgstr "Numărul maxim de conexiuni sau de ascultători"
 #, fuzzy
 msgid "Maximum number of data streams"
 msgstr "Numărul maxim de fire"
-
-#, fuzzy
-msgid "Maximum number of database connections to open."
-msgstr "Numărul maxim de conexiuni sau de ascultători"
 
 msgid "Maximum number of delivery attempts"
 msgstr "Numărul maxim de încercări de livrare"
@@ -54464,6 +54460,10 @@ msgstr "Problemă de permisiune: Calea de acces nu poate fi scrisă %s"
 
 msgid "Permissions"
 msgstr "Permisiuni"
+
+#, fuzzy
+msgid "Permissions requested"
+msgstr "Permisiune refuzată"
 
 msgid "Permit X11 forwarding"
 msgstr "Permiteți redirecționarea X11"
@@ -71234,11 +71234,6 @@ msgid ""
 msgstr ""
 "Titlurile agregării nu sunt unice. \"%s\" este creat prin agregarea <b>%s</"
 "b> și <b>%s</b>."
-
-#, python-format
-msgid ""
-"The application \"%(client_id)s\" is requesting access to this Checkmk site."
-msgstr ""
 
 msgid "The aspect of the image is preserved."
 msgstr "Aspectul imaginii este păstrat."
@@ -102731,6 +102726,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Authorize"
+#~ msgstr "Autor"
+
+#, fuzzy
+#~ msgid "Authorize access"
+#~ msgstr "Site-uri autorizate"
+
+#, fuzzy
+#~ msgid "Maximum connections"
+#~ msgstr "% din numărul maxim de conexiuni"
+
+#, fuzzy
+#~ msgid "Maximum number of database connections to open."
+#~ msgstr "Numărul maxim de conexiuni sau de ascultători"
 
 #~ msgid "The site id must consist only of letters, digit and the underscore."
 #~ msgstr ""

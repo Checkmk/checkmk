@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-09-01 07:14+0000\n"
+"PO-Revision-Date: 2026-09-02 13:39+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -1462,6 +1462,10 @@ msgstr ""
 "contêineres com o nome do nó do Docker correspondente. Caso contrário, podem "
 "ocorrer colisões de nomes se existirem contentores com o mesmo nome em mais "
 "do que um nó Docker."
+
+#, python-format
+msgid "<b>%(client_name)s</b> is requesting access to this Checkmk site."
+msgstr ""
 
 msgid ""
 "<b>Beware:</b> Deleting this key means that you will not be able to create "
@@ -7747,6 +7751,9 @@ msgstr "Aplicar para"
 msgid "Apply to combined graphs"
 msgstr "Aplicar em gráficos combinados"
 
+msgid "Approve"
+msgstr ""
+
 #, python-format
 msgid "Approximately finishes in %.1f seconds"
 msgstr "Acaba aproximadamente em %.1f segundos"
@@ -8390,12 +8397,8 @@ msgid "Authorizations per DB security group"
 msgstr "Autorizações por grupo de segurança do BD"
 
 #, fuzzy
-msgid "Authorize"
-msgstr "Autor"
-
-#, fuzzy
-msgid "Authorize access"
-msgstr "Sites autorizados"
+msgid "Authorize application"
+msgstr "Autorização"
 
 #, fuzzy
 msgid "Authorized user"
@@ -29839,6 +29842,10 @@ msgstr "Período de serviço para os anfitriões"
 msgid "Gracefully finishing"
 msgstr "Graciosamente terminada"
 
+#, python-format
+msgid "Granting access as <b>%(user)s</b> on site <b>%(site)s</b>."
+msgstr ""
+
 msgid "Grants modify access to all maps the user is contact for."
 msgstr ""
 "Concede acesso de modificação a todos os mapas para os quais o utilizador é "
@@ -38943,9 +38950,6 @@ msgstr ""
 "Recomenda-se habilitar o TLS o mais rápido possível, executando o comando "
 "`register` do utilitário `cmk-agent-ctl` no host monitorado."
 
-msgid "It is requesting these permissions:"
-msgstr ""
-
 msgid "It is still in use by"
 msgstr "Ainda está em uso por"
 
@@ -44175,10 +44179,6 @@ msgstr "Buscadores Checkmk máximos simultâneos"
 msgid "Maximum concurrent real-time checks"
 msgstr "Máximo de verificações simultâneas em tempo real"
 
-#, fuzzy
-msgid "Maximum connections"
-msgstr "% máxima de conexões"
-
 msgid "Maximum connections per second"
 msgstr "Máximo de conexões por segundo"
 
@@ -44318,10 +44318,6 @@ msgstr "Número máximo de ligações ou ouvintes"
 #, fuzzy
 msgid "Maximum number of data streams"
 msgstr "Número máximo de threads"
-
-#, fuzzy
-msgid "Maximum number of database connections to open."
-msgstr "Número máximo de ligações ou ouvintes"
 
 msgid "Maximum number of delivery attempts"
 msgstr "Número máximo de tentativas de entrega"
@@ -54311,6 +54307,10 @@ msgstr "Problema de permissão: Caminho não escrevível %s"
 
 msgid "Permissions"
 msgstr "Permissões"
+
+#, fuzzy
+msgid "Permissions requested"
+msgstr "Permissão negada"
 
 msgid "Permit X11 forwarding"
 msgstr "Permissão X11 de encaminhamento"
@@ -70990,11 +70990,6 @@ msgid ""
 msgstr ""
 "Os títulos de agregação não são únicos. \"%s\" é criado pela agregação "
 "<b>%s</b> e <b>%s</b>"
-
-#, python-format
-msgid ""
-"The application \"%(client_id)s\" is requesting access to this Checkmk site."
-msgstr ""
 
 msgid "The aspect of the image is preserved."
 msgstr "O aspecto da imagem é preservado."
@@ -102273,6 +102268,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Authorize"
+#~ msgstr "Autor"
+
+#, fuzzy
+#~ msgid "Authorize access"
+#~ msgstr "Sites autorizados"
+
+#, fuzzy
+#~ msgid "Maximum connections"
+#~ msgstr "% máxima de conexões"
+
+#, fuzzy
+#~ msgid "Maximum number of database connections to open."
+#~ msgstr "Número máximo de ligações ou ouvintes"
 
 #~ msgid "The site id must consist only of letters, digit and the underscore."
 #~ msgstr ""

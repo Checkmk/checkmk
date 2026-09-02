@@ -1463,6 +1463,10 @@ msgstr ""
 "naambotsingen optreden als containers met dezelfde naam op meer dan één "
 "Docker Node bestaan."
 
+#, python-format
+msgid "<b>%(client_name)s</b> is requesting access to this Checkmk site."
+msgstr ""
+
 msgid ""
 "<b>Beware:</b> Deleting this key means that you will not be able to create "
 "signatures with the key. Already deployed agents might not be able to update "
@@ -7739,6 +7743,9 @@ msgstr "Solliciteer naar"
 msgid "Apply to combined graphs"
 msgstr "Toepassen op gecombineerde grafieken"
 
+msgid "Approve"
+msgstr ""
+
 #, python-format
 msgid "Approximately finishes in %.1f seconds"
 msgstr "Ongeveer klaar in %.1f seconden"
@@ -8377,12 +8384,8 @@ msgid "Authorizations per DB security group"
 msgstr "Autorisaties per DB-beveiligingsgroep"
 
 #, fuzzy
-msgid "Authorize"
-msgstr "Auteur"
-
-#, fuzzy
-msgid "Authorize access"
-msgstr "Toegestane sites"
+msgid "Authorize application"
+msgstr "Machtiging"
 
 #, fuzzy
 msgid "Authorized user"
@@ -29824,6 +29827,10 @@ msgstr "Serviceperiode voor hosts"
 msgid "Gracefully finishing"
 msgstr "Sierlijk afmaken"
 
+#, python-format
+msgid "Granting access as <b>%(user)s</b> on site <b>%(site)s</b>."
+msgstr ""
+
 msgid "Grants modify access to all maps the user is contact for."
 msgstr ""
 "Geeft modificatietoegang tot alle kaarten waarvoor de gebruiker contact "
@@ -38934,9 +38941,6 @@ msgstr ""
 "`register` commando van de `cmk-agent-ctl` utility uit te voeren op de "
 "gemonitorde host."
 
-msgid "It is requesting these permissions:"
-msgstr ""
-
 msgid "It is still in use by"
 msgstr "Het is nog steeds in gebruik door"
 
@@ -44162,10 +44166,6 @@ msgstr "Maximaal aantal gelijktijdige Checkmk fetchers"
 msgid "Maximum concurrent real-time checks"
 msgstr "Maximaal aantal gelijktijdige Real-Time controles"
 
-#, fuzzy
-msgid "Maximum connections"
-msgstr "% van maximum connecties"
-
 msgid "Maximum connections per second"
 msgstr "Maximale verbindingen per seconde"
 
@@ -44305,10 +44305,6 @@ msgstr "Maximum aantal verbindingen of luisteraars"
 #, fuzzy
 msgid "Maximum number of data streams"
 msgstr "Maximaal aantal threads"
-
-#, fuzzy
-msgid "Maximum number of database connections to open."
-msgstr "Maximum aantal verbindingen of luisteraars"
 
 msgid "Maximum number of delivery attempts"
 msgstr "Maximum aantal leveringspogingen"
@@ -54321,6 +54317,10 @@ msgstr "Toestemmingsprobleem: pad niet beschrijfbaar %s"
 
 msgid "Permissions"
 msgstr "Toestemmingen"
+
+#, fuzzy
+msgid "Permissions requested"
+msgstr "Toestemming geweigerd"
 
 msgid "Permit X11 forwarding"
 msgstr "X11 doorsturen toestaan"
@@ -70980,11 +70980,6 @@ msgid ""
 msgstr ""
 "De aggregatietitels zijn niet uniek. \"%s\" is gemaakt door aggregatie "
 "<b>%s</b> en <b>%s</b>"
-
-#, python-format
-msgid ""
-"The application \"%(client_id)s\" is requesting access to this Checkmk site."
-msgstr ""
 
 msgid "The aspect of the image is preserved."
 msgstr "Het aspect van het beeld blijft behouden."
@@ -102356,6 +102351,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Authorize"
+#~ msgstr "Auteur"
+
+#, fuzzy
+#~ msgid "Authorize access"
+#~ msgstr "Toegestane sites"
+
+#, fuzzy
+#~ msgid "Maximum connections"
+#~ msgstr "% van maximum connecties"
+
+#, fuzzy
+#~ msgid "Maximum number of database connections to open."
+#~ msgstr "Maximum aantal verbindingen of luisteraars"
 
 #~ msgid "The site id must consist only of letters, digit and the underscore."
 #~ msgstr ""

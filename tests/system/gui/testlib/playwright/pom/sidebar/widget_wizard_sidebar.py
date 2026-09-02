@@ -5,7 +5,7 @@
 
 
 from enum import StrEnum
-from typing import Literal, overload, override
+from typing import override
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -34,79 +34,30 @@ class AddWidgetSidebar(SidebarHelper):
         """Locator property for the main area of the sidebar."""
         return self._iframe_locator.get_by_role("dialog", name="Add widget")
 
-    def _get_button_to_add_widget_by_type(self, widget_type: WidgetType) -> Locator:
+    def _get_button_to_add_widget_by_type(self, wizard_class: type[BaseWidgetWizard]) -> Locator:
         """Get the button to add a new widget.
 
         Args:
-            widget_type: the widget type of the button.
+            wizard_class: the wizard configuring the widget type of the button.
 
         Returns:
             The locator of the button to add the given widget type.
         """
-        return self.locator().get_by_role("button", name=widget_type)
+        return self.locator().get_by_role("button", name=wizard_class.widget_type_name)
 
-    @overload
-    def open_widget_wizard(
-        self, widget_type: Literal[WidgetType.METRICS_AND_GRAPHS]
-    ) -> MetricsAndGraphsWidgetWizard: ...
-
-    @overload
-    def open_widget_wizard(self, widget_type: WidgetType) -> BaseWidgetWizard: ...
-
-    def open_widget_wizard(self, widget_type: WidgetType) -> BaseWidgetWizard:
+    def open_widget_wizard[W: BaseWidgetWizard](self, wizard_class: type[W]) -> W:
         """Open the wizard to add a new widget.
 
         Args:
-            widget_type: the type of the widget that will be added.
+            wizard_class: the wizard configuring the type of the widget that will be added.
 
         Returns:
-            The `BaseWidgetWizard` object of the open sidebar.
+            The wizard object of the open sidebar.
         """
-        self._get_button_to_add_widget_by_type(widget_type).click()
-        wizard = widget_type.get_wizard(WidgetWizardMode.ADD_WIDGET, self.page)
+        self._get_button_to_add_widget_by_type(wizard_class).click()
+        wizard = wizard_class(WidgetWizardMode.ADD_WIDGET, self.page)
         wizard.expect_to_be_visible()
         return wizard
-
-
-class WidgetType(StrEnum):
-    """Enumeration that defines the types of the widgets that can be added to a custom dashboard."""
-
-    METRICS_AND_GRAPHS = "Metrics & graphs"
-    ALERTS_AND_NOTIFICATIONS = "Alerts & notifications"
-
-    @overload
-    def get_wizard(  # type: ignore[misc] # https://github.com/python/mypy/issues/15456  # TODO: SUP
-        self: Literal[WidgetType.METRICS_AND_GRAPHS], wizard_mode: WidgetWizardMode, page: Page
-    ) -> MetricsAndGraphsWidgetWizard: ...
-
-    @overload
-    def get_wizard(  # type: ignore[misc] # https://github.com/python/mypy/issues/15456
-        self: Literal[WidgetType.ALERTS_AND_NOTIFICATIONS],
-        wizard_mode: WidgetWizardMode,
-        page: Page,
-    ) -> AlertsAndNotificationsWidgetWizard: ...
-
-    @overload
-    def get_wizard(
-        self: WidgetType, wizard_mode: WidgetWizardMode, page: Page
-    ) -> BaseWidgetWizard: ...
-
-    def get_wizard(self: WidgetType, wizard_mode: WidgetWizardMode, page: Page) -> BaseWidgetWizard:
-        """Get the `BaseWidgetWizard` instance corresponding to the widget type.
-
-        Args:
-            page: the base page to initialize the `BaseWidgetWizard` object.
-
-        Returns:
-            The `BaseWidgetWizard` instance corresponding to the widget type
-        """
-        match self:
-            case WidgetType.METRICS_AND_GRAPHS:
-                return MetricsAndGraphsWidgetWizard(wizard_mode, page)
-            case WidgetType.ALERTS_AND_NOTIFICATIONS:
-                return AlertsAndNotificationsWidgetWizard(wizard_mode, page)
-            case _:
-                raise NotImplementedError(f"Widget wizard for '{self}' is not implemented.")
 
 
 class ServiceMetricDropdownOptions(DropdownOptions):
@@ -149,7 +100,11 @@ class WidgetWizardMode(StrEnum):
 
 
 class BaseWidgetWizard(SidebarHelper):
-    """Base class for widget wizard sidebar helpers"""
+    """Base class for widget wizard sidebar helpers."""
+
+    # The name the UI gives the widget type when offering it, which is not necessarily the
+    # heading the wizard itself carries.
+    widget_type_name: str
 
     def __init__(
         self, wizard_mode: WidgetWizardMode, page: Page, validate_sidebar: bool = True
@@ -175,6 +130,7 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
     To navigate: '{within any customized dashboard} > Add widget > Metrics & graphs'.
     """
 
+    widget_type_name = "Metrics & graphs"
     sidebar_title = "Metrics & graphs"
 
     @property
@@ -415,6 +371,7 @@ class AlertsAndNotificationsWidgetWizard(BaseWidgetWizard):
     To navigate: '{within any customized dashboard} > Add widget > Alerts & notifications'.
     """
 
+    widget_type_name = "Alerts & notifications"
     # The heading names the widget in the singular, unlike the tile that opens the wizard.
     sidebar_title = "Alert & Notification"
 

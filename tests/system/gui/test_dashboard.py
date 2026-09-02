@@ -30,11 +30,12 @@ from tests.system.gui.testlib.playwright.pom.sidebar.create_dashboard_sidebar im
     CreateDashboardSidebar,
 )
 from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
+    AlertsAndNotificationsWidgetWizard,
     AlertsVisualizationType,
+    MetricsAndGraphsWidgetWizard,
     ServiceMetricDropdownOptions,
     SiteFilterDropdownOptions,
     VisualizationType,
-    WidgetType,
 )
 from tests.testlib.common.utils2 import is_cleanup_enabled
 from tests.testlib.site import Site
@@ -216,7 +217,7 @@ def test_create_new_dashboard(dashboard_page: MainDashboard, linux_hosts: list[s
     widget_title = f"Top 10: {widget_metric}"
 
     try:
-        widget_wizard = custom_dashboard.open_add_widget_sidebar(WidgetType.METRICS_AND_GRAPHS)
+        widget_wizard = custom_dashboard.open_add_widget_sidebar(MetricsAndGraphsWidgetWizard)
         widget_wizard.select_service_metric(ServiceMetricDropdownOptions(widget_metric))
         widget_wizard.select_visualization_type(VisualizationType.TOP_LIST)
         widget_wizard.add_and_place_widget_button.click()
@@ -281,7 +282,7 @@ def test_top_list_widgets_settings(
     """
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_edit_widget_sidebar(
-        WidgetType.METRICS_AND_GRAPHS, widget_title
+        MetricsAndGraphsWidgetWizard, widget_title
     )
 
     expect(
@@ -333,7 +334,7 @@ def test_widget_filters(
 
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_edit_widget_sidebar(
-        WidgetType.METRICS_AND_GRAPHS, widget_title
+        MetricsAndGraphsWidgetWizard, widget_title
     )
 
     widget_wizard.add_filter_to_host_selection(site_filter, "Site")
@@ -444,7 +445,7 @@ def test_add_top_list_widget(
 
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_add_widget_sidebar(
-        WidgetType.METRICS_AND_GRAPHS
+        MetricsAndGraphsWidgetWizard
     )
 
     widget_wizard.select_service_metric(metric)
@@ -632,7 +633,7 @@ def test_graph_widget_renders_through_the_engine(
 
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_add_widget_sidebar(
-        WidgetType.METRICS_AND_GRAPHS
+        MetricsAndGraphsWidgetWizard
     )
 
     widget_wizard.select_single_host(linux_hosts[0])
@@ -664,7 +665,7 @@ def test_problem_percentage_widget_renders_through_the_engine(
     """
     cloned_linux_hosts_dashboard.enter_edit_widgets_mode()
     widget_wizard = cloned_linux_hosts_dashboard.open_add_widget_sidebar(
-        WidgetType.ALERTS_AND_NOTIFICATIONS
+        AlertsAndNotificationsWidgetWizard
     )
     widget_wizard.select_visualization_type(AlertsVisualizationType.PERCENTAGE_OF_SERVICE_PROBLEMS)
     widget_wizard.add_and_place_widget_button.click()

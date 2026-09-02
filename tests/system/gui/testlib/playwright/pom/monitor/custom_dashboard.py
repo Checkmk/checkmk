@@ -5,7 +5,7 @@
 
 import logging
 import re
-from typing import Literal, overload, override
+from typing import override
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -13,10 +13,7 @@ from tests.system.gui.testlib.playwright.pom.customize.edit_dashboard import Edi
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import BaseDashboard
 from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
     AddWidgetSidebar,
-    AlertsAndNotificationsWidgetWizard,
     BaseWidgetWizard,
-    MetricsAndGraphsWidgetWizard,
-    WidgetType,
     WidgetWizardMode,
 )
 
@@ -57,32 +54,20 @@ class CustomDashboard(BaseDashboard):
             self.dashboard_container, message=f"Dashboard '{self.page_title}' is not loaded"
         ).to_be_visible()
 
-    @overload
-    def open_add_widget_sidebar(
-        self, widget_type: Literal[WidgetType.METRICS_AND_GRAPHS]
-    ) -> MetricsAndGraphsWidgetWizard: ...
-
-    @overload
-    def open_add_widget_sidebar(
-        self, widget_type: Literal[WidgetType.ALERTS_AND_NOTIFICATIONS]
-    ) -> AlertsAndNotificationsWidgetWizard: ...
-
-    @overload
-    def open_add_widget_sidebar(self, widget_type: WidgetType) -> BaseWidgetWizard: ...
-
-    def open_add_widget_sidebar(self, widget_type: WidgetType) -> BaseWidgetWizard:
+    def open_add_widget_sidebar[W: BaseWidgetWizard](self, wizard_class: type[W]) -> W:
         """Open the sidebar to add a new widget.
 
         Args:
-            widget_type: the widget type for which the sidebar will be open.
+            wizard_class: the wizard configuring the widget type for which the sidebar
+                will be open.
 
         Returns:
-            The `BaseWidgetWizard` object of the open sidebar.
+            The wizard object of the open sidebar.
         """
         self.add_widget_button.click()
         add_widget_sidebar = AddWidgetSidebar(self.page)
         add_widget_sidebar.expect_to_be_visible()
-        return add_widget_sidebar.open_widget_wizard(widget_type)
+        return add_widget_sidebar.open_widget_wizard(wizard_class)
 
     @property
     def edit_widgets_button(self) -> Locator:
@@ -114,27 +99,18 @@ class CustomDashboard(BaseDashboard):
             self.save_button.click()
         assert saved.value.ok, f"Saving the dashboard answered HTTP {saved.value.status}"
 
-    @overload
-    def open_edit_widget_sidebar(
-        self, widget_type: Literal[WidgetType.METRICS_AND_GRAPHS], widget_title: str
-    ) -> MetricsAndGraphsWidgetWizard: ...
-
-    @overload
-    def open_edit_widget_sidebar(
-        self, widget_type: WidgetType, widget_title: str
-    ) -> BaseWidgetWizard: ...
-
-    def open_edit_widget_sidebar(
-        self, widget_type: WidgetType, widget_title: str
-    ) -> BaseWidgetWizard:
+    def open_edit_widget_sidebar[W: BaseWidgetWizard](
+        self, wizard_class: type[W], widget_title: str
+    ) -> W:
         """Open the sidebar to edit a widget.
 
         Args:
-            widget_type: the widget type for which the sidebar will be open.
+            wizard_class: the wizard configuring the widget type for which the sidebar
+                will be open.
             widget_title: the title of the widget to open the edit sidebar.
 
         Returns:
-            The `BaseWidgetWizard` object of the open sidebar.
+            The wizard object of the open sidebar.
         """
         self.edit_widget_properties_button(widget_title).click()
-        return widget_type.get_wizard(WidgetWizardMode.EDIT_WIDGET, self.page)
+        return wizard_class(WidgetWizardMode.EDIT_WIDGET, self.page)

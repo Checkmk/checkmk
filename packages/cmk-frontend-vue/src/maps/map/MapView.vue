@@ -14,9 +14,8 @@ lifecycle is keyed on the name (``useMapLifecycle``) and not on mount.
 This is also where the map's own design values are declared, on the view root,
 so every painter below inherits one set of them.
 
-Only static maps are drawn so far. The other map types, the object slide-in,
-the monitoring commands and the editing UI arrive in the commits that follow
-this one.
+Only static maps are drawn so far. The other map types and the editing UI
+arrive in the commits that follow this one.
 -->
 <script setup lang="ts">
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
@@ -24,6 +23,12 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 
+import AckModal from '@/maps/map/commands/AckModal.vue'
+import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
+import CommentModal from '@/maps/map/commands/CommentModal.vue'
+import DowntimeModal from '@/maps/map/commands/DowntimeModal.vue'
+import RemoveDowntimeModal from '@/maps/map/commands/RemoveDowntimeModal.vue'
+import { useObjectActions } from '@/maps/map/commands/useObjectActions'
 import MapKioskExit from '@/maps/map/components/MapKioskExit.vue'
 import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
 import MapViewTopbar from '@/maps/map/components/MapViewTopbar.vue'
@@ -34,11 +39,14 @@ import { provideMapPalette } from '@/maps/map/composables/useMapPalette'
 import { useMapRotation } from '@/maps/map/composables/useMapRotation'
 import { useMapViewState } from '@/maps/map/composables/useMapViewState'
 import { usePreviewBridge } from '@/maps/map/composables/usePreviewBridge'
+import DetailDrawer from '@/maps/map/detail/DetailDrawer.vue'
 import StaticMapView from '@/maps/map/static/StaticMapView.vue'
 import { useAuth, useConnections, useMaps, useNavigation, useStates } from '@/maps/services/context'
-import type { MapElement } from '@/maps/types/api'
+import type { BulkAckTarget, MapElement, ObjectState } from '@/maps/types/api'
 import { resolveCheckmkUrl } from '@/maps/utils/deploymentBase'
+import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkUrl, openUrl } from '@/maps/utils/mapNavigation'
+import { newMapElement } from '@/maps/utils/model'
 
 const { _t } = usei18n()
 const nav = useNavigation()
@@ -99,15 +107,171 @@ const { rotationCountdown, rotationPaused, stopRotation, scheduleRotation, toggl
 const root = useTemplateRef<HTMLElement>('root')
 provideMapPalette(root)
 
-const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
-  { title: _t('Maps'), link: nav.href({ view: 'home' }) },
-  { title: mapConfig.value?.alias || mapName.value, link: null }
-])
+// ---- The object slide-in, and the commands sent from it ----
+
+const detailDrawerObject = ref<MapElement | null>(null)
+// Drilldown targets (BI aggregation leaves) never enter the SSE states store,
+// so the drawer has no live state to key off their synthesized ids. Capture
+// the clicked node's state here so the drawer still shows status/output/age.
+const drawerSeedState = ref<ObjectState | null>(null)
+const detailDrawerState = computed(() => {
+  const obj = detailDrawerObject.value
+  if (!obj) {
+    return undefined
+  }
+  const live = statesStore.states.value[obj.id]
+  if (live) {
+    return live
+  }
+  if (drawerSeedState.value?.object_id === obj.id) {
+    return drawerSeedState.value
+  }
+  return undefined
+})
+
+const detailActions = useObjectActions(() => checkmkUrl.value)
+
+function openDetail(obj: MapElement) {
+  // A line is a visual relation between two endpoints, but in monitoring
+  // terms it represents either the host or the host's service (whichever
+  // is configured). Drawer logic keys off `type` to fetch state and
+  // render the right tabs, so expose the line as its underlying
+  // host/service for the drawer's purposes.
+  if (obj.type === 'line' && obj.host_name) {
+    detailDrawerObject.value = {
+      ...obj,
+      type: obj.service_description ? 'service' : 'host'
+    }
+  } else {
+    detailDrawerObject.value = obj
+  }
+}
+
+function closeDetail() {
+  detailDrawerObject.value = null
+  drawerSeedState.value = null
+}
+
+// All host MapElements on this map, keyed by hostname so the Drawer's
+// topology section can decide whether a parent/child entry can highlight on
+// the map (vs. just linking to Checkmk).
+const selectableHostNames = computed(() =>
+  (mapConfig.value?.objects ?? [])
+    .filter((o) => o.type === 'host' && o.host_name)
+    .map((o) => o.host_name as string)
+)
+
+function onSelectHost(
+  hostName: string,
+  serviceDescription?: string | null,
+  seed?: Omit<ObjectState, 'object_id'> | null
+) {
+  // Prefer a real map-object so toolbar actions (ack/downtime) bind to the
+  // operator's curated entry. Fall back to a synthesised object so members
+  // discovered via the hostgroup drawer (often not placed on the map)
+  // still open in the same slidein -- the parent state cycle lifts onto the
+  // standard host/service-detail-fetch watch automatically.
+  const objs = mapConfig.value?.objects ?? []
+  const real = objs.find((o) => {
+    if (o.type === 'service') {
+      return (
+        o.host_name === hostName &&
+        (serviceDescription ? o.service_description === serviceDescription : true)
+      )
+    }
+    return o.type === 'host' && o.host_name === hostName
+  })
+  if (real) {
+    detailDrawerObject.value = real
+    return
+  }
+  const transientId = serviceDescription
+    ? `transient:${hostName};${serviceDescription}`
+    : `transient:${hostName}`
+  // Transient objects have no SSE state entry; a caller-provided seed (e.g.
+  // a BI leaf's node state) keeps the drawer's status pane populated.
+  if (seed) {
+    drawerSeedState.value = { ...seed, object_id: transientId }
+  }
+  detailDrawerObject.value = newMapElement({
+    id: transientId,
+    type: serviceDescription ? 'service' : 'host',
+    host_name: hostName,
+    ...(serviceDescription ? { service_description: serviceDescription } : {}),
+    z: 0
+  })
+}
+
+function onDetailAck() {
+  detailActions.handlers.acknowledge(detailDrawerObject.value)
+}
+function onDetailRemoveAck() {
+  void detailActions.handlers.removeAck(detailDrawerObject.value)
+}
+function onDetailDowntime() {
+  detailActions.handlers.scheduleDowntime(detailDrawerObject.value)
+}
+function onDetailRemoveDowntime() {
+  void detailActions.handlers.removeDowntime(detailDrawerObject.value)
+}
+function onDetailForceCheck() {
+  void detailActions.handlers.forceCheck(detailDrawerObject.value)
+}
+function onDetailAddComment() {
+  detailActions.handlers.addComment(detailDrawerObject.value)
+}
+function onDetailToggleNotifications(enable: boolean) {
+  void detailActions.handlers.toggleNotifications(detailDrawerObject.value, enable)
+}
+
+/**
+ * Bulk-acknowledge contributing leaves of a BI aggregation. Opens the
+ * BulkAckModal -- that previews the targets, lets the operator review/edit
+ * the comment (pre-filled with "Bulk-ack: <aggregation_id>" so audit logs
+ * trace back to the originating aggregation), and runs the per-leaf ack
+ * loop with progress feedback. Firing N acks straight off a click would be
+ * risky for a misclick, since they have no atomic undo.
+ */
+function onDetailBulkAcknowledge(targets: BulkAckTarget[]) {
+  if (!checkmkUrl.value || !targets.length) {
+    return
+  }
+  const obj = detailDrawerObject.value
+  const aggregationId = obj?.aggregation_id ?? obj?.id ?? 'unknown'
+  bulkAckModal.value = { aggregationId, targets }
+}
+
+const bulkAckModal = ref<{
+  aggregationId: string
+  targets: BulkAckTarget[]
+} | null>(null)
+
+// A bulk ack's effect shows up in monitoring a moment later, so closing it
+// asks the state stream for a fresh picture -- the same thing the
+// single-object modals do via ``useObjectActions``.
+function closeBulkAckModal() {
+  bulkAckModal.value = null
+  statesStore.refreshAfterCommand()
+}
+
+// The map itself stays the breadcrumb's last level until the slide-in is
+// open: then the map name links back to the bare map.
+const breadcrumbItems = computed<BreadcrumbItem[]>(() => {
+  const mapTitle = mapConfig.value?.alias || mapName.value
+  const items: BreadcrumbItem[] = [{ title: _t('Maps'), link: nav.href({ view: 'home' }) }]
+  if (detailDrawerObject.value) {
+    items.push({ title: mapTitle, link: nav.href({ view: 'map', name: mapName.value }) })
+    items.push({ title: objectDisplayName(detailDrawerObject.value, _t), link: null })
+  } else {
+    items.push({ title: mapTitle, link: null })
+  }
+  return items
+})
 
 /**
  * What a click on an object leads to. The object's own link wins, a map object
  * navigates, Ctrl+Click leaves for Checkmk -- and a plain click opens the
- * object's slide-in, which lands with the commit that adds it.
+ * object's slide-in.
  */
 function onObjectClick(obj: MapElement, event?: MouseEvent) {
   if (editor.editMode.value) {
@@ -131,6 +295,31 @@ function onObjectClick(obj: MapElement, event?: MouseEvent) {
     if (cmkUrl) {
       openUrl(cmkUrl, '_blank')
     }
+    return
+  }
+  // Decorative objects without a monitored target have nothing to show in
+  // the drawer. Click is a no-op rather than an empty drawer.
+  if (!objectHasMonitoringTarget(obj)) {
+    return
+  }
+  openDetail(obj)
+}
+
+function objectHasMonitoringTarget(obj: MapElement): boolean {
+  switch (obj.type) {
+    case 'host':
+    case 'service':
+    case 'line':
+      return Boolean(obj.host_name)
+    case 'hostgroup':
+    case 'servicegroup':
+      return Boolean(obj.group_name)
+    case 'dyngroup':
+      return Boolean(obj.object_filter)
+    case 'aggregation':
+      return Boolean(obj.aggregation_id)
+    default:
+      return false
   }
 }
 
@@ -163,6 +352,7 @@ onMounted(() => {
       :editing="editor.editMode.value"
       :rotation-seconds="mapConfig && mapConfig.rotation_interval > 0 ? rotationCountdown : 0"
       :rotation-paused="rotationPaused"
+      :dimmed="!!detailDrawerObject"
       @toggle-rotation="toggleRotationPause"
       @open-full-screen="openKioskInNewTab"
     >
@@ -200,7 +390,60 @@ onMounted(() => {
         :checkmk-url="checkmkUrl"
         @object-click="onObjectClick"
       />
+
+      <DetailDrawer
+        :object="detailDrawerObject"
+        :state="detailDrawerState"
+        :checkmk-url="checkmkUrl"
+        :connection-id="detailDrawerObject?.connection_id ?? mapConfig?.connection_id ?? null"
+        :selectable-hosts="selectableHostNames"
+        :unattended="isKiosk || isPreview"
+        @close="closeDetail"
+        @acknowledge="onDetailAck"
+        @remove-ack="onDetailRemoveAck"
+        @schedule-downtime="onDetailDowntime"
+        @remove-downtime="onDetailRemoveDowntime"
+        @force-check="onDetailForceCheck"
+        @add-comment="onDetailAddComment"
+        @enable-notifications="onDetailToggleNotifications(true)"
+        @disable-notifications="onDetailToggleNotifications(false)"
+        @select-host="onSelectHost"
+        @bulk-acknowledge="onDetailBulkAcknowledge"
+      />
     </div>
+
+    <AckModal
+      v-if="detailActions.ackModalObject.value && checkmkUrl"
+      :object="detailActions.ackModalObject.value"
+      :checkmk-url="checkmkUrl"
+      @close="detailActions.closeAckModal"
+    />
+    <DowntimeModal
+      v-if="detailActions.downtimeModalObject.value && checkmkUrl"
+      :object="detailActions.downtimeModalObject.value"
+      :checkmk-url="checkmkUrl"
+      @close="detailActions.closeDowntimeModal"
+    />
+    <CommentModal
+      v-if="detailActions.commentModalObject.value && checkmkUrl"
+      :object="detailActions.commentModalObject.value"
+      :checkmk-url="checkmkUrl"
+      @close="detailActions.commentModalObject.value = null"
+    />
+    <RemoveDowntimeModal
+      v-if="detailActions.removeDowntimeModal.visible && checkmkUrl"
+      :downtimes="detailActions.removeDowntimeModal.downtimes"
+      :checkmk-url="checkmkUrl"
+      :object-name="detailActions.removeDowntimeModal.objectName"
+      @close="detailActions.closeRemoveDowntimeModal"
+    />
+    <BulkAckModal
+      v-if="bulkAckModal && checkmkUrl"
+      :aggregation-id="bulkAckModal.aggregationId"
+      :targets="bulkAckModal.targets"
+      :checkmk-url="checkmkUrl"
+      @close="closeBulkAckModal"
+    />
   </div>
 </template>
 

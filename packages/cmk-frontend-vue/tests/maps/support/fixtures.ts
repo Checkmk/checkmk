@@ -18,6 +18,7 @@ import type {
   MapConfig,
   MapElement,
   MapRead,
+  ObjectDetails,
   ObjectState,
   TopologyNode
 } from '@/maps/types/api'
@@ -99,6 +100,31 @@ export function aState(
   overrides: Partial<ObjectState> & Pick<ObjectState, 'object_id' | 'type' | 'state'>
 ): ObjectState {
   return newObjectState(overrides)
+}
+
+export function aDetails(
+  overrides: Partial<ObjectDetails> & Pick<ObjectDetails, 'type' | 'host_name'>
+): ObjectDetails {
+  return {
+    long_output: '',
+    check_command: '',
+    latency: null,
+    execution_time: null,
+    is_flapping: false,
+    in_notification_period: true,
+    last_time_ok: null,
+    notification_period: '',
+    check_interval: null,
+    parents: [],
+    children: [],
+    host_groups: [],
+    service_groups: [],
+    contact_groups: [],
+    labels: {},
+    comments: [],
+    downtimes: [],
+    ...overrides
+  }
 }
 
 export function aFolderNode(

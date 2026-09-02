@@ -35,6 +35,7 @@ const stubs = {
   MapCanvas: { template: `<div data-testid="renderer-static" />` },
   MapSearch: true,
   ProblemsOnlyToggle: true,
+  DetailDrawer: true,
   MapsLink: true,
   CmkLoading: true
 }

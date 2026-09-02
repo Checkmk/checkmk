@@ -55,7 +55,8 @@ const patternMap = {
   qs: 'src/quick-setup/',
   tmcq: 'src/telemetry-metrics-custom-query/',
   mm: 'src/main-menu/',
-  mh: 'src/mode-host/'
+  mh: 'src/mode-host/',
+  maps: 'src/maps/'
 }
 
 function normalize(relativePath) {

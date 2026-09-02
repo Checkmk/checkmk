@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.raritan_px_outlets import (
+from cmk.plugins.raritan.agent_based.raritan_px_outlets import (
     check_raritan_px_outlets,
     discover_raritan_px_outlets,
     parse_raritan_px_outlets,

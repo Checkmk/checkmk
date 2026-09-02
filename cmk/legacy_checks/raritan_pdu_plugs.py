@@ -4,16 +4,34 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Generator, Mapping
+from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import ReadOnly, TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith, StringTable
-from cmk.legacy_includes.raritan import raritan_pdu_plug_state
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    State,
+    StringTable,
+)
+from cmk.plugins.raritan.lib import PLUG_STATE_MAPPING
 
-check_info = {}
 
-Section = Mapping[str, Mapping[str, str]]
+@dataclass(frozen=True, kw_only=True)
+class Plug:
+    state: str
+    outlet_name: str
+
+
+type Section = Mapping[str, Plug]
 
 
 class CombinedParams(TypedDict, total=False):
@@ -22,42 +40,37 @@ class CombinedParams(TypedDict, total=False):
 
 
 def parse_raritan_pdu_plugs(string_table: StringTable) -> Section:
-    parsed = {}
-
-    for outlet_label, outlet_name, outlet_state in string_table:
-        state = raritan_pdu_plug_state.get(outlet_state, "unknown")
-        parsed[outlet_label] = {"state": state, "outlet_name": outlet_name}
-
-    return parsed
-
-
-def discover_raritan_pdu_plugs(parsed: Section) -> Generator[tuple[str, dict[str, str]]]:
-    for key, value in parsed.items():
-        if (state := value["state"]) != "unknown":
-            yield key, {"discovered_state": state}
+    return {
+        outlet_label: Plug(
+            state=PLUG_STATE_MAPPING.get(outlet_state, "unknown"),
+            outlet_name=outlet_name,
+        )
+        for outlet_label, outlet_name, outlet_state in string_table
+    }
 
 
-def check_raritan_pdu_plugs(
-    item: str,
-    params: CombinedParams,
-    parsed: Section,
-) -> Generator[tuple[int, str]]:
-    if not (data := parsed.get(item)):
+def discover_raritan_pdu_plugs(section: Section) -> DiscoveryResult:
+    for key, plug in section.items():
+        if plug.state != "unknown":
+            yield Service(item=key, parameters={"discovered_state": plug.state})
+
+
+def check_raritan_pdu_plugs(item: str, params: CombinedParams, section: Section) -> CheckResult:
+    if (plug := section.get(item)) is None:
         return
 
-    if outlet_name := data.get("outlet_name"):
-        yield 0, outlet_name
+    if plug.outlet_name:
+        yield Result(state=State.OK, summary=plug.outlet_name)
 
-    state = data["state"]
     expected_state = params["required_state"] or params["discovered_state"]
 
-    if state != expected_state:
-        yield (2, f"Status: {state} (expected: {expected_state})")
+    if plug.state != expected_state:
+        yield Result(state=State.CRIT, summary=f"Status: {plug.state} (expected: {expected_state})")
     else:
-        yield 0, "Status: %s" % state
+        yield Result(state=State.OK, summary=f"Status: {plug.state}")
 
 
-check_info["raritan_pdu_plugs"] = LegacyCheckDefinition(
+snmp_section_raritan_pdu_plugs = SimpleSNMPSection(
     name="raritan_pdu_plugs",
     detect=all_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.6"),
@@ -71,6 +84,11 @@ check_info["raritan_pdu_plugs"] = LegacyCheckDefinition(
         oids=["3.5.3.1.2", "3.5.3.1.3", "4.1.2.1.3"],
     ),
     parse_function=parse_raritan_pdu_plugs,
+)
+
+
+check_plugin_raritan_pdu_plugs = CheckPlugin(
+    name="raritan_pdu_plugs",
     service_name="Plug %s",
     discovery_function=discover_raritan_pdu_plugs,
     check_function=check_raritan_pdu_plugs,

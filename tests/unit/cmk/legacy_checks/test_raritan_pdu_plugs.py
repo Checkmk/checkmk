@@ -7,21 +7,23 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.legacy_checks.raritan_pdu_plugs import (
     check_raritan_pdu_plugs,
     CombinedParams,
     discover_raritan_pdu_plugs,
     parse_raritan_pdu_plugs,
+    Plug,
 )
 
 _SECTION = {
-    "1": {"outlet_name": "outlet1", "state": "on"},
-    "2": {"outlet_name": "outlet2", "state": "off"},
-    "3": {"outlet_name": "", "state": "unknown"},
-    "4": {"outlet_name": "", "state": "on"},
-    "5": {"outlet_name": "", "state": "on"},
-    "6": {"outlet_name": "", "state": "on"},
-    "7": {"outlet_name": "broken", "state": "unknown"},
+    "1": Plug(outlet_name="outlet1", state="on"),
+    "2": Plug(outlet_name="outlet2", state="off"),
+    "3": Plug(outlet_name="", state="unknown"),
+    "4": Plug(outlet_name="", state="on"),
+    "5": Plug(outlet_name="", state="on"),
+    "6": Plug(outlet_name="", state="on"),
+    "7": Plug(outlet_name="broken", state="unknown"),
 }
 
 
@@ -44,26 +46,11 @@ def test_parse_raritan_pdu_plugs() -> None:
 
 def test_discover_raritan_pdu_plugs() -> None:
     assert list(discover_raritan_pdu_plugs(_SECTION)) == [
-        (
-            "1",
-            {"discovered_state": "on"},
-        ),
-        (
-            "2",
-            {"discovered_state": "off"},
-        ),
-        (
-            "4",
-            {"discovered_state": "on"},
-        ),
-        (
-            "5",
-            {"discovered_state": "on"},
-        ),
-        (
-            "6",
-            {"discovered_state": "on"},
-        ),
+        Service(item="1", parameters={"discovered_state": "on"}),
+        Service(item="2", parameters={"discovered_state": "off"}),
+        Service(item="4", parameters={"discovered_state": "on"}),
+        Service(item="5", parameters={"discovered_state": "on"}),
+        Service(item="6", parameters={"discovered_state": "on"}),
     ]
 
 
@@ -74,8 +61,8 @@ def test_discover_raritan_pdu_plugs() -> None:
             "1",
             {"discovered_state": "on", "required_state": None},
             [
-                (0, "outlet1"),
-                (0, "Status: on"),
+                Result(state=State.OK, summary="outlet1"),
+                Result(state=State.OK, summary="Status: on"),
             ],
             id="using discovered params since required state not set - match (OK)",
         ),
@@ -83,8 +70,8 @@ def test_discover_raritan_pdu_plugs() -> None:
             "1",
             {"discovered_state": "off", "required_state": None},
             [
-                (0, "outlet1"),
-                (2, "Status: on (expected: off)"),
+                Result(state=State.OK, summary="outlet1"),
+                Result(state=State.CRIT, summary="Status: on (expected: off)"),
             ],
             id="using discovered params since required state not set - mismatch (CRIT)",
         ),
@@ -92,8 +79,8 @@ def test_discover_raritan_pdu_plugs() -> None:
             "1",
             {"discovered_state": "off", "required_state": "on"},
             [
-                (0, "outlet1"),
-                (0, "Status: on"),
+                Result(state=State.OK, summary="outlet1"),
+                Result(state=State.OK, summary="Status: on"),
             ],
             id="required state is set and takes priority over discovered - match (OK)",
         ),
@@ -101,8 +88,8 @@ def test_discover_raritan_pdu_plugs() -> None:
             "1",
             {"discovered_state": "on", "required_state": "off"},
             [
-                (0, "outlet1"),
-                (2, "Status: on (expected: off)"),
+                Result(state=State.OK, summary="outlet1"),
+                Result(state=State.CRIT, summary="Status: on (expected: off)"),
             ],
             id="required state is set and takes priority over discovered - mismatch (CRIT)",
         ),
@@ -110,7 +97,7 @@ def test_discover_raritan_pdu_plugs() -> None:
             "5",
             {"discovered_state": "on", "required_state": "on"},
             [
-                (0, "Status: on"),
+                Result(state=State.OK, summary="Status: on"),
             ],
             id="item without defined outlet_name still works",
         ),
@@ -118,8 +105,8 @@ def test_discover_raritan_pdu_plugs() -> None:
             "7",
             {"discovered_state": "unknown", "required_state": None},
             [
-                (0, "broken"),
-                (0, "Status: unknown"),
+                Result(state=State.OK, summary="broken"),
+                Result(state=State.OK, summary="Status: unknown"),
             ],
             id="unknown status matches discovered state",
         ),
@@ -127,8 +114,8 @@ def test_discover_raritan_pdu_plugs() -> None:
             "7",
             {"discovered_state": "unknown", "required_state": "off"},
             [
-                (0, "broken"),
-                (2, "Status: unknown (expected: off)"),
+                Result(state=State.OK, summary="broken"),
+                Result(state=State.CRIT, summary="Status: unknown (expected: off)"),
             ],
             id="unknown status does not match required state",
         ),
@@ -137,7 +124,7 @@ def test_discover_raritan_pdu_plugs() -> None:
 def test_check_raritan_pdu_plugs(
     item: str,
     params: CombinedParams,
-    expected_result: Sequence[tuple[int, str]],
+    expected_result: Sequence[Result],
 ) -> None:
     assert (
         list(

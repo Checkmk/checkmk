@@ -3,18 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.sophos_memory import (
     check_sophos_memory,
     discover_sophos_memory,
+    Params,
     parse_sophos_memory,
 )
-
-LegacyResult = tuple[int, str, Sequence[object]]
 
 
 @pytest.mark.parametrize(
@@ -31,7 +30,7 @@ def test_parse_sophos_memory(string_table: StringTable, expected: int | None) ->
 
 
 def test_discover_sophos_memory_yields_single_service() -> None:
-    assert list(discover_sophos_memory(27)) == [(None, {})]
+    assert list(discover_sophos_memory(27)) == [Service()]
 
 
 @pytest.mark.parametrize(
@@ -40,24 +39,27 @@ def test_discover_sophos_memory_yields_single_service() -> None:
         pytest.param(
             [["51"]],
             {},
-            [(0, "Usage: 51.00%", [("memory_util", 51, None, None)])],
+            [
+                Result(state=State.OK, summary="Usage: 51.00%"),
+                Metric("memory_util", 51.0),
+            ],
             id="no_levels_configured",
         ),
         pytest.param(
             [["27"]],
             {"memory_levels": (80, 90)},
-            [(0, "Usage: 27.00%", [("memory_util", 27, 80.0, 90.0)])],
+            [
+                Result(state=State.OK, summary="Usage: 27.00%"),
+                Metric("memory_util", 27.0, levels=(80.0, 90.0)),
+            ],
             id="ok_below_warn",
         ),
         pytest.param(
             [["85"]],
             {"memory_levels": (80, 90)},
             [
-                (
-                    1,
-                    "Usage: 85.00% (warn/crit at 80.00%/90.00%)",
-                    [("memory_util", 85, 80.0, 90.0)],
-                )
+                Result(state=State.WARN, summary="Usage: 85.00% (warn/crit at 80.00%/90.00%)"),
+                Metric("memory_util", 85.0, levels=(80.0, 90.0)),
             ],
             id="warn_above_warn",
         ),
@@ -65,11 +67,8 @@ def test_discover_sophos_memory_yields_single_service() -> None:
             [["95"]],
             {"memory_levels": (80, 90)},
             [
-                (
-                    2,
-                    "Usage: 95.00% (warn/crit at 80.00%/90.00%)",
-                    [("memory_util", 95, 80.0, 90.0)],
-                )
+                Result(state=State.CRIT, summary="Usage: 95.00% (warn/crit at 80.00%/90.00%)"),
+                Metric("memory_util", 95.0, levels=(80.0, 90.0)),
             ],
             id="crit_above_crit",
         ),
@@ -77,8 +76,9 @@ def test_discover_sophos_memory_yields_single_service() -> None:
 )
 def test_check_sophos_memory(
     string_table: StringTable,
-    params: Mapping[str, object],
-    expected_result: Sequence[LegacyResult],
+    params: Params,
+    expected_result: Sequence[Result | Metric],
 ) -> None:
     parsed = parse_sophos_memory(string_table)
-    assert list(check_sophos_memory(None, params, parsed)) == expected_result
+    assert parsed is not None
+    assert list(check_sophos_memory(params, parsed)) == expected_result

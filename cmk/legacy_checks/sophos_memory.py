@@ -3,21 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
+from typing import NotRequired, TypedDict
 
-from collections.abc import Mapping
-from typing import Any
-
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
 )
-from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.sophos.lib import DETECT_SOPHOS
 
-check_info = {}
+
+class Params(TypedDict):
+    memory_levels: NotRequired[tuple[float, float]]
 
 
 def parse_sophos_memory(string_table: StringTable) -> int | None:
@@ -27,26 +33,21 @@ def parse_sophos_memory(string_table: StringTable) -> int | None:
         return None
 
 
-def check_sophos_memory(
-    _item: str | None, params: Mapping[str, Any], parsed: int | None
-) -> LegacyCheckResult:
-    if parsed is None:
-        return
-    yield check_levels(
-        parsed,
+def discover_sophos_memory(section: int) -> DiscoveryResult:
+    yield Service()
+
+
+def check_sophos_memory(params: Params, section: int) -> CheckResult:
+    yield from check_levels(
+        section,
         "memory_util",
-        params.get("memory_levels", (None, None)),
+        params.get("memory_levels"),
         infoname="Usage",
         human_readable_func=render.percent,
     )
 
 
-def discover_sophos_memory(parsed: int | None) -> LegacyDiscoveryResult:
-    if parsed is not None:
-        yield None, {}
-
-
-check_info["sophos_memory"] = LegacyCheckDefinition(
+snmp_section_sophos_memory = SimpleSNMPSection(
     name="sophos_memory",
     detect=DETECT_SOPHOS,
     fetch=SNMPTree(
@@ -54,8 +55,14 @@ check_info["sophos_memory"] = LegacyCheckDefinition(
         oids=["2"],
     ),
     parse_function=parse_sophos_memory,
+)
+
+
+check_plugin_sophos_memory = CheckPlugin(
+    name="sophos_memory",
     service_name="Memory",
     discovery_function=discover_sophos_memory,
     check_function=check_sophos_memory,
     check_ruleset_name="sophos_memory",
+    check_default_parameters=Params(),
 )

@@ -124,10 +124,10 @@ impl OraDbEngine for StdEngine {
                 })
                 .collect::<Vec<(&str, &dyn ToSql)>>();
 
-            Ok(conn
-                .query_named(query.as_str(), x.as_slice())?
-                .map(|row| row_to_vector(&row))
-                .collect::<Vec<Vec<String>>>())
+            collect_rows(
+                conn.query_named(query.as_str(), x.as_slice())?
+                    .map(row_to_vector),
+            )
         }
 
         let result = _query_table(self.connection.as_ref(), query);
@@ -158,21 +158,38 @@ impl Clone for Box<dyn OraDbEngine + Send + Sync> {
     }
 }
 
-fn row_to_vector(row: &oracle::Result<oracle::Row>) -> Vec<String> {
-    if let Ok(r) = row {
-        r.sql_values()
-            .iter()
-            .map(|val| {
-                if val.is_null().unwrap_or(false) {
-                    "".to_string()
-                } else {
-                    String::from_sql(val).unwrap_or_else(|e| format!("Error: {}", e))
-                }
-            })
-            .collect::<Vec<String>>()
-    } else {
-        vec![format!("Error: {}", row.as_ref().err().unwrap())]
-    }
+/// Collects mapped rows, aborting on the first row error.
+///
+/// `collect` into a `Result` short-circuits: it stops pulling the iterator at the
+/// first `Err`, so a driver that re-yields a mid-fetch error (e.g. ORA-01476 after
+/// N rows) cannot spin CPU or grow memory without bound. The error is logged and
+/// returned, surfacing as a FAILURE row.
+fn collect_rows(rows: impl Iterator<Item = Result<Vec<String>>>) -> Result<Vec<Vec<String>>> {
+    rows.collect::<Result<Vec<Vec<String>>>>()
+        .inspect_err(|e| log::error!("Stopping section query after a row fetch error: {e:#}"))
+}
+
+/// Converts one fetched row to its string cells.
+///
+/// A per-value decode error stays a non-fatal `Error: <e>` placeholder. A
+/// row-level fetch error is returned to the caller, which logs it and stops:
+/// the driver can re-yield such an error indefinitely, so continuing would spin
+/// CPU and grow memory without bound.
+fn row_to_vector(row: oracle::Result<oracle::Row>) -> Result<Vec<String>> {
+    // Propagate the raw driver error (no `.context`): its Display carries the
+    // ORA-xxxxx text, which the section surfaces as the FAILURE reason.
+    let row = row?;
+    Ok(row
+        .sql_values()
+        .iter()
+        .map(|val| {
+            if val.is_null().unwrap_or(false) {
+                "".to_string()
+            } else {
+                String::from_sql(val).unwrap_or_else(|e| format!("Error: {}", e))
+            }
+        })
+        .collect::<Vec<String>>())
 }
 
 fn _to_privilege(role: &Role) -> Privilege {
@@ -742,5 +759,33 @@ oracle:
         let rows = vec![vec!["a".to_string(), "b".to_string(), "c".to_string()]];
         let lines = QueryResult(Ok(rows)).format("|").unwrap();
         assert_eq!(lines, vec!["a|b|c".to_string()]);
+    }
+
+    #[test]
+    fn test_collect_rows_stops_at_first_error_without_draining() {
+        use std::cell::Cell;
+        // Ok, Ok, then Err on every further pull - mimics a driver that re-yields a
+        // mid-fetch error instead of ending. If collect_rows drained instead of
+        // short-circuiting, this iterator never returns None and the test hangs.
+        let pulls = Cell::new(0usize);
+        let rows = std::iter::from_fn(|| {
+            let n = pulls.get();
+            pulls.set(n + 1);
+            Some(if n < 2 {
+                Ok(vec![format!("row{n}")])
+            } else {
+                Err(anyhow::anyhow!("ORA-01476: divisor is equal to zero"))
+            })
+        });
+
+        let result = collect_rows(rows);
+
+        assert!(result.is_err());
+        assert_eq!(
+            pulls.get(),
+            3,
+            "must stop right after the first error, not drain"
+        );
+        assert!(result.unwrap_err().to_string().contains("ORA-01476"));
     }
 }

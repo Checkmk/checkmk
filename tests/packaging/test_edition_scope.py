@@ -59,20 +59,21 @@ _CMK_PLUGINS = [
 def _stdout_bazel_cquery(
     edition: str, plugin_target: str, dir_repo_path: Path = repo_path()
 ) -> str:
-    dir_non_free_packages = dir_repo_path / "non-free" / "packages"
-    if dir_non_free_packages.exists():
-        return check_output(
-            [
-                "bazel",
-                "cquery",
-                "--ui_event_filters=-WARNING",
-                "--noshow_progress",
-                f"--cmk_edition={edition}",
-                f"somepath(//omd:complete_install, {plugin_target})",
-            ],
-            cwd=dir_repo_path.as_posix(),
-        )
-    pytest.skip(f"'{dir_non_free_packages}' must exist to run 'bazel cquery' command.")
+    if not (dir_repo_path / "non-free" / "packages").exists():
+        # Absence of the directory is a sign that the plugin is absent.
+        # Mirror `bazel cquery` command and return empty string.
+        return ""
+    return check_output(
+        [
+            "bazel",
+            "cquery",
+            "--ui_event_filters=-WARNING",
+            "--noshow_progress",
+            f"--cmk_edition={edition}",
+            f"somepath(//omd:complete_install, {plugin_target})",
+        ],
+        cwd=dir_repo_path.as_posix(),
+    )
 
 
 def _validate_plugin_in_package(plugin_details: PluginDetails, stdout: str) -> bool:

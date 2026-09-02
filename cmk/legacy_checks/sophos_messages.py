@@ -21,7 +21,7 @@
 
 
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import (
@@ -41,14 +41,21 @@ def discover_sophos_messages(info: StringTable) -> LegacyDiscoveryResult:
 def check_sophos_messages(
     item: str, params: Mapping[str, Any], info: StringTable
 ) -> LegacyResult | None:
+    return _check_sophos_messages(item, params, info, get_value_store(), time.time())
+
+
+def _check_sophos_messages(
+    item: str,
+    params: Mapping[str, Any],
+    info: StringTable,
+    value_store: MutableMapping[str, object],
+    now: float,
+) -> LegacyResult | None:
     for counter_type, inbound_str, outbound_str in info:
         if counter_type.replace("InvalidRecipient", "Invalid Recipient") == item:
-            now = time.time()
-            inbound = get_rate(
-                get_value_store(), "inbound", now, int(inbound_str), raise_overflow=True
-            )
+            inbound = get_rate(value_store, "inbound", now, int(inbound_str), raise_overflow=True)
             outbound = get_rate(
-                get_value_store(), "outbound", now, int(outbound_str), raise_overflow=True
+                value_store, "outbound", now, int(outbound_str), raise_overflow=True
             )
             infotext = f"{inbound + outbound:.1f} Inbounds and Outbounds/s, {inbound:.1f} Inbounds/s, {outbound:.1f} Outbounds/s"
             return 0, infotext, [("messages_inbound", inbound), ("messages_outbound", outbound)]

@@ -68,15 +68,20 @@ function mixesMirroredAndUnmirrored(metrics: Metric[]): boolean {
  * metrics their cumulative band extents.
  */
 export function composedValueDomain(metrics: Metric[], composed: ComposedSeries): [number, number] {
-  const domainBuckets = metrics.map((_, i) =>
-    composed.stacks[i]!.kind === 'area-stacked'
-      ? withoutOffPlotNeighbours(composed.stacks[i]!.bands).map((band) => ({
-          gap: band.gap,
-          minValue: Math.min(band.lower, band.upper),
-          maxValue: Math.max(band.lower, band.upper)
-        }))
-      : withoutOffPlotNeighbours(composed.paddedBuckets[i]!)
-  )
+  const domainBuckets = metrics.flatMap((metric, i) => {
+    if (metric.render.hidden) {
+      return []
+    }
+    return [
+      composed.stacks[i]!.kind === 'area-stacked'
+        ? withoutOffPlotNeighbours(composed.stacks[i]!.bands).map((band) => ({
+            gap: band.gap,
+            minValue: Math.min(band.lower, band.upper),
+            maxValue: Math.max(band.lower, band.upper)
+          }))
+        : withoutOffPlotNeighbours(composed.paddedBuckets[i]!)
+    ]
+  })
   return computeYDomain(domainBuckets, { symmetric: mixesMirroredAndUnmirrored(metrics) })
 }
 

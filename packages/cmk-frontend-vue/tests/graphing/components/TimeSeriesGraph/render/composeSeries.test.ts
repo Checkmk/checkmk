@@ -110,6 +110,20 @@ describe('composedValueDomain', () => {
     expect(yMax).toBe(base + layer)
   })
 
+  test('a hidden stack reference does not drag the domain down to zero', () => {
+    const baseline = 10
+    const member = 4
+    const metrics = [
+      makeMetric([baseline], { stack: 'g1', hidden: true }),
+      makeMetric([member], { stack: 'g1' })
+    ]
+
+    const [yMin, yMax] = composedValueDomain(metrics, compose(metrics))
+
+    expect(yMin).toBe(baseline)
+    expect(yMax).toBe(baseline + member)
+  })
+
   test('a flat positive series anchors its floor at zero rather than at the data', () => {
     const flat = 7
     const metrics = [makeMetric([flat, flat, flat])]

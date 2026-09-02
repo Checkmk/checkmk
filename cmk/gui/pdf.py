@@ -327,6 +327,10 @@ class Document:
     def page_number(self) -> int:
         return self._page_number
 
+    def is_at_top_of_page(self) -> bool:
+        """Whether nothing has been rendered yet on the current page"""
+        return self._linepos == self._top
+
     def next_page(self) -> None:
         self._canvas.showPage()
         self._linepos = self._top

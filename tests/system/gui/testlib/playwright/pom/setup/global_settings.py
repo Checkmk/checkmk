@@ -61,7 +61,7 @@ class GlobalSettings(CmkPage):
     def toggle(self, var_name: str) -> None:
         """Toggle a setting on or off."""
         logger.info("Toggle setting: %s", var_name)
-        self.main_area.click_and_wait(self._toggle_button(var_name))
+        self._toggle_button(var_name).click()
 
 
 class EditGlobalSetting(CmkPage, ABC):
@@ -101,8 +101,8 @@ class EditGlobalSetting(CmkPage, ABC):
     def to_factory_settings(self, expect_success: bool = True) -> None:
         """Reset the setting to default and confirm the reset.
 
-        Skip when the reset suggestion is disabled: the setting is not
-        explicitly configured, so there is nothing to reset.
+        The setting is expected to be explicitly configured; resetting an
+        unconfigured setting is not possible and fails here.
 
         Args:
             expect_success: the reset form submit either redirects to the
@@ -116,9 +116,10 @@ class EditGlobalSetting(CmkPage, ABC):
             self.factory_settings_button,
             message="Neither 'Reset to default' nor 'Remove explicit setting' is visible.",
         ).to_be_visible()
-        if "disabled" in (self.factory_settings_button.get_attribute("class") or ""):
-            logger.info("The setting is not explicitly configured; nothing to reset")
-            return
+        expect(
+            self.factory_settings_button,
+            message="The setting is not explicitly configured, so it cannot be reset.",
+        ).not_to_contain_class("disabled")
         self.factory_settings_button.click()
         expect(
             self.reset_confirmation_window, message="The reset confirmation popup did not appear."
@@ -150,12 +151,10 @@ class EditPiggybackHubGlobally(EditGlobalSetting):
         return self.main_area.locator(current_setting_label)
 
     def enable_hub(self) -> None:
-        if not self._current_setting_checkbox.is_checked():
-            self._current_setting_checkbox.click()
+        self._current_setting_checkbox.set_checked(True)
 
     def disable_hub(self) -> None:
-        if self._current_setting_checkbox.is_checked():
-            self._current_setting_checkbox.click()
+        self._current_setting_checkbox.set_checked(False)
 
 
 class SiteSpecificGlobalSettings(CmkPage):
@@ -217,7 +216,7 @@ class SiteSpecificGlobalSettings(CmkPage):
     def toggle(self, var_name: str) -> None:
         """Toggle a setting on or off."""
         logger.info("Toggle setting: %s", var_name)
-        self.main_area.click_and_wait(self._toggle_button(var_name))
+        self._toggle_button(var_name).click()
 
 
 class EditSiteSpecificGlobalSetting(CmkPage, ABC):
@@ -270,8 +269,8 @@ class EditSiteSpecificGlobalSetting(CmkPage, ABC):
     def to_factory_settings(self, expect_success: bool = True) -> None:
         """Reset the setting to default and confirm the reset.
 
-        Skip when the reset suggestion is disabled: the setting is not
-        explicitly configured, so there is nothing to reset.
+        The setting is expected to be explicitly configured; resetting an
+        unconfigured setting is not possible and fails here.
 
         Args:
             expect_success: the reset form submit either redirects to the
@@ -285,9 +284,10 @@ class EditSiteSpecificGlobalSetting(CmkPage, ABC):
             self.factory_settings_button,
             message="Neither 'Reset to default' nor 'Remove explicit setting' is visible.",
         ).to_be_visible()
-        if "disabled" in (self.factory_settings_button.get_attribute("class") or ""):
-            logger.info("The setting is not explicitly configured; nothing to reset")
-            return
+        expect(
+            self.factory_settings_button,
+            message="The setting is not explicitly configured, so it cannot be reset.",
+        ).not_to_contain_class("disabled")
         self.factory_settings_button.click()
         expect(
             self.reset_confirmation_window, message="The reset confirmation popup did not appear."
@@ -329,9 +329,7 @@ class EditPiggybackHubSiteSpecific(EditSiteSpecificGlobalSetting):
         return self.main_area.locator(current_setting_label)
 
     def enable_hub(self) -> None:
-        if not self._current_setting_checkbox.is_checked():
-            self._current_setting_checkbox.click()
+        self._current_setting_checkbox.set_checked(True)
 
     def disable_hub(self) -> None:
-        if self._current_setting_checkbox.is_checked():
-            self._current_setting_checkbox.click()
+        self._current_setting_checkbox.set_checked(False)

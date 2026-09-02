@@ -3,33 +3,52 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+from typing import NotRequired, TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
-from cmk.legacy_includes.cpu_util import check_cpu_util
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.sophos.lib import DETECT_SOPHOS
 
-check_info = {}
+
+class Params(TypedDict):
+    cpu_levels: NotRequired[tuple[float, float]]
 
 
-def parse_sophos_cpu(string_table):
+def parse_sophos_cpu(string_table: StringTable) -> int | None:
     try:
         return int(string_table[0][0])
     except ValueError, IndexError:
         return None
 
 
-def check_sophos_cpu(item, params, parsed):
-    return check_cpu_util(parsed, params.get("cpu_levels", (None, None)))
+def discover_sophos_cpu(section: int) -> DiscoveryResult:
+    yield Service()
 
 
-def discover_sophos_cpu(parsed):
-    yield None, {}
+def check_sophos_cpu(params: Params, section: int) -> CheckResult:
+    yield from check_levels(
+        section,
+        "util",
+        params.get("cpu_levels"),
+        human_readable_func=render.percent,
+        infoname="Total CPU",
+        boundaries=(0, 100),
+    )
 
 
-check_info["sophos_cpu"] = LegacyCheckDefinition(
+snmp_section_sophos_cpu = SimpleSNMPSection(
     name="sophos_cpu",
     detect=DETECT_SOPHOS,
     fetch=SNMPTree(
@@ -37,8 +56,14 @@ check_info["sophos_cpu"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     parse_function=parse_sophos_cpu,
+)
+
+
+check_plugin_sophos_cpu = CheckPlugin(
+    name="sophos_cpu",
     service_name="CPU usage",
     discovery_function=discover_sophos_cpu,
     check_function=check_sophos_cpu,
     check_ruleset_name="sophos_cpu",
+    check_default_parameters=Params(),
 )

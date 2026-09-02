@@ -3,13 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.legacy_checks.sophos_cpu import check_sophos_cpu, discover_sophos_cpu, parse_sophos_cpu
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.legacy_checks.sophos_cpu import (
+    check_sophos_cpu,
+    discover_sophos_cpu,
+    Params,
+    parse_sophos_cpu,
+)
 
 
 def test_parse_sophos_cpu() -> None:
@@ -20,41 +24,45 @@ def test_parse_sophos_cpu_invalid_returns_none() -> None:
     assert parse_sophos_cpu([["bogus"]]) is None
 
 
-@pytest.mark.parametrize(
-    "parsed",
-    [
-        pytest.param(27, id="with_value"),
-        pytest.param(None, id="with_none"),
-    ],
-)
-def test_discover_sophos_cpu_always_yields_single_service(parsed: int | None) -> None:
-    assert list(discover_sophos_cpu(parsed)) == [(None, {})]
+def test_discover_sophos_cpu_yields_single_service() -> None:
+    assert list(discover_sophos_cpu(27)) == [Service()]
 
 
 @pytest.mark.parametrize(
-    "params, parsed, expected",
+    "params, section, expected",
     [
         pytest.param(
             {"cpu_levels": (80.0, 90.0)},
             27,
-            (0, "Total CPU: 27.00%", [("util", 27, 80.0, 90.0, 0, 100)]),
+            [
+                Result(state=State.OK, summary="Total CPU: 27.00%"),
+                Metric("util", 27.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+            ],
             id="ok_below_warn",
         ),
         pytest.param(
             {"cpu_levels": (80.0, 90.0)},
             95,
-            (
-                2,
-                "Total CPU: 95.00% (warn/crit at 80.00%/90.00%)",
-                [("util", 95, 80.0, 90.0, 0, 100)],
-            ),
+            [
+                Result(state=State.CRIT, summary="Total CPU: 95.00% (warn/crit at 80.00%/90.00%)"),
+                Metric("util", 95.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+            ],
             id="crit_above_crit",
+        ),
+        pytest.param(
+            {},
+            27,
+            [
+                Result(state=State.OK, summary="Total CPU: 27.00%"),
+                Metric("util", 27.0, boundaries=(0.0, 100.0)),
+            ],
+            id="no_levels_configured",
         ),
     ],
 )
 def test_check_sophos_cpu(
-    params: Mapping[str, object],
-    parsed: int,
-    expected: tuple[int, str, Sequence[tuple[str, int, float, float, int, int]]],
+    params: Params,
+    section: int,
+    expected: Sequence[Result | Metric],
 ) -> None:
-    assert list(check_sophos_cpu(None, params, parsed)) == [expected]
+    assert list(check_sophos_cpu(params, section)) == expected

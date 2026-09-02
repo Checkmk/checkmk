@@ -263,6 +263,39 @@ describe('GlobalSettingsApp', () => {
     expect(screen.queryByText('(modified)')).not.toBeInTheDocument()
   })
 
+  test('saving a value equal to the factory default still marks the row as explicitly set', async () => {
+    await openEditor()
+    await fireEvent.update(await screen.findByRole('spinbutton'), '10')
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'PUT']))
+    expect(requests[1]).toMatchObject({ ifMatch: '"v1"', body: { value: 10 } })
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByText('(modified)')).toBeInTheDocument()
+  })
+
+  test('an explicit value equal to the factory default gets the explicit-setting wording', async () => {
+    serverValue = { value: 10, is_default: false }
+    await openEditor()
+    const dialog = screen.getByRole('dialog')
+    const removeButton = await within(dialog).findByRole('button', {
+      name: 'Remove explicit setting'
+    })
+    expect(
+      within(dialog).getByText(
+        'This setting uses an explicit value and overrides the factory and Global settings value.'
+      )
+    ).toBeInTheDocument()
+
+    await userEvent.click(removeButton)
+    expect(within(dialog).getByText('Remove explicit setting?')).toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Remove' }))
+
+    await waitFor(() => expect(requests.map((r) => r.method)).toEqual(['GET', 'DELETE', 'GET']))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.queryByText('(modified)')).not.toBeInTheDocument()
+  })
+
   test('toggling a boolean setting saves the flipped value inline without a dialog', async () => {
     render(GlobalSettingsApp, { props: { ...data, topics: [booleanTopic] } })
     await userEvent.click(

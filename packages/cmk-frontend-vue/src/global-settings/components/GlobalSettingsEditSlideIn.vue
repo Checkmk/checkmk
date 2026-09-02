@@ -54,17 +54,59 @@ function confirmReset(): void {
   void props.session.reset()
 }
 
-const resetButtonLabel = computed<TranslatedString>(() => _t('Remove modification'))
+function valuesEqual(a: unknown, b: unknown): boolean {
+  if (a === b) {
+    return true
+  }
+  if (Array.isArray(a) || Array.isArray(b)) {
+    return (
+      Array.isArray(a) &&
+      Array.isArray(b) &&
+      a.length === b.length &&
+      a.every((entry, index) => valuesEqual(entry, b[index]))
+    )
+  }
+  if (typeof a === 'object' && typeof b === 'object' && a !== null && b !== null) {
+    const entries = Object.entries(a)
+    return (
+      entries.length === Object.keys(b).length &&
+      entries.every(
+        ([key, value]) => key in b && valuesEqual(value, (b as Record<string, unknown>)[key])
+      )
+    )
+  }
+  return false
+}
+
+const isExplicitDefault = computed(
+  () => variable.value.modified && valuesEqual(variable.value.value, variable.value.default_value)
+)
+
+const resetButtonLabel = computed<TranslatedString>(() =>
+  isExplicitDefault.value ? _t('Remove explicit setting') : _t('Remove modification')
+)
 
 const resetConfirmation = computed<{
   heading: TranslatedString
   body: TranslatedString
   confirm: TranslatedString
-}>(() => ({
-  heading: _t('Remove modification?'),
-  body: _t('The configured value will be discarded and the factory default will be used instead.'),
-  confirm: _t('Remove')
-}))
+}>(() =>
+  isExplicitDefault.value
+    ? {
+        heading: _t('Remove explicit setting?'),
+        body: _t(
+          'Removing the explicit value will restore the default value for this site. The value will be inherited from Global settings or the factory settings.'
+        ),
+        confirm: _t('Remove')
+      }
+    : {
+        heading: _t('Remove modification?'),
+        body: _t(
+          'The configured value will be discarded and the factory default will be used instead.'
+        ),
+        confirm: _t('Remove')
+      }
+)
 
 const currentStateText = computed<TranslatedString>(() =>
   variable.value.modified
@@ -116,6 +158,14 @@ const currentStateText = computed<TranslatedString>(() =>
         }"
       >
         {{ resetConfirmation.body }}
+      </CmkAlertBox>
+
+      <CmkAlertBox v-if="isExplicitDefault" variant="info" dismissible>
+        {{
+          _t(
+            'This setting uses an explicit value and overrides the factory and Global settings value.'
+          )
+        }}
       </CmkAlertBox>
 
       <CmkAccordion v-model="openedSections" :min-open="0" :max-open="0">

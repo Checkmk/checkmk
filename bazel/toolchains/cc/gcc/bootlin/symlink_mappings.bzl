@@ -1,4 +1,4 @@
-"""Symlink mappings for Bootlin GCC toolchain C++ runtime libraries.
+"""Symlink mappings for the hermetic gcc_toolchain's C++ runtime libraries.
 
 This file defines the symlink structure for libstdc++.
 The mappings are used by packaging rules to create pkg_mklink targets.

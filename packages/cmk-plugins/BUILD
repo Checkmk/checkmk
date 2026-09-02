@@ -85,7 +85,7 @@ filegroup(
     visibility = ["//visibility:public"],
     deps = [
         "//packages/cmk-plugins/cmk/plugins/%s" % family,
-        "//packages/cmk-plugins/cmk/plugins/%s:agent" % family,
+        "//packages/cmk-plugins/cmk/plugins/%s:agents" % family,
         "//packages/cmk-plugins/cmk/plugins/%s:checkman" % family,
         "//packages/cmk-plugins/cmk/plugins/%s:libexec" % family,
     ],

@@ -15,7 +15,7 @@ py_library(
 )
 
 filegroup(
-    name = "agent",
+    name = "agents",
     srcs = [],
     visibility = ["//packages/cmk-plugins:__pkg__"],
 )

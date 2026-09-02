@@ -167,6 +167,10 @@ class Site:
 
         self.check_wait_timeout = check_wait_timeout
 
+        # Set once the site failed to reach a running state, so that the wait for it is not
+        # paid again by every later ensure_running() call.
+        self._failed_to_settle = False
+
         # We start with ADMIN_USER and change it to the automation user once it is created
         self.openapi = CMKOpenApiSession(
             host=self.http_address,
@@ -881,6 +885,35 @@ class Site:
 
         return completed_process
 
+    def _run_and_log_errors(self, cmd: list[str], description: str = "", sudo: bool = False) -> str:
+        """Run a command whose failure must never fail the test, and return its output.
+
+        Two kinds of command are run this way. Diagnostics are collected while something has
+        already gone wrong, and must not mask the original problem by failing themselves.
+        Artifact collection races with the site, which keeps writing and removing files while
+        the results are copied, so a file vanishing mid-copy must not fail a test which
+        otherwise passed.
+
+        Commands that only touch the result directory itself, creating it, renaming within
+        it, handing it to the test user, are deliberately not run this way: nothing raced with
+        them, so failing there is honest trouble and has to be noticed.
+
+        The command runs as the site user unless `sudo` is set, which the results need: they
+        are written outside the site.
+        """
+        description = description or subprocess.list2cmdline(cmd)
+        logger.info("%(description)s", {"description": description})
+        try:
+            if sudo:
+                return check_output(cmd, sudo=True, stderr=subprocess.STDOUT)
+            return self.check_output(cmd, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as excp:
+            logger.warning(
+                "%(description)s failed and is skipped (exit code %(returncode)d)",
+                {"description": description, "returncode": excp.returncode},
+            )
+            return str(excp.output or "")
+
     def path(self, rel_path: str | Path) -> Path:
         return self.root / rel_path
 
@@ -902,7 +935,7 @@ class Site:
                 ]
             )
         except subprocess.CalledProcessError as excp:
-            excp.add_note(f"Failed to read file '{rel_path}'!")
+            excp.add_note(f"Failed to read the timestamp of file '{rel_path}'!")
             raise excp
         return int(stdout.strip())
 
@@ -932,7 +965,7 @@ class Site:
         try:
             _ = self.run(["rm", "-f", self.path(rel_path).as_posix()])
         except subprocess.CalledProcessError as excp:
-            excp.add_note(f"Failed to read file '{rel_path}'!")
+            excp.add_note(f"Failed to delete file '{rel_path}'!")
             raise excp
 
     def move_file(self, src_rel_path: str | Path, dst_rel_path: str | Path) -> None:
@@ -1364,28 +1397,8 @@ class Site:
             logger.info("Starting site")
             # start the site and ensure it's fully running (including all services)
             self.omd("start", check=True)
-            # print("= BEGIN PROCESSES AFTER START ==============================")
-            # self.execute(["ps", "aux"]).wait()
-            # print("= END PROCESSES AFTER START ==============================")
-            i = 0
-            while not self.is_running():
-                i += 1
-                if i > 10:
-                    self.omd("status")
-                    # print("= BEGIN PROCESSES FAIL ==============================")
-                    # self.execute(["ps", "aux"]).wait()
-                    # print("= END PROCESSES FAIL ==============================")
-                    logger.warning(
-                        "Could not start site %(site_id)s. Stop waiting.", {"site_id": self.id}
-                    )
-                    break
-                logger.warning(
-                    "The site %(site_id)s is not running yet, sleeping... (round %(round)d)",
-                    {"site_id": self.id, "round": i},
-                )
-                sys.stdout.flush()
-                time.sleep(0.2)
-
+            # "omd start" returns before all services report themselves as running;
+            # ensure_running() polls the status and collects diagnostics if it never settles.
             self.ensure_running()
         else:
             logger.info("Site is already running")
@@ -1406,7 +1419,9 @@ class Site:
         logger.info("Stopping site")
 
         logger.debug("= BEGIN PROCESSES BEFORE =======================================")
-        logger.debug(check_output(["ps", "-fwwu", str(self.id)]))
+        # "ps -fwwu <user>" exits 1 when the user owns no processes, which happens for a site
+        # in transition. This listing is diagnostic only and must never fail a test.
+        logger.debug(self._run_and_log_errors(["ps", "-fwwu", str(self.id)]))
         logger.debug("= END PROCESSES BEFORE =======================================")
 
         stop_exit_code = self.omd("stop").returncode
@@ -1417,25 +1432,20 @@ class Site:
         # os.system("ps -fwwu %s" % self.id)  # nosec
         # logger.debug("= END PROCESSES AFTER STOP =======================================")
 
-        i = 0
-        while (status := self.omd("status")).returncode != 1:
-            i += 1
-            if i > 10:
-                logger.error(
-                    "omd status %(site_id)s stdout: %(stdout)s",
-                    {"site_id": self.id, "stdout": status.stdout},
-                )
-                logger.error(
-                    "omd status %(site_id)s stderr: %(stderr)s",
-                    {"site_id": self.id, "stderr": status.stderr},
-                )
-                raise Exception("Could not stop site %s" % self.id)
-            logger.warning(
-                "The site %(site_id)s is still running, sleeping... (round %(round)d)",
-                {"site_id": self.id, "round": i},
+        # "omd stop" returns before all services have terminated, so the status is polled
+        # rather than sampled once.
+        try:
+            # Stopping a site with many services can take a while under load.
+            self.wait_for_status_update(1, timeout=120)
+        except TimeoutError as excp:
+            # Last resort: report what the site claims about itself before giving up.
+            status = self.omd("status")
+            logger.exception(
+                "omd status %(site_id)s stdout: %(stdout)s\nomd status %(site_id)s stderr:"
+                " %(stderr)s",
+                {"site_id": self.id, "stdout": status.stdout, "stderr": status.stderr},
             )
-            sys.stdout.flush()
-            time.sleep(0.2)
+            raise RuntimeError("Could not stop site %s" % self.id) from excp
 
         # let's ensure, that no more processes for the site are running (CMK-21668)
         # all site processes will be for some file below /omd/sites/<site_id>
@@ -1466,9 +1476,28 @@ class Site:
 
     @tracer.instrument("Site.ensure_running")
     def ensure_running(self) -> None:
-        if not self.is_running():
-            omd_status_output = self.check_output(["omd", "status"], stderr=subprocess.STDOUT)
-            ps_output = self.check_output(["ps", "-ef"], stderr=subprocess.STDOUT)
+        if self.is_running():
+            self._failed_to_settle = False
+        else:
+            # A single "omd status" call can catch the site mid-transition. Give it a chance
+            # to settle before tearing down the whole session. Once it failed to settle, do
+            # not pay the budget again: ensure_running() is also called from "finally"
+            # blocks which run while the session is already being torn down.
+            if not self._failed_to_settle:
+                try:
+                    # Be generous: failing here ends the whole session, while waiting on a
+                    # merely slow site costs seconds. The latch below caps this at one wait.
+                    self.wait_for_status_update(0, timeout=120)
+                    return
+                except TimeoutError:
+                    self._failed_to_settle = True
+                    logger.exception(
+                        "Site %(site_id)s did not reach a running state", {"site_id": self.id}
+                    )
+            # "omd status" exits non-zero for a site which is not fully running, so its
+            # output has to be collected without failing on the exit code.
+            omd_status_output = self._run_and_log_errors(["omd", "status"])
+            ps_output = self._run_and_log_errors(["ps", "-ef"])
             self.save_results()
 
             write_file(ps_output_file := self.result_dir / "processes.out", ps_output, sudo=True)
@@ -1519,14 +1548,19 @@ class Site:
     def wait_for_status_update(
         self,
         expected_status: int,
-        timeout: int = 60,
-        interval: int = 2,
+        timeout: float = 60,
+        interval: float = 2,
     ) -> None:
+        """Wait until "omd status" reports the expected status.
+
+        Starting and stopping a site is not atomic: "omd status" can report a site as
+        partially running for a while after "omd start"/"omd stop" returned.
+        """
         wait_until(
             lambda: self.omd("status").returncode == expected_status,
             timeout=timeout,
             interval=interval,
-            condition_name=f"Site {self.id} status update",
+            condition_name=f"Site {self.id} reaching omd status {expected_status}",
         )
 
     def activate_changes_and_wait_for_site_restart(
@@ -1934,15 +1968,28 @@ class Site:
 
         logger.info("Saving to %(result_dir)s", {"result_dir": self.result_dir})
         if self.path("junit.xml").exists():
-            copy(self.path("junit.xml"), self.result_dir, check=False)
+            self._run_and_log_errors(
+                ["cp", self.path("junit.xml").as_posix(), self.result_dir.as_posix()],
+                "Saving junit.xml",
+                sudo=True,
+            )
 
-        copy(self.path("var/log"), self.result_dir, recursive=True, dereference=True, check=False)
+        # Copy the *contents*: a plain "cp -r SRC DST" creates the copy the first time and
+        # nests SRC inside it on a second save_results() for the same site.
+        log_dir = self.result_dir / "log"
+        makedirs(log_dir, sudo=True)
+        self._run_and_log_errors(
+            ["cp", "-rL", f"{self.path('var/log').as_posix()}/.", log_dir.as_posix()],
+            "Saving var/log",
+            sudo=True,
+        )
 
         # Rename apache logs to get better handling by the browser when opening a log file
         for log_name in ("access_log", "error_log"):
             orig_log_path = self.result_dir / "log" / "apache" / log_name
             if self.file_exists(orig_log_path):
-                run(
+                # Still as root: the copies are handed to the test user only at the very end.
+                _ = run(
                     [
                         "mv",
                         orig_log_path.as_posix(),
@@ -1951,29 +1998,77 @@ class Site:
                     sudo=True,
                 )
 
-        copy(self.path("var/nagios").glob("*.log"), self.result_dir / "log", check=False)
+        for nagios_log_path in glob.glob(self.path("var/nagios/*.log").as_posix()):
+            self._run_and_log_errors(
+                ["cp", nagios_log_path, (self.result_dir / "log").as_posix()],
+                f"Saving {nagios_log_path}",
+                sudo=True,
+            )
 
         core_dir = self.result_dir / self.core_name()
         makedirs(core_dir, sudo=True)
 
-        copy(self.core_history_log(), core_dir / "history", check=False)
+        if self.file_exists(self.core_history_log()):
+            self._run_and_log_errors(
+                ["cp", self.core_history_log().as_posix(), (core_dir / "history").as_posix()],
+                "Saving the core history log",
+                sudo=True,
+            )
 
         if self.file_exists("var/check_mk/core/core"):
-            copy(self.path("var/check_mk/core/core"), core_dir / "core_dump", check=False)
+            self._run_and_log_errors(
+                [
+                    "cp",
+                    self.path("var/check_mk/core/core").as_posix(),
+                    (core_dir / "core_dump").as_posix(),
+                ],
+                "Saving the core dump",
+                sudo=True,
+            )
 
-        copy(self.crash_report_dir, self.crash_archive_dir, recursive=True, check=False)
-
-        copy(
-            self.path("var/check_mk/background_jobs"), self.result_dir, recursive=True, check=False
+        makedirs(self.crash_archive_dir, sudo=True)
+        self._run_and_log_errors(
+            [
+                "cp",
+                "-r",
+                f"{self.crash_report_dir.as_posix()}/.",
+                self.crash_archive_dir.as_posix(),
+            ],
+            "Saving the crash reports",
+            sudo=True,
         )
 
-        # Change ownership of all copied files to the user that executes the test
-        run(["chown", "-R", f"{os.getuid()}:{os.getgid()}", self.result_dir.as_posix()], sudo=True)
+        if self.file_exists("var/check_mk/background_jobs"):
+            background_jobs_dir = self.result_dir / "background_jobs"
+            makedirs(background_jobs_dir, sudo=True)
+            self._run_and_log_errors(
+                [
+                    "cp",
+                    "-r",
+                    f"{self.path('var/check_mk/background_jobs').as_posix()}/.",
+                    background_jobs_dir.as_posix(),
+                ],
+                "Saving the background jobs",
+                sudo=True,
+            )
+
+        # Change ownership of all copied files to the user that executes the test. Results
+        # nobody can read afterwards are as useless as no results, so this one may fail loudly.
+        _ = run(
+            ["chown", "-R", f"{os.getuid()}:{os.getgid()}", self.result_dir.as_posix()],
+            sudo=True,
+        )
 
         # Rename files to get better handling by the browser when opening a crash file
         for crash_info in self.crash_archive_dir.glob("**/crash.info"):
             crash_json = crash_info.parent / (crash_info.stem + ".json")
-            crash_info.rename(crash_json)
+            try:
+                crash_info.rename(crash_json)
+            except OSError as excp:
+                logger.warning(
+                    "Renaming %(crash_info)s failed and is skipped: %(error)s",
+                    {"crash_info": crash_info, "error": excp},
+                )
 
     def crash_reports_dirs(self) -> list[Path]:
         return [

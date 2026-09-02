@@ -182,16 +182,6 @@ sh_library(
     ],
 )
 
-sh_library(
-    name = "agents_sh",
-    srcs = [
-        "tsm/agents/mk_tsm",
-        # mk_tsm sources tsm.cfg, so shellcheck needs the example config as an
-        # input to follow the "shellcheck source=" directive in it.
-        "//agents/cfg_examples:agents_cfg_examples_sh",
-    ],
-)
-
 py_doc_test(
     name = "doctest",
     size = "small",

@@ -220,6 +220,7 @@ COMMUNITY_WHEELS = [
     "//packages/cmk-plugins:wheel-splunk",
     "//packages/cmk-plugins:wheel-stulz",
     "//packages/cmk-plugins:wheel-tplink",
+    "//packages/cmk-plugins:wheel-tsm",
     "//packages/cmk-plugins:wheel-ucs_bladecenter",
     "//packages/cmk-plugins:wheel-viprinet",
     "//packages/cmk-plugins:wheel-vsphere",

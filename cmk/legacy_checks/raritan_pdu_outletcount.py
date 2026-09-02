@@ -6,27 +6,37 @@
 # mypy: disable-error-code="explicit-any"
 
 import contextlib
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, any_of, SNMPTree, startswith, StringTable
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 
-check_info = {}
+
+def discover_raritan_pdu_outletcount(section: StringTable) -> DiscoveryResult:
+    if section and section[0]:
+        yield Service()
 
 
-def discover_raritan_pdu_outletcount(info: StringTable) -> Iterator[tuple[None, dict[str, object]]]:
-    if info and info[0]:
-        yield None, {}
-
-
-def check_raritan_pdu_outletcount(
-    item: None, params: Mapping[str, Any], info: StringTable
-) -> Iterator[tuple[int, str, list[Any]]]:
-    levels = params.get("levels_upper", (None, None)) + params.get("levels_lower", (None, None))
+def check_raritan_pdu_outletcount(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     with contextlib.suppress(IndexError):
-        yield check_levels(
-            int(info[0][0]), "outletcount", levels, human_readable_func=lambda f: "%.f" % f
+        yield from check_levels_v1(
+            int(section[0][0]),
+            metric_name="outletcount",
+            levels_upper=params.get("levels_upper"),
+            levels_lower=params.get("levels_lower"),
+            render_func=lambda f: "%.f" % f,
         )
 
 
@@ -34,7 +44,7 @@ def parse_raritan_pdu_outletcount(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["raritan_pdu_outletcount"] = LegacyCheckDefinition(
+snmp_section_raritan_pdu_outletcount = SimpleSNMPSection(
     name="raritan_pdu_outletcount",
     parse_function=parse_raritan_pdu_outletcount,
     detect=all_of(
@@ -48,6 +58,11 @@ check_info["raritan_pdu_outletcount"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.13742.6.3.2.2.1.4",
         oids=["1"],
     ),
+)
+
+
+check_plugin_raritan_pdu_outletcount = CheckPlugin(
+    name="raritan_pdu_outletcount",
     service_name="Outlet Count",
     discovery_function=discover_raritan_pdu_outletcount,
     check_function=check_raritan_pdu_outletcount,

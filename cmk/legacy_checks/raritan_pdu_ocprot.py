@@ -5,16 +5,23 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any, TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    OIDEnd,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree, StringTable
 
 
 class ProtectorData(TypedDict, total=False):
@@ -22,7 +29,11 @@ class ProtectorData(TypedDict, total=False):
     current: float
 
 
-check_info = {}
+_STATES = {
+    "-1": (State.UNKNOWN, "Overcurrent protector information is unavailable"),
+    "0": (State.CRIT, "Overcurrent protector is open"),
+    "1": (State.OK, "Overcurrent protector is closed"),
+}
 
 # Example for info:
 # [[[u'1.1.1', u'4', u'0'],
@@ -54,7 +65,7 @@ check_info = {}
 
 
 def parse_raritan_pdu_ocprot(
-    string_table: list[StringTable],
+    string_table: Sequence[StringTable],
 ) -> dict[str, ProtectorData]:
     flattened_info = [
         [end_oid, state, value, scale]
@@ -71,36 +82,31 @@ def parse_raritan_pdu_ocprot(
     return parsed
 
 
-def discover_raritan_pdu_ocprot(
-    section: dict[str, ProtectorData],
-) -> LegacyDiscoveryResult:
-    yield from ((item, {}) for item in section)
+def discover_raritan_pdu_ocprot(section: dict[str, ProtectorData]) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
 def check_raritan_pdu_ocprot(
-    item: str, params: Mapping[str, Any], parsed: dict[str, ProtectorData]
-) -> LegacyCheckResult:
-    if not (data := parsed.get(item)):
+    item: str, params: Mapping[str, Any], section: dict[str, ProtectorData]
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    states = {
-        "-1": (3, "Overcurrent protector information is unavailable"),
-        "0": (2, "Overcurrent protector is open"),
-        "1": (0, "Overcurrent protector is closed"),
-    }
+
     if "state" in data:
-        yield states[data["state"]]
+        state, state_readable = _STATES[data["state"]]
+        yield Result(state=state, summary=state_readable)
 
     if "current" in data:
-        yield check_levels(
+        yield from check_levels_v1(
             data["current"],
-            "current",
-            params["levels"],
-            human_readable_func=lambda x: f"{x:.2f} A",
-            infoname="Current",
+            metric_name="current",
+            levels_upper=params["levels"],
+            render_func=lambda x: f"{x:.2f} A",
+            label="Current",
         )
 
 
-check_info["raritan_pdu_ocprot"] = LegacyCheckDefinition(
+snmp_section_raritan_pdu_ocprot = SNMPSection(
     name="raritan_pdu_ocprot",
     detect=contains(".1.3.6.1.2.1.1.2.0", "13742"),
     fetch=[
@@ -114,6 +120,11 @@ check_info["raritan_pdu_ocprot"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_raritan_pdu_ocprot,
+)
+
+
+check_plugin_raritan_pdu_ocprot = CheckPlugin(
+    name="raritan_pdu_ocprot",
     service_name="Overcurrent Protector %s",
     discovery_function=discover_raritan_pdu_ocprot,
     check_function=check_raritan_pdu_ocprot,

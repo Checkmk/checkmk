@@ -160,22 +160,29 @@ class DesignGraph(BaseGraph):
         with self.page.expect_response(re.compile(r"(?<!edit_)custom_graph\.py")):
             self.main_area.get_suggestion("Save").click()
 
-    def open_slide_in_for_metric_backend_rule(self) -> None:
-        logger.info("Open 'Design graph' slide-in")
-        self.main_area.locator().get_by_role(
-            "button", name="Add rule: Metric backend (Custom query)"
-        ).click()
-        ruleset_name = "special_agents:custom_query_metric_backend"
+    @property
+    def _create_custom_service_dialog(self) -> Locator:
+        return self.main_area.locator().get_by_role("dialog", name="Create custom service")
+
+    def open_create_custom_service_slide_in(self) -> None:
+        logger.info("Open 'Create custom service' slide-in")
+        self.main_area.locator().get_by_role("button", name="Create custom service").click()
         expect(
-            self.main_area.get_text(ruleset_name),
-            f"Ruleset name'{ruleset_name}' not visible.",
+            self._create_custom_service_dialog,
+            "'Create custom service' slide-in is not visible.",
         ).to_be_visible()
 
-    def save_rule_via_slide_in(self) -> None:
-        logger.info("Save rule via 'Design graph' slide-in")
-        self.main_area.locator().get_by_role(
-            "dialog", name="Add rule: Metric backend (Custom query)"
-        ).get_by_role("button", name="Save").click()
+    def create_custom_service_via_slide_in(self, host_name: str) -> None:
+        logger.info("Create custom service on host '%s' via slide-in", host_name)
+        dialog = self._create_custom_service_dialog
+        host_search = dialog.get_by_role("combobox")
+        host_search.click()
+        host_search.fill(host_name)
+        self.main_area.locator().get_by_role("option", name=re.compile(host_name)).click()
+        dialog.get_by_role("button", name="Save").click()
+        expect(
+            dialog, "'Create custom service' slide-in did not close after saving."
+        ).not_to_be_visible()
 
 
 class CustomGraph(BaseGraph):

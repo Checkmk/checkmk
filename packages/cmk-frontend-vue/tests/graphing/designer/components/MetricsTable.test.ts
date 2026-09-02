@@ -31,14 +31,14 @@ import {
   rrdMetricItem
 } from '../fixtures'
 
-vi.mock('@/graphing/designer/components/MetricBackendRuleSlideIn.vue', () => ({
+vi.mock('@/mode-custom-services/CreateCustomServiceSlideIn.vue', () => ({
   default: {
-    props: ['open', 'item', 'defaultTitle'],
+    props: ['open', 'initial'],
     emits: ['close'],
     template: `<div
-      data-testid="metric-backend-rule-slidein"
-      :data-item-id="item?.id"
-      :data-default-title="defaultTitle"
+      data-testid="create-custom-service-slidein"
+      :data-metric-name="initial?.metricName"
+      :data-service-name="initial?.serviceName"
     ></div>`
   }
 }))
@@ -47,7 +47,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-const ADD_RULE_LABEL = 'Add rule: Metric backend (Custom query)'
+const CREATE_SERVICE_LABEL = 'Create custom service'
 
 const PALETTE: readonly string[] = ['#28a2f3', '#ff8400', '#ec48b6', '#ffd703']
 const THRESHOLDS = { warning: '#ffd000', critical: '#ff3232' }
@@ -314,40 +314,40 @@ test('the title column header exposes the rendered macro help', async () => {
   expect(tooltip).toHaveTextContent('Checkmk RRD (single): $DEFAULT_TITLE$, $METRIC_NAME$')
 })
 
-test('a complete metric_backend row offers the add-rule action', () => {
+test('a complete metric_backend row offers the create-custom-service action', () => {
   renderTable([metricBackendItem('A')])
-  expect(screen.getByRole('button', { name: ADD_RULE_LABEL })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: CREATE_SERVICE_LABEL })).toBeInTheDocument()
 })
 
-test('the add-rule action is absent on non metric_backend rows', () => {
+test('the create-custom-service action is absent on non metric_backend rows', () => {
   renderTable([rrdMetricItem('A')])
-  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('the add-rule action is absent while the metric_backend query is incomplete', () => {
+test('the create-custom-service action is absent while the metric_backend query is incomplete', () => {
   renderTable([newMetricBackendDraft('A')])
-  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('the add-rule action is absent when the metric backend is unavailable', () => {
+test('the create-custom-service action is absent when the metric backend is unavailable', () => {
   renderTable([metricBackendItem('A')], false)
-  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('the add-rule action is absent when creating services is unavailable', () => {
+test('the create-custom-service action is absent when creating services is unavailable', () => {
   renderTable([metricBackendItem('A')], true, false)
-  expect(screen.queryByRole('button', { name: ADD_RULE_LABEL })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: CREATE_SERVICE_LABEL })).not.toBeInTheDocument()
 })
 
-test('clicking the add-rule action opens the rule slide-in for that row', async () => {
-  renderTable([metricBackendItem('A')])
-  expect(screen.queryByTestId('metric-backend-rule-slidein')).not.toBeInTheDocument()
+test('clicking the create-custom-service action opens the slide-in prefilled from that row', async () => {
+  renderTable([metricBackendItem('A', { title: '$DEFAULT_TITLE$' })])
+  expect(screen.queryByTestId('create-custom-service-slidein')).not.toBeInTheDocument()
 
-  await fireEvent.click(screen.getByRole('button', { name: ADD_RULE_LABEL }))
+  await fireEvent.click(screen.getByRole('button', { name: CREATE_SERVICE_LABEL }))
 
-  const slideIn = await screen.findByTestId('metric-backend-rule-slidein')
-  expect(slideIn).toHaveAttribute('data-item-id', 'A')
-  expect(slideIn).toHaveAttribute('data-default-title', '$METRIC_NAME$ - $SERIES_ID$')
+  const slideIn = await screen.findByTestId('create-custom-service-slidein')
+  expect(slideIn).toHaveAttribute('data-metric-name', 'span.latency')
+  expect(slideIn).toHaveAttribute('data-service-name', '$METRIC_NAME$ - $SERIES_ID$')
 })
 
 describe('a blocked row', () => {

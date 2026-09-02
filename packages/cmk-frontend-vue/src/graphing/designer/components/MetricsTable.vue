@@ -15,6 +15,8 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 
+import CreateCustomServiceSlideIn from '@/mode-custom-services/CreateCustomServiceSlideIn.vue'
+import type { ServiceModel } from '@/mode-custom-services/types'
 import EditableTable from '@/monitoring/shared/components/EditableTable.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import ActionsCell from '@/monitoring/shared/components/cell/ActionsCell.vue'
@@ -41,10 +43,10 @@ import {
   newScalarDraft,
   scalarColor
 } from '../drafts'
-import { type ItemId, type MetricBackendItem, isSingleLine, parseLineType } from '../types'
+import { customServiceModelFor } from '../metricBackend'
+import { type ItemId, isSingleLine, parseLineType } from '../types'
 import type { RowIssue } from '../validation'
 import DeleteWithDependentsPopup from './DeleteWithDependentsPopup.vue'
-import MetricBackendRuleSlideIn from './MetricBackendRuleSlideIn.vue'
 import RowEditor from './forms/RowEditor.vue'
 
 /** Shared so an unaffected row keeps the same identity across renders. */
@@ -181,7 +183,7 @@ const rowActions: CellAction[] = [
   { id: 'delete', label: _t('Delete'), icon: 'delete' }
 ]
 
-/** Metric-backend rows gain an "Add rule" action once their query is complete. */
+/** Metric-backend rows gain a "Create custom service" action once their query is complete. */
 function rowActionsFor(row: DesignerItem): CellAction[] {
   if (
     metricBackendAvailable &&
@@ -191,13 +193,13 @@ function rowActionsFor(row: DesignerItem): CellAction[] {
   ) {
     return [
       ...rowActions,
-      { id: 'add-rule', label: _t('Add rule: Metric backend (Custom query)'), icon: 'add-rule' }
+      { id: 'create-custom-service', label: _t('Create custom service'), icon: 'add-rule' }
     ]
   }
   return rowActions
 }
 
-const metricBackendRuleItem = ref<MetricBackendItem | null>(null)
+const customServiceModel = ref<ServiceModel | null>(null)
 
 const rowDelete = useDeleteWithDependents(store, () => {
   rowSelection.value = {}
@@ -211,8 +213,12 @@ function onRowAction(row: DesignerItem, action: CellAction): void {
     }
   } else if (action.id === 'delete') {
     rowDelete.request([row.id])
-  } else if (action.id === 'add-rule' && row.type === 'metric_backend' && isValid(row)) {
-    metricBackendRuleItem.value = row
+  } else if (
+    action.id === 'create-custom-service' &&
+    row.type === 'metric_backend' &&
+    isValid(row)
+  ) {
+    customServiceModel.value = customServiceModelFor(row, metricBackendDefaultTitle)
   }
 }
 
@@ -420,12 +426,11 @@ function titleMessages(row: DesignerItem): TranslatedString[] {
       @close="rowDelete.cancel()"
     />
 
-    <MetricBackendRuleSlideIn
-      v-if="metricBackendRuleItem !== null"
+    <CreateCustomServiceSlideIn
+      v-if="customServiceModel !== null"
       open
-      :item="metricBackendRuleItem"
-      :default-title="metricBackendDefaultTitle"
-      @close="metricBackendRuleItem = null"
+      :initial="customServiceModel"
+      @close="customServiceModel = null"
     />
   </div>
 </template>

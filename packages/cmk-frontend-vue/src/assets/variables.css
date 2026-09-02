@@ -120,6 +120,7 @@
     --default-dialog-font-color: var(--font-color);
     --form-element-required-color: var(--success-dimmed-2);
     --input-hover-bg-color: var(--ux-theme-4);
+    --global-settings-row-hover-bg-color: var(--color-dark-blue-10);
     --code-background-color: var(--color-daylight-grey-50);
     --wizard-progress-bar-background-color: var(--color-daylight-grey-60);
     --wizard-progress-bar-background-badge-color: var(--color-midnight-grey-100);
@@ -268,6 +269,7 @@
     --default-dialog-font-color: var(--font-color);
     --form-element-required-color: var(--success);
     --input-hover-bg-color: var(--ux-theme-4);
+    --global-settings-row-hover-bg-color: var(--color-dark-blue-90);
     --code-background-color: var(--ux-theme-0);
     --wizard-progress-bar-background-color: var(--white);
     --wizard-progress-bar-background-badge-color: var(--color-white-100);

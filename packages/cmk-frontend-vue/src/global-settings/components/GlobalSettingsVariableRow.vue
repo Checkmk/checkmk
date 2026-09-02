@@ -52,7 +52,7 @@ const emit = defineEmits<{ edit: [] }>()
 
   &:hover,
   &:focus-within {
-    background: var(--ux-theme-6);
+    background: var(--global-settings-row-hover-bg-color);
   }
 }
 

@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.sophos_disk import (
+from cmk.plugins.sophos.agent_based.sophos_disk import (
     check_sophos_disk,
     discover_sophos_disk,
     Params,

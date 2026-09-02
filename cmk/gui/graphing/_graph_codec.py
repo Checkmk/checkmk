@@ -24,6 +24,8 @@ from cmk.graphing_engine import (
     Line,
     MetricName,
     MinimalRange,
+    PredictionCurveKind,
+    PredictionMetric,
     Product,
     QuantityProtocol,
     Region,
@@ -205,6 +207,37 @@ def _rrd_metric_from_json(data: Mapping[str, object], _codec: QuantityCodec) -> 
             if consolidation_function is None
             else ConsolidationFunction(ensure_type(consolidation_function, str))
         ),
+    )
+
+
+def _prediction_metric_to_json(
+    quantity: QuantityProtocol, _codec: QuantityCodec
+) -> Mapping[str, object]:
+    quantity = ensure_type(quantity, PredictionMetric)
+    return {
+        "site_id": str(quantity.site_id),
+        "host_name": str(quantity.host_name),
+        "service_name": str(quantity.service_name),
+        "metric_name": str(quantity.metric_name),
+        "period": quantity.period,
+        "valid_from": quantity.valid_from,
+        "valid_until": quantity.valid_until,
+        "curve_kind": str(quantity.curve_kind),
+    }
+
+
+def _prediction_metric_from_json(
+    data: Mapping[str, object], _codec: QuantityCodec
+) -> PredictionMetric:
+    return PredictionMetric(
+        site_id=SiteID(ensure_type(data["site_id"], str)),
+        host_name=HostName(ensure_type(data["host_name"], str)),
+        service_name=ServiceName(ensure_type(data["service_name"], str)),
+        metric_name=MetricName(ensure_type(data["metric_name"], str)),
+        period=ensure_type(data["period"], str),
+        valid_from=ensure_type(data["valid_from"], int),
+        valid_until=ensure_type(data["valid_until"], int),
+        curve_kind=PredictionCurveKind(ensure_type(data["curve_kind"], str)),
     )
 
 
@@ -469,6 +502,7 @@ def graph_codec(specs: Sequence[QuantitySpec]) -> GraphCodec:
 # set, so a graph written by a smaller edition stays readable by a bigger one.
 COMMUNITY_QUANTITY_SPECS: Sequence[QuantitySpec] = (
     QuantitySpec("rrd_metric", _rrd_metric_to_json, _rrd_metric_from_json),
+    QuantitySpec("prediction_metric", _prediction_metric_to_json, _prediction_metric_from_json),
     QuantitySpec("constant", _constant_to_json, _constant_from_json),
     QuantitySpec("scalar_of", _scalar_of_to_json, _scalar_of_from_json),
     QuantitySpec("sum", _sum_to_json, _sum_from_json),

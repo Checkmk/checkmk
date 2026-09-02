@@ -25,6 +25,8 @@ from cmk.graphing_engine import (
     Line,
     MetricName,
     MinimalRange,
+    PredictionCurveKind,
+    PredictionMetric,
     Product,
     QuantityProtocol,
     Region,
@@ -239,6 +241,16 @@ _ROUND_TRIP_DISPLAY = CurveAttributes(
 # equality assertion. test_every_engine_quantity_kind_is_covered keeps this in step with the codec.
 _ENGINE_QUANTITY_SAMPLES: Mapping[str, QuantityProtocol] = {
     "rrd_metric": _ROUND_TRIP_METRIC,
+    "prediction_metric": PredictionMetric(
+        site_id=SiteID("heute"),
+        host_name=HostName("round-trip-host"),
+        service_name=ServiceName("round-trip-service"),
+        metric_name=MetricName("round_trip_metric"),
+        period="wday",
+        valid_from=1700000000,
+        valid_until=1700086400,
+        curve_kind=PredictionCurveKind.LOWER_CRITICAL,
+    ),
     "constant": Constant(23.5, _ROUND_TRIP_DISPLAY),
     "scalar_of": ScalarOf(
         metric=_ROUND_TRIP_METRIC, scalar_kind=ScalarKind.LOWER_CRITICAL, color="#040506"

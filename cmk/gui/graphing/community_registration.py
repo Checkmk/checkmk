@@ -28,6 +28,7 @@ from ._metric_backend_registry import (
     MetricBackend,
 )
 from ._metric_visitor import MetricVisitor
+from ._prediction_graphs import prediction_graph_dispatcher
 from ._settings import ConfigVariableGraphTimeranges
 from ._valuespecs import LivestatusQueryFunc, PageVsAutocomplete
 
@@ -35,6 +36,7 @@ from ._valuespecs import LivestatusQueryFunc, PageVsAutocomplete
 def _register_graph_dispatchers(registry: GraphDispatcherRegistry, codec: GraphCodec) -> None:
     # Every graph kind of the edition is registered with that one codec.
     registry.register(template_graph_dispatcher(codec))
+    registry.register(prediction_graph_dispatcher(codec))
 
 
 def register(

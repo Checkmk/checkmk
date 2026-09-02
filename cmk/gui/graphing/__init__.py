@@ -178,6 +178,7 @@ from ._plugins import (
     registered_translations,
 )
 from ._popup import PageHostServiceGraphPopup
+from ._prediction_graphs import prediction_graph_dispatcher
 from ._settings import ConfigVariableGraphTimeranges
 from ._source import (
     assemble_fetched_data,
@@ -345,6 +346,7 @@ __all__ = [
     "perfometer_sort_value",
     "PerfometerFromAPI",
     "perfometers_from_api",
+    "prediction_graph_dispatcher",
     "QuantityCodec",
     "QuantitySpec",
     "QueryData",

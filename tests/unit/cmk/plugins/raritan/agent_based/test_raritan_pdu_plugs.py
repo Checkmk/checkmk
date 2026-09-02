@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.raritan_pdu_plugs import (
+from cmk.plugins.raritan.agent_based.raritan_pdu_plugs import (
     check_raritan_pdu_plugs,
     CombinedParams,
     discover_raritan_pdu_plugs,

@@ -17,7 +17,9 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.monitor.command import (
+    acknowledge_defaults,
     acknowledge_presets_url,
+    downtime_presets,
     downtime_presets_url,
     DowntimeRecurrences,
     MonitorCommands,
@@ -37,7 +39,10 @@ from cmk.gui.type_defs import DynamicIconName, IconNames, StaticIcon, Visual
 from cmk.gui.user_sites import sorted_sites
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.all_hosts import (
+    AcknowledgeDefaults,
+    DowntimePreset,
     DowntimeRecurrence,
+    DowntimeUntilKeyword,
     Edition,
     MonitoringAction,
     MonitoringAllHostsApp,
@@ -136,6 +141,10 @@ class MonitorAllHostsPage(Page):
             user_role_ids=user.role_ids,
         )
 
+        # The option states and durations the dialogs start from, as the settings the panes
+        # link to have them.
+        ack = acknowledge_defaults(ctx.config)
+
         html.vue_component(
             "cmk-monitoring-all-hosts",
             data=asdict(
@@ -163,6 +172,24 @@ class MonitorAllHostsPage(Page):
                     row_actions=_row_actions(ctx.config),
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     acknowledge_presets_url=acknowledge_presets_url(ctx.config),
+                    acknowledge_defaults=AcknowledgeDefaults(
+                        sticky=ack.sticky,
+                        persistent=ack.persistent,
+                        notify=ack.notify,
+                        expire_seconds=ack.expire_seconds,
+                    ),
+                    downtime_presets=[
+                        DowntimePreset(
+                            title=preset.title,
+                            # A span stays a number; a keyword becomes the generated enum.
+                            end=(
+                                preset.end
+                                if isinstance(preset.end, int)
+                                else DowntimeUntilKeyword(preset.end)
+                            ),
+                        )
+                        for preset in downtime_presets(ctx.config)
+                    ],
                     notification_rules_url=notification_rules_url(ctx.config),
                     downtime_presets_url=downtime_presets_url(ctx.config),
                     legacy_view_button=MonitoringPageLinkButton(

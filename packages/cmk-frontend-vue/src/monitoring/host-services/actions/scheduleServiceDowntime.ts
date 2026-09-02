@@ -7,6 +7,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 
 import type { HostRef } from '@/monitoring/shared/api/types'
 import {
+  type DowntimePresetOption,
   type DowntimeRecurrenceOption,
   type ScheduleDowntimeFormValues
 } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
@@ -17,6 +18,7 @@ import type { MonitoringAction } from '@/monitoring/shared/components/action/typ
 export function useScheduleServiceDowntimeAction(
   host: HostRef,
   recurrences: DowntimeRecurrenceOption[],
+  presets: DowntimePresetOption[],
   presetsUrl: string | null
 ): MonitoringAction<ScheduleDowntimeFormValues, string> {
   const { _t, _tn } = usei18n()
@@ -29,6 +31,7 @@ export function useScheduleServiceDowntimeAction(
     ],
     targetKind: 'service',
     recurrences,
+    presets,
     presetsUrl,
     async schedule(api, targets, _values, options) {
       await api.scheduleServiceDowntime(host.name, targets, options)

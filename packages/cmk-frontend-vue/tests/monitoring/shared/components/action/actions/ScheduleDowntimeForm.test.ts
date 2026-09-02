@@ -10,25 +10,37 @@ import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import ScheduleDowntimeForm, {
+  type DowntimePresetOption,
   type DowntimeRecurrenceOption,
   type ScheduleDowntimeFormValues,
   defaultScheduleDowntimeValues,
   downtimeWindow,
   isScheduleDowntimeValid,
+  presetSelection,
   untilPresetEnd
 } from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
+
+/** What a site offers out of the box, as `user_downtime_timeranges` has it. */
+const PRESETS: DowntimePresetOption[] = [
+  { title: '2 hours', end: 2 * 60 * 60 },
+  { title: 'Today', end: 'next_day' },
+  { title: 'This week', end: 'next_week' },
+  { title: 'This month', end: 'next_month' },
+  { title: 'This year', end: 'next_year' }
+]
 
 function mountForm(
   overrides: Partial<ScheduleDowntimeFormValues> = {},
   recurrences: DowntimeRecurrenceOption[] = [],
-  presetsUrl: string | null = null
+  presetsUrl: string | null = null,
+  presets: DowntimePresetOption[] = PRESETS
 ) {
   const modelValue: ScheduleDowntimeFormValues = {
-    ...defaultScheduleDowntimeValues(),
+    ...defaultScheduleDowntimeValues(presets),
     ...overrides
   }
   return {
-    ...render(ScheduleDowntimeForm, { props: { modelValue, recurrences, presetsUrl } }),
+    ...render(ScheduleDowntimeForm, { props: { modelValue, recurrences, presets, presetsUrl } }),
     modelValue
   }
 }
@@ -46,17 +58,7 @@ class FakeResizeObserver {
 }
 
 /** Every duration the form offers, in render order, to tell chips from the form's other buttons. */
-const DURATION_LABELS = [
-  'Custom',
-  'Now',
-  '4 h',
-  '24 h',
-  '10 d',
-  'Today',
-  'This week',
-  'This month',
-  'This year'
-]
+const DURATION_LABELS = ['Custom', 'Now', ...PRESETS.map((preset) => preset.title)]
 
 function stubGeometry(el: HTMLElement, props: Record<string, number>): void {
   for (const [key, value] of Object.entries(props)) {
@@ -114,13 +116,27 @@ test("the immediate duration chip is named 'Now'", () => {
 })
 
 test('marks the selected duration chip as pressed', async () => {
-  mountForm({ comment: 'maintenance', selection: '4h' })
+  mountForm({ comment: 'maintenance', selection: presetSelection(0) })
 
-  expect(screen.getByRole('button', { name: '4 h', pressed: true })).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: '24 h', pressed: false })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '2 hours', pressed: true })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Today', pressed: false })).toBeInTheDocument()
 
-  await userEvent.click(screen.getByRole('button', { name: '24 h' }))
-  expect(screen.getByRole('button', { name: '24 h', pressed: true })).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: 'Today' }))
+  expect(screen.getByRole('button', { name: 'Today', pressed: true })).toBeInTheDocument()
+})
+
+test('offers the durations the site configured, not a hard-coded set', () => {
+  mountForm({ comment: 'maintenance' }, [], null, [
+    { title: '30 minutes', end: 30 * 60 },
+    { title: 'Until tomorrow', end: 'next_day' }
+  ])
+
+  expect(screen.getByRole('button', { name: '30 minutes' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Until tomorrow' })).toBeInTheDocument()
+  // The form's own two stay; everything else is the site's to decide.
+  expect(screen.getByRole('button', { name: 'Custom' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Now' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '2 hours' })).not.toBeInTheDocument()
 })
 
 test('links the duration presets only when the server offers the page', () => {
@@ -137,15 +153,15 @@ test('links the duration presets only when the server offers the page', () => {
 })
 
 test('a duration preset explains itself as a duration', () => {
-  mountForm({ comment: 'maintenance', selection: '4h' })
+  mountForm({ comment: 'maintenance', selection: presetSelection(0) })
 
   expect(
-    screen.getByText('Scheduled downtime, starting now with a duration of 4 hours.')
+    screen.getByText('Scheduled downtime, starting now with a duration of 2 hours.')
   ).toBeInTheDocument()
 })
 
 test('an until preset explains itself with the end date', () => {
-  mountForm({ comment: 'maintenance', selection: 'today' })
+  mountForm({ comment: 'maintenance', selection: presetSelection(1) })
 
   expect(screen.getByText(/Scheduled downtime, starting now and ending on/)).toBeInTheDocument()
 })
@@ -169,7 +185,7 @@ describe('a row too narrow for every duration', () => {
 
     expect(screen.getByRole('button', { name: 'Custom' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Now' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '4 h' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '2 hours' })).not.toBeInTheDocument()
     expect(screen.getByRole('combobox', { name: 'More durations' })).toBeInTheDocument()
   })
 
@@ -182,93 +198,137 @@ describe('a row too narrow for every duration', () => {
     await userEvent.click(screen.getByRole('combobox', { name: 'More durations' }))
     await userEvent.click(screen.getByRole('option', { name: 'This year' }))
 
-    expect(modelValue.selection).toBe('year')
+    // 'This year' is the last of the five configured ranges, so the fifth preset chip.
+    expect(modelValue.selection).toBe(presetSelection(4))
   })
 })
 
-test('shows seven durations and hides the rest behind the dropdown', async () => {
+test('shows the durations a stock site offers without needing the dropdown', () => {
   mountForm({ comment: 'maintenance' })
 
   const chips = screen
     .getAllByRole('button')
     .map((chip) => chip.textContent?.trim())
     .filter((label) => DURATION_LABELS.includes(label!))
-  expect(chips).toEqual(['Custom', 'Now', '4 h', '24 h', '10 d', 'Today', 'This week'])
+
+  // 'Custom' and 'Now' plus the five ranges a fresh site configures is exactly the cap.
+  expect(chips).toEqual([
+    'Custom',
+    'Now',
+    '2 hours',
+    'Today',
+    'This week',
+    'This month',
+    'This year'
+  ])
+  expect(screen.queryByRole('combobox', { name: 'More durations' })).not.toBeInTheDocument()
+})
+
+test('hides the durations past the cap behind the dropdown', async () => {
+  const extra: DowntimePresetOption[] = [...PRESETS, { title: '10 days', end: 10 * 24 * 60 * 60 }]
+  mountForm({ comment: 'maintenance' }, [], null, extra)
+
+  const chips = screen
+    .getAllByRole('button')
+    .map((chip) => chip.textContent?.trim())
+    .filter((label) => ['Custom', 'Now', ...extra.map((preset) => preset.title)].includes(label!))
+  expect(chips).toEqual([
+    'Custom',
+    'Now',
+    '2 hours',
+    'Today',
+    'This week',
+    'This month',
+    'This year'
+  ])
 
   await userEvent.click(screen.getByRole('combobox', { name: 'More durations' }))
   expect(screen.getAllByRole('option').map((option) => option.textContent?.trim())).toEqual([
-    'This month',
-    'This year'
+    '10 days'
   ])
 })
 
 describe('isScheduleDowntimeValid', () => {
   it('requires a non-empty comment', () => {
-    expect(isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(), comment: '' })).toBe(false)
-    expect(isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(), comment: 'x' })).toBe(true)
+    expect(
+      isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(PRESETS), comment: '' }, PRESETS)
+    ).toBe(false)
+    expect(
+      isScheduleDowntimeValid({ ...defaultScheduleDowntimeValues(PRESETS), comment: 'x' }, PRESETS)
+    ).toBe(true)
   })
 
   it('rejects a zero ad hoc duration', () => {
     expect(
-      isScheduleDowntimeValid({
-        ...defaultScheduleDowntimeValues(),
-        comment: 'x',
-        selection: 'adhoc',
-        adhocHours: 0,
-        adhocMinutes: 0
-      })
+      isScheduleDowntimeValid(
+        {
+          ...defaultScheduleDowntimeValues(PRESETS),
+          comment: 'x',
+          selection: 'adhoc',
+          adhocHours: 0,
+          adhocMinutes: 0
+        },
+        PRESETS
+      )
     ).toBe(false)
   })
 })
 
 describe('downtimeWindow', () => {
   it('spans the preset duration for a preset selection', () => {
-    const window = downtimeWindow({ ...defaultScheduleDowntimeValues(), selection: '4h' })
+    const window = downtimeWindow(defaultScheduleDowntimeValues(PRESETS), PRESETS)
 
     expect(window).not.toBeNull()
     const spanMs = new Date(window!.end).getTime() - new Date(window!.start).getTime()
-    expect(spanMs).toBe(4 * 60 * 60_000)
+    expect(spanMs).toBe(2 * 60 * 60_000)
   })
 
   it('returns null for an empty ad hoc duration', () => {
-    const window = downtimeWindow({
-      ...defaultScheduleDowntimeValues(),
-      selection: 'adhoc',
-      adhocHours: 0,
-      adhocMinutes: 0
-    })
+    const window = downtimeWindow(
+      {
+        ...defaultScheduleDowntimeValues(PRESETS),
+        selection: 'adhoc',
+        adhocHours: 0,
+        adhocMinutes: 0
+      },
+      PRESETS
+    )
 
     expect(window).toBeNull()
   })
 
-  it.each(['today', 'week', 'month', 'year'] as const)(
-    'ends on a later calendar boundary for the %s preset',
-    (selection) => {
-      const window = downtimeWindow({ ...defaultScheduleDowntimeValues(), selection })
+  it.each(
+    PRESETS.map((preset, index) => ({ ...preset, index })).filter(
+      ({ end }) => typeof end === 'string'
+    )
+  )('ends on a later calendar boundary for $title', ({ index }) => {
+    const window = downtimeWindow(
+      { ...defaultScheduleDowntimeValues(PRESETS), selection: presetSelection(index) },
+      PRESETS
+    )
 
-      expect(window).not.toBeNull()
-      expect(new Date(window!.end).getTime()).toBeGreaterThan(new Date(window!.start).getTime())
-    }
-  )
+    expect(window).not.toBeNull()
+    expect(new Date(window!.end).getTime()).toBeGreaterThan(new Date(window!.start).getTime())
+  })
 })
 
 describe('untilPresetEnd', () => {
   const start = toZoned(parseAbsolute('2026-08-04T10:30:00Z', 'UTC'), 'UTC')
 
   it('ends at the start of the next day for today', () => {
-    expect(untilPresetEnd('today', start).toString()).toBe('2026-08-05T00:00:00+00:00[UTC]')
+    expect(untilPresetEnd('next_day', start).toString()).toBe('2026-08-05T00:00:00+00:00[UTC]')
   })
 
   it('ends at the start of the day after the coming Sunday for the week', () => {
-    expect(untilPresetEnd('week', start).toString()).toBe('2026-08-10T00:00:00+00:00[UTC]')
+    expect(untilPresetEnd('next_week', start).toString()).toBe('2026-08-10T00:00:00+00:00[UTC]')
   })
 
   it('ends at the start of the next month', () => {
-    expect(untilPresetEnd('month', start).toString()).toBe('2026-09-01T00:00:00+00:00[UTC]')
+    expect(untilPresetEnd('next_month', start).toString()).toBe('2026-09-01T00:00:00+00:00[UTC]')
   })
 
   it('ends at the start of the next year', () => {
-    expect(untilPresetEnd('year', start).toString()).toBe('2027-01-01T00:00:00+00:00[UTC]')
+    expect(untilPresetEnd('next_year', start).toString()).toBe('2027-01-01T00:00:00+00:00[UTC]')
   })
 })
 
@@ -319,13 +379,16 @@ describe('Repeat', () => {
     const start = toZoned(parseAbsolute('2026-08-29T10:00:00Z', 'UTC'), 'UTC')
 
     expect(
-      isScheduleDowntimeValid({
-        ...defaultScheduleDowntimeValues(),
-        comment: 'maintenance',
-        selection: 'custom',
-        customRange: { from: start, to: start.add({ hours: 4 }) },
-        recur: 'day_of_month'
-      })
+      isScheduleDowntimeValid(
+        {
+          ...defaultScheduleDowntimeValues(PRESETS),
+          comment: 'maintenance',
+          selection: 'custom',
+          customRange: { from: start, to: start.add({ hours: 4 }) },
+          recur: 'day_of_month'
+        },
+        PRESETS
+      )
     ).toBe(false)
   })
 
@@ -333,13 +396,16 @@ describe('Repeat', () => {
     const start = toZoned(parseAbsolute('2026-08-28T10:00:00Z', 'UTC'), 'UTC')
 
     expect(
-      isScheduleDowntimeValid({
-        ...defaultScheduleDowntimeValues(),
-        comment: 'maintenance',
-        selection: 'custom',
-        customRange: { from: start, to: start.add({ hours: 4 }) },
-        recur: 'day_of_month'
-      })
+      isScheduleDowntimeValid(
+        {
+          ...defaultScheduleDowntimeValues(PRESETS),
+          comment: 'maintenance',
+          selection: 'custom',
+          customRange: { from: start, to: start.add({ hours: 4 }) },
+          recur: 'day_of_month'
+        },
+        PRESETS
+      )
     ).toBe(true)
   })
 

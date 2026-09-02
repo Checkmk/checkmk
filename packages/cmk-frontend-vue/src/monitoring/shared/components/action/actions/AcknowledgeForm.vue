@@ -123,7 +123,7 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
           target="_blank"
           rel="noopener"
         >
-          {{ _t('(edit presets)') }}
+          {{ _t('(Edit defaults)') }}
         </CmkLink>
       </div>
 

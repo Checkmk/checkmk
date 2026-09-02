@@ -16,12 +16,20 @@ export interface DowntimeRecurrenceOption {
   title: string
 }
 
-export type DurationPreset = '4h' | '24h' | '10d'
+/** The end of a calendar period, named the way the downtime time range setting names it. */
+export type UntilKeyword = 'next_day' | 'next_week' | 'next_month' | 'next_year'
 
-/** Presets that run until the end of a calendar period rather than for a fixed duration. */
-export type UntilPreset = 'today' | 'week' | 'month' | 'year'
+/**
+ * A duration the site offers. `end` is one field rather than two because that is what the
+ * setting stores: a span in seconds, or the keyword for the end of a calendar period.
+ */
+export interface DowntimePresetOption {
+  title: string
+  end: number | UntilKeyword
+}
 
-export type DurationSelection = 'custom' | 'adhoc' | DurationPreset | UntilPreset
+/** 'custom' and 'adhoc' are the form's own; anything else names one of the site's durations. */
+export type DurationSelection = 'custom' | 'adhoc' | `preset:${number}`
 
 /** Raw form state. The action turns this into the downtime request body at submit time. */
 export interface ScheduleDowntimeFormValues {
@@ -35,18 +43,30 @@ export interface ScheduleDowntimeFormValues {
   recur: DowntimeRecur
 }
 
-const PRESET_MINUTES: Record<DurationPreset, number> = {
-  '4h': 4 * 60,
-  '24h': 24 * 60,
-  '10d': 10 * 24 * 60
-}
-
 const MIDNIGHT = { hour: 0, minute: 0, second: 0, millisecond: 0 } as const
 
-const UNTIL_PRESETS: readonly DurationSelection[] = ['today', 'week', 'month', 'year']
+const UNTIL_KEYWORDS: readonly string[] = ['next_day', 'next_week', 'next_month', 'next_year']
 
-export function isUntilPreset(selection: DurationSelection): selection is UntilPreset {
-  return UNTIL_PRESETS.includes(selection)
+/** Whether a value off the payload is a keyword the form can resolve to a time. */
+export function isUntilKeyword(value: unknown): value is UntilKeyword {
+  return typeof value === 'string' && UNTIL_KEYWORDS.includes(value)
+}
+
+const PRESET_PREFIX = 'preset:'
+
+/** What `selection` reads as while the site's nth duration is picked. */
+export function presetSelection(index: number): DurationSelection {
+  return `${PRESET_PREFIX}${index}`
+}
+
+/** The duration `selection` names, or `undefined` while one of the form's own is picked. */
+export function selectedPreset(
+  values: ScheduleDowntimeFormValues,
+  presets: readonly DowntimePresetOption[]
+): DowntimePresetOption | undefined {
+  return values.selection.startsWith(PRESET_PREFIX)
+    ? presets[Number(values.selection.slice(PRESET_PREFIX.length))]
+    : undefined
 }
 
 /**
@@ -54,25 +74,51 @@ export function isUntilPreset(selection: DurationSelection): selection is UntilP
  * `time_interval_end`: the start of the next day, of the day after the coming
  * Sunday, of the next month, or of the next year.
  */
-export function untilPresetEnd(preset: UntilPreset, start: ZonedDateTime): ZonedDateTime {
+export function untilPresetEnd(preset: UntilKeyword, start: ZonedDateTime): ZonedDateTime {
   switch (preset) {
-    case 'today':
+    case 'next_day':
       return start.add({ days: 1 }).set(MIDNIGHT)
-    case 'week':
+    case 'next_week':
       return start.add({ days: 7 - ((start.toDate().getDay() + 6) % 7) }).set(MIDNIGHT)
-    case 'month':
+    case 'next_month':
       return start.add({ months: 1 }).set({ day: 1, ...MIDNIGHT })
-    case 'year':
+    case 'next_year':
       return start.add({ years: 1 }).set({ month: 1, day: 1, ...MIDNIGHT })
   }
 }
 
-export function defaultScheduleDowntimeValues(): ScheduleDowntimeFormValues {
+/** When the duration a preset offers runs out, or `null` when it resolves to no time. */
+function presetEnd(
+  preset: DowntimePresetOption | undefined,
+  start: ZonedDateTime
+): ZonedDateTime | null {
+  if (preset === undefined) {
+    return null
+  }
+  if (typeof preset.end === 'number') {
+    return preset.end > 0 ? start.add({ seconds: preset.end }) : null
+  }
+  return untilPresetEnd(preset.end, start)
+}
+
+/** When the ad hoc duration runs out, or `null` when none was entered. */
+function adhocEnd(values: ScheduleDowntimeFormValues, start: ZonedDateTime): ZonedDateTime | null {
+  const minutes = adhocMinutesTotal(values)
+  return minutes > 0 ? start.add({ minutes }) : null
+}
+
+export function defaultScheduleDowntimeValues(
+  presets: readonly DowntimePresetOption[]
+): ScheduleDowntimeFormValues {
   const start = now(getLocalTimeZone())
+  const first = presets[0]
   return {
     comment: '',
-    selection: '4h',
-    customRange: { from: start, to: start.add({ hours: 4 }) },
+    // The classic form marks the first configured range active and prefills its end into the
+    // custom fields, so start there; with none configured there is nothing to pick and the
+    // custom range is the only way in.
+    selection: first ? presetSelection(0) : 'custom',
+    customRange: { from: start, to: presetEnd(first, start) ?? start.add({ hours: 4 }) },
     adhocHours: 2,
     adhocMinutes: 30,
     flexible: false,
@@ -85,26 +131,35 @@ export function adhocMinutesTotal(values: ScheduleDowntimeFormValues): number {
   return (values.adhocHours ?? 0) * 60 + (values.adhocMinutes ?? 0)
 }
 
-export function isScheduleDowntimeValid(values: ScheduleDowntimeFormValues): boolean {
+export function isScheduleDowntimeValid(
+  values: ScheduleDowntimeFormValues,
+  presets: readonly DowntimePresetOption[]
+): boolean {
   const durationValid = values.selection !== 'adhoc' || adhocMinutesTotal(values) > 0
-  return values.comment.trim() !== '' && durationValid && repeatsOnADayEveryMonthHas(values)
+  return (
+    values.comment.trim() !== '' && durationValid && repeatsOnADayEveryMonthHas(values, presets)
+  )
 }
 
 /**
  * A downtime repeating on the same day of each month can only start on a day that every month
  * has, or the months short of it would go without.
  */
-export function repeatsOnADayEveryMonthHas(values: ScheduleDowntimeFormValues): boolean {
+export function repeatsOnADayEveryMonthHas(
+  values: ScheduleDowntimeFormValues,
+  presets: readonly DowntimePresetOption[]
+): boolean {
   if (values.recur !== 'day_of_month') {
     return true
   }
-  const window = downtimeWindow(values)
+  const window = downtimeWindow(values, presets)
   return window === null || new Date(window.start).getDate() <= 28
 }
 
 /** The absolute downtime window in ISO 8601, or `null` when the selected duration is empty. */
 export function downtimeWindow(
-  values: ScheduleDowntimeFormValues
+  values: ScheduleDowntimeFormValues,
+  presets: readonly DowntimePresetOption[]
 ): { start: string; end: string } | null {
   if (values.selection === 'custom') {
     return {
@@ -112,23 +167,14 @@ export function downtimeWindow(
       end: values.customRange.to.toDate().toISOString()
     }
   }
-  if (isUntilPreset(values.selection)) {
-    const start = now(getLocalTimeZone())
-    return {
-      start: start.toDate().toISOString(),
-      end: untilPresetEnd(values.selection, start).toDate().toISOString()
-    }
-  }
-  const minutes =
-    values.selection === 'adhoc' ? adhocMinutesTotal(values) : PRESET_MINUTES[values.selection]
-  if (minutes <= 0) {
-    return null
-  }
-  const startDate = new Date()
-  return {
-    start: startDate.toISOString(),
-    end: new Date(startDate.getTime() + minutes * 60_000).toISOString()
-  }
+  const start = now(getLocalTimeZone())
+  const end =
+    values.selection === 'adhoc'
+      ? adhocEnd(values, start)
+      : presetEnd(selectedPreset(values, presets), start)
+  return end === null
+    ? null
+    : { start: start.toDate().toISOString(), end: end.toDate().toISOString() }
 }
 </script>
 
@@ -155,12 +201,15 @@ const props = withDefaults(
   defineProps<{
     targetKind?: ActionTargetKind
     recurrences?: DowntimeRecurrenceOption[]
+    /** The durations the site offers, as configured under Setup. */
+    presets?: DowntimePresetOption[]
     /** Where the duration presets are edited. */
     presetsUrl?: string | null
   }>(),
   {
     targetKind: 'host',
     recurrences: () => [],
+    presets: () => [],
     presetsUrl: null
   }
 )
@@ -177,21 +226,20 @@ const timeZone = getLocalTimeZone()
 
 const customOpen = ref(false)
 
-const durationChips: {
+interface DurationChip {
   id: DurationSelection
   label: TranslatedString
-  duration?: TranslatedString
-}[] = [
+}
+
+// 'Custom' and 'Now' are the form's own; every other duration is the site's to configure.
+const durationChips = computed<DurationChip[]>(() => [
   { id: 'custom', label: _t('Custom') },
   { id: 'adhoc', label: _t('Now') },
-  { id: '4h', label: _t('4 h'), duration: _t('4 hours') },
-  { id: '24h', label: _t('24 h'), duration: _t('24 hours') },
-  { id: '10d', label: _t('10 d'), duration: _t('10 days') },
-  { id: 'today', label: _t('Today') },
-  { id: 'week', label: _t('This week') },
-  { id: 'month', label: _t('This month') },
-  { id: 'year', label: _t('This year') }
-]
+  ...props.presets.map((preset, index) => ({
+    id: presetSelection(index),
+    label: preset.title as TranslatedString
+  }))
+])
 
 const repeatOptions = computed(() => ({
   type: 'fixed' as const,
@@ -202,7 +250,7 @@ const repeatOptions = computed(() => ({
 }))
 
 const monthDayHint = computed(() =>
-  repeatsOnADayEveryMonthHas(model.value)
+  repeatsOnADayEveryMonthHas(model.value, props.presets)
     ? null
     : _t('A downtime repeating monthly has to start between the 1st and the 28th.')
 )
@@ -214,23 +262,21 @@ const repeat = computed({
   }
 })
 
-const presetDuration = computed(
-  () => durationChips.find((chip) => chip.id === model.value.selection)?.duration ?? ''
-)
+const presetDuration = computed(() => selectedPreset(model.value, props.presets)?.title ?? '')
 
 const untilEndDate = computed(() => {
-  const selection = model.value.selection
-  if (!isUntilPreset(selection)) {
+  const until = selectedPreset(model.value, props.presets)?.end
+  if (until === undefined || typeof until === 'number') {
     return null
   }
-  return untilPresetEnd(selection, now(timeZone)).toDate().toLocaleDateString('en-US', {
+  return untilPresetEnd(until, now(timeZone)).toDate().toLocaleDateString('en-US', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
   })
 })
 
-watch(model, (values) => emit('update:valid', isScheduleDowntimeValid(values)), {
+watch(model, (values) => emit('update:valid', isScheduleDowntimeValid(values, props.presets)), {
   immediate: true,
   deep: true
 })
@@ -248,8 +294,8 @@ function selectDuration(id: DurationSelection): void {
 
 /**
  * Chips past this one go to the dropdown however wide the row is. Seven is what the design shows:
- * 'Custom' and 'Now' plus the five presets a site configures by default (CMK-38358). Today's list
- * is hard-coded and longer, so two chips start out in the dropdown.
+ * 'Custom' and 'Now' plus the five ranges a site configures by default (CMK-38358); a site that
+ * configures more spills the rest into the dropdown.
  */
 const MAX_VISIBLE_DURATIONS = 7
 
@@ -263,7 +309,7 @@ const {
   hasOverflow
 } = usePresetOverflow(
   { rootRef: chipRowRef, measureRef: chipMeasureRef, overflowMeasureRef },
-  () => durationChips,
+  () => durationChips.value,
   { maxVisible: MAX_VISIBLE_DURATIONS }
 )
 
@@ -281,7 +327,7 @@ const overflowSelectedId = computed(() =>
 )
 
 function selectOverflow(id: string | null): void {
-  const chip = durationChips.find((candidate) => candidate.id === id)
+  const chip = durationChips.value.find((candidate) => candidate.id === id)
   if (chip) {
     selectDuration(chip.id)
   }

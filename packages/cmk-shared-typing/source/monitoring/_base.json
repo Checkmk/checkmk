@@ -35,9 +35,39 @@
     },
     "downtime_presets_url": {
       "type": ["string", "null"]
+    },
+    "acknowledge_defaults": { "$ref": "#/$defs/acknowledge_defaults" },
+    "downtime_presets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/downtime_preset" },
+      "default": []
     }
   },
   "$defs": {
+    "acknowledge_defaults": {
+      "type": "object",
+      "properties": {
+        "sticky": { "type": "boolean" },
+        "persistent": { "type": "boolean" },
+        "notify": { "type": "boolean" },
+        "expire_seconds": { "type": "number" }
+      },
+      "required": ["sticky", "persistent", "notify", "expire_seconds"]
+    },
+    "downtime_preset": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "end": {
+          "anyOf": [{ "type": "number" }, { "$ref": "#/$defs/downtime_until_keyword" }]
+        }
+      },
+      "required": ["title", "end"]
+    },
+    "downtime_until_keyword": {
+      "type": "string",
+      "enum": ["next_day", "next_week", "next_month", "next_year"]
+    },
     "monitoring_action": {
       "type": "object",
       "properties": {

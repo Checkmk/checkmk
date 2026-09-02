@@ -8,19 +8,22 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import type { HostRef } from '@/monitoring/shared/api/types'
 import { type AcknowledgeValues } from '@/monitoring/shared/components/action/actions/AcknowledgeForm.vue'
 import {
+  type AcknowledgeDefaults,
   type AcknowledgeLinks,
   createAcknowledgeAction
 } from '@/monitoring/shared/components/action/actions/acknowledge'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
 export function useAcknowledgeHostsAction(
-  links: AcknowledgeLinks
+  links: AcknowledgeLinks,
+  defaults: AcknowledgeDefaults
 ): MonitoringAction<AcknowledgeValues, HostRef> {
   const { _tn } = usei18n()
 
   return createAcknowledgeAction<HostRef>({
     targetKind: 'host',
     links,
+    defaults,
     async acknowledge(api, targets, options) {
       const hostNames = targets.map((target) => target.name)
       await api.acknowledgeHosts(hostNames, options)

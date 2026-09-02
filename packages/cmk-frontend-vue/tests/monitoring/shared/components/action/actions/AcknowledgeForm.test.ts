@@ -73,7 +73,7 @@ test('links the options header to the presets only when the server offers the pa
   const { unmount } = mountForm({}, 'host', { presetsUrl: 'wato.py?mode=edit_configvar' })
 
   expect(screen.getByText('Options')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: '(edit presets)' })).toHaveAttribute(
+  expect(screen.getByRole('link', { name: '(Edit defaults)' })).toHaveAttribute(
     'href',
     'wato.py?mode=edit_configvar'
   )
@@ -81,7 +81,7 @@ test('links the options header to the presets only when the server offers the pa
 
   mountForm()
   expect(screen.getByText('Options')).toBeInTheDocument()
-  expect(screen.queryByRole('link', { name: '(edit presets)' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: '(Edit defaults)' })).not.toBeInTheDocument()
 })
 
 test('the notify option links the notification rules when the server names them', () => {
@@ -126,7 +126,7 @@ test('both setup links open in a new tab, so a half-filled form survives the det
     'target',
     '_blank'
   )
-  expect(screen.getByRole('link', { name: '(edit presets)' })).toHaveAttribute('target', '_blank')
+  expect(screen.getByRole('link', { name: '(Edit defaults)' })).toHaveAttribute('target', '_blank')
 })
 
 test('the sticky option names the service on the service page', () => {

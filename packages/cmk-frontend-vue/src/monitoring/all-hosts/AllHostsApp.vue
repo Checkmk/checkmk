@@ -25,7 +25,9 @@ import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import RefreshCountdown from '../shared/components/RefreshCountdown.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
+import { acknowledgeDefaults } from '../shared/components/action/actions/acknowledge'
 import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
+import { downtimePresets } from '../shared/components/action/actions/scheduleDowntime'
 import { createActionRegistry } from '../shared/components/action/registry'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
@@ -176,13 +178,17 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
 const searchInput = useTemplateRef<{ focus: () => void }>('searchInput')
 
 const actionRegistry = createActionRegistry([
-  useAcknowledgeHostsAction({
-    presetsUrl: props.acknowledge_presets_url ?? null,
-    notificationRulesUrl: props.notification_rules_url ?? null
-  }),
+  useAcknowledgeHostsAction(
+    {
+      presetsUrl: props.acknowledge_presets_url ?? null,
+      notificationRulesUrl: props.notification_rules_url ?? null
+    },
+    acknowledgeDefaults(props.acknowledge_defaults)
+  ),
   useRescheduleHostsAction(),
   useScheduleHostDowntimeAction(
     props.downtime_recurrences ?? [],
+    downtimePresets(props.downtime_presets),
     props.downtime_presets_url ?? null
   )
 ])

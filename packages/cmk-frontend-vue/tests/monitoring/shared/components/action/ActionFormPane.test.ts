@@ -39,7 +39,7 @@ test('passes the form props on to the form', () => {
       title: 'Schedule downtimes' as TranslatedString,
       form: markRaw(ScheduleDowntimeForm),
       formProps: { targetKind: 'service' },
-      initialValues: defaultScheduleDowntimeValues()
+      initialValues: defaultScheduleDowntimeValues([])
     }
   })
 

@@ -333,32 +333,6 @@ http_archive(
 )
 
 http_archive(
-    name = "gcc-linux-x86_64",
-    build_file = "//bazel/toolchains/cc/gcc/bootlin:BUILD.bootlin.bazel",
-    integrity = "sha256-dgrNXDFZRIthjiN7YZNTNbqtp0/gzcDXYRgmy0m0HIw=",
-    patch_cmds = [
-        # The tools used by foreign_cc search the tools under their standard,
-        # non-decorated names and pass them all the flags, including `--sysroot`.
-        # But the combination of `--sysroot` and the multiple levels of symlink
-        # in the sandbox confuse the linker.
-        # This creates a wrapper for `ld` that removes the `--sysroot` argument.
-        "mv x86_64-buildroot-linux-gnu/bin/ld{,.orig}",
-        "echo '%s' > x86_64-buildroot-linux-gnu/bin/ld" % """\
-#!/usr/bin/env bash
-
-args=("$@")
-for ((i = 0; i < $#; i++)); do
-    [[ "${args[i]}" == --sysroot=* ]] && unset args[i]
-done
-exec "$(dirname -- "${BASH_SOURCE[0]}")"/ld.orig "${args[@]}"
-""",
-        "chmod 755 x86_64-buildroot-linux-gnu/bin/ld",
-    ],
-    strip_prefix = "x86-64--glibc--stable-2025.08-1",
-    urls = ["https://toolchains.bootlin.com/downloads/releases/toolchains/x86-64/tarballs/x86-64--glibc--stable-2025.08-1.tar.xz"],
-)
-
-http_archive(
     name = "pcap",
     build_file = "//omd/packages/pcap:BUILD.pcap.bazel",
     integrity = "sha256-hPqJrG0wMCjBxbdUq/93Ik9F7KCpTrGjT/CqnO7OOSU=",

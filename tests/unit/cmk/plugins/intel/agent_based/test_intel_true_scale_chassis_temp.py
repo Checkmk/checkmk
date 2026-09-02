@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.intel_true_scale_chassis_temp import (
+from cmk.plugins.intel.agent_based.intel_true_scale_chassis_temp import (
     check_intel_true_scale_chassis_temp,
     discover_intel_true_scale_chassis_temp,
     parse_intel_true_scale_chassis_temp,

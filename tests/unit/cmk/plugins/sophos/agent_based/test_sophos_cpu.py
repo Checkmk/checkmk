@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.sophos_cpu import (
+from cmk.plugins.sophos.agent_based.sophos_cpu import (
     check_sophos_cpu,
     discover_sophos_cpu,
     Params,

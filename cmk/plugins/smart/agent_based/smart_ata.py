@@ -136,12 +136,12 @@ def discover_smart_ata(
     for item, disk in devices.items():
         if isinstance(disk.device, ATADevice) and disk.ata_smart_attributes is not None:
             parameters: AtaDiscoveredParams = {
-                "id_5": entry.raw.value if (entry := disk.by_id(5)) is not None else None,
+                "id_5": entry.raw16() if (entry := disk.by_id(5)) is not None else None,
                 "id_10": entry.raw.value if (entry := disk.by_id(10)) is not None else None,
                 "id_184": entry.raw.value if (entry := disk.by_id(184)) is not None else None,
                 "id_187": entry.raw.value if (entry := disk.by_id(187)) is not None else None,
                 "id_188": entry.raw.value if (entry := disk.by_id(188)) is not None else None,
-                "id_196": entry.raw.value if (entry := disk.by_id(196)) is not None else None,
+                "id_196": entry.raw16() if (entry := disk.by_id(196)) is not None else None,
                 "id_197": entry.raw.value if (entry := disk.by_id(197)) is not None else None,
                 "id_199": entry.raw.value if (entry := disk.by_id(199)) is not None else None,
             }
@@ -191,7 +191,7 @@ def _check_smart_ata(
     if (reallocated_sector_count := disk.by_id(5)) is not None:
         yield from _check_against_params(
             param=params["levels_5"],
-            value=reallocated_sector_count.raw.value,
+            value=reallocated_sector_count.raw16(),
             discovered_value=params.get("id_5"),
             label="Reallocated sectors",
             metric_name="harddrive_reallocated_sectors",
@@ -246,7 +246,7 @@ def _check_smart_ata(
     if (reallocated_events := disk.by_id(196)) is not None:
         yield from _check_against_params(
             param=params["levels_196"],
-            value=reallocated_events.raw.value,
+            value=reallocated_events.raw16(),
             discovered_value=params.get("id_196"),
             label="Reallocated events",
             metric_name="harddrive_reallocated_events",

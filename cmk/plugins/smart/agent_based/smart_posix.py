@@ -53,6 +53,15 @@ class ATATableEntry(BaseModel, frozen=True):
     thresh: int | None = None
     raw: ATARawValue
 
+    def raw16(self) -> int:
+        """Low word of the 48 bit raw value.
+
+        Suitable or smartmontools' `raw16(raw16)` format, where only the low word is the
+        counter. The upper two words are undocumented vendor data. Full implementation
+        https://github.com/smartmontools/smartmontools/blob/9f83095a631ff71df44f8065c7a4a00134d3d404/smartmontools/atacmds.cpp#L1979-L1980
+        """
+        return self.raw.value & 0xFFFF
+
 
 class ATATable(BaseModel, frozen=True):
     table: Sequence[ATATableEntry]

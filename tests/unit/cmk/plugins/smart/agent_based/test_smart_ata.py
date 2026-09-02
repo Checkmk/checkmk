@@ -409,7 +409,7 @@ def test_discover_smart_ata_raw16_opt_raw16() -> None:
         "id_184": None,
         "id_187": None,
         "id_188": None,
-        "id_196": 205355271342909,
+        "id_196": 19261,
         "id_197": None,
         "id_199": None,
     }
@@ -429,7 +429,7 @@ def test_check_smart_ata_raw16_opt_raw16() -> None:
     ) == [
         Result(state=State.OK, summary="Reallocated sectors: 32"),
         Metric("harddrive_reallocated_sectors", 32.0),
-        Result(state=State.OK, summary="Reallocated events: 205355271342909"),
-        Metric("harddrive_reallocated_events", 205355271342909.0),
+        Result(state=State.OK, summary="Reallocated events: 19261"),
+        Metric("harddrive_reallocated_events", 19261.0),
         Result(state=State.OK, summary="Normalized value: 79.00"),
     ]

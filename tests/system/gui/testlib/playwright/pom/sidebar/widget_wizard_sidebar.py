@@ -55,7 +55,7 @@ class AddWidgetSidebar(SidebarHelper):
             The wizard object of the open sidebar.
         """
         self._get_button_to_add_widget_by_type(wizard_class).click()
-        wizard = wizard_class(WidgetWizardMode.ADD_WIDGET, self.page)
+        wizard = wizard_class(WizardDialogName.ADD_WIDGET, self.page)
         wizard.expect_to_be_visible()
         return wizard
 
@@ -86,17 +86,9 @@ class AlertsVisualizationType(StrEnum):
     PERCENTAGE_OF_SERVICE_PROBLEMS = "Percentage of service problems"
 
 
-class WidgetWizardMode(StrEnum):
-    ADD_WIDGET = "Add widget"
-    EDIT_WIDGET = "Edit widget"
-
-    @property
-    def wizard_dialog_name(self) -> str:
-        match self:
-            case WidgetWizardMode.ADD_WIDGET:
-                return "Add widget to dashboard"
-            case WidgetWizardMode.EDIT_WIDGET:
-                return "Edit widget properties"
+class WizardDialogName(StrEnum):
+    ADD_WIDGET = "Add widget to dashboard"
+    EDIT_WIDGET = "Edit widget properties"
 
 
 class BaseWidgetWizard(SidebarHelper):
@@ -107,16 +99,16 @@ class BaseWidgetWizard(SidebarHelper):
     widget_type_name: str
 
     def __init__(
-        self, wizard_mode: WidgetWizardMode, page: Page, validate_sidebar: bool = True
+        self, wizard_dialog_name: WizardDialogName, page: Page, validate_sidebar: bool = True
     ) -> None:
-        self._wizard_mode = wizard_mode
+        self._wizard_dialog_name = wizard_dialog_name
         super().__init__(page, validate_sidebar)
 
     @property
     @override
     def _sidebar_locator(self) -> Locator:
         """Locator property for the main area of the sidebar."""
-        return self._iframe_locator.get_by_role("dialog", name=self._wizard_mode.wizard_dialog_name)
+        return self._iframe_locator.get_by_role("dialog", name=self._wizard_dialog_name)
 
     @property
     def add_and_place_widget_button(self) -> Locator:

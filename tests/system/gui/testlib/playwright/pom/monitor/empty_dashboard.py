@@ -10,7 +10,7 @@ from playwright.sync_api import expect, Locator
 from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
     BaseWidgetWizard,
-    WidgetWizardMode,
+    WizardDialogName,
 )
 
 
@@ -63,6 +63,6 @@ class EmptyDashboard(CustomDashboard):
             The wizard object of the open sidebar.
         """
         self._get_button_to_add_widget_by_type(wizard_class).click()
-        wizard = wizard_class(WidgetWizardMode.ADD_WIDGET, self.page)
+        wizard = wizard_class(WizardDialogName.ADD_WIDGET, self.page)
         wizard.expect_to_be_visible()
         return wizard

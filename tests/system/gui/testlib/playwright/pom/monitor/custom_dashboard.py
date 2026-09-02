@@ -14,7 +14,7 @@ from tests.system.gui.testlib.playwright.pom.monitor.dashboard import BaseDashbo
 from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
     AddWidgetSidebar,
     BaseWidgetWizard,
-    WidgetWizardMode,
+    WizardDialogName,
 )
 
 logger = logging.getLogger(__name__)
@@ -113,4 +113,4 @@ class CustomDashboard(BaseDashboard):
             The wizard object of the open sidebar.
         """
         self.edit_widget_properties_button(widget_title).click()
-        return wizard_class(WidgetWizardMode.EDIT_WIDGET, self.page)
+        return wizard_class(WizardDialogName.EDIT_WIDGET, self.page)

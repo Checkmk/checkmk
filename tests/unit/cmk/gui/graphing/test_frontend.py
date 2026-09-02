@@ -36,9 +36,10 @@ from cmk.gui.graphing._frontend import (
     global_time_picker_props,
     global_time_picker_refresh,
     resolve_default_time_range_seconds,
+    stored_time_range_seconds,
     to_cmk_time_series_graph,
 )
-from cmk.gui.type_defs import GraphTimerange
+from cmk.gui.type_defs import GraphTimerange, PainterParameters
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
 from cmk.gui.valuespec import DropdownChoice
 from cmk.shared_typing.cmk_time_series_graph import (
@@ -138,6 +139,41 @@ def test_resolve_default_time_range_seconds_preference_honored() -> None:
 def test_resolve_default_time_range_seconds_stale_preference_falls_back() -> None:
     # e.g. an admin removed that time range from the global setting.
     assert resolve_default_time_range_seconds(_GRAPH_TIMERANGES, 90000) == 3600
+
+
+def test_stored_time_range_seconds_is_the_views_own_setting() -> None:
+    assert (
+        stored_time_range_seconds(
+            painter_parameters=PainterParameters(set_default_time_range=14400),
+            stored_by_the_view=True,
+        )
+        == 14400
+    )
+
+
+def test_stored_time_range_seconds_ignores_the_valuespec_default() -> None:
+    # What a painter with nothing stored reports: the valuespec default carries the key.
+    assert (
+        stored_time_range_seconds(
+            painter_parameters=PainterParameters(set_default_time_range=14400),
+            stored_by_the_view=False,
+        )
+        is None
+    )
+
+
+def test_stored_time_range_seconds_without_the_setting() -> None:
+    assert (
+        stored_time_range_seconds(
+            painter_parameters=PainterParameters(graph_render_options={}),
+            stored_by_the_view=True,
+        )
+        is None
+    )
+
+
+def test_stored_time_range_seconds_for_a_painter_without_parameters() -> None:
+    assert stored_time_range_seconds(painter_parameters=None, stored_by_the_view=True) is None
 
 
 def test_global_time_picker_props() -> None:

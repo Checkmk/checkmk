@@ -26,6 +26,7 @@ from cmk.gui.graphing._frontend import (
     _DEFAULT_INTERACTION,
     default_time_range_seconds,
     STATIC_INTERACTION,
+    stored_time_range_seconds,
 )
 from cmk.gui.http import Request, Response, response
 from cmk.gui.i18n import _, _l
@@ -217,11 +218,12 @@ def _paint_time_graph_cmk(
     )
 
     now = int(time.time())
-    if "set_default_time_range" in painter_params:
-        duration = painter_params["set_default_time_range"]
-        raw_time_range: tuple[int, int] = (now - duration, now)
-    else:
-        raw_time_range = (now - default_time_range_seconds(), now)
+    duration = stored_time_range_seconds(
+        painter_parameters=painter_params, stored_by_the_view=cell.has_painter_params()
+    )
+    if duration is None:
+        duration = default_time_range_seconds()
+    raw_time_range: tuple[int, int] = (now - duration, now)
 
     # The engine takes its interactions as an explicit argument rather than off the display
     # config, so a mobile render has to hand it the static one.

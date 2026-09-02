@@ -20,7 +20,7 @@ from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import GraphTimerange
+from cmk.gui.type_defs import GraphTimerange, PainterParameters
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
     CmkTimeSeriesGraph,
@@ -58,6 +58,17 @@ ENGINE_GRAPH_PAINTER_IDENTS: Final = frozenset(
 def renders_engine_graphs(painter_idents: Iterable[str]) -> bool:
     """Whether any of the given painters renders through the graph engine."""
     return any(ident in ENGINE_GRAPH_PAINTER_IDENTS for ident in painter_idents)
+
+
+def stored_time_range_seconds(
+    *, painter_parameters: PainterParameters | None, stored_by_the_view: bool
+) -> int | None:
+    """The "Set default time range" a view stores for a graph painter, `None` for none.
+    `Cell.painter_parameters` substitutes the valuespec default when the view stores none, and
+    that Dictionary carries the key for every view - hence `stored_by_the_view`."""
+    if not stored_by_the_view or painter_parameters is None:
+        return None
+    return painter_parameters.get("set_default_time_range")
 
 
 def resolve_default_time_range_seconds(

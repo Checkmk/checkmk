@@ -102,8 +102,6 @@ MYPY / FORMAT / PACKAGING
   test-mypy-cmk                           Run mypy on cmk targets
   test-mypy-gpl                           Run mypy with GPL config
   test-packaging                          Run packaging tests
-  test-artifact-relay-image               Run relay image artifact tests
-  test-artifact-relay-image-docker        Run relay image artifact tests in docker
   test-github-actions                     Run format, lint, unit tests, and mypy (community edition)
 
 OTHER TESTS
@@ -553,23 +551,7 @@ test-py-extensions() {
 
 test-packaging() {
     export PATH="$PATH:$(bazel run //bazel/tools:bazel_env print-path)"
-    # The relay image suite tests a different artifact (an OCI image, not a
-    # deb/rpm), needs a Docker daemon, and has its own target below.
-    _pytest --log-cli-level=INFO "$SCRIPT_DIR/packaging" \
-        --ignore="$SCRIPT_DIR/packaging/nonfree/ultimate/relay_image"
-}
-
-test-artifact-relay-image() {
-    _pytest -x "$(realpath "$SCRIPT_DIR/packaging/nonfree/ultimate/relay_image")" \
-        "${PYTEST_SYSTEM_TEST_ARGS[@]}" --session-timeout 3600
-}
-
-# Unlike the -docker variants that run a site in a container via
-# run-dockerized.py, this one only runs the test code itself in a build
-# container via run-in-docker.sh; the relay image under test is pulled there.
-test-artifact-relay-image-docker() {
-    DOCKER_RUN_ADDOPTS="-v $HOME/.docker/config.json:$HOME/.docker/config.json:ro -v $HOME/.cmk-credentials:$HOME/.cmk-credentials:ro --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION -e RELAY_IMAGE_TAG" \
-        "$REPO_PATH/scripts/run-in-docker.sh" tests/run_tests.sh test-artifact-relay-image
+    _pytest --log-cli-level=INFO "$SCRIPT_DIR/packaging"
 }
 
 # ---------------------------------------------------------------------------

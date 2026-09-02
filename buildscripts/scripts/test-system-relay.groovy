@@ -2,38 +2,6 @@
 
 /// file: test-system-relay.groovy
 
-/// The cheap artifact checks run first: a binary missing from the image fails in
-/// seconds, instead of after a whole site and relay stack has been brought up.
-/// RELAY_IMAGE_TAG is already in the environment. The cleanup covers both stages,
-/// so a failure in either one still removes the image from the agent.
-void run_relay_tests(Map args) {
-    try {
-        stage("Relay image artifact test") {
-            dir("${args.checkout_dir}") {
-                sh("tests/run_tests.sh test-artifact-relay-image");
-            }
-        }
-
-        stage("Relay end-to-end integration test") {
-            docker.withRegistry(args.docker_registry, "nexus") {
-                dir("${args.checkout_dir}") {
-                    sh("""
-                        WORKSPACE='${args.checkout_dir}' \
-                        BRANCH='${args.branch}' \
-                        EDITION='${args.edition}' \
-                        VERSION='${args.version}' \
-                        DISTRO='${args.distro}' \
-                        TEST_FILTER='${args.test_filter}' \
-                        tests/run_tests.sh ${args.make_target}
-                    """);
-                }
-            }
-        }
-    } finally {
-        sh("docker rmi -f ${args.relay_image_tag} || true");
-    }
-}
-
 void main() {
     check_job_parameters([
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
@@ -159,17 +127,25 @@ void main() {
                 """);
             }
 
-            run_relay_tests(
-                branch: setup_values.safe_branch_name,
-                checkout_dir: checkout_dir,
-                distro: distro,
-                docker_registry: DOCKER_REGISTRY,
-                edition: edition,
-                make_target: make_target,
-                relay_image_tag: relay_image_tag,
-                test_filter: params.TEST_FILTER,
-                version: cmk_version_rc_aware,
-            );
+            stage("Relay end-to-end integration test") {
+                try {
+                    docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+                        dir("${checkout_dir}") {
+                            sh("""
+                                WORKSPACE='${checkout_dir}' \
+                                BRANCH='${setup_values.safe_branch_name}' \
+                                EDITION='${edition}' \
+                                VERSION='${cmk_version_rc_aware}' \
+                                DISTRO='${distro}' \
+                                TEST_FILTER='${params.TEST_FILTER}' \
+                                tests/run_tests.sh ${make_target}
+                            """);
+                        }
+                    }
+                } finally {
+                    sh("docker rmi -f ${relay_image_tag} || true");
+                }
+            }
         }
     }
 }

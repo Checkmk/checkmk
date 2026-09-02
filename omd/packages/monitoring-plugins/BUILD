@@ -108,36 +108,3 @@ pkg_tar(
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )
-
-directory_path(
-    name = "check_icmp_file",
-    directory = ":monitoring-plugins_deployable_libexec",
-    path = "check_icmp",
-    tags = ["manual"],
-)
-
-copy_to_directory(
-    name = "check_icmp_copy",
-    srcs = [":check_icmp_file"],
-    root_paths = ["**/monitoring-plugins_deployable_libexec"],
-    tags = ["manual"],
-)
-
-pkg_files(
-    name = "check_icmp_libexec",
-    srcs = [":check_icmp_copy"],
-    attributes = pkg_attributes(
-        mode = "0755",
-    ),
-    prefix = "lib/nagios/plugins/",
-    strip_prefix = "check_icmp_copy",
-    tags = ["manual"],
-)
-
-pkg_tar(
-    name = "check_icmp",
-    srcs = [":check_icmp_libexec"],
-    stamp = 1,
-    tags = ["manual"],
-    visibility = ["//omd/non-free/relay:__pkg__"],
-)

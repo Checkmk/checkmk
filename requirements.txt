@@ -5529,9 +5529,7 @@ types-reportlab==4.5.1.20260521 \
 types-requests==2.33.0.20260518 \
     --hash=sha256:626d697d1adaaff76e2044dc8c5c051d8f21abc157bdfe204a75558076fe0bf0 \
     --hash=sha256:df7bd3bfe0ca8402dfb841e7d9be714bb5578203283d66d7dc4ef69343449a5e
-    # via
-    #   -r tests/dev-requirements.in
-    #   types-docker
+    # via types-docker
 types-s3transfer==0.16.0 \
     --hash=sha256:1c0cd111ecf6e21437cb410f5cddb631bfb2263b77ad973e79b9c6d0cb24e0ef \
     --hash=sha256:b4636472024c5e2b62278c5b759661efeb52a81851cde5f092f24100b1ecb443

@@ -5786,7 +5786,6 @@ types-requests==2.33.0.20260518 \
     --hash=sha256:df7bd3bfe0ca8402dfb841e7d9be714bb5578203283d66d7dc4ef69343449a5e
     # via
     #   -c requirements.txt
-    #   -r tests/dev-requirements.in
     #   types-docker
 types-s3transfer==0.16.0 \
     --hash=sha256:1c0cd111ecf6e21437cb410f5cddb631bfb2263b77ad973e79b9c6d0cb24e0ef \

@@ -66,6 +66,62 @@ class TestPredictionQuerier:
         assert list(querier.query_available_predictions(metric)) == [expected_prediction_info]
 
     @pytest.mark.usefixtures("patch_omd_site")
+    def test_query_predicted_metrics(self, mock_livestatus: MockLiveStatusConnection) -> None:
+        querier = self._prediction_querier()
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "host_name": str(querier.host_name),
+                    "description": str(querier.service_name),
+                    "prediction_files": [
+                        "metric/everyday-lower.info",
+                        "metric/everyday-lower",
+                        "other_metric/everyday-upper.info",
+                    ],
+                }
+            ],
+            site=SiteName("NO_SITE"),
+        )
+        mock_livestatus.expect_query(
+            "GET services\n"
+            "Columns: prediction_files\n"
+            f"Filter: host_name = {querier.host_name}\n"
+            f"Filter: description = {querier.service_name}\n"
+            "And: 2\n"
+            "ColumnHeaders: off"
+        )
+
+        assert querier.query_predicted_metrics() == ["metric", "other_metric"]
+
+    @pytest.mark.usefixtures("patch_omd_site")
+    def test_the_stored_file_list_is_read_once_per_querier(
+        self, mock_livestatus: MockLiveStatusConnection
+    ) -> None:
+        querier = self._prediction_querier()
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "host_name": str(querier.host_name),
+                    "description": str(querier.service_name),
+                    "prediction_files": ["metric/everyday-lower.info", "metric/everyday-lower"],
+                }
+            ],
+            site=SiteName("NO_SITE"),
+        )
+        mock_livestatus.expect_query(
+            "GET services\n"
+            "Columns: prediction_files\n"
+            f"Filter: host_name = {querier.host_name}\n"
+            f"Filter: description = {querier.service_name}\n"
+            "And: 2\n"
+            "ColumnHeaders: off"
+        )
+
+        assert querier.query_predicted_metrics() == querier.query_predicted_metrics()
+
+    @pytest.mark.usefixtures("patch_omd_site")
     def test_query_prediction_data(self, mock_livestatus: MockLiveStatusConnection) -> None:
         metric = "metric"
         querier = self._prediction_querier()

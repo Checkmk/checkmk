@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 
 from cmk.agent_based.prediction_backend import PredictionInfo
@@ -26,9 +27,7 @@ class PredictionQuerier:
 
     def query_available_predictions(self, metric: str) -> Iterator[PredictionInfo]:
         available_prediction_files = frozenset(
-            PredictionStore.filter_prediction_files_by_metric(
-                metric, self._query_prediction_files()
-            )
+            PredictionStore.filter_prediction_files_by_metric(metric, self._prediction_files)
         )
         yield from (
             PredictionInfo.model_validate_json(self._query_prediction_file_content(prediction_file))
@@ -36,6 +35,15 @@ class PredictionQuerier:
             if prediction_file.suffix == PredictionStore.INFO_FILE_SUFFIX
             and prediction_file.with_suffix(PredictionStore.DATA_FILE_SUFFIX)
             in available_prediction_files
+        )
+
+    def query_predicted_metrics(self) -> Sequence[str]:
+        return sorted(
+            {
+                prediction_file.parts[0]
+                for prediction_file in self._prediction_files
+                if prediction_file.parts
+            }
         )
 
     def query_prediction_data(self, meta: PredictionInfo) -> PredictionData:
@@ -48,15 +56,16 @@ class PredictionQuerier:
             Services.description == LqSafe(self.service_name),
         )
 
-    def _query_prediction_files(self) -> Iterator[Path]:
+    @cached_property
+    def _prediction_files(self) -> Sequence[Path]:
         query = Query(
             [Services.prediction_files],
             self._service_filter(),
         )
-        yield from (
+        return [
             Path(prediction_file)
             for prediction_file in self.livestatus_connection.query_row(query)[0]
-        )
+        ]
 
     def _query_prediction_file_content(self, relative_file_path: Path) -> bytes:
         query = Query(

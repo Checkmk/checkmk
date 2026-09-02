@@ -3,12 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyService
-from cmk.agent_based.v2 import equals, OIDEnd, SNMPTree, StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    OIDEnd,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
 # .1.3.6.1.4.1.2604.3.4 2 --> SOPHOS::sophosHwMemoryConsumption     Indicates whether the appliance is consuming excessive memory
 # .1.3.6.1.4.1.2604.3.5 2 --> SOPHOS::sophosHwMemoryStatus          Indicates whether the appliance detects less memory than expected
@@ -123,23 +132,21 @@ sophos_map_oid: Mapping[str, tuple[str, Mapping[str, str]]] = {
 }
 
 
-def discover_sophos(info: StringTable) -> Sequence[LegacyService]:
-    inventory: list[LegacyService] = []
-    for item_oid, item_state in info:
+def discover_sophos(section: StringTable) -> DiscoveryResult:
+    for item_oid, item_state in section:
         if item_oid in sophos_map_oid and item_state in ["2", "3", "4"]:
-            inventory.append((sophos_map_oid[item_oid][0], {}))
-    return inventory
+            yield Service(item=sophos_map_oid[item_oid][0])
 
 
-def check_sophos(item: str, _no_params: object, info: list[list[str]]) -> tuple[int, str] | None:
+def check_sophos(item: str, section: StringTable) -> CheckResult:
     sophos_map_state = {
-        "0": (3, "unknown"),
-        "1": (3, "disabled"),
-        "2": (0, "OK"),
-        "3": (1, "warn"),
-        "4": (2, "error"),
+        "0": (State.UNKNOWN, "unknown"),
+        "1": (State.UNKNOWN, "disabled"),
+        "2": (State.OK, "OK"),
+        "3": (State.WARN, "warn"),
+        "4": (State.CRIT, "error"),
     }
-    for item_oid, item_state in info:
+    for item_oid, item_state in section:
         try:
             item_name, item_info = sophos_map_oid[item_oid]
         except KeyError:
@@ -147,23 +154,27 @@ def check_sophos(item: str, _no_params: object, info: list[list[str]]) -> tuple[
         if item_name == item:
             state, state_readable = sophos_map_state[item_state]
             extra_info = item_info.get(item_state, "")
-            infotext = f"Status: {state_readable}{extra_info}"
-            return state, infotext
-    return None
+            yield Result(state=state, summary=f"Status: {state_readable}{extra_info}")
+            return
 
 
 def parse_sophos(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["sophos"] = LegacyCheckDefinition(
+snmp_section_sophos = SimpleSNMPSection(
     name="sophos",
-    parse_function=parse_sophos,
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2604",
         oids=[OIDEnd(), "3"],
     ),
+    parse_function=parse_sophos,
+)
+
+
+check_plugin_sophos = CheckPlugin(
+    name="sophos",
     service_name="%s",
     discovery_function=discover_sophos,
     check_function=check_sophos,

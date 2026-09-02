@@ -105,9 +105,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
   margin: 0;
 
   &:hover {
-    button {
-      background: var(--ux-theme-6);
-    }
+    background: var(--ux-theme-6);
   }
 
   &[data-state='open'] {
@@ -134,9 +132,7 @@ const { headerAs = 'h3', value = '', disabled = false } = defineProps<CmkAccordi
 body[data-theme='modern-dark'] {
   .cmk-accordion-item__header {
     &:hover {
-      button {
-        background: var(--color-white-10);
-      }
+      background: var(--color-white-10);
     }
   }
 }

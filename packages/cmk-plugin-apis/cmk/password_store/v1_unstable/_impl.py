@@ -219,7 +219,10 @@ def dereference_secret(raw: str, /) -> Secret[str]:
 
     if (store_secret := _read_store_secret()) is None:
         raise PasswordStoreError(f"Password store key file not found. Cannot decrypt {store_file}")
-    store_bytes = Path(store_file).read_bytes()
+    try:
+        store_bytes = Path(store_file).read_bytes()
+    except FileNotFoundError:
+        raise PasswordStoreError(f"Password store file not found: {store_file}")
 
     store = PasswordStore(store_secret).load_bytes(store_bytes)
     try:

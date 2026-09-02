@@ -18,10 +18,6 @@ from cmk.password_store.v1_unstable import (
 )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash group 4620: dereference_secret raises FileNotFoundError instead of PasswordStoreError when the store file is missing",
-)
 def test_dereference_secret_missing_store_file(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

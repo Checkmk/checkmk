@@ -73,6 +73,5 @@ types-pymysql  # used for type checking
 types-pysaml2  # used for type checking
 types-python-dateutil  # used for type checking
 types-pyyaml  # used for type checking
-types-requests  # used for type checking
 types-setuptools  # used for type checking
 types-reportlab  # used for type checking

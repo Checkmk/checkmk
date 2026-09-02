@@ -5981,7 +5981,6 @@ types-requests==2.33.0.20260712 \
     --hash=sha256:de027e28c171d3da529689cbfa023b0b4eab188c8dfa22fd834eebd2cee6e7bb
     # via
     #   -c requirements.txt
-    #   -r tests/dev-requirements.in
     #   types-docker
 types-setuptools==84.0.0.20260812 \
     --hash=sha256:09bedc248ebbb7a232c9419dfcdca329706e61bf2aa5743e9424d027f1d956b4 \

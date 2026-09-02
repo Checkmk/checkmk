@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-# we use raritan.include but here we have no infomation
+# we use the shared sensor helpers but here we have no infomation
 # about availability of the sensors
 # .1.3.6.1.4.1.13742.4.3.3.1.1.4 4 --> PDU-MIB::sensorID.4
 # .1.3.6.1.4.1.13742.4.3.3.1.1.5 5 --> PDU-MIB::sensorID.5
@@ -42,22 +40,26 @@
 # .1.3.6.1.4.1.13742.4.3.3.1.34.13 550 --> PDU-MIB::externalSensorUpperWarningThreshold.13
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import equals, SNMPTree
-from cmk.legacy_includes.raritan import (
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    DiscoveryResult,
+    equals,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.raritan.lib import (
     check_raritan_sensors,
     check_raritan_sensors_binary,
     check_raritan_sensors_temp,
-    inventory_raritan_sensors,
-    inventory_raritan_sensors_temp,
+    discover_raritan_sensors,
     parse_raritan_sensors,
+    SensorSection,
 )
 
-check_info = {}
 
-
-def parse_raritan_px_sensors(string_table):
-    pre_parsed = []
+def parse_raritan_px_sensors(string_table: StringTable) -> SensorSection:
+    pre_parsed: StringTable = []
     for (
         sensor_id,
         sensor_name,
@@ -79,7 +81,7 @@ def parse_raritan_px_sensors(string_table):
         )
 
         # These raritan devices use the PDU-MIB and have no 'isAvailable' information as used
-        # in the 'raritan.include' parse function, thus we take the sensor state instead
+        # in the shared parse function, thus we take the sensor state instead
         availability = "0" if sensor_state == "-1" else "1"
 
         pre_parsed.append(
@@ -102,8 +104,8 @@ def parse_raritan_px_sensors(string_table):
     return parse_raritan_sensors(pre_parsed)
 
 
-def discover_raritan_px_sensors(parsed):
-    return inventory_raritan_sensors_temp(parsed, "temp")
+def discover_raritan_px_sensors(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "temp")
 
 
 #   .--temperature---------------------------------------------------------.
@@ -117,7 +119,7 @@ def discover_raritan_px_sensors(parsed):
 #   |                              main check                              |
 #   '----------------------------------------------------------------------'
 
-check_info["raritan_px_sensors"] = LegacyCheckDefinition(
+snmp_section_raritan_px_sensors = SimpleSNMPSection(
     name="raritan_px_sensors",
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.4"),
     fetch=SNMPTree(
@@ -125,15 +127,21 @@ check_info["raritan_px_sensors"] = LegacyCheckDefinition(
         oids=["1", "4", "2", "40", "16", "17", "41", "31", "32", "33", "34"],
     ),
     parse_function=parse_raritan_px_sensors,
+)
+
+
+check_plugin_raritan_px_sensors = CheckPlugin(
+    name="raritan_px_sensors",
     service_name="Temperature %s",
     discovery_function=discover_raritan_px_sensors,
     check_function=check_raritan_sensors_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )
 
 
-def discover_raritan_px_sensors_humidity(parsed):
-    return inventory_raritan_sensors(parsed, "humidity")
+def discover_raritan_px_sensors_humidity(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "humidity")
 
 
 # .
@@ -146,7 +154,7 @@ def discover_raritan_px_sensors_humidity(parsed):
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-check_info["raritan_px_sensors.humidity"] = LegacyCheckDefinition(
+check_plugin_raritan_px_sensors_humidity = CheckPlugin(
     name="raritan_px_sensors_humidity",
     service_name="Humidity %s",
     sections=["raritan_px_sensors"],
@@ -155,8 +163,8 @@ check_info["raritan_px_sensors.humidity"] = LegacyCheckDefinition(
 )
 
 
-def discover_raritan_px_sensors_binary(parsed):
-    return inventory_raritan_sensors(parsed, "binary")
+def discover_raritan_px_sensors_binary(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "binary")
 
 
 # .
@@ -169,7 +177,7 @@ def discover_raritan_px_sensors_binary(parsed):
 #   |                                            |___/                     |
 #   '----------------------------------------------------------------------'
 
-check_info["raritan_px_sensors.binary"] = LegacyCheckDefinition(
+check_plugin_raritan_px_sensors_binary = CheckPlugin(
     name="raritan_px_sensors_binary",
     service_name="Contact %s",
     sections=["raritan_px_sensors"],

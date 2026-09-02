@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.raritan_px2_sensors import (
+from cmk.plugins.raritan.agent_based.raritan_px2_sensors import (
     check_raritan_sensors_humidity,
     discover_raritan_px2_sensors_humidity,
 )

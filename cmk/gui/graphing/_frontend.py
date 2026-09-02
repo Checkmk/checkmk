@@ -29,6 +29,7 @@ from cmk.shared_typing.cmk_time_series_graph import (
     GraphOptions,
     Interaction,
     Size,
+    UnitFormat,
     XAxis,
     YAxis,
 )
@@ -153,35 +154,33 @@ def _add_to(specification: GraphSpecification | None, internal: str) -> AddTo | 
     return AddTo(type=add_type, specification=specification.model_dump(), internal=internal)
 
 
-def y_axis_from_units(units: Iterable[Unit]) -> YAxis | None:
-    """The Y-axis derived from the first of an ordered sequence of curve units.
+def unit_from_curves(units: Iterable[Unit]) -> UnitFormat | None:
+    """The axis unit taken from the first of an ordered sequence of curve units.
 
     Every curve in a graph draws in one shared unit (enforced backend-side), so the axis unit is
     the unit of any curve; None when there are no units at all, in which case the renderer falls
-    back to raw, unit-less ticks. Shared by derive_y_axis (the pre-evaluation Graph, here) and
-    _graph_png._derive_y_axis (the EvaluatedGraph), which carries the same CurveAttributes.unit
+    back to raw, unit-less ticks. Shared by derive_y_axis_unit (the pre-evaluation Graph, here) and
+    _graph_png._derived_y_axis_unit (the EvaluatedGraph), which carries the same CurveAttributes.unit
     on its curves but has no common curve type to walk with this one.
     """
-    return next((YAxis(unit=unit_to_unit_format(unit)) for unit in units), None)
+    return next((unit_to_unit_format(unit) for unit in units), None)
 
 
-def derive_y_axis(graph: Graph) -> YAxis | None:
-    """Derive the Y-axis (its unit) from the graph's own curves.
+def derive_y_axis_unit(graph: Graph) -> UnitFormat | None:
+    """Derive the value axis unit from the graph's own curves.
 
     Mirrors yAxis.ts:deriveYAxis - template, single-timeseries and combined graphs draw every
     curve in one unit (enforced backend-side), so the axis unit is the unit of any curve. None
     when the graph has no curves; the renderer then falls back to raw, unit-less ticks.
     """
-    return y_axis_from_units(
+    return unit_from_curves(
         member.attributes.unit for stack in graph.stacks for member in stack.members
-    ) or y_axis_from_units(line.curve.attributes.unit for line in graph.lines)
+    ) or unit_from_curves(line.curve.attributes.unit for line in graph.lines)
 
 
 def _shell_y_axis(built: BuiltGraph) -> YAxis | None:
     """The axis the shell draws with: what the graph names for itself, else what its curves imply."""
-    unit = built.y_axis_unit
-    if unit is None and (derived := derive_y_axis(built.graph)) is not None:
-        unit = derived.unit
+    unit = built.y_axis_unit if built.y_axis_unit is not None else derive_y_axis_unit(built.graph)
     bounds = built.y_axis_bounds()
     if unit is None and bounds is None:
         return None

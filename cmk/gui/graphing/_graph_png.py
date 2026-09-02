@@ -33,10 +33,10 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import SizeMM
 from cmk.gui.unit_formatter import Label, NegativeYRange, NotationFormatter, PositiveYRange
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.shared_typing.cmk_time_series_graph import YAxis
+from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 from ._engine_curves import drawn_curves
-from ._frontend import y_axis_from_units
+from ._frontend import unit_from_curves
 from ._graph_display_config import GraphDisplayConfigImage
 from ._unit import user_specific_unit_from_unit_format
 
@@ -316,18 +316,17 @@ def _graph_time_caption(time_range: TimeRange) -> str:
     }
 
 
-def _notation_formatter(y_axis: YAxis | None) -> NotationFormatter | None:
-    if y_axis is None or y_axis.unit is None:
+def _notation_formatter(y_axis_unit: UnitFormat | None) -> NotationFormatter | None:
+    if y_axis_unit is None:
         return None
-    unit_format = y_axis.unit
     # The engine fetch does not (yet) convert values for the user's temperature preference, so
     # the label must stay truthful to the actually-plotted (unconverted) values: match the
     # requested unit to the metric's own degree scale rather than the user's preferred one,
     # which always resolves to the identity conversion.
     native_temperature_unit = (
-        TemperatureUnit.FAHRENHEIT if unit_format.symbol == "°F" else TemperatureUnit.CELSIUS
+        TemperatureUnit.FAHRENHEIT if y_axis_unit.symbol == "°F" else TemperatureUnit.CELSIUS
     )
-    return user_specific_unit_from_unit_format(unit_format, native_temperature_unit).formatter
+    return user_specific_unit_from_unit_format(y_axis_unit, native_temperature_unit).formatter
 
 
 def _y_range_for_labels(ax: Axes) -> PositiveYRange | NegativeYRange | None:
@@ -361,7 +360,7 @@ def _apply_render_config(
     ax: Axes,
     graph: EvaluatedGraph,
     config: GraphDisplayConfigImage,
-    y_axis: YAxis | None,
+    y_axis_unit: UnitFormat | None,
     formatter: NotationFormatter | None,
     *,
     is_mirrored: bool,
@@ -382,8 +381,8 @@ def _apply_render_config(
         )
 
     if config.show_vertical_axis:
-        if y_axis is not None and y_axis.unit is not None and y_axis.unit.symbol:
-            ax.set_ylabel(y_axis.unit.symbol, fontsize=config.font_size)
+        if y_axis_unit is not None and y_axis_unit.symbol:
+            ax.set_ylabel(y_axis_unit.symbol, fontsize=config.font_size)
         if formatter is not None and is_mirrored:
             target_number_of_labels = max(1.0, config.size[1] / 8.0 + 1)
             if labels := _mirrored_y_labels(ax, formatter, target_number_of_labels):
@@ -577,10 +576,10 @@ def mm_per_ex(font_size_pt: float) -> SizeMM:
     return _ex_to_inches(1.0, font_size_pt) * _MM_PER_INCH
 
 
-def _derive_y_axis(graph: EvaluatedGraph) -> YAxis | None:
-    """derive_y_axis (_frontend.py) works on the pre-evaluation Graph; this one works on the
+def _derived_y_axis_unit(graph: EvaluatedGraph) -> UnitFormat | None:
+    """derive_y_axis_unit (_frontend.py) works on the pre-evaluation Graph; this one works on the
     EvaluatedGraph, which carries the same CurveAttributes.unit on its curves."""
-    return y_axis_from_units(curve.attributes.unit for curve, _sign in _all_curves_with_sign(graph))
+    return unit_from_curves(curve.attributes.unit for curve, _sign in _all_curves_with_sign(graph))
 
 
 def _legend_height_ex(graph: EvaluatedGraph, config: GraphDisplayConfigImage) -> float:
@@ -608,25 +607,25 @@ def compute_png_size_mm(
 
 
 def render_png_ex(
-    graph: EvaluatedGraph, config: GraphDisplayConfigImage, y_axis: YAxis | None = None
+    graph: EvaluatedGraph, config: GraphDisplayConfigImage, y_axis_unit: UnitFormat | None = None
 ) -> tuple[bytes, SizeMM, SizeMM]:
     """Render a single evaluated graph to PNG bytes.
 
-    ``y_axis`` defaults to this graph's own derived axis (``_derive_y_axis``) - the same
-    server-derived axis the Vue graph renders from - so callers only need to pass an override
-    when they already have one computed elsewhere (e.g. from the pre-evaluation Graph).
+    ``y_axis_unit`` defaults to this graph's own derived unit (``_derived_y_axis_unit``) - the same
+    server-derived unit the Vue graph renders from. Only a caller holding the unit the graph
+    names for itself has to pass one: the evaluated graph does not carry it.
 
     Pure function - no registries, no Livestatus, no global state.
     """
-    if y_axis is None:
-        y_axis = _derive_y_axis(graph)
+    if y_axis_unit is None:
+        y_axis_unit = _derived_y_axis_unit(graph)
     scalars = _graph_scalars(graph)
     is_mirrored = any(sign < 0 for _curve, sign in _all_curves_with_sign(graph))
     lower, upper = _vertical_range_bounds(graph)
     # The legend always lists every rule (e.g. warning/critical), even ones outside the visible
     # Y range; only the drawn horizontal lines are restricted to the in-range subset.
     in_range_rules = _rules_in_range(graph.rules, lower, upper)
-    formatter = _notation_formatter(y_axis)
+    formatter = _notation_formatter(y_axis_unit)
     show_legend_table = config.show_legend and bool(scalars or graph.rules)
     table_height_ex = _legend_height_ex(graph, config)
 
@@ -653,7 +652,7 @@ def render_png_ex(
         sign = -1.0 if rule.inverse else 1.0
         ax.axhline(sign * rule.value, color=rule.attributes.color)
     title_artist = _apply_render_config(
-        ax, graph, config, y_axis, formatter, is_mirrored=is_mirrored
+        ax, graph, config, y_axis_unit, formatter, is_mirrored=is_mirrored
     )
     fig.tight_layout()
     _align_title_to_y_ticks(fig, ax, title_artist)
@@ -664,9 +663,9 @@ def render_png_ex(
 
 
 def render_png(
-    graph: EvaluatedGraph, config: GraphDisplayConfigImage, y_axis: YAxis | None = None
+    graph: EvaluatedGraph, config: GraphDisplayConfigImage, y_axis_unit: UnitFormat | None = None
 ) -> bytes:
-    png_bytes, _, _ = render_png_ex(graph, config, y_axis)
+    png_bytes, _, _ = render_png_ex(graph, config, y_axis_unit)
     return png_bytes
 
 
@@ -706,13 +705,13 @@ def render_png_graphs(
         lower, upper = _vertical_range_bounds(graph)
         if (limits := _y_axis_limits(lower, upper, is_mirrored=is_mirrored)) is not None:
             ax.set_ylim(*limits)
-        y_axis = _derive_y_axis(graph)
+        y_axis_unit = _derived_y_axis_unit(graph)
         title_artist = _apply_render_config(
             ax,
             graph,
             no_legend_config,
-            y_axis,
-            _notation_formatter(y_axis),
+            y_axis_unit,
+            _notation_formatter(y_axis_unit),
             is_mirrored=is_mirrored,
         )
         axes_and_titles.append((ax, title_artist))

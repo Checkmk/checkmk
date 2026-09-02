@@ -36,7 +36,7 @@ from cmk.gui.graphing._engine_codec import community_graph_codec
 from cmk.gui.graphing._engine_discovery import BuiltGraph
 from cmk.gui.graphing._engine_dispatch import serialize_graphs
 from cmk.gui.graphing._frontend import (
-    derive_y_axis,
+    derive_y_axis_unit,
     EngineDisplayOptions,
     global_time_picker_props,
     global_time_picker_refresh,
@@ -328,7 +328,7 @@ def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
     assert restored == graph
 
 
-def test_derive_y_axis_takes_the_unit_of_the_first_stack_member() -> None:
+def test_derive_y_axis_unit_takes_the_unit_of_the_first_stack_member() -> None:
     graph = Graph(
         name="mygraph",
         title="My Graph",
@@ -344,12 +344,12 @@ def test_derive_y_axis_takes_the_unit_of_the_first_stack_member() -> None:
             )
         ],
     )
-    assert derive_y_axis(graph) == YAxis(
-        unit=UnitFormat(notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)),
+    assert derive_y_axis_unit(graph) == UnitFormat(
+        notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)
     )
 
 
-def test_derive_y_axis_falls_back_to_a_line_when_there_are_no_stacks() -> None:
+def test_derive_y_axis_unit_falls_back_to_a_line_when_there_are_no_stacks() -> None:
     graph = Graph(
         name="mygraph",
         title="My Graph",
@@ -363,15 +363,14 @@ def test_derive_y_axis_falls_back_to_a_line_when_there_are_no_stacks() -> None:
             )
         ],
     )
-    y_axis = derive_y_axis(graph)
-    assert y_axis is not None
-    assert y_axis.unit is not None
-    assert y_axis.unit.symbol == "X"
+    y_axis_unit = derive_y_axis_unit(graph)
+    assert y_axis_unit is not None
+    assert y_axis_unit.symbol == "X"
 
 
-def test_derive_y_axis_is_none_for_a_graph_with_no_curves() -> None:
+def test_derive_y_axis_unit_is_none_for_a_graph_with_no_curves() -> None:
     graph = Graph(name="mygraph", title="Empty", kind="template")
-    assert derive_y_axis(graph) is None
+    assert derive_y_axis_unit(graph) is None
 
 
 def test_value_axis_width_is_sent_in_pixels_only_when_set_explicitly() -> None:

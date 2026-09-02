@@ -26,7 +26,7 @@ from matplotlib.figure import Figure
 from cmk.gui.graphing._graph_display_config import GraphDisplayConfigImage
 from cmk.gui.graphing._graph_png import (
     _all_curves_with_sign,
-    _derive_y_axis,
+    _derived_y_axis_unit,
     _graph_scalars,
     _mirrored_y_labels,
     _notation_formatter,
@@ -41,7 +41,7 @@ from cmk.gui.graphing._graph_png import (
     render_png_ex,
     render_png_graphs,
 )
-from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat, YAxis
+from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
 
 _UNIT = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
 _TIME_RANGE = TimeRange(start=0, end=180, step=60)
@@ -138,12 +138,10 @@ def test_notation_formatter_never_converts_temperature_values() -> None:
     """The engine fetch does not (yet) convert values for the user's temperature preference, so
     the PNG renderer must never apply a real conversion formula to a celsius/fahrenheit unit -
     doing so would mislabel the still-unconverted plotted values."""
-    y_axis = YAxis(
-        unit=UnitFormat(
-            notation="decimal", symbol="°C", precision=Precision(type="auto", digits=2)
-        ),
+    y_axis_unit = UnitFormat(
+        notation="decimal", symbol="°C", precision=Precision(type="auto", digits=2)
     )
-    formatter = _notation_formatter(y_axis)
+    formatter = _notation_formatter(y_axis_unit)
     assert formatter is not None
     assert formatter.symbol == "°C"
     assert formatter.render(10) == "10 °C"
@@ -160,11 +158,11 @@ def test_render_png_ex_with_a_unit_renders_ticks_and_legend_via_the_formatter() 
         stacks=[EvaluatedStack(members=[curve], inverse=False)],
         lines=[],
     )
-    y_axis = YAxis(
-        unit=UnitFormat(notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)),
+    y_axis_unit = UnitFormat(
+        notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)
     )
 
-    png_bytes, _width_mm, _height_mm = render_png_ex(graph, GraphDisplayConfigImage(), y_axis)
+    png_bytes, _width_mm, _height_mm = render_png_ex(graph, GraphDisplayConfigImage(), y_axis_unit)
 
     assert png_bytes.startswith(b"\x89PNG")
 
@@ -194,10 +192,10 @@ def test_mirrored_y_labels_mirrors_positive_text_to_the_negative_side() -> None:
     fig = Figure()
     ax = fig.add_subplot(1, 1, 1)
     ax.set_ylim(-2000, 2000)
-    y_axis = YAxis(
-        unit=UnitFormat(notation="decimal", symbol="B", precision=Precision(type="auto", digits=2)),
+    y_axis_unit = UnitFormat(
+        notation="decimal", symbol="B", precision=Precision(type="auto", digits=2)
     )
-    formatter = _notation_formatter(y_axis)
+    formatter = _notation_formatter(y_axis_unit)
     assert formatter is not None
 
     labels = _mirrored_y_labels(ax, formatter, 4.0)
@@ -263,7 +261,7 @@ def test_y_axis_limits_are_symmetric_for_a_mirrored_graph() -> None:
     assert _y_axis_limits(2.0, 30.0, is_mirrored=True) == (-30.0, 30.0)
 
 
-def test_derive_y_axis_reads_unit_from_the_first_curve() -> None:
+def test_derived_y_axis_unit_reads_the_unit_from_the_first_curve() -> None:
     curve = _curve("m", [1.0])
     graph = EvaluatedGraph(
         name="g",
@@ -273,24 +271,23 @@ def test_derive_y_axis_reads_unit_from_the_first_curve() -> None:
         lines=[],
     )
 
-    y_axis = _derive_y_axis(graph)
+    y_axis_unit = _derived_y_axis_unit(graph)
 
-    assert y_axis is not None
-    assert y_axis.unit is not None
-    assert y_axis.unit.notation == "decimal"
-    assert y_axis.unit.precision.digits == 2
+    assert y_axis_unit is not None
+    assert y_axis_unit.notation == "decimal"
+    assert y_axis_unit.precision.digits == 2
 
 
-def test_derive_y_axis_is_none_for_a_graph_with_no_curves() -> None:
+def test_derived_y_axis_unit_is_none_for_a_graph_with_no_curves() -> None:
     graph = EvaluatedGraph(name="g", title="Empty", vertical_range=None, stacks=[], lines=[])
 
-    assert _derive_y_axis(graph) is None
+    assert _derived_y_axis_unit(graph) is None
 
 
-def test_render_png_ex_self_derives_the_y_axis_when_none_is_passed() -> None:
-    """render_png/render_png_ex now derive their own Y-axis from the evaluated graph by default
-    (mirroring render_png_graphs), so callers no longer need to compute and pass
-    derive_y_axis(graph) (the pre-evaluation Graph's axis) themselves."""
+def test_render_png_ex_self_derives_the_y_axis_unit_when_none_is_passed() -> None:
+    """render_png/render_png_ex derive their own axis unit from the evaluated graph by default
+    (mirroring render_png_graphs), so only a caller holding the unit the graph names for itself
+    has to pass one."""
     curve = _curve("m", [1.0, 2.0, 3.0])
     graph = EvaluatedGraph(
         name="g",
@@ -302,7 +299,7 @@ def test_render_png_ex_self_derives_the_y_axis_when_none_is_passed() -> None:
 
     default_bytes, _width_mm, _height_mm = render_png_ex(graph, GraphDisplayConfigImage())
     explicit_bytes, _width_mm, _height_mm = render_png_ex(
-        graph, GraphDisplayConfigImage(), _derive_y_axis(graph)
+        graph, GraphDisplayConfigImage(), _derived_y_axis_unit(graph)
     )
 
     assert default_bytes == explicit_bytes

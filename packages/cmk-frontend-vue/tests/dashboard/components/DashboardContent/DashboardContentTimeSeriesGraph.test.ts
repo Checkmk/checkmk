@@ -233,7 +233,8 @@ describe('graph widget on a shared dashboard', () => {
             internal: '{"graphs": []}',
             title: 'My graph',
             name: 'my_graph',
-            add_to_specification: null
+            add_to_specification: null,
+            y_axis: null
           }
         ],
         no_data_message: null
@@ -273,7 +274,8 @@ describe('graph widget on a shared dashboard', () => {
             internal: '{"graphs": []}',
             title: 'My graph',
             name: 'my_graph',
-            add_to_specification: null
+            add_to_specification: null,
+            y_axis: null
           }
         ],
         no_data_message: null

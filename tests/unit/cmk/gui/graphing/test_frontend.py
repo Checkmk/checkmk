@@ -13,11 +13,13 @@ from cmk.graphing_engine import (
     CurveAttributes,
     DecimalNotation,
     EngineeringScientificNotation,
+    FixedRange,
     Graph,
     HostName,
     IECNotation,
     Line,
     MetricName,
+    MinimalRange,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -28,6 +30,7 @@ from cmk.graphing_engine import (
     StandardScientificNotation,
     TimeNotation,
     Unit,
+    VerticalRange,
 )
 from cmk.gui.graphing._engine_codec import community_graph_codec
 from cmk.gui.graphing._engine_discovery import BuiltGraph
@@ -47,6 +50,7 @@ from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
 from cmk.gui.valuespec import DropdownChoice
 from cmk.shared_typing.cmk_time_series_graph import (
+    ExplicitRange,
     GraphHeader,
     GraphOptions,
     Interaction,
@@ -393,3 +397,59 @@ def test_display_props_name_the_axis_width_the_floor_it_is() -> None:
         ]
         == 48.0
     )
+
+
+def _one_curve_graph(*, vertical_range: VerticalRange | None = None) -> Graph:
+    return Graph(
+        name="mygraph",
+        title="My Graph",
+        kind="template",
+        vertical_range=vertical_range,
+        lines=[
+            Line(
+                curve=Curve(
+                    quantity=_RRD, attributes=CurveAttributes(title="l", unit=_UNIT, color="#l")
+                ),
+                inverse=False,
+            )
+        ],
+    )
+
+
+def test_the_shell_axis_keeps_the_unit_the_graph_names_over_the_one_its_curves_imply() -> None:
+    named = UnitFormat(
+        notation="si", symbol="W", precision=Precision(type="strict", digits=0), convertible=False
+    )
+    result = to_cmk_time_series_graph(
+        BuiltGraph(graph=_one_curve_graph(), specification=None, y_axis_unit=named), size=_SIZE
+    )
+    assert result.options.y_axis == YAxis(unit=named, explicit_range=None)
+
+
+def test_the_shell_axis_is_pinned_by_the_graphs_own_fixed_range() -> None:
+    result = to_cmk_time_series_graph(
+        BuiltGraph(
+            graph=_one_curve_graph(vertical_range=FixedRange(lower=0.0, upper=100.0)),
+            specification=None,
+        ),
+        size=_SIZE,
+    )
+    y_axis = result.options.y_axis
+    assert y_axis is not None
+    assert y_axis.explicit_range == ExplicitRange(min=0.0, max=100.0)
+    # The graph names no unit, so the axis still takes the one its curves are drawn in.
+    assert y_axis.unit is not None
+    assert y_axis.unit.symbol == "X"
+
+
+def test_the_shell_axis_ignores_a_minimal_range_which_only_widens_the_drawn_extent() -> None:
+    result = to_cmk_time_series_graph(
+        BuiltGraph(
+            graph=_one_curve_graph(vertical_range=MinimalRange(lower=0.0, upper=100.0)),
+            specification=None,
+        ),
+        size=_SIZE,
+    )
+    y_axis = result.options.y_axis
+    assert y_axis is not None
+    assert y_axis.explicit_range is None

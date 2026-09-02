@@ -329,6 +329,7 @@ onMounted(() => {
       <GraphFigure
         v-else-if="shell"
         :internal="shell.internal"
+        :y-axis="shell.y_axis"
         :timerange="timerange"
         :combination-mode="combinationMode"
         :show-legend="showLegend"

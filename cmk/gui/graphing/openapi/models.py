@@ -11,9 +11,10 @@ from annotated_types import Interval
 from pydantic import Json
 
 from cmk.graphing_engine import Unit
-from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
 from cmk.gui.type_defs import IconNames
+from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 from .._engine_discovery import BuiltGraph, DiscoveredGraphs
 from .._engine_dispatch import serialize_graphs
@@ -44,6 +45,17 @@ class ApiUnitFormat:
     symbol: str = api_field(description="The unit symbol.", example="B")
     precision: ApiPrecision = api_field(description="The unit precision.")
     convertible: bool = api_field(description="Whether the unit is auto-convertible.", example=True)
+
+    @classmethod
+    def from_shared(cls, unit_format: UnitFormat) -> Self:
+        return cls(
+            notation=unit_format.notation,
+            symbol=unit_format.symbol,
+            precision=ApiPrecision(
+                type=unit_format.precision.type, digits=unit_format.precision.digits
+            ),
+            convertible=True if unit_format.convertible is None else unit_format.convertible,
+        )
 
     @classmethod
     def from_engine_unit(cls, unit: Unit) -> Self:
@@ -135,6 +147,48 @@ class ApiHorizontalLine:
 
 
 @api_model
+class ApiExplicitRange:
+    min: float = api_field(description="The lower edge of the axis.", example=0.0)
+    max: float = api_field(description="The upper edge of the axis.", example=100.0)
+
+
+@api_model
+class ApiYAxis:
+    """The axis a graph names for itself."""
+
+    unit: ApiUnitFormat | ApiOmitted = api_field(
+        description=(
+            "The unit to label the axis in. Absent to label it in the unit of the metrics the "
+            "graph draws."
+        ),
+        default_factory=ApiOmitted,
+    )
+    explicit_range: ApiExplicitRange | ApiOmitted = api_field(
+        description=(
+            "The edges the axis is fixed to. Absent to scale it to the values that are drawn."
+        ),
+        default_factory=ApiOmitted,
+    )
+
+    @classmethod
+    def from_built(cls, built: BuiltGraph) -> Self | None:
+        """The axis the graph names, or None when it names none at all."""
+        bounds = built.y_axis_bounds()
+        if built.y_axis_unit is None and bounds is None:
+            return None
+        return cls(
+            unit=(
+                ApiOmitted()
+                if built.y_axis_unit is None
+                else ApiUnitFormat.from_shared(built.y_axis_unit)
+            ),
+            explicit_range=(
+                ApiOmitted() if bounds is None else ApiExplicitRange(min=bounds[0], max=bounds[1])
+            ),
+        )
+
+
+@api_model
 class ApiDiscoveredGraph:
     """A discovered data-less graph definition."""
 
@@ -156,6 +210,13 @@ class ApiDiscoveredGraph:
         ),
         example="cpu_utilization",
     )
+    y_axis: ApiYAxis | None = api_field(
+        description=(
+            "The value axis this graph names for itself, e.g. the unit and range a custom graph "
+            "was configured with. Null when the graph names none, which leaves the whole axis to "
+            "be derived from the metrics it draws."
+        )
+    )
     add_to_specification: dict[str, object] | None = api_field(
         description=(
             "The specification identifying this one graph, to be passed to the add_to_visual and "
@@ -176,6 +237,7 @@ class ApiDiscoveredGraph:
             internal=json.dumps(serialize_graphs([built.graph])),
             title=built.graph.title,
             name=built.graph.name,
+            y_axis=ApiYAxis.from_built(built),
             add_to_specification=(
                 None if built.specification is None else built.specification.model_dump()
             ),

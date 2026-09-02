@@ -36,7 +36,7 @@ export function toTimeSeriesGraph(shell: DiscoveredGraph, width: number): CmkTim
       header: { title: shell.title, show_graph_time: true },
       name: shell.name,
       x_axis: null,
-      y_axis: null,
+      y_axis: shell.y_axis,
       font_size_pt: 8
     },
     interaction: PANEL_INTERACTION,

@@ -24,6 +24,7 @@ from cmk.gui.type_defs import GraphTimerange, PainterParameters, VerticalAxisWid
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
     CmkTimeSeriesGraph,
+    ExplicitRange,
     GraphHeader,
     GraphOptions,
     Interaction,
@@ -176,6 +177,20 @@ def derive_y_axis(graph: Graph) -> YAxis | None:
     ) or y_axis_from_units(line.curve.attributes.unit for line in graph.lines)
 
 
+def _shell_y_axis(built: BuiltGraph) -> YAxis | None:
+    """The axis the shell draws with: what the graph names for itself, else what its curves imply."""
+    unit = built.y_axis_unit
+    if unit is None and (derived := derive_y_axis(built.graph)) is not None:
+        unit = derived.unit
+    bounds = built.y_axis_bounds()
+    if unit is None and bounds is None:
+        return None
+    return YAxis(
+        unit=unit,
+        explicit_range=None if bounds is None else ExplicitRange(min=bounds[0], max=bounds[1]),
+    )
+
+
 def to_cmk_time_series_graph(
     built: BuiltGraph,
     *,
@@ -194,7 +209,7 @@ def to_cmk_time_series_graph(
             header=GraphHeader(title=graph.title, show_graph_time=show_graph_time),
             name=graph.name,
             x_axis=x_axis,
-            y_axis=derive_y_axis(graph),
+            y_axis=_shell_y_axis(built),
             font_size_pt=font_size_pt,
         ),
         interaction=interaction,

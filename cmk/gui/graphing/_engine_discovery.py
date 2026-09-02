@@ -12,8 +12,9 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.graphing_engine import Graph
+from cmk.graphing_engine import FixedRange, Graph
 from cmk.gui.i18n import _
+from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 from ._engine_dispatch import legacy_graph_id
 from ._from_api import GraphFromAPI
@@ -28,6 +29,17 @@ class BuiltGraph:
     # replay.
     graph: Graph
     specification: GraphSpecification | None
+    y_axis_unit: UnitFormat | None = None
+
+    def y_axis_bounds(self) -> tuple[float, float] | None:
+        """The edges the value axis is pinned to; None to scale it to the values that are drawn."""
+        match self.graph.vertical_range:
+            case FixedRange(lower=int() | float() as lower, upper=int() | float() as upper):
+                return lower, upper
+            case _:
+                # A minimal range only widens the drawn extent, and a bound the engine resolves
+                # while evaluating is no edge a data-less shell can name.
+                return None
 
 
 @dataclass(frozen=True)

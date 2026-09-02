@@ -19,6 +19,7 @@ void main() {
     def use_case = params.USE_CASE.trim() ?: "daily";
 
     def all_editions = [];
+    def success = true;
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         // run everything requiring python in this container
@@ -36,7 +37,11 @@ void main() {
         """.stripMargin());
 
     dir("${checkout_dir}") {
-        stage("Assert release build artifacts") {
+        success &= smart_stage(
+            name: "Assert release build artifacts",
+            condition: true,
+            raiseOnError: false,
+        ) {
             inside_container_minimal(safe_branch_name: safe_branch_name) {
                 withCredentials([
                     usernamePassword(
@@ -86,9 +91,13 @@ void main() {
                     }
                 }
             }
-        }
+        }[0]
 
-        stage("Assert Docker images") {
+        success &= smart_stage(
+            name: "Assert Docker images",
+            condition: true,
+            raiseOnError: false,
+        ) {
             def docker_file_location = "dirty_workspace/Dockerfile";
             def docker_build_args = (""
                 + " --dockerfile=${docker_file_location}"
@@ -139,7 +148,9 @@ void main() {
                     }
                 }
             }
-        }
+        }[0]
+
+        currentBuild.result = success ? "SUCCESS" : "FAILURE";
     }
 }
 

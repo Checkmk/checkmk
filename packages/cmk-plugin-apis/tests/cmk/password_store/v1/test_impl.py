@@ -5,11 +5,36 @@
 
 
 import binascii
+from pathlib import Path
 
 import pytest
 from cryptography.exceptions import InvalidTag
 
-from cmk.password_store.v1_unstable import PasswordStore, Secret
+from cmk.password_store.v1_unstable import (
+    dereference_secret,
+    PasswordStore,
+    PasswordStoreError,
+    Secret,
+)
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash group 4620: dereference_secret raises FileNotFoundError instead of PasswordStoreError when the store file is missing",
+)
+def test_dereference_secret_missing_store_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Key file exists (so _read_store_secret() returns non-None)
+    key_file = tmp_path / "key"
+    key_file.write_bytes(b"a" * 32)
+    monkeypatch.setenv("PASSWORD_STORE_SECRET_FILE", str(key_file))
+
+    # Store file does NOT exist
+    missing_store = tmp_path / "stored_passwords"
+
+    with pytest.raises(PasswordStoreError):
+        dereference_secret(f"some_id:{missing_store}")
 
 
 class TestPasswordStore:

@@ -2493,7 +2493,10 @@ def test_update_service_phase_reports_success_for_a_service_that_does_not_exist(
     nothing" is the honest result, and it is the mapping to `204` that turns it into a claim of
     success. Same shape as §10.18 but a different cause, and §10.18's proposed
     `check_table_created` precondition would not catch it -- the table is fresh, the service is
-    simply not in it. Not yet a §10 section: raised for triage in §9.3, not decided here.
+    simply not in it.
+
+    §10.19, low priority. When it lands the first three cases become `404` and the fourth is
+    unchanged.
     """
     resp = clients.ServiceDiscovery.update_service_phase(
         host_name,
@@ -2504,6 +2507,10 @@ def test_update_service_phase_reports_success_for_a_service_that_does_not_exist(
     )
 
     resp.assert_status_code(expected_status)
+    if expected_status == 404:
+        # Not just any 404: the contrast this test rests on is that the *host* is validated, by the
+        # path parameter's converter, before the handler runs. Asserting the field pins that.
+        assert "path.host_name" in resp.json["fields"]
     assert tier3_writes.services == []
 
 

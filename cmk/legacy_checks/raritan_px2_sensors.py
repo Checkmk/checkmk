@@ -3,29 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-from collections.abc import Iterable, Mapping
-from typing import Any
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
-from cmk.agent_based.v2 import OIDEnd, SNMPTree
-from cmk.legacy_includes.humidity import check_humidity
-from cmk.legacy_includes.raritan import (
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    Result,
+    SimpleSNMPSection,
+    SNMPTree,
+)
+from cmk.plugins.lib.humidity import check_humidity
+from cmk.plugins.raritan.lib import (
     check_raritan_sensors,
     check_raritan_sensors_temp,
-    inventory_raritan_sensors,
-    inventory_raritan_sensors_temp,
+    DETECT_RARITAN,
+    discover_raritan_sensors,
     parse_raritan_sensors,
+    SensorSection,
 )
-from cmk.plugins.raritan.lib import DETECT_RARITAN
-
-check_info = {}
 
 
-def discover_raritan_px2_sensors(parsed):
-    return inventory_raritan_sensors_temp(parsed, "temp")
+def discover_raritan_px2_sensors(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "temp")
 
 
 #   .--temperature---------------------------------------------------------.
@@ -40,7 +41,7 @@ def discover_raritan_px2_sensors(parsed):
 #   '----------------------------------------------------------------------'
 
 
-check_info["raritan_px2_sensors"] = LegacyCheckDefinition(
+snmp_section_raritan_px2_sensors = SimpleSNMPSection(
     name="raritan_px2_sensors",
     detect=DETECT_RARITAN,
     fetch=SNMPTree(
@@ -61,15 +62,21 @@ check_info["raritan_px2_sensors"] = LegacyCheckDefinition(
         ],
     ),
     parse_function=parse_raritan_sensors,
+)
+
+
+check_plugin_raritan_px2_sensors = CheckPlugin(
+    name="raritan_px2_sensors",
     service_name="Temperature %s",
     discovery_function=discover_raritan_px2_sensors,
     check_function=check_raritan_sensors_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )
 
 
-def discover_raritan_px2_sensors_airflow(parsed):
-    return inventory_raritan_sensors(parsed, "airflow")
+def discover_raritan_px2_sensors_airflow(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "airflow")
 
 
 # .
@@ -82,7 +89,7 @@ def discover_raritan_px2_sensors_airflow(parsed):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-check_info["raritan_px2_sensors.airflow"] = LegacyCheckDefinition(
+check_plugin_raritan_px2_sensors_airflow = CheckPlugin(
     name="raritan_px2_sensors_airflow",
     service_name="Air flow %s",
     sections=["raritan_px2_sensors"],
@@ -91,26 +98,26 @@ check_info["raritan_px2_sensors.airflow"] = LegacyCheckDefinition(
 )
 
 
-def discover_raritan_px2_sensors_humidity(parsed) -> Iterable[tuple[str, None]]:
-    return inventory_raritan_sensors(parsed, "humidity")
+def discover_raritan_px2_sensors_humidity(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "humidity")
 
 
 def check_raritan_sensors_humidity(
     item: str,
     params: Mapping[str, tuple[float, float]],
-    section: Mapping[str, Mapping[str, Any]],
-) -> LegacyCheckResult:
+    section: SensorSection,
+) -> CheckResult:
     if (sensor := section.get(item)) is None:
-        return None
+        return
 
-    humidity_value, crit_lower, warn_lower, crit, warn = sensor["sensor_data"]
+    humidity_value, crit_lower, warn_lower, crit, warn = sensor.sensor_data
 
     if "levels" in params:
         warn, crit = params["levels"]
     if "levels_lower" in params:
         warn_lower, crit_lower = params["levels_lower"]
 
-    yield check_humidity(
+    yield from check_humidity(
         humidity=humidity_value,
         params={
             "levels": (warn, crit),
@@ -118,8 +125,8 @@ def check_raritan_sensors_humidity(
         },
     )
 
-    state, state_readable = sensor["state"]
-    yield state, f"Device status: {state_readable}"
+    state, state_readable = sensor.state
+    yield Result(state=state, summary=f"Device status: {state_readable}")
 
 
 # .
@@ -132,18 +139,19 @@ def check_raritan_sensors_humidity(
 #   |                                                  |___/               |
 #   +----------------------------------------------------------------------+
 
-check_info["raritan_px2_sensors.humidity"] = LegacyCheckDefinition(
+check_plugin_raritan_px2_sensors_humidity = CheckPlugin(
     name="raritan_px2_sensors_humidity",
     service_name="Humidity %s",
     sections=["raritan_px2_sensors"],
     discovery_function=discover_raritan_px2_sensors_humidity,
     check_function=check_raritan_sensors_humidity,
     check_ruleset_name="humidity",
+    check_default_parameters={},
 )
 
 
-def discover_raritan_px2_sensors_pressure(parsed):
-    return inventory_raritan_sensors(parsed, "pressure")
+def discover_raritan_px2_sensors_pressure(section: SensorSection) -> DiscoveryResult:
+    yield from discover_raritan_sensors(section, "pressure")
 
 
 # .
@@ -156,7 +164,7 @@ def discover_raritan_px2_sensors_pressure(parsed):
 #   |              |_|                                                     |
 #   +----------------------------------------------------------------------+
 
-check_info["raritan_px2_sensors.pressure"] = LegacyCheckDefinition(
+check_plugin_raritan_px2_sensors_pressure = CheckPlugin(
     name="raritan_px2_sensors_pressure",
     service_name="Pressure %s",
     sections=["raritan_px2_sensors"],

@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
@@ -19,6 +20,7 @@ const attributeFilter = defineModel<AttributeFilter | undefined>('attributeFilte
   required: true
 })
 const consolidation = defineModel<WireConsolidationFunction>('consolidation', { required: true })
+const aggregator = defineModel<Aggregator | undefined>('aggregator', { required: true })
 </script>
 
 <template>
@@ -31,6 +33,7 @@ const consolidation = defineModel<WireConsolidationFunction>('consolidation', { 
       v-model:metric-types="metricTypes"
       v-model:attribute-filter="attributeFilter"
       v-model:consolidation="consolidation"
+      v-model:aggregator="aggregator"
     />
   </div>
 </template>

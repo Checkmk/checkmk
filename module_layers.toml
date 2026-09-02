@@ -1824,6 +1824,7 @@ allows = [
   "cmk.metric_backend.gui",
   "cmk.otel_collector.gui",
   "cmk.ruleset_matcher.matcher",
+  "cmk.shared_typing.aggregation",
   "cmk.shared_typing.attribute_filter",
   "cmk.shared_typing.consolidation",
   "cmk.shared_typing.mode_custom_services",

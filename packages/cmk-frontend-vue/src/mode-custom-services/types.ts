@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { AttributeFilter } from 'cmk-shared-typing/typescript/attribute_filter'
 import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 
@@ -13,6 +14,7 @@ export interface ServiceModel {
   metricTypes: string[]
   attributeFilter: AttributeFilter | undefined
   consolidation: WireConsolidationFunction
+  aggregator: Aggregator | undefined
   serviceName: string
   hostName: string | null
 }
@@ -23,6 +25,7 @@ export function emptyService(): ServiceModel {
     metricTypes: [],
     attributeFilter: undefined,
     consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 120 },
+    aggregator: undefined,
     serviceName: '',
     hostName: null
   }

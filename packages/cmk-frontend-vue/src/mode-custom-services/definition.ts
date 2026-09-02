@@ -64,7 +64,8 @@ export function buildCustomServiceDefinition(
       metric_name: model.metricName,
       service_name_template: model.serviceName,
       ...(model.attributeFilter === undefined ? {} : { attribute_filter: model.attributeFilter }),
-      consolidation: model.consolidation
+      consolidation: model.consolidation,
+      ...(model.aggregator === undefined ? {} : { aggregator: model.aggregator })
     }
   }
 }

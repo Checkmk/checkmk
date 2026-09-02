@@ -77,6 +77,7 @@ async function createService(): Promise<void> {
             v-model:metric-types="model.metricTypes"
             v-model:attribute-filter="model.attributeFilter"
             v-model:consolidation="model.consolidation"
+            v-model:aggregator="model.aggregator"
           />
         </template>
         <template #actions>

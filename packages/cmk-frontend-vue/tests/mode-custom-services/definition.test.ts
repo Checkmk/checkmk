@@ -70,6 +70,25 @@ describe('buildCustomServiceDefinition', () => {
     expect('attribute_filter' in configuration).toBe(false)
   })
 
+  test('carries the aggregator unchanged', () => {
+    const aggregator = {
+      stages: [
+        {
+          aggregate_by: [{ kind: 'resource' as const, name: 'k8s.namespace.name' }],
+          aggregation_fn: { type: 'scalar' as const, name: 'avg' as const }
+        }
+      ]
+    }
+    expect(buildCustomServiceDefinition(model({ aggregator })).configuration.aggregator).toEqual(
+      aggregator
+    )
+  })
+
+  test('omits the aggregator when none is configured', () => {
+    const { configuration } = buildCustomServiceDefinition(model({ aggregator: undefined }))
+    expect('aggregator' in configuration).toBe(false)
+  })
+
   test('carries a parameterless consolidation through unchanged', () => {
     const definition = buildCustomServiceDefinition(
       model({ consolidation: { type: 'sum', function: 'sum_rate', lookback_seconds: 120 } })

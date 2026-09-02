@@ -518,6 +518,21 @@ class Document:
         self.advance(self.lineskip() / 2.0)
         self.restore_state()
 
+    def reserve_for_heading(self, level: int) -> SizeMM:
+        """Approximate vertical space (mm) a heading at this level will occupy.
+
+        Use together with check_pagebreak() before adding a heading that is immediately
+        followed by other content (e.g. a graph), so the heading isn't left stranded alone
+        at the bottom of a page while its content starts on the next one.
+        """
+        level = self._gfx_state["heading_offset"] + level
+        zoom = {1: 1.8, 2: 1.5, 3: 1.2}.get(level, 1.0)
+        margin_mm = 7 + (5 if level == 1 else 0)
+        # add_heading() itself advances by one zoomed lineskip before the heading text, one
+        # more for the (at least one line of) text itself, and half a lineskip after - 2.5x
+        # in total.
+        return margin_mm + (self.lineskip() * zoom * 2.5) / mm
+
     def headings(self) -> Sequence[tuple[str, int]]:
         return self._heading_entries
 

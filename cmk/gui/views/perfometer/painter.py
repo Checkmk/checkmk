@@ -84,7 +84,7 @@ class PainterPerfometer(Painter):
             if title is None and h is None:
                 return "", ""
         except Exception as e:
-            logger.exception("error rendering performeter")
+            logger.exception("error rendering perfometer")
             if self.config.debug:
                 raise
             return " ".join(classes), _("Exception: %(e)s") % {"e": e}

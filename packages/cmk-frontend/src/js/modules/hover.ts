@@ -50,6 +50,13 @@ export function update_content(code: string, event_: MouseEvent) {
   update_position(event_)
 }
 
+// The content area starts where the navigation bar and a left-positioned sidebar end,
+// so the popup never renders underneath them.
+function content_area_left(): number {
+  const content_area = document.getElementById('content_area')
+  return content_area ? content_area.getBoundingClientRect().left : 0
+}
+
 // Position updates are triggered by the AJAX call response in graph_integration.js
 export function update_position(event_: MouseEvent) {
   if (!g_hover_menu) {
@@ -60,6 +67,7 @@ export function update_position(event_: MouseEvent) {
   const menu = g_hover_menu
   const vw = document.documentElement.clientWidth
   const vh = document.documentElement.clientHeight
+  const minLeft = content_area_left() + hoverSpacer
 
   menu.style.visibility = 'hidden'
   menu.style.left = event_.clientX + hoverSpacer + 'px'
@@ -69,8 +77,8 @@ export function update_position(event_: MouseEvent) {
     if (menu.clientWidth + hoverSpacer <= event_.clientX) {
       menu.style.left = event_.clientX - menu.clientWidth - hoverSpacer + 'px'
     } else {
-      menu.style.left = hoverSpacer + 'px'
-      menu.style.width = vw - 2 * hoverSpacer + 'px'
+      menu.style.left = minLeft + 'px'
+      menu.style.width = vw - minLeft - hoverSpacer + 'px'
     }
   }
 

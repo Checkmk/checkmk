@@ -3,46 +3,58 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsLinuxUnixAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Dictionary, TextInput
-from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import DictElement, Dictionary, String
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
+
+# The keys were renamed to tell rules stored before the migration to the rulesets v1 API
+# ("first matching rule wins") from rules stored afterwards (matching rules are merged).
+# Both elements are required, so a rule stored by the new form always carries both keys.
+_NEW_KEYS = ("distribution_tag", "dist_tag")
 
 
-def _valuespec_rpm_tags() -> Dictionary:
+def migrate(value: object) -> Mapping[str, object]:
+    if not isinstance(value, dict):
+        raise ValueError(f"Unexpected value: {value!r}")
+    if any(key in value for key in _NEW_KEYS):
+        return value
+    # Old rule (this includes the empty dict, which the new form never stores): make all
+    # parameters explicit so that merging with other rules does not change the outcome.
+    # An empty string means "not set".
+    return {
+        "distribution_tag": value.get("distribution", ""),
+        "dist_tag": value.get("disttag", ""),
+    }
+
+
+def _form_spec() -> Dictionary:
     return Dictionary(
-        title=_("Specify RPM package tags (Linux)"),
-        help=_(
+        help_text=Help(
             "The Linux RPM packages built by the Agent Bakery are packaged independently "
             "of any Linux distribution. Hence, the <tt>DISTRIBUTION</tt> and <tt>DISTTAG</tt> "
             "tags are left empty within the RPM spec file. "
             "Here, you can manually specify these tags."
         ),
-        elements=[
-            (
-                "distribution",
-                TextInput(
-                    title=("DISTRIBUTION"),
-                    allow_empty=False,
-                ),
+        migrate=migrate,
+        # Consumed by the RPM package builder (non-free cmk-bakery), not by a bakelet.
+        elements={
+            "distribution_tag": DictElement(
+                required=True,
+                parameter_form=String(title=Title("DISTRIBUTION")),
             ),
-            (
-                "disttag",
-                TextInput(
-                    title=_("DISTTAG"),
-                    allow_empty=False,
-                ),
+            "dist_tag": DictElement(
+                required=True,
+                parameter_form=String(title=Title("DISTTAG")),
             ),
-        ],
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsLinuxUnixAgent,
-        name=RuleGroup.AgentConfig("rpm_tags"),
-        valuespec=_valuespec_rpm_tags,
-    )
+rule_spec_rpm_tags = AgentConfig(
+    title=Title("Specify RPM package tags (Linux)"),
+    name="rpm_tags",
+    topic=Topic.LINUX,
+    parameter_form=_form_spec,
 )

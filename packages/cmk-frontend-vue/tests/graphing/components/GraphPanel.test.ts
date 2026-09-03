@@ -30,7 +30,10 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       'pinTime',
       'atMinTimeZoom',
       'consolidationFunction',
-      'options'
+      'options',
+      'showTimeAxis',
+      'showValueAxis',
+      'minValueAxisWidth'
     ],
     emits: ['zoom', 'pan', 'reset', 'pinCreate', 'pinAction'],
     template: `<div data-testid="time-series-graph">
@@ -45,6 +48,9 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       <span data-testid="pin-time">{{ pinTime }}</span>
       <span data-testid="at-min-time-zoom">{{ atMinTimeZoom }}</span>
       <span data-testid="renderer-consolidation">{{ consolidationFunction }}</span>
+      <span data-testid="renderer-show-time-axis">{{ showTimeAxis }}</span>
+      <span data-testid="renderer-show-value-axis">{{ showValueAxis }}</span>
+      <span data-testid="renderer-value-axis-width">{{ minValueAxisWidth ?? 'none' }}</span>
       <span data-testid="emit-pin-create" @click="$emit('pinCreate', { time: 1234 })" />
       <span data-testid="emit-pin-action" @click="$emit('pinAction', { time: 1234 })" />
       <span
@@ -1123,4 +1129,20 @@ test('derives the renderer y-axis from the metrics when none is provided', () =>
   // The unit comes from the metric, and no explicit range is invented.
   expect(screen.getByTestId('renderer-y-axis-unit')).toHaveTextContent('decimal')
   expect(screen.getByTestId('renderer-y-axis-range')).toHaveTextContent('none')
+})
+
+test('defaults the renderer to drawing both axes', () => {
+  renderPanelForRequest()
+
+  expect(screen.getByTestId('renderer-show-time-axis')).toHaveTextContent('true')
+  expect(screen.getByTestId('renderer-show-value-axis')).toHaveTextContent('true')
+  expect(screen.getByTestId('renderer-value-axis-width')).toHaveTextContent('none')
+})
+
+test('hands the renderer the axis options it was given', () => {
+  renderPanelForRequest({ showTimeAxis: false, showValueAxis: false, minValueAxisWidth: 48 })
+
+  expect(screen.getByTestId('renderer-show-time-axis')).toHaveTextContent('false')
+  expect(screen.getByTestId('renderer-show-value-axis')).toHaveTextContent('false')
+  expect(screen.getByTestId('renderer-value-axis-width')).toHaveTextContent('48')
 })

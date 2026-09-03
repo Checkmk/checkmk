@@ -70,6 +70,7 @@ from cmk.web.utils.urls import makeuri_contextless
 _LEGACY_ONLY_RENDER_OPTIONS = (
     "font_size",
     "title_format",
+    "show_margin",
     "show_time_range_previews",
     "fixed_timerange",
 )
@@ -191,7 +192,6 @@ def _paint_time_graph_cmk(
     request: Request,
     response: Response,
     painter_options: PainterOptions,
-    show_time_range_previews: bool | None = None,
     require_historic_metrics: bool = True,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
@@ -202,8 +202,6 @@ def _paint_time_graph_cmk(
     painter_params = _migrate_old_graph_render_options(painter_params)
 
     graph_render_options = painter_params["graph_render_options"].copy()
-    if show_time_range_previews is not None:
-        graph_render_options["show_time_range_previews"] = show_time_range_previews
 
     options = painter_options.get_without_default("graph_render_options")
     if options is not None:
@@ -233,7 +231,7 @@ def _paint_time_graph_cmk(
         display_config = display_config.model_copy(
             update={
                 "show_pin": False,
-                "show_time_range_previews": False,
+                "show_graph_time": False,
                 "show_legend": False,
             }
         )
@@ -293,11 +291,17 @@ def _render_engine_graph_group(
             STATIC_INTERACTION
             if mobile
             else replace(
-                _DEFAULT_INTERACTION, pin="enabled" if display_config.show_pin else "disabled"
+                _DEFAULT_INTERACTION,
+                burger="enabled" if display_config.show_controls else "disabled",
+                pin="enabled" if display_config.show_pin else "disabled",
             )
         ),
-        show_graph_time=display_config.show_time_range_previews,
+        show_graph_time=display_config.show_graph_time,
         show_legend=display_config.show_legend,
+        show_title=bool(display_config.show_title),
+        show_vertical_axis=display_config.show_vertical_axis,
+        vertical_axis_width=display_config.vertical_axis_width,
+        show_time_axis=display_config.show_time_axis,
         debug=debug,
         full_width=True,
     )
@@ -392,7 +396,6 @@ class PainterServiceGraphs(Painter):
             response=response,
             painter_options=self._painter_options,
             debug=self.config.debug,
-            show_time_range_previews=True,
         )
 
     @override
@@ -449,7 +452,6 @@ class PainterHostGraphs(Painter):
             response=response,
             painter_options=self._painter_options,
             debug=self.config.debug,
-            show_time_range_previews=True,
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
             # also render the graphs if there are no historic metrics available (but perf data is)
             require_historic_metrics="service_description" not in row,

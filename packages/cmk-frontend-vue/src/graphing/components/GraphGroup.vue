@@ -49,6 +49,11 @@ const props = withDefaults(
     figure_height?: number
     show_consolidation?: boolean
     show_legend?: boolean
+    show_title?: boolean
+    show_vertical_axis?: boolean
+    show_time_axis?: boolean
+    // In CSS pixels; absent leaves the renderer's own default.
+    value_axis_width?: number
     // 'column' stacks the panels vertically (the default)
     // 'wrap' flows the fixed-width panels into as many columns as the container allows
     layout?: 'column' | 'wrap'
@@ -63,6 +68,9 @@ const props = withDefaults(
     figure_height: 300,
     show_consolidation: true,
     show_legend: true,
+    show_title: true,
+    show_vertical_axis: true,
+    show_time_axis: true,
     layout: 'column',
     time_range_scope: 'global'
   }
@@ -275,10 +283,13 @@ function onRetry(): void {
           :time-picker-requests="timePickerRequests"
           :y-axis="props.graphs[panelSlot.index]!.options.y_axis"
           :title="panelSlot.graph.title"
-          :show-title="true"
+          :show-title="show_title"
           :show-timestamp="props.graphs[panelSlot.index]?.options.header.show_graph_time ?? true"
           :show-consolidation="show_consolidation"
           :show-legend="show_legend"
+          :show-value-axis="show_vertical_axis"
+          :show-time-axis="show_time_axis"
+          :min-value-axis-width="value_axis_width"
           :interaction="props.graphs[panelSlot.index]!.interaction"
           :brush-snapshot="brushSnapshotOf(panelSlot.index)"
           :horizontal-lines="panelSlot.graph.horizontalLines"

@@ -39,8 +39,9 @@ from cmk.gui.graphing._frontend import (
     stored_time_range_seconds,
     to_cmk_time_series_graph,
     user_first_day_of_week,
+    value_axis_width_px,
 )
-from cmk.gui.type_defs import GraphTimerange, PainterParameters
+from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
 from cmk.gui.valuespec import DropdownChoice
 from cmk.shared_typing.cmk_time_series_graph import (
@@ -365,3 +366,8 @@ def test_derive_y_axis_falls_back_to_a_line_when_there_are_no_stacks() -> None:
 def test_derive_y_axis_is_none_for_a_graph_with_no_curves() -> None:
     graph = Graph(name="mygraph", title="Empty", kind="template")
     assert derive_y_axis(graph) is None
+
+
+def test_value_axis_width_is_sent_in_pixels_only_when_set_explicitly() -> None:
+    assert value_axis_width_px("fixed") is None
+    assert value_axis_width_px(("explicit", SizePT(36.0))) == 48.0

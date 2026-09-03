@@ -45,10 +45,23 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
       'figureWidth',
       'consolidationFn',
       'brushSnapshot',
-      'yAxis'
+      'yAxis',
+      'showTitle',
+      'showTimestamp',
+      'showValueAxis',
+      'showTimeAxis',
+      'minValueAxisWidth'
     ],
     emits: ['update:requestedTimeRange', 'update:consolidationFn', 'inspect'],
-    template: `<div data-testid="graph-panel" :data-figure-width="figureWidth">
+    template: `<div
+      data-testid="graph-panel"
+      :data-figure-width="figureWidth"
+      :data-show-title="showTitle"
+      :data-show-timestamp="showTimestamp"
+      :data-show-value-axis="showValueAxis"
+      :data-show-time-axis="showTimeAxis"
+      :data-min-value-axis-width="minValueAxisWidth"
+    >
       <span>{{ title }}</span>
       <span data-testid="brush-geometry">{{ brushSnapshot
         ? brushSnapshot.drawnDomain.start + ',' + brushSnapshot.drawnDomain.end + '|' +
@@ -234,12 +247,23 @@ const group = (): Element | null => document.querySelector('.graphing-graph-grou
 const notice = (): HTMLElement | null => document.querySelector('.graphing-graph-notice')
 const notices = (): NodeListOf<Element> => document.querySelectorAll('.graphing-graph-notice')
 
-function renderGroup(graphs: CmkTimeSeriesGraph[] = [makeGraphDefinition('CPU utilization')]) {
+interface GroupDisplayOptions {
+  show_title?: boolean
+  show_vertical_axis?: boolean
+  show_time_axis?: boolean
+  value_axis_width?: number
+}
+
+function renderGroup(
+  graphs: CmkTimeSeriesGraph[] = [makeGraphDefinition('CPU utilization')],
+  displayOptions: GroupDisplayOptions = {}
+) {
   return render(GraphGroup, {
     props: {
       initial_time_range_start: RANGE_START,
       initial_time_range_end: RANGE_END,
-      graphs
+      graphs,
+      ...displayOptions
     }
   })
 }
@@ -749,4 +773,46 @@ test("threads each definition's configured y-axis to its own panel", async () =>
   const ranges = Array.from(document.querySelectorAll('[data-testid="panel-y-axis-range"]'))
   // The explicit range reaches the panel that carries it, and only that one.
   expect(ranges.map((el) => el.textContent)).toEqual(['5', 'none'])
+})
+
+describe('display options', () => {
+  const attributesOf = (name: string): (string | null)[] =>
+    Array.from(panels(), (panel) => panel.getAttribute(name))
+
+  test('shows title, timestamp and both axes by default', async () => {
+    renderGroup()
+    await screen.findAllByTestId('graph-panel')
+
+    expect(attributesOf('data-show-title')).toEqual(['true'])
+    expect(attributesOf('data-show-timestamp')).toEqual(['true'])
+    expect(attributesOf('data-show-value-axis')).toEqual(['true'])
+    expect(attributesOf('data-show-time-axis')).toEqual(['true'])
+    expect(attributesOf('data-min-value-axis-width')).toEqual([null])
+  })
+
+  test('forwards the switched-off options to every panel', async () => {
+    renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')], {
+      show_title: false,
+      show_vertical_axis: false,
+      show_time_axis: false,
+      value_axis_width: 48
+    })
+    await screen.findAllByTestId('graph-panel')
+
+    expect(attributesOf('data-show-title')).toEqual(['false', 'false'])
+    expect(attributesOf('data-show-value-axis')).toEqual(['false', 'false'])
+    expect(attributesOf('data-show-time-axis')).toEqual(['false', 'false'])
+    expect(attributesOf('data-min-value-axis-width')).toEqual(['48', '48'])
+  })
+
+  test("takes each panel's timestamp from its own graph definition", async () => {
+    const withTimestamp = makeGraphDefinition('CPU utilization')
+    const withoutTimestamp = makeGraphDefinition('Memory')
+    withoutTimestamp.options.header.show_graph_time = false
+
+    renderGroup([withTimestamp, withoutTimestamp])
+    await screen.findAllByTestId('graph-panel')
+
+    expect(attributesOf('data-show-timestamp')).toEqual(['true', 'false'])
+  })
 })

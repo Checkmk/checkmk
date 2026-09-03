@@ -35,7 +35,9 @@ const { _t } = usei18n()
 
 const props = withDefaults(defineProps<GraphPanelProps>(), {
   figureHeight: 300,
-  legendPosition: 'bottom'
+  legendPosition: 'bottom',
+  showTimeAxis: true,
+  showValueAxis: true
 })
 
 const emit = defineEmits<GraphPanelEmits>()
@@ -237,6 +239,9 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
             :min-time-range="MIN_ZOOM_TIME_RANGE_SECONDS"
             :at-min-time-zoom="atMinTimeZoom"
             :min-value-range="null"
+            :show-time-axis="showTimeAxis"
+            :show-value-axis="showValueAxis"
+            :min-value-axis-width="minValueAxisWidth"
             :consolidation-function="consolidationFn"
             :inspecting="inspectionActive"
             :pan-enabled="interaction.panning === 'enabled'"

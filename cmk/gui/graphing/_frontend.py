@@ -6,7 +6,7 @@
 import json
 from collections.abc import Iterable, Sequence
 from dataclasses import asdict
-from typing import Final
+from typing import Final, Literal
 
 from tzlocal import get_localzone_name
 
@@ -20,7 +20,7 @@ from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import GraphTimerange, PainterParameters
+from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
     CmkTimeSeriesGraph,
@@ -255,6 +255,16 @@ def render_global_time_picker(
     html.vue_component("cmk-global-time-picker", data=asdict(props))
 
 
+def value_axis_width_px(
+    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT],
+) -> float | None:
+    """None for "fixed": that choice reads "relative to the font size", and a page which offers
+    no font size has nothing to be relative to, so the renderer's own default width stands."""
+    if isinstance(vertical_axis_width, tuple):
+        return vertical_axis_width[1] * 96 / 72
+    return None
+
+
 def render_engine_graph_group(
     specification: TemplateGraphSpecification,
     *,
@@ -266,6 +276,10 @@ def render_engine_graph_group(
     debug: bool,
     show_consolidation: bool = True,
     show_legend: bool = True,
+    show_title: bool = True,
+    show_vertical_axis: bool = True,
+    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed",
+    show_time_axis: bool = True,
     interaction: Interaction = _DEFAULT_INTERACTION,
     multi_column: bool = False,
     full_width: bool = False,
@@ -307,9 +321,14 @@ def render_engine_graph_group(
         "graphs": vue_graphs,
         "show_consolidation": show_consolidation,
         "show_legend": show_legend,
+        "show_title": show_title,
+        "show_vertical_axis": show_vertical_axis,
+        "show_time_axis": show_time_axis,
         # Only the hover preview flows its many graphs into columns; everywhere else stacks.
         "layout": "wrap" if multi_column else "column",
     }
+    if (axis_width := value_axis_width_px(vertical_axis_width)) is not None:
+        data["value_axis_width"] = axis_width
     # Full-width groups omit figure_width entirely so the component measures the available width
     # itself; only a fixed-size embed (e.g. the hover popup) sends a concrete pixel width.
     if not full_width:

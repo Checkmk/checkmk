@@ -83,6 +83,9 @@ export interface GraphPanelProps {
   title?: string
   showTitle?: boolean
   showTimestamp?: boolean
+  showTimeAxis?: boolean
+  showValueAxis?: boolean
+  minValueAxisWidth?: number | undefined
   horizontalLines?: HorizontalLine[]
   // Outer figure dimensions (plot area + axis/label margins). The renderer derives
   // the plot (canvas) size by subtracting its margins.

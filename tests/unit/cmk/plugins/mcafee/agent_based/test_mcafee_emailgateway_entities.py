@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, State
-from cmk.legacy_checks import mcafee_emailgateway_entities as plugin
+from cmk.plugins.mcafee.agent_based import mcafee_emailgateway_entities as plugin
 
 
 def test_parse_maps_titles_across_all_subtables() -> None:

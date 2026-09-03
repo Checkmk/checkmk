@@ -15,9 +15,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.structured_data import (
     _DeltaDict,
-    _deserialize_retention_interval,
     _parse_from_unzipped,
-    _serialize_retention_interval,
     compare_trees,
     deserialize_delta_tree,
     deserialize_tree,
@@ -1861,7 +1859,13 @@ def test_deserialize_retention_interval(
     ),
     expected_retention_interval: RetentionInterval,
 ) -> None:
-    assert _deserialize_retention_interval(raw_retention_interval) == expected_retention_interval
+    assert deserialize_tree(
+        {
+            "Attributes": {"Retentions": {SDKey("key"): raw_retention_interval}},
+            "Table": {},
+            "Nodes": {},
+        }
+    ).attributes.retentions == {SDKey("key"): expected_retention_interval}
 
 
 @pytest.mark.parametrize(
@@ -1875,7 +1879,9 @@ def test_serialize_retention_interval(
     retention_interval: RetentionInterval,
     expected_raw_retention_interval: tuple[int, int, int, Literal["previous", "current"]],
 ) -> None:
-    assert _serialize_retention_interval(retention_interval) == expected_raw_retention_interval
+    assert serialize_tree(
+        ImmutableTree(attributes=ImmutableAttributes(retentions={SDKey("key"): retention_interval}))
+    )["Attributes"]["Retentions"] == {SDKey("key"): expected_raw_retention_interval}
 
 
 @pytest.mark.parametrize(

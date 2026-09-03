@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 import itertools
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -200,6 +201,58 @@ class RRDMetric:
         registered_metrics: Mapping[str, metrics_v1.Metric],
     ) -> CurveAttributes:
         return metric_display_attributes(self.metric_name, localizer, registered_metrics)
+
+
+class PredictionCurveKind(enum.StrEnum):
+    UPPER_REFERENCE = "upper_reference"
+    UPPER_WARNING = "upper_warning"
+    UPPER_CRITICAL = "upper_critical"
+    LOWER_REFERENCE = "lower_reference"
+    LOWER_WARNING = "lower_warning"
+    LOWER_CRITICAL = "lower_critical"
+
+
+@dataclass(frozen=True, kw_only=True)
+class PredictionMetric:
+    site_id: SiteID
+    host_name: HostName
+    service_name: ServiceName
+    metric_name: MetricName
+    period: str
+    valid_from: int
+    valid_until: int
+    curve_kind: PredictionCurveKind
+
+    def kind(self) -> str:
+        return "prediction_metric"
+
+    def ident(self) -> str:
+        return (
+            f"{self.kind()}({self.site_id}/{self.host_name}/{self.service_name}/{self.metric_name}"
+            f",{self.period},{self.valid_from},{self.valid_until},{self.curve_kind})"
+        )
+
+    def metrics(self) -> Iterable[MetricProtocol]:
+        yield self
+
+    def evaluate(self, context: EvaluationContext) -> Sequence[EvaluatedQuantity]:
+        if (time_series := context.time_series_of(self)) is None:
+            return []
+        return [
+            EvaluatedQuantity(
+                value=next(
+                    (value for value in reversed(time_series.values) if value is not None), None
+                ),
+                time_series=time_series,
+            )
+        ]
+
+    def attributes(
+        self,
+        _localizer: Callable[[str], str],
+        _registered_metrics: Mapping[str, metrics_v1.Metric],
+    ) -> CurveAttributes | None:
+        return None
 
 
 def rrd_metric_of(service: Service, metric_name: str) -> RRDMetric:

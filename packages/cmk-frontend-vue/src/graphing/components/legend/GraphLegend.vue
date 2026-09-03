@@ -11,7 +11,7 @@ import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref } from 'vue'
 
 import MetricAttributesTable from '../MetricAttributesTable.vue'
-import type { HorizontalLine, Metric } from '../TimeSeriesGraph'
+import type { HorizontalLine, Metric, ShadedRegion } from '../TimeSeriesGraph'
 import {
   CONSOLIDATION_FUNCTIONS,
   type ConsolidationFn,
@@ -38,6 +38,7 @@ const props = withDefaults(
   defineProps<{
     metrics: Metric[]
     horizontalLines?: HorizontalLine[]
+    shadedRegions?: ShadedRegion[]
     consolidationFn?: ConsolidationFn
     hiddenMetricNames?: string[]
     hiddenLineNames?: string[]
@@ -45,6 +46,7 @@ const props = withDefaults(
   }>(),
   {
     horizontalLines: () => [],
+    shadedRegions: () => [],
     consolidationFn: DEFAULT_CONSOLIDATION_FN,
     hiddenMetricNames: () => [],
     hiddenLineNames: () => [],
@@ -237,7 +239,7 @@ function toggleLine(name: string) {
             </tr>
           </template>
         </tbody>
-        <tfoot v-if="horizontalLines.length > 0">
+        <tfoot v-if="horizontalLines.length > 0 || shadedRegions.length > 0">
           <tr
             v-for="line in horizontalLines"
             :key="line.name"
@@ -267,6 +269,25 @@ function toggleLine(name: string) {
             <td class="graphing-graph-legend__stat">
               {{ horizontalLineValue(line) }}
             </td>
+          </tr>
+          <tr
+            v-for="region in shadedRegions"
+            :key="region.name"
+            class="graphing-graph-legend__row graphing-graph-legend__line-row"
+          >
+            <td class="graphing-graph-legend__cell--eye"></td>
+            <td class="graphing-graph-legend__name">
+              <div class="graphing-graph-legend__name-content">
+                <span class="graphing-graph-legend__swatch" :style="{ background: region.color }" />
+                <span class="graphing-graph-legend__title" :title="region.title">
+                  {{ region.title }}
+                </span>
+              </div>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
         </tfoot>
       </table>

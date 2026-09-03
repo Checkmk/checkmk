@@ -180,6 +180,7 @@ const graphOptions = computed(
             :data_time_range="fetchedTimeRange"
             :metrics="visibleMetrics"
             :horizontal_lines="visibleHorizontalLines"
+            :shaded_regions="[]"
             :value-range="viewValueRange"
             zoom-mode="time"
             :size="figureSize"

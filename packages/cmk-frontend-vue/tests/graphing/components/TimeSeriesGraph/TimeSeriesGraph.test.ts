@@ -108,6 +108,7 @@ const DEFAULT_PROPS: TimeSeriesGraphProps = {
   view_time_range: { start: 1_000, end: 2_000, step: 60 },
   metrics: [LINE_METRIC],
   horizontal_lines: [],
+  shaded_regions: [],
   valueRange: null,
   zoomMode: 'time',
   minTimeRange: null,

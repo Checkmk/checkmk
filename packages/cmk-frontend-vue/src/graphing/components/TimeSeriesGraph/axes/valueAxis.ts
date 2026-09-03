@@ -10,7 +10,7 @@ export interface DomainFlags {
   symmetric?: boolean
 }
 
-interface DomainBucket {
+export interface DomainBucket {
   gap: boolean
   minValue: number
   maxValue: number

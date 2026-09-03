@@ -13,7 +13,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
 import MetricAttributeGroups from '../MetricAttributeGroups.vue'
-import type { HorizontalLine, Metric } from '../TimeSeriesGraph'
+import type { HorizontalLine, Metric, ShadedRegion } from '../TimeSeriesGraph'
 import { type MetricAttribute, attributesOf } from '../metricAttributes'
 import GraphLegendEyeButton from './GraphLegendEyeButton.vue'
 import { orderMetricsForLegend, withNameToggled } from './legendUtils'
@@ -24,12 +24,14 @@ const props = withDefaults(
   defineProps<{
     metrics: Metric[]
     horizontalLines?: HorizontalLine[]
+    shadedRegions?: ShadedRegion[]
     hiddenMetricNames?: string[]
     hiddenLineNames?: string[]
     clickableMetricNames?: string[]
   }>(),
   {
     horizontalLines: () => [],
+    shadedRegions: () => [],
     hiddenMetricNames: () => [],
     hiddenLineNames: () => [],
     clickableMetricNames: () => []
@@ -118,6 +120,18 @@ const items = computed((): CompactLegendItem[] => [
       attributes: [],
       toggle: () =>
         emit('update:hiddenLineNames', withNameToggled(props.hiddenLineNames, line.name))
+    })
+  ),
+  ...props.shadedRegions.map((region) =>
+    withTruncationLayout({
+      key: `region:${region.name}`,
+      title: region.title,
+      color: region.color,
+      hidden: false,
+      metricName: null,
+      clickable: false,
+      attributes: [],
+      toggle: () => {}
     })
   )
 ])

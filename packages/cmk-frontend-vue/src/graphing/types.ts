@@ -6,10 +6,10 @@
 import type { AddTo, Interaction, YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type { IconNames } from 'cmk-shared-typing/typescript/icon'
 
-import type { HorizontalLine, Metric, TimeRange } from './components/TimeSeriesGraph'
+import type { HorizontalLine, Metric, ShadedRegion, TimeRange } from './components/TimeSeriesGraph'
 import type { ConsolidationFn } from './components/consolidation'
 
-export type { HorizontalLine, Metric, TimeRange }
+export type { HorizontalLine, Metric, ShadedRegion, TimeRange }
 
 export interface TimeInterval {
   start: number // unix seconds
@@ -112,6 +112,7 @@ export interface GraphPanelProps {
   showValueAxis?: boolean
   minValueAxisWidth?: number | undefined
   horizontalLines?: HorizontalLine[]
+  shadedRegions?: ShadedRegion[]
   // Outer figure dimensions (plot area + axis/label margins). The renderer derives
   // the plot (canvas) size by subtracting its margins.
   figureWidth: number

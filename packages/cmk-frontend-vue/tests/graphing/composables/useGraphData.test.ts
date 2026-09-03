@@ -205,6 +205,7 @@ test('a resolved graph reports the range it was asked for, not the window it was
       // Deliberately unlike `asked`: the backend answers on its own storage grid.
       timeRange: { start: 9_000, end: 21_000, step: 300 },
       horizontalLines: [],
+      shadedRegions: [],
       errors: [],
       warnings: []
     }
@@ -243,6 +244,7 @@ test("exposes a fetch's warnings apart from its errors", async () => {
     metrics: [],
     timeRange: { start: 0, end: 3_600, step: 60 },
     horizontalLines: [],
+    shadedRegions: [],
     errors: [],
     warnings: ['The query for CPU matched more than 100 time series.']
   }))

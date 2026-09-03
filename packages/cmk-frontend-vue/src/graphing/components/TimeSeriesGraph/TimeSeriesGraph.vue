@@ -42,6 +42,7 @@ import {
   withoutOffPlotNeighbours
 } from './render/composeSeries'
 import { drawHorizontalLines } from './render/horizontalLines'
+import { drawShadedRegions } from './render/shadedRegions'
 import type { PinPayload, TimeRange, TimeSeriesGraphProps, ZoomPayload } from './types'
 import { useAxes } from './useAxes'
 import { useHover } from './useHover'
@@ -289,7 +290,7 @@ function draw(): void {
     measureLabel
   )
 
-  const [autoYMin, autoYMax] = composedValueDomain(props.metrics, composed)
+  const [autoYMin, autoYMax] = composedValueDomain(props.metrics, composed, props.shaded_regions)
 
   const explicitRange = props.options.y_axis?.explicit_range || null
   const [rawYMin, rawYMax] = props.valueRange
@@ -328,6 +329,14 @@ function draw(): void {
   drawTimeAxis(xTicks, { showLabels: props.showTimeAxis })
   drawValueAxis({ showLabels: props.showValueAxis })
   if (axesContainer.value) {
+    drawShadedRegions(
+      axesContainer.value,
+      props.shaded_regions,
+      props.data_time_range ?? props.view_time_range,
+      xScale,
+      yScale,
+      { top: 0, bottom: plotHeight.value }
+    )
     drawHorizontalLines(axesContainer.value, props.horizontal_lines, yScale, plotWidth.value)
   }
 }

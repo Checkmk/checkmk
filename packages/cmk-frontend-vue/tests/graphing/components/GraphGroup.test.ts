@@ -51,7 +51,8 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
       'showTimestamp',
       'showValueAxis',
       'showTimeAxis',
-      'minValueAxisWidth'
+      'minValueAxisWidth',
+      'shadedRegions'
     ],
     emits: ['update:requestedTimeRange', 'update:consolidationFn', 'inspect'],
     template: `<div
@@ -69,6 +70,7 @@ vi.mock('@/graphing/components/GraphPanel.vue', () => ({
           brushSnapshot.window.start + ',' + brushSnapshot.window.end
         : 'none' }}</span>
       <span data-testid="panel-y-axis-range">{{ yAxis?.explicit_range?.max ?? 'none' }}</span>
+      <span data-testid="panel-shaded-regions">{{ shadedRegions?.length ?? 'none' }}</span>
       <span data-testid="panel-consolidation">{{ consolidationFn }}</span>
       <button @click="$emit('update:consolidationFn', 'min')">consolidate by min</button>
       <button @click="$emit('update:consolidationFn', 'avg')">consolidate by avg</button>
@@ -131,6 +133,14 @@ const FETCHED = {
   ],
   time_range: { start: RANGE_START, end: RANGE_END, step: 60 },
   horizontal_lines: [],
+  shaded_regions: [
+    {
+      name: 'region-0',
+      title: 'OK area',
+      color: '#15d1a0',
+      data_points: { lower: [1], upper: [2] }
+    }
+  ],
   warnings: [],
   errors: []
 }
@@ -762,6 +772,13 @@ describe('GraphGroup - the brush across a range switch', () => {
 
     expect(brushBarFraction()!.left).toBeCloseTo(before.left, 6)
   })
+})
+
+test('hands the fetched shaded regions to the panel that draws it', async () => {
+  renderGroup([makeGraphDefinition('CPU utilization')])
+  await screen.findAllByTestId('graph-panel')
+
+  expect(screen.getByTestId('panel-shaded-regions').textContent).toBe('1')
 })
 
 test("threads each definition's configured y-axis to its own panel", async () => {

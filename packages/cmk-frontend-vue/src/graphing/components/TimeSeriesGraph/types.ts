@@ -23,6 +23,7 @@ export type Metric = components['schemas']['ApiMetric']
 export type MetricMetadata = components['schemas']['ApiMetricMetadata']
 export type MetricRender = components['schemas']['ApiMetricRender']
 export type HorizontalLine = components['schemas']['ApiHorizontalLine']
+export type ShadedRegion = components['schemas']['ApiShadedRegion']
 export type TimeRange = components['schemas']['ApiTimeRange']
 
 export type LineInterpolator = 'linear' | 'monotoneX' | 'basis'
@@ -54,6 +55,7 @@ export interface TimeSeriesGraphProps extends Pick<CmkTimeSeriesGraph, 'size' | 
   data_time_range?: TimeRange | undefined
   metrics: Metric[]
   horizontal_lines: HorizontalLine[]
+  shaded_regions: ShadedRegion[]
   consolidationFunction?: ConsolidationFn
   curveInterpolator?: LineInterpolator
   valueRange: ValueRange | null

@@ -301,6 +301,7 @@ function onRetry(): void {
           :interaction="props.graphs[panelSlot.index]!.interaction"
           :brush-snapshot="brushSnapshotOf(panelSlot.index)"
           :horizontal-lines="panelSlot.graph.horizontalLines"
+          :shaded-regions="panelSlot.graph.shadedRegions"
           :figure-width="effectiveWidth"
           :figure-height="figure_height"
           :add-to="panelSlot.graph.addTo"

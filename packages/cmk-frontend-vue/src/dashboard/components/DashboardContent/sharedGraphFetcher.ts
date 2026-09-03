@@ -32,6 +32,7 @@ export function createSharedGraphFetcher(widgetId: string, cmkToken: string): Gr
       metrics: fetched.metrics,
       timeRange: fetched.time_range,
       horizontalLines: fetched.horizontal_lines,
+      shadedRegions: fetched.shaded_regions,
       errors: fetched.errors,
       warnings: fetched.warnings
     }

@@ -9,7 +9,7 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, computed, readonly, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
-import type { HorizontalLine, Metric, TimeRange } from '../components/TimeSeriesGraph'
+import type { HorizontalLine, Metric, ShadedRegion, TimeRange } from '../components/TimeSeriesGraph'
 import {
   type NavigableBounds,
   clippedToNavigableTime
@@ -36,6 +36,7 @@ export interface ResolvedGraph {
   // backend answers on its own storage grid.
   requestedTimeRange: RequestedTimeRange
   horizontalLines: HorizontalLine[]
+  shadedRegions: ShadedRegion[]
   // The add-to type the context menu is assembled for and the specification its actions replay;
   // absent for graphs that offer no add-to action.
   addTo?: AddTo | null | undefined
@@ -61,6 +62,7 @@ export interface FetchedGraph {
   metrics: Metric[]
   timeRange: TimeRange
   horizontalLines: HorizontalLine[]
+  shadedRegions: ShadedRegion[]
   // Non-fatal per-metric problems the fetch reported alongside whatever data did resolve. Carried
   // through so a source that hit one is stated rather than rendering as a silently missing curve.
   errors: string[]
@@ -97,6 +99,7 @@ export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, p
     metrics: fetched.metrics,
     timeRange: fetched.time_range,
     horizontalLines: fetched.horizontal_lines,
+    shadedRegions: fetched.shaded_regions,
     errors: fetched.errors,
     warnings: fetched.warnings
   }
@@ -216,6 +219,7 @@ export function useGraphData(
         timeRange: fetched.timeRange,
         requestedTimeRange: request.requestedTimeRange,
         horizontalLines: fetched.horizontalLines,
+        shadedRegions: fetched.shadedRegions,
         addTo: definition.add_to,
         internal: definition.internal
       },

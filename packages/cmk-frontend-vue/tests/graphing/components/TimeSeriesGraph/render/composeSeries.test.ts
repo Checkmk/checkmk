@@ -11,7 +11,7 @@ import {
   createM4CacheStore,
   withoutOffPlotNeighbours
 } from '@/graphing/components/TimeSeriesGraph/render/composeSeries'
-import type { Metric, TimeRange } from '@/graphing/components/TimeSeriesGraph/types'
+import type { Metric, ShadedRegion, TimeRange } from '@/graphing/components/TimeSeriesGraph/types'
 
 const STEP = 10
 const DATA_RANGE: TimeRange = { start: 0, end: 100, step: STEP }
@@ -122,6 +122,20 @@ describe('composedValueDomain', () => {
 
     expect(yMin).toBe(baseline)
     expect(yMax).toBe(baseline + member)
+  })
+
+  test('a region bound beyond every metric still fits inside the domain', () => {
+    const metrics = [makeMetric([10, 10])]
+    const region: ShadedRegion = {
+      name: 'region-0',
+      title: 'Critical area',
+      color: '#ff0000',
+      data_points: { lower: [40, 40], upper: [50, 50] }
+    }
+
+    const [, yMax] = composedValueDomain(metrics, compose(metrics), [region])
+
+    expect(yMax).toBeGreaterThanOrEqual(50)
   })
 
   test('a flat positive series anchors its floor at zero rather than at the data', () => {

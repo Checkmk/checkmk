@@ -9,10 +9,10 @@
 // extent it forces are the render contract, and two implementations of that is what let the strip
 // drift from the plot it summarises.
 import type { ConsolidationFn } from '../../consolidation'
-import { computeYDomain } from '../axes/valueAxis'
+import { type DomainBucket, computeYDomain } from '../axes/valueAxis'
 import { downsampleToColumns, edgeNeighbours, edgeSample, m4 } from '../decimation/decimate'
 import type { M4Cache } from '../decimation/types'
-import type { Metric, TimeRange } from '../types'
+import type { Metric, ShadedRegion, TimeRange } from '../types'
 import { invertBucket } from './bucket'
 import { type StackedSeries, computeStackedSeries } from './stacked'
 
@@ -63,11 +63,29 @@ function mixesMirroredAndUnmirrored(metrics: Metric[]): boolean {
   return hasMirroredMetric(metrics) && metrics.some((metric) => !metric.render.inverse)
 }
 
+function regionBoundBuckets(regions: ShadedRegion[]): DomainBucket[][] {
+  return regions.flatMap((region) =>
+    [region.data_points.lower, region.data_points.upper].flatMap((bound) =>
+      bound === null || bound === undefined
+        ? []
+        : [
+            bound.flatMap((value) =>
+              value === null ? [] : [{ gap: false, minValue: value, maxValue: value }]
+            )
+          ]
+    )
+  )
+}
+
 /**
  * The value extent the y-axis must cover. Line metrics contribute their drawn extremes; stacked
  * metrics their cumulative band extents.
  */
-export function composedValueDomain(metrics: Metric[], composed: ComposedSeries): [number, number] {
+export function composedValueDomain(
+  metrics: Metric[],
+  composed: ComposedSeries,
+  regions: ShadedRegion[] = []
+): [number, number] {
   const domainBuckets = metrics.flatMap((metric, i) => {
     if (metric.render.hidden) {
       return []
@@ -82,7 +100,9 @@ export function composedValueDomain(metrics: Metric[], composed: ComposedSeries)
         : withoutOffPlotNeighbours(composed.paddedBuckets[i]!)
     ]
   })
-  return computeYDomain(domainBuckets, { symmetric: mixesMirroredAndUnmirrored(metrics) })
+  return computeYDomain([...domainBuckets, ...regionBoundBuckets(regions)], {
+    symmetric: mixesMirroredAndUnmirrored(metrics)
+  })
 }
 
 export interface M4CacheStore {

@@ -2,30 +2,34 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import Literal
 
 from pydantic import BaseModel
+
+from cmk.utils.password_store import extract_formspec_password, FormSpecPassword
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
-class _DbCredentials(NamedTuple):
+class _DbCredentials(BaseModel):
     user: str
-    password: str
+    password: FormSpecPassword
 
 
-_Auth = Literal["system"] | tuple[Literal["db"], _DbCredentials]
+_Auth = tuple[Literal["system"], None] | tuple[Literal["db"], _DbCredentials]
 
 
-class _InstanceAuth(NamedTuple):
+class _InstanceAuth(BaseModel):
     instance: str
     auth: _Auth
 
 
 class _Config(BaseModel):
-    auth_default: _Auth = "system"
+    deployment: tuple[Literal["do_not_deploy", "sync"], None]
+    auth_default: _Auth = ("system", None)
     auth_instances: Sequence[_InstanceAuth] = ()
     inst_excludes: Sequence[str] = ()
     timeout_connection: int | None = None
@@ -34,8 +38,13 @@ class _Config(BaseModel):
 
 def get_mssql_files(conf: Mapping[str, object]) -> FileGenerator:
     config = _Config.model_validate(conf)
+    if config.deployment[0] == "do_not_deploy":
+        return
 
-    yield Plugin(base_os=OS.WINDOWS, source=Path("mssql.vbs"))
+    yield Plugin(
+        base_os=OS.WINDOWS,
+        source=Path("mssql.vbs"),
+    )
 
     yield PluginConfig(
         base_os=OS.WINDOWS,
@@ -61,12 +70,12 @@ def _get_mssql_ini_lines(
 ) -> Iterator[str]:
     yield "[auth]"
     match auth:
-        case "system":
+        case ("system", _):
             yield "type = system"
         case ("db", credentials):
             yield "type = db"
             yield f"username = {credentials.user}"
-            yield f"password = {credentials.password}"
+            yield f"password = {extract_formspec_password(credentials.password)}"
 
     if excludes:
         yield "[instance]"

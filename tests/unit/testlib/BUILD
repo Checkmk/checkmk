@@ -12,5 +12,6 @@ py_cmk_test(
         "//tests/testlib/pytest_helpers",
         requirement("docker"),
         requirement("pytest-random-order"),
+        requirement("psutil"),
     ],
 )

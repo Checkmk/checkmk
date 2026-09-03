@@ -14,12 +14,12 @@ from collections.abc import Callable
 from types import FrameType, TracebackType
 from typing import Self
 
-from psutil import Process
+from psutil import NoSuchProcess, Process, STATUS_ZOMBIE
 
 from tests.testlib.common.utils2 import run
 
 
-class SessionTimeoutError(TimeoutError): ...
+class SessionTimeoutError(BaseException): ...
 
 
 class MonitorTimeout:
@@ -44,7 +44,7 @@ class MonitorTimeout:
         # defaults
         self._start_time = time.time()
         self._timeout_handler = timeout_handler or self._default_timeout_handler
-        self._group_pid = os.getpgrp()
+        self._pytest_pid = os.getpid()
         # interface
         self._timeout = timeout
         # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
@@ -56,7 +56,7 @@ class MonitorTimeout:
         self._sigint_handler = signal.getsignal(signal.SIGINT)
 
     def _default_timeout_handler(self, signum: int, frame: FrameType | None) -> None:  # noqa: ARG002
-        """Handle SIGINT / KeyboardInterrupt as TimeoutError / SessionTimeoutError.
+        """Handle SIGINT as SessionTimeoutError or re-raise KeyboardInterrupt.
 
         Handling of SIGINT as SessionTimeoutError is active ONLY within pytest run.
         """
@@ -65,16 +65,31 @@ class MonitorTimeout:
         # default behaviour
         raise KeyboardInterrupt
 
+    def _is_pytest_alive(self) -> bool:
+        try:
+            return Process(self._pytest_pid).status() != STATUS_ZOMBIE
+        except NoSuchProcess:
+            return False
+
     def _timeout_and_interrupt(self) -> None:
         """Interrupt pytest run with `SIGINT` when a timeout is detected.
 
         This method is executed in a process which runs concurrently to the pytest run.
         """
-        time.sleep(self._timeout)
+        deadline = time.monotonic() + self._timeout
+        while time.monotonic() < deadline:
+            # worst-case: the timeout-logic is invoked after 'deadline + 1' seconds.
+            # considering the deadlines, this is tolerable.
+            time.sleep(1.0)
+            if not self._is_pytest_alive():
+                return
 
         self._terminate_children_processes()
-        # send SIGINT to pytest run.
-        run(["kill", f"-{signal.SIGINT}", str(self._group_pid)], sudo=True, check=False)
+        # os.kill() targets a specific PID, so the monitor cannot receive its own SIGINT.
+        try:
+            os.kill(self._pytest_pid, signal.SIGINT)
+        except ProcessLookupError:
+            return  # pytest already exited; nothing to interrupt
 
     @property
     def timeout_detected(self) -> bool:
@@ -88,10 +103,14 @@ class MonitorTimeout:
         # TODO:
         # Termination of a child process should lead to SIGCHLD being raise to parent process.
         # explore using SIGCHLD to trigger TimeoutError, instead of SIGINT.
-        children = Process(self._group_pid).children(recursive=True)
+        try:
+            children = Process(self._pytest_pid).children(recursive=True)
+        except NoSuchProcess:
+            return
         children.reverse()
         for child in children:
             if child.pid != self._process.pid:
+                # sudo is needed: child processes (e.g. site commands) may run as root.
                 run(["kill", f"-{signal.SIGINT}", str(child.pid)], sudo=True, check=False)
 
     def __enter__(self) -> Self:

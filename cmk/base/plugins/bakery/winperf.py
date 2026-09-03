@@ -3,19 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-from typing import NamedTuple
+from collections.abc import Mapping, Sequence
+
+from pydantic import BaseModel
 
 from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
 
 
-class _Counter(NamedTuple):
+class _Counter(BaseModel):
     section: str
     counter: str
 
 
-def get_winperf_windows_config(conf: Sequence[tuple[str, str]]) -> WindowsConfigGenerator:
-    if counters := [{c.counter: c.section} for c in map(_Counter._make, conf)]:
+class _Config(BaseModel):
+    counters: Sequence[_Counter] = ()
+
+
+def get_winperf_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
+    config = _Config.model_validate(conf)
+    if counters := [{c.counter: c.section} for c in config.counters]:
         yield WindowsConfigEntry(path=["winperf", "counters"], content=counters)
 
 

@@ -1230,7 +1230,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('winperf', [])
 
 agent_config['winperf'] = [
-{'id': '72aac8ba-3f4d-48d9-a5c0-0ce1c5857c60', 'value': [], 'condition': {}, 'options': {'disabled': False}},
+{'id': '72aac8ba-3f4d-48d9-a5c0-0ce1c5857c60', 'value': {'counters': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['winperf']
 
 

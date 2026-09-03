@@ -44,7 +44,7 @@ VM_DATA = pvcu.parse_proxmox_ve_cpu_util(
                 Result(state=State.OK, summary="Total CPU (1 min average): 75.00%"),
                 Metric("util_average", 75.0, boundaries=(0.0, None)),
                 Result(state=State.OK, summary="CPU cores assigned: 6"),
-                Result(state=State.OK, summary="Total CPU Core usage: 4.50"),
+                Result(state=State.OK, summary="Total CPU Core usage (1 min average): 4.50"),
                 Metric("cpu_core_usage", 4.5, boundaries=(0.0, 6.0)),
             ),
         ),
@@ -56,8 +56,32 @@ VM_DATA = pvcu.parse_proxmox_ve_cpu_util(
                 Result(state=State.OK, summary="Total CPU (1 min average): 75.00%"),
                 Metric("util_average", 75.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
                 Result(state=State.OK, summary="CPU cores assigned: 6"),
-                Result(state=State.OK, summary="Total CPU Core usage: 4.50"),
+                Result(state=State.OK, summary="Total CPU Core usage (1 min average): 4.50"),
                 Metric("cpu_core_usage", 4.5, levels=(5.4, 5.7), boundaries=(0.0, 6.0)),
+            ),
+        ),
+        (
+            {"util": ("fixed", (90.0, 95.0)), "average": 30},
+            VM_DATA,
+            (
+                Metric("util", 75.0, levels=(90.0, 95.0), boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Total CPU (30 min average): 75.00%"),
+                Metric("util_average", 75.0, levels=(90.0, 95.0), boundaries=(0.0, None)),
+                Result(state=State.OK, summary="CPU cores assigned: 6"),
+                Result(state=State.OK, summary="Total CPU Core usage (30 min average): 4.50"),
+                Metric("cpu_core_usage", 4.5, levels=(5.4, 5.7), boundaries=(0.0, 6.0)),
+            ),
+        ),
+        (
+            {"util": ("no_levels", None), "average": 30},
+            VM_DATA,
+            (
+                Metric("util", 75.0, boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Total CPU (30 min average): 75.00%"),
+                Metric("util_average", 75.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="CPU cores assigned: 6"),
+                Result(state=State.OK, summary="Total CPU Core usage (30 min average): 4.50"),
+                Metric("cpu_core_usage", 4.5, boundaries=(0.0, 6.0)),
             ),
         ),
     ],
@@ -70,6 +94,31 @@ def test_check_proxmox_ve_vm_info(
 ) -> None:
     results = tuple(pvcu.check_proxmox_ve_cpu_util(params, section))
     assert results == expected_results
+
+
+def test_core_usage_follows_average_not_instantaneous_spike(
+    empty_value_store: None,
+) -> None:
+    """A short CPU spike must not trip CRIT on "Total CPU Core usage" while the averaged
+    percentage is still well below its levels: both lines are levelled on the same average."""
+    params = {"util": ("fixed", (90.0, 95.0)), "average": 30}
+    low_load = pvcu.parse_proxmox_ve_cpu_util(
+        [[json.dumps({"cpu": "0.10", "max_cpu": "6", "uptime": "0"})]]
+    )
+    spike = pvcu.parse_proxmox_ve_cpu_util(
+        [[json.dumps({"cpu": "1.0", "max_cpu": "6", "uptime": "60"})]]
+    )
+
+    # Establish a low-usage baseline.
+    tuple(pvcu.check_proxmox_ve_cpu_util(params, low_load))
+
+    # One minute of full load barely moves a 30 minute average.
+    results = tuple(pvcu.check_proxmox_ve_cpu_util(params, spike))
+
+    core_usage_result = next(
+        r for r in results if isinstance(r, Result) and "Core usage" in r.summary
+    )
+    assert core_usage_result.state == State.OK
 
 
 if __name__ == "__main__":

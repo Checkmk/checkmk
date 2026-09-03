@@ -726,12 +726,26 @@ impl SqlInstance {
                         .await
                 }
                 names::CONNECTIONS => self.generate_connections_section(client, &query, sep).await,
-                names::TRANSACTION_LOG
-                | names::TABLE_SPACES
-                | names::DATAFILES
-                | names::CLUSTERS => self.generate_per_database_section_threading(
-                    databases, endpoint, section, &query, sep, &edition,
-                ),
+                names::TRANSACTION_LOG | names::TABLE_SPACES | names::DATAFILES => self
+                    .generate_per_database_section_threading(
+                        databases, endpoint, section, &query, sep, &edition,
+                    ),
+                // CLUSTERS is not chunked: it needs no per-database connection, only
+                // one instance-wide discovery connection. Running it through the
+                // per-chunk threading would open that connection once per chunk.
+                names::CLUSTERS => {
+                    let (accessible, inaccessible) =
+                        partition_by_access(databases, endpoint.conn().exclude_databases());
+                    self.generate_clusters_section(
+                        endpoint,
+                        &accessible,
+                        &inaccessible,
+                        &query,
+                        sep,
+                        &edition,
+                    )
+                    .await
+                }
                 names::MIRRORING | names::JOBS | names::AVAILABILITY_GROUPS => {
                     if client.get_edition() == Edition::Azure && section.name() == names::JOBS {
                         String::default()
@@ -1151,19 +1165,6 @@ impl SqlInstance {
                                     endpoint,
                                     &accessible,
                                     db_section,
-                                    query,
-                                    sep,
-                                    edition,
-                                ))
-                            }
-                            // Unlike above, CLUSTERS handles its own simulated
-                            // entries internally (needs live is_clustered state).
-                            // `simulated` below is always "" for it.
-                            None if section.name() == names::CLUSTERS => {
-                                rt.block_on(self.generate_clusters_section(
-                                    endpoint,
-                                    &accessible,
-                                    &inaccessible,
                                     query,
                                     sep,
                                     edition,

@@ -42,6 +42,7 @@ export interface QuickSetupAppProps {
 export interface QSStageStore {
   title: string
   sub_title?: string | null
+  is_applicable: boolean
   components?: ComponentSpec[]
   recap?: ComponentSpec[]
   user_input: Ref<StageData>

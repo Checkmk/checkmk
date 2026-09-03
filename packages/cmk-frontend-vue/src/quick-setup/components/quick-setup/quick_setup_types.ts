@@ -67,6 +67,9 @@ export interface QuickSetupStageSpec extends QuickSetupSaveStageSpec {
   /** @property {string} title - Title of the stage */
   title: string
 
+  /** @property {boolean | undefined} is_applicable - When false, the stage is not shown */
+  is_applicable?: boolean
+
   /** @property {undefined | null | () => void} goToThisStage - Method to open the stage */
   goToThisStage?: (() => void) | null
 

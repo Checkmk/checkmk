@@ -85,6 +85,7 @@ from cmk.gui.type_defs import CustomHostAttrSpec, GlobalSettings, SetOnceDict
 from cmk.gui.utils.host_relations import (
     referenced_host_names,
     relation_key,
+    RelationDirection,
     RelationLink,
     relations_or_empty,
     reverse_direction,
@@ -1269,21 +1270,36 @@ def plan_relation_mirror(
     same relation converge - the later save re-states the whole pair, so the last writer decides
     what it says and both halves agree.
 
-    ``before`` only contributes the counterparts that are gone from ``after`` entirely; they are
-    told to hold nothing.
+    Only the pairs this save changes are planned. A pair it leaves alone is none of this save's
+    business: its counterpart may be locked, unwritable for this user, or missing its half
+    entirely, and none of that may stand between the user and saving the host in front of them.
+    A lost half costs nothing in the monitoring either, because :func:`resolve_all_relations`
+    derives the reverse of every stored half anyway.
+
+    A link naming the host itself is no pair at all - mirroring it would edit the host a second
+    time, from inside its own save.
     """
-    mirror: dict[HostName, list[RelationLink]] = {}
-    for link in after:
-        mirror.setdefault(link["host"], []).append(
-            {
-                "kind": link["kind"],
-                "direction": reverse_direction(link["direction"]),
-                "host": host_name,
-            }
-        )
-    for link in before:
-        mirror.setdefault(link["host"], [])
-    return mirror
+    stored = _links_per_counterpart(before, host_name)
+    wanted = _links_per_counterpart(after, host_name)
+    return {
+        other: [
+            {"kind": kind_id, "direction": reverse_direction(direction), "host": host_name}
+            for kind_id, direction in wanted.get(other, ())
+        ]
+        for other in {**stored, **wanted}
+        if stored.get(other) != wanted.get(other)
+    }
+
+
+def _links_per_counterpart(
+    links: Sequence[RelationLink], owner: HostName
+) -> dict[HostName, list[tuple[str, RelationDirection]]]:
+    """What ``owner`` says about each host it links to, comparable between two values."""
+    grouped: dict[HostName, list[tuple[str, RelationDirection]]] = {}
+    for link in links:
+        if link["host"] != owner:
+            grouped.setdefault(link["host"], []).append((link["kind"], link["direction"]))
+    return {other: sorted(ends) for other, ends in grouped.items()}
 
 
 def need_writable_folders(folders: Iterable[Folder], *, acting_user: LoggedInUser) -> None:
@@ -1336,25 +1352,48 @@ def counterpart_resolver(folder: Folder) -> Callable[[HostName], Host | None]:
 
 
 @contextmanager
-def _refusal_of(counterpart: HostName) -> Iterator[None]:
-    """Say a counterpart's refusal in terms of the host the user is actually saving."""
+def _refusal_of(
+    counterpart: HostName, about: HostName, *, optional: bool = False, dropping: bool = False
+) -> Iterator[None]:
+    """Say a counterpart's refusal in terms of the host the user is actually saving.
+
+    An ``optional`` write is one whose counterpart may simply keep its row: the host it is about
+    is being deleted, so the row names a host that is gone - which
+    :func:`cmk.gui.watolib.host_relations.resolve_all_relations` drops and
+    :func:`cmk.gui.watolib.builtin_attributes.validate_host_relations` reports. Such a refusal is
+    only logged.
+
+    ``dropping`` says the write would have removed the counterpart's row rather than set it, and
+    only picks what the refusal tells the user to do about it.
+    """
     try:
         yield
-    except MKAuthException as exc:
-        raise MKUserError(
-            None,
-            _(
-                "The relation concerns '%(host)s' as well, which you cannot edit: "
-                "%(reason)s Remove the entry to save this host."
+    except (MKAuthException, MKUserError) as exc:
+        if optional:
+            logger.warning(
+                "Kept the relation of host %(host)r to %(about)r: %(reason)s",
+                {"host": counterpart, "about": about, "reason": exc},
             )
-            % {"host": counterpart, "reason": exc},
-        ) from exc
-    except MKUserError as exc:
-        raise MKUserError(
-            None,
-            _("The relation cannot be stored on '%(host)s': %(reason)s")
-            % {"host": counterpart, "reason": exc},
-        ) from exc
+            return
+        if isinstance(exc, MKAuthException):
+            message = (
+                _(
+                    "The relation concerns '%(host)s' as well, which you cannot edit: "
+                    "%(reason)s Put the entry back to save this host."
+                )
+                if dropping
+                else _(
+                    "The relation concerns '%(host)s' as well, which you cannot edit: "
+                    "%(reason)s Remove the entry to save this host."
+                )
+            )
+        else:
+            message = (
+                _("The relation cannot be removed from '%(host)s': %(reason)s")
+                if dropping
+                else _("The relation cannot be stored on '%(host)s': %(reason)s")
+            )
+        raise MKUserError(None, message % {"host": counterpart, "reason": exc}) from exc
 
 
 def apply_relation_mirror(
@@ -1370,6 +1409,14 @@ def apply_relation_mirror(
     that would have to be written are refused before the first host is mutated - the ordering
     :func:`need_writable_folders` explains. A counterpart that already says it is left alone, so
     re-stating a relation never needs write access to its folder.
+
+    Dropping a relation is refused just like establishing one when the counterpart cannot be
+    written. Removing only this host's half would not get rid of it:
+    :func:`cmk.gui.watolib.host_relations.resolve_all_relations` derives the reverse of the half
+    the counterpart keeps, so the relation would be back on both hosts in the monitoring while
+    the dialog of this host shows none. A deleted host is the one case where a half may stay
+    behind (see :func:`_drop_relations_to`) - it names a host that is gone, which every reader of
+    the relations drops anyway.
     """
     pending: list[tuple[Host, Sequence[RelationLink]]] = []
     for name, links in mirror.items():
@@ -1379,16 +1426,19 @@ def apply_relation_mirror(
             continue
         if counterpart.stores_relations_about(host_name, links):
             continue
-        with _refusal_of(counterpart.name()):
+        with _refusal_of(counterpart.name(), host_name, dropping=not links):
             need_writable_folders([counterpart.folder()], acting_user=acting_user)
-        pending.append((counterpart, links))
+            pending.append((counterpart, links))
 
     applied: list[tuple[Host, HostEditResult]] = []
     for counterpart, links in pending:
-        with _refusal_of(counterpart.name()):
-            mirrored = counterpart.set_relations_about(host_name, links, acting_user=acting_user)
-        if mirrored is not None:
-            applied.append((counterpart, mirrored))
+        with _refusal_of(counterpart.name(), host_name, dropping=not links):
+            if (
+                mirrored := counterpart.set_relations_about(
+                    host_name, links, acting_user=acting_user
+                )
+            ) is not None:
+                applied.append((counterpart, mirrored))
     return applied
 
 
@@ -1428,22 +1478,16 @@ def _drop_relations_to(
         counterparts.append(counterpart)
         if counterpart.stores_relations_about(gone, ()):
             continue
-        try:
+        with _refusal_of(name, gone, optional=True):
             folder = counterpart.folder()
             writes_folder = folder.path() not in skip_folder_paths
             if writes_folder:
                 need_writable_folders([folder], acting_user=acting_user)
-            edit = counterpart.set_relations_about(gone, (), acting_user=acting_user)
-            if edit is None:
+            if (edit := counterpart.set_relations_about(gone, (), acting_user=acting_user)) is None:
                 continue
             if writes_folder:
                 folder.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
             counterpart.add_relation_mirror_change(edit, gone, pending_changes=pending_changes)
-        except (MKAuthException, MKUserError) as exc:
-            logger.warning(
-                "Kept the relation of host %(host)r to the deleted host %(gone)r: %(reason)s",
-                {"host": name, "gone": gone, "reason": exc},
-            )
     return counterparts
 
 
@@ -4399,9 +4443,34 @@ class Host:
         pending_changes: PendingChanges,
         acting_user: LoggedInUser,
     ) -> None:
+        """Save this host, and with it the other half of every relation it names.
+
+        Every host is mutated in memory first and the folders are written afterwards, so anything
+        that can be refused - a permission, a lock, a contradiction - is refused before the first
+        file is written; what a refused save leaves behind in memory dies with the request. This
+        host is validated before its counterparts, so a value the form got wrong is reported
+        about the host the user is looking at.
+        """
+        stored_relations = relations_or_empty(self.attributes.get("relations", []))
         edit = self.apply_edit(attributes, cluster_nodes, acting_user=acting_user)
-        self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        mirror = plan_relation_mirror(
+            self.name(), stored_relations, relations_or_empty(self.attributes.get("relations", []))
+        )
+        counterparts = apply_relation_mirror(
+            counterpart_resolver(self.folder()), self.name(), mirror, acting_user=acting_user
+        )
+
+        folders = relation_mirror_folders(
+            [self, *(host for host, _mirrored in counterparts)], acting_user=acting_user
+        )
+        for folder in folders.values():
+            folder.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+
         self.add_edit_host_change(edit, pending_changes=pending_changes)
+        for counterpart, mirrored in counterparts:
+            counterpart.add_relation_mirror_change(
+                mirrored, self.name(), pending_changes=pending_changes
+            )
 
     def update_attributes(
         self,
@@ -4619,7 +4688,7 @@ class Host:
         """Make this host's relations about ``other`` be exactly ``links``, or nothing to do.
 
         The whole truth about the pair is replaced rather than merged - that is what turns a
-        flipped role into one write and what makes two concurrent edits of the same relation
+        flipped direction into one write and what makes two concurrent edits of the same relation
         converge (see :func:`cmk.gui.watolib.hosts_and_folders.plan_relation_mirror`).
 
         Unlike rename_relation(), which follows an already authorized rename and must not fail

@@ -7,8 +7,9 @@
  * Map edit-mode state: drag & drop, line editing, object selection, placing new objects.
  */
 import { randomId } from 'cmk-ui-library/lib/randomId'
-import { computed, onScopeDispose, reactive, ref, toRaw } from 'vue'
+import { computed, onScopeDispose, reactive, ref, toRaw, watch } from 'vue'
 
+import { isDraftPlaceable } from '@/maps/map/edit/draftFacts'
 import { useMaps, useSettings } from '@/maps/services/context'
 import type { MapElement, ObjectType } from '@/maps/types/api'
 import { newMapElement } from '@/maps/utils/model'
@@ -546,6 +547,32 @@ export function useMapEditor() {
     placing.value = true
     selectObject(null)
   }
+
+  // Placing is armed for one particular draft: the click that follows drops
+  // exactly what the panel showed when the button was pressed. Two things make
+  // that untrue, and both disarm rather than let the click surprise the
+  // operator. Swapping one hostname for another changes neither, and stays
+  // armed.
+
+  // A textbox is placeable where a host was not, so this cannot be folded into
+  // the check below: the type changing is reason enough on its own.
+  watch(
+    () => draft.type,
+    () => {
+      placing.value = false
+    }
+  )
+
+  // Emptying a binding the type needs — the canvas would drop a hostgroup with
+  // no group behind it.
+  watch(
+    () => isDraftPlaceable(draft),
+    (placeable) => {
+      if (!placeable) {
+        placing.value = false
+      }
+    }
+  )
 
   function resetDraft() {
     draft.type = ''

@@ -3,12 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { defineComponent, h } from 'vue'
 
 import type { SignedMap } from '@/maps/api/mapConfig'
 import MapViewComponent from '@/maps/map/MapView.vue'
-import type { MapConfig, MapView } from '@/maps/types/api'
+import type { MapConfig, MapRead, MapView } from '@/maps/types/api'
 
 import { aMap, newMapView } from '../support/fixtures'
 import { fakeMapsServices, provideServices } from '../support/services'
@@ -30,14 +32,16 @@ class FakeEventSource {
 
 // The canvas is the observable output of the dispatch under test: a recognisable
 // stub says whether the map got drawn. The chrome around it is irrelevant here
-// and auto-stubbed away.
+// and auto-stubbed away -- including the editing surfaces, which teleport to the
+// app root the test page does not have.
 const stubs = {
   MapCanvas: { template: `<div data-testid="renderer-static" />` },
   MapSearch: true,
   ProblemsOnlyToggle: true,
   DetailDrawer: true,
   MapsLink: true,
-  CmkLoading: true
+  CmkLoading: true,
+  teleport: true
 }
 
 function signedMap(view: MapView, extra: Partial<MapConfig> = {}): SignedMap {
@@ -157,5 +161,73 @@ describe('MapView – breadcrumb', () => {
       services.nav.href({ view: 'home' })
     )
     expect(screen.queryByRole('link', { name: 'Map 1' })).toBeNull()
+  })
+})
+
+describe('MapView – what the settings slide-in is handed', () => {
+  // Ownership and sharing live on the map-list row, not in the daemon config
+  // the canvas renders from. A settings form built from the config alone reads
+  // as private and saves that back, so renaming a map shared with everyone
+  // would quietly unpublish it -- and its Delete button would never appear.
+  let handedMap: MapRead | null
+
+  const openSettingsTopbar = defineComponent({
+    emits: ['open-settings'],
+    setup(_props, { emit }) {
+      return () => h('button', { onClick: () => emit('open-settings') }, 'Map settings')
+    }
+  })
+
+  const settingsProbe = defineComponent({
+    props: { map: { type: Object, required: true } },
+    setup(props) {
+      handedMap = props.map as MapRead
+      return () => h('div', { 'data-testid': 'settings-open' })
+    }
+  })
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    handedMap = null
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
+    services.nav.replace({ view: 'map', name: 'map1' })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('carries the sharing and delete rights over from the map list', async () => {
+    opensMap(newMapView('static'))
+    services.maps.maps.value = [
+      {
+        name: 'map1',
+        alias: 'Map 1',
+        owner: 'cmkadmin',
+        public: true,
+        can_edit: true,
+        can_delete: true
+      }
+    ] as typeof services.maps.maps.value
+
+    const { global: provided } = provideServices(services)
+    render(MapViewComponent, {
+      global: {
+        ...provided,
+        stubs: { ...stubs, MapViewTopbar: openSettingsTopbar, MapSettingsModal: settingsProbe }
+      }
+    })
+
+    await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: 'Map settings' }))
+
+    await waitFor(() => expect(screen.getByTestId('settings-open')).toBeInTheDocument())
+    expect(handedMap).toMatchObject({
+      alias: 'Map 1',
+      owner: 'cmkadmin',
+      public: true,
+      can_delete: true
+    })
   })
 })

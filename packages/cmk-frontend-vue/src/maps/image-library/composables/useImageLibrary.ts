@@ -26,6 +26,7 @@ export function useImageLibrary(): {
   hasUploads: ComputedRef<boolean>
   matchingUploaded: ComputedRef<ImageEntry[]>
   matchingBuiltin: ComputedRef<ImageEntry[]>
+  matchingAll: ComputedRef<ImageEntry[]>
   uploadFiles: (event: Event) => Promise<void>
   forget: (name: string) => void
   reportError: (error: unknown, fallback: TranslatedString) => void
@@ -56,6 +57,9 @@ export function useImageLibrary(): {
 
   const matchingUploaded = matching(uploaded)
   const matchingBuiltin = matching(builtin)
+  // Uploads first: someone looking for their own image should not have to
+  // scroll past the built-in library to find it.
+  const matchingAll = computed(() => [...matchingUploaded.value, ...matchingBuiltin.value])
 
   function reportError(error: unknown, fallback: TranslatedString): void {
     errorMessage.value = errorText(error, fallback)
@@ -108,6 +112,7 @@ export function useImageLibrary(): {
     hasUploads,
     matchingUploaded,
     matchingBuiltin,
+    matchingAll,
     uploadFiles,
     forget,
     reportError

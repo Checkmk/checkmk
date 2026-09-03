@@ -11,16 +11,15 @@ inside the SPA — connections and defaults live in Checkmk's global settings.
 <script setup lang="ts">
 import CmkAlertBox from 'cmk-ui-library/components/CmkAlertBox.vue'
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
-import CmkButton from 'cmk-ui-library/components/CmkButton'
-import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import CmkSearchInput from 'cmk-ui-library/components/CmkSearchInput.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import ImageGrid from '@/maps/image-library/components/ImageGrid.vue'
+import ImageUploadButton from '@/maps/image-library/components/ImageUploadButton.vue'
 import ImageUsageDialog from '@/maps/image-library/components/ImageUsageDialog.vue'
 import { useImageDeletion } from '@/maps/image-library/composables/useImageDeletion'
 import { useImageLibrary } from '@/maps/image-library/composables/useImageLibrary'
@@ -32,8 +31,6 @@ const nav = useNavigation()
 
 const library = useImageLibrary()
 const deletion = useImageDeletion(library.forget, library.reportError)
-
-const fileInput = ref<HTMLInputElement | null>(null)
 
 const breadcrumbItems = computed<BreadcrumbItem[]>(() => [
   { title: _t('Maps'), link: nav.href({ view: 'home' }) },
@@ -60,18 +57,7 @@ const deleteTitle = computed(() =>
           {{ _t('Upload and manage images for map objects') }}
         </CmkParagraph>
       </div>
-      <CmkButton variant="primary" @click="fileInput?.click()">
-        <CmkIcon name="upload" size="small" />
-        {{ _t('Upload image') }}
-      </CmkButton>
-      <input
-        ref="fileInput"
-        type="file"
-        accept="image/png,image/jpeg,image/svg+xml,image/webp"
-        multiple
-        class="maps-images-view__file-input"
-        @change="library.uploadFiles"
-      />
+      <ImageUploadButton :label="_t('Upload image')" @change="library.uploadFiles" />
     </div>
 
     <CmkAlertBox v-if="library.errorMessage.value" variant="error">
@@ -149,10 +135,6 @@ const deleteTitle = computed(() =>
 .maps-images-view__subtitle {
   margin-top: var(--dimension-3);
   color: var(--font-color-dimmed);
-}
-
-.maps-images-view__file-input {
-  display: none;
 }
 
 .maps-images-view__loading {

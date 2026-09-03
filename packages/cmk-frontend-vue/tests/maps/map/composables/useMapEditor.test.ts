@@ -5,6 +5,7 @@
  */
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest'
+import { nextTick } from 'vue'
 
 import { type MapEditor, useMapEditor } from '@/maps/map/composables/useMapEditor'
 import type { MapConfig, MapElement } from '@/maps/types/api'
@@ -142,6 +143,66 @@ describe('useMapEditor placing — services resolved outside setup', () => {
     expect(map.objects[0]).toMatchObject({ type: 'host', lat: 48.1, lng: 11.6 })
   })
 })
+
+describe('useMapEditor placing — the draft it was armed for', () => {
+  /**
+   * A draft that names a host, armed for placement. The tick between filling
+   * the draft in and pressing the button is what the operator's own pause is:
+   * arming in the same batch as picking the type would be disarmed by the very
+   * watcher under test.
+   */
+  async function armedEditor() {
+    const services = fakeMapsServices()
+    services.maps.currentMap.value = { objects: [] } as unknown as MapConfig
+    const editor = runWithServices(services, () => useMapEditor())
+    editor.draft.type = 'host'
+    editor.draft.host_name = 'web01'
+    await nextTick()
+    editor.startPlacing()
+    return editor
+  }
+
+  it('stays armed while the draft still names what it shows', async () => {
+    const editor = await armedEditor()
+
+    editor.draft.host_name = 'web02'
+    await nextTick()
+
+    expect(editor.placing.value).toBe(true)
+  })
+
+  // Otherwise the next canvas click drops a hostgroup with no group behind it:
+  // the place button is disabled by then, but the canvas was already armed.
+  it('disarms when a type change leaves the draft without its binding', async () => {
+    const editor = await armedEditor()
+
+    editor.draft.type = 'hostgroup'
+    await nextTick()
+
+    expect(editor.placing.value).toBe(false)
+  })
+
+  // A textbox needs no binding, so it stays placeable — but the click was aimed
+  // at a host, and dropping a textbox there instead is not what was asked for.
+  it('disarms on a type change even when the new type needs no binding', async () => {
+    const editor = await armedEditor()
+
+    editor.draft.type = 'textbox'
+    await nextTick()
+
+    expect(editor.placing.value).toBe(false)
+  })
+
+  it('disarms when the binding it was armed for is emptied', async () => {
+    const editor = await armedEditor()
+
+    editor.draft.host_name = ''
+    await nextTick()
+
+    expect(editor.placing.value).toBe(false)
+  })
+})
+
 // The server stamps the linked map's title onto every object it serves, so a
 // link the operator re-points in the editor would keep captioning itself with
 // the previous target until the map is loaded again.

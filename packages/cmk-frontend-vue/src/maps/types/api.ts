@@ -75,6 +75,9 @@ export type GroupElement = Daemon['GroupElement']
 
 export type PresentationElement = NonNullable<PresentationView['elements']>[number]
 
+/** Which kind of map a view is -- the discriminator every map-type branch tests. */
+export type MapViewType = MapView['type']
+
 export type MapView =
   | StaticView
   | WorldmapView

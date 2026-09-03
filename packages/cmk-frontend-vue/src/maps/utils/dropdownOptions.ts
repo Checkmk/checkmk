@@ -149,6 +149,14 @@ export function lineStyleOptions(
   ]
 }
 
+/** What a dynamic group collects: hosts or their services. */
+export function dyngroupTypeOptions(_t: TranslateFn) {
+  return [
+    { name: 'host', title: _t('Hosts') },
+    { name: 'service', title: _t('Services') }
+  ]
+}
+
 export function linePerfdataLabelOptions(_t: TranslateFn) {
   return [
     { name: 'none', title: _t('None') },

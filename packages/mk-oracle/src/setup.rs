@@ -907,7 +907,7 @@ static PLUGIN_TEMPLATE_TEXT: LazyLock<String> = LazyLock::new(|| {
 
 $CMK_VERSION = "{}"
 
-& $env:MK_PLUGINSDIR\libexec\mk-oracle-v2\mk-oracle.exe -c $env:MK_CONFDIR/mk-oracle.yml "#,
+& $env:MK_PLUGINSDIR\libexec\mk-oracle-v2\mk-oracle-v2.exe -c $env:MK_CONFDIR/mk-oracle.yml "#,
         VERSION
     )
 });
@@ -945,7 +945,7 @@ static PLUGIN_TEMPLATE_TEXT: LazyLock<String> = LazyLock::new(|| {
 
 CMK_VERSION="{}"
 
-"${{MK_LIBDIR}}/plugins/libexec/mk-oracle-v2/mk-oracle" -c "${{MK_CONFDIR}}/mk-oracle.yml" "#,
+"${{MK_LIBDIR}}/plugins/libexec/mk-oracle-v2/mk-oracle-v2" -c "${{MK_CONFDIR}}/mk-oracle.yml" "#,
         VERSION
     )
 });
@@ -1075,12 +1075,12 @@ fn build_plugin_list(
 ) -> Vec<(String, Option<u32>, &'static str)> {
     let ext = if cfg!(windows) { ".ps1" } else { "" };
     let mut plugins = vec![
-        ("oracle_unified_sync", None, "--filter sync"),
-        ("oracle_unified_async", Some(cache_age), "--filter async"),
+        ("mk-oracle-v2_sync", None, "--filter sync"),
+        ("mk-oracle-v2_async", Some(cache_age), "--filter async"),
     ];
     if cache_age != custom_metrics_cache_age {
         plugins.push((
-            "oracle_unified_async_custom_metrics",
+            "mk-oracle-v2_async_custom_metrics",
             Some(custom_metrics_cache_age),
             "--filter async-custom-metrics",
         ));
@@ -1396,9 +1396,9 @@ mod tests {
     #[test]
     fn test_build_plugin_list_names_unix() {
         let plugins = build_plugin_list(100, 200);
-        assert_eq!(plugins[0].0, "oracle_unified_sync");
-        assert_eq!(plugins[1].0, "oracle_unified_async");
-        assert_eq!(plugins[2].0, "oracle_unified_async_custom_metrics");
+        assert_eq!(plugins[0].0, "mk-oracle-v2_sync");
+        assert_eq!(plugins[1].0, "mk-oracle-v2_async");
+        assert_eq!(plugins[2].0, "mk-oracle-v2_async_custom_metrics");
     }
 
     #[test]

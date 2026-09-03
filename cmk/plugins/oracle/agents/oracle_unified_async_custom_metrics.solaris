@@ -22,7 +22,7 @@ if [ -z "${MK_LIBDIR}" ] || [ ! -d "${MK_LIBDIR}" ]; then
     exit 1
 fi
 
-bin_exe="${MK_LIBDIR}/plugins/libexec/mk-oracle-v2/mk-oracle.solaris"
+bin_exe="${MK_LIBDIR}/plugins/libexec/mk-oracle-v2/mk-oracle-v2.solaris"
 
 if [ ! -x "${bin_exe}" ]; then
     echo "${bin_exe} is not executable or not found"

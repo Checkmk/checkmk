@@ -36,15 +36,15 @@ LIN_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     [
         OraclePluginFile(
             source=Path("mk-oracle"),
-            target=Path("libexec", "mk-oracle-v2", "mk-oracle"),
+            target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_sync"),
-            target=Path("oracle_unified_sync"),
+            target=Path("mk-oracle-v2_sync"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_async"),
-            target=Path("oracle_unified_async"),
+            target=Path("mk-oracle-v2_async"),
             cached=True,
         ),
     ],
@@ -55,15 +55,15 @@ WIN_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     [
         OraclePluginFile(
             source=Path("mk-oracle.exe"),
-            target=Path("libexec", "mk-oracle-v2", "mk-oracle.exe"),
+            target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.exe"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_sync.ps1"),
-            target=Path("oracle_unified_sync.ps1"),
+            target=Path("mk-oracle-v2_sync.ps1"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_async.ps1"),
-            target=Path("oracle_unified_async.ps1"),
+            target=Path("mk-oracle-v2_async.ps1"),
             cached=True,
         ),
     ],
@@ -74,15 +74,15 @@ AIX_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     [
         OraclePluginFile(
             source=Path("mk-oracle.aix"),
-            target=Path("libexec", "mk-oracle-v2", "mk-oracle.aix"),
+            target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.aix"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_sync.aix"),
-            target=Path("oracle_unified_sync.aix"),
+            target=Path("mk-oracle-v2_sync.aix"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_async.aix"),
-            target=Path("oracle_unified_async.aix"),
+            target=Path("mk-oracle-v2_async.aix"),
             cached=True,
         ),
     ],
@@ -93,15 +93,15 @@ SOLARIS_ORACLE_FILES: tuple[OS, Sequence[OraclePluginFile]] = (
     [
         OraclePluginFile(
             source=Path("mk-oracle.solaris"),
-            target=Path("libexec", "mk-oracle-v2", "mk-oracle.solaris"),
+            target=Path("libexec", "mk-oracle-v2", "mk-oracle-v2.solaris"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_sync.solaris"),
-            target=Path("oracle_unified_sync.solaris"),
+            target=Path("mk-oracle-v2_sync.solaris"),
         ),
         OraclePluginFile(
             source=Path("oracle_unified_async.solaris"),
-            target=Path("oracle_unified_async.solaris"),
+            target=Path("mk-oracle-v2_async.solaris"),
             cached=True,
         ),
     ],
@@ -117,22 +117,22 @@ OS_ORACLE_FILES: Sequence[tuple[OS, Sequence[OraclePluginFile]]] = (
 CUSTOM_METRICS_ASYNC_FILES: Mapping[OS, OraclePluginFile] = {
     OS.LINUX: OraclePluginFile(
         source=Path("oracle_unified_async_custom_metrics"),
-        target=Path("oracle_unified_async_custom_metrics"),
+        target=Path("mk-oracle-v2_async_custom_metrics"),
         cached=True,
     ),
     OS.WINDOWS: OraclePluginFile(
         source=Path("oracle_unified_async_custom_metrics.ps1"),
-        target=Path("oracle_unified_async_custom_metrics.ps1"),
+        target=Path("mk-oracle-v2_async_custom_metrics.ps1"),
         cached=True,
     ),
     OS.AIX: OraclePluginFile(
         source=Path("oracle_unified_async_custom_metrics.aix"),
-        target=Path("oracle_unified_async_custom_metrics.aix"),
+        target=Path("mk-oracle-v2_async_custom_metrics.aix"),
         cached=True,
     ),
     OS.SOLARIS: OraclePluginFile(
         source=Path("oracle_unified_async_custom_metrics.solaris"),
-        target=Path("oracle_unified_async_custom_metrics.solaris"),
+        target=Path("mk-oracle-v2_async_custom_metrics.solaris"),
         cached=True,
     ),
 }

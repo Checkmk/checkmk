@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from typing import Final
 
 import pytest
 
@@ -13,6 +14,8 @@ from cmk.plugins.apc.agent_based.apc_netbotz_sensors import (
     check_apc_netbotz_sensors_humidity,
     check_apc_netbotz_sensors_temp,
     parse_apc_netbotz_v2_sensors,
+    parse_apc_netbotz_wireless_sensors,
+    SensorData,
 )
 from cmk.plugins.lib.temperature import TempParamType
 
@@ -131,3 +134,67 @@ def test_apc_netbotz_sensors_dewpoint(
     parsed = parse_apc_netbotz_v2_sensors(TEST_INFO)
     result = list(check_apc_netbotz_sensors_dewpoint(item=item, params={}, section=parsed))
     assert result == expected_result
+
+
+# wirelessSensorStatusIndex, -Name, -Temperature, -Humidity
+WIRELESS_SENSORS: Final[StringTable] = [
+    ["1", "Rack 12 top", "231", "41"],
+    ["2", "", "224", "0"],
+    ["3", "Rack 12 door", "", ""],
+]
+
+
+@pytest.mark.parametrize(
+    "ems_units, mem_units, expected_temperatures",
+    [
+        pytest.param(
+            [["1"]],
+            [["1"]],
+            {"Rack 12 top": 23.1, "Wireless sensor 2": 22.4},
+            id="celsius",
+        ),
+        pytest.param(
+            [["2"]],
+            [["2"]],
+            {"Rack 12 top": -4.944, "Wireless sensor 2": -5.333},
+            id="fahrenheit",
+        ),
+        pytest.param(
+            [],
+            [["2"]],
+            {"Rack 12 top": -4.944, "Wireless sensor 2": -5.333},
+            id="unit only reported by the mem branch",
+        ),
+        pytest.param(
+            [[""]],
+            [[""]],
+            {"Rack 12 top": 23.1, "Wireless sensor 2": 22.4},
+            id="no unit reported: assume celsius",
+        ),
+    ],
+)
+def test_parse_apc_netbotz_wireless_sensors_temperature(
+    ems_units: StringTable,
+    mem_units: StringTable,
+    expected_temperatures: Mapping[str, float],
+) -> None:
+    parsed = parse_apc_netbotz_wireless_sensors([WIRELESS_SENSORS, ems_units, mem_units])
+    assert parsed["temp"].keys() == expected_temperatures.keys()
+    for item, expected_temperature in expected_temperatures.items():
+        assert parsed["temp"][item].reading == pytest.approx(expected_temperature, abs=0.001)
+
+
+def test_parse_apc_netbotz_wireless_sensors_labels() -> None:
+    parsed = parse_apc_netbotz_wireless_sensors([WIRELESS_SENSORS, [["1"]], [["1"]]])
+    assert parsed["temp"] == {
+        "Rack 12 top": SensorData(reading=23.1, label="Wireless sensor 1"),
+        "Wireless sensor 2": SensorData(reading=22.4, label="Wireless sensor 2"),
+    }
+
+
+def test_parse_apc_netbotz_wireless_sensors_humidity() -> None:
+    # sensor 2 is a temperature only sensor reporting a humidity of zero
+    parsed = parse_apc_netbotz_wireless_sensors([WIRELESS_SENSORS, [["1"]], [["1"]]])
+    assert parsed["humidity"] == {
+        "Rack 12 top": SensorData(reading=41.0, label="Wireless sensor 1")
+    }

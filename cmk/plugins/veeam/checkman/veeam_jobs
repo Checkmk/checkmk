@@ -12,12 +12,8 @@ description:
 
  This check is {OK} if the result of the backup is Success. It is {WARN} if the
  result of the backup is Warning. It is {CRIT} if the result of the backup is
- Failed.
-
- If the result of the backup is None, the state of the job decides. While the
- job is running, the previous result is kept. If the job is not running, it has
- no execution history yet and the check is {OK}. Any state that cannot be
- interpreted results in {UNKNOWN}.
+ Failed. It is {OK} or {UNKNOWN} if the result of the backup is None. This then
+ depends on the state of the last backup.
 
 discovery:
  One service is created for each backup job created by the Veeam tool.

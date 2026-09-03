@@ -51,7 +51,6 @@ def _test_register_workflow(
         site.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_not_containerized
 def test_register_workflow_pull(
     central_site: Site,
@@ -65,7 +64,6 @@ def test_register_workflow_pull(
     )
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.skip_if_not_containerized
 @pytest.mark.skip_if_not_edition("ultimate", "ultimatemt")
 def test_register_workflow_push(

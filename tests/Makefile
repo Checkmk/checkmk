@@ -78,8 +78,7 @@ DOCKERABLE_TESTS := \
 	test-unit-shell \
 	test-unit-testlib \
 	test-werks \
-	test-semgrep \
-	test-medium-chain
+	test-semgrep
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.7, we need to convert them, just like it is done for the agent plugins (see
@@ -512,10 +511,3 @@ what-gerrit-makes:
 	    -e BASE_COMMIT_ID=origin/master \
 	    -e WORKSPACE="$$WORKSPACE" \
 	    -e RESULTS="$$WORKSPACE/results"
-
-EXCLUDE_PATTERN_MEDIUM_CHAIN := unit|unit-shell|agent-plugin-unit|qa-test-data
-TEST_DIRS_MEDIUM_CHAIN := $(shell find $(realpath) -mindepth 1 -maxdepth 1 -type d | grep -v -E "/($(EXCLUDE_PATTERN_MEDIUM_CHAIN))$$")
-
-test-medium-chain:
-	$(PYTEST) --log-cli-level=INFO -m medium_test_chain \
-	$(TEST_DIRS_MEDIUM_CHAIN) \

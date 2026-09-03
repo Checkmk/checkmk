@@ -236,7 +236,6 @@ def _broker_users(site: Site) -> set[str]:
 
 @pytest.mark.skip_if_edition("cloud")
 class TestRemoteLocalActivationBrokerSafety:
-    @pytest.mark.medium_test_chain
     def test_local_activation_on_remote_keeps_central_broker_user(
         self, central_site: Site, remote_site: Site
     ) -> None:

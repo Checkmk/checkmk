@@ -79,21 +79,7 @@ def test_equality_with_non_empty_nodes(
 
 
 def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
-    return ImmutableTree(
-        path=tree.path,
-        attributes=ImmutableAttributes(
-            pairs=tree.attributes.pairs,
-            retentions=tree.attributes.retentions,
-        ),
-        table=ImmutableTable(
-            key_columns=tree.table.key_columns,
-            rows_by_ident=tree.table.rows_by_ident,
-            retentions=tree.table.retentions,
-        ),
-        nodes_by_name={
-            name: _make_immutable_tree(node) for name, node in tree.nodes_by_name.items()
-        },
-    )
+    return deserialize_tree(serialize_tree(tree))
 
 
 def _create_empty_mut_tree() -> MutableTree:
@@ -105,7 +91,23 @@ def _create_empty_mut_tree() -> MutableTree:
 
 
 def _create_empty_imm_tree() -> ImmutableTree:
-    return _make_immutable_tree(_create_empty_mut_tree())
+    return deserialize_tree(
+        {
+            "Attributes": {},
+            "Table": {},
+            "Nodes": {
+                "path-to-nta": {
+                    "Attributes": {},
+                    "Table": {},
+                    "Nodes": {
+                        "na": {"Attributes": {}, "Table": {}, "Nodes": {}},
+                        "nt": {"Attributes": {}, "Table": {}, "Nodes": {}},
+                        "ta": {"Attributes": {}, "Table": {}, "Nodes": {}},
+                    },
+                }
+            },
+        }
+    )
 
 
 def _create_filled_mut_tree() -> MutableTree:

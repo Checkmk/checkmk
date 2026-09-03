@@ -189,7 +189,6 @@ single_version_override(
     patch_strip = 1,
     patches = [
         "//bazel/patches:rules_cc-publicize_unix_cc_toolchain_config.patch",
-        "//bazel/patches:rules_cc-add_static_link_cpp_runtimes.patch",
         "//bazel/patches:rules_cc-drop_sanitize_pwd_env.patch",
     ],
 )

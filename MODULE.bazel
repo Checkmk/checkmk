@@ -680,36 +680,36 @@ http_archive(
 http_file(
     name = "python_msi_ucrt",
     downloaded_file_path = "ucrt.msi",
-    sha256 = "c8a811fa5a52a813386c4357262c4c19b1f9da19be0ce1f736cf69174c656af7",
-    url = "https://www.python.org/ftp/python/3.13.14/amd64/ucrt.msi",
+    sha256 = "b173e03056eff8798729c602df992c1cc6b724f56465e39bbe1d01afeae1f369",
+    url = "https://www.python.org/ftp/python/3.13.15/amd64/ucrt.msi",
 )
 
 http_file(
     name = "python_msi_core",
     downloaded_file_path = "core.msi",
-    sha256 = "24d1bac7c022c69a626c92f1ba3ed924ff36ccfef091144dca1567973e14b33e",
-    url = "https://www.python.org/ftp/python/3.13.14/amd64/core.msi",
+    sha256 = "eff25b160b54a77c5953cf5803fc147a1ced084513265dfefc227583b1355484",
+    url = "https://www.python.org/ftp/python/3.13.15/amd64/core.msi",
 )
 
 http_file(
     name = "python_msi_exe",
     downloaded_file_path = "exe.msi",
-    sha256 = "14252c10aa6f5acaacc9a57347a4461c9ff4c7962044fb0464d766a118602e9a",
-    url = "https://www.python.org/ftp/python/3.13.14/amd64/exe.msi",
+    sha256 = "47f02452bde1f05b4d06fb93841ce380624c882ef75caddd1b1207d1a36bb4d2",
+    url = "https://www.python.org/ftp/python/3.13.15/amd64/exe.msi",
 )
 
 http_file(
     name = "python_msi_lib",
     downloaded_file_path = "lib.msi",
-    sha256 = "62738ace04a575bac5c04d04e1174a7fa3dd9ec169c8c3678c1c69abe6beabb1",
-    url = "https://www.python.org/ftp/python/3.13.14/amd64/lib.msi",
+    sha256 = "6d3130114d7f57eaa33d86e8366a669dfc73cfe8df772bef93ce2d9ea799f751",
+    url = "https://www.python.org/ftp/python/3.13.15/amd64/lib.msi",
 )
 
 http_file(
     name = "python_msi_pip",
     downloaded_file_path = "pip.msi",
-    sha256 = "59e9a8f2303bb088c5bddeda23185ac78b020cf0c277e50312749ea69e9321f7",
-    url = "https://www.python.org/ftp/python/3.13.14/amd64/pip.msi",
+    sha256 = "1bc9cfa07a92da66335cc7252dfb3d7ca318facd3966fd15574014466cccf37e",
+    url = "https://www.python.org/ftp/python/3.13.15/amd64/pip.msi",
 )
 
 # win_amd64 wheel closure for python-3.cab's .venv, fetched at the fetch phase

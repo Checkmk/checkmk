@@ -19,7 +19,7 @@ dependencies:
     license: MPL-2.0
     path: third_party/openhardwaremonitor/openhardwaremonitor-0.9.6.zip
 
-  - purl: pkg:generic/python@3.13.14
+  - purl: pkg:generic/python@3.13.15
     license: PSF-2.0
     comment: windows python
 

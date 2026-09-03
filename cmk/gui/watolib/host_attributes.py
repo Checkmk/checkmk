@@ -48,6 +48,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.type_defs import CustomHostAttrSpec
+from cmk.gui.utils.host_relations import RelationLink
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.labels import Labels
@@ -179,6 +180,7 @@ class BuiltInHostAttributes(TypedDict, total=False):
         tuple[Literal["enabled"], MetricsAssociationEnabled] | tuple[Literal["disabled"], None]
     )
     parents: Sequence[HostName]
+    relations: Sequence[RelationLink]
     network_scan: NetworkScanSpec
     network_scan_result: NetworkScanResult
     management_address: HostAddress

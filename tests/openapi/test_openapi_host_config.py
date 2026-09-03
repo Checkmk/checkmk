@@ -2320,6 +2320,7 @@ def test_openapi_built_in_host_attributes_in_sync() -> None:
         "network_scan_result",
         "bake_agent_package",
         "cmk_agent_connection",
+        "relations",
     ]
 
     assert set(BuiltInHostAttributes.__annotations__) == set(

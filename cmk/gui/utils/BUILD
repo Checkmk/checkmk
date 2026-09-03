@@ -9,6 +9,7 @@ load("//bazel/rules:doctest.bzl", "py_doc_test")
 py_library(
     name = "base",
     srcs = [
+        "host_relations.py",
         "images.py",
     ],
     imports = ["../../.."],
@@ -17,6 +18,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-web",
         requirement("pillow"),
     ],
@@ -27,6 +29,7 @@ py_library(
     srcs = [
         "dataclasses.py",
         "doc_reference_urls.py",
+        "host_relation_kinds.py",
         "misc.py",
         "mobile.py",
         "output_funnel.py",
@@ -48,6 +51,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":base",
         "//cmk/gui:core_toolkit",
         "//cmk/utils",
         "//cmk/utils:paths",

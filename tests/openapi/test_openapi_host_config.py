@@ -2314,6 +2314,56 @@ class TestHostsFilters:
         assert not resp.json["value"]
 
 
+def test_openapi_host_relations_cannot_be_removed(clients: ClientRegistry) -> None:
+    """A relation is stored on both hosts, so removing one side through the API would leave the
+    other one pointing at nothing. It is not settable either, so there is nothing to remove."""
+    clients.HostConfig.create(host_name="foobar", folder="/")
+
+    clients.HostConfig.edit(
+        host_name="foobar",
+        remove_attributes=["relations"],
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+def test_openapi_host_relations_cannot_be_removed_in_bulk_either(clients: ClientRegistry) -> None:
+    """The bulk endpoint says so in the same words, and leaves the host alone - rather than
+    reporting it as failed and applying the rest of the update to it anyway."""
+    clients.HostConfig.create(host_name="foobar", folder="/", attributes={"alias": "before"})
+
+    resp = clients.HostConfig.bulk_edit(
+        entries=[{"host_name": "foobar", "remove_attributes": ["alias", "relations"]}],
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    assert resp.json["ext"]["failed_hosts"] == {
+        "foobar": "The following attributes are not managed through the API: relations"
+    }
+    assert clients.HostConfig.get(host_name="foobar").json["extensions"]["attributes"]["alias"] == (
+        "before"
+    )
+
+
+def test_openapi_host_relations_leave_the_other_entries_of_that_host_alone(
+    clients: ClientRegistry,
+) -> None:
+    """A host may appear in the request more than once. It is refused as a whole, rather than
+    having the entries before the offending one saved while it is reported as failed."""
+    clients.HostConfig.create(host_name="foobar", folder="/", attributes={"alias": "before"})
+
+    clients.HostConfig.bulk_edit(
+        entries=[
+            {"host_name": "foobar", "update_attributes": {"alias": "after"}},
+            {"host_name": "foobar", "remove_attributes": ["relations"]},
+        ],
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    assert clients.HostConfig.get(host_name="foobar").json["extensions"]["attributes"]["alias"] == (
+        "before"
+    )
+
+
 def test_openapi_built_in_host_attributes_in_sync() -> None:
     known_exceptions = [
         "meta_data",

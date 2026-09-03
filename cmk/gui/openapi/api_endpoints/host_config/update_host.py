@@ -23,10 +23,12 @@ from cmk.gui.watolib.hosts_and_folders import Host
 
 from ._family import HOST_CONFIG_FAMILY
 from ._utils import (
+    carry_over_unexposed_attributes,
     host_etag,
     make_pending_changes,
     PERMISSIONS_UPDATE,
     serialize_host,
+    UNREMOVABLE_HOST_ATTRIBUTES,
     validate_host_attributes_for_quick_setup,
 )
 from .models.request_models import UpdateHost
@@ -59,8 +61,9 @@ def update_host_v1(
         )
 
     if body.attributes:
-        new_attributes = body.attributes.to_internal()
-        new_attributes["meta_data"] = host.attributes.get("meta_data", {})
+        new_attributes = carry_over_unexposed_attributes(
+            host.attributes, body.attributes.to_internal()
+        )
         host.edit(
             new_attributes,
             host.cluster_nodes(),
@@ -78,6 +81,13 @@ def update_host_v1(
         )
 
     if body.remove_attributes:
+        if unexposed := sorted(set(body.remove_attributes) & set(UNREMOVABLE_HOST_ATTRIBUTES)):
+            raise ProblemException(
+                status=400,
+                title="Some attributes cannot be removed",
+                detail=f"The following attributes are not managed through the API: {', '.join(unexposed)}",
+            )
+
         faulty_attributes = []
         for attribute in body.remove_attributes:
             if attribute not in host.attributes:

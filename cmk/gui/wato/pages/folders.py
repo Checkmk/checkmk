@@ -680,6 +680,7 @@ class ModeFolder(WatoMode):
             if transactions.check_transaction(request):
                 self._folder.delete_subfolder(
                     request.get_ascii_input_mandatory("_delete_folder"),
+                    pprint_value=config.wato_pprint_config,
                     pending_changes=_pending_changes(
                         config=config, local_site=omd_site(), acting_user=user.id
                     ),

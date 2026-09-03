@@ -5,6 +5,7 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
+import io
 import logging
 import os
 import shutil
@@ -30,6 +31,32 @@ from cmk.livestatus_client import (
     SiteConfigurations,
 )
 from cmk.utils.redis import disable_redis
+
+_SITE_CONFIGS = SiteConfigurations(
+    {
+        SiteId("NO_SITE"): SiteConfiguration(
+            id=SiteId("NO_SITE"),
+            alias="Local site NO_SITE",
+            socket=("local", None),
+            disable_wato=True,
+            disabled=False,
+            insecure=False,
+            url_prefix="/NO_SITE/",
+            multisiteurl="",
+            persist=False,
+            replicate_ec=False,
+            replicate_mkps=False,
+            replication=None,
+            timeout=5,
+            user_login=True,
+            proxy=None,
+            user_attribute_sync_connections="all",
+            status_host=None,
+            message_broker_port=5672,
+            is_trusted=False,
+        )
+    }
+)
 
 
 def _noop_pending_changes() -> PendingChanges:
@@ -164,29 +191,7 @@ def test_rename_host(
             job_interface=job_interface,
             custom_user_attributes=[],
             user_connections=[],
-            site_configs={
-                SiteId("NO_SITE"): SiteConfiguration(
-                    id=SiteId("NO_SITE"),
-                    alias="Local site NO_SITE",
-                    socket=("local", None),
-                    disable_wato=True,
-                    disabled=False,
-                    insecure=False,
-                    url_prefix="/NO_SITE/",
-                    multisiteurl="",
-                    persist=False,
-                    replicate_ec=False,
-                    replicate_mkps=False,
-                    replication=None,
-                    timeout=5,
-                    user_login=True,
-                    proxy=None,
-                    user_attribute_sync_connections="all",
-                    status_host=None,
-                    message_broker_port=5672,
-                    is_trusted=False,
-                )
-            },
+            site_configs=_SITE_CONFIGS,
             pending_changes=_noop_pending_changes(),
             pprint_value=False,
             use_git=False,
@@ -208,3 +213,52 @@ def test_rename_host(
         nodes = hosts[HostName(cluster)].cluster_nodes()
         assert nodes is not None
         assert set(nodes) == expected_nodes
+
+
+def test_rename_host_rewrites_the_relations_pointing_at_it() -> None:
+    """Both halves of a relation are stored, but only the half sitting on the counterpart names
+    the renamed host - so the pass is the same as for a parent definition."""
+    folder = folder_tree().root_folder()
+    folder.create_hosts(
+        [
+            (HostName("os1"), HostAttributes(), None),
+            (
+                HostName("board"),
+                HostAttributes(
+                    {
+                        "relations": [
+                            {"kind": "management", "direction": "parent", "host": HostName("os1")}
+                        ]
+                    }
+                ),
+                None,
+            ),
+        ],
+        pprint_value=False,
+        pending_changes=_noop_pending_changes(),
+        acting_user=user,
+    )
+
+    perform_rename_hosts(
+        renamings=[(folder, HostName("os1"), HostName("os2"))],
+        job_interface=BackgroundProcessInterface(
+            "",
+            "",
+            logging.getLogger(),
+            threading.Event(),
+            lambda x: gui_context(),  # noqa: ARG005
+            io.StringIO(),
+        ),
+        custom_user_attributes=[],
+        user_connections=[],
+        site_configs=_SITE_CONFIGS,
+        pending_changes=_noop_pending_changes(),
+        pprint_value=False,
+        use_git=False,
+        debug=False,
+    )
+
+    renamed = folder_tree().root_folder().hosts()[HostName("board")]
+    assert renamed.attributes["relations"] == [
+        {"kind": "management", "direction": "parent", "host": "os2"}
+    ]

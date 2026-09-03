@@ -253,7 +253,12 @@ class TestFolderValidation:
             acting_user=logged_in_user,
         )
         yield folder
-        root.delete_subfolder("abc", pending_changes=pending_changes, acting_user=logged_in_user)
+        root.delete_subfolder(
+            "abc",
+            pprint_value=False,
+            pending_changes=pending_changes,
+            acting_user=logged_in_user,
+        )
 
     @pytest.mark.usefixtures("load_config")
     def test_root_via_slash(self) -> None:

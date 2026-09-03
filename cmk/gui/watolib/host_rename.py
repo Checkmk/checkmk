@@ -148,7 +148,9 @@ def perform_rename_hosts(
     # FolderTree.all_hosts() call. This currently also needs to be done after the
     # host renaming as the folder_tree cache_invalidation still misses some caches.
     tree = folder_tree()
-    cluster_hosts = [host for host in tree.all_hosts().values() if host.is_cluster()]
+    all_hosts = list(tree.all_hosts().values())
+    cluster_hosts = [host for host in all_hosts if host.is_cluster()]
+    relation_hosts = [host for host in all_hosts if host.attributes.get("relations")]
 
     for renaming, this_host_actions in setup_actions.items():
         folder, oldname, newname = renaming
@@ -167,6 +169,16 @@ def perform_rename_hosts(
             this_host_actions.extend(
                 _rename_parents(
                     oldname, newname, pprint_value=pprint_value, pending_changes=pending_changes
+                )
+            )
+            update_interface(_("Renaming host(s) in relations..."))
+            this_host_actions.extend(
+                _rename_host_in_relations(
+                    relation_hosts,
+                    oldname,
+                    newname,
+                    pprint_value=pprint_value,
+                    pending_changes=pending_changes,
                 )
             )
             update_interface(_("Renaming host(s) in rule sets..."))
@@ -311,6 +323,34 @@ def _rename_host_in_parents(
         pending_changes=pending_changes,
     )
     return ["parents"] * len(parents), folder_parent_renamed
+
+
+def _rename_host_in_relations(
+    relation_hosts: Sequence[Host],
+    oldname: HostName,
+    newname: HostName,
+    *,
+    pprint_value: bool,
+    pending_changes: PendingChanges,
+) -> list[str]:
+    """Rewrite the relations naming the renamed host.
+
+    Both halves of a relation are stored, but only one of them names the renamed host: the other
+    half sits on the renamed host itself and names its counterpart, whose name did not change. So
+    the pass stays the same as for parents - rewrite every link that mentions the old name.
+    """
+    renamed = [
+        host
+        for host in relation_hosts
+        if host.rename_relation(
+            oldname,
+            newname,
+            pprint_value=pprint_value,
+            pending_changes=pending_changes,
+            acting_user=user,
+        )
+    ]
+    return ["relations"] * len(renamed)
 
 
 def _rename_host_in_rulesets(
@@ -777,6 +817,7 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         "wato_rules": _("Host and service configuration rule"),
         "alert_rules": _("Alert handler rule"),
         "parents": _("Parent definition"),
+        "relations": _("Related host definition"),
         "cluster_nodes": _("Cluster node definition"),
         "bi": _("BI rule or aggregation"),
         "favorites": _("Favorite entry of user"),

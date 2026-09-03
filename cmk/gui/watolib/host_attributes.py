@@ -225,6 +225,19 @@ class CollectedHostAttributes(HostAttributes):
     edit_url: NotRequired[str]
 
 
+def store_relations(attributes: HostAttributes, links: Sequence[RelationLink]) -> None:
+    """Put the links into the attributes, dropping the attribute if there are none left.
+
+    Writes into ``attributes`` rather than returning a new value - pass a copy if the caller's
+    dictionary has to stay as it was. The links themselves are copied, so that a host never ends
+    up storing a list somebody else still holds.
+    """
+    if links:
+        attributes["relations"] = list(links)
+    else:
+        attributes.pop("relations", None)
+
+
 def mask_attributes(attributes: Mapping[str, object]) -> dict[str, object]:
     """Create a copy of the given attributes and mask credential data"""
 

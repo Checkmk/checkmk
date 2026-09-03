@@ -7,7 +7,6 @@ from collections.abc import Sequence
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -20,13 +19,15 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainValidator
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
-from cmk.gui.watolib.hosts_and_folders import Folder, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, Host, HostEditResult
 
 from ._family import HOST_CONFIG_FAMILY
 from ._utils import (
     bulk_host_action_response,
+    carry_over_unexposed_attributes,
     make_pending_changes,
     PERMISSIONS_UPDATE,
+    UNREMOVABLE_HOST_ATTRIBUTES,
     validate_host_attributes_for_quick_setup,
 )
 from .models.request_models import UpdateHost
@@ -74,15 +75,37 @@ def bulk_update_hosts_v1(
         updates_by_host_name.setdefault(update.host.name(), []).append(update)
 
     for folder, hosts in hosts_by_folder.items():
-        pending_changes: list[tuple[Host, str, list[SiteId]]] = []
+        pending_changes: list[tuple[Host, HostEditResult]] = []
         for host in hosts:
-            for update in updates_by_host_name[host.name()]:
+            updates = updates_by_host_name[host.name()]
+
+            # Checked for the host as a whole and before the first update of it is applied: an
+            # attribute the API does not manage must not be half removed, and a host with several
+            # entries in the request would otherwise have the earlier ones saved while being
+            # reported as failed. The single-host endpoint refuses the request for the same
+            # reason. Unknown attributes keep their long-standing behaviour below - reported as
+            # faulty, with the rest of the update applied.
+            if unexposed := sorted(
+                {attribute for update in updates for attribute in update.remove_attributes or ()}
+                & set(UNREMOVABLE_HOST_ATTRIBUTES)
+            ):
+                failed_hosts[host.name()] = (
+                    f"The following attributes are not managed through the API: "
+                    f"{', '.join(unexposed)}"
+                )
+                continue
+
+            for update in updates:
                 if not validate_host_attributes_for_quick_setup(host, update):
                     failed_hosts[host.name()] = "Host is locked by Quick setup."
                     continue
 
                 attributes = (
-                    update.attributes.to_internal() if update.attributes else host.attributes.copy()
+                    carry_over_unexposed_attributes(
+                        host.attributes, update.attributes.to_internal()
+                    )
+                    if update.attributes
+                    else host.attributes.copy()
                 )
 
                 if update.update_attributes:
@@ -98,10 +121,12 @@ def bulk_update_hosts_v1(
                         # HostAttributes in attributes after removing random keys from it.
                         del attributes[valid_attribute]  # type: ignore[misc]
 
-                diff, affected_sites = host.apply_edit(
-                    attributes, host.cluster_nodes(), acting_user=acting_user
+                pending_changes.append(
+                    (
+                        host,
+                        host.apply_edit(attributes, host.cluster_nodes(), acting_user=acting_user),
+                    )
                 )
-                pending_changes.append((host, diff, affected_sites))
 
                 if faulty_attributes:
                     failed_hosts[host.name()] = (
@@ -116,10 +141,8 @@ def bulk_update_hosts_v1(
                 pprint_value=api_context.config.wato_pprint_config,
                 acting_user=acting_user,
             )
-            for host, diff, affected_sites in pending_changes:
-                host.add_edit_host_change(
-                    diff, affected_sites, pending_changes=make_pending_changes(api_context)
-                )
+            for host, edit in pending_changes:
+                host.add_edit_host_change(edit, pending_changes=make_pending_changes(api_context))
 
     return bulk_host_action_response(failed_hosts, succeeded_hosts, api_context=api_context)
 

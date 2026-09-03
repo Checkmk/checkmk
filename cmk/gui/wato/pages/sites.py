@@ -1111,6 +1111,7 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_delete_folders(
                 make_folder_tree(config),
                 SiteId(delete_folders_id),
+                pprint_value=config.wato_pprint_config,
                 pending_changes=_pending_changes(
                     config.sites,
                     use_git=config.wato_use_git,
@@ -1269,7 +1270,12 @@ class ModeDistributedMonitoring(WatoMode):
         return redirect(mode_url("sites"))
 
     def _action_delete_folders(
-        self, tree: FolderTree, delete_id: SiteId, *, pending_changes: PendingChanges
+        self,
+        tree: FolderTree,
+        delete_id: SiteId,
+        *,
+        pprint_value: bool,
+        pending_changes: PendingChanges,
     ) -> ActionResult:
         folder_site_stats = FolderSiteStats.build(tree.root_folder())
         folders_related_to_site = folder_site_stats.folders.get(delete_id, set())
@@ -1285,7 +1291,10 @@ class ModeDistributedMonitoring(WatoMode):
         for empty_folder in empty_folders:
             if (parent := empty_folder.parent()) is not None:
                 parent.delete_subfolder(
-                    empty_folder.name(), pending_changes=pending_changes, acting_user=user
+                    empty_folder.name(),
+                    pprint_value=pprint_value,
+                    pending_changes=pending_changes,
+                    acting_user=user,
                 )
 
         return redirect(mode_url("sites"))

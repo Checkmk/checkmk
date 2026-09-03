@@ -19,7 +19,16 @@ import subprocess
 import time
 import uuid
 from collections import defaultdict
-from collections.abc import Awaitable, Callable, Collection, Iterable, Iterator, Mapping, Sequence
+from collections.abc import (
+    Awaitable,
+    Callable,
+    Collection,
+    Container,
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 from enum import Enum
@@ -73,6 +82,13 @@ from cmk.gui.pages import PageContext
 from cmk.gui.session_context import get_session_csrf_token
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import CustomHostAttrSpec, GlobalSettings, SetOnceDict
+from cmk.gui.utils.host_relations import (
+    referenced_host_names,
+    relation_key,
+    RelationLink,
+    relations_or_empty,
+    reverse_direction,
+)
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -93,6 +109,7 @@ from cmk.gui.watolib.host_attributes import (
     LABEL_CLEAR_VALUE,
     mask_attributes,
     MetaData,
+    store_relations,
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.pending_changes import (
@@ -1212,6 +1229,222 @@ def _wato_folders_factory(tree: FolderTree) -> Mapping[PathWithoutSlash, Folder]
 
 def _core_settings_hosts_to_update(hostnames: Sequence[HostName]) -> DomainSettings:
     return {CORE_DOMAIN: generate_hosts_to_update_settings(hostnames)}
+
+
+# A relation is stored on both hosts: each of the two holds a row naming the other. Every path
+# that writes one therefore writes two hosts, and the helpers below are what those paths share -
+# plan what the counterparts have to say, refuse it before anything is touched, apply it, and
+# drop the other half again when a host goes away. The counterpart may well live on a remote
+# site: relations are resolved across all sites centrally at activation time (see
+# cmk.gui.watolib.host_relations_export), so it has to be activated along with the host that was
+# edited, or the reverse relation only appears once it happens to get activated itself.
+
+
+def _relation_counterpart_hosts(tree: FolderTree, *relations_values: object) -> list[Host]:
+    """Existing hosts referenced by the given manual-relations attribute values.
+
+    Several values may be passed (e.g. the attribute before and after an edit) to collect their
+    union, so that a removed link still refreshes its former counterpart.
+    """
+    referenced: set[HostName] = set()
+    for value in relations_values:
+        referenced |= referenced_host_names(relations_or_empty(value))
+    return [host for name in referenced if (host := tree.host(name)) is not None]
+
+
+#: For each counterpart, exactly the rows it must hold about the host being saved. An empty
+#: sequence means it must hold none - the relation is gone.
+RelationMirror = Mapping[HostName, Sequence[RelationLink]]
+
+
+def plan_relation_mirror(
+    host_name: HostName, before: Sequence[RelationLink], after: Sequence[RelationLink]
+) -> RelationMirror:
+    """What the counterparts of ``host_name`` have to say about it, given it now stores ``after``.
+
+    Stated per counterpart as the full truth about that pair, not as a diff: whatever a
+    counterpart held about this host is replaced by what this save says. That is what makes a
+    flipped direction one write instead of an added second row, and what makes two people editing the
+    same relation converge - the later save re-states the whole pair, so the last writer decides
+    what it says and both halves agree.
+
+    ``before`` only contributes the counterparts that are gone from ``after`` entirely; they are
+    told to hold nothing.
+    """
+    mirror: dict[HostName, list[RelationLink]] = {}
+    for link in after:
+        mirror.setdefault(link["host"], []).append(
+            {
+                "kind": link["kind"],
+                "direction": reverse_direction(link["direction"]),
+                "host": host_name,
+            }
+        )
+    for link in before:
+        mirror.setdefault(link["host"], [])
+    return mirror
+
+
+def need_writable_folders(folders: Iterable[Folder], *, acting_user: LoggedInUser) -> None:
+    """Refuse before the first write if any folder would refuse during it.
+
+    ``Folder.save_hosts()`` re-checks the folder's own write permission and host lock, and a
+    folder's contact groups are not a host's. Without this, a counterpart can pass every check of
+    ``Host.apply_edit()`` and still raise halfway through the loop - with the host being edited
+    already on disk and its counterpart not.
+
+    Ask before mutating, not only before saving: ``Host.set_relations_about()`` edits the host in
+    memory, and a folder refusing the write afterwards leaves it without a row that its
+    "hosts.mk" still has - to be written by whoever saves that folder next in the same request.
+    """
+    for folder in folders:
+        folder.need_unlocked_hosts()
+        folder.permissions.need_permission("write", acting_user)
+
+
+def relation_mirror_folders(
+    hosts: Iterable[Host], *, acting_user: LoggedInUser
+) -> Mapping[PathWithoutSlash, Folder]:
+    """The "hosts.mk" files a mirror has to be written to, refused now if one would refuse later.
+
+    One entry per file: a host and its counterpart may share a folder. Keying by path is only
+    safe because every host here was resolved through :func:`counterpart_resolver`, which hands
+    out one instance per folder - see the note there on what two instances of the same folder do
+    to a write.
+    """
+    folders = {host.folder().path(): host.folder() for host in hosts}
+    need_writable_folders(folders.values(), acting_user=acting_user)
+    return folders
+
+
+def counterpart_resolver(folder: Folder) -> Callable[[HostName], Host | None]:
+    """Look a counterpart up through ``folder`` first, then through the whole tree.
+
+    Not just ``FolderTree.host()``: that resolves through the tree's folder cache, which can hold
+    a *different instance* of the very folder the caller is about to save (see the note in
+    ``FolderTree.invalidate_caches()``). Mutating the counterpart on that other instance and then
+    saving this one silently drops the write.
+    """
+
+    def resolve(host_name: HostName) -> Host | None:
+        if (own := folder.host(host_name)) is not None:
+            return own
+        return folder.tree.host(host_name)
+
+    return resolve
+
+
+@contextmanager
+def _refusal_of(counterpart: HostName) -> Iterator[None]:
+    """Say a counterpart's refusal in terms of the host the user is actually saving."""
+    try:
+        yield
+    except MKAuthException as exc:
+        raise MKUserError(
+            None,
+            _(
+                "The relation concerns '%(host)s' as well, which you cannot edit: "
+                "%(reason)s Remove the entry to save this host."
+            )
+            % {"host": counterpart, "reason": exc},
+        ) from exc
+    except MKUserError as exc:
+        raise MKUserError(
+            None,
+            _("The relation cannot be stored on '%(host)s': %(reason)s")
+            % {"host": counterpart, "reason": exc},
+        ) from exc
+
+
+def apply_relation_mirror(
+    resolve_host: Callable[[HostName], Host | None],
+    host_name: HostName,
+    mirror: RelationMirror,
+    *,
+    acting_user: LoggedInUser,
+) -> Sequence[tuple[Host, HostEditResult]]:
+    """Make every counterpart say what ``mirror`` says about ``host_name``.
+
+    Resolving a counterpart and asking whether it already agrees does not edit it, so the folders
+    that would have to be written are refused before the first host is mutated - the ordering
+    :func:`need_writable_folders` explains. A counterpart that already says it is left alone, so
+    re-stating a relation never needs write access to its folder.
+    """
+    pending: list[tuple[Host, Sequence[RelationLink]]] = []
+    for name, links in mirror.items():
+        if (counterpart := resolve_host(name)) is None:
+            # Named a host that is not there - resolve_all_relations() drops such a link, and
+            # validate_host_relations() reports it. Nothing to mirror onto.
+            continue
+        if counterpart.stores_relations_about(host_name, links):
+            continue
+        with _refusal_of(counterpart.name()):
+            need_writable_folders([counterpart.folder()], acting_user=acting_user)
+        pending.append((counterpart, links))
+
+    applied: list[tuple[Host, HostEditResult]] = []
+    for counterpart, links in pending:
+        with _refusal_of(counterpart.name()):
+            mirrored = counterpart.set_relations_about(host_name, links, acting_user=acting_user)
+        if mirrored is not None:
+            applied.append((counterpart, mirrored))
+    return applied
+
+
+def _drop_relations_to(
+    resolve_host: Callable[[HostName], Host | None],
+    gone: HostName,
+    links: Sequence[RelationLink],
+    *,
+    pprint_value: bool,
+    pending_changes: PendingChanges,
+    acting_user: LoggedInUser,
+    deleted_with_it: Container[HostName] = (),
+    skip_folder_paths: Container[PathWithoutSlash] = (),
+) -> Sequence[Host]:
+    """Remove the other half of every relation of a host that is going away.
+
+    A host's own links name every host that has to be told. Best effort, unlike
+    :func:`apply_relation_mirror`: a counterpart in a locked folder or one the user may not edit
+    keeps its row - in memory as well as on disk - which
+    :func:`cmk.gui.watolib.builtin_attributes.validate_host_relations` reports and the export
+    drops. Deleting a host must not fail over a relation - least of all once the host's files are
+    already gone.
+
+    Returns the counterparts that exist, whether or not their row could be removed: the relation
+    is gone from this side either way, so their cores have to be refreshed.
+
+    Counterparts in ``deleted_with_it`` are left alone: they are being deleted in the same go, so
+    their row dies with their file and nothing has to be logged or activated about them. Folders
+    in ``skip_folder_paths`` are mutated but not written; the caller saves them.
+    """
+    counterparts: list[Host] = []
+    for name in dict.fromkeys(link["host"] for link in links):
+        if name in deleted_with_it:
+            continue
+        if (counterpart := resolve_host(name)) is None:
+            continue
+        counterparts.append(counterpart)
+        if counterpart.stores_relations_about(gone, ()):
+            continue
+        try:
+            folder = counterpart.folder()
+            writes_folder = folder.path() not in skip_folder_paths
+            if writes_folder:
+                need_writable_folders([folder], acting_user=acting_user)
+            edit = counterpart.set_relations_about(gone, (), acting_user=acting_user)
+            if edit is None:
+                continue
+            if writes_folder:
+                folder.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+            counterpart.add_relation_mirror_change(edit, gone, pending_changes=pending_changes)
+        except MKAuthException, MKUserError:
+            logger.warning(
+                "Kept the relation of host %(host)r to the deleted host %(gone)r: not allowed "
+                "to edit it.",
+                {"host": name, "gone": gone},
+            )
+    return counterparts
 
 
 class FolderTree:
@@ -2645,7 +2878,12 @@ class Folder:
         return new_subfolder
 
     def delete_subfolder(
-        self, name: str, *, pending_changes: PendingChanges, acting_user: LoggedInUser
+        self,
+        name: str,
+        *,
+        pprint_value: bool,
+        pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
     ) -> None:
         # 1. Check preconditions
         acting_user.need_permission("wato.manage_folders")
@@ -2661,6 +2899,29 @@ class Folder:
 
         # 3. Actual modification
         hooks.call("folder-deleted", subfolder)
+
+        # Every host in here takes the other half of its relations with it - including halves
+        # stored outside this subtree. Best effort, see _drop_relations_to(), and after the hook
+        # for the reason delete_hosts() does it after removing the files: a refusal must not leave
+        # outside hosts stripped of relations to hosts that are still there.
+        subtree = subfolder.all_hosts_recursively()
+        counterparts: list[Host] = []
+        for host_name, host in subtree.items():
+            counterparts.extend(
+                _drop_relations_to(
+                    counterpart_resolver(host.folder()),
+                    host_name,
+                    relations_or_empty(host.attributes.get("relations", [])),
+                    pprint_value=pprint_value,
+                    pending_changes=pending_changes,
+                    acting_user=acting_user,
+                    # A pair inside the subtree needs nothing done to it: both halves are removed
+                    # wholesale in a moment, so a row dropped here would only be logged and
+                    # activated for a host that is gone by then.
+                    deleted_with_it=subtree.keys(),
+                )
+            )
+
         pending_changes.add(
             Change(
                 action_name="delete-folder",
@@ -2668,7 +2929,12 @@ class Folder:
                 object_ref=self.object_ref(),
                 domains=[CORE_DOMAIN],
             ),
-            ChangeScope.sites(subfolder.all_site_ids()),
+            # A counterpart outside the subtree loses this relation too, and it may live on a site
+            # that has nothing else to do with this folder. No "hosts_to_update": deleting a
+            # folder is more than deleting its hosts, so the sites in here rebuild everything.
+            ChangeScope.sites(
+                [*subfolder.all_site_ids(), *(host.site_id() for host in counterparts)]
+            ),
         )
         del self._subfolders[name]
         shutil.rmtree(subfolder.filesystem_path())
@@ -2864,23 +3130,65 @@ class Folder:
             entries, self.site_id(), SiteConfigurations(self.tree.config.sites)
         )
 
-        self.create_validated_hosts(
-            [
-                (
+        validated = [
+            (
+                host_name,
+                self.verify_and_update_host_details(
                     host_name,
-                    self.verify_and_update_host_details(
-                        host_name,
-                        attributes,
-                        acting_user=acting_user,
+                    attributes,
+                    acting_user=acting_user,
+                ),
+                _cluster_nodes,
+            )
+            for host_name, attributes, _cluster_nodes in entries
+        ]
+
+        # A host created with a relation is a write on the host it names. Mutate those in memory
+        # first and refuse before anything is written, the way editing a host does -
+        # create_validated_hosts() itself must stay a phase that cannot fail, because the
+        # configuration bundles rely on that.
+        # Counterparts are looked up among the hosts that already exist: a host from this very
+        # batch is not one of them, so apply_relation_mirror() writes no half for it. Every entry
+        # states its own relations, so a pair created together is consistent as long as both
+        # entries name each other - and nothing that creates hosts in bulk sets relations, which
+        # the REST API does not expose (see UNEXPOSED_HOST_ATTRIBUTES).
+        resolve_counterpart = counterpart_resolver(self)
+        counterparts: list[tuple[Host, HostEditResult, HostName]] = []
+        for host_name, attributes, _cluster_nodes in validated:
+            counterparts.extend(
+                (counterpart, mirrored, host_name)
+                for counterpart, mirrored in apply_relation_mirror(
+                    resolve_counterpart,
+                    host_name,
+                    plan_relation_mirror(
+                        host_name, (), relations_or_empty(attributes.get("relations", []))
                     ),
-                    _cluster_nodes,
+                    acting_user=acting_user,
                 )
-                for host_name, attributes, _cluster_nodes in entries
-            ],
+            )
+        counterpart_folders = relation_mirror_folders(
+            [host for host, _mirrored, _related_to in counterparts], acting_user=acting_user
+        )
+
+        self.create_validated_hosts(
+            validated,
             pprint_value=pprint_value,
             pending_changes=pending_changes,
             acting_user=acting_user,
         )
+
+        # One file per counterpart folder, and every one of them has agreed to the write above.
+        # What is left is the disk saying no halfway through - the new hosts are created by then
+        # and one counterpart may be written and the next not. Nothing can be rolled back here,
+        # and validate_host_relations() reports the halves that end up missing.
+        for path, folder in counterpart_folders.items():
+            # create_validated_hosts() has saved this folder already.
+            if path != self.path():
+                folder.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        for counterpart, mirrored, related_to in counterparts:
+            counterpart.add_relation_mirror_change(
+                mirrored, related_to, pending_changes=pending_changes
+            )
 
     def create_validated_hosts(
         self,
@@ -2922,6 +3230,7 @@ class Folder:
         self._hosts[host_name] = host
         self._num_hosts = len(self._hosts)
 
+        counterparts = _relation_counterpart_hosts(self.tree, attributes.get("relations", []))
         pending_changes.add(
             Change(
                 action_name="create-host",
@@ -2929,9 +3238,11 @@ class Folder:
                 object_ref=host.object_ref(),
                 diff_text=diff_attributes({}, None, host.attributes, host.cluster_nodes()),
                 domains=[CORE_DOMAIN],
-                domain_settings=_core_settings_hosts_to_update([host_name]),
+                domain_settings=_core_settings_hosts_to_update(
+                    [host_name, *(c.name() for c in counterparts)]
+                ),
             ),
-            ChangeScope.sites([host.site_id()]),
+            ChangeScope.sites([host.site_id(), *(c.site_id() for c in counterparts)]),
         )
 
     def user_may_delete_hosts(
@@ -2977,8 +3288,25 @@ class Folder:
 
         # 3. Actual modification
         assert self._hosts is not None
+        deleted = frozenset(host_names)
         for host_name in host_names:
             host = self.hosts()[host_name]
+            # A deleted host takes the other half of its relations with it. Best effort on
+            # purpose: a counterpart the user may not edit keeps its row, which
+            # validate_host_relations() reports and the export drops - a delete must not fail
+            # over a relation, least of all after step 2 already removed the host's files.
+            counterparts = _drop_relations_to(
+                counterpart_resolver(self),
+                host_name,
+                relations_or_empty(host.attributes.get("relations", [])),
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
+                acting_user=acting_user,
+                # A pair deleted in the same call needs nothing done to it, and the counterparts
+                # that stay live in a folder that is written once, after every host is gone.
+                deleted_with_it=deleted,
+                skip_folder_paths={self.path()},
+            )
             del self._hosts[host_name]
             self._num_hosts = len(self._hosts)
             pending_changes.add(
@@ -2987,9 +3315,11 @@ class Folder:
                     text=_l("Deleted host %(host_name)s") % {"host_name": host_name},
                     object_ref=host.object_ref(),
                     domains=[CORE_DOMAIN],
-                    domain_settings=_core_settings_hosts_to_update([host.name()]),
+                    domain_settings=_core_settings_hosts_to_update(
+                        [host.name(), *(c.name() for c in counterparts)]
+                    ),
                 ),
-                ChangeScope.sites([host.site_id()]),
+                ChangeScope.sites([host.site_id(), *(c.site_id() for c in counterparts)]),
             )
 
         self.save_folder_attributes()  # num_hosts has changed
@@ -3685,6 +4015,19 @@ def parent_folder_chain(origin: SearchFolder | Folder) -> list[Folder]:
     return folders[::-1]
 
 
+@dataclass(frozen=True)
+class HostEditResult:
+    """What editing a host changed, as far as the change log has to know.
+
+    ``counterpart_hosts`` are the hosts whose relations change as a side effect of the edit (see
+    :func:`_relation_counterpart_hosts`); their core configuration has to be updated with it.
+    """
+
+    diff: str
+    affected_sites: Sequence[SiteId]
+    counterpart_hosts: Sequence[HostName]
+
+
 class Host:
     """Class representing one host that is managed via Setup. Hosts are contained in Folders."""
 
@@ -3954,8 +4297,11 @@ class Host:
         cluster_nodes: Sequence[HostName] | None,
         *,
         acting_user: LoggedInUser,
-    ) -> tuple[str, list[SiteId]]:
-        """Apply the changes to the host. This method does not save the changes to file!"""
+    ) -> HostEditResult:
+        """Apply the changes to the host. This method does not save the changes to file!
+
+        The result is what :meth:`add_edit_host_change` needs to log the change.
+        """
         # 1. Check preconditions
         if attributes.get("contactgroups") != self.attributes.get("contactgroups"):
             self._need_folder_write_permissions(acting_user)
@@ -3972,29 +4318,46 @@ class Host:
             acting_user,
         )
 
+        # Normalize the way the mirror is planned from it - an empty list is no attribute at all,
+        # not a stored empty one - and leave the caller's dictionary alone while doing so.
+        attributes = attributes.copy()
+        store_relations(attributes, relations_or_empty(attributes.get("relations", [])))
+
         diff = diff_attributes(self.attributes, self._cluster_nodes, attributes, cluster_nodes)
+
+        counterparts = _relation_counterpart_hosts(
+            folder.tree, self.attributes.get("relations", []), attributes.get("relations", [])
+        )
 
         # 2. Actual modification
         affected_sites = [self.site_id()]
         self.attributes = attributes
         self._cluster_nodes = cluster_nodes
-        affected_sites = list(set(affected_sites + [self.site_id()]))
+        affected_sites = list(
+            {self.site_id(), *affected_sites, *(host.site_id() for host in counterparts)}
+        )
 
-        return diff, affected_sites
+        return HostEditResult(
+            diff=diff,
+            affected_sites=affected_sites,
+            counterpart_hosts=[host.name() for host in counterparts],
+        )
 
     def add_edit_host_change(
-        self, diff: str, affected_sites: list[SiteId], *, pending_changes: PendingChanges
+        self, edit: HostEditResult, *, pending_changes: PendingChanges
     ) -> None:
         pending_changes.add(
             Change(
                 action_name="edit-host",
                 text=_l("Modified host %(host)s.") % {"host": self.name()},
                 object_ref=self.object_ref(),
-                diff_text=diff,
+                diff_text=edit.diff,
                 domains=[CORE_DOMAIN],
-                domain_settings=_core_settings_hosts_to_update([self.name()]),
+                domain_settings=_core_settings_hosts_to_update(
+                    [self.name(), *edit.counterpart_hosts]
+                ),
             ),
-            ChangeScope.sites(affected_sites),
+            ChangeScope.sites(edit.affected_sites),
         )
 
     def edit(
@@ -4006,9 +4369,9 @@ class Host:
         pending_changes: PendingChanges,
         acting_user: LoggedInUser,
     ) -> None:
-        diff, affected_sites = self.apply_edit(attributes, cluster_nodes, acting_user=acting_user)
+        edit = self.apply_edit(attributes, cluster_nodes, acting_user=acting_user)
         self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
-        self.add_edit_host_change(diff, affected_sites, pending_changes=pending_changes)
+        self.add_edit_host_change(edit, pending_changes=pending_changes)
 
     def update_attributes(
         self,
@@ -4162,6 +4525,111 @@ class Host:
         )
         self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
         return True
+
+    def rename_relation(
+        self,
+        oldname: HostName,
+        newname: HostName,
+        *,
+        pprint_value: bool,
+        pending_changes: PendingChanges,
+        acting_user: LoggedInUser,
+    ) -> bool:
+        """Point this host's relations at a renamed host. Same as with rename_parent().
+
+        And no ``hosts_to_update`` either, like rename_parent() and rename_cluster_node(): a
+        rename rewrites the host wherever it is named and records a change rebuilding the core
+        of every site it touches (see :mod:`cmk.gui.watolib.host_rename`), so narrowing the
+        update to the hosts known here could only leave one out.
+        """
+        links = relations_or_empty(self.attributes.get("relations", []))
+        if oldname not in referenced_host_names(links):
+            return False
+
+        self.attributes["relations"] = [
+            {**link, "host": newname} if link["host"] == oldname else link for link in links
+        ]
+        pending_changes.add(
+            Change(
+                action_name="rename-relation",
+                text=_l("Renamed related host from %(oldname)s into %(newname)s.")
+                % {"oldname": oldname, "newname": newname},
+                object_ref=self.object_ref(),
+                domains=[CORE_DOMAIN],
+            ),
+            ChangeScope.sites([self.site_id()]),
+        )
+        self.folder().save_hosts(pprint_value=pprint_value, acting_user=acting_user)
+        return True
+
+    def stores_relations_about(self, other: HostName, links: Sequence[RelationLink]) -> bool:
+        """Whether this host already says exactly ``links`` about ``other``.
+
+        Asked before mutating anything, so that a save which changes nothing here needs nothing
+        from this host - not its lock, not its folder.
+
+        Compared as sorted keys rather than as sets: a duplicated row is a difference too, and
+        the order the rows are stored in is not.
+        """
+        about_other = [
+            link
+            for link in relations_or_empty(self.attributes.get("relations", []))
+            if link["host"] == other
+        ]
+        return sorted(map(relation_key, about_other)) == sorted(map(relation_key, links))
+
+    def set_relations_about(
+        self, other: HostName, links: Sequence[RelationLink], *, acting_user: LoggedInUser
+    ) -> HostEditResult | None:
+        """Make this host's relations about ``other`` be exactly ``links``, or nothing to do.
+
+        The whole truth about the pair is replaced rather than merged - that is what turns a
+        flipped role into one write and what makes two concurrent edits of the same relation
+        converge (see :func:`cmk.gui.watolib.hosts_and_folders.plan_relation_mirror`).
+
+        Unlike rename_relation(), which follows an already authorized rename and must not fail
+        halfway, this is a user changing another host's configuration on purpose - so it goes
+        through apply_edit() like any other edit of this host, and like it does not save.
+        """
+        if self.stores_relations_about(other, links):
+            return None
+
+        stored = relations_or_empty(self.attributes.get("relations", []))
+        wanted = [*(link for link in stored if link["host"] != other), *links]
+
+        # Only a write is refused: a save that re-states a pair this host already agrees with
+        # must not become impossible because the host was taken over by Quick setup afterwards.
+        if is_locked_by_config_bundle(self.locked_by()):
+            raise MKUserError(
+                None,
+                _(
+                    "'%(host)s' is locked by Quick setup, so the other half of the relation "
+                    "cannot be stored on it."
+                )
+                % {"host": self.name()},
+            )
+
+        attributes = self.attributes.copy()
+        attributes["relations"] = wanted
+        return self.apply_edit(attributes, self._cluster_nodes, acting_user=acting_user)
+
+    def add_relation_mirror_change(
+        self, edit: HostEditResult, related_to: HostName, *, pending_changes: PendingChanges
+    ) -> None:
+        """Log the mirrored write under this host, not only under the one that was edited."""
+        pending_changes.add(
+            Change(
+                action_name="mirror-relation",
+                text=_l("Updated the relation to host %(host)s.") % {"host": related_to},
+                object_ref=self.object_ref(),
+                diff_text=edit.diff,
+                domains=[CORE_DOMAIN],
+                domain_settings=_core_settings_hosts_to_update(
+                    [self.name(), *edit.counterpart_hosts]
+                ),
+            ),
+            ChangeScope.sites(edit.affected_sites),
+        )
 
     def rename(self, new_name: HostName, *, pending_changes: PendingChanges) -> None:
         pending_changes.add(

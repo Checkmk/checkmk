@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 from collections.abc import Callable, Iterable, Sequence
-from typing import get_type_hints
+from typing import Final, get_type_hints
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
@@ -249,3 +249,25 @@ def bulk_host_action_response(
         )
 
     return host_collection
+
+
+#: Attributes the API does not model. A full replacement of "attributes" has to carry them over,
+#: or the request would silently drop configuration it never saw.
+UNEXPOSED_HOST_ATTRIBUTES: Final = ("meta_data", "relations")
+
+#: Of those, the ones a request must not remove either: dropping "relations" would leave the
+#: other half of every relation on the related host without its counterpart (see
+#: cmk.gui.watolib.hosts_and_folders.plan_relation_mirror). "meta_data" stays removable, the way
+#: it was before relations existed.
+UNREMOVABLE_HOST_ATTRIBUTES: Final = ("relations",)
+
+
+def carry_over_unexposed_attributes(
+    stored: HostAttributes, attributes: HostAttributes
+) -> HostAttributes:
+    """A copy of a replacement value with the attributes the API cannot express put back in."""
+    carried = attributes.copy()
+    for name in UNEXPOSED_HOST_ATTRIBUTES:
+        if name in stored:
+            carried[name] = stored[name]
+    return carried

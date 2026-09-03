@@ -59,6 +59,7 @@ def delete_folder_v1(
 
     parent.delete_subfolder(
         folder.name(),
+        pprint_value=api_context.config.wato_pprint_config,
         pending_changes=make_pending_changes(api_context),
         acting_user=api_context.user,
     )

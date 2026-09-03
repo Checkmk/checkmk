@@ -16,7 +16,6 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.structured_data import (
-    _DeltaDict,
     compare_trees,
     deserialize_delta_tree,
     deserialize_tree,
@@ -1885,50 +1884,56 @@ def test_serialize_retention_interval(
     )["Attributes"]["Retentions"] == {SDKey("key"): expected_raw_retention_interval}
 
 
-@pytest.mark.parametrize(
-    "keep_identical, result",
-    [
-        pytest.param(
-            False,
-            _DeltaDict(
-                result={
-                    SDKey("key2"): SDDeltaValue(old=None, new="val2"),
-                    SDKey("key3"): SDDeltaValue(old="val3", new=None),
-                    SDKey("key4"): SDDeltaValue(old="val4-old", new="val4-new"),
-                },
-                has_changes=True,
-            ),
-            id="do-not-keep-identical",
+def test_compare_trees_pairs() -> None:
+    assert compare_trees(
+        deserialize_tree(
+            {
+                "Attributes": {"Pairs": {"key1": "val1", "key2": "val2", "key4": "val4-new"}},
+                "Table": {},
+                "Nodes": {},
+            }
         ),
-        pytest.param(
-            True,
-            _DeltaDict(
-                result={
-                    SDKey("key1"): SDDeltaValue(old="val1", new="val1"),
-                    SDKey("key2"): SDDeltaValue(old=None, new="val2"),
-                    SDKey("key3"): SDDeltaValue(old="val3", new=None),
-                    SDKey("key4"): SDDeltaValue(old="val4-old", new="val4-new"),
-                },
-                has_changes=True,
-            ),
-            id="keep-identical",
+        deserialize_tree(
+            {
+                "Attributes": {"Pairs": {"key1": "val1", "key3": "val3", "key4": "val4-old"}},
+                "Table": {},
+                "Nodes": {},
+            }
         ),
-    ],
-)
-def test__delta_dict(keep_identical: bool, result: _DeltaDict) -> None:
-    assert (
-        _DeltaDict.compare(
-            left={
-                SDKey("key1"): "val1",
-                SDKey("key2"): "val2",
-                SDKey("key4"): "val4-new",
-            },
-            right={
-                SDKey("key1"): "val1",
-                SDKey("key3"): "val3",
-                SDKey("key4"): "val4-old",
-            },
-            keep_identical=keep_identical,
-        )
-        == result
-    )
+    ).attributes.pairs == {
+        SDKey("key2"): SDDeltaValue(old=None, new="val2"),
+        SDKey("key3"): SDDeltaValue(old="val3", new=None),
+        SDKey("key4"): SDDeltaValue(old="val4-old", new="val4-new"),
+    }
+
+
+def test_compare_trees_rows() -> None:
+    assert compare_trees(
+        deserialize_tree(
+            {
+                "Attributes": {},
+                "Table": {
+                    "KeyColumns": ["key1"],
+                    "Rows": [{"key1": "val1", "key2": "val2", "key4": "val4-new"}],
+                },
+                "Nodes": {},
+            }
+        ),
+        deserialize_tree(
+            {
+                "Attributes": {},
+                "Table": {
+                    "KeyColumns": ["key1"],
+                    "Rows": [{"key1": "val1", "key3": "val3", "key4": "val4-old"}],
+                },
+                "Nodes": {},
+            }
+        ),
+    ).table.rows == [
+        {
+            SDKey("key1"): SDDeltaValue(old="val1", new="val1"),
+            SDKey("key2"): SDDeltaValue(old=None, new="val2"),
+            SDKey("key3"): SDDeltaValue(old="val3", new=None),
+            SDKey("key4"): SDDeltaValue(old="val4-old", new="val4-new"),
+        }
+    ]

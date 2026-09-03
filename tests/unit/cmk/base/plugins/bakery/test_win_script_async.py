@@ -13,6 +13,6 @@ from cmk.base.plugins.bakery.win_script_async import get_win_script_async_window
 
 @pytest.mark.parametrize("mode", ["parallel", "sequential"])
 def test_win_script_async_windows_config(mode: Literal["sequential", "parallel"]) -> None:
-    assert list(get_win_script_async_windows_config(mode)) == [
+    assert list(get_win_script_async_windows_config({"mode": mode})) == [
         WindowsGlobalConfigEntry(name="async_script_execution", content=mode),
     ]

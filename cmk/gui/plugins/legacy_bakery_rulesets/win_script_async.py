@@ -3,33 +3,57 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from typing import Literal
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    SingleChoice,
+    SingleChoiceElement,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsWindowsAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import DropdownChoice
-from cmk.ruleset_matcher.definition import RuleGroup
+
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "mode" in value:
+        return value
+    if value in ("sequential", "parallel"):
+        return {"mode": value}
+    raise ValueError(f"Unexpected value: {value!r}")
 
 
-def _valuespec_agent_config_win_script_async() -> DropdownChoice[Literal["sequential", "parallel"]]:
-    return DropdownChoice(
-        title=_("Asynchronous execution of plug-ins (deprecated)"),
-        help=_("This rulespec is deprecated and will be removed in future versions."),
-        choices=[
-            ("sequential", _("Run asynchronous plug-ins sequential")),
-            ("parallel", _("Run asynchronous plug-ins in parallel")),
-        ],
-        default_value="sequential",
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help("This rulespec is deprecated and will be removed in future versions."),
+        migrate=migrate,
+        elements={
+            "mode": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Asynchronous execution of plug-ins"),
+                    elements=[
+                        SingleChoiceElement(
+                            name="sequential",
+                            title=Title("Run asynchronous plug-ins sequential"),
+                        ),
+                        SingleChoiceElement(
+                            name="parallel",
+                            title=Title("Run asynchronous plug-ins in parallel"),
+                        ),
+                    ],
+                    prefill=DefaultValue("sequential"),
+                ),
+            ),
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsWindowsAgent,
-        name=RuleGroup.AgentConfig("win_script_async"),
-        valuespec=_valuespec_agent_config_win_script_async,
-        is_deprecated=True,
-    )
+rule_spec_win_script_async = AgentConfig(
+    title=Title("Asynchronous execution of plug-ins (deprecated)"),
+    name="win_script_async",
+    topic=Topic.WINDOWS,
+    parameter_form=_form_spec,
+    is_deprecated=True,
 )

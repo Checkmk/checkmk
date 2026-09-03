@@ -357,7 +357,7 @@ class PainterServiceGraphs(Painter):
 
     @override
     def title(self, cell: Cell) -> str:
-        return _("Service graphs with time range previews")
+        return _("Service graphs with display options")
 
     @property
     @override
@@ -419,7 +419,7 @@ class PainterHostGraphs(Painter):
 
     @override
     def title(self, cell: Cell) -> str:
-        return _("Host graphs with time range previews")
+        return _("Host graphs with display options")
 
     @property
     @override

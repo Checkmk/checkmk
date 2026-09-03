@@ -381,7 +381,7 @@ pub fn filter_spots_by_oracle_home(
             .collect()
     } else {
         log::info!("{LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}=no: taking the targets that need no home");
-        let global_aliases = global_tns_aliases();
+        let global_aliases = global_tns_aliases(environment);
         // Every sid: which home owns it does not matter
         let all_local_sids: HashSet<Sid> = homes_to_sids.into_values().flatten().collect();
         spots
@@ -458,7 +458,7 @@ fn uses_wallet_auth(spot: &ClosedSpot) -> bool {
 /// API - nothing outside this module uses it in production.
 #[doc(hidden)]
 pub fn local_tns_aliases(environment: &Env) -> HashSet<String> {
-    if global_tns_file().is_some_and(|file| file.is_file()) {
+    if global_tns_file(environment).is_some_and(|file| file.is_file()) {
         return HashSet::new();
     }
 
@@ -471,8 +471,8 @@ pub fn local_tns_aliases(environment: &Env) -> HashSet<String> {
 
 /// The aliases of the `tnsnames.ora` that `TNS_ADMIN` names, upper-cased as the
 /// parser reports them. Empty when there is no such file.
-fn global_tns_aliases() -> HashSet<String> {
-    if let Some(file) = global_tns_file() {
+fn global_tns_aliases(env: &Env) -> HashSet<String> {
+    if let Some(file) = global_tns_file(env) {
         extract_aliases(&file)
     } else {
         log::info!("No global {TNS_ADMIN_ENV_VAR} file, no global aliases");
@@ -494,10 +494,10 @@ fn extract_aliases(file: &Path) -> HashSet<String> {
     }
 }
 
-fn global_tns_file() -> Option<PathBuf> {
+fn global_tns_file(env: &Env) -> Option<PathBuf> {
     // if exists TNS_ADMIN/tnsnames.ora return empty - we can't use local tnsnames.ora in this case
-    if let Some(dir) = std::env::var_os(TNS_ADMIN_ENV_VAR).filter(|dir| !dir.is_empty()) {
-        let external = PathBuf::from(dir).join(TNS_NAMES_FILE);
+    if let Some(dir) = env.global_tns_admin() {
+        let external = dir.join(TNS_NAMES_FILE);
         if external.is_file() {
             log::info!(
                 "'{}' resolves the aliases, not the one of {ORACLE_HOME_ENV_VAR}",
@@ -997,11 +997,11 @@ mod tests {
 
     #[test]
     fn test_global_tns_without_tns_admin() {
-        if std::env::var_os(TNS_ADMIN_ENV_VAR).is_some() {
-            return;
-        }
-        assert!(global_tns_file().is_none());
-        assert!(global_tns_aliases().is_empty());
+        // Hermetic: the empty Env carries no global TNS_ADMIN, regardless of what
+        // the process environment holds.
+        let env = Env::default();
+        assert!(global_tns_file(&env).is_none());
+        assert!(global_tns_aliases(&env).is_empty());
     }
 
     #[test]

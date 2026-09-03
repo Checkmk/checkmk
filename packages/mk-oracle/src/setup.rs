@@ -71,6 +71,11 @@ pub struct Env {
 
     /// What `LOCAL_ORACLE_HOME_TARGETS` states, `None` when it says nothing.
     local_oracle_home_targets: Option<bool>,
+
+    /// `TNS_ADMIN` as inherited from the environment, `None` when unset or empty.
+    /// Read once at start, like `oracle_home`: the parent process exports its own
+    /// value before spawning, so a later read would see that instead.
+    global_tns_admin: Option<PathBuf>,
 }
 
 impl Env {
@@ -93,6 +98,7 @@ impl Env {
             generate_plugins: args.generate_plugins.clone(),
             oracle_home: Env::inherited_oracle_home(),
             local_oracle_home_targets: Env::inherited_local_oracle_home_targets(),
+            global_tns_admin: Env::inherited_global_tns_admin(),
         }
     }
 
@@ -109,6 +115,13 @@ impl Env {
                 .ok()
                 .as_deref(),
         )
+    }
+
+    /// `TNS_ADMIN` as the environment states it, `None` when unset or empty.
+    fn inherited_global_tns_admin() -> Option<PathBuf> {
+        std::env::var_os(TNS_ADMIN_ENV_VAR)
+            .filter(|dir| !dir.is_empty())
+            .map(PathBuf::from)
     }
 
     /// An `Env` that only carries `ORACLE_HOME` and `LOCAL_ORACLE_HOME_TARGETS`, for
@@ -186,6 +199,13 @@ impl Env {
         self.oracle_home
             .as_ref()
             .map(|home| home.join("network").join("admin"))
+    }
+
+    /// The global `TNS_ADMIN` directory inherited from the environment, `None`
+    /// when unset or empty. When present, its `tnsnames.ora` resolves aliases in
+    /// place of any `ORACLE_HOME`-local one.
+    pub fn global_tns_admin(&self) -> Option<&Path> {
+        self.global_tns_admin.as_deref()
     }
 
     fn build_dir(dir: &Option<PathBuf>, fallback: &Option<&Path>) -> Option<PathBuf> {

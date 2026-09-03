@@ -295,16 +295,27 @@ String resolveShardDurations(Map args) {
 /// Labels have to stay unique, the same job runs once per shard.
 Map cascadeJobSpecs(Map args) {
     def specs = [:];
-    /// The unsharded entry both suites use: the marked tests, nothing else.
-    def marker_filter = composeTestFilter(marker: "medium_test_chain");
-    def markerSpec = { job_name -> [
+    /// Rerun each failing test-case once; show tracebacks even on eventual pass
+    /// so flakes stay visible in the log. Applied to every triggered job.
+    def rerun_opts = ["--reruns=1", "--reruns-delay=2", "--rerun-show-tracebacks"];
+    def markerSpec = { job_name, options = [] -> [
         job_name: job_name,
-        build_params: [TEST_FILTER: marker_filter],
+        build_params: [
+            /// unsharded entry
+            TEST_FILTER: composeTestFilter(
+                marker: "medium_test_chain",
+                options: options + rerun_opts,
+            )
+        ],
         start_delay: 0,
     ] };
 
     def multisite_job = "test-system-multisite-${args.edition}".toString();
-    specs["${multisite_job} [marker]".toString()] = markerSpec(multisite_job);
+    /// limiting reruns; duration of multisite tests is approaching thresholds ~ 35 mins.
+    /// 10 ~ 10% of total multisite test-cases
+    specs["${multisite_job} [marker]".toString()] = markerSpec(
+        multisite_job, ["--max-suite-reruns=10"]
+    );
 
     def singlesite_job = "test-system-singlesite-${args.edition}".toString();
 
@@ -312,7 +323,10 @@ Map cascadeJobSpecs(Map args) {
     /// The switch is the SHARD_COUNT job parameter, so turning sharding on or off
     /// is a checkmk_ci change and needs no change here and no rebase of open chains.
     if (args.singlesite_shards < 2) {
-        specs["${singlesite_job} [marker]".toString()] = markerSpec(singlesite_job);
+        /// limiting reruns; 50 ~ 10% of total singlesite test-cases
+        specs["${singlesite_job} [marker]".toString()] = markerSpec(
+            singlesite_job, ["--max-suite-reruns=50"]
+        );
         return specs;
     }
 
@@ -326,7 +340,7 @@ Map cascadeJobSpecs(Map args) {
                 TEST_FILTER: composeTestFilter(
                     shard_index: shard,
                     shard_count: args.singlesite_shards,
-                    options: [args.medium_chain_option],
+                    options: [args.medium_chain_option] + rerun_opts,
                 ),
                 /// A build parameter and not part of TEST_FILTER, so the job
                 /// documents where its runtimes come from. It is matched, which

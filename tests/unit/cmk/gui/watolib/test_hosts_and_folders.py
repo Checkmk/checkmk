@@ -51,6 +51,7 @@ from cmk.gui.utils.host_relations import RelationLink, relations_or_empty
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
+from cmk.gui.watolib.builtin_attributes import validate_host_relations
 from cmk.gui.watolib.config_domain_name import CORE as CORE_DOMAIN
 from cmk.gui.watolib.host_attributes import HostAttributes, HostContactGroupSpec
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
@@ -2124,6 +2125,112 @@ def test_edit_accepts_a_link_to_a_host_that_is_gone(tree: FolderTree) -> None:
     assert board.attributes["relations"] == [
         {"kind": "management", "direction": "parent", "host": "ghost"}
     ]
+
+
+def test_edit_rejects_contradicting_relations(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    board = _create_host(root, "board")
+
+    with pytest.raises(MKUserError, match="cannot be linked to itself"):
+        board.apply_edit(
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "parent", "host": HostName("board")}
+                    ]
+                }
+            ),
+            None,
+            acting_user=_SUPERUSER,
+        )
+
+
+def test_create_rejects_contradicting_relations(tree: FolderTree) -> None:
+    root = tree.root_folder()
+
+    with pytest.raises(MKUserError, match="cannot be linked to itself"):
+        _create_host(
+            root,
+            "board",
+            HostAttributes(
+                {
+                    "relations": [
+                        {"kind": "management", "direction": "parent", "host": HostName("board")}
+                    ]
+                }
+            ),
+        )
+
+
+def test_create_rejects_malformed_relations(tree: FolderTree) -> None:
+    root = tree.root_folder()
+
+    with pytest.raises(MKUserError, match="malformed"):
+        _create_host(
+            root,
+            "board",
+            HostAttributes({"relations": "not-a-list"}),  # type: ignore[typeddict-item]
+        )
+
+
+def test_edit_keeps_a_contradiction_the_counterpart_already_stored(tree: FolderTree) -> None:
+    """Mirroring re-states everything the counterpart stores, so one host's broken value must not
+    make an unrelated host unsavable."""
+    root = tree.root_folder()
+    board = _create_host(root, "board")
+    board.attributes["relations"] = [
+        {"kind": "management", "direction": "parent", "host": HostName("os1")},
+        {"kind": "management", "direction": "child", "host": HostName("os1")},
+    ]
+    os2 = _create_host(root, "os2")
+
+    board.set_relations_about(
+        os2.name(),
+        [{"kind": "management", "direction": "parent", "host": os2.name()}],
+        acting_user=_SUPERUSER,
+    )
+
+    assert {link["host"] for link in relations_or_empty(board.attributes["relations"])} == {
+        HostName("os1"),
+        HostName("os2"),
+    }
+
+
+def test_validate_host_relations_reports_a_host_that_is_gone(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    with pytest.raises(MKUserError, match="non-existing host 'os1'"):
+        validate_host_relations(board)
+
+
+def test_validate_host_relations_passes_for_an_existing_host(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    _create_host(root, "os1")
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    validate_host_relations(board)
+
+
+def test_validate_host_relations_reports_a_malformed_value(tree: FolderTree) -> None:
+    root = tree.root_folder()
+    board = _create_host(root, "board")
+    board.attributes["relations"] = "not-a-list"  # type: ignore[typeddict-item]
+
+    with pytest.raises(MKUserError, match="malformed"):
+        validate_host_relations(board)
 
 
 def test_set_relations_about_replaces_only_the_rows_of_that_pair(tree: FolderTree) -> None:

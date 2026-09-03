@@ -20,18 +20,26 @@ both hosts.
 """
 
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from functools import partial
-from typing import Protocol
+from typing import Literal, Protocol
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.utils.host_relation_kinds import known_relations
+from cmk.gui.utils.host_relation_kinds import (
+    DirectedRelationKind,
+    known_relations,
+    RELATION_KINDS,
+)
 from cmk.gui.utils.host_relations import (
     parse_relations_value,
     RelationDirection,
     RelationLink,
+    RelationsValue,
     ResolvedRelation,
     reverse_direction,
 )
@@ -56,6 +64,93 @@ class RelatedHost(Protocol):
 
 
 ResolvedRelations = dict[HostName, list[ResolvedRelation]]
+
+
+@dataclass(frozen=True)
+class RelationConflict:
+    """What speaks against storing a link, as a value rather than as its wording.
+
+    Comparable, so that an edit can tell the contradictions it introduces from the ones that were
+    already stored, without that answer hanging on how a sentence happens to read.
+    """
+
+    reason: Literal["self_link", "contradicting_directions", "duplicate"]
+    host: HostName | None = None
+    kind_id: str | None = None
+
+    def message(self) -> str:
+        match self.reason:
+            case "self_link":
+                return _("A host cannot be linked to itself.")
+            case "contradicting_directions":
+                assert self.kind_id is not None
+                kind = RELATION_KINDS[self.kind_id]
+                # Only a directed kind has two ends to contradict each other; a symmetric one
+                # stores the same direction on both hosts and can never get here.
+                assert isinstance(kind, DirectedRelationKind)
+                return _(
+                    "This host is linked to '%(host)s' both as its '%(end)s' and as its "
+                    "'%(other_end)s'. A host can only sit at one end of a relation."
+                ) % {
+                    "host": self.host,
+                    "end": kind.parent.noun,
+                    "other_end": kind.child.noun,
+                }
+            case "duplicate":
+                return _("'%(host)s' is linked more than once. Remove the duplicate.") % {
+                    "host": self.host
+                }
+
+
+def relation_conflicts(
+    links: Sequence[RelationLink], owner: HostName
+) -> Sequence[RelationConflict]:
+    """Everything that speaks against storing ``links`` on ``owner``, in reporting order.
+
+    Only what the value says about *this* host; those contradictions are rejected on save. What
+    the counterpart stores, and whether it still exists, is reported instead (see
+    :func:`cmk.gui.watolib.builtin_attributes.validate_host_relations`): rejecting it here would
+    make one host unsavable because someone else broke the other.
+
+    Links are grouped per relation, not per linked host: two links naming the same host are a
+    contradiction only as the two ends of the *same* relation. Only the kinds this version knows
+    are grouped - what a relation of a later version says about itself is not for this one to
+    judge, and it could not word the refusal anyway. Linking a host to itself is refused whatever
+    the kind: that is wrong without knowing what the relation means.
+    """
+    conflicts: list[RelationConflict] = []
+
+    if any(link["host"] == owner for link in links):
+        conflicts.append(RelationConflict(reason="self_link"))
+
+    directions_by_relation: dict[tuple[HostName, str], list[RelationDirection]] = {}
+    for link in known_relations(links):
+        if link["host"] == owner:
+            continue
+        directions_by_relation.setdefault((link["host"], link["kind"]), []).append(
+            link["direction"]
+        )
+
+    for (host_name, kind_id), directions in directions_by_relation.items():
+        distinct = set(directions)
+        if len(distinct) > 1:
+            conflicts.append(
+                RelationConflict(reason="contradicting_directions", host=host_name, kind_id=kind_id)
+            )
+        if len(directions) > len(distinct):
+            conflicts.append(RelationConflict(reason="duplicate", host=host_name, kind_id=kind_id))
+
+    return conflicts
+
+
+def relations_or_user_error(raw: object) -> RelationsValue:
+    """The links of a stored ``relations`` value, as a user error if it cannot be read at all."""
+    try:
+        return parse_relations_value(raw)
+    except ValueError as exc:
+        raise MKUserError(
+            None, _("The relations of this host are malformed: %(error)s") % {"error": exc}
+        ) from exc
 
 
 def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> ResolvedRelations:

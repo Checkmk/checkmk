@@ -111,6 +111,7 @@ from cmk.gui.watolib.host_attributes import (
     MetaData,
     store_relations,
 )
+from cmk.gui.watolib.host_relations import relation_conflicts, relations_or_user_error
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.pending_changes import (
     Change,
@@ -1438,13 +1439,36 @@ def _drop_relations_to(
             if writes_folder:
                 folder.save_hosts(pprint_value=pprint_value, acting_user=acting_user)
             counterpart.add_relation_mirror_change(edit, gone, pending_changes=pending_changes)
-        except MKAuthException, MKUserError:
+        except (MKAuthException, MKUserError) as exc:
             logger.warning(
-                "Kept the relation of host %(host)r to the deleted host %(gone)r: not allowed "
-                "to edit it.",
-                {"host": name, "gone": gone},
+                "Kept the relation of host %(host)r to the deleted host %(gone)r: %(reason)s",
+                {"host": name, "gone": gone, "reason": exc},
             )
     return counterparts
+
+
+def _relations_to_store(
+    owner: HostName, relations_value: object, stored_value: object = ()
+) -> Sequence[RelationLink]:
+    """The links to store on ``owner``, refusing a value that cannot hold.
+
+    Checked here rather than in the attribute's ``validate_input``, which the REST API does not
+    call at all: creating and editing a host are the two seams every writer passes. The
+    ``validate-host`` hook is no alternative either - it only ever reports, never blocks a save.
+    Returning the parsed links is what keeps creating and editing from normalizing the attribute
+    differently.
+
+    Only what the edit *introduces* is refused, against the ``stored_value`` it replaces: a
+    mirrored relation re-states everything its counterpart already stores (see
+    :meth:`Host.set_relations_about`), and a contradiction somebody left on that counterpart must
+    not make the host the user is actually saving unsavable.
+    """
+    links = relations_or_user_error(relations_value)
+    if conflicts := relation_conflicts(links, owner):
+        stored = relation_conflicts(relations_or_empty(stored_value), owner)
+        if introduced := [conflict for conflict in conflicts if conflict not in stored]:
+            raise MKUserError(None, introduced[0].message())
+    return links
 
 
 class FolderTree:
@@ -3216,7 +3240,10 @@ class Folder:
         # MKAuthException, MKUserError
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"], acting_user)
         validate_host_uniqueness(self.tree, "host", name)
-        return update_metadata(attributes, created_by=acting_user.id)
+        links = _relations_to_store(name, attributes.get("relations", []))
+        attributes = update_metadata(attributes, created_by=acting_user.id)
+        store_relations(attributes, links)
+        return attributes
 
     def _propagate_hosts_changes(
         self,
@@ -4317,11 +4344,14 @@ class Host:
             _get_cgconf_from_attributes(attributes)["groups"],
             acting_user,
         )
+        links = _relations_to_store(
+            self.name(), attributes.get("relations", []), self.attributes.get("relations", [])
+        )
 
         # Normalize the way the mirror is planned from it - an empty list is no attribute at all,
         # not a stored empty one - and leave the caller's dictionary alone while doing so.
         attributes = attributes.copy()
-        store_relations(attributes, relations_or_empty(attributes.get("relations", [])))
+        store_relations(attributes, links)
 
         diff = diff_attributes(self.attributes, self._cluster_nodes, attributes, cluster_nodes)
 

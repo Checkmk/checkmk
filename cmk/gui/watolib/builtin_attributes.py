@@ -33,6 +33,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
+from cmk.gui.utils.host_relations import referenced_host_names
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Age,
@@ -80,6 +81,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopic,
     sorted_host_attributes,
 )
+from cmk.gui.watolib.host_relations import relation_conflicts, relations_or_user_error
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.translation import HostnameTranslation
@@ -647,6 +649,29 @@ def validate_host_parents(host: Host) -> None:
                     "host_site": host.site_id(),
                 },
             )
+
+
+def validate_host_relations(host: Host) -> None:
+    """Report whatever is still wrong with the relations this host stores.
+
+    A counterpart can be deleted, and a contradiction can be left behind by whoever wrote the
+    other half, long after the link was stored. Rejecting either on save would leave the host
+    unsavable until someone else cleans up, so the save only refuses what it introduces itself
+    and the rest is reported like a missing parent; saving the host clears the row.
+    """
+    links = relations_or_user_error(host.attributes.get("relations", []))
+
+    tree = host.folder().tree
+    for related_name in sorted(referenced_host_names(links)):
+        if tree.host(related_name) is None:
+            raise MKUserError(
+                None,
+                _("You defined the non-existing host '%(related_name)s' as a related host.")
+                % {"related_name": related_name},
+            )
+
+    for conflict in relation_conflicts(links, host.name()):
+        raise MKUserError(None, conflict.message())
 
 
 @hooks.request_memoize()

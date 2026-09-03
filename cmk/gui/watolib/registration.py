@@ -165,6 +165,7 @@ def register(
     _register_autocompleters(autocompleter_registry)
     automation_background_job.register(job_registry, automation_command_registry)
     hooks.register_builtin("validate-host", builtin_attributes.validate_host_parents)
+    hooks.register_builtin("validate-host", builtin_attributes.validate_host_relations)
     hooks.register_builtin("ldap-sync-finished", handle_ldap_sync_finished)
     hooks.register_builtin("pre-activate-changes", update_builtin_host_labels_file)
     _register_form_specs()

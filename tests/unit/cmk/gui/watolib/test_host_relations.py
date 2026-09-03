@@ -4,13 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.utils.host_relations import RelationDirection, ResolvedRelation
-from cmk.gui.watolib.host_relations import RelatedHost, resolve_all_relations
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.utils.host_relation_kinds import RELATION_KINDS
+from cmk.gui.utils.host_relations import (
+    RelationDirection,
+    RelationLink,
+    ResolvedRelation,
+    reverse_direction,
+)
+from cmk.gui.watolib.host_relations import (
+    RelatedHost,
+    relation_conflicts,
+    RelationConflict,
+    relations_or_user_error,
+    resolve_all_relations,
+)
 from tests.unit.cmk.gui.watolib.host_relations_fakes import fake_hosts, FakeHost
 
 
@@ -179,3 +192,129 @@ def test_resolve_all_relations_skips_self_and_unknown_hosts() -> None:
         ResolvedRelation(kind="management", direction="parent", host="os1", site="central")
     ]
     assert HostName("ghost") not in resolved
+
+
+@pytest.mark.parametrize(
+    "links",
+    [
+        pytest.param(
+            [{"kind": "management", "direction": "parent", "host": HostName("mgmt1")}],
+            id="a sound link",
+        ),
+        pytest.param(
+            [{"kind": "management", "direction": "parent", "host": HostName("ghost")}],
+            id="a host that is not there - reported by validate_host_relations(), not refused",
+        ),
+        pytest.param(
+            [
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt2")},
+            ],
+            id="the same end towards two hosts",
+        ),
+        pytest.param(
+            [
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+                {"kind": "peering", "direction": "symmetric", "host": HostName("mgmt1")},
+            ],
+            id="two relations of different kinds towards the same host",
+        ),
+        pytest.param(
+            [
+                {"kind": "peering", "direction": "parent", "host": HostName("mgmt1")},
+                {"kind": "peering", "direction": "child", "host": HostName("mgmt1")},
+            ],
+            id="a relation of a later version is not this one's to judge",
+        ),
+    ],
+)
+def test_relation_conflicts_accepts(links: Sequence[RelationLink]) -> None:
+    assert relation_conflicts(links, HostName("srv1")) == []
+
+
+def test_a_link_of_a_later_version_to_this_host_itself_is_still_refused() -> None:
+    """Wrong whatever the relation means - and the only thing that can be said about it."""
+    assert relation_conflicts(
+        [{"kind": "peering", "direction": "symmetric", "host": HostName("srv1")}],
+        HostName("srv1"),
+    ) == [RelationConflict(reason="self_link")]
+
+
+@pytest.mark.parametrize(
+    "links, expected",
+    [
+        pytest.param(
+            [{"kind": "management", "direction": "parent", "host": HostName("srv1")}],
+            RelationConflict(reason="self_link"),
+            id="self link",
+        ),
+        pytest.param(
+            [
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+                {"kind": "management", "direction": "child", "host": HostName("mgmt1")},
+            ],
+            RelationConflict(
+                reason="contradicting_directions",
+                host=HostName("mgmt1"),
+                kind_id="management",
+            ),
+            id="both ends",
+        ),
+        pytest.param(
+            [
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+                {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+            ],
+            RelationConflict(reason="duplicate", host=HostName("mgmt1"), kind_id="management"),
+            id="duplicate",
+        ),
+    ],
+)
+def test_relation_conflicts_reports(
+    links: Sequence[RelationLink], expected: RelationConflict
+) -> None:
+    assert relation_conflicts(links, HostName("srv1"))[0] == expected
+
+
+def test_a_contradiction_names_both_ends_of_the_relation() -> None:
+    conflicts = relation_conflicts(
+        [
+            {"kind": "management", "direction": "parent", "host": HostName("other")},
+            {"kind": "management", "direction": "child", "host": HostName("other")},
+        ],
+        HostName("srv1"),
+    )
+
+    assert conflicts[0].message() == (
+        "This host is linked to 'other' both as its 'Management board' and as its 'OS host'. "
+        "A host can only sit at one end of a relation."
+    )
+
+
+@pytest.mark.parametrize(
+    "kind_id, direction",
+    [
+        (kind.id, direction)
+        for kind in RELATION_KINDS.values()
+        for direction in kind.directions()
+        if direction != "symmetric"
+    ],
+)
+def test_every_relation_can_say_what_it_contradicts(
+    kind_id: str, direction: RelationDirection
+) -> None:
+    """An end the report cannot name would only show up as a crash."""
+    conflicts = relation_conflicts(
+        [
+            {"kind": kind_id, "direction": direction, "host": HostName("other")},
+            {"kind": kind_id, "direction": reverse_direction(direction), "host": HostName("other")},
+        ],
+        HostName("srv1"),
+    )
+
+    assert "other" in conflicts[0].message()
+
+
+def test_relations_or_user_error_reports_a_malformed_value() -> None:
+    with pytest.raises(MKUserError, match="malformed"):
+        relations_or_user_error("not-a-list")

@@ -3,57 +3,51 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsWindowsAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Checkbox, Dictionary
-from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import BooleanChoice, DefaultValue, DictElement, Dictionary
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_win_ps() -> Dictionary:
+def _form_spec() -> Dictionary:
     return Dictionary(
-        title=_("Fine-tune Windows process monitoring"),
-        elements=[
-            (
-                "use_wmi",
-                Checkbox(
-                    title=_("Use WMI"),
-                    label=_(
+        elements={
+            "use_wmi": DictElement(
+                required=True,
+                parameter_form=BooleanChoice(
+                    title=Title("Use WMI"),
+                    label=Label(
                         "Retrieve process information using WMI (Windows Management Instrumentation)"
                     ),
-                    help=_(
+                    help_text=Help(
                         "Rely on WMI (Windows Management Instrumentation) when retrieving process "
                         "information. Using WMI is mandatory for including the full path of a running "
                         "process in the list of processes."
                     ),
-                    default_value=True,
+                    prefill=DefaultValue(True),
                 ),
             ),
-            (
-                "full_path",
-                Checkbox(
-                    title=_("Include full path"),
-                    label=_(
+            "full_path": DictElement(
+                required=True,
+                parameter_form=BooleanChoice(
+                    title=Title("Include full path"),
+                    label=Label(
                         "Include the full path of a process and its arguments in the process list. "
                         "Note: this requires using WMI for retrieving process information."
                     ),
-                    help=_(
+                    help_text=Help(
                         "Include the full path of a process and its arguments in the process list. "
                         "Note: this requires using WMI for retrieving process information."
                     ),
-                    default_value=False,
+                    prefill=DefaultValue(False),
                 ),
             ),
-        ],
-        optional_keys=False,
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsWindowsAgent,
-        name=RuleGroup.AgentConfig("win_ps"),
-        valuespec=_valuespec_agent_config_win_ps,
-    )
+rule_spec_win_ps = AgentConfig(
+    title=Title("Fine-tune Windows process monitoring"),
+    name="win_ps",
+    topic=Topic.WINDOWS,
+    parameter_form=_form_spec,
 )

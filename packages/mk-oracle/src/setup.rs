@@ -30,6 +30,7 @@ use clap::Parser;
 use flexi_logger::{self, Cleanup, Criterion, DeferredNow, FileSpec, LogSpecification, Record};
 use std::collections::HashSet;
 use std::env::ArgsOs;
+use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
@@ -1110,7 +1111,7 @@ fn plan_spawns(local_instances: &[LocalInstance]) -> Vec<Option<PathBuf>> {
     plans
 }
 
-/// Re-runs this program once per [`plan_spawns`] entry, each child seeing
+/// Re-runs this program once per `plan_spawns` entry, each child seeing
 /// `--runtime-ready` and the environment of its plan.
 ///
 /// The children run one after another: they write their sections to the same
@@ -1145,6 +1146,21 @@ pub fn spawn_new_processes(args: Vec<String>, old_path: std::path::PathBuf) -> i
                      {LOCAL_ORACLE_HOME_TARGETS_ENV_VAR}={targets}"
                 );
                 command.env(ORACLE_HOME_ENV_VAR, home);
+                // Pair the library search path with ORACLE_HOME so the child
+                // loads the client of its own home. Without this every child
+                // inherits the parent's single runtime and loads the wrong
+                // client for its home.
+                match child_runtime_path(home, &old_path) {
+                    Some(path) => {
+                        log::info!("Spawn {RUNTIME_PATH_ENV_VAR}={path:?}");
+                        command.env(RUNTIME_PATH_ENV_VAR, &path);
+                    }
+                    None => log::warn!(
+                        "Oracle home {home:?} ships no client library in its \
+                         {CLIENT_LIB_SUBDIR} directory; child keeps the inherited \
+                         {RUNTIME_PATH_ENV_VAR}"
+                    ),
+                }
             }
             None => log::info!(
                 "Spawn for the inherited {ORACLE_HOME_ENV_VAR} with \
@@ -1169,10 +1185,64 @@ pub fn spawn_new_processes(args: Vec<String>, old_path: std::path::PathBuf) -> i
     code
 }
 
+/// The library search path a child serving `home` must use: that home's own
+/// client (`<home>/lib`, `<home>\bin` on Windows) ahead of `old_path` (the search
+/// path as it was before any runtime was prepended). `None` when the home ships no
+/// client library there, so the child keeps the inherited path instead of being
+/// pointed at a missing directory.
+///
+/// Pairs the per-child library path with the per-child `ORACLE_HOME`: without it
+/// every child inherits the parent's single runtime and loads the wrong client.
+fn child_runtime_path(home: &Path, old_path: &Path) -> Option<OsString> {
+    let lib_dir = home.join(CLIENT_LIB_SUBDIR);
+    if !contains_oracle_client_lib(&lib_dir) {
+        return None;
+    }
+    Some(prepend_to_search_path(lib_dir, old_path))
+}
+
+/// Prepend `dir` to `old_path` with the platform separator, or return just `dir`
+/// when `old_path` is empty.
+fn prepend_to_search_path(dir: PathBuf, old_path: &Path) -> OsString {
+    let mut path = dir.into_os_string();
+    if !old_path.as_os_str().is_empty() {
+        path.push(ENV_VAR_SEP);
+        path.push(old_path);
+    }
+    path
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::path::PathBuf;
+
+    #[test]
+    fn test_prepend_to_search_path() {
+        let dir = PathBuf::from("/opt/oracle/home").join(CLIENT_LIB_SUBDIR);
+
+        // Empty old path: just the client dir.
+        assert_eq!(
+            prepend_to_search_path(dir.clone(), Path::new("")),
+            dir.clone().into_os_string()
+        );
+
+        // Non-empty: client dir, separator, then the old path.
+        let old = Path::new("/existing/lib");
+        let mut expected = dir.clone().into_os_string();
+        expected.push(ENV_VAR_SEP);
+        expected.push(old);
+        assert_eq!(prepend_to_search_path(dir, old), expected);
+    }
+
+    #[test]
+    fn test_child_runtime_path_none_when_home_has_no_client() {
+        assert!(child_runtime_path(
+            Path::new("/surely/missing/oracle/home"),
+            Path::new("/existing/lib")
+        )
+        .is_none());
+    }
 
     #[test]
     fn test_parse_local_oracle_home_targets() {

@@ -14,11 +14,11 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.structured_data import (
-    _compare_trees,
     _DeltaDict,
     _deserialize_retention_interval,
     _parse_from_unzipped,
     _serialize_retention_interval,
+    compare_trees,
     deserialize_delta_tree,
     deserialize_tree,
     filter_delta_tree,
@@ -249,7 +249,7 @@ def test_deserialize_filled_imm_tree() -> None:
 
 def test_serialize_empty_delta_tree() -> None:
     assert serialize_delta_tree(
-        _compare_trees(_create_empty_imm_tree(), _create_empty_imm_tree())
+        compare_trees(_create_empty_imm_tree(), _create_empty_imm_tree())
     ) == {
         "Attributes": {},
         "Table": {},
@@ -259,7 +259,7 @@ def test_serialize_empty_delta_tree() -> None:
 
 def test_serialize_filled_delta_tree() -> None:
     raw_tree = serialize_delta_tree(
-        _compare_trees(_create_empty_imm_tree(), _create_filled_imm_tree())
+        compare_trees(_create_empty_imm_tree(), _create_filled_imm_tree())
     )
     assert not raw_tree["Attributes"]
     assert not raw_tree["Table"]
@@ -448,7 +448,7 @@ def test_add_or_rows() -> None:
 
 def test_compare_tree_with_itself_1() -> None:
     empty_root = _create_empty_imm_tree()
-    delta_tree = _compare_trees(empty_root, empty_root)
+    delta_tree = compare_trees(empty_root, empty_root)
     stats = delta_tree.get_stats()
     assert stats["new"] == 0
     assert stats["changed"] == 0
@@ -457,7 +457,7 @@ def test_compare_tree_with_itself_1() -> None:
 
 def test_compare_tree_with_itself_2() -> None:
     filled_root = _create_filled_imm_tree()
-    delta_tree = _compare_trees(filled_root, filled_root)
+    delta_tree = compare_trees(filled_root, filled_root)
     stats = delta_tree.get_stats()
     assert stats["new"] == 0
     assert stats["changed"] == 0
@@ -465,7 +465,7 @@ def test_compare_tree_with_itself_2() -> None:
 
 
 def test_compare_tree_1() -> None:
-    delta_tree = _compare_trees(_create_empty_imm_tree(), _create_filled_imm_tree())
+    delta_tree = compare_trees(_create_empty_imm_tree(), _create_filled_imm_tree())
     stats = delta_tree.get_stats()
     assert stats["new"] == 0
     assert stats["changed"] == 0
@@ -473,7 +473,7 @@ def test_compare_tree_1() -> None:
 
 
 def test_compare_tree_2() -> None:
-    delta_tree = _compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree())
+    delta_tree = compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree())
     stats = delta_tree.get_stats()
     assert stats["new"] == 12
     assert stats["changed"] == 0
@@ -482,7 +482,7 @@ def test_compare_tree_2() -> None:
 
 def test_filter_delta_tree_nt() -> None:
     filtered = filter_delta_tree(
-        _compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("nt")),
@@ -510,7 +510,7 @@ def test_filter_delta_tree_nt() -> None:
 
 def test_filter_delta_tree_na() -> None:
     filtered = filter_delta_tree(
-        _compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("na")),
@@ -533,7 +533,7 @@ def test_filter_delta_tree_na() -> None:
 
 def test_filter_delta_tree_ta() -> None:
     filtered = filter_delta_tree(
-        _compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
@@ -561,7 +561,7 @@ def test_filter_delta_tree_ta() -> None:
 
 def test_filter_delta_tree_nta_ta() -> None:
     filtered = filter_delta_tree(
-        _compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
@@ -645,7 +645,7 @@ def test_difference_pairs(
     current_tree = MutableTree()
     current_tree.add(path=(), pairs=[current_pairs])
 
-    stats = _compare_trees(
+    stats = compare_trees(
         _make_immutable_tree(current_tree), _make_immutable_tree(previous_tree)
     ).get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == result
@@ -711,7 +711,7 @@ def test_difference_rows(
     current_tree = MutableTree()
     current_tree.add(path=(), key_columns=[SDKey("id")], rows=current_rows)
 
-    delta_tree = _compare_trees(
+    delta_tree = compare_trees(
         _make_immutable_tree(current_tree), _make_immutable_tree(previous_tree)
     )
     if any(result):
@@ -744,7 +744,7 @@ def test_difference_rows_keys(
     current_tree = MutableTree()
     current_tree.add(path=(), key_columns=[SDKey("id")], rows=[current_row])
 
-    delta_tree = _compare_trees(
+    delta_tree = compare_trees(
         _make_immutable_tree(current_tree), _make_immutable_tree(previous_tree)
     )
     assert {k for r in delta_tree.table.rows for k in r} == expected_keys
@@ -1185,7 +1185,7 @@ def test_count_entries(tree_name: HostName, result: int) -> None:
 )
 def test_compare_real_tree_with_itself(tree_name: HostName) -> None:
     tree = _get_inventory_store().load_inventory_tree(host_name=tree_name)
-    stats = _compare_trees(tree, tree).get_stats()
+    stats = compare_trees(tree, tree).get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == (0, 0, 0)
 
 
@@ -1230,7 +1230,7 @@ def test_compare_real_trees(
     inv_store = _get_inventory_store()
     old_tree = inv_store.load_inventory_tree(host_name=tree_name_old)
     new_tree = inv_store.load_inventory_tree(host_name=tree_name_new)
-    stats = _compare_trees(new_tree, old_tree).get_stats()
+    stats = compare_trees(new_tree, old_tree).get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == result
 
 

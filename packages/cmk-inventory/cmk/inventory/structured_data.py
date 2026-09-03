@@ -1264,7 +1264,7 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
     )
 
 
-def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTree:
+def compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTree:
     nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
 
     compared_node_names = _DictKeys.compare(
@@ -1283,7 +1283,7 @@ def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaT
         if (child_left := left.nodes_by_name[name]) == (child_right := right.nodes_by_name[name]):
             continue
 
-        if (node := _compare_trees(child_left, child_right)).get_stats():
+        if (node := compare_trees(child_left, child_right)).get_stats():
             nodes[name] = node
 
     for name in compared_node_names.only_right:
@@ -2106,7 +2106,7 @@ class HistoryStore:
                 entry = HistoryEntry.from_delta_tree(
                     previous_timestamp=path.previous.timestamp,
                     current_timestamp=path.current.timestamp,
-                    delta_tree=_compare_trees(
+                    delta_tree=compare_trees(
                         self._lookup_tree(path.current.tree_path),
                         self._lookup_tree(path.previous.tree_path),
                     ),

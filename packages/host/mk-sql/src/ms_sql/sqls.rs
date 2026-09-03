@@ -406,7 +406,25 @@ IF OBJECT_ID('sys.dm_hadr_availability_group_states') IS NOT NULL
     FROM sys.dm_hadr_availability_group_states Groups
     INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
 
+    /// Normal editions: `@@SERVICENAME` is the reliable instance name
+    /// ('MSSQLSERVER' for a default instance, the instance name for a named one).
+    /// It must match the Normal branch of `obtain_instance_name`. The Azure
+    /// `SERVERPROPERTY` fallback chain (see `INSTANCE_PROPERTIES_AZURE`) must NOT be
+    /// used here: on a default instance `SERVERPROPERTY('InstanceName')` is NULL, so
+    /// the chain would wrongly fall back to `FilestreamShareName`/`ServerName` and
+    /// yield a name that never matches the real instance.
     pub const INSTANCE_PROPERTIES: &str = r"SELECT
+    CAST(@@SERVICENAME AS NVARCHAR(MAX)) AS InstanceName,
+    CAST(SERVERPROPERTY( 'ProductVersion' ) AS NVARCHAR(MAX)) AS ProductVersion,
+    CAST(SERVERPROPERTY( 'MachineName' ) AS NVARCHAR(MAX)) AS MachineName,
+    CAST(SERVERPROPERTY( 'Edition' ) AS NVARCHAR(MAX)) AS Edition,
+    CAST(SERVERPROPERTY( 'ProductLevel' ) AS NVARCHAR(MAX)) AS ProductLevel,
+    CAST(SERVERPROPERTY( 'ComputerNamePhysicalNetBIOS' ) AS NVARCHAR(MAX)) AS NetBios";
+
+    /// Azure SQL has no `@@SERVICENAME` instance concept, so the name is derived
+    /// from `SERVERPROPERTY`: InstanceName, else FilestreamShareName, else ServerName.
+    /// Kept identical to the Azure branch of `obtain_instance_name`.
+    pub const INSTANCE_PROPERTIES_AZURE: &str = r"SELECT
     CAST(ISNULL(ISNULL(SERVERPROPERTY('InstanceName'), SERVERPROPERTY('FilestreamShareName')), SERVERPROPERTY('ServerName')) AS NVARCHAR(MAX)) AS InstanceName,
     CAST(SERVERPROPERTY( 'ProductVersion' ) AS NVARCHAR(MAX)) AS ProductVersion,
     CAST(SERVERPROPERTY( 'MachineName' ) AS NVARCHAR(MAX)) AS MachineName,
@@ -461,7 +479,7 @@ lazy_static::lazy_static! {
         (Id::Mirroring, QueryMap::new(query::MIRRORING_NORMAL, Some(query::MIRRORING_AZURE))),
         (Id::Jobs, QueryMap::new(query::JOBS, None)),
         (Id::AvailabilityGroups, QueryMap::new(query::AVAILABILITY_GROUP_NORMAL, Some(query::AVAILABILITY_GROUP_AZURE))),
-        (Id::InstanceProperties, QueryMap::new(query::INSTANCE_PROPERTIES, None)),
+        (Id::InstanceProperties, QueryMap::new(query::INSTANCE_PROPERTIES, Some(query::INSTANCE_PROPERTIES_AZURE))),
         (Id::UtcEntry, QueryMap::new(query::UTC_ENTRY, None)),
         (Id::ClusterActiveNodes, QueryMap::new(query::CLUSTER_ACTIVE_NODES, None)),
         (Id::ClusterNodes, QueryMap::new(query::CLUSTER_NODES_NORMAL, Some(query::CLUSTER_NODES_AZURE))),

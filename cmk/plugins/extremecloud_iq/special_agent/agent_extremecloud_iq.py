@@ -22,7 +22,7 @@ from cmk.password_store.v1_unstable import (
 )
 from cmk.server_side_programs.v1_unstable import report_agent_crashes
 
-__version__ = "2.5.0p13"
+__version__ = "2.5.0p14"
 
 AGENT = "extremecloud_iq"
 

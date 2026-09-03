@@ -68,7 +68,7 @@ from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 T = TypeVar("T")
 type ResourceId = str
 
-__version__ = "2.5.0p13"
+__version__ = "2.5.0p14"
 
 AGENT = "azure_v2"
 

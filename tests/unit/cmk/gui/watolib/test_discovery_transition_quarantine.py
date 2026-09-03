@@ -322,11 +322,14 @@ def test_ineligible_row_rejects_every_command(source: str) -> None:
 
 
 def test_clustered_row_disabled_from_the_node_drops_the_entry_without_a_rule() -> None:
-    """§10.17: the one clustered cell that does real harm.
+    """§10.17: the one clustered cell whose transition differs from the rest.
 
-    Cluster services are gathered from the nodes' autochecks filtered by `effective_host`, so
-    dropping the node's entry removes the service from the **cluster's** monitoring -- with no
-    rule recording the decision and nothing on the cluster's page to explain it.
+    Every other target writes the entry back; this one omits it and adds no rule. The difference
+    stops at this layer: `set_autochecks_for_effective_host` keeps every existing entry whose
+    effective host is not the one being written, and a clustered service's effective host is the
+    cluster, so the file is unchanged and the disable has no effect at all. Asserted here at the
+    transition level, where the drop is real; the file-level outcome is
+    `test_clustered_services_on_a_remote_cluster` in the multisite suite.
     """
     assert run_cell(DiscoveryState.CLUSTERED_OLD, DiscoveryState.IGNORED) == Outcome(
         computed=True,

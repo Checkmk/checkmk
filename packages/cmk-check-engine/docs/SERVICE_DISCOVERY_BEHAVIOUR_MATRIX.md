@@ -3,12 +3,13 @@
 **Purpose:** written statement of _today's_ behaviour of `cmk/gui/watolib/services.py`, so that
 "no behaviour change" during CMK-32255 / CMK-37497 is verifiable rather than assumed.
 
-**Status:** derived from the code at `68bd2fd4651` (branch `cmk-34150`). **Tiers 1–3 of §7 are
-implemented** — 523 cases across the GUI and REST suites plus 12 added to the check-engine suite, of which 40 are
-strict-xfail quarantine tests carrying a ticket each; Tier 4 (remote-site parity, real sites) remains
-a proposal. §1–§6 are descriptive (current behaviour, verified) with two exceptions: §6.3 and §11 are
-**prescriptive** — §6.3 states what follows for the rewrite from §6's mechanics, §11 states the
-intended per-state semantics. Both are for review.
+**Status:** derived from the code at `68bd2fd4651` (branch `cmk-34150`). **All four tiers of §7 are
+implemented** — 539 cases across the GUI, REST and multisite-system suites plus 12 added to the
+check-engine suite, of which 40 are strict-xfail quarantine tests carrying a ticket each. Tier 4
+(remote-site parity) needs two real sites, so it runs through `run_tests.sh` rather than Bazel, and
+only its reserved row T4.8 is outstanding. §1–§6 are descriptive (current behaviour, verified) with
+two exceptions: §6.3 and §11 are **prescriptive** — §6.3 states what follows for the rewrite from
+§6's mechanics, §11 states the intended per-state semantics. Both are for review.
 
 **Scope:** `cmk/gui/watolib/services.py` + the automation boundary in
 `cmk/gui/watolib/check_mk_automations.py`. The AJAX transport (`ModeAjaxServiceDiscovery`,
@@ -703,7 +704,8 @@ finding is a note for the rewrite: the appearance of inconsistency in a transiti
 symptom that the table contains cells that should be rejections.
 
 **A2-F7 — DEFECT: no operation on a `clustered_*` row is valid on the node, but the backend accepts all
-of them, and one of them mutates the cluster's monitoring.** ✅ _verified against the code_
+of them and then carries none of them out.** ✅ _verified against the code; the `ignored` cell's
+file-level outcome verified by executing tier 4_
 
 A `clustered_*` row means a "Clustered services" rule assigns the service to a cluster. The autocheck
 entry lives in the **node's** file, but the service is **owned by the cluster** — and so is the
@@ -737,13 +739,15 @@ right instinct, but it is preservation-by-rewrite rather than rejection, and it 
 - every target except `ignored`: rewrites the same entry and adds to `saved_services`. Harmless to the
   data, but it forces the host-global `apply_changes`, so a `set-autochecks` pending change and an
   automation round trip are produced for a host where nothing changed — the A1-F1 noise pattern.
-- target `ignored`: **drops the entry from the node's autochecks and adds no disabled rule at all**,
+- target `ignored`: **drops the entry from the computed autochecks and adds no disabled rule**,
   despite the comment's carve-out _"But if the user wants to disable the service on the host, this is
-  what we do."_ Since cluster services are gathered from the nodes' autochecks filtered by
-  `effective_host`, dropping the node's entry **silently un-monitors the service on the cluster**, with
-  no rule recording why and nothing on the cluster's own page to explain it. The next discovery on the
-  node re-adds it as `clustered_new`, so the effect is a transient outage of a cluster service triggered
-  from a page that is not supposed to allow any action. This is the one clustered cell with real harm.
+  what we do."_ It is the one clustered cell whose transition differs from the others — and the
+  difference is invisible from outside, because the drop never reaches the file:
+  `set_autochecks_for_effective_host` keeps every existing entry whose effective host is not the one
+  being written, and a clustered service's effective host is the cluster. So the carve-out does
+  nothing: no rule is written, the node's file is unchanged, the service goes on running on the
+  cluster, and the user's request leaves no trace but a `set-autochecks` change. Verified by
+  executing tier 4; the earlier reading of this cell as a cluster outage was wrong.
 
 Ticket in §10.17.
 
@@ -1726,7 +1730,7 @@ One parametrized table, one row per divergence, each row carrying `intended`, `c
 | T1b.7  | `new + drop` via the `removed` label                                                | rejected (wrong label)                                         | accepted, demands `to_removed`, does nothing                                                                                                                      | §11.3                |
 | T1b.8  | `monitor` with an empty adoption set on `changed` (`SINGLE_UPDATE` / `BULK_UPDATE`) | no transition — nothing to write                               | transition computed, value-identical write, permission demanded, host-wide rebuild                                                                                | A3-F1 residue, §10.8 |
 | T1b.9  | any command on a non-discovered origin                                              | rejected                                                       | `FIX_ALL` retargets to `monitored`, forcing a spurious write                                                                                                      | §10.8                |
-| T1b.10 | any command on a `clustered_*` source                                               | rejected with a redirect                                       | handled by `_case_clustered`; `disable` drops the node's entry and un-monitors it on the cluster                                                                  | §10.17               |
+| T1b.10 | any command on a `clustered_*` source                                               | rejected with a redirect                                       | handled by `_case_clustered`; `disable` drops the node's entry from the transition, which the write path then restores                                            | §10.17               |
 | T1b.11 | any non-command target (13 of the 17 REST phases)                                   | `400`                                                          | silently deletes the service, `204`, and 10 of them demand no permission — `legacy` and `legacy_ignored` among them, which are not `DiscoveryState` values at all | §10.3                |
 | T1b.12 | accepting a whole table with a disabled service present                             | the same rule delta `FIX_ALL` computes on the same table: none | a rule is written for the disabled service's description; on a shared description that disables the service just accepted                                         | §10.11               |
 
@@ -1900,8 +1904,8 @@ on the GUI path), the context manager's exit ordering (T2.13), and the endpoint 
 
 **Implemented.** 14 test functions, 59 cases, driving real requests through the Flask app with
 `ClientRegistry`. `update_service_phase` was added to `ServiceDiscoveryClient` in
-`tests/testlib/rest_api_client.py`, alongside the pre-existing `get_service_discovery_status`;
-Tier 4 needs it as well.
+`tests/testlib/rest_api_client.py`, alongside the pre-existing `get_service_discovery_status`.
+Tier 4 needed the same helper on the other client, and now has it.
 
 **No `xfail(strict=True)` lives in this tier, and that is a decision rather than an omission.**
 Tiers 1 and 2 already carry a tripwire for eleven of the thirteen §10 tickets, each at the lowest
@@ -1955,10 +1959,20 @@ no-op passed. Harness in the session scratchpad, not committed.
 
 Uses the existing `central_site` / `remote_site` session fixtures. One identically-configured host
 per site (same agent output, so the same preview), everything driven through the REST API **on the
-central site**. `ServiceDiscoveryAPI` in `tests/testlib/openapi_session.py` already has
-`run_discovery`, `run_discovery_and_wait_for_completion` and `get_discovery_result`; an
-`update_service_phase` helper needs adding there. `tests/testlib/rest_api_client.py` already has
-one, from Tier 3.
+central site**. `ServiceDiscoveryAPI` in `tests/testlib/openapi_session.py` carries
+`run_discovery`, `run_discovery_and_wait_for_completion`, `get_discovery_result`,
+`get_discovery_status`, `get_discovery_job_status` and — added with this tier —
+`update_service_phase`.
+`tests/testlib/rest_api_client.py` has its own, from Tier 3.
+
+Two mechanics shape every row and are worth stating once. **The preview reads cached agent data**
+(`get_result` → `_get_discovery_preview(prevent_fetching=True)` → `use_only_cache=True`), so only
+`refresh` and `tabula_rasa` fetch and a never-scanned host yields an empty table — the fixture has
+to scan before it yields, or every assertion here holds vacuously. And the agent output is
+supplied by one replicated `datasource_programs` rule (`cat ~/var/check_mk/agent_output/<HOST>`)
+over a per-site output file, which lets a test change what the agent reports without an
+activation, and makes "the same agent output on both sites" a property of the fixture rather than
+a hope.
 
 | #    | test                                                                       | pins                                                                                                                                                                                                                                                                                                                                                                                        |
 | ---- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1968,7 +1982,7 @@ one, from Tier 3.
 | T4.4 | `test_update_service_phase_parity[monitored, undecided, ignored, removed]` | The second entry point, remotely. Must assert a change _per site_, not equality alone — see §10.19 below.                                                                                                                                                                                                                                                                                   |
 | T4.5 | `test_refresh_and_tabula_rasa_parity`                                      | Background job runs on the remote; central sees status; `refresh-autochecks` change appears centrally (B-F2.2).                                                                                                                                                                                                                                                                             |
 | T4.6 | `test_host_label_parity`                                                   | `only_host_labels` writes discovered host labels on the remote.                                                                                                                                                                                                                                                                                                                             |
-| T4.7 | `test_cluster_parity`                                                      | A cluster whose nodes live on the remote site: node-table handling (T1a.9) end-to-end.                                                                                                                                                                                                                                                                                                      |
+| T4.7 | `test_clustered_services_on_a_remote_cluster`                              | A cluster whose nodes live on the remote site: node-table handling (T1a.9) end-to-end. Not a central-vs-remote comparison — see the two-defect note below.                                                                                                                                                                                                                                  |
 | T4.8 | _(reserved)_ SUP-derived scenarios                                         | **Input needed.** The ticket names SUP-28115 / SUP-28119 / SUP-28127 / SUP-28128 as real-world cases to cover. Those are customer tickets, not readable from this repository; their reproduction shapes must be extracted by hand and each turned into a case here.                                                                                                                         |
 
 **Not proposed:** `test-system-gui` coverage. The AC excludes the AJAX transport and
@@ -2004,6 +2018,13 @@ property of the setup and not of the code. So the hazard for Tier 4 is not a red
   boundary (`job_snapshot` → `fetch_service_discovery_background_job_status`,
   `_utils.py:job_snapshot`), so the `execute` endpoint is as safe remotely as locally;
   `update_service_phase` is unguarded on both.
+- **The stored preview** is a fourth way to get a green pass, and it is not a §10 item at all.
+  `_perform_service_scan` ends by writing the scan's table to disk, `get_result` prefers it over
+  recomputing, and `_load_last_preview` unlinks it — so the **first** read after any `refresh` is
+  answered from the scan and only later ones recompute. A fixture that scans and yields without
+  reading hands its first assertion a snapshot taken before the test did anything. Both fixtures
+  therefore read once per host after scanning, which doubles as the "did the agent output reach
+  this host" guard.
 - **§10.8** — `fix_all` rewrites the autochecks with an empty diff on any host carrying an active,
   custom, enforced or clustered row. T4.2's evidence is "the file changed on the remote and not
   centrally", which that write supplies whether or not the service moved. Assert file _content_, and
@@ -2012,8 +2033,14 @@ property of the setup and not of the code. So the hazard for Tier 4 is not a red
 Two more change the expected values rather than the assertions:
 
 - **§10.5** is to be fixed **before** the refactoring starts, so exactly one of T4.1's seven modes
-  — `only_service_labels` — is a cell written against behaviour we intend to change first. Write it
-  last, or budget for the update. `only_host_labels` is **not** affected: it maps to
+  — `only_service_labels` — is a cell written against behaviour we intend to change first, and it
+  will go red when the fix lands. That is deliberate rather than a cost: the cell drives the mode
+  against a host with **no** changed service at all, which is the sharper form of §10.5 that
+  §10.5 itself records as pinned nowhere, and it is the only form that asserts anything. Against a
+  _monitored_ baseline the mode is a no-op both before and after the fix — `unchanged` is the one
+  row already at `update_target` — so that cell would survive a mutant turning the mode off
+  entirely, the same weakness the Tier 3 retrospective found in `only_host_labels`.
+  `only_host_labels` is **not** affected: it maps to
   `UPDATE_HOST_LABELS`, which `perform_host_label_discovery` (`services.py`) serves without ever
   constructing `Discovery`, so it never reaches `_get_table_target` where §10.5 lives — and REST
   publishes no mode for `UPDATE_DISCOVERY_PARAMETERS` at all. T4.6 is clear for the same reason.
@@ -2023,13 +2050,16 @@ Two more change the expected values rather than the assertions:
 **T4.7 has to be built to carry two defects, and its row as stated carries neither.** A cluster
 whose nodes live on the remote site reaches §10.13 only with a _Disabled services_ rule matching a
 service that a _Clustered services_ rule maps onto the cluster. §10.17 needs the same fixture and
-splits by target: the harmful half — the node's entry dropped with no rule written — needs the test
-to target `ignored` on a `clustered_*` row **from the node**, while every other target reaches only
-the cheap half, a host-global `apply_changes` and a spurious round trip for a host where nothing
-changed. Put both defects in the fixture and the test carries expectations that move twice, because
-§10.17's fix depends on §10.13's landing first; leave them out and the warning does not apply — but
-neither does the coverage. It is also the test most
-likely to be written from §11's intended model instead of today's behaviour.
+splits by target: the divergent half — the node's entry dropped from the transition, with no rule
+written — needs the test to target `ignored` on a `clustered_*` row **from the node**, while every
+other target reaches only the plain rewrite. Both halves end in the same place, a host-global
+`apply_changes` and a spurious round trip for a host where nothing changed, and **that is the
+finding this test established**: at the system level the `ignored` cell is a no-op like the rest,
+because the write path restores what `_case_clustered` dropped. Put both defects in the fixture and
+the test carries expectations that move twice, because §10.17's fix depends on §10.13's landing
+first; leave them out and the warning does not apply — but neither does the coverage. It is also the
+test most likely to be written from §11's intended model instead of today's behaviour — and the one
+that proved a §10 severity claim wrong the first time it ran.
 
 **What Tier 4 does not close.** §10.10 is the same defect class the tier exists for — an
 unconditionally local apply path — but it sits behind quick setup rather than the discovery
@@ -2052,18 +2082,23 @@ which belongs in its docstring so that it is not read as covering the supported 
 | —    | added to the check-engine suite         | 5              | 12, of which 3 are `xfail(strict=True)`  | fast, pure — **implemented**                    |
 | 2    | 1 new                                   | 29             | 97, of which 4 are `xfail(strict=True)`  | fast, mocked at the transport — **implemented** |
 | 3    | extend 1 (+ 2 client helpers)           | 14             | 59, no `xfail`                           | medium — real requests, **implemented**         |
-| 4    | 1 new                                   | 7 (+ reserved) | ~20                                      | slow, real sites                                |
+| 4    | 1 new                                   | 7 (+ reserved) | 16, no `xfail`                           | slow, real sites — **implemented**              |
 
 Tier 1 totals 367 cases across the three test files — 334 passing and 33 strict-xfail — running
-in under five seconds. Tier 2 adds 97 and Tier 3 another 59, so the implemented tiers come to 523
-cases. Run them with:
+in under five seconds. Tier 2 adds 97, Tier 3 another 59 and Tier 4 sixteen, so the suite comes to
+539 cases. The first three tiers run under Bazel; Tier 4 needs two real sites and so runs through
+`run_tests.sh`, which forwards pytest arguments through `TEST_FILTER`:
 
 ```console
 $ bazel test //tests/unit/cmk/gui:setup_tests --test_arg=-k --test_arg=discovery_transition
 $ bazel test //tests/unit/cmk/gui:setup_tests --test_arg=-k --test_arg=services_dispatch
 $ bazel test //packages/cmk-check-engine:discovery-tests
 $ bazel test //tests/openapi:repo_community --test_arg=-k --test_arg=service_discovery
+$ TEST_FILTER='-k service_discovery_remote_parity' tests/run_tests.sh test-system-multisite
 ```
+
+Only T4.8 is left open, and deliberately: the SUP tickets it names are not readable from this
+repository, so its cases cannot be written without extracting their reproduction shapes by hand.
 
 ---
 
@@ -2083,7 +2118,7 @@ The **Status** column reflects the 2026-08-14 review; see §9 for detail.
 | A2-F3 | **No inconsistency exists** — `unchanged` is the only source for which `undecided` is a valid target; the two apparent disagreements (`vanished`, `clustered_*`) are invalid transitions                                                                | An apparent inconsistency in a transition table is a symptom of cells that should be rejections                                                                                                                                                                            | ✅ **verified — not a defect**; splits into A2-F6 / A2-F7                        |
 | A2-F4 | `_case_vanished`'s `else` keeps the service for every unlisted target, so `removed` is the only target that cleans up                                                                                                                                   | **No data harm** — the write is value-identical (`older is newer` for vanished rows), so nothing is resurrected; the effect is a failure to clean up                                                                                                                       | ✅ **verified — not a defect**                                                   |
 | A2-F5 | **No gap on GUI paths** — `may_edit_ruleset("ignored_services")` is `wato.services or wato.rulesets`, already guaranteed by `_service_discovery_context`. The real gap is the REST endpoint (= P-F1)                                                    | Vacuous on GUI paths                                                                                                                                                                                                                                                       | ✅ **verified — not a defect**; folded into §10.4                                |
-| A2-F7 | **No operation on a `clustered_*` row is valid on the node** — the service is owned by the cluster. The GUI honours this (no bulk actions, no row buttons); `_verify_permissions`, `_apply_state_change`, REST and the host-wide actions do not         | `clustered_* → ignored` drops the node's entry with no rule, silently un-monitoring the service **on the cluster** until the next node discovery                                                                                                                           | ✅ **confirmed defect** → §10.17                                                 |
+| A2-F7 | **No operation on a `clustered_*` row is valid on the node** — the service is owned by the cluster. The GUI honours this (no bulk actions, no row buttons); `_verify_permissions`, `_apply_state_change`, REST and the host-wide actions do not         | Every target is a **silent no-op** that still files a `set-autochecks` change: `clustered_* → ignored` drops the node's entry from the computed transition, but `set_autochecks_for_effective_host`'s own effective-host filter carries it over, so the file never changes | ✅ **confirmed defect** → §10.17 (severity corrected after the tier-4 run)       |
 | A2-F6 | **`removed` is the only valid target for `vanished`** — `ignored`, `undecided` and `monitored` name states the classifier cannot produce for a not-discovered service, yet the GUI offers `ignored` in two places and REST offers all three             | `vanished → ignored` writes the service back with a rule attached, creating inescapable residue; the fix is withdrawal, not repair                                                                                                                                         | ✅ **confirmed defect** → §10.16                                                 |
 | A3-F1 | `SINGLE_UPDATE` / `BULK_UPDATE` / `UPDATE_SERVICES` don't adopt new params or labels                                                                                                                                                                    | **The exact PoC downgrade.** Batch apply must state its side                                                                                                                                                                                                               | **intended** — contract input                                                    |
 | A3-F2 | `TABULA_RASA` is a second, independent "accept everything"                                                                                                                                                                                              | Story F2                                                                                                                                                                                                                                                                   | **intended** — revisit after epic                                                |
@@ -2848,14 +2883,21 @@ Werk: class `fix`, component `wato`, `compatible: yes`, noting that hosts on whi
 carry autochecks entries and disabled-services rules that a re-discovery plus "Remove vanished services"
 will clean up.
 
-### 10.17 Disabling a clustered service from the node page un-monitors it on the cluster
+### 10.17 Operations on clustered services are accepted from the node page and do nothing
 
-**Verified:** `_case_clustered`'s branches, the GUI's clustered table-group flags, and the cluster
-autochecks-gathering path. Source finding: A2-F7.
+**Verified:** `_case_clustered`'s branches, the GUI's clustered table-group flags, the cluster
+autochecks-gathering path, and — for the `ignored` cell — the write path, by executing T4.7 against
+two sites. Source finding: A2-F7.
+
+**The earlier severity claim was wrong.** This section said that targeting `ignored` drops the
+node's autochecks entry and thereby un-monitors the service on the cluster. It does not: the drop is
+real in `compute_discovery_transition`, but `set_autochecks_for_effective_host` never lets it reach
+the file (see Symptom 2). The tier-4 run of 2026-09-03 is what caught it — the assertion that the
+entry disappears failed with the entry still present. The defect is a silent no-op, not data loss,
+which lowers CMK-38593's priority without removing its cause.
 
 **Proposed title:** _Service discovery: operations on clustered services are rejected by the GUI but
-accepted by the backend; targeting `ignored` on a clustered row drops the node's autochecks entry
-and silently un-monitors the service on the cluster_
+accepted by the backend, where each one is a silent no-op that still files a pending change_
 
 **Summary.** A `clustered_*` row on a node's discovery page is informational: a "Clustered services" rule
 assigns the service to a cluster, the cluster owns it, and the responsibility for discovering it belongs
@@ -2869,26 +2911,30 @@ targets, `_apply_state_change` routes to `_case_clustered`, which acts instead o
 transition is reachable through REST `update_service_phase` (any `target_phase`) and through the
 host-wide actions that retarget every row (A1-F1 `FIX_ALL`, A1-F2 `UPDATE_SERVICE_LABELS`).
 
-**Symptom.** Two severities:
+**Symptom.** No target changes anything, and every one of them forces the host-global
+`apply_changes` on the source/target mismatch — producing a `set-autochecks` pending change and an
+automation round trip for a host where nothing changed. Two spellings of the same outcome:
 
-1. Every target except `ignored` rewrites the identical entry and adds it to `saved_services`. No data
-   change, but it forces the host-global `apply_changes`, producing a `set-autochecks` pending change and
-   an automation round trip for a host where nothing changed.
-2. Target `ignored` **drops the entry from the node's autochecks and adds no disabled-services rule**
-   (`services.py`; `_case_clustered` has no `add_disabled_rule` parameter at all). Because
-   cluster services are gathered from the nodes' autochecks filtered by `effective_host`, removing the
-   node's entry removes the service from the **cluster's** monitoring — with no rule recording the
-   decision and nothing on the cluster's page to explain it. The next discovery on the node re-adds it as
-   `clustered_new`, so the net effect is a transient loss of a cluster service, triggered from a page
-   that is documented not to allow any action.
+1. Every target except `ignored` rewrites the identical entry and adds it to `saved_services`.
+2. Target `ignored` **drops the entry from the computed autochecks and adds no disabled-services
+   rule** (`services.py`; `_case_clustered` has no `add_disabled_rule` parameter at all). **The
+   omission never reaches the file.** `set_autochecks_for_effective_host` keeps every `existing`
+   entry for which `effective_host != get_effective_host(owner, existing)` and appends the new
+   services, and `_automation_set_autochecks_v2` calls it with
+   `autochecks_owner == effective_host == the node` for any host that is not itself a cluster
+   (`cmk/base/automations/check_mk.py`). A clustered service's effective host is the _cluster_, so
+   its existing entry is carried over untouched — the write path's own `effective_host` filter is
+   what protects it. The user asked to disable the service, was answered `204`, and the service goes
+   on running on the cluster with nothing anywhere recording that the request was made.
 
 **Reproduction.** Create a cluster with one node, add a "Clustered services" rule matching one of the
 node's services, and run discovery on both hosts: the service shows as `clustered_old` on the node and as
 a normal monitored service on the cluster. Then, on the **node**, issue
 `PUT /objects/host/<node>/actions/update_discovery_phase/invoke` with `target_phase: "ignored"` for that
-service. Expected: rejection. Actual: `204`, the entry disappears from
-`var/check_mk/autochecks/<node>.mk`, no `ignored_services` rule is created, and after activation the
-service is gone from the cluster.
+service. Expected: rejection. Actual: `204`, `var/check_mk/autochecks/<node>.mk` still holds the
+entry, no `ignored_services` rule is created, the service is still monitored on the cluster after
+activation — and a `set-autochecks` change for the node is pending, which is the only trace the
+request left.
 
 **Fix.** Reject the operation rather than handling it. `effective_host(host, entry) != host` is a
 precondition that can be evaluated before the transition table is consulted, which is what the domain
@@ -2927,8 +2973,11 @@ say those rows become rejection assertions. **Today:** they are pinned by
 `test_ineligible_row_rejects_every_command` (T1b.9/T1b.10, strict-xfail, tagged
 `CMK-38589 (§10.8) / CMK-38593 (§10.17)`) with `test_ineligible_row_is_rewritten_instead_of_rejected`
 as its characterization half, plus
-`test_clustered_row_disabled_from_the_node_drops_the_entry_without_a_rule` for the one cell that does
-real harm. The fix deletes the pairs; the ticket is shared with §10.8, so the tripwire only clears
+`test_clustered_row_disabled_from_the_node_drops_the_entry_without_a_rule` for the one cell whose
+computed transition differs from the rest — that test is at the transition level, where the drop is
+real, and stays correct; only the file-level consequence it was named for does not happen. Tier 4's
+`test_clustered_services_on_a_remote_cluster` pins the file-level outcome instead. The fix deletes
+the pairs; the ticket is shared with §10.8, so the tripwire only clears
 once both land. A cluster fixture is required — this is one of the axes that cannot be exercised with a single host (§2.4). Werk:
 class `fix`, component `wato`, `compatible: yes`.
 
@@ -3224,9 +3273,10 @@ already operations for adding, removing, etc. of this service on the cluster. Th
 any operation for this clustered service on the related node."_ Nothing has to be migrated when the
 clustering rule is withdrawn, either — the entry never left the node's autochecks, so the service simply
 reappears as `unchanged`. The GUI honours this (no bulk actions, no row buttons, collapsed by default);
-the backend does not, and `_case_clustered`'s `ignored` branch actively un-monitors the service on the
-cluster. That is A2-F7 / §10.17; the misclassification that routes disabled clustered services into
-`_case_ignored` instead is the separate `clustered_ignored` story (§10.13).
+the backend does not — it accepts every operation and then carries none of them out, the
+`_case_clustered` `ignored` branch included. That is A2-F7 / §10.17; the misclassification that
+routes disabled clustered services into `_case_ignored` instead is the separate `clustered_ignored`
+story (§10.13).
 
 **`changed` is the only state where property adoption is meaningful**, because it is the only transition
 where `DiscoveredItem` has both sides set and differing (§5). It is also the only state with three
@@ -3282,16 +3332,16 @@ What _is_ a defect is that the `adopt=∅` case is executed as a change rather t
 
 ### 11.5 Divergences from current behaviour, indexed
 
-| #   | intended (§11.2)                                                                   | current                                                                                                                                      | finding                           |
-| --- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| 1   | `vanished + disable` rejected                                                      | writes the service back into autochecks, with a rule attached                                                                                | A2-F6, §10.16                     |
-| 2   | `vanished + monitor` rejected                                                      | keeps it; `vanished` forever                                                                                                                 | A2-F6, A2-F4, reachable via A1-F2 |
-| 3   | `vanished + drop` drops the entry, whichever label the caller used                 | only the `removed` label drops; `new` and `unchanged` keep it                                                                                | A2-F6, §10.16                     |
-| 4   | `monitor` with `adopt`=∅ on a `changed` row writes nothing — it is a no-op         | executed as a change: value-identical write, `to_monitored` demanded, pending change, host-wide autochecks rebuild                           | A3-F1 residue, §10.8 family       |
-| 5   | `{unchanged, changed} + disable` → absent from autochecks                          | writes it                                                                                                                                    | §10.1                             |
-| 6   | non-autocheck origins reject everything                                            | `FIX_ALL` retargets them to `monitored`; REST admits every target                                                                            | §10.8, §10.3, DM §12.8            |
-| 7   | clustered sources reject everything on the node                                    | every target except `ignored` rewrites the entry; `ignored` drops it and un-monitors the service on the cluster                              | A2-F7, §10.17                     |
-| 8   | `ignored + drop` removes the disabled rule                                         | the `removed` label leaves the rule in place — the one `drop` cell `_case_ignored` treats differently                                        | §11.3, §10.3                      |
-| 9   | the `removed` label is rejected on any still-discovered source                     | accepted and handled as `drop`, with a different permission                                                                                  | §11.3                             |
-| 10  | only 10 pairs accepted, under 4 rules                                              | 208 reachable via `update_service_phase`                                                                                                     | §10.3, §10.14                     |
-| 11  | a batch accept issues no `disable` command, so it writes no disabled-services rule | every whole-table save re-writes a rule for each already-disabled service, and on a shared description disables the service it just accepted | R-F1, §10.11                      |
+| #   | intended (§11.2)                                                                   | current                                                                                                                                                     | finding                           |
+| --- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| 1   | `vanished + disable` rejected                                                      | writes the service back into autochecks, with a rule attached                                                                                               | A2-F6, §10.16                     |
+| 2   | `vanished + monitor` rejected                                                      | keeps it; `vanished` forever                                                                                                                                | A2-F6, A2-F4, reachable via A1-F2 |
+| 3   | `vanished + drop` drops the entry, whichever label the caller used                 | only the `removed` label drops; `new` and `unchanged` keep it                                                                                               | A2-F6, §10.16                     |
+| 4   | `monitor` with `adopt`=∅ on a `changed` row writes nothing — it is a no-op         | executed as a change: value-identical write, `to_monitored` demanded, pending change, host-wide autochecks rebuild                                          | A3-F1 residue, §10.8 family       |
+| 5   | `{unchanged, changed} + disable` → absent from autochecks                          | writes it                                                                                                                                                   | §10.1                             |
+| 6   | non-autocheck origins reject everything                                            | `FIX_ALL` retargets them to `monitored`; REST admits every target                                                                                           | §10.8, §10.3, DM §12.8            |
+| 7   | clustered sources reject everything on the node                                    | every target is accepted and none takes effect: all but `ignored` rewrite the entry, `ignored` drops it from the transition and the write path puts it back | A2-F7, §10.17                     |
+| 8   | `ignored + drop` removes the disabled rule                                         | the `removed` label leaves the rule in place — the one `drop` cell `_case_ignored` treats differently                                                       | §11.3, §10.3                      |
+| 9   | the `removed` label is rejected on any still-discovered source                     | accepted and handled as `drop`, with a different permission                                                                                                 | §11.3                             |
+| 10  | only 10 pairs accepted, under 4 rules                                              | 208 reachable via `update_service_phase`                                                                                                                    | §10.3, §10.14                     |
+| 11  | a batch accept issues no `disable` command, so it writes no disabled-services rule | every whole-table save re-writes a rule for each already-disabled service, and on a shared description disables the service it just accepted                | R-F1, §10.11                      |

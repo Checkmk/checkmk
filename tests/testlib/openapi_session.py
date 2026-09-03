@@ -1042,6 +1042,33 @@ class ServiceDiscoveryAPI(BaseAPI):
             raise UnexpectedResponse.from_response(response)
         return {str(k): v for k, v in response.json().items()}
 
+    def update_service_phase(
+        self,
+        hostname: str,
+        *,
+        check_type: str,
+        service_item: str | None,
+        target_phase: str,
+    ) -> None:
+        """Move one service of `hostname` into `target_phase`.
+
+        The body params are keyword-only on purpose: three of them are interchangeable strings to a
+        type checker, and transposing two yields a puzzling 400 rather than an error at the call
+        site. Note that an identifier naming no service on the host is answered `204` with nothing
+        written (SERVICE_DISCOVERY_BEHAVIOUR_MATRIX.md §10.19), so a caller that wants evidence of
+        a write has to look for the change itself rather than treat the status code as one.
+        """
+        response = self.session.put(
+            f"/objects/host/{hostname}/actions/update_discovery_phase/invoke",
+            json={
+                "check_type": check_type,
+                "service_item": service_item,
+                "target_phase": target_phase,
+            },
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
 
 class ServicesAPI(BaseAPI):
     def get_host_services(

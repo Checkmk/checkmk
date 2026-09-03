@@ -54,7 +54,7 @@ py_library(
             "//non-free/packages/cmk-core-helpers:inline-snmp",
             "//non-free/packages/cmk-liveproxyd",
             "//non-free/packages/cmk-otel-collector:testlib",
-            "//non-free/packages/cmk-telemetry:plugins-custom-query",
+            "//non-free/packages/cmk-telemetry:cmk-telemetry-custom-query-rule-value",
             "//non-free/tests/testlib/system:metric_backend",
             "//non-free/tests/testlib/system:opentelemetry",
             "//non-free/tests/testlib/system/cloud",

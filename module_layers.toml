@@ -213,6 +213,7 @@ allows = [
 allows = [
   "cmk.metric_backend",
   "cmk.shared_typing.consolidation",
+  "cmk.telemetry.custom_query_rule_value",
   "cmk.utils.macros",
   "cmk.utils.paths",
 ]
@@ -785,6 +786,7 @@ allows = [
   "cmk.discover_plugins",
   "cmk.checkengine.fetchers",
   "cmk.metric_backend",
+  "cmk.shared_typing.consolidation",
   "cmk.utils.paths",
 ]
 
@@ -1838,6 +1840,7 @@ allows = [
   "cmk.shared_typing.consolidation",
   "cmk.shared_typing.mode_custom_services",
   "cmk.shared_typing.vue_formspec_components",
+  "cmk.telemetry.custom_query_rule_value",
   "cmk.telemetry.host_name_template",
   "cmk.utils.global_ident_type",
   "cmk.utils.paths",

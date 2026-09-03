@@ -32,10 +32,14 @@ case "$1" in
         # Do not use usual system daemon path. Some start script
         # (e.g. SLES) will think that the system xinetd is already
         # running and do not start it if the OMD xinetd is running.
-        mkdir -p $OMD_ROOT/var/tmp
-        cp $DAEMON $OMD_ROOT/var/tmp/xinetd
-        $OMD_ROOT/var/tmp/xinetd $OPTS
-        echo OK
+        if mkdir -p $OMD_ROOT/var/tmp &&
+            cp $DAEMON $OMD_ROOT/var/tmp/xinetd &&
+            $OMD_ROOT/var/tmp/xinetd $OPTS; then
+            echo OK
+        else
+            echo Error
+            exit 1
+        fi
         ;;
     stop)
         echo -n 'Stopping xinetd...'

@@ -38,6 +38,7 @@ from cmk.gui.graphing._frontend import (
     resolve_default_time_range_seconds,
     stored_time_range_seconds,
     to_cmk_time_series_graph,
+    user_first_day_of_week,
 )
 from cmk.gui.type_defs import GraphTimerange, PainterParameters
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
@@ -182,7 +183,10 @@ def test_global_time_picker_props() -> None:
     )
 
     props = global_time_picker_props(
-        _GRAPH_TIMERANGES, 14400, first_day_of_week=FirstDayOfWeek.monday, refresh=refresh
+        _GRAPH_TIMERANGES,
+        14400,
+        first_day_of_week=FirstDayOfWeek.monday,
+        refresh=refresh,
     )
 
     assert props.custom_time_ranges == [
@@ -240,13 +244,41 @@ def test_global_time_picker_refresh_prefers_the_interval_of_the_page(
     assert refresh.interval_seconds == interval_of_the_page
 
 
-def test_start_of_week_choices_match_first_day_of_week() -> None:
-    # user_first_day_of_week falls back to the browser locale for values it does not know, so
-    # drift between the two lists would silently disable the preference rather than fail.
+class _UserStub:
+    """Stands in for the `user` proxy, which resolves only inside a session."""
+
+    def __init__(self, attribute: object) -> None:
+        self._attribute = attribute
+
+    def get_attribute(self, key: str, deflt: object = None) -> object:
+        return self._attribute
+
+
+@pytest.mark.parametrize(
+    "stored, expected",
+    [
+        (None, FirstDayOfWeek.monday),
+        ("browser_locale", None),
+        ("sunday", FirstDayOfWeek.sunday),
+        ("funday", FirstDayOfWeek.monday),
+    ],
+)
+def test_user_first_day_of_week(
+    monkeypatch: pytest.MonkeyPatch, stored: str | None, expected: FirstDayOfWeek | None
+) -> None:
+    monkeypatch.setattr("cmk.gui.graphing._frontend.user", _UserStub(stored))
+    assert user_first_day_of_week() is expected
+
+
+def test_start_of_week_choices_are_all_honored(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Drift between the choices and the wire enum would silently ignore a preference.
     valuespec = StartOfWeekUserAttribute().valuespec()
     assert isinstance(valuespec, DropdownChoice)
-    configurable_days = {value for value, _title in valuespec.choices() if value is not None}
-    assert configurable_days == {day.value for day in FirstDayOfWeek}
+    resolved = set()
+    for value, _title in valuespec.choices():
+        monkeypatch.setattr("cmk.gui.graphing._frontend.user", _UserStub(value))
+        resolved.add(user_first_day_of_week())
+    assert resolved == {None, *FirstDayOfWeek}
 
 
 def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:

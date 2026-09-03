@@ -98,16 +98,18 @@ def default_time_range_seconds() -> int:
 
 
 def user_first_day_of_week() -> FirstDayOfWeek | None:
-    """The user's preferred start of week in the global time picker's calendar, None meaning the
-    browser locale decides."""
+    """The start of week the global time picker's calendar opens on, None leaving that to the
+    browser locale. No preference stored means Monday, not the locale."""
     match user.get_attribute("start_of_week"):
+        case "browser_locale":
+            return None
         case str() as value:
             try:
                 return FirstDayOfWeek(value)
             except ValueError:  # defensive: stale stored value
-                return None
+                return FirstDayOfWeek.monday
         case _:
-            return None
+            return FirstDayOfWeek.monday
 
 
 def user_default_refresh_time() -> int | None:

@@ -219,22 +219,18 @@ describe('GlobalTimePicker', () => {
     expect(screen.getByText(/^Timezone: /)).toHaveTextContent(/UTC/)
   })
 
-  test.each([
-    { locale: 'de-DE', segments: 2 },
-    { locale: 'en-US', segments: 3 }
-  ])(
-    'the $locale time input names each segment and marks the meridiem when it has one',
-    async ({ locale, segments }) => {
-      mockLocale(locale)
-      const { container } = renderPicker(rangeOfSeconds(99))
-      await openFlyout(container)
+  // 24-hour whatever the locale is, so no meridiem segment and no AM/PM in the summary.
+  test.each(['de-DE', 'en-US'])('the %s time input names its two segments', async (locale) => {
+    mockLocale(locale)
+    const { container } = renderPicker(rangeOfSeconds(99))
+    await openFlyout(container)
 
-      const time = within(screen.getByRole('group', { name: 'From time' }))
-      expect(time.getByRole('spinbutton', { name: 'Hours' })).toBeInTheDocument()
-      expect(time.getByRole('spinbutton', { name: 'Minutes' })).toBeInTheDocument()
-      expect(time.getAllByRole('spinbutton')).toHaveLength(segments)
-    }
-  )
+    const time = within(screen.getByRole('group', { name: 'From time' }))
+    expect(time.getByRole('spinbutton', { name: 'Hours' })).toBeInTheDocument()
+    expect(time.getByRole('spinbutton', { name: 'Minutes' })).toBeInTheDocument()
+    expect(time.getAllByRole('spinbutton')).toHaveLength(2)
+    expect(triggerText(container)).not.toMatch(/[AP]M/)
+  })
 
   test.each([
     { locale: 'de-DE', expected: 'Montag' },

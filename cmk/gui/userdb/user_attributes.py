@@ -498,11 +498,13 @@ class StartOfWeekUserAttribute(UserAttribute):
                 "browser's language settings."
             ),
             choices=[
-                (None, _("Browser locale")),
-                ("saturday", _("Saturday")),
-                ("sunday", _("Sunday")),
                 ("monday", _("Monday")),
+                ("sunday", _("Sunday")),
+                ("saturday", _("Saturday")),
+                ("browser_locale", _("Browser locale")),
             ],
+            default_value="monday",
+            invalid_choice="replace",
         )
 
     @override

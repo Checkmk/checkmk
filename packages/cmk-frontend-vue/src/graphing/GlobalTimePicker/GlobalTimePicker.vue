@@ -32,9 +32,12 @@ const range = defineModel<DateTimeRange>({ required: true })
 const { _t } = usei18n()
 
 const firstDayOfWeek = computed(() => firstDayOfWeekAsWeekday(props.firstDayOfWeek))
-const pickerSettings = computed<DateTimePickerSettings | undefined>(() =>
-  firstDayOfWeek.value === undefined ? undefined : { firstDayOfWeek: firstDayOfWeek.value }
-)
+// Checkmk reads and writes 24-hour times. The start of week follows the user's preference; an
+// omitted one leaves it to the browser locale.
+const pickerSettings = computed<DateTimePickerSettings>(() => ({
+  hourCycle: 24,
+  ...(firstDayOfWeek.value === undefined ? {} : { firstDayOfWeek: firstDayOfWeek.value })
+}))
 
 const staticRangePresets = useStaticPresets(() => firstDayOfWeek.value)
 

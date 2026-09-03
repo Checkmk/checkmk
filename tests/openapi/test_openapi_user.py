@@ -1403,13 +1403,13 @@ def test_openapi_time_picker_preferences_use_default_round_trip(
             }
         },
     ).json["extensions"]["interface_options"]["time_picker"]
-    # Stored as an explicit None, and reported as the sentinel forms rather than omitted.
+    # The "use default" forms are reported rather than omitted.
     assert extensions["start_of_week"] == "browser_locale"
     assert extensions["default_time_range"] == {"option": "default"}
     assert extensions["default_refresh_time"] == {"option": "default"}
 
     internal_attributes = _load_internal_attributes(UserId(username))
-    assert internal_attributes["start_of_week"] is None
+    assert internal_attributes["start_of_week"] == "browser_locale"
     assert internal_attributes["graph_default_time_range"] is None
     assert internal_attributes["graph_default_refresh_time"] is None
 
@@ -1465,13 +1465,12 @@ def test_openapi_edit_user_should_not_modify_time_picker_preferences(
 def test_openapi_time_picker_preferences_default_for_fresh_user(
     clients: ClientRegistry,
 ) -> None:
-    # User creation fills in every registered attribute (explicit None, like
-    # contextual_help_icon), so even a fresh user reports the "use default" sentinels.
+    # User creation fills in every registered attribute, so nothing here is omitted.
     extensions = clients.User.create(
         username="time_picker_fresh_user",
         fullname="Time Picker User",
     ).json["extensions"]["interface_options"]["time_picker"]
-    assert extensions["start_of_week"] == "browser_locale"
+    assert extensions["start_of_week"] == "monday"
     assert extensions["default_time_range"] == {"option": "default"}
     assert extensions["default_refresh_time"] == {"option": "default"}
 

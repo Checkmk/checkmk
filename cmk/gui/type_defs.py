@@ -273,7 +273,7 @@ class UserContactDetails(TypedDict):
     customer: NotRequired[str | None]
 
 
-StartOfWeek = Literal["saturday", "sunday", "monday"]
+StartOfWeek = Literal["browser_locale", "saturday", "sunday", "monday"]
 
 
 class UserDetails(TypedDict):

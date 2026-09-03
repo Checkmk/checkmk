@@ -557,6 +557,14 @@ def _web_log_level_elements(
             Title("Automatic host removal"),
             Help("Log the automatic host removal process."),
         ),
+        (
+            "cmk.web.host_relations",
+            Title("Host relations"),
+            Help(
+                "Log which relations between hosts were dropped when activating changes and "
+                "why, plus a summary of what the activation exported."
+            ),
+        ),
     ]
 
     if include_other_editions or edition is not Edition.COMMUNITY:

@@ -95,3 +95,16 @@ def test_the_links_this_version_can_place_keep_their_order() -> None:
         {"kind": "management", "direction": "child", "host": HostName("os1")},
         {"kind": "management", "direction": "parent", "host": HostName("os2")},
     ]
+
+
+def test_a_link_that_cannot_be_placed_is_reported_rather_than_dropped_silently() -> None:
+    """A link of a later version must not cost a host the rest of its relations unnoticed."""
+    unknown: list[RelationLink] = []
+    links: list[RelationLink] = [
+        {"kind": "peering", "direction": "symmetric", "host": HostName("peer")},
+        {"kind": "management", "direction": "parent", "host": HostName("os1")},
+    ]
+
+    known_relations(links, on_unknown=unknown.append)
+
+    assert unknown == [{"kind": "peering", "direction": "symmetric", "host": HostName("peer")}]

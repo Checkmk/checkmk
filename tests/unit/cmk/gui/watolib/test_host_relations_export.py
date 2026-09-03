@@ -6,14 +6,18 @@
 """Tests for the monitoring-core export of host relations."""
 
 import json
+import logging
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
 from livestatus import SiteConfigurations
 
+from cmk.ccc.hostaddress import HostName
 from cmk.gui.utils.host_relations import RELATIONS_MACRO
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
+from cmk.gui.watolib.host_relations import RelatedHost
 from cmk.gui.watolib.host_relations_export import export_host_relations, relations_export_path
 from tests.unit.cmk.gui.watolib.host_relations_fakes import fake_hosts
 
@@ -77,6 +81,37 @@ def test_export_rewrites_a_file_whose_relations_changed(tmp_path: Path) -> None:
     export_host_relations(fake_hosts(srv=None, mgmt=None), export_file)
 
     assert _exported_macro(export_file) == {}
+
+
+@pytest.mark.parametrize(
+    "all_hosts, hosts, entries",
+    [
+        pytest.param(
+            fake_hosts(
+                srv=[{"kind": "management", "direction": "child", "host": "mgmt"}], mgmt=None
+            ),
+            2,
+            2,
+            id="one relation, counted on both of its hosts",
+        ),
+        pytest.param(fake_hosts(plain=None), 0, 0, id="nothing configured"),
+    ],
+)
+def test_activation_summary_is_logged(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    all_hosts: Mapping[HostName, RelatedHost],
+    hosts: int,
+    entries: int,
+) -> None:
+    with caplog.at_level(logging.DEBUG, logger="cmk.web.host_relations"):
+        export_host_relations(all_hosts, tmp_path / "relations.mk")
+
+    summary = caplog.records[-1].args
+    assert isinstance(summary, Mapping)
+    assert summary["hosts"] == hosts
+    assert summary["entries"] == entries
+    assert str(summary["path"]).endswith("relations.mk")
 
 
 @pytest.mark.usefixtures("with_admin_login", "load_config")

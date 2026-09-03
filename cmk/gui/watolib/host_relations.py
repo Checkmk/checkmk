@@ -21,18 +21,23 @@ both hosts.
 
 from collections import defaultdict
 from collections.abc import Mapping
+from functools import partial
 from typing import Protocol
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.gui.log import logger
 from cmk.gui.utils.host_relation_kinds import known_relations
 from cmk.gui.utils.host_relations import (
     parse_relations_value,
     RelationDirection,
+    RelationLink,
     ResolvedRelation,
     reverse_direction,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
+
+_LOGGER = logger.getChild("host_relations")
 
 
 class RelatedHost(Protocol):
@@ -82,6 +87,13 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
             site = sites[name] = str(host.site_id())
         return site
 
+    def _drop_reason(owner: HostName, other: HostName) -> str | None:
+        if owner == other:
+            return "self-reference"
+        if other not in all_hosts:
+            return "related host does not exist"
+        return None
+
     def _add(
         owner: HostName, kind_id: str, direction: RelationDirection, other: RelatedHost
     ) -> None:
@@ -90,13 +102,46 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
         )
         resolved[owner][relation] = None
 
+    def _unknown_direction(owner: HostName, direction: str) -> None:
+        _LOGGER.debug(
+            "Relation of host %(owner)r dropped: direction %(direction)r is unknown to this"
+            " version.",
+            {"owner": owner, "direction": direction},
+        )
+
+    def _unknown_kind(owner: HostName, link: RelationLink) -> None:
+        _LOGGER.debug(
+            "Relation of host %(owner)r dropped: this version does not know a %(kind)r relation"
+            " with a %(direction)r end.",
+            {"owner": owner, "kind": link["kind"], "direction": link["direction"]},
+        )
+
     for host_name, host in all_hosts.items():
         try:
-            parsed = parse_relations_value(host.attributes.get("relations", []))
-        except ValueError:
+            parsed = parse_relations_value(
+                host.attributes.get("relations", []),
+                on_unknown_direction=partial(_unknown_direction, host_name),
+            )
+        except ValueError as exc:
+            # Only a hand written "hosts.mk" gets here, and a debug line would hide it from
+            # whoever wonders where their relations went.
+            _LOGGER.warning(
+                "Skipping malformed 'relations' attribute of host %(host)r: %(error)s",
+                {"host": host_name, "error": exc},
+            )
             continue
-        for link in known_relations(parsed):
-            if host_name == link["host"] or link["host"] not in all_hosts:
+        for link in known_relations(parsed, on_unknown=partial(_unknown_kind, host_name)):
+            if (reason := _drop_reason(host_name, link["host"])) is not None:
+                _LOGGER.debug(
+                    "Relation %(owner)r -> %(other)r (%(kind)s/%(direction)s) dropped: %(reason)s.",
+                    {
+                        "owner": host_name,
+                        "other": link["host"],
+                        "kind": link["kind"],
+                        "direction": link["direction"],
+                        "reason": reason,
+                    },
+                )
                 continue
             other = all_hosts[link["host"]]
             _add(host_name, link["kind"], link["direction"], other)

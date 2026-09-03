@@ -1232,6 +1232,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
             "cmk.web.background-job": 30,
             "cmk.web.slow-views": 30,
             "cmk.web.automatic_host_removal": 30,
+            "cmk.web.host_relations": 30,
         },
         pro={
             "cmk.web": 30,
@@ -1243,6 +1244,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
             "cmk.web.background-job": 30,
             "cmk.web.slow-views": 30,
             "cmk.web.automatic_host_removal": 30,
+            "cmk.web.host_relations": 30,
             "cmk.web.agent_registration": 30,
             "cmk.web.saml2": 30,
         },

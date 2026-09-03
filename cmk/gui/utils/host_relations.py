@@ -23,7 +23,7 @@ Livestatus, so the shared vocabulary lives in a home that belongs to neither (se
 
 import dataclasses
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from typing import get_args, Literal, TypedDict, TypeGuard, TypeIs
 
 from cmk.ccc.hostaddress import HostName
@@ -100,7 +100,9 @@ class RelationLink(TypedDict):
 RelationsValue = list[RelationLink]
 
 
-def parse_relations_value(raw: object) -> RelationsValue:
+def parse_relations_value(
+    raw: object, *, on_unknown_direction: Callable[[str], None] = lambda _direction: None
+) -> RelationsValue:
     """Validate and normalize the raw (JSON-decoded) ``relations`` attribute value.
 
     Raises ``ValueError`` on structurally invalid input - which includes an unusable host name,
@@ -110,9 +112,11 @@ def parse_relations_value(raw: object) -> RelationsValue:
     value but one a later version wrote, and everything that writes the attribute re-states the
     whole list from what it parsed (see
     :meth:`cmk.gui.watolib.hosts_and_folders.Host.set_relations_about`). Raising would therefore
-    turn one unreadable row into a host without any relations at all on its next save. The skip
-    happens *before* the host name is validated, so a row of a later version never fails on a
-    field this version reads more strictly.
+    turn one unreadable row into a host without any relations at all on its next save. A skip is
+    still a relation the caller will not see, so ``on_unknown_direction`` is called with the
+    direction for callers that have somewhere to report it - this module has no opinion on where
+    that is. The skip happens *before* the host name is validated, so a row of a later version
+    never fails on a field this version reads more strictly.
 
     An unknown *kind* is not skipped here: this module does not know which kinds exist. That
     answer, and the same forward compatibility for it, live in
@@ -136,6 +140,7 @@ def parse_relations_value(raw: object) -> RelationsValue:
         if not isinstance(direction, str):
             raise ValueError(f"Invalid relation direction: {direction!r}")
         if not _is_relation_direction(direction):
+            on_unknown_direction(direction)
             continue
         host = entry.get("host")
         if not _is_nonempty_str(host):

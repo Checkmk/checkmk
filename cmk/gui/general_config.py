@@ -167,6 +167,7 @@ class GeneralConfig:
             "cmk.web.ui-job-scheduler": 20,
             "cmk.web.slow-views": 30,
             "cmk.web.agent_registration": 30,
+            "cmk.web.host_relations": 30,
         }
     )
 

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 from collections.abc import Mapping
 
 import pytest
@@ -101,6 +102,67 @@ def test_two_halves_that_contradict_each_other_are_both_reported() -> None:
         ResolvedRelation(kind="management", direction="parent", host="os1", site="central"),
         ResolvedRelation(kind="management", direction="child", host="os1", site="central"),
     }
+
+
+@pytest.mark.parametrize(
+    "relations, reason",
+    [
+        ([{"kind": "management", "direction": "child", "host": "board"}], "self-reference"),
+        (
+            [{"kind": "management", "direction": "child", "host": "ghost"}],
+            "related host does not exist",
+        ),
+    ],
+)
+def test_every_dropped_relation_logs_a_reason(
+    caplog: pytest.LogCaptureFixture, relations: object, reason: str
+) -> None:
+    with caplog.at_level(logging.DEBUG, logger="cmk.web.host_relations"):
+        assert resolve_all_relations(fake_hosts(board=relations)) == {}
+
+    assert reason in caplog.text
+
+
+def test_an_end_this_version_does_not_know_logs_a_reason(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A link written by a later version is skipped by the parser - silently, until here."""
+    with caplog.at_level(logging.DEBUG, logger="cmk.web.host_relations"):
+        assert (
+            resolve_all_relations(
+                fake_hosts(board=[{"kind": "management", "direction": "sideways", "host": "os1"}])
+            )
+            == {}
+        )
+
+    assert "sideways" in caplog.text
+    assert "board" in caplog.text
+
+
+def test_a_kind_this_version_does_not_know_logs_a_reason(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The parser hands the link on - only the kinds this version knows can place it."""
+    with caplog.at_level(logging.DEBUG, logger="cmk.web.host_relations"):
+        assert (
+            resolve_all_relations(
+                fake_hosts(board=[{"kind": "peering", "direction": "symmetric", "host": "os1"}])
+            )
+            == {}
+        )
+
+    assert "peering" in caplog.text
+    assert "board" in caplog.text
+
+
+def test_a_malformed_stored_value_is_logged_as_a_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.WARNING, logger="cmk.web.host_relations"):
+        assert resolve_all_relations(fake_hosts(board="not-a-list")) == {}
+
+    assert "board" in caplog.text
+    assert [record.levelno for record in caplog.records] == [logging.WARNING]
 
 
 def test_resolve_all_relations_skips_self_and_unknown_hosts() -> None:

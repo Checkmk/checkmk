@@ -15,7 +15,7 @@ its own: the wording is lazily translated and needs ``_l``, which the stdlib-onl
 module below it cannot import.
 """
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 
@@ -126,11 +126,21 @@ def kind_accepts(kind_id: str, direction: RelationDirection) -> bool:
     return kind is not None and direction in kind.directions()
 
 
-def known_relations(links: Iterable[RelationLink]) -> list[RelationLink]:
+def known_relations(
+    links: Iterable[RelationLink],
+    *,
+    on_unknown: Callable[[RelationLink], None] = lambda _link: None,
+) -> list[RelationLink]:
     """The links whose kind and direction this version can place.
 
-    The others are left out rather than rejected: a link of a later version must not cost a host
+    The others are reported rather than rejected: a link of a later version must not cost a host
     the rest of its relations, the same forward-compatibility rule
     :func:`cmk.gui.utils.host_relations.parse_relations_value` applies to the direction.
     """
-    return [link for link in links if kind_accepts(link["kind"], link["direction"])]
+    known = []
+    for link in links:
+        if kind_accepts(link["kind"], link["direction"]):
+            known.append(link)
+        else:
+            on_unknown(link)
+    return known

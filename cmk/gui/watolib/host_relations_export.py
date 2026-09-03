@@ -33,6 +33,7 @@ from pathlib import Path
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
+from cmk.gui.log import logger
 from cmk.gui.utils.host_relations import dump_resolved_relations, RELATIONS_MACRO
 from cmk.gui.watolib.config_sync import (
     ReplicationPath,
@@ -40,6 +41,8 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPathType,
 )
 from cmk.gui.watolib.host_relations import RelatedHost, resolve_all_relations
+
+_LOGGER = logger.getChild("host_relations")
 
 
 def relations_export_path() -> Path:
@@ -85,7 +88,17 @@ def export_host_relations(
     macro_values = {
         str(host): dump_resolved_relations(relations) for host, relations in resolved.items()
     }
-    _write_export_file(export_file_path, macro_values)
+    written = _write_export_file(export_file_path, macro_values)
+    _LOGGER.debug(
+        "Host relations export: %(hosts)d host(s) with relations, %(entries)d relation entries, "
+        "%(outcome)s %(path)s.",
+        {
+            "hosts": len(macro_values),
+            "entries": sum(len(relations) for relations in resolved.values()),
+            "outcome": "written to" if written else "unchanged in",
+            "path": export_file_path,
+        },
+    )
 
 
 def register(replication_path_registry: ReplicationPathRegistry) -> None:

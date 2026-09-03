@@ -220,6 +220,17 @@ def test_an_unknown_end_is_skipped_before_the_host_name_is_read() -> None:
     )
 
 
+def test_an_unknown_end_is_reported_to_whoever_wants_to_know() -> None:
+    reported: list[str] = []
+
+    parse_relations_value(
+        [{"kind": "management", "direction": "sideways", "host": "os1"}],
+        on_unknown_direction=reported.append,
+    )
+
+    assert reported == ["sideways"]
+
+
 def test_a_kind_this_version_does_not_know_is_still_parsed() -> None:
     """Whether a kind exists is host_relation_kinds' question, not the wire format's."""
     assert parse_relations_value(

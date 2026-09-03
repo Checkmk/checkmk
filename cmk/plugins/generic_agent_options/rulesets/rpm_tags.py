@@ -5,9 +5,10 @@
 
 from collections.abc import Mapping
 
+from cmk.plugins.generic_agent_options.rulesets._topic import TOPIC_LINUX_UNIX_AGENT_OPTIONS
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, String
-from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
+from cmk.rulesets.v1.rule_specs import AgentConfig
 
 # The keys were renamed to tell rules stored before the migration to the rulesets v1 API
 # ("first matching rule wins") from rules stored afterwards (matching rules are merged).
@@ -55,6 +56,6 @@ def _form_spec() -> Dictionary:
 rule_spec_rpm_tags = AgentConfig(
     title=Title("Specify RPM package tags (Linux)"),
     name="rpm_tags",
-    topic=Topic.LINUX,
+    topic=TOPIC_LINUX_UNIX_AGENT_OPTIONS,
     parameter_form=_form_spec,
 )

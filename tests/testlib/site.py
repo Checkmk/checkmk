@@ -1417,6 +1417,37 @@ class Site:
     def is_running(self) -> bool:
         return self.omd("status").returncode == 0
 
+    def wait_until_api_ready(self, timeout: float = 60) -> None:
+        """Wait until the site's REST API is actually responsive.
+
+        Right after `start()` (e.g. following an update), `omd status` can already report all
+        processes as running while the web server is still warming up - a fresh worker process
+        can even crash and get replaced. Poll a cheap endpoint here so callers that immediately
+        depend on the REST API (like activating changes) don't race that startup window.
+        """
+
+        def _api_reachable() -> bool:
+            try:
+                response = self.openapi.get(
+                    "/domain-types/activation_run/collections/pending_changes"
+                )
+            except requests.exceptions.ConnectionError as exc:
+                logger.warning("Site %s API not reachable yet: %s", self.id, exc)
+                return False
+            if not response.ok:
+                logger.warning(
+                    "Site %s API not ready yet: [%d] %s",
+                    self.id,
+                    response.status_code,
+                    response.text,
+                )
+                return False
+            return True
+
+        wait_until(
+            _api_reachable, timeout=timeout, interval=1, condition_name=f"{self.id} API ready"
+        )
+
     def wait_for_status_update(
         self,
         expected_status: int,

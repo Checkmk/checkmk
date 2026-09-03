@@ -328,11 +328,25 @@ class CMKOpenApiSession(requests.Session):
                 raise TimeoutError(msg)
 
             logger.debug('Redirecting to "%s %s"...', http_method_for_redirection, redirect_url)
-            response = self.request(
-                method=http_method_for_redirection,
-                url=redirect_url,
-                allow_redirects=False,
-            )
+            try:
+                response = self.request(
+                    method=http_method_for_redirection,
+                    url=redirect_url,
+                    allow_redirects=False,
+                )
+            except requests.exceptions.ConnectionError as exc:
+                # The site's web server may briefly drop connections right after a restart
+                # (e.g. while still warming up). Treat that like any other "not done yet"
+                # response instead of failing the whole operation on a single hiccup.
+                logger.warning(
+                    "Connection error while polling for %s (attempt %d): %s; retrying...",
+                    operation,
+                    attempt,
+                    exc,
+                )
+                time.sleep(0.5)
+                continue
+
             if response.status_code == 204 and not response.content:
                 logger.info(
                     "Wait for completion finished after %0.2fs / %s attempts for %s",
@@ -482,7 +496,7 @@ class ChangesAPI(BaseAPI):
                     raise Redirect(start_result.redirect_url)
         finally:
             if activation_id:
-                activation_status = self.get_activation_status(activation_id)
+                activation_status = self._get_activation_status_with_retry(activation_id)
                 if "status_per_site" in activation_status["extensions"] and (
                     not_succeeded_sites := [
                         status
@@ -537,6 +551,31 @@ class ChangesAPI(BaseAPI):
 
         json_data: dict[str, Any] = response.json()
         return json_data
+
+    def _get_activation_status_with_retry(
+        self, activation_id: str, attempts: int = 3, interval: float = 1.0
+    ) -> dict[str, Any]:
+        """Like `get_activation_status`, but tolerates a transient connection error.
+
+        Right after a site restart, a single request can still hit the web server while it is
+        not fully warmed up yet (e.g. a worker process still starting or being replaced). Retry
+        a few times instead of letting that single hiccup fail the whole activation.
+        """
+        for attempt in range(1, attempts + 1):
+            try:
+                return self.get_activation_status(activation_id)
+            except requests.exceptions.ConnectionError as exc:
+                if attempt == attempts:
+                    raise
+                logger.warning(
+                    "Connection error while fetching activation status (attempt %d/%d): %s;"
+                    " retrying...",
+                    attempt,
+                    attempts,
+                    exc,
+                )
+                time.sleep(interval)
+        raise AssertionError("unreachable")
 
 
 class UsersAPI(BaseAPI):

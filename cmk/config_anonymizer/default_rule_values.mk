@@ -1041,7 +1041,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_controller', [])
 
 agent_config['win_controller'] = [
-{'id': 'ed6f5d72-7d8f-4785-893f-d8512fc53d8e', 'value': {'check_controller_access': True, 'force_legacy': False}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'ed6f5d72-7d8f-4785-893f-d8512fc53d8e', 'value': {'check_access': True, 'allow_legacy': False, 'agent_channel': ('mailslot', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_controller']
 
 

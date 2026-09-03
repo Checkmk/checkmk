@@ -12,8 +12,8 @@ from .bakery_api.v1 import register, WindowsConfigEntry, WindowsConfigGenerator
 
 
 class _Config(BaseModel):
-    check_controller_access: bool = True
-    force_legacy: bool = False
+    check_access: bool
+    allow_legacy: bool
     agent_channel: tuple[Literal["mailslot"], None] | tuple[Literal["tcp"], int] | None = None
 
 
@@ -23,8 +23,8 @@ def _path_to(entry: str) -> list[str]:
 
 def get_win_controller_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
     config = _Config.model_validate(conf)
-    yield WindowsConfigEntry(path=_path_to("check"), content=config.check_controller_access)
-    yield WindowsConfigEntry(path=_path_to("force_legacy"), content=config.force_legacy)
+    yield WindowsConfigEntry(path=_path_to("check"), content=config.check_access)
+    yield WindowsConfigEntry(path=_path_to("force_legacy"), content=config.allow_legacy)
     match config.agent_channel:
         case None:
             return

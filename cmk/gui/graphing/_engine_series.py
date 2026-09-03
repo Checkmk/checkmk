@@ -22,14 +22,6 @@ def _timestamps(time_range: TimeRange) -> Sequence[int]:
     return [t + time_range.step for t in range(time_range.start, time_range.end, time_range.step)]
 
 
-def get_step_label(step: int) -> str:
-    if step < 3600:
-        return "%dm" % (step / 60)
-    if step < 86400:
-        return "%dh" % (step / 3600)
-    return "%dd" % (step / 86400)
-
-
 def _aggregate(
     values: Sequence[float | None], consolidation_function: ConsolidationFunction
 ) -> float | None:

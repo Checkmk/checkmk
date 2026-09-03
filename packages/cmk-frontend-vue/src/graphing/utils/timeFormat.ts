@@ -17,7 +17,6 @@ export function isoTime(zdt: ZonedDateTime): string {
   return `${pad2(zdt.hour)}:${pad2(zdt.minute)}:${pad2(zdt.second)}`
 }
 
-// Mirrors the backend's get_step_label()
 export function stepLabel(step: number): string {
   const fmt = (n: number) => (n % 1 === 0 ? String(n) : n.toFixed(1))
   if (step < 3600) {

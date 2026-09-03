@@ -27,11 +27,7 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric
-from ._graph_metric_expressions import (
-    GraphConsolidationFunction,
-    op_func_wrapper,
-    time_series_operators,
-)
+from ._graph_metric_expressions import GraphConsolidationFunction
 from ._legacy import (
     check_metrics,
     CheckMetricEntry,
@@ -248,6 +244,10 @@ def all_rrd_columns_potentially_relevant_for_metric(
     )
 
 
+def _first_value_present(values: Sequence[float | None]) -> float | None:
+    return next((value for value in values if value is not None), None)
+
+
 @tracer.instrument("graphing.translate_and_merge_rrd_columns")
 def translate_and_merge_rrd_columns(
     target_metric: MetricName,
@@ -290,12 +290,11 @@ def translate_and_merge_rrd_columns(
     if not relevant_ts:
         return TimeSeries(start=0, end=0, step=0, values=[])
 
-    _op_title, op_func = time_series_operators()["MERGE"]
     return TimeSeries(
         start=relevant_ts[0].start,
         end=relevant_ts[0].end,
         step=relevant_ts[0].step,
-        values=[op_func_wrapper(op_func, list(tsp)) for tsp in zip(*relevant_ts)],
+        values=[_first_value_present(tsp) for tsp in zip(*relevant_ts)],
         conversion=user_specific_unit(
             get_metric_spec(target_metric, registered_metrics).unit_spec, temperature_unit
         ).conversion,

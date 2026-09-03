@@ -5,7 +5,7 @@
 
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Annotated, final, override
 
@@ -17,26 +17,19 @@ from pydantic import (
 )
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.color import Color
-from cmk.gui.i18n import _
 from cmk.gui.type_defs import SizeMM
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._from_api import GraphFromAPI, RegisteredMetric
 from ._graph_metric_expressions import (
-    AugmentedTimeSeries,
     GraphMetricExpression,
     line_type_mirror,
     LineType,
     parse_graph_metric_expression,
 )
 from ._metric_backend_registry import FetchTimeSeriesProtocol
-from ._translated_metrics import TranslatedMetric
-from ._unit import (
-    ConvertibleUnitSpecification,
-    UserSpecificUnit,
-)
+from ._unit import ConvertibleUnitSpecification
 
 
 @dataclass(frozen=True)
@@ -51,93 +44,11 @@ class GraphEnvironment:
     debug: bool = False
 
 
-@dataclass(frozen=True)
-class GraphMetricLimit:
-    graph_metric: GraphMetric
-    max_series_per_query: int
-    num_series_per_query: int
-
-    def reached(self) -> bool:
-        return self.max_series_per_query <= self.num_series_per_query
-
-
-@dataclass(frozen=True)
-class AugmentedTimeSeriesOfGraphMetric:
-    time_series: Sequence[AugmentedTimeSeries]
-    limit: GraphMetricLimit | None
-
-
 class HorizontalRule(BaseModel, frozen=True):
     value: float
     rendered_value: str
     color: str
     title: str
-
-
-def sort_horizontal_rules_in_decending_order(
-    horizontal_rules: Sequence[HorizontalRule],
-) -> Sequence[HorizontalRule]:
-    return sorted(horizontal_rules, key=lambda hr: hr.value, reverse=True)
-
-
-def compute_warn_crit_rules_from_translated_metric(
-    user_specific_unit: UserSpecificUnit,
-    translated_metric: TranslatedMetric,
-) -> Sequence[HorizontalRule]:
-    horizontal_rules = []
-    if (warn_value := translated_metric.scalar.warn) is not None and warn_value not in (
-        float("inf"),
-        float("-inf"),
-    ):
-        horizontal_rules.append(
-            HorizontalRule(
-                value=warn_value,
-                rendered_value=user_specific_unit.formatter.render(warn_value),
-                color=Color.WARN.value,
-                title=_("Warning"),
-            )
-        )
-    if (crit_value := translated_metric.scalar.crit) is not None and crit_value not in (
-        float("inf"),
-        float("-inf"),
-    ):
-        horizontal_rules.append(
-            HorizontalRule(
-                value=crit_value,
-                rendered_value=user_specific_unit.formatter.render(crit_value),
-                color=Color.CRIT.value,
-                title=_("Critical"),
-            )
-        )
-    if (
-        warn_lower_value := translated_metric.scalar.warn_lower
-    ) is not None and warn_lower_value not in (
-        float("inf"),
-        float("-inf"),
-    ):
-        horizontal_rules.append(
-            HorizontalRule(
-                value=warn_lower_value,
-                rendered_value=user_specific_unit.formatter.render(warn_lower_value),
-                color=Color.WARN.value,
-                title=_("Warning (lower)"),
-            )
-        )
-    if (
-        crit_lower_value := translated_metric.scalar.crit_lower
-    ) is not None and crit_lower_value not in (
-        float("inf"),
-        float("-inf"),
-    ):
-        horizontal_rules.append(
-            HorizontalRule(
-                value=crit_lower_value,
-                rendered_value=user_specific_unit.formatter.render(crit_lower_value),
-                color=Color.CRIT.value,
-                title=_("Critical (lower)"),
-            )
-        )
-    return sort_horizontal_rules_in_decending_order(horizontal_rules)
 
 
 class GraphMetric(BaseModel, frozen=True):

@@ -4,11 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import functools
 import json
-import operator
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Annotated, assert_never, final, Literal, override
 
@@ -17,7 +15,6 @@ from pydantic import BaseModel, computed_field, PlainValidator, SerializeAsAny
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
-from cmk.gui.i18n import _
 from cmk.utils.metrics import MetricName
 from cmk.utils.misc import pnp_cleanup
 from cmk.utils.servicename import ServiceName
@@ -276,76 +273,9 @@ class QueryDataError:
     exception: Exception
 
 
-def op_func_wrapper[TOperatorReturn](
-    op_func: Callable[[TimeSeries | Sequence[float | None]], TOperatorReturn],
-    tsp: TimeSeries | Sequence[float | None],
-) -> TOperatorReturn | None:
-    if tsp.count(None) < len(tsp):  # At least one non-None value
-        try:
-            return op_func(tsp)
-        except ZeroDivisionError:
-            pass
-    return None
-
-
 def clean_time_series_point(tsp: TimeSeries | Sequence[float | None]) -> list[float]:
     """removes "None" entries from input list"""
     return [x for x in tsp if x is not None]
-
-
-def _time_series_operator_sum(tsp: TimeSeries | Sequence[float | None]) -> float:
-    return sum(clean_time_series_point(tsp))
-
-
-def _time_series_operator_product(tsp: TimeSeries | Sequence[float | None]) -> float | None:
-    if None in tsp:
-        return None
-    return functools.reduce(operator.mul, tsp, 1)
-
-
-def _time_series_operator_difference(tsp: TimeSeries | Sequence[float | None]) -> float | None:
-    if None in tsp:
-        return None
-    assert tsp[0] is not None
-    assert tsp[1] is not None
-    return tsp[0] - tsp[1]
-
-
-def _time_series_operator_fraction(tsp: TimeSeries | Sequence[float | None]) -> float | None:
-    if None in tsp or tsp[1] == 0:
-        return None
-    assert tsp[0] is not None
-    assert tsp[1] is not None
-    return tsp[0] / tsp[1]
-
-
-def _time_series_operator_maximum(tsp: TimeSeries | Sequence[float | None]) -> float:
-    return max(clean_time_series_point(tsp))
-
-
-def _time_series_operator_minimum(tsp: TimeSeries | Sequence[float | None]) -> float:
-    return min(clean_time_series_point(tsp))
-
-
-def _time_series_operator_average(tsp: TimeSeries | Sequence[float | None]) -> float:
-    tsp_clean = clean_time_series_point(tsp)
-    return sum(tsp_clean) / len(tsp_clean)
-
-
-def time_series_operators() -> dict[
-    Operators,
-    tuple[str, Callable[[TimeSeries | Sequence[float | None]], float | None]],
-]:
-    return {
-        "+": (_("Sum"), _time_series_operator_sum),
-        "*": (_("Product"), _time_series_operator_product),
-        "-": (_("Difference"), _time_series_operator_difference),
-        "/": (_("Fraction"), _time_series_operator_fraction),
-        "MAX": (_("Maximum"), _time_series_operator_maximum),
-        "MIN": (_("Minimum"), _time_series_operator_minimum),
-        "AVERAGE": (_("Average"), _time_series_operator_average),
-        "MERGE": ("First not None", lambda x: next(iter(clean_time_series_point(x)))),
-    }
 
 
 @dataclass(frozen=True, kw_only=True)

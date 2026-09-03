@@ -2,20 +2,16 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Module to hold shared code for main module internals and the plugins"""
 
 import http
 from dataclasses import dataclass
-from typing import NewType, Self
+from typing import Self
 
 from cmk.gui.exceptions import MKHTTPException
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
     status = http.HTTPStatus.BAD_REQUEST  # type: ignore[mutable-override]
-
-
-SizeEx = NewType("SizeEx", float)
 
 
 @dataclass(frozen=True, kw_only=True)

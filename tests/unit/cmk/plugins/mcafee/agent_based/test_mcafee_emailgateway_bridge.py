@@ -9,7 +9,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks import mcafee_emailgateway_bridge as plugin
+from cmk.plugins.mcafee.agent_based import mcafee_emailgateway_bridge as plugin
 
 _NOW = datetime.datetime(2026, 1, 1, 0, 0, 0, tzinfo=datetime.UTC).timestamp()
 

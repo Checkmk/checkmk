@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 from ._quantity import Bound, Curve, MetricProtocol, QuantityProtocol
 from ._title import title_metrics
+from ._units import CurveAttributes
 
 
 @dataclass(frozen=True)
@@ -35,6 +36,13 @@ class Stack:
 
 
 @dataclass(frozen=True)
+class Region:
+    lower: Curve | None
+    upper: Curve | None
+    attributes: CurveAttributes
+
+
+@dataclass(frozen=True)
 class Line:
     curve: Curve
     inverse: bool
@@ -57,6 +65,7 @@ class Graph:
     stacks: Sequence[Stack] = ()
     lines: Sequence[Line] = ()
     rules: Sequence[Rule] = ()
+    regions: Sequence[Region] = ()
 
     def _bound_quantities(self) -> Iterator[QuantityProtocol]:
         if self.vertical_range is None:
@@ -64,6 +73,13 @@ class Graph:
         for bound in (self.vertical_range.lower, self.vertical_range.upper):
             if bound is not None and not isinstance(bound, int | float):
                 yield bound
+
+    def _region_bounds(self) -> Iterator[Curve]:
+        for region in self.regions:
+            if region.lower is not None:
+                yield region.lower
+            if region.upper is not None:
+                yield region.upper
 
     def metrics(self) -> Sequence[MetricProtocol]:
         drawn = list(
@@ -74,6 +90,7 @@ class Graph:
                     (g.reference.quantity for g in self.stacks if g.reference is not None),
                     (line.curve.quantity for line in self.lines),
                     (rule.curve.quantity for rule in self.rules),
+                    (bound.quantity for bound in self._region_bounds()),
                     self._bound_quantities(),
                 )
                 for metric in quantity.metrics()

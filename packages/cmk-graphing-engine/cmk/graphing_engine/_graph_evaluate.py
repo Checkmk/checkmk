@@ -12,7 +12,7 @@ from typing import assert_never
 
 from ._fetch import fetch_evaluation_context, FetchDataProtocol
 from ._fetched import MACRO_SERIES_ID, SeriesAttributes
-from ._graph import FixedRange, Graph, MinimalRange, Rule, VerticalRange
+from ._graph import FixedRange, Graph, MinimalRange, Region, Rule, VerticalRange
 from ._quantity import (
     Bound,
     Curve,
@@ -52,6 +52,14 @@ class EvaluatedLine:
 
 
 @dataclass(frozen=True, kw_only=True)
+class EvaluatedRegion:
+    id: str
+    attributes: CurveAttributes
+    lower: TimeSeries | None
+    upper: TimeSeries | None
+
+
+@dataclass(frozen=True, kw_only=True)
 class EvaluatedRule:
     id: str
     attributes: CurveAttributes
@@ -79,6 +87,7 @@ class EvaluatedGraph:
     stacks: Sequence[EvaluatedStack]
     lines: Sequence[EvaluatedLine]
     rules: Sequence[EvaluatedRule] = ()
+    regions: Sequence[EvaluatedRegion] = ()
 
 
 def _evaluate_bound(bound: Bound | None, context: EvaluationContext) -> float | None:
@@ -172,6 +181,27 @@ def _drawn_curves(curves: Sequence[EvaluatedCurve], *, omit_zero: bool) -> Seque
     return [curve for curve in curves if any(curve.time_series.values)]
 
 
+def _evaluate_bound_series(
+    bound: Curve | None, context: EvaluationContext
+) -> tuple[TimeSeries | None, bool]:
+    if bound is None:
+        return None, True
+    results = bound.quantity.evaluate(context)
+    if not results:
+        return None, False
+    return results[0].time_series, True
+
+
+def _evaluate_region(
+    region: Region, region_id: str, context: EvaluationContext
+) -> EvaluatedRegion | None:
+    lower, lower_present = _evaluate_bound_series(region.lower, context)
+    upper, upper_present = _evaluate_bound_series(region.upper, context)
+    if not lower_present or not upper_present:
+        return None
+    return EvaluatedRegion(id=region_id, attributes=region.attributes, lower=lower, upper=upper)
+
+
 def _evaluate_rule(rule: Rule, rule_id: str, context: EvaluationContext) -> EvaluatedRule | None:
     value = first_value(rule.curve.quantity.evaluate(context))
     if value is None:
@@ -223,6 +253,11 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
         rule_id = _create_id(rule.curve.quantity, inverse=rule.inverse, seen=seen)
         if (evaluated := _evaluate_rule(rule, rule_id, context)) is not None:
             rules.append(evaluated)
+    regions = tuple(
+        evaluated_region
+        for index, region in enumerate(graph.regions)
+        if (evaluated_region := _evaluate_region(region, f"region-{index}", context)) is not None
+    )
     return EvaluatedGraph(
         name=graph.name,
         title=evaluate_title(graph.title, graph.metrics(), context),
@@ -230,6 +265,7 @@ def _evaluate_graph(graph: Graph, context: EvaluationContext) -> EvaluatedGraph:
         stacks=stacks,
         lines=lines,
         rules=rules,
+        regions=regions,
     )
 
 

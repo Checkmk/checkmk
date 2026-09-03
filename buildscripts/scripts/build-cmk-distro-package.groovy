@@ -56,6 +56,9 @@ def main() {
     def container_name = "build-cmk-package-${distro}-${edition}-${workspace_hash}-${checkout_hash}";
 
     def bazel_log_prefix = "bazel_log_";
+    def testing_image_container_name = "testing-ubuntu-22.04-checkmk-${safe_branch_name}";
+    def testing_image_docker_tag = "latest-with-docker";
+    // testing-ubuntu-22.04-checkmk-2.4.0:latest-with-docker
 
     def causes = currentBuild.getBuildCauses();
     def triggerd_by = "";
@@ -206,7 +209,11 @@ def main() {
         }
     }
 
-    inside_container(ulimit_nofile: 1024) {
+    inside_container(
+        image: docker.image("${docker_registry_no_http}/${testing_image_container_name}:${testing_image_docker_tag}"),
+        pull: true,
+        ulimit_nofile: 1024,
+    ) {
         stage("Sign package") {
             package_helper.sign_package(
                 checkout_dir,

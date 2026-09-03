@@ -41,6 +41,11 @@ def _expected_replication_paths() -> list[ReplicationPath]:
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.FILE,
+            ident="host_relations",
+            site_path="etc/check_mk/conf.d/relations.mk",
+        ),
+        ReplicationPath.make(
+            ty=ReplicationPathType.FILE,
             ident="htpasswd",
             site_path="etc/htpasswd",
         ),

@@ -32,6 +32,7 @@ from . import (
     config_variable_groups,
     groups,
     host_attributes,
+    host_relations_export,
     rulespec_groups,
     sample_config,
 )
@@ -124,6 +125,7 @@ def register(
     _register_config_domains(config_domain_registry)
     host_attributes.register(host_attribute_topic_registry)
     activate_changes.register(replication_path_registry)
+    host_relations_export.register(replication_path_registry)
     _register_host_attribute(host_attribute_registry)
     _register_cronjobs(cron_job_registry)
     folder_validators_registry.register(

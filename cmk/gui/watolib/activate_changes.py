@@ -134,8 +134,10 @@ from cmk.gui.watolib.config_sync import (
     SnapshotSettings,
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
+from cmk.gui.watolib.host_relations_export import export_host_relations, relations_export_path
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
+    collect_hosts,
     folder_preserving_link,
     folder_tree,
     FolderTree,
@@ -1923,7 +1925,7 @@ class ActivateChangesManager:
         self._save_activation()
 
         with _debug_log_message("Calling pre-activate changes"):
-            self._pre_activate_changes(debug=debug)
+            self._pre_activate_changes(all_site_configs, debug=debug)
 
         with _debug_log_message("Creating snapshots"):
             self._create_snapshots(
@@ -2071,14 +2073,25 @@ class ActivateChangesManager:
         to_file = {key: getattr(self, key) for key in self.info_keys}
         store.save_object_to_file(Path(self._info_path(self._activation_id)), to_file)
 
-    # Give hooks chance to do some pre-activation things (and maybe stop
-    # the activation)
-    def _pre_activate_changes(self, *, debug: bool) -> None:
+    def _pre_activate_changes(self, all_site_configs: SiteConfigurations, *, debug: bool) -> None:
+        """Write the artifacts the sites need in their snapshot, then let the hooks have their say.
+
+        Anything raised here aborts the activation.
+
+        Like :func:`_activate_central_steps`, the central artifacts are skipped on a remote site:
+        cron-driven local activations (agent auto-registration, automatic host removal) reach this
+        too, and a remote site receives the file through config sync.
+        """
         try:
+            # Both consumers want every host of the tree, and neither is guaranteed to run, so
+            # the walk is shared but still only paid for when something asks for it.
+            all_hosts = functools.cache(folder_tree().root_folder().all_hosts_recursively)
+            if not is_distributed_setup_remote_site(all_site_configs):
+                export_host_relations(all_hosts(), relations_export_path())
             if hooks.registered("pre-distribute-changes"):
-                hooks.call("pre-distribute-changes", collect_all_hosts(folder_tree()))
+                hooks.call("pre-distribute-changes", collect_hosts(all_hosts()))
         except Exception as e:
-            logger.exception("error calling pre-distribute-changes hook")
+            logger.exception("error during the pre-activation steps")
             if debug:
                 raise
             raise MKUserError(None, _("Can not start activation: %(e)s") % {"e": e})

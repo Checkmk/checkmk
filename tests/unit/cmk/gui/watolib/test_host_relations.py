@@ -4,39 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import cast
 
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
 from cmk.gui.utils.host_relations import RelationDirection, ResolvedRelation
-from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_relations import RelatedHost, resolve_all_relations
-
-
-class _FakeHost:
-    """A host as ``resolve_all_relations`` sees it - it asks for nothing else.
-
-    Satisfies :class:`RelatedHost`, so it needs no cast where the resolver is called.
-    """
-
-    def __init__(self, name: str, relations: object = None, site: str = "central") -> None:
-        self._name = HostName(name)
-        self._site = SiteId(site)
-        self.attributes = cast(
-            "HostAttributes", {} if relations is None else {"relations": relations}
-        )
-
-    def name(self) -> HostName:
-        return self._name
-
-    def site_id(self) -> SiteId:
-        return self._site
-
-
-def _hosts(**relations: object) -> Mapping[HostName, RelatedHost]:
-    return {HostName(name): _FakeHost(name, value) for name, value in relations.items()}
+from tests.unit.cmk.gui.watolib.host_relations_fakes import fake_hosts, FakeHost
 
 
 @pytest.mark.parametrize("stored, mirrored", [("child", "parent"), ("parent", "child")])
@@ -47,7 +21,7 @@ def test_one_stored_half_materializes_on_both_sides(
     gets - from either end, and for a half whose counterpart row was lost as well: the
     monitoring is never one-sided, only Setup can be."""
     resolved = resolve_all_relations(
-        _hosts(srv=[{"kind": "management", "direction": stored, "host": "board"}], board=None)
+        fake_hosts(srv=[{"kind": "management", "direction": stored, "host": "board"}], board=None)
     )
 
     assert resolved[HostName("srv")] == [
@@ -61,10 +35,10 @@ def test_one_stored_half_materializes_on_both_sides(
 def test_resolve_all_relations_carries_the_site_of_the_counterpart() -> None:
     """Only the central site knows where a host is monitored, so the site travels along."""
     all_hosts: Mapping[HostName, RelatedHost] = {
-        HostName("board"): _FakeHost(
+        HostName("board"): FakeHost(
             "board", [{"kind": "management", "direction": "parent", "host": "os1"}]
         ),
-        HostName("os1"): _FakeHost("os1", site="remote"),
+        HostName("os1"): FakeHost("os1", site="remote"),
     }
 
     resolved = resolve_all_relations(all_hosts)
@@ -79,7 +53,7 @@ def test_resolve_all_relations_carries_the_site_of_the_counterpart() -> None:
 
 def test_both_sides_storing_their_half_is_one_logical_link() -> None:
     """The regular case now that a save writes both halves: no relation is listed twice."""
-    all_hosts = _hosts(
+    all_hosts = fake_hosts(
         board=[{"kind": "management", "direction": "parent", "host": "os1"}],
         os1=[{"kind": "management", "direction": "child", "host": "board"}],
     )
@@ -94,11 +68,29 @@ def test_both_sides_storing_their_half_is_one_logical_link() -> None:
     ]
 
 
+def test_a_link_stored_twice_on_one_host_is_one_relation() -> None:
+    """Saving a host with a repeated link is refused (see relation_conflicts), so this can only
+    come from a hand written "hosts.mk" - the resolution must still not report it twice."""
+    all_hosts = fake_hosts(
+        board=[
+            {"kind": "management", "direction": "parent", "host": "os1"},
+            {"kind": "management", "direction": "parent", "host": "os1"},
+        ],
+        os1=None,
+    )
+
+    resolved = resolve_all_relations(all_hosts)
+
+    assert resolved[HostName("board")] == [
+        ResolvedRelation(kind="management", direction="parent", host="os1", site="central")
+    ]
+
+
 def test_two_halves_that_contradict_each_other_are_both_reported() -> None:
     """Only reachable by hand editing "hosts.mk" - a save re-states both halves. The resolver
     must not pick a winner: it does not know which side is the newer one, and dropping either
     would hide the mistake that validate_host_relations() reports."""
-    all_hosts = _hosts(
+    all_hosts = fake_hosts(
         board=[{"kind": "management", "direction": "parent", "host": "os1"}],
         os1=[{"kind": "management", "direction": "parent", "host": "board"}],
     )
@@ -112,7 +104,7 @@ def test_two_halves_that_contradict_each_other_are_both_reported() -> None:
 
 
 def test_resolve_all_relations_skips_self_and_unknown_hosts() -> None:
-    all_hosts = _hosts(
+    all_hosts = fake_hosts(
         board=[
             {"kind": "management", "direction": "parent", "host": "board"},
             {"kind": "management", "direction": "parent", "host": "ghost"},

@@ -4255,12 +4255,12 @@ def _must_be_in_contactgroups(
 
 def call_hook_hosts_changed(folder: Folder) -> None:
     if hooks.registered("hosts-changed"):
-        hosts = _collect_hosts(folder)
+        hosts = collect_hosts(folder.all_hosts_recursively())
         hooks.call("hosts-changed", hosts)
 
     # The same with all hosts!
     if hooks.registered("all-hosts-changed"):
-        hosts = _collect_hosts(folder.tree.root_folder())
+        hosts = collect_all_hosts(folder.tree)
         hooks.call("all-hosts-changed", hosts)
 
 
@@ -4273,7 +4273,7 @@ def validate_all_hosts(
 ) -> dict[HostName, list[str]]:
     if hooks.registered("validate-all-hosts") and (len(hostnames) > 0 or force_all):
         hosts_errors: dict[HostName, list[str]] = {}
-        all_hosts = _collect_hosts(tree.root_folder())
+        all_hosts = collect_all_hosts(tree)
 
         if force_all:
             hostnames = list(all_hosts.keys())
@@ -4292,12 +4292,18 @@ def validate_all_hosts(
 
 
 def collect_all_hosts(tree: FolderTree) -> Mapping[HostName, CollectedHostAttributes]:
-    return _collect_hosts(tree.root_folder())
+    """Every host of the installation with its effective attributes and its edit URL.
+
+    Loads the whole folder tree and computes both per host, and it is not memoized - pass it
+    lazily and do not call it before you know that something consumes the result. Where the
+    hosts are at hand already, use :func:`collect_hosts` instead of walking the tree again.
+    """
+    return collect_hosts(tree.root_folder().all_hosts_recursively())
 
 
-def _collect_hosts(folder: Folder) -> Mapping[HostName, CollectedHostAttributes]:
+def collect_hosts(hosts: Mapping[HostName, Host]) -> Mapping[HostName, CollectedHostAttributes]:
     hosts_attributes = {}
-    for host_name, host in folder.all_hosts_recursively().items():
+    for host_name, host in hosts.items():
         # Mypy can currently not help here (we have dynamic attributes, so we can not map
         # explicitly). Would need something more powerful than typed dicts to clean this up.
         hosts_attributes[host_name] = CollectedHostAttributes(host.effective_attributes())  # type: ignore[misc]

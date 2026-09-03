@@ -3,42 +3,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 import time
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.mcafee.libgateway import DETECT_EMAIL_GATEWAY
 
-check_info = {}
+Params = Mapping[str, tuple[float, float]]
 
 
 def parse_mcafee_emailgateway_bridge(string_table: StringTable) -> StringTable | None:
     return string_table or None
 
 
-def discover_mcafee_gateway_generic(info):
-    return [(None, {})]
+def discover_mcafee_emailgateway_bridge(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def check_mcafee_emailgateway_bridge(item, params, info):
-    bridge_present, bridge_state, tcp_packets, udp_packets, icmp_packets = info[0]
-    if bridge_present == "0":
-        state = 0
-        state_readable = "present"
-    else:
-        state = 2
-        state_readable = "not present"
-    yield state, "Bridge: %s" % state_readable
+def check_mcafee_emailgateway_bridge(params: Params, section: StringTable) -> CheckResult:
+    bridge_present, bridge_state, tcp_packets, udp_packets, icmp_packets = section[0]
 
-    if bridge_state == "0":
-        state = 0
-        state_readable = "UP"
-    else:
-        state = 2
-        state_readable = "down"
-    yield state, "Status: %s" % state_readable
+    is_present = bridge_present == "0"
+    yield Result(
+        state=State.OK if is_present else State.CRIT,
+        summary=f"Bridge: {'present' if is_present else 'not present'}",
+    )
+    is_up = bridge_state == "0"
+    yield Result(
+        state=State.OK if is_up else State.CRIT,
+        summary=f"Status: {'UP' if is_up else 'down'}",
+    )
 
     now = time.time()
     value_store = get_value_store()
@@ -51,31 +58,37 @@ def check_mcafee_emailgateway_bridge(item, params, info):
         packets_rate = get_rate(
             value_store, f"mcafee_emailgateway_bridge.{key}", now, int(packets), raise_overflow=True
         )
-        perfdata = ["%s_packets_received" % key, packets_rate]
+        levels = params.get(key)
+        state = State.OK
         infotext = f"{title}: {packets_rate:.2f} packets received/s"
-        state = 0
-        if params.get(key):
-            warn, crit = params[key]
-            perfdata += [warn, crit]
+        if levels:
+            warn, crit = levels
             if packets_rate >= crit:
-                state = 2
+                state = State.CRIT
             elif packets_rate >= warn:
-                state = 1
-            if state:
+                state = State.WARN
+            if state is not State.OK:
                 infotext += f" (warn/crit at {warn}/{crit} packets/s)"
-        yield state, infotext, [tuple(perfdata)]
+        yield Result(state=state, summary=infotext)
+        yield Metric(f"{key}_packets_received", packets_rate, levels=levels)
 
 
-check_info["mcafee_emailgateway_bridge"] = LegacyCheckDefinition(
+snmp_section_mcafee_emailgateway_bridge = SimpleSNMPSection(
     name="mcafee_emailgateway_bridge",
-    parse_function=parse_mcafee_emailgateway_bridge,
     detect=DETECT_EMAIL_GATEWAY,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1230.2.4.1.2.2.1",
         oids=["1", "2", "3", "4", "5"],
     ),
+    parse_function=parse_mcafee_emailgateway_bridge,
+)
+
+
+check_plugin_mcafee_emailgateway_bridge = CheckPlugin(
+    name="mcafee_emailgateway_bridge",
     service_name="Bridge",
-    discovery_function=discover_mcafee_gateway_generic,
+    discovery_function=discover_mcafee_emailgateway_bridge,
     check_function=check_mcafee_emailgateway_bridge,
     check_ruleset_name="mcafee_emailgateway_bridge",
+    check_default_parameters={},
 )

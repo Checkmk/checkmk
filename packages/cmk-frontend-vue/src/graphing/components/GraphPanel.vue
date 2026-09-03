@@ -154,16 +154,25 @@ const showBurgerMenu = computed(
 )
 const burgerMenuGroups = ref<BurgerMenuGroup[]>([])
 
-const initialAddTo = addTo.value
-if (showBurgerMenu.value && initialAddTo !== null) {
-  loadMenu(initialAddTo.type)
-    .then((groups) => {
-      burgerMenuGroups.value = groups
-    })
-    .catch((err) => {
-      throw new Error(`Failed to load menu for add type "${initialAddTo.type}": ${err.message}`)
-    })
-}
+// The addTo prop can be null at first render (see the custom graph editor) so we watch it for
+// loading the menu
+watch(
+  () => addTo.value?.type ?? null,
+  (addType) => {
+    if (addType === null || props.interaction.burger !== 'enabled') {
+      burgerMenuGroups.value = []
+      return
+    }
+    loadMenu(addType)
+      .then((groups) => {
+        burgerMenuGroups.value = groups
+      })
+      .catch((err) => {
+        throw new Error(`Failed to load menu for add type "${addType}": ${err.message}`)
+      })
+  },
+  { immediate: true }
+)
 
 const triggerBurgerMenuAction = async (onClick: BurgerMenuCallable) => {
   const target = addTo.value

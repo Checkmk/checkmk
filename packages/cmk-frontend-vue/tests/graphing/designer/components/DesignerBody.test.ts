@@ -22,6 +22,9 @@ import type { RowIssue } from '@/graphing/designer/validation'
 
 import { filterDefinitions } from '../fixtures'
 
+// The designer's burger menu loads its groups on mount; this component test doesn't exercise it.
+vi.mock('@/graphing/api/burgerMenu', () => ({ loadMenu: vi.fn().mockResolvedValue([]) }))
+
 vi.mock('cmk-ui-library/components/CmkSlideIn/CmkSlideIn.vue', () => ({
   default: defineComponent({
     name: 'CmkSlideIn',
@@ -229,6 +232,7 @@ function bodyProps(graph: CustomGraphObject = graphObject()) {
     store,
     graphOptions: graph.extensions.content.graph_options,
     title: 'My graph',
+    graphName: 'my_graph',
     mode: 'edit' as 'view' | 'edit',
     thresholds: { warning: '#ffd000', critical: '#ff3232' },
     metricBackendAvailable: false,

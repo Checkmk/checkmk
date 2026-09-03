@@ -109,8 +109,10 @@ const rootStyle = computed(() => ({
       :y="iconSize / 2"
       text-anchor="middle"
       dominant-baseline="central"
-      :font-size="charFontSize"
-      :letter-spacing="typeChar.length > 1 ? -1 : 0.5"
+      :style="{
+        fontSize: `${charFontSize}px`,
+        letterSpacing: typeChar.length > 1 ? '-1px' : '0.5px'
+      }"
     >
       {{ missing ? '?' : typeChar }}
     </text>

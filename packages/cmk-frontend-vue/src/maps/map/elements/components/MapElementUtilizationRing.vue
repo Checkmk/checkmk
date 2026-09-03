@@ -15,9 +15,9 @@ underneath.
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, useTemplateRef } from 'vue'
 
-import { RING_PAD } from '@/maps/map/static/composables/arcRing'
-import { useArcRing } from '@/maps/map/static/composables/useArcRing'
-import type { UtilizationRing } from '@/maps/map/static/composables/useUtilizationRing'
+import { RING_PAD } from '@/maps/map/elements/composables/arcRing'
+import { useArcRing } from '@/maps/map/elements/composables/useArcRing'
+import type { UtilizationRing } from '@/maps/map/elements/composables/useUtilizationRing'
 
 const { _t } = usei18n()
 

@@ -348,9 +348,13 @@ const size = computed(() => {
         :y="nodeRadius + fontSize + 2"
         text-anchor="middle"
         fill="rgb(212 212 216)"
-        :font-size="fontSize"
         font-family="system-ui,-apple-system,sans-serif"
-        style="paint-order: stroke; stroke: rgb(0 0 0 / 70%); stroke-width: 3px"
+        :style="{
+          fontSize: `${fontSize}px`,
+          paintOrder: 'stroke',
+          stroke: 'rgb(0 0 0 / 70%)',
+          strokeWidth: '3px'
+        }"
       >
         {{ truncate(node.data.name) }}
       </text>

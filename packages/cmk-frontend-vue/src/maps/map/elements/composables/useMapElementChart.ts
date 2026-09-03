@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 /**
- * What a graph object on a static map plots.
+ * What a graph object plots.
  *
  * A graph object names a host or service and, optionally, a graph template or a
  * set of metrics. Turning that into series means asking the daemon for the

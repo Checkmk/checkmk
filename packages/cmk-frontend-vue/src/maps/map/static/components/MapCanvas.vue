@@ -20,14 +20,14 @@ import { computed, provide, useTemplateRef } from 'vue'
 import ContextMenu from '@/maps/map/components/ContextMenu.vue'
 import HoverMenu from '@/maps/map/components/HoverMenu.vue'
 import MapZoomResetPill from '@/maps/map/components/MapZoomResetPill.vue'
+import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
+import { useObjectResize } from '@/maps/map/composables/useObjectResize'
 import { useCanvasBackground } from '@/maps/map/static/composables/useCanvasBackground'
 import { useCanvasExtents } from '@/maps/map/static/composables/useCanvasExtents'
 import { useCanvasLayout } from '@/maps/map/static/composables/useCanvasLayout'
 import { useCanvasLineAnchors } from '@/maps/map/static/composables/useCanvasLineAnchors'
 import { useCanvasMarqueeSelect } from '@/maps/map/static/composables/useCanvasMarqueeSelect'
-import { useCanvasMenus } from '@/maps/map/static/composables/useCanvasMenus'
 import { useCanvasObjectDrag } from '@/maps/map/static/composables/useCanvasObjectDrag'
-import { useCanvasObjectResize } from '@/maps/map/static/composables/useCanvasObjectResize'
 import { useCanvasPan } from '@/maps/map/static/composables/useCanvasPan'
 import { CANVAS_SCALE, useCanvasViewport } from '@/maps/map/static/composables/useCanvasViewport'
 import { useSettings } from '@/maps/services/context'
@@ -135,7 +135,7 @@ const drag = useCanvasObjectDrag({
   onDragStart: (id) => emit('object-drag-start', id)
 })
 
-const resize = useCanvasObjectResize({ canvas: () => canvas.value })
+const resize = useObjectResize({ surface: () => canvas.value })
 
 // A click closing a gesture must not also deselect: pointer capture redirects
 // it to the canvas, where it would read as a click on empty space.
@@ -159,7 +159,7 @@ const pan = useCanvasPan({
   pannable: () => viewport.zoom.value > 1 || classic.value
 })
 
-const menus = useCanvasMenus({
+const menus = useMapObjectMenus({
   config: () => props.config,
   states: () => props.states,
   preview: () => props.preview === true

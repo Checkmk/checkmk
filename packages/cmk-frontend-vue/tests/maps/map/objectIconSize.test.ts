@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { objectIconSize } from '@/maps/map/static/objectIconSize'
+import { objectIconSize } from '@/maps/map/objectIconSize'
 import { newMapElement } from '@/maps/utils/model'
 
 const SIZES = { map: 40, override: undefined, fallback: 20 }

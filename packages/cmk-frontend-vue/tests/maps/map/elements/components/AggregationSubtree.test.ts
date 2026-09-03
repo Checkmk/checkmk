@@ -7,7 +7,7 @@ import { fireEvent, render } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
-import AggregationSubtree from '@/maps/map/static/components/AggregationSubtree.vue'
+import AggregationSubtree from '@/maps/map/elements/components/AggregationSubtree.vue'
 import type { AggregationNode, MapElement, ObjectState } from '@/maps/types/api'
 
 import { anAggregationNode } from '../../../support/fixtures'

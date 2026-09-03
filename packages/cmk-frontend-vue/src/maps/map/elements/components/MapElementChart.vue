@@ -18,7 +18,7 @@ import { computed } from 'vue'
 
 import MetricChart, { type SeriesContext, seriesColorMap } from '@/maps/map/components/MetricChart'
 import { useMapPalette } from '@/maps/map/composables/useMapPalette'
-import type { MapElementChartModel } from '@/maps/map/static/composables/useMapElementChart'
+import type { MapElementChartModel } from '@/maps/map/elements/composables/useMapElementChart'
 import type { ObjectState } from '@/maps/types/api'
 import { renderMetricValue } from '@/maps/utils/metricFormat'
 import { getMetric, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
@@ -119,9 +119,13 @@ const readingColor = computed(() => {
 </template>
 
 <style scoped>
+/* The frame is the object's configured graph_width/height, and this fills it:
+   with the page's content-box default the padding and border would paint
+   outside the frame, past the selection outline and the resize grip. */
 .maps-map-element-chart {
   display: flex;
   overflow: hidden;
+  box-sizing: border-box;
   flex-direction: column;
   width: 100%;
   height: 100%;

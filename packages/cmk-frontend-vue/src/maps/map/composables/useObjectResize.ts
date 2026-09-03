@@ -8,7 +8,7 @@
  *
  * Measured in screen pixels rather than map coordinates: the operator is sizing
  * a box they can see, and the object's own width and height are stored in the
- * same pixels. The size is held locally while dragging and only handed back on
+ * same pixels — which is what lets a geo map share the gesture. The size is held locally while dragging and only handed back on
  * release, so nothing round-trips through the store per pointer move.
  */
 import { type Reactive, reactive, ref } from 'vue'
@@ -30,7 +30,7 @@ export interface ObjectSize {
   height: number
 }
 
-export interface CanvasObjectResize {
+export interface ObjectResize {
   /** Live sizes of the object being resized, keyed by id. */
   sizes: Reactive<Record<string, ObjectSize>>
   begin: (event: PointerEvent, object: MapElement) => void
@@ -39,9 +39,10 @@ export interface CanvasObjectResize {
   end: () => { id: string; size: ObjectSize } | null
 }
 
-export function useCanvasObjectResize(source: {
-  canvas: () => HTMLElement | null
-}): CanvasObjectResize {
+export function useObjectResize(source: {
+  /** The element the gesture's pointer is captured on. */
+  surface: () => HTMLElement | null
+}): ObjectResize {
   const sizes = reactive<Record<string, ObjectSize>>({})
   const resizingId = ref<string | null>(null)
   let fromX = 0
@@ -50,11 +51,11 @@ export function useCanvasObjectResize(source: {
   let fromHeight = 0
 
   function begin(event: PointerEvent, object: MapElement): void {
-    const canvas = source.canvas()
-    if (!canvas) {
+    const surface = source.surface()
+    if (!surface) {
       return
     }
-    canvas.setPointerCapture(event.pointerId)
+    surface.setPointerCapture(event.pointerId)
     resizingId.value = object.id
     if (object.type === 'textbox') {
       // An auto-sized text box stores no size, so the gesture starts from what

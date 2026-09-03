@@ -16,12 +16,11 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, useTemplateRef } from 'vue'
 
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
-import { objectIconSize } from '@/maps/map/static/objectIconSize'
+import MapElement from '@/maps/map/elements/MapElement.vue'
+import { objectIconSize } from '@/maps/map/objectIconSize'
 import type { MapConfig, MapElement as MapObject, ObjectState } from '@/maps/types/api'
 import { anchorRectOf } from '@/maps/utils/anchorRect'
 import { objectAriaLabel } from '@/maps/utils/objectAria'
-
-import MapElement from './MapElement.vue'
 
 const { _t } = usei18n()
 

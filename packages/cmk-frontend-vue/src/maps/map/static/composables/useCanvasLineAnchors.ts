@@ -17,9 +17,8 @@
  */
 import { type Ref, type ShallowRef } from 'vue'
 
+import { objectIconSize } from '@/maps/map/objectIconSize'
 import type { MapConfig, MapElement } from '@/maps/types/api'
-
-import { objectIconSize } from '../objectIconSize'
 
 /** The box a line aims at: centre plus half-extents, in map units. */
 interface Footprint {

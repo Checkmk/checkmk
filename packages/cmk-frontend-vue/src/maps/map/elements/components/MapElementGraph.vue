@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <!--
-A graph object on a static map, in its configured footprint.
+A graph object, in its configured footprint.
 
 There are two kinds: one bound to a host or service, whose metrics Maps fetches
 and draws itself, and one pointed at a URL somebody else renders. Both keep the
@@ -15,7 +15,7 @@ of what fills the box.
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-import { useMapElementChart } from '@/maps/map/static/composables/useMapElementChart'
+import { useMapElementChart } from '@/maps/map/elements/composables/useMapElementChart'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 
 import MapElementChart from './MapElementChart.vue'
@@ -110,6 +110,7 @@ const waitingMessage = computed(() =>
 }
 
 .maps-map-element-graph__forbidden {
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
   background: color-mix(in srgb, var(--ux-theme-1) 20%, transparent);

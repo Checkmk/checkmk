@@ -15,7 +15,7 @@ bare glow proved too easy to miss on a busy background.
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { useUtilizationRing } from '@/maps/map/static/composables/useUtilizationRing'
+import { useUtilizationRing } from '@/maps/map/elements/composables/useUtilizationRing'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import { assetUrl } from '@/maps/utils/assetUrl'
 import { stateColorVar } from '@/maps/utils/stateColors'

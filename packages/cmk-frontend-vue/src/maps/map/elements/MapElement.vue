@@ -4,12 +4,13 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <!--
-One object on a static map.
+One object on a map, wherever it is placed.
 
 What an object looks like is a property of the object, not of the canvas, so the
 choice between the five presentations lives here and the canvas only places the
-result. The pointer events every presentation shares — hover, right-click, the
-resize grip — are declared once, on whichever presentation is showing.
+result — on its own coordinates, or on a Leaflet marker's. The pointer events
+every presentation shares — hover, right-click, the resize grip — are declared
+once, on whichever presentation is showing.
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -18,12 +19,12 @@ import { computed } from 'vue'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import { objectCaption } from '@/maps/utils/dropdownOptions'
 
-import MapElementGadget from './MapElementGadget.vue'
-import MapElementGraph from './MapElementGraph.vue'
-import MapElementIcon from './MapElementIcon.vue'
-import MapElementLabel from './MapElementLabel.vue'
-import MapElementTextPill from './MapElementTextPill.vue'
-import MapElementTextbox from './MapElementTextbox.vue'
+import MapElementGadget from './components/MapElementGadget.vue'
+import MapElementGraph from './components/MapElementGraph.vue'
+import MapElementIcon from './components/MapElementIcon.vue'
+import MapElementLabel from './components/MapElementLabel.vue'
+import MapElementTextPill from './components/MapElementTextPill.vue'
+import MapElementTextbox from './components/MapElementTextbox.vue'
 
 const { _t } = usei18n()
 

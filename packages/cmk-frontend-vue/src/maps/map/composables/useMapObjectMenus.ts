@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 /**
- * The hover card and the right-click menu on a static map's objects.
+ * The hover card and the right-click menu on a map's objects.
  *
  * Both are anchored to the pointer and both close on the same events, so they
  * are one piece of state rather than two: opening either closes the other, and
@@ -24,7 +24,7 @@ import { useSettings } from '@/maps/services/context'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
 import { resolveTemplate } from '@/maps/utils/template'
 
-export interface CanvasMenus {
+export interface MapObjectMenus {
   hover: ReturnType<typeof useObjectHoverMenu>
   context: {
     visible: boolean
@@ -43,12 +43,12 @@ export interface CanvasMenus {
   close: () => void
 }
 
-export function useCanvasMenus(source: {
+export function useMapObjectMenus(source: {
   config: () => MapConfig
   states: () => Record<string, ObjectState>
   /** The settings preview is not interactive. */
   preview: () => boolean
-}): CanvasMenus {
+}): MapObjectMenus {
   const settings = useSettings()
   const hover = useObjectHoverMenu({ resolveState: (object) => source.states()[object.id] })
   const context = reactive({

@@ -14,8 +14,9 @@ import { interpolateLab } from 'd3-interpolate'
 import { select } from 'd3-selection'
 import { type Ref, onMounted, watch } from 'vue'
 
+import { useD3Cleanup } from '@/maps/map/composables/useD3Cleanup'
+
 import { type RingColors, clearPulse, drawRing, startPulse } from './arcRing'
-import { useD3Cleanup } from './useD3Cleanup'
 
 interface ArcRingOptions {
   svgRef: Ref<SVGSVGElement | null>

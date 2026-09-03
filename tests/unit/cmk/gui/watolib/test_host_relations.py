@@ -10,21 +10,116 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import (
+    DEFAULT_VALUE,
+    get_visitor,
+    RawDiskData,
+    RawFrontendData,
+    VisitorOptions,
+)
 from cmk.gui.utils.host_relation_kinds import RELATION_KINDS
 from cmk.gui.utils.host_relations import (
     RelationDirection,
     RelationLink,
+    RelationsValue,
     ResolvedRelation,
     reverse_direction,
 )
 from cmk.gui.watolib.host_relations import (
+    host_relations_form_spec,
     RelatedHost,
     relation_conflicts,
     RelationConflict,
     relations_or_user_error,
     resolve_all_relations,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from tests.unit.cmk.gui.watolib.host_relations_fakes import fake_hosts, FakeHost
+
+_VISITOR_OPTIONS = VisitorOptions(migrate_values=False, mask_values=False)
+
+
+def test_the_form_offers_every_end_of_every_kind_in_one_row() -> None:
+    spec, _value = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS).to_vue(DEFAULT_VALUE)
+    assert isinstance(spec, shared_type_defs.List)
+    row = spec.element_template
+    assert isinstance(row, shared_type_defs.CascadingSingleChoice)
+    assert row.layout == shared_type_defs.CascadingSingleChoiceLayout.horizontal
+    assert [element.name for element in row.elements] == [
+        f"{kind.id}_{direction}"
+        for kind in RELATION_KINDS.values()
+        for direction in kind.directions()
+    ]
+
+
+def test_the_form_offers_both_ends_of_the_management_relation() -> None:
+    """Pinned separately: the names above are derived, these are what the dialog submits."""
+    spec, _value = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS).to_vue(DEFAULT_VALUE)
+    assert isinstance(spec, shared_type_defs.List)
+    row = spec.element_template
+    assert isinstance(row, shared_type_defs.CascadingSingleChoice)
+    assert [element.name for element in row.elements] == [
+        "management_parent",
+        "management_child",
+    ]
+
+
+def test_the_form_titles_read_as_a_sentence_about_the_host_being_edited() -> None:
+    spec, _value = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS).to_vue(DEFAULT_VALUE)
+    assert isinstance(spec, shared_type_defs.List)
+    row = spec.element_template
+    assert isinstance(row, shared_type_defs.CascadingSingleChoice)
+    assert [element.title for element in row.elements] == [
+        "is management board of",
+        "is OS host of",
+    ]
+
+
+def test_the_form_round_trips_stored_links() -> None:
+    links: RelationsValue = [
+        {"kind": "management", "direction": "parent", "host": HostName("mgmt1")},
+        {"kind": "management", "direction": "child", "host": HostName("os1")},
+    ]
+    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+    assert visitor.validate(RawDiskData(links)) == []
+    assert visitor.to_disk(RawDiskData(links)) == links
+
+
+def test_the_form_leaves_out_a_link_it_cannot_offer_a_row_for() -> None:
+    """A kind of a later version has no element to select, so the dialog cannot show its row."""
+    links: RelationsValue = [
+        {"kind": "peering", "direction": "symmetric", "host": HostName("peer")},
+        {"kind": "management", "direction": "child", "host": HostName("os1")},
+    ]
+    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+
+    assert visitor.to_disk(RawDiskData(links)) == [
+        {"kind": "management", "direction": "child", "host": HostName("os1")}
+    ]
+
+
+def test_the_form_stores_the_rows_the_dialog_submits() -> None:
+    """The dialog sends the (relation type, host name) pairs the cascading choice produces."""
+    rows = RawFrontendData([["management_parent", "mgmt1"], ["management_child", "os1"]])
+    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+    assert visitor.validate(rows) == []
+    assert visitor.to_disk(rows) == [
+        {"kind": "management", "direction": "parent", "host": "mgmt1"},
+        {"kind": "management", "direction": "child", "host": "os1"},
+    ]
+
+
+def test_the_form_asks_for_a_host_the_row_is_missing() -> None:
+    """The dialog submits the empty name the choice defaults to."""
+    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+    messages = visitor.validate(RawFrontendData([["management_child", ""]]))
+    assert [message.message for message in messages] == ["Select the host this relation points to."]
+
+
+def test_the_form_rejects_a_host_name_that_cannot_be_stored() -> None:
+    visitor = get_visitor(host_relations_form_spec(), _VISITOR_OPTIONS)
+    messages = visitor.validate(RawFrontendData([["management_child", "no spaces"]]))
+    assert [message.message for message in messages] == ["This is not a usable host name."]
 
 
 @pytest.mark.parametrize("stored, mirrored", [("child", "parent"), ("parent", "child")])

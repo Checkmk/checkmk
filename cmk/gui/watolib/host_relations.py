@@ -9,14 +9,13 @@ This is a pure Setup/GUI feature. It links a management-board host to the OS hos
 (and vice versa) so both sides are navigable, and it is surfaced in the monitoring without ever
 changing how a host is checked or notified.
 
-A relation is stored in the ``relations`` host attribute of **both** hosts, each from its own
-side. That is what lets every host answer what it is related to by looking at itself: the reverse
-links of a host would otherwise be the forward links of every *other* host, and finding them
-would mean loading every folder's ``hosts.mk``.
+Links are stored in the ``relations`` host attribute of **both** hosts, each from its own side,
+and one save writes both halves - so every host knows what it is related to by looking at itself,
+and whoever saves last decides what a pair says.
 
-:func:`resolve_all_relations` derives the reverse of every stored half anyway, so a pair
-collapses into one relation per side - and a half whose counterpart row was lost still reaches
-both hosts.
+For the monitoring the relations are resolved centrally at activation time (see
+:mod:`cmk.gui.watolib.host_relations_export`). The reverse of every stored half is derived in the
+same pass, so a half whose counterpart row was lost still materializes on both sides.
 """
 
 from collections import defaultdict
@@ -25,9 +24,14 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Literal, Protocol
 
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.ccc.site import SiteId
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.generators.config_host_name import create_config_host_name
+from cmk.gui.form_specs.unstable import CascadingSingleChoiceExtended, not_empty
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+)
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.host_relation_kinds import (
@@ -44,6 +48,15 @@ from cmk.gui.utils.host_relations import (
     reverse_direction,
 )
 from cmk.gui.watolib.host_attributes import HostAttributes
+from cmk.rulesets.internal.form_specs import StringAutocompleter
+from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoiceElement,
+    InputHint,
+    List,
+)
+from cmk.rulesets.v1.form_specs.validators import ValidationError
+from cmk.shared_typing.vue_formspec_components import CascadingSingleChoiceLayout
 
 _LOGGER = logger.getChild("host_relations")
 
@@ -61,6 +74,115 @@ class RelatedHost(Protocol):
     def name(self) -> HostName: ...
 
     def site_id(self) -> SiteId: ...
+
+
+def _validate_related_host_name(value: str) -> None:
+    try:
+        HostName(value)
+    except HostNameValidationError as exc:
+        raise ValidationError(Message("This is not a usable host name.")) from exc
+
+
+def _related_host_choice() -> StringAutocompleter:
+    return create_config_host_name(
+        title=Title("Related host"),
+        prefill=InputHint("Select related host"),
+        # A row is turned back into a link outside any validation, so a name rejected there is a
+        # crash report rather than a message next to the field. The length check also marks the
+        # field required in the dialog.
+        custom_validate=(
+            not_empty(error_msg=Message("Select the host this relation points to.")),
+            _validate_related_host_name,
+        ),
+    )
+
+
+def _choice_name(kind_id: str, direction: RelationDirection) -> str:
+    """One element of the relation type choice, named by the end of the kind it offers.
+
+    ``CascadingSingleChoiceElement`` requires an identifier as its name, so the two ids are joined
+    by an underscore rather than by a separator that reads better. That is unambiguous because a
+    direction contains none and a kind id is an identifier.
+    """
+    return f"{kind_id}_{direction}"
+
+
+def _decode_choice_name(name: str) -> tuple[str, str]:
+    kind_id, _sep, direction = name.rpartition("_")
+    return kind_id, direction
+
+
+def _relation_type_choice() -> CascadingSingleChoiceExtended:
+    """The relation type and the host it applies to, as one row of the host dialog.
+
+    One element per end of every known relation kind. The titles describe the end the host being
+    edited sits at towards the selected host, so a row reads left to right as "this host is
+    management board of <related host>".
+    """
+    return CascadingSingleChoiceExtended(
+        # Not rendered by the list, but names the field for screen readers.
+        title=Title("Relation type"),
+        layout=CascadingSingleChoiceLayout.horizontal,
+        prefill=InputHint(Title("Select relation type")),
+        elements=[
+            CascadingSingleChoiceElement(
+                name=_choice_name(kind.id, direction),
+                # Already a translatable string, held lazily by the kind it belongs to.
+                title=Title(str(kind.end(direction).row)),  # astrein: disable=localization-checker
+                parameter_form=_related_host_choice(),
+            )
+            for kind in RELATION_KINDS.values()
+            for direction in kind.directions()
+        ],
+    )
+
+
+def host_relations_form_spec() -> TransformDataForLegacyFormatOrRecomposeFunction:
+    """FormSpec of the ``relations`` attribute: one row per relation.
+
+    The rows are edited as the ``(relation type, host name)`` pairs a cascading choice produces,
+    but stored as the self-describing :class:`RelationLink` mappings the export and the monitoring
+    views read: that is what a hand written "hosts.mk" shows, and a named key can gain a sibling
+    in a later version where a tuple position cannot.
+    """
+    return TransformDataForLegacyFormatOrRecomposeFunction(
+        # "Related hosts" is taken by the section this sits in and by the field inside a row.
+        title=Title("Relations"),
+        help_text=Help(
+            "Link this host to other monitored hosts. The relation type says what this host is "
+            "to the selected one - the management board of that host, for instance, "
+            "or an OS host managed by it. A relation concerns both hosts, so it is stored on "
+            "both: it appears here right away when someone records it on the other host, and "
+            "adding or removing one here changes that host too."
+        ),
+        wrapped_form_spec=List[tuple[str, object]](
+            add_element_label=Label("Add new relation"),
+            remove_element_label=Label("Remove this relation"),
+            no_element_label=Label("No relations"),
+            editable_order=False,
+            element_template=_relation_type_choice(),
+        ),
+        from_disk=_links_to_form_data,
+        to_disk=_form_data_to_links,
+    )
+
+
+def _links_to_form_data(raw: object) -> list[tuple[str, str]]:
+    return [
+        (_choice_name(link["kind"], link["direction"]), link["host"])
+        for link in known_relations(parse_relations_value(raw))
+    ]
+
+
+def _form_data_to_links(raw: object) -> RelationsValue:
+    # Unusable rows are kept out by the validators on _related_host_choice().
+    if not isinstance(raw, list):
+        raise ValueError("Relations must be a list of relations.")
+    links = []
+    for name, host in raw:
+        kind_id, direction = _decode_choice_name(name)
+        links.append({"kind": kind_id, "direction": direction, "host": host})
+    return parse_relations_value(links)
 
 
 ResolvedRelations = dict[HostName, list[ResolvedRelation]]

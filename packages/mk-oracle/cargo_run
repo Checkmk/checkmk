@@ -26,4 +26,8 @@ resolve_test_endpoint
 path_to_runtime="${PWD}/runtimes/plugins/libexec/mk-oracle-v2/oic"
 export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
 export MK_CONFDIR="${PWD}"
-TNS_ADMIN=${PWD}/tests/files/tns MK_LIBDIR=${PWD}/runtimes/ cargo "$@"
+# Do not export a global TNS_ADMIN. The DB tests that need one set it themselves
+# (_init_runtime_path in tests/common/tools.rs), while the lib and migration tests
+# assert its absence; a global value here leaks into those and fails them. The
+# bazel test targets deliberately do not inherit TNS_ADMIN either.
+MK_LIBDIR=${PWD}/runtimes/ cargo "$@"

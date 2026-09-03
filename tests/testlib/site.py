@@ -41,6 +41,7 @@ from typing import Any, Final, Literal, overload
 import pytest
 import pytest_check
 import requests
+from pydantic import BaseModel, Field
 
 from cmk import trace
 from cmk.crypto.certificate import Certificate
@@ -102,14 +103,28 @@ class CMKCoreType(StrEnum):
 
 NO_TRACING = TracingConfig(collect_traces=False, otlp_endpoint="", extra_resource_attributes={})
 
-# A node of a HW/SW inventory tree, as host_inv_api.py serialises it:
-# {"Attributes": {"Pairs": {...}}, "Table": {"Rows": [...]}, "Nodes": {<name>: <node>}}
-InventoryNode = Mapping[str, object]
+# The JSON of host_inv_api.py. The whole host tree is validated, so the values must cover
+# everything the inventory serialiser can emit, not only what a test reads.
+_InventoryValue = int | float | str | bool | None
 
 
-def _as_mapping(value: object) -> InventoryNode:
-    assert isinstance(value, Mapping), f"Expected a mapping, got {value!r}"
-    return value
+class InventoryAttributes(BaseModel):
+    pairs: Mapping[str, _InventoryValue] | None = Field(default=None, alias="Pairs")
+
+
+class InventoryTable(BaseModel):
+    rows: Sequence[Mapping[str, _InventoryValue]] | None = Field(default=None, alias="Rows")
+
+
+class InventoryNode(BaseModel):
+    attributes: InventoryAttributes = Field(alias="Attributes")
+    table: InventoryTable = Field(alias="Table")
+    nodes: Mapping[str, InventoryNode] = Field(alias="Nodes")
+
+
+class _HostInvApiResponse(BaseModel):
+    result_code: Literal[0, 1]
+    result: str | Mapping[str, InventoryNode]
 
 
 class Site:
@@ -705,18 +720,18 @@ class Site:
         See https://docs.checkmk.com/latest/en/inventory.html#external. There is no REST API
         endpoint for HW/SW inventory data, so this page is the supported way in from outside.
         """
-        payload = _as_mapping(
+        response = _HostInvApiResponse.model_validate(
             web.get("host_inv_api.py", params={"host": host_name, "output_format": "json"}).json()
         )
-        assert payload["result_code"] == 0, f"host_inv_api.py failed: {payload['result']}"
-        return _as_mapping(_as_mapping(payload["result"])[host_name])
+        assert not isinstance(response.result, str), f"host_inv_api.py failed: {response.result}"
+        return response.result[host_name]
 
     @staticmethod
     def _inventory_node(tree: InventoryNode, path: Sequence[str]) -> InventoryNode:
         node = tree
         for node_name in path:
             try:
-                node = _as_mapping(_as_mapping(node["Nodes"])[node_name])
+                node = node.nodes[node_name]
             except KeyError as exc:
                 exc.add_note(f"The inventory tree has no {' > '.join(path)!r} node.")
                 raise exc
@@ -724,26 +739,15 @@ class Site:
 
     @staticmethod
     def get_inventory_attributes(tree: InventoryNode, path: Sequence[str]) -> Mapping[str, str]:
-        attributes = _as_mapping(Site._inventory_node(tree, path)["Attributes"])
-        try:
-            pairs = attributes["Pairs"]
-        except KeyError as exc:
-            exc.add_note(
-                f"The {' > '.join(path)!r} node has no 'Pairs' key, so it has no attributes."
-            )
-            raise exc
-        return {str(k): str(v) for k, v in _as_mapping(pairs).items()}
+        pairs = Site._inventory_node(tree, path).attributes.pairs
+        assert pairs is not None, f"The {' > '.join(path)!r} node has no attributes."
+        return {key: str(value) for key, value in pairs.items()}
 
     @staticmethod
     def get_inventory_rows(tree: InventoryNode, path: Sequence[str]) -> Sequence[Mapping[str, str]]:
-        table = _as_mapping(Site._inventory_node(tree, path)["Table"])
-        try:
-            rows = table["Rows"]
-        except KeyError as exc:
-            exc.add_note(f"The {' > '.join(path)!r} node has no 'Rows' key, so it has no table.")
-            raise exc
-        assert isinstance(rows, list), f"Expected a list of rows, got {rows!r}"
-        return [{str(k): str(v) for k, v in _as_mapping(row).items()} for row in rows]
+        rows = Site._inventory_node(tree, path).table.rows
+        assert rows is not None, f"The {' > '.join(path)!r} node has no table."
+        return [{key: str(value) for key, value in row.items()} for row in rows]
 
     def execute(
         self,

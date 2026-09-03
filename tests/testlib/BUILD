@@ -47,6 +47,7 @@ py_library(
         requirement("pexpect"),
         requirement("playwright"),
         requirement("psutil"),
+        requirement("pydantic"),
         requirement("pyjwt"),
         requirement("pyyaml"),
         requirement("pytest"),

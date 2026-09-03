@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.flags._config import (
     CONFIG_FILENAME,
-    load_release_flags,
-    release_field,
-    ReleaseFlagConfig,
+    experimental_field,
+    ExperimentalFlagConfig,
+    load_experimental_flags,
 )
 
 __all__ = [
     "CONFIG_FILENAME",
-    "load_release_flags",
-    "release_field",
-    "ReleaseFlagConfig",
+    "load_experimental_flags",
+    "experimental_field",
+    "ExperimentalFlagConfig",
 ]

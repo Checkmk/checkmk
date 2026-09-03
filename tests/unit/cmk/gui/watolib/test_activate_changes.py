@@ -103,8 +103,8 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.FILE,
-            ident="release_flags",
-            site_path="etc/check_mk/release_flag.json",
+            ident="experimental_flags",
+            site_path="etc/check_mk/experimental_flag.json",
         ),
         ReplicationPath.make(
             ty=ReplicationPathType.DIR,

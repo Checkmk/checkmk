@@ -4,25 +4,34 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator, Mapping
-from typing import Final
+from typing import Literal
+
+from pydantic import BaseModel
 
 from .bakery_api.v1 import register, WindowsConfigEntry
 
-_TO_YAML: Final = {
-    "logging_level": "debug",
-    "max_log_file_count": "max_file_count",
-    "max_log_file_size": "max_file_size",
-    "log_to_windbg": "windbg",
-}
+
+class _Config(BaseModel):
+    logging_level: Literal["no", "yes", "all"] | None = None
+    max_log_file_count: int | None = None
+    max_log_file_size: int | None = None
+    log_to_windbg: bool | None = None
 
 
-def get_logging_windows_config(
-    conf: Mapping[str, str | int | bool],
-) -> Iterator[WindowsConfigEntry]:
-    yield from (
-        WindowsConfigEntry(path=["global", "logging", _TO_YAML[key]], content=value)
-        for key, value in conf.items()
-    )
+def get_logging_windows_config(conf: Mapping[str, object]) -> Iterator[WindowsConfigEntry]:
+    config = _Config.model_validate(conf)
+    if config.logging_level is not None:
+        yield WindowsConfigEntry(path=["global", "logging", "debug"], content=config.logging_level)
+    if config.max_log_file_count is not None:
+        yield WindowsConfigEntry(
+            path=["global", "logging", "max_file_count"], content=config.max_log_file_count
+        )
+    if config.max_log_file_size is not None:
+        yield WindowsConfigEntry(
+            path=["global", "logging", "max_file_size"], content=config.max_log_file_size
+        )
+    if config.log_to_windbg is not None:
+        yield WindowsConfigEntry(path=["global", "logging", "windbg"], content=config.log_to_windbg)
 
 
 register.bakery_plugin(

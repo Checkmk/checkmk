@@ -3,78 +3,89 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    Integer,
+    SingleChoice,
+    SingleChoiceElement,
+    validators,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsWindowsAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer
-from cmk.ruleset_matcher.definition import RuleGroup
 
-
-def _valuespec_agent_config_logging() -> Dictionary:
+def _form_spec() -> Dictionary:
     return Dictionary(
-        title=_("Windows agent logging"),
-        elements=[
-            (
-                "logging_level",
-                DropdownChoice(
-                    title=_("Logging level"),
-                    label=_("Set the logging level for Windows agent"),
-                    help=_(
-                        "This setting determines how detailed the log file of the Windows agent will be."
+        elements={
+            "logging_level": DictElement(
+                parameter_form=SingleChoice(
+                    title=Title("Logging level"),
+                    label=Label("Set the logging level for Windows agent"),
+                    help_text=Help(
+                        "This setting determines how detailed the log file of the Windows agent "
+                        "will be."
                     ),
-                    choices=[
-                        ("no", _("Write to log file only most important events")),
-                        ("yes", _("Write to log file all important events and all warnings")),
-                        ("all", _("Write to log file everything")),
+                    elements=[
+                        SingleChoiceElement(
+                            name="no",
+                            title=Title("Write to log file only most important events"),
+                        ),
+                        SingleChoiceElement(
+                            name="yes",
+                            title=Title("Write to log file all important events and all warnings"),
+                        ),
+                        SingleChoiceElement(
+                            name="all",
+                            title=Title("Write to log file everything"),
+                        ),
                     ],
-                    default_value="yes",
+                    prefill=DefaultValue("yes"),
                 ),
             ),
-            (
-                "max_log_file_count",
-                Integer(
-                    title=_("Maximal number of log files to backup"),
-                    default_value=5,
-                    help=_(
+            "max_log_file_count": DictElement(
+                parameter_form=Integer(
+                    title=Title("Maximal number of log files to backup"),
+                    help_text=Help(
                         "Number of log files used during log rotation as a backup. "
                         "Once this number of log files is exceeded, "
                         "the oldest log file will be deleted."
                     ),
-                    minvalue=0,
-                    maxvalue=64,
+                    prefill=DefaultValue(5),
+                    custom_validate=(validators.NumberInRange(min_value=0, max_value=64),),
                 ),
             ),
-            (
-                "max_log_file_size",
-                Integer(
-                    title=_("Maximal log file size"),
-                    default_value=8000000,
-                    help=_("Maximal size of a log file"),
-                    minvalue=256 * 1024,
-                    maxvalue=256 * 1024 * 1024,
-                ),
-            ),
-            (
-                "log_to_windbg",
-                Checkbox(
-                    title=_("Windows debugging"),
-                    label=_("write log messages to the Windows debugging interface"),
-                    default_value=False,
-                    help=_(
-                        "Enable/disable logging to Windows debugging interface. Off by default. View with <i>WinDbg</i>"
+            "max_log_file_size": DictElement(
+                parameter_form=Integer(
+                    title=Title("Maximal log file size"),
+                    help_text=Help("Maximal size of a log file"),
+                    unit_symbol="B",
+                    prefill=DefaultValue(8000000),
+                    custom_validate=(
+                        validators.NumberInRange(min_value=256 * 1024, max_value=256 * 1024 * 1024),
                     ),
                 ),
             ),
-        ],
+            "log_to_windbg": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Windows debugging"),
+                    label=Label("write log messages to the Windows debugging interface"),
+                    help_text=Help(
+                        "Enable/disable logging to Windows debugging interface. Off by default. "
+                        "View with <i>WinDbg</i>"
+                    ),
+                    prefill=DefaultValue(False),
+                ),
+            ),
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsWindowsAgent,
-        match_type="dict",
-        name=RuleGroup.AgentConfig("logging"),
-        valuespec=_valuespec_agent_config_logging,
-    )
+rule_spec_logging = AgentConfig(
+    title=Title("Windows agent logging"),
+    name="logging",
+    topic=Topic.WINDOWS,
+    parameter_form=_form_spec,
 )

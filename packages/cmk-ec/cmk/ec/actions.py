@@ -6,7 +6,7 @@
 import os
 import subprocess
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
 
 from cmk.events import event_context
@@ -189,7 +189,7 @@ def _do_email_action(
     to = _prepare_text(action_config["to"], event_columns, event)
     subject = _prepare_text(action_config["subject"], event_columns, event)
     body = _prepare_text(action_config["body"], event_columns, event)
-    _send_email(config, to, subject, body, logger)
+    _send_email(config, to=to, subject=subject, body=body, logger=logger)
     history.add(event, "EMAIL", user, f"{to}|{subject}")
 
 
@@ -227,66 +227,58 @@ def _substitute_event_tags(
     return text
 
 
-def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger) -> bool:
-    command_utf8 = [
-        b"mail",
-        b"-S",
-        b"sendcharsets=utf-8",
-        b"-s",
-        subject.encode("utf-8"),
-        to.encode("utf-8"),
-    ]
-
-    if config["debug_rules"]:
-        logger.info(
-            "  Executing: %(command)s",
-            {"command": " ".join(x.decode("utf-8") for x in command_utf8)},
-        )
-
-    # FIXME: This may lock on too large buffer. We should move all "mail sending" code
-    # to a general place and fix this for all our components (notification plugins,
-    # notify.py, this one, ...)
+def run_in_subprocess(
+    *,
+    args: Sequence[str],
+    input_: str,
+    env: Mapping[str, str] | None,
+    description: str,
+    logger: Logger,
+) -> None:
     completed_process = subprocess.run(
-        command_utf8,
+        args,
+        input=input_,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         close_fds=True,
-        capture_output=True,
         encoding="utf-8",
-        input=body,
         check=False,
     )
-
-    logger.info("  Exitcode: %(exit_code)d", {"exit_code": completed_process.returncode})
     if completed_process.returncode:
-        logger.info("  Error: Failed to send the mail.")
-        for line in (completed_process.stdout + completed_process.stderr).splitlines():
-            logger.info("  Output: %(line)s", {"line": line.rstrip()})
-        return False
+        logger.error(
+            "%(description) failed with exit code %(returncode)",
+            {"description": description, "returncode": completed_process.returncode},
+        )
+        for line in completed_process.stdout.splitlines():
+            logger.error("  output: %(line)s", {"line": line})
+    else:
+        logger.info("%(description) succeeded", {"description": description})
 
-    return True
+
+def _send_email(config: Config, *, to: str, subject: str, body: str, logger: Logger) -> None:
+    args = ["mail", "-S", "sendcharsets=utf-8", "-s", subject, to]
+    if config["debug_rules"]:
+        logger.info("  Executing: %(command)s", {"command": " ".join(args)})
+    run_in_subprocess(args=args, input_=body, env=None, description="sending email", logger=logger)
 
 
 def _execute_script(
     event_columns: Iterable[tuple[str, object]], body: str, event: Event, logger: Logger
 ) -> None:
-    script_env = os.environ.copy()
-    for key, value in _get_event_tags(event_columns, event).items():
-        script_env["CMK_" + key.upper()] = value
-
-    # Traps can contain 0-Bytes. We need to remove this from the script
-    # body. Otherwise subprocess.Popen will crash.
-    completed_process = subprocess.run(
-        ["/bin/bash"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        close_fds=True,
-        env=script_env,
-        encoding="utf-8",
-        input=body,
-        check=False,
+    run_in_subprocess(
+        args=["/bin/bash"],
+        input_=body,
+        env=(
+            os.environ
+            | {
+                "CMK_" + key.upper(): value  #
+                for key, value in _get_event_tags(event_columns, event).items()
+            }
+        ),
+        description="executing script",
+        logger=logger,
     )
-    logger.info("  Exit code: %(exit_code)d", {"exit_code": completed_process.returncode})
-    if completed_process.stdout:
-        logger.info("  Output: '%(output)s'", {"output": completed_process.stdout})
 
 
 def _get_event_tags(
@@ -304,13 +296,10 @@ def _get_event_tags(
     def to_string(v: object) -> str:
         return v if isinstance(v, str) else str(v)
 
-    tags: dict[str, str] = {}
-    for key, value in substs:
-        value = " ".join(map(to_string, value)) if isinstance(value, tuple) else to_string(value)
-
-        tags[key] = value
-
-    return tags
+    return {
+        key: " ".join(map(to_string, value)) if isinstance(value, tuple) else to_string(value)
+        for key, value in substs
+    }
 
 
 # .
@@ -379,25 +368,13 @@ def do_notify(
         )  # context is TypedDict which is dict[str, object], in fact it is dict[str, str]
     )
 
-    completed_process = subprocess.run(
-        ["cmk", "--notify", "stdin"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        close_fds=True,
-        encoding="utf-8",
-        input=context_string,
-        check=False,
+    run_in_subprocess(
+        args=["cmk", "--notify", "stdin"],
+        input_=context_string,
+        env=None,
+        description=f"forwarding notification for event {event['id']} to Checkmk",
+        logger=logger,
     )
-    if completed_process.returncode:
-        logger.error(
-            "Error notifying via Check_MK: %(output)s",
-            {"output": completed_process.stdout.strip()},
-        )
-    else:
-        logger.info(
-            "Successfully forwarded notification for event %(event_id)d to Check_MK",
-            {"event_id": event["id"]},
-        )
 
 
 def _create_notification_context(

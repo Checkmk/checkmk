@@ -636,7 +636,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_mysql', [])
 
 agent_config['mk_mysql'] = [
-{'id': 'e82fd570-f001-4f9a-87c0-1cfea1ac6e02', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'e82fd570-f001-4f9a-87c0-1cfea1ac6e02', 'value': {'deployment': ('sync', None), 'credentials': ('no_credentials', None), 'sockets': [], 'host': '', 'custom_port': ('default', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_mysql']
 
 

@@ -301,6 +301,9 @@ def datetime_serializer(obj):
     """Custom serializer to pass to json dump functions"""
     if isinstance(obj, datetime):
         return str(obj)
+    if isinstance(obj, bytes):
+        # e.g. WAFv2 ByteMatchStatement.SearchString is returned by boto3 as bytes
+        return obj.decode("utf-8", errors="replace")
     # fall back to json default behaviour:
     raise TypeError("%r is not JSON serializable" % obj)
 

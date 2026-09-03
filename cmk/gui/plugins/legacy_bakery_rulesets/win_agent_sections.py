@@ -3,19 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary, MultipleChoice
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsWindowsAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.legacy_bakery_rulesets._windows_sections import windows_sections
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import ListChoice
-from cmk.ruleset_matcher.definition import RuleGroup
+from .windows_sections import migrate_sections, section_choices, WINDOWS_SECTIONS
 
 
-def _valuespec_agent_config_win_agent_sections() -> ListChoice:
-    return ListChoice(
-        title=_("Enabled sections (Windows agent)"),
-        help=_(
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
             "This option allows to select specific sections of the Checkmk agent. "
             "All of the sections checked below will be executed. "
             "Sections that are not selected here will be skipped. "
@@ -25,15 +22,25 @@ def _valuespec_agent_config_win_agent_sections() -> ListChoice:
             "The most CPU performance is needed by the Eventlog monitoring and the "
             "performance counters. "
         ),
-        choices=[(s.name, s.title) for s in windows_sections()],
-        default_value=[s.name if s.enabled_by_default else "" for s in windows_sections()],
+        migrate=migrate_sections,
+        elements={
+            "sections": DictElement(
+                required=True,
+                parameter_form=MultipleChoice(
+                    title=Title("Enabled sections"),
+                    elements=section_choices(),
+                    prefill=DefaultValue(
+                        [s.name for s in WINDOWS_SECTIONS if s.enabled_by_default]
+                    ),
+                ),
+            ),
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsWindowsAgent,
-        name=RuleGroup.AgentConfig("win_agent_sections"),
-        valuespec=_valuespec_agent_config_win_agent_sections,
-    )
+rule_spec_win_agent_sections = AgentConfig(
+    title=Title("Enabled sections (Windows agent)"),
+    name="win_agent_sections",
+    topic=Topic.WINDOWS,
+    parameter_form=_form_spec,
 )

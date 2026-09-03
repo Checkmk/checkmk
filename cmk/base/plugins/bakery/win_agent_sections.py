@@ -3,13 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+
+from pydantic import BaseModel
 
 from .bakery_api.v1 import register, WindowsConfigGenerator, WindowsGlobalConfigEntry
 
 
-def get_win_agent_sections_windows_config(conf: Sequence[str]) -> WindowsConfigGenerator:
-    yield WindowsGlobalConfigEntry(name="sections", content=list(conf))
+class _Config(BaseModel):
+    sections: Sequence[str]
+
+
+def get_win_agent_sections_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
+    config = _Config.model_validate(conf)
+    yield WindowsGlobalConfigEntry(name="sections", content=list(config.sections))
 
 
 register.bakery_plugin(

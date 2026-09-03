@@ -3,42 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary, MultipleChoice
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsWindowsAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.legacy_bakery_rulesets._windows_sections import windows_sections
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import ListChoice
-from cmk.ruleset_matcher.definition import RuleGroup
+from .windows_sections import migrate_sections, section_choices, WINDOWS_SECTIONS
 
 
-def _valuespec_agent_config_win_agent_disabled_sections() -> ListChoice:
-    return ListChoice(
-        title=_("Disabled sections (Windows agent)"),
-        help=" ".join(
-            (
-                _("This option allows to skip specific sections of the Checkmk agent."),
-                _("Selected sections will not be executed by the agent."),
-                _(
-                    "Skipping sections reduces CPU load on the monitored host and the amount "
-                    "of transferred data. However, it may result in the absence of the associated "
-                    "Checkmk service or services."
-                ),
-                _(
-                    "Most of the CPU performance is needed by the event log monitoring and the "
-                    "performance counters."
-                ),
-            )
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "This option allows to skip specific sections of the Checkmk agent. "
+            "Selected sections will not be executed by the agent. "
+            "Skipping sections reduces CPU load on the monitored host and the amount "
+            "of transferred data. However, it may result in the absence of the associated "
+            "Checkmk service or services. "
+            "Most of the CPU performance is needed by the event log monitoring and the "
+            "performance counters."
         ),
-        choices=[(s.name, s.title) for s in windows_sections()],
-        default_value=[s.name if s.disabled_by_default else "" for s in windows_sections()],
+        migrate=migrate_sections,
+        elements={
+            "sections": DictElement(
+                required=True,
+                parameter_form=MultipleChoice(
+                    title=Title("Disabled sections"),
+                    elements=section_choices(),
+                    prefill=DefaultValue(
+                        [s.name for s in WINDOWS_SECTIONS if s.disabled_by_default]
+                    ),
+                ),
+            ),
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsWindowsAgent,
-        name=RuleGroup.AgentConfig("win_agent_disabled_sections"),
-        valuespec=_valuespec_agent_config_win_agent_disabled_sections,
-    )
+rule_spec_win_agent_disabled_sections = AgentConfig(
+    title=Title("Disabled sections (Windows agent)"),
+    name="win_agent_disabled_sections",
+    topic=Topic.WINDOWS,
+    parameter_form=_form_spec,
 )

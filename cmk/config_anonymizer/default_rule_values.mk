@@ -1014,7 +1014,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_agent_disabled_sections', [])
 
 agent_config['win_agent_disabled_sections'] = [
-{'id': '91ca1245-3a49-4d38-955b-79d0ddc1fa7b', 'value': [], 'condition': {}, 'options': {'disabled': False}},
+{'id': '91ca1245-3a49-4d38-955b-79d0ddc1fa7b', 'value': {'sections': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_agent_disabled_sections']
 
 
@@ -1023,7 +1023,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_agent_sections', [])
 
 agent_config['win_agent_sections'] = [
-{'id': 'df88124d-af99-4768-a582-d540757ec8c3', 'value': ['check_mk', 'uptime', 'systemtime', 'w32time_status', 'w32time_peers', 'df', 'mem', 'ps', 'services', 'winperf', 'logwatch', 'logfiles', 'fileinfo', 'plugins', 'local', 'mrpe', 'spool', 'wmi_cpuload', 'msexch', 'wmi_webservices', 'dotnet_clrmemory', 'openhardwaremonitor', 'skype'], 'condition': {}, 'options': {'disabled': False}},
+{'id': 'df88124d-af99-4768-a582-d540757ec8c3', 'value': {'sections': ['check_mk', 'uptime', 'systemtime', 'w32time_status', 'w32time_peers', 'df', 'mem', 'ps', 'services', 'winperf', 'logwatch', 'logfiles', 'fileinfo', 'plugins', 'local', 'mrpe', 'spool', 'wmi_cpuload', 'msexch', 'wmi_webservices', 'dotnet_clrmemory', 'openhardwaremonitor', 'skype']}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_agent_sections']
 
 

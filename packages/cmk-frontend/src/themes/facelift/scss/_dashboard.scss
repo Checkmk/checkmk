@@ -25,6 +25,12 @@ body.dashboard {
   }
 }
 
+// Would eat the few pixels of slack that keep the viewport-sized dashboard
+// scrollbar-free, letting a horizontal scrollbar pull in a vertical one.
+#main_page_content:has(div#dashboard) {
+  padding-bottom: 0;
+}
+
 div#dashboard {
   position: relative;
   padding: 0;

@@ -13,8 +13,7 @@ import pytest
 from cmk.automations import results
 from cmk.automations.results import SerializedResult, SetAutochecksInput
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.discovery import DiscoveryReport, DiscoverySettings
-from cmk.checkengine.discovery._autochecks import AutochecksSerializer
+from cmk.checkengine.discovery import AutochecksSerializer, DiscoveryReport, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils.servicename import ServiceName

@@ -9,7 +9,7 @@ import subprocess
 
 import pytest
 
-from cmk.checkengine.discovery._autochecks import AutochecksSerializer
+from cmk.checkengine.discovery import AutochecksSerializer
 from cmk.utils import paths
 from tests.system.singlesite.linux_test_host import create_linux_test_host
 from tests.testlib.site import Site

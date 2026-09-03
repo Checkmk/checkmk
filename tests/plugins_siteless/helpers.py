@@ -28,8 +28,7 @@ from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import OK
 from cmk.checkengine.checkerplugin import ConfiguredService
-from cmk.checkengine.discovery import ABCDiscoveryConfig, commandline_discovery
-from cmk.checkengine.discovery._autochecks import AutochecksStore
+from cmk.checkengine.discovery import ABCDiscoveryConfig, AutochecksStore, commandline_discovery
 from cmk.checkengine.fetcher_abc import Mode
 from cmk.checkengine.filecache import AgentFileCache, FileCacheMode, MaxAge
 from cmk.checkengine.helper_interface import SourceInfo

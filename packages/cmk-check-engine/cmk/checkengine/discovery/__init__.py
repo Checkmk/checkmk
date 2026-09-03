@@ -20,6 +20,7 @@ Public API is re-exported from this module via __all__.
 from ._autochecks import (
     AutocheckServiceWithNodes,
     AutochecksMemoizer,
+    AutochecksSerializer,
     AutochecksStore,
     merge_cluster_autochecks,
     remove_autochecks_of_host,
@@ -54,6 +55,7 @@ __all__ = [
     "analyse_services",
     "AutocheckServiceWithNodes",
     "AutochecksMemoizer",
+    "AutochecksSerializer",
     "AutochecksStore",
     "autodiscovery",
     "automation_discovery",

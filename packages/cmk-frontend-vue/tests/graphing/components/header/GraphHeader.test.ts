@@ -5,7 +5,7 @@
  */
 import type * as intl from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 
 import GraphHeader from '@/graphing/components/header/GraphHeader.vue'
 import type { BurgerMenuGroup } from '@/graphing/types'
@@ -30,8 +30,13 @@ test('omits the graph title when showTitle is not set', () => {
   expect(screen.queryByText('CPU utilization')).not.toBeInTheDocument()
 })
 
+const AGGREGATED_TIME_RANGE = { start: JUNE_15_NOON_UTC, end: JUNE_15_NOON_UTC + 3600, step: 300 }
+const RAW_TIME_RANGE = { start: JUNE_15_NOON_UTC, end: JUNE_15_NOON_UTC + 3600, step: 60 }
+
 test('the consolidation dropdown shows the selected function', async () => {
-  render(GraphHeader, { props: { showConsolidation: true, consolidationFn: 'max' } })
+  render(GraphHeader, {
+    props: { showConsolidation: true, consolidationFn: 'max', timeRange: AGGREGATED_TIME_RANGE }
+  })
 
   await waitFor(() =>
     expect(screen.getByRole('combobox', { name: 'Graph values' })).toHaveTextContent('Max')
@@ -41,7 +46,7 @@ test('the consolidation dropdown shows the selected function', async () => {
 test('selecting a consolidation function shows the new selection and emits update:consolidationFn', async () => {
   const user = userEvent.setup()
   const { emitted } = render(GraphHeader, {
-    props: { showConsolidation: true, consolidationFn: 'max' }
+    props: { showConsolidation: true, consolidationFn: 'max', timeRange: AGGREGATED_TIME_RANGE }
   })
   const dropdown = screen.getByRole('combobox', { name: 'Graph values' })
 
@@ -108,15 +113,27 @@ test('switching the zoom mode emits update:zoomMode', async () => {
 })
 
 test('omits the consolidation dropdown unless showConsolidation is set', () => {
-  render(GraphHeader, {})
+  render(GraphHeader, { props: { timeRange: AGGREGATED_TIME_RANGE } })
 
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
 })
 
-test('shows the consolidation dropdown when showConsolidation is set', () => {
-  render(GraphHeader, { props: { showConsolidation: true } })
+test('shows the consolidation dropdown when showConsolidation is set and the data is aggregated', () => {
+  render(GraphHeader, { props: { showConsolidation: true, timeRange: AGGREGATED_TIME_RANGE } })
 
   expect(screen.getByRole('combobox', { name: 'Graph values' })).toBeInTheDocument()
+})
+
+test('hides the consolidation dropdown while the time range is unknown', () => {
+  render(GraphHeader, { props: { showConsolidation: true } })
+
+  expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+})
+
+test('hides the consolidation dropdown once the data is at raw, unaggregated resolution', () => {
+  render(GraphHeader, { props: { showConsolidation: true, timeRange: RAW_TIME_RANGE } })
+
+  expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
 })
 
 test('hides the zoom selector when showControls is false', () => {
@@ -149,7 +166,7 @@ test('exposes the controls as an accessible group', () => {
   ).toBeInTheDocument()
 })
 
-test('draws the burger menu at the right-hand end of the header', () => {
+test('draws the burger menu inside the header trailing action group', () => {
   const groups: BurgerMenuGroup[] = [
     {
       heading: 'Export',
@@ -161,20 +178,15 @@ test('draws the burger menu at the right-hand end of the header', () => {
       showTitle: true,
       title: 'CPU utilization',
       showConsolidation: true,
+      timeRange: AGGREGATED_TIME_RANGE,
       showBurgerMenu: true,
       burgerMenuGroups: groups
     }
   })
 
-  const title = screen.getByText('CPU utilization')
-  const dropdown = screen.getByRole('combobox', { name: 'Graph values' })
-  const zoomSwitch = screen.getByRole('switch')
-  const burgerMenuButton = screen.getByRole('button')
+  const [valuesAndTimeGroup, zoomAndMenuGroup] = screen.getAllByRole('group')
 
-  // The header lays its children out left to right, so DOM order matches
-  // visual order. The burger menu must follow every other control to end
-  // up drawn furthest to the right.
-  for (const control of [title, dropdown, zoomSwitch]) {
-    expect(control.compareDocumentPosition(burgerMenuButton)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
-  }
+  expect(valuesAndTimeGroup).toHaveAccessibleName('Graph values and time information')
+  expect(zoomAndMenuGroup).toHaveAccessibleName('Graph zoom controls and action menu')
+  expect(within(zoomAndMenuGroup!).getByRole('button')).toBeInTheDocument()
 })

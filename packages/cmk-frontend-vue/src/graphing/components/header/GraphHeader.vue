@@ -99,8 +99,15 @@ const titleEl = computed<HTMLElement | null>(() => (titleComp.value?.$el as HTML
 const valuesAndTimeEl = ref<HTMLElement | null>(null)
 const zoomAndMenuEl = ref<HTMLElement | null>(null)
 
+const RAW_DATA_STEP_SECONDS = 60
+
+const dataIsAggregated = computed(
+  () => !!props.timeRange && props.timeRange.step > RAW_DATA_STEP_SECONDS
+)
+const showConsolidationControl = computed(() => !!props.showConsolidation && dataIsAggregated.value)
+
 const showValuesAndTime = computed(
-  () => !!props.showConsolidation || (!!props.showTimestamp && !!props.timeRange)
+  () => showConsolidationControl.value || (!!props.showTimestamp && !!props.timeRange)
 )
 const showZoomAndMenu = computed(() => props.showControls || !!props.showBurgerMenu)
 
@@ -149,7 +156,7 @@ const resolutionLabel = computed(() => {
       role="group"
       :aria-label="_t('Graph values and time information')"
     >
-      <template v-if="showConsolidation">
+      <template v-if="showConsolidationControl">
         <span class="graphing-graph-header__values-label">{{ _t('Graph values') }}</span>
         <CmkDropdown
           v-model="consolidationModel"

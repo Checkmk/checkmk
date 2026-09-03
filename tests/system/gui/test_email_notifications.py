@@ -15,18 +15,13 @@ from playwright.sync_api import expect
 from tests.system.gui.testlib.playwright.plugin import PageGetter
 from tests.system.gui.testlib.playwright.pom.email import EmailPage
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
-from tests.system.gui.testlib.playwright.pom.monitor.service_search import (
-    ServiceSearchPage,
-    ServiceState,
-)
-from tests.system.gui.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
 from tests.system.gui.testlib.playwright.pom.setup.notification_configuration import (
     NotificationConfiguration,
 )
 from tests.system.gui.testlib.playwright.pom.setup.notification_rules import EditNotificationRule
-from tests.system.gui.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.common.utils2 import run
 from tests.testlib.emails import EmailManager
+from tests.testlib.notifications import NotificationTarget
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -45,14 +40,14 @@ def _copy_file(
 
 
 @pytest.fixture(name="modify_notification_rule", scope="function")
-def _modify_notification_rule(test_site: Site, linux_hosts: list[str]) -> Iterator[str]:
+def _modify_notification_rule(test_site: Site, configured_host: str) -> Iterator[str]:
     """Modify existing email notification rule to match a specific host.
 
     * Copy the existing notification rule file to a backup
     * Modify the notification rule to match a specific host
     * Restore the original notification rule file after the test execution
     """
-    hostname = linux_hosts[0]
+    hostname = configured_host
 
     notification_rule_path = test_site.path("etc/check_mk/conf.d/wato/notifications.mk")
     notification_rule_backup_path = notification_rule_path.parent / "notifications.mk.bak"
@@ -71,9 +66,9 @@ def _modify_notification_rule(test_site: Site, linux_hosts: list[str]) -> Iterat
 
 
 @pytest.mark.skip(reason="CMK-36115")
-def test_filesystem_email_notifications(
+def test_email_notification_matches_configuration(
     dashboard_page: MainDashboard,
-    linux_hosts: list[str],
+    notification_host: NotificationTarget,
     notification_user: tuple[str, str],
     email_manager: EmailManager,
     test_site: Site,
@@ -82,17 +77,16 @@ def test_filesystem_email_notifications(
 ) -> None:
     """Test that email notification is sent and contain expected data.
 
-    Test that when email notifications are set up and the status of 'Filesystem /' service changes,
-    the email notification is sent and contains the expected data.
+    Test that when email notifications are set up and the status of a monitored service
+    changes, the email notification is sent and contains the expected data.
     """
     email_manager.temp_folder = tmp_path
     username, email = notification_user
-    host_name = linux_hosts[0]
-    service_name = "Filesystem /"
+    host_name = notification_host.host_name
+    service_name = notification_host.service_name
     expected_event = "OK -> WARN"
     expected_notification_subject = f"Checkmk: {host_name}/{service_name} {expected_event}"
-    filesystem_rule_description = "Test rule for email notifications"
-    used_space = "10"
+    service_summary = "FAKE WARN"
     notification_description = "Test rule for email notifications"
 
     logger.info("Clone the existing default notification rule")
@@ -107,8 +101,6 @@ def test_filesystem_email_notifications(
     notification_configuration_page.clone_and_edit_button.click()
 
     try:
-        service_search_page = None
-
         logger.info("Modify the cloned rule")
         cloned_notification_rule_page = EditNotificationRule(
             notification_configuration_page.page,
@@ -126,29 +118,10 @@ def test_filesystem_email_notifications(
         default_notification_rule_page.check_disable_rule(True)
         default_notification_rule_page.apply()
 
-        logger.info(
-            (
-                "Add rule for filesystems to change status '%s'"
-                " when used space is more than %s percent"
-            ),
-            expected_event,
-            used_space,
+        logger.info("Set '%s' to WARN to trigger the notification", service_name)
+        test_site.send_service_check_result(
+            host_name, service_name, 1, service_summary, expected_state=1
         )
-        add_rule_filesystem_page = AddRuleFilesystems(dashboard_page.page)
-        add_rule_filesystem_page.check_levels_for_user_free_space(True)
-        add_rule_filesystem_page.description_text_field.fill(filesystem_rule_description)
-        add_rule_filesystem_page.levels_for_used_free_space_warning_text_field.fill(used_space)
-        add_rule_filesystem_page.select_explicit_host(host_name)
-        add_rule_filesystem_page.save_button.click()
-        add_rule_filesystem_page.activate_changes(test_site)
-
-        checkmk_agent = "Check_MK"
-        service_search_page = ServiceSearchPage(dashboard_page.page)
-        logger.info("Reschedule the '%s' service to trigger the notification", checkmk_agent)
-        service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
-        service_search_page.reschedule_check(host_name, checkmk_agent)
-        service_search_page.wait_for_check_status_update(host_name, service_name, ServiceState.WARN)
-        service_summary = service_search_page.service_summary(host_name, service_name).inner_text()
 
         email_file_path = email_manager.wait_for_email(expected_notification_subject)
         expected_fields = {"To": email}
@@ -156,13 +129,12 @@ def test_filesystem_email_notifications(
             "Host": host_name,
             "Service": service_name,
             "Event": expected_event,
-            "Summary": service_summary.replace("WARN", "(!)"),
+            "Summary": service_summary,
         }
         email_manager.check_email_content(email_file_path, expected_fields, expected_content)
 
         html_file_path = email_manager.copy_html_content_into_file(email_file_path)
         expected_content["Event"] = "OK–›WARN"
-        expected_content["Summary"] = service_summary
 
         notification_configuration_page.navigate()
         # The notifications stats need to be read -> open overview
@@ -176,24 +148,6 @@ def test_filesystem_email_notifications(
         new_page.close()
 
     finally:
-        if service_search_page is not None:
-            filesystems_rules_page = Ruleset(
-                service_search_page.page,
-                "File systems (used space and growth)",
-                "checkgroup_parameters:filesystem",
-            )
-            logger.info("Delete the filesystems rule")
-            filesystems_rules_page.delete_rule(rule_id=filesystem_rule_description)
-            filesystems_rules_page.activate_changes(test_site)
-
-            # Expect for the service to be OK after rule removal
-            service_search_page.navigate()
-            service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
-            service_search_page.reschedule_check(host_name, checkmk_agent)
-            service_search_page.wait_for_check_status_update(
-                host_name, service_name, ServiceState.OK
-            )
-
         logger.info("Delete the created rule")
 
         notification_configuration_page.navigate()

@@ -53,6 +53,7 @@ from tests.system.gui.testlib.playwright.pom.setup.licensing import Licensing
 from tests.testlib.common.repo import repo_path
 from tests.testlib.common.utils2 import is_cleanup_enabled, run
 from tests.testlib.emails import EmailManager
+from tests.testlib.notifications import create_host, create_notification_host, NotificationTarget
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import (
     ADMIN_USER,
@@ -368,6 +369,20 @@ def fixture_linux_hosts(agent_dump_hosts: dict[str, list]) -> list[str]:
 def fixture_windows_hosts(agent_dump_hosts: dict[str, list]) -> list[str]:
     """Return the list of windows hosts created using agent dump."""
     return agent_dump_hosts["windows-2.3.0p10"]
+
+
+@pytest.fixture(name="configured_host")
+def fixture_configured_host(test_site: Site) -> Iterator[str]:
+    """Return the name of a host that exists in the configuration, without any agent data."""
+    with create_host(test_site, _unique_faker.hostname()) as host_name:
+        yield host_name
+
+
+@pytest.fixture(name="notification_host")
+def fixture_notification_host(test_site: Site) -> Iterator[NotificationTarget]:
+    """Return a host with a service whose state the test controls."""
+    with create_notification_host(test_site, _unique_faker.hostname()) as notification_host:
+        yield notification_host
 
 
 @pytest.fixture(name="email_manager", scope="session")

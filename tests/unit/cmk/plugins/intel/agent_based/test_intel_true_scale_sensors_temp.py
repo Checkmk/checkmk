@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.intel_true_scale_sensors_temp import (
+from cmk.plugins.intel.agent_based.intel_true_scale_sensors_temp import (
     _check_intel_true_scale_sensors_temp,
     discover_intel_true_scale_sensors_temp,
     parse_intel_true_scale_sensors,

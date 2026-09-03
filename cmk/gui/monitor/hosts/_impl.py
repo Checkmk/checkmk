@@ -16,6 +16,12 @@ from typing import cast
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
+from cmk.gui.utils.host_relation_kinds import kind_accepts
+from cmk.gui.utils.host_relations import (
+    parse_resolved_relations,
+    RELATIONS_CUSTOM_VARIABLE,
+    ResolvedRelation,
+)
 from cmk.livestatus_client import (
     LivestatusClient,
     MultiSiteConnection,
@@ -73,6 +79,7 @@ class LiveStatusHostRepository:
         sorters: Sequence[HostSort],
         filters: HostFilter,
         fields: Set[HostOptionalField],
+        visible_relations: frozenset[tuple[str, str]] | None,
     ) -> Sequence[Host]:
         query_ = _sanitize_query(query)
         extra_headers = [
@@ -82,6 +89,10 @@ class LiveStatusHostRepository:
         if limit is not None:
             extra_headers.append(f"Limit: {limit}")
         wanted = _columns_to_read(fields, sorters)
+        if HostOptionalField.NUM_RELATIONS in wanted and visible_relations is None:
+            raise ValueError(
+                "Counting relations needs the counterparts visible_relation_hosts() answers with."
+            )
         q = Query(
             [
                 Hosts.name,
@@ -109,7 +120,6 @@ class LiveStatusHostRepository:
             _build_query_filter(query_, fields, self._folders, self._sites),
             extra_headers=extra_headers,
         )
-
         with detailed_connection(self._connection) as conn:
             return sorted(
                 [
@@ -153,6 +163,14 @@ class LiveStatusHostRepository:
                         contacts=list(row["contacts"]) if "contacts" in row else None,
                         contact_groups=(
                             list(row["contact_groups"]) if "contact_groups" in row else None
+                        ),
+                        num_relations=(
+                            None
+                            if visible_relations is None
+                            else _count_relations(
+                                row["custom_variables"].get(RELATIONS_CUSTOM_VARIABLE),
+                                visible_relations,
+                            )
                         ),
                     )
                     for row in q.iterate(conn)
@@ -236,6 +254,36 @@ class LiveStatusHostRepository:
             contacts=[],
             labels=HostLabelValue.by_label(row["labels"], row["label_sources"]),
         )
+
+    def visible_relation_hosts(
+        self, *, fields: Set[HostOptionalField], sorters: Sequence[HostSort]
+    ) -> frozenset[tuple[str, str]] | None:
+        """The hosts a relation may point at for this user, as ``(site, name)``.
+
+        ``None`` when the listing shows no relation count and needs none of this.
+
+        One query for the whole listing: every host that is anyone's counterpart carries the
+        variable, and one missing from the answer is one the ``AuthUser`` filter dropped or one
+        the core does not have - which is exactly what the host details leave out as well.
+
+        Asked *before* the caller narrows the connection to the sites it lists: how many relations
+        a host has is a property of the host, not of the reader's site filter.
+        """
+        if HostOptionalField.NUM_RELATIONS not in _columns_to_read(fields, sorters):
+            return None
+        q = Query([Hosts.name], Hosts.custom_variable_names == RELATIONS_CUSTOM_VARIABLE)
+        with detailed_connection(self._connection) as conn:
+            return frozenset((row["site"], row["name"]) for row in q.iterate(conn))
+
+    def has_any_relations(self) -> bool:
+        # Comparing a list column asks whether it contains the value. ``Limit: 1`` stops the core
+        # at the first match, and the connection's ``AuthUser`` filter applies.
+        q = Query(
+            [Hosts.name],
+            Hosts.custom_variable_names == RELATIONS_CUSTOM_VARIABLE,
+            extra_headers=["Limit: 1"],
+        )
+        return q.first(self._connection) is not None
 
     def count_total(self) -> int:
         # Counted via ``Stats`` on the hosts table rather than the global ``status.num_hosts``
@@ -329,6 +377,26 @@ class LiveStatusHostActions:
             )
 
 
+def _known_relations(raw: str | None) -> list[ResolvedRelation]:
+    """The relations a core reported that this version can place, in the resolved order.
+
+    A relation of a kind only a later version knows has no wording here, so it is left out -
+    counting it would promise something the host details cannot show.
+    """
+    return [
+        relation
+        for relation in parse_resolved_relations(raw)
+        if kind_accepts(relation.kind, relation.direction)
+    ]
+
+
+def _count_relations(raw: str | None, visible: frozenset[tuple[str, str]]) -> int:
+    """Count the relations of a listed host, bounded to the counterparts the host details show as
+    a card - so the number in the column and the cards there always agree.
+    """
+    return sum(1 for link in _known_relations(raw) if (link.site, link.host) in visible)
+
+
 def _sanitize_query(q: str) -> str:
     # TODO: decide on how we want to handle invalid regex? This will likely require coordinating
     # with frontend implementation to pass down errors to the response.
@@ -381,27 +449,31 @@ def _build_query_filter(
     return Or(Hosts.name.contains(query, ignore_case=True), *searched)
 
 
-# Sorting by folder means sorting by the title Setup gives it, which Livestatus cannot do: it only
-# has the file. So the header below merely bounds which rows a ``Limit:`` keeps, and the order the
-# user sees is the natural sort ``host_sorter()`` applies afterwards. Ordering by file is no longer
-# even close to ordering by title - "Data center Munich" lives in ``dc_muc`` - so a listing longer
-# than the limit, sorted by folder, shows the right rows in the right order only within the window
-# the limit kept.
-_LIVESTATUS_COLUMN_OVERRIDES: Mapping[HostSortColumn, str] = {
+# The Livestatus column a sort column orders by, or ``None`` when no site's core has one - "site"
+# is merged client-side, "num_relations" counted from the ``_RELATIONS`` variable, and "folder" is
+# a file rather than the title Setup shows. For those the ``OrderBy`` header merely bounds which
+# rows a ``Limit:`` keeps; the order the user sees is the one ``host_sorter()`` applies afterwards.
+_LIVESTATUS_SORT_COLUMNS: Mapping[HostSortColumn, str | None] = {
+    HostSortColumn.NAME: "name",
+    HostSortColumn.ALIAS: "alias",
+    HostSortColumn.ADDRESS: "address",
+    HostSortColumn.STATE: "state",
+    HostSortColumn.NUM_SERVICES: "num_services",
+    HostSortColumn.NUM_SERVICES_OK: "num_services_ok",
+    HostSortColumn.NUM_SERVICES_WARN: "num_services_warn",
+    HostSortColumn.NUM_SERVICES_CRIT: "num_services_crit",
+    HostSortColumn.NUM_SERVICES_UNKNOWN: "num_services_unknown",
+    HostSortColumn.NUM_SERVICES_PENDING: "num_services_pending",
+    HostSortColumn.LAST_CHECK: "last_check",
+    HostSortColumn.LAST_STATE_CHANGE: "last_state_change",
     HostSortColumn.FOLDER: "filename",
+    HostSortColumn.SITE_ID: None,
+    HostSortColumn.NUM_RELATIONS: None,
 }
-
-# "site" is synthesized client-side by the multisite connection layer while merging rows from
-# each site (see ``detailed_connection``'s ``prepend_site``); it isn't a real column on any single
-# site's Livestatus core. Sending it in an ``OrderBy`` header makes every site reject the query, so
-# it must never reach ``_LIVESTATUS_COLUMN_OVERRIDES``/the raw header below. The correct sort order
-# is still fully applied afterwards in Python by ``host_sorter()``.
-_VIRTUAL_SORT_COLUMNS = frozenset({HostSortColumn.SITE_ID})
 
 
 # Everything beyond the columns every host row needs is read only when a caller asks for it,
-# either through `fields` or by sorting on it - the list is sorted in Python, so a sort column
-# has to be read even when the response omits it.
+# either through `fields` or by sorting on it.
 _OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
     HostOptionalField.ALIAS: (Hosts.alias,),
     HostOptionalField.ADDRESS: (Hosts.address,),
@@ -411,6 +483,7 @@ _OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
     HostOptionalField.NUM_SERVICES_CRIT: (Hosts.num_services_crit,),
     HostOptionalField.NUM_SERVICES_UNKNOWN: (Hosts.num_services_unknown,),
     HostOptionalField.NUM_SERVICES_PENDING: (Hosts.num_services_pending,),
+    HostOptionalField.NUM_RELATIONS: (Hosts.custom_variables,),
     HostOptionalField.FOLDER: (Hosts.filename,),
     HostOptionalField.LAST_CHECK: (Hosts.last_check,),
     HostOptionalField.LAST_STATE_CHANGE: (Hosts.last_state_change,),
@@ -420,7 +493,12 @@ _OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
     HostOptionalField.CONTACT_GROUPS: (Hosts.contact_groups,),
 }
 
-_SORT_COLUMN_FIELDS: Mapping[HostSortColumn, HostOptionalField] = {
+# The optional field a sort column needs read, or ``None`` when every query reads it anyway.
+# Sorting happens in Python, so a sort column has to be read even when the response omits it.
+_SORT_COLUMN_FIELDS: Mapping[HostSortColumn, HostOptionalField | None] = {
+    HostSortColumn.NAME: None,
+    HostSortColumn.STATE: None,
+    HostSortColumn.SITE_ID: None,
     HostSortColumn.ALIAS: HostOptionalField.ALIAS,
     HostSortColumn.ADDRESS: HostOptionalField.ADDRESS,
     HostSortColumn.NUM_SERVICES: HostOptionalField.NUM_SERVICES,
@@ -429,6 +507,7 @@ _SORT_COLUMN_FIELDS: Mapping[HostSortColumn, HostOptionalField] = {
     HostSortColumn.NUM_SERVICES_CRIT: HostOptionalField.NUM_SERVICES_CRIT,
     HostSortColumn.NUM_SERVICES_UNKNOWN: HostOptionalField.NUM_SERVICES_UNKNOWN,
     HostSortColumn.NUM_SERVICES_PENDING: HostOptionalField.NUM_SERVICES_PENDING,
+    HostSortColumn.NUM_RELATIONS: HostOptionalField.NUM_RELATIONS,
     HostSortColumn.FOLDER: HostOptionalField.FOLDER,
     HostSortColumn.LAST_CHECK: HostOptionalField.LAST_CHECK,
     HostSortColumn.LAST_STATE_CHANGE: HostOptionalField.LAST_STATE_CHANGE,
@@ -439,7 +518,7 @@ def _columns_to_read(
     fields: Set[HostOptionalField], sorters: Sequence[HostSort]
 ) -> Set[HostOptionalField]:
     return set(fields) | {
-        field for sorter in sorters if (field := _SORT_COLUMN_FIELDS.get(sorter.column)) is not None
+        field for sorter in sorters if (field := _SORT_COLUMN_FIELDS[sorter.column]) is not None
     }
 
 
@@ -480,11 +559,10 @@ def _service_counts(row: Mapping[str, object]) -> ServiceCounts | None:
 # than the limit, sorted by state, therefore shows the right rows in the right order only within
 # the window the limit kept.
 def _build_primary_sort(sorters: Sequence[HostSort]) -> str:
-    if not sorters or sorters[0].column in _VIRTUAL_SORT_COLUMNS:
+    if not sorters or (column := _LIVESTATUS_SORT_COLUMNS[sorters[0].column]) is None:
         return "OrderBy: name asc"
 
     primary = sorters[0]
-    column = _LIVESTATUS_COLUMN_OVERRIDES.get(primary.column, primary.column.value)
     natural_sort_flag = " natural" if primary.column.natural_sort else ""
 
     return f"OrderBy: {column} {primary.direction}{natural_sort_flag}"

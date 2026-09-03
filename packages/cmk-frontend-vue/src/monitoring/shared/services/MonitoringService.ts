@@ -188,7 +188,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly filterUrlState: ComputedRef<FilterUrlState>
 
   readonly toggleableColumns: ToggleableColumn[]
-  private readonly hideableColumnIds: string[]
+  protected readonly hideableColumnIds: string[]
   readonly columnVisibility: Ref<VisibilityState>
   readonly defaultColumnVisibility: VisibilityState
   /** The table's non-filter display state, for a URL sync to watch. */

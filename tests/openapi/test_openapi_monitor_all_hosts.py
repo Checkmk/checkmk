@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import time
 
 import pytest
@@ -742,7 +743,7 @@ class TestMonitorHostsFields:
         mock_livestatus.expect_query(
             [
                 "GET hosts",
-                f"Columns: {_host_columns('labels')} labels label_sources",
+                f"Columns: {_host_columns('labels')}",
                 "OrderBy: name asc natural",
                 f"Limit: {_LIMIT}",
             ]
@@ -903,6 +904,64 @@ class TestMonitorHostsFields:
             resp = clients.MonitorHosts.list_all(limit=_LIMIT)
 
         assert "contact_groups" not in resp.json["hosts"][0]
+
+    def test_num_relations_counts_only_the_relations_that_reach_the_reader(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS_WITH_RELATIONS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        # Asked once for the whole listing, before the sites are narrowed, so the count does not
+        # change with the reader's site filter.
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                "Columns: name",
+                "Filter: custom_variable_names >= RELATIONS",
+            ]
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_host_columns('num_relations')}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, fields=["num_relations"])
+
+        # "heute" is related to "gestern" and to "gone"; only the former is a host any site knows,
+        # so the number promises exactly the cards the host details will show.
+        assert {host["name"]: host["num_relations"] for host in resp.json["hosts"]} == {
+            "heute": 1,
+            "gestern": 1,
+            "morgen": 0,
+        }
+
+    def test_num_relations_is_omitted_unless_requested(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", _HOSTS_WITH_RELATIONS)
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        # No pre-query either: a listing without the count needs none of the counterparts.
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT)
+
+        assert "num_relations" not in resp.json["hosts"][0]
 
 
 class TestMonitorHostOverviewAuth:
@@ -1281,6 +1340,7 @@ _HOSTS = [
         "tags": {"criticality": "prod"},
         "contacts": ["hh"],
         "contact_groups": ["all"],
+        "custom_variables": {},
     },
     {
         "name": "gestern",
@@ -1314,6 +1374,7 @@ _HOSTS = [
         "tags": {"criticality": "prod"},
         "contacts": ["hh"],
         "contact_groups": ["all"],
+        "custom_variables": {},
     },
     {
         "name": "morgen",
@@ -1348,7 +1409,40 @@ _HOSTS = [
         "tags": {"criticality": "prod"},
         "contacts": ["hh"],
         "contact_groups": ["all"],
+        "custom_variables": {},
     },
+]
+# Both ends of an exported relation carry the macro, so a counterpart carries it in return. Here
+# "heute" and "gestern" are related to each other, and "heute" additionally names a host no site
+# knows.
+_HOSTS_WITH_RELATIONS = [
+    {
+        **_HOSTS[0],
+        "custom_variables": {
+            "RELATIONS": json.dumps(
+                [
+                    {
+                        "kind": "management",
+                        "direction": "child",
+                        "host": "gestern",
+                        "site": _SITE_ID,
+                    },
+                    {"kind": "management", "direction": "child", "host": "gone", "site": _SITE_ID},
+                ]
+            )
+        },
+        "custom_variable_names": ["RELATIONS"],
+    },
+    {
+        **_HOSTS[1],
+        "custom_variables": {
+            "RELATIONS": json.dumps(
+                [{"kind": "management", "direction": "parent", "host": "heute", "site": _SITE_ID}]
+            )
+        },
+        "custom_variable_names": ["RELATIONS"],
+    },
+    {**_HOSTS[2], "custom_variable_names": []},
 ]
 # Columns every host row needs, followed by the ones a request has to ask for. Both lists are in
 # the order the query names them, so the expectations below read like the real `Columns:` header.
@@ -1378,9 +1472,11 @@ _OPTIONAL_COLUMNS = {
     "num_services_crit": "num_services_crit",
     "num_services_unknown": "num_services_unknown",
     "num_services_pending": "num_services_pending",
+    "num_relations": "custom_variables",
     "folder": "filename",
     "last_check": "last_check",
     "last_state_change": "last_state_change",
+    "labels": "labels label_sources",
     "tags": "tags",
     "contacts": "contacts",
     "contact_groups": "contact_groups",

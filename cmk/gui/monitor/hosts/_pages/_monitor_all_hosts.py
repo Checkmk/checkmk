@@ -8,6 +8,7 @@ from typing import override
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
+from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.header import make_header
@@ -53,6 +54,8 @@ from cmk.shared_typing.monitoring.all_hosts import (
 from cmk.utils import paths
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
+
+from .._impl import LiveStatusHostRepository
 
 _PAGE_TITLE = _("All hosts")
 
@@ -193,6 +196,9 @@ class MonitorAllHostsPage(Page):
                     ],
                     notification_rules_url=notification_rules_url(ctx.config),
                     downtime_presets_url=downtime_presets_url(ctx.config),
+                    show_relations=LiveStatusHostRepository(
+                        connection=sites.live()
+                    ).has_any_relations(),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,

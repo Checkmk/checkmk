@@ -31,7 +31,7 @@ export class HostService extends MonitoringService<HostEntry> {
         sort: this.sortState.value,
         searchQuery: this.appliedSearchQuery.value,
         filter: this.filterState.value,
-        fields: visibleHostFields(this.columnVisibility.value)
+        fields: visibleHostFields(this.columnVisibility.value, this.hideableColumnIds)
       },
       signal
     )

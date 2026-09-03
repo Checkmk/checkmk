@@ -36,6 +36,8 @@ def host_sorter(sorters: Sequence[HostSort]) -> Callable[[Host], Any]:
                 return 0 if host.service_counts is None else host.service_counts.unknown
             case HostSortColumn.NUM_SERVICES_PENDING:
                 return 0 if host.service_counts is None else host.service_counts.pending
+            case HostSortColumn.NUM_RELATIONS:
+                return host.num_relations or 0
             case HostSortColumn.FOLDER:
                 return host.folder
             case HostSortColumn.SITE_ID:

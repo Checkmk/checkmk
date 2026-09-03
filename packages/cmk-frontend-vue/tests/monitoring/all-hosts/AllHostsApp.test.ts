@@ -46,6 +46,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     num_services_unknown: 0,
     num_services_pending: 0,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-1',
+    num_relations: 0,
     ...overrides
   }
 }

@@ -118,7 +118,8 @@ const columns = buildHostColumns({
   includeSelect: mayActOnSelection,
   includeActions: hasRowActions,
   showCustomer,
-  sites: props.sites
+  sites: props.sites,
+  showRelations: props.show_relations ?? false
 })
 const columnPinning = buildHostColumnPinning({
   includeSelect: mayActOnSelection,

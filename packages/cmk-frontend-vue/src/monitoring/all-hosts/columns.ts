@@ -40,6 +40,8 @@ export interface HostColumnOptions {
   showCustomer: boolean
   /** Configured sites the user is authorized to see, for the site column's filter options. */
   sites: readonly Site[]
+  /** Whether to offer the relations column; set when any visible host carries a relation. */
+  showRelations: boolean
 }
 
 /**
@@ -47,6 +49,7 @@ export interface HostColumnOptions {
  * When hidden, their field is omitted from the API request.
  */
 const OPTIONAL_FIELD_COLUMNS = [
+  'num_relations',
   'alias',
   'address',
   'folder',
@@ -94,11 +97,18 @@ const HIDEABLE_COLUMN_IDS: ReadonlySet<string> = new Set([
 ])
 
 /**
- * The host optional fields (columns) the table currently shows,
- * to ask the API for those alone.
+ * The host optional fields (columns) the table currently shows, to ask the API for those alone.
+ *
+ * `offeredColumnIds` are the hideable columns this table actually has: a column the table does
+ * not offer at all - the relations column on a setup using no relations - must not have its
+ * field requested either, or the query would read a column nothing renders.
  */
-export function visibleHostFields(visibility: VisibilityState): HostOptionalField[] {
-  return OPTIONAL_FIELD_COLUMNS.filter((field) => visibility[field] !== false)
+export function visibleHostFields(
+  visibility: VisibilityState,
+  offeredColumnIds: readonly string[]
+): HostOptionalField[] {
+  const offered = new Set(offeredColumnIds)
+  return OPTIONAL_FIELD_COLUMNS.filter((field) => offered.has(field) && visibility[field] !== false)
 }
 
 function fixUnlessHideable(column: ColumnDef<HostEntry>): ColumnDef<HostEntry> {
@@ -134,7 +144,8 @@ export function buildHostColumns({
   includeSelect,
   includeActions,
   showCustomer,
-  sites
+  sites,
+  showRelations
 }: HostColumnOptions): ColumnDef<HostEntry>[] {
   const { _t } = usei18n()
 
@@ -299,6 +310,21 @@ export function buildHostColumns({
       minSize: 150,
       meta: { filter: nameFilter }
     },
+    ...(showRelations
+      ? [
+          {
+            accessorKey: 'num_relations',
+            header: _t('Relations'),
+            sortDescFirst: true,
+            minSize: 70,
+            maxSize: 130,
+            meta: {
+              justify: 'right',
+              headerTitle: _t('Number of related hosts (management board / OS host)')
+            }
+          } satisfies ColumnDef<HostEntry>
+        ]
+      : []),
     {
       accessorKey: 'alias',
       header: _t('Host alias'),

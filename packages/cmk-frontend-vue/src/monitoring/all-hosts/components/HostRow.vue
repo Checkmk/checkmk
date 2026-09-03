@@ -40,7 +40,17 @@ const emit = defineEmits<{
   (event: 'command', payload: { id: string; target: HostRef }): void
 }>()
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
+
+const relationsLabel = computed(() => {
+  const count = props.row.num_relations ?? 0
+  return _tn(
+    'Show the 1 related host of %{host}',
+    'Show the %{count} related hosts of %{host}',
+    count,
+    { count: String(count), host: props.row.name }
+  )
+})
 
 const SERVICE_COUNT_MIN_WIDTH = 35
 
@@ -117,6 +127,15 @@ const lastStateChange = computed(() =>
     column-id="name"
     :value="row.name"
     :button="true"
+    @click="emit('open', row)"
+  />
+  <NumberCell
+    v-if="hasColumn('num_relations')"
+    column-id="num_relations"
+    :value="row.num_relations"
+    :button="!!row.num_relations"
+    :button-label="relationsLabel"
+    blank-when-zero
     @click="emit('open', row)"
   />
   <StringCell v-if="hasColumn('alias')" column-id="alias" :value="row.alias" />

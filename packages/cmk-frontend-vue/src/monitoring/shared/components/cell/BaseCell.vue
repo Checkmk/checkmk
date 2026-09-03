@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkIconLink from 'cmk-ui-library/components/CmkIconLink.vue'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type CSSProperties, computed, inject, useSlots } from 'vue'
 
 import {
@@ -32,6 +33,8 @@ const props = defineProps<{
   highlight?: CellHighlight | undefined
   justify?: ColumnJustify | undefined
   button?: boolean | undefined
+  /** Names the button for a screen reader, where its content alone does not say what it does. */
+  buttonLabel?: TranslatedString | undefined
   verticalAlign?: CellVerticalAlign | undefined
   noWrap?: boolean | undefined
 }>()
@@ -113,6 +116,7 @@ const highlightStyle = computed<CSSProperties>(() =>
       v-if="button"
       type="button"
       class="monitoring-base-cell__button"
+      :aria-label="buttonLabel"
       @click="emit('click', $event)"
     >
       <div v-if="highlight" :class="highlightClasses" :style="highlightStyle">
@@ -210,6 +214,7 @@ const highlightStyle = computed<CSSProperties>(() =>
     display: flex;
     flex-direction: row;
     align-items: flex-start;
+    justify-content: v-bind(justifyContent);
     width: 100%;
     min-height: 31px;
     padding: 0;

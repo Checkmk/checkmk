@@ -133,7 +133,8 @@ const rows: HostEntry[] = [
     num_services_crit: 1,
     num_services_unknown: 0,
     num_services_pending: 2,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-server-01'
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-server-01',
+    num_relations: 0
   },
   {
     name: 'db-primary-02',
@@ -149,7 +150,8 @@ const rows: HostEntry[] = [
     num_services_crit: 7,
     num_services_unknown: 1,
     num_services_pending: 1,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=db-primary-02'
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=db-primary-02',
+    num_relations: 0
   },
   {
     name: 'cache-node-03',
@@ -165,7 +167,8 @@ const rows: HostEntry[] = [
     num_services_crit: 0,
     num_services_unknown: 0,
     num_services_pending: 0,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=cache-node-03'
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=cache-node-03',
+    num_relations: 0
   },
   {
     name: 'mail-relay-04',
@@ -181,7 +184,8 @@ const rows: HostEntry[] = [
     num_services_crit: 0,
     num_services_unknown: 2,
     num_services_pending: 0,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=mail-relay-04'
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=mail-relay-04',
+    num_relations: 0
   }
 ]
 

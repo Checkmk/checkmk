@@ -64,8 +64,19 @@ def get_fake_host_repository(
             sorters: Sequence[HostSort],  # noqa: ARG002
             filters: HostFilter,  # noqa: ARG002
             fields: Set[HostOptionalField] = frozenset(),  # noqa: ARG002
+            visible_relations: frozenset[tuple[str, str]] | None = None,  # noqa: ARG002
         ) -> Sequence[Host]:
             return self._hosts[:limit]
+
+        def visible_relation_hosts(
+            self,
+            *,
+            fields: Set[HostOptionalField],
+            sorters: Sequence[HostSort],  # noqa: ARG002
+        ) -> frozenset[tuple[str, str]] | None:
+            if HostOptionalField.NUM_RELATIONS not in fields:
+                return None
+            return frozenset((host.site_id, host.name) for host in self._hosts)
 
         def get_overview(self, *, hostname: str, site_id: str) -> Host:
             try:

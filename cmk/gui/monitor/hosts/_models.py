@@ -89,6 +89,8 @@ class Host:
     tags: dict[str, str] | None
     contacts: list[str] | None
     contact_groups: list[str] | None
+    num_relations: int | None = None
+    """How many hosts are related to this one - all the listing shows."""
 
     @property
     def state_label(self) -> HostStateLabel:
@@ -114,6 +116,7 @@ class HostOptionalField(enum.StrEnum):
     NUM_SERVICES_CRIT = "num_services_crit"
     NUM_SERVICES_UNKNOWN = "num_services_unknown"
     NUM_SERVICES_PENDING = "num_services_pending"
+    NUM_RELATIONS = "num_relations"
     FOLDER = "folder"
     LAST_CHECK = "last_check"
     LAST_STATE_CHANGE = "last_state_change"
@@ -138,6 +141,7 @@ class HostSortColumn(enum.StrEnum):
     NUM_SERVICES_CRIT = "num_services_crit"
     NUM_SERVICES_UNKNOWN = "num_services_unknown"
     NUM_SERVICES_PENDING = "num_services_pending"
+    NUM_RELATIONS = "num_relations"
     FOLDER = "folder"
     SITE_ID = "site_id"
     LAST_CHECK = "last_check"

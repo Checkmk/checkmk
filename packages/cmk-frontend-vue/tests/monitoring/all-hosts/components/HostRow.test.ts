@@ -7,9 +7,11 @@ import type { Row } from '@tanstack/vue-table'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { defineComponent, h } from 'vue'
 
+import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
 import { formatTimestamp } from '@/monitoring/shared/formatTimestamp'
+import { columnId } from '@/monitoring/shared/tableState/schema'
 
 function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   return {
@@ -30,6 +32,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     last_check: 1783942710,
     last_state_change: 1783942740,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-1',
+    num_relations: 0,
     ...overrides
   }
 }
@@ -140,6 +143,21 @@ test('renders neither icon for a host that is not flapping nor stale', () => {
   expect(screen.queryByTitle('Stale')).not.toBeInTheDocument()
 })
 
+const SERVICE_COUNT_COLUMNS = [
+  'num_services',
+  'num_services_ok',
+  'num_services_warn',
+  'num_services_crit',
+  'num_services_unknown',
+  'num_services_pending'
+] as const
+
+function cell(container: Element, columnId: string): HTMLElement {
+  const td = container.querySelector<HTMLElement>(`td[data-column-id="${columnId}"]`)
+  expect(td, `no cell for column ${columnId}`).not.toBeNull()
+  return td!
+}
+
 test('renders one cell per service state with its count', () => {
   const { container } = mountRow(
     makeHost({
@@ -152,21 +170,27 @@ test('renders one cell per service state with its count', () => {
     })
   )
 
-  const tds = Array.from(container.querySelectorAll('td'))
-  // select, state, modes, name, alias, address, folder, site_id, total, ok, warn, crit, unknown,
-  // pending, last_check, last_state_change, labels, tags, contacts, contact_groups, customer
-  expect(tds).toHaveLength(21)
-  expect(tds[8]).toHaveTextContent('15')
-  expect(tds[9]).toHaveTextContent('1')
-  expect(tds[10]).toHaveTextContent('2')
-  expect(tds[11]).toHaveTextContent('3')
-  expect(tds[12]).toHaveTextContent('4')
-  expect(tds[13]).toHaveTextContent('5')
+  const counts = SERVICE_COUNT_COLUMNS.map((id) => cell(container, id).textContent?.trim())
+  expect(counts).toEqual(['15', '1', '2', '3', '4', '5'])
+})
+
+test('renders its cells in the order the columns are defined in', () => {
+  const { container } = mountRow(makeHost())
+
+  const rendered = Array.from(container.querySelectorAll('td')).map((td) => td.dataset['columnId'])
+  const defined = buildHostColumns({
+    includeSelect: true,
+    includeActions: false,
+    showCustomer: true,
+    sites: [],
+    showRelations: true
+  }).map(columnId)
+
+  expect(rendered).toEqual(defined)
 })
 
 function serviceCountLinks(container: Element): Array<HTMLAnchorElement | null> {
-  const tds = Array.from(container.querySelectorAll('td'))
-  return tds.slice(8, 14).map((td) => td.querySelector('a'))
+  return SERVICE_COUNT_COLUMNS.map((id) => cell(container, id).querySelector('a'))
 }
 
 function filterParam(link: HTMLAnchorElement | null | undefined): string | null {
@@ -249,6 +273,55 @@ test('reflects the selected state from the tanstack row', () => {
 
   const checkbox = container.querySelector('.cmk-checkbox__button')!
   expect(checkbox).toHaveAttribute('aria-checked', 'true')
+})
+
+test('renders the relation count in the cell following the host name', () => {
+  const { container } = mountRow(makeHost({ num_relations: 2 }))
+
+  expect(cell(container, 'num_relations')).toHaveTextContent('2')
+  expect(cell(container, 'num_relations').querySelector('button')).not.toBeNull()
+})
+
+test('names the relation count button, whose number alone says nothing about it', () => {
+  const { container } = mountRow(makeHost({ name: 'web-01', num_relations: 2 }))
+
+  expect(cell(container, 'num_relations').querySelector('button')).toHaveAccessibleName(
+    'Show the 2 related hosts of web-01'
+  )
+})
+
+test('names the button of a host with a single relation in the singular', () => {
+  const { container } = mountRow(makeHost({ name: 'web-01', num_relations: 1 }))
+
+  expect(cell(container, 'num_relations').querySelector('button')).toHaveAccessibleName(
+    'Show the 1 related host of web-01'
+  )
+})
+
+test('leaves the relation cell of a host without relations empty and unclickable', () => {
+  const { container } = mountRow(makeHost({ num_relations: 0 }))
+
+  expect(cell(container, 'num_relations').textContent?.trim()).toBe('')
+  expect(cell(container, 'num_relations').querySelector('button')).toBeNull()
+})
+
+test('emits open asking for the relations when the relation count is clicked', async () => {
+  const host = makeHost({ num_relations: 2 })
+  const onOpen = vi.fn()
+  const { container } = render(
+    defineComponent({
+      components: { HostRow },
+      render() {
+        return h('table', [
+          h('tbody', [h('tr', [h(HostRow, { row: host, tableRow: makeTableRow(), onOpen })])])
+        ])
+      }
+    })
+  )
+
+  await fireEvent.click(cell(container, 'num_relations').querySelector('button')!)
+
+  expect(onOpen).toHaveBeenCalledWith(host)
 })
 
 test('renders the zero counts as well — one badge per service state column', () => {

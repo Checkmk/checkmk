@@ -129,6 +129,19 @@ def test_host_sorter_site_id_column() -> None:
     assert value == expected
 
 
+def test_host_sorter_relation_count_column() -> None:
+    hosts = [
+        HostFactory.build(name="one", num_relations=1),
+        HostFactory.build(name="none", num_relations=0),
+        HostFactory.build(name="two", num_relations=2),
+    ]
+    sorters = [HostSort(column=HostSortColumn.NUM_RELATIONS, direction=HostSortDirection.DESC)]
+
+    value = [host.name for host in sorted(hosts, key=host_sorter(sorters))]
+
+    assert value == ["two", "one", "none"]
+
+
 @pytest.mark.parametrize(
     "a, b",
     [

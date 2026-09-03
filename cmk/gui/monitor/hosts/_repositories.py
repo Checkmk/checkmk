@@ -36,8 +36,24 @@ class HostRepository(Protocol):
         sorters: Sequence[HostSort],
         filters: HostFilter,
         fields: Set[HostOptionalField],
+        visible_relations: frozenset[tuple[str, str]] | None,
     ) -> Sequence[Host]:
-        """Fetch hosts, reading only the columns `fields` and `sorters` need."""
+        """Fetch hosts, reading only the columns `fields` and `sorters` need.
+
+        `visible_relations` bounds the relation count; it comes from `visible_relation_hosts()`,
+        which has to be read before the connection is narrowed to the listed sites.
+        """
+        ...
+
+    def visible_relation_hosts(
+        self, *, fields: Set[HostOptionalField], sorters: Sequence[HostSort]
+    ) -> frozenset[tuple[str, str]] | None:
+        """The hosts a relation may point at for this reader, as `(site, name)`.
+
+        `None` when the listing shows no relation count and needs none of this. Read before the
+        connection is narrowed to the listed sites, because what a host is related to is a
+        property of the host, not of the reader's site filter.
+        """
         ...
 
     def get_overview(self, *, hostname: str, site_id: str) -> Host:

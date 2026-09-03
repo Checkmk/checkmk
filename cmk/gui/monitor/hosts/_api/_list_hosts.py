@@ -182,6 +182,15 @@ class HostEntry:
         description="URL to legacy host status view",
         example="view.py?view_name=hoststatus&host=web-server-01&site=local",
     )
+    num_relations: int | ApiOmitted = api_field(
+        description=(
+            "Number of hosts related to this host via the Setup 'Relations' feature (management "
+            "board / OS hosts). The related hosts themselves are shown in the host details, so "
+            "the listing carries the count only. 0 when the host has no relations."
+        ),
+        example=2,
+        default_factory=ApiOmitted,
+    )
 
     @classmethod
     def from_domain(cls, host: Host, fields: Set[HostOptionalField], customer: str | None) -> Self:
@@ -226,6 +235,7 @@ class HostEntry:
             customer=ApiOmitted() if customer is None else customer,
             modes=build_host_modes(host) or ApiOmitted(),
             legacy_host_status_link=host_view_link("hoststatus", host),
+            num_relations=included(HostOptionalField.NUM_RELATIONS, host.num_relations),
         )
 
 
@@ -348,6 +358,7 @@ def list_hosts(
     total_host_count = host_repo.count_total()
 
     fields = _DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields
+    sorters = _DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort
 
     # `sites.only_sites([])` can't express "query zero sites"; an empty list is falsy to it and
     # gets treated as "no restriction" instead, i.e. every site. This happens when the filter
@@ -359,13 +370,17 @@ def list_hosts(
             meta=HostsPageMeta(limit=limit, matched=0, total=total_host_count, fields=fields),
         )
 
+    # Like the total count above, and for the same reason: what a host is related to does not
+    # change with the sites the reader has filtered the listing down to.
+    visible_relations = host_repo.visible_relation_hosts(fields=fields, sorters=sorters)
+
     with sites.only_sites(site_ids):
         return _handle_list_hosts(
             host_repo,
             total_host_count,
             limit=limit,
             query="" if isinstance(body.q, ApiOmitted) else body.q,
-            sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
+            sorters=sorters,
             filters=(
                 HostFilter("")
                 if filters is None
@@ -374,6 +389,7 @@ def list_hosts(
             fields=fields,
             site_ids=site_ids,
             customer_of=customer_of,
+            visible_relations=visible_relations,
         )
 
 
@@ -388,6 +404,7 @@ def _handle_list_hosts(
     fields: Set[HostOptionalField] = _DEFAULT_FIELDS,
     site_ids: Sequence[SiteId] | None = None,
     customer_of: Callable[[str], str | None] = lambda _site_id: None,
+    visible_relations: frozenset[tuple[str, str]] | None = None,
 ) -> HostsResponse:
     # Derived from the same `site_ids` the caller scoped the connection with via `only_sites`,
     # rather than taken as a separately-passed flag, so the two can't drift apart.
@@ -399,6 +416,7 @@ def _handle_list_hosts(
         sorters=sorters,
         filters=filters,
         fields=fields,
+        visible_relations=visible_relations,
     )
     # `limit` reaches Livestatus as a per-site cap (queried in parallel across sites, then merged
     # and sorted here), so a multi-site fetch can come back with up to `limit * len(sites)` rows.

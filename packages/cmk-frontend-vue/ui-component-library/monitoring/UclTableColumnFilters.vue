@@ -271,7 +271,8 @@ const rows: HostEntry[] = [
       criticality: { source: 'explicit', value: 'prod' }
     },
     last_check: 1789625643,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-server-01'
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=web-server-01',
+    num_relations: 0
   },
   {
     name: 'db-primary-02',
@@ -292,7 +293,8 @@ const rows: HostEntry[] = [
       criticality: { source: 'explicit', value: 'prod' }
     },
     last_check: 1789624361,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=db-primary-02'
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=db-primary-02',
+    num_relations: 0
   },
   {
     name: 'cache-node-03',
@@ -313,7 +315,8 @@ const rows: HostEntry[] = [
       criticality: { source: 'explicit', value: 'test' }
     },
     last_check: 1789592712,
-    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=cache-node-03'
+    legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=cache-node-03',
+    num_relations: 0
   }
 ]
 

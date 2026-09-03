@@ -3,15 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+import json
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.ccc.site import SiteId
+from cmk.gui import sites
 from cmk.gui.monitor.hosts._folder import MonitorFolders, SetupFolders
 from cmk.gui.monitor.hosts._impl import (
     _build_primary_sort,
     _build_query_filter,
+    _count_relations,
+    _LIVESTATUS_SORT_COLUMNS,
     _OPTIONAL_COLUMNS,
     _SORT_COLUMN_FIELDS,
     LiveStatusHostRepository,
@@ -24,7 +28,7 @@ from cmk.gui.monitor.hosts._models import (
     HostSortDirection,
 )
 from cmk.gui.monitor.hosts._site import MonitorSite, MonitorSites
-from cmk.livestatus_client.testing import expect_single_query
+from cmk.livestatus_client.testing import expect_single_query, MockLiveStatusConnection
 from tests.testlib.gui.web_test_app import SetConfig
 
 
@@ -65,6 +69,11 @@ from tests.testlib.gui.web_test_app import SetConfig
             id="site_id as the first sorter still falls back, even with a real sorter behind it",
         ),
         pytest.param(
+            [HostSort(HostSortColumn.NUM_RELATIONS, HostSortDirection.DESC)],
+            "OrderBy: name asc",
+            id="num_relations falls back too, the count is built from a custom variable",
+        ),
+        pytest.param(
             [
                 HostSort(HostSortColumn.STATE, HostSortDirection.DESC),
                 HostSort(HostSortColumn.NAME, HostSortDirection.ASC),
@@ -84,12 +93,14 @@ def test_every_optional_field_names_the_columns_it_needs() -> None:
     assert set(_OPTIONAL_COLUMNS) == set(HostOptionalField)
 
 
-def test_every_sort_column_maps_to_a_field_or_is_always_read() -> None:
-    """Sorting happens in Python, so a sort column must either be mandatory or ask for its field."""
-    # `site` is synthesized by the multisite connection rather than queried, so sorting on it needs
-    # no column of its own - same as the two the query always reads.
-    always_read = {HostSortColumn.NAME, HostSortColumn.STATE, HostSortColumn.SITE_ID}
-    assert set(_SORT_COLUMN_FIELDS) | always_read == set(HostSortColumn)
+def test_every_sort_column_says_which_field_it_needs_read() -> None:
+    """Sorting happens in Python, so a sort column must name its field, or `None` for always-read."""
+    assert set(_SORT_COLUMN_FIELDS) == set(HostSortColumn)
+
+
+def test_every_sort_column_says_how_livestatus_orders_by_it() -> None:
+    """A column with no entry would default to its own name and be rejected by every site."""
+    assert set(_LIVESTATUS_SORT_COLUMNS) == set(HostSortColumn)
 
 
 _TITLES = {"web_dmz": "Web DMZ", "network": "Netzwerk"}
@@ -295,23 +306,7 @@ def test_count_matched_keeps_a_stray_carriage_return_on_one_line() -> None:
 def test_fetch_derives_stale_from_the_staleness_threshold(
     staleness: float, threshold: float, expected_stale: bool, set_config: SetConfig
 ) -> None:
-    row = {
-        "name": "some-host",
-        "state": 0,
-        "has_been_checked": 1,
-        "acknowledged": 0,
-        "scheduled_downtime_depth": 0,
-        "notifications_enabled": 1,
-        "comments": [],
-        "modified_attributes_list": [],
-        "active_checks_enabled": 1,
-        "accept_passive_checks": 1,
-        "in_notification_period": 1,
-        "in_service_period": 1,
-        "in_check_period": 1,
-        "is_flapping": 0,
-        "staleness": staleness,
-    }
+    row = _host_row(staleness=staleness)
     with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
         repo = LiveStatusHostRepository(connection=live)
         with set_config(staleness_threshold=threshold):
@@ -321,6 +316,7 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
                 sorters=[],
                 filters=HostFilter(""),
                 fields=frozenset(),
+                visible_relations=None,
             )
 
     assert [host.stale for host in hosts] == [expected_stale]
@@ -338,23 +334,10 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
 def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
     active_checks_enabled: int, modified_attributes_list: list[str], expected: bool
 ) -> None:
-    row = {
-        "name": "some-host",
-        "state": 0,
-        "has_been_checked": 1,
-        "acknowledged": 0,
-        "scheduled_downtime_depth": 0,
-        "notifications_enabled": 1,
-        "comments": [],
-        "modified_attributes_list": modified_attributes_list,
-        "active_checks_enabled": active_checks_enabled,
-        "accept_passive_checks": 1,
-        "in_notification_period": 1,
-        "in_service_period": 1,
-        "in_check_period": 1,
-        "is_flapping": 0,
-        "staleness": 0.0,
-    }
+    row = _host_row(
+        modified_attributes_list=modified_attributes_list,
+        active_checks_enabled=active_checks_enabled,
+    )
     with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
         hosts = LiveStatusHostRepository(connection=live).fetch(
             limit=None,
@@ -362,6 +345,248 @@ def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
             sorters=[],
             filters=HostFilter(""),
             fields=frozenset(),
+            visible_relations=None,
         )
 
     assert [host.active_checks_disabled for host in hosts] == [expected]
+
+
+_TWO_RELATIONS = (
+    '[{"kind": "management", "direction": "child", "host": "a", "site": "central"},'
+    ' {"kind": "management", "direction": "parent", "host": "b", "site": "remote"}]'
+)
+_BOTH_COUNTERPARTS = frozenset({("central", "a"), ("remote", "b")})
+
+
+@pytest.mark.parametrize(
+    "raw, visible, expected",
+    [
+        pytest.param(None, _BOTH_COUNTERPARTS, 0, id="host without the macro"),
+        pytest.param(
+            '[{"kind": "management", "direction": "child", "host": "a", "site": "central"}]',
+            _BOTH_COUNTERPARTS,
+            1,
+            id="one relation",
+        ),
+        pytest.param(_TWO_RELATIONS, _BOTH_COUNTERPARTS, 2, id="both ends counted"),
+        pytest.param(
+            '[{"kind": "peering", "direction": "symmetric", "host": "a", "site": "central"}]',
+            _BOTH_COUNTERPARTS,
+            0,
+            id="a relation of a later version is not counted - no card would be shown for it",
+        ),
+        pytest.param(
+            _TWO_RELATIONS,
+            frozenset({("central", "a")}),
+            1,
+            id="a counterpart the reader may not see is left out",
+        ),
+        pytest.param(
+            '[{"kind": "management", "direction": "child", "host": "a", "site": "central"}]',
+            frozenset({("remote", "a")}),
+            0,
+            id="the same name on another site is not the counterpart",
+        ),
+    ],
+)
+def test_count_relations(
+    raw: str | None, visible: frozenset[tuple[str, str]], expected: int
+) -> None:
+    """The malformed cases are covered where the value is parsed, in test_host_relations.py."""
+    assert _count_relations(raw, visible) == expected
+
+
+def test_has_any_relations_asks_the_core_for_one_host_carrying_the_macro() -> None:
+    """A list column compares by "contains", which is what ``>=`` means here."""
+    with expect_single_query(
+        "GET hosts\nColumns: name\nFilter: custom_variable_names >= RELATIONS\nLimit: 1",
+        match_type="strict",
+        tables={"hosts": [{"name": "some-host", "custom_variable_names": ["RELATIONS"]}]},
+    ) as live:
+        assert LiveStatusHostRepository(connection=live).has_any_relations() is True
+
+
+def test_has_any_relations_false_when_no_host_carries_the_macro() -> None:
+    with expect_single_query("GET hosts", tables={"hosts": []}) as live:
+        assert LiveStatusHostRepository(connection=live).has_any_relations() is False
+
+
+_VISIBLE_RELATION_HOSTS_QUERY = [
+    "GET hosts",
+    "Columns: name",
+    "Filter: custom_variable_names >= RELATIONS",
+]
+
+_RELATION_LISTING_QUERY = [
+    "GET hosts",
+    (
+        "Columns: name state has_been_checked acknowledged scheduled_downtime_depth "
+        "notifications_enabled comments modified_attributes_list active_checks_enabled "
+        "accept_passive_checks in_notification_period in_service_period in_check_period "
+        "is_flapping staleness custom_variables"
+    ),
+]
+
+
+def _host_row(name: str = "some-host", **overrides: object) -> dict[str, object]:
+    """A row carrying every column ``fetch`` reads unconditionally."""
+    return {
+        "name": name,
+        "state": 0,
+        "has_been_checked": 1,
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
+        "custom_variables": {},
+        **overrides,
+    }
+
+
+def _related_host_row(name: str, related_to: str | None) -> dict[str, object]:
+    relations = (
+        []
+        if related_to is None
+        else [{"kind": "management", "direction": "parent", "host": related_to, "site": "NO_SITE"}]
+    )
+    return _host_row(
+        name,
+        custom_variables={"RELATIONS": json.dumps(relations)} if relations else {},
+        custom_variable_names=["RELATIONS"] if relations else [],
+    )
+
+
+def _overview_row(name: str, relations: Sequence[Mapping[str, str]]) -> dict[str, object]:
+    """A row shaped for the single-host query behind ``get_overview``."""
+    return {
+        "name": name,
+        "alias": name,
+        "address": "127.0.0.1",
+        "state": 0,
+        "has_been_checked": 1,
+        "num_services": 0,
+        "num_services_ok": 0,
+        "num_services_warn": 0,
+        "num_services_crit": 0,
+        "num_services_unknown": 0,
+        "num_services_pending": 0,
+        "acknowledged": 0,
+        "scheduled_downtime_depth": 0,
+        "notifications_enabled": 1,
+        "comments": [],
+        "modified_attributes_list": [],
+        "active_checks_enabled": 1,
+        "accept_passive_checks": 1,
+        "in_notification_period": 1,
+        "in_service_period": 1,
+        "in_check_period": 1,
+        "is_flapping": 0,
+        "staleness": 0.0,
+        "last_check": 0,
+        "last_state_change": 0,
+        "contact_groups": [],
+        "tags": {},
+        "labels": {},
+        "label_sources": {},
+        "filename": "",
+        "custom_variables": {"RELATIONS": json.dumps(relations)} if relations else {},
+        "custom_variable_names": ["RELATIONS"] if relations else [],
+    }
+
+
+def _fetch_relation_counts() -> Sequence[int | None]:
+    repo = LiveStatusHostRepository(connection=sites.live())
+    fields = frozenset({HostOptionalField.NUM_RELATIONS})
+    visible_relations = repo.visible_relation_hosts(fields=fields, sorters=[])
+    return [
+        host.num_relations
+        for host in repo.fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=fields,
+            visible_relations=visible_relations,
+        )
+    ]
+
+
+def test_visible_relation_hosts_asks_nothing_when_no_relation_count_is_shown(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    """The mock fails the test on any query, which is what "nothing to read" has to look like."""
+    with mock_livestatus(expect_status_query=True):
+        repo = LiveStatusHostRepository(connection=sites.live())
+        assert repo.visible_relation_hosts(fields=frozenset(), sorters=[]) is None
+
+
+def test_fetching_the_relation_count_without_its_counterparts_is_refused(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    """Silently answering "n/a" for a field the caller asked for would show as an empty column."""
+    with mock_livestatus(expect_status_query=True):
+        repo = LiveStatusHostRepository(connection=sites.live())
+        with pytest.raises(ValueError, match="counterparts"):
+            repo.fetch(
+                limit=None,
+                query="",
+                sorters=[],
+                filters=HostFilter(""),
+                fields=frozenset({HostOptionalField.NUM_RELATIONS}),
+                visible_relations=None,
+            )
+
+
+def test_visible_relation_hosts_reads_them_for_a_listing_that_only_sorts_by_the_count(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    """Sorting happens in Python, so the count is read even when the response omits it."""
+    mock_livestatus.add_table("hosts", [_related_host_row("heute", "mgmt-heute")])
+    mock_livestatus.expect_query(_VISIBLE_RELATION_HOSTS_QUERY, match_type="loose")
+
+    with mock_livestatus(expect_status_query=True):
+        repo = LiveStatusHostRepository(connection=sites.live())
+        assert repo.visible_relation_hosts(
+            fields=frozenset(),
+            sorters=[HostSort(HostSortColumn.NUM_RELATIONS, HostSortDirection.ASC)],
+        ) == frozenset({("NO_SITE", "heute")})
+
+
+def test_fetch_counts_a_relation_on_both_of_its_ends(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table(
+        "hosts",
+        [_related_host_row("heute", "mgmt-heute"), _related_host_row("mgmt-heute", "heute")],
+    )
+    mock_livestatus.expect_query(_VISIBLE_RELATION_HOSTS_QUERY, match_type="loose")
+    mock_livestatus.expect_query(_RELATION_LISTING_QUERY, match_type="loose")
+
+    with mock_livestatus(expect_status_query=True):
+        assert _fetch_relation_counts() == [1, 1]
+
+
+def test_fetch_leaves_a_counterpart_the_core_does_not_answer_for_out_of_the_count(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    """A counterpart the user may not see and one no site knows both go missing from the answer,
+    and the host details leave out the card in both cases."""
+    mock_livestatus.add_table("hosts", [_related_host_row("heute", "mgmt-heute")])
+    mock_livestatus.expect_query(_VISIBLE_RELATION_HOSTS_QUERY, match_type="loose")
+    mock_livestatus.expect_query(_RELATION_LISTING_QUERY, match_type="loose")
+
+    with mock_livestatus(expect_status_query=True):
+        assert _fetch_relation_counts() == [0]

@@ -99,7 +99,8 @@ test('the state column reads as the one in the hosts listing', () => {
         includeSelect: true,
         includeActions: true,
         showCustomer: false,
-        sites: []
+        sites: [],
+        showRelations: false
       }) as ColumnDef<never>[]
     )
   )

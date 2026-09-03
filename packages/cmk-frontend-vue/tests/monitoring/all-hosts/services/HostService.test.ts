@@ -32,6 +32,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     num_services_unknown: 0,
     num_services_pending: 0,
     legacy_host_status_link: 'view.py?view_name=hoststatus&site=local&host=host-1',
+    num_relations: 0,
     ...overrides
   }
 }
@@ -77,7 +78,7 @@ describe('HostService', () => {
         limit: DEFAULT_BATCH_SIZE,
         sort: [{ id: 'name', desc: false }],
         searchQuery: '',
-        fields: visibleHostFields({})
+        fields: []
       },
       expect.any(AbortSignal)
     )
@@ -97,7 +98,7 @@ describe('HostService', () => {
         limit: DEFAULT_BATCH_SIZE,
         sort: [],
         searchQuery: 'web01',
-        fields: visibleHostFields({})
+        fields: []
       },
       expect.any(AbortSignal)
     )
@@ -122,7 +123,7 @@ describe('HostService', () => {
         limit: DEFAULT_BATCH_SIZE,
         sort: [],
         searchQuery: 'web01',
-        fields: visibleHostFields({})
+        fields: []
       },
       expect.any(AbortSignal)
     )
@@ -145,7 +146,7 @@ describe('HostService', () => {
       await vi.advanceTimersByTimeAsync(0)
 
       expect(fetchHosts).toHaveBeenLastCalledWith(
-        expect.objectContaining({ fields: visibleHostFields({ address: false }) }),
+        expect.objectContaining({ fields: visibleHostFields({ address: false }, ['address']) }),
         expect.any(AbortSignal)
       )
     })
@@ -163,7 +164,7 @@ describe('HostService', () => {
 
       expect(fetchHosts).toHaveBeenCalledTimes(2)
       expect(fetchHosts).toHaveBeenLastCalledWith(
-        expect.objectContaining({ fields: visibleHostFields({}) }),
+        expect.objectContaining({ fields: visibleHostFields({}, ['address']) }),
         expect.any(AbortSignal)
       )
     })

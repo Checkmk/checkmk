@@ -564,7 +564,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_inventory', [])
 
 agent_config['mk_inventory'] = [
-{'id': '2859b446-eb7a-46b1-b5ef-738b0b86c75f', 'value': {'interval': 14400, 'reg_paths': ['Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall', 'Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall']}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '2859b446-eb7a-46b1-b5ef-738b0b86c75f', 'value': {'deployment': ('sync', None), 'interval': 14400, 'exe_paths': [], 'reg_paths': ('default', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_inventory']
 
 

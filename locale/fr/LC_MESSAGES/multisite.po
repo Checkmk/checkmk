@@ -16449,8 +16449,8 @@ msgid "Configure host and regions"
 msgstr "Configuration"
 
 msgid ""
-"Configure how Checkmk fetches metrics from the metric backend for a host. "
-"This ruleset currently has no options."
+"Configure how Checkmk fetches metrics from the metric backend for a host and "
+"creates services from them"
 msgstr ""
 
 #, fuzzy
@@ -17521,16 +17521,16 @@ msgid ""
 "Controls which Oracle Instant Client the plug-in uses to connect to "
 "databases. Two sources are available: the <b>agent-local client</b> — Oracle "
 "Instant Client libraries manually installed alongside the Checkmk agent "
-"under <tt>$MK_LIBDIR/packages/mk-oracle/</tt> — and the <b>host client</b> — "
-"an Oracle installation already present on the monitored host. Note: Checkmk "
-"does <b>not</b> deploy Oracle Instant Client automatically; you must install "
-"it manually if you want to use the agent-local client. <b>Auto-detect</b>: "
-"tries the host client first, falls back to the agent-local client. <b>Never "
-"use host client</b>: uses only the agent-local client, ignores any host "
-"installation. <b>Always use host client</b>: uses only the host client, "
-"ignores the agent-local client. <b>Custom path</b>: uses the Oracle Instant "
-"Client at the specified path; supports environment variable expansion (e.g. "
-"<tt>${ORACLE_HOME}/lib</tt>)."
+"under <tt>$MK_LIBDIR/plugins/libexec/mk-oracle-v2/oic/</tt> — and the "
+"<b>host client</b> — an Oracle installation already present on the monitored "
+"host. Note: Checkmk does <b>not</b> deploy Oracle Instant Client "
+"automatically; you must install it manually if you want to use the agent-"
+"local client. <b>Auto-detect</b>: tries the host client first, falls back to "
+"the agent-local client. <b>Never use host client</b>: uses only the agent-"
+"local client, ignores any host installation. <b>Always use host client</b>: "
+"uses only the host client, ignores the agent-local client. <b>Custom path</"
+"b>: uses the Oracle Instant Client at the specified path; supports "
+"environment variable expansion (e.g. <tt>${ORACLE_HOME}/lib</tt>)."
 msgstr ""
 
 msgid "Convert FQHN"
@@ -102373,6 +102373,43 @@ msgid "Edit %{entity}"
 msgstr "Métrique d'édition"
 
 #, fuzzy
+msgid "Remove modification"
+msgstr "Suppression de la condition d'étiquetage"
+
+#, fuzzy
+msgid "Remove modification?"
+msgstr "Suppression de la condition d'étiquetage"
+
+msgid ""
+"The configured value will be discarded and the factory default will be used "
+"instead."
+msgstr ""
+
+#, fuzzy
+msgid "This variable has been modified."
+msgstr "Cette option a été modifiée."
+
+#, fuzzy
+msgid "Reset to factory default"
+msgstr "Réinitialisation aux valeurs par défaut"
+
+#, fuzzy
+msgid "Factory settings"
+msgstr "Réglage d'usine"
+
+#, fuzzy
+msgid "Site overrides"
+msgstr "Aperçu du site"
+
+#, fuzzy
+msgid "This setting is overridden by the following sites:"
+msgstr "Affectez les services au cluster suivant :"
+
+#, fuzzy
+msgid "Open site settings"
+msgstr "Paramètres de l'hôte"
+
+#, fuzzy
 msgid "%{count} variable"
 msgid_plural "%{count} variables"
 msgstr[0] "%d nouvelle étiquette"
@@ -102389,6 +102426,10 @@ msgstr "Que beaucoup de permissions n'utilisent pas les valeurs par défaut."
 #, fuzzy
 msgid "(modified)"
 msgstr "Fichier modifié"
+
+#, fuzzy
+msgid "Edit %{title}"
+msgstr "Modifier %(title)s"
 
 msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
@@ -102646,6 +102687,29 @@ msgstr "Informations thermiques"
 #, fuzzy
 msgid "Select one metric"
 msgstr "Mesures du service"
+
+#, fuzzy
+msgid "No metric available"
+msgstr "Ports disponibles"
+
+msgid ""
+"A percentile needs one metric. Add a single metric, or aggregate a query in "
+"a calculation first."
+msgstr ""
+
+msgid ""
+"A percentile needs one metric. This query selects several. Aggregate it in a "
+"calculation first."
+msgstr ""
+
+#, fuzzy
+msgid "This calculation is currently being edited."
+msgstr "Cette agrégation est actuellement activée."
+
+msgid ""
+"This calculation refers to the one being edited. A reference back would "
+"create a cycle."
+msgstr ""
 
 msgid "The formula is empty; add a metric id (e.g. A) or a number."
 msgstr ""
@@ -103016,6 +103080,10 @@ msgstr ""
 #, fuzzy
 msgid "The number of digits for rounding must be a non-negative integer"
 msgstr "La date doit être une valeur numérique"
+
+#, fuzzy
+msgid "Set both limits, or scale the range automatically"
+msgstr "Réglez sur \"0\" pour désactiver le rechargement automatique."
 
 #, fuzzy
 msgid "The lower limit must be less than the upper limit"

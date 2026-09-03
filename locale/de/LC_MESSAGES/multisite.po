@@ -15513,8 +15513,8 @@ msgid "Configure host and regions"
 msgstr "Host und Regionen konfigurieren"
 
 msgid ""
-"Configure how Checkmk fetches metrics from the metric backend for a host. "
-"This ruleset currently has no options."
+"Configure how Checkmk fetches metrics from the metric backend for a host and "
+"creates services from them"
 msgstr ""
 
 msgid "Configure levels"
@@ -16557,21 +16557,21 @@ msgid ""
 "untrusted admin sessions are a concern."
 msgstr ""
 
-#, python-brace-format
+#, fuzzy, python-brace-format
 msgid ""
 "Controls which Oracle Instant Client the plug-in uses to connect to "
 "databases. Two sources are available: the <b>agent-local client</b> — Oracle "
 "Instant Client libraries manually installed alongside the Checkmk agent "
-"under <tt>$MK_LIBDIR/packages/mk-oracle/</tt> — and the <b>host client</b> — "
-"an Oracle installation already present on the monitored host. Note: Checkmk "
-"does <b>not</b> deploy Oracle Instant Client automatically; you must install "
-"it manually if you want to use the agent-local client. <b>Auto-detect</b>: "
-"tries the host client first, falls back to the agent-local client. <b>Never "
-"use host client</b>: uses only the agent-local client, ignores any host "
-"installation. <b>Always use host client</b>: uses only the host client, "
-"ignores the agent-local client. <b>Custom path</b>: uses the Oracle Instant "
-"Client at the specified path; supports environment variable expansion (e.g. "
-"<tt>${ORACLE_HOME}/lib</tt>)."
+"under <tt>$MK_LIBDIR/plugins/libexec/mk-oracle-v2/oic/</tt> — and the "
+"<b>host client</b> — an Oracle installation already present on the monitored "
+"host. Note: Checkmk does <b>not</b> deploy Oracle Instant Client "
+"automatically; you must install it manually if you want to use the agent-"
+"local client. <b>Auto-detect</b>: tries the host client first, falls back to "
+"the agent-local client. <b>Never use host client</b>: uses only the agent-"
+"local client, ignores any host installation. <b>Always use host client</b>: "
+"uses only the host client, ignores the agent-local client. <b>Custom path</"
+"b>: uses the Oracle Instant Client at the specified path; supports "
+"environment variable expansion (e.g. <tt>${ORACLE_HOME}/lib</tt>)."
 msgstr ""
 "Kontrolliert, welchen Oracle Instant Client das Plugin für die Verbindung zu "
 "Datenbanken verwendet. Es stehen zwei Quellen zur Verfügung: der <b>agent-"
@@ -97280,6 +97280,43 @@ msgid "Edit %{entity}"
 msgstr "%{entity} bearbeiten"
 
 #, fuzzy
+msgid "Remove modification"
+msgstr "Bedingung entfernen"
+
+#, fuzzy
+msgid "Remove modification?"
+msgstr "Bedingung entfernen"
+
+msgid ""
+"The configured value will be discarded and the factory default will be used "
+"instead."
+msgstr ""
+
+#, fuzzy
+msgid "This variable has been modified."
+msgstr "Diese Einstellung wurde gesetzt."
+
+#, fuzzy
+msgid "Reset to factory default"
+msgstr "Auf Standard zurücksetzen"
+
+#, fuzzy
+msgid "Factory settings"
+msgstr "Werkseinstellungen"
+
+#, fuzzy
+msgid "Site overrides"
+msgstr "Instanzübersicht"
+
+#, fuzzy
+msgid "This setting is overridden by the following sites:"
+msgstr "Services zu folgendem Cluster zuordnen:"
+
+#, fuzzy
+msgid "Open site settings"
+msgstr "Testeinstellungen"
+
+#, fuzzy
 msgid "%{count} variable"
 msgid_plural "%{count} variables"
 msgstr[0] "%{count} %{label}"
@@ -97296,6 +97333,10 @@ msgstr "Soviele Berechtigungen befinden sich nicht in der Fabrikseinstellung."
 #, fuzzy
 msgid "(modified)"
 msgstr "Datei modifiziert"
+
+#, fuzzy
+msgid "Edit %{title}"
+msgstr "%(title)s bearbeiten"
 
 msgid ""
 "Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, "
@@ -97553,6 +97594,29 @@ msgstr "Transformation"
 #, fuzzy
 msgid "Select one metric"
 msgstr "Service-Metrik auswählen"
+
+#, fuzzy
+msgid "No metric available"
+msgstr "Keine Benutzer verfügbar"
+
+msgid ""
+"A percentile needs one metric. Add a single metric, or aggregate a query in "
+"a calculation first."
+msgstr ""
+
+msgid ""
+"A percentile needs one metric. This query selects several. Aggregate it in a "
+"calculation first."
+msgstr ""
+
+#, fuzzy
+msgid "This calculation is currently being edited."
+msgstr "Diese Aggregation ist derzeit aktiviert."
+
+msgid ""
+"This calculation refers to the one being edited. A reference back would "
+"create a cycle."
+msgstr ""
 
 msgid "The formula is empty; add a metric id (e.g. A) or a number."
 msgstr ""
@@ -97910,6 +97974,10 @@ msgstr ""
 #, fuzzy
 msgid "The number of digits for rounding must be a non-negative integer"
 msgstr "Zahlen müssen nicht-negativ sein"
+
+#, fuzzy
+msgid "Set both limits, or scale the range automatically"
+msgstr "Auf \"0\" setzen, um automatisches Neuladen zu deaktivieren."
 
 #, fuzzy
 msgid "The lower limit must be less than the upper limit"

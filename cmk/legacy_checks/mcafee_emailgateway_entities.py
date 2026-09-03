@@ -3,13 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.mcafee.libgateway import DETECT_EMAIL_GATEWAY
-
-check_info = {}
 
 TITLES = [
     [
@@ -49,47 +56,48 @@ TITLES = [
 ]
 
 
-def parse_mcafee_emailgateway_entities(string_table):
+def parse_mcafee_emailgateway_entities(
+    string_table: Sequence[StringTable],
+) -> Mapping[str, str] | None:
     return (
         {
             k: v
-            for subtable, services in zip(string_table, TITLES)
-            for k, v in zip(services, subtable[0])
+            for subtable, services in zip(string_table, TITLES, strict=False)
+            for k, v in zip(services, subtable[0], strict=False)
         }
         if all(string_table)
         else None
     )
 
 
-def discover_mcafee_emailgateway_entities(parsed):
-    for title, dev_state in parsed.items():
-        if dev_state not in ["10", "11"]:
-            yield title, {}
+def discover_mcafee_emailgateway_entities(section: Mapping[str, str]) -> DiscoveryResult:
+    for title, dev_state in section.items():
+        if dev_state not in ("10", "11"):
+            yield Service(item=title)
 
 
-def check_mcafee_emailgateway_entities(item, params, parsed):
+def check_mcafee_emailgateway_entities(item: str, section: Mapping[str, str]) -> CheckResult:
     map_states = {
-        "0": (0, "healthy"),
-        "1": (1, "operational but requires attention"),
-        "2": (1, "requires attention"),
-        "3": (1, "end of life reached"),
-        "4": (1, "near end of life"),
-        "5": (2, "corrupt dats"),
-        "6": (2, "corrupt configuration"),
-        "7": (2, "requires immediate attention"),
-        "8": (2, "critical"),
-        "9": (3, "unknown state"),
-        "10": (1, "disabled"),
-        "11": (1, "not applicable"),
+        "0": (State.OK, "healthy"),
+        "1": (State.WARN, "operational but requires attention"),
+        "2": (State.WARN, "requires attention"),
+        "3": (State.WARN, "end of life reached"),
+        "4": (State.WARN, "near end of life"),
+        "5": (State.CRIT, "corrupt dats"),
+        "6": (State.CRIT, "corrupt configuration"),
+        "7": (State.CRIT, "requires immediate attention"),
+        "8": (State.CRIT, "critical"),
+        "9": (State.UNKNOWN, "unknown state"),
+        "10": (State.WARN, "disabled"),
+        "11": (State.WARN, "not applicable"),
     }
 
-    if item in parsed:
-        state, state_readable = map_states[parsed[item]]
-        return state, "Status: %s" % state_readable
-    return None
+    if item in section:
+        state, state_readable = map_states[section[item]]
+        yield Result(state=state, summary=f"Status: {state_readable}")
 
 
-check_info["mcafee_emailgateway_entities"] = LegacyCheckDefinition(
+snmp_section_mcafee_emailgateway_entities = SNMPSection(
     name="mcafee_emailgateway_entities",
     detect=DETECT_EMAIL_GATEWAY,
     fetch=[
@@ -129,6 +137,11 @@ check_info["mcafee_emailgateway_entities"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_mcafee_emailgateway_entities,
+)
+
+
+check_plugin_mcafee_emailgateway_entities = CheckPlugin(
+    name="mcafee_emailgateway_entities",
     service_name="Entity %s",
     discovery_function=discover_mcafee_emailgateway_entities,
     check_function=check_mcafee_emailgateway_entities,

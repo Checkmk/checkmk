@@ -145,9 +145,9 @@ fn test_generate_plugins() {
         .args(["-g", env.plugins_dir.to_str().unwrap()])
         .assert()
         .success();
-    let sync_content = fs::read_to_string(env.plugins_dir.join("oracle_unified_sync.ps1"))
+    let sync_content = fs::read_to_string(env.plugins_dir.join("mk-oracle-v2_sync.ps1"))
         .expect("sync plugin missing");
-    let async_content = fs::read_to_string(env.plugins_dir.join("oracle_unified_async.ps1"))
+    let async_content = fs::read_to_string(env.plugins_dir.join("mk-oracle-v2_async.ps1"))
         .expect("async plugin missing");
     assert!(!sync_content.is_empty(), "sync plugin empty");
     assert!(!async_content.is_empty(), "async plugin empty");
@@ -164,8 +164,8 @@ fn test_generate_plugins() {
         .args(["-g", env.plugins_dir.to_str().unwrap()])
         .assert()
         .success();
-    let sync_path = env.plugins_dir.join("oracle_unified_sync");
-    let async_path = env.plugins_dir.join("600").join("oracle_unified_async");
+    let sync_path = env.plugins_dir.join("mk-oracle-v2_sync");
+    let async_path = env.plugins_dir.join("600").join("mk-oracle-v2_async");
     let sync_content = fs::read_to_string(&sync_path).expect("sync plugin missing");
     let async_content = fs::read_to_string(&async_path).expect("async plugin missing");
     assert!(!sync_content.is_empty(), "sync plugin empty");
@@ -419,11 +419,11 @@ oracle:
 
     // The async plugin lands in the overridden cache_age subdir, not the default.
     assert!(
-        out.join("123").join("oracle_unified_async").is_file(),
+        out.join("123").join("mk-oracle-v2_async").is_file(),
         "async plugin should use the overridden cache_age (123)"
     );
     assert!(
-        !out.join("600").join("oracle_unified_async").exists(),
+        !out.join("600").join("mk-oracle-v2_async").exists(),
         "async plugin must not use the default cache_age (600)"
     );
 

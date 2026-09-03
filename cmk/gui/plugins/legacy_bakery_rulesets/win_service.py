@@ -3,74 +3,93 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    SingleChoice,
+    SingleChoiceElement,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsWindowsAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Dictionary, DropdownChoice
-from cmk.ruleset_matcher.definition import RuleGroup
 
-
-def _valuespec_agent_config_win_service() -> Dictionary:
+def _form_spec() -> Dictionary:
     return Dictionary(
-        title=_("Checkmk Windows agent service settings"),
-        elements=[
-            (
-                "restart_on_crash",
-                DropdownChoice(
-                    title=_("Auto-restart on crash"),
-                    help=_(
+        elements={
+            "restart_on_crash": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Auto-restart on crash"),
+                    help_text=Help(
                         "Use this rule set to enable or disable automatic service restarts on crash "
                         "or other internal errors."
                     ),
-                    choices=[
-                        ("yes", _("Windows Service restarts automatically")),
-                        ("no", _("Windows Service doesn't restart automatically")),
+                    elements=[
+                        SingleChoiceElement(
+                            name="yes", title=Title("Windows Service restarts automatically")
+                        ),
+                        SingleChoiceElement(
+                            name="no", title=Title("Windows Service doesn't restart automatically")
+                        ),
                     ],
-                    default_value="yes",
+                    prefill=DefaultValue("yes"),
                 ),
             ),
-            (
-                "error_mode",
-                DropdownChoice(
-                    title=_("Action on error"),
-                    help=_(
+            "error_mode": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Action on error"),
+                    help_text=Help(
                         "Use this rule set to control some actions which can be performed "
                         "upon crash or other problems."
                     ),
-                    choices=[
-                        ("log", _("Windows Service writes information to the Event Log")),
-                        ("ignore", _("Windows Service does nothing")),
+                    elements=[
+                        SingleChoiceElement(
+                            name="log",
+                            title=Title("Windows Service writes information to the Event Log"),
+                        ),
+                        SingleChoiceElement(
+                            name="ignore", title=Title("Windows Service does nothing")
+                        ),
                     ],
-                    default_value="log",
+                    prefill=DefaultValue("log"),
                 ),
             ),
-            (
-                "start_mode",
-                DropdownChoice(
-                    title=_("Service start type"),
-                    help=_(
+            "start_mode": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Service start type"),
+                    help_text=Help(
                         "Use this rule set to choose a desirable start mode of the Windows "
                         "service. You may also prevent the service from starting."
                     ),
-                    choices=[
-                        ("auto", _("Windows Service starts automatically")),
-                        ("delayed", _("Windows Service starts automatically with delay")),
-                        ("demand", _("Windows Service starts on demand")),
-                        ("disabled", _("Windows Service is disabled and can't be started")),
+                    elements=[
+                        SingleChoiceElement(
+                            name="auto", title=Title("Windows Service starts automatically")
+                        ),
+                        SingleChoiceElement(
+                            name="delayed",
+                            title=Title("Windows Service starts automatically with delay"),
+                        ),
+                        SingleChoiceElement(
+                            name="demand", title=Title("Windows Service starts on demand")
+                        ),
+                        SingleChoiceElement(
+                            name="disabled",
+                            title=Title("Windows Service is disabled and can't be started"),
+                        ),
                     ],
-                    default_value="auto",
+                    prefill=DefaultValue("auto"),
                 ),
             ),
-        ],
-        optional_keys=False,
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsWindowsAgent,
-        name=RuleGroup.AgentConfig("win_service"),
-        valuespec=_valuespec_agent_config_win_service,
-    )
+rule_spec_win_service = AgentConfig(
+    title=Title("Checkmk Windows agent service settings"),
+    name="win_service",
+    topic=Topic.WINDOWS,
+    parameter_form=_form_spec,
 )

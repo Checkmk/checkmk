@@ -4,6 +4,7 @@ load("//bazel/toolchains/cc/feature/std:standards.bzl", "STANDARDS_FEATURES")
 cc_toolchain(
     name = "host_gcc",
     args = [
+        "//bazel/toolchains/cc/gcc/bootlin/args:linux_sysroot",
         "//bazel/toolchains/cc/gcc/args:link_libs",
         "//bazel/toolchains/cc/gcc/args:no_absolute_paths_for_builtins",
         "//bazel/toolchains/cc/args:optimizations",

@@ -18,9 +18,10 @@ cc_tool_map(
     visibility = ["//visibility:public"],
 )
 
-# No --sysroot flag: gcc resolves its own relocatable default sysroot, and
+# --sysroot comes from //bazel/toolchains/cc/gcc/bootlin/args:linux_sysroot.
 # rules_foreign_cc folds the compiler into a single $CC word, which breaks
-# if --sysroot is appended separately.
+# if --sysroot is appended separately, but no rules_foreign_cc target uses
+# this toolchain yet.
 cc_tool(
     name = "gcc",
     src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-gcc",

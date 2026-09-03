@@ -726,7 +726,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_scaleio', [])
 
 agent_config['mk_scaleio'] = [
-{'id': '215f961b-3160-4a84-8a81-7d7c5f566e78', 'value': {'user': '', 'password': ('password', ''), 'interval': 60}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '215f961b-3160-4a84-8a81-7d7c5f566e78', 'value': {'deployment': ('sync', None), 'user': 'example_user', 'password': ('cmk_postprocessed', 'explicit_password', ('215f961b-3160-4a84-8a81-7d7c5f566e78', 'example_password'))}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_scaleio']
 
 

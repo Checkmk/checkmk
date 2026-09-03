@@ -3,41 +3,90 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Age, Alternative, Dictionary, FixedValue, TextInput
-from cmk.gui.wato import IndividualOrStoredPassword
-from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    migrate_to_password,
+    Password,
+    String,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_mk_scaleio() -> Alternative:
-    return Alternative(
-        title=_("EMC ScaleIO"),
-        elements=[
-            Dictionary(
-                title=_("Deploy the Checkmk EMC ScaleIO plug-in"),
-                elements=[
-                    ("user", TextInput(title=_("Username"))),
-                    ("password", IndividualOrStoredPassword(title=_("Password"))),
-                    ("interval", Age(title=_("Interval for collecting data"), default_value=60)),
-                ],
-                optional_keys=False,
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    match value:
+        case None:
+            return {"deployment": ("do_not_deploy", None)}
+        case {"user": user, "password": password, "interval": int() | float() as interval}:
+            # The old bakelet ran the plug-in synchronously for intervals of 60 seconds or less.
+            return {
+                "deployment": ("cached", float(interval)) if interval > 60 else ("sync", None),
+                "user": user,
+                "password": migrate_to_password(password),
+            }
+        case _:
+            raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help("Deploy the agent plug-in <tt>mk_scaleio</tt> on your target system."),
+        migrate=migrate,
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(60.0),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ),
+                    prefill=DefaultValue("sync"),
+                ),
             ),
-            FixedValue(
-                value=None,
-                title=_("Do not deploy the Checkmk EMC ScaleIO plug-in"),
-                totext=_("(disabled)"),
+            "user": DictElement(
+                parameter_form=String(title=Title("Username")),
             ),
-        ],
+            "password": DictElement(
+                parameter_form=Password(title=Title("Password")),
+            ),
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("mk_scaleio"),
-        valuespec=_valuespec_agent_config_mk_scaleio,
-    )
+rule_spec_mk_scaleio = AgentConfig(
+    title=Title("EMC ScaleIO"),
+    name="mk_scaleio",
+    topic=Topic.STORAGE,
+    parameter_form=_form_spec,
 )

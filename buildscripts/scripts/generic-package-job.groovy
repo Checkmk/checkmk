@@ -47,6 +47,14 @@ void main() {
         inside_container_args += [
             image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}")
         ]
+    } else {
+        def container_name = "testing-ubuntu-22.04-checkmk-${safe_branch_name}";
+        def local_docker_tag = "latest-with-docker";
+        // testing-ubuntu-22.04-checkmk-2.4.0:latest-with-docker
+
+        inside_container_args += [
+            image: docker.image("${docker_registry_no_http}/${container_name}:${local_docker_tag}")
+        ]
     }
 
     dir(checkout_dir) {

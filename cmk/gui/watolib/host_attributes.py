@@ -79,6 +79,7 @@ def register(host_attribute_topic_registry_: HostAttributeTopicRegistry) -> None
     host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_HOST_TAGS)
     host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_NETWORK_SCAN)
     host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD)
+    host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_RELATIONS)
     host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_CUSTOM_ATTRIBUTES)
     host_attribute_topic_registry_.register(HOST_ATTRIBUTE_TOPIC_META_DATA)
 
@@ -317,6 +318,12 @@ HOST_ATTRIBUTE_TOPIC_MANAGEMENT_BOARD = HostAttributeTopic(
     sort_index=50,
 )
 
+HOST_ATTRIBUTE_TOPIC_RELATIONS = HostAttributeTopic(
+    ident="relations",
+    title=_("Related hosts"),
+    sort_index=55,
+)
+
 HOST_ATTRIBUTE_TOPIC_CUSTOM_ATTRIBUTES = HostAttributeTopic(
     ident="custom_attributes",
     title=_("Custom attributes"),
@@ -440,6 +447,13 @@ class ABCHostAttribute(abc.ABC):
         the host cleanup form"""
         return self.editable()
 
+    def show_in_bulk_edit(self) -> bool:
+        """Whether this attribute can be set on many hosts at once.
+
+        An attribute whose value implies a write on some *other* host cannot go through a bulk
+        edit."""
+        return True
+
     def editable(self) -> bool:
         """Whether or not this attribute can be edited using the GUI.
         This makes the attribute a read only attribute in the GUI."""
@@ -454,6 +468,13 @@ class ABCHostAttribute(abc.ABC):
         """Whether it is allowed that a host has no explicit
         value here (inherited or direct value). An mandatory
         has *no* default value."""
+        return False
+
+    def is_always_active(self) -> bool:
+        """Whether this attribute is shown without the "set explicitly" checkbox.
+
+        An attribute that is neither inherited nor defaulted has nothing to switch off, so its
+        field is always shown and always submitted."""
         return False
 
     def show_inherited_value(self) -> bool:
@@ -500,6 +521,7 @@ class ABCHostAttribute(abc.ABC):
         return (
             (not new or self.show_on_create())
             and (for_what not in ["host", "cluster", "bulk"] or self.show_in_form())
+            and (for_what != "bulk" or self.show_in_bulk_edit())
             and (for_what != "folder" or self.show_in_folder())
             and (for_what != "host_search" or self.show_in_host_search())
         )
@@ -937,12 +959,28 @@ def collect_attributes(
     new: bool,
     do_validate: bool = True,
     varprefix: str = "",
+    stored: HostAttributes | None = None,
 ) -> HostAttributes:
-    """Read attributes from HTML variables"""
+    """Read attributes from HTML variables.
+
+    ``stored`` are the attributes of the object being edited. The result replaces them whole, so
+    an editor of an existing object has to pass them: an attribute its form does not offer is
+    kept as it is stored instead of being read from the request.
+    """
     host = HostAttributes()
     for attr in host_attributes.values():
         attrname = attr.name()
         if not request.var(for_what + "_change_%s" % attrname, ""):
+            continue
+        if not attr.is_visible(for_what, new):
+            # A form that does not offer an attribute must not be able to set it, whatever the
+            # request says: needs_validation() returns False for exactly these, so a value
+            # slipping through would reach the disk unvalidated. It must not drop it either -
+            # configure_attributes() renders a forced entry for an attribute it only shows
+            # (see "force_entry" there), so the request carries values nobody may edit.
+            if stored is not None and attrname in stored:
+                # Mypy can not help here with the dynamic key
+                host[attrname] = stored[attrname]  # type: ignore[literal-required]
             continue
 
         value = attr.from_html_vars(varprefix)
@@ -1136,10 +1174,10 @@ class ABCHostAttributeFormSpec(ABCHostAttribute):
         data = read_data_from_frontend(field_id)
         try:
             return visitor.to_disk(data)
-        except MKGeneralException:
-            # The submitted data does not even parse into the form spec's model. The rendered
-            # widget cannot produce that, but a hand-crafted request must yield a user error
-            # instead of a crash report.
+        except MKGeneralException, ValueError:
+            # collect_attributes() reads the form before it validates it, so unusable input has
+            # to come out of here as a user error; otherwise ordinary mis-entry, which the
+            # rendered widget cannot prevent, ends in a crash report.
             raise MKUserError(
                 field_id,
                 " ".join(message.message for message in visitor.validate(data))

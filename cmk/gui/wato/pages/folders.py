@@ -83,6 +83,7 @@ from cmk.gui.watolib.host_attributes import (
     collect_attributes,
     HostAttributes,
 )
+from cmk.gui.watolib.host_relations import relations_deletion_note
 from cmk.gui.watolib.hosts_and_folders import (
     disk_or_search_folder_from_request,
     find_available_folder_name,
@@ -1376,16 +1377,21 @@ class ModeFolder(WatoMode):
                 self._show_move_to_folder_action(host)
 
             if host.permissions.may("write", user):
-                delete_host_options: dict[str, str | dict[str, str]] = (
-                    confirmed_form_submit_options(
-                        title=_("Delete host"),
-                        message=_(
+                delete_host_notes: list[str] = []
+                if relations_note := relations_deletion_note(host):
+                    delete_host_notes.append(relations_note)
+                if self._host_known_in_monitoring(host.name()):
+                    delete_host_notes.append(
+                        _(
                             "This change must be activated via <a href='https://docs.checkmk.com"
                             "/latest/en/wato.html#activate_changes' target='_blank'>Activate cha"
                             "nges</a> before it becomes effective in monitoring."
                         )
-                        if self._host_known_in_monitoring(host.name())
-                        else None,
+                    )
+                delete_host_options: dict[str, str | dict[str, str]] = (
+                    confirmed_form_submit_options(
+                        title=_("Delete host"),
+                        message="<br><br>".join(delete_host_notes) or None,
                         confirm_text=_("Yes, delete host"),
                         cancel_text=_("No, keep host"),
                         suffix=host.name(),
@@ -1606,6 +1612,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
             all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
             "folder",
             new=self._is_new,
+            stored=None if self._is_new else self._folder.attributes,
         )
         self._save(
             title,

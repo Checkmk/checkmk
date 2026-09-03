@@ -143,10 +143,12 @@ def test_form_spec_value_behavior(
 def test_form_spec_accepted_value_survives_edit_page(
     form_spec_attribute: dict[str, ABCHostAttributeFormSpec],
     attr_name: str,
-    case: Case,
+    case: CasePass,
 ) -> None:
     """Render -> submit -> parse: an accepted value comes back off the page unchanged."""
-    assert_form_spec_attribute_lifecycle(form_spec_attribute[attr_name], case.value)
+    assert_form_spec_attribute_lifecycle(
+        form_spec_attribute[attr_name], case.value, case.submitted_value
+    )
 
 
 @pytest.mark.usefixtures("request_context")

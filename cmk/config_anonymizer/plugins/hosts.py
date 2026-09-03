@@ -17,6 +17,7 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
+from cmk.gui.utils.host_relations import relations_or_empty
 from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     make_folder_tree,
@@ -237,6 +238,11 @@ def _anonymize_host_and_folder_attribute(
             ]
         case "parents":
             return "parents", [anon_interface.get_host(h) for h in attr_value]
+        case "relations":
+            return "relations", [
+                {**link, "host": anon_interface.get_host(link["host"])}
+                for link in relations_or_empty(attr_value)
+            ]
         case "snmp_community":
             return "snmp_community", _anonymize_snmp_credentials(anon_interface, attr_value)
         case "management_address":

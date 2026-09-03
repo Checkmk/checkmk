@@ -4432,6 +4432,11 @@ class Host:
         # 1. Check preconditions
         if "contactgroups" in attrnames_to_clean:
             self._need_folder_write_permissions(acting_user)
+        if "relations" in attrnames_to_clean:
+            # The only way to drop a relation is Host.edit(), which takes the other half with it.
+            raise MKUserError(
+                None, _("Relations are stored on both hosts and cannot be cleaned up in bulk.")
+            )
         self.need_unlocked()
 
         old_attrs = self.attributes.copy()

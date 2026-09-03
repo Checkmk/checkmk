@@ -30,6 +30,7 @@ from cmk.gui.watolib.host_relations import (
     RelatedHost,
     relation_conflicts,
     RelationConflict,
+    relations_deletion_note,
     relations_or_user_error,
     resolve_all_relations,
 )
@@ -287,6 +288,39 @@ def test_resolve_all_relations_skips_self_and_unknown_hosts() -> None:
         ResolvedRelation(kind="management", direction="parent", host="os1", site="central")
     ]
     assert HostName("ghost") not in resolved
+
+
+def test_relations_deletion_note_counts_the_related_hosts() -> None:
+    host = FakeHost(
+        "mgmt",
+        [
+            {"kind": "management", "direction": "child", "host": "h1"},
+            {"kind": "management", "direction": "child", "host": "h2"},
+        ],
+    )
+    assert relations_deletion_note(host) == (
+        "This host has related hosts: 2<br>"
+        "The relations of this host will be deleted, and removed from the related hosts "
+        "wherever they can be written."
+    )
+
+
+def test_relations_deletion_note_counts_each_related_host_once() -> None:
+    host = FakeHost(
+        "mgmt",
+        [
+            {"kind": "management", "direction": "child", "host": "h1"},
+            {"kind": "management", "direction": "parent", "host": "h1"},
+        ],
+    )
+    note = relations_deletion_note(host)
+    assert note is not None
+    assert note.startswith("This host has related hosts: 1")
+
+
+@pytest.mark.parametrize("relations", [None, [], "not a list"])
+def test_relations_deletion_note_is_absent_without_own_relations(relations: object) -> None:
+    assert relations_deletion_note(FakeHost("h1", relations)) is None
 
 
 @pytest.mark.parametrize(

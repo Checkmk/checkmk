@@ -615,6 +615,7 @@ allows = [
   "cmk.gui.session",
   "cmk.gui.session_context",
   "cmk.gui.site_config",
+  "cmk.gui.utils.host_relations",
   "cmk.gui.watolib.attributes",
   "cmk.gui.watolib.config_sync",
   "cmk.gui.watolib.groups_io",

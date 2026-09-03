@@ -103,7 +103,7 @@ def configure_attributes(
 
         forms.header(
             topic_title,
-            isopen=topic_id in ["basic", "address", "monitoring_agents"],
+            isopen=topic_id in ["basic", "address", "monitoring_agents", "relations"],
             table_id=topic_id,
             show_more_toggle=any(attribute.is_show_more(config) for attribute in topic_attributes),
             show_more_mode=show_more_mode,
@@ -233,9 +233,14 @@ def configure_attributes(
             cb = html.get_checkbox(checkbox_name)
             force_entry = False
             disabled = False
+            # The checkbox means "set explicitly" only where a single object is edited; in a bulk
+            # edit it means "change this on all of them", which every attribute needs.
+            always_active = attr.is_always_active() and for_what in ["host", "cluster"]
 
             # first handle mandatory cases
-            if (
+            if always_active:
+                active = True
+            elif (
                 (
                     for_what == "folder"
                     and attr.is_mandatory()
@@ -274,6 +279,10 @@ def configure_attributes(
                 for_what == "folder" and myself and myself.locked()
             ):
                 checkbox_code = None
+            elif always_active:
+                # Nothing to switch off, so no box at all - but collect_attributes() only reads
+                # attributes whose checkbox was submitted.
+                checkbox_code = html.render_hidden_field(checkbox_name, "on", add_var=True)
             elif force_entry:
                 checkbox_code = html.render_checkbox(
                     "ignored_" + checkbox_name, disabled="disabled"
@@ -323,6 +332,9 @@ def configure_attributes(
                 )
                 attr.render_input(varprefix, defvalue)
                 html.close_div()
+
+                if always_active:
+                    continue
 
                 html.open_div(
                     class_="inherited",

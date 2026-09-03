@@ -10,7 +10,7 @@
 import json
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, NamedTuple
+from typing import Any, Final, NamedTuple
 
 import pytest
 
@@ -182,6 +182,21 @@ BASE_EXPECTED_ATTRIBUTES: dict[str, dict[str, Any]] = {
         "show_in_table": False,
         "show_inherited_value": True,
         "topic": "Management board",
+    },
+    "relations": {
+        "class_name": "HostAttributeRelations",
+        "depends_on_roles": [],
+        "depends_on_tags": [],
+        "editable": True,
+        "from_config": False,
+        "show_in_folder": False,
+        "show_in_form": True,
+        "show_in_host_search": False,
+        "show_in_table": False,
+        "show_inherited_value": False,
+        "show_in_bulk_edit": False,
+        "show_in_host_cleanup": False,
+        "topic": "Related hosts",
     },
     "meta_data": {
         "class_name": "ValueSpecAttribute",
@@ -408,12 +423,28 @@ RELAY_ATTR: dict[str, dict[str, Any]] = {
 }
 
 
+class _SameAsStored:
+    """Sentinel: the page submits the value exactly as it is stored."""
+
+
+_SAME_AS_STORED: Final = _SameAsStored()
+
+
 @dataclass(frozen=True)
 class CasePass:
-    """A value that is accepted and stored on disk unchanged."""
+    """A value that is accepted and stored on disk unchanged.
+
+    ``submitted`` is what the Vue mount posts back for it, for an attribute whose form spec
+    transforms between the stored and the edited shape.
+    """
 
     id: str
     value: object
+    submitted: object = _SAME_AS_STORED
+
+    @property
+    def submitted_value(self) -> object:
+        return self.value if isinstance(self.submitted, _SameAsStored) else self.submitted
 
 
 @dataclass(frozen=True)
@@ -428,8 +459,21 @@ Case = CasePass | CaseFail
 
 
 # The attributes available in every edition, so every edition's module composes its cases
-# on top of these. No attribute is FormSpec-native yet; each migration adds its values here.
-BASE_FORM_SPEC_CASES: Mapping[str, list[Case]] = {}
+# on top of these; each migration adds its values here.
+BASE_FORM_SPEC_CASES: Mapping[str, list[Case]] = {
+    "relations": [
+        CasePass("no-relations", []),
+        # Stored as a mapping, edited as the (relation type, host name) pair the choice produces.
+        CasePass(
+            "a-link",
+            [{"kind": "management", "direction": "parent", "host": "board"}],
+            submitted=[["management_parent", "board"]],
+        ),
+        CaseFail("not-a-list", "management_parent"),
+        CaseFail("without-host", [{"kind": "management", "direction": "parent", "host": ""}]),
+        CaseFail("not-a-mapping", ["management_parent"]),
+    ],
+}
 
 
 def form_spec_attributes() -> dict[str, ABCHostAttributeFormSpec]:
@@ -525,10 +569,12 @@ def assert_form_spec_value_behavior(attr: ABCHostAttributeFormSpec, case: Case) 
             assert visitor.validate(RawDiskData(case.value))
 
 
-def assert_form_spec_attribute_lifecycle(attr: ABCHostAttributeFormSpec, value: object) -> None:
+def assert_form_spec_attribute_lifecycle(
+    attr: ABCHostAttributeFormSpec, value: object, submitted: object
+) -> None:
     """Drive one value through render -> submit -> parse of the edit-page machinery.
 
-    Needs a request context. The submitted data is the JSON the Vue mount posts back, so
+    Needs a request context. ``submitted`` is the JSON the Vue mount posts back for ``value``, so
     this also covers that the on-disk value survives the JSON leg of a real save.
     """
     with output_funnel.plugged():
@@ -536,7 +582,7 @@ def assert_form_spec_attribute_lifecycle(attr: ABCHostAttributeFormSpec, value: 
         attr.render_input_readonly("", value)
         output_funnel.drain()
 
-    request.set_var(attr.name(), json.dumps(value))
+    request.set_var(attr.name(), json.dumps(submitted))
     assert attr.from_html_vars("") == value
     attr.validate_input(value, "")
 

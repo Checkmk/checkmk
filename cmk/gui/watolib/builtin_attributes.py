@@ -68,6 +68,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.attributes import create_ipmi_parameters, IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import (
+    ABCHostAttributeFormSpec,
     ABCHostAttributeNagiosText,
     ABCHostAttributeValueSpec,
     all_host_attributes,
@@ -78,10 +79,15 @@ from cmk.gui.watolib.host_attributes import (
     HOST_ATTRIBUTE_TOPIC_MONITORING_DATASOURCES,
     HOST_ATTRIBUTE_TOPIC_NETWORK_ADDRESS,
     HOST_ATTRIBUTE_TOPIC_NETWORK_SCAN,
+    HOST_ATTRIBUTE_TOPIC_RELATIONS,
     HostAttributeTopic,
     sorted_host_attributes,
 )
-from cmk.gui.watolib.host_relations import relation_conflicts, relations_or_user_error
+from cmk.gui.watolib.host_relations import (
+    host_relations_form_spec,
+    relation_conflicts,
+    relations_or_user_error,
+)
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.translation import HostnameTranslation
@@ -1336,6 +1342,78 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
             description="IPMI credentials",
             required=False,
             allow_none=True,
+        )
+
+
+class HostAttributeRelations(ABCHostAttributeFormSpec):
+    """GUI-only relations between a host and its management board / OS hosts.
+
+    Stored in ``hosts.mk`` on both hosts of a relation, but exported to the monitoring core
+    elsewhere - see :mod:`cmk.gui.watolib.host_relations_export`.
+    """
+
+    @override
+    def name(self) -> str:
+        return "relations"
+
+    @override
+    def topic(self) -> HostAttributeTopic:
+        return HOST_ATTRIBUTE_TOPIC_RELATIONS
+
+    @classmethod
+    @override
+    def sort_index(cls) -> int:
+        return 220
+
+    @override
+    def show_in_table(self) -> bool:
+        return False
+
+    @override
+    def show_in_folder(self) -> bool:
+        return False
+
+    @override
+    def show_in_host_search(self) -> bool:
+        return False
+
+    @override
+    def show_inherited_value(self) -> bool:
+        return False
+
+    @override
+    def show_in_bulk_edit(self) -> bool:
+        """One value for a whole selection would pile every host of it onto the same counterpart,
+        rewriting that host's folder once per selected host - and a refusal halfway through would
+        leave the selection half applied."""
+        return False
+
+    @override
+    def show_in_host_cleanup(self) -> bool:
+        """Dropping a relation is a write on the other host, which only ``Host.edit()`` does."""
+        return False
+
+    @override
+    def is_always_active(self) -> bool:
+        """Relations are neither inherited nor defaulted, so there is nothing to switch off."""
+        return True
+
+    @override
+    def openapi_editable(self) -> bool:
+        return False
+
+    @override
+    def form_spec(self) -> TransformDataForLegacyFormatOrRecomposeFunction:
+        return host_relations_form_spec()
+
+    @override
+    def openapi_field(self) -> Field:
+        """Required of every attribute, but nothing reads this one: the host schemas list their
+        fields by hand and relations are configured in Setup only."""
+        return fields.List(
+            fields.Dict(),
+            description="GUI-only relations between this host and its management board / OS hosts.",
+            required=False,
         )
 
 

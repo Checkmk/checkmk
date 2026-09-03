@@ -2397,3 +2397,23 @@ def test_plan_relation_mirror_turns_a_flip_into_one_write() -> None:
     assert mirror == {
         HostName("board"): [{"kind": "management", "direction": "child", "host": HostName("os1")}]
     }
+
+
+def test_clean_attributes_refuses_to_drop_a_relation(tree: FolderTree) -> None:
+    """Only Host.edit() knows how to take the other half with it."""
+    root = tree.root_folder()
+    board = _create_host(
+        root,
+        "board",
+        HostAttributes(
+            {"relations": [{"kind": "management", "direction": "parent", "host": HostName("os1")}]}
+        ),
+    )
+
+    with pytest.raises(MKUserError, match="stored on both hosts"):
+        board.clean_attributes(
+            ["relations"],
+            pprint_value=False,
+            pending_changes=_noop_pending_changes(),
+            acting_user=_SUPERUSER,
+        )

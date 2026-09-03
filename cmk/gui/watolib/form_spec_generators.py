@@ -127,6 +127,9 @@ def create_host_attributes_selection(
             if not attr.is_visible(for_what="host", new=False) or not attr.editable():
                 continue
 
+            if not attr.openapi_editable():
+                continue
+
             if exclude_host_attributes is not None and attr.name() in exclude_host_attributes:
                 continue
 

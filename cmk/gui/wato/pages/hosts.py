@@ -100,6 +100,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributes,
 )
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
+from cmk.gui.watolib.host_relations import relations_deletion_note
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
     folder_from_request,
@@ -731,15 +732,17 @@ class ModeEditHost(ABCHostMode):
             )
             return None
 
-        attributes = collect_attributes(
-            all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
-            "host" if not self._is_cluster() else "cluster",
-            new=False,
-        )
         host = tree.host(self._host.name())
         if host is None:
             flash(f"Host {self._host.name()} could not be found.")
             return None
+
+        attributes = collect_attributes(
+            all_host_attributes(config.wato_host_attrs, config.tags.get_tag_groups_by_topic()),
+            "host" if not self._is_cluster() else "cluster",
+            new=False,
+            stored=host.attributes,
+        )
 
         host.edit(
             attributes,
@@ -928,6 +931,7 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
                         url=makeactionuri(request, transactions.get(), [("delete", "1")]),
                         title=_("Delete host"),
                         suffix=host.name(),
+                        message=relations_deletion_note(host),
                     )
                 ),
             )
@@ -1019,6 +1023,10 @@ class CreateHostMode(ABCHostMode):
                 list(nodes) if (nodes := self._clone_source.cluster_nodes()) is not None else None
             ),
         )
+
+        # The clone's counterparts were never told about these relations, so carrying the rows
+        # over would leave every one of them one-sided.
+        host.attributes.pop("relations", None)
 
         # remove the quick setup lock from the clone
         if is_locked_by_config_bundle(host.locked_by()):

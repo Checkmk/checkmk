@@ -41,8 +41,10 @@ from cmk.gui.utils.host_relation_kinds import (
 )
 from cmk.gui.utils.host_relations import (
     parse_relations_value,
+    referenced_host_names,
     RelationDirection,
     RelationLink,
+    relations_or_empty,
     RelationsValue,
     ResolvedRelation,
     reverse_direction,
@@ -365,3 +367,19 @@ def resolve_all_relations(all_hosts: Mapping[HostName, RelatedHost]) -> Resolved
             _add(other.name(), link["kind"], reverse_direction(link["direction"]), host)
 
     return {owner: list(relations) for owner, relations in resolved.items()}
+
+
+def relations_deletion_note(host: RelatedHost) -> str | None:
+    """Extra confirmation text for deleting ``host``, or ``None`` if it has no relations."""
+    if not (
+        related := referenced_host_names(relations_or_empty(host.attributes.get("relations", [])))
+    ):
+        return None
+    return (
+        _("This host has related hosts: %(count)d") % {"count": len(related)}
+        + "<br>"
+        + _(
+            "The relations of this host will be deleted, and removed from the related hosts "
+            "wherever they can be written."
+        )
+    )

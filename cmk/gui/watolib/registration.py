@@ -213,6 +213,7 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
         builtin_attributes.HostAttributeManagementProtocol,
         builtin_attributes.HostAttributeManagementSNMPCommunity,
         builtin_attributes.HostAttributeManagementIPMICredentials,
+        builtin_attributes.HostAttributeRelations,
         builtin_attributes.HostAttributeSite,
         builtin_attributes.HostAttributeLockedBy,
         builtin_attributes.HostAttributeLockedAttributes,

@@ -268,7 +268,9 @@ class ModeBulkCleanup(WatoMode):
         self, host_attributes: Mapping[str, ABCHostAttribute]
     ) -> list[str]:
         to_clean = []
-        for attrname in host_attributes:
+        for attrname, attr in host_attributes.items():
+            if not attr.show_in_host_cleanup():
+                continue
             if html.get_checkbox("_clean_" + attrname) is True:
                 to_clean.append(attrname)
         return to_clean

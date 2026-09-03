@@ -861,7 +861,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('package_name', [])
 
 agent_config['package_name'] = [
-{'id': '1f77993a-9629-43f6-b892-1e3ab5249876', 'value': 'check-mk-agent', 'condition': {}, 'options': {'disabled': False}},
+{'id': '1f77993a-9629-43f6-b892-1e3ab5249876', 'value': {'name': 'check-mk-agent'}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['package_name']
 
 

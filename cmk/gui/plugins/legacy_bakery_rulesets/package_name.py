@@ -3,40 +3,62 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsLinuxUnixAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    rulespec_registry,
+from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    String,
+    validators,
 )
-from cmk.gui.valuespec import TextInput
-from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_package_name() -> TextInput:
-    return TextInput(
-        label=_("Package name:"),
-        default_value="check-mk-agent",
-        regex="^[a-zA-Z][-a-zA-Z0-9]*$",
-        regex_error=_(
-            "A package must only consist of letters, digits, dash and it must start with a letter."
-        ),
-        title=_("Name of agent packages (Linux, Unix)"),
-        help=_(
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "name" in value:
+        return value
+    if isinstance(value, str):
+        return {"name": value}
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
             "Choose a custom name for the baked Checkmk agent package, other than default "
             "<tt>check-mk-agent</tt>. Please note that this rule only affects the name "
             "that is used by the package manager (e.g., RPM) to identify the Checkmk agent package, "
             "rather than the contents of the package, e.g., service names. "
             "In particular, it doesn't support to install multiple agents on one machine."
         ),
+        migrate=migrate,
+        # Consumed by the package builders (non-free cmk-bakery), not by a bakelet.
+        elements={
+            "name": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Package name"),
+                    prefill=DefaultValue("check-mk-agent"),
+                    custom_validate=(
+                        validators.MatchRegex(
+                            "^[a-zA-Z][-a-zA-Z0-9]*$",
+                            Message(
+                                "A package must only consist of letters, digits, dash and it "
+                                "must start with a letter."
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsLinuxUnixAgent,
-        name=RuleGroup.AgentConfig("package_name"),
-        valuespec=_valuespec_agent_config_package_name,
-    )
+rule_spec_package_name = AgentConfig(
+    title=Title("Name of agent packages (Linux, Unix)"),
+    name="package_name",
+    topic=Topic.LINUX,
+    parameter_form=_form_spec,
 )

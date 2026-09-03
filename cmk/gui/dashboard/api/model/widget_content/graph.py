@@ -26,7 +26,12 @@ from cmk.gui.openapi.framework.model.common_fields import (
     timerange_from_internal,
     TimerangeModel,
 )
-from cmk.gui.type_defs import GraphPresentation, GraphRenderOptionsVS, SizePT
+from cmk.gui.type_defs import (
+    GraphPresentation,
+    GraphRenderOptionsVS,
+    SizePT,
+    VerticalAxisWidth,
+)
 
 from ._base import BaseWidgetContent
 
@@ -99,7 +104,7 @@ class GraphRenderOptions:
 
     @staticmethod
     def _vertical_axis_width_from_internal(
-        value: Literal["fixed"] | tuple[Literal["explicit"], SizePT] | None,
+        value: VerticalAxisWidth | None,
     ) -> Literal["fixed"] | SizePT | ApiOmitted:
         if value is None:
             return ApiOmitted()

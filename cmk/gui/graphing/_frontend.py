@@ -6,7 +6,7 @@
 import json
 from collections.abc import Iterable, Sequence
 from dataclasses import asdict
-from typing import Final, Literal
+from typing import Final
 
 from tzlocal import get_localzone_name
 
@@ -20,7 +20,7 @@ from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT
+from cmk.gui.type_defs import GraphTimerange, PainterParameters, VerticalAxisWidth
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
     CmkTimeSeriesGraph,
@@ -256,7 +256,7 @@ def render_global_time_picker(
 
 
 def value_axis_width_px(
-    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT],
+    vertical_axis_width: VerticalAxisWidth,
 ) -> float | None:
     """None for "fixed": that choice reads "relative to the font size", and a page which offers
     no font size has nothing to be relative to, so the renderer's own default width stands."""
@@ -278,7 +278,7 @@ def render_engine_graph_group(
     show_legend: bool = True,
     show_title: bool = True,
     show_vertical_axis: bool = True,
-    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed",
+    vertical_axis_width: VerticalAxisWidth = "fixed",
     show_time_axis: bool = True,
     interaction: Interaction = _DEFAULT_INTERACTION,
     multi_column: bool = False,

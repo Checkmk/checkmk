@@ -43,6 +43,7 @@ from cmk.utils.password_store import PasswordId
 _ContactgroupName = str
 SizePT = NewType("SizePT", float)
 SizeMM = float
+type VerticalAxisWidth = Literal["fixed"] | tuple[Literal["explicit"], SizePT]
 HTTPVariables = list[tuple[str, int | str | None]]
 LivestatusQuery = str
 PermissionName = str
@@ -794,7 +795,7 @@ class GraphRenderOptionsVS(TypedDict, total=False):
     show_title: bool | Literal["inline"]
     show_vertical_axis: bool
     size: tuple[int, int]
-    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT]
+    vertical_axis_width: VerticalAxisWidth
     title_format: Sequence[GraphTitleFormatVS]
 
 

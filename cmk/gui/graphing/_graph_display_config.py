@@ -13,6 +13,7 @@ from cmk.gui.type_defs import (
     GraphTitleFormatVS,
     SizeMM,
     SizePT,
+    VerticalAxisWidth,
 )
 
 # Pixels per "ex" graph-size unit: graph sizes are configured/stored in ex, this scales them to the
@@ -66,7 +67,7 @@ class GraphRenderOptions(BaseModel):
     show_vertical_axis: bool | None = None
     size: tuple[int, int] | None = None
     title_format: GraphTitleFormat | None = None
-    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] | None = None
+    vertical_axis_width: VerticalAxisWidth | None = None
 
     @classmethod
     def from_graph_render_options_vs(cls, render_options_vs: GraphRenderOptionsVS) -> Self:
@@ -99,7 +100,7 @@ class _GraphDisplayConfigBase(BaseModel):
     show_time_axis: bool = True
     show_vertical_axis: bool = True
     title_format: GraphTitleFormat = _DEFAULT_TITLE_FORMAT
-    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed"
+    vertical_axis_width: VerticalAxisWidth = "fixed"
 
     def update_from_options(self, options: GraphRenderOptions) -> Self:
         return self.model_copy(

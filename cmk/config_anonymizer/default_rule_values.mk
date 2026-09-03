@@ -1077,7 +1077,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_exe_suffixes', [])
 
 agent_config['win_exe_suffixes'] = [
-{'id': '9515215d-efd4-41ce-b38d-6742d14824a8', 'value': None, 'condition': {}, 'options': {'disabled': False}},
+{'id': '9515215d-efd4-41ce-b38d-6742d14824a8', 'value': {'mode': ('all_files', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_exe_suffixes']
 
 

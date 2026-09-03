@@ -140,6 +140,60 @@ def _create_filled_imm_tree() -> ImmutableTree:
     return _make_immutable_tree(_create_filled_mut_tree())
 
 
+def _create_filled_delta_tree() -> ImmutableDeltaTree:
+    return deserialize_delta_tree(
+        SDRawDeltaTree(
+            Attributes={},
+            Nodes={
+                SDNodeName("path-to-nta"): SDRawDeltaTree(
+                    Attributes={},
+                    Nodes={
+                        SDNodeName("na"): SDRawDeltaTree(
+                            Attributes={
+                                "Pairs": {
+                                    SDKey("na0"): (None, "NA 0"),
+                                    SDKey("na1"): (None, "NA 1"),
+                                }
+                            },
+                            Nodes={},
+                            Table={},
+                        ),
+                        SDNodeName("nt"): SDRawDeltaTree(
+                            Attributes={},
+                            Nodes={},
+                            Table={
+                                "KeyColumns": [SDKey("nt0")],
+                                "Rows": [
+                                    {SDKey("nt0"): (None, "NT 00"), SDKey("nt1"): (None, "NT 01")},
+                                    {SDKey("nt0"): (None, "NT 10"), SDKey("nt1"): (None, "NT 11")},
+                                ],
+                            },
+                        ),
+                        SDNodeName("ta"): SDRawDeltaTree(
+                            Attributes={
+                                "Pairs": {
+                                    SDKey("ta0"): (None, "TA 0"),
+                                    SDKey("ta1"): (None, "TA 1"),
+                                }
+                            },
+                            Nodes={},
+                            Table={
+                                "KeyColumns": [SDKey("ta0")],
+                                "Rows": [
+                                    {SDKey("ta0"): (None, "TA 00"), SDKey("ta1"): (None, "TA 01")},
+                                    {SDKey("ta0"): (None, "TA 10"), SDKey("ta1"): (None, "TA 11")},
+                                ],
+                            },
+                        ),
+                    },
+                    Table={},
+                )
+            },
+            Table={},
+        )
+    )
+
+
 def test_serialize_empty_mut_tree() -> None:
     assert serialize_tree(_create_empty_mut_tree()) == {"Attributes": {}, "Table": {}, "Nodes": {}}
 
@@ -482,7 +536,7 @@ def test_compare_tree_2() -> None:
 
 def test_filter_delta_tree_nt() -> None:
     filtered = filter_delta_tree(
-        compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        _create_filled_delta_tree(),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("nt")),
@@ -510,7 +564,7 @@ def test_filter_delta_tree_nt() -> None:
 
 def test_filter_delta_tree_na() -> None:
     filtered = filter_delta_tree(
-        compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        _create_filled_delta_tree(),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("na")),
@@ -533,7 +587,7 @@ def test_filter_delta_tree_na() -> None:
 
 def test_filter_delta_tree_ta() -> None:
     filtered = filter_delta_tree(
-        compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        _create_filled_delta_tree(),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
@@ -561,7 +615,7 @@ def test_filter_delta_tree_ta() -> None:
 
 def test_filter_delta_tree_nta_ta() -> None:
     filtered = filter_delta_tree(
-        compare_trees(_create_filled_imm_tree(), _create_empty_imm_tree()),
+        _create_filled_delta_tree(),
         [
             SDFilterChoice(
                 path=(SDNodeName("path-to-nta"), SDNodeName("ta")),

@@ -3,54 +3,95 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, TextInput
-from cmk.gui.wato import IndividualOrStoredPassword
-from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    migrate_to_password,
+    Password,
+    String,
+    validators,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_mk_msoffice() -> Alternative:
-    return Alternative(
-        title=_("MS Office 365 (Windows)"),
-        help=_(
-            "This plug-in can be used to collect information of all MS Office 365 licenses and serviceplans "
-            "using the MgGraph PowerShell module."
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    match value:
+        case None:
+            return {"deployment": ("do_not_deploy", None)}
+        case {"client_id": client_id, "tenant_id": tenant_id, "client_secret": client_secret}:
+            return {
+                "deployment": ("sync", None),
+                "client_id": client_id,
+                "tenant_id": tenant_id,
+                "client_secret": migrate_to_password(client_secret),
+            }
+        case _:
+            raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "This plug-in can be used to collect information of all MS Office 365 licenses and "
+            "serviceplans using the MgGraph PowerShell module."
         ),
-        elements=[
-            Dictionary(
-                title=_("Deploy MS Office 365 plug-in"),
-                elements=[
-                    ("client_id", TextInput(title=_("ClientID"), allow_empty=False)),
-                    ("tenant_id", TextInput(title=_("TenantId"), allow_empty=False)),
-                    (
-                        "client_secret",
-                        IndividualOrStoredPassword(
-                            title=_("ClientSecret"),
-                            help=_(
-                                "Enter the client secret explicitly or select one from the password store."
-                            ),
-                            allow_empty=False,
+        migrate=migrate,
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the plug-in"),
+                            parameter_form=FixedValue(value=None),
                         ),
                     ),
-                ],
-                required_keys=["client_id", "tenant_id", "client_secret"],
+                    prefill=DefaultValue("sync"),
+                ),
             ),
-            FixedValue(
-                value=None,
-                title=_("Do not deploy plug-in for MS Office 365"),
-                totext=_("(disabled)"),
+            "client_id": DictElement(
+                parameter_form=String(
+                    title=Title("ClientID"),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
             ),
-        ],
+            "tenant_id": DictElement(
+                parameter_form=String(
+                    title=Title("TenantId"),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
+            ),
+            "client_secret": DictElement(
+                parameter_form=Password(
+                    title=Title("ClientSecret"),
+                    help_text=Help(
+                        "Enter the client secret explicitly or select one from the password store."
+                    ),
+                ),
+            ),
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("mk_msoffice"),
-        valuespec=_valuespec_agent_config_mk_msoffice,
-    )
+rule_spec_mk_msoffice = AgentConfig(
+    title=Title("MS Office 365 (Windows)"),
+    name="mk_msoffice",
+    topic=Topic.APPLICATIONS,
+    parameter_form=_form_spec,
 )

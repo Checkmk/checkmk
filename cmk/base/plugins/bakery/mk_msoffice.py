@@ -10,19 +10,23 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.utils.password_store import lookup_for_bakery
+from cmk.utils.password_store import extract_formspec_password, FormSpecPassword
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
 class _Config(BaseModel):
-    client_id: str
-    tenant_id: str
-    client_secret: tuple[Literal["password", "store"], str]
+    deployment: tuple[Literal["do_not_deploy", "sync"], None]
+    client_id: str = ""
+    tenant_id: str = ""
+    client_secret: FormSpecPassword | None = None
 
 
 def get_mk_msoffice_files(conf: Mapping[str, object]) -> FileGenerator:
     config = _Config.model_validate(conf)
+    if config.deployment[0] == "do_not_deploy":
+        return
+
     yield Plugin(base_os=OS.WINDOWS, source=Path("mk_msoffice.ps1"))
     yield PluginConfig(
         base_os=OS.WINDOWS,
@@ -30,18 +34,17 @@ def get_mk_msoffice_files(conf: Mapping[str, object]) -> FileGenerator:
             {
                 "ClientId": config.client_id,
                 "TenantId": config.tenant_id,
-                "ClientSecret": _client_secret(config.client_secret),
+                "ClientSecret": (
+                    ""
+                    if config.client_secret is None
+                    else extract_formspec_password(config.client_secret)
+                ),
             },
             indent=4,
         ).splitlines(),
         target=Path("msoffice_cfg.json"),
         include_header=False,
     )
-
-
-def _client_secret(value: tuple[Literal["password", "store"], str]) -> str:
-    kind, secret_or_id = value
-    return lookup_for_bakery(secret_or_id) if kind == "store" else secret_or_id
 
 
 register.bakery_plugin(

@@ -627,7 +627,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_msoffice', [])
 
 agent_config['mk_msoffice'] = [
-{'id': '9f2c53de-b9fd-4bc4-aeea-7f39a8cea4de', 'value': {'client_id': '00000000-0000-0000-0000-000000000001', 'tenant_id': '00000000-0000-0000-0000-000000000001', 'client_secret': ('password', 'example_secret_value_for_demo')}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '9f2c53de-b9fd-4bc4-aeea-7f39a8cea4de', 'value': {'deployment': ('sync', None), 'client_id': '00000000-0000-0000-0000-000000000001', 'tenant_id': '00000000-0000-0000-0000-000000000001', 'client_secret': ('cmk_postprocessed', 'explicit_password', ('9f2c53de-b9fd-4bc4-aeea-7f39a8cea4de', 'example_secret_value_for_demo'))}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_msoffice']
 
 

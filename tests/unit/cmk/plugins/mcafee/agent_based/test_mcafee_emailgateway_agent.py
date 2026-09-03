@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.mcafee_emailgateway_agent import (
+from cmk.plugins.mcafee.agent_based.mcafee_emailgateway_agent import (
     check_mcafee_emailgateway_agent,
     discover_mcafee_emailgateway_agent,
 )

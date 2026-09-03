@@ -29,6 +29,7 @@ from tests.system.gui.testlib.playwright.pom.setup.hosts import AddHost, SetupHo
 from tests.system.gui.testlib.playwright.pom.setup.licensing import Licensing
 from tests.testlib.common.repo import repo_path
 from tests.testlib.emails import EmailManager
+from tests.testlib.notifications import create_host, create_notification_host, NotificationTarget
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import (
     ADMIN_USER,
@@ -40,6 +41,8 @@ from tests.testlib.utils import is_cleanup_enabled, run
 
 logger = logging.getLogger(__name__)
 
+# `unique` only dedupes within its own Faker, so the whole session has to share one.
+_unique_faker = Faker().unique
 
 TCmkPage = TypeVar("TCmkPage", bound=CmkPage)
 
@@ -180,7 +183,6 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
     python_script_path = repo_path() / "tests/scripts" / python_script_name
     test_site_dump_path = test_site.path("var/check_mk/dumps")
     data_source_dump_path = repo_path() / "tests" / "system" / "gui" / "data"
-    faker = Faker()
 
     logger.info("Create a folder '%s' for dumps inside test site", test_site_dump_path)
     if not test_site.is_dir(test_site_dump_path):
@@ -208,7 +210,7 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
         else:
             hosts_count = 1
         for _ in range(hosts_count):
-            host_name = faker.unique.hostname()
+            host_name = _unique_faker.hostname()
             logger.info("Copy a dump to the new folder")
             assert (
                 run(
@@ -268,6 +270,20 @@ def fixture_windows_hosts(agent_dump_hosts: dict[str, list]) -> list[str]:
     return agent_dump_hosts["windows-2.3.0p10"]
 
 
+@pytest.fixture(name="configured_host")
+def fixture_configured_host(test_site: Site) -> Iterator[str]:
+    """Return the name of a host that exists in the configuration, without any agent data."""
+    with create_host(test_site, _unique_faker.hostname()) as host_name:
+        yield host_name
+
+
+@pytest.fixture(name="notification_host")
+def fixture_notification_host(test_site: Site) -> Iterator[NotificationTarget]:
+    """Return a host with a service whose state the test controls."""
+    with create_notification_host(test_site, _unique_faker.hostname()) as notification_host:
+        yield notification_host
+
+
 @pytest.fixture(name="email_manager", scope="session")
 def _email_manager() -> Iterator[EmailManager]:
     """Create EmailManager instance.
@@ -293,9 +309,7 @@ def _create_bulk_hosts(
     Yields:
         List of the hosts that been created.
     """
-    faker = Faker()
-
-    hosts_list = [faker.unique.hostname() for _ in range(num_hosts)]
+    hosts_list = [_unique_faker.hostname() for _ in range(num_hosts)]
     entries = [
         {
             "host_name": host,

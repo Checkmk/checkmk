@@ -8,11 +8,6 @@ from pathlib import Path
 import pytest
 
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import MainDashboard
-from tests.system.gui.testlib.playwright.pom.monitor.service_search import (
-    ServiceSearchPage,
-    ServiceState,
-)
-from tests.system.gui.testlib.playwright.pom.setup.add_rule_filesystems import AddRuleFilesystems
 from tests.system.gui.testlib.playwright.pom.setup.notification_configuration import (
     NotificationConfiguration,
 )
@@ -26,8 +21,8 @@ from tests.system.gui.testlib.playwright.pom.setup.notification_rules import (
     STAGE_SENDING_CONDITIONS,
     STAGE_TRIGGERING_EVENTS,
 )
-from tests.system.gui.testlib.playwright.pom.setup.ruleset import Ruleset
 from tests.testlib.emails import EmailManager
+from tests.testlib.notifications import NotificationTarget
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -37,7 +32,7 @@ logger = logging.getLogger(__name__)
 @pytest.mark.usefixtures("notification_user")
 def test_add_new_notification_rule(
     dashboard_page: MainDashboard,
-    linux_hosts: list[str],
+    notification_host: NotificationTarget,
     notification_user: tuple[str, str],
     email_manager: EmailManager,
     test_site: Site,
@@ -46,11 +41,9 @@ def test_add_new_notification_rule(
     """Test adding a new notification rule creates the expected email"""
     email_manager.temp_folder = tmp_path
     username, email = notification_user
-    host_name = linux_hosts[0]
-    service_name = "Filesystem /"
+    host_name = notification_host.host_name
+    service_name = notification_host.service_name
     expected_notification_subject = "GUI E2E Test Add Notification Rule"
-    filesystem_rule_description = "Test rule for email notifications"
-    used_space = "10"
 
     logger.info("Add new notification rule")
 
@@ -64,7 +57,7 @@ def test_add_new_notification_rule(
     )
     add_rule_page.validate_button_text_and_goto_next_qs_stage(current_stage=1)
 
-    logger.info("Set Hosts on Host filters to '%s'", test_site.id)
+    logger.info("Set Hosts on Host filters to '%s'", host_name)
     add_rule_page.expand_host_filters()
     add_rule_page.hosts_checkbox.set_checked(True)
     add_rule_page.hosts_dropdown_list().click()
@@ -119,30 +112,10 @@ def test_add_new_notification_rule(
     edit_rule_page.save_and_test()
 
     try:
-        was_filesystem_ruleset_created = False
-
-        add_rule_filesystem_page = AddRuleFilesystems(dashboard_page.page)
-        add_rule_filesystem_page.check_levels_for_user_free_space(True)
-        add_rule_filesystem_page.description_text_field.fill(filesystem_rule_description)
-        add_rule_filesystem_page.levels_for_used_free_space_warning_text_field.fill(used_space)
-        add_rule_filesystem_page.save_button.click()
-        filesystems_rules_page = Ruleset(
-            dashboard_page.page,
-            add_rule_filesystem_page.rule_name,
-            add_rule_filesystem_page.section_name,
-            navigate_to_page=False,
+        logger.info("Set '%s' to WARN to trigger the notification", service_name)
+        test_site.send_service_check_result(
+            host_name, service_name, 1, "FAKE WARN", expected_state=1
         )
-        filesystems_rules_page.check_rule_is_present(rule_id=filesystem_rule_description)
-        add_rule_filesystem_page.activate_changes(test_site)
-
-        was_filesystem_ruleset_created = True
-
-        checkmk_agent = "Check_MK"
-        service_search_page = ServiceSearchPage(dashboard_page.page)
-        logger.info("Reschedule the '%s' service to trigger the notification", checkmk_agent)
-        service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
-        service_search_page.reschedule_check(host_name, checkmk_agent)
-        service_search_page.wait_for_check_status_update(host_name, service_name, ServiceState.WARN)
 
         logger.info("Waiting for email %s from for user %s", username, email)
         email_manager.wait_for_email(expected_notification_subject)
@@ -159,16 +132,4 @@ def test_add_new_notification_rule(
         edit_notification_rule_page.check_disable_rule(False)
         edit_notification_rule_page.apply()
 
-        if was_filesystem_ruleset_created:
-            filesystems_rules_page.navigate()
-            logger.info("Delete the filesystems rule")
-            filesystems_rules_page.delete_rule(rule_id=filesystem_rule_description)
-            filesystems_rules_page.activate_changes(test_site)
-
-            # Expect for the service to be OK after rule removal
-            service_search_page.navigate()
-            service_search_page.filter_sidebar.apply_filters(service_search_page.services_table)
-            service_search_page.reschedule_check(host_name, checkmk_agent)
-            service_search_page.wait_for_check_status_update(
-                host_name, service_name, ServiceState.OK
-            )
+        email_manager.clean_emails(expected_notification_subject)

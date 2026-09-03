@@ -22,6 +22,10 @@ def main() {
     /// executed inside the container (as long as the IDs are different)
     def docker_group_id = get_docker_group_id();
 
+    def container_name = "testing-ubuntu-22.04-checkmk-${safe_branch_name}";
+    def docker_tag = "latest-with-docker";
+    // testing-ubuntu-22.04-checkmk-2.4.0:latest-with-docker
+
     print(
         """
         |===== CONFIGURATION ===============================
@@ -34,7 +38,10 @@ def main() {
         """.stripMargin());
 
     stage("Make repo edition aware") {
-        inside_container() {
+        inside_container(
+            image: docker.image("${docker_registry_no_http}/${container_name}:${docker_tag}"),
+            pull: true,
+        ) {
             dir("${checkout_dir}") {
                 versioning.configure_checkout_folder(edition, cmk_version);
             }
@@ -107,7 +114,10 @@ def main() {
 
         dir("${checkout_dir}") {
             stage("Create bill-of-materials.csv") {
-                inside_container() {
+                inside_container(
+                    image: docker.image("${docker_registry_no_http}/${container_name}:${docker_tag}"),
+                    pull: true,
+                ) {
                     sh("""
                         bazel build //omd:generate_bom_csv
                         cp bazel-bin/omd/bill-of-materials.csv omd/

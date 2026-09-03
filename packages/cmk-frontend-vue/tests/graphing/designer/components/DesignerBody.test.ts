@@ -22,6 +22,9 @@ import type { RowIssue } from '@/graphing/designer/validation'
 
 import { filterDefinitions } from '../fixtures'
 
+// The designer's burger menu loads its groups on mount; this component test doesn't exercise it.
+vi.mock('@/graphing/api/burgerMenu', () => ({ loadMenu: vi.fn().mockResolvedValue([]) }))
+
 const PAN_SECONDS = 1800
 const PAN_REFETCH_TIMEOUT_MS = 2000
 const PAST_WINDOW: DateTimeRange = {
@@ -232,6 +235,7 @@ function bodyProps(graph: CustomGraphObject = graphObject()) {
     store,
     graphOptions: graph.extensions.content.graph_options,
     title: 'My graph',
+    graphName: 'my_graph',
     mode: 'edit' as 'view' | 'edit',
     thresholds: { warning: '#ffd000', critical: '#ff3232' },
     telemetryMetricsAvailable: false,

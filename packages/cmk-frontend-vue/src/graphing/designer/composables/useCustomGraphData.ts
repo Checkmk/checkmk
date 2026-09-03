@@ -69,6 +69,8 @@ export interface CustomGraphData {
   warnings: Readonly<Ref<readonly string[]>>
   /** Fetch now, bypassing the debounce (live-refresh tick, mode transitions). */
   refetch: () => void
+  /** Needed for some of the custom graph's burger menu entries. */
+  internal: Readonly<Ref<string | null>>
 }
 
 const DEFAULT_DEBOUNCE_MS = 400
@@ -121,6 +123,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   const error = ref<string | null>(null)
   const partialErrors = ref<string[]>([])
   const warnings = ref<string[]>([])
+  const internal = ref<string | null>(null)
 
   let requestCounter = 0
   // The body of the last overview fetch that completed, so an identical one can be skipped.
@@ -146,6 +149,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     error.value = null
     partialErrors.value = []
     warnings.value = []
+    internal.value = null
   }
 
   async function load(): Promise<void> {
@@ -228,6 +232,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
       partialErrors.value = [...main.errors]
       warnings.value = [...main.warnings]
       error.value = null
+      internal.value = main.internal
     } catch (e) {
       if (requestId !== requestCounter) {
         return
@@ -304,6 +309,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     error: readonly(error),
     partialErrors: readonly(partialErrors),
     warnings: readonly(warnings),
-    refetch
+    refetch,
+    internal
   }
 }

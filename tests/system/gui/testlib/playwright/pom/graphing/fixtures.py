@@ -207,10 +207,14 @@ def fixture_stored_graph_pin(admin_graph_pin: UserGraphPin) -> int:
 
 @contextmanager
 def _custom_graph(
-    test_site: Site, name: str, title: str, data_sources: Sequence[Mapping[str, object]]
+    test_site: Site,
+    name: str,
+    title: str,
+    data_sources: Sequence[Mapping[str, object]],
+    public: bool = False,
 ) -> Iterator[str]:
     with _as_admin_user(test_site):
-        test_site.openapi.custom_graph.create(name, title, data_sources)
+        test_site.openapi.custom_graph.create(name, title, data_sources, public=public)
     try:
         yield name
     finally:
@@ -228,6 +232,9 @@ def fixture_saved_custom_graph(
 
     Created over the REST API rather than through the designer, so the tests that read a
     saved graph do not fail on a broken designer.
+
+    Published to all users: it is created as the REST admin, but on the cloud edition the
+    browser logs in as a different (SSO) user, who would not see a private graph.
     """
     data_source = test_site.openapi.custom_graph.rrd_metric_data_source(
         "A",
@@ -235,7 +242,9 @@ def fixture_saved_custom_graph(
         rrd_metric_source.service_name,
         rrd_metric_source.metrics[0].name,
     )
-    with _custom_graph(test_site, "e2e_saved_graph", "E2E saved graph", [data_source]) as name:
+    with _custom_graph(
+        test_site, "e2e_saved_graph", "E2E saved graph", [data_source], public=True
+    ) as name:
         yield name
 
 

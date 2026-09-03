@@ -51,6 +51,7 @@ from ._graph_dispatch import (
     GraphDispatcher,
     GraphDispatcherRegistry,
     legacy_graph_id,
+    serialize_graphs,
 )
 from ._graph_display_config import (
     compute_image_graph_ranges,
@@ -351,6 +352,7 @@ __all__ = [
     "RRDFetchMetricNames",
     "RRDFetchTimeSeries",
     "serialize_drawn_curves",
+    "serialize_graphs",
     "SINotation",
     "sort_registered_graph_plugins",
     "split_predict_prefix",

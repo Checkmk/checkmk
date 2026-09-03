@@ -13,14 +13,14 @@ from .bakery_api.v1 import FileGenerator, OS, PluginConfig, register
 
 
 class _Config(BaseModel):
-    version: Literal["auto", "python2", "python3"]
+    python_version: Literal["auto", "python2", "python3"]
     command: str = ""
     """Empty string: use the default commands"""
 
 
 def get_python_plugins_files(conf: Mapping[str, object]) -> FileGenerator:
     config = _Config.model_validate(conf)
-    if config.version == "auto" and not config.command:
+    if config.python_version == "auto" and not config.command:
         return
 
     for base_os in [OS.LINUX, OS.SOLARIS, OS.AIX]:
@@ -33,16 +33,16 @@ def get_python_plugins_files(conf: Mapping[str, object]) -> FileGenerator:
 
 
 def _get_python_plugins_config(config: _Config) -> Iterator[str]:
-    if config.command and config.version in ("python2", "auto"):
+    if config.command and config.python_version in ("python2", "auto"):
         yield f"PYTHON2={quote(config.command)}"
 
-    if config.command and config.version in ("python3", "auto"):
+    if config.command and config.python_version in ("python3", "auto"):
         yield f"PYTHON3={quote(config.command)}"
 
-    if config.version == "python2":
+    if config.python_version == "python2":
         yield "PYTHON3="
 
-    if config.version == "python3":
+    if config.python_version == "python3":
         yield "PYTHON2="
 
 

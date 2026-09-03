@@ -879,7 +879,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('python_plugins', [])
 
 agent_config['python_plugins'] = [
-{'id': 'daadce35-e1a4-486e-ae3d-83793cf7266b', 'value': {'version': 'auto'}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'daadce35-e1a4-486e-ae3d-83793cf7266b', 'value': {'python_version': 'auto', 'command': ''}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['python_plugins']
 
 

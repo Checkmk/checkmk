@@ -169,6 +169,10 @@ WHERE object_name NOT LIKE '%Deprecated%'
             CAST(blocking_session_id AS varchar) AS blocking_session_id
     FROM sys.dm_os_waiting_tasks";
 
+    /// Every database, unfiltered. Consumed only by the backup section, which
+    /// reads backup history from `msdb` over the instance connection and never
+    /// opens a database - so an offline or otherwise inaccessible database must
+    /// keep its last-backup reporting and stay in this list.
     pub const DATABASE_NAMES_ALL: &str = "SELECT name FROM sys.databases";
 
     /// Skips secondary replica databases participating in availability groups
@@ -177,16 +181,23 @@ WHERE object_name NOT LIKE '%Deprecated%'
     /// 0 for secondary replica
     /// NULL for databases not participating in availability groups
     /// ONLY SUPPORTED since version 12 (SQL Server 2014)
+    ///
+    /// The second column `has_access` is `HAS_DBACCESS(d.name)` (1 / 0 / NULL):
+    /// whether the monitoring login can open the database. Inaccessible databases
+    /// are deliberately KEPT in the result - the caller reports them with a
+    /// simulated error line instead of attempting a per-database login, which is
+    /// what floods the SQL Server error log (18456 / 4060). A NULL result (the
+    /// database vanished mid-query) counts as no access.
     pub const DATABASE_NAMES_ACTIVE: &str = r#"IF CAST(PARSENAME(CAST(SERVERPROPERTY('ProductVersion') AS varchar(30)), 4) AS int) >= 12
 BEGIN
-    SELECT d.name
+    SELECT d.name, CAST(HAS_DBACCESS(d.name) AS NVARCHAR(1)) AS has_access
     FROM sys.databases AS d
     WHERE sys.fn_hadr_is_primary_replica(d.name) IS NULL
        OR sys.fn_hadr_is_primary_replica(d.name) = 1;
 END
 ELSE
 BEGIN
-    SELECT d.name
+    SELECT d.name, CAST(HAS_DBACCESS(d.name) AS NVARCHAR(1)) AS has_access
     FROM sys.databases AS d;
 END;"#;
 

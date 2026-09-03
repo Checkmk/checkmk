@@ -555,7 +555,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_inotify', [])
 
 agent_config['mk_inotify'] = [
-{'id': '17ffd5a3-449a-4e92-839c-12e1016be6a5', 'value': None, 'condition': {}, 'options': {'disabled': False}},
+{'id': '17ffd5a3-449a-4e92-839c-12e1016be6a5', 'value': {'deployment': ('do_not_deploy', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_inotify']
 
 

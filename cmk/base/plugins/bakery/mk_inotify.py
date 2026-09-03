@@ -3,60 +3,61 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple
+from typing import Literal
+
+from pydantic import BaseModel
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
-class _Folder(NamedTuple):
+class _Folder(BaseModel):
     path: str
     operations: Sequence[str]
 
 
-class _Files(NamedTuple):
+class _Files(BaseModel):
     path: str
     files: Sequence[str]
     operations: Sequence[str]
 
 
-_RawEntry = tuple[str, Sequence[str]] | tuple[str, Sequence[str], Sequence[str]]
-_RawConfig = tuple[float, float, int, float, Sequence[_RawEntry]]
+class _Config(BaseModel):
+    deployment: tuple[Literal["do_not_deploy", "sync"], None]
+    heartbeat_timeout: float = 120.0
+    write_interval: float = 10.0
+    max_messages_per_interval: int = 100
+    stats_retention: float = 120.0
+    entries: Sequence[tuple[Literal["folder"], _Folder] | tuple[Literal["files"], _Files]] = ()
 
 
-def _parse_entry(entry: _RawEntry) -> _Folder | _Files:
-    match entry:
-        case (path, operations):
-            return _Folder(path, operations)
-        case (path, files, operations):
-            return _Files(path, files, operations)
+def get_mk_inotify_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
+    if config.deployment[0] == "do_not_deploy":
+        return
 
-
-def get_mk_inotify_files(conf: _RawConfig) -> FileGenerator:
     yield Plugin(base_os=OS.LINUX, source=Path("mk_inotify.py"))
 
     yield PluginConfig(
         base_os=OS.LINUX,
-        lines=list(_get_mk_inotify_config(conf)),
+        lines=list(_get_mk_inotify_config(config)),
         target=Path("mk_inotify.cfg"),
         include_header=True,
     )
 
 
-def _get_mk_inotify_config(conf: _RawConfig) -> Iterator[str]:
-    heartbeat_timeout, write_interval, max_messages_per_interval, stats_retention, entries = conf
-
+def _get_mk_inotify_config(config: _Config) -> Iterator[str]:
     yield from [
         "[global]",
-        f"heartbeat_timeout={int(heartbeat_timeout)}",
-        f"write_interval={int(write_interval)}",
-        f"max_messages_per_interval={int(max_messages_per_interval)}",
-        f"stats_retention={int(stats_retention)}",
+        f"heartbeat_timeout={int(config.heartbeat_timeout)}",
+        f"write_interval={int(config.write_interval)}",
+        f"max_messages_per_interval={config.max_messages_per_interval}",
+        f"stats_retention={int(config.stats_retention)}",
         "",
     ]
 
-    for entry in map(_parse_entry, entries):
+    for _kind, entry in config.entries:
         match entry:
             case _Folder():
                 yield f"[{entry.path}]"

@@ -214,16 +214,10 @@ class BaseNotificationPage(QuickSetupPage):
     def apply_button(self) -> Locator:
         return self.main_area.locator().locator("button").filter(has_text=re.compile(r"^Apply$"))
 
-    @property
-    def apply_and_create_another_rule_button(self) -> Locator:
-        return self.main_area.locator().get_by_text("Apply & create another rule")
-
-    def apply_and_create_another_rule(self) -> None:
-        self.apply_and_create_another_rule_button.click()
-        self.page.wait_for_url(
-            url=re.compile(rf"{re.escape('wato.py?mode=notification_rule_quick_setup')}$"),
-            wait_until="load",
-        )
+    def apply(self) -> None:
+        """Apply the rule and wait for the notification configuration page it lands on."""
+        self.apply_button.click()
+        NotificationConfiguration(self.page, navigate_to_page=False)
 
     def delete_all_service_events(self) -> None:
         rows = self._service_events_rows
@@ -343,11 +337,7 @@ class BaseNotificationPage(QuickSetupPage):
         self.description_text_field.fill(description)
 
         logger.info("Save the changes")
-        self.apply_button.click()
-
-        self.page.wait_for_url(
-            url=re.compile(re.escape("wato.py?mode=notifications")), wait_until="load"
-        )
+        self.apply()
 
 
 class EditNotificationRule(BaseNotificationPage):

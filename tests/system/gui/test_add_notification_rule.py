@@ -157,7 +157,7 @@ def test_add_new_notification_rule(
             notification_configuration_page.page, rule_position=0
         )
         edit_notification_rule_page.check_disable_rule(False)
-        edit_notification_rule_page.apply_and_create_another_rule()
+        edit_notification_rule_page.apply()
 
         if was_filesystem_ruleset_created:
             filesystems_rules_page.navigate()

@@ -5,6 +5,8 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
+import gzip
+import json
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
@@ -15,7 +17,6 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.structured_data import (
     _DeltaDict,
-    _parse_from_unzipped,
     compare_trees,
     deserialize_delta_tree,
     deserialize_tree,
@@ -1088,8 +1089,8 @@ def test_save_status_data_tree(tmp_path: Path) -> None:
         ),
     ],
 )
-def test_parse_from_unzipped(raw: Mapping[str, object], expected: SDMetaAndRawTree) -> None:
-    assert _parse_from_unzipped(raw) == expected
+def test_parse_from_gzipped(raw: Mapping[str, object], expected: SDMetaAndRawTree) -> None:
+    assert parse_from_gzipped(gzip.compress(json.dumps(raw).encode())) == expected
 
 
 @pytest.mark.parametrize(

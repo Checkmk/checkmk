@@ -3,18 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping, MutableMapping, Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree
-from cmk.legacy_includes.temperature import check_temperature_list
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    OIDEnd,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.intel.lib import DETECT_INTEL_TRUE_SCALE
+from cmk.plugins.lib.temperature import (
+    aggregate_temperature_results,
+    check_temperature,
+    StatusType,
+    TemperatureSensor,
+    TempParamDict,
+)
 
-check_info = {}
-
-type SensorReading = tuple[str, float, dict[str, object]]
+type SensorReading = tuple[str, float, StatusType, str]
 # Every slot maps "slot_type" to a string and each sensor type to its readings.
 type SlotData = dict[str, str | list[SensorReading]]
+
+Section = Mapping[str, SlotData]
 
 
 # .1.3.6.1.4.1.10222.2.1.2.9.1.1.1.1.1 1 --> ICS-CHASSIS-MIB::icsChassisSlotIndex.1.1.1
@@ -38,7 +55,7 @@ type SlotData = dict[str, str | list[SensorReading]]
 # .1.3.6.1.4.1.10222.2.1.9.8.1.8.1.2.2 31 --> ICS-CHASSIS-MIB::icsChassisSensorSlotValue.1.2.2
 
 
-def parse_intel_true_scale_sensors(string_table):
+def parse_intel_true_scale_sensors(string_table: Sequence[StringTable]) -> Section:
     map_slot_types = {
         "0": "unspecified",
         "1": "switch master",
@@ -97,12 +114,13 @@ def parse_intel_true_scale_sensors(string_table):
         factor = 0.001 if ty in ["5", "6"] else 1
 
         state, state_readable = map_states[status]
-        kwargs = {"dev_status": state, "dev_status_name": state_readable}
 
         sensor_ty = map_sensor_types[ty]
         readings = parsed[slot_name].setdefault(sensor_ty, [])
         assert isinstance(readings, list)  # only "slot_type" maps to a string
-        readings.append((f"{sensor_id} {sensor_name}", float(reading_str) * factor, kwargs))
+        readings.append(
+            (f"{sensor_id} {sensor_name}", float(reading_str) * factor, state, state_readable)
+        )
 
     return parsed
 
@@ -119,18 +137,49 @@ def parse_intel_true_scale_sensors(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def discover_intel_true_scale_sensors_temp(parsed):
-    for slot_name, slot_info in parsed.items():
+def discover_intel_true_scale_sensors_temp(section: Section) -> DiscoveryResult:
+    for slot_name, slot_info in section.items():
         if slot_info.get("temp"):
-            yield slot_name, {}
+            yield Service(item=slot_name)
 
 
-def check_intel_true_scale_sensors_temp(item, params, parsed):
-    if item in parsed:
-        yield from check_temperature_list(parsed[item]["temp"], params)
+def _sensor(
+    params: TempParamDict, name: str, temp: float, dev_status: StatusType, dev_status_name: str
+) -> TemperatureSensor:
+    # check_temperature only reports dev_status where the device supplies levels
+    # as well, which this one does not.
+    reading = check_temperature(temp, params).reading
+    return TemperatureSensor(
+        id=name,
+        temp=temp,
+        result=Result(
+            state=State.worst(reading.state, State(dev_status)),
+            summary=f"{reading.summary}, State on device: {dev_status_name}",
+        ),
+    )
 
 
-check_info["intel_true_scale_sensors_temp"] = LegacyCheckDefinition(
+def _check_intel_true_scale_sensors_temp(
+    item: str,
+    params: TempParamDict,
+    section: Section,
+    value_store: MutableMapping[str, object],
+) -> CheckResult:
+    if item in section:
+        sensors = section[item]["temp"]
+        assert isinstance(sensors, list)  # only "slot_type" maps to a string
+        yield from aggregate_temperature_results(
+            [_sensor(params, *sensor) for sensor in sensors], params, value_store
+        )
+
+
+def check_intel_true_scale_sensors_temp(
+    item: str, params: TempParamDict, section: Section
+) -> CheckResult:
+    yield from _check_intel_true_scale_sensors_temp(item, params, section, get_value_store())
+
+
+snmp_section_intel_true_scale_sensors_temp = SNMPSection(
     name="intel_true_scale_sensors_temp",
     detect=DETECT_INTEL_TRUE_SCALE,
     fetch=[
@@ -144,7 +193,13 @@ check_info["intel_true_scale_sensors_temp"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_intel_true_scale_sensors,
+)
+
+
+check_plugin_intel_true_scale_sensors_temp = CheckPlugin(
+    name="intel_true_scale_sensors_temp",
     service_name="Temperature sensors %s",
     discovery_function=discover_intel_true_scale_sensors_temp,
     check_function=check_intel_true_scale_sensors_temp,
+    check_default_parameters=TempParamDict(),
 )

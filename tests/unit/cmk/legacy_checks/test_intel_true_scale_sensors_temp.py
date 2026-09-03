@@ -3,18 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.intel_true_scale_sensors_temp import (
-    check_intel_true_scale_sensors_temp,
+    _check_intel_true_scale_sensors_temp,
     discover_intel_true_scale_sensors_temp,
     parse_intel_true_scale_sensors,
 )
+from cmk.plugins.lib.temperature import TempParamDict
 
 # synthetic data
 STRING_TABLE: Sequence[StringTable] = [
@@ -36,7 +35,7 @@ STRING_TABLE: Sequence[StringTable] = [
 def test_discover_intel_true_scale_sensors_temp_needs_a_temperature_sensor() -> None:
     assert list(
         discover_intel_true_scale_sensors_temp(parse_intel_true_scale_sensors(STRING_TABLE))
-    ) == [("slot 1", {}), ("slot 2", {}), ("slot 4", {})]
+    ) == [Service(item="slot 1"), Service(item="slot 2"), Service(item="slot 4")]
 
 
 @pytest.mark.parametrize(
@@ -45,36 +44,57 @@ def test_discover_intel_true_scale_sensors_temp_needs_a_temperature_sensor() -> 
         pytest.param(
             "slot 1",
             [
-                (0, "Sensors: 4", []),
-                (0, "Highest: 41.0 °C", [("temp", 41.0)]),
-                (0, "Average: 36.0 °C", []),
-                (0, "Lowest: 32.0 °C", []),
-                (1, "2 fusion: 32.0 °C, State on device: warning", []),
-                (3, "3 inlet air: 35.0 °C, State on device: unknown", []),
-                (3, "4 -- baseboard: 36.0 °C, State on device: disabled", []),
+                Result(state=State.OK, summary="Sensors: 4"),
+                Result(state=State.OK, summary="Highest: 41.0 °C"),
+                Metric("temp", 41.0),
+                Result(state=State.OK, summary="Average: 36.0 °C"),
+                Result(state=State.OK, summary="Lowest: 32.0 °C"),
+                Result(
+                    state=State.WARN,
+                    summary="2 fusion: Temperature: 32.0 °C, State on device: warning",
+                ),
+                Result(
+                    state=State.UNKNOWN,
+                    summary="3 inlet air: Temperature: 35.0 °C, State on device: unknown",
+                ),
+                Result(
+                    state=State.UNKNOWN,
+                    summary="4 -- baseboard: Temperature: 36.0 °C, State on device: disabled",
+                ),
             ],
             id="good_sensor_stays_silent_and_names_keep_their_sensor_index",
         ),
         pytest.param(
             "slot 2",
             [
-                (0, "Sensors: 2", []),
-                (0, "Highest: 49.0 °C", [("temp", 49.0)]),
-                (0, "Average: 40.0 °C", []),
-                (0, "Lowest: 31.0 °C", []),
-                (2, "1 baseboard: 49.0 °C, State on device: bad", []),
-                (2, "2 fusion: 31.0 °C, State on device: invalid", []),
+                Result(state=State.OK, summary="Sensors: 2"),
+                Result(state=State.OK, summary="Highest: 49.0 °C"),
+                Metric("temp", 49.0),
+                Result(state=State.OK, summary="Average: 40.0 °C"),
+                Result(state=State.OK, summary="Lowest: 31.0 °C"),
+                Result(
+                    state=State.CRIT,
+                    summary="1 baseboard: Temperature: 49.0 °C, State on device: bad",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="2 fusion: Temperature: 31.0 °C, State on device: invalid",
+                ),
             ],
             id="bad_and_invalid_are_both_crit",
         ),
         pytest.param(
             "slot 4",
             [
-                (0, "Sensors: 1", []),
-                (0, "Highest: 40.0 °C", [("temp", 40.0)]),
-                (0, "Average: 40.0 °C", []),
-                (0, "Lowest: 40.0 °C", []),
-                (1, "7 outlet air: 40.0 °C, State on device: warning", []),
+                Result(state=State.OK, summary="Sensors: 1"),
+                Result(state=State.OK, summary="Highest: 40.0 °C"),
+                Metric("temp", 40.0),
+                Result(state=State.OK, summary="Average: 40.0 °C"),
+                Result(state=State.OK, summary="Lowest: 40.0 °C"),
+                Result(
+                    state=State.WARN,
+                    summary="7 outlet air: Temperature: 40.0 °C, State on device: warning",
+                ),
             ],
             id="voltage_sensor_is_left_out_and_only_the_last_two_oid_components_count",
         ),
@@ -84,8 +104,8 @@ def test_discover_intel_true_scale_sensors_temp_needs_a_temperature_sensor() -> 
 def test_check_intel_true_scale_sensors_temp(item: str, expected_results: Sequence[object]) -> None:
     assert (
         list(
-            check_intel_true_scale_sensors_temp(
-                item, {}, parse_intel_true_scale_sensors(STRING_TABLE)
+            _check_intel_true_scale_sensors_temp(
+                item, TempParamDict(), parse_intel_true_scale_sensors(STRING_TABLE), {}
             )
         )
         == expected_results

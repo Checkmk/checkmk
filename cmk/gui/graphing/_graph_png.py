@@ -7,7 +7,7 @@ This is needed for the graphs sent with mail notifications."""
 
 import datetime
 import io
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -24,9 +24,11 @@ import cmk.utils.render
 from cmk.graphing_engine import (
     EvaluatedCurve,
     EvaluatedGraph,
+    EvaluatedRegion,
     EvaluatedRule,
     EvaluatedStack,
     TimeRange,
+    TimeSeries,
     VerticalRangeKind,
 )
 from cmk.gui.i18n import _
@@ -53,6 +55,7 @@ LEGEND_MARKER_WIDTH_PX = 4
 LEGEND_MARKER_HEIGHT_PX = 16
 LEGEND_MARKER_RADIUS_PX = 2
 TITLE_Y_OFFSET_PX = 10
+REGION_FILL_ALPHA = 0.15
 _PT_PER_PX = 72 / DPI
 _MM_PER_INCH = 25.4
 
@@ -74,6 +77,14 @@ def _time_range(graph: EvaluatedGraph) -> TimeRange | None:
     return None
 
 
+def _region_bound_series(graph: EvaluatedGraph) -> Iterator[TimeSeries]:
+    for region in graph.regions:
+        if region.lower is not None:
+            yield region.lower
+        if region.upper is not None:
+            yield region.upper
+
+
 def _curves_length(graph: EvaluatedGraph) -> int:
     """The longest time_series.values of any curve actually drawn (stack members, their hidden
     references, and lines).
@@ -91,6 +102,7 @@ def _curves_length(graph: EvaluatedGraph) -> int:
         for stack in graph.stacks
         if stack.reference is not None
     )
+    lengths.extend(len(series.values) for series in _region_bound_series(graph))
     return max(lengths, default=0)
 
 
@@ -103,13 +115,17 @@ def _timestamps(time_range: TimeRange, length: int) -> list[int]:
     return [time_range.start + i * time_range.step for i in range(length)]
 
 
-def _values(
-    curve: EvaluatedCurve, *, sign: float = 1.0, length: int | None = None
-) -> npt.NDArray[np.float64]:
-    raw = sign * np.array([np.nan if v is None else float(v) for v in curve.time_series.values])
+def _series_values(series: TimeSeries, *, length: int | None = None) -> npt.NDArray[np.float64]:
+    raw = np.array([np.nan if v is None else float(v) for v in series.values])
     if length is not None and len(raw) != length:
         raw = np.pad(raw, (0, length - len(raw)), constant_values=np.nan)
     return raw
+
+
+def _values(
+    curve: EvaluatedCurve, *, sign: float = 1.0, length: int | None = None
+) -> npt.NDArray[np.float64]:
+    return _series_values(curve.time_series, length=length) * sign
 
 
 def _last_non_null(values: Sequence[float | None]) -> float | None:
@@ -184,6 +200,36 @@ def _plot_stack(ax: Axes, stack: EvaluatedStack, timestamps: Sequence[int]) -> N
         )
 
 
+def _plot_regions(ax: Axes, graph: EvaluatedGraph) -> None:
+    if not graph.regions:
+        return
+    time_range = _time_range(graph)
+    timestamps = _timestamps(time_range, _curves_length(graph)) if time_range is not None else []
+    if not timestamps:
+        return
+    floor, ceiling = ax.get_ylim()
+    for region in graph.regions:
+        lower = (
+            np.full(len(timestamps), floor)
+            if region.lower is None
+            else _series_values(region.lower, length=len(timestamps))
+        )
+        upper = (
+            np.full(len(timestamps), ceiling)
+            if region.upper is None
+            else _series_values(region.upper, length=len(timestamps))
+        )
+        ax.fill_between(
+            timestamps,
+            lower,
+            upper,
+            where=~(np.isnan(lower) | np.isnan(upper)),
+            color=region.attributes.color,
+            alpha=REGION_FILL_ALPHA,
+            zorder=0,
+        )
+
+
 def _plot_metrics(ax: Axes, graph: EvaluatedGraph) -> None:
     """Plot every stack (cumulatively, on top of its optional hidden reference) and line of the
     graph, mirroring inverse ones below zero."""
@@ -236,6 +282,9 @@ def _drawn_vertical_extent(graph: EvaluatedGraph) -> tuple[float | None, float |
     for line in graph.lines:
         sign = -1.0 if line.inverse else 1.0
         raw = _values(line.curve, sign=sign, length=len(timestamps))
+        values.extend(raw[~np.isnan(raw)].tolist())
+    for series in _region_bound_series(graph):
+        raw = _series_values(series, length=len(timestamps))
         values.extend(raw[~np.isnan(raw)].tolist())
     if not values:
         return None, None
@@ -453,6 +502,7 @@ def _plot_legend_table(
     ax: Axes,
     scalars: Sequence[_CurveScalars],
     rules: Sequence[EvaluatedRule],
+    regions: Sequence[EvaluatedRegion],
     config: GraphDisplayConfigImage,
     formatter: NotationFormatter | None,
 ) -> None:
@@ -466,20 +516,24 @@ def _plot_legend_table(
     ax.axis("off")
     ax.set_in_layout(False)
     col_labels = ["", "", _("Min"), _("Max"), _("Average"), _("Last")]
-    cell_text = [
+    cell_text = (
         [
-            "",
-            s.title,
-            _format_value(s.minimum, formatter),
-            _format_value(s.maximum, formatter),
-            _format_value(s.average, formatter),
-            _format_value(s.last, formatter),
+            [
+                "",
+                s.title,
+                _format_value(s.minimum, formatter),
+                _format_value(s.maximum, formatter),
+                _format_value(s.average, formatter),
+                _format_value(s.last, formatter),
+            ]
+            for s in reversed(scalars)
         ]
-        for s in reversed(scalars)
-    ] + [
-        ["", rule.attributes.title, "", "", "", _format_value(rule.value, formatter)]
-        for rule in rules
-    ]
+        + [
+            ["", rule.attributes.title, "", "", "", _format_value(rule.value, formatter)]
+            for rule in rules
+        ]
+        + [["", region.attributes.title, "", "", "", ""] for region in regions]
+    )
 
     col_widths = [0.04, 0.56, 0.125, 0.125, 0.125, 0.125]
     table = ax.table(
@@ -506,7 +560,7 @@ def _plot_legend_table(
             table[first_rule_row, col].visible_edges = "T"
             table[first_rule_row, col].set_edgecolor(LEGEND_HEADER_SEPARATOR_COLOR)
 
-    n_rows = len(scalars) + len(rules)
+    n_rows = len(scalars) + len(rules) + len(regions)
     row_count = n_rows + 1  # +1 for the header row
     for col in range(len(col_labels)):
         table[0, col].set_text_props(color=LEGEND_HEADER_COLOR)
@@ -557,6 +611,9 @@ def _plot_legend_table(
     for row, rule in enumerate(rules, start=len(scalars) + 1):
         add_marker(marker_x, marker_y(row), rule.attributes.color)
 
+    for row, region in enumerate(regions, start=len(scalars) + len(rules) + 1):
+        add_marker(marker_x, marker_y(row), region.attributes.color)
+
 
 def _ex_to_inches(size_ex: float, font_size_pt: float) -> float:
     # one "ex" is half the font size in points, and 1 point = 1/72 inch
@@ -587,9 +644,8 @@ def _legend_height_ex(graph: EvaluatedGraph, config: GraphDisplayConfigImage) ->
     e.g. 0.0 if there is nothing to show. Depends only on the graph's own scalar/rule counts and
     config.show_legend - never on config.size - so it's safe to call before an actual render."""
     scalars = _graph_scalars(graph)
-    show_legend_table = config.show_legend and bool(scalars or graph.rules)
-    n_legend_rows = len(scalars) + len(graph.rules)
-    return 2.0 * (n_legend_rows + 1) if show_legend_table else 0.0
+    n_legend_rows = len(scalars) + len(graph.rules) + len(graph.regions)
+    return 2.0 * (n_legend_rows + 1) if config.show_legend and n_legend_rows else 0.0
 
 
 def compute_png_size_mm(
@@ -626,7 +682,7 @@ def render_png_ex(
     # Y range; only the drawn horizontal lines are restricted to the in-range subset.
     in_range_rules = _rules_in_range(graph.rules, lower, upper)
     formatter = _notation_formatter(y_axis_unit)
-    show_legend_table = config.show_legend and bool(scalars or graph.rules)
+    show_legend_table = config.show_legend and bool(scalars or graph.rules or graph.regions)
     table_height_ex = _legend_height_ex(graph, config)
 
     width_in = _ex_to_inches(config.size[0], config.font_size)
@@ -639,7 +695,7 @@ def render_png_ex(
         ax = fig.add_subplot(gs[0])
         legend_ax = fig.add_subplot(gs[1])
         legend_ax.set_facecolor(BACKGROUND_COLOR)
-        _plot_legend_table(legend_ax, scalars, graph.rules, config, formatter)
+        _plot_legend_table(legend_ax, scalars, graph.rules, graph.regions, config, formatter)
     else:
         ax = fig.add_subplot(1, 1, 1)
     ax.set_facecolor(BACKGROUND_COLOR)
@@ -648,6 +704,7 @@ def render_png_ex(
         # Set explicitly (not just autoscaled) *before* the rules below are drawn, so a rule far
         # outside the data's range doesn't stretch the view via matplotlib's own autoscale.
         ax.set_ylim(*limits)
+    _plot_regions(ax, graph)
     for rule in in_range_rules:
         sign = -1.0 if rule.inverse else 1.0
         ax.axhline(sign * rule.value, color=rule.attributes.color)
@@ -705,6 +762,7 @@ def render_png_graphs(
         lower, upper = _vertical_range_bounds(graph)
         if (limits := _y_axis_limits(lower, upper, is_mirrored=is_mirrored)) is not None:
             ax.set_ylim(*limits)
+        _plot_regions(ax, graph)
         y_axis_unit = _derived_y_axis_unit(graph)
         title_artist = _apply_render_config(
             ax,

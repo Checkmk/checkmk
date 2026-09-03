@@ -27,6 +27,7 @@ from cmk.graphing_engine import (
     MinimalRange,
     Product,
     QuantityProtocol,
+    Region,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -276,3 +277,31 @@ def test_a_codec_refuses_two_quantities_claiming_one_kind() -> None:
     )
     with pytest.raises(ValueError, match="duplicate quantity kind: constant"):
         graph_codec((*COMMUNITY_QUANTITY_SPECS, duplicate))
+
+
+def test_a_region_round_trips_both_of_its_bounds() -> None:
+    codec = community_graph_codec()
+    region = Region(
+        lower=Curve(quantity=Constant(1.0), attributes=_ROUND_TRIP_DISPLAY),
+        upper=Curve(quantity=Constant(2.0), attributes=_ROUND_TRIP_DISPLAY),
+        attributes=_ROUND_TRIP_DISPLAY,
+    )
+    graph = Graph(name="n", title="t", kind="template", regions=[region])
+
+    restored = codec.deserialize_graph(json.loads(json.dumps(codec.serialize_graph(graph))))
+
+    assert restored.regions == (region,)
+
+
+def test_a_region_open_at_one_side_round_trips_as_open() -> None:
+    codec = community_graph_codec()
+    region = Region(
+        lower=Curve(quantity=Constant(1.0), attributes=_ROUND_TRIP_DISPLAY),
+        upper=None,
+        attributes=_ROUND_TRIP_DISPLAY,
+    )
+    graph = Graph(name="n", title="t", kind="template", regions=[region])
+
+    restored = codec.deserialize_graph(json.loads(json.dumps(codec.serialize_graph(graph))))
+
+    assert restored.regions[0].upper is None

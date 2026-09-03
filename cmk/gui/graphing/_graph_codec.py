@@ -26,6 +26,7 @@ from cmk.graphing_engine import (
     MinimalRange,
     Product,
     QuantityProtocol,
+    Region,
     RRDMetric,
     Rule,
     ScalarKind,
@@ -395,6 +396,23 @@ class GraphCodec:
             curve=self._curve_from_json(data["curve"]), inverse=ensure_type(data["inverse"], bool)
         )
 
+    def _region_to_json(self, region: Region) -> Mapping[str, object]:
+        return {
+            "lower": None if region.lower is None else self._curve_to_json(region.lower),
+            "upper": None if region.upper is None else self._curve_to_json(region.upper),
+            "attributes": _attributes_to_json(region.attributes),
+        }
+
+    def _region_from_json(self, data: object) -> Region:
+        data = _as_mapping(data)
+        lower = data["lower"]
+        upper = data["upper"]
+        return Region(
+            lower=None if lower is None else self._curve_from_json(lower),
+            upper=None if upper is None else self._curve_from_json(upper),
+            attributes=_attributes_from_json(data["attributes"]),
+        )
+
     def _rule_to_json(self, rule: Rule) -> Mapping[str, object]:
         return {"curve": self._curve_to_json(rule.curve), "inverse": rule.inverse}
 
@@ -416,6 +434,7 @@ class GraphCodec:
             "stacks": [self._stack_to_json(stack) for stack in graph.stacks],
             "lines": [self._line_to_json(line) for line in graph.lines],
             "rules": [self._rule_to_json(rule) for rule in graph.rules],
+            "regions": [self._region_to_json(region) for region in graph.regions],
         }
 
     def deserialize_graph(self, data: object) -> Graph:
@@ -432,6 +451,7 @@ class GraphCodec:
             stacks=[self._stack_from_json(stack) for stack in _as_list(data["stacks"])],
             lines=[self._line_from_json(line) for line in _as_list(data["lines"])],
             rules=[self._rule_from_json(rule) for rule in _as_list(data["rules"])],
+            regions=tuple(self._region_from_json(region) for region in _as_list(data["regions"])),
         )
 
     def serialize_graphs(self, graphs: Sequence[Graph]) -> Mapping[str, object]:

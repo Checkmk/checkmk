@@ -19,6 +19,7 @@ from cmk.graphing_engine import (
     EvaluatedCurve,
     EvaluatedGraph,
     EvaluatedLine,
+    EvaluatedRegion,
     FetchedData,
     Graph,
     HostName,
@@ -89,6 +90,57 @@ def test_evaluated_to_response_has_no_diagnostics_by_default() -> None:
     )
     assert response.warnings == []
     assert response.errors == []
+
+
+def _region(lower: TimeSeries | None, upper: TimeSeries | None) -> EvaluatedRegion:
+    return EvaluatedRegion(
+        id="region-0",
+        attributes=CurveAttributes(
+            title="OK area",
+            unit=Unit(notation=DecimalNotation(""), precision=AutoPrecision(2)),
+            color="#15d1a0",
+        ),
+        lower=lower,
+        upper=upper,
+    )
+
+
+def test_a_shaded_region_is_served_beside_the_metrics_not_among_them() -> None:
+    series = TimeSeries(time_range=TimeRange(start=0, end=30, step=10), values=[1.0, 2.0, 3.0])
+
+    response = evaluated_to_response(
+        EvaluatedGraph(
+            name="g",
+            title="t",
+            vertical_range=None,
+            stacks=[],
+            lines=[],
+            regions=(_region(series, series),),
+        ),
+        fallback_time_range=TimeRange(start=0, end=30, step=10),
+        diagnostics=FetchDiagnostics(),
+    )
+
+    assert (len(response.shaded_regions), len(response.metrics)) == (1, 0)
+
+
+def test_a_region_open_at_the_top_is_served_without_an_upper_bound() -> None:
+    series = TimeSeries(time_range=TimeRange(start=0, end=30, step=10), values=[1.0, 2.0, 3.0])
+
+    response = evaluated_to_response(
+        EvaluatedGraph(
+            name="g",
+            title="t",
+            vertical_range=None,
+            stacks=[],
+            lines=[],
+            regions=(_region(series, None),),
+        ),
+        fallback_time_range=TimeRange(start=0, end=30, step=10),
+        diagnostics=FetchDiagnostics(),
+    )
+
+    assert response.shaded_regions[0].data_points.upper is None
 
 
 @pytest.mark.usefixtures("load_config")

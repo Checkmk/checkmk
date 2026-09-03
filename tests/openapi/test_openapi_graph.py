@@ -163,6 +163,7 @@ def test_fetch_graph_data_comprehensive_graph(
                 "color": "#FFFFFF",
             }
         ],
+        "shaded_regions": [],
         "warnings": [],
         "errors": [],
     }

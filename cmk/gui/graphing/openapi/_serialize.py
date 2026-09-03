@@ -22,6 +22,8 @@ from .models import (
     ApiMetricAttribute,
     ApiMetricMetadata,
     ApiMetricRender,
+    ApiRegionBounds,
+    ApiShadedRegion,
     ApiTimeRange,
     ApiUnitFormat,
     GraphFetchResponse,
@@ -57,6 +59,21 @@ def horizontal_lines_to_api(evaluated: EvaluatedGraph) -> list[ApiHorizontalLine
             color=rule.attributes.color,
         )
         for rule in evaluated.rules
+    ]
+
+
+def shaded_regions_to_api(evaluated: EvaluatedGraph) -> list[ApiShadedRegion]:
+    return [
+        ApiShadedRegion(
+            name=region.id,
+            title=region.attributes.title,
+            color=region.attributes.color,
+            data_points=ApiRegionBounds(
+                lower=None if region.lower is None else list(region.lower.values),
+                upper=None if region.upper is None else list(region.upper.values),
+            ),
+        )
+        for region in evaluated.regions
     ]
 
 
@@ -113,6 +130,7 @@ def evaluated_to_response(
         time_range=api_time_range_from_engine(time_range),
         metrics=metrics,
         horizontal_lines=horizontal_lines_to_api(evaluated),
+        shaded_regions=shaded_regions_to_api(evaluated),
         warnings=diagnostics_to_warnings(diagnostics),
         errors=list(diagnostics.errors),
     )

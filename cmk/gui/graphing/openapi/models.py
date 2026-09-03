@@ -22,6 +22,9 @@ from .._unit_format import notation_name, precision_kind
 
 type ApiConsolidation = Literal["min", "max", "avg"]
 
+# One value per data point of the graph; null where the bound has no value there.
+type ApiRegionBound = list[float | None]
+
 # How a combined graph folds the same metric across its matched services: aggregate
 # (sum/average/min/max) or show each service separately (lines/stacked).
 type ApiCombinationMode = Literal["lines", "stacked", "sum", "average", "min", "max"]
@@ -116,6 +119,37 @@ class ApiMetricRender:
     inverse: bool = api_field(description="Whether the metric is mirrored.", example=False)
     hidden: bool = api_field(
         description="Whether the metric is drawn (used for stack baselines).", example=False
+    )
+
+
+@api_model
+class ApiRegionBounds:
+    lower: ApiRegionBound | None = api_field(
+        description=(
+            "The lower bound of the region. Null when the region is open at the bottom, in which"
+            " case it is drawn down to the edge of the plot."
+        ),
+        example=[1.0, 2.0],
+    )
+    upper: ApiRegionBound | None = api_field(
+        description=(
+            "The upper bound of the region. Null when the region is open at the top, in which"
+            " case it is drawn up to the edge of the plot."
+        ),
+        example=[3.0, 4.0],
+    )
+
+
+@api_model
+class ApiShadedRegion:
+    name: str = api_field(
+        description="The stable structural identifier of the shaded region.",
+        example="region-0",
+    )
+    title: str = api_field(description="The localized region title, for the legend.", example="OK")
+    color: str = api_field(description="The region's fill colour.", example="#15d1a0")
+    data_points: ApiRegionBounds = api_field(
+        description="The two bounds the region is drawn between, one value per data point."
     )
 
 
@@ -321,6 +355,9 @@ class GraphFetchResponse:
     )
     horizontal_lines: list[ApiHorizontalLine] = api_field(
         description="The horizontal (threshold) lines."
+    )
+    shaded_regions: list[ApiShadedRegion] = api_field(
+        description="The areas shaded behind the curves."
     )
     warnings: list[str] = api_field(
         description=(

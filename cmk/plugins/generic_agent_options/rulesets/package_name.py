@@ -13,7 +13,9 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
-from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
+from cmk.rulesets.v1.rule_specs import AgentConfig
+
+from ._topic import TOPIC_LINUX_UNIX_AGENT_OPTIONS
 
 
 def migrate(value: object) -> Mapping[str, object]:
@@ -59,6 +61,6 @@ def _form_spec() -> Dictionary:
 rule_spec_package_name = AgentConfig(
     title=Title("Name of agent packages (Linux, Unix)"),
     name="package_name",
-    topic=Topic.LINUX,
+    topic=TOPIC_LINUX_UNIX_AGENT_OPTIONS,
     parameter_form=_form_spec,
 )

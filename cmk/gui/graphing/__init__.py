@@ -22,6 +22,8 @@ from ._graph_metric_expressions import (
 from ._graph_pdf import (
     compute_pdf_graph_data_range,
     get_mm_per_ex,
+    graph_legend_height,
+    graph_title_height,
     render_graph_pdf,
 )
 from ._graph_render_config import (
@@ -138,7 +140,9 @@ __all__ = [
     "get_mm_per_ex",
     "get_temperature_unit",
     "get_template_graph_specification",
+    "graph_legend_height",
     "graph_spec_from_request",
+    "graph_title_height",
     "graphs_from_api",
     "host_service_graph_dashlet_cmk",
     "host_service_graph_popup_cmk",

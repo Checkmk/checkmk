@@ -48,6 +48,7 @@ from cmk.gui.quick_setup.handlers.utils import (
     NEXT_BUTTON_LABEL,
     PREV_BUTTON_ARIA_LABEL,
     QuickSetupValidationError,
+    stage_applicability_and_form_data,
     validate_custom_validators,
     ValidationErrorMap,
     ValidationErrors,
@@ -239,6 +240,7 @@ class StageActionResult(BaseModel, frozen=False):
     # TODO: This should be a list of widgets using only Sequence[Widget] will remove all fields
     #  when the data is returned (this is a temporary fix)
     stage_recap: Sequence[Any] = field(default_factory=list)
+    stage_applicability: Sequence[bool] = field(default_factory=list)
     background_job_exception: BackgroundJobException | None = None
 
     @classmethod
@@ -277,15 +279,21 @@ def verify_custom_validators_and_recap_stage(
     if progress_logger is None:
         progress_logger = InfoLogger()
 
+    stage_applicability, stages_raw_formspecs = stage_applicability_and_form_data(
+        quick_setup.stages,
+        [RawFormData(stage["form_data"]) for stage in input_stages],
+        form_spec_map,
+    )
     response = StageActionResult(
         quick_setup_id=quick_setup.id,
         stage_index=stage_index,
         action_id=stage_action_id,
+        stage_applicability=stage_applicability,
     )
     if (
         errors := verify_stage_custom_validators(
             quick_setup=quick_setup,
-            stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
+            stages_raw_formspecs=stages_raw_formspecs,
             stage_index=stage_index,
             stage_action_id=stage_action_id,
             stages=built_stages,
@@ -301,7 +309,7 @@ def verify_custom_validators_and_recap_stage(
         stage_index=stage_index,
         stages=built_stages,
         stage_action_id=stage_action_id,
-        stages_raw_formspecs=[RawFormData(stage["form_data"]) for stage in input_stages],
+        stages_raw_formspecs=stages_raw_formspecs,
         quick_setup_formspec_map=form_spec_map,
         progress_logger=progress_logger,
         site_configs=site_configs,

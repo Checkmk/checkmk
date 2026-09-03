@@ -45,6 +45,9 @@ class StageActionModel:
 class StageOverviewModel:
     title: str = api_field(description="The title of a stage", example="Prepare AWS for Checkmk")
     sub_title: str | None = api_field(description="The sub-title of a stage", example="aws")
+    is_applicable: bool = api_field(
+        description="Whether the stage is shown for the current form data.", example=True
+    )
 
 
 @api_model
@@ -91,6 +94,10 @@ class QuickSetupStageActionResponseModel:
     )
     validation_errors: ValidationErrorsModel | None = api_field(
         description="All formspec errors and general stage errors", example={}
+    )
+    stage_applicability: list[bool] = api_field(
+        description="Whether each stage is shown for the current form data.",
+        example=[True, False],
     )
     background_job_exception: BackgroundJobExceptionModel | None = api_field(
         description=(

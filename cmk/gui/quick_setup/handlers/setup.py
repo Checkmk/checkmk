@@ -45,6 +45,7 @@ from cmk.gui.quick_setup.handlers.utils import (
     NEXT_BUTTON_LABEL,
     PREV_BUTTON_ARIA_LABEL,
     PREV_BUTTON_LABEL,
+    stage_applicability_and_form_data,
     validate_custom_validators,
     ValidationErrors,
 )
@@ -75,6 +76,7 @@ from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfi
 class StageOverview:
     title: str
     sub_title: str | None
+    is_applicable: bool
 
 
 @dataclass
@@ -100,6 +102,11 @@ def quick_setup_guided_mode(
     quick_setup: QuickSetup, prefill_data: ParsedFormData | None, is_edit_mode: bool = False
 ) -> QuickSetupOverview:
     stages = [stage() for stage in quick_setup.stages]
+    # Nothing is submitted yet, so the conditions read the prefill data only and no formspec
+    # map has to be built.
+    stage_applicability, _visible_form_data = stage_applicability_and_form_data(
+        quick_setup.stages, [], {}, prefill_data=prefill_data
+    )
 
     return QuickSetupOverview(
         guided_mode_string=_("Guided mode"),
@@ -109,8 +116,9 @@ def quick_setup_guided_mode(
             StageOverview(
                 title=stage.title,
                 sub_title=stage.sub_title,
+                is_applicable=is_applicable,
             )
-            for stage in stages
+            for stage, is_applicable in zip(stages, stage_applicability, strict=True)
         ],
         stage=NextStageStructure(
             components=[
@@ -317,7 +325,11 @@ def verify_custom_validators_and_complete_quick_setup(
     action = next((action for action in quick_setup.actions if action.id == action_id), None)
     if action is None:
         raise ValueError(f"Action with id {action_id} not found")
-    stages_raw_formspecs = [RawFormData(stage["form_data"]) for stage in input_stages]
+    _stage_applicability, stages_raw_formspecs = stage_applicability_and_form_data(
+        quick_setup.stages,
+        [RawFormData(stage["form_data"]) for stage in input_stages],
+        form_spec_map,
+    )
     errors = validate_custom_validators(
         quick_setup_id=quick_setup.id,
         custom_validators=action.custom_validators,

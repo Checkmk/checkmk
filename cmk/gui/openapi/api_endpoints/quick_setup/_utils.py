@@ -23,7 +23,13 @@ from cmk.gui.quick_setup.handlers.setup import (
     verify_custom_validators_and_complete_quick_setup,
 )
 from cmk.gui.quick_setup.handlers.stage import NextStageStructure, StageActionResult
-from cmk.gui.quick_setup.handlers.utils import Action, Button, ButtonIcon, ValidationErrors
+from cmk.gui.quick_setup.handlers.utils import (
+    Action,
+    Button,
+    ButtonIcon,
+    stage_applicability_and_form_data,
+    ValidationErrors,
+)
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode, QuickSetupBackgroundAction
@@ -100,7 +106,12 @@ def convert_guided_response(data: QuickSetupOverview) -> QuickSetupGuidedRespons
         guided_mode_string=data.guided_mode_string,
         overview_mode_string=data.overview_mode_string,
         overviews=[
-            StageOverviewModel(title=o.title, sub_title=o.sub_title) for o in data.overviews
+            StageOverviewModel(
+                title=o.title,
+                sub_title=o.sub_title,
+                is_applicable=o.is_applicable,
+            )
+            for o in data.overviews
         ],
         stage=_convert_stage_structure(data.stage),
     )
@@ -135,6 +146,7 @@ def convert_stage_action_response(result: StageActionResult) -> QuickSetupStageA
             if result.validation_errors is not None
             else None
         ),
+        stage_applicability=list(result.stage_applicability),
         background_job_exception=(
             BackgroundJobExceptionModel(
                 message=result.background_job_exception.message,
@@ -198,10 +210,13 @@ def complete_quick_setup_action(
         )
 
     form_spec_map = build_formspec_map_from_stages([stage() for stage in quick_setup.stages])
+    _stage_applicability, stages_raw_form_data = stage_applicability_and_form_data(
+        quick_setup.stages,
+        [RawFormData(cast(Mapping[FormSpecId, object], stage.form_data)) for stage in body.stages],
+        form_spec_map,
+    )
     errors = validate_stages_form_data(
-        stages_raw_form_data=[
-            RawFormData(cast(Mapping[FormSpecId, object], stage.form_data)) for stage in body.stages
-        ],
+        stages_raw_form_data=stages_raw_form_data,
         quick_setup_formspec_map=form_spec_map,
     )
 

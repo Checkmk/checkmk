@@ -79,6 +79,16 @@ def get_quick_setup_v1(
             )
 
     if mode == "overview":
+        # The overview mode has no stage actions that could re-evaluate the stage conditions.
+        if quick_setup.has_conditional_stages:
+            raise ProblemException(
+                status=400,
+                title="Overview mode not available",
+                detail=(
+                    f"Quick setup with id '{quick_setup_id}' has conditional stages. The overview "
+                    "mode does not support conditional stages."
+                ),
+            )
         return convert_overview_response(
             quick_setup_overview_mode(
                 quick_setup=quick_setup,

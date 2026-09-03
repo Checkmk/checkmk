@@ -71,6 +71,7 @@ CallableAction = Callable[
     ],
     str,
 ]
+CallableStageApplicability = Callable[[ParsedFormData], bool]
 WidgetConfigurator = Callable[[], Sequence[Widget]]
 
 
@@ -166,6 +167,48 @@ class QuickSetupStage:
     prev_button_label: str | None = None
 
 
+StageFactory = Callable[[], QuickSetupStage]
+
+
+@dataclass(frozen=True)
+class ConditionalStage:
+    """A stage factory that carries the condition deciding if its stage is shown.
+
+    The condition sits next to the factory, so the framework reads it without building the stage.
+    """
+
+    factory: StageFactory
+    applicable_if: CallableStageApplicability
+
+    def __call__(self) -> QuickSetupStage:
+        return self.factory()
+
+    @property
+    def __name__(self) -> str:
+        return getattr(self.factory, "__name__", "<stage>")
+
+    @staticmethod
+    def condition_of(factory: StageFactory) -> CallableStageApplicability | None:
+        """The condition of a stage factory, or None if the stage is always shown."""
+        return factory.applicable_if if isinstance(factory, ConditionalStage) else None
+
+
+def applicable_if(
+    condition: CallableStageApplicability,
+) -> Callable[[StageFactory], ConditionalStage]:
+    """Declare when a stage is shown.
+
+    The condition is called with the parsed form data of the visible stages above the stage. It
+    returns True to show the stage and False to hide it. A stage without the decorator is always
+    shown, and so is the first stage, which has no data above it to read.
+    """
+
+    def decorate(factory: StageFactory) -> ConditionalStage:
+        return ConditionalStage(factory=factory, applicable_if=condition)
+
+    return decorate
+
+
 @dataclass(frozen=True, kw_only=True)
 class QuickSetupActionButtonIcon:
     """Dataclass representing an icon for a QuickSetupAction
@@ -235,9 +278,17 @@ class QuickSetupBackgroundAction(QuickSetupAction):
 class QuickSetup:
     title: str
     id: QuickSetupId
-    stages: Sequence[Callable[[], QuickSetupStage]]
+    stages: Sequence[StageFactory]
     actions: Sequence[QuickSetupAction]
     load_data: Callable[[str], ParsedFormData | None] = lambda _: None
+
+    @property
+    def has_conditional_stages(self) -> bool:
+        """Whether a stage is shown only under a condition.
+
+        The first stage is always shown, so a condition on it is never read.
+        """
+        return any(ConditionalStage.condition_of(stage) is not None for stage in self.stages[1:])
 
 
 def get_all_permissions(quick_setup: QuickSetup) -> list[str] | None:

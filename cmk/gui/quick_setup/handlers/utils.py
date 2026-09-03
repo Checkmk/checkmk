@@ -26,9 +26,12 @@ from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.quick_setup.private.widgets import ConditionalNotificationStageWidget
 from cmk.gui.quick_setup.v0_unstable.setups import (
+    CallableStageApplicability,
     CallableValidator,
+    ConditionalStage,
     FormspecMap,
     ProgressLogger,
+    StageFactory,
     StepStatus,
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import (
@@ -182,6 +185,97 @@ def form_spec_parse(
         for current_stage_form_data in all_stages_form_data
         for form_spec_id, form_data in current_stage_form_data.items()
     }
+
+
+def stage_applicability_and_form_data(
+    stage_factories: Sequence[StageFactory],
+    stages_raw_form_data: Sequence[RawFormData],
+    quick_setup_formspec_map: FormspecMap,
+    *,
+    prefill_data: ParsedFormData | None = None,
+) -> tuple[list[bool], list[RawFormData]]:
+    """Determine which stages are shown and blank out the form data of the hidden ones.
+
+    The conditions are read from the stage factories, so no stage is built here. The formspec
+    map only parses `stages_raw_form_data`, so it can be empty while nothing is submitted.
+
+    Returns one applicability per stage, and the form data with the entries of the hidden stages
+    replaced by an empty mapping. The second list has as many entries as `stages_raw_form_data`.
+    """
+    conditions = [ConditionalStage.condition_of(factory) for factory in stage_factories]
+    if all(condition is None for condition in conditions):
+        return [True] * len(conditions), list(stages_raw_form_data)
+
+    applicability: list[bool] = []
+    visible_raw_form_data: list[RawFormData] = []
+
+    for stage_index, condition in enumerate(conditions):
+        is_applicable = (
+            stage_index == 0
+            or condition is None
+            or _condition_holds(
+                condition,
+                getattr(stage_factories[stage_index], "__name__", "<stage>"),
+                {
+                    **(prefill_data or {}),
+                    **_parse_condition_input(visible_raw_form_data, quick_setup_formspec_map),
+                },
+            )
+        )
+        applicability.append(is_applicable)
+        if stage_index < len(stages_raw_form_data):
+            visible_raw_form_data.append(
+                stages_raw_form_data[stage_index] if is_applicable else RawFormData({})
+            )
+
+    visible_raw_form_data.extend(stages_raw_form_data[len(conditions) :])
+    return applicability, visible_raw_form_data
+
+
+def _parse_condition_input(
+    stages_raw_form_data: Sequence[RawFormData],
+    quick_setup_formspec_map: FormspecMap,
+) -> ParsedFormData:
+    """Parse the form data a stage condition may read.
+
+    A condition runs before the form data is validated, so an unknown or invalid field is
+    skipped instead of parsed.
+    """
+    return form_spec_parse(
+        [
+            RawFormData(
+                {
+                    form_spec_id: form_data
+                    for form_spec_id, form_data in stage_raw_form_data.items()
+                    if form_spec_id in quick_setup_formspec_map
+                    and not get_visitor(
+                        quick_setup_formspec_map[form_spec_id],
+                        VisitorOptions(migrate_values=True, mask_values=False),
+                    ).validate(RawFrontendData(form_data))
+                }
+            )
+            for stage_raw_form_data in stages_raw_form_data
+        ],
+        quick_setup_formspec_map,
+    )
+
+
+def _condition_holds(
+    condition: CallableStageApplicability,
+    stage_name: str,
+    parsed_form_data: ParsedFormData,
+) -> bool:
+    """Evaluate a stage condition. A condition that raises hides its stage."""
+    try:
+        return condition(parsed_form_data)
+    except Exception:
+        logger.warning(
+            "Applicability condition of Quick setup stage %(stage_name)s failed. "
+            "The stage is hidden.",
+            {"stage_name": stage_name},
+            exc_info=True,
+        )
+        return False
 
 
 def get_stage_components_from_widget(widget: Widget, prefill_data: ParsedFormData | None) -> dict:

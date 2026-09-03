@@ -32,7 +32,10 @@ from cmk.gui.quick_setup.handlers.stage import (
     validate_stage_formspecs,
     verify_custom_validators_and_recap_stage,
 )
-from cmk.gui.quick_setup.handlers.utils import form_spec_parse
+from cmk.gui.quick_setup.handlers.utils import (
+    form_spec_parse,
+    stage_applicability_and_form_data,
+)
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
 from cmk.gui.quick_setup.v0_unstable.predefined._common import find_id_in_form_data
@@ -102,9 +105,11 @@ def run_stage_action_v1(
 
     built_stages = [stage() for stage in quick_setup.stages[: stage_index + 1]]
     form_spec_map = build_formspec_map_from_stages(built_stages)
-    stages_raw_formspecs = [
-        RawFormData(cast(Mapping[FormSpecId, object], stage.form_data)) for stage in body.stages
-    ]
+    stage_applicability, stages_raw_formspecs = stage_applicability_and_form_data(
+        quick_setup.stages,
+        [RawFormData(cast(Mapping[FormSpecId, object], stage.form_data)) for stage in body.stages],
+        form_spec_map,
+    )
     errors = validate_stage_formspecs(
         stage_index=stage_index,
         stages_raw_formspecs=stages_raw_formspecs,
@@ -115,6 +120,7 @@ def run_stage_action_v1(
             body=QuickSetupStageActionResponseModel(
                 stage_recap=[],
                 validation_errors=_convert_validation_errors(errors),
+                stage_applicability=stage_applicability,
                 background_job_exception=None,
             ),
             status_code=400,

@@ -51,7 +51,7 @@ PYTHON_MODULE      := $(PYTHON_TMP_DIR)\$(PYTHON_MODULE_NAME)
 NEXUS_UPSTREAM_ARCHIVES_URL := https://artifacts.lan.tribe29.com/repository/upstream-archives
 
 
-.PHONY: clean venv 7zip unpack build python_install usage python_version integration
+.PHONY: clean venv 7zip unpack build python_install usage python_version integration $(PYTHON_PACKAGE)
 
 .DEFAULT_GOAL = usage
 

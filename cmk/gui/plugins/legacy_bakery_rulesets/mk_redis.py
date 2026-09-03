@@ -3,129 +3,201 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import (
-    Alternative,
-    CascadingDropdown,
+from collections.abc import Mapping
+
+from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
     Dictionary,
     FixedValue,
-    Hostname,
-    ListOf,
-    NetworkPort,
-    TextInput,
+    Integer,
+    List,
+    migrate_to_password,
+    Password,
+    String,
+    validators,
 )
-from cmk.gui.wato import IndividualOrStoredPassword
-from cmk.ruleset_matcher.definition import RuleGroup
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_mk_redis() -> CascadingDropdown:
-    return CascadingDropdown(
-        title=_("Redis databases"),
-        help=_(
-            "If you activate this option, then the agent plug-in <tt>mk_redis</tt> will be deployed. "
-            "You can configure multiple instances or auto-detect running instances."
-        ),
-        choices=[
-            ("autodetect", _("Auto-detect instances")),
-            (
-                "static",
-                _("Specific list of instances"),
-                ListOf(
-                    valuespec=Dictionary(
-                        elements=[
-                            (
-                                "instance",
-                                TextInput(
-                                    title=_("Name of the instance in the monitoring"),
-                                    allow_empty=False,
-                                    regex="^[A-Za-z0-9_][A-Za-z0-9_-]{0,62}$",
-                                    regex_error=_(
-                                        "Use at most 63 letters, digits, underscores and "
-                                        "hyphens, and do not start with a hyphen."
-                                    ),
-                                ),
+def migrate_instance(value: object) -> Mapping[str, object]:
+    if not isinstance(value, dict):
+        raise ValueError(f"Unexpected value: {value!r}")
+    match value.get("password"):
+        case None:
+            return {**value, "password": ("no_password", None)}
+        case ("no_password", None) | ("password", ("cmk_postprocessed", _, _)):
+            return value
+        case old_password:
+            return {**value, "password": ("password", migrate_to_password(old_password))}
+
+
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    match value:
+        case None:
+            return {"deployment": ("do_not_deploy", None)}
+        case "autodetect":
+            return {"deployment": ("sync", None), "instances": ("autodetect", None)}
+        case ("static", list() as instances):
+            return {
+                "deployment": ("sync", None),
+                "instances": ("static", [migrate_instance(i) for i in instances]),
+            }
+        case _:
+            raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _instance_form() -> Dictionary:
+    return Dictionary(
+        migrate=migrate_instance,
+        elements={
+            "instance": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Name of the instance in the monitoring"),
+                    custom_validate=(
+                        validators.MatchRegex(
+                            "^[A-Za-z0-9_][A-Za-z0-9_-]{0,62}$",
+                            Message(
+                                "Use at most 63 letters, digits, underscores and "
+                                "hyphens, and do not start with a hyphen."
                             ),
-                            (
-                                "connection",
-                                CascadingDropdown(
-                                    title=_("Connection"),
-                                    choices=[
-                                        (
-                                            "tcp",
-                                            _("TCP"),
-                                            Dictionary(
-                                                elements=[
-                                                    (
-                                                        "host",
-                                                        Hostname(
-                                                            title=_("IPv4 address"),
-                                                            default_value="127.0.0.1",
-                                                            allow_empty=False,
-                                                        ),
-                                                    ),
-                                                    (
-                                                        "port",
-                                                        NetworkPort(
-                                                            title=_("TCP port number"),
-                                                            default_value=6379,
-                                                        ),
-                                                    ),
-                                                ],
-                                                optional_keys=False,
-                                            ),
-                                        ),
-                                        (
-                                            "unix-socket",
-                                            _("Unix socket"),
-                                            Dictionary(
-                                                elements=[
-                                                    (
-                                                        "socket",
-                                                        TextInput(
-                                                            title=_("Path to Unix socket"),
-                                                            allow_empty=False,
-                                                        ),
-                                                    ),
-                                                ],
-                                                optional_keys=False,
-                                            ),
-                                        ),
-                                    ],
-                                ),
-                            ),
-                            (
-                                "password",
-                                Alternative(
-                                    title=_("Password"),
-                                    elements=[
-                                        FixedValue(
-                                            value=None,
-                                            title=_("Don't use password"),
-                                            totext=_("Connect without password"),
-                                        ),
-                                        IndividualOrStoredPassword(
-                                            title=_("Password"),
-                                            allow_empty=False,
-                                        ),
-                                    ],
-                                ),
-                            ),
-                        ],
-                        optional_keys=False,
+                        ),
                     ),
                 ),
             ),
-            (None, _("Do not deploy the Redis plug-in")),
-        ],
+            "connection": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Connection"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="tcp",
+                            title=Title("TCP"),
+                            parameter_form=Dictionary(
+                                elements={
+                                    "host": DictElement(
+                                        required=True,
+                                        parameter_form=String(
+                                            title=Title("IPv4 address"),
+                                            prefill=DefaultValue("127.0.0.1"),
+                                            custom_validate=(
+                                                validators.LengthInRange(min_value=1),
+                                            ),
+                                        ),
+                                    ),
+                                    "port": DictElement(
+                                        required=True,
+                                        parameter_form=Integer(
+                                            title=Title("TCP port number"),
+                                            prefill=DefaultValue(6379),
+                                            custom_validate=(validators.NetworkPort(),),
+                                        ),
+                                    ),
+                                },
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="unix-socket",
+                            title=Title("Unix socket"),
+                            parameter_form=Dictionary(
+                                elements={
+                                    "socket": DictElement(
+                                        required=True,
+                                        parameter_form=String(
+                                            title=Title("Path to Unix socket"),
+                                            custom_validate=(
+                                                validators.LengthInRange(min_value=1),
+                                            ),
+                                        ),
+                                    ),
+                                },
+                            ),
+                        ),
+                    ),
+                    prefill=DefaultValue("tcp"),
+                ),
+            ),
+            "password": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Password"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="no_password",
+                            title=Title("Connect without password"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="password",
+                            title=Title("Password"),
+                            parameter_form=Password(),
+                        ),
+                    ),
+                    prefill=DefaultValue("no_password"),
+                ),
+            ),
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("mk_redis"),
-        valuespec=_valuespec_agent_config_mk_redis,
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "If you activate this option, then the agent plug-in <tt>mk_redis</tt> will be "
+            "deployed. You can configure multiple instances or auto-detect running instances."
+        ),
+        migrate=migrate,
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ),
+                    prefill=DefaultValue("sync"),
+                ),
+            ),
+            "instances": DictElement(
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Instances"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="autodetect",
+                            title=Title("Auto-detect instances"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="static",
+                            title=Title("Specific list of instances"),
+                            parameter_form=List(element_template=_instance_form()),
+                        ),
+                    ),
+                    prefill=DefaultValue("autodetect"),
+                ),
+            ),
+        },
     )
+
+
+rule_spec_mk_redis = AgentConfig(
+    title=Title("Redis databases"),
+    name="mk_redis",
+    topic=Topic.DATABASES,
+    parameter_form=_form_spec,
 )

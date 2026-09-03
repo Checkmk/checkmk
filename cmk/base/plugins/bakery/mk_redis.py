@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
@@ -11,8 +12,9 @@ from typing import Literal
 from pydantic import BaseModel
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.utils.password_store import extract_formspec_password, FormSpecPassword
 
-from .bakery_api.v1 import FileGenerator, OS, password_store, Plugin, PluginConfig, register
+from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
 class _Tcp(BaseModel):
@@ -27,18 +29,32 @@ class _UnixSocket(BaseModel):
 class _Instance(BaseModel):
     instance: str
     connection: tuple[Literal["tcp"], _Tcp] | tuple[Literal["unix-socket"], _UnixSocket]
-    password: password_store.PasswordId | None = None
+    password: tuple[Literal["no_password"], None] | tuple[Literal["password"], FormSpecPassword]
 
 
-RedisConfig = Literal["autodetect"] | tuple[Literal["static"], Sequence[Mapping[str, object]]]
+class _Config(BaseModel):
+    deployment: tuple[Literal["do_not_deploy", "sync"], None]
+    instances: (
+        tuple[Literal["autodetect"], None] | tuple[Literal["static"], Sequence[_Instance]]
+    ) = (
+        "autodetect",
+        None,
+    )
 
 
-def get_mk_redis_files(conf: RedisConfig) -> FileGenerator:
-    yield Plugin(base_os=OS.LINUX, source=Path("mk_redis"))
+def get_mk_redis_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
+    if config.deployment[0] == "do_not_deploy":
+        return
+
+    yield Plugin(
+        base_os=OS.LINUX,
+        source=Path("mk_redis"),
+    )
 
     yield PluginConfig(
         base_os=OS.LINUX,
-        lines=list(_get_mk_redis_config(conf)),
+        lines=list(_get_mk_redis_config(config)),
         target=Path("mk_redis.cfg"),
         include_header=True,
     )
@@ -79,14 +95,12 @@ def _host_and_port(redis_instance: _Instance) -> tuple[str, str | int]:
             return unix_socket.socket, "unix-socket"
 
 
-def _get_mk_redis_config(conf: RedisConfig) -> Iterator[str]:
-    match conf:
-        case "autodetect":
+def _get_mk_redis_config(config: _Config) -> Iterator[str]:
+    match config.instances:
+        case ("autodetect", _):
             yield "# Autodetect instances"
         case ("static", instances):
-            yield from _get_static_instances_config(
-                [_Instance.model_validate(e) for e in instances]
-            )
+            yield from _get_static_instances_config(instances)
 
 
 def _get_static_instances_config(instances: Sequence[_Instance]) -> Iterator[str]:
@@ -98,8 +112,11 @@ def _get_static_instances_config(instances: Sequence[_Instance]) -> Iterator[str
 
         yield f"REDIS_HOST_{suffix}={quote(host)}"
         yield f"REDIS_PORT_{suffix}={quote(str(port))}"
-        if redis_instance.password is not None:
-            yield f"REDIS_PASSWORD_{suffix}={quote(password_store.extract(redis_instance.password))}"
+        match redis_instance.password:
+            case ("no_password", _):
+                pass
+            case ("password", password):
+                yield f"REDIS_PASSWORD_{suffix}={quote(extract_formspec_password(password))}"
 
     yield "REDIS_INSTANCES=(%s)" % " ".join(quote(i.instance) for i in instances)
 

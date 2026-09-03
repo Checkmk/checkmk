@@ -18,16 +18,16 @@ OPTS="-pidfile ${OMD_ROOT}/tmp/run/xinetd.pid -filelog ${OMD_ROOT}/var/log/xinet
 
 case "$1" in
     start)
- 	echo -n 'Starting xinetd...'
-	if [ -e "$PIDFILE" ] ; then
-	    PID=$(cat $PIDFILE)
-	    if [ -n "$PID" ] && ps $PID > /dev/null 2>&1 ; then
-		echo "still running with pid $PID! Aborting!"
-		exit 1
-	    fi
-	    echo "removing stale pid file..."
-	    rm -f $PIDFILE
-	fi
+        echo -n 'Starting xinetd...'
+        if [ -e "$PIDFILE" ]; then
+            PID=$(cat $PIDFILE)
+            if [ -n "$PID" ] && ps $PID >/dev/null 2>&1; then
+                echo "already running."
+                exit 0
+            fi
+            echo "removing stale pid file..."
+            rm -f $PIDFILE
+        fi
 
         # Do not use usual system daemon path. Some start script
         # (e.g. SLES) will think that the system xinetd is already

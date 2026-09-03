@@ -372,6 +372,7 @@ class _FannedQuantity(QuantityProtocol):
 
     series: Sequence[tuple[str, float]]
     series_attributes: Mapping[str, SeriesAttributes] = field(default_factory=dict)
+    aggregation_kind: object | None = None
 
     @override
     def kind(self) -> str:
@@ -427,6 +428,36 @@ def test_evaluate_graph_carries_the_curve_source_id() -> None:
     assert result.stacks[0].members[0].source_id == "A"
     # An untagged curve stays untagged.
     assert result.lines[0].curve.source_id is None
+
+
+def test_evaluate_graph_colours_a_fan_out_apart_even_at_a_single_series() -> None:
+    alone = _FannedQuantity(series=[("only", 1.0)])
+    several = _FannedQuantity(series=[("first", 1.0), ("second", 2.0)])
+    [line] = _evaluate_graph(
+        Graph(
+            name="g", title="g", kind="test", lines=[Line(curve=_curve(alone, ""), inverse=False)]
+        ),
+        _context({}, {}),
+    ).lines
+    [first, _second] = _evaluate_graph(
+        Graph(
+            name="g", title="g", kind="test", lines=[Line(curve=_curve(several, ""), inverse=False)]
+        ),
+        _context({}, {}),
+    ).lines
+    assert line.curve.attributes.color != "#28a2f3"
+    assert line.curve.attributes.color == first.curve.attributes.color
+
+
+def test_evaluate_graph_keeps_the_curve_colour_of_a_quantity_that_never_fans_out() -> None:
+    plain = _metric("a")
+    [line] = _evaluate_graph(
+        Graph(
+            name="g", title="g", kind="test", lines=[Line(curve=_curve(plain, "a"), inverse=False)]
+        ),
+        _context({plain: _data(value=1.0)}, {plain: _time_series(1.0)}),
+    ).lines
+    assert line.curve.attributes.color == "#28a2f3"
 
 
 def test_evaluate_graph_fanned_curves_share_their_source_id() -> None:

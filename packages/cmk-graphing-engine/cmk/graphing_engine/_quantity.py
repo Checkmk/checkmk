@@ -6,7 +6,7 @@
 
 from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from cmk.graphing.v1 import metrics as metrics_v1
 
@@ -74,6 +74,14 @@ class QuantityProtocol(Protocol):
         registered_metrics: Mapping[str, metrics_v1.Metric],
         /,
     ) -> CurveAttributes | None: ...
+
+
+@runtime_checkable
+class FanOutQuantity(Protocol):
+    """A quantity drawing one curve per matched series, unless aggregation_kind reduces them."""
+
+    @property
+    def aggregation_kind(self) -> object | None: ...
 
 
 # The leaves a graph fetches data for: the keys of EvaluationContext.fetched and the elements

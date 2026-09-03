@@ -92,6 +92,7 @@ class _FanOut:
     """A custom quantity that expands into one labelled curve per given label."""
 
     labels: Sequence[str]
+    aggregation_kind: object | None = None
 
     def kind(self) -> str:
         return "fan_out"

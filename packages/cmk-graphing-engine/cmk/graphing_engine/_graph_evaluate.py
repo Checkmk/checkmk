@@ -13,7 +13,14 @@ from typing import assert_never
 from ._fetch import fetch_evaluation_context, FetchDataProtocol
 from ._fetched import MACRO_SERIES_ID, SeriesAttributes
 from ._graph import FixedRange, Graph, MinimalRange, Rule, VerticalRange
-from ._quantity import Bound, Curve, EvaluationContext, first_value, QuantityProtocol
+from ._quantity import (
+    Bound,
+    Curve,
+    EvaluationContext,
+    FanOutQuantity,
+    first_value,
+    QuantityProtocol,
+)
 from ._timeseries import ConsolidationFunction, TimeRange, TimeSeries
 from ._title import evaluate_title
 from ._units import CurveAttributes
@@ -143,7 +150,7 @@ def _evaluate_curve(
     curve: Curve, *, inverse: bool, seen: Counter[str], context: EvaluationContext
 ) -> Sequence[EvaluatedCurve]:
     results = curve.quantity.evaluate(context)
-    fanned = len(results) > 1
+    fanned = isinstance(curve.quantity, FanOutQuantity) and curve.quantity.aggregation_kind is None
     return [
         EvaluatedCurve(
             id=_create_id(curve.quantity, inverse=inverse, seen=seen),

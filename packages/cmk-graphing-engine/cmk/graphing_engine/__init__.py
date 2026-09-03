@@ -70,6 +70,7 @@ from ._quantity import (
     Curve,
     EvaluatedQuantity,
     EvaluationContext,
+    FanOutQuantity,
     MetricProtocol,
     QuantityProtocol,
 )
@@ -122,6 +123,7 @@ __all__ = [
     "EvaluatedStacked",
     "EvaluatedVerticalRange",
     "EvaluationContext",
+    "FanOutQuantity",
     "FetchDataProtocol",
     "FetchMetricNamesProtocol",
     "FetchedData",

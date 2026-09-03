@@ -479,7 +479,7 @@ watch(
   border-radius: var(--border-radius-half);
 }
 
-.graphing-graph-legend__name {
+.graphing-graph-legend td.graphing-graph-legend__name {
   padding-left: var(--dimension-4);
   display: flex;
   align-items: center;
@@ -506,6 +506,7 @@ watch(
 
 .graphing-graph-legend td.graphing-graph-legend__stat {
   text-align: right;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 

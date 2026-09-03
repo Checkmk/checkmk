@@ -35,7 +35,7 @@ cc_toolchain(
         "//bazel/platforms:linux_x86_64": "@gcc_toolchain//:static_runtime_lib",
     }),
     tags = ["manual"],
-    tool_map = "//bazel/toolchains/cc/gcc/bootlin/tools",
+    tool_map = "//bazel/toolchains/cc/gcc/hermetic/tools",
 )
 
 toolchain(

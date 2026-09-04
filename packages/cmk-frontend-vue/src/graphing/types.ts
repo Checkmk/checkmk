@@ -25,6 +25,16 @@ export type RequestedTimeRange = TimeInterval
 // re-derives it (multiplier × span) once the span changed.
 export type TimeRangeCommitKind = 'translated_timerange' | 'changed_timerange_span'
 
+// Who moved a fetch owner's requested time range: one of its own panels (by key), the page's
+// time picker, or a different graph group on the page. A panel reacts by source instead of
+// guessing whether a change was its own commit echoing back.
+export type PanelKey = number
+export type RangeChangeSource = 'time_picker' | 'other_group' | PanelKey
+export interface RangeChange {
+  version: number
+  source: RangeChangeSource
+}
+
 /**
  * The bar's geometry is `window` projected through `drawnDomain`, so a window measured against a
  * strip it was never derived from lands anywhere. Only `useBrushSnapshot` assembles one, and it
@@ -89,7 +99,10 @@ export interface GraphPanelProps {
   requestedTimeRange: RequestedTimeRange
   // While true the panel draws the range its data covers, not the one requested.
   awaitingData?: boolean | undefined
-  timePickerRequests: number
+  // Identifies this panel as the source of its own range commits.
+  panelKey: PanelKey
+  // The latest change to requestedTimeRange and who made it; absent until the first one.
+  rangeChange?: RangeChange | undefined
   yAxis?: YAxis | null
   interaction: Interaction
   title?: string

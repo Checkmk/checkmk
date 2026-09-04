@@ -6,8 +6,7 @@
 import { type Ref, computed, ref, watch } from 'vue'
 
 import type { PinPayload, TimeRange, ZoomMode, ZoomPayload } from '../components/TimeSeriesGraph'
-import type { RequestedTimeRange, TimeRangeCommitKind } from '../types'
-import { sameRequestedTimeRange } from '../utils/timeRange'
+import type { PanelKey, RangeChange, RequestedTimeRange, TimeRangeCommitKind } from '../types'
 import { useGlobalPin } from './useGlobalPin'
 import { useGraphView } from './useGraphView'
 
@@ -46,19 +45,11 @@ export function useGraphInteraction(
     { immediate: true }
   )
 
-  // Tracks the current committing zoom/pan session: resetTarget is the range that was in
-  // effect right before it started (consumed by onReset), lastCommittedRequest is the range
-  // this session last asked onTimeRangeCommit to publish. The two always start and end
-  // together, hence one nullable object rather than two separately-nullable refs.
-  //
-  // resetTarget is the range the page asked for, not the baseline the backend answered with:
-  // the served range is snapped to the RRD step, so publishing it would end the reset on a
-  // range that is a step longer than any of the time picker's presets and drop the picker to
-  // "Custom time range". The baseline is the fallback for hosts that request nothing.
-  const zoomSession: Ref<{
-    resetTarget: RequestedTimeRange
-    lastCommittedRequest: RequestedTimeRange
-  } | null> = ref(null)
+  // Tracks the committing zoom/pan session; resetTarget is the pre-session range, consumed by
+  // onReset. It's the requested range, not the RRD-step-snapped baseline: publishing that would
+  // drop the time picker to "Custom time range". Falls back to the baseline if nothing was
+  // requested.
+  const zoomSession: Ref<{ resetTarget: RequestedTimeRange } | null> = ref(null)
   const inspectionActive = computed(() => viewInspectionActive.value || zoomSession.value !== null)
 
   watch(getBaseline, (baseline) => {
@@ -67,18 +58,19 @@ export function useGraphInteraction(
     }
   })
 
-  // A new requested time range that doesn't equal the last request committed from within this
-  // composable indicates an outer change, i.e. triggered through the global time picker.
-  // In this case we abandon the current zoom session - setting it to null.
-  if (getRequestedTimeRange) {
-    watch(getRequestedTimeRange, (current) => {
-      if (
-        zoomSession.value !== null &&
-        !sameRequestedTimeRange(current, zoomSession.value.lastCommittedRequest)
-      ) {
-        zoomSession.value = null
-      }
-    })
+  // The host reports each change to the requested time range along with who made it, so this
+  // never has to guess whether a change was its own commit echoing back.
+  function onRangeChange(change: RangeChange, ownKey: PanelKey): void {
+    if (change.source === ownKey) {
+      return
+    }
+    if (change.source === 'time_picker') {
+      abandonInspection()
+      return
+    }
+    // Another group or a sibling panel moved the window: the reset target is stale, but a peak
+    // zoom is still this graph's own business and stands.
+    zoomSession.value = null
   }
 
   function commitTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
@@ -92,12 +84,9 @@ export function useGraphInteraction(
       const baseline = getBaseline()
       if (baseline !== undefined) {
         zoomSession.value = {
-          resetTarget: getRequestedTimeRange?.() ?? { start: baseline.start, end: baseline.end },
-          lastCommittedRequest: rounded
+          resetTarget: getRequestedTimeRange?.() ?? { start: baseline.start, end: baseline.end }
         }
       }
-    } else {
-      zoomSession.value = { ...zoomSession.value, lastCommittedRequest: rounded }
     }
     onTimeRangeCommit?.(rounded, kind)
   }
@@ -142,6 +131,7 @@ export function useGraphInteraction(
     onPan,
     onBrush: commitTimeRange,
     onReset,
+    onRangeChange,
     abandonInspection,
     onPinCreate,
     clearPin

@@ -71,7 +71,7 @@ const {
   onPan,
   onBrush,
   onReset,
-  abandonInspection,
+  onRangeChange,
   onPinCreate,
   clearPin
 } = useGraphInteraction(
@@ -81,7 +81,14 @@ const {
   updateTimeRange // onTimeRangeCommit
 )
 
-watch(() => props.timePickerRequests, abandonInspection)
+watch(
+  () => props.rangeChange,
+  (change) => {
+    if (change) {
+      onRangeChange(change, props.panelKey)
+    }
+  }
+)
 
 function onZoomIntent(payload: ZoomPayload): void {
   emit('inspect')

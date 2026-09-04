@@ -31,6 +31,8 @@ const BASELINE: TimeRange = { start: 1000, end: 2000, step: 60 }
 const ZOOMED: TimeRange = { start: 1200, end: 1500, step: 60 }
 const SHIFTED: TimeRange = { start: 1100, end: 2100, step: 60 }
 const PEAK: ValueRange = { min: 10, max: 20 }
+const OWN_KEY = 0
+const SIBLING_KEY = 1
 
 const bounds = ({ start, end }: TimeRange): RequestedTimeRange => ({ start, end })
 
@@ -94,7 +96,7 @@ describe('useGraphInteraction', () => {
     // The local inspection overlay clears (rangeCommit) so the fresh baseline shows through...
     expect(graph.viewTimeRange.value).toEqual(committed)
     // ...but inspectionActive stays true: a baseline change alone never clears the reset
-    // target (only onReset() or, when wired, an unrelated requestedTimeRange change does).
+    // target (only onReset(), or the host reporting someone else's range change, does).
     expect(graph.inspectionActive.value).toBe(true)
   })
 
@@ -189,9 +191,8 @@ test('the reset control survives the baseline settling at the rounded (not raw) 
 
   graph.onZoom({ timeRange: { start: 1200.6, end: 1499.4, step: 60 } })
 
-  // Without a getRequestedTimeRange source, the session is never cleared by a baseline
-  // change alone (only an explicit reset clears it) — this just confirms that still holds
-  // once the baseline settles at the rounded value the zoom actually committed.
+  // A baseline change alone never clears the session; this confirms that still holds once
+  // the baseline settles at the rounded value the zoom actually committed.
   baseline.value = { start: 1201, end: 1499, step: 60 }
   await nextTick()
 
@@ -307,32 +308,37 @@ test('abandoning the inspection ends it without publishing a range', () => {
   expect(graph.inspectionActive.value).toBe(false)
 })
 
-test('a requested time range matching our own commit (inner) keeps the reset target', async () => {
-  const baseline = ref<TimeRange>(BASELINE)
-  const requestedTimeRange = ref<RequestedTimeRange>({
-    start: BASELINE.start,
-    end: BASELINE.end
+describe('the host reports who moved the requested time range', () => {
+  // Zoomed, with the zoom's own fetch settled: that clears the transient overlay, so whatever
+  // inspection is left comes from the reset target alone.
+  async function settledZoomedGraph() {
+    const baseline = ref<TimeRange>(BASELINE)
+    const graph = useGraphInteraction(() => baseline.value)
+    graph.onZoom({ timeRange: ZOOMED })
+    baseline.value = ZOOMED
+    await nextTick()
+    return graph
+  }
+
+  test("the graph's own commit echoing back keeps the reset target", async () => {
+    const graph = await settledZoomedGraph()
+
+    graph.onRangeChange({ version: 1, source: OWN_KEY }, OWN_KEY)
+
+    expect(graph.inspectionActive.value).toBe(true)
   })
-  const onTimeRangeCommit = vi.fn()
-  const graph = useGraphInteraction(
-    () => baseline.value,
-    undefined,
-    () => requestedTimeRange.value,
-    onTimeRangeCommit
-  )
 
-  graph.onZoom({ timeRange: ZOOMED })
-  // Let the zoom's own commit settle first, clearing the local inspection overlay — what's
-  // left active afterward must come purely from the reset target (zoomSession), not the
-  // transient overlay, otherwise this would pass even if zoomSession were wrongly cleared.
-  baseline.value = ZOOMED
-  await nextTick()
-  // Echoes straight back, exactly as GraphGroup would when it applies our own emitted
-  // update:requestedTimeRange — no backend round trip involved, so no rounding drift.
-  requestedTimeRange.value = { start: ZOOMED.start, end: ZOOMED.end }
-  await nextTick()
+  test.each([
+    ['a sibling panel', SIBLING_KEY],
+    ['another group', 'other_group'],
+    ['the time picker', 'time_picker']
+  ] as const)('%s moving the range drops the reset target', async (_who, source) => {
+    const graph = await settledZoomedGraph()
 
-  expect(graph.inspectionActive.value).toBe(true)
+    graph.onRangeChange({ version: 1, source }, OWN_KEY)
+
+    expect(graph.inspectionActive.value).toBe(false)
+  })
 })
 
 describe('the brush commits like the canvas gestures do', () => {
@@ -347,8 +353,10 @@ describe('the brush commits like the canvas gestures do', () => {
       expect(onTimeRangeCommit).toHaveBeenCalledExactlyOnceWith(bounds(SHIFTED), kind)
     }
   )
+})
 
-  test('the echo of a brush commit is not mistaken for an outside change', async () => {
+describe('a peak zoom outlives every change of the requested time range', () => {
+  function peakZoomedGraph() {
     const baseline = ref<TimeRange>(BASELINE)
     const requestedTimeRange = ref<RequestedTimeRange>({
       start: BASELINE.start,
@@ -362,35 +370,8 @@ describe('the brush commits like the canvas gestures do', () => {
         requestedTimeRange.value = { start: timeRange.start, end: timeRange.end }
       }
     )
-
-    graph.onBrush({ start: SHIFTED.start, end: SHIFTED.end }, 'translated_timerange')
-    baseline.value = SHIFTED
-    await nextTick()
-
-    expect(graph.inspectionActive.value).toBe(true)
-  })
-})
-
-describe('a peak zoom outlives every change of the requested time range', () => {
-  function peakZoomedGraph() {
-    const baseline = ref<TimeRange>(BASELINE)
-    const requestedTimeRange = ref<RequestedTimeRange>({
-      start: BASELINE.start,
-      end: BASELINE.end
-    })
-    function request(range: RequestedTimeRange): void {
-      requestedTimeRange.value = range
-    }
-    const graph = useGraphInteraction(
-      () => baseline.value,
-      undefined,
-      () => requestedTimeRange.value,
-      (timeRange) => {
-        request({ start: timeRange.start, end: timeRange.end })
-      }
-    )
     graph.onZoom({ timeRange: BASELINE, valueRange: PEAK })
-    return { graph, baseline, request }
+    return { graph, baseline }
   }
 
   async function refetchServes(baseline: Ref<TimeRange>, served: TimeRange): Promise<void> {
@@ -428,28 +409,31 @@ describe('a peak zoom outlives every change of the requested time range', () => 
     expect(graph.viewValueRange.value).toEqual(PEAK)
   })
 
-  test('an outside range change keeps it, since only the host can judge that one', async () => {
-    const { graph, baseline, request } = peakZoomedGraph()
+  test.each([
+    ['a sibling panel', SIBLING_KEY],
+    ['another group', 'other_group']
+  ] as const)('%s moving the range keeps it', async (_who, source) => {
+    const { graph, baseline } = peakZoomedGraph()
 
-    request({ start: 5000, end: 6000 })
+    graph.onRangeChange({ version: 1, source }, OWN_KEY)
     await refetchServes(baseline, { start: 5000, end: 6000, step: 60 })
 
     expect(graph.viewValueRange.value).toEqual(PEAK)
+  })
+
+  test('the time picker moving the range ends it', () => {
+    const { graph } = peakZoomedGraph()
+
+    graph.onRangeChange({ version: 1, source: 'time_picker' }, OWN_KEY)
+
+    expect(graph.viewValueRange.value).toBeNull()
+    expect(graph.inspectionActive.value).toBe(false)
   })
 
   test('a refetch re-serving the same window at another step keeps it', async () => {
     const { graph, baseline } = peakZoomedGraph()
 
     await refetchServes(baseline, { ...BASELINE, step: 120 })
-
-    expect(graph.viewValueRange.value).toEqual(PEAK)
-  })
-
-  test('a requested range republished unchanged keeps it', async () => {
-    const { graph, request } = peakZoomedGraph()
-
-    request({ start: BASELINE.start, end: BASELINE.end })
-    await nextTick()
 
     expect(graph.viewValueRange.value).toEqual(PEAK)
   })
@@ -480,31 +464,4 @@ describe('a peak zoom outlives every change of the requested time range', () => 
 
     expect(graph.inspectionActive.value).toBe(true)
   })
-})
-
-test('an unrelated requested time range (e.g. the global picker) drops the reset target', async () => {
-  const baseline = ref<TimeRange>(BASELINE)
-  const requestedTimeRange = ref<RequestedTimeRange>({
-    start: BASELINE.start,
-    end: BASELINE.end
-  })
-  const onTimeRangeCommit = vi.fn()
-  const graph = useGraphInteraction(
-    () => baseline.value,
-    undefined,
-    () => requestedTimeRange.value,
-    onTimeRangeCommit
-  )
-
-  graph.onZoom({ timeRange: ZOOMED })
-  // Let the zoom's own commit settle first, clearing the local inspection overlay — same
-  // reasoning as above, isolating what's being tested to zoomSession's own clearing logic.
-  baseline.value = ZOOMED
-  await nextTick()
-  expect(graph.inspectionActive.value).toBe(true)
-
-  requestedTimeRange.value = { start: 5000, end: 6000 }
-  await nextTick()
-
-  expect(graph.inspectionActive.value).toBe(false)
 })

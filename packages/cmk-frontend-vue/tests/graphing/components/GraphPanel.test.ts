@@ -165,7 +165,7 @@ function renderPanelWithLegend(metrics: Metric[], hiddenMetricNames: string[] = 
       metrics,
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       hiddenMetricNames,
@@ -212,7 +212,7 @@ function renderPanelForRequest(overrides: Partial<GraphPanelProps> = {}) {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: MID_INTERVAL_REQUEST,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       ...overrides
@@ -254,7 +254,7 @@ test('does not render the legend when showLegend is not set', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -268,7 +268,7 @@ test('renders the legend when showLegend is true', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       showLegend: true
@@ -285,7 +285,7 @@ test('the brush bar shows the committed window, not the range the curves are dra
       dataTimeRange: { start: 1, end: 2, step: 300 },
       awaitingData: true,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: { ...INTERACTION_NONE, brush: 'enabled' },
       brushSnapshot: BRUSH_SNAPSHOT
@@ -302,7 +302,7 @@ test('renders the context view when showBrush is set and a brush snapshot is sup
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: { ...INTERACTION_NONE, brush: 'enabled' },
       brushSnapshot: BRUSH_SNAPSHOT
@@ -318,7 +318,7 @@ function renderPanelWithBrush() {
       dataTimeRange: TIME_RANGE,
       // Same span as the brush move below, so the published range is the moved one.
       requestedTimeRange: { start: 200, end: 300 },
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: { ...INTERACTION_NONE, brush: 'enabled' },
       brushSnapshot: BRUSH_SNAPSHOT
@@ -349,29 +349,47 @@ test('a brush change activates inspection, so the reset affordance is offered', 
   expect(screen.getByTestId('inspecting')).toHaveTextContent('true')
 })
 
-test('a peak zoom outlives a time range the host requested without a new-window count', async () => {
-  const { rerender } = renderPanelWithBrush()
-  await fireEvent.click(screen.getByTestId('emit-value-zoom'))
+// The renderer stub pans to 300..400. With the same requested span the host republishes exactly
+// that, and the fetch it triggers settles the drawn range on it, clearing the transient overlay:
+// whatever is left of the reset affordance comes from the reset target alone.
+const PANNED: RequestedTimeRange = { start: 300, end: 400 }
+const PANNED_DATA: TimeRange = { ...PANNED, step: 10 }
 
-  await rerender({ requestedTimeRange: { start: 5_000, end: 6_000 } })
+async function pannedPanel() {
+  const rendered = render(GraphPanel, {
+    props: {
+      metrics: [CPU],
+      dataTimeRange: TIME_RANGE,
+      requestedTimeRange: { start: 200, end: 300 },
+      panelKey: 0,
+      figureWidth: FIGURE_WIDTH,
+      interaction: INTERACTION_NONE
+    }
+  })
+  await fireEvent.click(screen.getByTestId('emit-pan'))
+  return rendered
+}
+
+test("the panel's own pan echoing back keeps the reset affordance", async () => {
+  const { rerender } = await pannedPanel()
+
+  await rerender({
+    requestedTimeRange: PANNED,
+    dataTimeRange: PANNED_DATA,
+    rangeChange: { version: 1, source: 0 }
+  })
 
   expect(screen.getByTestId('inspecting')).toHaveTextContent('true')
 })
 
-test('a peak zoom ends when a time control asks for another window', async () => {
-  const { rerender } = renderPanelWithBrush()
-  await fireEvent.click(screen.getByTestId('emit-value-zoom'))
+test("a sibling panel's commit ends the reset affordance", async () => {
+  const { rerender } = await pannedPanel()
 
-  await rerender({ requestedTimeRange: { start: 5_000, end: 6_000 }, timePickerRequests: 1 })
-
-  expect(screen.getByTestId('inspecting')).toHaveTextContent('false')
-})
-
-test('a peak zoom ends on a new-window count even when the range is unchanged', async () => {
-  const { rerender } = renderPanelWithBrush()
-  await fireEvent.click(screen.getByTestId('emit-value-zoom'))
-
-  await rerender({ timePickerRequests: 1 })
+  await rerender({
+    requestedTimeRange: PANNED,
+    dataTimeRange: PANNED_DATA,
+    rangeChange: { version: 1, source: 1 }
+  })
 
   expect(screen.getByTestId('inspecting')).toHaveTextContent('false')
 })
@@ -382,7 +400,7 @@ test('does not render the context view when showBrush is not set', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       brushSnapshot: BRUSH_SNAPSHOT
@@ -401,7 +419,7 @@ test('reports time zoom at its floor once the requested window is the narrowest 
       interaction: INTERACTION_NONE,
       // A minute apart: exactly MIN_ZOOM_TIME_RANGE_SECONDS.
       requestedTimeRange: { start: 1_781_524_800, end: 1_781_524_860 },
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       // Served a step wider, as the backend does.
       dataTimeRange: { start: 1_781_524_800, end: 1_781_524_920, step: 60 }
@@ -418,7 +436,7 @@ test('does not report time zoom at its floor while the requested window is still
       interaction: INTERACTION_NONE,
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH
     }
   })
@@ -432,7 +450,7 @@ test('does not render GraphBurgerMenu when showBurgerMenu is not set', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -446,7 +464,7 @@ test('does not render GraphBurgerMenu when the burger interaction is disabled', 
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       addTo: { type: 'test', specification: {}, internal: '{"graphs":[]}' },
       interaction: INTERACTION_NONE
@@ -461,7 +479,7 @@ test('renders GraphBurgerMenu when the burger interaction is enabled, and is acc
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       addTo: { type: 'test', specification: {}, internal: '{"graphs":[]}' },
       interaction: { ...INTERACTION_NONE, burger: 'enabled' }
@@ -486,7 +504,7 @@ test('a do-action from the header runs the callback with the graph the backends 
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       addTo: { type: 'test', specification, internal },
       interaction: { ...INTERACTION_NONE, burger: 'enabled' }
@@ -523,7 +541,7 @@ function renderPanelWithConsolidation() {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       showConsolidation: true
@@ -555,7 +573,7 @@ test('the burger menu addresses the graph with the selected consolidation functi
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       addTo: { type: 'test', specification: {}, internal: '{"graphs":[]}' },
       interaction: { ...INTERACTION_NONE, burger: 'enabled' },
@@ -576,7 +594,7 @@ test('renders title when showTitle is true', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       title: 'Panel Title',
@@ -592,7 +610,7 @@ test('applies legend-right modifier class when legendPosition is "right"', () =>
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       legendPosition: 'right'
@@ -609,7 +627,7 @@ test('does not apply legend-right modifier class when legendPosition is "bottom"
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       legendPosition: 'bottom'
@@ -626,7 +644,7 @@ test('the renderer receives the baseline view without inspection', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -642,7 +660,7 @@ test('a zoom intent from the renderer overlays the view and activates inspection
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -660,7 +678,7 @@ test('a zoom intent from the renderer also publishes a requested time range upda
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -679,7 +697,7 @@ test('a value-zoom intent from the renderer does not publish a requested time ra
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -697,7 +715,7 @@ test('a pan intent from the renderer also publishes a requested time range updat
       dataTimeRange: TIME_RANGE,
       // Same span as the pan below, so the published range is the panned one.
       requestedTimeRange: { start: 200, end: 300 },
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -717,7 +735,7 @@ test('a pan asks for the span that was requested, not the wider one that was ser
       // Served a step wider than requested, as the backend does.
       dataTimeRange: { start: 1_781_524_800, end: 1_781_528_460, step: 60 },
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -742,7 +760,7 @@ describe('reporting inspection to the host', () => {
         metrics: [CPU],
         dataTimeRange: TIME_RANGE,
         requestedTimeRange: REQUESTED,
-        timePickerRequests: 0,
+        panelKey: 0,
         figureWidth: FIGURE_WIDTH,
         interaction: INTERACTION_NONE
       }
@@ -770,7 +788,7 @@ describe('reporting inspection to the host', () => {
         metrics: [CPU],
         dataTimeRange: TIME_RANGE,
         requestedTimeRange: REQUESTED,
-        timePickerRequests: 0,
+        panelKey: 0,
         figureWidth: FIGURE_WIDTH,
         interaction: INTERACTION_NONE
       }
@@ -788,7 +806,7 @@ test('a reset intent from the renderer also publishes a requested time range upd
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -809,7 +827,7 @@ test('a reset intent from the renderer restores the baseline view', async () => 
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -828,7 +846,7 @@ test('the renderer receives every metric when none are hidden', () => {
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -843,7 +861,7 @@ test('hiding a metric via the legend eye removes it from what TimeSeriesGraph re
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       showLegend: true
@@ -863,7 +881,7 @@ test('a metric hidden via the hiddenMetricNames model is filtered from the rende
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       hiddenMetricNames: ['cpu'],
       interaction: INTERACTION_NONE
@@ -880,7 +898,7 @@ test('toggling a metric requests no new data', async () => {
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       showLegend: true
@@ -897,7 +915,7 @@ test('un-hiding a metric restores it to the renderer, and so to the tooltip', as
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       hiddenMetricNames: ['cpu'],
@@ -922,7 +940,7 @@ test('toggling two of five metrics hides exactly those two', async () => {
       metrics,
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       showLegend: true
@@ -960,7 +978,7 @@ test('hiding every metric keeps the frame and states why', () => {
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       hiddenMetricNames: ['cpu', 'mem'],
@@ -979,7 +997,7 @@ test('bringing one metric back clears the empty state', async () => {
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       hiddenMetricNames: ['cpu', 'mem'],
@@ -1001,7 +1019,7 @@ test('the renderer is told to offer the pin affordance', () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: { ...INTERACTION_NONE, pin: 'enabled' }
     }
@@ -1016,7 +1034,7 @@ test('a pin intent from the renderer stores the pinned time', async () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -1033,7 +1051,7 @@ test('acting on an existing pin removes it', async () => {
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -1052,7 +1070,7 @@ test('draws its frame from the requested range before any data has arrived', () 
     props: {
       metrics: [],
       requestedTimeRange: { start: 1_700_000_000, end: 1_700_003_600 },
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -1068,7 +1086,7 @@ test('keeps the all-hidden message when data arrived but nothing is shown', () =
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       hiddenMetricNames: ['cpu']
@@ -1086,7 +1104,7 @@ test('a window that returned no data reuses the all-hidden message', () => {
       metrics: [],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
@@ -1103,7 +1121,7 @@ test('forwards a provided y-axis, explicit range included, into the renderer opt
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       yAxis: { unit: UNIT, explicit_range: { min: 1, max: 5 } }
@@ -1119,7 +1137,7 @@ test('derives the renderer y-axis from the metrics when none is provided', () =>
       metrics: [CPU],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      timePickerRequests: 0,
+      panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
       yAxis: null

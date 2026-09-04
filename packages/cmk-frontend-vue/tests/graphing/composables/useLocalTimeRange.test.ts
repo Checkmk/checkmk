@@ -19,6 +19,7 @@ const pickerRange = (fromDay: number, toDay: number): DateTimeRange => ({
 })
 
 const INITIAL = { start: 1_000, end: 2_000 }
+const PANEL_KEY = 0
 
 describe('useLocalTimeRange', () => {
   // The global picker store is a module-level singleton shared across the whole bundle; reset it
@@ -34,11 +35,19 @@ describe('useLocalTimeRange', () => {
   test('a range the owner sets stays off the page-global picker', async () => {
     const { setRequestedTimeRange, requestedTimeRange } = useLocalTimeRange(INITIAL)
 
-    setRequestedTimeRange({ start: 5_000, end: 6_000 })
+    setRequestedTimeRange({ start: 5_000, end: 6_000 }, PANEL_KEY)
     await nextTick()
 
     expect(requestedTimeRange.value).toEqual({ start: 5_000, end: 6_000 })
     expect(useGlobalTimeRange().activeTimeRange.value).toBeNull()
+  })
+
+  test("a range the owner sets is recorded under the panel's key", () => {
+    const { setRequestedTimeRange, rangeChange } = useLocalTimeRange(INITIAL)
+
+    setRequestedTimeRange({ start: 5_000, end: 6_000 }, PANEL_KEY)
+
+    expect(rangeChange.value?.source).toBe(PANEL_KEY)
   })
 
   test('a range the page-global picker publishes leaves the owner alone', async () => {

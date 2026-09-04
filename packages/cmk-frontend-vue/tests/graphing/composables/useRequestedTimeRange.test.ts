@@ -25,6 +25,7 @@ const range = (fromDay: number, toDay: number): DateTimeRange => ({
 const epochSeconds = (value: ZonedDateTime): number => Math.floor(value.toDate().getTime() / 1000)
 
 const INITIAL = { start: 1_000, end: 2_000 }
+const PANEL_KEY = 0
 
 describe('useRequestedTimeRange', () => {
   // The global picker store is a module-level singleton shared across the whole bundle; reset it
@@ -78,7 +79,7 @@ describe('useRequestedTimeRange', () => {
   test('records a local update', () => {
     const { requestedTimeRange, setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
 
-    setRequestedTimeRange({ start: 5_000, end: 6_000 })
+    setRequestedTimeRange({ start: 5_000, end: 6_000 }, PANEL_KEY)
 
     expect(requestedTimeRange.value).toEqual({ start: 5_000, end: 6_000 })
   })
@@ -86,7 +87,7 @@ describe('useRequestedTimeRange', () => {
   test('publishes a local update as external, never as the picker', async () => {
     const { setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
 
-    setRequestedTimeRange({ start: 5_000, end: 6_000 })
+    setRequestedTimeRange({ start: 5_000, end: 6_000 }, PANEL_KEY)
     await nextTick()
 
     expect(useGlobalTimeRange().activeTimeRangeState.value.origin).toBe('external')
@@ -97,7 +98,7 @@ describe('useRequestedTimeRange', () => {
     const { setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
     await nextTick()
 
-    setRequestedTimeRange({ start: 5_000, end: 6_000 })
+    setRequestedTimeRange({ start: 5_000, end: 6_000 }, PANEL_KEY)
     await nextTick()
 
     const published = useGlobalTimeRange().activeTimeRange.value
@@ -111,7 +112,7 @@ describe('useRequestedTimeRange', () => {
     const { setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
     await nextTick()
 
-    setRequestedTimeRange({ start: 5_000, end: 6_000 })
+    setRequestedTimeRange({ start: 5_000, end: 6_000 }, PANEL_KEY)
     await nextTick()
 
     const published = useGlobalTimeRange().activeTimeRange.value
@@ -122,7 +123,7 @@ describe('useRequestedTimeRange', () => {
   test('falls back to the local timezone when publishing without a prior picker range', async () => {
     const { setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
 
-    setRequestedTimeRange({ start: 5_000, end: 6_000 })
+    setRequestedTimeRange({ start: 5_000, end: 6_000 }, PANEL_KEY)
     await nextTick()
 
     const published = useGlobalTimeRange().activeTimeRange.value
@@ -134,7 +135,7 @@ describe('useRequestedTimeRange', () => {
     const second = useRequestedTimeRange(INITIAL)
     await nextTick()
 
-    first.setRequestedTimeRange({ start: 5_000, end: 6_000 })
+    first.setRequestedTimeRange({ start: 5_000, end: 6_000 }, PANEL_KEY)
     await nextTick()
 
     expect(second.requestedTimeRange.value).toEqual({ start: 5_000, end: 6_000 })
@@ -144,7 +145,7 @@ describe('useRequestedTimeRange', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { requestedTimeRange, setRequestedTimeRange } = useRequestedTimeRange(INITIAL)
 
-    setRequestedTimeRange({ start: 5_000, end: 6_000 })
+    setRequestedTimeRange({ start: 5_000, end: 6_000 }, PANEL_KEY)
     await nextTick()
     await nextTick()
     await nextTick()
@@ -154,51 +155,51 @@ describe('useRequestedTimeRange', () => {
     errorSpy.mockRestore()
   })
 
-  describe('counting the windows a time control asked for', () => {
-    test('starts at nothing asked for', () => {
-      const { timePickerRequests } = useRequestedTimeRange(INITIAL)
+  describe('recording who moved the window', () => {
+    test('starts with nothing recorded', () => {
+      const { rangeChange } = useRequestedTimeRange(INITIAL)
 
-      expect(timePickerRequests.value).toBe(0)
+      expect(rangeChange.value).toBeUndefined()
     })
 
-    test('a picker range counts', async () => {
-      const { timePickerRequests } = useRequestedTimeRange(INITIAL)
+    test("a picker range is recorded as the picker's", async () => {
+      const { rangeChange } = useRequestedTimeRange(INITIAL)
 
       useGlobalTimeRange().setActiveTimeRange(range(9, 10), 'time_picker')
       await nextTick()
 
-      expect(timePickerRequests.value).toBe(1)
+      expect(rangeChange.value?.source).toBe('time_picker')
     })
 
-    test('an external range does not count, however far it moves the window', async () => {
-      const { timePickerRequests } = useRequestedTimeRange(INITIAL)
+    test("an external range is recorded as another group's", async () => {
+      const { rangeChange } = useRequestedTimeRange(INITIAL)
 
       useGlobalTimeRange().setActiveTimeRange(range(9, 10), 'external')
       await nextTick()
 
-      expect(timePickerRequests.value).toBe(0)
+      expect(rangeChange.value?.source).toBe('other_group')
     })
 
-    test('the picker republishing the window already shown does not count', async () => {
+    test('the picker republishing the window already shown records nothing', async () => {
       const published = range(9, 10)
       useGlobalTimeRange().setActiveTimeRange(published, 'time_picker')
-      const { timePickerRequests } = useRequestedTimeRange(INITIAL)
+      const { rangeChange } = useRequestedTimeRange(INITIAL)
       await nextTick()
 
       useGlobalTimeRange().setActiveTimeRange(published, 'time_picker')
       await nextTick()
 
-      expect(timePickerRequests.value).toBe(0)
+      expect(rangeChange.value).toBeUndefined()
     })
 
-    test("this owner's own write does not count, even once it round-trips back", async () => {
-      const { setRequestedTimeRange, timePickerRequests } = useRequestedTimeRange(INITIAL)
+    test("this owner's own write is recorded under the panel's key, even once it round-trips back", async () => {
+      const { setRequestedTimeRange, rangeChange } = useRequestedTimeRange(INITIAL)
 
-      setRequestedTimeRange({ start: 5_000, end: 6_000 })
+      setRequestedTimeRange({ start: 5_000, end: 6_000 }, PANEL_KEY)
       await nextTick()
       await nextTick()
 
-      expect(timePickerRequests.value).toBe(0)
+      expect(rangeChange.value?.source).toBe(PANEL_KEY)
     })
   })
 })

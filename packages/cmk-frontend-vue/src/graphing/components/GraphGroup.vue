@@ -26,6 +26,7 @@ import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
 import type {
   BrushOverview,
   GraphDisplayOptions,
+  PanelKey,
   RequestedTimeRange,
   TimeRangeCommitKind
 } from '../types'
@@ -116,7 +117,7 @@ const initialTimeRange = {
   start: props.initial_time_range_start,
   end: props.initial_time_range_end
 }
-const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } =
+const { requestedTimeRange, setRequestedTimeRange, rangeChange } =
   props.time_range_scope === 'global'
     ? useRequestedTimeRange(initialTimeRange)
     : useLocalTimeRange(initialTimeRange)
@@ -132,10 +133,14 @@ const brush = useBrushSnapshot<BrushOverview[]>({
   getRequestedTimeRange: () => requestedTimeRange.value
 })
 
-function onPanelTimeRange(requested: RequestedTimeRange, kind: TimeRangeCommitKind): void {
+function onPanelTimeRange(
+  requested: RequestedTimeRange,
+  kind: TimeRangeCommitKind,
+  panelKey: PanelKey
+): void {
   const range = clippedToNavigableTime(requested, navigableBounds())
   brush.onRangeCommitted(range, kind)
-  setRequestedTimeRange(range)
+  setRequestedTimeRange(range, panelKey)
 }
 
 const { graphs, isLoading, loadingSlots, error, partialErrors, warnings, reload } = useGraphData(
@@ -282,7 +287,8 @@ function onRetry(): void {
           :data-time-range="panelSlot.graph.timeRange"
           :requested-time-range="requestedTimeRange"
           :awaiting-data="panelSlot.isAwaitingData"
-          :time-picker-requests="timePickerRequests"
+          :panel-key="panelSlot.index"
+          :range-change="rangeChange"
           :y-axis="props.graphs[panelSlot.index]!.options.y_axis"
           :title="panelSlot.graph.title"
           :show-title="display.show_title"
@@ -299,7 +305,9 @@ function onRetry(): void {
           :figure-height="figure_height"
           :add-to="panelSlot.graph.addTo"
           :header-is-compact="layout === 'wrap'"
-          @update:requested-time-range="onPanelTimeRange"
+          @update:requested-time-range="
+            (range, kind) => onPanelTimeRange(range, kind, panelSlot.index)
+          "
           @update:consolidation-fn="consolidationFnPerPanel[panelSlot.index] = $event"
           @inspect="pauseRefresh"
         />

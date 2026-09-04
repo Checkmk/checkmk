@@ -16,7 +16,10 @@ import { nextTick, ref, watch } from 'vue'
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/globalTimeState'
 import type { TimeRange } from '@/graphing/components/TimeSeriesGraph'
 import { useGraphInteraction } from '@/graphing/composables/useGraphInteraction'
-import { useRequestedTimeRange } from '@/graphing/composables/useRequestedTimeRange'
+import {
+  type RequestedTimeRangeState,
+  useRequestedTimeRange
+} from '@/graphing/composables/useRequestedTimeRange'
 import type { RequestedTimeRange } from '@/graphing/types'
 
 vi.mock('@/graphing/composables/useGlobalPin', async () => {
@@ -48,6 +51,21 @@ async function settlePropagation(): Promise<void> {
   await nextTick()
 }
 
+// Each graph is the only panel of its own fetch owner.
+const PANEL_KEY = 0
+
+// The glue GraphPanel provides: the owner's change record reaches the graph with the graph's key.
+function reportRangeChanges(
+  owner: RequestedTimeRangeState,
+  graph: ReturnType<typeof useGraphInteraction>
+): void {
+  watch(owner.rangeChange, (change) => {
+    if (change) {
+      graph.onRangeChange(change, PANEL_KEY)
+    }
+  })
+}
+
 function twoGraphsOnOnePage() {
   const zoomed = useRequestedTimeRange(INITIAL)
   const sibling = useRequestedTimeRange(INITIAL)
@@ -56,8 +74,9 @@ function twoGraphsOnOnePage() {
     () => BASELINE,
     () => false,
     () => zoomed.requestedTimeRange.value,
-    zoomed.setRequestedTimeRange
+    (range) => zoomed.setRequestedTimeRange(range, PANEL_KEY)
   )
+  reportRangeChanges(zoomed, zoomedGraph)
 
   const siblingBaseline = ref<TimeRange>(BASELINE)
   watch(sibling.requestedTimeRange, (range) => {
@@ -67,15 +86,15 @@ function twoGraphsOnOnePage() {
     () => siblingBaseline.value,
     () => false,
     () => sibling.requestedTimeRange.value,
-    sibling.setRequestedTimeRange
+    (range) => sibling.setRequestedTimeRange(range, PANEL_KEY)
   )
+  reportRangeChanges(sibling, siblingGraph)
 
   return {
     zoomedGraph,
     siblingGraph,
     zoomedRange: zoomed.requestedTimeRange,
-    siblingRange: sibling.requestedTimeRange,
-    siblingTimePickerRequests: sibling.timePickerRequests
+    siblingRange: sibling.requestedTimeRange
   }
 }
 
@@ -122,13 +141,24 @@ describe('zoom sync across the graphs on a page', () => {
     expect(siblingRange.value).toEqual({ start: 1_100, end: 2_100 })
   })
 
-  test("a peer's commit reaches the sibling without counting as a new window", async () => {
-    const { zoomedGraph, siblingTimePickerRequests } = twoGraphsOnOnePage()
+  test("a graph's own X-zoom keeps its reset target once it has round-tripped through the page", async () => {
+    const { siblingGraph } = twoGraphsOnOnePage()
+
+    siblingGraph.onZoom({ timeRange: { start: 1_200, end: 1_500, step: 60 } })
+    await settlePropagation()
+
+    expect(siblingGraph.inspectionActive.value).toBe(true)
+  })
+
+  test("a peer's pan ends the sibling's own reset target", async () => {
+    const { zoomedGraph, siblingGraph } = twoGraphsOnOnePage()
+    siblingGraph.onZoom({ timeRange: { start: 1_200, end: 1_500, step: 60 } })
+    await settlePropagation()
 
     zoomedGraph.onPan({ timeRange: { start: 1_100, end: 2_100, step: 60 } })
     await settlePropagation()
 
-    expect(siblingTimePickerRequests.value).toBe(0)
+    expect(siblingGraph.inspectionActive.value).toBe(false)
   })
 
   test("a peer's pan leaves a sibling's own peak zoom standing", async () => {
@@ -152,8 +182,8 @@ describe('zoom sync across the graphs on a page', () => {
     expect(siblingGraph.viewValueRange.value).toEqual(PEAK)
   })
 
-  test('the user picking a range reaches a graph counted as a new window', async () => {
-    const { siblingRange, siblingTimePickerRequests } = twoGraphsOnOnePage()
+  test('the user picking a range reaches a graph', async () => {
+    const { siblingRange } = twoGraphsOnOnePage()
     const picked = pickedRange(9, 10)
 
     useGlobalTimeRange().setActiveTimeRange(picked, 'time_picker')
@@ -163,6 +193,15 @@ describe('zoom sync across the graphs on a page', () => {
       start: epochSeconds(picked.from as ZonedDateTime),
       end: epochSeconds(picked.to as ZonedDateTime)
     })
-    expect(siblingTimePickerRequests.value).toBe(1)
+  })
+
+  test("the user picking a range ends a graph's peak zoom", async () => {
+    const { siblingGraph } = twoGraphsOnOnePage()
+    siblingGraph.onZoom({ timeRange: BASELINE, valueRange: PEAK })
+
+    useGlobalTimeRange().setActiveTimeRange(pickedRange(9, 10), 'time_picker')
+    await settlePropagation()
+
+    expect(siblingGraph.viewValueRange.value).toBeNull()
   })
 })

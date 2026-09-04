@@ -29,7 +29,7 @@ import GraphLegend from '../../components/legend/GraphLegend.vue'
 import { useBrushSnapshot } from '../../composables/useBrushSnapshot'
 import { type GraphNoticeDescriptor, useGraphNotice } from '../../composables/useGraphNotice'
 import { useRequestedTimeRange } from '../../composables/useRequestedTimeRange'
-import type { RequestedTimeRange, TimeRange, TimeRangeCommitKind } from '../../types'
+import type { PanelKey, RequestedTimeRange, TimeRange, TimeRangeCommitKind } from '../../types'
 import type { CustomGraphMetric, CustomGraphOptions } from '../api'
 import { MetricsCalculationSlideout, type RefVisibility } from '../calculation'
 import { useCustomGraphData } from '../composables/useCustomGraphData'
@@ -83,7 +83,8 @@ const { validItems } = useItemValidation(store.items)
 
 const consolidationFn = ref<ConsolidationFn>('max')
 // The app seeds the global time range from the configured default before we mount.
-const { requestedTimeRange, setRequestedTimeRange, timePickerRequests } = useRequestedTimeRange()
+const { requestedTimeRange, setRequestedTimeRange, rangeChange } = useRequestedTimeRange()
+const PREVIEW_PANEL_KEY: PanelKey = 0
 
 const brush = useBrushSnapshot<{ metrics: CustomGraphMetric[]; dataTimeRange: TimeRange }>({
   getNow: () => Math.floor(Date.now() / 1000),
@@ -93,7 +94,7 @@ const brush = useBrushSnapshot<{ metrics: CustomGraphMetric[]; dataTimeRange: Ti
 function onPanelTimeRange(requested: RequestedTimeRange, kind: TimeRangeCommitKind): void {
   const range = clippedToNavigableTime(requested, navigableBounds())
   brush.onRangeCommitted(range, kind)
-  setRequestedTimeRange(range)
+  setRequestedTimeRange(range, PREVIEW_PANEL_KEY)
 }
 
 const hiddenMetricNames = ref<string[]>([])
@@ -264,7 +265,8 @@ const yAxis = computed<YAxis | null>(() => {
         :data-time-range="data.dataTimeRange.value"
         :horizontal-lines="data.horizontalLines.value"
         :requested-time-range="requestedTimeRange"
-        :time-picker-requests="timePickerRequests"
+        :panel-key="PREVIEW_PANEL_KEY"
+        :range-change="rangeChange"
         :y-axis="yAxis"
         :title="title"
         show-title

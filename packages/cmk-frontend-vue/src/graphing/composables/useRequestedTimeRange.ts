@@ -8,7 +8,7 @@ import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { type ComputedRef, computed, ref, watch } from 'vue'
 
 import { useGlobalTimeRange } from '../GlobalTimePicker/globalTimeState'
-import type { RequestedTimeRange } from '../types'
+import type { PanelKey, RangeChange, RangeChangeSource, RequestedTimeRange } from '../types'
 import { sameRequestedTimeRange } from '../utils/timeRange'
 
 function toRequestedTimeRange(range: DateTimeRange): RequestedTimeRange {
@@ -32,8 +32,15 @@ const DEFAULT_RANGE_SECONDS = 4 * 3600
 
 export interface RequestedTimeRangeState {
   requestedTimeRange: ComputedRef<RequestedTimeRange>
-  setRequestedTimeRange: (range: RequestedTimeRange) => void
-  timePickerRequests: ComputedRef<number>
+  setRequestedTimeRange: (range: RequestedTimeRange, source: PanelKey) => void
+  rangeChange: ComputedRef<RangeChange | undefined>
+}
+
+export function nextRangeChange(
+  previous: RangeChange | undefined,
+  source: RangeChangeSource
+): RangeChange {
+  return { version: (previous?.version ?? 0) + 1, source }
 }
 
 /**
@@ -62,7 +69,7 @@ export function useRequestedTimeRange(initial?: RequestedTimeRange): RequestedTi
         : { ...initial }
       : toRequestedTimeRange(active.range)
   )
-  const timePickerRequests = ref(0)
+  const rangeChange = ref<RangeChange | undefined>(undefined)
 
   // Mount order of the picker and the fetch owner is DOM-driven: if the picker mounts
   // later, its initial publish arrives through this watch and replaces the seed.
@@ -75,13 +82,15 @@ export function useRequestedTimeRange(initial?: RequestedTimeRange): RequestedTi
       return
     }
     request.value = next
-    if (state.origin === 'time_picker') {
-      timePickerRequests.value += 1
-    }
+    rangeChange.value = nextRangeChange(
+      rangeChange.value,
+      state.origin === 'time_picker' ? 'time_picker' : 'other_group'
+    )
   })
 
-  function setRequestedTimeRange(range: RequestedTimeRange): void {
+  function setRequestedTimeRange(range: RequestedTimeRange, source: PanelKey): void {
     request.value = { start: range.start, end: range.end }
+    rangeChange.value = nextRangeChange(rangeChange.value, source)
   }
 
   watch(request, (range) => {
@@ -96,6 +105,6 @@ export function useRequestedTimeRange(initial?: RequestedTimeRange): RequestedTi
   return {
     requestedTimeRange: computed(() => request.value),
     setRequestedTimeRange,
-    timePickerRequests: computed(() => timePickerRequests.value)
+    rangeChange: computed(() => rangeChange.value)
   }
 }

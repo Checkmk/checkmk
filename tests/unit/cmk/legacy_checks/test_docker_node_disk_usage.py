@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.legacy_checks.docker_node_disk_usage import (
     check_docker_node_disk_usage,
     parse_docker_node_disk_usage,
@@ -27,8 +26,12 @@ def test_check_docker_node_disk_usage() -> None:
         check_docker_node_disk_usage("volumes", {}, parse_docker_node_disk_usage(AGENT_OUTPUT))
     )
     assert result == [
-        (0, "Size: 230 KiB", [("size", 235177, None, None)]),
-        (0, "Reclaimable: 93 B", [("reclaimable", 93, None, None)]),
-        (0, "Count: 7", [("count", 7, None, None)]),
-        (0, "Active: 5", [("active", 5, None, None)]),
+        Result(state=State.OK, summary="Size: 230 KiB"),
+        Metric("size", 235177.0),
+        Result(state=State.OK, summary="Reclaimable: 93 B"),
+        Metric("reclaimable", 93.0),
+        Result(state=State.OK, summary="Count: 7"),
+        Metric("count", 7.0),
+        Result(state=State.OK, summary="Active: 5"),
+        Metric("active", 5.0),
     ]

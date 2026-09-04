@@ -58,6 +58,13 @@ def test_parse_multiline() -> None:
     assert list(result.data) == [{"value": 1}, {"value": 2}, {"value": 3}]
 
 
+def test_parse_multiline_skips_null_lines() -> None:
+    result = parse_multiline(
+        [["@docker_version_info", "{}"], ['{"value": 1}'], ["null"], ['{"value": 2}']]
+    )
+    assert list(result.data) == [{"value": 1}, {"value": 2}]
+
+
 @pytest.mark.parametrize(
     "data_in, data_out",
     [

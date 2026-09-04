@@ -3,27 +3,51 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="explicit-any"
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.legacy.conversion import (
+    # TODO: replace this by 'from cmk.agent_based.v2 import check_levels'.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    render,
+    Service,
+    StringTable,
+)
 from cmk.plugins.docker import lib as docker
 
-check_info = {}
 
-
-def parse_docker_node_disk_usage(string_table):
+def parse_docker_node_disk_usage(string_table: StringTable) -> Mapping[str, Mapping[str, Any]]:
     disk_usage = docker.parse_multiline(string_table).data
-    return {r.get("type"): r for r in disk_usage if r is not None}  # type: ignore[redundant-expr]
+    return {item_type: r for r in disk_usage if (item_type := r.get("type")) is not None}
 
 
-def check_docker_node_disk_usage(item, params, parsed):
-    if not parsed:
+agent_section_docker_node_disk_usage = AgentSection(
+    name="docker_node_disk_usage",
+    parse_function=parse_docker_node_disk_usage,
+)
+
+
+def discover_docker_node_disk_usage(section: Mapping[str, Mapping[str, Any]]) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_docker_node_disk_usage(
+    item: str, params: Mapping[str, Any], section: Mapping[str, Mapping[str, Any]]
+) -> CheckResult:
+    if not section:
         # The section error is reported by the "Docker node info" service
         raise IgnoreResultsError("Disk usage missing")
 
-    if not (data := parsed.get(item)):
+    if not (data := section.get(item)):
         return
     for key, human_readable_func in (
         ("size", render.bytes),
@@ -33,7 +57,7 @@ def check_docker_node_disk_usage(item, params, parsed):
     ):
         value = data[key]
 
-        yield check_levels(
+        yield from check_levels(
             value,
             key,
             params.get(key),
@@ -42,15 +66,11 @@ def check_docker_node_disk_usage(item, params, parsed):
         )
 
 
-def discover_docker_node_disk_usage(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["docker_node_disk_usage"] = LegacyCheckDefinition(
+check_plugin_docker_node_disk_usage = CheckPlugin(
     name="docker_node_disk_usage",
-    parse_function=parse_docker_node_disk_usage,
     service_name="Docker disk usage - %s",
     discovery_function=discover_docker_node_disk_usage,
     check_function=check_docker_node_disk_usage,
     check_ruleset_name="docker_node_disk_usage",
+    check_default_parameters={},
 )

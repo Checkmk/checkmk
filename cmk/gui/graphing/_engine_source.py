@@ -189,6 +189,24 @@ class _RRDFetchTimeSeriesProtocol(Protocol):
     ) -> Mapping[RRDMetric, TimeSeries]: ...
 
 
+def rrd_column_name(
+    metric_name: MetricName,
+    *,
+    consolidation_function: ConsolidationFunction,
+    time_range: TimeRange,
+    max_data_points: int | None = None,
+) -> str:
+    data_range_args: list[int] = [time_range.start, time_range.end, max(1, time_range.step)]
+    if max_data_points is not None:
+        data_range_args.append(max_data_points)
+    # `rrddata` is registered on both the hosts and the services table and the composed column name
+    # is the same on either, so building it via Services is fine even for the hosts query that
+    # _object_queries emits. `dynamic` validates all parts via LqSafe.
+    return Services.rrddata.dynamic(
+        metric_name, f"{metric_name}.{consolidation_function}", *data_range_args
+    ).name
+
+
 @dataclass(frozen=True)
 class RRDFetchPerformanceData:
     def __call__(
@@ -242,10 +260,11 @@ class RRDFetchTimeSeries:
         for metric_names, refs in services_by_metric_names.items():
             column_of = {name: index for index, name in enumerate(metric_names)}
             columns = [
-                self._column(
+                rrd_column_name(
                     MetricName(name),
                     consolidation_function=consolidation_function,
                     time_range=time_range,
+                    max_data_points=self.max_data_points,
                 )
                 for name in metric_names
             ]
@@ -267,23 +286,6 @@ class RRDFetchTimeSeries:
                                 values=column[3:],
                             )
         return result
-
-    def _column(
-        self,
-        metric_name: MetricName,
-        *,
-        consolidation_function: ConsolidationFunction,
-        time_range: TimeRange,
-    ) -> str:
-        data_range_args: list[int] = [time_range.start, time_range.end, max(1, time_range.step)]
-        if self.max_data_points is not None:
-            data_range_args.append(self.max_data_points)
-        # `rrddata` is registered on both the hosts and the services table and the composed column
-        # name is the same on either, so building it via Services is fine even for the hosts query
-        # that _object_queries emits. `dynamic` validates all parts via LqSafe.
-        return Services.rrddata.dynamic(
-            metric_name, f"{metric_name}.{consolidation_function}", *data_range_args
-        ).name
 
 
 @dataclass(frozen=True, kw_only=True)

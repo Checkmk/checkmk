@@ -195,18 +195,31 @@ def rrd_originals(
     ]
 
 
+def translated_names_and_scales(
+    check_command: str,
+    raw_metric_names: Sequence[MetricName],
+    registered_translations: Sequence[translations_v1.Translation],
+) -> Mapping[MetricName, tuple[MetricName, float]]:
+    specs = _specs_for_command(check_command, registered_translations)
+    mapping: dict[MetricName, tuple[MetricName, float]] = {}
+    for raw_metric_name in raw_metric_names:
+        prefix, bare_name = _split_predict_prefix(raw_metric_name)
+        name, scale = _find_name_and_scale(MetricName(bare_name), specs)
+        mapping[raw_metric_name] = (MetricName(f"{prefix}{name}"), scale)
+    return mapping
+
+
 def map_metric_names(
     check_command: str,
     raw_metric_names: Sequence[MetricName],
     registered_translations: Sequence[translations_v1.Translation],
 ) -> Mapping[MetricName, MetricName]:
-    specs = _specs_for_command(check_command, registered_translations)
-    mapping: dict[MetricName, MetricName] = {}
-    for raw_metric_name in raw_metric_names:
-        prefix, bare_name = _split_predict_prefix(raw_metric_name)
-        name, _scale = _find_name_and_scale(MetricName(bare_name), specs)
-        mapping[raw_metric_name] = MetricName(f"{prefix}{name}")
-    return mapping
+    return {
+        raw_metric_name: name
+        for raw_metric_name, (name, _scale) in translated_names_and_scales(
+            check_command, raw_metric_names, registered_translations
+        ).items()
+    }
 
 
 def translate_metric_names(

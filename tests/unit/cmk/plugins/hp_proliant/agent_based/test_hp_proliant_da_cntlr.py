@@ -8,6 +8,7 @@ from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.hp_proliant.agent_based.hp_proliant_da_cntlr import (
     check_hp_proliant_da_cntlr,
     ControllerID,
+    DEFAULT_PARAMETERS,
     discovery_hp_proliant_da_cntlr,
     parse_hp_proliant_da_cntlr,
 )
@@ -73,7 +74,11 @@ def test_discovery() -> None:
 def test_check(item: ControllerID, expected: list[Result]) -> None:
     assert (
         list(
-            check_hp_proliant_da_cntlr(item=item, section=parse_hp_proliant_da_cntlr(STRING_TABLE))
+            check_hp_proliant_da_cntlr(
+                item=item,
+                params=DEFAULT_PARAMETERS,
+                section=parse_hp_proliant_da_cntlr(STRING_TABLE),
+            )
         )
         == expected
     )

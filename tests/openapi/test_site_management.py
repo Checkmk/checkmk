@@ -324,6 +324,20 @@ def test_update_site_connection(clients: ClientRegistry) -> None:
     assert extensions == config
 
 
+def test_update_site_connection_ignores_site_id_from_body(clients: ClientRegistry) -> None:
+    """The site ID from the path wins, the one in the request body is ignored."""
+    config, site_id = _default_config_with_site_id()
+    clients.SiteManagement.create(site_config=config)
+
+    config["basic_settings"]["site_id"] = "NO_SITE"
+    resp = clients.SiteManagement.update(site_id=site_id, site_config=config)
+
+    assert resp.json["id"] == site_id
+    assert resp.json["extensions"]["basic_settings"]["site_id"] == site_id
+    stored = clients.SiteManagement.get(site_id=site_id)
+    assert stored.json["extensions"]["basic_settings"]["site_id"] == site_id
+
+
 def test_update_site_connection_that_doesnt_exist(
     clients: ClientRegistry,
 ) -> None:

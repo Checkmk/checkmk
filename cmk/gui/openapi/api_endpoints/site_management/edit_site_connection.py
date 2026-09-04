@@ -70,7 +70,8 @@ def edit_site_connection_v1(
     user.need_permission("wato.sites")
 
     site_config_spec_from_request = body.site_config.to_internal()
-    body.site_config.basic_settings.site_id = site_id
+    # The site ID from the path is authoritative, the one from the request body is ignored.
+    site_config_spec_from_request["id"] = site_id
 
     sites_api_mgr = SitesApiMgr()
     old_site_config = sites_api_mgr.get_a_site(site_id)

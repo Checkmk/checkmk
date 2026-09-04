@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import contains
+from cmk.agent_based.v2 import any_of, contains
 
-DETECT_VUTLAN_EMS = contains(".1.3.6.1.2.1.1.1.0", "vutlan ems")
+DETECT_VUTLAN_EMS = any_of(
+    contains(".1.3.6.1.2.1.1.1.0", "vutlan ems"),
+    contains(".1.3.6.1.2.1.1.1.0", "RZproducts DCM"),   # Vutlan is ODM
+)

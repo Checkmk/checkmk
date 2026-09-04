@@ -851,7 +851,12 @@ class HostsAPI(BaseAPI):
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
-    def bulk_delete(self, hostnames: list[str]) -> None:
+    def bulk_delete(self, hostnames: list[str], ignore_missing: bool = False) -> None:
+        if ignore_missing:
+            existing_hosts = set(self.get_all_names())
+            hostnames = [_ for _ in hostnames if _ in existing_hosts]
+            if not hostnames:
+                return
         response = self.session.post(
             "/domain-types/host_config/actions/bulk-delete/invoke",
             json={"entries": hostnames},

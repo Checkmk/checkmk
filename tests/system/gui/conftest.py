@@ -285,78 +285,83 @@ def _create_hosts_using_data_from_agent_dump(test_site: Site) -> Iterator:
     data_source_dump_path = repo_path() / "tests" / "system" / "gui" / "data"
     faker = Faker()
 
-    logger.info("Create a folder '%s' for dumps inside test site", test_site_dump_path)
-    if not test_site.is_dir(test_site_dump_path):
-        test_site.makedirs(test_site_dump_path)
+    rule_id: str | None = None
+    created_hosts_list: list[str] = []
+    try:
+        logger.info("Create a folder '%s' for dumps inside test site", test_site_dump_path)
+        if not test_site.is_dir(test_site_dump_path):
+            test_site.makedirs(test_site_dump_path)
 
-    logger.info("Create a rule to read agent-output data from file")
-    rule_id = test_site.openapi.rules.create(
-        ruleset_name="datasource_programs",
-        value=f"python3 {test_site_dump_path}/{python_script_name} {test_site_dump_path}/<HOST>",
-    )
+        logger.info("Create a rule to read agent-output data from file")
+        rule_id = test_site.openapi.rules.create(
+            ruleset_name="datasource_programs",
+            value=f"python3 {test_site_dump_path}/{python_script_name} {test_site_dump_path}/<HOST>",
+        )
 
-    assert (
-        run(
-            ["cp", "-f", str(python_script_path), str(test_site_dump_path)],
-            sudo=True,
-        ).returncode
-        == 0
-    ), f"Error copying '{python_script_path}' file"
+        assert (
+            run(
+                ["cp", "-f", str(python_script_path), str(test_site_dump_path)],
+                sudo=True,
+            ).returncode
+            == 0
+        ), f"Error copying '{python_script_path}' file"
 
-    dump_path_to_host_name_dict = defaultdict(list)
+        dump_path_to_host_name_dict = defaultdict(list)
 
-    for dump_path in data_source_dump_path.iterdir():
-        if "linux" in dump_path.name:  # noqa: SIM108
-            hosts_count = 3
-        else:
-            hosts_count = 1
-        for _ in range(hosts_count):
-            host_name = faker.unique.hostname()
-            logger.info("Copy a dump to the new folder")
-            assert (
-                run(
-                    ["cp", "-f", str(dump_path), f"{test_site_dump_path}/{host_name}"],
-                    sudo=True,
-                ).returncode
-                == 0
-            ), f"Error copying '{dump_path}' file"
-            dump_path_to_host_name_dict[dump_path.name].append(host_name)
+        for dump_path in data_source_dump_path.iterdir():
+            if "linux" in dump_path.name:  # noqa: SIM108
+                hosts_count = 3
+            else:
+                hosts_count = 1
+            for _ in range(hosts_count):
+                host_name = faker.unique.hostname()
+                logger.info("Copy a dump to the new folder")
+                assert (
+                    run(
+                        ["cp", "-f", str(dump_path), f"{test_site_dump_path}/{host_name}"],
+                        sudo=True,
+                    ).returncode
+                    == 0
+                ), f"Error copying '{dump_path}' file"
+                dump_path_to_host_name_dict[dump_path.name].append(host_name)
 
-    created_hosts_list = [
-        value for sublist in dump_path_to_host_name_dict.values() for value in sublist
-    ]
-    hosts_dict = [
-        {
-            "host_name": host_name,
-            "folder": "/",
-            "attributes": {
-                "ipaddress": LOCALHOST_IPV4,
-                "tag_agent": "cmk-agent",
-            },
-        }
-        for host_name in created_hosts_list
-    ]
+        created_hosts_list = [
+            value for sublist in dump_path_to_host_name_dict.values() for value in sublist
+        ]
+        hosts_dict = [
+            {
+                "host_name": host_name,
+                "folder": "/",
+                "attributes": {
+                    "ipaddress": LOCALHOST_IPV4,
+                    "tag_agent": "cmk-agent",
+                },
+            }
+            for host_name in created_hosts_list
+        ]
 
-    logger.info("Creating hosts...")
-    test_site.openapi.hosts.bulk_create(hosts_dict)
+        logger.info("Creating hosts...")
+        test_site.openapi.hosts.bulk_create(hosts_dict)
 
-    logger.info("Discovering services and waiting for completion...")
-    test_site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
-        created_hosts_list
-    )
-    test_site.openapi.changes.activate_and_wait_for_completion()
-
-    logger.info("Schedule the 'Check_MK' service")
-    for host_name in created_hosts_list:
-        test_site.reschedule_services(host_name, 3, strict=False)
-
-    yield dump_path_to_host_name_dict
-    if is_cleanup_enabled():
-        logger.info("Clean up: delete the host(s) and the rule")
-        test_site.openapi.hosts.bulk_delete(created_hosts_list)
-        test_site.openapi.rules.delete(rule_id)
+        logger.info("Discovering services and waiting for completion...")
+        test_site.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
+            created_hosts_list
+        )
         test_site.openapi.changes.activate_and_wait_for_completion()
-        test_site.delete_dir(test_site_dump_path)
+
+        logger.info("Schedule the 'Check_MK' service")
+        for host_name in created_hosts_list:
+            test_site.reschedule_services(host_name, 3, strict=False)
+
+        yield dump_path_to_host_name_dict
+    finally:
+        if is_cleanup_enabled():
+            logger.info("Clean up: delete the host(s) and the rule")
+            test_site.openapi.hosts.bulk_delete(created_hosts_list, ignore_missing=True)
+            if rule_id is not None:
+                test_site.openapi.rules.delete(rule_id)
+            test_site.openapi.changes.activate_and_wait_for_completion()
+            test_site.delete_dir(test_site_dump_path)
 
 
 @pytest.fixture(name="linux_hosts", scope="module")
@@ -426,14 +431,15 @@ def _create_bulk_hosts(
         for host in hosts_list
     ]
 
-    created_hosts = test_site.openapi.hosts.bulk_create(entries=entries, bake_agent=False)
-    if activate:
+    try:
+        created_hosts = test_site.openapi.hosts.bulk_create(entries=entries, bake_agent=False)
+        if activate:
+            test_site.openapi.changes.activate_and_wait_for_completion()
+
+        yield created_hosts
+    finally:
+        test_site.openapi.hosts.bulk_delete(hosts_list, ignore_missing=True)
         test_site.openapi.changes.activate_and_wait_for_completion()
-
-    yield created_hosts
-
-    test_site.openapi.hosts.bulk_delete([host["id"] for host in created_hosts])
-    test_site.openapi.changes.activate_and_wait_for_completion()
 
 
 @pytest.fixture(name="bulk_create_hosts_central_site")

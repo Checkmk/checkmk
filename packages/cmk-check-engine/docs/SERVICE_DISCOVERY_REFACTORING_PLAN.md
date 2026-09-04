@@ -3,7 +3,10 @@
 **Epic:** CMK-32255 _Simplify/Rewrite Service Discovery_
 **Target release:** 3.0.0 — not a roadmap priority; correctness over speed.
 **Component ownership:** Check and Discovery Engine only. No cross-component sign-off needed.
-**Status:** planning. No code written against this yet.
+**Status:** Phase 0 delivered. Phases 1–5 not started.
+**Companion documents:** `SERVICE_DISCOVERY_DOMAIN_MODEL.md` (the target model, cited as DM) and
+`SERVICE_DISCOVERY_BEHAVIOUR_MATRIX.md` (today's behaviour, the divergences and the guardrail tests,
+cited as matrix). Neither is summarised here.
 
 ---
 
@@ -66,7 +69,7 @@ currently owns _both_ async orchestration _and_ is the only way to obtain a prev
 three primitives:
 
 ```
-compute_discovery_preview()   # synchronous, pure cache read (prevent_fetching=True)
+compute_discovery_preview()   # synchronous — but not a pure cache read; see Phase 1
 start_scan()                  # async, contacts the host
 poll status                   # job status only
 ```
@@ -78,22 +81,23 @@ scope unchanged, and the epic builds on its output.
 
 ## 2. Decisions taken
 
-| #   | Decision                                                                                                                                                          | Consequence                                                                                          |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| D1  | CMK-37497 ships first, as scoped (A→C→B→D), strictly behaviour-preserving                                                                                         | Cold-cache "empty" behaviour stays 1:1; not fixed there                                              |
-| D2  | Then the contract; then backend and frontend proceed independently                                                                                                | The contract is the only synchronisation point                                                       |
-| D3  | UI is a **column board**: services move between columns, decisions are revisable, submitted in bulk                                                               | Confirms the PoC's interaction principle                                                             |
-| D4  | **Attention-first**: board defaults to undecided / changed / vanished; Monitored is a collapsed count, virtualized on expand                                      | Addresses clutter-at-scale without hiding data                                                       |
-| D5  | End state is the **public versioned REST API**. Development may start on internal endpoints and promote them once validated — decided in the implementation phase | Avoids premature public commitments while keeping one eventual surface                               |
-| D6  | Read contract carries **scan lifecycle + per-source outcomes as first-class fields from day one**                                                                 | CMK-35050 fills placeholders; no contract change later                                               |
-| D7  | **Automation wire format is frozen** for this project                                                                                                             | New read models assembled above the automation boundary; zero mixed-version risk                     |
-| D8  | The core stays in `cmk/gui/watolib`                                                                                                                               | No shared package needed within this scope                                                           |
-| D9  | CMK-37187 (CLI entrypoint divergence) is **out of scope**                                                                                                         | Sits below the watolib convergence line; neither blocks nor simplifies the GUI path                  |
-| D10 | Old GUI code is touched minimally and deleted in Phase 5, not refactored                                                                                          | No effort spent improving code with a known end date                                                 |
-| D11 | Concurrency token is **hash-based** rather than a timestamp                                                                                                       | More robust than `check_table_created`; exact shape in Phase 2                                       |
-| D12 | Accepting host labels does **not** attempt to recompute which services are discovered                                                                             | Label-based rule matching can change discovery; requiring an explicit rescan is acceptable, as today |
-| D13 | PM/UX are **not yet involved but must not be excluded**                                                                                                           | See Phase 4 and risk R3                                                                              |
-| D14 | Feature-flag toggles are used during implementation                                                                                                               | Enables incremental landing and a controlled cutover                                                 |
+| #   | Decision                                                                                                                                                          | Consequence                                                                                                                                                                                                                                                                                                                                              |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | CMK-37497 ships first, as scoped (A→C→B→D), strictly behaviour-preserving                                                                                         | Cold-cache "empty" behaviour stays 1:1; not fixed there. Two of its premises need correcting — Phase 1                                                                                                                                                                                                                                                   |
+| D2  | Then the contract; then backend and frontend proceed independently                                                                                                | The contract is the only synchronisation point                                                                                                                                                                                                                                                                                                           |
+| D3  | UI is a **column board**: services move between columns, decisions are revisable, submitted in bulk                                                               | Confirms the PoC's interaction principle                                                                                                                                                                                                                                                                                                                 |
+| D4  | **Attention-first**: board defaults to undecided / changed / vanished; Monitored is a collapsed count, virtualized on expand                                      | Addresses clutter-at-scale without hiding data                                                                                                                                                                                                                                                                                                           |
+| D5  | End state is the **public versioned REST API**. Development may start on internal endpoints and promote them once validated — decided in the implementation phase | Avoids premature public commitments while keeping one eventual surface                                                                                                                                                                                                                                                                                   |
+| D6  | Read contract carries **scan lifecycle + per-source outcomes as first-class fields from day one**                                                                 | CMK-35050 fills placeholders; no contract change later                                                                                                                                                                                                                                                                                                   |
+| D7  | **Automation wire format is frozen** for this project                                                                                                             | New read models assembled above the automation boundary; zero mixed-version risk                                                                                                                                                                                                                                                                         |
+| D8  | The core stays in `cmk/gui/watolib`                                                                                                                               | No shared package needed within this scope. It is not one boundary, though: a single operation spans two sites' stores (DM §9.1, §9.2)                                                                                                                                                                                                                   |
+| D9  | CMK-37187 (CLI entrypoint divergence) is **out of scope**                                                                                                         | Sits below the watolib convergence line; neither blocks nor simplifies the GUI path                                                                                                                                                                                                                                                                      |
+| D10 | Old GUI code is touched minimally and deleted in Phase 5, not refactored                                                                                          | No effort spent improving code with a known end date                                                                                                                                                                                                                                                                                                     |
+| D11 | Concurrency token is the **table version already in the read model**, made a precondition of every write                                                          | Supersedes an earlier hash-based choice: the client already holds it and it is `0` during a scan, so one mechanism covers a stale page, an intervening scan and a concurrent admin — and it _replaces_ the job-active probe rather than adding to it (DM §9.4, matrix §11.4 item 6). How strict it is at the boundary is an API-ownership call: DM §12.7 |
+| D12 | Accepting host labels does **not** attempt to recompute which services are discovered                                                                             | Label-based rule matching can change discovery; requiring an explicit rescan is acceptable, as today                                                                                                                                                                                                                                                     |
+| D13 | PM/UX are **not yet involved but must not be excluded**                                                                                                           | See Phase 4 and risk R3                                                                                                                                                                                                                                                                                                                                  |
+| D14 | Feature-flag toggles are used during implementation                                                                                                               | Enables incremental landing and a controlled cutover                                                                                                                                                                                                                                                                                                     |
+| D15 | **CMK-38599 (§10.5) is fixed before Phase 1 starts**                                                                                                              | The only confirmed divergence that changes data on every use and has no guardrail in any tier                                                                                                                                                                                                                                                            |
 
 ### Compatibility envelope (D7)
 
@@ -123,13 +127,15 @@ Resolution: split one concept into two — cached **data** used to compute the t
 error, per CMK-31896) versus the last scan **outcome** used for display (always persisted, per
 CMK-35050). Until CMK-35050 lands, the board treats a cold cache as a first-class _never
 scanned_ state and offers a Scan action. It must **not** invent a preview cache to paper over
-this; that is exactly what produced the PoC's first-scan `AttributeError`.
+this; that is exactly what produced the PoC's first-scan `AttributeError`. One correction: **a
+preview cache already exists** — the stored last preview, a second layer on top of the agent-data
+cache (matrix §6.0). The rule is not to add a third.
 
 ---
 
 ## 3. Phases
 
-### Phase 0 — Guardrails
+### Phase 0 — Guardrails ✅ delivered
 
 Exists because every PoC defect was semantic drift, and because nobody can currently state
 today's behaviour precisely.
@@ -147,8 +153,15 @@ today's behaviour precisely.
   It is the input to both the contract and the UI, and it is what makes Phase 3's transition
   table reviewable.
 
-**Exit criteria:** current semantics documented and pinned by tests that fail if they change,
-on both local and remote hosts.
+**Delivered** on branch `cmk-34150`: two documents rather than one — the diff is only meaningful
+against a stated target, so the matrix records today's behaviour and DM records the target — and
+four test tiers, 539 cases plus 12 in the check-engine suite, 40 of them strict-xfail quarantine
+tests carrying a ticket each (matrix §7).
+
+**Exit criteria: met.** One qualification worth carrying forward: tier 4 first ran 2026-09-03 and
+corrected a §10 severity claim that had been derived by reading — §10.17's `ignored` cell is a
+silent no-op, not a cluster outage, because the write path restores what the transition drops. See
+R5.
 
 ### Phase 1 — CMK-37497, as scoped
 
@@ -165,13 +178,27 @@ No behaviour change, including "empty on cold cache". Note the ticket's own warn
 OpenAPI tests for this endpoint run via `tests/run_tests.sh`, **not** bazel — they are the
 guard for the schema-unchanged claim.
 
+**Two premises need correcting first, both from Phase 0.**
+
+1. **`get_result` is not a pure cache read.** A scan stores its own preview, the next read prefers
+   that file over recomputing, and loading it unlinks it — so the first read after any scan is
+   answered from the scan's table and only later ones recompute (matrix §6.0, §6.2). A must decide
+   explicitly whether to keep that; extracting a "cache read" silently is a behaviour change.
+2. **Idea D is superseded before it is written.** D11 replaces the job-active probe rather than
+   narrowing it (matrix §11.4 item 6), so D as scoped implements a guard Phase 2 deletes. Reduce it
+   to _removing_ the guard where it cannot collide, and leave the mechanism to Phase 2.
+
 **Exit criteria:** the three primitives exist; `ServiceDiscoveryBackgroundJob` is reduced to
-"run the scan, expose status"; Phase 0 tests green on local and remote.
+"run the scan, expose status" — the _scan's_ status, not discovery's (matrix §6.3); Phase 0 tests
+green on local and remote.
 
 ### Phase 2 — The contract
 
 The linchpin. If this is wrong, Phases 3 and 4 diverge independently and the project fails the
-way the PoC did. The Phase 0 matrix is the reference document for its review.
+way the PoC did. The Phase 0 matrix is the reference document for its review — and since the target
+semantics are now written down too (DM §5, §6.2, §6.3, with the divergences to dispose of indexed in
+matrix §11.5), much of this phase is ratification rather than design. **DM §12's open decisions are
+the gate**; take §12.5 (exclusion identity) first, as the one that may need a config-format change.
 
 **Canonical service identity.** Pull **CMK-32562** (support ServiceID) in here — critical path,
 not adjacent. Batch apply needs a collision-free key; the kickoff doc already noted that
@@ -190,19 +217,23 @@ semantics the PoC got wrong:
 - whether accepting a _changed_ service adopts `new_discovered_parameters` (the PoC silently
   did not — a functional downgrade versus legacy Fix-all);
 - partial-failure behaviour: all-or-nothing, or per-item results;
+- an identifier naming no service: today it is answered `204` with nothing written, so a whole
+  batch of typos would report success. Matrix §10.19 prescribes `404`, and says why the lookup
+  belongs at the endpoint rather than inside the transition;
 - per-target-disposition permission checks (`wato.service_discovery_to_*`), matching the
   legacy page's model rather than tightening it;
 - audit-log granularity — this is **story F1** from the epic comments, and the right place to
   settle it once for both actions;
 - `409` on a stale token.
 
-**Optimistic concurrency (D11).** Required by "discover once, act many". The client echoes a
-content hash; the server rejects if the underlying preview changed. Covers a concurrent admin,
-an intervening scan, and a stale browser tab in one mechanism, and subsumes Phase 1's Idea-D
-guard.
+**Optimistic concurrency (D11).** Required by "discover once, act many". The client echoes the
+table version it decided against; the server rejects if it has moved. Covers a concurrent admin, an
+intervening scan and a stale browser tab in one mechanism, and replaces Phase 1's Idea-D guard.
 
 **Deprecations.** `update_service_phase` (single service, re-runs discovery on every call) is
-superseded by batch apply — mark deprecated, don't delete in 3.0.0.
+superseded by batch apply — mark deprecated, don't delete in 3.0.0. Note the collision: CMK-38598's
+fix adds a required field to that same endpoint, and DM §12.7's optional-when-present-in-v1 is what
+reconciles deprecating it with changing it.
 
 **Compiler-enforced contract.** `openapi-fetch` is already a dependency, but there is no
 generation step — `quick-setup/rest-api/` hand-writes its request/response schemas. Add
@@ -218,21 +249,26 @@ mock that satisfies the schema.
 
 Scoped to the code that survives. **No old GUI code is touched here** (D10).
 
-- **Decompose `DiscoveryState`.** Its ~15 values conflate four orthogonal axes — lifecycle
-  (new/unchanged/changed/vanished), disposition (monitored/ignored/undecided/removed), origin
-  (discovered/enforced/active/custom) and clustering. That conflation is why the `_case_*`
-  handlers are unreadable. Replace with orthogonal axes plus one explicit, **total** transition
-  table, exhaustively unit-tested against the Phase 0 matrix. The single largest simplification
-  available.
+- **Decompose `DiscoveryState`.** Its 15 declared values (13 reachable) conflate four orthogonal
+  axes — lifecycle (new/unchanged/changed/vanished), disposition
+  (monitored/ignored/undecided/removed), origin (discovered/enforced/active/custom) and clustering.
+  That conflation is why the `_case_*` handlers are unreadable. Replace with orthogonal axes plus
+  one explicit, **total** transition table, exhaustively unit-tested against the Phase 0 matrix —
+  **generated** from DM §6.2 rather than transcribed (matrix §11.4 item 5). The target is five
+  states × three commands — 15 cells, 10 of them meaningful, against the 208 pairs reachable
+  through `update_service_phase` today — plus two row-level gates. That ratio is why this is the
+  single largest simplification available.
 - **Real enums.** The "must be strings for JS serialization" constraint dies once the boundary
   is a Pydantic schema.
 - **Story F2:** `TABULA_RASA` becomes _invalidate cache + `start_scan` + fix-all_ instead of a
-  second implementation path. Nearly free once Phase 1's primitives exist.
+  second implementation path. Nearly free once Phase 1's primitives exist; matrix §6.3 lists what
+  it deletes in one move.
 - **Story F3 (backend half):** update the user-visible background-job title; the internal
   `DiscoveryAction.TABULA_RASA` constant stays for API and change-log compatibility. The new
   wording ships with the new page in Phase 4.
 - **Remove the mypy suppressions** at the top of `watolib/services.py` — a concrete, verifiable
-  success criterion for "less error-prone".
+  success criterion for "less error-prone". A second one: **T1b.12 must XPASS**, because §10.11
+  disappears by construction in this model rather than by fix (matrix §11.4 item 7).
 
 Verify that `bulk_discovery.py`, DCD and periodic discovery still behave once the primitives
 are extracted. They are not being migrated here, but they are consumers.
@@ -296,8 +332,11 @@ Then, as separate work: **CMK-35050** (faithful source failures — reopens D7),
 
 | Ticket                            | Role                                                                                            |
 | --------------------------------- | ----------------------------------------------------------------------------------------------- |
-| CMK-37497                         | Phase 1. Ships first, scope unchanged                                                           |
-| CMK-34150                         | Phase 0. Promoted to prerequisite                                                               |
+| CMK-37497                         | Phase 1. Ships first, scope unchanged except Idea D — see Phase 1                               |
+| CMK-34150                         | Phase 0. Promoted to prerequisite. **Done**                                                     |
+| CMK-38599 (§10.5)                 | **Before Phase 1** (D15)                                                                        |
+| CMK-38587 … CMK-38598             | The other 12 divergence tickets — indexed below                                                 |
+| CMK-38679                         | **Not this epic.** Matcher-owned, spun out of the tier-2/4 review                               |
 | CMK-32562                         | Phase 2. Critical path — batch apply needs a canonical key                                      |
 | Story F1 (audit log)              | Phase 2. Settled once, in the batch-apply design                                                |
 | Story F2 (TABULA_RASA dedup)      | Phase 3. Nearly free after Phase 1                                                              |
@@ -310,26 +349,54 @@ Then, as separate work: **CMK-35050** (faithful source failures — reopens D7),
 | CMK-28034 (no progress indicator) | **Not planned.** Probably a transient issue left open; keep in mind while building the new page |
 | CMK-31896                         | Already fixed; informs the cold-cache split                                                     |
 
+### The divergence tickets from Phase 0
+
+All thirteen are linked to CMK-32255 and filed against Check and Discovery Engine. Off the critical
+path except CMK-38599 (D15): each is a fix a later phase would otherwise subsume. Ten own a
+strict-xfail guardrail that must be deleted with the fix — the Jira label `discovery-quarantine`
+finds the ones that forgot, and is the only part of that mechanism living outside the repo, the
+guardrails themselves being self-enforcing. One literal is shared by CMK-38589 and CMK-38593, so it
+clears only once both land.
+
+| ticket    | §            | ticket    | §     |
+| --------- | ------------ | --------- | ----- |
+| CMK-38587 | 10.1         | CMK-38594 | 10.4  |
+| CMK-38588 | 10.3 + 10.14 | CMK-38595 | 10.9  |
+| CMK-38589 | 10.8         | CMK-38596 | 10.10 |
+| CMK-38590 | 10.11        | CMK-38597 | 10.15 |
+| CMK-38591 | 10.13        | CMK-38598 | 10.18 |
+| CMK-38592 | 10.16 + 11.3 | CMK-38599 | 10.5  |
+| CMK-38593 | 10.17        |           |       |
+
+**The §10 items that own no ticket.** §10.2 is resolved as not-a-defect. §10.19 is left unticketed
+as low priority — Phase 2 disposes of it. §10.6, §10.7, §10.12 and §10.14 step 3 are requirements of
+this epic rather than tickets; §10.12 is Phase 3's first bullet, §10.14 step 3 is an API-ownership
+call for Phase 2, and §10.6 and §10.7 are settled by the contract's permission model and the new
+board.
+
 ---
 
 ## 5. Risks
 
-| #   | Risk                                                                                                                           | Mitigation                                                                                                                                                |
-| --- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R1  | **The contract is a single point of failure.** Wrong in Phase 2 → Phases 3 and 4 diverge independently, exactly as the PoC did | Phase 0 matrix as the review reference; generated TS types so drift breaks the build; D5's internal-first option keeps early mistakes cheap               |
-| R2  | **Public API permanence.** A batch-apply endpoint shipped in 3.0.0 cannot be quietly reshaped                                  | Largely resolved by D5: build on internal endpoints, promote to public once the UI has actually validated them                                            |
-| R3  | **UX decided without PM/UX**, on a genuinely new interaction model                                                             | D13: interaction spec reviewed by PM/UX before the model is locked in code; validate on a large host with real admins before cutover                      |
-| R4  | **Column board degrades at scale** worse than a table                                                                          | D4 plus the Phase 4 large-host fixture, exercised before the model is locked                                                                              |
-| R5  | **Remote-site behaviour is the historical blind spot** — where the PoC broke and where the tests weren't                       | Phase 0 remote coverage via `test-system-multisite`; remote parity required at every phase exit, not at the end                                           |
-| R6  | **Deletion never happens.** Phase 5 slips and both implementations live on — the very complexity this epic exists to remove    | Deletion commit written up front; toggle window bounded to one release cycle; D10 means the legacy code was never improved, so keeping it is unattractive |
-| R7  | **Not a roadmap priority** — the plan stalls mid-way and leaves things half-migrated                                           | Every phase is independently shippable and leaves the tree defensible. Phase 1 alone is a net win even if nothing follows                                 |
+| #   | Risk                                                                                                                           | Mitigation                                                                                                                                                                                                                                                                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | **The contract is a single point of failure.** Wrong in Phase 2 → Phases 3 and 4 diverge independently, exactly as the PoC did | Phase 0 matrix as the review reference; generated TS types so drift breaks the build; D5's internal-first option keeps early mistakes cheap                                                                                                                                                                    |
+| R2  | **Public API permanence.** A batch-apply endpoint shipped in 3.0.0 cannot be quietly reshaped                                  | Largely resolved by D5: build on internal endpoints, promote to public once the UI has actually validated them                                                                                                                                                                                                 |
+| R3  | **UX decided without PM/UX**, on a genuinely new interaction model                                                             | D13: interaction spec reviewed by PM/UX before the model is locked in code; validate on a large host with real admins before cutover                                                                                                                                                                           |
+| R4  | **Column board degrades at scale** worse than a table                                                                          | D4 plus the Phase 4 large-host fixture, exercised before the model is locked                                                                                                                                                                                                                                   |
+| R5  | **Remote-site behaviour is the historical blind spot** — where the PoC broke and where the tests weren't                       | Phase 0's tier 4 via `test-system-multisite`, at every phase exit rather than at the end. But a parity assertion is **blind to any defect symmetric across sites** — of the 19 §10 items only §10.10 is asymmetric — so "parity" must mean pinning **absolute per-site outcomes**, not comparing the two sites |
+| R6  | **Deletion never happens.** Phase 5 slips and both implementations live on — the very complexity this epic exists to remove    | Deletion commit written up front; toggle window bounded to one release cycle; D10 means the legacy code was never improved, so keeping it is unattractive                                                                                                                                                      |
+| R7  | **Not a roadmap priority** — the plan stalls mid-way and leaves things half-migrated                                           | Every phase is independently shippable and leaves the tree defensible. Phase 1 alone is a net win even if nothing follows                                                                                                                                                                                      |
 
 ---
 
 ## 6. Open questions
 
-1. Exact shape of the concurrency hash (D11): what goes into it, and is it stable across
-   equivalent previews?
+1. **Is a write to a host on a remote site read-your-write?** Config sync reaches the remote with
+   activation suppressed and the automation helper picks the change up at its next reload, with no
+   happens-before edge (matrix §6.1) — so a read issued straight after an apply can legitimately
+   answer with the pre-write table. The contract must either return the new table from the apply or
+   tell the client to poll.
 2. Whether to start on internal endpoints and promote, or go public immediately (D5) — an
    implementation-phase call.
 3. How wide the flag-gated coexistence window should be, and whether the toggle is per-site or

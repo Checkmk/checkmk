@@ -789,9 +789,13 @@ not whether the service is monitored:
 | clustered onto a cluster | the cluster, via `_get_clustered_services` → `get_autochecks(node)` (`:473-478`) | load-bearing — §6.1           |
 
 That reading makes werk 19801's "drop the entry when a rule disables it" and this
-model's "keep the node's entry when the service is clustered" one rule rather than two,
-and it is why dropping a clustered node's entry is data loss (behaviour matrix §10.17)
-while dropping a disabled service's entry is a fix.
+model's "keep the node's entry when the service is clustered" one rule rather than two:
+dropping a disabled service's entry is a fix, while dropping a clustered node's entry
+would lose a service the cluster reads. It **would**, not does — today
+`set_autochecks_for_effective_host` filters on `effective_host` and never drops it,
+which is why behaviour matrix §10.17's `ignored` cell is a silent no-op rather than an
+outage. That filter lives in the write path, which is exactly the layer condition 1
+below proposes to drop entries in.
 
 **Only the enforced row is undecided, and today's behaviour is not an answer to it.**
 The entry survives indefinitely until someone clicks "Accept all", at which point it is
@@ -810,10 +814,11 @@ conditions:
 
 1. The drop must be conditional on nothing reading the entry, `effective_host`
    included. A node carrying both an enforced-services rule and a clustered-services
-   rule for the same service would otherwise lose it from the cluster's table — the
-   §10.17 harm from the other direction. The mechanism is confirmed; whether a real
-   configuration produces that overlap is not, and it needs a cluster-fixture test
-   either way.
+   rule for the same service would otherwise lose it from the cluster's table. The
+   `effective_host` filter in that layer is the only thing preventing this today — it is
+   what makes §10.17's `ignored` cell a no-op — so a drop that supersedes the filter has
+   to re-implement the check. The mechanism is confirmed; whether a real configuration
+   produces that overlap is not, and it needs a cluster-fixture test either way.
 2. The withdrawal gap must be accepted explicitly: removing the enforced rule leaves
    the service undecided until a rediscovery. That price was already paid for disabled
    services after werk 19801, so this is consistency rather than a new cost.

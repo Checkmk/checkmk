@@ -4,10 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.legacy_checks.docker_node_disk_usage import (
-    check_docker_node_disk_usage,
-    parse_docker_node_disk_usage,
-)
+from cmk.plugins.docker.agent_based import docker_node_disk_usage
 
 AGENT_OUTPUT = [
     [
@@ -23,7 +20,9 @@ AGENT_OUTPUT = [
 
 def test_check_docker_node_disk_usage() -> None:
     result = list(
-        check_docker_node_disk_usage("volumes", {}, parse_docker_node_disk_usage(AGENT_OUTPUT))
+        docker_node_disk_usage.check_docker_node_disk_usage(
+            "volumes", {}, docker_node_disk_usage.parse_docker_node_disk_usage(AGENT_OUTPUT)
+        )
     )
     assert result == [
         Result(state=State.OK, summary="Size: 230 KiB"),

@@ -15,5 +15,7 @@ cc_feature(
     name = "static_libstdcpp",
     args = [":static_libstdcpp_args"],
     feature_name = "static_libstdcpp",
+    # GCC still links libgcc_s dynamically unless -static-libgcc is passed too.
+    implies = ["//bazel/toolchains/cc/feature/static_libgcc"],
     visibility = ["//:__subpackages__"],
 )

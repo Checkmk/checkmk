@@ -24,6 +24,7 @@ cc_toolchain(
         "@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features",
         "//bazel/toolchains/cc/feature/strip:strip_all_symbols",
         "//bazel/toolchains/cc/feature/static_libstdcpp:static_libstdcpp",
+        "//bazel/toolchains/cc/feature/static_libgcc:static_libgcc",
         "//bazel/toolchains/cc/feature/optimize:no_optimization",
         "//bazel/toolchains/cc/feature/optimize:debug_optimization",
         "//bazel/toolchains/cc/feature/optimize:size_optimization",

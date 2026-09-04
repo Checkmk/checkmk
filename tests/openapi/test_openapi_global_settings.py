@@ -101,6 +101,22 @@ def fixture_user_without_global_permission(clients: ClientRegistry) -> None:
     clients.GlobalSetting.set_credentials("no_globals", "supersecretish")
 
 
+@pytest.fixture(name="user_without_event_console_permission")
+def fixture_user_without_event_console_permission(clients: ClientRegistry) -> None:
+    """Holds the general global-settings permission but not the Event Console's own."""
+    clients.UserRole.clone(body={"role_id": "admin", "new_role_id": "no_event_console"})
+    clients.UserRole.edit(
+        role_id="no_event_console", body={"new_permissions": {"mkeventd.config": "no"}}
+    )
+    clients.User.create(
+        username="no_event_console",
+        fullname="no_event_console",
+        roles=["no_event_console"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.GlobalSetting.set_credentials("no_event_console", "supersecretish")
+
+
 def _register_variable(
     monkeypatch: pytest.MonkeyPatch,
     varname: str,
@@ -320,6 +336,39 @@ def test_site_scope_needs_the_global_permission(clients: ClientRegistry, remote_
         403
     )
     clients.GlobalSetting.delete_site(remote_site, INT_VAR, expect_ok=False).assert_status_code(403)
+
+
+@pytest.mark.usefixtures("user_without_event_console_permission")
+def test_an_event_console_setting_needs_the_event_console_permission(
+    clients: ClientRegistry, event_console_var: str
+) -> None:
+    """wato.global does not reach an Event Console variable.
+
+    An ordinary variable is exercised afterwards with the same user on the same
+    route, so the refusals cannot be read as that user having no access to the
+    endpoints at all.
+    """
+    clients.GlobalSetting.get(event_console_var, expect_ok=False).assert_status_code(403)
+    clients.GlobalSetting.update(event_console_var, True, expect_ok=False).assert_status_code(403)
+    clients.GlobalSetting.delete(event_console_var, expect_ok=False).assert_status_code(403)
+
+    assert clients.GlobalSetting.get(INT_VAR).json["value"] == INT_DEFAULT
+    assert clients.GlobalSetting.update(INT_VAR, 42).json["value"] == 42
+
+
+@pytest.mark.usefixtures("user_without_global_permission")
+def test_an_event_console_setting_does_not_need_the_general_permission(
+    clients: ClientRegistry, event_console_var: str
+) -> None:
+    """mkeventd.config alone does reach an Event Console variable.
+
+    The permission demanded is the one the variable's own configuration domain
+    declares, so wato.global — which every ordinary variable requires — is not
+    required here.
+    """
+    assert clients.GlobalSetting.get(event_console_var).json["value"] is False
+    assert clients.GlobalSetting.update(event_console_var, True).json["value"] is True
+    clients.GlobalSetting.delete(event_console_var)
 
 
 def test_site_value_falls_back_to_the_central_value(

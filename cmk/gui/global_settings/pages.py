@@ -171,5 +171,6 @@ def _global_settings_page(ctx: PageContext) -> None:
         user_role_ids=user.role_ids,
     )
     html.show_warning(_("This page is work in progress. It shows a subset of the global settings."))
+    html.enable_help_toggle()
     html.vue_component(component_name="cmk-global-settings", data=asdict(data))
     html.footer()

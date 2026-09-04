@@ -8,11 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.vutlan_ems_humidity import (
-    check_vutlan_ems_humidity,
-    discover_vutlan_ems_humidity,
-    parse_vutlan_ems_humidity,
-)
+from cmk.plugins.vutlan.agent_based import vutlan_ems_humidity
 
 STRING_TABLE = [
     ["101001", "Dry-1", "0"],
@@ -43,8 +39,8 @@ STRING_TABLE = [
 def test_discover_vutlan_ems_humidity(
     string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
-    section = parse_vutlan_ems_humidity(string_table)
-    result = list(discover_vutlan_ems_humidity(section))
+    section = vutlan_ems_humidity.parse_vutlan_ems_humidity(string_table)
+    result = list(vutlan_ems_humidity.discover_vutlan_ems_humidity(section))
     assert sorted(result) == sorted(expected_discoveries)
 
 
@@ -77,6 +73,6 @@ def test_check_vutlan_ems_humidity(
     string_table: StringTable,
     expected_results: Sequence[object],
 ) -> None:
-    section = parse_vutlan_ems_humidity(string_table)
-    result = list(check_vutlan_ems_humidity(item, params, section))
+    section = vutlan_ems_humidity.parse_vutlan_ems_humidity(string_table)
+    result = list(vutlan_ems_humidity.check_vutlan_ems_humidity(item, params, section))
     assert result == expected_results

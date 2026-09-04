@@ -19,15 +19,14 @@
 #
 # Examples
 #
-# dl/gnu/gcc-toolchain/gcc14.4.0-glibc2.28/linux/x86_64/almalinux8/x86_64-checkmk-linux-gnu-gcc14.4.0-glibc2.28.tar.xz
-# dl/gnu/gdb/gcc14.4.0-glibc2.28/linux/x86_64/static/x86_64-checkmk-linux-gnu-gdb.tar.xz
+# dl/gnu/gcc-toolchain/gcc14.4.0-glibc2.28-df6cc09a/linux/x86_64/almalinux8/x86_64-checkmk-linux-gnu-gcc14.4.0-glibc2.28.tar.xz
+# dl/gnu/gdb/gcc14.4.0-glibc2.28-df6cc09a/linux/x86_64/static/x86_64-checkmk-linux-gnu-gdb.tar.xz
 
 set -eu -o pipefail
 
 # shellcheck source=buildscripts/scripts/gcc-toolchain/common.sh
 . "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
-TOOLCHAIN_VERSION="gcc${GCC_VERSION}-glibc${GLIBC_VERSION}"
 TOOLCHAIN_NAME="gcc-toolchain"
 TOOLCHAIN_VARIANT="almalinux8"
 GDB_NAME="gdb"

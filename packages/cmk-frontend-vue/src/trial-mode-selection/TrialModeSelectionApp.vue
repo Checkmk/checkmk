@@ -5,7 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { type TrialModeSelection } from 'cmk-shared-typing/typescript/trial_mode_selection'
+import { type TrialModeSelectionProps } from 'cmk-shared-typing/typescript/trial_mode_selection_props'
+import {
+  type TrialModeSelectionRequest,
+  type VerificationMode
+} from 'cmk-shared-typing/typescript/trial_mode_selection_request'
 import { type ComponentPublicInstance, nextTick, ref } from 'vue'
 
 import { cmkAjax } from '@/lib/ajax'
@@ -22,7 +26,7 @@ declare let global_csrf_token: string
 
 const { _t } = usei18n()
 
-const props = defineProps<TrialModeSelection>()
+const props = defineProps<TrialModeSelectionProps>()
 
 /**
  * State of the trial mode selection flow.
@@ -40,7 +44,7 @@ const stepHeading = ref<ComponentPublicInstance | null>(null)
 /*
  * Persists the decision and only then leaves the page.
  */
-async function persist(request: Record<string, string>, target: string): Promise<void> {
+async function persist(request: TrialModeSelectionRequest, target: string): Promise<void> {
   if (saving.value) {
     return
   }
@@ -63,7 +67,7 @@ function startTrial(): Promise<void> {
   return persist({ selection: 'trial' }, 'index.py')
 }
 
-function verifyNow(mode: 'online' | 'offline'): Promise<void> {
+function verifyNow(mode: VerificationMode): Promise<void> {
   return persist(
     { selection: 'customer', verification_mode: mode },
     mode === 'online' ? props.verify_online_url : props.verify_offline_url

@@ -1,0 +1,25 @@
+title: Pure Storage FlashArray: Connection to
+agents: pure_storage_fa
+catalog: hw/storagehw/pure_storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the connections of a Pure Storage.
+ Monitoring state, throttled-state, version, management address, replication addresses and type.
+
+ The status is mapped to the following Checkmk state:
+
+ - {OK} if state is connected and not throttled unless the service was discovered another state
+
+ - {WARN} if state is connected but throttled and was not discovered throttled
+
+ - {CRIT} if state is disconnected and as not discovered disconnected
+
+ To make this check work you have to configure the related special agent
+ {Pure Storage FlashArray}.
+
+item:
+ Name of the connection.
+
+discovery:
+ One service per connection is created.

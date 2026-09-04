@@ -8,9 +8,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import OK, Result
-from cmk.ccc.site import SiteId
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import (
     QueryData,
@@ -19,13 +17,11 @@ from cmk.gui.graphing._graph_metric_expressions import (
 from cmk.gui.graphing._graph_specification import (
     GraphRanges,
 )
-from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
+from cmk.gui.graphing._legacy import CheckMetricEntry
 from cmk.gui.graphing._rrd import (
     _reverse_translate_into_all_potentially_relevant_metrics,
     _rrd_columns,
-    make_graph_row,
     MetricProperties,
-    ServiceGraphRow,
     translate_and_merge_rrd_columns,
 )
 from cmk.gui.graphing._time_series import TimeSeries
@@ -36,7 +32,6 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.livestatus_client.tables.services import Services
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.metrics import MetricName
-from cmk.utils.servicename import ServiceName
 
 
 @contextmanager
@@ -360,65 +355,3 @@ def test_reverse_translate_into_all_potentially_relevant_metrics(
         )
         == expected_result
     )
-
-
-def test_make_graph_row_applies_pnp_suffix_check_command_to_translation(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Regression test for CMK-33772.
-
-    When perfdata carries a PNP-style ``[check_command]`` suffix,
-    the suffix-derived check_command must be used for the
-    translation lookup that feeds the graph, not the outer service
-    check_command, which has no translation entry.
-
-    Previously the graph path passed the outer (un-normalized) check_command,
-    so the lookup failed and the default unit was used.
-    """
-    # The `check_ping` translation is normally registered by a production
-    # graphing plug-in. Stub it here so the test does not depend on any
-    # plug-in being on the runfiles path.
-    monkeypatch.setitem(
-        check_metrics,
-        "check_ping",
-        {
-            MetricName("rta"): {"scale": 0.001},
-            MetricName("pl"): {},
-        },
-    )
-    row = make_graph_row(
-        site=SiteId("NO_SITE"),
-        host_name=HostName("my-host"),
-        service_name=ServiceName("Fake_Ping"),
-        perf_data_string="rta=6.8;300;500;0; pl=0;1;1;0;100 [check_ping]",
-        metrics=[MetricName("rta"), MetricName("pl")],
-        check_command="check_mk-mrpe",
-        registered_metrics={
-            "rta": RegisteredMetric(
-                name="rta",
-                title_localizer=lambda _localizer: "Round trip average",
-                unit_spec=ConvertibleUnitSpecification(
-                    notation=DecimalNotation(symbol="s"),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="",
-            ),
-            "pl": RegisteredMetric(
-                name="pl",
-                title_localizer=lambda _localizer: "Packet loss",
-                unit_spec=ConvertibleUnitSpecification(
-                    notation=DecimalNotation(symbol="%"),
-                    precision=AutoPrecision(digits=2),
-                ),
-                color="",
-            ),
-        },
-        debug=False,
-        temperature_unit=TemperatureUnit.CELSIUS,
-    )
-    assert isinstance(row, ServiceGraphRow)
-    assert row.check_command == "check_ping"
-    rta = row.translated_metrics["rta"]
-    assert rta.value == pytest.approx(0.0068)
-    assert rta.scalar.warn == pytest.approx(0.3)
-    assert rta.scalar.crit == pytest.approx(0.5)

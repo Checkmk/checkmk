@@ -30,7 +30,9 @@ _REGISTERED = {
 
 
 def _translations(
-    specs: Mapping[str, translations.RenameTo | translations.ScaleBy],
+    specs: Mapping[
+        str, translations.RenameTo | translations.ScaleBy | translations.RenameToAndScaleBy
+    ],
 ) -> Sequence[translations.Translation]:
     return [
         translations.Translation(
@@ -123,3 +125,23 @@ def test_a_metric_only_the_rrd_knows_is_read_as_well() -> None:
 def test_performance_data_wins_over_what_the_rrd_reports() -> None:
     evaluated = _evaluated("used=10B", rrd_metrics=[MetricName("used")])
     assert evaluated[MetricName("used")].performance_data.value == 10.0
+
+
+def test_a_pnp_suffix_names_the_check_command_the_translation_is_looked_up_with() -> None:
+    # CMK-33772: perf data may carry a PNP-style "[check_command]" suffix. The suffix names the
+    # command whose translations apply, not the outer service check command.
+    evaluated = evaluated_metrics(
+        "old=6.8;300;500 [check_mk-foo]",
+        "check_mk-mrpe",
+        registered_metrics=_REGISTERED,
+        registered_translations=_translations(
+            {"old": translations.RenameToAndScaleBy("used", 0.001)}
+        ),
+        temperature_unit=TemperatureUnit.CELSIUS,
+        debug=True,
+    )
+
+    assert [
+        (name, metric.performance_data.value, metric.performance_data.warning)
+        for name, metric in evaluated.items()
+    ] == [(MetricName("used"), 0.0068, 0.3)]

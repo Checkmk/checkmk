@@ -7,14 +7,12 @@
 # mypy: disable-error-code="comparison-overlap"
 
 from collections.abc import Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import lru_cache
 
 import cmk.ccc.version as cmk_version
 from cmk import trace
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
 from cmk.ccc.version import parse_check_mk_version
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName
@@ -22,7 +20,6 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.livestatus_client.tables.services import Services
 from cmk.livestatus_client.types import Column, DynamicColumn
 from cmk.utils.metrics import MetricName
-from cmk.utils.servicename import ServiceName
 
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import GraphConsolidationFunction
@@ -33,77 +30,12 @@ from ._legacy import (
 from ._metrics import get_metric_spec
 from ._time_series import TimeSeries
 from ._translated_metrics import (
-    compute_translated_metrics,
     find_matching_translation,
-    parse_perf_data,
-    TranslatedMetric,
     TranslationSpec,
 )
 from ._unit import user_specific_unit
 
 tracer = trace.get_tracer()
-
-
-@dataclass(frozen=True)
-class HostGraphRow:
-    site_id: SiteId
-    host_name: HostName
-    check_command: str
-    translated_metrics: Mapping[str, TranslatedMetric] = field(default_factory=dict)
-
-    @property
-    def service_name(self) -> ServiceName:
-        return ServiceName("_HOST_")
-
-
-@dataclass(frozen=True)
-class ServiceGraphRow:
-    site_id: SiteId
-    host_name: HostName
-    service_name: ServiceName
-    check_command: str
-    translated_metrics: Mapping[str, TranslatedMetric] = field(default_factory=dict)
-
-
-def make_graph_row(
-    site: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    perf_data_string: str,
-    metrics: list[MetricName],
-    check_command: str,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    explicit_color: str = "",
-    *,
-    debug: bool,
-    temperature_unit: TemperatureUnit,
-) -> HostGraphRow | ServiceGraphRow:
-    perf_data, normalized_check_command = parse_perf_data(
-        perf_data_string, check_command, debug=debug
-    )
-    translated = compute_translated_metrics(
-        perf_data,
-        metrics,
-        normalized_check_command,
-        registered_metrics,
-        explicit_color,
-        debug=debug,
-        temperature_unit=temperature_unit,
-    )
-    if service_name == "_HOST_":
-        return HostGraphRow(
-            site_id=site,
-            host_name=host_name,
-            check_command=normalized_check_command,
-            translated_metrics=translated,
-        )
-    return ServiceGraphRow(
-        site_id=site,
-        host_name=host_name,
-        service_name=service_name,
-        check_command=normalized_check_command,
-        translated_metrics=translated,
-    )
 
 
 @dataclass(frozen=True, kw_only=True)

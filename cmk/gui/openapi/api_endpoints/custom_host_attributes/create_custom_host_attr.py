@@ -49,7 +49,7 @@ def create_custom_host_attr_v1(
             ),
         )
     new_attr = CustomHostAttrSpec(
-        type="TextAscii",
+        type=body.data_type,
         name=body.name,
         title=body.title,
         topic=body.topic,

@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from typing import Literal
+
 from cmk.gui.openapi.framework.model import api_field, api_model
 
 
@@ -18,10 +20,15 @@ class CreateCustomHostAttrModel:
         description="A human-readable title for the attribute.",
         example="Coordinates",
     )
+    data_type: Literal["TextAscii"] = api_field(
+        description="The data type of the attribute. Currently only simple text is supported.",
+        example="TextAscii",
+        default="TextAscii",
+    )
     topic: str = api_field(
-        description="The section this attribute appears in when editing a host.",
-        example="Custom attributes",
-        default="Custom attributes",
+        description="The internal ID of the section this attribute appears in when editing a host.",
+        example="custom_attributes",
+        default="custom_attributes",
     )
     help: str = api_field(
         description="A help text shown next to the attribute in the UI.",
@@ -51,8 +58,8 @@ class UpdateCustomHostAttrModel:
         default=None,
     )
     topic: str | None = api_field(
-        description="The section this attribute appears in when editing a host.",
-        example="Custom attributes",
+        description="The internal ID of the section this attribute appears in when editing a host.",
+        example="custom_attributes",
         default=None,
     )
     help: str | None = api_field(

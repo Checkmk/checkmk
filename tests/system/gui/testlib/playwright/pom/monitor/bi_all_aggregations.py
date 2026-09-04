@@ -56,25 +56,19 @@ class AllAggregations(CmkPage):
     def _aggregation_group(self, group_name: str) -> Locator:
         return self.main_area.locator("table.data").filter(has_text=group_name)
 
-    @property
-    def hosts_aggregation_group(self) -> Locator:
-        return self._aggregation_group(group_name="Hosts")
-
-    def hosts_aggregation_row(self, index: int) -> "_HostsAggregationRow":
-        """Return a locator corresponding to a row of aggregations.
-
-        The aggregation / row is specific to the aggregation group: 'Hosts'.
-        """
-        return self._HostsAggregationRow(self.hosts_aggregation_group, index)
+    def hosts_aggregation_row(self, host_name: str) -> "_HostsAggregationRow":
+        """Return the row of the 'Hosts' aggregation group which belongs to `host_name`."""
+        return self._HostsAggregationRow(
+            self._aggregation_group(group_name="Hosts")
+            .locator("tr.data")
+            .filter(has_text=host_name)
+        )
 
     class _HostsAggregationRow:
         """Represents a single data row in the All Aggregations table."""
 
-        def __init__(self, aggregation_group_locator: Locator, index: int) -> None:
-            """Initialize HostsAggregationRow with its row index."""
-            self._aggregation_group = aggregation_group_locator
-            self._index = index
-            self._row_locator = self._aggregation_group.locator("tr.data").nth(self._index)
+        def __init__(self, row_locator: Locator) -> None:
+            self._row_locator = row_locator
 
         @property
         def locator(self) -> Locator:

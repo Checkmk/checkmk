@@ -72,7 +72,6 @@ def fixture_test_host(test_site: Site) -> Iterator[HostDetails]:
         yield host_details
 
 
-@pytest.mark.skip(reason="This test is flaky, investigation is required. See CMK-32258")
 def test_all_aggregations_sanity(
     dashboard_page: MainDashboard,
     test_host: HostDetails,
@@ -82,8 +81,8 @@ def test_all_aggregations_sanity(
     """A sanity test of the elements on the `Monitor -> Business Intelligence -> All aggregations`
     page.
 
-    The test checks for the presence and their expected values of various elements within the first
-    row with host's data of the "Hosts" aggregation group.
+    The test checks for the presence and their expected values of various elements within the
+    row of the test host in the "Hosts" aggregation group.
     """
     logger.info("Navigating to 'Monitor -> Business Intelligence -> All aggregations' page")
     all_aggregations_page = AllAggregations(dashboard_page.page)
@@ -91,7 +90,8 @@ def test_all_aggregations_sanity(
         "Validate elements on the 'Monitor -> Business Intelligence -> All aggregations' page"
     )
     all_aggregations_page.check_no_errors()
-    aggregation_row = all_aggregations_page.hosts_aggregation_row(index=0)
+    host_name = test_host.name
+    aggregation_row = all_aggregations_page.hosts_aggregation_row(host_name)
     expect(
         aggregation_row.visualize_icon, "'Visualize  this aggregation' icon not visible"
     ).to_be_visible()
@@ -105,9 +105,7 @@ def test_all_aggregations_sanity(
     assert aggregation_row.state == (expect_state := "CRIT"), (
         f"Expected state to be '{expect_state}'!"
     )
-    assert (host_name := test_host.name) in aggregation_row.tree_name, (
-        f"Expected '{host_name}' to be in tree name!"
-    )
+    assert host_name in aggregation_row.tree_name, f"Expected '{host_name}' to be in tree name!"
     expect(
         aggregation_row.host_link,
         message=f"Host name '{host_name}' not found in 'Hosts' column!",

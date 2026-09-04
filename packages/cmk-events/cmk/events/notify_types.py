@@ -17,6 +17,7 @@ from typing import (
     Required,
     TypedDict,
     TypeGuard,
+    TypeIs,
 )
 
 from pydantic import (
@@ -75,11 +76,11 @@ NotifyBulkType = (
 )
 
 
-def is_always_bulk(bulk_params: NotifyBulkParameters) -> TypeGuard[AlwaysBulkParameters]:
+def is_always_bulk(bulk_params: NotifyBulkParameters) -> TypeIs[AlwaysBulkParameters]:
     return "interval" in bulk_params
 
 
-def is_timeperiod_bulk(bulk_params: NotifyBulkParameters) -> TypeGuard[TimeperiodBulkParameters]:
+def is_timeperiod_bulk(bulk_params: NotifyBulkParameters) -> TypeIs[TimeperiodBulkParameters]:
     return "timeperiod" in bulk_params
 
 

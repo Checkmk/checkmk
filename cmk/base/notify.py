@@ -1532,27 +1532,23 @@ def _rbn_get_bulk_params(
     if is_always_bulk(params) or method == "always":
         return params
 
-    if is_timeperiod_bulk(params):
-        try:
-            active = timeperiods_active.get(params["timeperiod"], False)
-        except MKLivestatusException:
-            if cmk.ccc.debug.enabled():
-                raise
-            # If a livestatus connection error appears we will bulk the
-            # notification in the first place. When the connection is available
-            # again and the period is not active the notifications will be sent.
-            logger.info(
-                "   - Error checking activity of time period %(timeperiod)s: assuming active",
-                {"timeperiod": params["timeperiod"]},
-            )
-            active = True
+    try:
+        active = timeperiods_active.get(params["timeperiod"], False)
+    except MKLivestatusException:
+        if cmk.ccc.debug.enabled():
+            raise
+        # If a livestatus connection error appears we will bulk the
+        # notification in the first place. When the connection is available
+        # again and the period is not active the notifications will be sent.
+        logger.info(
+            "   - Error checking activity of time period %(timeperiod)s: assuming active",
+            {"timeperiod": params["timeperiod"]},
+        )
+        active = True
 
-        if active:
-            return params
-        return params.get("bulk_outside")
-
-    logger.info("   - Unknown bulking method: assuming bulking is disabled")
-    return None
+    if active:
+        return params
+    return params.get("bulk_outside")
 
 
 def _rbn_event_match_rule(
@@ -2387,7 +2383,7 @@ def do_bulk_notify(
         plugin_context["PARAMETER_BULK_SUBJECT"] = bulk["bulk_subject"]
 
     if "host" in bulkby:
-        bulk_path.extend(  # type: ignore[possibly-undefined]
+        bulk_path.extend(
             [
                 "host",
                 plugin_context["HOSTNAME"],
@@ -2395,7 +2391,7 @@ def do_bulk_notify(
         )
 
     elif "folder" in bulkby:
-        bulk_path.extend(  # type: ignore[possibly-undefined]
+        bulk_path.extend(
             [
                 "folder",
                 str(find_wato_folder(NotificationContext(plugin_context))),
@@ -2403,7 +2399,7 @@ def do_bulk_notify(
         )
 
     if "service" in bulkby:
-        bulk_path.extend(  # type: ignore[possibly-undefined]
+        bulk_path.extend(
             [
                 "service",
                 plugin_context.get("SERVICEDESC", ""),
@@ -2411,7 +2407,7 @@ def do_bulk_notify(
         )
 
     if "sl" in bulkby:
-        bulk_path.extend(  # type: ignore[possibly-undefined]
+        bulk_path.extend(
             [
                 "sl",
                 plugin_context.get(what + "_SL", ""),
@@ -2419,7 +2415,7 @@ def do_bulk_notify(
         )
 
     if "check_type" in bulkby:
-        bulk_path.extend(  # type: ignore[possibly-undefined]
+        bulk_path.extend(
             [
                 "check_type",
                 plugin_context.get(what + "CHECKCOMMAND", "").split("!")[0],
@@ -2427,7 +2423,7 @@ def do_bulk_notify(
         )
 
     if "state" in bulkby:
-        bulk_path.extend(  # type: ignore[possibly-undefined]
+        bulk_path.extend(
             [
                 "state",
                 plugin_context.get(what + "STATE", ""),
@@ -2435,7 +2431,7 @@ def do_bulk_notify(
         )
 
     if "ec_contact" in bulkby:
-        bulk_path.extend(  # type: ignore[possibly-undefined]
+        bulk_path.extend(
             [
                 "ec_contact",
                 plugin_context.get("EC_CONTACT", ""),
@@ -2443,7 +2439,7 @@ def do_bulk_notify(
         )
 
     if "ec_comment" in bulkby:
-        bulk_path.extend(  # type: ignore[possibly-undefined]
+        bulk_path.extend(
             [
                 "ec_comment",
                 plugin_context.get("EC_COMMENT", ""),
@@ -2457,7 +2453,7 @@ def do_bulk_notify(
         value = plugin_context.get("SERVICE" + "_" + macroname, "") or plugin_context.get(
             "HOST" + "_" + macroname, ""
         )
-        bulk_path.extend(  # type: ignore[possibly-undefined]
+        bulk_path.extend(
             [
                 macroname.lower(),
                 value,
@@ -2466,7 +2462,7 @@ def do_bulk_notify(
 
     logger.info(
         "    --> storing for bulk notification %(bulk_path)s",
-        {"bulk_path": "|".join(bulk_path)},  # type: ignore[possibly-undefined]
+        {"bulk_path": "|".join(bulk_path)},
     )
     bulk_dir = _create_bulk_dir(bulk_path)
     notify_uuid = str(uuid.uuid4())

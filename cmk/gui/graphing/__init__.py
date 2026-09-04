@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._engine_discovery import graph_choices, GraphChoices, GraphPluginChoice
 from ._engine_dispatch import evaluate_built_graphs
 from ._engine_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
 from ._engine_metrics import evaluated_metrics, EvaluatedMetric
@@ -13,9 +14,13 @@ from ._engine_perfometer_bars import (
     perfometer_sort_value,
 )
 from ._engine_perfometers import evaluated_perfometer
-from ._engine_plugins import registered_metrics, registered_translations
+from ._engine_plugins import registered_graphs, registered_metrics, registered_translations
 from ._engine_source import RRDFetchMetricNames
-from ._engine_template_graphs import build_template_graphs, resolve_graph_id_from_index
+from ._engine_template_graphs import (
+    build_template_graphs,
+    discover_template_graphs,
+    resolve_graph_id_from_index,
+)
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
     GraphFromAPI,
@@ -59,10 +64,8 @@ from ._graph_specification import (
     parse_graph_specification,
 )
 from ._graph_templates import (
-    get_graph_plugin_and_single_metric_choices,
     get_graph_plugin_choices,
     get_template_graph_specification,
-    GraphPluginChoice,
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
@@ -166,11 +169,14 @@ __all__ = [
     "evaluated_perfometer",
     "perfometer_label",
     "perfometer_sort_value",
+    "GraphChoices",
+    "graph_choices",
+    "discover_template_graphs",
+    "registered_graphs",
     "registered_metrics",
     "registered_translations",
     "fetch_graph_row",
     "make_graph_row",
-    "get_graph_plugin_and_single_metric_choices",
     "get_graph_plugin_choices",
     "sort_registered_graph_plugins",
     "get_metric_spec",

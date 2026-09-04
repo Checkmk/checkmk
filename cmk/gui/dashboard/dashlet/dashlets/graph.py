@@ -8,41 +8,46 @@
 # mypy: disable-error-code="type-arg"
 
 import abc
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Literal, NotRequired, override
 
 import cmk.livestatus_client as livestatus
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import ConsolidationFunction, TimeRange
+from cmk.graphing_engine import HostName as EngineHostName
+from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
+    build_template_graphs,
+    discover_template_graphs,
     evaluate_built_graphs,
-    fetch_graph_row,
-    get_graph_plugin_and_single_metric_choices,
     get_graph_plugin_choices,
     get_metric_spec,
-    get_temperature_unit,
     get_template_graph_specification,
+    graph_choices,
+    GraphChoices,
     GraphDestinations,
     GraphFromAPI,
     GraphPluginChoice,
     graphs_from_api,
     GraphSpecification,
     metrics_from_api,
-    RegisteredMetric,
+    registered_metrics,
+    registered_translations,
     resolve_graph_id_from_index,
+    RRDFetchMetricNames,
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._engine_discovery import DiscoveredGraphs
-from cmk.gui.graphing._engine_template_graphs import discover_template_graphs
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     Choices,
@@ -52,7 +57,6 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     DropdownChoiceWithHostAndServiceHints,
     Timerange,
@@ -374,10 +378,10 @@ def graph_templates_autocompleter(
     return _graph_templates_autocompleter_testable(
         value_entered_by_user=value_entered_by_user,
         params=params,
-        registered_metrics=metrics_from_api,
-        registered_graphs=graphs_from_api,
+        registered_plugin_graphs=graphs_from_api,
+        registered_metric_definitions=registered_metrics(),
+        registered_translations=registered_translations(),
         debug=config.debug,
-        temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
     )
 
 
@@ -385,71 +389,72 @@ def _graph_templates_autocompleter_testable(
     *,
     value_entered_by_user: str,
     params: Mapping[str, Any],
-    registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, GraphFromAPI],
+    registered_plugin_graphs: Mapping[str, GraphFromAPI],
+    registered_metric_definitions: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
     debug: bool,
-    temperature_unit: TemperatureUnit,
 ) -> Choices:
     if not params.get("context") and params.get("show_independent_of_context") is True:
         return _sorted_matching_graph_template_choices(
             value_entered_by_user,
-            get_graph_plugin_choices(registered_graphs),
+            get_graph_plugin_choices(registered_plugin_graphs),
         )
 
-    graph_template_choices, single_metric_template_choices = (
-        _graph_and_single_metric_templates_choices_for_context(
-            params["context"],
-            registered_metrics,
-            registered_graphs,
-            debug=debug,
-            temperature_unit=temperature_unit,
-        )
+    choices = _graph_and_single_metric_templates_choices_for_context(
+        params["context"],
+        registered_plugin_graphs,
+        registered_metric_definitions,
+        registered_translations,
+        debug=debug,
     )
-
     return _sorted_matching_graph_template_choices(
         value_entered_by_user,
-        graph_template_choices,
+        choices.plugin_graphs,
     ) + _sorted_matching_graph_template_choices(
         value_entered_by_user,
-        single_metric_template_choices,
+        choices.single_metrics,
     )
 
 
 def _graph_and_single_metric_templates_choices_for_context(
     context: VisualContext,
-    registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, GraphFromAPI],
+    registered_metric_definitions: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
     *,
     debug: bool,
-    temperature_unit: TemperatureUnit,
-) -> tuple[list[GraphPluginChoice], list[GraphPluginChoice]]:
+) -> GraphChoices:
     if "host" not in context or "service" not in context:
-        return [], []
+        return GraphChoices(plugin_graphs=[], single_metrics=[])
 
     only_sites = get_only_sites_from_context(context)
     site_id = only_sites[0] if only_sites and len(only_sites) == 1 else None
     host_name = HostName(context["host"]["host"])
     service_name = ServiceName(context["service"]["service"])
-
-    try:
-        graph_row = fetch_graph_row(
-            site_id,
-            host_name,
-            service_name,
-            registered_metrics,
-            debug=debug,
-            temperature_unit=temperature_unit,
-        )
-    except livestatus.MKLivestatusNotFoundError:
-        return [], []
-
-    return get_graph_plugin_and_single_metric_choices(
-        registered_metrics,
-        sort_registered_graph_plugins(registered_graphs),
-        graph_row.site_id,
-        graph_row.host_name,
-        graph_row.service_name,
-        graph_row.translated_metrics,
+    sorted_graph_plugins = [
+        plugin for _name, plugin in sort_registered_graph_plugins(registered_graphs)
+    ]
+    return graph_choices(
+        [
+            built.graph
+            for built in build_template_graphs(
+                get_template_graph_specification(
+                    site_id=site_id,
+                    host_name=host_name,
+                    service_name=service_name,
+                ),
+                registered_graphs=sorted_graph_plugins,
+                registered_metrics=registered_metric_definitions,
+                fetch_metric_names=RRDFetchMetricNames(
+                    host_name=EngineHostName(host_name),
+                    service_name=EngineServiceName(service_name),
+                    debug=debug,
+                    site_id=site_id,
+                    registered_translations=registered_translations,
+                ),
+            )
+        ],
+        sorted_graph_plugins,
     )
 
 

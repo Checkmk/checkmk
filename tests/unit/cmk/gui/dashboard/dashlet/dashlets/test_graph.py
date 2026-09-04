@@ -10,24 +10,25 @@ from cmk.graphing.v1.graphs import Graph
 from cmk.gui.dashboard.dashlet.dashlets.graph import (
     _graph_templates_autocompleter_testable,
 )
-from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+
+_REGISTERED_GRAPHS = {
+    "graph1": Graph(
+        name="graph1",
+        title=TitleV1("Graph 1"),
+        simple_lines=["metric1"],
+    )
+}
 
 
 def test_graph_templates_autocompleter_testable_unconstrained() -> None:
     assert _graph_templates_autocompleter_testable(
         value_entered_by_user="",
         params={"show_independent_of_context": True},
-        registered_metrics={},
-        registered_graphs={
-            "graph1": Graph(
-                name="graph1",
-                title=TitleV1("Graph 1"),
-                simple_lines=["metric1"],
-            )
-        },
+        registered_plugin_graphs=_REGISTERED_GRAPHS,
+        registered_metric_definitions={},
+        registered_translations=[],
         debug=False,
-        temperature_unit=TemperatureUnit.CELSIUS,
     ) == [
         (
             "graph1",
@@ -40,13 +41,14 @@ def test_graph_templates_autocompleter_testable_unconstrained() -> None:
 def test_graph_templates_autocompleter_testable_constrained_by_host_and_service(
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
+    mock_livestatus.set_sites(["NO_SITE"])
     with mock_livestatus(expect_status_query=True):
         mock_livestatus.add_table(
             "services",
             [
                 {
                     "host_name": "my-host",
-                    "service_description": "my-service",
+                    "description": "my-service",
                     "check_command": "check_command",
                     "perf_data": "metric1=1.35;;;; metric2=2.89;;;;",
                     "metrics": ["metric1", "metric2"],
@@ -55,27 +57,20 @@ def test_graph_templates_autocompleter_testable_constrained_by_host_and_service(
         )
         mock_livestatus.expect_query(
             """GET services
-Columns: perf_data metrics check_command
+Columns: host_name description perf_data metrics check_command
 Filter: host_name = my-host
-Filter: service_description = my-service
-ColumnHeaders: off
-
+Filter: description = my-service
+And: 2
 """
         )
 
         assert _graph_templates_autocompleter_testable(
             value_entered_by_user="",
             params={"context": {"host": {"host": "my-host"}, "service": {"service": "my-service"}}},
-            registered_metrics={},
-            registered_graphs={
-                "graph1": Graph(
-                    name="graph1",
-                    title=TitleV1("Graph 1"),
-                    simple_lines=["metric1"],
-                )
-            },
+            registered_plugin_graphs=_REGISTERED_GRAPHS,
+            registered_metric_definitions={},
+            registered_translations=[],
             debug=False,
-            temperature_unit=TemperatureUnit.CELSIUS,
         ) == [
             (
                 "graph1",
@@ -92,13 +87,14 @@ ColumnHeaders: off
 def test_graph_templates_autocompleter_testable_constrained_by_host_and_service_and_user_input(
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
+    mock_livestatus.set_sites(["NO_SITE"])
     with mock_livestatus(expect_status_query=True):
         mock_livestatus.add_table(
             "services",
             [
                 {
                     "host_name": "my-host",
-                    "service_description": "my-service",
+                    "description": "my-service",
                     "check_command": "check_command",
                     "perf_data": "metric1=1.35;;;; metric2=2.89;;;;",
                     "metrics": ["metric1", "metric2"],
@@ -107,27 +103,20 @@ def test_graph_templates_autocompleter_testable_constrained_by_host_and_service_
         )
         mock_livestatus.expect_query(
             """GET services
-Columns: perf_data metrics check_command
+Columns: host_name description perf_data metrics check_command
 Filter: host_name = my-host
-Filter: service_description = my-service
-ColumnHeaders: off
-
+Filter: description = my-service
+And: 2
 """
         )
 
         assert _graph_templates_autocompleter_testable(
             value_entered_by_user="1",
             params={"context": {"host": {"host": "my-host"}, "service": {"service": "my-service"}}},
-            registered_metrics={},
-            registered_graphs={
-                "graph1": Graph(
-                    name="graph1",
-                    title=TitleV1("Graph 1"),
-                    simple_lines=["metric1"],
-                )
-            },
+            registered_plugin_graphs=_REGISTERED_GRAPHS,
+            registered_metric_definitions={},
+            registered_translations=[],
             debug=False,
-            temperature_unit=TemperatureUnit.CELSIUS,
         ) == [
             (
                 "graph1",

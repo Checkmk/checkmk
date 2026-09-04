@@ -7,7 +7,7 @@ import math
 from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import repeat
-from typing import assert_never, Final
+from typing import assert_never, Final, Self
 
 from cmk.graphing_engine import (
     EvaluatedBidirectional,
@@ -24,13 +24,34 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from ._engine_unit_format import unit_to_unit_format
 from ._unit import user_specific_unit_from_unit_format
-from ._utils import Linear
 
 
 @dataclass(frozen=True, kw_only=True)
 class DrawnSegment:
     share: float
     color: str | None
+
+
+@dataclass(frozen=True, kw_only=True)
+class Linear:
+    slope: float
+    intercept: float
+
+    @classmethod
+    def fit_to_two_points(
+        cls,
+        *,
+        p_1: tuple[float, float],
+        p_2: tuple[float, float],
+    ) -> Self:
+        slope = (p_2[1] - p_1[1]) / (p_2[0] - p_1[0])
+        return cls(
+            slope=slope,
+            intercept=p_1[1] - slope * p_1[0],
+        )
+
+    def __call__(self, value: int | float) -> float:
+        return self.slope * value + self.intercept
 
 
 @dataclass(frozen=True, kw_only=True)

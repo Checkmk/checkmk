@@ -7,7 +7,7 @@
 import json
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Annotated, assert_never, final, Literal, override
 
 from pydantic import BaseModel, computed_field, PlainValidator, SerializeAsAny
@@ -15,10 +15,9 @@ from pydantic import BaseModel, computed_field, PlainValidator, SerializeAsAny
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
+from cmk.graphing_engine import TimeSeries
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
-
-from ._time_series import TimeSeries
 
 GraphConsolidationFunction = Literal["max", "min", "average"]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
@@ -246,17 +245,6 @@ type QueryData = Mapping[QueryDataKey, QueryDataValue]
 class QueryDataError:
     keys: Sequence[QueryDataKey]
     exception: Exception
-
-
-@dataclass(frozen=True, kw_only=True)
-class AugmentedTimeSeries:
-    time_series: TimeSeries
-    # meta infos
-    title: str | None = None
-    line_type: LineType | Literal["ref"] | None = None
-    color: str | None = None
-    attributes: Mapping[AttributeGroup, Mapping[str, str]] = field(default_factory=dict)
-    metric_name: str | None = None
 
 
 class GraphMetricExpression(BaseModel, ABC, frozen=True):

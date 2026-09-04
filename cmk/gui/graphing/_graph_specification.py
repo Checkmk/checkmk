@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import http
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -17,6 +18,7 @@ from pydantic import (
 )
 
 from cmk.ccc.plugin_registry import Registry
+from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.type_defs import SizeMM
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -30,6 +32,10 @@ from ._graph_metric_expressions import (
 )
 from ._metric_backend_registry import FetchTimeSeriesProtocol
 from ._unit import ConvertibleUnitSpecification
+
+
+class MKCombinedGraphLimitExceededError(MKHTTPException):
+    status = http.HTTPStatus.BAD_REQUEST  # type: ignore[mutable-override]
 
 
 @dataclass(frozen=True)

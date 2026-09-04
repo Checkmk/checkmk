@@ -65,6 +65,7 @@ from ._graph_specification import (
     GraphMetric,
     GraphRanges,
     GraphSpecification,
+    MKCombinedGraphLimitExceededError,
     parse_graph_specification,
 )
 from ._graph_templates import (
@@ -95,9 +96,6 @@ from ._unit import (
     get_temperature_unit,
     user_specific_unit,
     UserSpecificUnit,
-)
-from ._utils import (
-    MKCombinedGraphLimitExceededError,
 )
 from ._valuespecs import (
     id_from_unit_spec,

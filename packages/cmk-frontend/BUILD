@@ -51,7 +51,7 @@ dependency_info(
     license_text = "src/openapi/redoc.standalone.js.LICENSE.txt",
     purl_namespace = None,
     purl_type = "npm",
-    version = "2.2.0",
+    version = "2.5.3",
 )
 
 copy_to_bin(

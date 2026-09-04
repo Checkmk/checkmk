@@ -16,19 +16,20 @@ from typing import Literal, override
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.graphing_engine import MetricName
 from cmk.gui import sites
 from cmk.gui.color import render_color_icon
 from cmk.gui.config import Config
 from cmk.gui.graphing import (
+    evaluated_metrics,
+    EvaluatedMetric,
     get_metric_spec,
     get_temperature_unit,
     metrics_from_api,
-    parse_perf_data,
     registered_metric_ids_and_titles,
+    registered_metrics,
+    registered_translations,
     RegisteredMetric,
-    translate_metrics,
-    TranslatedMetric,
-    user_specific_unit,
 )
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -56,7 +57,6 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Checkbox,
     DateFormat,
@@ -766,6 +766,49 @@ class PainterSvcPerfData(Painter):
         return paint_stalified(row, row["service_perf_data"], self.config.staleness_threshold)
 
 
+def _rendered_value(metric: EvaluatedMetric) -> str:
+    value = metric.performance_data.value
+    return "" if value is None else metric.formatter.render(value)
+
+
+def _show_metrics_table(
+    evaluated: Mapping[MetricName, EvaluatedMetric],
+    host_name: str,
+    service_description: str,
+    show_metric_id: bool,
+) -> None:
+    html.open_table(class_="metricstable")
+    for metric_name, metric in sorted(evaluated.items(), key=lambda t: t[1].title):
+        optional_metric_id = ""
+        if show_metric_id:
+            optional_metric_id = f" (Metric ID: {metric_name})"
+        html.open_tr()
+        html.td(render_color_icon(metric.color), class_="color")
+        html.td(f"{metric.title}{optional_metric_id}:")
+        html.td(_rendered_value(metric), class_="value")
+        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
+            html.td(
+                html.render_popup_trigger(
+                    html.render_static_icon(
+                        StaticIcon(IconNames.menu),
+                        title=_("Use this metric for a forecast graph"),
+                        css_classes=["iconbutton"],
+                    ),
+                    ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
+                    method=MethodAjax(
+                        endpoint="add_metric_to_graph",
+                        url_vars=[
+                            ("host", host_name),
+                            ("service", service_description),
+                            ("metric", metric_name),
+                        ],
+                    ),
+                )
+            )
+        html.close_tr()
+    html.close_table()
+
+
 class PainterSvcMetrics(Painter):
     @property
     @override
@@ -797,80 +840,28 @@ class PainterSvcMetrics(Painter):
 
     @override
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        perf_data, check_command = parse_perf_data(
-            row["service_perf_data"], row["service_check_command"], debug=self.config.debug
-        )
-        temperature_unit = get_temperature_unit(user, self.config.default_temperature_unit)
-        translated_metrics = translate_metrics(
-            perf_data,
-            check_command,
-            metrics_from_api,
-            temperature_unit=temperature_unit,
+        evaluated = evaluated_metrics(
+            row["service_perf_data"],
+            row["service_check_command"],
+            registered_metrics=registered_metrics(),
+            registered_translations=registered_translations(),
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            debug=self.config.debug,
         )
 
-        if row["service_perf_data"] and not translated_metrics:
+        if row["service_perf_data"] and not evaluated:
             return "", _("Failed to parse metrics string: %(perf_data)s") % {
                 "perf_data": row["service_perf_data"]
             }
 
         with output_funnel.plugged():
-            self._show_metrics_table(
-                translated_metrics,
+            _show_metrics_table(
+                evaluated,
                 row["host_name"],
                 row["service_description"],
                 show_metric_id=self._painter_options.get("show_internal_graph_and_metric_ids"),
-                theme=self.theme,
-                temperature_unit=temperature_unit,
             )
             return "", HTML.without_escaping(output_funnel.drain())
-
-    def _show_metrics_table(
-        self,
-        translated_metrics: Mapping[str, TranslatedMetric],
-        host_name: str,
-        service_description: str,
-        show_metric_id: bool,
-        *,
-        theme: Theme,
-        temperature_unit: TemperatureUnit,
-    ) -> None:
-        html.open_table(class_="metricstable")
-        for metric_name, translated_metric in sorted(
-            translated_metrics.items(), key=lambda t: t[1].title
-        ):
-            optional_metric_id = ""
-            if show_metric_id:
-                optional_metric_id = f" (Metric ID: {metric_name})"
-            html.open_tr()
-            html.td(render_color_icon(translated_metric.color), class_="color")
-            html.td(f"{translated_metric.title}{optional_metric_id}:")
-            html.td(
-                user_specific_unit(translated_metric.unit_spec, temperature_unit).formatter.render(
-                    translated_metric.value
-                ),
-                class_="value",
-            )
-            if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
-                html.td(
-                    html.render_popup_trigger(
-                        html.render_static_icon(
-                            StaticIcon(IconNames.menu),
-                            title=_("Use this metric for a forecast graph"),
-                            css_classes=["iconbutton"],
-                        ),
-                        ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
-                        method=MethodAjax(
-                            endpoint="add_metric_to_graph",
-                            url_vars=[
-                                ("host", host_name),
-                                ("service", service_description),
-                                ("metric", metric_name),
-                            ],
-                        ),
-                    )
-                )
-            html.close_tr()
-        html.close_table()
 
 
 # TODO: Use a parameterized painter for this instead of 10 painter classes
@@ -6539,28 +6530,19 @@ class AbstractColumnSpecificMetric(Painter):
         assert parameters is not None
         show_metric = parameters["metric"]
 
-        perf_data, check_command = parse_perf_data(
-            perf_data_entries, check_command, debug=self.config.debug
-        )
-        temperature_unit = get_temperature_unit(user, self.config.default_temperature_unit)
-        translated_metrics = translate_metrics(
-            perf_data,
+        evaluated = evaluated_metrics(
+            perf_data_entries,
             check_command,
-            metrics_from_api,
-            temperature_unit=temperature_unit,
+            registered_metrics=registered_metrics(),
+            registered_translations=registered_translations(),
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
+            debug=self.config.debug,
         )
 
-        if show_metric not in translated_metrics:
+        if (metric := evaluated.get(MetricName(show_metric))) is None:
             return "", ""
 
-        translated_metric = translated_metrics[show_metric]
-
-        return (
-            "",
-            user_specific_unit(translated_metric.unit_spec, temperature_unit).formatter.render(
-                translated_metric.value
-            ),
-        )
+        return "", _rendered_value(metric)
 
 
 class PainterHostSpecificMetric(AbstractColumnSpecificMetric):

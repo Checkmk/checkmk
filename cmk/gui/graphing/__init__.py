@@ -5,6 +5,7 @@
 
 from ._engine_dispatch import evaluate_built_graphs
 from ._engine_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
+from ._engine_metrics import evaluated_metrics, EvaluatedMetric
 from ._engine_perfometer_bars import (
     drawn_segments,
     DrawnSegment,
@@ -160,6 +161,8 @@ __all__ = [
     "compute_graph_ranges_for_width",
     "DrawnSegment",
     "drawn_segments",
+    "EvaluatedMetric",
+    "evaluated_metrics",
     "evaluated_perfometer",
     "perfometer_label",
     "perfometer_sort_value",

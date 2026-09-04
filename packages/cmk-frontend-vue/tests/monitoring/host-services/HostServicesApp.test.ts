@@ -539,6 +539,137 @@ test('marks the sorted column with its direction', async () => {
   )
 })
 
+/*
+ * Sort and column selection belong in the URL, the way the all hosts listing spells them: a
+ * colleague opening the link has to land on the same table, not just the same host.
+ */
+
+test('puts a sort the user picked in the URL', async () => {
+  window.history.replaceState(null, '', '/monitor_host_services.py?host=web-1&site=local')
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByRole('button', { name: 'Service' })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Service' }))
+
+  const params = new URLSearchParams(window.location.search)
+  expect(params.get('sort')).toBe('name:asc')
+  expect(params.get('host')).toBe('web-1')
+  expect(params.get('site')).toBe('local')
+})
+
+test('puts the columns left visible in the URL', async () => {
+  window.history.replaceState(null, '', '/monitor_host_services.py?host=web-1&site=local')
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByRole('columnheader', { name: 'Service' })
+
+  await userEvent.click(screen.getByRole('button', { name: 'Show or hide columns' }))
+  const picker = screen.getByRole('group', { name: 'Filter columns' })
+  await userEvent.click(within(picker).getByRole('button', { name: 'Summary' }))
+  await userEvent.click(within(picker).getByRole('button', { name: 'Apply' }))
+
+  expect(new URLSearchParams(window.location.search).get('cols')).toBe(
+    'modes,last_check,last_state_change,perfometer'
+  )
+})
+
+test('leaves a pristine table out of the URL', async () => {
+  window.history.replaceState(null, '', '/monitor_host_services.py?host=web-1&site=local')
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByRole('columnheader', { name: 'Service' })
+
+  const params = new URLSearchParams(window.location.search)
+  expect(params.get('sort')).toBeNull()
+  expect(params.get('cols')).toBeNull()
+  // The page offers a single row-count tier, so the limit never leaves its default.
+  expect(params.get('limit')).toBeNull()
+})
+
+test('sorts by the column the URL a link arrived on names', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/monitor_host_services.py?host=web-1&site=local&sort=state:desc'
+  )
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByText('Total rows: 1')
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: { limit: 1000, sort: ['state:desc'], fields: [] }
+    })
+  )
+  expect(screen.getByRole('columnheader', { name: 'State' })).toHaveAttribute(
+    'aria-sort',
+    'descending'
+  )
+})
+
+test('shows the columns the URL a link arrived on names, and asks for their fields', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/monitor_host_services.py?host=web-1&site=local&cols=summary,labels'
+  )
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByText('Total rows: 1')
+
+  expect(screen.getByRole('columnheader', { name: 'Labels' })).toBeInTheDocument()
+  expect(screen.queryByRole('columnheader', { name: 'Last check' })).not.toBeInTheDocument()
+  // `state` and `name` cannot be hidden, so the URL never has to name them.
+  expect(screen.getByRole('columnheader', { name: 'Service' })).toBeInTheDocument()
+
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: { limit: 1000, fields: ['labels'] }
+    })
+  )
+})
+
+test('falls back to the default ordering when the URL names an unsortable column', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/monitor_host_services.py?host=web-1&site=local&sort=perfometer:asc'
+  )
+  // A hand-edited or stale bookmark has to degrade, not error - it says so in the log and the
+  // page carries on with what is left.
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByText('Total rows: 1')
+
+  expect(warn).toHaveBeenCalledWith(
+    'table state: sort named a column that cannot be sorted (perfometer); dropped it'
+  )
+  expect(postSpy).toHaveBeenLastCalledWith(
+    '/monitor/hosts/{hostname}/services',
+    expect.objectContaining({
+      body: { limit: 1000, fields: [] }
+    })
+  )
+  expect(new URLSearchParams(window.location.search).get('sort')).toBeNull()
+})
+
+test('a column the URL named is not written to storage until the user changes one', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/monitor_host_services.py?host=web-1&site=local&cols=summary,labels'
+  )
+  mockServices([makeApiEntry()])
+  renderApp()
+  await screen.findByRole('columnheader', { name: 'Labels' })
+
+  expect(localStorage.getItem('monitoring-host-services-columns-local-cmkadmin-pro')).toBeNull()
+})
+
 test('requests services whose last state change is at or after the picked instant', async () => {
   mockServices([makeApiEntry()])
   renderApp()

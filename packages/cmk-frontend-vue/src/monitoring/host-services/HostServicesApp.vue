@@ -32,6 +32,8 @@ import { createActionRegistry } from '../shared/components/action/registry'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
 import { buildColumnStorageKey } from '../shared/services/MonitoringService'
+import { buildTableStateSchema } from '../shared/tableState/schema'
+import { readTableStateFromUrl, tableStateWriter } from '../shared/tableState/urlState'
 import {
   type SlideInUrlDescriptor,
   exactPattern,
@@ -105,6 +107,11 @@ const mayActOnSelection = serviceActions.length > 0
 const columns = useHostServicesColumns({ includeSelect: mayActOnSelection })
 const columnPinning = buildHostServicesColumnPinning({ includeSelect: mayActOnSelection })
 
+// The row limit is deliberately left at its single tier: this page offers no limit
+// selector, so `limit` never leaves its default and the codec never spells it out.
+const schema = buildTableStateSchema({ columns, limitTiers: [], mayRemoveLimit: false })
+const initialState = readTableStateFromUrl(window.location.search, schema)
+
 const filterSchema = buildFilterUrlSchema(columns)
 const initialFilterState = readFilterUrlState(window.location.search, filterSchema)
 
@@ -116,6 +123,7 @@ const hostServicesService = new HostServicesService(
   getKeyShortcutServiceInstance(),
   {
     pollIntervalMs: props.poll_interval_ms,
+    tableStateSchema: schema,
     columnStorageKey: buildColumnStorageKey({
       view: 'host-services',
       site: props.site,
@@ -123,6 +131,7 @@ const hostServicesService = new HostServicesService(
       edition: props.edition
     }),
     columns,
+    initialState,
     initialFilterState,
     quickFilters: [
       {
@@ -222,6 +231,7 @@ const SERVICE_SLIDE_IN: SlideInUrlDescriptor<HostServiceEntry, string> = {
 }
 
 useUrlSync([
+  tableStateWriter(hostServicesService, schema),
   filterStateWriter(hostServicesService),
   slideInWriter({
     descriptor: SERVICE_SLIDE_IN,

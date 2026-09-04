@@ -43,7 +43,6 @@ import { initPasswordStrength } from './modules/password_meter'
 import * as popup_menu from './modules/popup_menu'
 import * as prediction from './modules/prediction'
 import * as quicksearch from './modules/quicksearch'
-import * as reload_pause from './modules/reload_pause'
 import * as selection from './modules/selection'
 import * as service_discovery from './modules/service_discovery'
 import * as sidebar from './modules/sidebar'
@@ -115,7 +114,6 @@ export const cmk_export = {
     popup_menu: popup_menu,
     prediction: prediction,
     quicksearch: quicksearch,
-    reload_pause: reload_pause,
     render_stats_table: render_stats_table,
     selection: selection,
     service_discovery: service_discovery,

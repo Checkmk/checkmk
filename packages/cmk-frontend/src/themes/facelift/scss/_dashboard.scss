@@ -632,20 +632,6 @@ div#dashboard.grid {
   cursor: sw-resize;
 }
 
-.dashlet.pnpgraph .dashlet_inner {
-  color: $font-color;
-  text-align: left;
-  background-color: $dashlet-inner-bg-color;
-}
-
-.dashlet.pnpgraph .container {
-  background-color: $dashlet-inner-bg-color;
-}
-
-.dashlet.pnpgraph div.title a {
-  color: $font-color;
-}
-
 svg {
   .title,
   .single_value,

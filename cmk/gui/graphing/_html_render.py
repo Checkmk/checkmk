@@ -19,7 +19,7 @@ from cmk.shared_typing.cmk_time_series_graph import Interaction, Size
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils.html import HTML
 
-from ._frontend import render_engine_graph_group
+from ._frontend import EngineDisplayOptions, render_engine_graph_group
 from ._graph_metric_expressions import GraphConsolidationFunction
 from ._graph_specification import (
     GraphSpecification,
@@ -112,8 +112,7 @@ def host_service_graph_popup_cmk(
             time_range=(start_time, end_time),
             interaction=_HOVER_INTERACTION,
             show_graph_time=True,
-            show_consolidation=False,
-            show_legend=False,
+            display=EngineDisplayOptions(show_consolidation=False, show_legend=False),
             multi_column=True,
             debug=debug,
         )

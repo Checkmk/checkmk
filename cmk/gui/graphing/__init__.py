@@ -27,6 +27,7 @@ from ._from_api import (
 )
 from ._frontend import (
     default_time_range_seconds,
+    EngineDisplayOptions,
     global_time_picker_props,
     global_time_picker_refresh,
     render_engine_graph_group,
@@ -196,6 +197,7 @@ __all__ = [
     "compute_png_size_mm",
     "mm_per_ex",
     "render_png_ex",
+    "EngineDisplayOptions",
     "render_engine_graph_group",
     "render_plain_graph_title",
     "resolve_graph_id_from_index",

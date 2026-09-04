@@ -8,7 +8,11 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.graphing import GraphDisplayConfigHTML, TemplateGraphSpecification
+from cmk.gui.graphing import (
+    EngineDisplayOptions,
+    GraphDisplayConfigHTML,
+    TemplateGraphSpecification,
+)
 from cmk.gui.graphing._frontend import STATIC_INTERACTION
 from cmk.gui.type_defs import SizePT
 from cmk.gui.views import graph as graph_views
@@ -34,7 +38,6 @@ _EVERYTHING_OFF = GraphDisplayConfigHTML(
 # The dialog's plain on/off options; the others are checked individually below.
 _ON_OFF_OPTIONS = (
     "show_title",
-    "show_graph_time",
     "show_legend",
     "show_vertical_axis",
     "show_time_axis",
@@ -68,6 +71,12 @@ def _forwarded(
     return recorded
 
 
+def _display_of(forwarded: Mapping[str, object]) -> EngineDisplayOptions:
+    display = forwarded["display"]
+    assert isinstance(display, EngineDisplayOptions)
+    return display
+
+
 def _interaction_of(forwarded: Mapping[str, object]) -> Interaction:
     interaction = forwarded["interaction"]
     assert isinstance(interaction, Interaction)
@@ -78,14 +87,20 @@ def _interaction_of(forwarded: Mapping[str, object]) -> Interaction:
 def test_a_display_option_switched_off_reaches_the_engine(
     monkeypatch: pytest.MonkeyPatch, option: str
 ) -> None:
-    assert _forwarded(monkeypatch, _EVERYTHING_OFF)[option] is False
+    assert getattr(_display_of(_forwarded(monkeypatch, _EVERYTHING_OFF)), option) is False
 
 
 @pytest.mark.parametrize("option", _ON_OFF_OPTIONS)
 def test_a_display_option_left_on_reaches_the_engine(
     monkeypatch: pytest.MonkeyPatch, option: str
 ) -> None:
-    assert _forwarded(monkeypatch, GraphDisplayConfigHTML())[option] is True
+    assert getattr(_display_of(_forwarded(monkeypatch, GraphDisplayConfigHTML())), option) is True
+
+
+def test_the_graph_time_option_reaches_the_engine(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Not part of the display object: it is rendered into each graph's own header.
+    assert _forwarded(monkeypatch, _EVERYTHING_OFF)["show_graph_time"] is False
+    assert _forwarded(monkeypatch, GraphDisplayConfigHTML())["show_graph_time"] is True
 
 
 def test_the_burger_menu_follows_the_controls_option(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -105,7 +120,7 @@ def test_the_configured_vertical_axis_width_reaches_the_engine(
         monkeypatch, GraphDisplayConfigHTML(vertical_axis_width=("explicit", SizePT(40.0)))
     )
 
-    assert forwarded["vertical_axis_width"] == ("explicit", 40.0)
+    assert _display_of(forwarded).vertical_axis_width == ("explicit", 40.0)
 
 
 def test_mobile_stays_static_even_with_the_controls_switched_on(

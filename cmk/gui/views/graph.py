@@ -14,6 +14,7 @@ from typing import Literal, override
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
+    EngineDisplayOptions,
     get_template_graph_specification,
     GraphDisplayConfigHTML,
     GraphRenderOptions,
@@ -297,11 +298,13 @@ def _render_engine_graph_group(
             )
         ),
         show_graph_time=display_config.show_graph_time,
-        show_legend=display_config.show_legend,
-        show_title=bool(display_config.show_title),
-        show_vertical_axis=display_config.show_vertical_axis,
-        vertical_axis_width=display_config.vertical_axis_width,
-        show_time_axis=display_config.show_time_axis,
+        display=EngineDisplayOptions(
+            show_legend=display_config.show_legend,
+            show_title=bool(display_config.show_title),
+            show_vertical_axis=display_config.show_vertical_axis,
+            show_time_axis=display_config.show_time_axis,
+            vertical_axis_width=display_config.vertical_axis_width,
+        ),
         debug=debug,
         full_width=True,
     )

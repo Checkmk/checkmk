@@ -33,6 +33,7 @@ from cmk.gui.graphing._engine_codec import community_graph_codec
 from cmk.gui.graphing._engine_dispatch import serialize_graphs
 from cmk.gui.graphing._frontend import (
     derive_y_axis,
+    EngineDisplayOptions,
     global_time_picker_props,
     global_time_picker_refresh,
     resolve_default_time_range_seconds,
@@ -371,3 +372,23 @@ def test_derive_y_axis_is_none_for_a_graph_with_no_curves() -> None:
 def test_value_axis_width_is_sent_in_pixels_only_when_set_explicitly() -> None:
     assert value_axis_width_px("fixed") is None
     assert value_axis_width_px(("explicit", SizePT(36.0))) == 48.0
+
+
+def test_display_props_carry_every_option_so_none_reads_as_off() -> None:
+    assert EngineDisplayOptions(show_legend=False).as_props() == {
+        "show_consolidation": True,
+        "show_legend": False,
+        "show_title": True,
+        "show_vertical_axis": True,
+        "show_time_axis": True,
+    }
+
+
+def test_display_props_name_the_axis_width_the_floor_it_is() -> None:
+    assert "min_value_axis_width" not in EngineDisplayOptions().as_props()
+    assert (
+        EngineDisplayOptions(vertical_axis_width=("explicit", SizePT(36.0))).as_props()[
+            "min_value_axis_width"
+        ]
+        == 48.0
+    )

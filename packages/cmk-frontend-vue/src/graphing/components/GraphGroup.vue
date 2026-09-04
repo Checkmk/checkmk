@@ -23,7 +23,12 @@ import { type GraphCombinationMode, useGraphData } from '../composables/useGraph
 import { useGraphNotice } from '../composables/useGraphNotice'
 import { useLocalTimeRange } from '../composables/useLocalTimeRange'
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
-import type { BrushOverview, RequestedTimeRange, TimeRangeCommitKind } from '../types'
+import type {
+  BrushOverview,
+  GraphDisplayOptions,
+  RequestedTimeRange,
+  TimeRangeCommitKind
+} from '../types'
 import { drawnTimeRange } from '../utils/timeRange'
 import GraphNotice from './GraphNotice.vue'
 import GraphPanel from './GraphPanel.vue'
@@ -47,13 +52,8 @@ const props = withDefaults(
     // - see effectiveWidth below.
     figure_width?: number
     figure_height?: number
-    show_consolidation?: boolean
-    show_legend?: boolean
-    show_title?: boolean
-    show_vertical_axis?: boolean
-    show_time_axis?: boolean
-    // In CSS pixels; absent leaves the renderer's own default.
-    value_axis_width?: number
+    // Omit for the defaults below, or send the whole object.
+    display?: GraphDisplayOptions
     // 'column' stacks the panels vertically (the default)
     // 'wrap' flows the fixed-width panels into as many columns as the container allows
     layout?: 'column' | 'wrap'
@@ -66,11 +66,13 @@ const props = withDefaults(
   {
     combination_mode: null,
     figure_height: 300,
-    show_consolidation: true,
-    show_legend: true,
-    show_title: true,
-    show_vertical_axis: true,
-    show_time_axis: true,
+    display: () => ({
+      show_consolidation: true,
+      show_legend: true,
+      show_title: true,
+      show_vertical_axis: true,
+      show_time_axis: true
+    }),
     layout: 'column',
     time_range_scope: 'global'
   }
@@ -265,7 +267,7 @@ function onRetry(): void {
         class="graphing-graph-group__panel"
         :figure-width="effectiveWidth"
         :figure-height="figure_height"
-        :show-legend="show_legend"
+        :show-legend="display.show_legend"
         :show-brush="props.graphs[panelSlot.index]!.interaction.brush === 'enabled'"
         :height="panelHeights[panelSlot.index]"
       />
@@ -283,13 +285,13 @@ function onRetry(): void {
           :time-picker-requests="timePickerRequests"
           :y-axis="props.graphs[panelSlot.index]!.options.y_axis"
           :title="panelSlot.graph.title"
-          :show-title="show_title"
+          :show-title="display.show_title"
           :show-timestamp="props.graphs[panelSlot.index]?.options.header.show_graph_time ?? true"
-          :show-consolidation="show_consolidation"
-          :show-legend="show_legend"
-          :show-value-axis="show_vertical_axis"
-          :show-time-axis="show_time_axis"
-          :min-value-axis-width="value_axis_width"
+          :show-consolidation="display.show_consolidation"
+          :show-legend="display.show_legend"
+          :show-value-axis="display.show_vertical_axis"
+          :show-time-axis="display.show_time_axis"
+          :min-value-axis-width="display.min_value_axis_width"
           :interaction="props.graphs[panelSlot.index]!.interaction"
           :brush-snapshot="brushSnapshotOf(panelSlot.index)"
           :horizontal-lines="panelSlot.graph.horizontalLines"

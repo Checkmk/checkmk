@@ -5,7 +5,7 @@
 
 import json
 from collections.abc import Iterable, Sequence
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from typing import Final
 
 from tzlocal import get_localzone_name
@@ -265,6 +265,37 @@ def value_axis_width_px(
     return None
 
 
+@dataclass(frozen=True)
+class EngineDisplayOptions:
+    """What a graph group applies to every graph it renders.
+
+    The component takes these as one ``display`` prop, so a builder either omits it and gets
+    every default, or sends the whole object - a partial one would read as "hide" for the keys
+    it leaves out.
+    """
+
+    show_consolidation: bool = True
+    show_legend: bool = True
+    show_title: bool = True
+    show_vertical_axis: bool = True
+    show_time_axis: bool = True
+    vertical_axis_width: VerticalAxisWidth = "fixed"
+
+    def as_props(self) -> dict[str, object]:
+        props: dict[str, object] = {
+            "show_consolidation": self.show_consolidation,
+            "show_legend": self.show_legend,
+            "show_title": self.show_title,
+            "show_vertical_axis": self.show_vertical_axis,
+            "show_time_axis": self.show_time_axis,
+        }
+        # The renderer treats the width as a floor, not an absolute: it still grows to hold the
+        # widest label. Absent leaves its own default - see value_axis_width_px.
+        if (width := value_axis_width_px(self.vertical_axis_width)) is not None:
+            props["min_value_axis_width"] = width
+        return props
+
+
 def render_engine_graph_group(
     specification: TemplateGraphSpecification,
     *,
@@ -274,12 +305,7 @@ def render_engine_graph_group(
     time_range: tuple[int, int],
     show_graph_time: bool,
     debug: bool,
-    show_consolidation: bool = True,
-    show_legend: bool = True,
-    show_title: bool = True,
-    show_vertical_axis: bool = True,
-    vertical_axis_width: VerticalAxisWidth = "fixed",
-    show_time_axis: bool = True,
+    display: EngineDisplayOptions = EngineDisplayOptions(),
     interaction: Interaction = _DEFAULT_INTERACTION,
     multi_column: bool = False,
     full_width: bool = False,
@@ -319,16 +345,10 @@ def render_engine_graph_group(
         "initial_time_range_end": time_range[1],
         "figure_height": int(size.height * HTML_SIZE_PER_EX),
         "graphs": vue_graphs,
-        "show_consolidation": show_consolidation,
-        "show_legend": show_legend,
-        "show_title": show_title,
-        "show_vertical_axis": show_vertical_axis,
-        "show_time_axis": show_time_axis,
+        "display": display.as_props(),
         # Only the hover preview flows its many graphs into columns; everywhere else stacks.
         "layout": "wrap" if multi_column else "column",
     }
-    if (axis_width := value_axis_width_px(vertical_axis_width)) is not None:
-        data["value_axis_width"] = axis_width
     # Full-width groups omit figure_width entirely so the component measures the available width
     # itself; only a fixed-size embed (e.g. the hover popup) sends a concrete pixel width.
     if not full_width:

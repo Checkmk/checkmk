@@ -66,6 +66,18 @@ export interface BurgerMenuGroup {
   actions: BurgerMenuAction[]
 }
 
+// What a graph group applies to every graph it renders. The backend omits `display`
+// entirely or sends the whole object, so a missing key is a bug, not "use the default".
+export interface GraphDisplayOptions {
+  show_consolidation: boolean
+  show_legend: boolean
+  show_title: boolean
+  show_vertical_axis: boolean
+  show_time_axis: boolean
+  // In CSS pixels; the one field the backend may omit, leaving the renderer's default.
+  min_value_axis_width?: number
+}
+
 // The presentational panel around the renderer with header, legend, and brush zones;
 // the hosting group owns the data fetch and range state.
 export interface GraphPanelProps {

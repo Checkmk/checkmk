@@ -17,6 +17,7 @@ import {
   useGlobalTimeRange
 } from '@/graphing/GlobalTimePicker/globalTimeState'
 import GraphGroup from '@/graphing/components/GraphGroup.vue'
+import type { GraphDisplayOptions } from '@/graphing/types'
 
 // Hoisted so the panel stub below can bake the ranges its buttons report into its template.
 const { RANGE_START, RANGE_END, PAN_TARGET, ZOOM_TARGET } = vi.hoisted(() => {
@@ -247,23 +248,24 @@ const group = (): Element | null => document.querySelector('.graphing-graph-grou
 const notice = (): HTMLElement | null => document.querySelector('.graphing-graph-notice')
 const notices = (): NodeListOf<Element> => document.querySelectorAll('.graphing-graph-notice')
 
-interface GroupDisplayOptions {
-  show_title?: boolean
-  show_vertical_axis?: boolean
-  show_time_axis?: boolean
-  value_axis_width?: number
+const EVERYTHING_SHOWN: GraphDisplayOptions = {
+  show_consolidation: true,
+  show_legend: true,
+  show_title: true,
+  show_vertical_axis: true,
+  show_time_axis: true
 }
 
 function renderGroup(
   graphs: CmkTimeSeriesGraph[] = [makeGraphDefinition('CPU utilization')],
-  displayOptions: GroupDisplayOptions = {}
+  displayOptions: Partial<GraphDisplayOptions> | null = null
 ) {
   return render(GraphGroup, {
     props: {
       initial_time_range_start: RANGE_START,
       initial_time_range_end: RANGE_END,
       graphs,
-      ...displayOptions
+      ...(displayOptions === null ? {} : { display: { ...EVERYTHING_SHOWN, ...displayOptions } })
     }
   })
 }
@@ -795,7 +797,7 @@ describe('display options', () => {
       show_title: false,
       show_vertical_axis: false,
       show_time_axis: false,
-      value_axis_width: 48
+      min_value_axis_width: 48
     })
     await screen.findAllByTestId('graph-panel')
 

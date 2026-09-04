@@ -24,7 +24,7 @@ import subprocess
 import sys
 import tempfile
 import tomllib
-from collections.abc import Sequence
+from collections.abc import Collection, Mapping, Sequence
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
@@ -150,6 +150,7 @@ def _load_specs_from_toml(
             {
                 "editions": _derive_editions("", package_target),
                 "frontend_supervised": entry.get("frontend_supervised", False),
+                "input_prefixes": [],
                 "mode": -1,
                 "name": entry["name"],
                 "needs_faked_artifacts": entry.get("needs_faked_artifacts", False),
@@ -784,84 +785,156 @@ def _validate_manifest(manifest: dict[str, Any]) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _query_install_spec_extensions(
-    install_specs: list[dict[str, Any]],
+def _query_target_sources(
+    install_specs: Collection[Mapping[str, Any]],
     repo_root: Path,
 ) -> dict[str, frozenset[str]]:
-    """Query Bazel for source file extensions of install spec targets.
+    """Query Bazel for the source files behind each install spec target.
 
-    Runs a single batched ``labels(srcs, deps(TARGETS))`` query covering all
-    install spec ``package_target`` labels, then groups the returned source
-    file labels by their owning install spec (matching on ``source_prefix``).
-
-    Args:
-        install_specs: List of install spec dicts (must be enriched, i.e.
-            ``source_prefix`` already populated).
-        repo_root: Absolute path to the git repository root.
+    Runs ``labels(srcs, deps(TARGET))`` once per distinct ``package_target``
+    (the first query loads the graph, the rest reuse it) and converts the
+    returned labels to repo-relative paths.  Labels from external
+    repositories are dropped; targets whose query fails are left out.
 
     Returns:
-        Dict mapping ``source_prefix`` (without trailing slash) to the
-        frozenset of file extensions found in that package's sources.
-        Only includes extensions from source files whose path starts with
-        the spec's ``source_prefix``.
+        Dict mapping each package_target to the paths of its sources.
     """
-    # Collect package_targets and build prefix lookup
-    targets: list[str] = []
-    prefix_map: dict[str, str] = {}  # source_prefix -> package_target
-    for spec in install_specs:
-        pt = spec.get("package_target", "")
-        sp = spec.get("source_prefix", "").rstrip("/")
-        if pt and sp:
-            targets.append(pt)
-            prefix_map[sp] = pt
-
-    if not targets:
-        return {}
-
-    # Single batched query for all install spec source files
-    union_expr = " + ".join(sorted(set(targets)))
-    srcs_query = f"labels(srcs, deps({union_expr}))"
-    result = _run_bazel_query(
-        ["query", srcs_query, "--output=label", "--keep_going"],
-        repo_root,
+    targets = sorted(
+        {spec["package_target"] for spec in install_specs if spec.get("package_target")}
     )
-    if result is None:
-        logger.warning(
-            "Bazel srcs query for install specs failed; falling back to supplementary rules"
+    sources: dict[str, frozenset[str]] = {}
+    for target in targets:
+        result = _run_bazel_query(
+            ["query", f"labels(srcs, deps({target}))", "--output=label", "--keep_going"],
+            repo_root,
         )
-        return {}
-
-    # Parse labels and group extensions by source_prefix
-    all_labels = [
-        line.strip()
-        for line in result.stdout.strip().splitlines()
-        if line.strip() and line.strip().startswith("//")
-    ]
-
-    # For each label, convert to a file path and match against source prefixes
-    prefix_extensions: dict[str, set[str]] = {sp: set() for sp in prefix_map}
-    sorted_prefixes = sorted(prefix_map.keys(), key=len, reverse=True)
-
-    for label in all_labels:
-        # Skip external deps
-        if label.startswith("@"):
+        if result is None:
+            logger.warning(
+                "Bazel srcs query for %(target)s failed; its sources stay uncategorized",
+                {"target": target},
+            )
             continue
-        # Convert label to path: //pkg:target -> pkg/target
-        path = label[2:]  # strip //
-        if ":" in path:
-            pkg, name = path.split(":", 1)
-            path = f"{pkg}/{name}"
+        sources[target] = frozenset(
+            _label_to_source_path(line.strip())
+            for line in result.stdout.splitlines()
+            if line.strip().startswith("//")
+        )
+    return sources
 
-        # Match against install spec source prefixes (longest first)
-        for sp in sorted_prefixes:
-            if path.startswith((sp + "/", sp + ":")):
-                # Extract extension
-                if "." in path.rsplit("/", 1)[-1]:
-                    ext = "." + path.rsplit(".", 1)[-1]
-                    prefix_extensions[sp].add(ext)
-                break
 
-    return {sp: frozenset(exts) for sp, exts in prefix_extensions.items() if exts}
+def _label_to_source_path(label: str) -> str:
+    """``//pkg:sub/file.ext`` -> ``pkg/sub/file.ext``."""
+    package, _, name = label[2:].partition(":")
+    return f"{package}/{name}" if name else package
+
+
+def _extension(path: str) -> str | None:
+    """Return the file extension of *path* including the dot, or None."""
+    basename = path.rsplit("/", 1)[-1]
+    return "." + basename.rsplit(".", 1)[-1] if "." in basename else None
+
+
+def _extensions_by_prefix(
+    paths: Collection[str],
+    prefixes: Collection[str],
+) -> dict[str, frozenset[str]]:
+    """Group the file extensions of *paths* by longest matching prefix.
+
+    *prefixes* are directory paths without trailing slash.  Paths under
+    none of them and paths without an extension are ignored; prefixes
+    that end up without extensions are absent from the result.
+    """
+    longest_first = sorted(prefixes, key=len, reverse=True)
+    grouped: dict[str, set[str]] = {}
+    for path in paths:
+        if (ext := _extension(path)) is None:
+            continue
+        if (
+            prefix := next((p for p in longest_first if path.startswith(p + "/")), None)
+        ) is not None:
+            grouped.setdefault(prefix, set()).add(ext)
+    return {prefix: frozenset(exts) for prefix, exts in grouped.items()}
+
+
+_WORKSPACE_PACKAGE_ROOTS: tuple[str, ...] = ("packages/", "non-free/packages/")
+"""Directories whose immediate children are workspace packages."""
+
+
+def _workspace_package(path: str) -> str | None:
+    """Return the workspace package directory containing *path*, if any.
+
+    ``packages/cmk-ui-library/lib/x.ts`` -> ``packages/cmk-ui-library``.
+    """
+    for root in _WORKSPACE_PACKAGE_ROOTS:
+        if path.startswith(root):
+            name, sep, _rest = path[len(root) :].partition("/")
+            return root + name if sep else None
+    return None
+
+
+def _compute_input_prefixes(
+    target_sources: Mapping[str, Collection[str]],
+    deployable_prefixes: Collection[str],
+) -> dict[str, list[str]]:
+    """Find the packages each install target is built from that nothing deploys.
+
+    A workspace package can contribute sources to an install target's
+    closure without having a wheel, install, or config spec of its own --
+    cmk-ui-library feeding the cmk-frontend-vue dist, for instance.
+    Changes there reach the site only through the consuming target, so
+    its install spec records them as ``input_prefixes``.
+
+    Packages whose sources carry no Bazel-buildable extension (see
+    ``_EXTENSION_CATEGORY_PRIORITY``) are skipped: the vue dist's closure
+    reaches Python packages through the OpenAPI spec generator, and those
+    must keep their Python categorization.
+
+    Args:
+        target_sources: Source paths per package_target, as returned by
+            :func:`_query_target_sources`.
+        deployable_prefixes: Source prefixes (trailing ``/``) that some
+            wheel, install, or config spec already deploys.
+
+    Returns:
+        Dict mapping package_target to its sorted input prefixes (trailing
+        ``/``); targets without input packages are absent.
+    """
+    deployable = tuple(deployable_prefixes)
+    result: dict[str, list[str]] = {}
+    for target, paths in target_sources.items():
+        candidates = {
+            package
+            for path in paths
+            if (package := _workspace_package(path)) is not None
+            and not (package + "/").startswith(deployable)
+        }
+        extensions = _extensions_by_prefix(paths, candidates)
+        prefixes = sorted(
+            package + "/"
+            for package in candidates
+            if _extensions_to_category(extensions.get(package, frozenset())) is not None
+        )
+        if prefixes:
+            result[target] = prefixes
+    return result
+
+
+def _install_spec_extensions(
+    install_specs: Collection[Mapping[str, Any]],
+    target_sources: Mapping[str, Collection[str]],
+) -> dict[str, frozenset[str]]:
+    """Source file extensions per install spec prefix, own and input alike.
+
+    Feeds the categorization rules: a prefix's rule matches exactly the
+    extensions Bazel reports under it.  Keys carry no trailing slash.
+    """
+    prefixes = {
+        prefix.rstrip("/")
+        for spec in install_specs
+        for prefix in (spec.get("source_prefix", ""), *spec.get("input_prefixes", []))
+        if prefix
+    }
+    return _extensions_by_prefix(frozenset().union(*target_sources.values()), prefixes)
 
 
 def _extensions_to_category(
@@ -897,15 +970,17 @@ def _compute_categorization_rules(
 
     Produces rules from four sources:
     1. install_specs: compiled artifacts (C++, Rust, Vue, Frontend) with
-       extensions derived from the Bazel build graph
+       extensions derived from the Bazel build graph, for the spec's own
+       source_prefix and for its input_prefixes alike
     2. wheel_prefixes: Python packages
     3. config_specs: config/data directories
     4. supplementary_rules: from deploy_specs.toml [[categorization]] entries
 
     Args:
         manifest_data: The full manifest dict (with enriched specs).
-        install_spec_extensions: Mapping of source_prefix to frozenset of
-            file extensions, as returned by ``_query_install_spec_extensions``.
+        install_spec_extensions: Mapping of source or input prefix (no
+            trailing slash) to frozenset of file extensions, as returned by
+            ``_install_spec_extensions``.
 
     Returns a list of JSON-serializable rule dicts, ordered longest-prefix-first.
     Within the same prefix length, rules with non-null extensions come before
@@ -927,32 +1002,34 @@ def _compute_categorization_rules(
         if not source_prefix:
             continue
 
-        extensions = install_spec_extensions.get(source_prefix, frozenset())
-        if not extensions:
-            logger.debug(
-                "No source extensions found for install spec %(spec)s (%(source_prefix)s); skipping",
-                {"spec": spec.get("name", "?"), "source_prefix": source_prefix},
-            )
-            continue
+        input_prefixes = (p.rstrip("/") for p in spec.get("input_prefixes", []))
+        for prefix in (source_prefix, *input_prefixes):
+            extensions = install_spec_extensions.get(prefix, frozenset())
+            if not extensions:
+                logger.debug(
+                    "No source extensions found for install spec %(spec)s (%(prefix)s); skipping",
+                    {"spec": spec.get("name", "?"), "prefix": prefix},
+                )
+                continue
 
-        category = _extensions_to_category(
-            extensions,
-            frontend_supervised=spec.get("frontend_supervised", False),
-        )
-        if category is None:
-            logger.debug(
-                "Cannot determine category for install spec %(spec)s (extensions: %(extensions)s); skipping",
-                {"spec": spec.get("name", "?"), "extensions": extensions},
+            category = _extensions_to_category(
+                extensions,
+                frontend_supervised=spec.get("frontend_supervised", False),
             )
-            continue
+            if category is None:
+                logger.debug(
+                    "Cannot determine category for install spec %(spec)s (%(prefix)s, extensions: %(extensions)s); skipping",
+                    {"spec": spec.get("name", "?"), "prefix": prefix, "extensions": extensions},
+                )
+                continue
 
-        _add(
-            CategorizationRule(
-                prefix=source_prefix + "/",
-                extensions=extensions,
-                category=category,
+            _add(
+                CategorizationRule(
+                    prefix=prefix + "/",
+                    extensions=extensions,
+                    category=category,
+                )
             )
-        )
 
     # --- From wheel prefixes ---
     for prefix in manifest_data.get("wheel_prefixes", []):
@@ -1231,13 +1308,26 @@ def main(spinner: Spinner | None = None) -> int:
         _enrich_install_specs(manual.get("install_specs", []), pkg_data)
         _done(lbl, t0)
 
-        # Query source file extensions for install specs (for categorization)
-        lbl = "Querying install spec extensions"
+        # The sources behind the install targets drive categorization (which
+        # extensions each prefix owns) and reveal the packages that only reach
+        # the site through one of these targets (input_prefixes).
+        lbl = "Querying install spec sources"
         t0 = _begin(lbl)
-        install_spec_extensions = _query_install_spec_extensions(
-            manual.get("install_specs", []), repo_root
+        target_sources = _query_target_sources(manual["install_specs"], repo_root)
+        deployable_prefixes = frozenset(wheel_prefixes) | {
+            spec["source_prefix"].rstrip("/") + "/"
+            for spec in (*manual["install_specs"], *config_specs)
+        }
+        input_prefixes = _compute_input_prefixes(target_sources, deployable_prefixes)
+        for spec in manual["install_specs"]:
+            spec["input_prefixes"] = input_prefixes.get(spec["package_target"], [])
+        install_spec_extensions = _install_spec_extensions(manual["install_specs"], target_sources)
+        _done(
+            lbl,
+            t0,
+            f"{len(target_sources)} targets, "
+            f"{sum(len(p) for p in input_prefixes.values())} input packages",
         )
-        _done(lbl, t0, f"{len(install_spec_extensions)} packages")
 
     except Exception as exc:
         return _abort(exc)

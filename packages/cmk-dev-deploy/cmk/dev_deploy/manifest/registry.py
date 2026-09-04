@@ -20,7 +20,8 @@ def _registered_coverage() -> tuple[frozenset[str], frozenset[str]]:
     """Build registry coverage signal as (covered_dirs, covered_files).
 
     - ``covered_dirs`` are source-tree prefixes (with trailing ``/``).  Used
-      for install and wheel specs which deploy entire packages, and as a
+      for install specs (their own package and the input packages they
+      deploy) and wheel specs which deploy entire packages, and as a
       fallback for config specs whose enriched ``files`` list is empty.
     - ``covered_files`` are exact source paths.  Populated from each config
       spec's enumerated ``files`` list.
@@ -32,7 +33,11 @@ def _registered_coverage() -> tuple[frozenset[str], frozenset[str]]:
     silently mask any sibling file as "covered" even when no spec actually
     deploys it.
     """
-    install_dirs = frozenset(spec.package + "/" for spec in get_install_specs())
+    install_dirs = frozenset(
+        prefix
+        for spec in get_install_specs()
+        for prefix in (spec.package + "/", *spec.input_prefixes)
+    )
     wheel_dirs = frozenset(get_wheel_prefixes())
 
     config_dirs: set[str] = set()

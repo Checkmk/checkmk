@@ -4,6 +4,7 @@
 
 """Unit tests for cmk.dev_deploy.manifest.registry (uncovered_changed_files)."""
 
+from collections.abc import Mapping
 from unittest.mock import Mock
 
 import pytest
@@ -18,6 +19,7 @@ from cmk.dev_deploy.manifest.registry import uncovered_changed_files
 def _mock_specs(
     monkeypatch: pytest.MonkeyPatch,
     install_packages: tuple[str, ...] = (),
+    install_input_prefixes: Mapping[str, tuple[str, ...]] | None = None,
     config_prefixes: tuple[str, ...] = (),
     config_specs_with_files: tuple[tuple[str, tuple[str, ...]], ...] = (),
     wheel_packages: tuple[str, ...] = (),
@@ -25,6 +27,8 @@ def _mock_specs(
     """Patch all three spec getters with simple mock objects.
 
     Args:
+        install_input_prefixes: Input prefixes per install package, for
+            install specs whose artifact is built from further packages.
         config_prefixes: Config specs without an explicit files list (use
             source_prefix for coverage).
         config_specs_with_files: (source_prefix, (file_src, ...)) pairs for
@@ -35,6 +39,7 @@ def _mock_specs(
     for pkg in install_packages:
         spec = Mock()
         spec.package = pkg
+        spec.input_prefixes = (install_input_prefixes or {}).get(pkg, ())
         install_specs.append(spec)
 
     config_specs = []
@@ -117,6 +122,25 @@ class TestUncoveredChangedFiles:
         result = uncovered_changed_files(changed)
         assert result == sorted(result)
         assert result == ["aaa/file.py", "mmm/file.py", "zzz/file.py"]
+
+    def test_install_spec_input_prefix_covers(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A package compiled into an install spec's artifact counts as covered.
+
+        cmk-ui-library has no deploy spec of its own but is built into the
+        cmk-frontend-vue dist, which the install spec records as an input
+        prefix.  Other undeployed packages still warn.
+        """
+        _mock_specs(
+            monkeypatch,
+            install_packages=("packages/cmk-frontend-vue",),
+            install_input_prefixes={"packages/cmk-frontend-vue": ("packages/cmk-ui-library/",)},
+        )
+        changed = (
+            "packages/cmk-ui-library/components/StateTag.vue",
+            "packages/cmk-ui-library/README.md",
+            "packages/cmk-other-lib/lib/x.ts",
+        )
+        assert uncovered_changed_files(changed) == ["packages/cmk-other-lib/lib/x.ts"]
 
     def test_config_spec_with_files_uses_explicit_list(
         self, monkeypatch: pytest.MonkeyPatch

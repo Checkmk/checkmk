@@ -1794,6 +1794,13 @@ class TestFrontendSupervisedRegistry:
         prefixes = get_frontend_supervised_prefixes()
         assert "packages/cmk-frontend-vue/" in prefixes
 
+    def test_input_packages_of_frontend_vue_are_supervised(self) -> None:
+        """iBazel watches the vite target's transitive sources, so HMR covers them too."""
+        from cmk.dev_deploy.manifest.reader import get_frontend_supervised_prefixes
+
+        prefixes = get_frontend_supervised_prefixes()
+        assert "packages/cmk-ui-library/" in prefixes
+
     def test_prefixes_have_trailing_slash(self) -> None:
         from cmk.dev_deploy.manifest.reader import get_frontend_supervised_prefixes
 

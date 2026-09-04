@@ -5,9 +5,10 @@
 """Bazel target resolution module for cmk-dev-deploy.
 
 Maps changed files to owning Bazel build targets by matching file paths
-against the manifest's source-prefix-to-target mapping.  This is instant
-compared to the old ``bazel query rdeps()`` approach which had to load
-the entire workspace.
+against the manifest's source-prefix-to-target mapping (each install
+spec's own package plus its input packages).  This is instant compared
+to the old ``bazel query rdeps()`` approach which had to load the entire
+workspace.
 
 Only files in categories requiring Bazel builds (CPP, RUST, VUE, FRONTEND)
 are resolved. Python fast-path files are excluded -- they are handled by
@@ -49,7 +50,7 @@ def resolve_bazel_targets(
     """Resolve changed files to owning Bazel build targets.
 
     Filters the changeset to Bazel-buildable categories and matches files
-    against the manifest's install spec source prefixes.  BUILD file changes
+    against the manifest's install spec source and input prefixes.  BUILD file changes
     are handled separately: global build files (MODULE.bazel, bazel/) trigger
     a conservative ``//...`` target, while specific BUILD files produce
     per-package targets.
@@ -146,11 +147,12 @@ def _get_bazel_queryable_files(
 
 
 def _resolve_via_manifest(files: list[str]) -> list[tuple[str, str]]:
-    """Match changed files against install spec source prefixes.
+    """Match changed files against install spec source and input prefixes.
 
     Uses the manifest's existing source-prefix-to-target mapping (enriched
-    at manifest build time via bazel cquery) to resolve files to packages
-    without running any bazel query at deploy time.
+    at manifest build time via bazel query) to resolve files to packages
+    without running any bazel query at deploy time.  A file under an input
+    prefix resolves to every spec built from it.
 
     Returns:
         List of ``(kind_str, package_label)`` tuples matching the format
@@ -161,9 +163,8 @@ def _resolve_via_manifest(files: list[str]) -> list[tuple[str, str]]:
 
     for f in files:
         for spec in specs:
-            if f.startswith(spec.package + "/"):
+            if f.startswith((spec.package + "/", *spec.input_prefixes)):
                 matched_packages.add(spec.package)
-                break  # file matched, no need to check more specs
 
     # Return synthetic targets using the package path (the label format
     # doesn't matter for downstream — only the package is extracted)

@@ -31,7 +31,7 @@ def _make_config_spec(source_prefix: str) -> ConfigDeploySpec:
     )
 
 
-def _make_install_spec(package: str) -> InstallSpec:
+def _make_install_spec(package: str, *, input_prefixes: tuple[str, ...] = ()) -> InstallSpec:
     """Create an InstallSpec with the given package path."""
     return InstallSpec(
         package=package,
@@ -44,6 +44,7 @@ def _make_install_spec(package: str) -> InstallSpec:
         needs_version_flag=False,
         needs_faked_artifacts=False,
         use_copytree=False,
+        input_prefixes=input_prefixes,
     )
 
 
@@ -86,6 +87,25 @@ class TestPipelineDeployers:
         assert result is not None
         assert "packages/livestatus/" in result
         assert "packages/neb/" in result
+
+    def test_install_spec_includes_input_prefixes(self) -> None:
+        """Packages built into an artifact are watched for the install deployer.
+
+        Otherwise a change only in cmk-ui-library would resolve to the vue
+        dist target and then be skipped as "no changes in packages/...".
+        """
+        specs = (
+            _make_install_spec(
+                "packages/cmk-frontend-vue", input_prefixes=("packages/cmk-ui-library/",)
+            ),
+        )
+        with (
+            patch(f"{_MANIFEST_PREFIX}.get_install_specs", return_value=specs),
+            patch(f"{_DEPS_PREFIX}.expand_dependencies", side_effect=lambda dirs: dirs),
+        ):
+            result = resolve_source_paths("install_spec")
+
+        assert result == ("packages/cmk-frontend-vue/", "packages/cmk-ui-library/")
 
     def test_install_spec_adds_trailing_slash(self) -> None:
         """Trailing '/' is added to package paths that lack it."""

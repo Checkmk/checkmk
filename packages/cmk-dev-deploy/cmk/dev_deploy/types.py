@@ -216,6 +216,11 @@ class InstallSpec:
     frontend_supervised: bool = False
     """True if Bazel build is skipped when --frontend is active (Vite HMR)."""
 
+    input_prefixes: tuple[str, ...] = ()
+    """Source prefixes (trailing ``/``) of packages built into this artifact
+    that no deployer covers on their own, e.g. ``packages/cmk-ui-library/``
+    for the cmk-frontend-vue dist.  Changes there deploy through this spec."""
+
 
 @dataclass(frozen=True)
 class ConfigFileEntry:

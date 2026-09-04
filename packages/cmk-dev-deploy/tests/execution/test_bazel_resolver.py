@@ -40,7 +40,12 @@ def _make_changeset(**category_files: tuple[str, ...]) -> ChangeSet:
     return ChangeSet(build_commit=_COMMIT, files=all_files, categories=categories)
 
 
-def _make_install_spec(package: str, package_target: str) -> InstallSpec:
+def _make_install_spec(
+    package: str,
+    package_target: str,
+    *,
+    input_prefixes: tuple[str, ...] = (),
+) -> InstallSpec:
     """Create a minimal InstallSpec for testing."""
     return InstallSpec(
         package=package,
@@ -53,7 +58,16 @@ def _make_install_spec(package: str, package_target: str) -> InstallSpec:
         needs_version_flag=False,
         needs_faked_artifacts=False,
         use_copytree=False,
+        input_prefixes=input_prefixes,
     )
+
+
+_VUE_SPEC = _make_install_spec(
+    "packages/cmk-frontend-vue",
+    "//packages/cmk-frontend-vue:frontend_vue_dist_pkg",
+    input_prefixes=("packages/cmk-ui-library/",),
+)
+_UI_LIBRARY_FILE = "packages/cmk-ui-library/components/StateTag.vue"
 
 
 # ---------------------------------------------------------------------------
@@ -252,6 +266,62 @@ class TestResolveBazelTargets:
 
         assert not result.is_empty
         assert "packages/neb" in result.targets[0].package
+
+    def test_input_prefix_resolves_to_consuming_spec(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """A file of a package built into an artifact resolves to that artifact's spec.
+
+        cmk-ui-library has no install spec; its changes reach the site only
+        through the cmk-frontend-vue dist.
+        """
+        monkeypatch.setattr(
+            "cmk.dev_deploy.execution.bazel_resolver.get_install_specs", lambda: (_VUE_SPEC,)
+        )
+
+        result = resolve_bazel_targets(_make_changeset(VUE=(_UI_LIBRARY_FILE,)), tmp_path)
+
+        assert [t.package for t in result.targets] == ["packages/cmk-frontend-vue"]
+        assert result.files_resolved == 1
+
+    def test_shared_input_prefix_resolves_to_every_consumer(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """A package built into several artifacts triggers all of them."""
+        other = _make_install_spec(
+            "packages/cmk-frontend",
+            "//packages/cmk-frontend:frontend_dist_pkg",
+            input_prefixes=("packages/cmk-ui-library/",),
+        )
+        monkeypatch.setattr(
+            "cmk.dev_deploy.execution.bazel_resolver.get_install_specs",
+            lambda: (_VUE_SPEC, other),
+        )
+
+        result = resolve_bazel_targets(_make_changeset(VUE=(_UI_LIBRARY_FILE,)), tmp_path)
+
+        assert {t.package for t in result.targets} == {
+            "packages/cmk-frontend",
+            "packages/cmk-frontend-vue",
+        }
+
+    def test_frontend_supervised_excludes_input_prefix_files(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """Under --frontend, Vite HMR handles the input packages of the vue dist too."""
+        monkeypatch.setattr(
+            "cmk.dev_deploy.execution.bazel_resolver.get_install_specs", lambda: (_VUE_SPEC,)
+        )
+        monkeypatch.setattr(
+            "cmk.dev_deploy.execution.bazel_resolver.get_frontend_supervised_prefixes",
+            lambda: frozenset({"packages/cmk-frontend-vue/", "packages/cmk-ui-library/"}),
+        )
+
+        result = resolve_bazel_targets(
+            _make_changeset(VUE=(_UI_LIBRARY_FILE,)), tmp_path, frontend_supervised=True
+        )
+
+        assert result.is_empty
 
     def test_build_file_changes_add_package_targets(self, tmp_path: Path) -> None:
         """BUILD file changes add package-level targets without resolution."""

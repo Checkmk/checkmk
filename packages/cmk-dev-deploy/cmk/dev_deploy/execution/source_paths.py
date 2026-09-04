@@ -58,14 +58,14 @@ def _resolve_config_paths() -> tuple[str, ...]:
 
 
 def _resolve_install_paths() -> tuple[str, ...]:
-    """Return package + '/' from every install spec, plus transitive deps."""
+    """Return package + '/' and the input prefixes of every install spec, plus transitive deps."""
     from cmk.dev_deploy.manifest.reader import get_install_specs
 
     paths: list[str] = []
     for spec in get_install_specs():
-        prefix = spec.package + "/" if not spec.package.endswith("/") else spec.package
-        if prefix not in paths:
-            paths.append(prefix)
+        for prefix in (spec.package + "/", *spec.input_prefixes):
+            if prefix not in paths:
+                paths.append(prefix)
 
     # Expand transitive dependencies for install specs (non-Python deployer)
     from cmk.dev_deploy.manifest.deps import expand_dependencies

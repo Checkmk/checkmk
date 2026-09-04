@@ -561,6 +561,10 @@ class TestCategorizationRegression:
             ("packages/cmk-frontend-vue/src/App.vue", ChangeCategory.VUE),
             ("packages/cmk-frontend-vue/src/main.ts", ChangeCategory.VUE),
             ("packages/cmk-shared-typing/src/types.ts", ChangeCategory.VUE),
+            # Vue input package: built into the cmk-frontend-vue dist, no spec of its own
+            ("packages/cmk-ui-library/components/StateTag.vue", ChangeCategory.VUE),
+            ("packages/cmk-ui-library/lib/utils.ts", ChangeCategory.VUE),
+            ("packages/cmk-ui-library/README.md", ChangeCategory.OTHER),
             # Frontend (includes .ts -- the motivating bug fix)
             ("packages/cmk-frontend/scss/main.scss", ChangeCategory.FRONTEND),
             ("packages/cmk-frontend/src/main.js", ChangeCategory.FRONTEND),

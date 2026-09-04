@@ -394,7 +394,7 @@ It contains:
 
 - **Wheel prefixes** -- the source-tree prefixes covered by wheel deployment, used for step gating, `.py` categorization, coverage warnings, and the service-restart convention. Which wheels get deployed (per edition) is defined in `bazel/rules/deploy.bzl`, not here.
 - **Config specs** -- Config/data directories deployed via `copy_dir`, `install_files`, or `locale_compile` methods. Each spec maps a source prefix to a site destination.
-- **Install specs** -- Compiled artifacts (C++ binaries, Rust binaries, frontend dist bundles) built by Bazel and installed with specific permissions and post-install actions.
+- **Install specs** -- Compiled artifacts (C++ binaries, Rust binaries, frontend dist bundles) built by Bazel and installed with specific permissions and post-install actions. Each spec also records its _input prefixes_: workspace packages in the target's Bazel closure that no wheel, install, or config spec deploys on their own (e.g. `packages/cmk-ui-library/` for the cmk-frontend-vue dist). Changes there categorize, resolve, and deploy through the consuming spec.
 
 ### deploy_specs.toml
 

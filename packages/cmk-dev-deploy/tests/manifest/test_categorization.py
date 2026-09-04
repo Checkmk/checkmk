@@ -163,8 +163,8 @@ class TestComputeCategorizationRules:
     """Tests for _compute_categorization_rules logic.
 
     These import the function directly and test with synthetic manifest data.
-    The install_spec_extensions dict simulates what _query_install_spec_extensions
-    would return from the Bazel build graph.
+    The install_spec_extensions dict simulates what _install_spec_extensions
+    would derive from the Bazel build graph.
     """
 
     def test_install_spec_rust(self) -> None:
@@ -247,6 +247,52 @@ class TestComputeCategorizationRules:
         assert len(fe_rules) == 1
         assert ".ts" in fe_rules[0]["extensions"]
         assert fe_rules[0]["category"] == "frontend"
+
+    def test_install_spec_input_prefix_gets_own_rule(self) -> None:
+        """An input package is categorized like the spec it is built into.
+
+        cmk-ui-library's sources reach the site through the cmk-frontend-vue
+        dist, so its .vue/.ts files must categorize as VUE with exactly the
+        extensions Bazel reports under it.
+        """
+        from cmk.dev_deploy.manifest.update import _compute_categorization_rules
+
+        manifest = _make_manifest(
+            install_specs=[
+                {
+                    "source_prefix": "packages/cmk-frontend-vue",
+                    "frontend_supervised": True,
+                    "input_prefixes": ["packages/cmk-ui-library/"],
+                },
+            ]
+        )
+        extensions = {
+            "packages/cmk-frontend-vue": frozenset({".vue", ".ts"}),
+            "packages/cmk-ui-library": frozenset({".vue", ".ts", ".svg"}),
+        }
+        rules = _compute_categorization_rules(manifest, extensions)
+        ui_rules = [r for r in rules if r["prefix"] == "packages/cmk-ui-library/"]
+        assert len(ui_rules) == 1
+        assert ui_rules[0]["category"] == "vue"
+        assert ui_rules[0]["extensions"] == [".svg", ".ts", ".vue"]
+
+    def test_install_spec_input_prefix_without_extensions_skipped(self) -> None:
+        """An input prefix Bazel reports no extensions for gets no rule."""
+        from cmk.dev_deploy.manifest.update import _compute_categorization_rules
+
+        manifest = _make_manifest(
+            install_specs=[
+                {
+                    "source_prefix": "packages/cmk-frontend-vue",
+                    "frontend_supervised": True,
+                    "input_prefixes": ["packages/cmk-ui-library/"],
+                },
+            ]
+        )
+        rules = _compute_categorization_rules(
+            manifest, {"packages/cmk-frontend-vue": frozenset({".vue"})}
+        )
+        assert not any(r["prefix"] == "packages/cmk-ui-library/" for r in rules)
 
     def test_install_spec_no_extensions_skipped(self) -> None:
         """Install spec with no Bazel extensions is skipped gracefully."""

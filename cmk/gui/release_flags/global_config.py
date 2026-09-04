@@ -23,7 +23,7 @@ from pydantic.fields import FieldInfo
 from cmk.ccc import store
 from cmk.flags import CONFIG_FILENAME as RELEASE_FLAGS_CONFIG_FILENAME
 from cmk.flags import ReleaseFlagConfig
-from cmk.gui.i18n import _l
+from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -36,6 +36,7 @@ from cmk.rulesets.v1 import form_specs as fs
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.paths import default_config_dir, omd_root
+from cmk.web.utils.html import HTML
 
 RELEASE_FLAGS_CONFIG_ID: Final[ConfigDomainName] = "release_flags"
 RELEASE_FLAGS_CONFIG_DIR: Final = default_config_dir
@@ -59,6 +60,16 @@ class ConfigDomainReleaseFlags(ABCConfigDomain):
     @override
     def ident(cls) -> ConfigDomainName:
         return RELEASE_FLAGS_CONFIG_ID
+
+    @classmethod
+    @override
+    def hint(cls) -> HTML:
+        return HTML.without_escaping(
+            _(
+                "This is an experimental flag for testing only. It may change or be removed "
+                "without notice and must not be relied on for permanent configuration."
+            )
+        )
 
     @override
     def config_dir(self) -> Path:
@@ -108,7 +119,7 @@ class ConfigDomainReleaseFlags(ABCConfigDomain):
 
 
 ConfigVariableGroupReleaseFlags = ConfigVariableGroup(
-    title=_l("Release flags"),
+    title=_l("Experimental flags (for testing only)"),
     sort_index=200,
 )
 

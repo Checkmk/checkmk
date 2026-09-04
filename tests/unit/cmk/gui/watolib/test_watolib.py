@@ -245,7 +245,7 @@ def test_registered_configvar_groups() -> None:
         "Support",
         "Developer tools",
         "Product usage analytics",
-        "Release flags",
+        "Experimental flags (for testing only)",
     ]
 
     registered = sorted(config_variable_group_registry.keys())

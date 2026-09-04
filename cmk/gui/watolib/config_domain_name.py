@@ -31,6 +31,7 @@ from cmk.gui.type_defs import (
     GlobalSettings,
     GraphTimerange,
 )
+from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import ValueSpec
@@ -337,7 +338,8 @@ class ConfigVariable:
         need_apache_reload: bool = False,
         allow_reset: bool = True,
         in_global_settings: bool = True,
-        hint: Callable[[], HTML] = lambda: HTML.empty(),
+        hint: Callable[[], HTML] = HTML.empty,
+        hint_type: MsgType = "warning",
         domain_hint: HTML | None = None,
     ) -> None:
         self._group = group
@@ -349,6 +351,7 @@ class ConfigVariable:
         self._allow_reset = allow_reset
         self._in_global_settings = in_global_settings
         self._hint_func = hint
+        self._hint_type = hint_type
         self._domain_hint = domain_hint
         self._idents_of_affected_domains = [self._primary_domain_ident]
 
@@ -398,6 +401,9 @@ class ConfigVariable:
 
     def hint(self) -> HTML:
         return self._hint_func()
+
+    def hint_type(self) -> MsgType:
+        return self._hint_type
 
     def domain_hint(self) -> HTML:
         return self._domain_hint or self.primary_domain().hint() or HTML.empty()

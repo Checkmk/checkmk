@@ -503,7 +503,10 @@ class ABCEditGlobalSettingMode(WatoMode):
             html.show_warning(domain_hint)
         hint = self._config_variable.hint()
         if hint:
-            html.show_warning(hint)
+            if self._config_variable.hint_type() == "info":
+                html.show_info(hint)
+            else:
+                html.show_warning(hint)
 
         with html.form_context("value_editor", method="POST"):
             title = self._valuespec.title()

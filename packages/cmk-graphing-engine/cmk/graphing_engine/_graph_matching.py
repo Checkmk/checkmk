@@ -11,7 +11,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 
 from ._api_plugins import drawn_metric_names_of_graph
-from ._display import metric_display_attributes
+from ._display import metric_display_attributes, PREDICT_LOWER_PREFIX, PREDICT_PREFIX
 from ._fetch import FetchMetricNamesProtocol
 from ._fetched import ScalarKind
 from ._graph import Graph, Line, Rule, Stack
@@ -26,7 +26,6 @@ from ._quantities import rrd_metric_of, RRDMetric, ScalarOf
 from ._quantity import QuantityProtocol
 from ._quantity_from_api import build_curve
 
-_PREDICT_PREFIX = "predict_"
 _METRIC_PREFIX = "METRIC_"
 
 
@@ -95,8 +94,8 @@ def _add_predictive_lines(
     names: set[MetricName] = set()
     for base, inverse in inverse_by_metric.items():
         for predictive in (
-            MetricName(f"{_PREDICT_PREFIX}{base}"),
-            MetricName(f"{_PREDICT_PREFIX}lower_{base}"),
+            MetricName(f"{PREDICT_PREFIX}{base}"),
+            MetricName(f"{PREDICT_LOWER_PREFIX}{base}"),
         ):
             if predictive in available and predictive not in names:
                 added.append(
@@ -242,7 +241,7 @@ def build_matched_graphs(
         )
 
     for name in sorted(available):
-        if name in claimed or name.startswith(_PREDICT_PREFIX):
+        if name in claimed or name.startswith(PREDICT_PREFIX):
             continue
         _collect(_single_metric_graph(name))
 

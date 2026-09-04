@@ -7,7 +7,7 @@ VERSION=""
 # Function to show usage
 usage() {
     echo "Usage: $0 -v <version> [-P <port>]"
-    echo "  -v, --version   Oracle version (23, 11, 12, 19)"
+    echo "  -v, --version   Oracle version (23, 11, 12)"
     echo "  -P, --port      Database port (default: 1521)"
     exit 1
 }
@@ -41,9 +41,8 @@ case $VERSION in
     23) SERVICE="oracle-free" ;;
     11) SERVICE="oracle-xe" ;;
     12 | 12c) SERVICE="oracle-12c" ;;
-    19 | 19c) SERVICE="oracle-19c" ;;
     *)
-        echo "Error: Unsupported version '$VERSION'. Supported versions: 23, 11, 12, 19"
+        echo "Error: Unsupported version '$VERSION'. Supported versions: 23, 11, 12"
         exit 1
         ;;
 esac
@@ -59,7 +58,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 docker compose -f "$SCRIPT_DIR/docker-compose.yml" up -d "$SERVICE"
 
 # Wait for healthcheck for supported versions
-if [[ "$VERSION" == "23" || "$VERSION" == "11" || "$VERSION" == "12" || "$VERSION" == "12c" || "$VERSION" == "19" || "$VERSION" == "19c" ]]; then
+if [[ "$VERSION" == "23" || "$VERSION" == "11" || "$VERSION" == "12" || "$VERSION" == "12c" ]]; then
     echo "Waiting for $SERVICE to be healthy..."
 
     while true; do
@@ -104,9 +103,6 @@ if [[ "$VERSION" == "23" || "$VERSION" == "11" || "$VERSION" == "12" || "$VERSIO
     elif [[ "$VERSION" == "12" || "$VERSION" == "12c" ]]; then
         SID="XE"
         SERVICE_NAME="xe.oracle.docker"
-    elif [[ "$VERSION" == "19" || "$VERSION" == "19c" ]]; then
-        SID="ORCLCDB"
-        SERVICE_NAME="ORCLCDB"
     fi
 
     echo ""

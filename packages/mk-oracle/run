@@ -55,7 +55,7 @@ usage() {
     echo "  -C, --component-tests       run all component tests"
     echo "  -R, --remote-host           run tests on a remote host"
     echo "  -T VER, --docker-tests=VER"
-    echo "                              run component tests against Oracle Database in Docker (VER: 23, 19, 12, 11)"
+    echo "                              run component tests against Oracle Database in Docker (VER: 23, 12, 11)"
     echo "  -f, --format                format sources"
     echo "  -D, --documentation         generate documentation"
     echo "  -j N, --jobs=N              allow N jobs at once, default is ${JOBS}"
@@ -391,7 +391,6 @@ cleanup_docker_container() {
         23) service="oracle-free" ;;
         11) service="oracle-xe" ;;
         12 | 12c) service="oracle-12c" ;;
-        19 | 19c) service="oracle-19c" ;;
         *)
             echo "Warning: Unknown version '${version}' for cleanup"
             return 1
@@ -428,7 +427,6 @@ run_test_component_docker() {
         23) db_sid="FREE" db_service_name="FREE" ;;
         11) db_sid="XE" db_service_name="XE" ;;
         12 | 12c) db_sid="XE" db_service_name="xe.oracle.docker" ;;
-        19 | 19c) db_sid="ORCLCDB" db_service_name="ORCLCDB" ;;
         *)
             cleanup_docker_container "${ORACLE_DOCKER_VERSION}"
             failure "Unsupported Oracle version: ${ORACLE_DOCKER_VERSION}"

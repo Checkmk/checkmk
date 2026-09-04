@@ -22,7 +22,6 @@ This `docker-compose.yml` file defines several Oracle database services. You sho
   supported minimum of 12.1.0.2, so the plug-in only fails against it; useful for
   checking that it fails cleanly, not for monitoring.
 - `oracle-12c` (Version 12): Runs **Oracle Database 12c**.
-- `oracle-19c` (Version 19): Runs **Oracle Database 19c**.
 
 ---
 
@@ -39,7 +38,7 @@ You can easily start any of the supported database versions using the `run-db.sh
 ### Options
 
 - `-v, --version`: **Required**. The Oracle version to run.
-  - Available versions: `23`, `19`, `12`, and `11` (below the supported minimum).
+  - Available versions: `23`, `12`, and `11` (below the supported minimum).
 - `-P, --port`: **Optional**. The host port to bind the database listener to.
   - Default: `1521`.
 
@@ -51,12 +50,6 @@ Start Oracle 23 (Free) on default port 1521:
 ./run-db.sh -v 23
 ```
 
-Start Oracle 19c on port 1521:
-
-```bash
-./run-db.sh -v 19 -P 1521
-```
-
 The script will output the connection details (Host, Port, SID, Password) once the database is ready to accept connections.
 
 ### Default Credentials
@@ -64,6 +57,5 @@ The script will output the connection details (Host, Port, SID, Password) once t
 - **Password**: `oracle` (for all versions)
 - **SIDs**:
   - Version 23: `FREE`
-  - Version 19: `ORCLCDB`
   - Version 12: `XE`
   - Version 11: `XE`

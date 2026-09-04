@@ -47,27 +47,7 @@ services:
             retries: 10
             start_period: 60s
 
-    oracle-19c:
-        image: anvarmk/oracle-19c:latest
-        ports:
-            - "${ORACLE_PORT:-1521}:1521"
-        environment:
-            ORACLE_PWD: oracle
-            ORACLE_SID: ORCLCDB
-        volumes:
-            - oracle-19c-volume:/opt/oracle/oradata
-        healthcheck:
-            test: [
-                "CMD-SHELL",
-                "echo 'SELECT 1 FROM DUAL; exit' | sqlplus -s -L system/oracle"
-            ]
-            interval: 10s
-            timeout: 5s
-            retries: 10
-            start_period: 60s
-
 volumes:
     oracle-free-volume:
     oracle-xe-volume:
     oracle-12c:
-    oracle-19c-volume:

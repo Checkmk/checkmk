@@ -8,12 +8,9 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.conversion import (
-    # TODO: replace this by 'from cmk.agent_based.v2 import check_levels'.
-    check_levels_legacy_compatible as check_levels,
-)
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
@@ -49,20 +46,18 @@ def check_docker_node_disk_usage(
 
     if not (data := section.get(item)):
         return
-    for key, human_readable_func in (
+    for key, render_func in (
         ("size", render.bytes),
         ("reclaimable", render.bytes),
-        ("count", lambda x: x),
-        ("active", lambda x: x),
+        ("count", lambda x: str(int(x))),
+        ("active", lambda x: str(int(x))),
     ):
-        value = data[key]
-
         yield from check_levels(
-            value,
-            key,
-            params.get(key),
-            human_readable_func=human_readable_func,
-            infoname=key.title(),
+            data[key],
+            levels_upper=params.get(key),
+            metric_name=key,
+            render_func=render_func,
+            label=key.title(),
         )
 
 

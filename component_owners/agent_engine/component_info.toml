@@ -1,0 +1,7 @@
+type = "Component"
+members_required = 2
+tier = 1
+product_managers = ["annika.felgentraeger@checkmk.com"]
+description = """
+- Checkmk agent engine: the site-local daemon that hosts LLM-backed agents against monitoring data
+"""

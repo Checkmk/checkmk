@@ -311,6 +311,10 @@ allows = ["cmk.utils.paths"]
 [components."cmk.agent_based"]
 allows = []
 
+# empty until code needs a first-party import
+[components."cmk.agent_engine"]
+allows = []
+
 [components."cmk.agent_receiver"]
 allows = ["@ccc", "@crypto", "@relay_protocols", "cmk.licensing.basics.options"]
 

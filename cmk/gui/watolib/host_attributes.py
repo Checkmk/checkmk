@@ -868,6 +868,8 @@ def config_based_custom_host_attribute_sync_plugins(
                 # in case one is missing.
                 "_topic": _declare_host_attribute_topic(attr["topic"], attr["topic"].title()),
                 "topic": lambda self: self._topic,
+                "_show_in_table": attr["show_in_table"] or False,
+                "show_in_table": lambda self: self._show_in_table,
             },
         )
         attributes[attr["name"]] = final_class()

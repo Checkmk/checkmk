@@ -1537,6 +1537,9 @@ allows = ["cmk.mcp"]
 [components."cmk.testlib.metric_backend"]
 allows = ["cmk.metric_backend"]
 
+[components."cmk.testlib.network_flow"]
+allows = ["@network_flow", "cmk.network_flow.gui"]
+
 [components."cmk.testlib.otel_collector"]
 allows = ["cmk.otel_collector"]
 

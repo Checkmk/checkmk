@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.3.0p50"
+$CMK_VERSION = "2.3.0p51"
 # check_datacore.ps1
 # Version 0.2
 # Author : Andre Eckstein, Andre.Eckstein@Bechtle.com

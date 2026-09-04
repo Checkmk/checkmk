@@ -8,12 +8,12 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.vutlan_ems_temp import (
+from cmk.plugins.lib.temperature import TempParamType
+from cmk.plugins.vutlan.agent_based.vutlan_ems_temp import (
     check_vutlan_ems_temp_impl,
     discover_vutlan_ems_temp,
     parse_vutlan_ems_temp,
 )
-from cmk.plugins.lib.temperature import TempParamType
 
 STRING_TABLE = [
     ["101001", "Dry-1", "0"],

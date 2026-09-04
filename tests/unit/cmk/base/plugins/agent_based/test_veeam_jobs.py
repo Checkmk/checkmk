@@ -119,7 +119,7 @@ def test_check_veeam_jobs() -> None:
         (
             "backup_stopped",
             [
-                Result(state=State.OK, summary="State: Stopped, Result: None"),
+                Result(state=State.UNKNOWN, summary="State: Stopped, Result: None"),
                 Result(state=State.OK, summary="Type: Backup"),
             ],
         ),
@@ -179,23 +179,25 @@ def test_parse_veeam_jobs_job_without_data() -> None:
 
 
 @pytest.mark.parametrize(
-    "last_state, last_result, expected",
+    "last_state, last_result, type_, expected",
     [
-        pytest.param("Stopped", "Success", State.OK, id="succeeded"),
-        pytest.param("Stopped", "Warning", State.WARN, id="finished with warning"),
-        pytest.param("Stopped", "Failed", State.CRIT, id="failed"),
-        pytest.param("Stopped", "Kaputt", State.UNKNOWN, id="unparsable result"),
-        pytest.param("Stopped", "None", State.OK, id="never executed"),
-        pytest.param("Idle", "None", State.OK, id="idle without result"),
-        pytest.param("Suspended", "None", State.OK, id="suspended without result"),
-        pytest.param("Levitating", "None", State.UNKNOWN, id="unparsable state"),
+        pytest.param("Stopped", "Success", "Backup", State.OK, id="succeeded"),
+        pytest.param("Stopped", "Warning", "Backup", State.WARN, id="finished with warning"),
+        pytest.param("Stopped", "Failed", "Backup", State.CRIT, id="failed"),
+        pytest.param("Stopped", "Kaputt", "Backup", State.UNKNOWN, id="unparsable result"),
+        pytest.param("Idle", "None", "BackupSync", State.OK, id="idle backup sync without result"),
+        pytest.param("Idle", "None", "Backup", State.UNKNOWN, id="idle backup without result"),
+        pytest.param(
+            "Stopped", "None", "Backup", State.UNKNOWN, id="stopped backup without result"
+        ),
+        pytest.param("Levitating", "None", "Backup", State.UNKNOWN, id="unparsable state"),
     ],
 )
-def test_monitoring_state(last_state: str, last_result: str, expected: State) -> None:
-    assert monitoring_state(last_state, last_result) == expected
+def test_monitoring_state(last_state: str, last_result: str, type_: str, expected: State) -> None:
+    assert monitoring_state(last_state, last_result, type_) == expected
 
 
 @pytest.mark.parametrize("last_state", ["Starting", "Working", "Postprocessing"])
 def test_monitoring_state_running_raises_ignore_results(last_state: str) -> None:
     with pytest.raises(IgnoreResultsError):
-        monitoring_state(last_state, "None")
+        monitoring_state(last_state, "None", "Backup")

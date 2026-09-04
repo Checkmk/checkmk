@@ -7,6 +7,7 @@
 
 from cmk.gui.type_defs import Choices
 
+from ._engine_plugins import registered_metrics, registered_translations
 from ._from_api import metrics_from_api
 from ._metrics import registered_metric_ids_and_titles
 from ._valuespecs import LivestatusQueryFunc, metrics_of_query
@@ -24,7 +25,11 @@ def metrics_autocompleter(
         return []
 
     if context:
-        metrics = set(metrics_of_query(context, metrics_from_api, livestatus_query))
+        metrics = set(
+            metrics_of_query(
+                context, registered_metrics(), registered_translations(), livestatus_query
+            )
+        )
     else:
         metrics = set(registered_metric_ids_and_titles(metrics_from_api))
 

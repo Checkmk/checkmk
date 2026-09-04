@@ -15,10 +15,14 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, assert_never, Literal, override, TypedDict
 
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import translations as translations_v1
+from cmk.graphing_engine import metric_display_attributes
+from cmk.graphing_engine import MetricName as EngineMetricName
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.type_defs import Choice, Choices, GraphTitleFormatVS, VisualContext
@@ -49,18 +53,13 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
     ValueSpecValidateFunc,
 )
-from cmk.utils.metrics import MetricName as MetricName_
 from cmk.web.utils.autocompleter_config import ContextAutocompleterConfig
 
+from ._engine_perfdata import parse_performance_data
+from ._engine_translations import translate_metric_names
 from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_display_config import GraphDisplayConfigHTML
-from ._legacy import check_metrics
 from ._metrics import get_metric_spec, registered_metric_ids_and_titles
-from ._translated_metrics import (
-    find_matching_translation,
-    lookup_metric_translations_for_check_command,
-    parse_perf_data,
-)
 from ._unit import (
     ConvertibleUnitSpecification,
     DecimalNotation,
@@ -567,26 +566,25 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 
 def _metric_choices(
     check_command: str,
-    perfvars: tuple[MetricName_, ...],
-    registered_metrics: Mapping[str, RegisteredMetric],
+    raw_metric_names: Sequence[EngineMetricName],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
 ) -> Iterator[Choice]:
-    for perfvar in perfvars:
-        metric_name = find_matching_translation(
-            MetricName_(perfvar),
-            lookup_metric_translations_for_check_command(check_metrics, check_command),
-        ).name
+    for metric_name in translate_metric_names(
+        check_command, raw_metric_names, registered_translations
+    ):
         yield (
             metric_name,
-            get_metric_spec(
-                metric_name,
-                registered_metrics,
+            metric_display_attributes(
+                metric_name, translate_to_current_language, registered_metrics
             ).title,
         )
 
 
 def metrics_of_query(
     context: VisualContext,
-    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
+    registered_translations: Sequence[translations_v1.Translation],
     livestatus_query: LivestatusQueryFunc,
 ) -> Iterator[Choice]:
     # Fetch host data with the *same* query. This saves one round trip. And head
@@ -602,19 +600,20 @@ def metrics_of_query(
 
     row = {}
     for row in livestatus_query("service", context, columns):
-        perf_data, check_command = parse_perf_data(
+        raw = parse_performance_data(
             row["service_perf_data"], row["service_check_command"], debug=active_config.debug
         )
-        known_metrics = set([p.metric_name for p in perf_data] + row["service_metrics"])
         yield from _metric_choices(
-            str(check_command),
-            tuple(map(str, known_metrics)),
+            raw.check_command,
+            [*raw.values, *map(EngineMetricName, row["service_metrics"])],
             registered_metrics,
+            registered_translations,
         )
 
     if row.get("host_check_command"):
         yield from _metric_choices(
             str(row["host_check_command"]),
-            tuple(map(str, row["host_metrics"])),
+            [EngineMetricName(name) for name in row["host_metrics"]],
             registered_metrics,
+            registered_translations,
         )

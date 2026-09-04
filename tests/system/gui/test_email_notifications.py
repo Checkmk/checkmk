@@ -65,7 +65,6 @@ def _modify_notification_rule(test_site: Site, configured_host: str) -> Iterator
         test_site.delete_file(notification_rule_backup_path)
 
 
-@pytest.mark.skip(reason="CMK-36115")
 def test_email_notification_matches_configuration(
     dashboard_page: MainDashboard,
     notification_host: NotificationTarget,

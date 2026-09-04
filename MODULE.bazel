@@ -68,6 +68,8 @@ bazel_dep(name = "rules_sphinx", version = "0.2.0")
 bazel_dep(name = "lcov", version = "2.3.2")
 bazel_dep(name = "zstd", version = "1.5.7")
 
+bazel_dep(name = "libpcap", version = "1.10.5.bcr.3", dev_dependency = True)
+
 # rules_sphinx is not yet on BCR
 archive_override(
     module_name = "rules_sphinx",

@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.vutlan_ems_leakage import (
+from cmk.plugins.vutlan.agent_based.vutlan_ems_leakage import (
     check_vutlan_ems_leakage,
     discover_vutlan_ems_leakage,
     parse_vutlan_ems_leakage,

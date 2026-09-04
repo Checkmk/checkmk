@@ -113,9 +113,7 @@ def parse_graph_specification(graph_specification: object) -> GraphSpecification
 
 class GraphRanges(BaseModel, frozen=True):
     time_range: tuple[int, int]
-    # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
-    # colon separated [step length]:[rrd point count]
-    step: int | str
+    step: int
     vertical_range: tuple[float, float] | None = None
 
 

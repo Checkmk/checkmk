@@ -194,7 +194,7 @@ class RRDFetchPerformanceData:
     def __call__(
         self, services: Sequence[Service], *, only_site: EngineSiteID | None
     ) -> Sequence[PerformanceDataRow]:
-        # prepend_site reveals which site each row came from (as in the legacy fetch_graph_row): a
+        # prepend_site reveals which site each row came from: a
         # metric whose site is unknown up front is thereby scoped to the site its data lives on for
         # the time-series fetch.
         rows: list[PerformanceDataRow] = []

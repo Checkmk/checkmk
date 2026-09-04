@@ -133,13 +133,12 @@ def _answer_graph_image_request(
     num_graphs = request.get_integer_input("num_graphs")
     graphs = [built.graph for built in itertools.islice(built_graphs, num_graphs)]
     ranges = compute_image_graph_ranges(display_config, start_time, end_time)
-    step = ranges.step if isinstance(ranges.step, int) else 60
     evaluated = evaluate_built_graphs(
         graphs,
         {
             "consolidation_function": ConsolidationFunction.MAX,
             "time_range": TimeRange(
-                start=ranges.time_range[0], end=ranges.time_range[1], step=step
+                start=ranges.time_range[0], end=ranges.time_range[1], step=ranges.step
             ),
             "destination": graph_specification.destination,
         },

@@ -273,11 +273,6 @@ class QueryDataError:
     exception: Exception
 
 
-def clean_time_series_point(tsp: TimeSeries | Sequence[float | None]) -> list[float]:
-    """removes "None" entries from input list"""
-    return [x for x in tsp if x is not None]
-
-
 @dataclass(frozen=True, kw_only=True)
 class AugmentedTimeSeries:
     time_series: TimeSeries

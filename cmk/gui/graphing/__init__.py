@@ -89,7 +89,6 @@ from ._metrics import (
 from ._rrd import (
     _reverse_translate_into_all_potentially_relevant_metrics_cached,
     all_rrd_columns_potentially_relevant_for_metric,
-    fetch_graph_row,
     make_graph_row,
     translate_and_merge_rrd_columns,
 )
@@ -175,7 +174,6 @@ __all__ = [
     "registered_graphs",
     "registered_metrics",
     "registered_translations",
-    "fetch_graph_row",
     "make_graph_row",
     "get_graph_plugin_choices",
     "sort_registered_graph_plugins",

@@ -16,11 +16,9 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import parse_check_mk_version
-from cmk.gui import sites
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.livestatus_client import livestatus_lql
 from cmk.livestatus_client.tables.services import Services
 from cmk.livestatus_client.types import Column, DynamicColumn
 from cmk.utils.metrics import MetricName
@@ -65,40 +63,6 @@ class ServiceGraphRow:
     service_name: ServiceName
     check_command: str
     translated_metrics: Mapping[str, TranslatedMetric] = field(default_factory=dict)
-
-
-@tracer.instrument("graphing.fetch_graph_row")
-def fetch_graph_row(
-    site_id: list[SiteId] | SiteId | None,
-    host_name: HostName,
-    service_description: ServiceName,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    explicit_color: str = "",
-    *,
-    debug: bool,
-    temperature_unit: TemperatureUnit,
-) -> HostGraphRow | ServiceGraphRow:
-    columns = ["perf_data", "metrics", "check_command"]
-    query = livestatus_lql([host_name], columns, service_description)
-    what = "host" if service_description == "_HOST_" else "service"
-    labels = [f"{what}_{col}" for col in columns]
-
-    with sites.only_sites(site_id), sites.prepend_site():
-        site, *values = sites.live().query_row(query)
-
-    raw = dict(zip(labels, values))
-    return make_graph_row(
-        SiteId(site),
-        host_name,
-        service_description,
-        raw[f"{what}_perf_data"],
-        raw[f"{what}_metrics"],
-        raw[f"{what}_check_command"],
-        registered_metrics,
-        explicit_color,
-        debug=debug,
-        temperature_unit=temperature_unit,
-    )
 
 
 def make_graph_row(
@@ -158,7 +122,7 @@ def _rrd_columns(
     *,
     start_time: float,
     end_time: float,
-    step: int | str,
+    step: int,
 ) -> Iterator[Column]:
     """RRD data columns for each metric
 
@@ -167,7 +131,6 @@ def _rrd_columns(
         rpn = f"{metric_prop.metric_name}.{metric_prop.consolidation_function}"
         if metric_prop.scale != 1.0:
             rpn += ",%f,*" % metric_prop.scale
-        # `step` may be a preformatted, colon separated step length & point count
         yield rrddata.dynamic(metric_prop.metric_name, rpn, start_time, end_time, step)
 
 

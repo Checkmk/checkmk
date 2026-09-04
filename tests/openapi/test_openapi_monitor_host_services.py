@@ -154,6 +154,7 @@ class TestMonitorHostServicesFilters:
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 1,
+                    "has_been_checked": 1,
                     "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -180,7 +181,11 @@ class TestMonitorHostServicesFilters:
                 f"Columns: {_SERVICES_COLUMNS}",
                 f"Filter: host_name = {_HOSTNAME}",
                 "Filter: state = 1",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Filter: state = 2",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Or: 2",
                 _DEFAULT_ORDER_BY,
                 f"Limit: {_LIMIT}",
@@ -201,7 +206,11 @@ class TestMonitorHostServicesFilters:
                 "Stats: state >= 0",
                 f"Filter: host_name = {_HOSTNAME}",
                 "Filter: state = 1",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Filter: state = 2",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Or: 2",
             ],
             sites=[_SITE_ID],
@@ -249,6 +258,7 @@ class TestMonitorHostServicesFilters:
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 1,
+                    "has_been_checked": 1,
                     "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -276,6 +286,8 @@ class TestMonitorHostServicesFilters:
                 f"Filter: host_name = {_HOSTNAME}",
                 "Filter: description ~~ CPU",
                 "Filter: state = 1",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "And: 2",
                 _DEFAULT_ORDER_BY,
                 f"Limit: {_LIMIT}",
@@ -297,6 +309,8 @@ class TestMonitorHostServicesFilters:
                 f"Filter: host_name = {_HOSTNAME}",
                 "Filter: description ~~ CPU",
                 "Filter: state = 1",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "And: 2",
             ],
             sites=[_SITE_ID],
@@ -370,6 +384,7 @@ class TestMonitorHostServices:
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -448,6 +463,7 @@ class TestMonitorHostServices:
                     "description": "CPU load",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -489,6 +505,7 @@ class TestMonitorHostServices:
                     "description": "CPU load",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -530,6 +547,7 @@ class TestMonitorHostServices:
                     "description": "CPU load",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -568,6 +586,7 @@ class TestMonitorHostServices:
                     "description": "CPU load",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -606,6 +625,7 @@ class TestMonitorHostServices:
                     "description": "CPU load",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -645,6 +665,7 @@ class TestMonitorHostServices:
                     "description": "CPU load",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -684,6 +705,7 @@ class TestMonitorHostServices:
                     "description": "CPU load",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -724,6 +746,7 @@ class TestMonitorHostServices:
                     "description": "CPU load",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -765,6 +788,7 @@ class TestMonitorHostServices:
                     "description": "CPU load",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -808,6 +832,7 @@ class TestMonitorHostServices:
                     "description": "CPU load",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -847,6 +872,7 @@ class TestMonitorHostServices:
                     "description": "CPU load",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -890,6 +916,7 @@ class TestMonitorHostServices:
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 0,
                     "plugin_output": "",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -935,6 +962,7 @@ class TestMonitorHostServices:
             )
 
         assert resp.json["services"][0]["last_check"] is None
+        assert resp.json["services"][0]["state"] == "PENDING"
 
     @pytest.mark.parametrize(
         "sort, expected_order_by",
@@ -1017,6 +1045,7 @@ class TestMonitorHostServices:
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -1087,6 +1116,7 @@ class TestMonitorHostServicessLimitPermissions:
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -1157,6 +1187,7 @@ class TestMonitorHostServicessLimitPermissions:
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "acknowledged": 0,
                     "scheduled_downtime_depth": 0,
@@ -1220,6 +1251,7 @@ class TestMonitorServiceOverview:
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 1,
+                    "has_been_checked": 1,
                     "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
                     "last_check": time.time(),
                     "last_state_change": time.time(),
@@ -1230,6 +1262,7 @@ class TestMonitorServiceOverview:
                     "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
+                    "host_has_been_checked": 1,
                     "host_acknowledged": 0,
                     "host_scheduled_downtime_depth": 0,
                     "contact_groups": ["all"],
@@ -1327,6 +1360,7 @@ class TestMonitorServiceOverview:
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 2,
+                    "has_been_checked": 1,
                     "plugin_output": "CRIT - load average: 9.10, 8.05, 7.01",
                     "last_check": time.time(),
                     "last_state_change": time.time(),
@@ -1337,6 +1371,7 @@ class TestMonitorServiceOverview:
                     "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
+                    "host_has_been_checked": 1,
                     "host_acknowledged": 0,
                     "host_scheduled_downtime_depth": 0,
                     "contact_groups": ["all"],
@@ -1385,6 +1420,7 @@ class TestMonitorServiceOverview:
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 1,
                     "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
                     "last_check": time.time(),
                     "last_state_change": time.time(),
@@ -1395,6 +1431,7 @@ class TestMonitorServiceOverview:
                     "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
+                    "host_has_been_checked": 1,
                     "host_acknowledged": 0,
                     "host_scheduled_downtime_depth": 0,
                     "contact_groups": ["all"],
@@ -1442,6 +1479,7 @@ class TestMonitorServiceOverview:
                     "check_command": "check_mk-test",
                     "host_name": _HOSTNAME,
                     "state": 0,
+                    "has_been_checked": 0,
                     "plugin_output": "",
                     "last_check": 0,
                     "last_state_change": time.time(),
@@ -1452,6 +1490,7 @@ class TestMonitorServiceOverview:
                     "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
                     "host_state": 0,
+                    "host_has_been_checked": 1,
                     "host_acknowledged": 0,
                     "host_scheduled_downtime_depth": 0,
                     "contact_groups": ["all"],
@@ -1483,6 +1522,66 @@ class TestMonitorServiceOverview:
             )
 
         assert resp.json["last_check"] is None
+        assert resp.json["state"] == "PENDING"
+
+    @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
+    def test_pending_host_state_on_a_never_checked_host(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": _SERVICE_DESCRIPTION,
+                    "perf_data": "",
+                    "check_command": "check_mk-test",
+                    "host_name": _HOSTNAME,
+                    "state": 1,
+                    "has_been_checked": 1,
+                    "plugin_output": "WARN - load average: 3.10, 2.05, 1.01",
+                    "last_check": time.time(),
+                    "last_state_change": time.time(),
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "is_flapping": 0,
+                    "staleness": 0.0,
+                    "host_alias": _HOST_ALIAS,
+                    "host_state": 0,
+                    "host_has_been_checked": 0,
+                    "host_acknowledged": 0,
+                    "host_scheduled_downtime_depth": 0,
+                    "contact_groups": ["all"],
+                    "long_plugin_output": "",
+                    "current_attempt": 1,
+                    "max_check_attempts": 1,
+                    "next_check": time.time() + 60,
+                    "contacts": ["hh"],
+                    "labels": {},
+                    "label_sources": {},
+                    "tags": {},
+                }
+            ],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: description = {_SERVICE_DESCRIPTION}",
+                "And: 2",
+            ],
+            sites=[_SITE_ID],
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get_service_overview(
+                hostname=_HOSTNAME, site_id=_SITE_ID, service_name=_SERVICE_DESCRIPTION
+            )
+
+        assert resp.json["host_state"] == "PENDING"
 
     def test_unknown_service_returns_404(
         self,
@@ -1677,15 +1776,18 @@ _HOSTNAME = "heute"
 _SERVICE_DESCRIPTION = "CPU load"
 _HOST_ALIAS = "Web Server"
 _SERVICE_OVERVIEW_COLUMNS = (
-    "description host_name state plugin_output last_check last_state_change acknowledged "
+    "description host_name state has_been_checked plugin_output last_check last_state_change "
+    "acknowledged "
     "scheduled_downtime_depth notifications_enabled is_flapping staleness host_alias host_state "
-    "host_acknowledged host_scheduled_downtime_depth contact_groups long_plugin_output "
+    "host_has_been_checked host_acknowledged host_scheduled_downtime_depth contact_groups "
+    "long_plugin_output "
     "current_attempt max_check_attempts next_check tags labels label_sources perf_data "
     "check_command"
 )
 _LIMIT = 1000
 _SERVICES_COLUMNS = (
-    "description host_name state plugin_output acknowledged scheduled_downtime_depth "
+    "description host_name state has_been_checked plugin_output acknowledged "
+    "scheduled_downtime_depth "
     "notifications_enabled is_flapping staleness last_check last_state_change perf_data "
     "check_command"
 )

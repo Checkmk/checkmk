@@ -107,7 +107,16 @@ def test_query_builder_state_choice_single_no_or() -> None:
     condition = ServiceStateChoiceCondition(
         type="condition", field="state", op="one_of", value=["WARN"]
     )
-    assert parse_as_livestatus_filter(condition) == "Filter: state = 1"
+    value = parse_as_livestatus_filter(condition)
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: state = 1",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+        ]
+    )
+
+    assert value == expected
 
 
 def test_query_builder_state_choice_multiple_with_or() -> None:
@@ -122,7 +131,40 @@ def test_query_builder_state_choice_multiple_with_or() -> None:
     expected = "\n".join(  # noqa: FLY002
         [
             "Filter: state = 1",
+            "Filter: has_been_checked = 1",
+            "And: 2",
             "Filter: state = 2",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "Or: 2",
+        ]
+    )
+
+    assert value == expected
+
+
+def test_query_builder_state_choice_pending_matches_has_been_checked_only() -> None:
+    """A pending service's raw ``state`` column is meaningless, so 'PENDING' is not translated
+    into a ``state = X`` filter at all - only into ``has_been_checked``."""
+    condition = ServiceStateChoiceCondition(
+        type="condition", field="state", op="one_of", value=["PENDING"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: has_been_checked = 0"
+
+
+def test_query_builder_state_choice_mixes_pending_and_real_states() -> None:
+    condition = ServiceStateChoiceCondition(
+        type="condition", field="state", op="one_of", value=["OK", "PENDING"]
+    )
+
+    value = parse_as_livestatus_filter(condition)
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: state = 0",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "Filter: has_been_checked = 0",
             "Or: 2",
         ]
     )
@@ -254,7 +296,22 @@ def test_query_builder_nested_conditions() -> None:
     )
 
     value = parse_as_livestatus_filter(nodes)
-    expected = "Filter: state = 1\nFilter: state = 0\nFilter: state = 3\nOr: 2\nNegate:\nAnd: 2"
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: state = 1",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "Filter: state = 0",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "Filter: state = 3",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "Or: 2",
+            "Negate:",
+            "And: 2",
+        ]
+    )
 
     assert value == expected
 
@@ -271,7 +328,15 @@ def test_query_builder_mixed_string_and_state_conditions() -> None:
     )
 
     value = parse_as_livestatus_filter(nodes)
-    expected = "Filter: description ~~ CPU\nFilter: state = 1\nAnd: 2"
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: description ~~ CPU",
+            "Filter: state = 1",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "And: 2",
+        ]
+    )
 
     assert value == expected
 

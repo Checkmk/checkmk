@@ -181,14 +181,7 @@ const lastStateChange = computed(() =>
       minWidth: SERVICE_COUNT_MIN_WIDTH,
       active: !!row.num_services_pending
     }"
-    :linked-to="
-      !row.num_services_pending
-        ? undefined
-        : {
-            href: `view.py?host=${row.name}&view_name=host_pending`,
-            target: '_top'
-          }
-    "
+    :linked-to="!row.num_services_pending ? undefined : servicesInStateLink('PENDING')"
   />
 
   <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />

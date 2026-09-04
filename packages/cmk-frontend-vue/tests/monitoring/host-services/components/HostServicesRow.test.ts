@@ -293,6 +293,13 @@ test('renders the state badge with unknown color for state UNKNOWN', () => {
   expect(stateTag).toHaveTextContent('UNKNOWN')
 })
 
+test('renders the state badge as pending for a service that has never been checked', () => {
+  mountRow(makeService({ state: 'PENDING' }))
+
+  expect(screen.getByText('PENDING')).toBeInTheDocument()
+  expect(screen.queryByText('CRITICAL')).not.toBeInTheDocument()
+})
+
 test('renders a checkbox cell for row selection', () => {
   mountRow(makeService())
 

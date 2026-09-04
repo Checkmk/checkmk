@@ -380,7 +380,11 @@ class TestMonitorHostsFilters:
                 f"Columns: {_HOST_TABLE_COLUMNS}",
                 "Filter: num_services <= 10",
                 "Filter: state = 0",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Filter: state = 1",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Or: 2",
                 "And: 2",
                 "OrderBy: name asc natural",
@@ -393,7 +397,11 @@ class TestMonitorHostsFilters:
                 "Stats: state >= 0",
                 "Filter: num_services <= 10",
                 "Filter: state = 0",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Filter: state = 1",
+                "Filter: has_been_checked = 1",
+                "And: 2",
                 "Or: 2",
                 "And: 2",
             ]
@@ -435,6 +443,30 @@ class TestMonitorHostsFilters:
                 "legacy_host_status_link": "view.py?view_name=hoststatus&site=NO_SITE&host=heute",
             },
         ]
+
+    def test_never_checked_host_is_reported_as_pending(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table(
+            "hosts",
+            [{**_HOSTS[0], "name": "pending-host", "has_been_checked": 0}],
+        )
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_HOST_TABLE_COLUMNS}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT)
+
+        assert resp.json["hosts"][0]["state"] == "PENDING"
 
     def test_hosts_filtered_by_folder(
         self,
@@ -985,6 +1017,7 @@ class TestMonitorHostOverview:
                     "alias": "Today",
                     "address": "127.0.0.1",
                     "state": 0,
+                    "has_been_checked": 1,
                     "num_services": 10,
                     "num_services_ok": 10,
                     "num_services_warn": 0,
@@ -1057,6 +1090,7 @@ class TestMonitorHostOverview:
                     "alias": "Today",
                     "address": "127.0.0.1",
                     "state": 0,
+                    "has_been_checked": 1,
                     "num_services": 0,
                     "num_services_ok": 0,
                     "num_services_warn": 0,
@@ -1191,6 +1225,7 @@ _HOSTS = [
         "address": "127.0.0.1",
         "alias": "Today",
         "state": 0,
+        "has_been_checked": 1,
         "num_services": 10,
         "num_services_ok": 10,
         "num_services_warn": 0,
@@ -1215,6 +1250,7 @@ _HOSTS = [
         "address": "127.0.10.1",
         "alias": "Yesterday",
         "state": 1,
+        "has_been_checked": 1,
         "num_services": 20,
         "num_services_ok": 20,
         "num_services_warn": 0,
@@ -1239,6 +1275,7 @@ _HOSTS = [
         "address": "127.0.2.1",
         "alias": "Tomorrow",
         "state": 2,
+        "has_been_checked": 1,
         "num_services": 30,
         "num_services_ok": 30,
         "num_services_warn": 0,
@@ -1265,6 +1302,7 @@ _HOSTS = [
 _MANDATORY_COLUMNS = (
     "name",
     "state",
+    "has_been_checked",
     "acknowledged",
     "scheduled_downtime_depth",
     "is_flapping",
@@ -1309,4 +1347,4 @@ def _host_columns(*fields: str) -> str:
 
 
 _HOST_TABLE_COLUMNS = _host_columns()
-_HOST_OVERVIEW_COLUMNS = "name alias address state num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth is_flapping staleness last_check last_state_change contact_groups tags labels label_sources filename"
+_HOST_OVERVIEW_COLUMNS = "name alias address state has_been_checked num_services num_services_ok num_services_warn num_services_crit num_services_unknown num_services_pending acknowledged scheduled_downtime_depth is_flapping staleness last_check last_state_change contact_groups tags labels label_sources filename"

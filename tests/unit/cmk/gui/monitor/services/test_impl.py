@@ -28,9 +28,9 @@ from tests.testlib.gui.web_test_app import SetConfig
 # supply full row data for every column the query touches.
 _UNKNOWN_HOSTNAME = "foo-server-01"
 _SERVICES_COLUMNS = (
-    "description host_name state plugin_output acknowledged scheduled_downtime_depth "
-    "notifications_enabled is_flapping staleness last_check last_state_change perf_data "
-    "check_command"
+    "description host_name state has_been_checked plugin_output acknowledged "
+    "scheduled_downtime_depth notifications_enabled is_flapping staleness last_check "
+    "last_state_change perf_data check_command"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 
@@ -261,6 +261,7 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
         "description": "CPU load",
         "host_name": _UNKNOWN_HOSTNAME,
         "state": 0,
+        "has_been_checked": 1,
         "plugin_output": "OK",
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,

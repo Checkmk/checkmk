@@ -245,12 +245,13 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
             filters.append(f"Filter: {column} {_STRING_OP_TO_LS[node.op]} {node.value}")
 
         case ServiceStateChoiceCondition():
-            for value in node.value:
-                filters.append(f"Filter: {node.field} = {ServiceState[value]}")
+            clauses = [_state_choice_clause(node.field, value) for value in node.value]
+            for clause in clauses:
+                filters.extend(clause)
 
             match node.op:
-                case "one_of" if len(node.value) > 1:
-                    filters.append(f"Or: {len(node.value)}")
+                case "one_of" if len(clauses) > 1:
+                    filters.append(f"Or: {len(clauses)}")
 
         case ServiceTimestampCondition():
             filters.append(f"Filter: {node.field} {_TIMESTAMP_OP_TO_LS[node.op]} {node.value}")
@@ -295,6 +296,19 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
         case ServiceNotNode():
             _accumulate_filters(node.child, filters)
             filters.append("Negate:")
+
+
+def _state_choice_clause(field: str, value: ServiceStateLabel) -> list[str]:
+    """A pending service's raw ``state`` column is meaningless (always 0, coinciding with OK), so
+    'PENDING' is matched on ``has_been_checked`` instead, and every other state excludes pending
+    services the same way rather than silently bucketing them in with a real state."""
+    if value == "PENDING":
+        return ["Filter: has_been_checked = 0"]
+    return [
+        f"Filter: {field} = {ServiceState[value]}",
+        "Filter: has_been_checked = 1",
+        "And: 2",
+    ]
 
 
 _STRING_OP_TO_LS = {

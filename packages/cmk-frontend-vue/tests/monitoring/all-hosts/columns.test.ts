@@ -209,7 +209,8 @@ test('the state column filter offers the state checkboxes plus flapping/stale fl
     options: [
       { value: 'UP', title: 'UP' },
       { value: 'DOWN', title: 'DOWN' },
-      { value: 'UNREACHABLE', title: 'UNREACH' }
+      { value: 'UNREACHABLE', title: 'UNREACH' },
+      { value: 'PENDING', title: 'PENDING' }
     ],
     flags: [
       { field: 'is_flapping', title: 'Flapping' },

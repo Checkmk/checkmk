@@ -82,7 +82,8 @@ export function useHostServicesColumns({
       { value: 'OK', title: _t('OK') },
       { value: 'WARN', title: _t('WARN') },
       { value: 'CRIT', title: _t('CRIT') },
-      { value: 'UNKNOWN', title: _t('UNKNOWN') }
+      { value: 'UNKNOWN', title: _t('UNKNOWN') },
+      { value: 'PENDING', title: _t('PENDING') }
     ] satisfies { value: ServiceState; title: string }[],
     flags: [
       { field: 'is_flapping', title: _t('Flapping') },

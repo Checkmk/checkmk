@@ -167,6 +167,7 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
     row = {
         "name": "some-host",
         "state": 0,
+        "has_been_checked": 1,
         "acknowledged": 0,
         "scheduled_downtime_depth": 0,
         "is_flapping": 0,

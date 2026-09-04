@@ -14,7 +14,6 @@ import BaseCell from './BaseCell.vue'
 interface BaseStateCellProps {
   stale?: boolean | undefined
   flapping?: boolean | undefined
-  pending?: boolean | undefined
   columnId?: string | undefined
 }
 
@@ -34,29 +33,17 @@ const props = defineProps<StateCellProps>()
         <ServiceStateDisplay
           v-if="props.kind === 'service'"
           :state="props.state"
-          :pending="pending"
           :stale="stale"
           abbreviated
         />
-        <HostStateDisplay
-          v-else
-          :state="props.state"
-          :pending="pending"
-          :stale="stale"
-          abbreviated
-        />
+        <HostStateDisplay v-else :state="props.state" :stale="stale" abbreviated />
         <StateModeIcons :flapping="flapping" :stale="stale" />
       </div>
     </template>
     <template #spelledOut>
       <div class="monitoring-state-cell">
-        <ServiceStateDisplay
-          v-if="props.kind === 'service'"
-          :state="props.state"
-          :pending="pending"
-          :stale="stale"
-        />
-        <HostStateDisplay v-else :state="props.state" :pending="pending" :stale="stale" />
+        <ServiceStateDisplay v-if="props.kind === 'service'" :state="props.state" :stale="stale" />
+        <HostStateDisplay v-else :state="props.state" :stale="stale" />
         <StateModeIcons :flapping="flapping" :stale="stale" />
       </div>
     </template>

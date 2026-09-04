@@ -131,7 +131,8 @@ export function buildHostColumns({
     options: [
       { value: 'UP', title: _t('UP') },
       { value: 'DOWN', title: _t('DOWN') },
-      { value: 'UNREACHABLE', title: _t('UNREACH') }
+      { value: 'UNREACHABLE', title: _t('UNREACH') },
+      { value: 'PENDING', title: _t('PENDING') }
     ] satisfies { value: HostState; title: string }[],
     flags: [
       { field: 'is_flapping', title: _t('Flapping') },

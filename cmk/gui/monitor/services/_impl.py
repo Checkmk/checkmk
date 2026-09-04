@@ -69,6 +69,7 @@ class LiveStatusHostServicesRepository:
                 Services.description,
                 Services.host_name,
                 Services.state,
+                Services.has_been_checked,
                 Services.plugin_output,
                 Services.acknowledged,
                 Services.scheduled_downtime_depth,
@@ -95,7 +96,11 @@ class LiveStatusHostServicesRepository:
                 [
                     Service(
                         name=row["description"],
-                        state=ServiceState(row["state"]),
+                        state=(
+                            ServiceState.PENDING
+                            if row["has_been_checked"] == 0
+                            else ServiceState(row["state"])
+                        ),
                         acknowledged=bool(row["acknowledged"]),
                         in_downtime=row["scheduled_downtime_depth"] > 0,
                         notifications_enabled=bool(row["notifications_enabled"]),
@@ -128,6 +133,7 @@ class LiveStatusHostServicesRepository:
                 Services.description,
                 Services.host_name,
                 Services.state,
+                Services.has_been_checked,
                 Services.plugin_output,
                 Services.last_check,
                 Services.last_state_change,
@@ -138,6 +144,7 @@ class LiveStatusHostServicesRepository:
                 Services.staleness,
                 Services.host_alias,
                 Services.host_state,
+                Services.host_has_been_checked,
                 Services.host_acknowledged,
                 Services.host_scheduled_downtime_depth,
                 Services.contact_groups,
@@ -164,7 +171,9 @@ class LiveStatusHostServicesRepository:
             name=row["description"],
             host_name=row["host_name"],
             site_id=row["site"],
-            state=ServiceState(row["state"]),
+            state=(
+                ServiceState.PENDING if row["has_been_checked"] == 0 else ServiceState(row["state"])
+            ),
             summary=row["plugin_output"],
             last_check=int(row["last_check"]) or None,
             last_state_change=int(row["last_state_change"]),
@@ -177,7 +186,11 @@ class LiveStatusHostServicesRepository:
             is_flapping=bool(row["is_flapping"]),
             stale=row["staleness"] >= active_config.staleness_threshold,
             host_alias=row["host_alias"],
-            host_state=HostState(row["host_state"]),
+            host_state=(
+                HostState.PENDING
+                if row["host_has_been_checked"] == 0
+                else HostState(row["host_state"])
+            ),
             host_acknowledged=bool(row["host_acknowledged"]),
             host_in_downtime=row["host_scheduled_downtime_depth"] > 0,
             contact_groups=list(row["contact_groups"]),

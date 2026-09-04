@@ -47,7 +47,13 @@ class ServiceOverviewResponse:
         description="Name of the host this service belongs to", example="web-server-01"
     )
     site_id: str = api_field(description="Site ID", example="local")
-    state: ServiceStateLabel = api_field(description="Service state", example="OK")
+    state: ServiceStateLabel = api_field(
+        description=(
+            "Service state. 'PENDING' means the service has never been checked, i.e. its state "
+            "is still pending the first check result"
+        ),
+        example="OK",
+    )
     modes: list[ServiceModeInfo] = api_field(
         description=(
             "Active service modes (e.g. scheduled downtime, acknowledgement, disabled "
@@ -57,7 +63,13 @@ class ServiceOverviewResponse:
         example=[],
     )
     host_alias: str = api_field(description="Alias of the host", example="Web Server")
-    host_state: HostStateLabel = api_field(description="State of the host", example="UP")
+    host_state: HostStateLabel = api_field(
+        description=(
+            "State of the host. 'PENDING' means the host has never been checked, i.e. its state "
+            "is still pending the first check result"
+        ),
+        example="UP",
+    )
     host_modes: list[ServiceModeInfo] = api_field(
         description=(
             "Active modes of the host the service runs on, rendered as linked icons next to its "

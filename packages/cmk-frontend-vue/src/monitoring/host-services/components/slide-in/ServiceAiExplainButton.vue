@@ -20,13 +20,17 @@ const SERVICE_STATES: Record<ServiceOverview['state'], ExplainThisIssueData['ser
   OK: 'OK',
   WARN: 'Warning',
   CRIT: 'Critical',
-  UNKNOWN: 'Unknown'
+  UNKNOWN: 'Unknown',
+  PENDING: 'Pending'
 }
 
 const HOST_STATES: Record<ServiceOverview['host_state'], ExplainThisIssueData['host_state']> = {
   UP: 'Up',
   DOWN: 'Down',
-  UNREACHABLE: 'Unreachable'
+  UNREACHABLE: 'Unreachable',
+  // The AI explain schema has no pending host state; a never-checked host is treated as up,
+  // matching classic's ``explain_with_ai_icon.py`` fallback for an unrecognized host state.
+  PENDING: 'Up'
 }
 
 function explainThis(): void {

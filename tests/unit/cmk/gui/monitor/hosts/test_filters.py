@@ -203,7 +203,16 @@ def test_query_builder_stale_condition(
 
 def test_query_builder_state_choice_single_no_or() -> None:
     condition = StateChoiceCondition(type="condition", field="state", op="one_of", value=["DOWN"])
-    assert parse_as_livestatus_filter(condition) == "Filter: state = 1"
+    value = parse_as_livestatus_filter(condition)
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: state = 1",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+        ]
+    )
+
+    assert value == expected
 
 
 def test_query_builder_state_choice_multiple_with_or() -> None:
@@ -218,7 +227,40 @@ def test_query_builder_state_choice_multiple_with_or() -> None:
     expected = "\n".join(  # noqa: FLY002
         [
             "Filter: state = 1",
+            "Filter: has_been_checked = 1",
+            "And: 2",
             "Filter: state = 2",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "Or: 2",
+        ]
+    )
+
+    assert value == expected
+
+
+def test_query_builder_state_choice_pending_matches_has_been_checked_only() -> None:
+    """A pending host's raw ``state`` column is meaningless, so 'PENDING' is not translated into a
+    ``state = X`` filter at all - only into ``has_been_checked``."""
+    condition = StateChoiceCondition(
+        type="condition", field="state", op="one_of", value=["PENDING"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: has_been_checked = 0"
+
+
+def test_query_builder_state_choice_mixes_pending_and_real_states() -> None:
+    condition = StateChoiceCondition(
+        type="condition", field="state", op="one_of", value=["UP", "PENDING"]
+    )
+
+    value = parse_as_livestatus_filter(condition)
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: state = 0",
+            "Filter: has_been_checked = 1",
+            "And: 2",
+            "Filter: has_been_checked = 0",
             "Or: 2",
         ]
     )

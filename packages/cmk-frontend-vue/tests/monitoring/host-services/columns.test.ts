@@ -107,7 +107,8 @@ test('the state column filter offers the state checkboxes plus flapping/stale fl
       { value: 'OK', title: 'OK' },
       { value: 'WARN', title: 'WARN' },
       { value: 'CRIT', title: 'CRIT' },
-      { value: 'UNKNOWN', title: 'UNKNOWN' }
+      { value: 'UNKNOWN', title: 'UNKNOWN' },
+      { value: 'PENDING', title: 'PENDING' }
     ],
     flags: [
       { field: 'is_flapping', title: 'Flapping' },

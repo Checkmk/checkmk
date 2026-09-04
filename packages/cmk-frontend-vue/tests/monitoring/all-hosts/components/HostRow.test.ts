@@ -114,6 +114,13 @@ test('renders state badge with unknown color for state UNREACHABLE', () => {
   expect(stateTag).toHaveTextContent('UNREACH')
 })
 
+test('renders the state badge as pending for a host that has never been checked', () => {
+  mountRow(makeHost({ state: 'PENDING' }))
+
+  expect(screen.getByText('PENDING')).toBeInTheDocument()
+  expect(screen.queryByText('DOWN')).not.toBeInTheDocument()
+})
+
 test('renders the flapping icon next to the state badge for a flapping host', () => {
   mountRow(makeHost({ is_flapping: true }))
 
@@ -185,7 +192,7 @@ test('links every service count to the services of that host', () => {
     })
   )
 
-  for (const link of serviceCountLinks(container).slice(0, 5)) {
+  for (const link of serviceCountLinks(container)) {
     expect(link).toHaveAttribute('target', '_top')
     expect(link!.getAttribute('href')).toContain('monitor_host_services.py?host=web-1&site=local')
   }
@@ -203,19 +210,13 @@ test('narrows each service count link to the state that column counts', () => {
     })
   )
 
-  const [total, ok, warn, crit, unknown] = serviceCountLinks(container)
+  const [total, ok, warn, crit, unknown, pending] = serviceCountLinks(container)
   expect(filterParam(total)).toBeNull()
   expect(filterParam(ok)).toBe(stateFilter('OK'))
   expect(filterParam(warn)).toBe(stateFilter('WARN'))
   expect(filterParam(crit)).toBe(stateFilter('CRIT'))
   expect(filterParam(unknown)).toBe(stateFilter('UNKNOWN'))
-})
-
-test('keeps the pending count on the legacy view, which alone knows that state', () => {
-  const { container } = mountRow(makeHost({ num_services_pending: 5 }))
-
-  const pending = serviceCountLinks(container)[5]
-  expect(pending).toHaveAttribute('href', 'view.py?host=web-1&view_name=host_pending')
+  expect(filterParam(pending)).toBe(stateFilter('PENDING'))
 })
 
 test('links no service count a host has none of', () => {

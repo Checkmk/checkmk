@@ -71,8 +71,8 @@ test('renders the service state when kind is service', () => {
   expect(screen.getByText('CRITICAL')).toBeInTheDocument()
 })
 
-test('forwards the pending flag to the service state', () => {
-  mountCell({ kind: 'service', state: 'CRIT', pending: true })
+test('renders the pending state for a service', () => {
+  mountCell({ kind: 'service', state: 'PENDING' })
 
   expect(screen.getByText('PENDING')).toBeInTheDocument()
   expect(screen.queryByText('CRITICAL')).not.toBeInTheDocument()
@@ -112,7 +112,7 @@ test('renders both the flapping and the stale indicator together', () => {
 test.each<[StateCellProps, string]>([
   [{ state: 'DOWN' }, 'DO'],
   [{ state: 'UNREACHABLE' }, 'UN'],
-  [{ state: 'UP', pending: true }, 'PD'],
+  [{ state: 'PENDING' }, 'PD'],
   [{ kind: 'service', state: 'CRIT' }, 'CR'],
   [{ kind: 'service', state: 'WARN' }, 'WA']
 ])('abbreviates the label in a column too narrow to spell it out', async (props, label) => {

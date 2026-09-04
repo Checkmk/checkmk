@@ -45,7 +45,13 @@ from ._urls import host_view_link
 @api_model
 class HostOverviewResponse:
     name: str = api_field(description="Host name", example="web-server-01")
-    state: HostStateLabel = api_field(description="Host state", example="UP")
+    state: HostStateLabel = api_field(
+        description=(
+            "Host state. 'PENDING' means the host has never been checked, i.e. its state is "
+            "still pending the first check result"
+        ),
+        example="UP",
+    )
     address: str = api_field(description="Primary IP address", example="10.0.0.1")
     alias: str = api_field(description="Host alias", example="Web Server")
     site_id: str = api_field(description="Site ID", example="local")

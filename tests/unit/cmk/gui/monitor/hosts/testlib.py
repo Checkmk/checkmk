@@ -26,13 +26,22 @@ class HostFactory(DataclassFactory[Host]):
     __allow_none_optionals__ = False
 
 
-def get_fake_host_repository(*, n_hosts: int = 0, hostnames: Sequence[str] = ()) -> HostRepository:
+def get_fake_host_repository(
+    *,
+    n_hosts: int = 0,
+    hostnames: Sequence[str] = (),
+    hosts: Sequence[Host] | None = None,
+) -> HostRepository:
     class HostFakeRepository:
         def __init__(self) -> None:
-            self._hosts = [
-                *(HostFactory.build(name=name) for name in hostnames),
-                *(HostFactory.build() for _ in range(n_hosts)),
-            ]
+            self._hosts = (
+                list(hosts)
+                if hosts is not None
+                else [
+                    *(HostFactory.build(name=name) for name in hostnames),
+                    *(HostFactory.build() for _ in range(n_hosts)),
+                ]
+            )
             self._host_overviews = {
                 (h.site_id, h.name): HostFactory.build(site_id=h.site_id, name=h.name)
                 for h in self._hosts

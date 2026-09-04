@@ -69,7 +69,13 @@ _DEFAULT_FIELDS: frozenset[HostOptionalField] = frozenset(
 @api_model
 class HostEntry:
     name: str = api_field(description="Host name", example="web-server-01")
-    state: HostStateLabel = api_field(description="Host state", example="UP")
+    state: HostStateLabel = api_field(
+        description=(
+            "Host state. 'PENDING' means the host has never been checked, i.e. its state is "
+            "still pending the first check result"
+        ),
+        example="UP",
+    )
     is_flapping: bool = api_field(description="Whether the host state is flapping", example=False)
     stale: bool = api_field(
         description="Whether the host hasn't been checked recently enough", example=False

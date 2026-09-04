@@ -64,7 +64,13 @@ _DEFAULT_FIELDS: frozenset[ServiceOptionalField] = frozenset()
 @api_model
 class HostServiceEntry:
     name: str = api_field(description="Service name", example="Check_MK HW/SW Inventory")
-    state: ServiceStateLabel = api_field(description="Service state", example="OK")
+    state: ServiceStateLabel = api_field(
+        description=(
+            "Service state. 'PENDING' means the service has never been checked, i.e. its state "
+            "is still pending the first check result"
+        ),
+        example="OK",
+    )
     is_flapping: bool = api_field(
         description="Whether the service state is flapping", example=False
     )

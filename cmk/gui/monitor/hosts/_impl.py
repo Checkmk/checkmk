@@ -81,6 +81,7 @@ class LiveStatusHostRepository:
             [
                 Hosts.name,
                 Hosts.state,
+                Hosts.has_been_checked,
                 Hosts.acknowledged,
                 Hosts.scheduled_downtime_depth,
                 Hosts.is_flapping,
@@ -103,7 +104,11 @@ class LiveStatusHostRepository:
                         name=row["name"],
                         alias=row.get("alias"),
                         address=row.get("address"),
-                        state=HostState(row["state"]),
+                        state=(
+                            HostState.PENDING
+                            if row["has_been_checked"] == 0
+                            else HostState(row["state"])
+                        ),
                         site_id=row["site"],
                         service_counts=_service_counts(row),
                         acknowledged=bool(row["acknowledged"]),
@@ -140,6 +145,7 @@ class LiveStatusHostRepository:
                 Hosts.alias,
                 Hosts.address,
                 Hosts.state,
+                Hosts.has_been_checked,
                 Hosts.num_services,
                 Hosts.num_services_ok,
                 Hosts.num_services_warn,
@@ -168,7 +174,7 @@ class LiveStatusHostRepository:
             name=row["name"],
             alias=row["alias"],
             address=row["address"],
-            state=HostState(row["state"]),
+            state=(HostState.PENDING if row["has_been_checked"] == 0 else HostState(row["state"])),
             site_id=row["site"],
             service_counts=ServiceCounts(
                 total=row["num_services"],
@@ -391,6 +397,11 @@ def _service_counts(row: Mapping[str, object]) -> ServiceCounts | None:
     )
 
 
+# Sorting by state hits the same limit-window imprecision as folder above: a host that has never
+# been checked is ``HostState.PENDING`` - last in ``host_sorter()``'s ascending order - but its raw
+# ``state`` column reports 0, indistinguishable there from a genuinely OK host. A listing longer
+# than the limit, sorted by state, therefore shows the right rows in the right order only within
+# the window the limit kept.
 def _build_primary_sort(sorters: Sequence[HostSort]) -> str:
     if not sorters or sorters[0].column in _VIRTUAL_SORT_COLUMNS:
         return "OrderBy: name asc"

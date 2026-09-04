@@ -35,14 +35,20 @@ class ServiceOverviewFactory(DataclassFactory[ServiceOverview]):
 
 
 def get_fake_host_services_repository(
-    *, n_services: int, names: Sequence[str] | None = None
+    *,
+    n_services: int = 0,
+    names: Sequence[str] | None = None,
+    services: Sequence[Service] | None = None,
 ) -> HostServicesRepository:
     class HostServicesFakeRepository:
         def __init__(self) -> None:
-            self._services = [
-                ServiceFactory.build() if names is None else ServiceFactory.build(name=names[i])
-                for i in range(n_services)
-            ]
+            if services is not None:
+                self._services = list(services)
+            else:
+                self._services = [
+                    ServiceFactory.build() if names is None else ServiceFactory.build(name=names[i])
+                    for i in range(n_services)
+                ]
             self._service_overviews = {
                 (KNOWN_SITE_ID, KNOWN_HOSTNAME, s.name): ServiceOverviewFactory.build(
                     site_id=KNOWN_SITE_ID, host_name=KNOWN_HOSTNAME, name=s.name

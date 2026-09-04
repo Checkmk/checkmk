@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State
 from cmk.plugins.hp_hh3c.agent_based import hp_hh3c_ext
 from cmk.plugins.hp_hh3c.agent_based.hp_hh3c_ext import (
     check_hp_hh3c_ext,
@@ -20,6 +20,7 @@ from cmk.plugins.hp_hh3c.agent_based.hp_hh3c_ext import (
     discover_hp_hh3c_ext_mem,
     discover_hp_hh3c_ext_states,
     parse_hp_hh3c_ext,
+    Section,
     snmp_section_hp_hh3c_ext,
 )
 from cmk.plugins.hp_hh3c.lib import OID_SysObjectID
@@ -48,6 +49,37 @@ _STRING_TABLE = [
 
 _ITEM = "MODULE LEVEL1 192"
 
+_IRF_MEM_TOTAL = 4207771648
+_IRF_ITEM = "MODULE LEVEL1 210"
+
+# Rows taken verbatim from a walk of an HPE 5710 48XGT IRF stack (sysObjectID
+# .1.3.6.1.4.1.25506.11.1.289). All four stack members are separate modules.
+_STRING_TABLE_IRF_STACK = [
+    [
+        ["1", "1", "1", "0", "0", _INVALID_TEMPERATURE, "0"],
+        ["2", "1", "1", "0", "0", _INVALID_TEMPERATURE, "0"],
+        ["192", "1", "3", "11", "39", "31", str(_IRF_MEM_TOTAL)],
+        ["210", "1", "3", "18", "40", "28", str(_IRF_MEM_TOTAL)],
+        ["228", "1", "3", "10", "39", "34", str(_IRF_MEM_TOTAL)],
+        ["246", "1", "3", "11", "39", "33", str(_IRF_MEM_TOTAL)],
+    ],
+    [
+        ["1", "HPE"],
+        ["2", "HPE 5710 48XGT 6QS+/2QS28 Switch Software Version 7.1.070"],
+        ["192", "MODULE LEVEL1"],
+        ["210", "MODULE LEVEL1"],
+        ["228", "MODULE LEVEL1"],
+        ["246", "MODULE LEVEL1"],
+    ],
+]
+
+_IRF_MODULES = [
+    Service(item="MODULE LEVEL1 192"),
+    Service(item="MODULE LEVEL1 210"),
+    Service(item="MODULE LEVEL1 228"),
+    Service(item="MODULE LEVEL1 246"),
+]
+
 
 @pytest.mark.parametrize(
     "oid_data",
@@ -55,6 +87,10 @@ _ITEM = "MODULE LEVEL1 192"
         pytest.param(
             {OID_SysObjectID: ".1.3.6.1.4.1.25506.11.1.290", _STATE_ENTRY_OID: "0"},
             id="HPE 5710 24XGT 6QS+/2QS28",
+        ),
+        pytest.param(
+            {OID_SysObjectID: ".1.3.6.1.4.1.25506.11.1.289", _STATE_ENTRY_OID: "0"},
+            id="HPE 5710 48XGT 6QS+/2QS28",
         ),
         pytest.param(
             {OID_SysObjectID: ".1.3.6.1.4.1.25506.11.1.239", _STATE_ENTRY_OID: "0"},
@@ -203,3 +239,63 @@ def test_discover_hp_hh3c_ext_cpu_without_mem_size() -> None:
         ]
     )
     assert not list(discover_hp_hh3c_ext_cpu(section))
+
+
+@pytest.mark.parametrize(
+    "discover_function",
+    [
+        pytest.param(discover_hp_hh3c_ext, id="temperature"),
+        pytest.param(discover_hp_hh3c_ext_states, id="states"),
+        pytest.param(discover_hp_hh3c_ext_cpu, id="cpu"),
+        pytest.param(discover_hp_hh3c_ext_mem, id="mem"),
+    ],
+)
+def test_discover_hp_hh3c_ext_irf_stack(
+    discover_function: Callable[[Section], DiscoveryResult],
+) -> None:
+    section = parse_hp_hh3c_ext(_STRING_TABLE_IRF_STACK)
+    assert list(discover_function(section)) == _IRF_MODULES
+
+
+def test_check_hp_hh3c_ext_irf_stack_member(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(hp_hh3c_ext, "get_value_store", dict)
+    section = parse_hp_hh3c_ext(_STRING_TABLE_IRF_STACK)
+    assert list(check_hp_hh3c_ext(_IRF_ITEM, {}, section)) == [
+        Metric("temp", 28.0),
+        Result(state=State.OK, summary="Temperature: 28.0 °C"),
+        Result(
+            state=State.OK,
+            notice="Configuration: prefer user levels over device levels (no levels found)",
+        ),
+    ]
+
+
+def test_check_hp_hh3c_ext_states_irf_stack_member() -> None:
+    # The stack reports hh3cEntityExtAdminStatus = 1 (not supported).
+    section = parse_hp_hh3c_ext(_STRING_TABLE_IRF_STACK)
+    assert list(check_hp_hh3c_ext_states(_IRF_ITEM, {}, section)) == [
+        Result(state=State.WARN, summary="Administrative: not supported"),
+        Result(state=State.OK, summary="Operational: enabled"),
+    ]
+
+
+def test_check_hp_hh3c_ext_cpu_irf_stack_member(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(hp_hh3c_ext, "get_value_store", dict)
+    section = parse_hp_hh3c_ext(_STRING_TABLE_IRF_STACK)
+    assert list(check_hp_hh3c_ext_cpu(_IRF_ITEM, {}, section)) == [
+        Result(state=State.OK, summary="Total CPU: 18.00%"),
+        Metric("util", 18.0, boundaries=(0, None)),
+    ]
+
+
+def test_check_hp_hh3c_ext_mem_irf_stack_member() -> None:
+    section = parse_hp_hh3c_ext(_STRING_TABLE_IRF_STACK)
+    assert list(check_hp_hh3c_ext_mem(_IRF_ITEM, {"levels": (80.0, 90.0)}, section)) == [
+        Result(state=State.OK, summary="Usage: 40.00% - 1.57 GiB of 3.92 GiB"),
+        Metric(
+            "memused",
+            0.4 * _IRF_MEM_TOTAL,
+            levels=(0.8 * _IRF_MEM_TOTAL, 0.9 * _IRF_MEM_TOTAL),
+            boundaries=(0, _IRF_MEM_TOTAL),
+        ),
+    ]

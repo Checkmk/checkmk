@@ -13,6 +13,7 @@ from typing import Literal
 
 import cmk.ccc.version as cmk_version
 from cmk.gui import hooks, visuals
+from cmk.gui.dashboard.global_time_picker_options import get_global_time_picker_props
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
@@ -154,6 +155,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
             "publish_to_sites": user.may("general.publish_dashboards_to_sites"),
         },
         "logged_in_user": user.id,
+        "global_time_picker": asdict(get_global_time_picker_props(ctx.config)),
     }
 
     html.vue_component("cmk-dashboard", data=page_properties)

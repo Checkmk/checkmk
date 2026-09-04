@@ -28,6 +28,14 @@ See [BAZEL.md](BAZEL.md) for the full developer command reference.
 - Agent plugins: Python 3.4+ compatible
 - GUI cannot import cmk/base internals (enforced by component isolation)
 
+## Testing
+
+Read [TESTING.md](TESTING.md) before writing, changing, or debugging tests, and
+run its self-check before finishing. It defines the test levels and their
+directories, the flaky-test process, and the core rules: test through the
+public surface, inject dependencies instead of patching Checkmk code, one
+behavior per test.
+
 ## Editions
 
 The codebase supports five editions: `community`, `pro`, `ultimate`,

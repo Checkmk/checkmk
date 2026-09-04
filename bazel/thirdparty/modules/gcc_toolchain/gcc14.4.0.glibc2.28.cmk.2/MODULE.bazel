@@ -1,0 +1,7 @@
+module(
+    name = "gcc_toolchain",
+    version = "gcc14.4.0.glibc2.28.cmk.2",
+    compatibility_level = 1,
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.9.0")

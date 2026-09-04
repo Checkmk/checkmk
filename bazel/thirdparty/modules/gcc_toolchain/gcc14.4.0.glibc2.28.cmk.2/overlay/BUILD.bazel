@@ -1,0 +1,111 @@
+# See https://github.com/bazelbuild/rules_cc/tree/main/examples/rule_based_toolchain
+
+load("@bazel_skylib//rules/directory:directory.bzl", "directory")
+load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(glob(["bin/**"]))
+
+directory(
+    # Our hermetic clang-tidy uses this target to find the C++ headers.
+    name = "x86_64-checkmk-linux-gnu",
+    srcs = ["lib/gcc/x86_64-checkmk-linux-gnu/14.4.0"],
+)
+
+directory(
+    name = "toolchain_root",
+    srcs = glob([
+        "lib/**",
+        "x86_64-checkmk-linux-gnu/include/**",
+    ]),
+)
+
+subdirectory(
+    name = "lib-gcc-include",
+    parent = ":toolchain_root",
+    path = "x86_64-checkmk-linux-gnu/include",
+)
+
+subdirectory(
+    name = "include-x86_64-checkmk-linux-gnu",
+    parent = ":toolchain_root",
+    path = "lib/gcc/x86_64-checkmk-linux-gnu/14.4.0/include",
+)
+
+filegroup(
+    name = "builtin_headers",
+    srcs = [
+        ":include-x86_64-checkmk-linux-gnu",
+        ":lib-gcc-include",
+    ],
+)
+
+filegroup(
+    name = "linker_builtins",
+    # CT_STATIC_TOOLCHAIN ships bfd-plugins as .a, not .so — no *.so*
+    # under lib/ anymore.
+    data = glob(
+        [
+            "bin/*ld*",
+            "lib/**/*.a",
+            "lib/**/*.so*",
+            "lib/**/*.o",
+        ],
+        allow_empty = True,
+    ),
+)
+
+filegroup(
+    name = "linker_buildroot",
+    srcs = glob([
+        "x86_64-checkmk-linux-gnu/bin/ld*",
+    ]),
+)
+
+filegroup(
+    name = "multicall_support_files",
+    srcs = glob([
+        "libexec/**/*",
+    ]),
+)
+
+directory(
+    name = "root",
+    srcs = glob(["x86_64-checkmk-linux-gnu/sysroot/**/*"]),
+)
+
+subdirectory(
+    name = "sysroot",
+    parent = ":root",
+    path = "x86_64-checkmk-linux-gnu/sysroot",
+)
+
+alias(
+    name = "dynamic_runtime_lib",
+    actual = "x86_64-checkmk-linux-gnu/sysroot/lib/libstdc++.so",
+)
+
+alias(
+    name = "static_runtime_lib",
+    actual = "x86_64-checkmk-linux-gnu/sysroot/lib/libstdc++.a",
+)
+
+# Filegroups for cpp_libs package - provides hermetic access to C++ runtime libraries
+# Separated into ELF files and symlinks for patchelf processing
+filegroup(
+    name = "cpp_libs_files",
+    srcs = [
+        "x86_64-checkmk-linux-gnu/sysroot/lib/libgcc_s.so",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "cpp_libs_elf",
+    srcs = [
+        "x86_64-checkmk-linux-gnu/sysroot/lib/libgcc_s.so.1",
+        "x86_64-checkmk-linux-gnu/sysroot/lib/libstdc++.so.6.0.33",
+    ],
+    visibility = ["//visibility:public"],
+)

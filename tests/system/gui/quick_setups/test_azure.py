@@ -84,7 +84,6 @@ def fixture_azure_qs_config_page(
         list_hosts_page.activate_changes(test_site)
 
 
-@pytest.mark.skip(reason="This test is flaky, investigation is required. See CMK-32258")
 def test_minimal_configuration(
     azure_qs_config_page: AzureAddNewConfiguration, test_site: Site
 ) -> None:
@@ -147,7 +146,7 @@ def test_minimal_configuration(
         expected_locator=list_hosts_page.get_link(host_name),
     )
     logger.info("Validate Azure rule is setup.")
-    list_azure_rules_page = Ruleset(list_hosts_page.page, "Azure", "special_agents:azure")
+    list_azure_rules_page = Ruleset(list_hosts_page.page, "Azure", "special_agents:azure_v2")
     expect(
         list_azure_rules_page.rule_source(rule_id=0),
         message="Expected the Azure rule to be created!",

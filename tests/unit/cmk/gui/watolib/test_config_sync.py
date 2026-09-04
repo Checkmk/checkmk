@@ -404,18 +404,6 @@ def _get_expected_paths(
             "etc/check_mk/multisite.d/wato/groups.mk",
             "etc/check_mk/multisite.d/wato/user_connections.mk",
             "etc/password_store.secret",
-            "etc/check_mk/apache.d/wato/global.mk",
-            "etc/check_mk/conf.d/wato/global.mk",
-            "etc/check_mk/diskspace.d/wato/global.mk",
-            "etc/check_mk/multisite.d/wato/ca-certificates.mk",
-            "etc/check_mk/multisite.d/wato/site_certificate/global.mk",
-            "etc/check_mk/rrdcached.d/wato/global.mk",
-            "etc/omd/global.mk",
-            "etc/check_mk/dcd.d/wato/global.mk",
-            "etc/check_mk/mknotifyd.d/wato/global.mk",
-            "etc/check_mk/mkeventd.d/wato/global.mk",
-            "etc/check_mk/otel_collector.d/wato/global.mk",
-            "etc/check_mk/multisite.d/wato/ai_control_plane/global.mk",
         ]
 
         if with_local:
@@ -492,9 +480,11 @@ def _get_expected_paths(
         expected_paths += [
             "etc/check_mk/metric_backend.d",
             "etc/check_mk/metric_backend.d/wato",
-            "etc/check_mk/metric_backend.d/wato/global.mk",
             "etc/check_mk/metric_backend.d/wato/sitespecific.mk",
         ]
+
+        if edition is not cmk_version.Edition.ULTIMATEMT:
+            expected_paths += ["etc/check_mk/metric_backend.d/wato/global.mk"]
 
     return expected_paths
 

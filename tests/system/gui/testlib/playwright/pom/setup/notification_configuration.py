@@ -140,24 +140,24 @@ class NotificationConfiguration(CmkPage):
     def get_total_sent_notifications_count(self) -> int:
         stat_count = self._get_notification_stat_count("Total sent notifications")
         expect(stat_count, message="'Total sent notifications' count is not shown").to_have_text(
-            re.compile(r"\d+")
+            re.compile(r"^\s*\d+\s*$")
         )
         return int(stat_count.inner_text())
 
     def check_total_sent_notifications_has_changed(self, previous_count: int) -> None:
         locator = self._get_notification_stat_count("Total sent notifications")
-        expect(locator).not_to_have_text(re.compile(rf"^{previous_count}$"))
+        expect(locator).not_to_have_text(re.compile(rf"^\s*{previous_count}\s*$"))
 
     def get_failed_notifications_count(self) -> int:
         stat_count = self._get_notification_stat_count("Failed notifications")
         expect(stat_count, message="'Failed notifications' count is not shown").to_have_text(
-            re.compile(r"\d+")
+            re.compile(r"^\s*\d+\s*$")
         )
         return int(stat_count.inner_text())
 
     def check_failed_notifications_has_not_changed(self, previous_count: int) -> None:
         locator = self._get_notification_stat_count("Failed notifications")
-        expect(locator).to_have_text(re.compile(rf"^\s{previous_count}$"))
+        expect(locator).to_have_text(re.compile(rf"^\s*{previous_count}\s*$"))
 
     def rule_conditions(self, rule_number: int = 0) -> Locator:
         return self._notification_rule_row(rule_number).locator("td.rule_conditions")

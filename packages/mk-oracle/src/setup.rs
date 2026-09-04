@@ -870,11 +870,12 @@ pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
 /// On Unix the path, its direct entries and its parent directories must only be
 /// writable by root, by the conventional Oracle owner `oracle:oinstall`, or by a
 /// user or group listed in `safe_entries`, whenever the plugin runs as root. On
-/// Windows the path's DACL must grant write access only to privileged SIDs
-/// (SYSTEM, built-in Administrators, Domain Admins, Enterprise Admins) or to a
-/// listed safe entry, whenever the plugin runs elevated. In both cases a
-/// non-privileged caller always passes, and `check` turns the validation off
-/// entirely.
+/// Windows the path must be owned by, and its DACL must grant write access only
+/// to, privileged SIDs (SYSTEM, built-in Administrators, Domain Admins,
+/// Enterprise Admins) or a listed safe entry, whenever the plugin runs elevated:
+/// the owner implicitly holds `WRITE_DAC`, so validating the DACL alone would let
+/// a non-privileged owner rewrite it. In both cases a non-privileged caller
+/// always passes, and `check` turns the validation off entirely.
 pub fn validate_permissions(p: &Path, check: bool, safe_entries: &[String]) -> bool {
     #[cfg(unix)]
     {

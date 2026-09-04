@@ -25,6 +25,7 @@ from cmk.flags import CONFIG_FILENAME as RELEASE_FLAGS_CONFIG_FILENAME
 from cmk.flags import ReleaseFlagConfig
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -58,6 +59,16 @@ class ConfigDomainReleaseFlags(ABCConfigDomain):
     @classmethod
     def ident(cls) -> ConfigDomainName:
         return RELEASE_FLAGS_CONFIG_ID
+
+    @classmethod
+    @override
+    def hint(cls) -> HTML:
+        return HTML.without_escaping(
+            _(
+                "This is an experimental flag for testing only. It may change or be removed "
+                "without notice and must not be relied on for permanent configuration."
+            )
+        )
 
     @override
     def config_dir(self) -> Path:
@@ -107,7 +118,7 @@ class ConfigDomainReleaseFlags(ABCConfigDomain):
 
 
 ConfigVariableGroupReleaseFlags = ConfigVariableGroup(
-    title=_l("Release flags"),
+    title=_l("Experimental flags (for testing only)"),
     sort_index=200,
 )
 

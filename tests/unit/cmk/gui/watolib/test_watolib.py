@@ -350,7 +350,7 @@ def test_registered_configvar_groups() -> None:
         "Support",
         "Developer tools",
         "Product usage analytics",
-        "Release flags",
+        "Experimental flags (for testing only)",
     ]
 
     if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:

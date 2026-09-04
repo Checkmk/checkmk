@@ -782,7 +782,7 @@ fn calc_main_spots(endpoints: Vec<config::ora_sql::Endpoint>) -> Vec<ClosedSpot>
 /// API - nothing outside this module uses it in production.
 #[doc(hidden)]
 pub fn calc_custom_spots(instances: &[CustomInstance]) -> Vec<ClosedSpot> {
-    log::debug!("CUSTOM INSTANCES: {:?}", instances);
+    log::debug!("Instances: {:?}", instances);
     instances
         .iter()
         .filter_map(|instance| {

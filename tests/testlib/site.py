@@ -1854,6 +1854,9 @@ class Site:
             if re.search("Licensed phase: too many services.", crash_detail):
                 logger.warning("Ignored crash report due to license violation!")
                 continue
+            if re.search("Trial period ended: 'Activate changes' is blocked", crash_detail):
+                logger.warning("Ignored crash report due to license violation! See CMK-38535")
+                continue
             if re.search("version `OPENSSL_3.4.0' not found", crash_detail):
                 logger.warning("Ignored crash report due to known OpenSSL issue. See CMK-28862")
                 continue

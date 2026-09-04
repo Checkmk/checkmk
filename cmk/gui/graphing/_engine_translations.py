@@ -122,6 +122,23 @@ def _reverse_names(
     return result
 
 
+def reverse_translated_names(
+    canonical_name: MetricName,
+    registered_translations: Sequence[translations_v1.Translation],
+) -> frozenset[MetricName]:
+    # Every raw metric name whose data may belong to this metric, across all check commands: the
+    # name itself plus every name any translation renames to it. A regex translation ("~.*rta")
+    # maps many names onto one and so cannot be reversed.
+    return frozenset(
+        {canonical_name}
+        | {
+            name
+            for translation in registered_translations
+            for name in _reverse_names(canonical_name, translation.translations)
+        }
+    )
+
+
 def _deprecated_originals(
     metric_name: MetricName,
     specs: Mapping[str, _TranslationSpec],

@@ -7,6 +7,7 @@ from ._engine_discovery import graph_choices, GraphChoices, GraphPluginChoice
 from ._engine_dispatch import evaluate_built_graphs
 from ._engine_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
 from ._engine_metrics import evaluated_metrics, EvaluatedMetric
+from ._engine_perfdata import parse_check_command
 from ._engine_perfometer_bars import (
     drawn_segments,
     DrawnSegment,
@@ -21,6 +22,7 @@ from ._engine_template_graphs import (
     discover_template_graphs,
     resolve_graph_id_from_index,
 )
+from ._engine_translations import reverse_translated_names
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
     GraphFromAPI,
@@ -87,7 +89,6 @@ from ._metrics import (
     registered_metric_ids_and_titles,
 )
 from ._rrd import (
-    _reverse_translate_into_all_potentially_relevant_metrics_cached,
     all_rrd_columns_potentially_relevant_for_metric,
     make_graph_row,
     translate_and_merge_rrd_columns,
@@ -153,7 +154,6 @@ __all__ = [
     "ScalarBounds",
     "TranslatedMetric",
     "UserSpecificUnit",
-    "_reverse_translate_into_all_potentially_relevant_metrics_cached",
     "all_rrd_columns_potentially_relevant_for_metric",
     "check_metrics",
     "default_time_range_seconds",
@@ -165,6 +165,7 @@ __all__ = [
     "drawn_segments",
     "EvaluatedMetric",
     "evaluated_metrics",
+    "parse_check_command",
     "evaluated_perfometer",
     "perfometer_label",
     "perfometer_sort_value",
@@ -172,6 +173,7 @@ __all__ = [
     "graph_choices",
     "discover_template_graphs",
     "registered_graphs",
+    "reverse_translated_names",
     "registered_metrics",
     "registered_translations",
     "make_graph_row",

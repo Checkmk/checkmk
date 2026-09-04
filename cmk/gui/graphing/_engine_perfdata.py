@@ -85,7 +85,7 @@ def _parse_perf_values(
     )
 
 
-def _parse_check_command(check_command: str) -> str:
+def parse_check_command(check_command: str) -> str:
     parts = check_command.split("!", 1)
     if (
         parts[0] == "check-mk-custom"
@@ -99,7 +99,7 @@ def _parse_check_command(check_command: str) -> str:
 def _parse_perf_data(
     perf_data_string: str, check_command: str, *, debug: bool
 ) -> tuple[Mapping[MetricName, RawPerformanceValue], str]:
-    check_command = _parse_check_command(check_command)
+    check_command = parse_check_command(check_command)
 
     parts = shlex.split(perf_data_string)
     if parts and parts[-1].startswith("[") and parts[-1].endswith("]"):

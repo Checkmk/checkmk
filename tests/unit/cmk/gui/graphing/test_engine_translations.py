@@ -10,6 +10,7 @@ from cmk.graphing_engine import MetricName
 from cmk.gui.graphing._engine_perfdata import RawPerformanceData, RawPerformanceValue
 from cmk.gui.graphing._engine_translations import (
     map_metric_names,
+    reverse_translated_names,
     rrd_originals,
     RRDOriginal,
     translate_metric_names,
@@ -186,3 +187,30 @@ def test_a_metric_without_performance_data_falls_back_to_its_own_column_unscaled
         _raw({"x": RawPerformanceValue(value=5.0)}),
         _registered({"x": translations.ScaleBy(1024)}),
     ) == [_original("y", 1.0)]
+
+
+def test_reverse_translated_names_always_contains_the_metric_itself() -> None:
+    assert reverse_translated_names(MetricName("new"), []) == {MetricName("new")}
+
+
+def test_reverse_translated_names_collects_every_name_renamed_to_it() -> None:
+    assert reverse_translated_names(
+        MetricName("new"),
+        [
+            *_registered({"old": translations.RenameTo("new")}),
+            *_registered({"ancient": translations.RenameToAndScaleBy("new", 2.0)}),
+        ],
+    ) == {MetricName("new"), MetricName("old"), MetricName("ancient")}
+
+
+def test_reverse_translated_names_skips_a_regex_translation() -> None:
+    # "~.*rta" maps many raw names onto one canonical name, so it cannot be reversed.
+    assert reverse_translated_names(
+        MetricName("rta"), _registered({"~.*rta": translations.RenameTo("rta")})
+    ) == {MetricName("rta")}
+
+
+def test_reverse_translated_names_ignores_a_translation_to_another_metric() -> None:
+    assert reverse_translated_names(
+        MetricName("new"), _registered({"old": translations.RenameTo("other")})
+    ) == {MetricName("new")}

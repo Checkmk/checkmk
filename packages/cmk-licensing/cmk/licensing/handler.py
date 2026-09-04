@@ -78,48 +78,82 @@ class LicenseState(Enum):
 
         This typically happens when the site enters a free state after a trial expiration."""
 
-        return self is LicenseState.FREE
+        match self:
+            case LicenseState.FREE:
+                return True
+            case (
+                LicenseState.TRIAL
+                | LicenseState.LICENSED
+                | LicenseState.UNLICENSED
+                | LicenseState.PENDING_SELECTION
+                | LicenseState.PENDING_LICENSE_VERIFICATION
+                | LicenseState.PENDING_TRIAL_VERIFICATION
+            ):
+                return False
 
     def is_connecting_to_remotes_enabled(self) -> bool:
         """Returns True if distributed monitoring features should be enabled (for central sites)."""
 
-        return self in [
-            LicenseState.TRIAL,
-            LicenseState.LICENSED,
-            LicenseState.PENDING_SELECTION,
-            LicenseState.PENDING_LICENSE_VERIFICATION,
-            LicenseState.PENDING_TRIAL_VERIFICATION,
-        ]
+        match self:
+            case (
+                LicenseState.TRIAL
+                | LicenseState.LICENSED
+                | LicenseState.PENDING_SELECTION
+                | LicenseState.PENDING_LICENSE_VERIFICATION
+                | LicenseState.PENDING_TRIAL_VERIFICATION
+            ):
+                return True
+            case LicenseState.FREE | LicenseState.UNLICENSED:
+                return False
 
     def is_adding_as_remote_enabled(self) -> bool:
         """Returns True if the site can be added to a distributed monitoring setup (as a remote site)."""
 
-        # Note: it's not clear if UNLICENSED remote sites should be prevented from remote site
-        # automation. This code replicates the behaviour that existed in the past, however, it
-        # probably makes sense to remove the UNLICENSED state here.
-        return self in [
-            LicenseState.TRIAL,
-            LicenseState.LICENSED,
-            LicenseState.UNLICENSED,
-            LicenseState.PENDING_SELECTION,
-            LicenseState.PENDING_LICENSE_VERIFICATION,
-            LicenseState.PENDING_TRIAL_VERIFICATION,
-        ]
+        match self:
+            case (
+                LicenseState.TRIAL
+                | LicenseState.LICENSED
+                # Note: it's not clear if UNLICENSED remote sites should be prevented from remote
+                # site automation. This code replicates the behaviour that existed in the past,
+                # however, it probably makes sense to remove the UNLICENSED state here.
+                | LicenseState.UNLICENSED
+                | LicenseState.PENDING_SELECTION
+                | LicenseState.PENDING_LICENSE_VERIFICATION
+                | LicenseState.PENDING_TRIAL_VERIFICATION
+            ):
+                return True
+            case LicenseState.FREE:
+                return False
 
     def has_reduced_metric_series_limit(self) -> bool:
         """Returns True if the site should reduce the active metric series limit (typically to 750)."""
 
-        return self is LicenseState.FREE
+        match self:
+            case LicenseState.FREE:
+                return True
+            case (
+                LicenseState.TRIAL
+                | LicenseState.LICENSED
+                | LicenseState.UNLICENSED
+                | LicenseState.PENDING_SELECTION
+                | LicenseState.PENDING_LICENSE_VERIFICATION
+                | LicenseState.PENDING_TRIAL_VERIFICATION
+            ):
+                return False
 
     def has_remaining_trial_time(self) -> bool:
         """Return True if the site is in a state where remaining trial time exists."""
 
-        return self in [
-            LicenseState.TRIAL,
-            LicenseState.PENDING_SELECTION,
-            LicenseState.PENDING_LICENSE_VERIFICATION,
-            LicenseState.PENDING_TRIAL_VERIFICATION,
-        ]
+        match self:
+            case (
+                LicenseState.TRIAL
+                | LicenseState.PENDING_SELECTION
+                | LicenseState.PENDING_LICENSE_VERIFICATION
+                | LicenseState.PENDING_TRIAL_VERIFICATION
+            ):
+                return True
+            case LicenseState.FREE | LicenseState.LICENSED | LicenseState.UNLICENSED:
+                return False
 
 
 class LicenseStateError(Exception):

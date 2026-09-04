@@ -13,7 +13,7 @@ windows_python_wheels = use_repo_rule("//agents/modules/windows:windows_python_w
 bazel_dep(name = "asio", version = "1.34.2.cmk.1")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 bazel_dep(name = "aspect_rules_js", version = "2.3.7")
-bazel_dep(name = "aspect_rules_lint", version = "2.0.0")
+bazel_dep(name = "aspect_rules_lint", version = "2.9.0")
 bazel_dep(name = "aspect_rules_py", version = "1.11.5")
 bazel_dep(name = "aspect_rules_ts", version = "3.6.0")
 bazel_dep(name = "aspect_rules_webpack", version = "0.17.0")

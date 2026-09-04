@@ -75,8 +75,10 @@ clang_tidy = lint_clang_tidy_aspect(
     # (e.g. its mmintrin.h calls __builtin_ia32_* names Clang doesn't implement), so use
     # Clang's own extracted resource-dir headers instead.
     builtin_include_dir = [Label("@clang-resource-headers")],
+    # Not the opaque :x86_64-checkmk-linux-gnu dir: it collides with all_files in the sandbox.
     deps = [
-        Label("@gcc_toolchain//:x86_64-checkmk-linux-gnu"),
+        Label("@gcc_toolchain//:builtin_headers"),
+        Label("@gcc_toolchain//:linker_builtins"),
         Label("@clang-resource-headers"),
     ],
 )

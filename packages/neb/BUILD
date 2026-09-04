@@ -4,7 +4,7 @@ load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:define_from_flag.bzl", "define_from_flag")
 load("//bazel/rules:dependency_info.bzl", "dependency_info")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
-load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_test")
+load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_shared_library", "cc_test")
 
 define_from_flag(
     name = "cmk_version_define",
@@ -17,6 +17,7 @@ cc_library(
     name = "neb_version",
     srcs = ["src/CmkVersion.cc"],
     hdrs = ["include/neb/CmkVersion.h"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     strip_include_prefix = "include/",
     deps = [":cmk_version_define"],
 )
@@ -36,6 +37,7 @@ cc_library(
     name = "neb_nagios3_headers",
     hdrs = glob(["third_party/include/nagios/*.h"]),
     package_metadata = [":nagios3_dependency_info"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     strip_include_prefix = "third_party/include/",
     tags = ["manual"],
 )
@@ -54,6 +56,7 @@ cc_library(
     name = "neb_nagios4_headers",
     hdrs = glob(["third_party/include/nagios4/*.h"]),
     package_metadata = [":nagios4_dependency_info"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     strip_include_prefix = "third_party/include/",
     tags = ["manual"],
 )
@@ -94,6 +97,7 @@ cc_library(
         "-O3",
         "-std=c++20",
     ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     strip_include_prefix = "include/",
     deps = [
         ":neb_nagios3_headers",
@@ -107,6 +111,7 @@ cc_library(
 cc_shared_library(
     name = "neb_shared",
     dynamic_deps = ["//packages/livestatus:livestatus_shared"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     visibility = ["//visibility:public"],
     deps = [
         ":neb_base",
@@ -148,6 +153,7 @@ cc_library(
         "test/test_utilities.cc",
     ],
     hdrs = ["test/test_utilities.h"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     deps = [
         ":neb_base",
         ":neb_version",
@@ -159,6 +165,7 @@ cc_library(
     name = "dummy_nagios",
     testonly = 1,
     srcs = ["test/DummyNagios.cc"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     deps = [
         ":neb_base",
         ":neb_version",
@@ -176,6 +183,7 @@ cc_test(
     copts = [
         "-std=c++20",
     ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["cpp"],
     deps = [
         ":dummy_nagios",

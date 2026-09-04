@@ -14,6 +14,7 @@ cc_binary(
     linkopts = [
         "-pthread",
     ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     visibility = ["//visibility:public"],
     deps = [
         "//packages/livestatus:livestatus_poller",
@@ -51,6 +52,7 @@ cc_test(
     name = "test",
     size = "small",
     srcs = ["test/test.cc"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["cpp"],
     deps = [":unixcat"],
 )

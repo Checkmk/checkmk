@@ -2,7 +2,7 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:patchelf.bzl", "set_runpath")
-load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_test")
+load("//bazel/rules:xcomp/cc.bzl", "cc_library", "cc_shared_library", "cc_test")
 
 cc_library(
     name = "livestatus_poller",
@@ -21,6 +21,7 @@ cc_library(
         "-O3",
         "-std=c++20",
     ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     strip_include_prefix = "include/",
     visibility = ["//:__subpackages__"],
 )
@@ -29,6 +30,7 @@ cc_library(
     name = "livestatus_headers",
     hdrs = glob(["include/livestatus/*.h"]),
     copts = ["-std=c++20"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     strip_include_prefix = "include/",
     visibility = ["//:__subpackages__"],
     deps = ["@asio"],
@@ -52,6 +54,7 @@ cc_library(
         "ASIO_DISABLE_CONCEPTS",
         "ASIO_NO_DEPRECATED",
     ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     visibility = [
         # Should rather be private
         "//packages/neb:__pkg__",
@@ -72,6 +75,7 @@ cc_shared_library(
         # symbols explicitly in the code.
         "@re2",
     ],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     shared_lib_name = "liblivestatus.so",
     visibility = ["//visibility:public"],
     deps = [
@@ -124,6 +128,7 @@ cc_test(
         "test/*.h",
     ]),
     copts = ["-std=c++20"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["cpp"],
     deps = [
         ":livestatus_base",

@@ -107,8 +107,7 @@ def chop_last_empty_step(
     time_series: Mapping[RRDMetric, TimeSeries], end: int
 ) -> Mapping[RRDMetric, TimeSeries]:
     # Drop the empty trailing step of a graph that ends "now": the current RRD step has no data yet,
-    # so an all-None last point across every curve is stripped rather than drawn as a gap (matches
-    # the legacy _chop_last_empty_step).
+    # so an all-None last point across every curve is stripped rather than drawn as a gap.
     if not time_series:
         return time_series
     step = next(iter(time_series.values())).time_range.step

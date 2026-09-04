@@ -365,7 +365,14 @@ class EditNotificationRule(BaseNotificationPage):
         )
         # The scrollbar interrupts the interaction with rule edit button -> -> collapse overview
         notification_configuration_page.collapse_notification_overview(True)
-        notification_configuration_page.notification_rule_edit_button(self.rule_position).click()
+        # The rule form requests its notification parameters after the page has loaded.
+        # Leaving the page while that request is in flight is reported as a crash.
+        with self.page.expect_response(
+            re.compile(r"/domain-types/notification_parameter/collections/")
+        ):
+            notification_configuration_page.notification_rule_edit_button(
+                self.rule_position
+            ).click()
         self.validate_page()
 
 

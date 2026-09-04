@@ -79,7 +79,6 @@ from ._html_render import (
     GraphExportRequest,
     host_service_graph_popup_cmk,
 )
-from ._legacy import check_metrics, CheckMetricEntry
 from ._metric_backend_registry import (
     FetchTimeSeriesProtocol,
     METRIC_BACKEND_KEY,
@@ -89,17 +88,6 @@ from ._metrics import (
     get_metric_spec,
     MetricSpec,
     registered_metric_ids_and_titles,
-)
-from ._rrd import (
-    all_rrd_columns_potentially_relevant_for_metric,
-    translate_and_merge_rrd_columns,
-)
-from ._translated_metrics import (
-    lookup_metric_translations_for_check_command,
-    parse_perf_data,
-    ScalarBounds,
-    translate_metrics,
-    TranslatedMetric,
 )
 from ._unit import (
     ConvertibleUnitSpecification,
@@ -122,7 +110,6 @@ from ._valuespecs import (
 )
 
 __all__ = [
-    "CheckMetricEntry",
     "ConvertibleUnitSpecification",
     "DecimalNotation",
     "ExplicitGraphSpecification",
@@ -152,11 +139,7 @@ __all__ = [
     "PerfometerFromAPI",
     "RegisteredMetric",
     "TemplateGraphSpecification",
-    "ScalarBounds",
-    "TranslatedMetric",
     "UserSpecificUnit",
-    "all_rrd_columns_potentially_relevant_for_metric",
-    "check_metrics",
     "default_time_range_seconds",
     "global_time_picker_props",
     "global_time_picker_refresh",
@@ -190,7 +173,6 @@ __all__ = [
     "graphs_from_api",
     "host_service_graph_popup_cmk",
     "id_from_unit_spec",
-    "lookup_metric_translations_for_check_command",
     "METRIC_BACKEND_KEY",
     "metric_backend_registry",
     "metrics_from_api",
@@ -198,7 +180,6 @@ __all__ = [
     "migrate_graph_render_options_title_format",
     "migrate_graph_render_options_title_format_from_disk",
     "parse_metric_from_api",
-    "parse_perf_data",
     "parse_graph_specification",
     "perfometers_from_api",
     "registered_metric_ids_and_titles",
@@ -213,8 +194,6 @@ __all__ = [
     "render_engine_graph_group",
     "render_plain_graph_title",
     "resolve_graph_id_from_index",
-    "translate_and_merge_rrd_columns",
-    "translate_metrics",
     "user_specific_unit",
     "vs_graph_render_option_elements",
     "vs_graph_render_options",

@@ -29,8 +29,6 @@ from cmk.graphing.v2_unstable import entry_point_prefixes as entry_point_prefixe
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.gui.graphing import (
-    check_metrics,
-    CheckMetricEntry,
     GraphFromAPI,
     graphs_from_api,
     host_service_graph_popup_cmk,
@@ -41,7 +39,6 @@ from cmk.gui.graphing import (
 )
 from cmk.gui.log import logger
 from cmk.gui.pages import PageContext, PageResult
-from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
 #   .--Plugins-------------------------------------------------------------.
@@ -72,60 +69,6 @@ def _load_graphing_plugins() -> DiscoveredPlugins[
     return discovered_plugins
 
 
-def _parse_check_command_from_api(
-    check_command: (
-        translations_v1.PassiveCheck
-        | translations_v1.ActiveCheck
-        | translations_v1.HostCheckCommand
-        | translations_v1.NagiosPlugin
-    ),
-) -> str:
-    match check_command:
-        case translations_v1.PassiveCheck():
-            return (
-                check_command.name
-                if check_command.name.startswith("check_mk-")
-                else f"check_mk-{check_command.name}"
-            )
-        case translations_v1.ActiveCheck():
-            return (
-                check_command.name
-                if check_command.name.startswith("check_mk_active-")
-                else f"check_mk_active-{check_command.name}"
-            )
-        case translations_v1.HostCheckCommand():
-            return (
-                check_command.name
-                if check_command.name.startswith("check-mk-")
-                else f"check-mk-{check_command.name}"
-            )
-        case translations_v1.NagiosPlugin():
-            name = (
-                check_command.name
-                if check_command.name.startswith("check_")
-                else f"check_{check_command.name}"
-            )
-            # parse_perf_data normalizes the lookup key with .replace(".", "_");
-            # apply the same normalization here so registrations whose Nagios
-            # plugin name contains a dot (e.g. "check_ping.exe") match the key
-            # the lookup will produce. See cmk/gui/graphing/_translated_metrics.py.
-            return name.replace(".", "_")
-
-
-def _parse_translation(
-    translation: (
-        translations_v1.RenameTo | translations_v1.ScaleBy | translations_v1.RenameToAndScaleBy
-    ),
-) -> CheckMetricEntry:
-    match translation:
-        case translations_v1.RenameTo():
-            return {"name": translation.metric_name}
-        case translations_v1.ScaleBy():
-            return {"scale": translation.factor}
-        case translations_v1.RenameToAndScaleBy():
-            return {"name": translation.metric_name, "scale": translation.factor}
-
-
 def _add_graphing_plugins(
     plugins: DiscoveredPlugins[
         metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_v1.Translation
@@ -134,13 +77,6 @@ def _add_graphing_plugins(
     for plugin in plugins.plugins.values():
         if isinstance(plugin, metrics_v1.Metric):
             metrics_from_api.register(parse_metric_from_api(plugin))
-
-        elif isinstance(plugin, translations_v1.Translation):
-            for check_command in plugin.check_commands:
-                check_metrics[_parse_check_command_from_api(check_command)] = {
-                    MetricName(old_name): _parse_translation(translation)
-                    for old_name, translation in plugin.translations.items()
-                }
 
         elif isinstance(
             plugin,

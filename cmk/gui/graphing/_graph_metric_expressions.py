@@ -16,39 +16,14 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 from cmk.utils.metrics import MetricName
-from cmk.utils.misc import pnp_cleanup
 from cmk.utils.servicename import ServiceName
 
 from ._time_series import TimeSeries
-from ._translated_metrics import TranslatedMetric
 
 GraphConsolidationFunction = Literal["max", "min", "average"]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 type DrawnLineType = Literal["line", "area", "stack"]
 type AttributeGroup = Literal["resource", "scope", "data_point"]
-
-
-def create_graph_metric_expression_from_translated_metric(
-    site_id: SiteId,
-    host_name: HostName,
-    service_name: ServiceName,
-    translated_metric: TranslatedMetric,
-    consolidation_function: GraphConsolidationFunction | None,
-) -> GraphMetricRRDSource | GraphMetricOperation:
-    metrics = [
-        GraphMetricRRDSource(
-            site_id=site_id,
-            host_name=host_name,
-            service_name=service_name,
-            metric_name=pnp_cleanup(o.name),
-            consolidation_func_name=consolidation_function,
-            scale=o.scale,
-        )
-        for o in translated_metric.originals
-    ]
-    if len(metrics) > 1:
-        return GraphMetricOperation(operator_name="MERGE", operands=metrics)
-    return metrics[0]
 
 
 def line_type_mirror(line_type: LineType) -> LineType:

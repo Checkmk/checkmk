@@ -106,7 +106,6 @@ py_library(
         "//cmk/gui/availability",
         "//cmk/gui/dashboard:type_defs",
         "//cmk/gui/data_source",
-        "//cmk/gui/graphing",
         "//cmk/gui/inventory",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/restful_objects",

@@ -7,10 +7,8 @@ from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
-from cmk.graphing.v1 import translations as translations_api
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_templates import get_graph_plugin_from_id
-from cmk.gui.graphing._legacy import check_metrics
 from cmk.gui.graphing._metrics import get_metric_spec
 from cmk.gui.graphing._unit import ConvertibleUnitSpecification, DecimalNotation
 from cmk.gui.graphing_main import _add_graphing_plugins
@@ -21,10 +19,10 @@ def test_add_graphing_plugins_registers_every_supported_plugin_kind() -> None:
     """Test the graphing plug-in loader/registrar with a synthetic
     `DiscoveredPlugins` collection.
 
-    Covering one entry of every kind the registrar knows about (`Metric`, `Graph`, `Translation`).
-    The test confirms that the loader-side bridge from the public `cmk.graphing.v1` API into
-    the internal `metrics_from_api` / `graphs_from_api` / `check_metrics` registries works end-to-end
-    and preserves the relevant attributes (title, unit, color, lines, translations)
+    Covering one entry of every kind the registrar knows about (`Metric`, `Graph`). The test
+    confirms that the loader-side bridge from the public `cmk.graphing.v1` API into the internal
+    `metrics_from_api` / `graphs_from_api` registries works end-to-end and preserves the relevant
+    attributes (title, unit, color, lines).
     """
     test_metric_1 = metrics_api.Metric(
         name="syntest_count_first",
@@ -54,14 +52,6 @@ def test_add_graphing_plugins_registers_every_supported_plugin_kind() -> None:
             metrics_api.CriticalOf("syntest_count_first"),
         ],
     )
-    test_translation = translations_api.Translation(
-        name="syntest_translation",
-        check_commands=[translations_api.PassiveCheck("syntest_check")],
-        translations={
-            "raw_value": translations_api.RenameToAndScaleBy("renamed_value", 0.01),
-            "raw_rpm": translations_api.RenameTo("fan_speed"),
-        },
-    )
     _add_graphing_plugins(
         DiscoveredPlugins(
             errors=[],
@@ -69,7 +59,6 @@ def test_add_graphing_plugins_registers_every_supported_plugin_kind() -> None:
                 PluginLocation("syntest", "metric_1"): test_metric_1,
                 PluginLocation("syntest", "metric_2"): test_metric_2,
                 PluginLocation("syntest", "graph"): test_graph,
-                PluginLocation("syntest", "translation"): test_translation,
             },
         )
     )
@@ -87,11 +76,6 @@ def test_add_graphing_plugins_registers_every_supported_plugin_kind() -> None:
     registered_metric_2 = get_metric_spec("syntest_count_second", metrics_from_api)
     assert registered_metric_2.name == "syntest_count_second"
     assert registered_metric_2.title == "Synthetic test count (second)"
-
-    assert check_metrics["check_mk-syntest_check"] == {
-        "raw_value": {"name": "renamed_value", "scale": 0.01},
-        "raw_rpm": {"name": "fan_speed"},
-    }
 
     assert get_graph_plugin_from_id(graphs_from_api, "syntest_counts") == graphs_api.Graph(
         name="syntest_counts",

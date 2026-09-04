@@ -16,7 +16,7 @@ from cmk.graphing_engine import (
 )
 
 
-def _timestamps(time_range: TimeRange) -> Sequence[int]:
+def timestamps(time_range: TimeRange) -> Sequence[int]:
     if time_range.step <= 0:
         return []
     return [t + time_range.step for t in range(time_range.start, time_range.end, time_range.step)]
@@ -42,11 +42,11 @@ def _downsample(
     time_range: TimeRange,
     consolidation_function: ConsolidationFunction,
 ) -> Sequence[float | None]:
-    desired = _timestamps(time_range)
+    desired = timestamps(time_range)
     resampled: list[float | None] = []
     bucket: list[float | None] = []
     index = 0
-    for timestamp, value in zip(_timestamps(time_series.time_range), time_series.values):
+    for timestamp, value in zip(timestamps(time_series.time_range), time_series.values):
         if index < len(desired) and timestamp > desired[index]:
             resampled.append(_aggregate(bucket, consolidation_function))
             bucket = []
@@ -75,7 +75,7 @@ def resample(
     if time_series.time_range == time_range:
         return time_series
     if not time_series.values or time_series.time_range.step <= 0:
-        return TimeSeries(time_range=time_range, values=[None] * len(_timestamps(time_range)))
+        return TimeSeries(time_range=time_range, values=[None] * len(timestamps(time_range)))
     values = (
         _downsample(time_series, time_range, consolidation_function)
         if time_range.step >= time_series.time_range.step

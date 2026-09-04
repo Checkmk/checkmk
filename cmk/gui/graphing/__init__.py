@@ -16,6 +16,8 @@ from ._engine_perfometer_bars import (
 )
 from ._engine_perfometers import evaluated_perfometer
 from ._engine_plugins import registered_graphs, registered_metrics, registered_translations
+from ._engine_rrd_columns import merge_rrd_columns, rrd_column_names
+from ._engine_series import timestamps
 from ._engine_source import RRDFetchMetricNames
 from ._engine_template_graphs import (
     build_template_graphs,
@@ -165,7 +167,10 @@ __all__ = [
     "drawn_segments",
     "EvaluatedMetric",
     "evaluated_metrics",
+    "merge_rrd_columns",
     "parse_check_command",
+    "rrd_column_names",
+    "timestamps",
     "evaluated_perfometer",
     "perfometer_label",
     "perfometer_sort_value",

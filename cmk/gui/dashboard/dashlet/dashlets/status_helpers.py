@@ -7,23 +7,22 @@
 from collections.abc import Iterable, Mapping
 
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
+from cmk.graphing_engine import PerformanceData
 from cmk.gui import sites, visuals
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.graphing import (
     ConvertibleUnitSpecification,
+    EvaluatedMetric,
     get_temperature_unit,
     MetricSpec,
-    ScalarBounds,
-    TranslatedMetric,
     user_specific_unit,
-    UserSpecificUnit,
 )
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import ColumnName, VisualContext
-from cmk.gui.unit_formatter import IECFormatter
+from cmk.gui.unit_formatter import IECFormatter, NotationFormatter
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.livestatus_client import LivestatusResponse
 from cmk.web.utils.urls import makeuri_contextless
@@ -94,46 +93,40 @@ def purge_metric_spec_for_js(metric_spec: MetricSpec) -> dict[str, object]:
     )
 
 
-def _scalar_bounds_for_js(scalar: ScalarBounds) -> Mapping[str, float]:
+def _scalar_bounds_for_js(performance_data: PerformanceData) -> Mapping[str, float]:
     bounds: dict[str, float] = {}
-    if scalar.warn is not None:
-        bounds["warn"] = scalar.warn
-    if scalar.crit is not None:
-        bounds["crit"] = scalar.crit
-    if scalar.min_ is not None:
-        bounds["min"] = scalar.min_
-    if scalar.max_ is not None:
-        bounds["max"] = scalar.max_
+    if performance_data.warning is not None:
+        bounds["warn"] = performance_data.warning
+    if performance_data.critical is not None:
+        bounds["crit"] = performance_data.critical
+    if performance_data.minimum is not None:
+        bounds["min"] = performance_data.minimum
+    if performance_data.maximum is not None:
+        bounds["max"] = performance_data.maximum
     return bounds
 
 
-def purge_translated_metric_for_js(translated_metric: TranslatedMetric) -> dict[str, object]:
-    return {"bounds": _scalar_bounds_for_js(translated_metric.scalar)} | _purge_unit_spec_for_js(
-        translated_metric.unit_spec,
-        temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
-    )
+def purge_evaluated_metric_for_js(metric: EvaluatedMetric) -> dict[str, object]:
+    return {
+        "bounds": _scalar_bounds_for_js(metric.performance_data),
+        "unit": _formatter_for_js(metric.formatter),
+    }
 
 
 def _purge_unit_spec_for_js(
     unit_spec: ConvertibleUnitSpecification,
     temperature_unit: TemperatureUnit,
 ) -> dict[str, object]:
-    return {
-        "unit": _transform_user_specific_unit_for_js(
-            user_specific_unit(unit_spec, temperature_unit)
-        )
-    }
+    return {"unit": _formatter_for_js(user_specific_unit(unit_spec, temperature_unit).formatter)}
 
 
-def _transform_user_specific_unit_for_js(
-    unit_for_current_user: UserSpecificUnit,
-) -> dict[str, object]:
+def _formatter_for_js(formatter: NotationFormatter) -> dict[str, object]:
     return {
-        "formatter_type": unit_for_current_user.formatter.js_formatter_name,
-        "symbol": unit_for_current_user.formatter.symbol,
-        "precision_type": unit_for_current_user.formatter.precision.type,
-        "precision_digits": unit_for_current_user.formatter.precision.digits,
-        "stepping": "binary" if isinstance(unit_for_current_user.formatter, IECFormatter) else None,
+        "formatter_type": formatter.js_formatter_name,
+        "symbol": formatter.symbol,
+        "precision_type": formatter.precision.type,
+        "precision_digits": formatter.precision.digits,
+        "stepping": "binary" if isinstance(formatter, IECFormatter) else None,
     }
 
 

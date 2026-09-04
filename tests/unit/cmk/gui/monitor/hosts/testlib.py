@@ -20,10 +20,14 @@ class HostOverviewFactory(DataclassFactory[HostOverview]):
     __check_model__ = False
 
 
-def get_fake_host_repository(*, n_hosts: int) -> HostRepository:
+def get_fake_host_repository(
+    *, n_hosts: int = 0, hosts: Sequence[Host] | None = None
+) -> HostRepository:
     class HostFakeRepository:
         def __init__(self) -> None:
-            self._hosts = [HostFactory.build() for _ in range(n_hosts)]
+            self._hosts = (
+                list(hosts) if hosts is not None else [HostFactory.build() for _ in range(n_hosts)]
+            )
             self._host_overviews = {
                 (h.site_id, h.name): HostOverviewFactory.build(site_id=h.site_id, name=h.name)
                 for h in self._hosts

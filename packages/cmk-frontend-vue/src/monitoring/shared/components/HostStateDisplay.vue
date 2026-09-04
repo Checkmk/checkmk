@@ -13,36 +13,43 @@ import CmkTag, { type Colors } from '@/components/CmkTag.vue'
 
 import type { HostState } from '@/monitoring/shared/api/types'
 
-const props = defineProps<{ state: HostState; pending?: boolean | undefined }>()
+const props = defineProps<{ state: HostState }>()
 
 const { _t } = usei18n()
 
+const assertNever = (value: never): never => {
+  throw new Error(`Unhandled host state: ${String(value)}`)
+}
+
 const stateLabel = computed<TranslatedString>(() => {
-  if (props.pending) {
-    return _t('PEND')
-  }
-  switch (props.state) {
+  const state = props.state
+  switch (state) {
     case 'UP':
       return _t('UP')
     case 'DOWN':
       return _t('DOWN')
     case 'UNREACHABLE':
-    default:
       return _t('UNREACH')
+    case 'PENDING':
+      return _t('PEND')
+    default:
+      return assertNever(state)
   }
 })
 
 const stateColor = computed<Colors>(() => {
-  if (props.pending) {
-    return 'default'
-  }
-  switch (props.state) {
+  const state = props.state
+  switch (state) {
     case 'UP':
       return 'success'
     case 'DOWN':
       return 'danger'
-    default:
+    case 'UNREACHABLE':
       return 'unknown'
+    case 'PENDING':
+      return 'default'
+    default:
+      return assertNever(state)
   }
 })
 </script>

@@ -16,7 +16,6 @@ import BaseCell from './BaseCell.vue'
 export interface StateCellProps {
   state: HostState
   stale?: boolean | undefined
-  pending?: boolean | undefined
   columnId?: string | undefined
 }
 
@@ -29,7 +28,7 @@ defineProps<StateCellProps>()
   <BaseCell :column-id="columnId">
     <template #default>
       <div class="monitoring-state-cell">
-        <HostStateDisplay :state="state" :pending="pending" />
+        <HostStateDisplay :state="state" />
         <CmkMultitoneIcon
           v-if="stale"
           name="stale"

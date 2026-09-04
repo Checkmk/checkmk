@@ -64,6 +64,7 @@ class LiveStatusHostRepository:
                 Hosts.alias,
                 Hosts.address,
                 Hosts.state,
+                Hosts.has_been_checked,
                 Hosts.num_services,
                 Hosts.num_services_ok,
                 Hosts.num_services_warn,
@@ -84,7 +85,11 @@ class LiveStatusHostRepository:
                         name=row["name"],
                         alias=row["alias"],
                         address=row["address"],
-                        state=HostState(row["state"]),
+                        state=(
+                            HostState.PENDING
+                            if row["has_been_checked"] == 0
+                            else HostState(row["state"])
+                        ),
                         site_id=row["site"],
                         service_counts=ServiceCounts(
                             total=row["num_services"],
@@ -136,7 +141,7 @@ class LiveStatusHostRepository:
             name=row["name"],
             alias=row["alias"],
             address=row["address"],
-            state=HostState(row["state"]),
+            state=(HostState.PENDING if row["has_been_checked"] == 0 else HostState(row["state"])),
             site_id=row["site"],
             service_counts=ServiceCounts(
                 total=row["num_services"],
@@ -226,6 +231,11 @@ def _build_query_filter(query: str) -> QueryExpression:
     )
 
 
+# Sorting by state hits the same limit-window imprecision as folder above: a host that has never
+# been checked is ``HostState.PENDING`` - last in ``host_sorter()``'s ascending order - but its raw
+# ``state`` column reports 0, indistinguishable there from a genuinely OK host. A listing longer
+# than the limit, sorted by state, therefore shows the right rows in the right order only within
+# the window the limit kept.
 def _build_primary_sort(sorters: Sequence[HostSort]) -> str:
     # NOTE (2.5.0 backport): master appends " natural" for natural-sort columns, but the
     # 2.5.0 Livestatus core only understands `OrderBy: COLUMN [asc|desc]` and fails the

@@ -154,12 +154,13 @@ def _accumulate_filters(node: FilterNode, filters: list[str]) -> None:
                     filters.append(f"Filter: {node.field} = {int(node.value)}")
 
         case StateChoiceCondition():
-            for value in node.value:
-                filters.append(f"Filter: {node.field} = {HostState[value]}")
+            clauses = [_state_choice_clause(node.field, value) for value in node.value]
+            for clause in clauses:
+                filters.extend(clause)
 
             match node.op:
-                case "one_of" if len(node.value) > 1:
-                    filters.append(f"Or: {len(node.value)}")
+                case "one_of" if len(clauses) > 1:
+                    filters.append(f"Or: {len(clauses)}")
 
         case AndNode() | OrNode():
             for child in node.children:
@@ -174,6 +175,19 @@ def _accumulate_filters(node: FilterNode, filters: list[str]) -> None:
         case NotNode():
             _accumulate_filters(node.child, filters)
             filters.append("Negate:")
+
+
+def _state_choice_clause(field: str, value: HostStateLabel) -> list[str]:
+    """A pending host's raw ``state`` column is meaningless (always 0, coinciding with UP), so
+    'PENDING' is matched on ``has_been_checked`` instead, and every other state excludes pending
+    hosts the same way rather than silently bucketing them in with a real state."""
+    if value == "PENDING":
+        return ["Filter: has_been_checked = 0"]
+    return [
+        f"Filter: {field} = {HostState[value]}",
+        "Filter: has_been_checked = 1",
+        "And: 2",
+    ]
 
 
 _NUMERIC_OP_TO_LS = {

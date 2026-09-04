@@ -22,7 +22,7 @@ export interface HostRef {
   name: string
 }
 
-export type HostState = components['schemas']['HostState']
+export type HostState = components['schemas']['HostStateLabel']
 
 export type HostsPageMeta = components['schemas']['HostsPageMeta']
 

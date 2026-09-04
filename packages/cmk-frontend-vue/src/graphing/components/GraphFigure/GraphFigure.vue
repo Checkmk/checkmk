@@ -42,7 +42,8 @@ const props = withDefaults(defineProps<GraphFigureProps>(), {
   showPin: false,
   burgerMenuGroups: () => [],
   showTimeAxis: true,
-  showValueAxis: true
+  showValueAxis: true,
+  showMargin: false
 })
 
 const graphAreaDiv = ref<HTMLDivElement | null>(null)
@@ -212,7 +213,10 @@ onBeforeUnmount(() => {
 <template>
   <div
     class="graphing-graph-figure"
-    :class="{ 'graphing-graph-figure--pin-overhang': showPin && !hasHeader }"
+    :class="{
+      'graphing-graph-figure--with-margin': showMargin,
+      'graphing-graph-figure--pin-overhang': showPin && !hasHeader
+    }"
   >
     <!-- Initial load only: while a refetch is pending the held data stays rendered
          (the transient zoom bridges it). -->
@@ -298,6 +302,9 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   position: relative;
+
+  /* The modifiers below pad this box, which fills its container exactly. */
+  box-sizing: border-box;
 }
 
 .graphing-graph-figure__loading-icon {
@@ -338,6 +345,11 @@ onBeforeUnmount(() => {
   overflow: visible;
 }
 
+.graphing-graph-figure--with-margin {
+  padding: var(--dimension-3);
+}
+
+/* Declared after the margin so the overhang keeps the top edge it needs for the marker. */
 .graphing-graph-figure--pin-overhang {
   padding-top: var(--dimension-5);
 }

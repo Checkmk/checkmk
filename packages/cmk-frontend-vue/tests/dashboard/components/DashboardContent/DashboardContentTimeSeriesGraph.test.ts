@@ -28,6 +28,7 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       'showPin',
       'showTimeAxis',
       'showValueAxis',
+      'showMargin',
       'minValueAxisWidth',
       'fetchGraph'
     ],
@@ -37,6 +38,7 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       :data-has-fetch-graph="fetchGraph !== undefined"
       :data-show-time-axis="showTimeAxis"
       :data-show-value-axis="showValueAxis"
+      :data-show-margin="showMargin"
       :data-min-value-axis-width="minValueAxisWidth"
     >{{ internal }}</div>`
   }
@@ -188,6 +190,24 @@ describe('graph render options', () => {
     const figure = await screen.findByTestId('graph-figure')
     expect(figure.getAttribute('data-show-time-axis')).toBe('true')
     expect(figure.getAttribute('data-show-value-axis')).toBe('true')
+  })
+
+  test('a stored margin option insets the figure', async () => {
+    const marginRequested = { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_margin: true } }
+
+    renderWidget({ content: marginRequested })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-margin')).toBe('true')
+  })
+
+  test('a widget storing no margin option leaves the figure flush', async () => {
+    const marginUnset = { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: true } }
+
+    renderWidget({ content: marginUnset })
+
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-show-margin')).toBe('false')
   })
 })
 

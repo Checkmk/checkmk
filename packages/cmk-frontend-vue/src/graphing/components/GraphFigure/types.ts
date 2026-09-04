@@ -26,6 +26,8 @@ export interface GraphFigureProps {
   showTimeAxis?: boolean
   showValueAxis?: boolean
   minValueAxisWidth?: number | undefined
+  /** Insets the whole figure (header, plot and legend) from its container's edge. */
+  showMargin?: boolean
   /**
    * Called for every fetch to get the graph's data; defaults to posting the definition to the
    * session-authenticated graph fetch endpoint.

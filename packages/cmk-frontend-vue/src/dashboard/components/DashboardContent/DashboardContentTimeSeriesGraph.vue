@@ -278,6 +278,7 @@ const showPin = computed(
 )
 const showTimeAxis = computed(() => graphRenderOptions.value?.show_time_axis ?? true)
 const showValueAxis = computed(() => graphRenderOptions.value?.show_vertical_axis ?? true)
+const showMargin = computed(() => graphRenderOptions.value?.show_margin ?? false)
 const valueAxisWidth = computed(() => {
   const configuredWidth = graphRenderOptions.value?.vertical_axis_width
   if (typeof configuredWidth === 'number') {
@@ -335,6 +336,7 @@ onMounted(() => {
         :show-pin="showPin"
         :show-time-axis="showTimeAxis"
         :show-value-axis="showValueAxis"
+        :show-margin="showMargin"
         :min-value-axis-width="valueAxisWidth"
         :fetch-graph="fetchGraph"
       />

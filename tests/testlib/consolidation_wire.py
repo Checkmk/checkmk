@@ -23,12 +23,19 @@ from cmk.shared_typing.consolidation import (
 
 
 def gauge(function: GaugeFunction, *, lookback_seconds: float) -> dict[str, object]:
-    return asdict(ConsolidationGauge(function=function, lookback_seconds=lookback_seconds))
+    return asdict(
+        ConsolidationGauge(type="gauge", function=function, lookback_seconds=lookback_seconds)
+    )
 
 
 def histogram_quantile(*, lookback_seconds: float, percentile: float) -> dict[str, object]:
     return asdict(
-        ConsolidationHistogramQuantile(lookback_seconds=lookback_seconds, percentile=percentile)
+        ConsolidationHistogramQuantile(
+            type="histogram",
+            function="histogram_quantile",
+            lookback_seconds=lookback_seconds,
+            percentile=percentile,
+        )
     )
 
 
@@ -37,6 +44,8 @@ def histogram_fraction_between(
 ) -> dict[str, object]:
     return asdict(
         ConsolidationHistogramFractionBetween(
+            type="histogram",
+            function="histogram_fraction_between",
             lookback_seconds=lookback_seconds,
             lower_threshold=lower_threshold,
             upper_threshold=upper_threshold,
@@ -53,6 +62,8 @@ def histogram_preserve_fraction_between(
 ) -> dict[str, object]:
     return asdict(
         ConsolidationHistogramPreserveFractionBetween(
+            type="histogram",
+            function="histogram_preserve_fraction_between",
             lookback_seconds=lookback_seconds,
             lower_threshold=lower_threshold,
             upper_threshold=upper_threshold,

@@ -214,7 +214,6 @@ json2python(
         "--use-title-as-name",
         "--use-double-quotes",
         "--use-default",
-        "--use-one-literal-as-default",
         "--custom-file-header-path=$(location :header_py.txt)",
         "--custom-formatters=utils.format",
         "--output-model-type=dataclasses.dataclass",

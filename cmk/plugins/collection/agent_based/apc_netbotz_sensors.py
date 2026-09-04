@@ -7,13 +7,10 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
-    all_of,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
-    exists,
     get_value_store,
-    OIDEnd,
     Result,
     Service,
     SNMPSection,
@@ -22,9 +19,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.apc.lib_ats import DETECT
 from cmk.plugins.lib.humidity import check_humidity
-from cmk.plugins.lib.temperature import check_temperature, TempParamType, to_celsius
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.636159851 nbAlinkEnc_0_4_TEMP
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.882181375 nbAlinkEnc_2_1_TEMP
@@ -198,88 +194,6 @@ snmp_section_apc_netbotz_50_sensors = SNMPSection(
         ),
     ],
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.52674.500"),
-)
-
-
-# The wireless sensors of the APC NetBotz Rack Monitor series (NBWS100T: temperature only,
-# NBWS100H: temperature and humidity) are reported neither via the NETBOTZV2 MIB nor via the
-# NETBOTZ50 MIB, but via the wirelessSensorStatusTable of the PowerNet MIB:
-
-# .1.3.6.1.4.1.318.1.1.10.5.1.1.1.1.1 1               wirelessSensorStatusIndex
-# .1.3.6.1.4.1.318.1.1.10.5.1.1.1.1.2 2
-# .1.3.6.1.4.1.318.1.1.10.5.1.1.1.3.1 Rack 12 top     wirelessSensorStatusName
-# .1.3.6.1.4.1.318.1.1.10.5.1.1.1.3.2 Rack 12 bottom
-# .1.3.6.1.4.1.318.1.1.10.5.1.1.1.5.1 231             wirelessSensorStatusTemperature
-# .1.3.6.1.4.1.318.1.1.10.5.1.1.1.5.2 224
-# .1.3.6.1.4.1.318.1.1.10.5.1.1.1.8.1 41              wirelessSensorStatusHumidity
-# .1.3.6.1.4.1.318.1.1.10.5.1.1.1.8.2 0
-
-# The temperature unit is a device wide setting, exposed by the environmental monitoring
-# branches of the PowerNet MIB: celsius(1) or fahrenheit(2)
-
-# .1.3.6.1.4.1.318.1.1.10.3.12.11.0   1               emsStatusSysTempUnits
-# .1.3.6.1.4.1.318.1.1.10.4.2.1.0     1               memSensorsStatusSysTempUnits
-
-
-def _parse_float(value: str) -> float | None:
-    try:
-        return float(value)
-    except ValueError:
-        return None
-
-
-def _device_temp_unit(*unit_tables: StringTable) -> str:
-    for unit_table in unit_tables:
-        for (unit,) in unit_table:
-            if unit:
-                return "f" if unit == "2" else "c"
-    return "c"
-
-
-def parse_apc_netbotz_wireless_sensors(string_table: Sequence[StringTable]) -> Section:
-    sensors, ems_units, mem_units = string_table
-    unit = _device_temp_unit(ems_units, mem_units)
-
-    parsed: dict[str, dict[str, SensorData]] = {}
-    for index, name, temp_reading, humidity_reading in sensors:
-        label = f"Wireless sensor {index}"
-        item = name or label
-
-        if (temp := _parse_float(temp_reading)) is not None:
-            parsed.setdefault("temp", {})[item] = SensorData(
-                reading=to_celsius(temp / 10.0, unit), label=label
-            )
-
-        if (humidity := _parse_float(humidity_reading)) is not None and humidity > 0:
-            parsed.setdefault("humidity", {})[item] = SensorData(reading=humidity, label=label)
-
-    return parsed
-
-
-snmp_section_apc_netbotz_wireless_sensors = SNMPSection(
-    name="apc_netbotz_wireless_sensors",
-    parse_function=parse_apc_netbotz_wireless_sensors,
-    parsed_section_name="apc_netbotz_sensors",
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.318.1.1.10.5.1.1.1",
-            oids=[
-                OIDEnd(),
-                "3",  # wirelessSensorStatusName
-                "5",  # wirelessSensorStatusTemperature
-                "8",  # wirelessSensorStatusHumidity
-            ],
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.318.1.1.10.3.12",
-            oids=["11.0"],  # emsStatusSysTempUnits
-        ),
-        SNMPTree(
-            base=".1.3.6.1.4.1.318.1.1.10.4.2",
-            oids=["1.0"],  # memSensorsStatusSysTempUnits
-        ),
-    ],
-    detect=all_of(DETECT, exists(".1.3.6.1.4.1.318.1.1.10.5.1.1.1.5.*")),
 )
 
 #   .--temperature---------------------------------------------------------.

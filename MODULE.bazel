@@ -334,16 +334,6 @@ http_archive(
 )
 
 http_archive(
-    name = "pcap",
-    build_file = "//omd/packages/pcap:BUILD.pcap.bazel",
-    integrity = "sha256-hPqJrG0wMCjBxbdUq/93Ik9F7KCpTrGjT/CqnO7OOSU=",
-    strip_prefix = "libpcap-1.10.5",
-    urls = [
-        "https://www.tcpdump.org/release/libpcap-1.10.5.tar.xz",
-    ],
-)
-
-http_archive(
     name = "oci-basic-light-win-x64",
     # The archive holds one instantclient_<version> directory. Globbing it with
     # ** rather than naming it keeps a version bump to the url and the checksum:

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+from dataclasses import replace
 from typing import Annotated, Literal, Self
 
 from pydantic import model_validator
@@ -236,13 +237,21 @@ class RuleConditionsRequestModel:
             raise ValueError(
                 "Please provide the field 'service_labels' OR 'service_label_groups', not both."
             )
-        if self.host_labels:
-            self.host_label_groups = _fold_old_labels(self.host_labels)
-            self.host_labels = None
-        if self.service_labels:
-            self.service_label_groups = _fold_old_labels(self.service_labels)
-            self.service_labels = None
-        return self
+        return replace(
+            self,
+            host_labels=None,
+            host_label_groups=(
+                _fold_old_labels(self.host_labels)  #
+                if self.host_labels  #
+                else self.host_label_groups
+            ),
+            service_labels=None,
+            service_label_groups=(
+                _fold_old_labels(self.service_labels)
+                if self.service_labels
+                else self.service_label_groups
+            ),
+        )
 
     @model_validator(mode="after")
     def _reject_empty_match_on(self) -> Self:

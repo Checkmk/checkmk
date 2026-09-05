@@ -887,8 +887,8 @@ msgstr "%s: Utilizza SSL"
 
 #, python-format
 msgid ""
-"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
-"version %s and must not be relied on for permanent configuration."
+"%s<br><br>This is a temporary experimental flag. It is scheduled for removal "
+"in version %s and must not be relied on for permanent configuration."
 msgstr ""
 
 msgid "&lt;None&gt;"
@@ -2991,9 +2991,6 @@ msgstr "Token di accesso API"
 
 msgid "API cache is disabled."
 msgstr "Cache delle API disabilitata."
-
-msgid "API endpoint from PagerDuty V2"
-msgstr "Endpoint API di PagerDuty V2"
 
 msgid "API health"
 msgstr "Salute API"
@@ -14278,6 +14275,11 @@ msgstr ""
 "dello stato della sonda è 0)."
 
 msgid ""
+"Choose the PagerDuty region your account belongs to. This selects the "
+"corresponding Events API v2 endpoint that Checkmk will post incidents to."
+msgstr ""
+
+msgid ""
 "Choose the action the Event Console should trigger once the limit is reached."
 msgstr ""
 "Scegli l'azione che la console degli eventi deve attivare una volta "
@@ -16950,16 +16952,16 @@ msgid ""
 "Controls which Oracle Instant Client the plugin uses to connect to "
 "databases. Two sources are available: the <b>agent-local client</b> — Oracle "
 "Instant Client libraries manually installed alongside the Checkmk agent "
-"under <tt>$MK_LIBDIR/packages/mk-oracle/</tt> — and the <b>host client</b> — "
-"an Oracle installation already present on the monitored host. Note: Checkmk "
-"does <b>not</b> deploy Oracle Instant Client automatically; you must install "
-"it manually if you want to use the agent-local client. <b>Auto-detect</b>: "
-"tries the host client first, falls back to the agent-local client. <b>Never "
-"use host client</b>: uses only the agent-local client, ignores any host "
-"installation. <b>Always use host client</b>: uses only the host client, "
-"ignores the agent-local client. <b>Custom path</b>: uses the Oracle Instant "
-"Client at the specified path; supports environment variable expansion (e.g. "
-"<tt>${ORACLE_HOME}/lib</tt>)."
+"under <tt>$MK_LIBDIR/plugins/libexec/mk-oracle-v2/oic/</tt> — and the "
+"<b>host client</b> — an Oracle installation already present on the monitored "
+"host. Note: Checkmk does <b>not</b> deploy Oracle Instant Client "
+"automatically; you must install it manually if you want to use the agent-"
+"local client. <b>Auto-detect</b>: tries the host client first, falls back to "
+"the agent-local client. <b>Never use host client</b>: uses only the agent-"
+"local client, ignores any host installation. <b>Always use host client</b>: "
+"uses only the host client, ignores the agent-local client. <b>Custom path</"
+"b>: uses the Oracle Instant Client at the specified path; supports "
+"environment variable expansion (e.g. <tt>${ORACLE_HOME}/lib</tt>)."
 msgstr ""
 
 msgid "Convert FQHN"
@@ -23773,6 +23775,9 @@ msgstr "Host ESX: distribuzione di macchine virtuali"
 msgid "ESX multipath count"
 msgstr "Conteggio dei percorsi multipli di ESX"
 
+msgid "EU (events.eu.pagerduty.com)"
+msgstr ""
+
 msgid "EWS"
 msgstr "EWS"
 
@@ -26529,6 +26534,10 @@ msgstr "Stato previsto"
 #, fuzzy
 msgid "Expected virtual switch name"
 msgstr "Stato previsto della bandiera"
+
+#, fuzzy
+msgid "Experimental flags"
+msgstr "Caratteristica dell'impresa"
 
 #, fuzzy
 msgid "Expiration date"
@@ -53159,6 +53168,10 @@ msgstr "Chiave di integrazione del servizio PagerDuty"
 msgid "PagerDuty parameters"
 msgstr "Parametri predefiniti"
 
+#, fuzzy
+msgid "PagerDuty region"
+msgstr "Parametri predefiniti"
+
 msgid "Pages"
 msgstr "Pagine"
 
@@ -58092,10 +58105,6 @@ msgstr ""
 #, fuzzy
 msgid "Relays"
 msgstr "Ritardo:"
-
-#, fuzzy
-msgid "Release flags"
-msgstr "Pacchetto di rilascio"
 
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
@@ -85028,6 +85037,9 @@ msgstr ""
 msgid "URL:"
 msgstr "URL:"
 
+msgid "US (events.pagerduty.com)"
+msgstr ""
+
 #, fuzzy
 msgid "USrv - Allocation latency"
 msgstr "USrv - Latenza di assegnazione"
@@ -102184,6 +102196,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "API endpoint from PagerDuty V2"
+#~ msgstr "Endpoint API di PagerDuty V2"
+
+#, fuzzy
+#~ msgid "Release flags"
+#~ msgstr "Pacchetto di rilascio"
 
 #, fuzzy
 #~ msgid "Authorize"

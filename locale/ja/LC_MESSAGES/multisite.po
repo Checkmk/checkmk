@@ -874,10 +874,10 @@ msgstr "%s：サービスディスカバリー：許可拒否"
 msgid "%s: uses SSL"
 msgstr "%s: SSLを使用"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"%s<br><br>This is a temporary release flag. It is scheduled for removal in "
-"version %s and must not be relied on for permanent configuration."
+"%s<br><br>This is a temporary experimental flag. It is scheduled for removal "
+"in version %s and must not be relied on for permanent configuration."
 msgstr ""
 "%s<br><br>これは一時的なリリースフラグです。バージョン%sで削除される予定であ"
 "り、恒久的な設定として依存してはなりません。"
@@ -2879,9 +2879,6 @@ msgstr "APIアクセストークン"
 
 msgid "API cache is disabled."
 msgstr "APIキャッシュは無効です。"
-
-msgid "API endpoint from PagerDuty V2"
-msgstr "PagerDuty V2のAPIエンドポイント"
 
 msgid "API health"
 msgstr "APIの状態"
@@ -13676,6 +13673,11 @@ msgstr ""
 "します。"
 
 msgid ""
+"Choose the PagerDuty region your account belongs to. This selects the "
+"corresponding Events API v2 endpoint that Checkmk will post incidents to."
+msgstr ""
+
+msgid ""
 "Choose the action the Event Console should trigger once the limit is reached."
 msgstr ""
 "制限に達したときにイベントコンソールがトリガーするアクションを選択します。"
@@ -16271,21 +16273,21 @@ msgstr "コントローラーID"
 msgid "Controller version"
 msgstr "コントローラバージョン"
 
-#, python-brace-format
+#, fuzzy, python-brace-format
 msgid ""
 "Controls which Oracle Instant Client the plugin uses to connect to "
 "databases. Two sources are available: the <b>agent-local client</b> — Oracle "
 "Instant Client libraries manually installed alongside the Checkmk agent "
-"under <tt>$MK_LIBDIR/packages/mk-oracle/</tt> — and the <b>host client</b> — "
-"an Oracle installation already present on the monitored host. Note: Checkmk "
-"does <b>not</b> deploy Oracle Instant Client automatically; you must install "
-"it manually if you want to use the agent-local client. <b>Auto-detect</b>: "
-"tries the host client first, falls back to the agent-local client. <b>Never "
-"use host client</b>: uses only the agent-local client, ignores any host "
-"installation. <b>Always use host client</b>: uses only the host client, "
-"ignores the agent-local client. <b>Custom path</b>: uses the Oracle Instant "
-"Client at the specified path; supports environment variable expansion (e.g. "
-"<tt>${ORACLE_HOME}/lib</tt>)."
+"under <tt>$MK_LIBDIR/plugins/libexec/mk-oracle-v2/oic/</tt> — and the "
+"<b>host client</b> — an Oracle installation already present on the monitored "
+"host. Note: Checkmk does <b>not</b> deploy Oracle Instant Client "
+"automatically; you must install it manually if you want to use the agent-"
+"local client. <b>Auto-detect</b>: tries the host client first, falls back to "
+"the agent-local client. <b>Never use host client</b>: uses only the agent-"
+"local client, ignores any host installation. <b>Always use host client</b>: "
+"uses only the host client, ignores the agent-local client. <b>Custom path</"
+"b>: uses the Oracle Instant Client at the specified path; supports "
+"environment variable expansion (e.g. <tt>${ORACLE_HOME}/lib</tt>)."
 msgstr ""
 "プラグインがデータベースへの接続に使用するOracle Instant Clientを制御します。"
 "利用可能なソースは2つあります：<b>エージェントローカルクライアント </b> — "
@@ -22802,6 +22804,9 @@ msgstr "ESXホスト:仮想マシンの配布"
 msgid "ESX multipath count"
 msgstr "ESXマルチパスカウント"
 
+msgid "EU (events.eu.pagerduty.com)"
+msgstr ""
+
 msgid "EWS"
 msgstr "EWS"
 
@@ -25506,6 +25511,10 @@ msgstr "期待される状態"
 #, fuzzy
 msgid "Expected virtual switch name"
 msgstr "予想されるフラグの状態"
+
+#, fuzzy
+msgid "Experimental flags"
+msgstr "エンタープライズ機能"
 
 msgid "Expiration date"
 msgstr "有効期限なし"
@@ -50869,6 +50878,10 @@ msgstr "PagerDutyサービス統合キー"
 msgid "PagerDuty parameters"
 msgstr "PagerDuty パラメータ"
 
+#, fuzzy
+msgid "PagerDuty region"
+msgstr "PagerDuty パラメータ"
+
 msgid "Pages"
 msgstr "ページ"
 
@@ -55552,10 +55565,6 @@ msgstr ""
 #, fuzzy
 msgid "Relays"
 msgstr "ディレイ:"
-
-#, fuzzy
-msgid "Release flags"
-msgstr "リリースパッケージ"
 
 #, fuzzy, python-format
 msgid "Release the extension package \"%s\""
@@ -81332,6 +81341,9 @@ msgstr ""
 msgid "URL:"
 msgstr "URL:"
 
+msgid "US (events.pagerduty.com)"
+msgstr ""
+
 msgid "USrv - Allocation latency"
 msgstr "USrv-割り当てレイテンシー"
 
@@ -98368,6 +98380,13 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "API endpoint from PagerDuty V2"
+#~ msgstr "PagerDuty V2のAPIエンドポイント"
+
+#, fuzzy
+#~ msgid "Release flags"
+#~ msgstr "リリースパッケージ"
 
 #, fuzzy
 #~ msgid "Authorize"

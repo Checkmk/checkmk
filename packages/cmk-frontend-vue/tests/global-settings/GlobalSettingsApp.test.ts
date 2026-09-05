@@ -199,6 +199,13 @@ const secondTopic: GlobalSettingsTopic = {
   ]
 }
 
+const warnedTopic: GlobalSettingsTopic = {
+  ...data.topics[0]!,
+  headline: 'Developer tools',
+  subline: 'Settings for developing Checkmk',
+  warning: 'These settings are internal and unsupported.'
+}
+
 describe('GlobalSettingsApp accordion', () => {
   test('all topics start collapsed and the toggle expands and collapses them all', async () => {
     render(GlobalSettingsApp, { props: { ...data, topics: [...data.topics, secondTopic] } })
@@ -689,5 +696,48 @@ describe('GlobalSettingsApp', () => {
 
     await waitFor(() => expect(putIfMatch).toBe('"fresh"'))
     expect(screen.queryByText('Loading failed')).not.toBeInTheDocument()
+  })
+})
+
+describe('GlobalSettingsApp overview presentation', () => {
+  test('every topic is listed with its headline and subline, and expanding one reveals only its own settings', async () => {
+    render(GlobalSettingsApp, { props: { ...data, topics: [...data.topics, secondTopic] } })
+
+    expect(screen.getByText('Configures user/authentication settings')).toBeInTheDocument()
+    expect(screen.getByText('Configures site settings')).toBeInTheDocument()
+
+    await userEvent.click(
+      screen.getByRole('button', { name: /Toggle accordion item User management/ })
+    )
+
+    expect(screen.getByText('Lock user accounts after N login failures')).toBeInTheDocument()
+    expect(screen.queryByText('Site setting')).not.toBeInTheDocument()
+  })
+
+  test("a row shows the setting's title and the value in force", async () => {
+    render(GlobalSettingsApp, { props: data })
+    await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
+
+    const row = screen
+      .getByText('Lock user accounts after N login failures')
+      .closest('.global-settings-variable-row')
+
+    expect(row).toHaveTextContent('10')
+  })
+
+  test("a topic's warning is shown above its settings", async () => {
+    render(GlobalSettingsApp, { props: { ...data, topics: [warnedTopic] } })
+    await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'These settings are internal and unsupported.'
+    )
+  })
+
+  test('a topic without a warning renders no warning at all', async () => {
+    render(GlobalSettingsApp, { props: data })
+    await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })

@@ -2392,6 +2392,22 @@ async def _collect_virtual_machines_resources(
         key="value",
     )
 
+    nics = await api_client.get_async(
+        "providers/Microsoft.Network/networkInterfaces",
+        params={"api-version": "2024-07-01"},
+        key="value",
+    )
+
+    vm_ip_map: dict[str, str] = {}
+    for nic in nics:
+        try:
+            vm_name = nic["properties"]["virtualMachine"]["id"].lower()
+
+            private_ip = nic["properties"]["ipConfigurations"][0]["properties"]["privateIPAddress"]
+            vm_ip_map[vm_name] = private_ip
+        except (KeyError, IndexError):
+            continue
+
     virtual_machines: list[AzureResource] = []
     for vm in response:
         try:
@@ -2408,6 +2424,10 @@ async def _collect_virtual_machines_resources(
             statuses = vm.pop("properties")["instanceView"]["statuses"]
         except KeyError:
             raise ApiErrorMissingData("Virtual machine instance's statuses must be present")
+
+        vm_ip = vm_ip_map.get(vm["id"].lower())
+        if vm_ip is not None:
+            resource.labels["vm_ip"] = vm_ip
 
         resource.info["specific_info"] = {"statuses": statuses}
         # for backward compatibility

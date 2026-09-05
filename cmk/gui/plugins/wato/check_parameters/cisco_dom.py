@@ -112,6 +112,24 @@ def _valuespec_discovery_cisco_dom_rules() -> Dictionary:
                     default_value=["1", "2", "3"],
                 ),
             ),
+            (
+                "operational_states",
+                ListChoice(
+                    title=_("Operational states to discover"),
+                    choices={
+                        1: _("up"),
+                        2: _("down"),
+                        3: _("testing"),
+                        4: _("unknown"),
+                        5: _("dormant"),
+                        6: _("not present"),
+                        7: _("lower layer down"),
+                        8: _("degraded"),
+                    },
+                    toggle_all=True,
+                    default_value=["1", "2", "3", "4", "5", "6", "7", "8"],
+                ),
+            ),
         ],
     )
 

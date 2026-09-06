@@ -29,8 +29,7 @@ try:
     # TODO: We should probably ship this package.
     import pyinotify  # type: ignore[import-not-found]
 except ImportError:
-    sys.stderr.write("Error: Python plugin pyinotify is not installed\n")
-    sys.exit(1)
+    pyinotify = None
 
 
 def parse_arguments(argv):
@@ -39,8 +38,6 @@ def parse_arguments(argv):
     parser.add_argument("-g", "--foreground", action="store_true", help="run in foreground")
     return parser.parse_args(argv)
 
-
-opt_foreground = parse_arguments(sys.argv[1:]).foreground
 
 DEFAULT_CONFDIR = "/etc/check_mk"
 DEFAULT_VARDIR = "/var/lib/check_mk_agent"
@@ -60,14 +57,6 @@ def get_paths(environ):
     )
 
 
-paths = get_paths(os.environ)
-
-config = configparser.ConfigParser({})
-if not os.path.exists(paths.config_file):
-    sys.exit(0)
-config_mtime = os.stat(paths.config_file).st_mtime
-config.read(paths.config_file)
-
 # Configurable in Agent Bakery
 GlobalSettings = namedtuple(
     "GlobalSettings",
@@ -83,9 +72,6 @@ def read_global_settings(config):
         max_messages_per_interval=config.getint("global", "max_messages_per_interval"),
         stats_retention=config.getint("global", "stats_retention"),
     )
-
-
-settings = read_global_settings(config)
 
 
 def output_data(vardir, configured_paths, stats_retention, now):
@@ -136,15 +122,6 @@ def is_other_instance_running(pid_file, proc_dir="/proc"):
     return True
 
 
-if is_other_instance_running(paths.pid_file):
-    # Another mk_notify process is already running..
-    # Simply output the current statistics and exit
-    output_data(paths.vardir, paths.configured_paths, settings.stats_retention, time.time())
-
-    # The pidfile is also the heartbeat file for the running process
-    os.utime(paths.pid_file, None)
-    sys.exit(0)
-
 #   .--Fork----------------------------------------------------------------.
 #   |                         _____          _                             |
 #   |                        |  ___|__  _ __| | __                         |
@@ -153,7 +130,6 @@ if is_other_instance_running(paths.pid_file):
 #   |                        |_|  \___/|_|  |_|\_\                         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   Reaching this point means that no mk_inotify is currently running
 
 
 def daemonize(pid_file):
@@ -178,8 +154,6 @@ def daemonize(pid_file):
         opened_file.write("%d" % os.getpid())
 
 
-if not opt_foreground:
-    daemonize(paths.pid_file)
 # .
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -314,36 +288,49 @@ def get_event_masks(inotify_module):
     return {mode: getattr(inotify_module, name) for mode, name in EVENT_MASK_NAMES.items()}
 
 
-event_masks = get_event_masks(pyinotify)
+def make_event_handler_class(inotify_module):  # type: ignore[explicit-any]
+    # type: (Any) -> type
+    """Create the event handler class
 
+    Deferred to call time, as pyinotify may not be importable.
+    """
 
-# The suppression below is needed because without an actual pyinotify
-# package available, the superclass is effectively Any.
-class NotifyEventHandler(pyinotify.ProcessEvent):  # type: ignore[misc]
-    def my_init(self, monitor):
-        # type: (Monitor) -> None
-        self.monitor = monitor
+    # The suppression below is needed because without an actual pyinotify
+    # package available, the superclass is effectively Any.
+    class NotifyEventHandler(inotify_module.ProcessEvent):  # type: ignore[misc]
+        def my_init(self, monitor):
+            # type: (Monitor) -> None
+            self.monitor = monitor
 
-    def process_IN_MOVED_TO(self, event: pyinotify.Event) -> None:
-        self.monitor.handle_event("movedto", event)
+        def process_IN_MOVED_TO(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("movedto", event)
 
-    def process_IN_MOVED_FROM(self, event: pyinotify.Event) -> None:
-        self.monitor.handle_event("movedfrom", event)
+        def process_IN_MOVED_FROM(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("movedfrom", event)
 
-    def process_IN_MOVE_SELF(self, event: pyinotify.Event) -> None:
-        self.monitor.handle_event("moveself", event)
+        def process_IN_MOVE_SELF(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("moveself", event)
 
-    def process_IN_CREATE(self, event: pyinotify.Event) -> None:
-        self.monitor.handle_event("create", event)
+        def process_IN_CREATE(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("create", event)
 
-    def process_IN_DELETE(self, event: pyinotify.Event) -> None:
-        self.monitor.handle_event("delete", event)
+        def process_IN_DELETE(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("delete", event)
 
-    def process_IN_MODIFY(self, event: pyinotify.Event) -> None:
-        self.monitor.handle_event("modify", event)
+        def process_IN_MODIFY(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("modify", event)
 
-    def process_IN_OPEN(self, event: pyinotify.Event) -> None:
-        self.monitor.handle_event("open", event)
+        def process_IN_OPEN(self, event):
+            # type: (pyinotify.Event) -> None
+            self.monitor.handle_event("open", event)
+
+    return NotifyEventHandler
 
 
 def compute_folder_configs(config, event_masks):  # type: ignore[explicit-any]
@@ -414,8 +401,36 @@ def compute_folder_configs(config, event_masks):  # type: ignore[explicit-any]
     return folder_configs
 
 
-def main() -> None:
-    folder_configs = compute_folder_configs(config, event_masks)
+def main(argv=None):
+    # type: (list[str] | None) -> None
+    opt_foreground = parse_arguments(sys.argv[1:] if argv is None else argv).foreground
+    if pyinotify is None:
+        sys.stderr.write("Error: Python plugin pyinotify is not installed\n")
+        sys.exit(1)
+
+    paths = get_paths(os.environ)
+
+    config = configparser.ConfigParser({})
+    if not os.path.exists(paths.config_file):
+        sys.exit(0)
+    config_mtime = os.stat(paths.config_file).st_mtime
+    config.read(paths.config_file)
+    settings = read_global_settings(config)
+
+    if is_other_instance_running(paths.pid_file):
+        # Another mk_notify process is already running..
+        # Simply output the current statistics and exit
+        output_data(paths.vardir, paths.configured_paths, settings.stats_retention, time.time())
+
+        # The pidfile is also the heartbeat file for the running process
+        os.utime(paths.pid_file, None)
+        sys.exit(0)
+
+    # Reaching this point means that no mk_inotify is currently running
+    if not opt_foreground:
+        daemonize(paths.pid_file)
+
+    folder_configs = compute_folder_configs(config, get_event_masks(pyinotify))
     monitor = Monitor(
         folder_configs,
         settings,
@@ -440,7 +455,7 @@ def main() -> None:
         opened_conf_paths.write("\n".join(get_watched_files(folder_configs)) + "\n")
 
     # Event handler
-    eh = NotifyEventHandler(monitor=monitor)
+    eh = make_event_handler_class(pyinotify)(monitor=monitor)
     notifier = pyinotify.Notifier(monitor.watch_manager, eh)
 
     # Wake up every few seconds, check heartbeat and write data to disk

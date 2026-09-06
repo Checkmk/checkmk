@@ -155,7 +155,9 @@ if is_other_instance_running(paths.pid_file):
 #   +----------------------------------------------------------------------+
 #   Reaching this point means that no mk_inotify is currently running
 
-if not opt_foreground:
+
+def daemonize(pid_file):
+    # type: (str) -> None
     try:
         pid = os.fork()
         if pid > 0:
@@ -172,8 +174,12 @@ if not opt_foreground:
         sys.stderr.write("Error forking mk_inotify: %s" % e)
 
     # Save pid of working process.
-    with open(paths.pid_file, "w") as opened_file:
+    with open(pid_file, "w") as opened_file:
         opened_file.write("%d" % os.getpid())
+
+
+if not opt_foreground:
+    daemonize(paths.pid_file)
 # .
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |

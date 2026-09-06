@@ -88,14 +88,14 @@ def read_global_settings(config):
 settings = read_global_settings(config)
 
 
-def output_data() -> None:
+def output_data(vardir, configured_paths, stats_retention, now):
+    # type: (str, str, int, float) -> None
     sys.stdout.write("<<<inotify:sep(9)>>>\n")
-    if os.path.exists(paths.configured_paths):
-        with open(paths.configured_paths) as opened_conf_paths:
+    if os.path.exists(configured_paths):
+        with open(configured_paths) as opened_conf_paths:
             sys.stdout.write(opened_conf_paths.read())
 
-    now = time.time()
-    for dirpath, _unused_dirnames, filenames in os.walk(paths.vardir):
+    for dirpath, _unused_dirnames, filenames in os.walk(vardir):
         for filename in filenames:
             if filename.startswith("mk_inotify.stats"):
                 try:
@@ -105,35 +105,45 @@ def output_data() -> None:
                     if file_age > 5:
                         with open(the_file) as opened_the_file:
                             sys.stdout.write(opened_the_file.read())
-                    if file_age > settings.stats_retention:
+                    if file_age > stats_retention:
                         os.unlink(the_file)
                 except Exception:
                     pass
         break
 
 
-# Check if another mk_inotify process is already running
-if os.path.exists(paths.pid_file):
-    with open(paths.pid_file) as opened_file:
-        pid_str = opened_file.read()
-    proc_cmdline = "/proc/%s/cmdline" % pid_str
-    # make sure that the process with that ID is still running, else cleanup.
-    if os.path.exists(proc_cmdline):
-        with open(proc_cmdline) as opened_inner_file:
-            cmdline = opened_inner_file.read()
-        # make sure that the process actually belongs to agent plugin command, else cleanup.
-        if "mk_inotify" in cmdline:
-            # Another mk_notify process is already running..
-            # Simply output the current statistics and exit
-            output_data()
+def is_other_instance_running(pid_file, proc_dir="/proc"):
+    # type: (str, str) -> bool
+    """Check if another mk_inotify process is already running
 
-            # The pidfile is also the heartbeat file for the running process
-            os.utime(paths.pid_file, None)
-            sys.exit(0)
-        else:
-            os.remove(paths.pid_file)
-    else:
-        os.remove(paths.pid_file)
+    A pid file that does not belong to a running mk_inotify process is removed.
+    """
+    if not os.path.exists(pid_file):
+        return False
+    with open(pid_file) as opened_file:
+        pid_str = opened_file.read()
+    proc_cmdline = "%s/%s/cmdline" % (proc_dir, pid_str)
+    # make sure that the process with that ID is still running, else cleanup.
+    if not os.path.exists(proc_cmdline):
+        os.remove(pid_file)
+        return False
+    with open(proc_cmdline) as opened_inner_file:
+        cmdline = opened_inner_file.read()
+    # make sure that the process actually belongs to agent plugin command, else cleanup.
+    if "mk_inotify" not in cmdline:
+        os.remove(pid_file)
+        return False
+    return True
+
+
+if is_other_instance_running(paths.pid_file):
+    # Another mk_notify process is already running..
+    # Simply output the current statistics and exit
+    output_data(paths.vardir, paths.configured_paths, settings.stats_retention, time.time())
+
+    # The pidfile is also the heartbeat file for the running process
+    os.utime(paths.pid_file, None)
+    sys.exit(0)
 
 #   .--Fork----------------------------------------------------------------.
 #   |                         _____          _                             |

@@ -180,7 +180,8 @@ folder_configs = {}  # type: dict[str, dict[str, Any]]  # type: ignore[explicit-
 output = []  # type: list[str]
 
 
-def get_watched_files() -> set[str]:
+def get_watched_files(folder_configs):  # type: ignore[explicit-any]
+    # type: (Mapping[str, dict[str, Any]]) -> set[str]
     files = set()
     for folder, attributes in folder_configs.items():
         for filenames in attributes["monitor_files"].values():
@@ -196,7 +197,7 @@ def wakeup_handler(signum: int, frame: object) -> None:  # noqa: ARG001
     if output:
         if opt_foreground:
             sys.stdout.write("%s\n" % "\n".join(output))
-            sys.stdout.write("%s\n" % "\n".join(get_watched_files()))
+            sys.stdout.write("%s\n" % "\n".join(get_watched_files(folder_configs)))
         else:
             filename = "mk_inotify.stats.%d" % time.time()
             with open("%s/%s" % (paths.vardir, filename), "w") as stats_file:
@@ -316,9 +317,9 @@ def update_watched_folders() -> None:
                 attributes["watch_descriptor"] = new_wd
 
 
-def main() -> None:
-    # Read config
-
+def compute_folder_configs(config, event_masks):  # type: ignore[explicit-any]
+    # type: (configparser.ConfigParser, Mapping[str, int]) -> dict[str, dict[str, Any]]
+    folder_configs = {}  # type: dict[str, dict[str, Any]]  # type: ignore[explicit-any]
     for section in config.sections():
         if section == "global":
             continue
@@ -381,6 +382,12 @@ def main() -> None:
         for mode in attributes["monitor_all"]:
             attributes["mask"] |= event_masks[mode]
 
+    return folder_configs
+
+
+def main() -> None:
+    folder_configs.update(compute_folder_configs(config, event_masks))
+
     update_watched_folders()
     if opt_foreground:
         import pprint
@@ -393,7 +400,7 @@ def main() -> None:
 
     # Save monitored file/folder information specified in mk_inotify.cfg
     with open(paths.configured_paths, "w") as opened_conf_paths:
-        opened_conf_paths.write("\n".join(get_watched_files()) + "\n")
+        opened_conf_paths.write("\n".join(get_watched_files(folder_configs)) + "\n")
 
     # Event handler
     eh = NotifyEventHandler()

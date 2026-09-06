@@ -69,11 +69,23 @@ config_mtime = os.stat(paths.config_file).st_mtime
 config.read(paths.config_file)
 
 # Configurable in Agent Bakery
-heartbeat_timeout = config.getint("global", "heartbeat_timeout")
-write_interval = config.getint("global", "write_interval")
-max_messages_per_interval = config.getint("global", "max_messages_per_interval")
-stats_retention = config.getint("global", "stats_retention")
-config.remove_section("global")
+GlobalSettings = namedtuple(
+    "GlobalSettings",
+    ["heartbeat_timeout", "write_interval", "max_messages_per_interval", "stats_retention"],
+)
+
+
+def read_global_settings(config):
+    # type: (configparser.ConfigParser) -> GlobalSettings
+    return GlobalSettings(
+        heartbeat_timeout=config.getint("global", "heartbeat_timeout"),
+        write_interval=config.getint("global", "write_interval"),
+        max_messages_per_interval=config.getint("global", "max_messages_per_interval"),
+        stats_retention=config.getint("global", "stats_retention"),
+    )
+
+
+settings = read_global_settings(config)
 
 
 def output_data() -> None:
@@ -93,7 +105,7 @@ def output_data() -> None:
                     if file_age > 5:
                         with open(the_file) as opened_the_file:
                             sys.stdout.write(opened_the_file.read())
-                    if file_age > stats_retention:
+                    if file_age > settings.stats_retention:
                         os.unlink(the_file)
                 except Exception:
                     pass
@@ -199,24 +211,26 @@ def wakeup_handler(signum: int, frame: object) -> None:  # noqa: ARG001
     if not opt_foreground:
         if not os.path.exists(paths.pid_file):  # pidfile is missing
             sys.exit(0)
-        if time.time() - os.stat(paths.pid_file).st_mtime > heartbeat_timeout:  # heartbeat timeout
+        if (
+            time.time() - os.stat(paths.pid_file).st_mtime > settings.heartbeat_timeout
+        ):  # heartbeat timeout
             sys.exit(0)
         with open(paths.pid_file) as opened_pid_file:
             if os.getpid() != int(opened_pid_file.read()):  # pidfile differs
                 sys.exit(0)
 
     update_watched_folders()
-    signal.alarm(write_interval)
+    signal.alarm(settings.write_interval)
 
 
 def do_output(what: str, event: pyinotify.Event) -> None:
     if event.dir:
         return  # Only monitor files
 
-    if len(output) > max_messages_per_interval:
+    if len(output) > settings.max_messages_per_interval:
         last_message = "warning\tMaximum messages reached: %d per %d seconds" % (
-            max_messages_per_interval,
-            write_interval,
+            settings.max_messages_per_interval,
+            settings.write_interval,
         )
         if output[-1] != last_message:
             output.append(last_message)
@@ -304,6 +318,8 @@ def main() -> None:
     # Read config
 
     for section in config.sections():
+        if section == "global":
+            continue
         section_tokens = section.split("|")
 
         folder = section_tokens[0]
@@ -383,7 +399,7 @@ def main() -> None:
 
     # Wake up every few seconds, check heartbeat and write data to disk
     signal.signal(signal.SIGALRM, wakeup_handler)
-    signal.alarm(write_interval)
+    signal.alarm(settings.write_interval)
 
     notifier.loop()
 

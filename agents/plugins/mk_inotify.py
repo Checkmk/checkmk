@@ -8,6 +8,7 @@
 
 __version__ = "3.0.0b1"
 
+import argparse
 import configparser
 import contextlib
 import os
@@ -30,16 +31,14 @@ except ImportError:
     sys.exit(1)
 
 
-def usage() -> None:
-    sys.stdout.write("Usage: mk_inotify [-g]\n")
-    sys.stdout.write("         -g: run in foreground\n\n")
+def parse_arguments(argv):
+    # type: (list[str]) -> argparse.Namespace
+    parser = argparse.ArgumentParser(prog="mk_inotify")
+    parser.add_argument("-g", "--foreground", action="store_true", help="run in foreground")
+    return parser.parse_args(argv)
 
 
-# Available options:
-# -g: run in foreground
-opt_foreground = False
-if len(sys.argv) == 2 and sys.argv[1] == "-g":
-    opt_foreground = True
+opt_foreground = parse_arguments(sys.argv[1:]).foreground
 
 mk_confdir = os.getenv("MK_CONFDIR") or "/etc/check_mk"
 mk_vardir = os.getenv("MK_VARDIR") or "/var/lib/check_mk_agent"

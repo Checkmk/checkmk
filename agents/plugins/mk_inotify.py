@@ -15,11 +15,13 @@ import os
 import signal
 import sys
 import time
+from collections import namedtuple
 
 try:
+    from collections.abc import Mapping
     from typing import Any
 
-    _ = Any  # type: ignore[explicit-any] # make ruff happy
+    _ = Mapping, Any  # make ruff happy
 except ImportError:
     pass
 
@@ -40,18 +42,31 @@ def parse_arguments(argv):
 
 opt_foreground = parse_arguments(sys.argv[1:]).foreground
 
-mk_confdir = os.getenv("MK_CONFDIR") or "/etc/check_mk"
-mk_vardir = os.getenv("MK_VARDIR") or "/var/lib/check_mk_agent"
+DEFAULT_CONFDIR = "/etc/check_mk"
+DEFAULT_VARDIR = "/var/lib/check_mk_agent"
 
-config_filename = mk_confdir + "/mk_inotify.cfg"
-configured_paths = mk_vardir + "/mk_inotify.configured"
-pid_filename = mk_vardir + "/mk_inotify.pid"
+Paths = namedtuple("Paths", ["config_file", "configured_paths", "pid_file", "vardir"])
+
+
+def get_paths(environ):
+    # type: (Mapping[str, str]) -> Paths
+    confdir = environ.get("MK_CONFDIR") or DEFAULT_CONFDIR
+    vardir = environ.get("MK_VARDIR") or DEFAULT_VARDIR
+    return Paths(
+        config_file=confdir + "/mk_inotify.cfg",
+        configured_paths=vardir + "/mk_inotify.configured",
+        pid_file=vardir + "/mk_inotify.pid",
+        vardir=vardir,
+    )
+
+
+paths = get_paths(os.environ)
 
 config = configparser.ConfigParser({})
-if not os.path.exists(config_filename):
+if not os.path.exists(paths.config_file):
     sys.exit(0)
-config_mtime = os.stat(config_filename).st_mtime
-config.read(config_filename)
+config_mtime = os.stat(paths.config_file).st_mtime
+config.read(paths.config_file)
 
 # Configurable in Agent Bakery
 heartbeat_timeout = config.getint("global", "heartbeat_timeout")
@@ -63,12 +78,12 @@ config.remove_section("global")
 
 def output_data() -> None:
     sys.stdout.write("<<<inotify:sep(9)>>>\n")
-    if os.path.exists(configured_paths):
-        with open(configured_paths) as opened_conf_paths:
+    if os.path.exists(paths.configured_paths):
+        with open(paths.configured_paths) as opened_conf_paths:
             sys.stdout.write(opened_conf_paths.read())
 
     now = time.time()
-    for dirpath, _unused_dirnames, filenames in os.walk(mk_vardir):
+    for dirpath, _unused_dirnames, filenames in os.walk(paths.vardir):
         for filename in filenames:
             if filename.startswith("mk_inotify.stats"):
                 try:
@@ -86,8 +101,8 @@ def output_data() -> None:
 
 
 # Check if another mk_inotify process is already running
-if os.path.exists(pid_filename):
-    with open(pid_filename) as opened_file:
+if os.path.exists(paths.pid_file):
+    with open(paths.pid_file) as opened_file:
         pid_str = opened_file.read()
     proc_cmdline = "/proc/%s/cmdline" % pid_str
     # make sure that the process with that ID is still running, else cleanup.
@@ -101,12 +116,12 @@ if os.path.exists(pid_filename):
             output_data()
 
             # The pidfile is also the heartbeat file for the running process
-            os.utime(pid_filename, None)
+            os.utime(paths.pid_file, None)
             sys.exit(0)
         else:
-            os.remove(pid_filename)
+            os.remove(paths.pid_file)
     else:
-        os.remove(pid_filename)
+        os.remove(paths.pid_file)
 
 #   .--Fork----------------------------------------------------------------.
 #   |                         _____          _                             |
@@ -135,7 +150,7 @@ if not opt_foreground:
         sys.stderr.write("Error forking mk_inotify: %s" % e)
 
     # Save pid of working process.
-    with open(pid_filename, "w") as opened_file:
+    with open(paths.pid_file, "w") as opened_file:
         opened_file.write("%d" % os.getpid())
 # .
 #   .--Main----------------------------------------------------------------.
@@ -172,21 +187,21 @@ def wakeup_handler(signum: int, frame: object) -> None:  # noqa: ARG001
             sys.stdout.write("%s\n" % "\n".join(get_watched_files()))
         else:
             filename = "mk_inotify.stats.%d" % time.time()
-            with open("%s/%s" % (mk_vardir, filename), "w") as stats_file:
+            with open("%s/%s" % (paths.vardir, filename), "w") as stats_file:
                 stats_file.write("\n".join(output) + "\n")
         output = []
 
     # Check if configuration has changed -> restart
-    if config_mtime != os.stat(config_filename).st_mtime:
+    if config_mtime != os.stat(paths.config_file).st_mtime:
         os.execv(__file__, sys.argv)
 
     # Exit on various instances
     if not opt_foreground:
-        if not os.path.exists(pid_filename):  # pidfile is missing
+        if not os.path.exists(paths.pid_file):  # pidfile is missing
             sys.exit(0)
-        if time.time() - os.stat(pid_filename).st_mtime > heartbeat_timeout:  # heartbeat timeout
+        if time.time() - os.stat(paths.pid_file).st_mtime > heartbeat_timeout:  # heartbeat timeout
             sys.exit(0)
-        with open(pid_filename) as opened_pid_file:
+        with open(paths.pid_file) as opened_pid_file:
             if os.getpid() != int(opened_pid_file.read()):  # pidfile differs
                 sys.exit(0)
 
@@ -355,11 +370,11 @@ def main() -> None:
         sys.stdout.write(pprint.pformat(folder_configs))
 
     # In the event that new file permissions need to be set, let's clean up.
-    if os.path.exists(configured_paths):
-        os.remove(configured_paths)
+    if os.path.exists(paths.configured_paths):
+        os.remove(paths.configured_paths)
 
     # Save monitored file/folder information specified in mk_inotify.cfg
-    with open(configured_paths, "w") as opened_conf_paths:
+    with open(paths.configured_paths, "w") as opened_conf_paths:
         opened_conf_paths.write("\n".join(get_watched_files()) + "\n")
 
     # Event handler

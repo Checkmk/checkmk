@@ -8,16 +8,12 @@
 
 __version__ = "3.0.0b1"
 
+import configparser
 import contextlib
 import os
 import signal
 import sys
 import time
-
-try:
-    import configparser
-except ImportError:  # Python 2
-    import ConfigParser as configparser  # type: ignore[import-not-found,no-redef]
 
 try:
     from typing import Any

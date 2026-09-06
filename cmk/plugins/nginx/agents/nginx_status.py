@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
 # Checkmk-Agent-Plug-in - Nginx Server Status
 #
 # Fetches the stub nginx_status page from detected or configured nginx
@@ -27,6 +23,15 @@ import sys
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+try:
+    from collections.abc import Container, Sequence
+    from typing import Any
+
+    _ = Any, Container, Sequence  # make ruff happy
+except ImportError:
+    # We need typing only for testing
+    pass
+
 __version__ = "3.0.0b1"
 
 USER_AGENT = "checkmk-agent-nginx_status-" + __version__
@@ -38,6 +43,7 @@ urllib.getproxies = dict  # type: ignore[attr-defined]
 
 
 def extract_stats_from_iproute2(lines, ssl_ports):
+    # type: (Sequence[str], Container[int]) -> list[tuple[str, str, int]]
     results = []
 
     line_maxsplit = 5
@@ -78,6 +84,7 @@ def extract_stats_from_iproute2(lines, ssl_ports):
 
 
 def extract_stats_from_netstat(lines, ssl_ports):
+    # type: (Sequence[str], Container[int]) -> list[tuple[str, str, int]]
     pids = []
     results = []
     for netstat_line in lines:
@@ -126,6 +133,7 @@ def extract_stats_from_netstat(lines, ssl_ports):
 
 
 def try_detect_servers(ssl_ports):
+    # type: (Container[int]) -> list[tuple[str, str, int]]
     """Fetch network statistics for nginx server(s).
 
     Try and fetch the stats from the `ss` utility. If tool not available, fallback to the `netstat`
@@ -140,7 +148,8 @@ def try_detect_servers(ssl_ports):
     return extract_stats_from_netstat(netstat_lines, ssl_ports)
 
 
-def _is_ip_v6_address(address: str) -> bool:
+def _is_ip_v6_address(address):
+    # type: (str) -> bool
     """Check if the given address is an IPv6 address."""
     try:
         return ipaddress.ip_address(address).version == 6
@@ -148,7 +157,8 @@ def _is_ip_v6_address(address: str) -> bool:
         return False
 
 
-def _make_url(proto: str, address: str, port: int, page: str) -> str:
+def _make_url(proto, address, port, page):
+    # type: (str, str, int, str) -> str
     """Construct a URL from its components, taking care of IPv6 addresses."""
     if _is_ip_v6_address(address):
         return "%s://[%s]:%s/%s" % (proto, address, port, page)
@@ -156,10 +166,11 @@ def _make_url(proto: str, address: str, port: int, page: str) -> str:
 
 
 def main():
+    # type: () -> None
     config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
     config_file = config_dir + "/nginx_status.cfg"
 
-    config = {}  # type: dict
+    config = {}  # type: dict[str, Any]  # type: ignore[explicit-any]
     if os.path.exists(config_file):
         with open(config_file) as open_config_file:
             config_src = open_config_file.read()

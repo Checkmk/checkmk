@@ -244,28 +244,30 @@ def do_output(what: str, event: pyinotify.Event) -> None:
     filename = os.path.basename(event.pathname)
     if what in path_config["monitor_all"] or filename in path_config["monitor_files"].get(what, []):
         line = "%d\t%s\t%s" % (time.time(), what, event.pathname)
-        if map_events[what][1]:  # Check if filestats are enabled
-            try:
-                stats = os.stat(event.pathname)
-                line += "\t%d\t%d" % (stats.st_size, stats.st_mtime)
-            except Exception:
-                pass
         output.append(line)
         if opt_foreground:
             sys.stdout.write("%s\n" % line)
 
 
-map_events = {
-    # Mode     Mask                        Report_filestats (currently unused)
-    "access": (pyinotify.IN_ACCESS, False),
-    "open": (pyinotify.IN_OPEN, False),
-    "create": (pyinotify.IN_CREATE, False),
-    "delete": (pyinotify.IN_DELETE, False),
-    "modify": (pyinotify.IN_MODIFY, False),
-    "movedto": (pyinotify.IN_MOVED_TO, False),
-    "movedfrom": (pyinotify.IN_MOVED_FROM, False),
-    "moveself": (pyinotify.IN_MOVE_SELF, False),
+# Maps the mode names used in mk_inotify.cfg to the pyinotify mask names
+EVENT_MASK_NAMES = {
+    "access": "IN_ACCESS",
+    "open": "IN_OPEN",
+    "create": "IN_CREATE",
+    "delete": "IN_DELETE",
+    "modify": "IN_MODIFY",
+    "movedto": "IN_MOVED_TO",
+    "movedfrom": "IN_MOVED_FROM",
+    "moveself": "IN_MOVE_SELF",
 }
+
+
+def get_event_masks(inotify_module):
+    # type: (object) -> dict[str, int]
+    return {mode: getattr(inotify_module, name) for mode, name in EVENT_MASK_NAMES.items()}
+
+
+event_masks = get_event_masks(pyinotify)
 
 
 # The suppression below is needed because without an actual pyinotify
@@ -335,7 +337,7 @@ def main() -> None:
         add_modes = set()
         del_modes = set()
         for key, value in config.items(section):
-            if key in map_events:
+            if key in event_masks:
                 if value == "1":
                     add_modes.add(key)
                 else:
@@ -375,9 +377,9 @@ def main() -> None:
         # Determine mask
         attributes["mask"] = 0
         for mode in attributes["modes"]:
-            attributes["mask"] |= map_events[mode][0]
+            attributes["mask"] |= event_masks[mode]
         for mode in attributes["monitor_all"]:
-            attributes["mask"] |= map_events[mode][0]
+            attributes["mask"] |= event_masks[mode]
 
     update_watched_folders()
     if opt_foreground:

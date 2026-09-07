@@ -19,6 +19,8 @@ from cmk.plugins.docker.rulesets.mk_docker import migrate
                 "node": [],
                 "containers": [],
                 "container_id": "short",
+                "base_url": "unix://var/run/docker.sock",
+                "persist_period_node_disk_usage": 90,
             },
         ),
         (
@@ -33,6 +35,8 @@ from cmk.plugins.docker.rulesets.mk_docker import migrate
                 "node": [],
                 "containers": ["docker_container_mem"],
                 "container_id": "long",
+                "base_url": "unix://var/run/docker.sock",
+                "persist_period_node_disk_usage": 90,
             },
         ),
         (
@@ -47,6 +51,8 @@ from cmk.plugins.docker.rulesets.mk_docker import migrate
                 "node": [],
                 "containers": [],
                 "container_id": "short",
+                "base_url": "unix://var/run/docker.sock",
+                "persist_period_node_disk_usage": 90,
             },
         ),
         (

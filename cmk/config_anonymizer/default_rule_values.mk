@@ -528,7 +528,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_docker', [])
 
 agent_config['mk_docker'] = [
-{'id': '593ba77e-3a81-4a15-994f-05426e3a4e45', 'value': {'node': [], 'containers': [], 'container_id': 'short'}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '593ba77e-3a81-4a15-994f-05426e3a4e45', 'value': {'deployment': ('sync', None), 'node': [], 'containers': [], 'container_id': 'short', 'base_url': 'unix://var/run/docker.sock', 'persist_period_node_disk_usage': 90}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_docker']
 
 

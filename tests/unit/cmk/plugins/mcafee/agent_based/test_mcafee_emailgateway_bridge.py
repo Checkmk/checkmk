@@ -49,7 +49,10 @@ def test_check_rates_with_levels(monkeypatch: pytest.MonkeyPatch) -> None:
         Result(state=State.OK, summary="Status: UP"),
         Result(
             state=State.WARN,
-            summary="TCP: 1.00 packets received/s (warn/crit at 0.5/2.0 packets/s)",
+            summary=(
+                "TCP: 1.00 packets received/s "
+                "(warn/crit at 0.50 packets received/s/2.00 packets received/s)"
+            ),
         ),
         Metric("tcp_packets_received", 1.0, levels=(0.5, 2.0)),
         Result(state=State.OK, summary="UDP: 0.00 packets received/s"),

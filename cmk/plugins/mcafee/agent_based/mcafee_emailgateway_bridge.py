@@ -7,12 +7,12 @@ import time
 from collections.abc import Mapping
 
 from cmk.agent_based.v2 import (
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
     get_rate,
     get_value_store,
-    Metric,
     Result,
     Service,
     SimpleSNMPSection,
@@ -59,18 +59,13 @@ def check_mcafee_emailgateway_bridge(params: Params, section: StringTable) -> Ch
             value_store, f"mcafee_emailgateway_bridge.{key}", now, int(packets), raise_overflow=True
         )
         levels = params.get(key)
-        state = State.OK
-        infotext = f"{title}: {packets_rate:.2f} packets received/s"
-        if levels:
-            warn, crit = levels
-            if packets_rate >= crit:
-                state = State.CRIT
-            elif packets_rate >= warn:
-                state = State.WARN
-            if state is not State.OK:
-                infotext += f" (warn/crit at {warn}/{crit} packets/s)"
-        yield Result(state=state, summary=infotext)
-        yield Metric(f"{key}_packets_received", packets_rate, levels=levels)
+        yield from check_levels(
+            packets_rate,
+            levels_upper=("fixed", levels) if levels else None,
+            metric_name=f"{key}_packets_received",
+            render_func=lambda v: f"{v:.2f} packets received/s",
+            label=title,
+        )
 
 
 snmp_section_mcafee_emailgateway_bridge = SimpleSNMPSection(

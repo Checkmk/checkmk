@@ -5,6 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 from typing import Literal
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -44,6 +45,7 @@ from cmk.gui.graphing import (
 )
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
+from cmk.gui.graphing._unit_format import apply_temperature_unit, unit_to_unit_format
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
 from cmk.gui.graphing.openapi._serialize import (
     api_consolidation_to_engine,
@@ -51,7 +53,10 @@ from cmk.gui.graphing.openapi._serialize import (
 )
 from cmk.gui.graphing.openapi.fetch_graph_data import fetch_graph_data_v1
 from cmk.gui.graphing.openapi.models import ApiTimeRange, ApiUnitFormat, GraphFetchRequest
+from cmk.gui.logged_in import LoggedInNobody
+from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
 @pytest.mark.parametrize(
@@ -68,6 +73,14 @@ def test_consolidation_function_mapping(
     assert api_consolidation_to_engine(value) == expected
 
 
+def _api_context(temperature_unit: str = "celsius") -> ApiContext:
+    """Only the user and the configured default the temperature unit resolves from matter here."""
+    context = MagicMock(spec=ApiContext)
+    context.user = LoggedInNobody()
+    context.config.default_temperature_unit = temperature_unit
+    return context
+
+
 def test_evaluated_to_response_surfaces_fetch_diagnostics() -> None:
     # A hit series cap becomes a warning; a per-query fetch error becomes an error entry.
     response = evaluated_to_response(
@@ -77,6 +90,7 @@ def test_evaluated_to_response_surfaces_fetch_diagnostics() -> None:
             limits_reached=[QueryLimitReached(metric_name="cpu", max_series=100, num_series=100)],
             errors=["metric backend unavailable"],
         ),
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert response.errors == ["metric backend unavailable"]
     assert len(response.warnings) == 1
@@ -88,6 +102,7 @@ def test_evaluated_to_response_has_no_diagnostics_by_default() -> None:
         EvaluatedGraph(name="g", title="t", vertical_range=None, stacks=[], lines=[]),
         fallback_time_range=TimeRange(start=0, end=60, step=10),
         diagnostics=FetchDiagnostics(),
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert response.warnings == []
     assert response.errors == []
@@ -120,6 +135,7 @@ def test_a_shaded_region_is_served_beside_the_metrics_not_among_them() -> None:
         ),
         fallback_time_range=TimeRange(start=0, end=30, step=10),
         diagnostics=FetchDiagnostics(),
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
 
     assert (len(response.shaded_regions), len(response.metrics)) == (1, 0)
@@ -139,6 +155,7 @@ def test_a_region_open_at_the_top_is_served_without_an_upper_bound() -> None:
         ),
         fallback_time_range=TimeRange(start=0, end=30, step=10),
         diagnostics=FetchDiagnostics(),
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
 
     assert response.shaded_regions[0].data_points.upper is None
@@ -156,7 +173,7 @@ def test_fetch_graph_data_empty_graph_runs_end_to_end() -> None:
         requested_time_range=ApiTimeRange(start=0, end=60, step=10),
         consolidation_function="avg",
     )
-    response = fetch_graph_data_v1(request)
+    response = fetch_graph_data_v1(_api_context(), request)
     assert response.metrics == []
     assert response.horizontal_lines == []
     assert response.time_range == ApiTimeRange(start=0, end=60, step=10)
@@ -170,7 +187,7 @@ def test_fetch_graph_data_invalid_internal_raises_500() -> None:
         consolidation_function="avg",
     )
     with pytest.raises(ProblemException) as exc_info:
-        fetch_graph_data_v1(request)
+        fetch_graph_data_v1(_api_context(), request)
     assert exc_info.value.code == 500
     assert "Failed to evaluate graph" in exc_info.value.detail
 
@@ -184,7 +201,7 @@ def test_fetch_graph_data_unknown_graph_kind_raises_500() -> None:
         consolidation_function="avg",
     )
     with pytest.raises(ProblemException) as exc_info:
-        fetch_graph_data_v1(request)
+        fetch_graph_data_v1(_api_context(), request)
     assert exc_info.value.code == 500
 
 
@@ -202,7 +219,7 @@ def test_fetch_graph_data_livestatus_failure_raises_503(
         consolidation_function="avg",
     )
     with pytest.raises(ProblemException) as exc_info:
-        fetch_graph_data_v1(request)
+        fetch_graph_data_v1(_api_context(), request)
     assert exc_info.value.code == 503
     assert "connection refused" in exc_info.value.detail
 
@@ -219,7 +236,7 @@ def test_fetch_graph_data_multiple_internal_graphs_raises_500() -> None:
         consolidation_function="avg",
     )
     with pytest.raises(ProblemException) as exc_info:
-        fetch_graph_data_v1(request)
+        fetch_graph_data_v1(_api_context(), request)
     assert exc_info.value.code == 500
     assert "Expected exactly one graph" in exc_info.value.detail
     assert "got 2" in exc_info.value.detail
@@ -247,12 +264,13 @@ def test_fetch_graph_data_passes_combination_mode_into_options(
     captured: dict[str, Mapping[str, object]] = {}
     _capture_request(monkeypatch, captured)
     fetch_graph_data_v1(
+        _api_context(),
         GraphFetchRequest(
             internal=serialize_graphs([Graph(name="g", title="t", kind="template")]),
             requested_time_range=ApiTimeRange(start=0, end=60, step=10),
             consolidation_function="avg",
             combination_mode="stacked",
-        )
+        ),
     )
     assert captured["options"]["combination_mode"] == "stacked"
 
@@ -264,11 +282,12 @@ def test_fetch_graph_data_omits_combination_mode_when_not_requested(
     captured: dict[str, Mapping[str, object]] = {}
     _capture_request(monkeypatch, captured)
     fetch_graph_data_v1(
+        _api_context(),
         GraphFetchRequest(
             internal=serialize_graphs([Graph(name="g", title="t", kind="template")]),
             requested_time_range=ApiTimeRange(start=0, end=60, step=10),
             consolidation_function="avg",
-        )
+        ),
     )
     assert "combination_mode" not in captured["options"]
 
@@ -331,7 +350,10 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
         _FetchData(),
     )(graph).graphs
     response = evaluated_to_response(
-        evaluated, fallback_time_range=time_range, diagnostics=FetchDiagnostics()
+        evaluated,
+        fallback_time_range=time_range,
+        diagnostics=FetchDiagnostics(),
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
 
     # The header reads this title, so the fetch is what substitutes a plug-in's title expression.
@@ -347,7 +369,145 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
     assert (horizontal_line.value, horizontal_line.color) == (80.0, "#ffcc00")
     # The legend renders the value with the unit of the metric the line bounds, as it does a
     # metric's own values - without it the raw number is all it can show.
-    assert horizontal_line.unit == ApiUnitFormat.from_engine_unit(unit)
+    assert horizontal_line.unit == ApiUnitFormat.from_shared(
+        apply_temperature_unit(unit_to_unit_format(unit), TemperatureUnit.CELSIUS)[0]
+    )
+
+
+def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit() -> None:
+    unit = Unit(notation=DecimalNotation("°C"), precision=AutoPrecision(2))
+    metric = RRDMetric(
+        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("temp")
+    )
+    graph = Graph(
+        name="g",
+        title="Temperature",
+        kind="template",
+        lines=[
+            Line(
+                curve=Curve(
+                    quantity=metric,
+                    attributes=CurveAttributes(title="Temperature", unit=unit, color="#0000ff"),
+                ),
+                inverse=False,
+            )
+        ],
+        rules=[
+            Rule(
+                curve=Curve(
+                    quantity=ScalarOf(metric=metric, scalar_kind=ScalarKind.WARNING),
+                    attributes=CurveAttributes(
+                        title="Warning of Temperature", unit=unit, color="#ffcc00"
+                    ),
+                ),
+                inverse=False,
+            )
+        ],
+    )
+    time_range = TimeRange(start=0, end=30, step=10)
+
+    class _FetchData:
+        diagnostics = FetchDiagnostics()
+
+        def __call__(
+            self,
+            metrics: Sequence[MetricProtocol],
+            *,
+            consolidation_function: ConsolidationFunction,  # noqa: ARG002
+            time_range: TimeRange,
+        ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
+            return {
+                rrd_metric: [
+                    FetchedData(
+                        performance_data=PerformanceData(value=20.0, warning=70.0),
+                        time_series=TimeSeries(time_range=time_range, values=[20.0, None, 70.0]),
+                    )
+                ]
+                for rrd_metric in metrics
+                if isinstance(rrd_metric, RRDMetric)
+            }
+
+    [evaluated] = _EvaluateTemplateGraphs(
+        CommonGraphOptions(
+            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
+        ),
+        _FetchData(),
+    )(graph).graphs
+    response = evaluated_to_response(
+        evaluated,
+        fallback_time_range=time_range,
+        diagnostics=FetchDiagnostics(),
+        temperature_unit=TemperatureUnit.FAHRENHEIT,
+    )
+
+    [line] = response.metrics
+    assert line.data_points == [68.0, None, 158.0]
+    assert line.metadata.unit.symbol == "°F"
+    # Already converted, so the frontend's own conversion must leave the numbers alone.
+    assert line.metadata.unit.convertible is False
+    [horizontal_line] = response.horizontal_lines
+    assert horizontal_line.value == 158.0
+    assert horizontal_line.unit.symbol == "°F"
+
+
+def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
+    unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
+    metric = RRDMetric(
+        host_name=HostName("h"), service_name=ServiceName("svc"), metric_name=MetricName("m")
+    )
+    graph = Graph(
+        name="g",
+        title="t",
+        kind="template",
+        lines=[
+            Line(
+                curve=Curve(
+                    quantity=metric,
+                    attributes=CurveAttributes(title="Line", unit=unit, color="#0000ff"),
+                ),
+                inverse=False,
+            )
+        ],
+    )
+    time_range = TimeRange(start=0, end=30, step=10)
+
+    class _FetchData:
+        diagnostics = FetchDiagnostics()
+
+        def __call__(
+            self,
+            metrics: Sequence[MetricProtocol],
+            *,
+            consolidation_function: ConsolidationFunction,  # noqa: ARG002
+            time_range: TimeRange,
+        ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
+            return {
+                rrd_metric: [
+                    FetchedData(
+                        performance_data=PerformanceData(value=20.0),
+                        time_series=TimeSeries(time_range=time_range, values=[20.0]),
+                    )
+                ]
+                for rrd_metric in metrics
+                if isinstance(rrd_metric, RRDMetric)
+            }
+
+    [evaluated] = _EvaluateTemplateGraphs(
+        CommonGraphOptions(
+            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
+        ),
+        _FetchData(),
+    )(graph).graphs
+    response = evaluated_to_response(
+        evaluated,
+        fallback_time_range=time_range,
+        diagnostics=FetchDiagnostics(),
+        temperature_unit=TemperatureUnit.FAHRENHEIT,
+    )
+
+    [line] = response.metrics
+    assert line.data_points == [20.0]
+    assert line.metadata.unit.symbol == "X"
 
 
 def test_evaluated_to_response_carries_the_attributes_of_the_fetched_series() -> None:
@@ -378,7 +538,10 @@ def test_evaluated_to_response_carries_the_attributes_of_the_fetched_series() ->
     )
 
     response = evaluated_to_response(
-        evaluated, fallback_time_range=time_range, diagnostics=FetchDiagnostics()
+        evaluated,
+        fallback_time_range=time_range,
+        diagnostics=FetchDiagnostics(),
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
 
     [metric] = response.metrics
@@ -414,7 +577,10 @@ def test_evaluated_to_response_leaves_an_rrd_metric_without_attributes() -> None
     )
 
     response = evaluated_to_response(
-        evaluated, fallback_time_range=time_range, diagnostics=FetchDiagnostics()
+        evaluated,
+        fallback_time_range=time_range,
+        diagnostics=FetchDiagnostics(),
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
 
     [metric] = response.metrics

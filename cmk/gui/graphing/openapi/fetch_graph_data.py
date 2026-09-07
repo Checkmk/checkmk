@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping
 from cmk.graphing_engine import Graph
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.openapi.framework import (
+    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -17,10 +18,12 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.livestatus_client import MKLivestatusException
 from cmk.web.utils import permission_verification as permissions
 
 from .._graph_dispatch import evaluate_built_graphs, evaluate_graphs, EvaluatedGraphs
+from .._unit import get_temperature_unit
 from ._family import GRAPH_FAMILY
 from ._serialize import (
     api_consolidation_to_engine,
@@ -69,7 +72,10 @@ def _evaluated_or_problem(evaluate: Callable[[], EvaluatedGraphs]) -> EvaluatedG
 
 
 def _single_graph_response(
-    evaluated: EvaluatedGraphs, *, fallback_time_range: EngineTimeRange
+    evaluated: EvaluatedGraphs,
+    *,
+    fallback_time_range: EngineTimeRange,
+    temperature_unit: TemperatureUnit,
 ) -> GraphFetchResponse:
     if len(evaluated.graphs) != 1:
         raise ProblemException(
@@ -81,6 +87,7 @@ def _single_graph_response(
         evaluated.graphs[0],
         fallback_time_range=fallback_time_range,
         diagnostics=evaluated.diagnostics,
+        temperature_unit=temperature_unit,
     )
 
 
@@ -90,6 +97,7 @@ def evaluate_graph_to_response(
     requested_time_range: ApiTimeRange,
     consolidation_function: ApiConsolidation,
     combination_mode: ApiCombinationMode | None,
+    temperature_unit: TemperatureUnit,
 ) -> GraphFetchResponse:
     """Evaluate the serialized definition of exactly one graph into its fetched data."""
     time_range = api_time_range_to_engine(requested_time_range)
@@ -97,6 +105,7 @@ def evaluate_graph_to_response(
     return _single_graph_response(
         _evaluated_or_problem(lambda: evaluate_graphs(internal, options)),
         fallback_time_range=time_range,
+        temperature_unit=temperature_unit,
     )
 
 
@@ -106,6 +115,7 @@ def evaluate_built_graph_to_response(
     requested_time_range: ApiTimeRange,
     consolidation_function: ApiConsolidation,
     combination_mode: ApiCombinationMode | None,
+    temperature_unit: TemperatureUnit,
 ) -> GraphFetchResponse:
     """Evaluate a graph that was built in this request into its fetched data.
 
@@ -117,16 +127,20 @@ def evaluate_built_graph_to_response(
     return _single_graph_response(
         _evaluated_or_problem(lambda: evaluate_built_graphs([graph], options)),
         fallback_time_range=time_range,
+        temperature_unit=temperature_unit,
     )
 
 
-def fetch_graph_data_v1(body: GraphFetchRequest) -> GraphFetchResponse:
+def fetch_graph_data_v1(api_context: ApiContext, body: GraphFetchRequest) -> GraphFetchResponse:
     """Fetch the data for a graph definition over a requested time range"""
     return evaluate_graph_to_response(
         body.internal,
         requested_time_range=body.requested_time_range,
         consolidation_function=body.consolidation_function,
         combination_mode=body.combination_mode,
+        temperature_unit=get_temperature_unit(
+            api_context.user, api_context.config.default_temperature_unit
+        ),
     )
 
 

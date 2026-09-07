@@ -58,6 +58,7 @@ from cmk.gui.graphing._graph_codec import community_graph_codec
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, SizePT
 from cmk.gui.userdb.user_attributes import StartOfWeekUserAttribute
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import DropdownChoice
 from cmk.shared_typing.cmk_time_series_graph import (
     ExplicitRange,
@@ -109,7 +110,11 @@ def test_to_cmk_time_series_graph_shell() -> None:
             )
         ],
     )
-    result = to_cmk_time_series_graph(BuiltGraph(graph=graph, specification=None), size=_SIZE)
+    result = to_cmk_time_series_graph(
+        BuiltGraph(graph=graph, specification=None),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
 
     assert result.size == _SIZE
     assert result.options == GraphOptions(
@@ -118,7 +123,11 @@ def test_to_cmk_time_series_graph_shell() -> None:
         x_axis=None,
         y_axis=YAxis(
             unit=UnitFormat(
-                notation="decimal", symbol="X", precision=Precision(type="auto", digits=2)
+                notation="decimal",
+                symbol="X",
+                precision=Precision(type="auto", digits=2),
+                # Already converted by the shell, so the renderer must not convert it again.
+                convertible=False,
             ),
         ),
         font_size_pt=8.0,
@@ -330,7 +339,11 @@ def test_data_attribute_internal_round_trips_to_the_same_graph() -> None:
             )
         ],
     )
-    result = to_cmk_time_series_graph(BuiltGraph(graph=graph, specification=None), size=_SIZE)
+    result = to_cmk_time_series_graph(
+        BuiltGraph(graph=graph, specification=None),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
 
     assert result.options.header.title == "My Graph"
     [restored] = community_graph_codec().deserialize_graphs(json.loads(result.internal))
@@ -429,7 +442,9 @@ def test_the_shell_axis_keeps_the_unit_the_graph_names_over_the_one_its_curves_i
         notation="si", symbol="W", precision=Precision(type="strict", digits=0), convertible=False
     )
     result = to_cmk_time_series_graph(
-        BuiltGraph(graph=_one_curve_graph(), specification=None, y_axis_unit=named), size=_SIZE
+        BuiltGraph(graph=_one_curve_graph(), specification=None, y_axis_unit=named),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     assert result.options.y_axis == YAxis(unit=named, explicit_range=None)
 
@@ -441,6 +456,7 @@ def test_the_shell_axis_is_pinned_by_the_graphs_own_fixed_range() -> None:
             specification=None,
         ),
         size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     y_axis = result.options.y_axis
     assert y_axis is not None
@@ -457,6 +473,7 @@ def test_the_shell_axis_ignores_a_minimal_range_which_only_widens_the_drawn_exte
             specification=None,
         ),
         size=_SIZE,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     y_axis = result.options.y_axis
     assert y_axis is not None
@@ -589,3 +606,26 @@ def test_an_attribute_group_the_graph_spec_does_not_report_is_left_out() -> None
     )
 
     assert spec["curves"][0]["attributes"] == {"resource": {"host.name": "heute"}}
+
+
+def test_the_shell_axis_takes_the_users_temperature_unit() -> None:
+    # The axis labels have to agree with the converted values the fetch serves.
+    celsius = UnitFormat(
+        notation="decimal", symbol="°C", precision=Precision(type="auto", digits=2)
+    )
+    result = to_cmk_time_series_graph(
+        BuiltGraph(
+            graph=_one_curve_graph(vertical_range=FixedRange(lower=0.0, upper=100.0)),
+            specification=None,
+            y_axis_unit=celsius,
+        ),
+        size=_SIZE,
+        temperature_unit=TemperatureUnit.FAHRENHEIT,
+    )
+    y_axis = result.options.y_axis
+    assert y_axis is not None
+    assert y_axis.unit is not None
+    assert y_axis.unit.symbol == "°F"
+    assert y_axis.unit.convertible is False
+    # The bounds are in the metric's own scale, so they move with the unit.
+    assert y_axis.explicit_range == ExplicitRange(min=32.0, max=212.0)

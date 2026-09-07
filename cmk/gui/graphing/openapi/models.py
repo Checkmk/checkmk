@@ -4,21 +4,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Annotated, Literal, Self
 
 from annotated_types import Interval
 from pydantic import Json
 
-from cmk.graphing_engine import Unit
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel
 from cmk.gui.type_defs import IconNames
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import UnitFormat
 
 from .._built_graphs import BuiltGraph, DiscoveredGraphs
 from .._graph_dispatch import serialize_graphs
-from .._unit_format import notation_name, precision_kind
+from .._unit_format import apply_temperature_unit
 
 type ApiConsolidation = Literal["min", "max", "avg"]
 
@@ -58,17 +58,6 @@ class ApiUnitFormat:
                 type=unit_format.precision.type, digits=unit_format.precision.digits
             ),
             convertible=True if unit_format.convertible is None else unit_format.convertible,
-        )
-
-    @classmethod
-    def from_engine_unit(cls, unit: Unit) -> Self:
-        # TODO: The engine ``Unit`` has no convertibility concept, so default to convertible
-        #  (matches the shared unit-format default).
-        return cls(
-            notation=notation_name(unit),
-            symbol=unit.notation.symbol,
-            precision=ApiPrecision(type=precision_kind(unit), digits=unit.precision.digits),
-            convertible=True,
         )
 
 
@@ -204,19 +193,21 @@ class ApiYAxis:
     )
 
     @classmethod
-    def from_built(cls, built: BuiltGraph) -> Self | None:
+    def from_built(cls, built: BuiltGraph, temperature_unit: TemperatureUnit) -> Self | None:
         """The axis the graph names, or None when it names none at all."""
         bounds = built.y_axis_bounds()
         if built.y_axis_unit is None and bounds is None:
             return None
+        unit_format: UnitFormat | None = None
+        conversion: Callable[[float], float] = lambda value: value
+        if built.y_axis_unit is not None:
+            unit_format, conversion = apply_temperature_unit(built.y_axis_unit, temperature_unit)
         return cls(
-            unit=(
-                ApiOmitted()
-                if built.y_axis_unit is None
-                else ApiUnitFormat.from_shared(built.y_axis_unit)
-            ),
+            unit=(ApiOmitted() if unit_format is None else ApiUnitFormat.from_shared(unit_format)),
             explicit_range=(
-                ApiOmitted() if bounds is None else ApiExplicitRange(min=bounds[0], max=bounds[1])
+                ApiOmitted()
+                if bounds is None
+                else ApiExplicitRange(min=conversion(bounds[0]), max=conversion(bounds[1]))
             ),
         )
 
@@ -265,12 +256,12 @@ class ApiDiscoveredGraph:
     )
 
     @classmethod
-    def from_built(cls, built: BuiltGraph) -> Self:
+    def from_built(cls, built: BuiltGraph, temperature_unit: TemperatureUnit) -> Self:
         return cls(
             internal=json.dumps(serialize_graphs([built.graph])),
             title=built.graph.title,
             name=built.graph.name,
-            y_axis=ApiYAxis.from_built(built),
+            y_axis=ApiYAxis.from_built(built, temperature_unit),
             add_to_specification=(
                 None if built.specification is None else built.specification.model_dump()
             ),
@@ -293,9 +284,14 @@ class GraphsDiscoverResponse:
     )
 
     @classmethod
-    def from_discovered(cls, discovered: DiscoveredGraphs) -> Self:
+    def from_discovered(
+        cls, discovered: DiscoveredGraphs, temperature_unit: TemperatureUnit
+    ) -> Self:
         return cls(
-            graphs=[ApiDiscoveredGraph.from_built(built) for built in discovered.graphs],
+            graphs=[
+                ApiDiscoveredGraph.from_built(built, temperature_unit)
+                for built in discovered.graphs
+            ],
             no_data_message=discovered.no_data_message,
         )
 

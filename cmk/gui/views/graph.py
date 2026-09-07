@@ -17,6 +17,7 @@ from cmk.gui.graphing import (
     DEFAULT_INTERACTION,
     default_time_range_seconds,
     EngineDisplayOptions,
+    get_temperature_unit,
     GraphDisplayConfigHTML,
     GraphRenderOptions,
     render_engine_graph_group,
@@ -46,6 +47,7 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
 )
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
@@ -189,6 +191,7 @@ def _paint_time_graph_cmk(
     request: Request,
     response: Response,
     painter_options: PainterOptions,
+    temperature_unit: TemperatureUnit,
     require_historic_metrics: bool = True,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
@@ -258,6 +261,7 @@ def _paint_time_graph_cmk(
         raw_time_range=raw_time_range,
         debug=debug,
         mobile=mobile,
+        temperature_unit=temperature_unit,
     )
 
 
@@ -269,6 +273,7 @@ def _render_engine_graph_group(
     raw_time_range: tuple[int, int],
     debug: bool,
     mobile: bool,
+    temperature_unit: TemperatureUnit,
 ) -> HTML:
     """Render the graph-engine (Vue) graph group for a row's template graphs."""
     return render_engine_graph_group(
@@ -298,6 +303,7 @@ def _render_engine_graph_group(
         ),
         debug=debug,
         full_width=True,
+        temperature_unit=temperature_unit,
     )
 
 
@@ -390,6 +396,7 @@ class PainterServiceGraphs(Painter):
             response=response,
             painter_options=self._painter_options,
             debug=self.config.debug,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
         )
 
     @override
@@ -446,6 +453,7 @@ class PainterHostGraphs(Painter):
             response=response,
             painter_options=self._painter_options,
             debug=self.config.debug,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
             # also render the graphs if there are no historic metrics available (but perf data is)
             require_historic_metrics="service_description" not in row,
@@ -530,6 +538,7 @@ class PainterSvcPnpgraph(Painter):
             response=response,
             painter_options=self._painter_options,
             debug=self.config.debug,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
         )
 
     @override
@@ -590,6 +599,7 @@ class PainterHostPnpgraph(Painter):
             response=response,
             painter_options=self._painter_options,
             debug=self.config.debug,
+            temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
         )
 
     @override

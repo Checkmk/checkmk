@@ -19,6 +19,7 @@ from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.store import DashboardStore
 from cmk.gui.dashboard.type_defs import DashboardConfig, DashletConfig, LinkedViewDashletConfig
 from cmk.gui.exceptions import HTTPRedirect, MKMethodNotAllowed, MKMissingDataError, MKUserError
+from cmk.gui.graphing import get_temperature_unit
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import response
 from cmk.gui.i18n import _
@@ -36,6 +37,7 @@ from cmk.gui.token_auth import (
 from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.json import CustomObjectJSONEncoder
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.views.store import get_permitted_views, ViewStore
 from cmk.utils import paths
 from cmk.web.utils.urls import urlencode_vars
@@ -423,6 +425,12 @@ class ImpersonatedDashboardTokenIssuer:
             return permitted[view_name]
         except KeyError:
             raise InvalidWidgetError(disable_token=True)
+
+    def temperature_unit(self, default_temperature_unit: str) -> TemperatureUnit:
+        """A shared dashboard shows the unit its owner configured, not the visitor's."""
+        self._check_valid()
+
+        return get_temperature_unit(user, default_temperature_unit)
 
 
 @contextlib.contextmanager

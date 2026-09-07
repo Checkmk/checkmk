@@ -26,6 +26,7 @@ from cmk.gui.pages import PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.sites import live
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import Size
 from cmk.utils.servicename import ServiceName
 
@@ -43,6 +44,7 @@ from ._prediction_graphs import (
 )
 from ._prediction_query import PredictionQuerier, PredictionQuerierProtocol
 from ._prediction_source import Direction
+from ._unit import get_temperature_unit
 
 
 class ServiceBreadcrumbFunc(Protocol):
@@ -150,6 +152,7 @@ def _graph_group_data(
     host_name: HostName,
     service_name: ServiceName,
     predictions: Sequence[_Prediction],
+    temperature_unit: TemperatureUnit,
 ) -> dict[str, object]:
     options = GraphRenderOptions()
     width, height = resolve_size(options)
@@ -177,6 +180,7 @@ def _graph_group_data(
                 ),
                 size=size,
                 interaction=STATIC_INTERACTION,
+                temperature_unit=temperature_unit,
             )
         )
         for prediction in predictions
@@ -240,6 +244,7 @@ class PredictionPage:
                 host_name,
                 service_name,
                 [prediction for prediction in predictions if prediction.title == selected],
+                get_temperature_unit(user, ctx.config.default_temperature_unit),
             ),
         )
         html.footer()

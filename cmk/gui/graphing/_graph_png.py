@@ -368,7 +368,7 @@ def _graph_time_caption(time_range: TimeRange) -> str:
 def _notation_formatter(y_axis_unit: UnitFormat | None) -> NotationFormatter | None:
     if y_axis_unit is None:
         return None
-    # The engine fetch does not (yet) convert values for the user's temperature preference, so
+    # PNG plots the evaluated graph's own values rather than the converted fetch response, so
     # the label must stay truthful to the actually-plotted (unconverted) values: match the
     # requested unit to the metric's own degree scale rather than the user's preferred one,
     # which always resolves to the identity conversion.

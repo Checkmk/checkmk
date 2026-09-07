@@ -125,7 +125,8 @@ def test_fetch_graph_data_comprehensive_graph(
         "notation": "decimal",
         "symbol": "X",
         "precision": {"type": "auto", "digits": 2},
-        "convertible": True,
+        # Already converted by the fetch, so the renderer must not convert it again.
+        "convertible": False,
     }
 
     def _metadata(name: str) -> dict[str, object]:

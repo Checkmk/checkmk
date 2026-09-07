@@ -11,12 +11,15 @@ from cmk import trace
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.htmllib.html import html
+from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import Interaction, Size
 from cmk.utils.servicename import ServiceName
 
 from ._frontend import EngineDisplayOptions, render_engine_graph_group
 from ._graph_templates import TemplateGraphSpecification
+from ._unit import get_temperature_unit
 
 tracer = trace.get_tracer()
 
@@ -37,6 +40,7 @@ def host_service_graph_popup_cmk(
     service_description: ServiceName,
     *,
     debug: bool,
+    temperature_unit: TemperatureUnit,
 ) -> None:
     end_time = int(time.time())
     start_time = end_time - 8 * 3600
@@ -57,6 +61,7 @@ def host_service_graph_popup_cmk(
             display=EngineDisplayOptions(show_consolidation=False, show_legend=False),
             multi_column=True,
             debug=debug,
+            temperature_unit=temperature_unit,
         )
     )
     html.close_div()
@@ -70,5 +75,6 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             ctx.request.get_validated_type_input_mandatory(HostName, "host_name"),
             ServiceName(ctx.request.get_str_input_mandatory("service")),
             debug=ctx.config.debug,
+            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
         )
         return None

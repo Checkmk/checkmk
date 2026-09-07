@@ -5,7 +5,7 @@
 
 import json
 import traceback
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from typing import Final, TypedDict
 
@@ -26,6 +26,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import GraphTimerange, PainterParameters, VerticalAxisWidth
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import (
     AddTo,
     CmkTimeSeriesGraph,
@@ -56,7 +57,7 @@ from ._graph_templates import build_template_graphs, TemplateGraphSpecification
 from ._line_types import LineType
 from ._metric_query import AttributeGroup
 from ._source import RRDFetchMetricNames
-from ._unit_format import unit_from_curves
+from ._unit_format import apply_temperature_unit, unit_from_curves
 
 
 def stored_time_range_seconds(
@@ -162,15 +163,22 @@ def derive_y_axis_unit(graph: Graph) -> UnitFormat | None:
     ) or unit_from_curves(line.curve.attributes.unit for line in graph.lines)
 
 
-def _shell_y_axis(built: BuiltGraph) -> YAxis | None:
+def _shell_y_axis(built: BuiltGraph, temperature_unit: TemperatureUnit) -> YAxis | None:
     """The axis the shell draws with: what the graph names for itself, else what its curves imply."""
     unit = built.y_axis_unit if built.y_axis_unit is not None else derive_y_axis_unit(built.graph)
     bounds = built.y_axis_bounds()
     if unit is None and bounds is None:
         return None
+    conversion: Callable[[float], float] = lambda value: value
+    if unit is not None:
+        unit, conversion = apply_temperature_unit(unit, temperature_unit)
     return YAxis(
         unit=unit,
-        explicit_range=None if bounds is None else ExplicitRange(min=bounds[0], max=bounds[1]),
+        explicit_range=(
+            None
+            if bounds is None
+            else ExplicitRange(min=conversion(bounds[0]), max=conversion(bounds[1]))
+        ),
     )
 
 
@@ -182,6 +190,7 @@ def to_cmk_time_series_graph(
     font_size_pt: float = 8.0,
     show_graph_time: bool = True,
     x_axis: XAxis | None = None,
+    temperature_unit: TemperatureUnit,
 ) -> CmkTimeSeriesGraph:
     """Translate a built graph into the shared ``CmkTimeSeriesGraph`` the Vue renderer takes."""
     graph = built.graph
@@ -192,7 +201,7 @@ def to_cmk_time_series_graph(
             header=GraphHeader(title=graph.title, show_graph_time=show_graph_time),
             name=graph.name,
             x_axis=x_axis,
-            y_axis=_shell_y_axis(built),
+            y_axis=_shell_y_axis(built, temperature_unit),
             font_size_pt=font_size_pt,
         ),
         interaction=interaction,
@@ -301,6 +310,7 @@ def render_engine_graph_group(
     interaction: Interaction = DEFAULT_INTERACTION,
     multi_column: bool = False,
     full_width: bool = False,
+    temperature_unit: TemperatureUnit,
 ) -> HTML:
     """Render the graph-engine (Vue) 'cmk-graph-group' for a host/service's template graphs.
 
@@ -326,6 +336,7 @@ def render_engine_graph_group(
                 size=size,
                 interaction=interaction,
                 show_graph_time=show_graph_time,
+                temperature_unit=temperature_unit,
             )
         )
         for built in engine_graphs

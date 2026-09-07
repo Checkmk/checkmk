@@ -24,6 +24,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.token_auth import AuthToken, DashboardToken, TokenId
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 from .api import convert_internal_relative_dashboard_to_api_model_dict, DashboardConstants
 from .dashlet.dashlets.status_helpers import make_mk_missing_data_error
@@ -31,7 +32,10 @@ from .dashlet.registry import dashlet_registry
 from .exceptions import WidgetRenderError
 from .graph_widget_discovery import discover_widget_graphs, GRAPH_WIDGET_TYPES
 from .page_token_error import page_dashboard_token_invalid
-from .token_util import DashboardTokenAuthenticatedPage, impersonate_dashboard_token_issuer
+from .token_util import (
+    DashboardTokenAuthenticatedPage,
+    impersonate_dashboard_token_issuer,
+)
 from .type_defs import DashboardConfig, DashletConfig
 
 
@@ -87,6 +91,7 @@ def _compute_widget_graphs(
     *,
     debug: bool,
     user_permissions: UserPermissions,
+    temperature_unit: TemperatureUnit,
 ) -> dict[str, Any]:
     try:
         discovered = discover_widget_graphs(
@@ -99,13 +104,20 @@ def _compute_widget_graphs(
         return {"error": str(make_mk_missing_data_error())}
 
     return {
-        "graphs": [asdict(ApiDiscoveredGraph.from_built(built)) for built in discovered.graphs],
+        "graphs": [
+            asdict(ApiDiscoveredGraph.from_built(built, temperature_unit))
+            for built in discovered.graphs
+        ],
         "no_data_message": discovered.no_data_message,
     }
 
 
 def compute_widget_graphs(
-    board: DashboardConfig, *, debug: bool, user_permissions: UserPermissions
+    board: DashboardConfig,
+    *,
+    debug: bool,
+    user_permissions: UserPermissions,
+    temperature_unit: TemperatureUnit,
 ) -> dict[str, dict[str, Any]]:
     """Discover the graph shells of the dashboard's client-side rendered graph widgets.
 
@@ -116,7 +128,11 @@ def compute_widget_graphs(
     dashboard_context = board.get("context")
     return {
         widget_id: _compute_widget_graphs(
-            widget, dashboard_context, debug=debug, user_permissions=user_permissions
+            widget,
+            dashboard_context,
+            debug=debug,
+            user_permissions=user_permissions,
+            temperature_unit=temperature_unit,
         )
         for widget_id, widget in board["widgets"].items()
         if widget["type"] in GRAPH_WIDGET_TYPES
@@ -160,7 +176,10 @@ def page_shared_dashboard(
         widget_titles = compute_widget_titles(board)
         # Must run before the filter values are stripped: discovery resolves the graphs from them.
         widget_graphs = compute_widget_graphs(
-            board, debug=ctx.config.debug, user_permissions=user_permissions
+            board,
+            debug=ctx.config.debug,
+            user_permissions=user_permissions,
+            temperature_unit=issuer.temperature_unit(ctx.config.default_temperature_unit),
         )
         remove_sensitive_filter_information(board)
 

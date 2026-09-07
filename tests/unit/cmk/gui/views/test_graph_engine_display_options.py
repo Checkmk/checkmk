@@ -15,6 +15,7 @@ from cmk.gui.graphing import (
     TemplateGraphSpecification,
 )
 from cmk.gui.type_defs import SizePT
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.views import graph as graph_views
 from cmk.shared_typing.cmk_time_series_graph import Interaction
 from cmk.web.utils.html import HTML
@@ -66,6 +67,7 @@ def _forwarded(
         raw_time_range=(1_000, 2_000),
         debug=False,
         mobile=mobile,
+        temperature_unit=TemperatureUnit.CELSIUS,
     )
     return recorded
 

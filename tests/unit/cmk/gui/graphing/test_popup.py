@@ -12,6 +12,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.gui.graphing._popup import host_service_graph_popup_cmk
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.servicename import ServiceName
 
@@ -39,6 +40,7 @@ def _render_popup(mock_livestatus: MockLiveStatusConnection) -> str:
             HostName("h"),
             ServiceName("svc"),
             debug=False,
+            temperature_unit=TemperatureUnit.CELSIUS,
         )
         return output_funnel.drain()
 

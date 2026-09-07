@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+from dataclasses import replace
 from typing import assert_never, Literal
 
 from cmk.graphing_engine import (
@@ -17,7 +18,10 @@ from cmk.graphing_engine import (
     TimeNotation,
     Unit,
 )
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.shared_typing.cmk_time_series_graph import Precision, UnitFormat
+
+from ._unit import user_specific_unit_from_unit_format
 
 type NotationName = Literal[
     "decimal", "si", "iec", "standard_scientific", "engineering_scientific", "time"
@@ -71,3 +75,16 @@ def unit_from_curves(units: Iterable[Unit]) -> UnitFormat | None:
     CurveAttributes.unit on its curves but has no common curve type to walk with this one.
     """
     return next((unit_to_unit_format(unit) for unit in units), None)
+
+
+def apply_temperature_unit(
+    unit_format: UnitFormat, temperature_unit: TemperatureUnit
+) -> tuple[UnitFormat, Callable[[float], float]]:
+    """Unit and converter as a pair, so no caller relabels values without converting them.
+
+    ``convertible=False`` tells the frontend the numbers are already converted."""
+    user_specific = user_specific_unit_from_unit_format(unit_format, temperature_unit)
+    return (
+        replace(unit_format, symbol=user_specific.formatter.symbol, convertible=False),
+        user_specific.conversion,
+    )

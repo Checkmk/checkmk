@@ -933,7 +933,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('smart', [])
 
 agent_config['smart'] = [
-{'id': '204a08f0-6bc8-4bfb-a07f-8583f1cd05dc', 'value': 'smart_posix', 'condition': {}, 'options': {'disabled': False}},
+{'id': '204a08f0-6bc8-4bfb-a07f-8583f1cd05dc', 'value': {'deployment': ('sync', None), 'use_legacy_plugin': False}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['smart']
 
 

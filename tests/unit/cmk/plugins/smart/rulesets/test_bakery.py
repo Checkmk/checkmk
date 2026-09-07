@@ -13,7 +13,7 @@ from cmk.plugins.smart.rulesets.bakery import migrate
     [
         pytest.param(
             "smart_posix",
-            {"deployment": ("sync", None)},
+            {"deployment": ("sync", None), "use_legacy_plugin": False},
             id="deploy_smart_posix",
         ),
         pytest.param(
@@ -28,7 +28,7 @@ from cmk.plugins.smart.rulesets.bakery import migrate
         ),
         pytest.param(
             {"deployment": ("smart_posix", None)},
-            {"deployment": ("sync", None)},
+            {"deployment": ("sync", None), "use_legacy_plugin": False},
             id="old_intermediate_smart_posix",
         ),
         pytest.param(

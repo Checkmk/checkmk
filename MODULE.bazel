@@ -304,6 +304,27 @@ apt.install(
 )
 use_repo(apt, "relay_base_image")
 
+# Configure apt for the ReviewMK job image
+apt.install(
+    name = "reviewmk_job_image",
+    lock = "//non-free/packages/dev-ai:deploy/job-image/distro_packages.lock.json",
+    manifest = "//non-free/packages/dev-ai:deploy/job-image/distro_packages.yaml",
+)
+use_repo(apt, "reviewmk_job_image")
+
+# Claude Code CLI is unfortunately not available through standard package managers, so
+# we expose it directly for the deploy target
+http_file(
+    name = "claude_code_linux_x64",
+    downloaded_file_path = "claude",
+    executable = True,
+    integrity = "sha256-JtAgNR6BEvQAZ5Dzz85DtMnfDBux0OVCNk1kFRuB1bo=",
+    urls = [
+        "https://downloads.claude.ai/claude-code-releases/2.1.263/linux-x64/claude",
+        UPSTREAM_MIRROR_URL + "/claude-code-2.1.263-linux-x64",
+    ],
+)
+
 # Java runtimes we hand to tools explicitly:
 #   remotejdk25_linux - Wiremock-based component/unit tests. Previously provided
 #                       implicitly via WORKSPACE; expose it explicitly under Bzlmod.

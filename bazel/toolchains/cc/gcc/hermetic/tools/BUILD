@@ -26,6 +26,7 @@ cc_tool(
     name = "gcc",
     src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-gcc",
     data = [
+        "@gcc_toolchain//:assembler_buildroot",
         "@gcc_toolchain//:builtin_headers",
         "@gcc_toolchain//:linker_buildroot",
         "@gcc_toolchain//:multicall_support_files",
@@ -38,6 +39,7 @@ cc_tool(
     name = "g++",
     src = "@gcc_toolchain//:bin/x86_64-checkmk-linux-gnu-g++",
     data = [
+        "@gcc_toolchain//:assembler_buildroot",
         "@gcc_toolchain//:builtin_headers",
         "@gcc_toolchain//:multicall_support_files",
         "@gcc_toolchain//:sysroot",

@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 
 export type ComputedWidgetSpecResponse = components['schemas']['ComputedWidgetSpecResponse']
 export type ComputedTopListResponse = components['schemas']['ComputedTopListResponse']
@@ -100,3 +101,20 @@ export type GraphWidgetContent = Pick<
 >
 export type WidgetAvailableInventory =
   components['schemas']['WidgetAvailableInventoryCollectionModel']
+
+export interface WidgetRefreshSignal {
+  tick: number
+}
+
+export interface WidgetInteractionState {
+  editMode: boolean
+  isPreview: boolean
+}
+
+export interface WidgetTimeRange {
+  range: DateTimeRange
+}
+
+export interface WidgetEmitTimeRange {
+  updateTimeRange: [range: DateTimeRange]
+}

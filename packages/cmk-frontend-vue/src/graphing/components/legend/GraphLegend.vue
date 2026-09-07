@@ -8,8 +8,7 @@ import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
-import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
-import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import MetricAttributesTable from '../MetricAttributesTable.vue'
 import type { HorizontalLine, Metric } from '../TimeSeriesGraph'
@@ -72,14 +71,17 @@ const visibilityLabel = computed(() =>
 // Counts threshold lines too: 5 metrics plus 2 thresholds scrolls where 7 metrics would.
 const VISIBLE_ITEM_BUDGET = 7
 const ROW_HEIGHT_PX = 24
+const HEADER_ROW_HEIGHT_PX = 40
 const rowHeight = `${ROW_HEIGHT_PX}px`
+const headerRowHeight = `${HEADER_ROW_HEIGHT_PX}px`
 
-const metricsMaxHeight = computed(() => {
+const scrollMaxHeight = computed(() => {
   if (props.fillHeight) {
     return 'none'
   }
   const rowsForMetrics = Math.max(1, VISIBLE_ITEM_BUDGET - props.horizontalLines.length)
-  return `${rowsForMetrics * ROW_HEIGHT_PX}px`
+  const visibleRows = rowsForMetrics + props.horizontalLines.length
+  return `${HEADER_ROW_HEIGHT_PX + visibleRows * ROW_HEIGHT_PX}px`
 })
 
 const displayMetrics = computed(() => orderMetricsForLegend(props.metrics))
@@ -130,108 +132,52 @@ function toggleMetric(name: string) {
 function toggleLine(name: string) {
   emit('update:hiddenLineNames', withNameToggled(props.hiddenLineNames, name))
 }
-
-const metricsTableRef = useTemplateRef<HTMLTableElement>('metricsTable')
-const scrollContainerRef = computed(() => metricsTableRef.value?.parentElement ?? null)
-const metricsScrollable = ref(false)
-
-function updateScrollable() {
-  const el = scrollContainerRef.value
-  metricsScrollable.value = el ? el.scrollHeight > el.clientHeight : false
-}
-
-const { observe } = useResizeObserver(updateScrollable)
-observe(metricsTableRef)
-observe(scrollContainerRef)
-
-onMounted(async () => {
-  await nextTick()
-  updateScrollable()
-})
-
-watch(
-  () => props.metrics.length,
-  async () => {
-    await nextTick()
-    updateScrollable()
-  }
-)
 </script>
 
 <template>
   <div
     class="graphing-graph-legend"
     :class="{ 'graphing-graph-legend--fill': fillHeight }"
-    :style="{ '--legend-row-height': rowHeight }"
+    :style="{ '--legend-row-height': rowHeight, '--legend-header-height': headerRowHeight }"
   >
-    <!-- Table 1: fixed header row -->
-    <table class="graphing-graph-legend__table">
-      <colgroup>
-        <col class="graphing-graph-legend__col--eye" />
-        <col class="graphing-graph-legend__col--swatch" />
-        <col />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-      </colgroup>
-      <thead>
-        <tr
-          class="graphing-graph-legend__header-row"
-          :class="{ 'graphing-graph-legend__padded-row': metricsScrollable }"
-        >
-          <th class="graphing-graph-legend__header--eye">
-            <GraphLegendEyeButton
-              :hidden="allHidden"
-              :title="allHidden ? _t('Show all') : _t('Hide all')"
-              @toggle="toggleAll"
-            />
-          </th>
-          <th colspan="2">
-            <div class="graphing-graph-legend__header-meta">
-              <button
-                class="graphing-graph-legend__metric-count-btn"
-                :title="allHidden ? _t('Show all metrics') : _t('Hide all metrics')"
-                @click="toggleAll"
-              >
-                {{ visibilityLabel }}
-              </button>
-            </div>
-          </th>
-          <th
-            v-for="consolidationFunction in CONSOLIDATION_FUNCTIONS"
-            :key="consolidationFunction"
-            class="graphing-graph-legend__consolidation-function-th"
-          >
-            {{ consolidationFunctionLabels[consolidationFunction] }}
-          </th>
-          <th class="graphing-graph-legend__last-header">
-            {{ _t('Last') }}
-          </th>
-        </tr>
-      </thead>
-    </table>
-
-    <!-- Table 2: metric rows — scrollable -->
     <CmkScrollContainer
-      class="graphing-graph-legend__rows-scroll"
-      :max-height="metricsMaxHeight"
+      class="graphing-graph-legend__scroll"
+      :max-height="scrollMaxHeight"
       height="auto"
-      :style="{ overflowX: 'hidden' }"
     >
-      <table
-        ref="metricsTable"
-        class="graphing-graph-legend__table graphing-graph-legend__table-metrics"
-      >
-        <colgroup>
-          <col class="graphing-graph-legend__col--eye" />
-          <col class="graphing-graph-legend__col--swatch" />
-          <col />
-          <col class="graphing-graph-legend__col--stat" />
-          <col class="graphing-graph-legend__col--stat" />
-          <col class="graphing-graph-legend__col--stat" />
-          <col class="graphing-graph-legend__col--stat" />
-        </colgroup>
+      <table class="graphing-graph-legend__table">
+        <thead>
+          <tr class="graphing-graph-legend__header-row">
+            <th class="graphing-graph-legend__header--eye">
+              <GraphLegendEyeButton
+                :hidden="allHidden"
+                :title="allHidden ? _t('Show all') : _t('Hide all')"
+                @toggle="toggleAll"
+              />
+            </th>
+            <th>
+              <div class="graphing-graph-legend__header-meta">
+                <button
+                  class="graphing-graph-legend__metric-count-btn"
+                  :title="allHidden ? _t('Show all metrics') : _t('Hide all metrics')"
+                  @click="toggleAll"
+                >
+                  {{ visibilityLabel }}
+                </button>
+              </div>
+            </th>
+            <th
+              v-for="consolidationFunction in CONSOLIDATION_FUNCTIONS"
+              :key="consolidationFunction"
+              class="graphing-graph-legend__header--stat"
+            >
+              {{ consolidationFunctionLabels[consolidationFunction] }}
+            </th>
+            <th class="graphing-graph-legend__header--stat">
+              {{ _t('Last') }}
+            </th>
+          </tr>
+        </thead>
         <tbody>
           <template v-for="(m, index) in displayMetrics" :key="m.metadata.name">
             <tr
@@ -249,27 +195,27 @@ watch(
                   @toggle="toggleMetric(m.metadata.name)"
                 />
               </td>
-              <td class="graphing-graph-legend__cell--swatch">
-                <span
-                  class="graphing-graph-legend__swatch"
-                  :style="{ background: m.metadata.color }"
-                />
-              </td>
               <td class="graphing-graph-legend__name">
-                <span class="graphing-graph-legend__title" :title="m.metadata.title">
-                  {{ m.metadata.title }}
-                </span>
-                <CmkIconButton
-                  v-if="hasAttributes(m)"
-                  class="graphing-graph-legend__attributes-toggle"
-                  :name="showsAttributes(m) ? 'chevron-up' : 'chevron-down'"
-                  primary-color="font"
-                  size="small"
-                  :aria-expanded="showsAttributes(m)"
-                  :aria-controls="attributesId(index)"
-                  :aria-label="_t('Toggle attributes of %{metric}', { metric: m.metadata.title })"
-                  @click="toggleAttributes(m.metadata.name)"
-                />
+                <div class="graphing-graph-legend__name-content">
+                  <span
+                    class="graphing-graph-legend__swatch"
+                    :style="{ background: m.metadata.color }"
+                  />
+                  <span class="graphing-graph-legend__title" :title="m.metadata.title">
+                    {{ m.metadata.title }}
+                  </span>
+                  <CmkIconButton
+                    v-if="hasAttributes(m)"
+                    class="graphing-graph-legend__attributes-toggle"
+                    :name="showsAttributes(m) ? 'chevron-up' : 'chevron-down'"
+                    primary-color="font"
+                    size="small"
+                    :aria-expanded="showsAttributes(m)"
+                    :aria-controls="attributesId(index)"
+                    :aria-label="_t('Toggle attributes of %{metric}', { metric: m.metadata.title })"
+                    @click="toggleAttributes(m.metadata.name)"
+                  />
+                </div>
               </td>
               <td class="graphing-graph-legend__stat">
                 {{ metricStats.get(m.metadata.name)?.min }}
@@ -285,66 +231,53 @@ watch(
               </td>
             </tr>
             <tr v-if="showsAttributes(m)">
-              <td :id="attributesId(index)" colspan="7" class="graphing-graph-legend__attributes">
+              <td :id="attributesId(index)" colspan="6" class="graphing-graph-legend__attributes">
                 <MetricAttributesTable :attributes="attributesOf(m)" />
               </td>
             </tr>
           </template>
         </tbody>
+        <tfoot v-if="horizontalLines.length > 0">
+          <tr
+            v-for="line in horizontalLines"
+            :key="line.name"
+            class="graphing-graph-legend__row graphing-graph-legend__line-row"
+            :class="{
+              'graphing-graph-legend__row--hidden': hiddenLineNames.includes(line.name)
+            }"
+          >
+            <td class="graphing-graph-legend__cell--eye">
+              <GraphLegendEyeButton
+                :hidden="hiddenLineNames.includes(line.name)"
+                :aria-label="line.title"
+                @toggle="toggleLine(line.name)"
+              />
+            </td>
+            <td class="graphing-graph-legend__name">
+              <div class="graphing-graph-legend__name-content">
+                <span class="graphing-graph-legend__swatch" :style="{ background: line.color }" />
+                <span class="graphing-graph-legend__title" :title="line.title">
+                  {{ line.title }}
+                </span>
+              </div>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="graphing-graph-legend__stat">
+              {{ horizontalLineValue(line) }}
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </CmkScrollContainer>
-
-    <!-- Table 3: horizontal lines — not scrollable, only rendered when lines are present -->
-    <table
-      v-if="horizontalLines.length > 0"
-      class="graphing-graph-legend__table graphing-graph-legend__lines-table"
-    >
-      <colgroup>
-        <col class="graphing-graph-legend__col--eye" />
-        <col class="graphing-graph-legend__col--swatch" />
-        <col />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-        <col class="graphing-graph-legend__col--stat" />
-      </colgroup>
-      <tbody>
-        <tr
-          v-for="line in horizontalLines"
-          :key="line.name"
-          class="graphing-graph-legend__row"
-          :class="{
-            'graphing-graph-legend__row--hidden': hiddenLineNames.includes(line.name),
-            'graphing-graph-legend__padded-row': metricsScrollable
-          }"
-        >
-          <td class="graphing-graph-legend__cell--eye">
-            <GraphLegendEyeButton
-              :hidden="hiddenLineNames.includes(line.name)"
-              :aria-label="line.title"
-              @toggle="toggleLine(line.name)"
-            />
-          </td>
-          <td class="graphing-graph-legend__cell--swatch">
-            <span class="graphing-graph-legend__swatch" :style="{ background: line.color }" />
-          </td>
-          <td class="graphing-graph-legend__name">{{ line.title }}</td>
-          <td></td>
-          <td></td>
-          <td></td>
-          <td class="graphing-graph-legend__stat">
-            {{ horizontalLineValue(line) }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 </template>
 
 <style scoped lang="scss">
 .graphing-graph-legend {
-  --swatch-gap: var(--dimension-4);
   --swatch-width: 4px;
+  --legend-title-min-width: 10em;
 
   box-sizing: border-box;
   padding: var(--dimension-5);
@@ -360,11 +293,7 @@ watch(
   flex: 0 1 auto;
   min-height: 0;
 
-  > .graphing-graph-legend__table {
-    flex-shrink: 0;
-  }
-
-  .graphing-graph-legend__rows-scroll {
+  .graphing-graph-legend__scroll {
     flex: 1 1 auto;
     min-height: 0;
   }
@@ -372,7 +301,6 @@ watch(
 
 .graphing-graph-legend__table {
   border-collapse: collapse;
-  table-layout: fixed;
   width: 100%;
 
   th,
@@ -380,36 +308,22 @@ watch(
     padding: 2px;
     vertical-align: middle;
   }
-
-  .graphing-graph-legend__padded-row th,
-  .graphing-graph-legend__padded-row td {
-    padding-right: var(--spacing);
-  }
-}
-
-.graphing-graph-legend__table-metrics {
-  margin-right: var(--spacing);
-}
-
-// Column widths — col 3 (name) gets no explicit width and fills remaining space
-.graphing-graph-legend__col--eye {
-  width: 20px;
-}
-.graphing-graph-legend__col--swatch {
-  width: calc(var(--swatch-gap) + var(--swatch-width));
-}
-.graphing-graph-legend__col--stat {
-  width: 64px;
 }
 
 .graphing-graph-legend__header-row {
-  border-bottom: 1px solid var(--ux-theme-6);
+  height: var(--legend-header-height);
 
   th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     padding-top: var(--dimension-3);
     padding-bottom: var(--dimension-5);
     text-align: right;
     font-weight: normal;
+    white-space: nowrap;
+    background: var(--ux-theme-2);
+    box-shadow: inset 0 -1px 0 var(--ux-theme-6);
   }
 }
 
@@ -434,16 +348,10 @@ watch(
   }
 }
 
-.graphing-graph-legend__lines-table {
-  border-top: 1px solid var(--ux-theme-6);
-  padding-top: 8px;
-  background: var(--ux-theme-3);
-}
-
 .graphing-graph-legend__row {
   height: var(--legend-row-height);
 
-  &:hover {
+  &:hover td {
     background: var(--graphing-legend-row-hover);
   }
 
@@ -453,7 +361,17 @@ watch(
   }
 }
 
-/* The eye button fills its column exactly, so with no cell padding the swatch cell's own
+.graphing-graph-legend__line-row td {
+  position: sticky;
+  bottom: 0;
+  background: var(--ux-theme-3);
+}
+
+.graphing-graph-legend__line-row:first-child td {
+  box-shadow: inset 0 1px 0 var(--ux-theme-6);
+}
+
+/* The eye button fills its column exactly, so with no cell padding the name cell's own
    padding is the gap between the two. The element qualifier beats the table's blanket rule. */
 .graphing-graph-legend th.graphing-graph-legend__header--eye,
 .graphing-graph-legend td.graphing-graph-legend__cell--eye {
@@ -462,28 +380,28 @@ watch(
   text-align: center;
 }
 
-.graphing-graph-legend td.graphing-graph-legend__cell--swatch {
-  padding-left: var(--swatch-gap);
-  padding-right: 0;
-  text-align: left;
-}
-
 .graphing-graph-legend :deep(.graphing-graph-legend-eye-button) {
   margin: 0 auto;
 }
 
-.graphing-graph-legend__swatch {
-  display: inline-block;
-  width: var(--swatch-width);
-  height: 16px;
-  border-radius: var(--border-radius-half);
+.graphing-graph-legend td.graphing-graph-legend__name {
+  width: 100%;
+  min-width: var(--legend-title-min-width);
+  padding-left: var(--dimension-4);
 }
 
-.graphing-graph-legend td.graphing-graph-legend__name {
-  padding-left: var(--dimension-4);
+.graphing-graph-legend__name-content {
   display: flex;
   align-items: center;
   gap: var(--dimension-3);
+  contain: inline-size;
+}
+
+.graphing-graph-legend__swatch {
+  flex: 0 0 auto;
+  width: var(--swatch-width);
+  height: 16px;
+  border-radius: var(--border-radius-half);
 }
 
 /* The title, not its cell, is what ellipsises, so the toggle stays visible next to it. */
@@ -504,9 +422,14 @@ watch(
   background: var(--ux-theme-3);
 }
 
+.graphing-graph-legend th.graphing-graph-legend__header--stat,
 .graphing-graph-legend td.graphing-graph-legend__stat {
+  padding-left: var(--dimension-7);
   text-align: right;
   white-space: nowrap;
+}
+
+.graphing-graph-legend td.graphing-graph-legend__stat {
   font-variant-numeric: tabular-nums;
 }
 

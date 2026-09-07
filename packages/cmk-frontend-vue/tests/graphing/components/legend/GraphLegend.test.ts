@@ -3,9 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
-import { afterEach, vi } from 'vitest'
-import { nextTick } from 'vue'
+import { fireEvent, render, screen } from '@testing-library/vue'
 
 import type { HorizontalLine, Metric } from '@/graphing/components/TimeSeriesGraph'
 import type { M4Bucket } from '@/graphing/components/TimeSeriesGraph/decimation/types'
@@ -38,30 +36,6 @@ function makeBucket(value: number): M4Bucket {
     valueSum: value
   }
 }
-
-// jsdom has no ResizeObserver, so stub one that records its observe calls and lets tests
-// trigger its callback directly to simulate a resize.
-class FakeResizeObserver {
-  static instances: FakeResizeObserver[] = []
-  observed: Element[] = []
-  constructor(public callback: ResizeObserverCallback) {
-    FakeResizeObserver.instances.push(this)
-  }
-  observe(el: Element): void {
-    this.observed.push(el)
-  }
-  unobserve(el: Element): void {
-    this.observed = this.observed.filter((other) => other !== el)
-  }
-  disconnect(): void {
-    this.observed = []
-  }
-}
-
-afterEach(() => {
-  FakeResizeObserver.instances = []
-  vi.unstubAllGlobals()
-})
 
 const UNIT: Metric['metadata']['unit'] = {
   notation: 'decimal',
@@ -363,74 +337,66 @@ test('clicking "show all" when every metric is already hidden emits update:hidde
   expect(emitted()['update:hiddenMetricNames']).toEqual([[[]]])
 })
 
-test('marks header and horizontal-line rows as padded once the metrics table overflows its scroll container', async () => {
-  const line: HorizontalLine = {
-    name: 'scalar_of(warning,rrd_metric(h/svc/util))',
-    title: 'Warning',
-    value: 80,
-    unit: LINE_UNIT,
-    color: '#ffaa00'
-  }
+test('header, metric rows and threshold lines share one table, so their columns stay aligned', () => {
   const { container } = render(GraphLegend, {
-    props: { metrics: [CPU, MEM], horizontalLines: [line] }
+    props: { metrics: [CPU, MEM], horizontalLines: [WARN_LINE] }
   })
 
-  const metricsTable = container.querySelector('.graphing-graph-legend__table-metrics')!
-  const scrollContainer = metricsTable.parentElement!
-  Object.defineProperty(scrollContainer, 'scrollHeight', { value: 500, configurable: true })
-  Object.defineProperty(scrollContainer, 'clientHeight', { value: 100, configurable: true })
-
-  const headerRow = container.querySelector('.graphing-graph-legend__header-row')!
-  await waitFor(() => expect(headerRow).toHaveClass('graphing-graph-legend__padded-row'))
-  const lineRow = screen.getByText('Warning').closest('tr')!
-  expect(lineRow).toHaveClass('graphing-graph-legend__padded-row')
+  const tables = container.querySelectorAll('table')
+  expect(tables).toHaveLength(1)
+  const table = tables[0]!
+  expect(table.querySelector('thead')).toContainElement(screen.getByText(/metrics are visible/))
+  expect(table.querySelector('tbody')).toContainElement(screen.getByText('CPU'))
+  expect(table.querySelector('tfoot')).toContainElement(screen.getByText('Warning'))
 })
 
-test('does not mark rows as padded when the metrics table fits without scrolling', async () => {
-  const { container } = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
-  await nextTick()
-  await nextTick()
-  const headerRow = container.querySelector('.graphing-graph-legend__header-row')!
-  expect(headerRow).not.toHaveClass('graphing-graph-legend__padded-row')
+test('metric and threshold titles carry their full text as tooltip, for when they are ellipsised', () => {
+  render(GraphLegend, { props: { metrics: [CPU], horizontalLines: [WARN_LINE] } })
+
+  expect(screen.getByText('CPU')).toHaveAttribute('title', 'CPU')
+  expect(screen.getByText('Warning')).toHaveAttribute('title', 'Warning')
 })
 
-test('observes both the metrics table and its scroll container for resizes', async () => {
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-  const { container } = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
-  await nextTick()
-
-  const metricsTable = container.querySelector('.graphing-graph-legend__table-metrics')!
-  const observedTargets = FakeResizeObserver.instances.flatMap((observer) => observer.observed)
-  expect(observedTargets).toContain(metricsTable)
-  expect(observedTargets).toContain(metricsTable.parentElement)
-})
-
-function metricRowsMaxHeightPx(container: Element): number {
-  const scroller = container.querySelector<HTMLElement>('.graphing-graph-legend__rows-scroll')
+function legendScrollMaxHeightPx(container: Element): number {
+  const scroller = container.querySelector<HTMLElement>('.graphing-graph-legend__scroll')
   return Number.parseInt(scroller!.style.maxHeight, 10)
 }
 
-test('caps the metric rows at seven rows by default', () => {
+function legendHeightVariablesPx(container: Element): { header: number; row: number } {
+  const root = container.querySelector<HTMLElement>('.graphing-graph-legend')!
+  return {
+    header: Number.parseInt(root.style.getPropertyValue('--legend-header-height'), 10),
+    row: Number.parseInt(root.style.getPropertyValue('--legend-row-height'), 10)
+  }
+}
+
+test('caps the legend at its header plus seven rows by default', () => {
   const { container } = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
   expect(container.querySelector('.graphing-graph-legend--fill')).not.toBeInTheDocument()
-  expect(metricRowsMaxHeightPx(container)).toBe(7 * 24)
+
+  const { header, row } = legendHeightVariablesPx(container)
+  expect(legendScrollMaxHeightPx(container)).toBe(header + 7 * row)
 })
 
-test('the row height the cap is derived from reaches the stylesheet', () => {
+test('the header and row heights the cap is derived from reach the stylesheet', () => {
   const { container } = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
 
-  // The rows take their height from the same constant the cap multiplies. Were the two to
-  // drift apart, the cap would stop landing on a row boundary.
+  // The header and the rows take their heights from the same constants the cap sums up. Were
+  // they to drift apart, the cap would stop landing on a row boundary.
   const root = container.querySelector<HTMLElement>('.graphing-graph-legend')!
   expect(root.style.getPropertyValue('--legend-row-height')).toBe('24px')
+  expect(root.style.getPropertyValue('--legend-header-height')).toBe('40px')
 })
 
-test('threshold lines eat into the same seven-item budget', () => {
-  const { container } = render(GraphLegend, {
+test('threshold lines eat into the same seven-item budget instead of adding height', () => {
+  const withoutLines = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
+  const withLines = render(GraphLegend, {
     props: { metrics: [CPU, MEM], horizontalLines: [WARN_LINE, CRIT_LINE] }
   })
 
-  expect(metricRowsMaxHeightPx(container)).toBe(5 * 24)
+  expect(legendScrollMaxHeightPx(withLines.container)).toBe(
+    legendScrollMaxHeightPx(withoutLines.container)
+  )
 })
 
 test('the metric rows keep room for one row even when thresholds outnumber the budget', () => {
@@ -439,13 +405,14 @@ test('the metric rows keep room for one row even when thresholds outnumber the b
     props: { metrics: [CPU, MEM], horizontalLines: manyLines }
   })
 
-  expect(metricRowsMaxHeightPx(container)).toBe(24)
+  const { header, row } = legendHeightVariablesPx(container)
+  expect(legendScrollMaxHeightPx(container)).toBe(header + (manyLines.length + 1) * row)
 })
 
-test('fillHeight applies the fill modifier and lifts the metric-rows height cap', () => {
+test('fillHeight applies the fill modifier and lifts the height cap', () => {
   const { container } = render(GraphLegend, { props: { metrics: [CPU, MEM], fillHeight: true } })
   expect(container.querySelector('.graphing-graph-legend--fill')).toBeInTheDocument()
-  const scroll = container.querySelector<HTMLElement>('.graphing-graph-legend__rows-scroll')!
+  const scroll = container.querySelector<HTMLElement>('.graphing-graph-legend__scroll')!
   expect(scroll.style.maxHeight).toBe('none')
 })
 
@@ -507,26 +474,4 @@ test('expanding one entry leaves the others collapsed', async () => {
   await fireEvent.click(screen.getByRole('button', { name: 'Toggle attributes of Requests' }))
 
   expect(screen.getAllByText('host.arch')).toHaveLength(1)
-})
-
-test('recomputes padded rows when the scroll container is resized', async () => {
-  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
-  const { container } = render(GraphLegend, { props: { metrics: [CPU, MEM] } })
-  await nextTick()
-
-  const headerRow = container.querySelector('.graphing-graph-legend__header-row')!
-  expect(headerRow).not.toHaveClass('graphing-graph-legend__padded-row')
-
-  const metricsTable = container.querySelector('.graphing-graph-legend__table-metrics')!
-  const scrollContainer = metricsTable.parentElement!
-  Object.defineProperty(scrollContainer, 'scrollHeight', { value: 500, configurable: true })
-  Object.defineProperty(scrollContainer, 'clientHeight', { value: 100, configurable: true })
-
-  const observer = FakeResizeObserver.instances.find((candidate) =>
-    candidate.observed.includes(scrollContainer)
-  )!
-  observer.callback([], observer as unknown as ResizeObserver)
-  await nextTick()
-
-  expect(headerRow).toHaveClass('graphing-graph-legend__padded-row')
 })

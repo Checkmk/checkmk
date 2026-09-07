@@ -67,6 +67,8 @@ const consolidationFn = computed<ConsolidationFn>(
   () => props.consolidationFunction ?? DEFAULT_CONSOLIDATION_FN
 )
 
+const highlightedMetricNames = computed(() => new Set(props.highlightedMetricNames))
+
 const MAX_ZOOM_HINT_DURATION_MS = 1200
 const MAX_ZOOM_HINT_CURSOR_OFFSET = 12
 const maxZoomHintAt = ref<{ x: number; y: number } | null>(null)
@@ -322,7 +324,7 @@ function draw(): void {
     {
       interpolator: props.curveInterpolator ?? 'linear'
     },
-    props.highlightedMetricName
+    highlightedMetricNames.value
   )
 
   drawValueGrid()
@@ -507,7 +509,7 @@ watch(
     props.consolidationFunction,
     props.curveInterpolator,
     props.horizontal_lines,
-    props.highlightedMetricName,
+    props.highlightedMetricNames,
     plotWidth.value,
     props.showTimeAxis,
     props.showValueAxis,

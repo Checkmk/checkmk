@@ -107,8 +107,8 @@ function onBrushIntent(range: RequestedTimeRange, kind: TimeRangeCommitKind): vo
 
 const hiddenMetricNames = defineModel<string[]>('hiddenMetricNames', { default: () => [] })
 const hiddenLineNames = defineModel<string[]>('hiddenLineNames', { default: () => [] })
-const highlightedMetricName = defineModel<string | null>('highlightedMetricName', {
-  default: null
+const highlightedMetricNames = defineModel<string[]>('highlightedMetricNames', {
+  default: () => []
 })
 const consolidationFn = defineModel<ConsolidationFn>('consolidationFn', {
   default: DEFAULT_CONSOLIDATION_FN
@@ -116,7 +116,7 @@ const consolidationFn = defineModel<ConsolidationFn>('consolidationFn', {
 const { visibleMetrics, visibleHorizontalLines } = useGraphVisibility(
   () => props.metrics,
   () => props.horizontalLines ?? [],
-  { hiddenMetricNames, hiddenLineNames, highlightedMetricName }
+  { hiddenMetricNames, hiddenLineNames, highlightedMetricNames }
 )
 
 const { visibleMetrics: visibleBrushMetrics } = useGraphVisibility(
@@ -265,7 +265,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
               y_axis: effectiveYAxis,
               font_size_pt: 10
             }"
-            :highlighted-metric-name="highlightedMetricName"
+            :highlighted-metric-names="highlightedMetricNames"
             :pin-time="pinTime"
             @zoom="onZoomIntent"
             @pan="onPanIntent"
@@ -310,7 +310,7 @@ const brushPlotWidth = computed(() => props.figureWidth - plotLeft.value - PLOT_
         :hidden-line-names="hiddenLineNames"
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
-        @hover-metric="highlightedMetricName = $event"
+        @hover-metrics="highlightedMetricNames = $event"
       />
     </div>
   </div>

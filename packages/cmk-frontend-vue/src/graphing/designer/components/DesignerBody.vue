@@ -99,7 +99,7 @@ function onPanelTimeRange(requested: RequestedTimeRange, kind: TimeRangeCommitKi
 
 const hiddenMetricNames = ref<string[]>([])
 const hiddenLineNames = ref<string[]>([])
-const highlightedMetricName = ref<string | null>(null)
+const highlightedMetricNames = ref<string[]>([])
 
 const graphContainer = ref<HTMLElement | null>(null)
 const figureWidth = ref(DEFAULT_FIGURE_WIDTH)
@@ -189,6 +189,7 @@ watch(
       hiddenMetricNames.value = []
       hiddenLineNames.value = []
     }
+    highlightedMetricNames.value = []
     data.refetch()
   }
 )
@@ -259,7 +260,7 @@ const yAxis = computed<YAxis | null>(() => {
       <GraphPanel
         v-model:hidden-metric-names="hiddenMetricNames"
         v-model:hidden-line-names="hiddenLineNames"
-        v-model:highlighted-metric-name="highlightedMetricName"
+        v-model:highlighted-metric-names="highlightedMetricNames"
         class="graphing-designer-body__preview"
         :metrics="drawnMetrics"
         :data-time-range="data.dataTimeRange.value"
@@ -305,7 +306,7 @@ const yAxis = computed<YAxis | null>(() => {
         :metrics="drawnMetrics"
         :horizontal-lines="data.horizontalLines.value"
         :consolidation-fn="consolidationFn"
-        @hover-metric="highlightedMetricName = $event"
+        @hover-metrics="highlightedMetricNames = $event"
       />
 
       <CmkTabs

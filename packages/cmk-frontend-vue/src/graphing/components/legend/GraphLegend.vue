@@ -57,7 +57,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   'update:hiddenMetricNames': [value: string[]]
   'update:hiddenLineNames': [value: string[]]
-  hoverMetric: [metricName: string | null]
+  hoverMetrics: [names: string[]]
 }>()
 
 const visibleCount = computed(() => props.metrics.length - props.hiddenMetricNames.length)
@@ -187,8 +187,8 @@ function toggleLine(name: string) {
               :class="{
                 'graphing-graph-legend__row--hidden': hiddenMetricNames.includes(m.metadata.name)
               }"
-              @mouseenter="$emit('hoverMetric', m.metadata.name)"
-              @mouseleave="$emit('hoverMetric', null)"
+              @mouseenter="$emit('hoverMetrics', [m.metadata.name])"
+              @mouseleave="$emit('hoverMetrics', [])"
             >
               <td class="graphing-graph-legend__cell--eye">
                 <GraphLegendEyeButton

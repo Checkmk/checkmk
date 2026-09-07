@@ -130,7 +130,7 @@ function drawWaveform(): void {
       bandStrokeWidth: STRIP_BAND_STROKE_WIDTH
     },
     // Highlighting a legend entry dims the plot only; the strip is a fixed overview.
-    null
+    new Set()
   )
 }
 

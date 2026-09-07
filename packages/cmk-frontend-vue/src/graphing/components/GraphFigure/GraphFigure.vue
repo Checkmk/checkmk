@@ -165,7 +165,7 @@ watch(
 const {
   hiddenMetricNames,
   hiddenLineNames,
-  highlightedMetricName,
+  highlightedMetricNames,
   visibleMetrics,
   visibleHorizontalLines
 } = useGraphVisibility(
@@ -266,7 +266,7 @@ onBeforeUnmount(() => {
           :show-value-axis="showValueAxis"
           :min-value-axis-width="minValueAxisWidth"
           :options="graphOptions"
-          :highlighted-metric-name="highlightedMetricName"
+          :highlighted-metric-names="highlightedMetricNames"
           @zoom="onZoom"
           @pan="onPan"
           @reset="onResetIntent"
@@ -283,7 +283,7 @@ onBeforeUnmount(() => {
         :hidden-line-names="hiddenLineNames"
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
-        @hover-metric="highlightedMetricName = $event"
+        @hover-metrics="highlightedMetricNames = $event"
       />
     </template>
     <!-- A sibling of the graph rather than a branch beside it, so a failed refetch states itself

@@ -139,26 +139,26 @@ test('clicking a hidden metric eye emits update:hiddenMetricNames with that name
   expect(emitted()['update:hiddenMetricNames']).toEqual([[[]]])
 })
 
-test('hovering a metric item emits hoverMetric with its name', async () => {
+test('hovering a metric item emits its name', async () => {
   const { emitted } = render(GraphLegendCompact, { props: { metrics: [CPU] } })
   const item = screen.getByText('CPU').closest('.graphing-graph-legend-compact__item')!
 
   await fireEvent.mouseEnter(item)
 
-  expect(emitted()['hoverMetric']).toEqual([['cpu']])
+  expect(emitted()['hoverMetrics']).toEqual([[['cpu']]])
 })
 
-test('leaving a metric item emits hoverMetric null', async () => {
+test('leaving a metric item clears the highlight', async () => {
   const { emitted } = render(GraphLegendCompact, { props: { metrics: [CPU] } })
   const item = screen.getByText('CPU').closest('.graphing-graph-legend-compact__item')!
   await fireEvent.mouseEnter(item)
 
   await fireEvent.mouseLeave(item)
 
-  expect(emitted()['hoverMetric']).toEqual([['cpu'], [null]])
+  expect(emitted()['hoverMetrics']).toEqual([[['cpu']], [[]]])
 })
 
-test('hovering a horizontal line item does not emit hoverMetric', async () => {
+test('hovering a horizontal line item emits nothing', async () => {
   const { emitted } = render(GraphLegendCompact, {
     props: { metrics: [CPU], horizontalLines: [WARN_LINE] }
   })
@@ -167,7 +167,7 @@ test('hovering a horizontal line item does not emit hoverMetric', async () => {
   await fireEvent.mouseEnter(item)
   await fireEvent.mouseLeave(item)
 
-  expect(emitted()['hoverMetric']).toBeUndefined()
+  expect(emitted()['hoverMetrics']).toBeUndefined()
 })
 
 test('a metrics-backend item offers its attributes grouped by kind', () => {

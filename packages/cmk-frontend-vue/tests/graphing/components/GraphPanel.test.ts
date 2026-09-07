@@ -25,7 +25,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       'metrics',
       'view_time_range',
       'inspecting',
-      'highlightedMetricName',
+      'highlightedMetricNames',
       'pinEnabled',
       'pinTime',
       'atMinTimeZoom',
@@ -43,7 +43,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
       <span data-testid="view-start">{{ view_time_range.start }}</span>
       <span data-testid="view-end">{{ view_time_range.end }}</span>
       <span data-testid="inspecting">{{ inspecting }}</span>
-      <span data-testid="highlighted">{{ highlightedMetricName }}</span>
+      <span data-testid="highlighted">{{ highlightedMetricNames.join(",") }}</span>
       <span data-testid="show-pin">{{ pinEnabled }}</span>
       <span data-testid="pin-time">{{ pinTime }}</span>
       <span data-testid="at-min-time-zoom">{{ atMinTimeZoom }}</span>

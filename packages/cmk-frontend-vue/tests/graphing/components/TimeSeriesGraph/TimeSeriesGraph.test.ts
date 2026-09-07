@@ -122,7 +122,7 @@ const DEFAULT_PROPS: TimeSeriesGraphProps = {
   inspecting: false,
   panEnabled: false,
   zoomEnabled: false,
-  highlightedMetricName: null
+  highlightedMetricNames: []
 }
 
 function renderComponent(props: Partial<TimeSeriesGraphProps> = {}) {

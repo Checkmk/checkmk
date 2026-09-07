@@ -42,7 +42,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   'update:hiddenMetricNames': [value: string[]]
   'update:hiddenLineNames': [value: string[]]
-  hoverMetric: [metricName: string | null]
+  hoverMetrics: [names: string[]]
   metricClick: [metricName: string]
 }>()
 
@@ -145,13 +145,13 @@ function setAttributesOpen(key: string, open: boolean): void {
 
 function onItemEnter(item: CompactLegendItem): void {
   if (item.metricName !== null) {
-    emit('hoverMetric', item.metricName)
+    emit('hoverMetrics', [item.metricName])
   }
 }
 
 function onItemLeave(item: CompactLegendItem): void {
   if (item.metricName !== null) {
-    emit('hoverMetric', null)
+    emit('hoverMetrics', [])
   }
 }
 

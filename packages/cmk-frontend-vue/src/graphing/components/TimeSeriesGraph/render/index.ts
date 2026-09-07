@@ -28,7 +28,7 @@ export function drawData(
   xScale: ScaleTime<number, number>,
   yScale: ScaleLinear<number, number>,
   options: DrawOptions,
-  highlightedMetricName: string | null
+  highlightedMetricNames: ReadonlySet<string>
 ): void {
   for (let i = 0; i < metrics.length; i++) {
     // Hidden metrics (stack references) shape the stacking sums but are never painted.
@@ -37,7 +37,7 @@ export function drawData(
     }
     if (stacks[i]!.kind === 'area-stacked') {
       ctx.globalAlpha =
-        highlightedMetricName !== null && metrics[i]!.metadata.name !== highlightedMetricName
+        highlightedMetricNames.size > 0 && !highlightedMetricNames.has(metrics[i]!.metadata.name)
           ? 0.4
           : 1
       drawStackedBand(ctx, stacks[i]!, xScale, yScale, metrics[i]!.metadata.color, {
@@ -51,7 +51,7 @@ export function drawData(
     }
     if (stacks[i]!.kind === 'line') {
       ctx.globalAlpha =
-        highlightedMetricName !== null && metrics[i]!.metadata.name !== highlightedMetricName
+        highlightedMetricNames.size > 0 && !highlightedMetricNames.has(metrics[i]!.metadata.name)
           ? 0.4
           : 1
       drawLine(

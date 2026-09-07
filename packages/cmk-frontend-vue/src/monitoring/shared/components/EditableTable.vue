@@ -45,6 +45,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (event: 'reorder', fromIndex: number, toIndex: number): void
+  /** The row under the pointer, or null once it leaves. Expansion rows are not covered. */
+  (event: 'rowHover', row: T | null): void
 }>()
 
 const rowSelection = defineModel<RowSelectionState>('rowSelection', { default: () => ({}) })
@@ -171,6 +173,8 @@ defineExpose({
             'monitoring-editable-table__row--no-hover': isDraggingRow,
             'monitoring-editable-table__row--error': getRowVariant?.(row, index) === 'error'
           }"
+          @mouseenter="emit('rowHover', row)"
+          @mouseleave="emit('rowHover', null)"
         >
           <slot name="row" :row="row" :table-row="tableRowAt(index)" :index="index" />
         </tr>

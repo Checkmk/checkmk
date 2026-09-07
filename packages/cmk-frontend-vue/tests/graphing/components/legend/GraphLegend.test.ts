@@ -156,12 +156,12 @@ test('clicking a hidden metric eye emits update:hiddenMetricNames with that name
   expect(emitted()['update:hiddenMetricNames']).toEqual([[[]]])
 })
 
-test('hovering a metric row emits hoverMetric with the name, mouseleave emits null', async () => {
+test('hovering a metric row emits its name, and leaving clears the highlight', async () => {
   const { emitted } = render(GraphLegend, { props: { metrics: [CPU] } })
   const row = screen.getByText('CPU').closest('tr')!
   await fireEvent.mouseEnter(row)
   await fireEvent.mouseLeave(row)
-  expect(emitted()['hoverMetric']).toEqual([['cpu'], [null]])
+  expect(emitted()['hoverMetrics']).toEqual([[['cpu']], [[]]])
 })
 
 // An entry that jumps position when clicked is impossible to re-find.

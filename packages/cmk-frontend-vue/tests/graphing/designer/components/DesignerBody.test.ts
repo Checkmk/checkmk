@@ -10,7 +10,7 @@ import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { defineComponent, h, nextTick } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 
 import { useGlobalTimeRange } from '@/graphing/GlobalTimePicker/globalTimeState'
 import type { CustomGraphObject } from '@/graphing/designer/api'
@@ -42,11 +42,11 @@ const PAST_WINDOW: DateTimeRange = {
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
-    props: ['metrics', 'highlightedMetricName', 'panEnabled', 'view_time_range', 'options'],
+    props: ['metrics', 'highlightedMetricNames', 'panEnabled', 'view_time_range', 'options'],
     emits: ['pan'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="drawn">{{ metrics.map((m) => m.metadata.title).join(',') }}</span>
-      <span data-testid="highlighted">{{ highlightedMetricName ?? '' }}</span>
+      <span data-testid="highlighted">{{ highlightedMetricNames.join(',') }}</span>
       <span data-testid="pan-enabled">{{ panEnabled }}</span>
       <span data-testid="axis-unit">{{ options.y_axis?.unit?.symbol ?? '' }}</span>
       <span data-testid="axis-range">{{ options.y_axis?.explicit_range?.max ?? '' }}</span>
@@ -254,13 +254,21 @@ function renderBody(
     'onUpdate:displaySettings': vi.fn(),
     onUpdateGraphOptions: vi.fn()
   }
+  const activeMode = ref(mode)
   const harness = defineComponent({
     setup() {
       useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
-      return () => h(DesignerBody, { ...props, ...events })
+      return () => h(DesignerBody, { ...props, ...events, mode: activeMode.value })
     }
   })
-  return { ...render(harness), props, events }
+  return {
+    ...render(harness),
+    props,
+    events,
+    setMode: (next: 'view' | 'edit') => {
+      activeMode.value = next
+    }
+  }
 }
 
 test('hiding a metric in the detached view-mode legend removes it from the preview', async () => {
@@ -745,4 +753,16 @@ test('a multi-selection query is one row to configure and one line per matching 
 
   await userEvent.click(screen.getByRole('tab', { name: 'Graph appearance' }))
   await waitFor(() => expect(drawnTitles()).toBe('host-1,host-2,host-3'))
+})
+
+test('switching mode drops a highlight the unmounted legend left behind', async () => {
+  const { setMode } = renderBody('view')
+
+  await waitFor(() => expect(screen.getByTestId('drawn')).toHaveTextContent('CPU'))
+  await fireEvent.mouseEnter(screen.getByText('CPU').closest('tr')!)
+  expect(screen.getByTestId('highlighted')).toHaveTextContent('metric-a')
+
+  setMode('edit')
+
+  await waitFor(() => expect(screen.getByTestId('highlighted').textContent).toBe(''))
 })

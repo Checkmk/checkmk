@@ -16,7 +16,7 @@ class _Config(BaseModel):
     deployment: tuple[Literal["do_not_deploy", "sync", "cached"], float | None]
     only_qm: Sequence[str] = ()
     skip_qm: Sequence[str] = ()
-    execute_as_another_user: str | None = None
+    execute_as_another_user: Literal["default_user", "mqm"] | None = None
 
 
 def get_ibm_mq_files(conf: Mapping[str, object]) -> FileGenerator:

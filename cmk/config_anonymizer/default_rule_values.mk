@@ -393,7 +393,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('ibm_mq', [])
 
 agent_config['ibm_mq'] = [
-{'id': '98706833-7a35-4e58-9a5f-e887d678daf3', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '98706833-7a35-4e58-9a5f-e887d678daf3', 'value': {'deployment': ('sync', None), 'only_qm': [], 'skip_qm': [], 'execute_as_another_user': 'default_user'}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['ibm_mq']
 
 

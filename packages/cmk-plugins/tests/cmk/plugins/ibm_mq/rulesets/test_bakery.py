@@ -12,13 +12,17 @@ def test_migrate_none() -> None:
     assert migrate(None) == {"deployment": ("do_not_deploy", None)}
 
 
+_NOT_CONFIGURED = {"only_qm": [], "skip_qm": [], "execute_as_another_user": "default_user"}
+
+
 def test_migrate_empty_dict() -> None:
-    assert migrate({}) == {"deployment": ("sync", None)}
+    assert migrate({}) == {"deployment": ("sync", None), **_NOT_CONFIGURED}
 
 
 def test_migrate_with_only_qm() -> None:
     assert migrate({"only_qm": ["QM1", "QM2"]}) == {
         "deployment": ("sync", None),
+        **_NOT_CONFIGURED,
         "only_qm": ["QM1", "QM2"],
     }
 
@@ -26,6 +30,7 @@ def test_migrate_with_only_qm() -> None:
 def test_migrate_with_skip_qm() -> None:
     assert migrate({"skip_qm": ["QM3"]}) == {
         "deployment": ("sync", None),
+        **_NOT_CONFIGURED,
         "skip_qm": ["QM3"],
     }
 
@@ -33,6 +38,7 @@ def test_migrate_with_skip_qm() -> None:
 def test_migrate_with_execute_as_another_user() -> None:
     assert migrate({"execute_as_another_user": "mqm"}) == {
         "deployment": ("sync", None),
+        **_NOT_CONFIGURED,
         "execute_as_another_user": "mqm",
     }
 

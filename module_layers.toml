@@ -834,6 +834,7 @@ allows = [
   "cmk.checkengine.snmp_backend_builder",
   "cmk.checkengine.snmp_backends",
   "cmk.checkengine.snmplib",
+  "cmk.telemetry",
 ]
 
 [components."cmk.fields"]

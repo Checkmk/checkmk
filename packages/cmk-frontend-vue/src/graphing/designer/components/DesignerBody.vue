@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import type { AddTo, YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
+import type { YAxis } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
 import type {
   CustomGraphDesignerMode,
   TitleMacroGroup
@@ -51,7 +51,6 @@ const {
   store,
   graphOptions,
   title,
-  graphName,
   mode,
   thresholds,
   metricBackendAvailable,
@@ -63,7 +62,6 @@ const {
   store: GraphItemsStore
   graphOptions: CustomGraphOptions
   title: string
-  graphName: string
   mode: CustomGraphDesignerMode
   thresholds: { warning: string; critical: string }
   metricBackendAvailable: boolean
@@ -247,16 +245,6 @@ const yAxis = computed<YAxis | null>(() => {
     ...(explicitRange === null ? {} : { explicit_range: explicitRange })
   }
 })
-
-const addTo = computed<AddTo | null>(() =>
-  data.internal.value === null
-    ? null
-    : {
-        type: 'custom_graph',
-        specification: { graph_type: 'custom', id: graphName },
-        internal: data.internal.value
-      }
-)
 </script>
 
 <template>
@@ -288,14 +276,13 @@ const addTo = computed<AddTo | null>(() =>
         :show-legend="false"
         :interaction="{
           brush: mode === 'view' ? 'enabled' : 'disabled',
-          burger: mode === 'view' ? 'enabled' : 'disabled',
+          burger: 'disabled',
           hover: 'enabled',
           panning: 'enabled',
           zoom: 'enabled',
           pin: 'enabled'
         }"
         :brush-snapshot="drawnBrushSnapshot"
-        :add-to="addTo"
         @update:requested-time-range="onPanelTimeRange"
         @inspect="pauseRefresh"
       />

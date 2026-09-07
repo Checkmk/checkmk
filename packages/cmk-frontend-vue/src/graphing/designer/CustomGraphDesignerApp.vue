@@ -400,7 +400,6 @@ const saveFailureButtons = computed(() => {
         :store="store"
         :graph-options="graphOptions"
         :title="loaded.graph.title ?? current.name"
-        :graph-name="current.name"
         :mode="mode"
         :thresholds="{ warning: warning_color, critical: critical_color }"
         :metric-backend-available="metric_backend_available"

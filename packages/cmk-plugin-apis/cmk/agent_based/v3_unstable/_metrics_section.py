@@ -19,7 +19,7 @@ type _HostLabelFunction = Callable[..., HostLabelGenerator]
 
 
 # NOTE: The dataclasses below duplicate quite a few things from
-# cmk.data_backend.query.models.attribute_filter. Is there a
+# cmk.data_backend.telemetry_metrics.query.models.attribute_filter. Is there a
 # reason for not simply using the metric backend data types?
 
 

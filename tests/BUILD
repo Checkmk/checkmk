@@ -85,7 +85,7 @@ py_library(
 py_library(
     name = "plugins_siteless",
     testonly = True,
-    # TODO: The tests include non-free plugins (cmk.plugins.custom_query_metric_backend.special_agents.nonfree.ultimate)
+    # TODO: The tests include non-free plugins (cmk.plugins.telemetry_metrics_custom_query.special_agents.nonfree.ultimate)
     # Introduce a folder structure to separate free and non-free tests.
     srcs = select({
         "//:gpl+nonfree_repo": glob(

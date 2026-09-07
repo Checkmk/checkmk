@@ -209,7 +209,7 @@ allows = [
   "cmk.otel_collector.gui",
 ]
 
-[plugin_families.violations.custom_query_metric_backend]
+[plugin_families.violations.telemetry_metrics_custom_query]
 allows = [
   "cmk.data_backend",
   "cmk.shared_typing.consolidation",
@@ -219,8 +219,8 @@ allows = [
 ]
 
 [plugin_families.violations.custom_service]
-# MetricBackendCustomQuery FormSpec
-allows = ["cmk.data_backend.gui"]
+# TelemetryMetricsCustomQuery FormSpec
+allows = ["cmk.data_backend.telemetry_metrics.gui"]
 
 [plugin_families.violations.datadog]
 allows = [
@@ -263,7 +263,7 @@ allows = [
 [plugin_families.violations.data_backend]
 allows = ["cmk.data_backend"]
 
-[plugin_families.violations.metric_backend_connector]
+[plugin_families.violations.telemetry_metrics_connector]
 allows = [
   "cmk.ccc",
   "cmk.dcd.daemon",
@@ -748,13 +748,21 @@ allows = [
   "@ccc",
   "@plugin_apis",
   "cmk.discover_plugins",
-  # data_backend.license_usage provides a license usage counter plug-in
-  "cmk.licensing.usage_counters",
   # schema_manager gates per-feature provisioning on the feature's license option
   "cmk.licensing.basics.options",
 ]
 
-[components."cmk.data_backend.adapters"]
+[components."cmk.data_backend.telemetry_metrics"]
+allows = [
+  "@ccc",
+  "@data_backend",
+  "@plugin_apis",
+  "cmk.discover_plugins",
+  # telemetry_metrics.license_usage provides a license usage counter plug-in
+  "cmk.licensing.usage_counters",
+]
+
+[components."cmk.data_backend.telemetry_metrics.adapters"]
 allows = [
   "@data_backend",
   "cmk.shared_typing.aggregation",
@@ -882,6 +890,7 @@ allows = [
   "cmk.gui",
   "cmk.gui.nonfree",
   "cmk.data_backend.gui",
+  "cmk.data_backend.telemetry_metrics.gui",
   "cmk.network_flow.gui",
   "cmk.otel_collector",
   "cmk.telemetry.gui",
@@ -995,8 +1004,9 @@ allows = [
   "cmk.gui_plugins.internal",
   "cmk.licensing",
   "cmk.liveproxyd.gui",
-  "cmk.data_backend.adapters",
+  "cmk.data_backend.telemetry_metrics.adapters",
   "cmk.data_backend.gui",
+  "cmk.data_backend.telemetry_metrics.gui",
   "cmk.telemetry.gui",
   "cmk.otel_collector",
   "cmk.robotmk.gui",
@@ -1036,6 +1046,7 @@ allows = [
   "cmk.livestatus_client",
   "cmk.multi_tenancy.shared",
   "cmk.data_backend.gui",
+  "cmk.data_backend.telemetry_metrics.gui",
   "cmk.otel_collector.gui",
   "cmk.telemetry.gui",
   "cmk.piggyback",
@@ -1064,7 +1075,7 @@ allows = [
   "cmk.gui_plugins.internal",
   "cmk.licensing",
   "cmk.liveproxyd.gui",
-  "cmk.data_backend.gui.register",
+  "cmk.data_backend.telemetry_metrics.gui",
   "cmk.otel_collector.gui",
   "cmk.telemetry.gui",
   "cmk.shared_typing",
@@ -1300,6 +1311,7 @@ allows = [
   "cmk.licensing",
   "cmk.message_broker_certs",
   "cmk.data_backend.gui",
+  "cmk.data_backend.telemetry_metrics.gui",
   "cmk.otel_collector",
   "cmk.robotmk",
   "cmk.telemetry.host_name_template",
@@ -1326,6 +1338,7 @@ allows = [
   "cmk.gui",
   "cmk.message_broker_certs",
   "cmk.data_backend.gui",
+  "cmk.data_backend.telemetry_metrics.gui",
   "cmk.otel_collector",
   "cmk.robotmk",
   "cmk.telemetry.host_name_template",
@@ -1375,6 +1388,7 @@ allows = [
   "cmk.licensing",
   "cmk.message_broker_certs",
   "cmk.data_backend.gui",
+  "cmk.data_backend.telemetry_metrics.gui",
   "cmk.otel_collector",
   "cmk.plugins",
   "cmk.robotmk",
@@ -1410,6 +1424,21 @@ allows = ["@ccc", "@trace"]
 allows = ["@ccc", "cmk.crash", "cmk.events"]
 
 [components."cmk.data_backend.gui"]
+allows = [
+  "cmk.web.utils",
+  "@ccc",
+  "@livestatus_client",
+  "@data_backend",
+  "@plugin_apis",
+  "cmk.fields",
+  "cmk.gui",
+  "cmk.gui_plugins.internal",
+  "cmk.licensing",
+  "cmk.shared_typing",
+  "cmk.utils",
+]
+
+[components."cmk.data_backend.telemetry_metrics.gui"]
 allows = [
   "cmk.web.utils",
   "@ccc",
@@ -1834,6 +1863,7 @@ allows = [
   "cmk.gui",
   "cmk.gui.nonfree.pro.graphing.openapi.models.attribute_filter",
   "cmk.data_backend.gui",
+  "cmk.data_backend.telemetry_metrics.gui",
   "cmk.otel_collector.gui",
   "cmk.ruleset_matcher.matcher",
   "cmk.shared_typing.aggregation",

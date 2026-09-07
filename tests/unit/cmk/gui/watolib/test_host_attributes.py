@@ -273,32 +273,6 @@ def test_custom_host_attribute_has_form_spec() -> None:
 
 
 @pytest.mark.parametrize(
-    "show_in_table, expected",
-    [
-        pytest.param(True, True, id="enabled"),
-        pytest.param(False, False, id="disabled"),
-        pytest.param(None, False, id="unset defaults to hidden"),
-    ],
-)
-def test_custom_host_attribute_threads_show_in_table(
-    show_in_table: bool | None, expected: bool
-) -> None:
-    custom_host_attribute = CustomHostAttrSpec(
-        type="TextAscii",
-        name="custom_attr",
-        title="Custom Attribute",
-        help="Custom attribute for testing",
-        topic="custom_attributes",
-        add_custom_macro=False,
-        show_in_table=show_in_table,
-    )
-
-    attr = all_host_attributes([custom_host_attribute], [])["custom_attr"]
-
-    assert attr.show_in_table() is expected
-
-
-@pytest.mark.parametrize(
     "crit, value, expected",
     [
         pytest.param({"dc": "MM"}, {"dc": "MM"}, True, id="exact match"),

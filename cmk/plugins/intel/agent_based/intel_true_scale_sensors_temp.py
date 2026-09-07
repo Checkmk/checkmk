@@ -146,8 +146,6 @@ def discover_intel_true_scale_sensors_temp(section: Section) -> DiscoveryResult:
 def _sensor(
     params: TempParamDict, name: str, temp: float, dev_status: StatusType, dev_status_name: str
 ) -> TemperatureSensor:
-    # check_temperature only reports dev_status where the device supplies levels
-    # as well, which this one does not.
     reading = check_temperature(temp, params).reading
     return TemperatureSensor(
         id=name,

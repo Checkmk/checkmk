@@ -19,6 +19,19 @@ export type CommandScope = 'download' | 'registration'
 /** A one-time token as produced by `GenerateToken`. */
 export type TokenValue = string | null | Error
 
+/** Why a command can or cannot be shown. */
+export type TokenState = 'not-required' | 'ready' | 'missing' | 'failed'
+
+export interface RenderedCommand {
+  text: string
+  tokenState: TokenState
+}
+
+/** Whether the command can be shown as it stands. */
+export function isResolved(state: TokenState): boolean {
+  return state === 'ready' || state === 'not-required'
+}
+
 export interface HostMacros {
   hostName: string
   siteId: string
@@ -62,23 +75,33 @@ export function requiresToken(cmd: string | undefined, scope: CommandScope): boo
 }
 
 /**
- * Substitute the one-time token. An empty token counts as no token: replacing
- * the placeholder with nothing would turn a working command into a broken one.
+ * Whether a token can be substituted into a command. An empty token counts as
+ * no token: replacing the placeholder with nothing would turn a working
+ * command into a broken one.
  */
+export function isTokenUsable(token: TokenValue): token is string {
+  return !!token && !(token instanceof Error)
+}
+
 export function applyToken(
   cmd: string | undefined,
   scope: CommandScope,
   token: TokenValue
-): string {
+): RenderedCommand {
   if (!cmd) {
-    return ''
+    return { text: '', tokenState: 'not-required' }
   }
-  if (!token || token instanceof Error) {
-    return cmd
+  if (!requiresToken(cmd, scope)) {
+    return { text: cmd, tokenState: 'not-required' }
+  }
+  if (!isTokenUsable(token)) {
+    return { text: cmd, tokenState: token instanceof Error ? 'failed' : 'missing' }
   }
   // Substitute every occurrence, like the macros above: a command with two
   // authorized downloads would otherwise keep the second placeholder.
-  return scope === 'registration'
-    ? cmd.replaceAll(REGISTRATION_USER_FLAG, `--ott 0:${token}`)
-    : cmd.replaceAll(DOWNLOAD_TOKEN_MACRO, token)
+  const text =
+    scope === 'registration'
+      ? cmd.replaceAll(REGISTRATION_USER_FLAG, `--ott 0:${token}`)
+      : cmd.replaceAll(DOWNLOAD_TOKEN_MACRO, token)
+  return { text, tokenState: 'ready' }
 }

@@ -48,7 +48,6 @@ const ottGenerating = ref(false)
 const ottGenerated = ref(false)
 const ottError = ref<Error | null>(null)
 const ottExpiry = ref<Date | null>(null)
-const noOTT = ref(false)
 
 watch(ott, (newValue) => {
   if (newValue === null) {
@@ -82,8 +81,12 @@ const validityText = computed<TranslatedString | null>(() => {
   return _t('This token remains valid for %{duration}.', { duration: unit }) as TranslatedString
 })
 
+/** The `watch(ott)` above resets the rest when the value goes back to null. */
+function retry() {
+  ott.value = null
+}
+
 async function generateOTT() {
-  noOTT.value = false
   ottGenerating.value = true
 
   if (props.expiresInSeconds) {
@@ -130,9 +133,17 @@ async function generateOTT() {
     <CmkAlertBox v-else variant="loading">{{ _t('Generating one-time token') }}</CmkAlertBox>
   </template>
   <template v-else>
-    <CmkAlertBox v-if="ottError" variant="error">{{
-      _t(`Error generating one-time token: ${ottError.message}`)
-    }}</CmkAlertBox>
+    <template v-if="ottError">
+      <CmkAlertBox variant="error">{{
+        _t(`Error generating one-time token: ${ottError.message}`)
+      }}</CmkAlertBox>
+      <!-- `ottGenerated` stays true after a failure, so without this there is
+           no way back to the generate button. -->
+      <CmkButton variant="secondary" class="mh-generate-token__button" @click="retry">
+        <CmkIcon name="reload" class="mh-generate-token__icon" />
+        {{ _t('Try again') }}
+      </CmkButton>
+    </template>
     <template v-else>
       <CmkAlertBox variant="success">
         <template v-if="showValidityText && validityText">{{ validityText }}</template>

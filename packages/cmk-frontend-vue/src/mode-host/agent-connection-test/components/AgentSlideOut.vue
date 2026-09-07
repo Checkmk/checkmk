@@ -20,7 +20,7 @@ import { useDismissDialog } from 'cmk-ui-library/lib/useDismissDialog'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { ref, watch } from 'vue'
 
-import { applyToken } from '../lib/commandTemplate'
+import { applyToken, isResolved, requiresToken } from '../lib/commandTemplate'
 import type { AgentSlideOutTabs } from '../lib/type_def'
 import GenerateToken from './GenerateToken.vue'
 import RegisterAgent from './steps/RegisterAgent.vue'
@@ -74,8 +74,23 @@ function saveHostAction() {
   cmk.page_menu.form_submit('edit_host', 'save_and_edit')
 }
 const ott = ref<string | null | Error>(null)
+/**
+ * Latches once a token generation attempt failed. The agents page in the
+ * header is the manual way to get the package, so a failed token must not
+ * block the step - only a token nobody has tried to generate yet does.
+ */
+const downloadFailed = ref(false)
+watch(ott, (value) => {
+  if (value instanceof Error) {
+    downloadFailed.value = true
+  }
+})
+
 watch([openedTab, model], () => {
   ott.value = null
+  // Another tab or package is a fresh context: nothing has been attempted
+  // there, so the latch below must not carry over.
+  downloadFailed.value = false
 })
 
 function getStatusCmd(tab: AgentSlideOutTabs): string {
@@ -86,14 +101,29 @@ function getStatusCmd(tab: AgentSlideOutTabs): string {
   return tab.statusCmd
 }
 
+/**
+ * The install commands on screen, branching exactly like the template below so
+ * that a command it never renders cannot influence the token handling.
+ */
+function currentInstallCmds(tab: AgentSlideOutTabs): string[] {
+  const variants = tab.installCmdVariants
+  const cmds: (string | undefined)[] = []
+  if (variants && variants.length > 1) {
+    const variant = variants.find((v) => v.id === selectedVariantId.value)
+    cmds.push(variant?.downloadCmd, variant?.installCmd)
+  } else if (tab.installDownloadCmd) {
+    cmds.push(tab.installDownloadCmd, tab.installCmd)
+  } else if (tab.installMsg && tab.installCmd) {
+    cmds.push(tab.installCmd)
+  }
+  const subTab = tab.subTabs?.find((st) => st.id === model.value)
+  cmds.push(subTab?.downloadCmd, subTab?.installCmd)
+  return cmds.filter((cmd): cmd is string => !!cmd)
+}
+
+/** Whether any command on screen cannot be run without a token. */
 function tabNeedsToken(tab: AgentSlideOutTabs): boolean {
-  if (tab.installCmd) {
-    return true
-  }
-  if (tab.subTabs) {
-    return !!tab.subTabs.find((st) => st.id === model.value)
-  }
-  return false
+  return currentInstallCmds(tab).some((cmd) => requiresToken(cmd, 'download'))
 }
 
 function currentInstallMsg(tab: AgentSlideOutTabs): string {
@@ -105,7 +135,14 @@ function currentInstallMsg(tab: AgentSlideOutTabs): string {
 }
 
 function installCmdWithToken(cmd: string | undefined): string {
-  return applyToken(cmd, 'download', ott.value)
+  return applyToken(cmd, 'download', ott.value).text
+}
+
+/** True when every install command on screen can be shown as it stands. */
+function installCmdsResolved(tab: AgentSlideOutTabs): boolean {
+  return currentInstallCmds(tab).every((cmd) =>
+    isResolved(applyToken(cmd, 'download', ott.value).tokenState)
+  )
 }
 
 const currentStep = ref(getInitStep())
@@ -215,10 +252,11 @@ function getInitStep() {
             </template>
             <template #content>
               <div v-if="currentStep === 2" class="download_install__content">
-                <template v-if="tabNeedsToken(tab) && !tab.unbakedFallback">
+                <template v-if="currentInstallCmds(tab).length > 0 && !tab.unbakedFallback">
                   <div class="download_install__token">
                     <CmkParagraph>{{ currentInstallMsg(tab) }}</CmkParagraph>
                     <GenerateToken
+                      v-if="tabNeedsToken(tab)"
                       v-model="ott"
                       token-generation-endpoint-uri="domain-types/agent_download_token/collections/all"
                       :description="
@@ -231,7 +269,7 @@ function getInitStep() {
                       :token-generation-body="{ site_id: siteId }"
                     />
                   </div>
-                  <template v-if="ott !== null">
+                  <template v-if="installCmdsResolved(tab)">
                     <template v-if="tab.installCmdVariants && tab.installCmdVariants.length > 1">
                       <CmkToggleButtonGroup
                         v-model="selectedVariantId"
@@ -340,11 +378,7 @@ function getInitStep() {
             <template v-if="currentStep === 2" #actions>
               <CmkWizardButton
                 type="next"
-                :disabled="
-                  tabNeedsToken(tab) &&
-                  !tab.unbakedFallback &&
-                  (ott === null || ott instanceof Error)
-                "
+                :disabled="!tab.unbakedFallback && !downloadFailed && !installCmdsResolved(tab)"
                 :override-label="_t('Next step: Register agent')"
               />
               <CmkWizardButton type="previous" />

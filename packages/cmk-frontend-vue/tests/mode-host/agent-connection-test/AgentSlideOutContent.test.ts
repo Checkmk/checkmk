@@ -361,19 +361,20 @@ describe('AgentSlideOutContent', () => {
     expect(codeTexts().join('\n')).toContain('linux-status')
   })
 
-  // TODO(CMK-38409): a failed registration token still renders the command with
-  // `--user agent_registration` silently left in place, and leaves the finish
-  // button enabled. Flipped by the token-error fix.
-  test('renders the un-tokenised command when token generation fails', async () => {
+  test('hides the registration command when token generation fails', async () => {
     mockFailingTokenGeneration()
     renderContent({ agentInstalled: true, isPushMode: false })
 
     await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
     await screen.findByText(/Error generating one-time token/)
 
-    // The troubleshooting fallback is in the DOM in every case (CmkCollapsible
-    // uses v-show), so the bug is that the token command block renders as well.
-    expect(codeTexts().filter((text) => text.includes('linux-register'))).toHaveLength(2)
+    // The troubleshooting fallback stays in the DOM on purpose; what must be
+    // gone is the second, token-bearing command block.
+    expect(codeTexts().filter((text) => text.includes('linux-register'))).toHaveLength(1)
+    expect(screen.queryByText(/run this command on your Linux host/)).not.toBeInTheDocument()
+    expect(codeTexts().join('\n')).not.toContain('--ott 0:')
+    // Registering with the agent_registration user is a legitimate way out, so
+    // the step must stay finishable after a failed token.
     expect(
       within(step('Register agent')).getByRole('button', {
         name: new RegExp(contentProps.closeButtonTitle)
@@ -381,21 +382,112 @@ describe('AgentSlideOutContent', () => {
     ).toBeEnabled()
   })
 
-  // TODO(CMK-38409): with no baked Linux packages and no bakery fallback the
-  // legacy-agent link is unreachable, because `tabNeedsToken()` tests subtab
-  // existence rather than command emptiness. Flipped by the flavour builders.
-  test('renders empty code blocks instead of the legacy agent link', async () => {
-    mockTokenGeneration('download_token')
+  test('offers a retry after token generation failed', async () => {
+    mockFailingTokenGeneration()
+    renderContent({ agentInstalled: true, isPushMode: false })
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Error generating one-time token/)
+
+    await fireEvent.click(screen.getByRole('button', { name: /try again/i }))
+
+    expect(screen.getByRole('button', { name: /generate one-time token/i })).toBeInTheDocument()
+  })
+
+  test('says why the registration command is hidden after a failed token', async () => {
+    mockFailingTokenGeneration()
+    renderContent({ agentInstalled: true, isPushMode: false })
+
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Error generating one-time token/)
+
+    expect(
+      screen.getByText(/hidden until a token has been generated successfully/)
+    ).toBeInTheDocument()
+  })
+
+  test('stays finishable after retrying a failed token', async () => {
+    mockFailingTokenGeneration()
+    renderContent({ agentInstalled: true, isPushMode: false })
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Error generating one-time token/)
+
+    await fireEvent.click(screen.getByRole('button', { name: /try again/i }))
+
+    expect(
+      within(step('Register agent')).getByRole('button', {
+        name: new RegExp(contentProps.closeButtonTitle)
+      })
+    ).toBeEnabled()
+  })
+
+  test('does not carry a failed attempt over to another platform', async () => {
+    mockFailingTokenGeneration()
+    renderContent()
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Error generating one-time token/)
+
+    await selectTab('Windows')
+
+    expect(
+      within(step('Download and install')).getByRole('button', { name: /next step/i })
+    ).toBeDisabled()
+  })
+
+  test('does not carry a failed attempt over the previous button', async () => {
+    const post = mockTokenGeneration('download_token')
+    post.mockRejectedValueOnce(new Error('token generation failed'))
+    renderContent({ agentInstalled: true, isPushMode: false })
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Error generating one-time token/)
+
+    // Back to the install step and forward again: the registration step has
+    // not been attempted since, so it must ask for a token as it did before.
+    await fireEvent.click(
+      within(step('Register agent')).getByRole('button', { name: /previous step/i })
+    )
+    await generateToken()
+    await fireEvent.click(
+      within(step('Download and install')).getByRole('button', { name: /next step/i })
+    )
+
+    expect(
+      within(step('Register agent')).getByRole('button', {
+        name: new RegExp(contentProps.closeButtonTitle)
+      })
+    ).toBeDisabled()
+  })
+
+  test('hides the install command when token generation fails', async () => {
+    mockFailingTokenGeneration()
+    renderContent()
+
+    await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+    await screen.findByText(/Error generating one-time token/)
+
+    expect(codeTexts().join('\n')).not.toContain('deb-install')
+    expect(codeTexts().join('\n')).not.toContain('[AGENT_DOWNLOAD_OTT]')
+  })
+
+  test('offers the legacy agent link when no packages are available', () => {
     renderContent({
       legacyAgentUrl: 'https://docs.example.test/legacy-agent',
       agentInstallCmds: { ...installCmds, linux_deb: '', linux_rpm: '', linux_tgz_download: '' }
     })
 
-    await generateToken()
+    expect(
+      screen.getByRole('link', { name: /Install the legacy Checkmk agent/ })
+    ).toBeInTheDocument()
+    expect(codeTexts().join('\n')).not.toContain('-install')
+  })
+
+  test('asks for no download token when no command needs one', () => {
+    renderContent({
+      agentInstallCmds: { ...installCmds, linux_deb: 'deb-install {{SERVER}}/{{SITE}}' }
+    })
 
     expect(
-      screen.queryByRole('link', { name: /Install the legacy Checkmk agent/ })
+      screen.queryByRole('button', { name: /generate one-time token/i })
     ).not.toBeInTheDocument()
-    expect(codeTexts().some((text) => text.trim() === '')).toBe(true)
+    expect(codeTexts().join('\n')).toContain('deb-install')
   })
 })

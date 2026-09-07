@@ -17,9 +17,9 @@ import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-import { applyToken } from '../../lib/commandTemplate'
+import { applyToken, isResolved, requiresToken } from '../../lib/commandTemplate'
 import type { AgentSlideOutTabs } from '../../lib/type_def'
 import GenerateToken from '../GenerateToken.vue'
 
@@ -51,12 +51,48 @@ const activeRegistrationCmd = computed<string | undefined>(() => {
   return props.tab.registrationCmd
 })
 
-const regAgentOttCmd = computed(() =>
+const registrationCmd = computed(() =>
   applyToken(activeRegistrationCmd.value, 'registration', ott.value)
 )
 
+/** Whether the token command can be shown as it stands. */
+const commandShown = computed(() => isResolved(registrationCmd.value.tokenState))
+
+/** Whether this command needs a token at all. */
+const needsToken = computed(() => requiresToken(activeRegistrationCmd.value, 'registration'))
+
+/**
+ * Latches once a generation attempt failed. Retrying puts the token back to
+ * `missing`, so without the latch the button would lock again while the
+ * fallback command is still on screen.
+ */
+const generationFailed = ref(false)
+
+/**
+ * Registering with the agent_registration user is a legitimate way to finish
+ * this step, so a failed attempt must not lock the user in - only a token that
+ * nobody has tried to generate yet does.
+ */
+const waitingForToken = computed(
+  () => !generationFailed.value && registrationCmd.value.tokenState === 'missing'
+)
+
+// A warning that points at the troubleshooting section is useless while that
+// section is folded away.
+watch(
+  () => registrationCmd.value.tokenState,
+  (state) => {
+    if (state === 'failed') {
+      generationFailed.value = true
+      collapsibleOpen.value = true
+    }
+  }
+)
+
+/** Leaving the step backwards discards the attempt along with the token. */
 function reset() {
   ott.value = null
+  generationFailed.value = false
 }
 </script>
 <template>
@@ -79,6 +115,7 @@ function reset() {
           </div>
 
           <GenerateToken
+            v-if="needsToken"
             v-model="ott"
             token-generation-endpoint-uri="domain-types/agent_registration_token/collections/all"
             :expires-in-seconds="604800"
@@ -89,7 +126,18 @@ function reset() {
             }"
             :description="_t('This requires the generation of a registration token.')"
           />
-          <template v-if="ott !== null">
+          <CmkAlertBox
+            v-if="registrationCmd.tokenState === 'failed'"
+            variant="warning"
+            size="small"
+          >
+            {{
+              _t(
+                'The registration command is hidden until a token has been generated successfully. You can register with the agent_registration user instead - see "Troubleshooting registration issues" below.'
+              )
+            }}
+          </CmkAlertBox>
+          <template v-if="commandShown">
             <CmkToggleButtonGroup
               v-if="tab.registrationCmdVariants && tab.registrationCmdVariants.length > 1"
               v-model="selectedVariantId"
@@ -97,7 +145,7 @@ function reset() {
               :options="tab.registrationCmdVariants.map((v) => ({ label: v.label, value: v.id }))"
             />
             <CmkParagraph>{{ tab.registrationMsg }}</CmkParagraph>
-            <CmkCode :code-text="regAgentOttCmd" class="code" width="fill" />
+            <CmkCode :code-text="registrationCmd.text" class="code" width="fill" />
             <CmkAlertBox v-if="agentReceiverPortIsDefault" variant="warning" size="small">
               {{
                 _t(
@@ -155,11 +203,11 @@ function reset() {
         v-if="!isPushMode"
         type="finish"
         :override-label="closeButtonTitle"
-        :disabled="ott === null"
+        :disabled="waitingForToken"
         icon-name="connection-tests"
         @click="emit('close')"
       />
-      <CmkWizardButton v-else type="next" :disabled="ott === null" />
+      <CmkWizardButton v-else type="next" :disabled="waitingForToken" />
       <CmkWizardButton type="previous" @click="reset" />
     </template>
   </CmkWizardStep>

@@ -6,6 +6,7 @@
 import {
   type HostMacros,
   applyToken,
+  isResolved,
   requiresToken,
   substituteMacros
 } from '@/mode-host/agent-connection-test/lib/commandTemplate'
@@ -60,25 +61,24 @@ describe('requiresToken', () => {
 
 describe('applyToken', () => {
   test('substitutes the download placeholder', () => {
-    expect(applyToken('install --auth 0:[AGENT_DOWNLOAD_OTT]', 'download', 'tok')).toBe(
-      'install --auth 0:tok'
-    )
+    expect(applyToken('install --auth 0:[AGENT_DOWNLOAD_OTT]', 'download', 'tok')).toEqual({
+      text: 'install --auth 0:tok',
+      tokenState: 'ready'
+    })
   })
 
   test('replaces the registration user flag with the token', () => {
-    expect(applyToken('register --user agent_registration', 'registration', 'tok')).toBe(
-      'register --ott 0:tok'
-    )
+    expect(applyToken('register --user agent_registration', 'registration', 'tok')).toEqual({
+      text: 'register --ott 0:tok',
+      tokenState: 'ready'
+    })
   })
 
   test('substitutes every occurrence of the download placeholder', () => {
     expect(
-      applyToken(
-        'get 0:[AGENT_DOWNLOAD_OTT] && get-again 0:[AGENT_DOWNLOAD_OTT]',
-        'download',
-        'tok'
-      )
-    ).toBe('get 0:tok && get-again 0:tok')
+      applyToken('get 0:[AGENT_DOWNLOAD_OTT] && again 0:[AGENT_DOWNLOAD_OTT]', 'download', 'tok')
+        .text
+    ).toBe('get 0:tok && again 0:tok')
   })
 
   test('substitutes every occurrence of the registration user flag', () => {
@@ -87,25 +87,30 @@ describe('applyToken', () => {
         'a --user agent_registration && b --user agent_registration',
         'registration',
         'tok'
-      )
+      ).text
     ).toBe('a --ott 0:tok && b --ott 0:tok')
   })
 
-  test('leaves a command that needs no token alone', () => {
-    expect(applyToken('cmk-agent-ctl status', 'download', null)).toBe('cmk-agent-ctl status')
+  test('reports a command that needs no token as resolved', () => {
+    const rendered = applyToken('cmk-agent-ctl status', 'download', null)
+    expect(rendered).toEqual({ text: 'cmk-agent-ctl status', tokenState: 'not-required' })
+    expect(isResolved(rendered.tokenState)).toBe(true)
   })
 
   test.each([
-    ['no token was generated', null],
-    ['generation failed', new Error('nope')],
-    ['the token is empty', '']
-  ])('keeps the placeholder when %s', (_reason, token) => {
-    expect(applyToken('install 0:[AGENT_DOWNLOAD_OTT]', 'download', token)).toBe(
-      'install 0:[AGENT_DOWNLOAD_OTT]'
-    )
+    ['no token was generated', null, 'missing'],
+    ['the token is empty', '', 'missing'],
+    ['generation failed', new Error('nope'), 'failed']
+  ])('keeps the placeholder when %s', (_reason, token, tokenState) => {
+    const rendered = applyToken('install 0:[AGENT_DOWNLOAD_OTT]', 'download', token)
+    expect(rendered).toEqual({ text: 'install 0:[AGENT_DOWNLOAD_OTT]', tokenState })
+    expect(isResolved(rendered.tokenState)).toBe(false)
   })
 
   test('returns an empty string for a missing command', () => {
-    expect(applyToken(undefined, 'download', 'tok')).toBe('')
+    expect(applyToken(undefined, 'download', 'tok')).toEqual({
+      text: '',
+      tokenState: 'not-required'
+    })
   })
 })

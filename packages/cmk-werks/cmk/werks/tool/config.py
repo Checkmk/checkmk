@@ -5,7 +5,6 @@
 
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Literal
 
 from pydantic import BaseModel, model_validator, ValidationInfo
 
@@ -18,12 +17,9 @@ class Config(BaseModel):
     levels: list[tuple[str, str]]
     compatible: list[tuple[str, str]]
     online_url: str
-    project: Literal["cmk", "cloudmk", "cma"]
-    branch: str
-    repo: str
     create_commit: bool = True
     """
-    Should the werk tool automatically create a commit when reserving ids or creating a werk?
+    Should the werk tool automatically create a commit when creating a werk?
     This option was introduced for cloudmk, they have special requirements for commit messages.
     """
     werk_ids_server_url: str = "https://werk-ids.lan.checkmk.net"

@@ -80,7 +80,8 @@ py_doc_test(
 
 py_cmk_test(
     name = "unit",
-    size = "small",
+    # the e2e tests each run the CLI in a subprocess, which does not fit into "small"
+    size = "medium",
     srcs = glob(["tests/**/*.py"]),
     deps = [
         ":cmk-werk-ids-server",

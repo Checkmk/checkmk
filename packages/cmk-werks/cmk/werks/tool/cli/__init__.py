@@ -36,14 +36,11 @@ from ..models import EditionV2, EditionV3
 from ..parse import WerkMetadata, WerkV2ParseResult, WerkV3ParseResult
 from ..utils import resolve_version
 from .id_pool import (
-    add_id_to_stash,
     dump_stash_to_file,
-    load_legacy_stash_from_file,
     load_or_update_stash,
     load_stash_from_file,
     make_paths_object,
     migrate_werk_ids_file,
-    pick_id_from_stash,
     WerkIDsClient,
     write_secret,
 )
@@ -61,22 +58,12 @@ from .in_out_elements import (
     TTY_NORMAL,
     TTY_RED,
 )
-from .stash import LegacyStash, Stash
 from .status import collect_status, render_json, render_status
 from .werk import Werk, WerkId
 
 WerkVersion = Literal["v1", "markdown"]
 
 _REDIRECTED_WIDTH = 200
-
-WERK_ID_RANGES = {
-    # start is inclusive, end is exclusive, as it is in range()
-    "cma": [(9_000, 10_000)],
-    "cmk": [(10_000, 1_000_000)],
-    "cloudmk": [(1_000_000, 2_000_000)],
-}
-
-_FIRST_UNSUPPORTED_WERK_ID_FOR_LEGACY_WORKFLOW = 22003
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -153,38 +140,21 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     # IDS
     parser_ids = subparsers.add_parser(
         "ids",
-        help="Show the number of reserved Werk IDs (reserving via 'ids <NR>' is legacy-only, removed start of September 2026)",
+        help="Show the number of reserved Werk IDs",
     )
     parser_ids.add_argument(
         "count",
         nargs="?",
         type=int,
-        help=(
-            "number of Werks to reserve. Only supported with the legacy "
-            "reservation mechanism. From the start of August 2026 on, reserving "
-            "Werk IDs at or above 22003 is rejected; the mechanism will be "
-            "removed entirely at the start of September 2026, after which IDs "
-            "are reserved automatically."
-        ),
+        help="ignored, kept for backwards compatibility",
     )
     parser_ids.add_argument(
         "-n",
         "--no-commit",
         action="store_true",
-        help="do not commit at the end",
+        help="ignored, kept for backwards compatibility",
     )
-    parser_ids.add_argument(
-        "--skip-master-branch-check",
-        action="store_true",
-        help=(
-            "The werk tool checks if you are on the master branch, because "
-            "reserving werk ids has to happen in a central place, and this "
-            "place is the master branch. Normally this check is desired, but "
-            "it does not work with some workflows such as when using jj. This "
-            "flag allows you to bypass the check."
-        ),
-    )
-    parser_ids.set_defaults(func=main_fetch_ids)
+    parser_ids.set_defaults(func=main_show_ids)
 
     # LIST
     parser_list = subparsers.add_parser("list", help="List Werks")
@@ -762,7 +732,7 @@ def main_new(args: argparse.Namespace) -> None:
 
     paths = make_paths_object(Path.home())
     stash = load_or_update_stash(paths, WerkIDsClient(get_config().werk_ids_server_url))
-    werk_id = pick_id_from_stash(stash, get_config().project)
+    werk_id = stash.pick_id()
 
     metadata: WerkMetadata = {}
     metadata["id"] = str(werk_id)
@@ -926,7 +896,7 @@ def main_delete(args: argparse.Namespace) -> None:
             continue
         sys.stdout.write(f"Deleted Werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
         stash = load_stash_from_file(paths)
-        add_id_to_stash(stash, werk_id, get_config().project)
+        stash.add_ids([werk_id])
         dump_stash_to_file(paths, stash)
         sys.stdout.write(f"You lucky bastard now own the Werk ID {format_werk_id(werk_id)}.\n")
 
@@ -1115,120 +1085,11 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
             subprocess.run(["git", "status"], check=True)
 
 
-def current_branch() -> str:
-    result = subprocess.run(["git", "branch", "--show-current"], check=True, capture_output=True)
-    return result.stdout.strip().decode("utf-8")
-
-
-def current_repo() -> str:
-    return (
-        list(os.popen("git config --get remote.origin.url"))[0]
-        .strip()
-        .split("@")[-1]
-        .removesuffix(".git")
-    )
-
-
-def _reserve_werk_ids(
-    ranges: list[tuple[int, int]], first_free: int, count: int
-) -> tuple[int, list[WerkId]]:
-    buffer: list[WerkId] = []
-    while ranges:
-        start, end = ranges.pop(0)
-        if first_free > end:
-            # range already complelty exhausted
-            continue
-        if first_free < start:
-            # first_free is not in our range!
-            raise RuntimeError("Configuration error: first_free no in range!")
-        new_first_free = first_free + count
-        if new_first_free < end:
-            return new_first_free, buffer + [WerkId(i) for i in range(first_free, new_first_free)]
-        buffer += [WerkId(i) for i in range(first_free, end)]
-        count -= end - first_free
-        if not ranges:
-            raise RuntimeError(
-                "Not enough ids available, please add a fresh range to WERK_ID_RANGES"
-            )
-        first_free = ranges[0][0]
-
-    raise RuntimeError("could not allocate ids")
-
-
-def _reject_ids_unsupported_by_legacy_workflow(werk_ids: Sequence[WerkId]) -> None:
-    if any(werk_id.id >= _FIRST_UNSUPPORTED_WERK_ID_FOR_LEGACY_WORKFLOW for werk_id in werk_ids):
-        bail_out(
-            "The manual reservation of werk IDs is no longer supported. Please run 'werk init' "
-            "to migrate to the new reservation mechanism, which reserves werk IDs on the fly "
-            "during 'werk new'."
-        )
-
-
-def main_fetch_ids(args: argparse.Namespace) -> None:
-    paths = make_paths_object(Path.home())
-    stash = load_stash_from_file(paths)
-
-    if args.count is None:
-        sys.stdout.write(f"You have {stash.count()} reserved IDs\n")
-        if isinstance(stash, LegacyStash):
-            sys.stdout.write(
-                "\n".join(f"{project}: {len(ids)}" for project, ids in stash.ids_by_project.items())
-            )
-            sys.stdout.write("\n")
-        sys.exit(0)
-
-    if isinstance(stash, Stash):
-        bail_out(
-            "You already converted to the new workflow, there is no need to reserve Werks. "
-            "Go live your happy life and just create Werks."
-        )
-
-    if not args.skip_master_branch_check and (
-        current_branch() != get_config().branch or current_repo() != get_config().repo
-    ):
-        bail_out(
-            f"Werk IDs can only be reserved on the '{get_config().branch}' branch on "
-            f"'{get_config().repo}', not '{current_branch()}' on '{current_repo()}'."
-        )
-
-    # Get the start werk_id to reserve
-    try:
-        with open("first_free", encoding="utf-8") as f:
-            first_free = int(f.read().strip())
-    except (OSError, ValueError) as e:
-        raise RuntimeError("Could not load .werks/first_free") from e
-
-    project = get_config().project
-    if project not in WERK_ID_RANGES:
-        raise RuntimeError(f"project {project} has no Werk ID range")
-    ranges = WERK_ID_RANGES[project].copy()
-
-    new_first_free, fresh_ids = _reserve_werk_ids(ranges, first_free, args.count)
-
-    _reject_ids_unsupported_by_legacy_workflow(fresh_ids)
-
-    stash = load_legacy_stash_from_file(paths)
-    for werk_id in fresh_ids:
-        add_id_to_stash(stash, werk_id, project=project)
-    dump_stash_to_file(paths, stash)
-
-    # Store the new reserved werk ids
-    with open("first_free", "w", encoding="utf-8") as f:
-        f.write(str(new_first_free) + "\n")
-
-    sys.stdout.write(
-        f"Reserved {args.count} additional IDs now. You have {stash.count()} reserved IDs now.\n"
-    )
-
-    if get_config().create_commit and not args.no_commit:
-        if os.system(f"git commit --no-verify -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec B605 # BNS:a52d7f
-            sys.stdout.write("--> Successfully committed reserved Werk IDS. Please push it soon!\n")
-        else:
-            bail_out("Cannot commit.")
-    else:
-        sys.stdout.write(
-            "--> Reserved Werk IDs. Commit and push it soon, otherwise someone else reserves the same IDs!\n"
-        )
+def main_show_ids(_args: argparse.Namespace) -> None:
+    # 'count' and '--no-commit' are ignored; they are kept only so that existing
+    # invocations from the days of manual reservation don't fail.
+    stash = load_stash_from_file(make_paths_object(Path.home()))
+    sys.stdout.write(f"You have {stash.count()} reserved IDs\n")
 
 
 def main_preview(args: argparse.Namespace) -> None:

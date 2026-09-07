@@ -5,14 +5,14 @@
 
 import io
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 import pytest
 from rich.console import Console
 
 from cmk.werks.tool.cli.id_pool import make_paths_object, Paths, ServerStatus
-from cmk.werks.tool.cli.stash import LegacyStash, Stash
+from cmk.werks.tool.cli.stash import Stash
 from cmk.werks.tool.cli.status import (
     collect_status,
     FileInfo,
@@ -36,6 +36,12 @@ def _no_werk_exists(_werk_id: WerkId) -> bool:
     return False
 
 
+def _write_legacy_stash(paths: Paths, ids_by_project: Mapping[str, Sequence[int]]) -> None:
+    paths.legacy_stash_file.write_text(
+        json.dumps({"__version__": "2", "ids_by_project": ids_by_project}), encoding="utf-8"
+    )
+
+
 def _paths(
     tmp_path: Path,
     ids: Sequence[int] = (),
@@ -55,10 +61,7 @@ def _paths(
             Stash(ids=list(ids)).model_dump_json(by_alias=True), encoding="utf-8"
         )
     if legacy_ids is not None:
-        paths.legacy_stash_file.write_text(
-            LegacyStash(ids_by_project={"cmk": list(legacy_ids)}).model_dump_json(by_alias=True),
-            encoding="utf-8",
-        )
+        _write_legacy_stash(paths, {"cmk": legacy_ids})
     return paths
 
 
@@ -741,16 +744,13 @@ def test_only_errors_count_as_errors() -> None:
     assert _status(problems=[warning, error]).has_errors is True
 
 
-def test_legacy_ids_count_across_projects(tmp_path: Path) -> None:
+def test_legacy_ids_of_other_projects_are_ignored(tmp_path: Path) -> None:
+    # 'werk init' only migrates the cmk IDs of the legacy file, so those are the ones
+    # reported as available.
     paths = make_paths_object(tmp_path)
-    paths.legacy_stash_file.write_text(
-        LegacyStash(ids_by_project={"cmk": [20_261], "cloudmk": [1_111_111]}).model_dump_json(
-            by_alias=True
-        ),
-        encoding="utf-8",
-    )
+    _write_legacy_stash(paths, {"cmk": [20_261], "cloudmk": [1_111_111]})
 
     status = _collect(tmp_path, paths, server_status=None)
 
-    assert status.legacy_stash.count == 2
+    assert status.legacy_stash.count == 1
     assert status.legacy_stash.next_id == 20_261

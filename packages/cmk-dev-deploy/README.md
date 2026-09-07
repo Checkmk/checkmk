@@ -9,9 +9,9 @@ Deploy local changes to a running OMD site in under 5 seconds.
 - A local OMD site -- install one with `cmk-dev-install` / `cmk-dev-install-site` (from the `cmk-dev-site` pipx package)
 - `sudo` access (for the one-time installation of the per-site sudoers rule)
 - Bazel (the project's build system)
-- Python >= 3.14 (the tool itself is stdlib-only; if the system Python is
-  older, the launcher automatically falls back to the repo venv -- create it
-  with `make .venv`)
+- The repo virtualenv (`make .venv`) -- the launcher always runs the tool on
+  `.venv/bin/python3`, so everyone uses the same interpreter (the tool itself
+  is stdlib-only, but needs Python >= 3.14)
 
 ## Quick Start
 

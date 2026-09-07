@@ -3,46 +3,66 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="explicit-any"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
 import json
-from collections.abc import Iterable, Mapping
-from typing import Any
+from collections.abc import Mapping
+from dataclasses import dataclass
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
 
-Section = Mapping[str, Any]
+@dataclass(frozen=True)
+class D2DService:
+    health_level: str
+    health: str
+    subsystem_state: str
 
 
-def parse_storeonce4x_d2d_services(string_table):
-    return json.loads(string_table[0][0])["services"]
+Section = Mapping[str, D2DService]
+
+_HEALTH_MAP = {"OK": State.OK, "WARNING": State.WARN, "CRITICAL": State.CRIT}
 
 
-def discover_storeonce4x_d2d_services(section: Section) -> Iterable[tuple[None, dict]]:
+def parse_storeonce4x_d2d_services(string_table: StringTable) -> Section:
+    return {
+        service_name: D2DService(
+            health_level=service_data["healthLevelString"],
+            health=service_data["healthString"],
+            subsystem_state=service_data["subsystemState"],
+        )
+        for service_name, service_data in json.loads(string_table[0][0])["services"].items()
+    }
+
+
+agent_section_storeonce4x_d2d_services = AgentSection(
+    name="storeonce4x_d2d_services",
+    parse_function=parse_storeonce4x_d2d_services,
+)
+
+
+def discover_storeonce4x_d2d_services(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_storeonce4x_d2d_services(_item, _params, parsed):
-    health_map = {"OK": 0, "WARNING": 1, "CRITICAL": 2}
-
-    for service_name, service_data in parsed.items():
-        healthLevelString = service_data["healthLevelString"]
-        healthString = service_data["healthString"]
-        subsystemState = service_data["subsystemState"]
-        yield (
-            health_map.get(healthLevelString, 3),
-            f"{service_name}: {healthString} ({subsystemState})",
+def check_storeonce4x_d2d_services(section: Section) -> CheckResult:
+    for service_name, service in section.items():
+        yield Result(
+            state=_HEALTH_MAP.get(service.health_level, State.UNKNOWN),
+            summary=f"{service_name}: {service.health} ({service.subsystem_state})",
         )
 
 
-check_info["storeonce4x_d2d_services"] = LegacyCheckDefinition(
+check_plugin_storeonce4x_d2d_services = CheckPlugin(
     name="storeonce4x_d2d_services",
-    parse_function=parse_storeonce4x_d2d_services,
     service_name="D2D Services",
     discovery_function=discover_storeonce4x_d2d_services,
     check_function=check_storeonce4x_d2d_services,

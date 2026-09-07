@@ -26,6 +26,7 @@ import GlobalSettingsApp from './global-settings/GlobalSettingsApp.vue'
 import { GlobalTimePickerApp } from './graphing/GlobalTimePicker'
 import GraphGroup from './graphing/components/GraphGroup.vue'
 import CustomGraphDesignerApp from './graphing/designer/CustomGraphDesignerApp.vue'
+import AlertWizardApp from './mode-alerts/AlertWizardApp.vue'
 import CustomServicesWizardApp from './mode-custom-services/CustomServicesWizardApp.vue'
 import ModeCreateOAuth2ConnectionApp from './mode-oauth2-connection/ModeCreateOAuth2ConnectionApp.vue'
 import ModeRedirectOAuth2ConnectionAppCopy from './mode-oauth2-connection/ModeRedirectOAuth2ConnectionApp.vue'
@@ -70,6 +71,7 @@ defineCmkComponent('cmk-notification-parameters-overview', NotificationParameter
 defineCmkComponent('cmk-mode-host', ModeHostApp)
 defineCmkComponent('cmk-mode-create-otel-conf', ModeCreateOTelConfApp)
 defineCmkComponent('cmk-mode-create-prometheus-conf', ModeCreatePrometheusConfApp)
+defineCmkComponent('cmk-mode-create-alert', AlertWizardApp)
 defineCmkComponent('cmk-mode-custom-services', CustomServicesWizardApp)
 defineCmkComponent('cmk-mode-create-relay', ModeCreateRelayApp)
 defineCmkComponent('cmk-mode-create-oauth2-connection', ModeCreateOAuth2ConnectionApp)

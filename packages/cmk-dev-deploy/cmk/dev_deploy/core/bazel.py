@@ -17,8 +17,6 @@ Opting out (``--shared-bazel-server`` or ``CDD_SHARED_BAZEL_SERVER=1``)
 restores the old single-server behavior, e.g. when disk space is tight.
 """
 
-from __future__ import annotations
-
 import hashlib
 import os
 import shutil

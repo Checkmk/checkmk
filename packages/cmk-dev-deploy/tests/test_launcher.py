@@ -4,8 +4,6 @@
 
 """Smoke test for the direct launcher script (scripts/cmk-dev-deploy)."""
 
-from __future__ import annotations
-
 import subprocess
 import sys
 from pathlib import Path

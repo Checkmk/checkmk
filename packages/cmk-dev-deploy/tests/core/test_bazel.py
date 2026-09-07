@@ -4,8 +4,6 @@
 
 """Unit tests for the deploy-server Bazel command composition."""
 
-from __future__ import annotations
-
 import os
 from pathlib import Path
 

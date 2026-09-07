@@ -5,15 +5,24 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Generator, Mapping
+import time
+from collections.abc import Generator, Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.legacy_includes.temperature import (
-    check_temperature,
+from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import get_average, get_rate, get_value_store, IgnoreResultsError
+from cmk.plugins.lib.temperature import (
+    migrate_params,
     OptFloat,
+    render_temp,
+    temp_unitsym,
     TempParamType,
+    to_celsius,
+    TrendComputeDict,
 )
+
+type Levels = tuple[OptFloat, OptFloat]
+type Perfdata = list[tuple[str, float, OptFloat, OptFloat, OptFloat, OptFloat]]
 
 check_info = {}
 
@@ -45,18 +54,180 @@ def discover_smart_temp(
             yield disk_name, {}
 
 
-def check_smart_temp(
+def _check_trend(
+    temp: float,
+    params: TrendComputeDict,
+    output_unit: str,
+    crit: OptFloat,
+    crit_lower: OptFloat,
+    unique_name: str,
+    value_store: MutableMapping[str, Any],
+    now: float,
+) -> tuple[int, str]:
+    trend_range_min = params["period"]
+    status = 0
+    infotexts = []
+
+    # first compute current rate in C/s by computing delta since last check
+    rate = get_rate(value_store, "temp.%s.delta" % unique_name, now, temp)
+
+    # average trend, initialize with zero (by default), rate_avg is in C/s
+    rate_avg = get_average(value_store, f"temp.{unique_name}.trend", now, rate, trend_range_min)
+
+    # rate_avg is growth in C/s, trend is in C per trend range minutes
+    trend = float(rate_avg * trend_range_min * 60.0)
+    sign = "+" if trend > 0 else ""
+    infotexts.append(f"rate: {sign}{render_temp(trend, output_unit, True)}/{trend_range_min:g} min")
+
+    warn_upper_trend, crit_upper_trend = params.get("trend_levels", (None, None))
+    # it may be unclear to the user if he should specify temperature decrease as a negative
+    # number or positive. This works either way. Having a positive lower bound makes no
+    # sense anyway.
+    warn_lower_trend: OptFloat = None
+    crit_lower_trend: OptFloat = None
+    match params.get("trend_levels_lower"):
+        case (int() | float() as warn, int() | float() as crit):
+            warn_lower_trend, crit_lower_trend = abs(warn) * -1, abs(crit) * -1
+        case _:
+            pass
+
+    if crit_upper_trend is not None and trend > crit_upper_trend:
+        status = 2
+        infotexts.append(
+            f"rising faster than {render_temp(crit_upper_trend, output_unit, True)}/{trend_range_min:g} min(!!)"
+        )
+    elif warn_upper_trend is not None and trend > warn_upper_trend:
+        status = 1
+        infotexts.append(
+            f"rising faster than {render_temp(warn_upper_trend, output_unit, True)}/{trend_range_min:g} min(!)"
+        )
+    elif crit_lower_trend is not None and trend < crit_lower_trend:
+        status = 2
+        infotexts.append(
+            f"falling faster than {render_temp(crit_lower_trend, output_unit, True)}/{trend_range_min:g} min(!!)"
+        )
+    elif warn_lower_trend is not None and trend < warn_lower_trend:
+        status = 1
+        infotexts.append(
+            f"falling faster than {render_temp(warn_lower_trend, output_unit, True)}/{trend_range_min:g} min(!)"
+        )
+
+    if (timeleft := params.get("trend_timeleft")) is not None:
+        # compute time until temperature limit is reached
+        limit = crit if trend > 0 else crit_lower
+
+        if limit:  # crit levels may not be set, especially lower level
+            diff_to_limit = limit - temp
+            minutes_left = diff_to_limit / rate_avg / 60.0 if rate_avg != 0.0 else float("inf")
+
+            def format_minutes(minutes: float) -> str:
+                if minutes > 60:  # hours
+                    hours = int(minutes / 60.0)
+                    minutes += -int(hours) * 60
+                    return "%dh %02dm" % (hours, minutes)
+                return "%d minutes" % minutes
+
+            ml_warn, ml_crit = timeleft
+            if ml_crit is not None and minutes_left <= ml_crit:
+                status = max(status, 2)
+                infotexts.append("%s until temp limit reached(!!)" % format_minutes(minutes_left))
+            elif ml_warn is not None and minutes_left <= ml_warn:
+                status = max(status, 1)
+                infotexts.append("%s until temp limit reached(!)" % format_minutes(minutes_left))
+
+    return status, ", ".join(infotexts)
+
+
+def _check_temperature(
+    reading: float,
+    params: TempParamType,
+    unique_name: str,
+    value_store: MutableMapping[str, Any],
+    now: float,
+) -> tuple[int, str, Perfdata]:
+    params = migrate_params(params)
+
+    # Convert reading into Celsius
+    input_unit = params.get("input_unit", "c")
+    output_unit = params.get("output_unit", "c")
+    temp = to_celsius(reading, input_unit)
+
+    # Set all user levels to None. None means do not impose a level
+    usr_warn, usr_crit = params.get("levels") or (None, None)
+    usr_warn_lower, usr_crit_lower = params.get("levels_lower") or (None, None)
+
+    # Decide which of user's and device's levels should be used according to the setting
+    # "device_levels_handling". This plug-in reports no levels of its own, so "best" and
+    # "worst" reduce to the user's levels, and "dev" to no levels at all.
+    warn = crit = warn_lower = crit_lower = None
+    dlh = params.get("device_levels_handling", "usrdefault")
+    if dlh in ("usr", "best", "worst"):
+        warn, crit, warn_lower, crit_lower = usr_warn, usr_crit, usr_warn_lower, usr_crit_lower
+    elif dlh in ("usrdefault", "devdefault"):
+        if usr_warn is not None and usr_crit is not None:
+            warn, crit = usr_warn, usr_crit
+        if usr_warn_lower is not None and usr_crit_lower is not None:
+            warn_lower, crit_lower = usr_warn_lower, usr_crit_lower
+
+    status, _, perfdata = check_levels(temp, "temp", (warn, crit, warn_lower, crit_lower))
+
+    # Render actual temperature, e.g. "17.8 °F"
+    infotext = f"{render_temp(temp, output_unit)} {temp_unitsym[output_unit]}"
+
+    # In case of a non-OK status output the information about the levels. Only the user's
+    # levels can be in effect, so they are the only ones worth printing.
+    if status != 0:
+        if usr_warn is not None and usr_crit is not None:
+            infotext += (
+                f" (warn/crit at {render_temp(usr_warn, output_unit)}/"
+                f"{render_temp(usr_crit, output_unit)} {temp_unitsym[output_unit]})"
+            )
+        if usr_warn_lower is not None and usr_crit_lower is not None:
+            infotext += (
+                f" (warn/crit below {render_temp(usr_warn_lower, output_unit)}/"
+                f"{render_temp(usr_crit_lower, output_unit)} {temp_unitsym[output_unit]})"
+            )
+
+    # when activating trend computation through the website, "period" is always set together
+    # with the trend_compute dictionary. But a check may want to specify default levels for
+    # trends without activating them. In this case they can leave period unset to deactivate
+    # the feature.
+    if (trend := params.get("trend_compute")) is not None and trend.get("period") is not None:
+        try:
+            trend_status, trend_infotext = _check_trend(
+                temp, trend, output_unit, crit, crit_lower, unique_name, value_store, now
+            )
+        except IgnoreResultsError as e:
+            trend_status, trend_infotext = 3, str(e)
+        status = max(status, trend_status)
+        if trend_infotext:
+            infotext += ", " + trend_infotext
+
+    return status, infotext, perfdata
+
+
+def _check_smart_temp(
     item: str,
     params: TempParamType,
     section: Mapping[str, Mapping[str, int]],
-) -> tuple[int, str, list[tuple[str, float, OptFloat, OptFloat, OptFloat, OptFloat]]] | None:
+    value_store: MutableMapping[str, Any],
+    now: float,
+) -> tuple[int, str, Perfdata] | None:
     if (data := section.get(item)) is None:
         return None
 
     if (temperature := data.get("Temperature")) is None:
         return None
 
-    return check_temperature(temperature, params, "smart_%s" % item)
+    return _check_temperature(temperature, params, f"smart_{item}", value_store, now)
+
+
+def check_smart_temp(
+    item: str,
+    params: TempParamType,
+    section: Mapping[str, Mapping[str, int]],
+) -> tuple[int, str, Perfdata] | None:
+    return _check_smart_temp(item, params, section, get_value_store(), time.time())
 
 
 check_info["smart.temp"] = LegacyCheckDefinition(

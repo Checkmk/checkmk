@@ -9,17 +9,16 @@
 # test by something more appropriate.
 
 
-import time
-
 import pytest
 
-from cmk.legacy_checks.smart import (
-    check_smart_temp,
-    discover_smart_temp,
-)
-from cmk.legacy_includes import temperature
-from cmk.legacy_includes.temperature import TempParamType
+from cmk.legacy_checks.smart import _check_smart_temp, discover_smart_temp
+from cmk.plugins.lib.temperature import TempParamType
 from cmk.plugins.smart.agent_based.smart import parse_raw_values, Section
+
+DELTA_KEY = "temp.smart_/dev/sda.delta"
+TREND_KEY = "temp.smart_/dev/sda.trend"
+LAST_CHECK = 1767225600.0
+CHECK_INTERVAL = 600.0
 
 
 def parsed() -> Section:
@@ -157,7 +156,7 @@ def test_smart_temp_check_ok() -> None:
     """Test check function for normal temperature."""
     params: TempParamType = {"levels": (35.0, 40.0)}
 
-    result = check_smart_temp("/dev/sda", params, parsed())
+    result = _check_smart_temp("/dev/sda", params, parsed(), {}, LAST_CHECK)
 
     # Should return a single temperature check result
     assert result is not None
@@ -172,7 +171,7 @@ def test_smart_temp_check_warning() -> None:
     """Test check function with temperature warning."""
     params: TempParamType = {"levels": (25.0, 40.0)}  # Lower warning threshold
 
-    result = check_smart_temp("/dev/sda", params, parsed())
+    result = _check_smart_temp("/dev/sda", params, parsed(), {}, LAST_CHECK)
 
     # Should return temperature warning result
     assert result is not None
@@ -186,7 +185,7 @@ def test_smart_temp_check_nvme() -> None:
     """Test check function for NVMe temperature."""
     params: TempParamType = {"levels": (35.0, 40.0)}
 
-    result = check_smart_temp("/dev/nvme0n1", params, parsed())
+    result = _check_smart_temp("/dev/nvme0n1", params, parsed(), {}, LAST_CHECK)
 
     # Should return temperature warning result
     assert result is not None
@@ -200,7 +199,7 @@ def test_smart_temp_check_missing_item() -> None:
     """Test check function with non-existent device."""
     params: TempParamType = {"levels": (35.0, 40.0)}
 
-    results = check_smart_temp("/dev/missing", params, parsed())
+    results = _check_smart_temp("/dev/missing", params, parsed(), {}, LAST_CHECK)
 
     # Should return None for missing device
     assert results is None
@@ -211,7 +210,7 @@ def test_smart_temp_check_no_temperature() -> None:
     params: TempParamType = {"levels": (35.0, 40.0)}
     section = parsed_no_temp()
 
-    results = check_smart_temp("/dev/sdb", params, section)
+    results = _check_smart_temp("/dev/sdb", params, section, {}, LAST_CHECK)
 
     # Should return None for device without temperature
     assert results is None
@@ -264,13 +263,7 @@ def test_smart_temp_discovered_but_not_checkable() -> None:
     section = parsed_unmapped_temp_attribute()
 
     assert list(discover_smart_temp(section)) == [("/dev/sdc", {})]
-    assert check_smart_temp("/dev/sdc", {"levels": (35.0, 40.0)}, section) is None
-
-
-DELTA_KEY = "temp.smart_/dev/sda.delta"
-TREND_KEY = "temp.smart_/dev/sda.trend"
-LAST_CHECK = 1767225600.0
-CHECK_INTERVAL = 600.0
+    assert _check_smart_temp("/dev/sdc", {"levels": (35.0, 40.0)}, section, {}, LAST_CHECK) is None
 
 
 @pytest.mark.parametrize(
@@ -314,7 +307,7 @@ CHECK_INTERVAL = 600.0
     ],
 )
 def test_smart_temp_check_levels(params: TempParamType, expected: object) -> None:
-    assert check_smart_temp("/dev/sda", params, parsed()) == expected
+    assert _check_smart_temp("/dev/sda", params, parsed(), {}, LAST_CHECK) == expected
 
 
 @pytest.mark.parametrize(
@@ -410,7 +403,6 @@ def test_smart_temp_check_levels(params: TempParamType, expected: object) -> Non
     ],
 )
 def test_smart_temp_check_trend(
-    monkeypatch: pytest.MonkeyPatch,
     previous_reading: float,
     params: TempParamType,
     expected: object,
@@ -419,18 +411,16 @@ def test_smart_temp_check_trend(
         DELTA_KEY: (LAST_CHECK, previous_reading),
         TREND_KEY: (LAST_CHECK, 0.0),
     }
-    monkeypatch.setattr(temperature, "get_value_store", lambda: value_store)
-    monkeypatch.setattr(time, "time", lambda: LAST_CHECK + CHECK_INTERVAL)
-
-    assert check_smart_temp("/dev/sda", params, parsed()) == expected
+    assert (
+        _check_smart_temp("/dev/sda", params, parsed(), value_store, LAST_CHECK + CHECK_INTERVAL)
+        == expected
+    )
     assert set(value_store) == {DELTA_KEY, TREND_KEY}
 
 
-def test_smart_temp_check_trend_on_the_first_execution(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_smart_temp_check_trend_on_the_first_execution() -> None:
     params: TempParamType = {"levels": (35.0, 40.0), "trend_compute": {"period": 5}}
     value_store: dict[str, object] = {}
-    monkeypatch.setattr(temperature, "get_value_store", lambda: value_store)
-    monkeypatch.setattr(time, "time", lambda: LAST_CHECK)
 
     expected: object = (
         3,
@@ -441,5 +431,5 @@ def test_smart_temp_check_trend_on_the_first_execution(monkeypatch: pytest.Monke
         [("temp", 30, 35.0, 40.0)],
     )
 
-    assert check_smart_temp("/dev/sda", params, parsed()) == expected
+    assert _check_smart_temp("/dev/sda", params, parsed(), value_store, LAST_CHECK) == expected
     assert set(value_store) == {DELTA_KEY}

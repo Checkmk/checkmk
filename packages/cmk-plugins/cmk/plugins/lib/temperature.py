@@ -116,7 +116,7 @@ temp_unitsym = {
 }
 
 
-def _migrate_params(params: TempParamType) -> TempParamDict:
+def migrate_params(params: TempParamType) -> TempParamDict:
     """Migrate legacy params values to the current one.
 
     Args:
@@ -128,16 +128,16 @@ def _migrate_params(params: TempParamType) -> TempParamDict:
 
     Examples:
 
-        >>> _migrate_params((1, 2))
+        >>> migrate_params((1, 2))
         {'levels': (1, 2)}
 
-        >>> _migrate_params((1, 2, 3, 4))
+        >>> migrate_params((1, 2, 3, 4))
         {'levels': (1, 2), 'levels_lower': (3, 4)}
 
-        >>> _migrate_params({})
+        >>> migrate_params({})
         {}
 
-        >>> _migrate_params(None)
+        >>> migrate_params(None)
         {}
 
     """
@@ -357,7 +357,7 @@ def check_temperature(
         )
 
     # Convert legacy tuple params into new dict
-    params = _migrate_params(params)
+    params = migrate_params(params)
 
     input_unit = params.get("input_unit", dev_unit)
     output_unit = params.get("output_unit", "c")

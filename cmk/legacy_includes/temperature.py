@@ -12,7 +12,7 @@ from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import check_levels
 from cmk.agent_based.v2 import get_average, get_rate, get_value_store, IgnoreResultsError
-from cmk.plugins.lib.temperature import _migrate_params
+from cmk.plugins.lib.temperature import migrate_params
 from cmk.plugins.lib.temperature import render_temp as render_temp
 from cmk.plugins.lib.temperature import StatusType as StatusType
 from cmk.plugins.lib.temperature import temp_unitsym as temp_unitsym
@@ -299,7 +299,7 @@ def check_temperature(
 
     """
     # Convert legacy tuple params into new dict
-    params = _migrate_params(params)
+    params = migrate_params(params)
 
     # Convert reading into Celsius
     input_unit = params.get("input_unit", dev_unit)

@@ -582,7 +582,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_jolokia', [])
 
 agent_config['mk_jolokia'] = [
-{'id': 'f75499fe-2ef3-4d30-a6ec-db4cca00ca71', 'value': {'deployment': 'sync'}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'f75499fe-2ef3-4d30-a6ec-db4cca00ca71', 'value': {'deployment': 'sync', 'main_instance': {}, 'instances': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_jolokia']
 
 

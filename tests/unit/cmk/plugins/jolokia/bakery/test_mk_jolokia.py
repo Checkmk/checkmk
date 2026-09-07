@@ -31,27 +31,29 @@ jolokia_lines = [
 
 jolokia_conf = {
     "deployment": "sync",
-    "protocol": "https",
-    "verify": ("ca_file", "/etc/ssl/certs/company-ca.pem"),
-    "server": ("ip_or_fqdn", "127.0.0.1"),
-    "port": 8080,
-    "timeout": 1.0,
-    "login": {
-        "user": "moni",
-        "password": Secret("toring", "", ""),
-        "mode": "basic",
-    },
-    "suburi": "jolokia",
-    "instance": "Cööle Instanß",
-    "custom_vars": [
-        {
-            "mbean": "some_mbean",
-            "path": "some_path",
-            "value_type": "number",
-            "title": "some_title",
+    "main_instance": {
+        "protocol": "https",
+        "verify": ("ca_file", "/etc/ssl/certs/company-ca.pem"),
+        "server": ("ip_or_fqdn", "127.0.0.1"),
+        "port": 8080,
+        "timeout": 1.0,
+        "login": {
+            "user": "moni",
+            "password": Secret("toring", "", ""),
+            "mode": "basic",
         },
-        {"mbean": "another_mbean", "path": "another_path", "value_type": "string"},
-    ],
+        "suburi": "jolokia",
+        "instance": "Cööle Instanß",
+        "custom_vars": [
+            {
+                "mbean": "some_mbean",
+                "path": "some_path",
+                "value_type": "number",
+                "title": "some_title",
+            },
+            {"mbean": "another_mbean", "path": "another_path", "value_type": "string"},
+        ],
+    },
     "instances": [
         {"protocol": "http", "server": ("use_local_fqdn", None)},
         {"protocol": "https", "server": ("ip_or_fqdn", "10.0.0.1"), "verify": ("disabled", None)},
@@ -79,3 +81,19 @@ def test_bakery_plugin() -> None:
             include_header=True,
         ),
     ]
+
+
+def test_bakery_plugin_without_parameters() -> None:
+    conf = bakery_plugin_jolokia.parameter_parser(
+        {"deployment": "sync", "main_instance": {}, "instances": []}
+    )
+    files = list(bakery_plugin_jolokia.files_function(conf))
+    assert isinstance(files[1], PluginConfig)
+    assert files[1].lines == ["# Default values", "server = 'use fqdn'"]
+
+
+def test_bakery_plugin_do_not_deploy() -> None:
+    conf = bakery_plugin_jolokia.parameter_parser(
+        {"deployment": "do_not_deploy", "main_instance": {}, "instances": []}
+    )
+    assert not list(bakery_plugin_jolokia.files_function(conf))

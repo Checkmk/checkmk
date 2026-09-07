@@ -61,29 +61,33 @@ def _migrate_instance_config(instance_config: dict[str, Any]) -> dict[str, Any]:
 
 
 def migrate(value: object) -> Mapping[str, object]:
-    """Migrate old ruleset format to new format with deployment field.
+    """Migrate the 2.5 format to the current one.
 
-    Old format had Alternative at the top level:
+    The 2.5 format was an Alternative at the top level:
     - None: Do not deploy
-    - Dictionary: Deploy with configuration
+    - Dictionary: Deploy; the parameters of the main instance are top-level keys, additional
+      instances are a list under "instances"
 
-    New format has all parameters in a flat Dictionary with deployment field:
-    - {"deployment": "do_not_deploy"}
-    - {"deployment": "sync", ...config...}
+    The current format is a Dictionary with three mandatory keys: "deployment", "main_instance"
+    (a dictionary of the optional per-instance parameters) and "instances". Because every stored
+    rule carries all three keys, merging matching rules yields exactly the highest-priority rule.
     """
     match value:
         case None:
-            return {"deployment": "do_not_deploy"}
-        case {"deployment": str()} if isinstance(value, dict):
+            return {"deployment": "do_not_deploy", "main_instance": {}, "instances": []}
+        case dict() if "deployment" in value:
             return value
         case dict():
-            config = _migrate_instance_config(value)
-            if "instances" in config:
-                instances = config["instances"]
-                if isinstance(instances, list):
-                    config["instances"] = [_migrate_instance_config(inst) for inst in instances]
-
-            return {"deployment": "sync", **config}
+            instances = value.get("instances", [])
+            if not isinstance(instances, list):
+                raise ValueError(f"Cannot migrate jolokia agent config value: {value!r}")
+            return {
+                "deployment": "sync",
+                "main_instance": _migrate_instance_config(
+                    {k: v for k, v in value.items() if k != "instances"}
+                ),
+                "instances": [_migrate_instance_config(inst) for inst in instances],
+            }
         case _:
             raise ValueError(f"Cannot migrate jolokia agent config value: {value!r}")
 
@@ -357,9 +361,19 @@ def _form_spec_agent_config_mk_jolokia() -> Dictionary:
                     ],
                 ),
             ),
-            **_jolokia_instance_elements(),
+            "main_instance": DictElement(
+                required=True,
+                parameter_form=Dictionary(
+                    title=Title("Main instance"),
+                    help_text=Help(
+                        "The parameters of the JMX instance to monitor. They also serve as the "
+                        "defaults for the additional instances configured below."
+                    ),
+                    elements=_jolokia_instance_elements(),
+                ),
+            ),
             "instances": DictElement(
-                required=False,
+                required=True,
                 parameter_form=List(
                     title=Title("Monitor multiple JMX instances on the host"),
                     help_text=Help(

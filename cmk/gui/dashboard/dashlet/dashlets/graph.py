@@ -53,7 +53,6 @@ from cmk.gui.type_defs import (
     Choices,
     GraphRenderOptionsVS,
     SingleInfos,
-    SizePT,
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
@@ -354,7 +353,6 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
 
 def default_dashlet_graph_render_options() -> GraphRenderOptionsVS:
     return GraphRenderOptionsVS(
-        font_size=SizePT(8),
         show_graph_time=False,
         show_margin=False,
         show_legend=False,

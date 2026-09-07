@@ -38,10 +38,6 @@ from ._base import BaseWidgetContent
 
 @api_model
 class GraphRenderOptions:
-    font_size_pt: Annotated[SizePT, Unit("pt")] | ApiOmitted = api_field(
-        description="Font size in points.",
-        default_factory=ApiOmitted,
-    )
     show_title: bool | Literal["inline"] | ApiOmitted = api_field(
         description="Whether to show the title of the graph.",
         default_factory=ApiOmitted,
@@ -120,7 +116,6 @@ class GraphRenderOptions:
             return ApiOmitted()
 
         return cls(
-            font_size_pt=graph_render_options.get("font_size", ApiOmitted()),
             show_title=graph_render_options.get("show_title", ApiOmitted()),
             title_format=graph_render_options.get("title_format", ApiOmitted()),
             show_graph_time=graph_render_options.get("show_graph_time", ApiOmitted()),
@@ -143,8 +138,6 @@ class GraphRenderOptions:
 
     def to_internal(self) -> GraphRenderOptionsVS:
         options = default_dashlet_graph_render_options()
-        if not isinstance(self.font_size_pt, ApiOmitted):
-            options["font_size"] = self.font_size_pt
         if not isinstance(self.show_title, ApiOmitted):
             # Transform "inline" to "inline", otherwise pass bool
             options["show_title"] = self.show_title

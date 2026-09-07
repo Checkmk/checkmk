@@ -72,8 +72,6 @@ let requestCounter = 0
 const DEFAULT_THEME_COLOR = '#008EFF'
 
 const PX_PER_PT = 96 / 72
-const FIXED_VALUE_AXIS_WIDTH_IN_FONT_SIZES = 6
-const DEFAULT_FONT_SIZE_PT = 8
 
 const resolveTimeseriesColor = (color: SingleTimeseriesContent['color']): string | null => {
   if (color === 'default_metric') {
@@ -279,13 +277,10 @@ const showPin = computed(
 const showTimeAxis = computed(() => graphRenderOptions.value?.show_time_axis ?? true)
 const showValueAxis = computed(() => graphRenderOptions.value?.show_vertical_axis ?? true)
 const showMargin = computed(() => graphRenderOptions.value?.show_margin ?? false)
+// A fixed axis keeps the renderer's own default width.
 const valueAxisWidth = computed(() => {
   const configuredWidth = graphRenderOptions.value?.vertical_axis_width
-  if (typeof configuredWidth === 'number') {
-    return configuredWidth * PX_PER_PT
-  }
-  const fontSizePt = graphRenderOptions.value?.font_size_pt ?? DEFAULT_FONT_SIZE_PT
-  return FIXED_VALUE_AXIS_WIDTH_IN_FONT_SIZES * fontSizePt * PX_PER_PT
+  return typeof configuredWidth === 'number' ? configuredWidth * PX_PER_PT : undefined
 })
 const combinationMode = computed(() => {
   const content = props.content

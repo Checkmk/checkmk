@@ -170,16 +170,16 @@ describe('graph render options', () => {
     expect(figure.getAttribute('data-min-value-axis-width')).toBe('40')
   })
 
-  test('sizes a fixed vertical axis width from the graph font size', async () => {
+  test("leaves the renderer's own width for a fixed vertical axis", async () => {
     renderWidget({
       content: {
         ...CUSTOM_GRAPH_CONTENT,
-        graph_render_options: { vertical_axis_width: 'fixed', font_size_pt: 12 }
+        graph_render_options: { vertical_axis_width: 'fixed' }
       }
     })
 
     const figure = await screen.findByTestId('graph-figure')
-    expect(figure.getAttribute('data-min-value-axis-width')).toBe('96')
+    expect(figure.getAttribute('data-min-value-axis-width')).toBeNull()
   })
 
   test('shows both axes when the widget stores no axis options', async () => {
